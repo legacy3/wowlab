@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <PageLayout
       title="Dashboard"
-      description="Welcome to Innocent - Your WoW rotation simulation toolkit"
+      description="Welcome to WoW Lab - Your WoW rotation simulation toolkit"
       breadcrumbs={[{ label: "Dashboard" }]}
     >
       <div className="space-y-6">
@@ -175,7 +175,7 @@ export default function Home() {
                 <div>
                   <CardTitle>Get Started</CardTitle>
                   <CardDescription>
-                    New to Innocent? Here&apos;s how to begin
+                    New to WoW Lab? Here&apos;s how to begin
                   </CardDescription>
                 </div>
                 <Badge variant="outline" className="border-amber-500">
