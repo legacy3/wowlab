@@ -28,5 +28,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
+      - name: Build packages only
+        run: pnpm -r --filter './packages/**' build
