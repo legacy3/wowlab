@@ -1,0 +1,16 @@
+# Exclude third-party game data files
+third_party/
+
+# Exclude git submodules
+docs/libs/
+
+# Exclude lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Next
+.next/
+
+# Old stuff
+apps_old/

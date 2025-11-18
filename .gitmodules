@@ -1,0 +1,18 @@
+[submodule "third_party/not_even_close"]
+	path = third_party/not_even_close
+	url = https://github.com/acornellier/not_even_close.git
+[submodule "third_party/wow-ui-source"]
+	path = third_party/wow-ui-source
+	url = https://github.com/Gethe/wow-ui-source.git
+[submodule "third_party/simc"]
+	path = third_party/simc
+	url = https://github.com/simulationcraft/simc
+[submodule "docs/libs/TypeOnceSnippets"]
+	path = docs/libs/TypeOnceSnippets
+	url = https://github.com/typeonce-dev/snippets
+[submodule "docs/libs/EffectPatterns"]
+	path = docs/libs/EffectPatterns
+	url = https://github.com/PaulJPhilp/EffectPatterns
+[submodule "docs/libs/effect"]
+	path = docs/libs/effect
+	url = https://github.com/Effect-TS/effect.git

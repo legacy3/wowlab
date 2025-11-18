@@ -1,0 +1,36 @@
+"use client";
+
+import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { useAtom } from "jotai";
+import { currentUserAtom } from "@/atoms";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UserMenu } from "./user-menu";
+
+function AuthButtonInner() {
+  const router = useRouter();
+  const [user] = useAtom(currentUserAtom);
+
+  if (user) {
+    return <UserMenu />;
+  }
+
+  return (
+    <Button variant="default" size="sm" onClick={() => router.push("/sign-in")}>
+      Sign In
+    </Button>
+  );
+}
+
+function AuthButtonSkeleton() {
+  return <Skeleton className="h-9 w-20" />;
+}
+
+export function AuthButton() {
+  return (
+    <Suspense fallback={<AuthButtonSkeleton />}>
+      <AuthButtonInner />
+    </Suspense>
+  );
+}

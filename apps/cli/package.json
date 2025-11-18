@@ -1,0 +1,45 @@
+{
+  "name": "@apps/cli",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI tools for lib-innocent development",
+  "bin": {
+    "lib-innocent": "./index.ts"
+  },
+  "scripts": {
+    "dev": "tsx index.ts",
+    "build": "echo 'No build needed - scripts use tsx directly'",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "ncu": "ncu -u"
+  },
+  "dependencies": {
+    "@effect/cli": "^0.72.1",
+    "@effect/cluster": "^0.52.8",
+    "@effect/experimental": "^0.57.0",
+    "@effect/platform": "^0.93.0",
+    "@effect/platform-node": "^0.100.0",
+    "@effect/printer": "^0.47.0",
+    "@effect/printer-ansi": "^0.47.0",
+    "@effect/rpc": "^0.72.1",
+    "@effect/typeclass": "^0.38.0",
+    "@packages/innocent-schemas": "workspace:*",
+    "@packages/innocent-services": "workspace:*",
+    "@supabase/supabase-js": "^2.81.1",
+    "change-case": "^5.4.4",
+    "dotenv": "^17.2.3",
+    "effect": "^3.19.3",
+    "immutable": "^5.1.4",
+    "json-bigint": "^1.0.0",
+    "stream-json": "^1.9.1",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/json-bigint": "^1.0.4",
+    "@types/node": "^24.10.0",
+    "@types/stream-json": "^1.7.8",
+    "typescript": "^5.9.3"
+  }
+}
