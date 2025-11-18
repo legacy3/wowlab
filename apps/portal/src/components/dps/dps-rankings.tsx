@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { WowItemLink } from "@/components/game";
 import {
   selectedTierAtom,
   selectedFightLengthAtom,
@@ -212,8 +213,7 @@ function DpsRankingsInner() {
             Most Wanted Items
           </h2>
           <p className="text-muted-foreground">
-            Items filtered by average DPS gain across uploaded simulations. Item
-            tooltips are coming soon.
+            Items filtered by average DPS gain across uploaded simulations.
           </p>
         </div>
         <Card>
@@ -239,7 +239,14 @@ function DpsRankingsInner() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <span className="font-medium">{item.name}</span>
+                          <span className="font-medium">
+                            <WowItemLink
+                              itemId={item.id}
+                              quality={item.quality}
+                            >
+                              {item.name}
+                            </WowItemLink>
+                          </span>
                           <p className="text-xs text-muted-foreground">
                             {item.source}
                           </p>
@@ -281,8 +288,7 @@ function DpsRankingsInner() {
             />
           </CardContent>
           <CardFooter className="bg-muted/60 px-6 py-4 text-sm text-muted-foreground">
-            Item scores combine average DPS gain with pickup rate. Hover
-            previews will land alongside the item database integration.
+            Item scores combine average DPS gain with pickup rate.
           </CardFooter>
         </Card>
       </TabsContent>

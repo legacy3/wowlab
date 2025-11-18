@@ -108,8 +108,6 @@ For AI-assisted development with Claude Code, configure these MCP servers:
 }
 ```
 
-See `docs/MCP-SERVERS.md` for complete documentation.
-
 ## Contributing
 
 Contributions are welcome! Please read `CLAUDE.md` for development guidelines and architectural patterns.
