@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom, useSetAtom } from "jotai";
 import { Controller, useForm } from "react-hook-form";
@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -51,7 +50,7 @@ const handleSchema = z.object({
     }),
 });
 
-function UserSettingsFormInner() {
+export function ProfileSettingsCard() {
   const router = useRouter();
   const [profile] = useAtom(currentProfileAtom);
   const [, updateProfile] = useAtom(profileSettingsAtom);
@@ -247,41 +246,5 @@ function UserSettingsFormInner() {
         </FieldGroup>
       </CardContent>
     </Card>
-  );
-}
-
-function UserSettingsFormSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-96 mt-2" />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex justify-end">
-          <Skeleton className="h-10 w-32" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function UserSettingsForm() {
-  return (
-    <Suspense fallback={<UserSettingsFormSkeleton />}>
-      <UserSettingsFormInner />
-    </Suspense>
   );
 }
