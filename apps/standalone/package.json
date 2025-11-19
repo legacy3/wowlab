@@ -1,0 +1,30 @@
+{
+  "name": "@apps/standalone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Node.js app for testing lib-innocent simulation",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "ncu": "ncu -u"
+  },
+  "dependencies": {
+    "@packages/innocent-bootstrap": "workspace:*",
+    "@packages/innocent-domain": "workspace:*",
+    "@packages/innocent-rotation": "workspace:*",
+    "@packages/innocent-schemas": "workspace:*",
+    "@packages/innocent-services": "workspace:*",
+    "effect": "^3.19.4",
+    "immutable": "^5.1.4",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5"
+  }
+}
