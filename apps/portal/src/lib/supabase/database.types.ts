@@ -392,7 +392,34 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      spec_rankings_hourly: {
+        Row: {
+          avg_dps: number | null;
+          class: string | null;
+          last_updated: string | null;
+          max_dps: number | null;
+          median_dps: number | null;
+          min_dps: number | null;
+          sim_count: number | null;
+          spec: string | null;
+        };
+        Relationships: [];
+      };
+      top_sims_daily: {
+        Row: {
+          author: string | null;
+          class: string | null;
+          dps: number | null;
+          gear_set: string | null;
+          id: string | null;
+          last_updated: string | null;
+          rotation_name: string | null;
+          scenario: string | null;
+          sim_date: string | null;
+          spec: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       generate_default_handle: { Args: { user_id: string }; Returns: string };
