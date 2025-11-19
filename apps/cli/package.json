@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "@effect/cli": "^0.72.1",
-    "@effect/cluster": "^0.52.8",
-    "@effect/experimental": "^0.57.0",
-    "@effect/platform": "^0.93.0",
+    "@effect/cluster": "^0.52.11",
+    "@effect/experimental": "^0.57.3",
+    "@effect/platform": "^0.93.3",
     "@effect/platform-node": "^0.100.0",
     "@effect/printer": "^0.47.0",
     "@effect/printer-ansi": "^0.47.0",
@@ -27,10 +27,10 @@
     "@effect/typeclass": "^0.38.0",
     "@packages/innocent-schemas": "workspace:*",
     "@packages/innocent-services": "workspace:*",
-    "@supabase/supabase-js": "^2.81.1",
+    "@supabase/supabase-js": "^2.83.0",
     "change-case": "^5.4.4",
     "dotenv": "^17.2.3",
-    "effect": "^3.19.3",
+    "effect": "^3.19.4",
     "immutable": "^5.1.4",
     "json-bigint": "^1.0.0",
     "stream-json": "^1.9.1",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/json-bigint": "^1.0.4",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/stream-json": "^1.7.8",
     "typescript": "^5.9.3"
   }

@@ -2,7 +2,12 @@
 
 import { Suspense, useMemo } from "react";
 import { useAtom } from "jotai";
-import { ArrowUpRight, ArrowDownRight, ExternalLink } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  ExternalLink,
+  BarChart3,
+} from "lucide-react";
 
 import {
   Card,
@@ -32,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { WowItemLink } from "@/components/game";
 import {
   selectedTierAtom,
   selectedFightLengthAtom,
@@ -134,64 +140,80 @@ function DpsRankingsInner() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-14 text-center">#</TableHead>
-                    <TableHead>Spec</TableHead>
-                    <TableHead className="text-right">DPS</TableHead>
-                    <TableHead className="w-32 text-right">Change</TableHead>
-                    <TableHead className="w-32 text-right">Parses</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {specRankings.map((ranking) => (
-                    <TableRow
-                      key={ranking.rank}
-                      className={cn(
-                        ranking.rank <= 3 &&
-                          "bg-primary/5 hover:bg-primary/10 dark:bg-primary/10/50",
-                      )}
-                    >
-                      <TableCell className="text-center font-semibold">
-                        {ranking.rank}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{
-                              backgroundColor: CLASS_COLORS[ranking.wowClass],
-                            }}
-                          />
-                          <div>
-                            <p className="font-medium">
-                              {ranking.spec} {ranking.wowClass}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {specHeaderMeta.window} • Median of top parses
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {ranking.dps.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <TrendPill
-                          direction={ranking.direction}
-                          value={ranking.changePercent}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {ranking.sampleSize.toLocaleString()}
-                      </TableCell>
+            {specRankings.length === 0 ? (
+              <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
+                <div className="rounded-full bg-muted p-3">
+                  <BarChart3 className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">No rankings yet</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Rankings will appear here once simulation data is available.
+                    <br />
+                    Upload your first rotation simulation to get started.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-14 text-center">#</TableHead>
+                      <TableHead>Spec</TableHead>
+                      <TableHead className="text-right">DPS</TableHead>
+                      <TableHead className="w-32 text-right">Change</TableHead>
+                      <TableHead className="w-32 text-right">Parses</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {specRankings.map((ranking) => (
+                      <TableRow
+                        key={ranking.rank}
+                        className={cn(
+                          ranking.rank <= 3 &&
+                            "bg-primary/5 hover:bg-primary/10 dark:bg-primary/10/50",
+                        )}
+                      >
+                        <TableCell className="text-center font-semibold">
+                          {ranking.rank}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full"
+                              style={{
+                                backgroundColor: CLASS_COLORS[ranking.wowClass],
+                              }}
+                            />
+                            <div>
+                              <p className="font-medium">
+                                {ranking.spec} {ranking.wowClass}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {specHeaderMeta.window} • Median of top parses
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {ranking.dps.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          <TrendPill
+                            direction={ranking.direction}
+                            value={ranking.changePercent}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {ranking.sampleSize.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
             <TablePagination
               className="border-none pt-0"
               totalCount={60}
@@ -200,8 +222,8 @@ function DpsRankingsInner() {
             />
           </CardContent>
           <CardFooter className="bg-muted/60 px-6 py-4 text-sm text-muted-foreground">
-            Rankings aggregate public sim uploads. Filters update metadata only
-            until live data integration lands.
+            Rankings aggregate approved public simulations from the last 30
+            days. Data refreshes every hour.
           </CardFooter>
         </Card>
       </TabsContent>
@@ -212,8 +234,7 @@ function DpsRankingsInner() {
             Most Wanted Items
           </h2>
           <p className="text-muted-foreground">
-            Items filtered by average DPS gain across uploaded simulations. Item
-            tooltips are coming soon.
+            Items filtered by average DPS gain across uploaded simulations.
           </p>
         </div>
         <Card>
@@ -239,7 +260,14 @@ function DpsRankingsInner() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <span className="font-medium">{item.name}</span>
+                          <span className="font-medium">
+                            <WowItemLink
+                              itemId={item.id}
+                              quality={item.quality}
+                            >
+                              {item.name}
+                            </WowItemLink>
+                          </span>
                           <p className="text-xs text-muted-foreground">
                             {item.source}
                           </p>
@@ -281,8 +309,7 @@ function DpsRankingsInner() {
             />
           </CardContent>
           <CardFooter className="bg-muted/60 px-6 py-4 text-sm text-muted-foreground">
-            Item scores combine average DPS gain with pickup rate. Hover
-            previews will land alongside the item database integration.
+            Item scores combine average DPS gain with pickup rate.
           </CardFooter>
         </Card>
       </TabsContent>
@@ -297,90 +324,110 @@ function DpsRankingsInner() {
         </div>
         <Card>
           <CardContent className="space-y-4 pt-6">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Character</TableHead>
-                    <TableHead className="hidden md:table-cell">Spec</TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Realm
-                    </TableHead>
-                    <TableHead className="text-right">DPS</TableHead>
-                    <TableHead className="hidden md:table-cell text-right">
-                      Percentile
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell text-right">
-                      Gearscore
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell text-right">
-                      Date
-                    </TableHead>
-                    <TableHead className="w-24 text-right">Report</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topSimCharacters.map((sim, index) => (
-                    <TableRow key={sim.id}>
-                      <TableCell className="text-muted-foreground">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{sim.character}</span>
-                          <span className="text-xs text-muted-foreground md:hidden">
-                            {sim.spec} {sim.wowClass}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge
-                          variant="outline"
-                          className="text-xs"
-                          style={{
-                            borderColor: CLASS_COLORS[sim.wowClass],
-                            color: CLASS_COLORS[sim.wowClass],
-                          }}
-                        >
-                          {sim.spec} {sim.wowClass}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground">
-                        {sim.realm} • {sim.region}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {sim.dps.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
-                        {sim.percentile}th
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-right tabular-nums text-muted-foreground">
-                        {sim.gearscore.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-right text-muted-foreground">
-                        {sim.runDate}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <a
-                          href={sim.reportUrl}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                        >
-                          Open
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      </TableCell>
+            {topSimCharacters.length === 0 ? (
+              <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
+                <div className="rounded-full bg-muted p-3">
+                  <BarChart3 className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">No simulations yet</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Top simulations will appear here once data is available.
+                    <br />
+                    Run your first rotation simulation to get started.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Character</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Spec
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Realm
+                      </TableHead>
+                      <TableHead className="text-right">DPS</TableHead>
+                      <TableHead className="hidden md:table-cell text-right">
+                        Percentile
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell text-right">
+                        Gearscore
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell text-right">
+                        Date
+                      </TableHead>
+                      <TableHead className="w-24 text-right">Report</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <TablePagination
-              className="border-none pt-0"
-              totalCount={50}
-              pageCount={5}
-              pageSize={6}
-            />
+                  </TableHeader>
+                  <TableBody>
+                    {topSimCharacters.map((sim, index) => (
+                      <TableRow key={sim.id}>
+                        <TableCell className="text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{sim.character}</span>
+                            <span className="text-xs text-muted-foreground md:hidden">
+                              {sim.spec} {sim.wowClass}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              borderColor: CLASS_COLORS[sim.wowClass],
+                              color: CLASS_COLORS[sim.wowClass],
+                            }}
+                          >
+                            {sim.spec} {sim.wowClass}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-muted-foreground">
+                          {sim.realm} • {sim.region}
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {sim.dps.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
+                          {sim.percentile}th
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-right tabular-nums text-muted-foreground">
+                          {sim.gearscore.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-right text-muted-foreground">
+                          {sim.runDate}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <a
+                            href={sim.reportUrl}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            Open
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            {topSimCharacters.length > 0 && (
+              <TablePagination
+                className="border-none pt-0"
+                totalCount={50}
+                pageCount={5}
+                pageSize={6}
+              />
+            )}
           </CardContent>
           <CardFooter className="bg-muted/60 px-6 py-4 text-sm text-muted-foreground">
             Want to appear here? Upload your sim from the timeline or editor

@@ -22,7 +22,7 @@
     "@packages/innocent-domain": "workspace:*",
     "@packages/innocent-schemas": "workspace:*",
     "@packages/innocent-spellbook": "workspace:*",
-    "effect": "^3.19.3",
+    "effect": "^3.19.4",
     "immutable": "^5.1.4",
     "microdiff": "^1.5.0",
     "tinyqueue": "^3.0.0"

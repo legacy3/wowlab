@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Innocent Simulator",
+  title: "WoW Lab",
   description: "WoW rotation simulation toolkit for optimal DPS analysis",
 };
 

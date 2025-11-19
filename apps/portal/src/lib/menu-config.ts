@@ -5,6 +5,7 @@ import {
   Bug,
   Clock,
   FileCode,
+  FileText,
   Library,
   Loader2,
   LucideIcon,
@@ -59,6 +60,10 @@ export const menuConfig: MenuGroup[] = [
       { label: "Workbench", href: "/workbench", icon: Activity },
       { label: "Computing", href: "/computing", icon: Loader2 },
     ],
+  },
+  {
+    label: "About",
+    items: [{ label: "Changelog", href: "/changelog", icon: FileText }],
   },
   {
     label: "Debug",

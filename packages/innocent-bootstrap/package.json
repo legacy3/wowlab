@@ -25,7 +25,7 @@
     "@packages/innocent-schemas": "workspace:*",
     "@packages/innocent-services": "workspace:*",
     "@packages/innocent-spellbook": "workspace:*",
-    "effect": "^3.19.3",
+    "effect": "^3.19.4",
     "immutable": "^5.1.4"
   },
   "devDependencies": {

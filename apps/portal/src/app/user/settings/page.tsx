@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth/require-auth";
 import { PageLayout } from "@/components/page";
-import { UserSettingsForm } from "@/components/user/user-settings-form";
+import { SettingsOverview } from "@/components/user/settings-overview";
 
 export default async function SettingsPage() {
   await requireAuth();
@@ -15,7 +15,7 @@ export default async function SettingsPage() {
         { label: "Settings" },
       ]}
     >
-      <UserSettingsForm />
+      <SettingsOverview />
     </PageLayout>
   );
 }
