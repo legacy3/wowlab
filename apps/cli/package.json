@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "tsx index.ts",
     "build": "echo 'No build needed - scripts use tsx directly'",
+    "check-circular": "tsx scripts/check-circular.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -38,8 +39,10 @@
   },
   "devDependencies": {
     "@types/json-bigint": "^1.0.4",
+    "@types/madge": "^5.0.3",
     "@types/node": "^24.10.1",
     "@types/stream-json": "^1.7.8",
+    "madge": "^8.0.0",
     "typescript": "^5.9.3"
   }
 }
