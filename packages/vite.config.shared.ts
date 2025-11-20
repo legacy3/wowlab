@@ -9,27 +9,32 @@ export interface PackageConfig {
 
 export function createPackageConfig(config: PackageConfig) {
   return defineConfig({
-    resolve: {
-      alias: {
-        "@": resolve(process.cwd(), "./src"),
-      },
-    },
     build: {
       lib: {
         entry: config.entries,
         formats: ["es"],
       },
+      minify: false,
+      outDir: "build",
       rollupOptions: {
         external: config.external,
       },
-      outDir: "build",
+      sourcemap: true,
+    },
+    esbuild: {
+      keepNames: true,
     },
     plugins: [
       dts({
-        outDir: "build",
-        include: ["src/**/*.ts"],
         exclude: ["**/*.test.ts", "**/*.spec.ts"],
+        include: ["src/**/*.ts"],
+        outDir: "build",
       }),
     ],
+    resolve: {
+      alias: {
+        "@": resolve(process.cwd(), "./src"),
+      },
+    },
   });
 }
