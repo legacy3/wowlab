@@ -1,19 +1,15 @@
-import * as Layers from "@packages/innocent-bootstrap/Layers";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
-import { StandaloneMetadataServiceLayer } from "./metadata.js";
-import { runSimulation } from "./simulation.js";
+import { Step3Layer, testDependentServicesLayer } from "./layers-local.js";
 
 const main = async () => {
   console.log("=".repeat(60));
-  console.log("WowLab Standalone Simulation Test");
+  console.log("WowLab Standalone Layer Test - STEP 3: Dependent Services");
   console.log("=".repeat(60));
 
-  const appLayer = Layers.AppLayer.create(StandaloneMetadataServiceLayer);
-
-  const program = runSimulation.pipe(Effect.scoped, Effect.provide(appLayer));
+  const program = testDependentServicesLayer.pipe(Effect.provide(Step3Layer));
 
   const exit = await Effect.runPromiseExit(program);
 
