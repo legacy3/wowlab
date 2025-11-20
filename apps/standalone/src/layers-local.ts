@@ -282,7 +282,7 @@ export const Step3Layer = Layer.mergeAll(
 // ============================================================================
 // COMMENTED OUT - This is where it breaks when following the lib's pattern
 
-/*
+
 // Mock MetadataService
 export class MetadataService extends Context.Tag("MetadataService")<
   MetadataService,
@@ -428,45 +428,39 @@ export class EventSchedulerService extends Context.Tag("EventSchedulerService")<
 // STEP 4 LAYER - Mimics the lib's AppLayer.create() pattern
 // ============================================================================
 
+// We need to ensure all services are satisfied before merging them into the final layer.
+
+// Services depending on Core (LogService)
+const SpellLayer = Layer.provide(SpellService.Default, CoreLayer);
+const RotationRefLayer = Layer.provide(RotationRefService.Default, CoreLayer);
+const SimulationLayer = Layer.provide(SimulationService.Default, CoreLayer);
+const EventSchedulerLayer = Layer.provide(EventSchedulerService.Default, CoreLayer);
+
+// Services depending on StateService (in Core)
+const ProfileComposerLayer = Layer.provide(ProfileComposer.Default, CoreLayer);
+
+// Services depending on StateService (Core) and MetadataService
+const SpellInfoDeps = Layer.merge(CoreLayer, MetadataService.Default);
+const SpellInfoLayer = Layer.provide(SpellInfoService.Default, SpellInfoDeps);
+
 export const Step4Layer = Layer.mergeAll(
-  CoreLayer,
-  AccessorLayer,
-  UnitLayer,
-  ProjectileLayer,
-  PeriodicLayer,
-  CastQueueLayer,
-  LifecycleLayer,
-  SpellService.Default,
-  RotationRefService.Default,
-  SimulationService.Default,
-  EventSchedulerService.Default,
-).pipe(
-  // This is what the lib does
-  Layer.provide(MetadataService.Default),
-  Layer.provideMerge(ProfileComposer.Default),
-  Layer.provideMerge(SpellInfoService.Default),
+  // Previous steps (already satisfied)
+  Step3Layer,
+  
+  // New services (now satisfied)
+  SpellLayer,
+  RotationRefLayer,
+  SimulationLayer,
+  EventSchedulerLayer,
+  
+  // Metadata (no deps)
+  MetadataService.Default,
+  
+  // Higher level services
+  ProfileComposerLayer,
+  SpellInfoLayer
 );
 
-export const testHigherLevelServicesLayer = Effect.gen(function* () {
-  const log = yield* LogService;
-  const metadata = yield* MetadataService;
-  const profileComposer = yield* ProfileComposer;
-  const spellInfoService = yield* SpellInfoService;
-
-  yield* log.log("Testing Step 4");
-
-  const spell = yield* metadata.loadSpell(108853);
-  yield* log.log(`Loaded spell: ${JSON.stringify(spell)}`);
-
-  const profile = yield* profileComposer.compose(1);
-  yield* log.log(`Composed profile: ${JSON.stringify(profile)}`);
-
-  const spellInfo = yield* spellInfoService.getSpell(108853);
-  yield* log.log(`Got spell info: ${JSON.stringify(spellInfo)}`);
-
-  return { success: true, message: "Step 4 works!" };
-});
-*/
 
 // ============================================================================
 // TEST PROGRAMS

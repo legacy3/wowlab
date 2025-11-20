@@ -2,14 +2,14 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
-import { Step3Layer, testDependentServicesLayer } from "./layers-local.js";
+import { Step4Layer, testHigherLevelServicesLayer } from "./layers-local.js";
 
 const main = async () => {
   console.log("=".repeat(60));
-  console.log("WowLab Standalone Layer Test - STEP 3: Dependent Services");
+  console.log("WowLab Standalone Layer Test - STEP 4: Higher Level Services");
   console.log("=".repeat(60));
 
-  const program = testDependentServicesLayer.pipe(Effect.provide(Step3Layer));
+  const program = testHigherLevelServicesLayer.pipe(Effect.provide(Step4Layer));
 
   const exit = await Effect.runPromiseExit(program);
 
