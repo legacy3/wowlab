@@ -18,68 +18,164 @@ import * as State from "@packages/innocent-services/State";
 import * as Unit from "@packages/innocent-services/Unit";
 import * as Layer from "effect/Layer";
 
-// Core services (no dependencies)
+// 1. Core Services (State, Log, RNG)
+// These are the roots. We use .Default to create them.
 const CoreLayer = Layer.mergeAll(
   Log.LogService.Default,
   State.StateService.Default,
   Rng.RNGService.Default,
 );
 
-// Accessors layer - just the raw accessors
-const AccessorsRaw = Layer.mergeAll(
-  Accessors.UnitAccessor.Default,
-  Accessors.SpellAccessor.Default,
+// 2. Independent Services (Scheduler, RotationRef, ProfileComposer)
+// These don't depend on StateService (or use their own internal state like Ref/FiberRef)
+const IndependentLayer = Layer.mergeAll(
+  Scheduler.EventSchedulerService.Default,
+  RotationRef.RotationRefService.Default,
+  Profile.ProfileComposer.Default
 );
 
-// Provide Core to Accessors (Accessors depend on State)
-const AccessorLayer = Layer.provide(AccessorsRaw, CoreLayer);
+// 3. Accessors (Depend on StateService)
+// We must construct them manually to use the shared StateService from CoreLayer
+const AccessorLayer = Layer.mergeAll(
+  // @ts-ignore
+  Accessors.UnitAccessor.DefaultWithoutDependencies,
+  // @ts-ignore
+  Accessors.SpellAccessor.DefaultWithoutDependencies
+).pipe(
+  Layer.provide(CoreLayer)
+);
 
-// Services that depend on Accessors - provide full stack (Core + Accessors)
-const ServiceDeps = Layer.mergeAll(CoreLayer, AccessorLayer);
+// 4. Base Dependencies for Higher Level Services
+// Core + Independent + Accessors
+const BaseDeps = Layer.mergeAll(
+  CoreLayer,
+  IndependentLayer,
+  AccessorLayer
+);
 
-const UnitLayer = Layer.provide(Unit.UnitService.Default, ServiceDeps);
-const ProjectileLayer = Layer.provide(
-  Projectile.ProjectileService.Default,
-  ServiceDeps,
+// 5. Dependent Services (Depend on State, Accessors, Scheduler, etc.)
+// We construct them manually to ensure they use the shared instances.
+
+// UnitService depends on State, UnitAccessor, Scheduler
+// @ts-ignore
+const UnitLayer = Unit.UnitService.DefaultWithoutDependencies.pipe(
+  Layer.provide(BaseDeps)
 );
-const PeriodicLayer = Layer.provide(
-  Periodic.PeriodicTriggerService.Default,
-  ServiceDeps,
+
+// SpellService depends on State
+// @ts-ignore
+const SpellLayer = Spell.SpellService.DefaultWithoutDependencies.pipe(
+  Layer.provide(BaseDeps)
 );
-const CastQueueLayer = Layer.provide(
-  CastQueue.CastQueueService.Default,
-  ServiceDeps,
+
+// LifecycleService depends on State, Accessors, etc.
+// @ts-ignore
+const LifecycleLayer = Lifecycle.SpellLifecycleService.DefaultWithoutDependencies.pipe(
+  Layer.provide(BaseDeps)
 );
-const LifecycleLayer = Layer.provide(
-  Lifecycle.SpellLifecycleService.Default,
-  ServiceDeps,
+
+// ProjectileService depends on State, Accessors, etc.
+// @ts-ignore
+const ProjectileLayer = Projectile.ProjectileService.DefaultWithoutDependencies.pipe(
+  Layer.provide(BaseDeps)
+);
+
+// CastQueueService depends on Lifecycle, Scheduler, State, Accessors, Unit, RotationRef, Log
+// It needs UnitLayer and LifecycleLayer too.
+const CastQueueDeps = Layer.mergeAll(
+  BaseDeps,
+  UnitLayer,
+  LifecycleLayer
+);
+// @ts-ignore
+const CastQueueLayer = CastQueue.CastQueueService.DefaultWithoutDependencies.pipe(
+  Layer.provide(CastQueueDeps)
+);
+
+// PeriodicTriggerService depends on State, Unit, Accessors, Scheduler, SpellAccessor, CastQueue
+const PeriodicDeps = Layer.mergeAll(
+  BaseDeps,
+  UnitLayer,
+  CastQueueLayer
+);
+// @ts-ignore
+const PeriodicLayer = Periodic.PeriodicTriggerService.DefaultWithoutDependencies.pipe(
+  Layer.provide(PeriodicDeps)
+);
+
+// SimulationService depends on State, Unit, Scheduler, RotationRef, Periodic
+const SimulationDeps = Layer.mergeAll(
+  BaseDeps,
+  UnitLayer,
+  PeriodicLayer
+);
+// @ts-ignore
+const SimulationLayer = Simulation.SimulationService.DefaultWithoutDependencies.pipe(
+  Layer.provide(SimulationDeps)
+);
+
+// Rotation Actions
+const RotationActionsDeps = Layer.mergeAll(
+  BaseDeps,
+  UnitLayer,
+  SpellLayer,
+  CastQueueLayer
+);
+
+// @ts-ignore
+const UnitActionsLayer = RotationActions.UnitActions.DefaultWithoutDependencies.pipe(
+  Layer.provide(RotationActionsDeps)
+);
+
+// @ts-ignore
+const SpellActionsLayer = RotationActions.SpellActions.DefaultWithoutDependencies.pipe(
+  Layer.provide(RotationActionsDeps)
+);
+
+// @ts-ignore
+const ControlActionsLayer = RotationActions.ControlActions.DefaultWithoutDependencies.pipe(
+  Layer.provide(RotationActionsDeps)
+);
+
+const RotationActionsLayer = Layer.mergeAll(
+  UnitActionsLayer,
+  SpellActionsLayer,
+  ControlActionsLayer
+);
+
+// Rotation Context
+// @ts-ignore
+const RotationContextLayer = RotationContext.RotationContext.DefaultWithoutDependencies.pipe(
+  Layer.provide(RotationActionsLayer)
 );
 
 export const create = <R>(
   metadataLayer: Layer.Layer<Metadata.MetadataService, never, R>,
 ) => {
+  // SpellInfoService depends on Metadata, Profile, Modifiers (runtime?)
+  const SpellInfoDeps = Layer.mergeAll(
+    metadataLayer,
+    IndependentLayer // Contains ProfileComposer
+  );
+  
+  const SpellInfoLayer = Data.SpellInfoService.Default.pipe(
+    Layer.provide(SpellInfoDeps)
+  );
+
   return Layer.mergeAll(
     CoreLayer,
+    IndependentLayer,
     AccessorLayer,
     UnitLayer,
-    ProjectileLayer,
-    PeriodicLayer,
-    CastQueueLayer,
+    SpellLayer,
     LifecycleLayer,
-    Spell.SpellService.Default,
-    RotationRef.RotationRefService.Default,
-    Simulation.SimulationService.Default,
-    Scheduler.EventSchedulerService.Default,
-    RotationActions.UnitActions.Default,
-    RotationActions.SpellActions.Default,
-    RotationActions.ControlActions.Default,
-    RotationContext.RotationContext.Default,
-  ).pipe(
-    // Provide MetadataService (external dependency)
-    Layer.provide(metadataLayer),
-
-    // Merge ProfileComposer and SpellInfoService (share StateService instance)
-    Layer.provideMerge(Profile.ProfileComposer.Default),
-    Layer.provideMerge(Data.SpellInfoService.Default),
+    ProjectileLayer,
+    CastQueueLayer,
+    PeriodicLayer,
+    SimulationLayer,
+    SpellInfoLayer,
+    metadataLayer,
+    RotationActionsLayer,
+    RotationContextLayer
   );
 };
