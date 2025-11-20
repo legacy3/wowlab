@@ -29,9 +29,7 @@ export class StateService extends Context.Tag("StateService")<
   StateService,
   {
     readonly getState: () => Effect.Effect<{ currentTime: number }>;
-    readonly setState: (
-      state: { currentTime: number },
-    ) => Effect.Effect<void>;
+    readonly setState: (state: { currentTime: number }) => Effect.Effect<void>;
   }
 >() {
   static Default = Layer.sync(this, () => {
@@ -282,7 +280,6 @@ export const Step3Layer = Layer.mergeAll(
 // ============================================================================
 // COMMENTED OUT - This is where it breaks when following the lib's pattern
 
-
 // Mock MetadataService
 export class MetadataService extends Context.Tag("MetadataService")<
   MetadataService,
@@ -417,7 +414,9 @@ export class EventSchedulerService extends Context.Tag("EventSchedulerService")<
       return {
         schedule: (eventId: number, timeMs: number) =>
           Effect.gen(function* () {
-            yield* log.log(`EventSchedulerService: Scheduling ${eventId} at ${timeMs}ms`);
+            yield* log.log(
+              `EventSchedulerService: Scheduling ${eventId} at ${timeMs}ms`,
+            );
           }),
       };
     }),
@@ -434,7 +433,10 @@ export class EventSchedulerService extends Context.Tag("EventSchedulerService")<
 const SpellLayer = Layer.provide(SpellService.Default, CoreLayer);
 const RotationRefLayer = Layer.provide(RotationRefService.Default, CoreLayer);
 const SimulationLayer = Layer.provide(SimulationService.Default, CoreLayer);
-const EventSchedulerLayer = Layer.provide(EventSchedulerService.Default, CoreLayer);
+const EventSchedulerLayer = Layer.provide(
+  EventSchedulerService.Default,
+  CoreLayer,
+);
 
 // Services depending on StateService (in Core)
 const ProfileComposerLayer = Layer.provide(ProfileComposer.Default, CoreLayer);
@@ -446,21 +448,20 @@ const SpellInfoLayer = Layer.provide(SpellInfoService.Default, SpellInfoDeps);
 export const Step4Layer = Layer.mergeAll(
   // Previous steps (already satisfied)
   Step3Layer,
-  
+
   // New services (now satisfied)
   SpellLayer,
   RotationRefLayer,
   SimulationLayer,
   EventSchedulerLayer,
-  
+
   // Metadata (no deps)
   MetadataService.Default,
-  
+
   // Higher level services
   ProfileComposerLayer,
-  SpellInfoLayer
+  SpellInfoLayer,
 );
-
 
 // ============================================================================
 // TEST PROGRAMS

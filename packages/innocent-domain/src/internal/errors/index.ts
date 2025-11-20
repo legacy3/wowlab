@@ -1,7 +1,7 @@
 import * as Branded from "@packages/innocent-schemas/Branded";
 import * as EffectData from "effect/Data";
 
-import * as Entities from "@/Entities";
+import type * as Entities from "@/Entities";
 
 // ============================================================================
 // Accessor Errors

@@ -2,6 +2,7 @@ import * as RotationActions from "@packages/innocent-rotation/Actions";
 import * as RotationContext from "@packages/innocent-rotation/Context";
 import * as Accessors from "@packages/innocent-services/Accessors";
 import * as CastQueue from "@packages/innocent-services/CastQueue";
+import { SpellInfoServiceLive } from "@packages/innocent-services/Data";
 import * as Data from "@packages/innocent-services/Data";
 import * as Lifecycle from "@packages/innocent-services/Lifecycle";
 import * as Log from "@packages/innocent-services/Log";
@@ -31,7 +32,7 @@ const CoreLayer = Layer.mergeAll(
 const IndependentLayer = Layer.mergeAll(
   Scheduler.EventSchedulerService.Default,
   RotationRef.RotationRefService.Default,
-  Profile.ProfileComposer.Default
+  Profile.ProfileComposer.Default,
 );
 
 // 3. Accessors (Depend on StateService)
@@ -40,18 +41,12 @@ const AccessorLayer = Layer.mergeAll(
   // @ts-ignore
   Accessors.UnitAccessor.DefaultWithoutDependencies,
   // @ts-ignore
-  Accessors.SpellAccessor.DefaultWithoutDependencies
-).pipe(
-  Layer.provide(CoreLayer)
-);
+  Accessors.SpellAccessor.DefaultWithoutDependencies,
+).pipe(Layer.provide(CoreLayer));
 
 // 4. Base Dependencies for Higher Level Services
 // Core + Independent + Accessors
-const BaseDeps = Layer.mergeAll(
-  CoreLayer,
-  IndependentLayer,
-  AccessorLayer
-);
+const BaseDeps = Layer.mergeAll(CoreLayer, IndependentLayer, AccessorLayer);
 
 // 5. Dependent Services (Depend on State, Accessors, Scheduler, etc.)
 // We construct them manually to ensure they use the shared instances.
@@ -59,95 +54,90 @@ const BaseDeps = Layer.mergeAll(
 // UnitService depends on State, UnitAccessor, Scheduler
 // @ts-ignore
 const UnitLayer = Unit.UnitService.DefaultWithoutDependencies.pipe(
-  Layer.provide(BaseDeps)
+  Layer.provide(BaseDeps),
 );
 
 // SpellService depends on State
 // @ts-ignore
 const SpellLayer = Spell.SpellService.DefaultWithoutDependencies.pipe(
-  Layer.provide(BaseDeps)
+  Layer.provide(BaseDeps),
 );
 
 // LifecycleService depends on State, Accessors, etc.
 // @ts-ignore
-const LifecycleLayer = Lifecycle.SpellLifecycleService.DefaultWithoutDependencies.pipe(
-  Layer.provide(BaseDeps)
+const LifecycleLayer = Lifecycle.SpellLifecycleService.Default.pipe(
+  Layer.provide(BaseDeps),
 );
 
 // ProjectileService depends on State, Accessors, etc.
 // @ts-ignore
-const ProjectileLayer = Projectile.ProjectileService.DefaultWithoutDependencies.pipe(
-  Layer.provide(BaseDeps)
-);
+const ProjectileLayer =
+  Projectile.ProjectileService.DefaultWithoutDependencies.pipe(
+    Layer.provide(BaseDeps),
+  );
 
 // CastQueueService depends on Lifecycle, Scheduler, State, Accessors, Unit, RotationRef, Log
 // It needs UnitLayer and LifecycleLayer too.
-const CastQueueDeps = Layer.mergeAll(
-  BaseDeps,
-  UnitLayer,
-  LifecycleLayer
-);
+const CastQueueDeps = Layer.mergeAll(BaseDeps, UnitLayer, LifecycleLayer);
 // @ts-ignore
-const CastQueueLayer = CastQueue.CastQueueService.DefaultWithoutDependencies.pipe(
-  Layer.provide(CastQueueDeps)
-);
+const CastQueueLayer =
+  CastQueue.CastQueueService.DefaultWithoutDependencies.pipe(
+    Layer.provide(CastQueueDeps),
+  );
 
 // PeriodicTriggerService depends on State, Unit, Accessors, Scheduler, SpellAccessor, CastQueue
-const PeriodicDeps = Layer.mergeAll(
-  BaseDeps,
-  UnitLayer,
-  CastQueueLayer
-);
+const PeriodicDeps = Layer.mergeAll(BaseDeps, UnitLayer, CastQueueLayer);
 // @ts-ignore
-const PeriodicLayer = Periodic.PeriodicTriggerService.DefaultWithoutDependencies.pipe(
-  Layer.provide(PeriodicDeps)
-);
+const PeriodicLayer =
+  Periodic.PeriodicTriggerService.DefaultWithoutDependencies.pipe(
+    Layer.provide(PeriodicDeps),
+  );
 
 // SimulationService depends on State, Unit, Scheduler, RotationRef, Periodic
-const SimulationDeps = Layer.mergeAll(
-  BaseDeps,
-  UnitLayer,
-  PeriodicLayer
-);
+const SimulationDeps = Layer.mergeAll(BaseDeps, UnitLayer, PeriodicLayer);
 // @ts-ignore
-const SimulationLayer = Simulation.SimulationService.DefaultWithoutDependencies.pipe(
-  Layer.provide(SimulationDeps)
-);
+const SimulationLayer =
+  Simulation.SimulationService.DefaultWithoutDependencies.pipe(
+    Layer.provide(SimulationDeps),
+  );
 
 // Rotation Actions
 const RotationActionsDeps = Layer.mergeAll(
   BaseDeps,
   UnitLayer,
   SpellLayer,
-  CastQueueLayer
+  CastQueueLayer,
 );
 
 // @ts-ignore
-const UnitActionsLayer = RotationActions.UnitActions.DefaultWithoutDependencies.pipe(
-  Layer.provide(RotationActionsDeps)
-);
+const UnitActionsLayer =
+  RotationActions.UnitActions.DefaultWithoutDependencies.pipe(
+    Layer.provide(RotationActionsDeps),
+  );
 
 // @ts-ignore
-const SpellActionsLayer = RotationActions.SpellActions.DefaultWithoutDependencies.pipe(
-  Layer.provide(RotationActionsDeps)
-);
+const SpellActionsLayer =
+  RotationActions.SpellActions.DefaultWithoutDependencies.pipe(
+    Layer.provide(RotationActionsDeps),
+  );
 
 // @ts-ignore
-const ControlActionsLayer = RotationActions.ControlActions.DefaultWithoutDependencies.pipe(
-  Layer.provide(RotationActionsDeps)
+const ControlActionsLayer = RotationActions.ControlActions.Default.pipe(
+  Layer.provide(RotationActionsDeps),
 );
 
 const RotationActionsLayer = Layer.mergeAll(
   UnitActionsLayer,
   SpellActionsLayer,
-  ControlActionsLayer
+  ControlActionsLayer,
 );
 
 // Rotation Context
 // @ts-ignore
-const RotationContextLayer = RotationContext.RotationContext.DefaultWithoutDependencies.pipe(
-  Layer.provide(RotationActionsLayer)
-);
+const RotationContextLayer =
+  RotationContext.RotationContext.DefaultWithoutDependencies.pipe(
+    Layer.provide(RotationActionsLayer),
+  );
 
 export const create = <R>(
   metadataLayer: Layer.Layer<Metadata.MetadataService, never, R>,
@@ -155,11 +145,11 @@ export const create = <R>(
   // SpellInfoService depends on Metadata, Profile, Modifiers (runtime?)
   const SpellInfoDeps = Layer.mergeAll(
     metadataLayer,
-    IndependentLayer // Contains ProfileComposer
+    IndependentLayer, // Contains ProfileComposer
   );
-  
-  const SpellInfoLayer = Data.SpellInfoService.Default.pipe(
-    Layer.provide(SpellInfoDeps)
+
+  const SpellInfoLayer = SpellInfoServiceLive.pipe(
+    Layer.provide(SpellInfoDeps),
   );
 
   return Layer.mergeAll(
@@ -176,6 +166,6 @@ export const create = <R>(
     SpellInfoLayer,
     metadataLayer,
     RotationActionsLayer,
-    RotationContextLayer
+    RotationContextLayer,
   );
 };

@@ -7,14 +7,5 @@ export default createPackageConfig({
     Layers: resolve(__dirname, "src/Layers.ts"),
     SpellLoader: resolve(__dirname, "src/SpellLoader.ts"),
   },
-  external: [
-    "effect",
-    "immutable",
-    "@packages/innocent-schemas",
-    "@packages/innocent-domain",
-    "@packages/innocent-services",
-    "@packages/innocent-rotation",
-    "@packages/innocent-spellbook",
-    "@packages/innocent-parsers",
-  ],
+  external: ["effect", "immutable", /^@packages\//],
 });

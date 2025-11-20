@@ -21,7 +21,7 @@ interface SpellSourceProps {
 const SpellRecord = Record<SpellProps>({
   charges: 0,
   cooldownExpiry: 0,
-  info: createNotFoundSpellInfo(Branded.SpellID(-1)),
+  info: null as any, // createNotFoundSpellInfo(Branded.SpellID(-1)),
   isReady: false,
 });
 

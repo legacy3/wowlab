@@ -2,10 +2,10 @@ import * as Branded from "@packages/innocent-schemas/Branded";
 import * as Spell from "@packages/innocent-schemas/Spell";
 import { Record } from "immutable";
 
-import type { SpellModifier } from "./types";
+// import type { SpellModifier } from "./types/SpellModifier";
 
 interface SpellInfoProps extends Spell.SpellDataFlat {
-  readonly modifiers: readonly SpellModifier[];
+  readonly modifiers: readonly any[]; // SpellModifier[];
 }
 
 const SpellInfoRecord = Record<SpellInfoProps>({

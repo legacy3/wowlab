@@ -1,7 +1,7 @@
 import * as Branded from "@packages/innocent-schemas/Branded";
 import { Record } from "immutable";
 
-import { createNotFoundSpellInfo, SpellInfo } from "@/Entities";
+import { createNotFoundSpellInfo, SpellInfo } from "./SpellInfo";
 
 import type { ComputedEntity } from "./shared";
 
@@ -23,7 +23,7 @@ interface AuraSourceProps {
 const AuraRecord = Record<AuraProps>({
   casterUnitId: Branded.UnitID("unknown"),
   expiresAt: 0,
-  info: createNotFoundSpellInfo(Branded.SpellID(-1)),
+  info: null as any, // createNotFoundSpellInfo(Branded.SpellID(-1)),
   isActive: false,
   stacks: 0,
 });

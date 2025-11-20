@@ -7,10 +7,5 @@ export default createPackageConfig({
     Config: resolve(__dirname, "src/Config.ts"),
     Spells: resolve(__dirname, "src/Spells.ts"),
   },
-  external: [
-    "effect",
-    "immutable",
-    "@packages/innocent-schemas",
-    "@packages/innocent-domain",
-  ],
+  external: ["effect", "immutable", /^@packages\//],
 });

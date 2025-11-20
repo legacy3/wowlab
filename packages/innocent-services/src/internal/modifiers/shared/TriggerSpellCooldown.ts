@@ -10,7 +10,7 @@ import * as Log from "@/Log";
 import * as Scheduler from "@/Scheduler";
 import * as StateServices from "@/State";
 
-export const TriggerSpellCooldown: Entities.SpellModifier = {
+export const TriggerSpellCooldown: Entities.Types.SpellModifier = {
   name: "trigger-spell-cooldown",
 
   onCast: (spell) =>

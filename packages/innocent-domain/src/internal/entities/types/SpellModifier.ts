@@ -2,23 +2,24 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Schedule from "effect/Schedule";
 
-import * as Entities from "@/Entities";
+import type { Spell } from "../Spell";
+import type { Unit } from "../Unit";
 import * as Errors from "@/Errors";
 
 export type SpellModifier = {
   readonly name: string;
   readonly beforeCast?: (
-    spell: Entities.Spell,
-  ) => Effect.Effect<Entities.Spell, Errors.Modifier, unknown>;
+    spell: Spell,
+  ) => Effect.Effect<Spell, Errors.Modifier, unknown>;
   readonly onCast?: (
-    spell: Entities.Spell,
+    spell: Spell,
   ) => Effect.Effect<void, Errors.Modifier, unknown>;
   readonly onHit?: (
-    spell: Entities.Spell,
-    target?: Entities.Unit,
+    spell: Spell,
+    target?: Unit,
   ) => Effect.Effect<void, Errors.Modifier, unknown>;
   readonly onDamage?: (
-    spell: Entities.Spell,
+    spell: Spell,
     damage: number,
   ) => Effect.Effect<void, Errors.Modifier, unknown>;
 };

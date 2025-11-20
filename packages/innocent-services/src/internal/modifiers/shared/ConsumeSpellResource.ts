@@ -7,7 +7,7 @@ import { pipe } from "effect/Function";
 import * as Log from "@/Log";
 import * as Unit from "@/Unit";
 
-export const ConsumeSpellResource: Entities.SpellModifier = {
+export const ConsumeSpellResource: Entities.Types.SpellModifier = {
   name: "consume-spell-resource",
 
   onCast: (spell) =>

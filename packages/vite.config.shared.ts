@@ -4,7 +4,7 @@ import dts from "vite-plugin-dts";
 
 export interface PackageConfig {
   entries: Record<string, string>;
-  external: string[];
+  external: (string | RegExp)[];
 }
 
 export function createPackageConfig(config: PackageConfig) {

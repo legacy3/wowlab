@@ -15,7 +15,7 @@ class ServiceB extends Context.Tag("ServiceB")<ServiceB, { value: string }>() {
     Effect.gen(function* () {
       const a = yield* ServiceA;
       return { value: a.value + "->B" };
-    })
+    }),
   );
 }
 
@@ -34,17 +34,19 @@ const main = async () => {
 
   const BrokenLayer = ServiceA.Default.pipe(
     // @ts-ignore - Ignoring type error to show runtime failure
-    Layer.provideMerge(ServiceB.Default)
+    Layer.provideMerge(ServiceB.Default),
   );
-  
-  await Effect.runPromiseExit(program.pipe(Effect.provide(BrokenLayer))).then(exit => {
-    if (Exit.isFailure(exit)) {
-      console.log("❌ FAILURE:");
-      console.log(exit.cause.toString());
-    } else {
-      console.log("✅ SUCCESS (Unexpected)");
-    }
-  });
+
+  await Effect.runPromiseExit(program.pipe(Effect.provide(BrokenLayer))).then(
+    (exit) => {
+      if (Exit.isFailure(exit)) {
+        console.log("❌ FAILURE:");
+        console.log(exit.cause.toString());
+      } else {
+        console.log("✅ SUCCESS (Unexpected)");
+      }
+    },
+  );
 
   console.log("\n" + "=".repeat(50));
   console.log("2. CORRECT WAY");
@@ -53,17 +55,19 @@ const main = async () => {
   console.log("=".repeat(50));
 
   const WorkingLayer = ServiceB.Default.pipe(
-    Layer.provideMerge(ServiceA.Default)
+    Layer.provideMerge(ServiceA.Default),
   );
 
-  await Effect.runPromiseExit(program.pipe(Effect.provide(WorkingLayer))).then(exit => {
-    if (Exit.isFailure(exit)) {
-      console.log("❌ FAILURE:");
-      console.log(exit.cause.toString());
-    } else {
-      console.log("✅ SUCCESS");
-    }
-  });
+  await Effect.runPromiseExit(program.pipe(Effect.provide(WorkingLayer))).then(
+    (exit) => {
+      if (Exit.isFailure(exit)) {
+        console.log("❌ FAILURE:");
+        console.log(exit.cause.toString());
+      } else {
+        console.log("✅ SUCCESS");
+      }
+    },
+  );
 };
 
 main();

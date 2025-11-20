@@ -7,7 +7,7 @@ import * as Accessors from "@/Accessors";
 import * as Log from "@/Log";
 import * as Unit from "@/Unit";
 
-export const ClearCastingState: Entities.SpellModifier = {
+export const ClearCastingState: Entities.Types.SpellModifier = {
   name: "clear-casting-state",
 
   onCast: (spell) =>

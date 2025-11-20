@@ -3,9 +3,9 @@ import * as Errors from "@packages/innocent-domain/Errors";
 import * as Branded from "@packages/innocent-schemas/Branded";
 import * as Effect from "effect/Effect";
 
-import * as Data from "@/Data";
 import * as Log from "@/Log";
 import * as State from "@/State";
+import { SpellInfoService } from "../data/service/definition.js";
 
 export class SpellAccessor extends Effect.Service<SpellAccessor>()(
   "SpellAccessor",
@@ -68,7 +68,7 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
                 },
               );
               // Try to get spell info and return stub spell
-              const spellInfoService = yield* Data.SpellInfoService;
+              const spellInfoService = yield* SpellInfoService;
               return yield* spellInfoService
                 .getSpell(spellId, { profileIds: [] })
                 .pipe(
@@ -108,7 +108,7 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
               `Spell ${spellId} NOT learned, yielding SpellInfoService...`,
               { spellId, unitId },
             );
-            const spellInfoService = yield* Data.SpellInfoService;
+            const spellInfoService = yield* SpellInfoService;
             yield* logService.info(
               "SpellAccessor",
               `Got SpellInfoService, fetching spell ${spellId}`,

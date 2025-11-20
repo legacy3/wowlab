@@ -1,5 +1,6 @@
 import * as Errors from "@packages/innocent-domain/Errors";
 import * as Spell from "@packages/innocent-schemas/Spell";
+import * as Branded from "@packages/innocent-schemas/Branded";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
@@ -28,7 +29,7 @@ export { flattenSpellData } from "./flatten";
 export const transformSpell = (
   spellId: number,
   cache: SpellInfoCache,
-): Effect.Effect<Spell.SpellDataDBC, Errors.SpellInfoNotFound> =>
+): Effect.Effect<Spell.SpellDataFlat, Errors.SpellInfoNotFound> =>
   Effect.gen(function* () {
     // Check if spell exists
     if (!cache.spellMisc.has(spellId)) {
@@ -96,29 +97,70 @@ export const transformSpell = (
       Option.getOrElse(() => "inv_misc_questionmark"),
     );
 
-    // Create and return the SpellDataDBC object
-    return Spell.createSpellDataDBC({
-      attributes: Option.getOrUndefined(attributes),
-      castTime: Option.isSome(castTime) ? castTime.value.base : 0,
-      charges: Option.getOrUndefined(charges),
-      cone: Option.getOrUndefined(cone),
-      cooldown: Option.isSome(cooldown) ? cooldown.value.recovery : 0,
-      damage: Option.getOrUndefined(damage),
-      defense: Option.getOrUndefined(defense),
-      dispel: Option.getOrUndefined(dispel),
-      duration: Option.getOrUndefined(duration),
-      empower: Option.getOrUndefined(empower),
-      facing: Option.getOrUndefined(facing),
+    // Create and return the SpellDataFlat object
+    return {
+      // Core
       iconName,
-      id: spellId,
-      interrupts: Option.getOrUndefined(interrupts),
-      manaCost,
-      missile: Option.getOrUndefined(missile),
+      id: Branded.SpellID(spellId),
       name,
-      radius: radius.length > 0 ? radius : undefined,
-      range: Option.getOrUndefined(range),
-      scaling,
-      targeting: targeting.length > 0 ? targeting : undefined,
-      triggers: triggers.length > 0 ? triggers : undefined,
-    });
+
+      // Timing
+      castTime: Option.isSome(castTime) ? castTime.value.base : 0,
+      cooldown: Option.isSome(cooldown) ? cooldown.value.recovery : 0,
+      gcd: 1500,
+
+      // Resources
+      manaCost,
+
+      // Charges
+      maxCharges: Option.isSome(charges) ? charges.value.maxCharges : 0,
+      rechargeTime: Option.isSome(charges) ? charges.value.rechargeTime : 0,
+
+      // Range
+      rangeAllyMax: Option.isSome(range) ? range.value.ally.max : 0,
+      rangeAllyMin: Option.isSome(range) ? range.value.ally.min : 0,
+      rangeEnemyMax: Option.isSome(range) ? range.value.enemy.max : 0,
+      rangeEnemyMin: Option.isSome(range) ? range.value.enemy.min : 0,
+
+      // Geometry
+      coneDegrees: Option.isSome(cone) ? cone.value.degrees : 0,
+      radius: radius.length > 0 ? radius : [],
+
+      // Damage/Defense
+      defenseType: Option.isSome(defense) ? defense.value.defenseType : 0,
+      schoolMask: Option.isSome(damage) ? damage.value.schoolMask : 0,
+
+      // Scaling
+      scalingAttackPower: scaling.attackPower,
+      scalingSpellPower: scaling.spellPower,
+
+      // Interrupts
+      interruptAura0: Option.isSome(interrupts) ? interrupts.value.aura[0] : 0,
+      interruptAura1: Option.isSome(interrupts) ? interrupts.value.aura[1] : 0,
+      interruptChannel0: Option.isSome(interrupts)
+        ? interrupts.value.channel[0]
+        : 0,
+      interruptChannel1: Option.isSome(interrupts)
+        ? interrupts.value.channel[1]
+        : 0,
+      interruptFlags: Option.isSome(interrupts) ? interrupts.value.flags : 0,
+
+      // Duration
+      duration: Option.isSome(duration) ? duration.value.duration : 0,
+      durationMax: Option.isSome(duration) ? duration.value.max : 0,
+
+      // Empower
+      canEmpower: Option.isSome(empower) ? empower.value.canEmpower : false,
+      empowerStages: Option.isSome(empower) ? empower.value.stages : [],
+
+      // Mechanics
+      dispelType: Option.isSome(dispel) ? dispel.value.dispelType : 0,
+      facingFlags: Option.isSome(facing) ? facing.value.facingFlags : 0,
+      missileSpeed: Option.isSome(missile) ? missile.value.speed : 0,
+
+      // Arrays
+      attributes: Option.getOrElse(attributes, () => []),
+      targeting: targeting.length > 0 ? targeting : [],
+      triggers: triggers.length > 0 ? triggers : [],
+    };
   });

@@ -7,11 +7,5 @@ export default createPackageConfig({
     Actions: resolve(__dirname, "src/Actions.ts"),
     Context: resolve(__dirname, "src/Context.ts"),
   },
-  external: [
-    "effect",
-    "immutable",
-    "@packages/innocent-services",
-    "@packages/innocent-domain",
-    "@packages/innocent-schemas",
-  ],
+  external: ["effect", "immutable", /^@packages\//],
 });

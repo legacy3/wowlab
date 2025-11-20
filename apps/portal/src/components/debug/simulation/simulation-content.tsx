@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-// import { useAtom } from "jotai";
-// import {
-//   runSimulationAtom,
-//   simulationEventsAtom,
-//   simulationSnapshotCountAtom,
-//   simulationLogsAtom,
-//   simulationOrderAtom,
-//   type SimulationCardId,
-// } from "@/atoms/debug";
+import { useAtom } from "jotai";
+import {
+  runSimulationAtom,
+  simulationEventsAtom,
+  simulationSnapshotCountAtom,
+  simulationLogsAtom,
+  simulationOrderAtom,
+  type SimulationCardId,
+} from "@/atoms/debug";
 import { useSerializedError } from "@/hooks/use-serialized-error";
 import {
   DraggableDashboard,
@@ -23,36 +23,21 @@ import {
   EventsCard,
 } from "./cards";
 
-type SimulationCardId = "controls" | "result" | "error" | "logs" | "events";
-
 export function SimulationContent() {
   const [isRunning, setIsRunning] = useState(false);
   const { error, setSerializedError, clearError } = useSerializedError();
-  // const [events] = useAtom(simulationEventsAtom);
-  // const [snapshotCount] = useAtom(simulationSnapshotCountAtom);
-  // const [logs] = useAtom(simulationLogsAtom);
-  // const [order, setOrder] = useAtom(simulationOrderAtom);
-  // const [, runSimulation] = useAtom(runSimulationAtom);
-
-  const events: any[] = [];
-  const snapshotCount = 0;
-  const logs: string[] = [];
-  const order: SimulationCardId[] = [
-    "controls",
-    "result",
-    "error",
-    "logs",
-    "events",
-  ];
-  const setOrder = () => {};
+  const [events] = useAtom(simulationEventsAtom);
+  const [snapshotCount] = useAtom(simulationSnapshotCountAtom);
+  const [logs] = useAtom(simulationLogsAtom);
+  const [order, setOrder] = useAtom(simulationOrderAtom);
+  const [, runSimulation] = useAtom(runSimulationAtom);
 
   const handleRunSimulation = async () => {
     setIsRunning(true);
     clearError();
 
     try {
-      // await runSimulation();
-      console.log("Simulation temporarily disabled");
+      await runSimulation();
     } catch (err) {
       setSerializedError(err);
       console.error("Simulation error:", err);

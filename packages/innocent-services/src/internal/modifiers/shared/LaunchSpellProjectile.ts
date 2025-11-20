@@ -11,7 +11,7 @@ import * as Log from "@/Log";
 import * as Scheduler from "@/Scheduler";
 import * as StateServices from "@/State";
 
-export const LaunchSpellProjectile: Entities.SpellModifier = {
+export const LaunchSpellProjectile: Entities.Types.SpellModifier = {
   name: "launch-spell-projectile",
 
   onCast: (spell) =>
