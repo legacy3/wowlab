@@ -1,10 +1,10 @@
-import { createAppLayer } from "@wowlab/runtime";
-import * as Metadata from "@wowlab/services/Metadata";
-import * as Context from "@wowlab/rotation/Context";
-import * as Unit from "@wowlab/services/Unit";
 import * as Entities from "@wowlab/core/Entities";
 import { Branded } from "@wowlab/core/Schemas";
 import * as Schemas from "@wowlab/core/Schemas";
+import * as Context from "@wowlab/rotation/Context";
+import { createAppLayer } from "@wowlab/runtime";
+import * as Metadata from "@wowlab/services/Metadata";
+import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Map, Record } from "immutable";
@@ -67,8 +67,8 @@ const testRotation = Effect.gen(function* () {
 });
 
 const metadataLayer = Metadata.InMemoryMetadata({
-  spells: mockSpells,
   items: [],
+  spells: mockSpells,
 });
 
 // Combine runtime + rotation layers

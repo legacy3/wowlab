@@ -48,11 +48,6 @@ export class SimulationService extends Effect.Service<SimulationService>()(
               if (nextEvent.execute) {
                 yield* nextEvent.execute;
               }
-
-              // Publish snapshot
-              const currentState = yield* state.getState;
-              const subscribers = yield* Ref.get(snapshotStreamRef);
-              subscribers.forEach((fn) => fn(currentState));
             }
 
             const finalState = yield* state.getState;
