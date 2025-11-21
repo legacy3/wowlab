@@ -37,6 +37,14 @@ export const SPELL_TABLES = {
     file: "SpellCategory.csv",
     schema: Dbc.SpellCategoryRowSchema,
   },
+  spellPower: {
+    file: "SpellPower.csv",
+    schema: Dbc.SpellPowerRowSchema,
+  },
+  spellClassOptions: {
+    file: "SpellClassOptions.csv",
+    schema: Dbc.SpellClassOptionsRowSchema,
+  },
 } as const;
 
 export const ITEM_TABLES = {

@@ -9,12 +9,15 @@ import type { DbcCache } from "../DbcCache.js";
 import {
   extractCastTime,
   extractCharges,
+  extractClassOptions,
   extractCooldown,
+  extractDescription,
   extractDuration,
   extractEmpower,
   extractInterrupts,
   extractManaCost,
   extractName,
+  extractPower,
   extractRadius,
   extractRange,
   extractScaling,
@@ -119,6 +122,9 @@ export const transformSpell = (
       .filter((t) => t !== 0);
     const manaCost = extractManaCost(effects);
     const name = extractName(spellId, cache);
+    const descriptions = extractDescription(spellId, cache);
+    const power = extractPower(spellId, cache);
+    const classOptions = extractClassOptions(spellId, cache);
 
     // Icon relies on FileData (missing)
     const iconName = "inv_misc_questionmark";
@@ -129,24 +135,31 @@ export const transformSpell = (
       iconName,
       id: Branded.SpellID(spellId),
       name,
+      description: descriptions.description,
+      auraDescription: descriptions.auraDescription,
 
       // Timing
       castTime: Option.isSome(castTime) ? castTime.value.base : 0,
-      cooldown: Option.isSome(cooldown) ? cooldown.value.recovery : 0,
-      gcd: 1500, // Default GCD
+      recoveryTime: Option.isSome(cooldown) ? cooldown.value.recovery : 0,
+      startRecoveryTime: 1500, // Default GCD
 
       // Resources
       manaCost,
+      powerType: Option.isSome(power) ? power.value.powerType : -1,
+      powerCost: Option.isSome(power) ? power.value.powerCost : 0,
+      powerCostPct: Option.isSome(power) ? power.value.powerCostPct : 0,
 
       // Charges
       maxCharges: Option.isSome(charges) ? charges.value.maxCharges : 0,
-      rechargeTime: Option.isSome(charges) ? charges.value.rechargeTime : 0,
+      chargeRecoveryTime: Option.isSome(charges)
+        ? charges.value.rechargeTime
+        : 0,
 
       // Range
-      rangeAllyMax: Option.isSome(range) ? range.value.ally.max : 0,
-      rangeAllyMin: Option.isSome(range) ? range.value.ally.min : 0,
-      rangeEnemyMax: Option.isSome(range) ? range.value.enemy.max : 0,
-      rangeEnemyMin: Option.isSome(range) ? range.value.enemy.min : 0,
+      rangeMax1: Option.isSome(range) ? range.value.ally.max : 0,
+      rangeMin1: Option.isSome(range) ? range.value.ally.min : 0,
+      rangeMax0: Option.isSome(range) ? range.value.enemy.max : 0,
+      rangeMin0: Option.isSome(range) ? range.value.enemy.min : 0,
 
       // Geometry
       coneDegrees: 0, // Option.isSome(cone) ? cone.value.degrees : 0,
@@ -158,8 +171,8 @@ export const transformSpell = (
       schoolMask: Option.isSome(damage) ? damage.value.schoolMask : 0,
 
       // Scaling
-      scalingAttackPower: scaling.attackPower,
-      scalingSpellPower: scaling.spellPower,
+      bonusCoefficientFromAP: scaling.attackPower,
+      effectBonusCoefficient: scaling.spellPower,
 
       // Interrupts
       interruptAura0: 0, // Option.isSome(interrupts) ? interrupts.value.aura[0] : 0,
@@ -176,7 +189,7 @@ export const transformSpell = (
 
       // Duration
       duration: Option.isSome(duration) ? duration.value.duration : 0,
-      durationMax: Option.isSome(duration) ? duration.value.max : 0,
+      maxDuration: Option.isSome(duration) ? duration.value.max : 0,
 
       // Empower
       canEmpower: Option.isSome(empower) ? empower.value.canEmpower : false,
@@ -184,12 +197,27 @@ export const transformSpell = (
 
       // Mechanics
       dispelType: Option.isSome(dispel) ? dispel.value.dispelType : 0,
-      facingFlags: 0, // Option.isSome(facing) ? facing.value.facingFlags : 0,
-      missileSpeed: Option.isSome(missile) ? missile.value.speed : 0,
+      facingCasterFlags: 0, // Option.isSome(facing) ? facing.value.facingFlags : 0,
+      speed: Option.isSome(missile) ? missile.value.speed : 0,
+      spellClassSet: Option.isSome(classOptions)
+        ? classOptions.value.spellClassSet
+        : 0,
+      spellClassMask1: Option.isSome(classOptions)
+        ? classOptions.value.spellClassMask1
+        : 0,
+      spellClassMask2: Option.isSome(classOptions)
+        ? classOptions.value.spellClassMask2
+        : 0,
+      spellClassMask3: Option.isSome(classOptions)
+        ? classOptions.value.spellClassMask3
+        : 0,
+      spellClassMask4: Option.isSome(classOptions)
+        ? classOptions.value.spellClassMask4
+        : 0,
 
       // Arrays
       attributes: Option.getOrElse(attributes, () => []),
-      targeting: targeting.length > 0 ? targeting : [],
-      triggers: triggers.length > 0 ? triggers : [],
+      implicitTarget: targeting.length > 0 ? targeting : [],
+      effectTriggerSpell: triggers.length > 0 ? triggers : [],
     };
   });

@@ -60,7 +60,7 @@ export class Aura
       stacks: boundedTransform(
         this.stacks,
         0,
-        this.info.durationMax,
+        this.info.maxDuration,
         (newStacks, currentTime) =>
           this.with({ stacks: newStacks }, currentTime),
       ),

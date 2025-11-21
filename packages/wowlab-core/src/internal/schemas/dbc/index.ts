@@ -9,6 +9,8 @@ export * from "./SpellRadiusSchema.js";
 export * from "./SpellRangeSchema.js";
 export * from "./SpellCategoriesSchema.js";
 export * from "./SpellCategorySchema.js";
+export * from "./SpellPowerSchema.js";
+export * from "./SpellClassOptionsSchema.js";
 export * from "./ItemSchema.js";
 export * from "./ItemEffectSchema.js";
 export * from "./ItemSparseSchema.js";

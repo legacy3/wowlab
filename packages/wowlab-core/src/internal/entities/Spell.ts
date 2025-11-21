@@ -22,24 +22,29 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   iconName: "inv_misc_questionmark",
   id: Branded.SpellID(-1),
   name: "",
+  description: "",
+  auraDescription: "",
 
   // Timing
   castTime: 0,
-  cooldown: 0,
-  gcd: 1500,
+  recoveryTime: 0,
+  startRecoveryTime: 1500,
 
   // Resources
   manaCost: 0,
+  powerType: -1,
+  powerCost: 0,
+  powerCostPct: 0,
 
   // Charges (flattened)
   maxCharges: 0,
-  rechargeTime: 0,
+  chargeRecoveryTime: 0,
 
   // Range (flattened)
-  rangeAllyMax: 0,
-  rangeAllyMin: 0,
-  rangeEnemyMax: 0,
-  rangeEnemyMin: 0,
+  rangeMax1: 0,
+  rangeMin1: 0,
+  rangeMax0: 0,
+  rangeMin0: 0,
 
   // Geometry (flattened)
   coneDegrees: 0,
@@ -51,8 +56,8 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   schoolMask: 0,
 
   // Scaling (flattened)
-  scalingAttackPower: 0,
-  scalingSpellPower: 0,
+  bonusCoefficientFromAP: 0,
+  effectBonusCoefficient: 0,
 
   // Interrupts (flattened)
   interruptAura0: 0,
@@ -63,7 +68,7 @@ const SpellInfoRecord = Record<SpellInfoProps>({
 
   // Duration (flattened)
   duration: 0,
-  durationMax: 0,
+  maxDuration: 0,
 
   // Empower (flattened)
   canEmpower: false,
@@ -71,13 +76,18 @@ const SpellInfoRecord = Record<SpellInfoProps>({
 
   // Mechanics (flattened)
   dispelType: 0,
-  facingFlags: 0,
-  missileSpeed: 0,
+  facingCasterFlags: 0,
+  speed: 0,
+  spellClassSet: 0,
+  spellClassMask1: 0,
+  spellClassMask2: 0,
+  spellClassMask3: 0,
+  spellClassMask4: 0,
 
   // Arrays
   attributes: [],
-  targeting: [],
-  triggers: [],
+  implicitTarget: [],
+  effectTriggerSpell: [],
 
   // Modifiers
   modifiers: [],

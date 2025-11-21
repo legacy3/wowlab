@@ -7,24 +7,29 @@ export const SpellDataFlatSchema = Schema.Struct({
   iconName: Schema.String,
   id: Branded.SpellIDSchema,
   name: Schema.String,
+  description: Schema.String,
+  auraDescription: Schema.String,
 
   // Timing
   castTime: Schema.Number,
-  cooldown: Schema.Number,
-  gcd: Schema.Number,
+  recoveryTime: Schema.Number,
+  startRecoveryTime: Schema.Number,
 
   // Resources
   manaCost: Schema.Number,
+  powerType: Schema.Number,
+  powerCost: Schema.Number,
+  powerCostPct: Schema.Number,
 
   // Charges (flattened from charges.maxCharges, charges.rechargeTime)
   maxCharges: Schema.Number,
-  rechargeTime: Schema.Number,
+  chargeRecoveryTime: Schema.Number,
 
   // Range (flattened from range.ally.*, range.enemy.*)
-  rangeAllyMax: Schema.Number,
-  rangeAllyMin: Schema.Number,
-  rangeEnemyMax: Schema.Number,
-  rangeEnemyMin: Schema.Number,
+  rangeMax1: Schema.Number,
+  rangeMin1: Schema.Number,
+  rangeMax0: Schema.Number,
+  rangeMin0: Schema.Number,
 
   // Geometry (flattened from cone.degrees)
   coneDegrees: Schema.Number,
@@ -36,8 +41,8 @@ export const SpellDataFlatSchema = Schema.Struct({
   schoolMask: Schema.Number,
 
   // Scaling (flattened from scaling.spellPower, scaling.attackPower)
-  scalingAttackPower: Schema.Number,
-  scalingSpellPower: Schema.Number,
+  bonusCoefficientFromAP: Schema.Number,
+  effectBonusCoefficient: Schema.Number,
 
   // Interrupts (flattened from interrupts.*)
   interruptAura0: Schema.Number,
@@ -48,7 +53,7 @@ export const SpellDataFlatSchema = Schema.Struct({
 
   // Duration (flattened from duration.duration, duration.max)
   duration: Schema.Number,
-  durationMax: Schema.Number,
+  maxDuration: Schema.Number,
 
   // Empower (flattened from empower.*)
   canEmpower: Schema.Boolean,
@@ -56,13 +61,18 @@ export const SpellDataFlatSchema = Schema.Struct({
 
   // Mechanics (flattened from missile.speed, facing.facingFlags, dispel.dispelType)
   dispelType: Schema.Number,
-  facingFlags: Schema.Number,
-  missileSpeed: Schema.Number,
+  facingCasterFlags: Schema.Number,
+  speed: Schema.Number,
+  spellClassSet: Schema.Number,
+  spellClassMask1: Schema.Number,
+  spellClassMask2: Schema.Number,
+  spellClassMask3: Schema.Number,
+  spellClassMask4: Schema.Number,
 
   // Arrays (already flat)
   attributes: Schema.Array(Schema.Number),
-  targeting: Schema.Array(Schema.Number),
-  triggers: Schema.Array(Schema.Number),
+  implicitTarget: Schema.Array(Schema.Number),
+  effectTriggerSpell: Schema.Array(Schema.Number),
 });
 
 export type SpellDataFlat = Schema.Schema.Type<typeof SpellDataFlatSchema>;

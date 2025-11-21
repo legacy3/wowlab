@@ -122,3 +122,39 @@ export const extractName = (spellId: number, cache: DbcCache): string =>
     Option.map((n) => n.Name_lang || ""),
     Option.getOrElse(() => `Spell ${spellId}`),
   );
+
+export const extractDescription = (
+  spellId: number,
+  cache: DbcCache,
+): { description: string; auraDescription: string } =>
+  pipe(
+    Option.fromNullable(cache.spell.get(spellId)),
+    Option.map((n) => ({
+      description: n.Description_lang || "",
+      auraDescription: n.AuraDescription_lang || "",
+    })),
+    Option.getOrElse(() => ({ description: "", auraDescription: "" })),
+  );
+
+export const extractPower = (spellId: number, cache: DbcCache) =>
+  pipe(
+    Option.fromNullable(cache.spellPower.get(spellId)),
+    Option.flatMap(first),
+    Option.map((p) => ({
+      powerType: p.PowerType,
+      powerCost: p.ManaCost,
+      powerCostPct: p.PowerCostPct,
+    })),
+  );
+
+export const extractClassOptions = (spellId: number, cache: DbcCache) =>
+  pipe(
+    Option.fromNullable(cache.spellClassOptions.get(spellId)),
+    Option.map((o) => ({
+      spellClassSet: o.SpellClassSet,
+      spellClassMask1: o.SpellClassMask_0,
+      spellClassMask2: o.SpellClassMask_1,
+      spellClassMask3: o.SpellClassMask_2,
+      spellClassMask4: o.SpellClassMask_3,
+    })),
+  );

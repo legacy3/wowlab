@@ -13,6 +13,8 @@ export interface RawDbcData {
   spellRange: Dbc.SpellRangeRow[];
   spellCategories: Dbc.SpellCategoriesRow[];
   spellCategory: Dbc.SpellCategoryRow[];
+  spellPower: Dbc.SpellPowerRow[];
+  spellClassOptions: Dbc.SpellClassOptionsRow[];
   item: Dbc.ItemRow[];
   itemEffect: Dbc.ItemEffectRow[];
   itemSparse: Dbc.ItemSparseRow[];
@@ -30,6 +32,8 @@ export interface DbcCache {
   spellRange: ImmutableMap<number, Dbc.SpellRangeRow>;
   spellCategories: ImmutableMap<number, Dbc.SpellCategoriesRow>;
   spellCategory: ImmutableMap<number, Dbc.SpellCategoryRow>;
+  spellPower: ImmutableMap<number, Dbc.SpellPowerRow[]>;
+  spellClassOptions: ImmutableMap<number, Dbc.SpellClassOptionsRow>;
   item: ImmutableMap<number, Dbc.ItemRow>;
   itemEffect: ImmutableMap<number, Dbc.ItemEffectRow>;
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
@@ -56,6 +60,10 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   ),
   spellCategory: ImmutableMap(
     rawData.spellCategory.map((row) => [row.ID, row]),
+  ),
+  spellPower: groupBySpellId(rawData.spellPower),
+  spellClassOptions: ImmutableMap(
+    rawData.spellClassOptions.map((row) => [row.SpellID, row]),
   ),
   item: ImmutableMap(rawData.item.map((row) => [row.ID, row])),
   itemEffect: ImmutableMap(rawData.itemEffect.map((row) => [row.ID, row])),
