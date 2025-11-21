@@ -51,6 +51,16 @@ packages/
         simulation/
           index.ts
           SimulationService.ts
+
+### Service contracts (specify in code comments or docstrings)
+
+- StateService: exposes `getState`, `setState`, `updateState`; state type must be `Entities.GameState` only.
+- LogService: minimum methods `info`, `warn`, `error`; all accept `message: string` plus optional context record.
+- RNGService: seeded constructor + `nextInt`, `nextFloat` with deterministic guarantees.
+- MetadataService: `loadSpell`, `loadItem` must fail with `Errors.SpellInfoNotFound` / `Errors.ItemInfoNotFound`.
+- EventSchedulerService: enqueue with priority by timestamp ascending; dequeue returns earliest first; supports cancellation.
+- SpellInfoService: resolves flattened spell data plus derived fields (e.g., gcd, travel time) without side effects.
+- UnitService / SpellService / SimulationService: declare dependencies explicitly via `Effect.Service` config (no hidden globals).
 ```
 
 ### Files to Create
@@ -185,7 +195,7 @@ const logService = yield* Log.LogService
 
 Run:
 ```bash
-pnpm --filter @wowlab/services build
+cd packages/wowlab-services && pnpm build
 ```
 
 ## Verification Criteria
@@ -195,6 +205,7 @@ pnpm --filter @wowlab/services build
 - ✅ Types reference `@wowlab/core` correctly
 - ✅ `internal/*` not exposed in exports
 - ✅ No `@ts-ignore` comments
+- ✅ Each interface documents the contract above (methods + expected errors/ordering)
 
 ## Next Phase
 

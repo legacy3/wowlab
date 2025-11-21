@@ -208,7 +208,7 @@ main();
 Run:
 ```bash
 cd apps/standalone
-pnpm dev src/new/phase-06-test.ts
+pnpm tsx src/new/phase-06-test.ts
 ```
 
 ## Verification Criteria
@@ -218,6 +218,18 @@ pnpm dev src/new/phase-06-test.ts
 - ✅ Snapshot subscription works
 - ✅ NO @ts-ignore needed (dependencies resolve correctly)
 - ✅ All services compose via Layer.mergeAll
+- ✅ Snapshot schema matches contract below and is emitted in non-decreasing `timestamp`
+
+## Snapshot schema (standardize now)
+
+Each snapshot must include at least:
+- `timestamp: number` (ms since sim start)
+- `units: Immutable.Map<UnitID, Entities.Unit>`
+- `eventsProcessed: Events.Event[]` (events executed at this tick)
+- `pendingEvents: number` (queue length after processing)
+- `rngState?: unknown` (optional for reproducibility)
+
+Ordering rules: snapshots emit after every processed event batch; timestamps must never go backwards; scheduler must dequeue strictly by earliest time.
 
 ## Next Phase
 

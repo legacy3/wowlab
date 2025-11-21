@@ -128,6 +128,13 @@ export * from "./Errors.js";
 - `@packages/innocent-domain/src/Events.ts` → `internal/events/Events.ts`
 - `@packages/innocent-domain/src/Errors.ts` → `internal/errors/Errors.ts`
 
+## Parity audit (run right after copy)
+
+- Enums: verify every `SpellSchool`, `Resource`, and `Class` value from `@packages/innocent-schemas` exists 1:1.
+- Branded IDs: confirm `UnitID`, `SpellID`, and `ItemID` retain the same brand names and primitive types.
+- Entity shapes: ensure `GameState`, `Unit`, `Spell`, and `Aura` have identical required fields and default values to the source files.
+- Errors/events: check `Errors.ts` and `Events.ts` still export all tags with the same discriminants.
+
 ## Import Pattern
 
 **Old:**
@@ -149,7 +156,7 @@ import { Schemas, Entities } from "@wowlab/core"
 
 Run:
 ```bash
-pnpm --filter @wowlab/core build
+cd packages/wowlab-core && pnpm build
 ```
 
 Should output clean build with no errors.
@@ -161,6 +168,7 @@ Should output clean build with no errors.
 - ✅ Can import namespaces: `import * as Schemas from "@wowlab/core/Schemas"`
 - ✅ Can import from main: `import { Schemas } from "@wowlab/core"`
 - ✅ No circular dependencies
+- ✅ Parity audit passes (enums, branded IDs, entities, errors/events)
 
 ## Next Phase
 

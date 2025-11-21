@@ -282,6 +282,17 @@ const main = async () => {
 main();
 ```
 
+### Rotation API surface (lock this contract in code comments)
+
+- Actions namespace:
+  - `spell.cast(spellId: Branded.SpellID)` → schedules cast respecting gcd/cooldown, fails with `Errors.SpellNotFound` or `Errors.SpellOnCooldown`.
+  - `unit.target(unitId: Branded.UnitID)` → sets current target.
+  - `control.wait(ms: number)` → advances time without actions.
+- Context:
+  - `RotationContext` exposes `state`, `actions`, `events`, plus helpers for current target and global cooldown.
+- Errors: use tagged errors from `@wowlab/core/Errors`; no generic Error.
+- Determinism: actions must be pure Effect; no Date.now or Math.random without RNG service.
+
 **Update `apps/standalone/package.json`:**
 
 ```json
@@ -299,7 +310,7 @@ Run:
 ```bash
 cd apps/standalone
 pnpm install
-pnpm dev src/new/phase-08-test.ts
+pnpm tsx src/new/phase-08-test.ts
 ```
 
 ## Verification Criteria
@@ -308,6 +319,8 @@ pnpm dev src/new/phase-08-test.ts
 - ✅ RotationContext composes all actions
 - ✅ NO @ts-ignore needed
 - ✅ Rotation layer merges cleanly with runtime layer
+- ✅ Actions enforce gcd/cooldown rules and emit domain errors on violations
+- ✅ RotationContext exposes a stable shape: `{ state, actions, events, target }`
 
 ## Next Phase
 

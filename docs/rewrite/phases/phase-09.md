@@ -38,17 +38,43 @@ const mockSpells: Schemas.Spell.SpellDataFlat[] = [
     school: Schemas.Enums.SpellSchool.Fire,
     castTime: 0,
     cooldown: 12000,
-    // ... other required fields
-  } as any,
+    gcd: 1200,
+    charges: 0,
+    chargeCooldown: 0,
+    travelTime: 0,
+    resourceCost: {
+      type: Schemas.Enums.Resource.Mana,
+      amount: 500,
+    },
+    isInstant: true,
+    canCrit: true,
+    baseDamage: 800,
+    coefficient: 0.429,
+    schoolMask: 0,
+  },
   {
     id: 2948,
     name: "Scorch",
     school: Schemas.Enums.SpellSchool.Fire,
     castTime: 1500,
     cooldown: 0,
-    // ... other required fields
-  } as any,
+    gcd: 1500,
+    charges: 0,
+    chargeCooldown: 0,
+    travelTime: 0,
+    resourceCost: {
+      type: Schemas.Enums.Resource.Mana,
+      amount: 300,
+    },
+    isInstant: false,
+    canCrit: true,
+    baseDamage: 500,
+    coefficient: 0.428,
+    schoolMask: 0,
+  },
 ];
+
+// Minimum fixture completeness: populate every required schema field (ids, school, castTime, gcd, cooldown, resourceCost, flags, base damage). Avoid `as any` casts so type safety matches production metadata.
 
 // ============================================================
 // Setup
@@ -263,6 +289,9 @@ pnpm dev:old
 - ✅ **ZERO @ts-ignore in entire codebase**
 - ✅ All services compose cleanly
 - ✅ Metadata is pluggable (using InMemoryMetadata)
+- ✅ Snapshot payload matches Phase 6 schema; timestamps never decrease; queue drains to expected length
+- ✅ Final time equals requested duration; rotation exits cleanly without hanging events
+- ✅ Error paths return `Exit` with domain errors (no generic Error)
 
 ## Success Metrics
 

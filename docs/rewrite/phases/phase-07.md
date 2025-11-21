@@ -224,7 +224,7 @@ Run:
 ```bash
 cd apps/standalone
 pnpm install
-pnpm dev src/new/phase-07-test.ts
+pnpm tsx src/new/phase-07-test.ts
 ```
 
 ## Verification Criteria
@@ -235,6 +235,7 @@ pnpm dev src/new/phase-07-test.ts
 - ✅ Metadata is pluggable
 - ✅ TypeScript compiles without errors
 - ✅ Clean, readable code
+- ✅ `createAppLayer()` returns a single Layer that can be merged with overrides (e.g., swap Metadata layer) without type errors
 
 ## Next Phase
 

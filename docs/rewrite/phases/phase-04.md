@@ -206,7 +206,7 @@ main();
 Run:
 ```bash
 cd apps/standalone
-pnpm dev src/new/phase-04-test.ts
+pnpm tsx src/new/phase-04-test.ts
 ```
 
 ## Verification Criteria
@@ -216,6 +216,15 @@ pnpm dev src/new/phase-04-test.ts
 - ✅ Error handling works (SpellInfoNotFound)
 - ✅ Layer composition is clean (no @ts-ignore)
 - ✅ Can swap metadata implementations easily
+- ✅ Invariants enforced (see below)
+
+## Data invariants to honor (document in code comments)
+
+- `castTime === 0` implies `gcd <= 1500` and `isInstant = true` where applicable.
+- `cooldown >= 0`; spells with `charges` must include `chargeCooldown`.
+- Travel time fields are optional but, if present, must be non-negative.
+- Items/spells must declare `school`, `resourceCost` brand consistent with schemas.
+- MetadataService must only fail with domain errors from `@wowlab/core/Errors`.
 
 ## Next Phase
 

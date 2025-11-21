@@ -80,7 +80,7 @@ Follow phases sequentially. Each phase is independently testable in `apps/standa
 Every phase ends with:
 ```bash
 cd apps/standalone
-pnpm dev src/new/phase-XX-test.ts
+pnpm tsx src/new/phase-XX-test.ts
 ```
 
 If it works, move to next phase. If not, fix before proceeding.

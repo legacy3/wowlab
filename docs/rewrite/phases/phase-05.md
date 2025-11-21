@@ -296,7 +296,7 @@ main();
 Run:
 ```bash
 cd apps/standalone
-pnpm dev src/new/phase-05-test.ts
+pnpm tsx src/new/phase-05-test.ts
 ```
 
 ## Verification Criteria
@@ -306,6 +306,15 @@ pnpm dev src/new/phase-05-test.ts
 - ✅ Accessors work correctly
 - ✅ Unit CRUD operations work
 - ✅ Services compose cleanly with Layer.mergeAll
+- ✅ UnitAccessor returns `UnitNotFound` on missing IDs; SpellAccessor returns `SpellNotFound`
+- ✅ Health update helpers keep `health.value` within min/max bounds
+- ✅ Parity audit: Unit/Spell service methods mirror existing @packages/innocent-* behaviors (method names + error types)
+
+## Parity audit (business layer)
+
+- Match method surface area of `@packages/innocent-services` Unit/Spell modules (create/add/remove/update/health/damage/heal/spendResource).
+- Events/errors emitted must keep the same tag names so downstream listeners remain compatible.
+- Accessors must be read-only and side-effect free; all mutations go through services.
 
 ## Next Phase
 

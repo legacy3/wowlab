@@ -171,6 +171,12 @@ Copy and adapt from:
 - `@packages/innocent-services/src/internal/log/LogService.ts`
 - `@packages/innocent-services/src/internal/rng/RNGService.ts`
 
+## Wiring notes
+
+- `StateServiceLive` must use `Entities.GameState.createInitial()` for defaults (no duplicated defaults elsewhere).
+- `ConsoleLogger` stays dependency-free; `NoOpLogger` is 100% silent for deterministic tests.
+- Both RNG implementations share the same contract from Phase 2 (`next`, `nextInt`, seedable constructor) to keep swapping trivial.
+
 ## How to Test in Standalone
 
 **Create:** `apps/standalone/src/new/phase-03-test.ts`
@@ -239,7 +245,7 @@ Run:
 ```bash
 cd apps/standalone
 pnpm install
-pnpm dev src/new/phase-03-test.ts
+pnpm tsx src/new/phase-03-test.ts
 ```
 
 ## Verification Criteria
@@ -250,6 +256,8 @@ pnpm dev src/new/phase-03-test.ts
 - ✅ No `@ts-ignore` needed
 - ✅ Services compose cleanly with `Layer.mergeAll`
 - ✅ Can import from `@wowlab/services/State` etc.
+- ✅ StateService `setState`/`getState` round-trips the same reference
+- ✅ RNG produces deterministic sequence when seeded identically
 
 ## Next Phase
 
