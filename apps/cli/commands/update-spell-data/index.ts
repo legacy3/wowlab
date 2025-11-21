@@ -37,6 +37,7 @@ export const updateSpellDataCommand = createDataUpdateCommand({
         "upsert spell_data batch",
         async () => await supabase.from("spell_data").upsert(batch),
       );
+      
       return batch.length;
     }),
 });

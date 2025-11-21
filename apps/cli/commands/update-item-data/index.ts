@@ -45,6 +45,7 @@ export const updateItemDataCommand = createDataUpdateCommand({
         "upsert item_data batch",
         async () => await supabase.from("item_data").upsert(batch),
       );
+      
       return batch.length;
     }),
 });
