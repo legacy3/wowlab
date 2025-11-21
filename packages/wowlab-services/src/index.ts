@@ -6,6 +6,8 @@ export * as Profile from "./Profile.js";
 export * as Rng from "./Rng.js";
 export * as Scheduler from "./Scheduler.js";
 export * as Simulation from "./Simulation.js";
+export * as Lifecycle from "./Lifecycle.js";
 export * as Spell from "./Spell.js";
+
 export * as State from "./State.js";
 export * as Unit from "./Unit.js";

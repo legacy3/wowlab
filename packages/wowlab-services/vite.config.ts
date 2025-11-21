@@ -5,7 +5,9 @@ export default createPackageConfig({
     Data: "src/Data.ts",
     Accessors: "src/Accessors.ts",
     index: "src/index.ts",
+    Lifecycle: "src/Lifecycle.ts",
     Log: "src/Log.ts",
+
     Metadata: "src/Metadata.ts",
     Profile: "src/Profile.ts",
     Rng: "src/Rng.ts",
