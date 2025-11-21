@@ -1,15 +1,27 @@
+import * as Layers from "@packages/innocent-bootstrap/Layers";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Logger from "effect/Logger";
+import * as LogLevel from "effect/LogLevel";
 
-import { Step4Layer, testHigherLevelServicesLayer } from "./layers-local.js";
+import { StandaloneMetadataServiceLayer } from "./metadata.js";
+import { runSimulation } from "./simulation.js";
 
 const main = async () => {
   console.log("=".repeat(60));
-  console.log("WowLab Standalone Layer Test - STEP 4: Higher Level Services");
+  console.log("WowLab Standalone Simulation");
   console.log("=".repeat(60));
 
-  const program = testHigherLevelServicesLayer.pipe(Effect.provide(Step4Layer));
+  // Create the application layer with standalone metadata
+  const appLayer = Layers.AppLayer.create(StandaloneMetadataServiceLayer);
+
+  // Configure logging
+  const program = runSimulation.pipe(
+    Effect.provide(appLayer),
+    Effect.provide(Logger.pretty),
+    Effect.provide(Logger.minimumLogLevel(LogLevel.Debug)),
+  );
 
   const exit = await Effect.runPromiseExit(program);
 
@@ -17,7 +29,8 @@ const main = async () => {
 
   if (Exit.isSuccess(exit)) {
     console.log("✅ SUCCESS");
-    console.log(JSON.stringify(exit.value, null, 2));
+    console.log(`Snapshots: ${exit.value.snapshots}`);
+    console.log(`Events: ${exit.value.events.length}`);
     process.exit(0);
   } else {
     console.log("❌ FAILURE");
