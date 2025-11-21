@@ -43,25 +43,12 @@ export class ItemNotFound extends Data.TaggedError("ItemNotFound")<{
   readonly message: string;
 }> {}
 
-export class UnitNotFound extends Data.TaggedError("UnitNotFound")<{
-  readonly unitId: Branded.UnitID;
-}> {}
-
-export class SpellNotFound extends Data.TaggedError("SpellNotFound")<{
-  readonly unitId: Branded.UnitID;
-  readonly spellId: number;
-}> {}
-
 export class Modifier extends Data.TaggedError("Modifier")<{
   readonly modifierName: string;
   readonly spell: Entities.Spell.Spell;
   readonly reason: string;
   readonly phase: "beforeCast" | "onCast" | "onHit" | "onDamage";
 }> {}
-
-// ============================================================================
-// Data Errors
-// ============================================================================
 
 export class ModifierTimeout extends Data.TaggedError("ModifierTimeout")<{
   readonly modifierName: string;
@@ -72,6 +59,10 @@ export class ModifierTimeout extends Data.TaggedError("ModifierTimeout")<{
 export class NoChargesAvailable extends Data.TaggedError("NoChargesAvailable")<{
   readonly spell: Entities.Spell.Spell;
 }> {}
+
+// ============================================================================
+// Data Errors
+// ============================================================================
 
 export class PlayerIsCasting extends Data.TaggedError("PlayerIsCasting")<{
   readonly spell: Entities.Spell.Spell;
@@ -89,11 +80,20 @@ export class ProjectileNotFound extends Data.TaggedError("ProjectileNotFound")<{
   readonly projectileId: Branded.ProjectileID;
 }> {}
 
+export class SpellInfoNotFound extends Data.TaggedError("SpellInfoNotFound")<{
+  readonly spellId: number;
+  readonly message: string;
+}> {}
+
+export class SpellNotFound extends Data.TaggedError("SpellNotFound")<{
+  readonly unitId: Branded.UnitID;
+  readonly spellId: number;
+}> {}
+
 // ============================================================================
 // Modifier Errors
 // ============================================================================
 
-export class SpellInfoNotFound extends Data.TaggedError("SpellInfoNotFound")<{
-  readonly spellId: number;
-  readonly message: string;
+export class UnitNotFound extends Data.TaggedError("UnitNotFound")<{
+  readonly unitId: Branded.UnitID;
 }> {}

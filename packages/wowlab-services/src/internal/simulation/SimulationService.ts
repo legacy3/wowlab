@@ -3,17 +3,14 @@ import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 
-import { StateService } from "../state/StateService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
+import { StateService } from "../state/StateService.js";
 import { UnitService } from "../unit/UnitService.js";
 
 export class SimulationService extends Effect.Service<SimulationService>()(
   "SimulationService",
   {
-    dependencies: [
-      EventSchedulerService.Default,
-      UnitService.Default,
-    ],
+    dependencies: [EventSchedulerService.Default, UnitService.Default],
     effect: Effect.gen(function* () {
       const state = yield* StateService;
       const scheduler = yield* EventSchedulerService;
@@ -25,9 +22,9 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       return {
         run: (durationMs: number) =>
           Effect.gen(function* () {
-            const startTime = yield* state
-              .getState
-              .pipe(Effect.map((s) => s.currentTime));
+            const startTime = yield* state.getState.pipe(
+              Effect.map((s) => s.currentTime),
+            );
             const endTime = startTime + durationMs;
 
             // Main simulation loop
@@ -49,7 +46,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
               // Process event based on type
               // TODO: Dispatch to appropriate handlers
               if (nextEvent.execute) {
-                  yield* nextEvent.execute;
+                yield* nextEvent.execute;
               }
 
               // Publish snapshot
@@ -60,8 +57,8 @@ export class SimulationService extends Effect.Service<SimulationService>()(
 
             const finalState = yield* state.getState;
             return {
-              finalTime: finalState.currentTime,
               eventsProcessed: 0, // TODO: track
+              finalTime: finalState.currentTime,
             };
           }),
 
@@ -71,4 +68,3 @@ export class SimulationService extends Effect.Service<SimulationService>()(
     }),
   },
 ) {}
-

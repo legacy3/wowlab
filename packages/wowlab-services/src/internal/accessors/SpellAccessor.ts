@@ -27,7 +27,7 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
 
             return spell
               ? Effect.succeed(spell)
-              : Effect.fail(new Errors.SpellNotFound({ unitId, spellId }));
+              : Effect.fail(new Errors.SpellNotFound({ spellId, unitId }));
           }).pipe(Effect.flatten),
       };
     }),

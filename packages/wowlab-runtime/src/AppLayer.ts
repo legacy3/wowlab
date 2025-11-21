@@ -32,7 +32,6 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     rng = Rng.RNGServiceDefault,
   } = options;
 
-
   const BaseLayer = Layer.mergeAll(
     State.StateServiceLive,
     logger,
@@ -49,8 +48,5 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     Simulation.SimulationService.Default,
   );
 
-  return ServicesLayer.pipe(
-    Layer.provide(BaseLayer),
-    Layer.merge(BaseLayer),
-  );
+  return ServicesLayer.pipe(Layer.provide(BaseLayer), Layer.merge(BaseLayer));
 };

@@ -1,4 +1,4 @@
-import * as Layers from "@packages/innocent-bootstrap/Layers";
+import * as Runtime from "@wowlab/runtime";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -14,7 +14,9 @@ const main = async () => {
   console.log("=".repeat(60));
 
   // Create the application layer with standalone metadata
-  const appLayer = Layers.AppLayer.create(StandaloneMetadataServiceLayer);
+  const appLayer = Runtime.createAppLayer({
+    metadata: StandaloneMetadataServiceLayer,
+  });
 
   // Configure logging
   const program = runSimulation.pipe(

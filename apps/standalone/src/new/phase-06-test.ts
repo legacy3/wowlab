@@ -50,7 +50,6 @@ const appLayer = Layer.mergeAll(
   Simulation.SimulationService.Default,
 ).pipe(Layer.provide(State.StateServiceLive));
 
-
 const main = async () => {
   const result = await Effect.runPromise(
     testSimulation.pipe(Effect.provide(appLayer)),
@@ -59,4 +58,3 @@ const main = async () => {
 };
 
 main();
-

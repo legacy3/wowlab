@@ -1,18 +1,18 @@
-import * as Entities from "@packages/innocent-domain/Entities";
-import * as Branded from "@packages/innocent-schemas/Branded";
+import * as Entities from "@wowlab/core/Entities";
+import * as Schemas from "@wowlab/core/Schemas";
 import { Map } from "immutable";
 
-export const createPlayerUnit = (): Entities.Unit => ({
-  auras: { all: Map<Branded.SpellID, Entities.Aura>(), meta: {} },
+export const createPlayerUnit = (): Entities.Unit.Unit => ({
+  auras: { all: Map<Schemas.Branded.SpellID, Entities.Aura.Aura>(), meta: {} },
   castingSpellId: null,
   castRemaining: 0,
-  castTarget: Branded.UnitID("enemy"),
-  health: Entities.Power.create({ current: 25000, max: 25000 }),
-  id: Branded.UnitID("player"),
+  castTarget: Schemas.Branded.UnitID("enemy"),
+  health: Entities.Power.Power.create({ current: 25000, max: 25000 }),
+  id: Schemas.Branded.UnitID("player"),
   isCasting: false,
   isPlayer: true,
   name: "Player",
-  paperDoll: Entities.PaperDoll.create({
+  paperDoll: Entities.PaperDoll.PaperDoll.create({
     armor: 0,
     avoidance: 0,
     class: "Mage",
@@ -25,48 +25,48 @@ export const createPlayerUnit = (): Entities.Unit => ({
     versatilityRating: 0,
   }),
   position: { x: 0, y: 0, z: 0 },
-  power: Map<Entities.Types.PowerKey, Entities.Power>([
-    ["mana", Entities.Power.create({ current: 15000, max: 15000 })],
-    ["rage", Entities.Power.create({ current: 0, max: 100 })],
-    ["focus", Entities.Power.create({ current: 100, max: 100 })],
-    ["energy", Entities.Power.create({ current: 100, max: 100 })],
-    ["comboPoints", Entities.Power.create({ current: 0, max: 5 })],
-    ["runes", Entities.Power.create({ current: 6, max: 6 })],
-    ["runicPower", Entities.Power.create({ current: 0, max: 100 })],
-    ["soulShards", Entities.Power.create({ current: 3, max: 5 })],
-    ["lunarPower", Entities.Power.create({ current: 0, max: 100 })],
-    ["holyPower", Entities.Power.create({ current: 0, max: 5 })],
-    ["alternativePower", Entities.Power.create({ current: 0, max: 100 })],
-    ["maelstrom", Entities.Power.create({ current: 0, max: 100 })],
-    ["chi", Entities.Power.create({ current: 0, max: 6 })],
-    ["insanity", Entities.Power.create({ current: 0, max: 100 })],
-    ["burningEmbers", Entities.Power.create({ current: 0, max: 0 })],
-    ["demonicFury", Entities.Power.create({ current: 0, max: 0 })],
-    ["arcaneCharges", Entities.Power.create({ current: 0, max: 4 })],
-    ["fury", Entities.Power.create({ current: 0, max: 100 })],
-    ["pain", Entities.Power.create({ current: 0, max: 100 })],
+  power: Map<Schemas.Enums.PowerType, Entities.Power.Power>([
+    ["mana", Entities.Power.Power.create({ current: 15000, max: 15000 })],
+    ["rage", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["focus", Entities.Power.Power.create({ current: 100, max: 100 })],
+    ["energy", Entities.Power.Power.create({ current: 100, max: 100 })],
+    ["comboPoints", Entities.Power.Power.create({ current: 0, max: 5 })],
+    ["runes", Entities.Power.Power.create({ current: 6, max: 6 })],
+    ["runicPower", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["soulShards", Entities.Power.Power.create({ current: 3, max: 5 })],
+    ["lunarPower", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["holyPower", Entities.Power.Power.create({ current: 0, max: 5 })],
+    ["alternativePower", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["maelstrom", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["chi", Entities.Power.Power.create({ current: 0, max: 6 })],
+    ["insanity", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["burningEmbers", Entities.Power.Power.create({ current: 0, max: 0 })],
+    ["demonicFury", Entities.Power.Power.create({ current: 0, max: 0 })],
+    ["arcaneCharges", Entities.Power.Power.create({ current: 0, max: 4 })],
+    ["fury", Entities.Power.Power.create({ current: 0, max: 100 })],
+    ["pain", Entities.Power.Power.create({ current: 0, max: 100 })],
   ]),
   profiles: ["player-base", "class-mage", "spec-mage-fire"],
   spells: {
-    all: Map<Branded.SpellID, Entities.Spell>(),
-    meta: { cooldownCategories: Map<number, number>() },
+    all: Map(),
+    meta: { cooldownCategories: Map() },
   },
 });
 
-export const createEnemyUnit = (): Entities.Unit => ({
-  auras: { all: Map<Branded.SpellID, Entities.Aura>(), meta: {} },
+export const createEnemyUnit = (): Entities.Unit.Unit => ({
+  auras: { all: Map<Schemas.Branded.SpellID, Entities.Aura.Aura>(), meta: {} },
   castingSpellId: null,
   castRemaining: 0,
   castTarget: null,
-  health: Entities.Power.create({ current: 1000000, max: 1000000 }),
-  id: Branded.UnitID("enemy"),
+  health: Entities.Power.Power.create({ current: 100000, max: 100000 }),
+  id: Schemas.Branded.UnitID("enemy"),
   isCasting: false,
   isPlayer: false,
-  name: "Training Dummy",
-  paperDoll: Entities.PaperDoll.create({
+  name: "Target Dummy",
+  paperDoll: Entities.PaperDoll.PaperDoll.create({
     armor: 0,
     avoidance: 0,
-    class: "Boss",
+    class: "Warrior",
     critRating: 0,
     hasteRating: 0,
     level: 83,
@@ -76,10 +76,10 @@ export const createEnemyUnit = (): Entities.Unit => ({
     versatilityRating: 0,
   }),
   position: { x: 10, y: 0, z: 0 },
-  power: Map<Entities.Types.PowerKey, Entities.Power>(),
-  profiles: [],
+  power: Map(),
+  profiles: ["npc-base"],
   spells: {
-    all: Map<Branded.SpellID, Entities.Spell>(),
-    meta: { cooldownCategories: Map<number, number>() },
+    all: Map(),
+    meta: { cooldownCategories: Map() },
   },
 });

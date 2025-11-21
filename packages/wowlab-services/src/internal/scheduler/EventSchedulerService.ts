@@ -12,11 +12,14 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
       );
 
       return {
-        schedule: (event: Events.SimulationEvent) =>
-          Ref.update(queueRef, (queue) => {
-            queue.push(event);
-            return queue;
-          }),
+        clear: () =>
+          Ref.set(
+            queueRef,
+            new TinyQueue<Events.SimulationEvent>(
+              [],
+              (a, b) => a.time - b.time,
+            ),
+          ),
 
         dequeue: () =>
           Ref.modify(queueRef, (queue) => {
@@ -26,14 +29,11 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
 
         peek: () => Ref.get(queueRef).pipe(Effect.map((queue) => queue.peek())),
 
-        clear: () =>
-          Ref.set(
-            queueRef,
-            new TinyQueue<Events.SimulationEvent>(
-              [],
-              (a, b) => a.time - b.time,
-            ),
-          ),
+        schedule: (event: Events.SimulationEvent) =>
+          Ref.update(queueRef, (queue) => {
+            queue.push(event);
+            return queue;
+          }),
       };
     }),
   },

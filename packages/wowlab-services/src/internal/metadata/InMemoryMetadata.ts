@@ -40,8 +40,8 @@ export const InMemoryMetadata = (config: InMemoryMetadataConfig) => {
             )
           : Effect.fail(
               new Errors.SpellInfoNotFound({
-                spellId,
                 message: "Spell not found in memory",
+                spellId,
               }),
             );
       },

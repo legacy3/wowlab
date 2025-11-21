@@ -2,8 +2,8 @@ import * as Entities from "@wowlab/core/Entities";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
-import { StateService } from "../state/StateService.js";
 import { UnitAccessor } from "../accessors/UnitAccessor.js";
+import { StateService } from "../state/StateService.js";
 
 export class UnitService extends Effect.Service<UnitService>()("UnitService", {
   dependencies: [UnitAccessor.Default],

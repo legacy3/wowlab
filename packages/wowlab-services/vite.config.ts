@@ -2,8 +2,8 @@ import { createPackageConfig } from "../vite.config.shared";
 
 export default createPackageConfig({
   entries: {
-    Data: "src/Data.ts",
     Accessors: "src/Accessors.ts",
+    Data: "src/Data.ts",
     index: "src/index.ts",
     Lifecycle: "src/Lifecycle.ts",
     Log: "src/Log.ts",
