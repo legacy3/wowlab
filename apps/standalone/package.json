@@ -14,6 +14,8 @@
     "ncu": "ncu -u"
   },
   "dependencies": {
+    "@effect/cli": "^0.72.1",
+    "@effect/platform-node": "^0.100.0",
     "@wowlab/core": "workspace:*",
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",

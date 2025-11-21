@@ -1,15 +1,14 @@
-# Standalone Simulation Test App
+# Standalone Simulation CLI
 
-A standalone Node.js application for testing the WowLab simulation library (`@packages/innocent-*`) in isolation.
+A standalone CLI application for running WowLab simulations using the `@wowlab/*` packages.
 
 ## Purpose
 
-This app exists to test and debug the simulation library integration without the complexity of the Next.js portal app. It provides a simple environment to:
+This app provides a lightweight environment to:
 
-- Test layer composition
-- Debug Effect-TS service integration
-- Verify simulation execution
-- Troubleshoot metadata service implementations
+- Develop and test rotations in isolation.
+- Verify simulation mechanics.
+- Debug Effect-TS service integration.
 
 ## Setup
 
@@ -17,55 +16,23 @@ This app exists to test and debug the simulation library integration without the
 # Install dependencies (from repo root)
 pnpm install
 
-# Run in development mode
-cd apps/standalone
-pnpm dev
+# Run the default rotation (Fire Mage)
+pnpm dev run
 
-# Build and run production
-pnpm build
-pnpm start
+# Run a specific rotation
+pnpm dev run fire-mage
 ```
-
-## What It Does
-
-The app runs a simple 10-second Fire Mage simulation with:
-
-- **Player unit**: Level 80 Mage with Fire Blast (108853) and Scorch (2948)
-- **Enemy unit**: Training dummy with 1M HP
-- **Rotation**: Cast Fire Blast → Scorch
-- **Event collection**: Captures all simulation events and state snapshots
 
 ## Architecture
 
-- Uses `@packages/innocent-bootstrap/Layers` for layer composition
-- Creates a minimal metadata service (stubbed for standalone mode)
-- Demonstrates proper Effect service usage and error handling
-- Shows how to subscribe to simulation events and snapshots
+- **CLI**: Built with `@effect/cli`.
+- **Framework**: Uses a modular runner (`src/framework/runner.ts`) to set up the simulation environment.
+- **Rotations**: Rotations are defined in `src/rotations/` and implement the `RotationDefinition` interface.
+- **Packages**: Consumes `@wowlab/core`, `@wowlab/rotation`, `@wowlab/runtime`, and `@wowlab/services`.
 
-## Output
+## Adding a New Rotation
 
-On success, you'll see:
-
-```
-============================================================
-WowLab Standalone Simulation Test
-============================================================
-Starting simulation...
-Loading spells: 108853, 2948
-Loaded 2 spells successfully
-Adding units to state
-Getting rotation context
-Subscribing to simulation events
-Starting simulation run (10s)
-Executing rotation
-Simulation complete. Snapshots: X, Events: Y
-============================================================
-✅ SUCCESS
-{
-  "snapshots": X,
-  "events": Y,
-  "success": true
-}
-```
-
-On failure, you'll see detailed Effect error traces with causes and defects.
+1. Create a new file in `src/rotations/` (e.g., `my-spec.ts`).
+2. Implement the `RotationDefinition` interface.
+3. Register it in `src/rotations/index.ts`.
+4. Run it with `pnpm dev run my-spec`.
