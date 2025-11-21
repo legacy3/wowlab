@@ -14,11 +14,6 @@
     "ncu": "ncu -u"
   },
   "dependencies": {
-    "@packages/innocent-bootstrap": "workspace:*",
-    "@packages/innocent-domain": "workspace:*",
-    "@packages/innocent-rotation": "workspace:*",
-    "@packages/innocent-schemas": "workspace:*",
-    "@packages/innocent-services": "workspace:*",
     "@wowlab/core": "workspace:*",
     "@wowlab/runtime": "workspace:*",
     "@wowlab/services": "workspace:*",

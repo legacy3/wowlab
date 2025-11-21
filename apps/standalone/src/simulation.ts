@@ -102,9 +102,24 @@ export const runSimulation = Effect.gen(function* () {
   console.log("Starting simulation run (10s)");
   const result = yield* simulation.run(10000);
 
-  console.log(
-    `Simulation complete. Snapshots: ${snapshots.length}, Final Time: ${result.finalTime}`,
-  );
+  console.log("=".repeat(60));
+  console.log("SIMULATION REPORT");
+  console.log("=".repeat(60));
+  console.log(`Final Time: ${result.finalTime}ms`);
+  console.log(`Snapshots Collected: ${snapshots.length}`);
+  console.log(`Events Processed: ${result.eventsProcessed}`);
+  console.log("-".repeat(60));
+  console.log("Final State Summary:");
+  
+  const finalState = yield* stateService.getState;
+  finalState.units.forEach((unit) => {
+    console.log(`Unit: ${unit.name} (${unit.id})`);
+    console.log(`  Health: ${unit.health.current}/${unit.health.max}`);
+    console.log(`  Position: (${unit.position.x}, ${unit.position.y})`);
+    console.log(`  Spells: ${unit.spells.all.size}`);
+    console.log(`  Auras: ${unit.auras.all.size}`);
+  });
+  console.log("=".repeat(60));
 
   return {
     events: [], // TODO: Capture events
