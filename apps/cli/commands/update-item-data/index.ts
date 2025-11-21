@@ -1,44 +1,18 @@
-import { Command, Options } from "@effect/cli";
 import * as Effect from "effect/Effect";
 import { createCache } from "@wowlab/services/Data";
-import { loadAllItemTables } from "./loader.js";
 import { transformItem } from "./transform.js";
-import {
-  createSupabaseClient,
-  clearAllItems,
-  insertItemsInBatches,
-} from "./supabase.js";
-import { CliOptions, ItemDataFlat } from "./types.js";
+import { executeSupabaseQuery } from "../shared/supabase.js";
+import { createDataUpdateCommand } from "../shared/data-updater.js";
+import { ITEM_TABLES } from "../shared/dbc-config.js";
+import { ItemDataFlat } from "./types.js";
 
-const showDryRunPreview = (items: ItemDataFlat[]) =>
-  Effect.gen(function* () {
-    yield* Effect.log("DRY RUN - showing first 3 items:");
-    for (const item of items.slice(0, 3)) {
-      yield* Effect.log(JSON.stringify(item, null, 2));
-    }
-  });
-
-const parseItemIds = (input: string, allIds: number[]): number[] => {
-  if (input === "all") return allIds;
-  return input
-    .split(",")
-    .map((s) => parseInt(s.trim()))
-    .filter((n) => !isNaN(n));
-};
-
-const updateItemDataProgram = (options: CliOptions) =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Starting item data import...");
-
-    const supabase = yield* createSupabaseClient();
-
-    if (options.clear && !options.dryRun) {
-      yield* clearAllItems(supabase);
-    }
-
-    const rawData = yield* loadAllItemTables;
-    const cache = createCache({
-      ...rawData,
+export const updateItemDataCommand = createDataUpdateCommand({
+  name: "update-item-data",
+  entityName: "items",
+  tables: ITEM_TABLES,
+  createCache: (rawData) =>
+    createCache({
+      ...(rawData as any),
       spell: [],
       spellEffect: [],
       spellMisc: [],
@@ -50,51 +24,27 @@ const updateItemDataProgram = (options: CliOptions) =>
       spellRange: [],
       spellCategories: [],
       spellCategory: [],
-    });
-
-    const allItemIds = Array.from(cache.item.keys());
-    const itemIds =
-      options.items === "all"
-        ? allItemIds
-        : parseItemIds(options.items, allItemIds);
-
-    yield* Effect.logInfo(`Processing ${itemIds.length} items...`);
-
-    const transformedItems = yield* Effect.forEach(
-      itemIds,
-      (itemId) =>
-        transformItem(itemId, cache).pipe(
-          Effect.catchTag("ItemNotFoundError", () => Effect.succeed(null)),
-        ),
-      { concurrency: "unbounded" },
-    );
-
-    const validItems = transformedItems.filter(
-      (s): s is ItemDataFlat => s !== null,
-    );
-
-    if (options.dryRun) {
-      yield* showDryRunPreview(validItems);
-      return 0;
-    }
-
-    const inserted = yield* insertItemsInBatches(
-      supabase,
-      validItems,
-      options.batch,
-    );
-
-    yield* Effect.logInfo(`✓ Import complete! Inserted ${inserted} items`);
-    return 0;
-  });
-
-export const updateItemDataCommand = Command.make(
-  "update-item-data",
-  {
-    batch: Options.integer("batch").pipe(Options.withDefault(1000)),
-    clear: Options.boolean("clear").pipe(Options.withDefault(false)),
-    dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
-    items: Options.text("items").pipe(Options.withDefault("all")),
-  },
-  updateItemDataProgram,
-);
+    }),
+  getAllIds: (cache) => Array.from(cache.item.keys()),
+  transform: (id, cache) =>
+    transformItem(id, cache).pipe(
+      Effect.catchTag("ItemNotFoundError", () => Effect.succeed(null)),
+    ),
+  clearData: (supabase) =>
+    Effect.gen(function* () {
+      yield* Effect.logWarning("Clearing all existing item data...");
+      yield* executeSupabaseQuery(
+        "clear item_data",
+        async () => await supabase.from("item_data").delete().neq("id", -1),
+      );
+      yield* Effect.logInfo("✓ Cleared all item data");
+    }),
+  insertBatch: (supabase, batch: ItemDataFlat[]) =>
+    Effect.gen(function* () {
+      yield* executeSupabaseQuery(
+        "upsert item_data batch",
+        async () => await supabase.from("item_data").upsert(batch),
+      );
+      return batch.length;
+    }),
+});
