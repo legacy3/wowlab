@@ -39,7 +39,7 @@ const updateSpellDataProgram = (options: CliOptions) =>
       yield* clearAllSpells(supabase);
     }
 
-    const rawData = yield* loadAllSpellTables();
+    const rawData = yield* loadAllSpellTables;
     const cache = createCache({
       ...rawData,
       item: [],

@@ -1,9 +1,13 @@
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Dbc } from "@wowlab/core/Schemas";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export const DBC_DATA_DIR = path.join(
-  process.cwd(),
-  "third_party/wowlab-data/data/tables",
+  __dirname,
+  "../../../../third_party/wowlab-data/data/tables",
 );
 
 export const SPELL_TABLES = [

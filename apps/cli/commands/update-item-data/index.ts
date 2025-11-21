@@ -36,7 +36,7 @@ const updateItemDataProgram = (options: CliOptions) =>
       yield* clearAllItems(supabase);
     }
 
-    const rawData = yield* loadAllItemTables();
+    const rawData = yield* loadAllItemTables;
     const cache = createCache({
       ...rawData,
       spell: [],

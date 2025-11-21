@@ -1,8 +1,9 @@
 import * as Effect from "effect/Effect";
 import * as path from "node:path";
-import { loadCsvFile, FileReadError, ParseError } from "@wowlab/services/Data";
+import { parseCsvData, ParseError } from "@wowlab/services/Data";
 import { Dbc } from "@wowlab/core/Schemas";
 import { ITEM_TABLES, DBC_DATA_DIR } from "../shared/dbc-config.js";
+import { FileSystem } from "@effect/platform";
 
 export interface RawItemData {
   item: Dbc.ItemRow[];
@@ -10,29 +11,33 @@ export interface RawItemData {
   itemSparse: Dbc.ItemSparseRow[];
 }
 
-export const loadAllItemTables = (): Effect.Effect<
-  RawItemData,
-  FileReadError | ParseError
-> =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Loading item tables from wowlab-data...");
+export const loadAllItemTables = Effect.gen(function* () {
+  yield* Effect.logInfo("Loading item tables from wowlab-data...");
 
-    const results = yield* Effect.all(
-      ITEM_TABLES.map(({ file, schema }) =>
-        loadCsvFile(path.join(DBC_DATA_DIR, file), schema as any),
-      ),
-      { concurrency: "unbounded" },
-    );
+  const fs = yield* FileSystem.FileSystem;
 
-    const item = results[0] as unknown as Dbc.ItemRow[];
-    const itemEffect = results[1] as unknown as Dbc.ItemEffectRow[];
-    const itemSparse = results[2] as unknown as Dbc.ItemSparseRow[];
+  const results = yield* Effect.all(
+    ITEM_TABLES.map(({ file, schema }) =>
+      Effect.gen(function* () {
+        const content = yield* fs.readFileString(
+          path.join(DBC_DATA_DIR, file),
+          "utf8",
+        );
+        return yield* parseCsvData(content, schema as any);
+      }),
+    ),
+    { concurrency: "unbounded" },
+  );
 
-    yield* Effect.logInfo(`Loaded ${item.length} items`);
+  const item = results[0] as unknown as Dbc.ItemRow[];
+  const itemEffect = results[1] as unknown as Dbc.ItemEffectRow[];
+  const itemSparse = results[2] as unknown as Dbc.ItemSparseRow[];
 
-    return {
-      item,
-      itemEffect,
-      itemSparse,
-    };
-  });
+  yield* Effect.logInfo(`Loaded ${item.length} items`);
+
+  return {
+    item,
+    itemEffect,
+    itemSparse,
+  };
+});
