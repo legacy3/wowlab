@@ -3,7 +3,7 @@ import * as path from "node:path";
 import { parseCsvData } from "@wowlab/services/Data";
 import { DBC_DATA_DIR } from "./dbc-config.js";
 import { FileSystem } from "@effect/platform";
-import { Schema } from "@effect/schema";
+import * as Schema from "effect/Schema";
 
 export interface TableConfig<T = any> {
   file: string;

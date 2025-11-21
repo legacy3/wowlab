@@ -43,7 +43,8 @@ const SpellInfoRecord = Record<SpellInfoProps>({
 
   // Geometry (flattened)
   coneDegrees: 0,
-  radius: [],
+  radiusMax: 0,
+  radiusMin: 0,
 
   // Damage/Defense (flattened)
   defenseType: 0,

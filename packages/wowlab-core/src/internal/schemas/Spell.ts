@@ -28,13 +28,8 @@ export const SpellDataFlatSchema = Schema.Struct({
 
   // Geometry (flattened from cone.degrees)
   coneDegrees: Schema.Number,
-  radius: Schema.Array(
-    Schema.Struct({
-      max: Schema.Number,
-      min: Schema.Number,
-      radius: Schema.Number,
-    }),
-  ),
+  radiusMax: Schema.Number,
+  radiusMin: Schema.Number,
 
   // Damage/Defense (flattened from damage.schoolMask, defense.defenseType)
   defenseType: Schema.Number,
@@ -57,12 +52,7 @@ export const SpellDataFlatSchema = Schema.Struct({
 
   // Empower (flattened from empower.*)
   canEmpower: Schema.Boolean,
-  empowerStages: Schema.Array(
-    Schema.Struct({
-      duration: Schema.Number,
-      stage: Schema.Number,
-    }),
-  ),
+  empowerStages: Schema.Unknown, // TODO Check how to flatten this
 
   // Mechanics (flattened from missile.speed, facing.facingFlags, dispel.dispelType)
   dispelType: Schema.Number,

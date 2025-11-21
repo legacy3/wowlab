@@ -1,10 +1,9 @@
 import * as Effect from "effect/Effect";
-import { createCache } from "@wowlab/services/Data";
-import { transformSpell } from "./transform.js";
+import { createCache, transformSpell } from "@wowlab/services/Data";
+import { Spell } from "@wowlab/core/Schemas";
 import { executeSupabaseQuery } from "../shared/supabase.js";
 import { createDataUpdateCommand } from "../shared/data-updater.js";
 import { SPELL_TABLES } from "../shared/dbc-config.js";
-import { SpellDataFlat } from "./types.js";
 
 export const updateSpellDataCommand = createDataUpdateCommand({
   name: "update-spell-data",
@@ -20,7 +19,7 @@ export const updateSpellDataCommand = createDataUpdateCommand({
   getAllIds: (cache) => Array.from(cache.spellMisc.keys()),
   transform: (id, cache) =>
     transformSpell(id, cache).pipe(
-      Effect.catchTag("SpellNotFoundError", () => Effect.succeed(null)),
+      Effect.catchTag("SpellInfoNotFound", () => Effect.succeed(null)),
     ),
   clearData: (supabase) =>
     Effect.gen(function* () {
@@ -31,13 +30,13 @@ export const updateSpellDataCommand = createDataUpdateCommand({
       );
       yield* Effect.logInfo("✓ Cleared all spell data");
     }),
-  insertBatch: (supabase, batch: SpellDataFlat[]) =>
+  insertBatch: (supabase, batch: Spell.SpellDataFlat[]) =>
     Effect.gen(function* () {
       yield* executeSupabaseQuery(
         "upsert spell_data batch",
         async () => await supabase.from("spell_data").upsert(batch),
       );
-      
+
       return batch.length;
     }),
 });
