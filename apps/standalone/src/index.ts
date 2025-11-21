@@ -1,29 +1,17 @@
-import * as Runtime from "@wowlab/runtime";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Logger from "effect/Logger";
-import * as LogLevel from "effect/LogLevel";
 
-import { StandaloneMetadataServiceLayer } from "./metadata.js";
-import { runSimulation } from "./simulation.js";
+import { runRotation } from "./framework/runner.js";
+import { FireMageRotation } from "./rotations/fire-mage.js";
 
 const main = async () => {
   console.log("=".repeat(60));
-  console.log("WowLab Standalone Simulation");
+  console.log("WowLab Standalone Runner");
   console.log("=".repeat(60));
 
-  // Create the application layer with standalone metadata
-  const appLayer = Runtime.createAppLayer({
-    metadata: StandaloneMetadataServiceLayer,
-  });
-
-  // Configure logging
-  const program = runSimulation.pipe(
-    Effect.provide(appLayer),
-    Effect.provide(Logger.pretty),
-    Effect.provide(Logger.minimumLogLevel(LogLevel.Debug)),
-  );
+  // In the future, we could select rotation from CLI args
+  const program = runRotation(FireMageRotation);
 
   const exit = await Effect.runPromiseExit(program);
 
@@ -31,8 +19,7 @@ const main = async () => {
 
   if (Exit.isSuccess(exit)) {
     console.log("✅ SUCCESS");
-    console.log(`Snapshots: ${exit.value.snapshots}`);
-    console.log(`Events: ${exit.value.events.length}`);
+    console.log(exit.value);
     process.exit(0);
   } else {
     console.log("❌ FAILURE");
