@@ -43,6 +43,15 @@ export class ItemNotFound extends Data.TaggedError("ItemNotFound")<{
   readonly message: string;
 }> {}
 
+export class UnitNotFound extends Data.TaggedError("UnitNotFound")<{
+  readonly unitId: Branded.UnitID;
+}> {}
+
+export class SpellNotFound extends Data.TaggedError("SpellNotFound")<{
+  readonly unitId: Branded.UnitID;
+  readonly spellId: number;
+}> {}
+
 export class Modifier extends Data.TaggedError("Modifier")<{
   readonly modifierName: string;
   readonly spell: Entities.Spell.Spell;
@@ -87,8 +96,4 @@ export class ProjectileNotFound extends Data.TaggedError("ProjectileNotFound")<{
 export class SpellInfoNotFound extends Data.TaggedError("SpellInfoNotFound")<{
   readonly spellId: number;
   readonly message: string;
-}> {}
-
-export class SpellNotFound extends Data.TaggedError("SpellNotFound")<{
-  readonly spellId: Branded.SpellID;
 }> {}

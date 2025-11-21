@@ -1,3 +1,4 @@
+import * as Entities from "@wowlab/core/Entities";
 import * as Errors from "@wowlab/core/Errors";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
@@ -24,13 +25,25 @@ export const InMemoryMetadata = (config: InMemoryMetadataConfig) => {
         const item = itemMap.get(itemId);
         return item
           ? Effect.succeed(item)
-          : Effect.fail(new Errors.ItemNotFound({ itemId }));
+          : Effect.fail(
+              new Errors.ItemNotFound({
+                itemId,
+                message: "Item not found in memory",
+              }),
+            );
       },
       loadSpell: (spellId) => {
         const spell = spellMap.get(spellId);
         return spell
-          ? Effect.succeed(spell)
-          : Effect.fail(new Errors.SpellInfoNotFound({ spellId }));
+          ? Effect.succeed(
+              Entities.Spell.SpellInfo.create({ ...spell, modifiers: [] }),
+            )
+          : Effect.fail(
+              new Errors.SpellInfoNotFound({
+                spellId,
+                message: "Spell not found in memory",
+              }),
+            );
       },
     }),
   );

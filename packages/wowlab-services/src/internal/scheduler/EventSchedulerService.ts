@@ -1,15 +1,40 @@
 import * as Events from "@wowlab/core/Events";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
+import TinyQueue from "tinyqueue";
 
-export interface EventSchedulerService {
-  readonly cancelEvent: (eventId: string) => Effect.Effect<void>;
-  readonly isEmpty: Effect.Effect<boolean>;
-  readonly nextEvent: Effect.Effect<Events.SimulationEvent | null>;
-  readonly peekEvent: Effect.Effect<Events.SimulationEvent | null>;
-  readonly schedule: (event: Events.SimulationEvent) => Effect.Effect<void>;
-}
+export class EventSchedulerService extends Effect.Service<EventSchedulerService>()(
+  "EventSchedulerService",
+  {
+    effect: Effect.gen(function* () {
+      const queueRef = yield* Ref.make(
+        new TinyQueue<Events.SimulationEvent>([], (a, b) => a.time - b.time),
+      );
 
-export const EventSchedulerService = Context.GenericTag<EventSchedulerService>(
-  "@wowlab/services/EventSchedulerService",
-);
+      return {
+        schedule: (event: Events.SimulationEvent) =>
+          Ref.update(queueRef, (queue) => {
+            queue.push(event);
+            return queue;
+          }),
+
+        dequeue: () =>
+          Ref.modify(queueRef, (queue) => {
+            const event = queue.pop();
+            return [event, queue] as const;
+          }),
+
+        peek: () => Ref.get(queueRef).pipe(Effect.map((queue) => queue.peek())),
+
+        clear: () =>
+          Ref.set(
+            queueRef,
+            new TinyQueue<Events.SimulationEvent>(
+              [],
+              (a, b) => a.time - b.time,
+            ),
+          ),
+      };
+    }),
+  },
+) {}

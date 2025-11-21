@@ -1,4 +1,5 @@
 export * as Data from "./Data.js";
+export * as Accessors from "./Accessors.js";
 export * as Log from "./Log.js";
 export * as Metadata from "./Metadata.js";
 export * as Profile from "./Profile.js";
