@@ -2,9 +2,10 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Schedule from "effect/Schedule";
 
+import * as Errors from "@/Errors";
+
 import type { Spell } from "../Spell";
 import type { Unit } from "../Unit";
-import * as Errors from "@/Errors";
 
 export type SpellModifier = {
   readonly name: string;

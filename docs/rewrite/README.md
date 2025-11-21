@@ -45,6 +45,7 @@ Each phase ends with a working `apps/standalone` test that proves the new code w
 ## Timeline
 
 Each phase should be:
+
 - Small enough to implement in one session
 - Independently testable
 - Builds on previous phases

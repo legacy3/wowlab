@@ -112,7 +112,7 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     Simulation.SimulationService.Default,
 
     // Pluggable metadata
-    metadata
+    metadata,
   );
 
   // NO manual Layer.provide() chains
@@ -134,24 +134,26 @@ export * from "./AppLayer.js";
 **Why this works without @ts-ignore:**
 
 Each service uses `Effect.Service` with `dependencies` array:
+
 ```typescript
-export class UnitService extends Effect.Service<UnitService>()(
-  "UnitService",
-  {
-    dependencies: [StateService.Default, UnitAccessor.Default],
-    effect: Effect.gen(function* () { /* ... */ }),
-  }
-) {}
+export class UnitService extends Effect.Service<UnitService>()("UnitService", {
+  dependencies: [StateService.Default, UnitAccessor.Default],
+  effect: Effect.gen(function* () {
+    /* ... */
+  }),
+}) {}
 ```
 
 This generates `UnitService.Default` which is a `Layer.Layer<UnitService>` that includes its dependencies.
 
 When you `Layer.mergeAll()`, Effect:
+
 1. **Deduplicates** - StateService.Default appears in multiple dependency chains, but only one instance is created
 2. **Resolves** - Each service finds its required dependencies in the merged graph
 3. **Type-safe** - TypeScript can infer the full dependency graph
 
 **The old AppLayer.ts was wrong because:**
+
 - It manually accessed `.DefaultWithoutDependencies` (internal API)
 - It manually called `Layer.provide()` for each service
 - TypeScript couldn't infer the manual chains, requiring `@ts-ignore`
@@ -200,7 +202,7 @@ const appLayer = createAppLayer({ metadata: metadataLayer });
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testRuntime.pipe(Effect.provide(appLayer))
+    testRuntime.pipe(Effect.provide(appLayer)),
   );
   console.log("Result:", result);
 };
@@ -221,6 +223,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm install

@@ -80,10 +80,7 @@ import * as Accessors from "@wowlab/services/Accessors";
 export class SpellActions extends Effect.Service<SpellActions>()(
   "SpellActions",
   {
-    dependencies: [
-      Unit.UnitService.Default,
-      Accessors.UnitAccessor.Default,
-    ],
+    dependencies: [Unit.UnitService.Default, Accessors.UnitAccessor.Default],
     effect: Effect.gen(function* () {
       const unitService = yield* Unit.UnitService;
       const unitAccessor = yield* Accessors.UnitAccessor;
@@ -98,7 +95,7 @@ export class SpellActions extends Effect.Service<SpellActions>()(
             const spell = unit.spells.get(spellId);
             if (!spell) {
               return yield* Effect.fail(
-                new Error(`Spell ${spellId} not found on unit ${unitId}`)
+                new Error(`Spell ${spellId} not found on unit ${unitId}`),
               );
             }
 
@@ -116,7 +113,7 @@ export class SpellActions extends Effect.Service<SpellActions>()(
           }),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -157,7 +154,7 @@ export class ControlActions extends Effect.Service<ControlActions>()(
           }),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -176,10 +173,7 @@ import { ControlActions } from "../actions/control/ControlActions.js";
 export class RotationContext extends Effect.Service<RotationContext>()(
   "RotationContext",
   {
-    dependencies: [
-      SpellActions.Default,
-      ControlActions.Default,
-    ],
+    dependencies: [SpellActions.Default, ControlActions.Default],
     effect: Effect.gen(function* () {
       const spell = yield* SpellActions;
       const control = yield* ControlActions;
@@ -189,7 +183,7 @@ export class RotationContext extends Effect.Service<RotationContext>()(
         control,
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -210,6 +204,7 @@ export * as Context from "./Context.js";
 ## Reference Implementation
 
 Copy from `@packages/innocent-rotation/src/internal/`:
+
 - `actions/*` → SpellActions, UnitActions, ControlActions
 - `context/*` → RotationContext
 
@@ -269,12 +264,12 @@ const metadataLayer = Metadata.InMemoryMetadata({
 // Combine runtime + rotation layers
 const appLayer = Layer.mergeAll(
   createAppLayer({ metadata: metadataLayer }),
-  Context.RotationContext.Default
+  Context.RotationContext.Default,
 );
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testRotation.pipe(Effect.provide(appLayer))
+    testRotation.pipe(Effect.provide(appLayer)),
   );
   console.log("Result:", result);
 };
@@ -307,6 +302,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm install

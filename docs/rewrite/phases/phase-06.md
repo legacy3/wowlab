@@ -53,9 +53,9 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       return {
         run: (durationMs: number) =>
           Effect.gen(function* () {
-            const startTime = yield* state.getState().pipe(
-              Effect.map((s) => s.currentTime)
-            );
+            const startTime = yield* state
+              .getState()
+              .pipe(Effect.map((s) => s.currentTime));
             const endTime = startTime + durationMs;
 
             // Main simulation loop
@@ -64,16 +64,14 @@ export class SimulationService extends Effect.Service<SimulationService>()(
 
               if (!nextEvent || nextEvent.time > endTime) {
                 // No more events or past end time
-                yield* state.updateState((s) =>
-                  s.set("currentTime", endTime)
-                );
+                yield* state.updateState((s) => s.set("currentTime", endTime));
                 break;
               }
 
               // Dequeue and process event
               yield* scheduler.dequeue();
               yield* state.updateState((s) =>
-                s.set("currentTime", nextEvent.time)
+                s.set("currentTime", nextEvent.time),
               );
 
               // Process event based on type
@@ -96,7 +94,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
           Ref.update(snapshotStreamRef, (subs) => [...subs, callback]),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -123,7 +121,7 @@ export class SpellLifecycleService extends Effect.Service<SpellLifecycleService>
           }),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -144,6 +142,7 @@ export * as Lifecycle from "./Lifecycle.js";
 ## Reference Implementation
 
 Copy from `@packages/innocent-services/src/internal/`:
+
 - `simulation/*` → SimulationService
 - `lifecycle/*` → SpellLifecycleService
 - `periodic/*` → PeriodicTriggerService
@@ -192,12 +191,12 @@ const appLayer = Layer.mergeAll(
   State.StateServiceLive,
   Scheduler.EventSchedulerService.Default,
   Unit.UnitService.Default,
-  Simulation.SimulationService.Default
+  Simulation.SimulationService.Default,
 );
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testSimulation.pipe(Effect.provide(appLayer))
+    testSimulation.pipe(Effect.provide(appLayer)),
   );
   console.log("Result:", result);
 };
@@ -206,6 +205,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm tsx src/new/phase-06-test.ts
@@ -223,6 +223,7 @@ pnpm tsx src/new/phase-06-test.ts
 ## Snapshot schema (standardize now)
 
 Each snapshot must include at least:
+
 - `timestamp: number` (ms since sim start)
 - `units: Immutable.Map<UnitID, Entities.Unit>`
 - `eventsProcessed: Events.Event[]` (events executed at this tick)

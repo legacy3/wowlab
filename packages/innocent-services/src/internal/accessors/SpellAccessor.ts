@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 
 import * as Log from "@/Log";
 import * as State from "@/State";
+
 import { SpellInfoService } from "../data/service/definition.js";
 
 export class SpellAccessor extends Effect.Service<SpellAccessor>()(

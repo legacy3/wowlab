@@ -47,7 +47,7 @@ export const StateServiceLive = Layer.effect(
       setState: (state) => Ref.set(ref, state),
       updateState: (fn) => Ref.update(ref, fn),
     });
-  })
+  }),
 );
 ```
 
@@ -75,7 +75,7 @@ export const ConsoleLogger = Layer.succeed(
     info: (message) => Effect.sync(() => console.info(message)),
     warn: (message) => Effect.sync(() => console.warn(message)),
     error: (message) => Effect.sync(() => console.error(message)),
-  })
+  }),
 );
 ```
 
@@ -95,7 +95,7 @@ export const NoOpLogger = Layer.succeed(
     info: () => Effect.void,
     warn: () => Effect.void,
     error: () => Effect.void,
-  })
+  }),
 );
 ```
 
@@ -138,7 +138,7 @@ export const MersenneTwisterRNG = (seed?: number) =>
             return Math.floor(val * (max - min)) + min;
           }),
       });
-    })
+    }),
   );
 
 // Default export with no seed
@@ -167,6 +167,7 @@ export * from "./DeterministicRNG.js";
 ## Reference Implementation
 
 Copy and adapt from:
+
 - `@packages/innocent-services/src/internal/state/StateService.ts`
 - `@packages/innocent-services/src/internal/log/LogService.ts`
 - `@packages/innocent-services/src/internal/rng/RNGService.ts`
@@ -217,12 +218,12 @@ const testCoreServices = Effect.gen(function* () {
 const coreLayer = Layer.mergeAll(
   State.StateServiceLive,
   Log.ConsoleLogger,
-  Rng.RNGServiceDefault
+  Rng.RNGServiceDefault,
 );
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testCoreServices.pipe(Effect.provide(coreLayer))
+    testCoreServices.pipe(Effect.provide(coreLayer)),
   );
   console.log("Result:", result);
 };
@@ -242,6 +243,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm install

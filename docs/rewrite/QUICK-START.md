@@ -78,6 +78,7 @@ Follow phases sequentially. Each phase is independently testable in `apps/standa
 ## Verification at Each Phase
 
 Every phase ends with:
+
 ```bash
 cd apps/standalone
 pnpm tsx src/new/phase-XX-test.ts
@@ -88,6 +89,7 @@ If it works, move to next phase. If not, fix before proceeding.
 ## Success Criteria
 
 Phase 9 complete when:
+
 - ✅ Full simulation runs in standalone
 - ✅ **ZERO `@ts-ignore` in entire `@wowlab/*` codebase**
 - ✅ Services compose cleanly
@@ -104,6 +106,7 @@ Phase 9 complete when:
 ## Rollback
 
 Old packages remain untouched. If new implementation fails:
+
 - Keep using `@packages/innocent-*`
 - Fix `@wowlab/*` packages
 - Only migrate apps when stable

@@ -1,6 +1,6 @@
 import * as Errors from "@packages/innocent-domain/Errors";
-import * as Spell from "@packages/innocent-schemas/Spell";
 import * as Branded from "@packages/innocent-schemas/Branded";
+import * as Spell from "@packages/innocent-schemas/Spell";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";

@@ -1,10 +1,7 @@
-import * as Branded from "@packages/innocent-schemas/Branded";
 import { Record } from "immutable";
-
-import type { ComputedEntity } from "./shared";
-
-import { boundedTransform, expiryTransform } from "./shared/transforms";
-import { createNotFoundSpellInfo, SpellInfo } from "./SpellInfo";
+import * as Branded from "../schemas/Branded.js";
+import { SpellInfo, createNotFoundSpellInfo } from "./Spell.js";
+import { boundedTransform, expiryTransform } from "./Transforms.js";
 
 interface AuraComputedProps {
   readonly isActive: boolean;
@@ -22,10 +19,15 @@ interface AuraSourceProps {
 const AuraRecord = Record<AuraProps>({
   casterUnitId: Branded.UnitID("unknown"),
   expiresAt: 0,
-  info: null as any, // createNotFoundSpellInfo(Branded.SpellID(-1)),
+  info: null as any,
   isActive: false,
   stacks: 0,
 });
+
+export interface ComputedEntity<T, Source> {
+  transform: any;
+  with(updates: Partial<Source>, currentTime: number): T;
+}
 
 export class Aura
   extends AuraRecord

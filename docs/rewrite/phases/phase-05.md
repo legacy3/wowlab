@@ -61,7 +61,7 @@ export class UnitAccessor extends Effect.Service<UnitAccessor>()(
           }),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -100,7 +100,7 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
           }).pipe(Effect.flatten),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -134,10 +134,7 @@ import { StateService } from "../state/StateService.js";
 import { UnitAccessor } from "../accessors/UnitAccessor.js";
 
 export class UnitService extends Effect.Service<UnitService>()("UnitService", {
-  dependencies: [
-    StateService.Default,
-    UnitAccessor.Default,
-  ],
+  dependencies: [StateService.Default, UnitAccessor.Default],
   effect: Effect.gen(function* () {
     const state = yield* StateService;
     const accessor = yield* UnitAccessor;
@@ -164,7 +161,7 @@ export class UnitService extends Effect.Service<UnitService>()("UnitService", {
             });
 
             yield* state.updateState((s) =>
-              s.setIn(["units", unitId, "health"], updatedHealth)
+              s.setIn(["units", unitId, "health"], updatedHealth),
             );
           }),
       },
@@ -187,7 +184,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
   {
     effect: Effect.gen(function* () {
       const queueRef = yield* Ref.make(
-        new TinyQueue<Events.SimulationEvent>([], (a, b) => a.time - b.time)
+        new TinyQueue<Events.SimulationEvent>([], (a, b) => a.time - b.time),
       );
 
       return {
@@ -203,16 +200,13 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             return [event, queue] as const;
           }),
 
-        peek: () =>
-          Ref.get(queueRef).pipe(
-            Effect.map((queue) => queue.peek())
-          ),
+        peek: () => Ref.get(queueRef).pipe(Effect.map((queue) => queue.peek())),
 
         clear: () =>
           Ref.set(queueRef, new TinyQueue([], (a, b) => a.time - b.time)),
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -234,6 +228,7 @@ export * as Scheduler from "./Scheduler.js";
 ## Reference Implementation
 
 Copy from `@packages/innocent-services/src/internal/`:
+
 - `accessors/*` → UnitAccessor, SpellAccessor
 - `unit/*` → UnitService
 - `scheduler/*` → EventSchedulerService
@@ -280,12 +275,12 @@ const testBusinessServices = Effect.gen(function* () {
 const appLayer = Layer.mergeAll(
   State.StateServiceLive,
   Accessors.UnitAccessor.Default,
-  Unit.UnitService.Default
+  Unit.UnitService.Default,
 );
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testBusinessServices.pipe(Effect.provide(appLayer))
+    testBusinessServices.pipe(Effect.provide(appLayer)),
   );
   console.log("Result:", result);
 };
@@ -294,6 +289,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm tsx src/new/phase-05-test.ts
@@ -308,7 +304,7 @@ pnpm tsx src/new/phase-05-test.ts
 - ✅ Services compose cleanly with Layer.mergeAll
 - ✅ UnitAccessor returns `UnitNotFound` on missing IDs; SpellAccessor returns `SpellNotFound`
 - ✅ Health update helpers keep `health.value` within min/max bounds
-- ✅ Parity audit: Unit/Spell service methods mirror existing @packages/innocent-* behaviors (method names + error types)
+- ✅ Parity audit: Unit/Spell service methods mirror existing @packages/innocent-\* behaviors (method names + error types)
 
 ## Parity audit (business layer)
 

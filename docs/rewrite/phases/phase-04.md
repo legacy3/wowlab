@@ -43,7 +43,7 @@ export interface InMemoryMetadataConfig {
 
 export const InMemoryMetadata = (config: InMemoryMetadataConfig) => {
   const spellMap = ImmutableMap(
-    config.spells.map((spell) => [spell.id, spell])
+    config.spells.map((spell) => [spell.id, spell]),
   );
   const itemMap = ImmutableMap(config.items.map((item) => [item.id, item]));
 
@@ -62,7 +62,7 @@ export const InMemoryMetadata = (config: InMemoryMetadataConfig) => {
           ? Effect.succeed(item)
           : Effect.fail(new Errors.ItemNotFound({ itemId }));
       },
-    })
+    }),
   );
 };
 ```
@@ -90,9 +90,7 @@ export class ProfileComposer extends Effect.Service<ProfileComposer>()(
   "ProfileComposer",
   {
     effect: Effect.gen(function* () {
-      const cacheRef = yield* Ref.make(
-        new Map<string, ComposedProfile>()
-      );
+      const cacheRef = yield* Ref.make(new Map<string, ComposedProfile>());
 
       const compose = (profileIds: ReadonlyArray<string>) =>
         Effect.gen(function* () {
@@ -118,7 +116,7 @@ export class ProfileComposer extends Effect.Service<ProfileComposer>()(
         compose,
       };
     }),
-  }
+  },
 ) {}
 ```
 
@@ -195,7 +193,7 @@ const metadataLayer = Metadata.InMemoryMetadata({
 
 const main = async () => {
   const result = await Effect.runPromise(
-    testMetadata.pipe(Effect.provide(metadataLayer))
+    testMetadata.pipe(Effect.provide(metadataLayer)),
   );
   console.log("Result:", result);
 };
@@ -204,6 +202,7 @@ main();
 ```
 
 Run:
+
 ```bash
 cd apps/standalone
 pnpm tsx src/new/phase-04-test.ts

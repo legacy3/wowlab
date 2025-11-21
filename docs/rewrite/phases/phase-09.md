@@ -113,10 +113,7 @@ const setupSimulation = Effect.gen(function* () {
 // Rotation
 // ============================================================
 
-const executeRotation = (
-  playerId: Branded.UnitID,
-  enemyId: Branded.UnitID
-) =>
+const executeRotation = (playerId: Branded.UnitID, enemyId: Branded.UnitID) =>
   Effect.gen(function* () {
     const rotation = yield* Context.RotationContext;
 
@@ -165,9 +162,7 @@ const runSimulation = Effect.gen(function* () {
   });
 
   // Execute rotation in parallel with simulation
-  const rotationFiber = yield* Effect.fork(
-    executeRotation(playerId, enemyId)
-  );
+  const rotationFiber = yield* Effect.fork(executeRotation(playerId, enemyId));
 
   // Run simulation for 10 seconds
   yield* Effect.log("Running simulation (10s)");
@@ -197,7 +192,7 @@ const metadataLayer = Metadata.InMemoryMetadata({
 
 const appLayer = Layer.mergeAll(
   createAppLayer({ metadata: metadataLayer }),
-  Context.RotationContext.Default
+  Context.RotationContext.Default,
 );
 
 // ============================================================
@@ -210,7 +205,7 @@ const main = async () => {
   console.log("=".repeat(60));
 
   const exit = await Effect.runPromiseExit(
-    runSimulation.pipe(Effect.provide(appLayer))
+    runSimulation.pipe(Effect.provide(appLayer)),
   );
 
   console.log("=".repeat(60));
@@ -244,12 +239,14 @@ main();
 ## How to Test
 
 Run the new simulation:
+
 ```bash
 cd apps/standalone
 pnpm dev:new
 ```
 
 Expected output:
+
 ```
 ============================================================
 WowLab Standalone Simulation (NEW @wowlab/* packages)
@@ -275,6 +272,7 @@ Snapshots collected: X
 ```
 
 Compare with old implementation:
+
 ```bash
 pnpm dev:old
 ```
@@ -297,13 +295,15 @@ pnpm dev:old
 
 Compare the two implementations:
 
-**Old packages (@packages/innocent-*):**
+**Old packages (@packages/innocent-\*):**
+
 - 7 packages
 - 13 `@ts-ignore` comments in AppLayer.ts
 - Confusing `DefaultWithoutDependencies` pattern
 - Only metadata is pluggable
 
-**New packages (@wowlab/*):**
+**New packages (@wowlab/\*):**
+
 - 4 packages (43% reduction)
 - **ZERO `@ts-ignore` comments**
 - Clean `Effect.Service` with dependencies
@@ -312,6 +312,7 @@ Compare the two implementations:
 ## Next Steps
 
 Once Phase 9 is verified:
+
 1. Migrate `apps/portal` to use `@wowlab/*`
 2. Migrate `apps/cli` to use `@wowlab/*`
 3. Add remaining services (CastQueue, Periodic, etc.)
@@ -321,6 +322,7 @@ Once Phase 9 is verified:
 ## Rollback Plan
 
 If anything fails:
+
 - Keep using `@packages/innocent-*` in apps
 - Fix issues in `@wowlab/*` packages
 - Re-test in standalone

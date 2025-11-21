@@ -138,23 +138,26 @@ export * from "./Errors.js";
 ## Import Pattern
 
 **Old:**
+
 ```typescript
-import * as Schemas from "@packages/innocent-schemas"
-import * as Entities from "@packages/innocent-domain/Entities"
+import * as Schemas from "@packages/innocent-schemas";
+import * as Entities from "@packages/innocent-domain/Entities";
 ```
 
 **New:**
+
 ```typescript
-import * as Schemas from "@wowlab/core/Schemas"
-import * as Entities from "@wowlab/core/Entities"
+import * as Schemas from "@wowlab/core/Schemas";
+import * as Entities from "@wowlab/core/Entities";
 
 // Or use main entry
-import { Schemas, Entities } from "@wowlab/core"
+import { Schemas, Entities } from "@wowlab/core";
 ```
 
 ## How to Test
 
 Run:
+
 ```bash
 cd packages/wowlab-core && pnpm build
 ```

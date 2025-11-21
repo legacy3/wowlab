@@ -1,9 +1,9 @@
+import * as Entities from "@packages/innocent-domain/Entities";
+import * as DomainProfile from "@packages/innocent-domain/Profile";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { Map } from "immutable";
-import * as Entities from "@packages/innocent-domain/Entities";
-import * as DomainProfile from "@packages/innocent-domain/Profile";
 
 import * as Metadata from "@/Metadata";
 import * as Modifiers from "@/Modifiers";

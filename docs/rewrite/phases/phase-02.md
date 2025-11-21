@@ -152,7 +152,7 @@ export class StateService extends Context.Tag("StateService")<
     readonly getState: () => Effect.Effect<Entities.GameState>;
     readonly setState: (state: Entities.GameState) => Effect.Effect<void>;
     readonly updateState: (
-      fn: (state: Entities.GameState) => Entities.GameState
+      fn: (state: Entities.GameState) => Entities.GameState,
     ) => Effect.Effect<void>;
   }
 >() {}
@@ -173,6 +173,7 @@ export class StateService extends Context.Tag("StateService")<
 ## Reference Implementation
 
 Copy service signatures from:
+
 - `@packages/innocent-services/src/internal/state/StateService.ts` → `StateService`
 - `@packages/innocent-services/src/internal/log/LogService.ts` → `LogService`
 - etc.
@@ -182,18 +183,20 @@ Copy service signatures from:
 ## Import Pattern
 
 **Usage:**
+
 ```typescript
-import * as State from "@wowlab/services/State"
-import * as Log from "@wowlab/services/Log"
+import * as State from "@wowlab/services/State";
+import * as Log from "@wowlab/services/Log";
 
 // In Effect.gen
-const stateService = yield* State.StateService
-const logService = yield* Log.LogService
+const stateService = yield * State.StateService;
+const logService = yield * Log.LogService;
 ```
 
 ## How to Test
 
 Run:
+
 ```bash
 cd packages/wowlab-services && pnpm build
 ```
