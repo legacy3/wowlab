@@ -1,6 +1,7 @@
 export * as Data from "./Data.js";
 export * as Log from "./Log.js";
 export * as Metadata from "./Metadata.js";
+export * as Profile from "./Profile.js";
 export * as Rng from "./Rng.js";
 export * as Scheduler from "./Scheduler.js";
 export * as Simulation from "./Simulation.js";
