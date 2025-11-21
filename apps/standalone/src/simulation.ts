@@ -9,6 +9,7 @@ import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 import { Map, Record } from "immutable";
 
+import { Logger } from "./logger.js";
 import { createEnemyUnit, createPlayerUnit } from "./units.js";
 
 export interface SimulationResult {
@@ -102,24 +103,27 @@ export const runSimulation = Effect.gen(function* () {
   console.log("Starting simulation run (10s)");
   const result = yield* simulation.run(10000);
 
-  console.log("=".repeat(60));
-  console.log("SIMULATION REPORT");
-  console.log("=".repeat(60));
-  console.log(`Final Time: ${result.finalTime}ms`);
-  console.log(`Snapshots Collected: ${snapshots.length}`);
-  console.log(`Events Processed: ${result.eventsProcessed}`);
-  console.log("-".repeat(60));
-  console.log("Final State Summary:");
-  
+  Logger.header("SIMULATION REPORT");
+  Logger.kv("Final Time", `${result.finalTime}ms`);
+  Logger.kv("Snapshots Collected", snapshots.length);
+  Logger.kv("Events Processed", result.eventsProcessed);
+
+  Logger.subHeader("Final State Summary");
+
   const finalState = yield* stateService.getState;
-  finalState.units.forEach((unit) => {
-    console.log(`Unit: ${unit.name} (${unit.id})`);
-    console.log(`  Health: ${unit.health.current}/${unit.health.max}`);
-    console.log(`  Position: (${unit.position.x}, ${unit.position.y})`);
-    console.log(`  Spells: ${unit.spells.all.size}`);
-    console.log(`  Auras: ${unit.auras.all.size}`);
-  });
-  console.log("=".repeat(60));
+  const unitSummary = finalState.units
+    .valueSeq()
+    .toArray()
+    .map((unit) => ({
+      Auras: unit.auras.all.size,
+      Health: `${unit.health.current}/${unit.health.max}`,
+      ID: unit.id,
+      Name: unit.name,
+      Position: `(${unit.position.x}, ${unit.position.y})`,
+      Spells: unit.spells.all.size,
+    }));
+
+  Logger.table(unitSummary);
 
   return {
     events: [], // TODO: Capture events
