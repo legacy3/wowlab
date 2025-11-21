@@ -23,5 +23,5 @@ export default createPackageConfig({
     State: resolve(__dirname, "src/State.ts"),
     Unit: resolve(__dirname, "src/Unit.ts"),
   },
-  external: ["effect", "immutable", "microdiff", "tinyqueue", /^@packages\//],
+  external: ["microdiff", "tinyqueue"],
 });

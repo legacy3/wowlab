@@ -11,5 +11,4 @@ export default createPackageConfig({
     Item: resolve(__dirname, "src/Item.ts"),
     Spell: resolve(__dirname, "src/Spell.ts"),
   },
-  external: ["effect", "immutable", /^@packages\//],
 });

@@ -4,10 +4,13 @@ import dts from "vite-plugin-dts";
 
 export interface PackageConfig {
   entries: Record<string, string>;
-  external: (string | RegExp)[];
+  external?: (string | RegExp)[];
 }
 
 export function createPackageConfig(config: PackageConfig) {
+  const defaultExternal = ["effect", "immutable", /^@packages\//];
+  const external = [...defaultExternal, ...(config.external || [])];
+
   return defineConfig({
     build: {
       lib: {
@@ -17,7 +20,7 @@ export function createPackageConfig(config: PackageConfig) {
       minify: false,
       outDir: "build",
       rollupOptions: {
-        external: config.external,
+        external,
       },
       sourcemap: true,
     },

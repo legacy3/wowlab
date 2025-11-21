@@ -10,5 +10,4 @@ export default createPackageConfig({
     Profile: resolve(__dirname, "src/Profile.ts"),
     State: resolve(__dirname, "src/State.ts"),
   },
-  external: ["effect", "immutable", "@packages/innocent-schemas"],
 });

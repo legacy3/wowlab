@@ -6,5 +6,4 @@ export default createPackageConfig({
   entries: {
     Simc: resolve(__dirname, "src/Simc.ts"),
   },
-  external: ["effect", "immutable", /^@packages\//],
 });

@@ -7,5 +7,4 @@ export default createPackageConfig({
     Layers: resolve(__dirname, "src/Layers.ts"),
     SpellLoader: resolve(__dirname, "src/SpellLoader.ts"),
   },
-  external: ["effect", "immutable", /^@packages\//],
 });
