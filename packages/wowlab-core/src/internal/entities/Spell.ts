@@ -2,7 +2,12 @@ import { Record } from "immutable";
 
 import * as Branded from "../schemas/Branded.js";
 import * as SpellSchema from "../schemas/Spell.js";
-import { boundedTransform, expiryTransform } from "./Transforms.js";
+import {
+  Bounded,
+  boundedTransform,
+  Expiry,
+  expiryTransform,
+} from "./Transforms.js";
 
 // ============================================================================
 // SpellInfo
@@ -118,18 +123,23 @@ interface SpellSourceProps {
 const SpellRecord = Record<SpellProps>({
   charges: 0,
   cooldownExpiry: 0,
-  info: null as any,
+  info: createNotFoundSpellInfo(Branded.SpellID(-1)),
   isReady: false,
 });
 
-export interface ComputedEntity<T, Source> {
-  transform: any; // Simplify for now
+export interface ComputedEntity<T, Source, Tr> {
+  transform: Tr;
   with(updates: Partial<Source>, currentTime: number): T;
+}
+
+export interface SpellTransform {
+  charges: Bounded<Spell>;
+  cooldown: Expiry<Spell>;
 }
 
 export class Spell
   extends SpellRecord
-  implements ComputedEntity<Spell, SpellSourceProps>
+  implements ComputedEntity<Spell, SpellSourceProps, SpellTransform>
 {
   static create(source: SpellSourceProps, currentTime: number): Spell {
     return new Spell({
@@ -138,7 +148,7 @@ export class Spell
     });
   }
 
-  get transform() {
+  get transform(): SpellTransform {
     return {
       charges: boundedTransform(
         this.charges,

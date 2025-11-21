@@ -2,7 +2,12 @@ import { Record } from "immutable";
 
 import * as Branded from "../schemas/Branded.js";
 import { createNotFoundSpellInfo, SpellInfo } from "./Spell.js";
-import { boundedTransform, expiryTransform } from "./Transforms.js";
+import {
+  Bounded,
+  boundedTransform,
+  Expiry,
+  expiryTransform,
+} from "./Transforms.js";
 
 interface AuraComputedProps {
   readonly isActive: boolean;
@@ -20,19 +25,24 @@ interface AuraSourceProps {
 const AuraRecord = Record<AuraProps>({
   casterUnitId: Branded.UnitID("unknown"),
   expiresAt: 0,
-  info: null as any,
+  info: createNotFoundSpellInfo(Branded.SpellID(-1)),
   isActive: false,
   stacks: 0,
 });
 
-export interface ComputedEntity<T, Source> {
-  transform: any;
+export interface AuraTransform {
+  duration: Expiry<Aura>;
+  stacks: Bounded<Aura>;
+}
+
+export interface ComputedEntity<T, Source, Tr> {
+  transform: Tr;
   with(updates: Partial<Source>, currentTime: number): T;
 }
 
 export class Aura
   extends AuraRecord
-  implements ComputedEntity<Aura, AuraSourceProps>
+  implements ComputedEntity<Aura, AuraSourceProps, AuraTransform>
 {
   static create(source: AuraSourceProps, currentTime: number): Aura {
     return new Aura({
@@ -41,7 +51,7 @@ export class Aura
     });
   }
 
-  get transform() {
+  get transform(): AuraTransform {
     return {
       duration: expiryTransform(this.expiresAt, (newExpiry, currentTime) =>
         this.with({ expiresAt: newExpiry }, currentTime),

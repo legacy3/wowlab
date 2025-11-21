@@ -11,11 +11,12 @@ import { RotationDefinition } from "../framework/types.js";
 const createSpellEntity = (
   data: Schemas.Spell.SpellDataFlat,
 ): Entities.Spell.Spell => {
-  const info = Record({
+  const info = Entities.Spell.SpellInfo.create({
     ...data,
     id: Schemas.Branded.SpellID(data.id),
     maxCharges: 1, // Default for now
-  } as any)();
+    modifiers: [],
+  });
 
   return Entities.Spell.Spell.create(
     {
@@ -67,7 +68,7 @@ export const FireMageRotation: RotationDefinition = {
         [fireBlast.info.id, fireBlast],
         [scorch.info.id, scorch],
       ]),
-      meta: Record({ cooldownCategories: Map() })(),
+      meta: Record({ cooldownCategories: Map<number, number>() })(),
     };
 
     return Entities.Unit.Unit.create({
