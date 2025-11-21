@@ -4,3 +4,12 @@ export interface CliOptions {
   dryRun: boolean;
   spells: string;
 }
+
+export interface SpellDataFlat {
+  id: number;
+  name: string;
+  iconName: string;
+  castTime: number;
+  cooldown: number;
+  gcd: number;
+}

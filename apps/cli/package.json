@@ -29,6 +29,8 @@
     "@packages/innocent-schemas": "workspace:*",
     "@packages/innocent-services": "workspace:*",
     "@supabase/supabase-js": "^2.83.0",
+    "@wowlab/core": "workspace:*",
+    "@wowlab/services": "workspace:*",
     "change-case": "^5.4.4",
     "dotenv": "^17.2.3",
     "effect": "^3.19.4",

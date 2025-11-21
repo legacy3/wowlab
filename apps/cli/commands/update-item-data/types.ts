@@ -1,5 +1,3 @@
-import type { ItemDataFlat } from "@packages/innocent-schemas/Item";
-
 export interface CliOptions {
   batch: number;
   clear: boolean;
@@ -7,5 +5,13 @@ export interface CliOptions {
   items: string;
 }
 
-// Re-export ItemDataFlat for CLI use
-export type { ItemDataFlat };
+export interface ItemDataFlat {
+  id: number;
+  name: string;
+  quality: number;
+  inventoryType: number;
+  itemLevel: number;
+  requiredLevel: number;
+  classId: number;
+  subclassId: number;
+}

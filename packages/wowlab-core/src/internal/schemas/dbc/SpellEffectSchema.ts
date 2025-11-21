@@ -1,0 +1,43 @@
+import * as Schema from "effect/Schema";
+import * as Branded from "../Branded.js";
+
+export const SpellEffectRowSchema = Schema.Struct({
+  ID: Schema.Number,
+  SpellID: Branded.SpellIDSchema,
+  EffectIndex: Schema.Number,
+  Effect: Schema.Number,
+  EffectAura: Schema.Number,
+  EffectAmplitude: Schema.Number,
+  EffectAttributes: Schema.Number,
+  EffectAuraPeriod: Schema.Number,
+  EffectBonusCoefficient: Schema.Number,
+  EffectChainAmplitude: Schema.Number,
+  EffectChainTargets: Schema.Number,
+  EffectItemType: Schema.Number,
+  EffectMechanic: Schema.Number,
+  EffectPointsPerResource: Schema.Number,
+  EffectPos_facing: Schema.Number,
+  EffectRealPointsPerLevel: Schema.Number,
+  EffectTriggerSpell: Schema.Number,
+  BonusCoefficientFromAP: Schema.Number,
+  PvpMultiplier: Schema.Number,
+  Coefficient: Schema.Number,
+  Variance: Schema.Number,
+  ResourceCoefficient: Schema.Number,
+  GroupSizeBasePointsCoefficient: Schema.Number,
+  EffectBasePointsF: Schema.Number,
+  ScalingClass: Schema.Number,
+  Node__Field_12_0_0_63534_001: Schema.optional(Schema.Number),
+  EffectMiscValue_0: Schema.Number,
+  EffectMiscValue_1: Schema.Number,
+  EffectRadiusIndex_0: Schema.Number,
+  EffectRadiusIndex_1: Schema.Number,
+  EffectSpellClassMask_0: Schema.Number,
+  EffectSpellClassMask_1: Schema.Number,
+  EffectSpellClassMask_2: Schema.Number,
+  EffectSpellClassMask_3: Schema.Number,
+  ImplicitTarget_0: Schema.Number,
+  ImplicitTarget_1: Schema.Number,
+});
+
+export type SpellEffectRow = Schema.Schema.Type<typeof SpellEffectRowSchema>;

@@ -20,12 +20,12 @@ This document outlines the plan for building `apps/cli` commands to parse CSV ga
 
 ### ✅ Confirmed Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| CSV Parser | **papaparse** | Feature-rich, streaming support, battle-tested, TypeScript types |
-| Schema Location | `packages/wowlab-core/src/internal/schemas/dbc/` | Keep DBC schemas with domain entities |
-| Data Service | `packages/wowlab-services/src/Data.ts` | Centralized data services |
-| Cache Strategy | Selective loading (spell/item tables only) | Start small, expand as needed |
+| Decision        | Choice                                           | Rationale                                                        |
+| --------------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| CSV Parser      | **papaparse**                                    | Feature-rich, streaming support, battle-tested, TypeScript types |
+| Schema Location | `packages/wowlab-core/src/internal/schemas/dbc/` | Keep DBC schemas with domain entities                            |
+| Data Service    | `packages/wowlab-services/src/Data.ts`           | Centralized data services                                        |
+| Cache Strategy  | Selective loading (spell/item tables only)       | Start small, expand as needed                                    |
 
 ### ❓ Pending Decisions
 
@@ -53,12 +53,14 @@ export const loadCsvFile = <T>(
 ```
 
 **Features:**
+
 - Stream-based parsing for large files (papaparse streaming API)
 - Effect Schema validation
 - Type-safe parsing
 - Error handling for malformed CSV
 
 **Dependencies:**
+
 ```json
 {
   "papaparse": "^5.4.1",
@@ -67,18 +69,19 @@ export const loadCsvFile = <T>(
 ```
 
 **Implementation Pattern:**
+
 ```typescript
-import * as Effect from "effect/Effect"
-import * as Schema from "effect/Schema"
-import Papa from "papaparse"
-import * as fs from "node:fs"
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+import Papa from "papaparse";
+import * as fs from "node:fs";
 
 export const loadCsvFile = <A, I>(
   filePath: string,
-  schema: Schema.Schema<A, I>
+  schema: Schema.Schema<A, I>,
 ): Effect.Effect<A[], FileReadError | ParseError> =>
   Effect.gen(function* () {
-    const rows: A[] = []
+    const rows: A[] = [];
 
     yield* Effect.tryPromise({
       try: async () => {
@@ -88,23 +91,23 @@ export const loadCsvFile = <A, I>(
             dynamicTyping: true,
             skipEmptyLines: true,
             step: (result) => {
-              const decoded = Schema.decodeUnknownEither(schema)(result.data)
+              const decoded = Schema.decodeUnknownEither(schema)(result.data);
               if (decoded._tag === "Right") {
-                rows.push(decoded.right)
+                rows.push(decoded.right);
               } else {
                 // Log validation error, continue
               }
             },
             complete: () => resolve(rows),
-            error: (error) => reject(error)
-          })
-        })
+            error: (error) => reject(error),
+          });
+        });
       },
-      catch: (error) => new FileReadError({ filePath, cause: error })
-    })
+      catch: (error) => new FileReadError({ filePath, cause: error }),
+    });
 
-    return rows
-  })
+    return rows;
+  });
 ```
 
 #### 1.2 DBC Schema Definitions
@@ -112,6 +115,7 @@ export const loadCsvFile = <A, I>(
 **Location:** `packages/wowlab-core/src/internal/schemas/dbc/`
 
 **Priority Tables (Spell):**
+
 - `Spell.csv` - Core spell data
 - `SpellEffect.csv` - Spell effects
 - `SpellMisc.csv` - Miscellaneous spell properties
@@ -125,15 +129,17 @@ export const loadCsvFile = <A, I>(
 - `SpellCategory.csv` - Category definitions
 
 **Priority Tables (Item):**
+
 - `Item.csv` - Core item data
 - `ItemEffect.csv` - Item effects/spells
 - `ItemSparse.csv` - Item extended properties
 
 **Schema Pattern:**
+
 ```typescript
 // packages/wowlab-core/src/internal/schemas/dbc/SpellEffectSchema.ts
-import * as Schema from "effect/Schema"
-import * as Branded from "../Branded.js"
+import * as Schema from "effect/Schema";
+import * as Branded from "../Branded.js";
 
 export const SpellEffectRowSchema = Schema.Struct({
   ID: Schema.Number,
@@ -172,9 +178,9 @@ export const SpellEffectRowSchema = Schema.Struct({
   EffectSpellClassMask_3: Schema.Number,
   ImplicitTarget_0: Schema.Number,
   ImplicitTarget_1: Schema.Number,
-})
+});
 
-export type SpellEffectRow = Schema.Schema.Type<typeof SpellEffectRowSchema>
+export type SpellEffectRow = Schema.Schema.Type<typeof SpellEffectRowSchema>;
 ```
 
 #### 1.3 Data Cache Service
@@ -182,44 +188,43 @@ export type SpellEffectRow = Schema.Schema.Type<typeof SpellEffectRowSchema>
 **File:** `packages/wowlab-services/src/internal/data/DbcCache.ts`
 
 ```typescript
-import { Map } from "immutable"
+import { Map } from "immutable";
 
 export interface DbcCache {
-  spell: Map<number, SpellRow>
-  spellEffect: Map<number, SpellEffectRow[]>
-  spellMisc: Map<number, SpellMiscRow>
-  spellName: Map<number, SpellNameRow>
-  spellCastTimes: Map<number, SpellCastTimesRow>
-  spellCooldowns: Map<number, SpellCooldownsRow>
-  spellDuration: Map<number, SpellDurationRow>
-  spellRadius: Map<number, SpellRadiusRow>
-  spellRange: Map<number, SpellRangeRow>
-  spellCategories: Map<number, SpellCategoriesRow>
-  spellCategory: Map<number, SpellCategoryRow>
+  spell: Map<number, SpellRow>;
+  spellEffect: Map<number, SpellEffectRow[]>;
+  spellMisc: Map<number, SpellMiscRow>;
+  spellName: Map<number, SpellNameRow>;
+  spellCastTimes: Map<number, SpellCastTimesRow>;
+  spellCooldowns: Map<number, SpellCooldownsRow>;
+  spellDuration: Map<number, SpellDurationRow>;
+  spellRadius: Map<number, SpellRadiusRow>;
+  spellRange: Map<number, SpellRangeRow>;
+  spellCategories: Map<number, SpellCategoriesRow>;
+  spellCategory: Map<number, SpellCategoryRow>;
 }
 
-export const createCache = (
-  rawData: RawDbcData
-): DbcCache => ({
-  spell: Map(rawData.spell.map(row => [row.ID, row])),
+export const createCache = (rawData: RawDbcData): DbcCache => ({
+  spell: Map(rawData.spell.map((row) => [row.ID, row])),
   spellEffect: groupBySpellId(rawData.spellEffect),
-  spellMisc: Map(rawData.spellMisc.map(row => [row.SpellID, row])),
+  spellMisc: Map(rawData.spellMisc.map((row) => [row.SpellID, row])),
   // ... other tables
-})
+});
 
 const groupBySpellId = <T extends { SpellID: number }>(
-  rows: T[]
+  rows: T[],
 ): Map<number, T[]> => {
-  const grouped = new Map<number, T[]>()
-  rows.forEach(row => {
-    const existing = grouped.get(row.SpellID) || []
-    grouped.set(row.SpellID, [...existing, row])
-  })
-  return Map(grouped)
-}
+  const grouped = new Map<number, T[]>();
+  rows.forEach((row) => {
+    const existing = grouped.get(row.SpellID) || [];
+    grouped.set(row.SpellID, [...existing, row]);
+  });
+  return Map(grouped);
+};
 ```
 
 **Features:**
+
 - Immutable.js Map-based storage
 - Indexed lookups by ID, SpellID, etc.
 - Relationship mapping (e.g., SpellID → Effects[])
@@ -242,15 +247,16 @@ shared/
 ```
 
 **dbc-config.ts:**
-```typescript
-import * as path from "node:path"
-import * as Dbc from "@packages/wowlab-core/Schemas/dbc"
 
-export const REPO_ROOT = path.join(process.cwd(), "../..")
+```typescript
+import * as path from "node:path";
+import * as Dbc from "@packages/wowlab-core/Schemas/dbc";
+
+export const REPO_ROOT = path.join(process.cwd(), "../..");
 export const DBC_DATA_DIR = path.join(
   REPO_ROOT,
-  "third_party/wowlab-data/data/tables"
-)
+  "third_party/wowlab-data/data/tables",
+);
 
 export const SPELL_TABLES = [
   { file: "Spell.csv", schema: Dbc.SpellRowSchema },
@@ -264,18 +270,19 @@ export const SPELL_TABLES = [
   { file: "SpellRange.csv", schema: Dbc.SpellRangeRowSchema },
   { file: "SpellCategories.csv", schema: Dbc.SpellCategoriesRowSchema },
   { file: "SpellCategory.csv", schema: Dbc.SpellCategoryRowSchema },
-] as const
+] as const;
 
 export const ITEM_TABLES = [
   { file: "Item.csv", schema: Dbc.ItemRowSchema },
   { file: "ItemEffect.csv", schema: Dbc.ItemEffectRowSchema },
   { file: "ItemSparse.csv", schema: Dbc.ItemSparseRowSchema },
-] as const
+] as const;
 ```
 
 #### 2.2 `update-spell-data` Command
 
 **Structure:**
+
 ```
 update-spell-data/
 ├── index.ts              # Command definition
@@ -286,24 +293,25 @@ update-spell-data/
 ```
 
 **loader.ts:**
+
 ```typescript
-import * as Effect from "effect/Effect"
-import * as path from "node:path"
-import { loadCsvFile } from "@packages/wowlab-services/Data"
-import { SPELL_TABLES, DBC_DATA_DIR } from "../shared/dbc-config"
+import * as Effect from "effect/Effect";
+import * as path from "node:path";
+import { loadCsvFile } from "@packages/wowlab-services/Data";
+import { SPELL_TABLES, DBC_DATA_DIR } from "../shared/dbc-config";
 
 export interface RawSpellData {
-  spell: SpellRow[]
-  spellEffect: SpellEffectRow[]
-  spellMisc: SpellMiscRow[]
-  spellName: SpellNameRow[]
-  spellCastTimes: SpellCastTimesRow[]
-  spellCooldowns: SpellCooldownsRow[]
-  spellDuration: SpellDurationRow[]
-  spellRadius: SpellRadiusRow[]
-  spellRange: SpellRangeRow[]
-  spellCategories: SpellCategoriesRow[]
-  spellCategory: SpellCategoryRow[]
+  spell: SpellRow[];
+  spellEffect: SpellEffectRow[];
+  spellMisc: SpellMiscRow[];
+  spellName: SpellNameRow[];
+  spellCastTimes: SpellCastTimesRow[];
+  spellCooldowns: SpellCooldownsRow[];
+  spellDuration: SpellDurationRow[];
+  spellRadius: SpellRadiusRow[];
+  spellRange: SpellRangeRow[];
+  spellCategories: SpellCategoriesRow[];
+  spellCategory: SpellCategoryRow[];
 }
 
 export const loadAllSpellTables = (): Effect.Effect<
@@ -311,7 +319,7 @@ export const loadAllSpellTables = (): Effect.Effect<
   FileReadError | ParseError
 > =>
   Effect.gen(function* () {
-    yield* Effect.logInfo("Loading spell tables from wowlab-data...")
+    yield* Effect.logInfo("Loading spell tables from wowlab-data...");
 
     const [
       spell,
@@ -327,12 +335,12 @@ export const loadAllSpellTables = (): Effect.Effect<
       spellCategory,
     ] = yield* Effect.all(
       SPELL_TABLES.map(({ file, schema }) =>
-        loadCsvFile(path.join(DBC_DATA_DIR, file), schema)
+        loadCsvFile(path.join(DBC_DATA_DIR, file), schema),
       ),
-      { concurrency: "unbounded" }
-    )
+      { concurrency: "unbounded" },
+    );
 
-    yield* Effect.logInfo(`Loaded ${spell.length} spells`)
+    yield* Effect.logInfo(`Loaded ${spell.length} spells`);
 
     return {
       spell,
@@ -346,31 +354,32 @@ export const loadAllSpellTables = (): Effect.Effect<
       spellRange,
       spellCategories,
       spellCategory,
-    }
-  })
+    };
+  });
 ```
 
 **transform.ts:**
+
 ```typescript
-import * as Effect from "effect/Effect"
-import { createCache } from "@packages/wowlab-services/Data"
+import * as Effect from "effect/Effect";
+import { createCache } from "@packages/wowlab-services/Data";
 
 export const transformSpell = (
   spellId: number,
-  cache: DbcCache
+  cache: DbcCache,
 ): Effect.Effect<SpellDataFlat, SpellNotFoundError> =>
   Effect.gen(function* () {
-    const misc = cache.spellMisc.get(spellId)
+    const misc = cache.spellMisc.get(spellId);
     if (!misc) {
-      return yield* Effect.fail(new SpellNotFoundError({ spellId }))
+      return yield* Effect.fail(new SpellNotFoundError({ spellId }));
     }
 
-    const name = cache.spellName.get(spellId)
-    const effects = cache.spellEffect.get(spellId) || []
-    const cooldowns = cache.spellCooldowns.get(misc.ID)
-    const castTimes = cache.spellCastTimes.get(misc.CastingTimeIndex)
-    const duration = cache.spellDuration.get(misc.DurationIndex)
-    const range = cache.spellRange.get(misc.RangeIndex)
+    const name = cache.spellName.get(spellId);
+    const effects = cache.spellEffect.get(spellId) || [];
+    const cooldowns = cache.spellCooldowns.get(misc.ID);
+    const castTimes = cache.spellCastTimes.get(misc.CastingTimeIndex);
+    const duration = cache.spellDuration.get(misc.DurationIndex);
+    const range = cache.spellRange.get(misc.RangeIndex);
 
     // Transform to flat structure for Supabase
     return {
@@ -381,54 +390,56 @@ export const transformSpell = (
       cooldown: cooldowns?.RecoveryTime || 0,
       gcd: cooldowns?.CategoryRecoveryTime || 0,
       // ... map all fields to Supabase schema
-    }
-  })
+    };
+  });
 ```
 
 **index.ts:**
+
 ```typescript
-import { Command, Options } from "@effect/cli"
-import * as Effect from "effect/Effect"
+import { Command, Options } from "@effect/cli";
+import * as Effect from "effect/Effect";
 
 const updateSpellDataProgram = (options: CliOptions) =>
   Effect.gen(function* () {
-    yield* Effect.logInfo("Starting spell data import...")
+    yield* Effect.logInfo("Starting spell data import...");
 
-    const supabase = yield* createSupabaseClient()
+    const supabase = yield* createSupabaseClient();
 
     if (options.clear && !options.dryRun) {
-      yield* clearAllSpells(supabase)
+      yield* clearAllSpells(supabase);
     }
 
-    const rawData = yield* loadAllSpellTables()
-    const cache = createCache(rawData)
+    const rawData = yield* loadAllSpellTables();
+    const cache = createCache(rawData);
 
-    const spellIds = options.spells === "all"
-      ? Array.from(cache.spellMisc.keys())
-      : parseSpellIds(options.spells)
+    const spellIds =
+      options.spells === "all"
+        ? Array.from(cache.spellMisc.keys())
+        : parseSpellIds(options.spells);
 
-    yield* Effect.logInfo(`Processing ${spellIds.length} spells...`)
+    yield* Effect.logInfo(`Processing ${spellIds.length} spells...`);
 
     const transformedSpells = yield* Effect.forEach(
       spellIds,
       (spellId) => transformSpell(spellId, cache),
-      { concurrency: "unbounded" }
-    )
+      { concurrency: "unbounded" },
+    );
 
     if (options.dryRun) {
-      yield* showDryRunPreview(transformedSpells)
-      return 0
+      yield* showDryRunPreview(transformedSpells);
+      return 0;
     }
 
     const inserted = yield* insertSpellsInBatches(
       supabase,
       transformedSpells,
-      options.batch
-    )
+      options.batch,
+    );
 
-    yield* Effect.logInfo(`✓ Import complete! Inserted ${inserted} spells`)
-    return 0
-  })
+    yield* Effect.logInfo(`✓ Import complete! Inserted ${inserted} spells`);
+    return 0;
+  });
 
 export const updateSpellDataCommand = Command.make(
   "update-spell-data",
@@ -438,13 +449,14 @@ export const updateSpellDataCommand = Command.make(
     dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
     spells: Options.text("spells").pipe(Options.withDefault("all")),
   },
-  updateSpellDataProgram
-)
+  updateSpellDataProgram,
+);
 ```
 
 #### 2.3 `update-item-data` Command
 
 Same structure as `update-spell-data`:
+
 - Load Item, ItemEffect, ItemSparse CSV tables
 - Create cache with Immutable.js Maps
 - Transform to Supabase `item_data` schema
@@ -461,17 +473,17 @@ Same structure as `update-spell-data`:
 export const parseIndexedFields = <T>(
   row: Record<string, unknown>,
   fieldName: string,
-  maxIndex: number
+  maxIndex: number,
 ): T[] => {
-  const result: T[] = []
+  const result: T[] = [];
   for (let i = 0; i < maxIndex; i++) {
-    const value = row[`${fieldName}_${i}`]
+    const value = row[`${fieldName}_${i}`];
     if (value !== undefined) {
-      result.push(value as T)
+      result.push(value as T);
     }
   }
-  return result
-}
+  return result;
+};
 
 // Example usage:
 // const effectMiscValue = parseIndexedFields<number>(row, "EffectMiscValue", 2)
@@ -490,6 +502,7 @@ pnpm add -D @types/papaparse
 #### 4.2 Data Directory
 
 All CLI commands use:
+
 ```
 third_party/wowlab-data/data/tables/
 ```
@@ -512,7 +525,7 @@ pnpm cli update-spell-data --clear --batch 1000
 #### 5.2 Validation Checklist
 
 - [ ] CSV parsing produces correct data types
-- [ ] Indexed array fields parse correctly (EffectMiscValue_0, _1)
+- [ ] Indexed array fields parse correctly (EffectMiscValue_0, \_1)
 - [ ] Relationships maintained (SpellID → Effects)
 - [ ] Supabase insertions succeed
 - [ ] No data corruption

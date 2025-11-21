@@ -1,17 +1,14 @@
 import { Command, Options } from "@effect/cli";
 import * as Effect from "effect/Effect";
-import { Map } from "immutable";
-
-import type { CliOptions, ItemDataFlat } from "./types";
-
-import { DBC_DATA_DIR } from "./config";
-import { loadAllDbcTables } from "./dbc-loader";
+import { createCache } from "@wowlab/services/Data";
+import { loadAllItemTables } from "./loader.js";
+import { transformItem } from "./transform.js";
 import {
-  clearAllItems,
   createSupabaseClient,
+  clearAllItems,
   insertItemsInBatches,
-} from "./supabase";
-import { parseItemIds, transformItems } from "./transform";
+} from "./supabase.js";
+import { CliOptions, ItemDataFlat } from "./types.js";
 
 const showDryRunPreview = (items: ItemDataFlat[]) =>
   Effect.gen(function* () {
@@ -21,9 +18,17 @@ const showDryRunPreview = (items: ItemDataFlat[]) =>
     }
   });
 
+const parseItemIds = (input: string, allIds: number[]): number[] => {
+  if (input === "all") return allIds;
+  return input
+    .split(",")
+    .map((s) => parseInt(s.trim()))
+    .filter((n) => !isNaN(n));
+};
+
 const updateItemDataProgram = (options: CliOptions) =>
   Effect.gen(function* () {
-    yield* Effect.logInfo("Starting item data migration...");
+    yield* Effect.logInfo("Starting item data import...");
 
     const supabase = yield* createSupabaseClient();
 
@@ -31,71 +36,65 @@ const updateItemDataProgram = (options: CliOptions) =>
       yield* clearAllItems(supabase);
     }
 
-    yield* Effect.logInfo("Loading DBC data...");
-    const rawData = yield* loadAllDbcTables(DBC_DATA_DIR);
-    yield* Effect.logInfo("DBC data loaded!");
+    const rawData = yield* loadAllItemTables();
+    const cache = createCache({
+      ...rawData,
+      spell: [],
+      spellEffect: [],
+      spellMisc: [],
+      spellName: [],
+      spellCastTimes: [],
+      spellCooldowns: [],
+      spellDuration: [],
+      spellRadius: [],
+      spellRange: [],
+      spellCategories: [],
+      spellCategory: [],
+    });
 
+    const allItemIds = Array.from(cache.item.keys());
     const itemIds =
       options.items === "all"
-        ? yield* Effect.sync(() =>
-            parseItemIds(options.items, {
-              fileData: Map(),
-              item: Map(rawData.item.map((row) => [row.ID, row])),
-              itemSparse: Map(),
-            }),
-          )
-        : parseItemIds(options.items, {
-            fileData: Map(),
-            item: Map(rawData.item.map((row) => [row.ID, row])),
-            itemSparse: Map(),
-          });
+        ? allItemIds
+        : parseItemIds(options.items, allItemIds);
 
     yield* Effect.logInfo(`Processing ${itemIds.length} items...`);
-    yield* Effect.logDebug(`Item IDs: ${itemIds.join(", ")}`);
 
-    const transformedItems = yield* transformItems(itemIds, rawData);
-    yield* Effect.logInfo(`Transformed ${transformedItems.length} items`);
+    const transformedItems = yield* Effect.forEach(
+      itemIds,
+      (itemId) =>
+        transformItem(itemId, cache).pipe(
+          Effect.catchTag("ItemNotFoundError", () => Effect.succeed(null)),
+        ),
+      { concurrency: "unbounded" },
+    );
+
+    const validItems = transformedItems.filter(
+      (s): s is ItemDataFlat => s !== null,
+    );
 
     if (options.dryRun) {
-      yield* showDryRunPreview(transformedItems);
+      yield* showDryRunPreview(validItems);
       return 0;
     }
 
     const inserted = yield* insertItemsInBatches(
       supabase,
-      transformedItems,
+      validItems,
       options.batch,
     );
-    yield* Effect.logInfo(`✓ Migration complete! Inserted ${inserted} items`);
 
+    yield* Effect.logInfo(`✓ Import complete! Inserted ${inserted} items`);
     return 0;
   });
 
-const CLI_OPTIONS = {
-  batch: Options.integer("batch").pipe(
-    Options.withDefault(1000),
-    Options.withDescription(
-      "Batch size for insertions (max 1000 for Supabase)",
-    ),
-  ),
-  clear: Options.boolean("clear").pipe(
-    Options.withDefault(false),
-    Options.withDescription("Clear all existing item data before inserting"),
-  ),
-  dryRun: Options.boolean("dry-run").pipe(
-    Options.withDefault(false),
-    Options.withDescription("Preview without inserting into database"),
-  ),
-  items: Options.text("items").pipe(
-    Options.withDefault("all"),
-    Options.withDescription(
-      'Item IDs to import: "all" (all DBC items, default), or comma-separated IDs',
-    ),
-  ),
-};
-
 export const updateItemDataCommand = Command.make(
   "update-item-data",
-  CLI_OPTIONS,
+  {
+    batch: Options.integer("batch").pipe(Options.withDefault(1000)),
+    clear: Options.boolean("clear").pipe(Options.withDefault(false)),
+    dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
+    items: Options.text("items").pipe(Options.withDefault("all")),
+  },
   updateItemDataProgram,
 );

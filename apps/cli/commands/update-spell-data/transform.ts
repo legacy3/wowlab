@@ -1,42 +1,34 @@
-import * as Spell from "@packages/innocent-schemas/Spell";
-import * as Data from "@packages/innocent-services/Data";
 import * as Effect from "effect/Effect";
+import * as Data from "effect/Data";
+import { DbcCache } from "@wowlab/services/Data";
 
-export const parseSpellIds = (
-  input: string,
-  cache: ReturnType<typeof Data.createCache>,
-): number[] =>
-  input === "all"
-    ? Array.from(cache.spellMisc.keys())
-    : input.split(",").map((id) => parseInt(id.trim(), 10));
+export class SpellNotFoundError extends Data.TaggedError("SpellNotFoundError")<{
+  spellId: number;
+}> {}
 
-export const transformSpells = (
-  spellIds: number[],
-  cache: ReturnType<typeof Data.createCache>,
-) =>
+export const transformSpell = (
+  spellId: number,
+  cache: DbcCache,
+): Effect.Effect<any, SpellNotFoundError> =>
   Effect.gen(function* () {
-    const results = yield* Effect.forEach(
-      spellIds,
-      (spellId) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.either(
-            Data.transformSpell(spellId, cache),
-          );
+    const misc = cache.spellMisc.get(spellId);
+    if (!misc) {
+      return yield* Effect.fail(new SpellNotFoundError({ spellId }));
+    }
 
-          if (result._tag === "Right") {
-            // Transform nested DBC to flat camelCase structure
-            return Data.flattenSpellData(
-              result.right as Spell.SpellDataFlatSchema,
-            );
-          } else {
-            yield* Effect.logDebug(`⚠️  Spell ${spellId} not found, skipping`);
-            return null;
-          }
-        }),
-      { concurrency: "unbounded" },
-    );
+    const name = cache.spellName.get(spellId);
+    const effects = cache.spellEffect.get(spellId) || [];
+    const cooldowns = cache.spellCooldowns.get(spellId);
+    const castTimes = cache.spellCastTimes.get(misc.CastingTimeIndex);
+    const duration = cache.spellDuration.get(misc.DurationIndex);
+    const range = cache.spellRange.get(misc.RangeIndex);
 
-    return results.filter(
-      (spell): spell is Spell.SpellDataFlat => spell !== null,
-    );
+    return {
+      id: spellId,
+      name: name?.Name_lang || "",
+      iconName: "",
+      castTime: castTimes?.Base || 0,
+      cooldown: cooldowns?.RecoveryTime || 0,
+      gcd: cooldowns?.CategoryRecoveryTime || 0,
+    };
   });

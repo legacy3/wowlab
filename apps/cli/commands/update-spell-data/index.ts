@@ -1,18 +1,14 @@
 import { Command, Options } from "@effect/cli";
-import { createCache } from "@packages/innocent-services/Data";
 import * as Effect from "effect/Effect";
-
-import type { CliOptions, SpellDataFlat } from "./types";
-
-import { DBC_DATA_DIR } from "./config";
-import { loadAllDbcTables } from "./dbc-loader";
-import { collectAllSpellIdsFromSpellbook } from "./spell-collector";
+import { createCache } from "@wowlab/services/Data";
+import { loadAllSpellTables } from "./loader.js";
+import { transformSpell } from "./transform.js";
 import {
-  clearAllSpells,
   createSupabaseClient,
+  clearAllSpells,
   insertSpellsInBatches,
-} from "./supabase";
-import { parseSpellIds, transformSpells } from "./transform";
+} from "./supabase.js";
+import { CliOptions, SpellDataFlat } from "./types.js";
 
 const showDryRunPreview = (spells: SpellDataFlat[]) =>
   Effect.gen(function* () {
@@ -22,9 +18,20 @@ const showDryRunPreview = (spells: SpellDataFlat[]) =>
     }
   });
 
+const parseSpellIds = (input: string, allIds: number[]): number[] => {
+  if (input === "all") {
+    return allIds;
+  }
+
+  return input
+    .split(",")
+    .map((s) => parseInt(s.trim()))
+    .filter((n) => !isNaN(n));
+};
+
 const updateSpellDataProgram = (options: CliOptions) =>
   Effect.gen(function* () {
-    yield* Effect.logInfo("Starting spell data migration...");
+    yield* Effect.logInfo("Starting spell data import...");
 
     const supabase = yield* createSupabaseClient();
 
@@ -32,62 +39,57 @@ const updateSpellDataProgram = (options: CliOptions) =>
       yield* clearAllSpells(supabase);
     }
 
-    yield* Effect.logInfo("Loading DBC data...");
-    const rawData = yield* loadAllDbcTables(DBC_DATA_DIR);
-    const cache = createCache(rawData);
-    yield* Effect.logInfo("Cache created!");
+    const rawData = yield* loadAllSpellTables();
+    const cache = createCache({
+      ...rawData,
+      item: [],
+      itemEffect: [],
+      itemSparse: [],
+    });
 
+    const allSpellIds = Array.from(cache.spellMisc.keys());
     const spellIds =
-      options.spells === "auto"
-        ? yield* collectAllSpellIdsFromSpellbook()
-        : parseSpellIds(options.spells, cache);
+      options.spells === "all"
+        ? allSpellIds
+        : parseSpellIds(options.spells, allSpellIds);
 
     yield* Effect.logInfo(`Processing ${spellIds.length} spells...`);
-    yield* Effect.logDebug(`Spell IDs: ${spellIds.join(", ")}`);
 
-    const transformedSpells = yield* transformSpells(spellIds, cache);
-    yield* Effect.logInfo(`Transformed ${transformedSpells.length} spells`);
+    const transformedSpells = yield* Effect.forEach(
+      spellIds,
+      (spellId) =>
+        transformSpell(spellId, cache).pipe(
+          Effect.catchTag("SpellNotFoundError", () => Effect.succeed(null)),
+        ),
+      { concurrency: "unbounded" },
+    );
+
+    const validSpells = transformedSpells.filter(
+      (s): s is SpellDataFlat => s !== null,
+    );
 
     if (options.dryRun) {
-      yield* showDryRunPreview(transformedSpells);
+      yield* showDryRunPreview(validSpells);
       return 0;
     }
 
     const inserted = yield* insertSpellsInBatches(
       supabase,
-      transformedSpells,
+      validSpells,
       options.batch,
     );
-    yield* Effect.logInfo(`✓ Migration complete! Inserted ${inserted} spells`);
 
+    yield* Effect.logInfo(`✓ Import complete! Inserted ${inserted} spells`);
     return 0;
   });
 
-const CLI_OPTIONS = {
-  batch: Options.integer("batch").pipe(
-    Options.withDefault(1000),
-    Options.withDescription(
-      "Batch size for insertions (max 1000 for Supabase)",
-    ),
-  ),
-  clear: Options.boolean("clear").pipe(
-    Options.withDefault(false),
-    Options.withDescription("Clear all existing spell data before inserting"),
-  ),
-  dryRun: Options.boolean("dry-run").pipe(
-    Options.withDefault(false),
-    Options.withDescription("Preview without inserting into database"),
-  ),
-  spells: Options.text("spells").pipe(
-    Options.withDefault("auto"),
-    Options.withDescription(
-      'Spell IDs to import: "auto" (from spellbook, default), "all" (all DBC spells), or comma-separated IDs',
-    ),
-  ),
-};
-
 export const updateSpellDataCommand = Command.make(
   "update-spell-data",
-  CLI_OPTIONS,
+  {
+    batch: Options.integer("batch").pipe(Options.withDefault(1000)),
+    clear: Options.boolean("clear").pipe(Options.withDefault(false)),
+    dryRun: Options.boolean("dry-run").pipe(Options.withDefault(false)),
+    spells: Options.text("spells").pipe(Options.withDefault("all")),
+  },
   updateSpellDataProgram,
 );
