@@ -144,3 +144,11 @@ export enum InventoryType {
 }
 
 export const InventoryTypeSchema = Schema.Enums(InventoryType);
+
+export enum SpellEffect {
+  SchoolDamage = 2,
+  Heal = 10,
+  PowerDrain = 30,
+}
+
+export const SpellEffectSchema = Schema.Enums(SpellEffect);

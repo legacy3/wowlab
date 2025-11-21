@@ -28,7 +28,7 @@ export const transformSpell = (
   Effect.gen(function* () {
     const nameStr = cache.spellName.get(spellId);
     if (!nameStr) {
-       return yield* Effect.fail(
+      return yield* Effect.fail(
         new Errors.SpellInfoNotFound({
           message: `Spell ${spellId} not found in DBC cache`,
           spellId,
@@ -42,10 +42,12 @@ export const transformSpell = (
     // Extract all properties using focused extractor functions
     const range = extractRange(misc, cache);
     const radius = extractRadius(effects, cache);
-    
+
     // ImplicitTarget is on Effect, so we can extract it.
-    const targeting = effects.flatMap((e) => [e.ImplicitTarget_0, e.ImplicitTarget_1].filter(t => t !== 0));
-    
+    const targeting = effects.flatMap((e) =>
+      [e.ImplicitTarget_0, e.ImplicitTarget_1].filter((t) => t !== 0),
+    );
+
     const damage = pipe(
       misc,
       Option.map((m) => ({ schoolMask: m.SchoolMask })),
@@ -55,21 +57,33 @@ export const transformSpell = (
     const attributes = pipe(
       misc,
       Option.map((m) => [
-        m.Attributes_0, m.Attributes_1, m.Attributes_2, m.Attributes_3,
-        m.Attributes_4, m.Attributes_5, m.Attributes_6, m.Attributes_7,
-        m.Attributes_8, m.Attributes_9, m.Attributes_10, m.Attributes_11,
-        m.Attributes_12, m.Attributes_13, m.Attributes_14, m.Attributes_15
+        m.Attributes_0,
+        m.Attributes_1,
+        m.Attributes_2,
+        m.Attributes_3,
+        m.Attributes_4,
+        m.Attributes_5,
+        m.Attributes_6,
+        m.Attributes_7,
+        m.Attributes_8,
+        m.Attributes_9,
+        m.Attributes_10,
+        m.Attributes_11,
+        m.Attributes_12,
+        m.Attributes_13,
+        m.Attributes_14,
+        m.Attributes_15,
       ]),
     );
-    
+
     const missile = pipe(
       misc,
       Option.map((m) => ({ speed: m.Speed })),
     );
     const empower = extractEmpower(spellId, cache);
-    
+
     // Cone relies on SpellTargetRestrictions (missing)
-    const cone = Option.none(); 
+    const cone = Option.none();
     /*
     pipe(
       first(cache.spellTargetRestrictions.get(spellId)),
@@ -80,7 +94,7 @@ export const transformSpell = (
     const castTime = extractCastTime(misc, cache);
     const duration = extractDuration(misc, cache);
     const charges = extractCharges(spellId, cache);
-    
+
     const defense = pipe(
       Option.fromNullable(cache.spellCategories.get(spellId)),
       Option.map((c) => ({ defenseType: c.DefenseType })),
@@ -90,7 +104,7 @@ export const transformSpell = (
       Option.fromNullable(cache.spellCategories.get(spellId)),
       Option.map((c) => ({ dispelType: c.DispelType })),
     );
-    
+
     // Facing relies on SpellCastingRequirements (missing)
     const facing = Option.none();
     /*
@@ -99,13 +113,13 @@ export const transformSpell = (
       Option.map((r) => ({ facingFlags: r.FacingCasterFlags })),
     );
     */
-    
+
     const triggers = effects
       .map((e) => e.EffectTriggerSpell)
       .filter((t) => t !== 0);
     const manaCost = extractManaCost(effects);
     const name = extractName(spellId, cache);
-    
+
     // Icon relies on FileData (missing)
     const iconName = "inv_misc_questionmark";
 
@@ -151,13 +165,13 @@ export const transformSpell = (
       interruptAura0: 0, // Option.isSome(interrupts) ? interrupts.value.aura[0] : 0,
       interruptAura1: 0, // Option.isSome(interrupts) ? interrupts.value.aura[1] : 0,
       interruptChannel0: 0,
-        // Option.isSome(interrupts)
-        // ? interrupts.value.channel[0]
-        // : 0,
+      // Option.isSome(interrupts)
+      // ? interrupts.value.channel[0]
+      // : 0,
       interruptChannel1: 0,
-        // Option.isSome(interrupts)
-        // ? interrupts.value.channel[1]
-        // : 0,
+      // Option.isSome(interrupts)
+      // ? interrupts.value.channel[1]
+      // : 0,
       interruptFlags: 0, // Option.isSome(interrupts) ? interrupts.value.flags : 0,
 
       // Duration

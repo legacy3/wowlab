@@ -1,10 +1,8 @@
-import { Dbc } from "@wowlab/core/Schemas";
+import { Dbc, Enums } from "@wowlab/core/Schemas";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
 import type { DbcCache } from "../DbcCache.js";
-
-import { POWER_TYPE, SPELL_EFFECT_TYPE } from "./constants.js";
 
 export const first = <T>(arr?: T[]): Option.Option<T> =>
   arr?.[0] ? Option.some(arr[0]) : Option.none();
@@ -15,17 +13,16 @@ export const extractRange = (
 ) =>
   pipe(
     misc,
-    Option.flatMap((m) => Option.fromNullable(cache.spellRange.get(m.RangeIndex))),
+    Option.flatMap((m) =>
+      Option.fromNullable(cache.spellRange.get(m.RangeIndex)),
+    ),
     Option.map((r) => ({
       ally: { max: r.RangeMax_1, min: r.RangeMin_1 },
       enemy: { max: r.RangeMax_0, min: r.RangeMin_0 },
     })),
   );
 
-export const extractRadius = (
-  effects: Dbc.SpellEffectRow[],
-  cache: DbcCache,
-) =>
+export const extractRadius = (effects: Dbc.SpellEffectRow[], cache: DbcCache) =>
   effects.flatMap((e) =>
     [e.EffectRadiusIndex_0, e.EffectRadiusIndex_1]
       .filter((i) => i !== 0)
@@ -102,8 +99,8 @@ export const extractScaling = (effects: Dbc.SpellEffectRow[]) =>
   effects
     .filter(
       (e) =>
-        e.Effect === SPELL_EFFECT_TYPE.SCHOOL_DAMAGE ||
-        e.Effect === SPELL_EFFECT_TYPE.HEAL,
+        e.Effect === Enums.SpellEffect.SchoolDamage ||
+        e.Effect === Enums.SpellEffect.Heal,
     )
     .map((e) => ({
       attackPower: e.BonusCoefficientFromAP,
@@ -114,8 +111,8 @@ export const extractManaCost = (effects: Dbc.SpellEffectRow[]): number =>
   Math.abs(
     effects.find(
       (e) =>
-        e.Effect === SPELL_EFFECT_TYPE.POWER_DRAIN &&
-        e.EffectMiscValue_0 === POWER_TYPE.MANA,
+        e.Effect === Enums.SpellEffect.PowerDrain &&
+        e.EffectMiscValue_0 === Enums.PowerType.Mana,
     )?.EffectBasePointsF ?? 0,
   );
 
