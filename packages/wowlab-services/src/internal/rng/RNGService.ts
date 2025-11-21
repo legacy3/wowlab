@@ -1,12 +1,12 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 
-export interface RNGService {
-  readonly nextBoolean: () => Effect.Effect<boolean>;
-  readonly nextFloat: () => Effect.Effect<number>;
-  readonly nextInt: (min: number, max: number) => Effect.Effect<number>;
-}
+export class RNGService extends Effect.Service<RNGService>()("RNGService", {
+  effect: Effect.succeed({
+    nextBoolean: () => Effect.sync(() => Math.random() > 0.5),
+    nextFloat: () => Effect.sync(() => Math.random()),
+    nextInt: (min: number, max: number) =>
+      Effect.sync(() => Math.floor(Math.random() * (max - min + 1)) + min),
+  }),
+}) {}
 
-export const RNGService = Context.GenericTag<RNGService>(
-  "@wowlab/services/RNGService",
-);
+export const RNGServiceDefault = RNGService.Default;
