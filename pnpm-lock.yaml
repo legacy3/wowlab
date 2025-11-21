@@ -343,6 +343,9 @@ importers:
       '@wowlab/core':
         specifier: workspace:*
         version: link:../../packages/wowlab-core
+      '@wowlab/rotation':
+        specifier: workspace:*
+        version: link:../../packages/wowlab-rotation
       '@wowlab/runtime':
         specifier: workspace:*
         version: link:../../packages/wowlab-runtime
@@ -537,6 +540,28 @@ importers:
 
   packages/wowlab-core:
     dependencies:
+      effect:
+        specifier: ^3.19.4
+        version: 3.19.4
+      immutable:
+        specifier: ^5.1.4
+        version: 5.1.4
+    devDependencies:
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.8.16
+      vite-plugin-dts:
+        specifier: ^4.5.4
+        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+
+  packages/wowlab-rotation:
+    dependencies:
+      '@wowlab/core':
+        specifier: workspace:*
+        version: link:../wowlab-core
+      '@wowlab/services':
+        specifier: workspace:*
+        version: link:../wowlab-services
       effect:
         specifier: ^3.19.4
         version: 3.19.4

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@wowlab/core": "workspace:*",
+    "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",
     "@wowlab/services": "workspace:*",
     "effect": "^3.19.4",
