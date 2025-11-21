@@ -64,13 +64,12 @@ export const runSimulation = Effect.gen(function* () {
   });
 
   // Update player unit with loaded spells
-  const playerWithSpells = {
-    ...playerUnit,
-    spells: {
-      all: playerSpellsMap,
-      meta: Record({ cooldownCategories: Map<number, number>() })(),
-    },
-  };
+  const playerWithSpells = playerUnit.set("spells", {
+    all: playerSpellsMap,
+    meta: Record({ cooldownCategories: Map<number, number>() })({
+      cooldownCategories: Map(),
+    }),
+  });
 
   // Add units to state
   console.log("Adding units to state");
