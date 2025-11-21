@@ -9,9 +9,23 @@ export type Bounded<T> = {
   modify(params: ModifyParams): T;
   set(params: ModifyParams): T;
 };
+// Expiry Transform
+export type Expiry<T> = {
+  trigger(params: TriggerParams): T;
+  reset(params: ResetParams): T;
+  reduce(params: ReduceParams): T;
+  refresh(params: TriggerParams): T;
+  modify(params: ModifyParams): T;
+  set(params: SetParams): T;
+};
 type IncrementParams = { amount: number; time: number };
+
 type ModifyParams = { value: number; time: number };
 
+type ReduceParams = { amount: number; time: number };
+type ResetParams = { time: number };
+type SetParams = { value: number; time: number };
+type TriggerParams = { duration: number; time: number };
 export function boundedTransform<T>(
   current: number,
   min: number,
@@ -39,20 +53,6 @@ export function boundedTransform<T>(
     },
   };
 }
-
-// Expiry Transform
-export type Expiry<T> = {
-  trigger(params: TriggerParams): T;
-  reset(params: ResetParams): T;
-  reduce(params: ReduceParams): T;
-  refresh(params: TriggerParams): T;
-  modify(params: ModifyParams): T;
-  set(params: SetParams): T;
-};
-type ReduceParams = { amount: number; time: number };
-type ResetParams = { time: number };
-type SetParams = { value: number; time: number };
-type TriggerParams = { duration: number; time: number };
 
 export function expiryTransform<T>(
   current: number,

@@ -1,4 +1,5 @@
 import { Map, Record } from "immutable";
+
 import * as Branded from "../schemas/Branded.js";
 import * as Enums from "../schemas/Enums.js";
 import { Aura } from "./Aura.js";
@@ -7,17 +8,17 @@ import { Position } from "./Position.js";
 import { Power } from "./Power.js";
 import { Spell } from "./Spell.js";
 
-// Collections
-export interface EntityCollection<T, Meta, ID> {
-  readonly all: Map<ID, T>;
-  readonly meta: Meta;
-}
-
 export type AuraCollection = EntityCollection<
   Aura,
   Record<{}>, // Empty meta for now
   Branded.SpellID
 >;
+
+// Collections
+export interface EntityCollection<T, Meta, ID> {
+  readonly all: Map<ID, T>;
+  readonly meta: Meta;
+}
 
 export type SpellCollection = EntityCollection<
   Spell,

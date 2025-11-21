@@ -1,15 +1,15 @@
 import { Record } from "immutable";
 
 interface PositionProps {
+  readonly facing: number;
   readonly x: number;
   readonly y: number;
-  readonly facing: number;
 }
 
 const PositionRecord = Record<PositionProps>({
+  facing: 0,
   x: 0,
   y: 0,
-  facing: 0,
 });
 
 export class Position extends PositionRecord {

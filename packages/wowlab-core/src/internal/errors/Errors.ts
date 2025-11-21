@@ -1,6 +1,7 @@
 import * as Data from "effect/Data";
-import * as Branded from "../schemas/Branded.js";
+
 import * as Entities from "../entities/index.js";
+import * as Branded from "../schemas/Branded.js";
 
 // ============================================================================
 // Accessor Errors

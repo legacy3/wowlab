@@ -1,4 +1,5 @@
 import { Record } from "immutable";
+
 import * as Branded from "../schemas/Branded.js";
 import { createNotFoundSpell, Spell } from "./Spell.js";
 

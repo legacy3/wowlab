@@ -1,6 +1,7 @@
 import { Record } from "immutable";
+
 import * as Branded from "../schemas/Branded.js";
-import { SpellInfo, createNotFoundSpellInfo } from "./Spell.js";
+import { createNotFoundSpellInfo, SpellInfo } from "./Spell.js";
 import { boundedTransform, expiryTransform } from "./Transforms.js";
 
 interface AuraComputedProps {

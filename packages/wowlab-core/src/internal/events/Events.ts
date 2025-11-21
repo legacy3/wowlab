@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
-import * as Branded from "../schemas/Branded.js";
+
 import * as Entities from "../entities/index.js";
+import * as Branded from "../schemas/Branded.js";
 
 export enum EventType {
   // Core progression
