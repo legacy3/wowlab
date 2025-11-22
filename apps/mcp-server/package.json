@@ -1,16 +1,17 @@
 {
   "name": "@wowlab/mcp-server",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "MCP server for querying WoW spell and item data from WowLab",
   "type": "module",
   "bin": {
-    "wowlab-mcp": "./build/index.js"
+    "wowlab-mcp": "./bin/wowlab-mcp"
   },
   "files": [
-    "build"
+    "build",
+    "bin"
   ],
   "scripts": {
-    "build": "tsc && chmod +x build/index.js",
+    "build": "tsc && chmod +x build/index.js && chmod +x bin/wowlab-mcp",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
