@@ -45,7 +45,8 @@ const validateCast = Effect.fn("CastQueueService.validateCast")(function* (
 
   // Check GCD
   const gcdCategory = 133;
-  const gcdExpiry = player.spells.meta.cooldownCategories.get(gcdCategory) ?? 0;
+  const gcdExpiry =
+    player.spells.meta.get("cooldownCategories").get(gcdCategory) ?? 0;
   if (gcdExpiry > currentTime) {
     return yield* Effect.fail(
       new Errors.GCDActive({
@@ -69,8 +70,10 @@ const applyImmediateEffects = (
   const newGcdExpiry = triggersGcd ? currentTime + gcd : currentTime;
 
   const updatedCooldownCategories = triggersGcd
-    ? player.spells.meta.cooldownCategories.set(gcdCategory, newGcdExpiry)
-    : player.spells.meta.cooldownCategories;
+    ? player.spells.meta
+        .get("cooldownCategories")
+        .set(gcdCategory, newGcdExpiry)
+    : player.spells.meta.get("cooldownCategories");
 
   // Consume a charge if spell has charges
   let updatedSpell = spell;
@@ -81,10 +84,10 @@ const applyImmediateEffects = (
     });
   }
 
-  return player.with({
+  return Entities.Unit.Unit.create({
+    ...player.toObject(),
     isCasting: spell.info.castTime > 0,
     spells: {
-      ...player.spells,
       all: player.spells.all.set(spell.info.id, updatedSpell),
       meta: player.spells.meta.set(
         "cooldownCategories",
@@ -100,7 +103,6 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
     dependencies: [
       SpellLifecycleService.Default,
       EventSchedulerService.Default,
-      StateService.Default,
       RotationRefService.Default,
     ],
     effect: Effect.gen(function* () {
@@ -118,7 +120,15 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             const currentState = yield* state.getState;
 
             yield* Effect.logInfo(`[CastQueue] Enqueueing ${spell.info.name}`);
-            const player = yield* state.getPlayer;
+
+            // Find player unit (first unit marked as player)
+            const player = currentState.units
+              .valueSeq()
+              .find((u) => u.isPlayer);
+
+            if (!player) {
+              return yield* Effect.fail(new Error("Player unit not found"));
+            }
 
             // Get the current spell from player state (not the stale spell parameter)
             const currentSpell = player.spells.all.get(spell.info.id) ?? spell;
@@ -152,7 +162,9 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               currentState.currentTime,
             );
 
-            yield* state.updateUnit(updatedPlayer);
+            yield* state.updateState((s) =>
+              s.set("units", s.units.set(player.id, updatedPlayer)),
+            );
 
             // Schedule events
             const castTime = modifiedSpell.info.castTime || 0;
@@ -177,11 +189,12 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               execute: pipe(
                 lifecycle.executeOnCast(modifiedSpell, player.id),
                 Effect.timeout("10 seconds"),
-                Effect.catchTag("Modifier", (error) =>
+                Effect.catchAll((error) =>
                   Effect.logError(
-                    `[CastQueue] Modifier ${error.modifierName} failed: ${error.reason}`,
+                    `[CastQueue] Modifier execution failed: ${error}`,
                   ),
                 ),
+                Effect.asVoid,
               ),
               id: `cast_complete_${modifiedSpell.info.id}_${startTime}`,
               payload: { spell: modifiedSpell, targetId },
@@ -198,7 +211,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               const aplEvaluateTime = Math.max(completeTime, gcdExpiry);
 
               yield* scheduler.schedule({
-                execute: rotationEffect,
+                execute: Effect.asVoid(rotationEffect),
                 id: `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
                 payload: {},
                 priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],

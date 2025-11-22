@@ -17,10 +17,15 @@ export class SpellLifecycleService extends Effect.Service<SpellLifecycleService>
         Effect.gen(function* () {
           const spellModifiers = spell.info.modifiers;
 
-          const caster = yield* state.getUnit(casterId);
+          const currentState = yield* state.getState;
+          const caster = currentState.units.get(casterId);
+          if (!caster) {
+            return spellModifiers;
+          }
+
           const auraModifiers = caster.auras.all
             .valueSeq()
-            .flatMap((aura) => aura.info.modifiers)
+            .flatMap((aura: Entities.Aura.Aura) => aura.info.modifiers)
             .toArray();
 
           return [...spellModifiers, ...auraModifiers];
@@ -38,18 +43,15 @@ export class SpellLifecycleService extends Effect.Service<SpellLifecycleService>
             }
 
             return yield* pipe(
-              Effect.reduce(
-                modifiers,
-                spell,
-                (currentSpell, modifier) =>
-                  pipe(
-                    modifier.beforeCast?.(currentSpell) ??
-                      Effect.succeed(currentSpell),
-                    Effect.withSpan(
-                      `spell:${spell.info.name}:modifier:${modifier.name}:beforeCast`,
-                    ),
-                    Effect.annotateLogs("modifier", modifier.name),
+              Effect.reduce(modifiers, spell, (currentSpell, modifier) =>
+                pipe(
+                  modifier.beforeCast?.(currentSpell) ??
+                    Effect.succeed(currentSpell),
+                  Effect.withSpan(
+                    `spell:${spell.info.name}:modifier:${modifier.name}:beforeCast`,
                   ),
+                  Effect.annotateLogs("modifier", modifier.name),
+                ),
               ),
               Effect.annotateLogs({
                 phase: "beforeCast",

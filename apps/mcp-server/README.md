@@ -98,21 +98,25 @@ Add to your Claude Code settings:
 If `npx` doesn't work on Windows (especially with nvm4w), use direct node execution:
 
 **Step 1:** Install globally
+
 ```powershell
 npm install -g @wowlab/mcp-server
 ```
 
 **Step 2:** Find your Node.js binary location
+
 ```powershell
 (Get-Command node).Source
 ```
 
 **Step 3:** Find your global npm modules location
+
 ```powershell
 npm root -g
 ```
 
 **Step 4:** Use this configuration (adjust paths based on your output):
+
 ```json
 {
   "mcpServers": {

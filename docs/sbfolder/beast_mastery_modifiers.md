@@ -74,7 +74,7 @@ Purpose: per‑spell side effects (buffs, procs, cooldown deltas, pet interactio
 **Call of the Wild**
 
 - Triggers CotW buff; spawns CotW stable pet(s) for duration (effect2) and count (effect1).
-- Up‑front CD reduction: Kill Command & Barbed Shot shortened by percent = effect3 * effect1.
+- Up‑front CD reduction: Kill Command & Barbed Shot shortened by percent = effect3 \* effect1.
 - Each buff tick: spawns additional CotW pet for effect2 duration; again reduces KC/Barbed Shot by same percent; with `Bloody Frenzy` → reapplies Beast Cleave to hunter/pets/CotW pets and triggers `stomp` on each pet.
 - Applies `withering_fire` buff for full CotW duration.
 
