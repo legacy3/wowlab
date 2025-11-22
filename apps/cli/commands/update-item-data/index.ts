@@ -1,35 +1,12 @@
+import { Item } from "@wowlab/core/Schemas";
+import { createCache, transformItem } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
-import { createCache } from "@wowlab/services/Data";
-import { transformItem } from "./transform.js";
-import { executeSupabaseQuery } from "../shared/supabase.js";
+
 import { createDataUpdateCommand } from "../shared/data-updater.js";
 import { ITEM_TABLES } from "../shared/dbc-config.js";
-import { ItemDataFlat } from "./types.js";
+import { executeSupabaseQuery } from "../shared/supabase.js";
 
 export const updateItemDataCommand = createDataUpdateCommand({
-  name: "update-item-data",
-  entityName: "items",
-  tables: ITEM_TABLES,
-  createCache: (rawData) =>
-    createCache({
-      ...(rawData as any),
-      spell: [],
-      spellEffect: [],
-      spellMisc: [],
-      spellName: [],
-      spellCastTimes: [],
-      spellCooldowns: [],
-      spellDuration: [],
-      spellRadius: [],
-      spellRange: [],
-      spellCategories: [],
-      spellCategory: [],
-    }),
-  getAllIds: (cache) => Array.from(cache.item.keys()),
-  transform: (id, cache) =>
-    transformItem(id, cache).pipe(
-      Effect.catchTag("ItemNotFoundError", () => Effect.succeed(null)),
-    ),
   clearData: (supabase) =>
     Effect.gen(function* () {
       yield* Effect.logWarning("Clearing all existing item data...");
@@ -39,7 +16,26 @@ export const updateItemDataCommand = createDataUpdateCommand({
       );
       yield* Effect.logInfo("✓ Cleared all item data");
     }),
-  insertBatch: (supabase, batch: ItemDataFlat[]) =>
+  createCache: (rawData) =>
+    createCache({
+      ...(rawData as any),
+      spell: [],
+      spellCastTimes: [],
+      spellCategories: [],
+      spellCategory: [],
+      spellClassOptions: [],
+      spellCooldowns: [],
+      spellDuration: [],
+      spellEffect: [],
+      spellMisc: [],
+      spellName: [],
+      spellPower: [],
+      spellRadius: [],
+      spellRange: [],
+    }),
+  entityName: "items",
+  getAllIds: (cache) => Array.from(cache.item.keys()),
+  insertBatch: (supabase, batch: Item.ItemDataFlat[]) =>
     Effect.gen(function* () {
       yield* executeSupabaseQuery(
         "upsert item_data batch",
@@ -48,4 +44,10 @@ export const updateItemDataCommand = createDataUpdateCommand({
 
       return batch.length;
     }),
+  name: "update-item-data",
+  tables: ITEM_TABLES,
+  transform: (id, cache) =>
+    transformItem(id, cache).pipe(
+      Effect.catchTag("ItemNotFound", () => Effect.succeed(null)),
+    ),
 });

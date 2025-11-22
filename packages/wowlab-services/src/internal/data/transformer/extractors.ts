@@ -130,10 +130,10 @@ export const extractDescription = (
   pipe(
     Option.fromNullable(cache.spell.get(spellId)),
     Option.map((n) => ({
-      description: n.Description_lang || "",
       auraDescription: n.AuraDescription_lang || "",
+      description: n.Description_lang || "",
     })),
-    Option.getOrElse(() => ({ description: "", auraDescription: "" })),
+    Option.getOrElse(() => ({ auraDescription: "", description: "" })),
   );
 
 export const extractPower = (spellId: number, cache: DbcCache) =>
@@ -141,9 +141,9 @@ export const extractPower = (spellId: number, cache: DbcCache) =>
     Option.fromNullable(cache.spellPower.get(spellId)),
     Option.flatMap(first),
     Option.map((p) => ({
-      powerType: p.PowerType,
       powerCost: p.ManaCost,
       powerCostPct: p.PowerCostPct,
+      powerType: p.PowerType,
     })),
   );
 
@@ -151,10 +151,10 @@ export const extractClassOptions = (spellId: number, cache: DbcCache) =>
   pipe(
     Option.fromNullable(cache.spellClassOptions.get(spellId)),
     Option.map((o) => ({
-      spellClassSet: o.SpellClassSet,
       spellClassMask1: o.SpellClassMask_0,
       spellClassMask2: o.SpellClassMask_1,
       spellClassMask3: o.SpellClassMask_2,
       spellClassMask4: o.SpellClassMask_3,
+      spellClassSet: o.SpellClassSet,
     })),
   );

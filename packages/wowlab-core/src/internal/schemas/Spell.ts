@@ -4,11 +4,11 @@ import * as Branded from "./Branded.js";
 
 export const SpellDataFlatSchema = Schema.Struct({
   // Core
+  auraDescription: Schema.String,
+  description: Schema.String,
   iconName: Schema.String,
   id: Branded.SpellIDSchema,
   name: Schema.String,
-  description: Schema.String,
-  auraDescription: Schema.String,
 
   // Timing
   castTime: Schema.Number,
@@ -17,19 +17,19 @@ export const SpellDataFlatSchema = Schema.Struct({
 
   // Resources
   manaCost: Schema.Number,
-  powerType: Schema.Number,
   powerCost: Schema.Number,
   powerCostPct: Schema.Number,
+  powerType: Schema.Number,
 
   // Charges (flattened from charges.maxCharges, charges.rechargeTime)
-  maxCharges: Schema.Number,
   chargeRecoveryTime: Schema.Number,
+  maxCharges: Schema.Number,
 
   // Range (flattened from range.ally.*, range.enemy.*)
-  rangeMax1: Schema.Number,
-  rangeMin1: Schema.Number,
   rangeMax0: Schema.Number,
+  rangeMax1: Schema.Number,
   rangeMin0: Schema.Number,
+  rangeMin1: Schema.Number,
 
   // Geometry (flattened from cone.degrees)
   coneDegrees: Schema.Number,
@@ -63,16 +63,16 @@ export const SpellDataFlatSchema = Schema.Struct({
   dispelType: Schema.Number,
   facingCasterFlags: Schema.Number,
   speed: Schema.Number,
-  spellClassSet: Schema.Number,
   spellClassMask1: Schema.Number,
   spellClassMask2: Schema.Number,
   spellClassMask3: Schema.Number,
   spellClassMask4: Schema.Number,
+  spellClassSet: Schema.Number,
 
   // Arrays (already flat)
   attributes: Schema.Array(Schema.Number),
-  implicitTarget: Schema.Array(Schema.Number),
   effectTriggerSpell: Schema.Array(Schema.Number),
+  implicitTarget: Schema.Array(Schema.Number),
 });
 
 export type SpellDataFlat = Schema.Schema.Type<typeof SpellDataFlatSchema>;

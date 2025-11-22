@@ -1,8 +1,8 @@
 import * as Schema from "effect/Schema";
 
 export const SpellCastTimesRowSchema = Schema.Struct({
-  ID: Schema.Number,
   Base: Schema.Number,
+  ID: Schema.Number,
   Minimum: Schema.Number,
 });
 

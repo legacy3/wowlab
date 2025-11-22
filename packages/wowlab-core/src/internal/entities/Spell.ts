@@ -19,11 +19,11 @@ interface SpellInfoProps extends SpellSchema.SpellDataFlat {
 
 const SpellInfoRecord = Record<SpellInfoProps>({
   // Core
+  auraDescription: "",
+  description: "",
   iconName: "inv_misc_questionmark",
   id: Branded.SpellID(-1),
   name: "",
-  description: "",
-  auraDescription: "",
 
   // Timing
   castTime: 0,
@@ -32,19 +32,19 @@ const SpellInfoRecord = Record<SpellInfoProps>({
 
   // Resources
   manaCost: 0,
-  powerType: -1,
   powerCost: 0,
   powerCostPct: 0,
+  powerType: -1,
 
   // Charges (flattened)
-  maxCharges: 0,
   chargeRecoveryTime: 0,
+  maxCharges: 0,
 
   // Range (flattened)
-  rangeMax1: 0,
-  rangeMin1: 0,
   rangeMax0: 0,
+  rangeMax1: 0,
   rangeMin0: 0,
+  rangeMin1: 0,
 
   // Geometry (flattened)
   coneDegrees: 0,
@@ -78,16 +78,16 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   dispelType: 0,
   facingCasterFlags: 0,
   speed: 0,
-  spellClassSet: 0,
   spellClassMask1: 0,
   spellClassMask2: 0,
   spellClassMask3: 0,
   spellClassMask4: 0,
+  spellClassSet: 0,
 
   // Arrays
   attributes: [],
-  implicitTarget: [],
   effectTriggerSpell: [],
+  implicitTarget: [],
 
   // Modifiers
   modifiers: [],

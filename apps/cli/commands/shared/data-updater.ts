@@ -1,25 +1,26 @@
 import { Command, Options } from "@effect/cli";
-import * as Effect from "effect/Effect";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { createSupabaseClient, insertInBatches } from "./supabase.js";
+import * as Effect from "effect/Effect";
+
 import { loadTables, TableConfig } from "./loader.js";
+import { createSupabaseClient, insertInBatches } from "./supabase.js";
 
 export interface DataUpdateConfig<
   TRawData extends Record<string, any>,
   TCache,
   TEntity extends { id: number },
 > {
-  name: string;
-  entityName: string; // e.g. "spells" or "items" (plural)
-  tables: { [K in keyof TRawData]: TableConfig<TRawData[K]> };
-  createCache: (data: TRawData) => TCache;
-  getAllIds: (cache: TCache) => number[];
-  transform: (id: number, cache: TCache) => Effect.Effect<TEntity | null, any>;
   clearData: (supabase: SupabaseClient) => Effect.Effect<void, any>;
+  createCache: (data: TRawData) => TCache;
+  entityName: string; // e.g. "spells" or "items" (plural)
+  getAllIds: (cache: TCache) => number[];
   insertBatch: (
     supabase: SupabaseClient,
     batch: TEntity[],
   ) => Effect.Effect<number, any>;
+  name: string;
+  tables: { [K in keyof TRawData]: TableConfig<TRawData[K]> };
+  transform: (id: number, cache: TCache) => Effect.Effect<TEntity | null, any>;
 }
 
 interface CliOptions {

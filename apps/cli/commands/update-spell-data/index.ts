@@ -1,26 +1,12 @@
-import * as Effect from "effect/Effect";
-import { createCache, transformSpell } from "@wowlab/services/Data";
 import { Spell } from "@wowlab/core/Schemas";
-import { executeSupabaseQuery } from "../shared/supabase.js";
+import { createCache, transformSpell } from "@wowlab/services/Data";
+import * as Effect from "effect/Effect";
+
 import { createDataUpdateCommand } from "../shared/data-updater.js";
 import { SPELL_TABLES } from "../shared/dbc-config.js";
+import { executeSupabaseQuery } from "../shared/supabase.js";
 
 export const updateSpellDataCommand = createDataUpdateCommand({
-  name: "update-spell-data",
-  entityName: "spells",
-  tables: SPELL_TABLES,
-  createCache: (rawData) =>
-    createCache({
-      ...(rawData as any),
-      item: [],
-      itemEffect: [],
-      itemSparse: [],
-    }),
-  getAllIds: (cache) => Array.from(cache.spellMisc.keys()),
-  transform: (id, cache) =>
-    transformSpell(id, cache).pipe(
-      Effect.catchTag("SpellInfoNotFound", () => Effect.succeed(null)),
-    ),
   clearData: (supabase) =>
     Effect.gen(function* () {
       yield* Effect.logWarning("Clearing all existing spell data...");
@@ -30,6 +16,16 @@ export const updateSpellDataCommand = createDataUpdateCommand({
       );
       yield* Effect.logInfo("✓ Cleared all spell data");
     }),
+  createCache: (rawData) =>
+    createCache({
+      ...(rawData as any),
+      item: [],
+      itemEffect: [],
+      itemSparse: [],
+      itemXItemEffect: [],
+    }),
+  entityName: "spells",
+  getAllIds: (cache) => Array.from(cache.spellMisc.keys()),
   insertBatch: (supabase, batch: Spell.SpellDataFlat[]) =>
     Effect.gen(function* () {
       yield* executeSupabaseQuery(
@@ -39,4 +35,10 @@ export const updateSpellDataCommand = createDataUpdateCommand({
 
       return batch.length;
     }),
+  name: "update-spell-data",
+  tables: SPELL_TABLES,
+  transform: (id, cache) =>
+    transformSpell(id, cache).pipe(
+      Effect.catchTag("SpellInfoNotFound", () => Effect.succeed(null)),
+    ),
 });

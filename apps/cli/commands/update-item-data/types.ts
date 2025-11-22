@@ -6,12 +6,31 @@ export interface CliOptions {
 }
 
 export interface ItemDataFlat {
+  binding: number;
+  buyPrice: number;
+  classId: number;
+  description: string;
+  effects: {
+    spellId: number;
+    triggerType: number;
+    charges: number;
+    cooldown: number;
+    categoryCooldown: number;
+  }[];
+  iconPath: string;
   id: number;
-  name: string;
-  quality: number;
   inventoryType: number;
   itemLevel: number;
+  maxCount: number;
+  name: string;
+  quality: number;
   requiredLevel: number;
-  classId: number;
+  sellPrice: number;
+  speed: number;
+  stackable: number;
+  stats: {
+    type: number;
+    value: number;
+  }[];
   subclassId: number;
 }

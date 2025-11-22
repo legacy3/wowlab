@@ -1,21 +1,22 @@
-import { DbcCache } from "@wowlab/services/Data";
-import * as Data from "effect/Data";
+import * as Errors from "@wowlab/core/Errors";
+import { Item } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
-import { ItemDataFlat } from "./types.js";
-
-export class ItemNotFoundError extends Data.TaggedError("ItemNotFoundError")<{
-  itemId: number;
-}> {}
+import type { DbcCache } from "../DbcCache.js";
 
 export const transformItem = (
   itemId: number,
   cache: DbcCache,
-): Effect.Effect<ItemDataFlat, ItemNotFoundError> =>
+): Effect.Effect<Item.ItemDataFlat, Errors.ItemNotFound> =>
   Effect.gen(function* () {
     const item = cache.item.get(itemId);
     if (!item) {
-      return yield* Effect.fail(new ItemNotFoundError({ itemId }));
+      return yield* Effect.fail(
+        new Errors.ItemNotFound({
+          itemId,
+          message: `Item ${itemId} not found in DBC cache`,
+        }),
+      );
     }
 
     const sparse = cache.itemSparse.get(itemId);
@@ -43,7 +44,7 @@ export const transformItem = (
       .filter((e): e is NonNullable<typeof e> => e !== null);
 
     // Resolve Stats (Basic mapping from Sparse)
-    const stats: ItemDataFlat["stats"] = [];
+    const stats: { type: number; value: number }[] = [];
     if (sparse) {
       for (let i = 0; i < 10; i++) {
         const type = (sparse as any)[`StatModifier_bonusStat_${i}`];

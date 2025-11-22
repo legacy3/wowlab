@@ -1,9 +1,10 @@
-import * as Effect from "effect/Effect";
-import * as path from "node:path";
+import * as FileSystem from "@effect/platform/FileSystem";
 import { parseCsvData } from "@wowlab/services/Data";
-import { DBC_DATA_DIR } from "./dbc-config.js";
-import { FileSystem } from "@effect/platform";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import * as path from "node:path";
+
+import { DBC_DATA_DIR } from "./dbc-config.js";
 
 export interface TableConfig<T = any> {
   file: string;
