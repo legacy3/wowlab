@@ -135,9 +135,9 @@ export const transformSpell = (
       ),
     );
 
-    const iconName = pipe(
+    const fileName = pipe(
       iconRow,
-      Option.map((row) => `${row.FilePath}${row.FileName}`.replace(/\\/g, "/")),
+      Option.map((row) => row.FileName.toLowerCase().split(".")[0]),
       Option.getOrElse(() => "inv_misc_questionmark"),
     );
 
@@ -146,7 +146,7 @@ export const transformSpell = (
       // Core
       auraDescription: descriptions.auraDescription,
       description: descriptions.description,
-      iconName,
+      fileName,
       id: Branded.SpellID(spellId),
       name,
 

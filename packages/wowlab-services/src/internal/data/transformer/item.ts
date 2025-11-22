@@ -1,6 +1,8 @@
 import * as Errors from "@wowlab/core/Errors";
 import { Item } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Option from "effect/Option";
 
 import type { DbcCache } from "../DbcCache.js";
 
@@ -21,18 +23,22 @@ export const transformItem = (
 
     const sparse = cache.itemSparse.get(itemId);
 
-    // Resolve Icon Path
-    const iconRow = cache.manifestInterfaceData.get(item.IconFileDataID);
-    const iconPath = iconRow
-      ? `${iconRow.FilePath}${iconRow.FileName}`.replace(/\\/g, "/")
-      : "";
+    // Resolve File Name
+    const fileName = pipe(
+      Option.fromNullable(cache.manifestInterfaceData.get(item.IconFileDataID)),
+      Option.map((row) => row.FileName.toLowerCase().split(".")[0]),
+      Option.getOrElse(() => "inv_misc_questionmark"),
+    );
 
     // Resolve Effects
     const effectLinks = cache.itemXItemEffect.get(itemId) || [];
     const effects = effectLinks
       .map((link) => {
         const effect = cache.itemEffect.get(link.ItemEffectID);
-        if (!effect) return null;
+        if (!effect) {
+          return null;
+        }
+
         return {
           categoryCooldown: effect.CategoryCoolDownMSec,
           charges: effect.Charges,
@@ -45,10 +51,12 @@ export const transformItem = (
 
     // Resolve Stats (Basic mapping from Sparse)
     const stats: { type: number; value: number }[] = [];
+
     if (sparse) {
       for (let i = 0; i < 10; i++) {
         const type = (sparse as any)[`StatModifier_bonusStat_${i}`];
         const value = (sparse as any)[`StatPercentEditor_${i}`];
+
         if (type !== -1 && type !== 0) {
           stats.push({ type, value: value || 0 });
         }
@@ -61,7 +69,7 @@ export const transformItem = (
       classId: item.ClassID,
       description: sparse?.Description_lang || "",
       effects,
-      iconPath,
+      fileName,
       id: itemId,
       inventoryType: item.InventoryType,
       itemLevel: sparse?.ItemLevel || 0,

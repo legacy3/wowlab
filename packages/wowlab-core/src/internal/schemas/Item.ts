@@ -19,7 +19,7 @@ export const ItemDataFlatSchema = Schema.Struct({
   classId: Schema.Number,
   description: Schema.String,
   effects: Schema.Array(ItemEffectSchema),
-  iconPath: Schema.String,
+  fileName: Schema.String,
   id: Schema.Number,
   inventoryType: Schema.Number,
   itemLevel: Schema.Number,

@@ -46,7 +46,7 @@ export type Database = {
           createdAt: string;
           description: string;
           effects: Json;
-          iconPath: string;
+          fileName: string;
           id: number;
           inventoryType: number;
           itemLevel: number;
@@ -68,7 +68,7 @@ export type Database = {
           createdAt?: string;
           description?: string;
           effects?: Json;
-          iconPath?: string;
+          fileName?: string;
           id: number;
           inventoryType?: number;
           itemLevel?: number;
@@ -90,7 +90,7 @@ export type Database = {
           createdAt?: string;
           description?: string;
           effects?: Json;
-          iconPath?: string;
+          fileName?: string;
           id?: number;
           inventoryType?: number;
           itemLevel?: number;
@@ -309,7 +309,7 @@ export type Database = {
           effectTriggerSpell: Json;
           empowerStages: Json;
           facingCasterFlags: number;
-          iconName: string;
+          fileName: string;
           id: number;
           implicitTarget: Json;
           interruptAura0: number;
@@ -358,7 +358,7 @@ export type Database = {
           effectTriggerSpell?: Json;
           empowerStages?: Json;
           facingCasterFlags?: number;
-          iconName?: string;
+          fileName?: string;
           id: number;
           implicitTarget?: Json;
           interruptAura0?: number;
@@ -407,7 +407,7 @@ export type Database = {
           effectTriggerSpell?: Json;
           empowerStages?: Json;
           facingCasterFlags?: number;
-          iconName?: string;
+          fileName?: string;
           id?: number;
           implicitTarget?: Json;
           interruptAura0?: number;

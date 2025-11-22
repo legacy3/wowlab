@@ -6,7 +6,7 @@ export const SpellDataFlatSchema = Schema.Struct({
   // Core
   auraDescription: Schema.String,
   description: Schema.String,
-  iconName: Schema.String,
+  fileName: Schema.String,
   id: Branded.SpellIDSchema,
   name: Schema.String,
 
