@@ -16,13 +16,13 @@ MCP (Model Context Protocol) server for querying World of Warcraft spell and ite
 Use npx to run without installation:
 
 ```bash
-npx wowlab-mcp@latest
+npx @wowlab/mcp-server@latest
 ```
 
 ### Global Installation
 
 ```bash
-npm install -g wowlab-mcp
+npm install -g @wowlab/mcp-server
 ```
 
 ## Available Tools
@@ -66,7 +66,7 @@ Add to your Claude Code settings:
   "mcpServers": {
     "wowlab": {
       "command": "npx",
-      "args": ["-y", "wowlab-mcp@latest"]
+      "args": ["-y", "@wowlab/mcp-server@latest"]
     }
   }
 }
@@ -81,7 +81,7 @@ If you want to use your own Supabase instance:
   "mcpServers": {
     "wowlab": {
       "command": "npx",
-      "args": ["-y", "wowlab-mcp@latest"],
+      "args": ["-y", "@wowlab/mcp-server@latest"],
       "env": {
         "SUPABASE_URL": "https://your-project.supabase.co",
         "SUPABASE_ANON_KEY": "your-anon-key"
@@ -137,7 +137,7 @@ pnpm dev
 
 ```bash
 # Publish to npm (credentials will be bundled in build/)
-npm publish
+npm publish --access public
 ```
 
 For first-time setup or contributors:
