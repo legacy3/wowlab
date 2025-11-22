@@ -60,20 +60,15 @@ export class NoChargesAvailable extends Data.TaggedError("NoChargesAvailable")<{
   readonly spell: Entities.Spell.Spell;
 }> {}
 
-export class SpellOnCooldown extends Data.TaggedError("SpellOnCooldown")<{
-  readonly remainingCooldown: number;
-  readonly spell: Entities.Spell.Spell;
-}> {}
-
-// ============================================================================
-// Data Errors
-// ============================================================================
-
 export class PlayerIsCasting extends Data.TaggedError("PlayerIsCasting")<{
   readonly spell: Entities.Spell.Spell;
   readonly castingSpell: Entities.Spell.Spell;
   readonly castEndsAt: number;
 }> {}
+
+// ============================================================================
+// Data Errors
+// ============================================================================
 
 export class ProfileBundleNotFound extends Data.TaggedError(
   "ProfileBundleNotFound",
@@ -93,6 +88,11 @@ export class SpellInfoNotFound extends Data.TaggedError("SpellInfoNotFound")<{
 export class SpellNotFound extends Data.TaggedError("SpellNotFound")<{
   readonly unitId: Branded.UnitID;
   readonly spellId: number;
+}> {}
+
+export class SpellOnCooldown extends Data.TaggedError("SpellOnCooldown")<{
+  readonly remainingCooldown: number;
+  readonly spell: Entities.Spell.Spell;
 }> {}
 
 // ============================================================================

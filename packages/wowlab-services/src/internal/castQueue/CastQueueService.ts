@@ -217,12 +217,12 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             Effect.mapError(
               (err) =>
                 new Errors.Cast({
+                  caster: undefined,
                   reason:
                     typeof err === "object" && err !== null && "_tag" in err
                       ? (err._tag as string)
                       : "Unknown error",
                   spell,
-                  caster: undefined,
                 }),
             ),
           ),

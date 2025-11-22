@@ -4,5 +4,5 @@ export * as PaperDoll from "./PaperDoll.js";
 export * as Position from "./Position.js";
 export * as Power from "./Power.js";
 export * as Spell from "./Spell.js";
-export * as Unit from "./Unit.js";
 export * as Types from "./types/SpellModifier.js";
+export * as Unit from "./Unit.js";

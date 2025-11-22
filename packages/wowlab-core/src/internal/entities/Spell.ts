@@ -1,5 +1,7 @@
 import { Record } from "immutable";
 
+import type { SpellModifier } from "./types/SpellModifier.js";
+
 import * as Branded from "../schemas/Branded.js";
 import * as SpellSchema from "../schemas/Spell.js";
 import {
@@ -8,7 +10,6 @@ import {
   Expiry,
   expiryTransform,
 } from "./Transforms.js";
-import type { SpellModifier } from "./types/SpellModifier.js";
 
 // ============================================================================
 // SpellInfo
@@ -22,7 +23,7 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   // Core
   auraDescription: "",
   description: "",
-  iconName: "inv_misc_questionmark",
+  fileName: "inv_misc_questionmark",
   id: Branded.SpellID(-1),
   name: "",
 

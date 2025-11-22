@@ -2,9 +2,10 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Schedule from "effect/Schedule";
 
-import * as Errors from "../../errors/index.js";
 import type { Spell } from "../Spell.js";
 import type { Unit } from "../Unit.js";
+
+import * as Errors from "../../errors/index.js";
 
 export type SpellModifier = {
   readonly name: string;
