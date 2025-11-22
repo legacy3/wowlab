@@ -165,7 +165,7 @@ Numeric values: read directly from spell data (dbc) at runtime or embed constant
 - **Huntmaster's Call**: 459731
 - **Summon Fenryr**: 459735
 - **Summon Hati**: 459738
-- **Withering Fire**: 466991 (buff), 468037 (black arrow variant)
+- **Withering Fire**: 466991 (buff), 468037 (black arrow variant - not in wowlab)
 - **Deathblow**: 378770 (buff)
 
 ### Pet Buffs
@@ -183,18 +183,18 @@ Numeric values: read directly from spell data (dbc) at runtime or embed constant
 - **Wild Instincts**: 424567
 - **Kill Zone**: 393480
 - **Spotter's Mark**: 466872
-- **Ohnahran Winds**: 1215057
-- **Sentinel**: 450387 (debuff), 450412 (tick)
+- **Ohnahran Winds**: 1215057 (SimC reference; not in wowlab database - may be MM-only)
+- **Sentinel**: 450387 (debuff), 450412 (tick - not in wowlab)
 
 ### Proc/Background Actions
 
 - **Snakeskin Quiver**: talent-based (fires Cobra Shot 193455)
-- **Stomp** (primary): 1217528
+- **Stomp** (primary): 1217528 (SimC reference; not in wowlab database)
 - **Stomp** (cleave): 201754
 - **Poisoned Barbs**: 1217549
 - **Brutal Companion**: talent-based (effectN 1 = stack threshold, effectN 2 = damage bonus)
 - **Kill Cleave**: 389448
-- **Wild Hunt**: 62762 (energize)
+- **Wild Hunt**: 62762 (Basic Attack Focus Cost Modifier in wowlab)
 - **Ravenous Leap** (Fenryr): 459753
 
 ### Pack Leader (Hero Talent)
@@ -242,17 +242,17 @@ Numeric values: read directly from spell data (dbc) at runtime or embed constant
 - **Auto Shot**: 75
 - **Steady Shot Energize**: 77443
 - **Call Pet**: 883
-- **Serpent Sting**: 271788 (BM), 259491 (SV), 13810 (base debuff duration)
+- **Serpent Sting**: 271788 (BM), 259491 (SV), 13810 (Ice Trap in wowlab)
 
 ### Dark Ranger Hero (cross-spec)
 
-- **Black Arrow**: 466930 (spell), 468572 (DoT)
-- **The Bell Tolls**: 1232992 (buff)
-- **Phantom Pain**: 468019
-- **Bleak Arrows**: 467718
-- **Shadow Hounds**: 442419 (summon)
-- **Bleak Powder**: 467914 (MM), 472084 (SV)
-- **TWW S3 Dark Ranger 4pc**: 1236975
+- **Black Arrow**: 466930 (spell - not in wowlab), 468572 (DoT - not in wowlab)
+- **The Bell Tolls**: 1232992 (buff - not in wowlab)
+- **Phantom Pain**: 468019 (not in wowlab)
+- **Bleak Arrows**: 467718 (not in wowlab)
+- **Shadow Hounds**: 442419 (summon - not in wowlab)
+- **Bleak Powder**: 467914 (MM - not in wowlab), 472084 (SV - not in wowlab)
+- **TWW S3 Dark Ranger 4pc**: 1236975 (Blighted Quiver)
 
 ### Survival (for reference)
 
@@ -265,3 +265,7 @@ Numeric values: read directly from spell data (dbc) at runtime or embed constant
 ### Constants & Magic Numbers
 
 - **BARBED_SHOT_BUFFS_MAX**: 8 (max simultaneous Barbed Shot regen buffs)
+
+## Notes on Spell ID Verification
+
+Spell IDs have been cross-referenced with the wowlab database (as of 2025-11-22). Most core BM spell IDs are verified. Spells marked "not in wowlab" are present in SimC source but not found in the wowlab database (may be renamed, removed, or spec-specific spells not yet indexed).
