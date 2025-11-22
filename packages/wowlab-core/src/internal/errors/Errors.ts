@@ -60,6 +60,11 @@ export class NoChargesAvailable extends Data.TaggedError("NoChargesAvailable")<{
   readonly spell: Entities.Spell.Spell;
 }> {}
 
+export class SpellOnCooldown extends Data.TaggedError("SpellOnCooldown")<{
+  readonly remainingCooldown: number;
+  readonly spell: Entities.Spell.Spell;
+}> {}
+
 // ============================================================================
 // Data Errors
 // ============================================================================

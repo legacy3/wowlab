@@ -8,13 +8,14 @@ import {
   Expiry,
   expiryTransform,
 } from "./Transforms.js";
+import type { SpellModifier } from "./types/SpellModifier.js";
 
 // ============================================================================
 // SpellInfo
 // ============================================================================
 
 interface SpellInfoProps extends SpellSchema.SpellDataFlat {
-  readonly modifiers: readonly any[]; // Placeholder for modifiers
+  readonly modifiers: readonly SpellModifier[];
 }
 
 const SpellInfoRecord = Record<SpellInfoProps>({
