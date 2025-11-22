@@ -1,0 +1,8 @@
+node_modules/
+build/
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Credentials (kept out of git but bundled during npm publish)
+src/config.ts

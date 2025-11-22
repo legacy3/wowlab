@@ -1,0 +1,43 @@
+{
+  "name": "@apps/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for querying WoW spell and item data from WowLab",
+  "type": "module",
+  "bin": {
+    "wowlab-mcp": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "ncu": "ncu -u",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "world-of-warcraft",
+    "wow",
+    "spell-data",
+    "item-data",
+    "mcp-server"
+  ],
+  "author": "WowLab",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@supabase/supabase-js": "^2.48.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
