@@ -23,14 +23,12 @@ export function registerSchemaTools(server: McpServer) {
       title: "Get Spell Schema",
     },
     async () => {
-      const { data, error } = await supabase
-        .from("information_schema.columns")
-        .select("column_name, data_type")
-        .eq("table_name", "spell_data")
-        .order("ordinal_position");
+      const { data, error } = await supabase.rpc("get_spell_schema");
 
       if (error) {
-        throw error;
+        throw new Error(
+          `Failed to get spell schema: ${error.message || JSON.stringify(error)}`,
+        );
       }
 
       const output = { columns: data || [] };
@@ -60,14 +58,12 @@ export function registerSchemaTools(server: McpServer) {
       title: "Get Item Schema",
     },
     async () => {
-      const { data, error } = await supabase
-        .from("information_schema.columns")
-        .select("column_name, data_type")
-        .eq("table_name", "item_data")
-        .order("ordinal_position");
+      const { data, error } = await supabase.rpc("get_item_schema");
 
       if (error) {
-        throw error;
+        throw new Error(
+          `Failed to get item schema: ${error.message || JSON.stringify(error)}`,
+        );
       }
 
       const output = { columns: data || [] };
