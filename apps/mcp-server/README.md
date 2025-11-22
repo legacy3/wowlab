@@ -6,8 +6,11 @@ MCP (Model Context Protocol) server for querying World of Warcraft spell and ite
 
 - **Spell Data**: Search and retrieve complete spell information including cast time, mana cost, effects, and more
 - **Item Data**: Search and retrieve complete item information including stats, item level, quality, and effects
+- **Advanced Filtering**: Query data with flexible filters (equality, ranges, pattern matching) on any column
+- **Schema Discovery**: Introspect available columns and types to build dynamic queries
 - **Zero Configuration**: Works out of the box with WowLab's public Supabase instance
 - **Efficient Batch Queries**: Retrieve multiple spells or items in a single request
+- **Future-Proof**: Generic filtering adapts automatically when database schema changes
 
 ## Installation
 
@@ -27,33 +30,51 @@ npm install -g @wowlab/mcp-server
 
 ## Available Tools
 
-### Spell Tools
+### Basic Search & Retrieval
 
 - **`search_spells`** - Search for spells by name
   - Parameters: `query` (string), `limit` (number, optional, max 50)
   - Returns: Array of matching spells with id, name, and description
 
-- **`get_spell`** - Get complete spell data by ID
-  - Parameters: `id` (number)
-  - Returns: Full spell object with all properties
-
-- **`get_spells_batch`** - Get multiple spells efficiently
-  - Parameters: `ids` (number[])
-  - Returns: Array of full spell objects
-
-### Item Tools
-
 - **`search_items`** - Search for items by name
   - Parameters: `query` (string), `limit` (number, optional, max 50)
   - Returns: Array of matching items with id, name, and description
+
+- **`get_spell`** - Get complete spell data by ID
+  - Parameters: `id` (number)
+  - Returns: Full spell object with all properties
 
 - **`get_item`** - Get complete item data by ID
   - Parameters: `id` (number)
   - Returns: Full item object with all properties
 
-- **`get_items_batch`** - Get multiple items efficiently
+- **`get_spells_batch`** / **`get_items_batch`** - Get multiple spells/items efficiently
   - Parameters: `ids` (number[])
-  - Returns: Array of full item objects
+  - Returns: Array of full spell/item objects
+
+### Advanced Filtering
+
+- **`query_spells`** - Query spells with flexible filters
+  - Parameters: `filters` (object), `limit` (number), `orderBy` (string), `ascending` (boolean)
+  - Filter operators: `eq`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`
+  - Example: Find fire spells: `{ filters: { schoolMask: 4 }, limit: 20 }`
+  - Example: Find instant cast spells: `{ filters: { castTime: 0 } }`
+  - Example: Find spells with cooldown: `{ filters: { recoveryTime: { gt: 0 } } }`
+
+- **`query_items`** - Query items with flexible filters
+  - Parameters: `filters` (object), `limit` (number), `orderBy` (string), `ascending` (boolean)
+  - Filter operators: `eq`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`
+  - Example: Find epic items: `{ filters: { quality: 4 }, limit: 20 }`
+  - Example: Find level 60-70 items: `{ filters: { itemLevel: { gte: 60, lte: 70 } } }`
+  - Example: Find swords: `{ filters: { name: { ilike: "sword" } } }`
+
+### Schema Discovery
+
+- **`get_spell_schema`** - Get all available spell_data columns and types
+  - Use this to discover what fields you can filter by in `query_spells`
+
+- **`get_item_schema`** - Get all available item_data columns and types
+  - Use this to discover what fields you can filter by in `query_items`
 
 ## Configuration
 

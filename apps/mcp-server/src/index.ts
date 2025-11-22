@@ -3,17 +3,24 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import { registerItemTools, registerSpellTools } from "./tools/index.js";
+import {
+  registerItemTools,
+  registerQueryTools,
+  registerSchemaTools,
+  registerSpellTools,
+} from "./tools/index.js";
 
 // Create server instance
 const server = new McpServer({
   name: "wowlab-mcp",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 // Register all tools
 registerSpellTools(server);
 registerItemTools(server);
+registerQueryTools(server);
+registerSchemaTools(server);
 
 // Start the server
 async function main() {
