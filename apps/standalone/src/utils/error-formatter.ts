@@ -64,7 +64,9 @@ const colorizeStackTrace = (stackTrace: string): string => {
 export const printFormattedError = (
   exit: Exit.Exit<unknown, unknown>,
 ): void => {
-  if (!Exit.isFailure(exit)) return;
+  if (!Exit.isFailure(exit)) {
+    return;
+  }
 
   const separator = chalk.red.bold("=".repeat(SEPARATOR_WIDTH));
   const divider = chalk.gray("-".repeat(SEPARATOR_WIDTH));
