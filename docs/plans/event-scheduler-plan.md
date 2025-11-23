@@ -19,19 +19,21 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 - Priority map lives in `@wowlab/core/Events` (single truth). Higher number = earlier at same timestamp.
 - Tie-breaker: id asc for stability.
 
-## Scheduler state & structure
+## Scheduler state & structure (use Immutable.js, no custom heap)
 
-- `SchedulerState`: `{ currentTime: number; queue: PriorityHeap<ScheduledEvent>; counter: number; }`.
-- `PriorityHeap`: tiny immutable binary heap backed by `ReadonlyArray`. Helpers: `push`, `pop`, `peek`, `size`, `isEmpty`. No mutation.
-- Stored in `Ref<SchedulerState>` inside the service; all ops return new state.
+- `SchedulerState`: `{ currentTime: number; counter: number; queue: OrderedMap<string, ScheduledEvent>; }`.
+- `OrderedMap` key builder enforces ordering: `key(event) = ${padTime(event.time)}:${padPriorityDesc(event.priority)}:${event.id}`.
+  - `padTime` ensures lexicographic = numeric (e.g., left-pad to 12 digits).
+  - `padPriorityDesc` flips sign or inverts (e.g., `999 - priority`) so higher priority sorts earlier.
+- Ops are persistent/immutable by default; stored in `Ref<SchedulerState>`; every op returns new state.
 
 ## Service API (Effect service)
 
-- `schedule(input) -> Effect<EventId>`: fills `priority` from map if absent, assigns `id`, rejects `time < currentTime`, pushes immutably, publishes to `events$` PubSub.
-- `peek() -> Effect<Option<ScheduledEvent>>`
-- `dequeue() -> Effect<Option<ScheduledEvent>>`: pops earliest, advances `currentTime` to event.time.
+- `schedule(input) -> Effect<EventId>`: fills `priority`, assigns `id`, rejects `time < currentTime`, inserts into `OrderedMap`, publishes to `events$`.
+- `peek() -> Effect<Option<ScheduledEvent>>`: `queue.first()`.
+- `dequeue() -> Effect<Option<ScheduledEvent>>`: `const [k, e] = queue.first(kv); queue = queue.shift(); currentTime = e.time`.
 - `clear()`, `size()`, `isEmpty()`.
-- `cancel(id)`, `cancelWhere(predicate)` (useful for canceled projectiles/auras).
+- `cancel(id)`, `cancelWhere(predicate)` implemented via `queue.filterNot`.
 - `events$`: PubSub stream of scheduled events for tracing.
 
 ## APL ergonomics (guardrails)
@@ -59,9 +61,9 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 
 ## Testing plan (Vitest)
 
-- Unit (pure heap):
-  - push/pop ordering by `(time, -priority, id)`.
-  - immutability: old heap reference unchanged after push/pop.
+- Unit (key builder):
+  - key sorts `(time asc, priority desc, id asc)` via `OrderedMap`.
+  - immutability: previous map reference unchanged after inserts/removals.
 - Service:
   - `schedule` then `peek`/`dequeue` respects ordering and advances `currentTime`.
   - APL guard prevents duplicates.
@@ -77,9 +79,8 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 - `packages/wowlab-core/src/internal/events/Events.ts`:
   - Ensure `EVENT_PRIORITY` exported; add `EventId` type and `DefaultPriority(eventType)`.
 - `packages/wowlab-services/src/internal/scheduler/`:
-  - New `PriorityHeap` (pure).
-  - Replace TinyQueue service with immutable implementation + builders.
-  - Add `APLGuard` helpers.
+  - Replace TinyQueue with `OrderedMap`-based queue + key builder (no custom heap).
+  - Builders + APL guard helpers.
 - `packages/wowlab-services/__tests__/scheduler.test.ts`:
   - Vitest coverage for invariants above.
 - `packages/wowlab-services/src/internal/castQueue/CastQueueService.ts`:
