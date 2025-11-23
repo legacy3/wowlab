@@ -187,7 +187,9 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
 
             yield* scheduler.schedule({
               execute: Effect.void,
-              id: `cast_start_${modifiedSpell.info.id}_${startTime}`,
+              id: Schemas.Branded.EventID(
+                `cast_start_${modifiedSpell.info.id}_${startTime}`,
+              ),
               payload: { spell: modifiedSpell, targetId },
               priority:
                 Events.EVENT_PRIORITY[Events.EventType.SPELL_CAST_START],
@@ -208,7 +210,9 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
                 ),
                 Effect.asVoid,
               ),
-              id: `cast_complete_${modifiedSpell.info.id}_${startTime}`,
+              id: Schemas.Branded.EventID(
+                `cast_complete_${modifiedSpell.info.id}_${startTime}`,
+              ),
               payload: { spell: modifiedSpell, targetId },
               priority:
                 Events.EVENT_PRIORITY[Events.EventType.SPELL_CAST_COMPLETE],
@@ -224,7 +228,9 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
 
               yield* scheduler.schedule({
                 execute: Effect.asVoid(rotationEffect),
-                id: `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
+                id: Schemas.Branded.EventID(
+                  `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
+                ),
                 payload: {},
                 priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
                 time: aplEvaluateTime,

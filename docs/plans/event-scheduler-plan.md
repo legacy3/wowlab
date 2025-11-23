@@ -25,8 +25,8 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 interface SchedulerState {
   currentTime: number;
   counter: number;
-  queue: TinyQueue<ScheduledEvent>;  // Binary heap for O(log n) operations
-  index: Immutable.Map<EventId, ScheduledEvent>;  // For O(log₃₂ n) lookup/cancel
+  queue: TinyQueue<ScheduledEvent>; // Binary heap for O(log n) operations
+  index: Immutable.Map<EventId, ScheduledEvent>; // For O(log₃₂ n) lookup/cancel
 }
 ```
 
@@ -37,13 +37,13 @@ interface SchedulerState {
 
 ## Complexity analysis
 
-| Operation | Complexity | Notes |
-|-----------|-----------|-------|
-| schedule  | O(log n) | Heap push + index insert |
-| peek      | O(1) | Heap peek only |
-| dequeue   | O(log n) | Heap pop + index delete |
-| cancel    | O(1) mark, O(log n) skip | Tombstones + skip-stale on pop |
-| cancelWhere | O(n) | Filter and rebuild (rare; can compact) |
+| Operation   | Complexity               | Notes                                  |
+| ----------- | ------------------------ | -------------------------------------- |
+| schedule    | O(log n)                 | Heap push + index insert               |
+| peek        | O(1)                     | Heap peek only                         |
+| dequeue     | O(log n)                 | Heap pop + index delete                |
+| cancel      | O(1) mark, O(log n) skip | Tombstones + skip-stale on pop         |
+| cancelWhere | O(n)                     | Filter and rebuild (rare; can compact) |
 
 ### Optional performance tweak: lazy tombstones
 
@@ -114,7 +114,15 @@ type ScheduledInput =
   | { type: "SPELL_CAST_COMPLETE"; at: number; spell; targetId }
   | { type: "SPELL_COOLDOWN_READY"; at: number; spell }
   | { type: "SPELL_CHARGE_READY"; at: number; spell }
-  | { type: "PROJECTILE_IMPACT"; at: number; projectileId; spell; casterUnitId; targetUnitId; damage }
+  | {
+      type: "PROJECTILE_IMPACT";
+      at: number;
+      projectileId;
+      spell;
+      casterUnitId;
+      targetUnitId;
+      damage;
+    }
   | { type: "AURA_EXPIRE"; at: number; aura; unitId }
   | { type: "AURA_STACK_DECAY"; at: number; aura; unitId }
   | { type: "PERIODIC_POWER"; at: number }
@@ -180,7 +188,7 @@ type ScheduledInput =
 - Update comparator: `(time asc, priority desc, id asc)`.
 - Implement cancel with tombstones + optional compaction; cancelWhere rebuilds.
 
-### packages/wowlab-services/__tests__/scheduler.test.ts
+### packages/wowlab-services/**tests**/scheduler.test.ts
 
 - Test suite covering all invariants and service operations.
 

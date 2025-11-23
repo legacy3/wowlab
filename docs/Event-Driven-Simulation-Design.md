@@ -46,13 +46,14 @@ This document outlines the design principles and architecture for WowLab's event
 **Current approach:**
 
 ```typescript
-const rotationEffect = yield* rotationRef.get;
+const rotationEffect = yield * rotationRef.get;
 if (rotationEffect !== null) {
-  yield* scheduler.schedule({
-    execute: rotationEffect, // Passing around Effect directly
-    type: Events.EventType.APL_EVALUATE,
-    // ...
-  });
+  yield *
+    scheduler.schedule({
+      execute: rotationEffect, // Passing around Effect directly
+      type: Events.EventType.APL_EVALUATE,
+      // ...
+    });
 }
 ```
 
@@ -71,23 +72,25 @@ if (rotationEffect !== null) {
 
 ```typescript
 // In SimulationService - ONCE at start
-yield* scheduler.schedule({
-  execute: rotation,
-  type: Events.EventType.APL_EVALUATE,
-  time: 0,
-  priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-});
+yield *
+  scheduler.schedule({
+    execute: rotation,
+    type: Events.EventType.APL_EVALUATE,
+    time: 0,
+    priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
+  });
 
 // In CastQueueService - after EACH successful cast
 const gcdExpiry = triggersGcd ? startTime + gcd : startTime;
 const aplEvaluateTime = Math.max(completeTime, gcdExpiry);
 
-yield* scheduler.schedule({
-  execute: rotationEffect,
-  type: Events.EventType.APL_EVALUATE,
-  time: aplEvaluateTime,  // When cast completes AND GCD expires
-  priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-});
+yield *
+  scheduler.schedule({
+    execute: rotationEffect,
+    type: Events.EventType.APL_EVALUATE,
+    time: aplEvaluateTime, // When cast completes AND GCD expires
+    priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
+  });
 ```
 
 **Why this works:**
@@ -101,14 +104,14 @@ yield* scheduler.schedule({
 
 ```typescript
 export const EVENT_PRIORITY = {
-  APL_EVALUATE: 10,           // Lowest - runs last at same timestamp
+  APL_EVALUATE: 10, // Lowest - runs last at same timestamp
   SPELL_CAST_START: 30,
   SPELL_CHARGE_READY: 40,
   PERIODIC_SPELL: 59,
   PERIODIC_POWER: 60,
   AURA_EXPIRE: 80,
   PROJECTILE_IMPACT: 90,
-  SPELL_CAST_COMPLETE: 100,   // Highest - runs first at same timestamp
+  SPELL_CAST_COMPLETE: 100, // Highest - runs first at same timestamp
 } as const;
 ```
 
@@ -125,26 +128,27 @@ This ensures the rotation always sees the correct spell/cooldown state.
 
 ```typescript
 // Implicit behavior in spell modifiers (not shown in code but should be there)
-onCast: (spell) => Effect.gen(function*() {
-  const runtime = yield* SpellbookRuntime;
-  const state = yield* runtime.state.getState();
-  const player = yield* runtime.units.get(playerId);
+onCast: (spell) =>
+  Effect.gen(function* () {
+    const runtime = yield* SpellbookRuntime;
+    const state = yield* runtime.state.getState();
+    const player = yield* runtime.units.get(playerId);
 
-  // Set spell cooldown
-  const cooldownExpiry = state.currentTime + spell.info.recoveryTime;
-  const updatedSpell = spell.with({ cooldownExpiry }, state.currentTime);
-  yield* runtime.spells.update(player.id, updatedSpell);
+    // Set spell cooldown
+    const cooldownExpiry = state.currentTime + spell.info.recoveryTime;
+    const updatedSpell = spell.with({ cooldownExpiry }, state.currentTime);
+    yield* runtime.spells.update(player.id, updatedSpell);
 
-  // Schedule SPELL_COOLDOWN_READY event (if needed)
-  if (spell.info.recoveryTime > 0) {
-    yield* runtime.scheduler.schedule({
-      type: Events.EventType.SPELL_COOLDOWN_READY,
-      time: cooldownExpiry,
-      payload: { spell: updatedSpell },
-      execute: Effect.void, // Could trigger APL if rotation is waiting
-    });
-  }
-})
+    // Schedule SPELL_COOLDOWN_READY event (if needed)
+    if (spell.info.recoveryTime > 0) {
+      yield* runtime.scheduler.schedule({
+        type: Events.EventType.SPELL_COOLDOWN_READY,
+        time: cooldownExpiry,
+        payload: { spell: updatedSpell },
+        execute: Effect.void, // Could trigger APL if rotation is waiting
+      });
+    }
+  });
 ```
 
 ### 4. Spell Transform Pattern
@@ -153,13 +157,13 @@ The `transform` API provides a clean way to modify spell state:
 
 ```typescript
 // Decrement charges
-spell.transform.charges.decrement({ amount: 1, time: currentTime })
+spell.transform.charges.decrement({ amount: 1, time: currentTime });
 
 // Set cooldown
-spell.transform.cooldown.set({ time: currentTime + spell.info.recoveryTime })
+spell.transform.cooldown.set({ time: currentTime + spell.info.recoveryTime });
 
 // Clear cooldown
-spell.transform.cooldown.reset({ time: currentTime })
+spell.transform.cooldown.reset({ time: currentTime });
 ```
 
 **Benefits:**
@@ -180,7 +184,7 @@ spell.transform.cooldown.reset({ time: currentTime })
 // Polling loop
 while (currentTime < maxDuration) {
   if (shouldRunRotation(currentTime)) {
-    yield* runRotation();
+    yield * runRotation();
   }
   currentTime += 100; // Advance by fixed increment
 }
@@ -191,11 +195,11 @@ while (currentTime < maxDuration) {
 ```typescript
 // Event loop
 while (true) {
-  const nextEvent = yield* scheduler.dequeue();
+  const nextEvent = yield * scheduler.dequeue();
   if (!nextEvent || nextEvent.time > maxDuration) break;
 
-  yield* state.updateState(s => s.set("currentTime", nextEvent.time));
-  yield* nextEvent.execute; // Events schedule other events
+  yield * state.updateState((s) => s.set("currentTime", nextEvent.time));
+  yield * nextEvent.execute; // Events schedule other events
 }
 ```
 
@@ -260,10 +264,16 @@ player.health.current -= damage;
 ✅ **Good (immutable):**
 
 ```typescript
-const updatedPlayer = player.with({
-  health: player.health.transform.damage({ amount: damage, time: currentTime })
-}, currentTime);
-yield* unitService.update(updatedPlayer);
+const updatedPlayer = player.with(
+  {
+    health: player.health.transform.damage({
+      amount: damage,
+      time: currentTime,
+    }),
+  },
+  currentTime,
+);
+yield * unitService.update(updatedPlayer);
 ```
 
 ## Architectural Improvements Needed
@@ -276,10 +286,10 @@ Create a **base modifier** that ALL spells use to set cooldowns:
 // packages/wowlab-spellbook/src/internal/modifiers/base/CooldownModifier.ts
 
 export const CooldownModifier = (
-  spell: Entities.Spell.Spell
+  spell: Entities.Spell.Spell,
 ): SpellModifier => ({
   name: "Base Cooldown",
-  onCast: Effect.gen(function*(spell, runtime) {
+  onCast: Effect.gen(function* (spell, runtime) {
     // Only set cooldown if spell has one
     if (spell.info.recoveryTime <= 0) return;
 
@@ -289,7 +299,7 @@ export const CooldownModifier = (
     // Set spell cooldown
     const cooldownExpiry = state.currentTime + spell.info.recoveryTime;
     const updatedSpell = spell.transform.cooldown.set({
-      time: cooldownExpiry
+      time: cooldownExpiry,
     });
 
     yield* runtime.spells.update(player.id, updatedSpell);
@@ -302,7 +312,7 @@ export const CooldownModifier = (
       priority: Events.EVENT_PRIORITY[Events.EventType.SPELL_COOLDOWN_READY],
       execute: Effect.void,
     });
-  })
+  }),
 });
 ```
 
@@ -316,7 +326,7 @@ const bestialWrath = SpellInfo.create({
   modifiers: [
     CooldownModifier, // <-- Base modifier
     ...customModifiers,
-  ]
+  ],
 });
 ```
 
@@ -326,34 +336,36 @@ const bestialWrath = SpellInfo.create({
 
 ```typescript
 // Schedules APL every cast - WRONG
-yield* scheduler.schedule({
-  execute: Effect.asVoid(rotationEffect),
-  time: aplEvaluateTime,
-  type: Events.EventType.APL_EVALUATE,
-});
+yield *
+  scheduler.schedule({
+    execute: Effect.asVoid(rotationEffect),
+    time: aplEvaluateTime,
+    type: Events.EventType.APL_EVALUATE,
+  });
 ```
 
 **Should be (innocent-services pattern):**
 
 ```typescript
 // Only schedule if rotation exists AND cast succeeded
-const rotationEffect = yield* rotationRef.get;
+const rotationEffect = yield * rotationRef.get;
 if (rotationEffect !== null) {
   const gcdExpiry = triggersGcd ? startTime + gcd : startTime;
   const aplEvaluateTime = Math.max(completeTime, gcdExpiry);
 
-  yield* scheduler.schedule({
-    execute: rotationEffect,
-    id: `apl_evaluate_${spell.info.id}_${startTime}`,
-    time: aplEvaluateTime,
-    type: Events.EventType.APL_EVALUATE,
-    priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-    payload: {},
-  });
+  yield *
+    scheduler.schedule({
+      execute: rotationEffect,
+      id: `apl_evaluate_${spell.info.id}_${startTime}`,
+      time: aplEvaluateTime,
+      type: Events.EventType.APL_EVALUATE,
+      priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
+      payload: {},
+    });
 }
 
 // Interrupt - this prevents duplicate APL scheduling
-return yield* Effect.interrupt;
+return yield * Effect.interrupt;
 ```
 
 ### 3. Remove Periodic APL Fallback
@@ -364,11 +376,12 @@ If the old implementation had a "periodic APL fallback" in SimulationService:
 
 ```typescript
 // DON'T DO THIS - it fights with event-driven scheduling
-yield* scheduler.schedule({
-  execute: rotation,
-  type: Events.EventType.APL_EVALUATE,
-  time: currentTime + 1000, // Every second fallback - WRONG
-});
+yield *
+  scheduler.schedule({
+    execute: rotation,
+    type: Events.EventType.APL_EVALUATE,
+    time: currentTime + 1000, // Every second fallback - WRONG
+  });
 ```
 
 The rotation should ONLY be scheduled by:
@@ -382,8 +395,8 @@ The rotation should ONLY be scheduled by:
 **Current pattern:**
 
 ```typescript
-const rotationRef = yield* RotationRefService; // Service that holds Effect
-const rotation = yield* rotationRef.get;       // Get raw Effect
+const rotationRef = yield * RotationRefService; // Service that holds Effect
+const rotation = yield * rotationRef.get; // Get raw Effect
 ```
 
 **Better pattern:**
@@ -392,28 +405,30 @@ const rotation = yield* rotationRef.get;       // Get raw Effect
 // Define rotation as a reusable context
 interface RotationContext {
   readonly evaluate: Effect.Effect<void>; // The APL evaluation logic
-  readonly playerId: UnitID;              // Who is casting
+  readonly playerId: UnitID; // Who is casting
 }
 
 // In rotation definition
 const beastMasteryRotation = (playerId: UnitID) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const rotation = yield* RotationContext;
     // ... priority-based spell casts
   });
 
 // Set it once
-yield* RotationContext.provide({
-  evaluate: beastMasteryRotation(playerId),
-  playerId,
-});
+yield *
+  RotationContext.provide({
+    evaluate: beastMasteryRotation(playerId),
+    playerId,
+  });
 
 // Access it anywhere
-const { evaluate } = yield* RotationContext;
-yield* scheduler.schedule({
-  execute: evaluate,
-  type: Events.EventType.APL_EVALUATE,
-});
+const { evaluate } = yield * RotationContext;
+yield *
+  scheduler.schedule({
+    execute: evaluate,
+    type: Events.EventType.APL_EVALUATE,
+  });
 ```
 
 ## Implementation Checklist
@@ -541,12 +556,13 @@ When a spell becomes available, **automatically trigger APL evaluation:**
 
 ```typescript
 // In SPELL_COOLDOWN_READY event handler
-yield* scheduler.schedule({
-  execute: rotationEffect,
-  type: Events.EventType.APL_EVALUATE,
-  time: currentTime,
-  priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-});
+yield *
+  scheduler.schedule({
+    execute: rotationEffect,
+    type: Events.EventType.APL_EVALUATE,
+    time: currentTime,
+    priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
+  });
 ```
 
 This "wakes up" stalled rotations when resources become available.
@@ -558,11 +574,12 @@ Some rotations need to react to aura expiration:
 ```typescript
 // When important aura expires, re-evaluate rotation
 if (aura.name === "Frenzy") {
-  yield* scheduler.schedule({
-    execute: rotationEffect,
-    type: Events.EventType.APL_EVALUATE,
-    time: currentTime,
-  });
+  yield *
+    scheduler.schedule({
+      execute: rotationEffect,
+      type: Events.EventType.APL_EVALUATE,
+      time: currentTime,
+    });
 }
 ```
 
@@ -571,14 +588,15 @@ if (aura.name === "Frenzy") {
 For debugging and analysis:
 
 ```typescript
-yield* scheduler.schedule({
-  execute: Effect.gen(function*() {
-    const state = yield* StateService.getState();
-    yield* PubSub.publish(snapshotPubSub, state);
-  }),
-  type: Events.EventType.SNAPSHOT,
-  time: currentTime,
-});
+yield *
+  scheduler.schedule({
+    execute: Effect.gen(function* () {
+      const state = yield* StateService.getState();
+      yield* PubSub.publish(snapshotPubSub, state);
+    }),
+    type: Events.EventType.SNAPSHOT,
+    time: currentTime,
+  });
 ```
 
 Schedule snapshots at regular intervals (e.g., every 1000ms) for timeline visualization.
@@ -601,5 +619,5 @@ By following the innocent-services pattern and the principles outlined here, the
 
 ---
 
-*Document created: 2025-01-23*
-*Last updated: 2025-01-23*
+_Document created: 2025-01-23_
+_Last updated: 2025-01-23_

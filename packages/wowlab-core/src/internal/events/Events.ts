@@ -88,9 +88,16 @@ export const EVENT_PRIORITY: Record<EventType, number> = {
   [EventType.SPELL_DAMAGE]: 95,
 };
 
+/**
+ * Scheduled event in the priority queue.
+ * Alias for SimulationEvent for consistency with the event scheduler plan.
+ */
+export type ScheduledEvent<T extends EventType = EventType> =
+  SimulationEvent<T>;
+
 export interface SimulationEvent<T extends EventType = EventType> {
   readonly execute: Effect.Effect<void, unknown>;
-  readonly id: string;
+  readonly id: Branded.EventID;
 
   readonly payload: EventPayloadMap[T];
   readonly priority: number;

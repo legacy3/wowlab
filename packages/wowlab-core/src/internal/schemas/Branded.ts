@@ -1,3 +1,5 @@
+/* eslint-disable no-redeclare */
+
 import * as Brand from "effect/Brand";
 import * as Schema from "effect/Schema";
 
@@ -36,6 +38,18 @@ export const ProjectileIDSchema = Schema.String.pipe(
 export type ProjectileID = Schema.Schema.Type<typeof ProjectileIDSchema>;
 
 export const ProjectileID = Brand.refined<ProjectileID>(
+  (s) => s.length > 0,
+  (s) => Brand.error(`Expected non-empty string, got "${s}"`),
+);
+
+export const EventIDSchema = Schema.String.pipe(
+  Schema.minLength(1),
+  Schema.brand("EventID"),
+);
+
+export type EventID = Schema.Schema.Type<typeof EventIDSchema>;
+
+export const EventID = Brand.refined<EventID>(
   (s) => s.length > 0,
   (s) => Brand.error(`Expected non-empty string, got "${s}"`),
 );

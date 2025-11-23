@@ -1,5 +1,6 @@
 import * as Entities from "@wowlab/core/Entities";
 import * as Events from "@wowlab/core/Events";
+import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
@@ -49,7 +50,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
             yield* scheduler.clear();
             yield* scheduler.schedule({
               execute: rotation as Effect.Effect<void, unknown>,
-              id: "initial_apl",
+              id: Schemas.Branded.EventID("initial_apl"),
               payload: {},
               priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
               time: 0,
