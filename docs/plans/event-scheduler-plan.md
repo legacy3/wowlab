@@ -10,7 +10,6 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 - Deterministic ordering: `(time asc, priority desc, id asc)`.
 - Pure, immutable state management; easy to test with Vitest.
 - Ergonomic helpers so callers never fiddle with ids or priorities.
-- Efficient cancel operations without full queue rebuilds.
 
 ## Event model
 
@@ -43,7 +42,7 @@ interface SchedulerState {
 | schedule  | O(log n) | Heap push + index insert |
 | peek      | O(1) | Heap peek only |
 | dequeue   | O(log n) | Heap pop + index delete |
-| cancel    | O(n) | Rebuild queue, but rare operation |
+| cancel    | O(n) | Rebuild queue |
 | cancelWhere | O(n) | Filter and rebuild |
 
 ## Service API (Effect service)
@@ -132,36 +131,42 @@ Callers provide semantic parameters; builders handle technical details.
 - **Cooldown ready**: fires event -> can trigger APL re-evaluation.
 - **Index consistency**: after multiple schedule/cancel operations, index matches queue.
 
-## File touchpoints
+## Implementation
 
-- `packages/wowlab-core/src/internal/events/Events.ts`:
-  - Export `EVENT_PRIORITY` (already exists).
-  - Add `EventId` type alias: `type EventId = string & { readonly EventId: unique symbol }`.
+### packages/wowlab-core/src/internal/events/Events.ts
 
-- `packages/wowlab-services/src/internal/scheduler/EventSchedulerService.ts`:
-  - Enhance state with index: `Immutable.Map<EventId, ScheduledEvent>`.
-  - Implement APL guard in `scheduleAPL`.
-  - Add builder helpers.
-  - Update comparator for full ordering.
+- Export `EVENT_PRIORITY`.
+- Add `EventId` type: `type EventId = string & { readonly EventId: unique symbol }`.
 
-- `packages/wowlab-services/__tests__/scheduler.test.ts`:
-  - Create test file with coverage for invariants above.
+### packages/wowlab-services/src/internal/scheduler/EventSchedulerService.ts
 
-- `packages/wowlab-services/src/internal/castQueue/CastQueueService.ts`:
-  - Replace inline APL scheduling (lines 219-233) with `scheduleNextAPL` helper.
-  - Keep `Effect.interrupt` after scheduling.
+- Add index to state: `Immutable.Map<EventId, ScheduledEvent>`.
+- Implement APL guard: `scheduleAPL`, `scheduleNextAPL`.
+- Add builder helpers: `cooldownReady`, `chargeReady`, `auraExpire`, `periodicPower`, `projectileImpact`.
+- Update comparator: `(time asc, priority desc, id asc)`.
+- Implement cancel operations with queue rebuild.
 
-## Developer ergonomics
+### packages/wowlab-services/__tests__/scheduler.test.ts
 
-- **Defaults everywhere**: builders auto-fill priority from `EVENT_PRIORITY`, auto-generate IDs.
-- **Typed errors**: friendly error with context when scheduling invalid events (include type, time, currentTime).
-- **Optional tracing**: `events$` PubSub stream for debugging timeline without mutation.
-- **Clean API**: callers work with semantic helpers, not raw scheduler primitives.
+- Test suite covering all invariants and service operations.
 
-## Rollout steps
+### packages/wowlab-services/src/internal/castQueue/CastQueueService.ts
 
-1. **Enhance scheduler**: add index to state, implement APL guard, add builders, write tests.
-2. **Wire CastQueue**: replace inline APL scheduling with `scheduleNextAPL` helper.
-3. **Seed APL**: in SimulationService, schedule initial APL at `t=0`; remove any periodic fallback.
-4. **Add lifecycle events**: implement `CooldownModifier` + `ChargeModifier` to wake rotation when resources available.
-5. **Tracing**: add optional subscriber to `events$` for timeline debugging.
+- Delete inline APL scheduling logic.
+- Use `scheduleNextAPL` helper with `Effect.interrupt`.
+
+### packages/wowlab-services/src/internal/simulation/SimulationService.ts
+
+- Seed initial APL at `t=0`.
+- Delete periodic APL fallback.
+
+### Event lifecycle hooks
+
+- Implement `CooldownModifier` events to schedule `SPELL_COOLDOWN_READY`.
+- Implement `ChargeModifier` events to schedule `SPELL_CHARGE_READY`.
+- Wake rotation when resources become available.
+
+### Tracing
+
+- Subscribe to `events$` PubSub for timeline debugging.
+- Log event scheduling and execution.
