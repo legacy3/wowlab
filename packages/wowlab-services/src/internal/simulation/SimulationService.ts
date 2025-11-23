@@ -10,7 +10,11 @@ import { UnitService } from "../unit/UnitService.js";
 export class SimulationService extends Effect.Service<SimulationService>()(
   "SimulationService",
   {
-    dependencies: [EventSchedulerService.Default, UnitService.Default],
+    dependencies: [
+      EventSchedulerService.Default,
+      UnitService.Default,
+      StateService.Default,
+    ],
     effect: Effect.gen(function* () {
       const state = yield* StateService;
       const scheduler = yield* EventSchedulerService;
@@ -22,7 +26,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       return {
         run: (durationMs: number) =>
           Effect.gen(function* () {
-            const startTime = yield* state.getState.pipe(
+            const startTime = yield* state.getState().pipe(
               Effect.map((s) => s.currentTime),
             );
             const endTime = startTime + durationMs;

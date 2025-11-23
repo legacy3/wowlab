@@ -11,18 +11,18 @@ export type SpellModifier = {
   readonly name: string;
   readonly beforeCast?: (
     spell: Spell,
-  ) => Effect.Effect<Spell, Errors.Modifier, unknown>;
+  ) => Effect.Effect<Spell, Errors.Modifier, never>;
   readonly onCast?: (
     spell: Spell,
-  ) => Effect.Effect<void, Errors.Modifier, unknown>;
+  ) => Effect.Effect<void, Errors.Modifier, never>;
   readonly onHit?: (
     spell: Spell,
     target?: Unit,
-  ) => Effect.Effect<void, Errors.Modifier, unknown>;
+  ) => Effect.Effect<void, Errors.Modifier, never>;
   readonly onDamage?: (
     spell: Spell,
     damage: number,
-  ) => Effect.Effect<void, Errors.Modifier, unknown>;
+  ) => Effect.Effect<void, Errors.Modifier, never>;
 };
 
 export const composeModifiers = (
