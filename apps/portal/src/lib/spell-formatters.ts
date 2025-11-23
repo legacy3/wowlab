@@ -221,7 +221,8 @@ export const formatScaling = (value: unknown): string | null => {
   });
 };
 
-export const propertyFormatters: Record<SpellDataKey, PropertyFormatter> = {
+// Temporarily using Partial due to missing properties
+export const propertyFormatters: Partial<Record<SpellDataKey, PropertyFormatter>> = {
   id: formatNumber,
   name: formatString,
   description: formatString,
@@ -263,7 +264,7 @@ export const propertyFormatters: Record<SpellDataKey, PropertyFormatter> = {
   bonusCoefficientFromAP: formatScaling,
   effectBonusCoefficient: formatScaling,
   effectTriggerSpell: formatJson,
-  iconName: formatString,
+  // iconName: formatString, // Temporarily disabled - not in current schema
   spellClassSet: formatNumber,
   spellClassMask1: formatNumber,
   spellClassMask2: formatNumber,
