@@ -3,11 +3,14 @@ import * as Errors from "@wowlab/core/Errors";
 import * as Events from "@wowlab/core/Events";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import { Map, Set } from "immutable";
 import { customAlphabet } from "nanoid";
 import TinyQueue from "tinyqueue";
+
+import { RotationProviderService } from "../rotation/RotationProviderService.js";
 
 export type ScheduledInput =
   | { type: Events.EventType.APL_EVALUATE; at: number }
@@ -361,6 +364,64 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             yield* PubSub.publish(eventPubSub, event);
           }),
 
+        scheduleAPL: (at: number) =>
+          Effect.gen(function* () {
+            const rotationProvider = yield* RotationProviderService;
+            const rotationOption = yield* rotationProvider.get();
+
+            if (Option.isNone(rotationOption)) {
+              // No rotation set, skip scheduling
+              return;
+            }
+
+            const rotation = rotationOption.value;
+            const state = yield* Ref.get(stateRef);
+
+            // Find existing APL event
+            const existingAPL = Array.from(state.index.values()).find(
+              (event) => event.type === Events.EventType.APL_EVALUATE,
+            );
+
+            if (existingAPL) {
+              // If existing APL is at same or later time, drop new request
+              if (existingAPL.time <= at) {
+                return;
+              }
+
+              // Cancel existing APL (new one is earlier)
+              yield* Ref.update(stateRef, (state) => ({
+                ...state,
+                index: state.index.delete(existingAPL.id),
+                tombstones: state.tombstones.add(existingAPL.id),
+              }));
+            }
+
+            // Schedule new APL
+            const input: ScheduledInput = {
+              at,
+              type: Events.EventType.APL_EVALUATE,
+            };
+
+            const event = buildEvent(input, state.counter);
+            const eventWithRotation = {
+              ...event,
+              execute: Effect.asVoid(rotation),
+            };
+
+            yield* Ref.update(stateRef, (state) => {
+              state.queue.push(eventWithRotation);
+
+              return {
+                ...state,
+                counter: state.counter + 1,
+                index: state.index.set(eventWithRotation.id, eventWithRotation),
+              };
+            });
+
+            // Publish event to stream for observers
+            yield* PubSub.publish(eventPubSub, eventWithRotation);
+          }),
+
         scheduleInput: (input: ScheduledInput) =>
           Effect.gen(function* () {
             const state = yield* Ref.get(stateRef);
@@ -392,6 +453,29 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             yield* PubSub.publish(eventPubSub, event);
 
             return event.id;
+          }),
+
+        scheduleNextAPL: ({
+          castComplete,
+          gcdExpiry,
+        }: {
+          castComplete: number;
+          gcdExpiry: number;
+        }) =>
+          Effect.gen(function* () {
+            const at = Math.max(castComplete, gcdExpiry);
+
+            yield* Effect.serviceOption(EventSchedulerService).pipe(
+              Effect.flatMap((schedulerOption) => {
+                if (Option.isSome(schedulerOption)) {
+                  return schedulerOption.value.scheduleAPL(at);
+                }
+
+                return Effect.void;
+              }),
+            );
+
+            return yield* Effect.interrupt;
           }),
 
         setCurrentTime: (time: number) =>
