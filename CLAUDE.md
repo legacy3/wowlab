@@ -20,6 +20,25 @@ AI agent guidance for the WowLab repository.
 
 **This is non-negotiable. Admitting you don't know is ALWAYS better than pretending you do.**
 
+## [!] DOCUMENTATION REQUIREMENT [!]
+
+**BEFORE MAKING ANY CHANGES TO EFFECT-TS CODE:**
+
+1. **SEARCH THE EFFECT DOCS** - Use the Effect Docs MCP server to find relevant documentation
+2. **QUOTE THE DOCS** - Provide a written quote from the official Effect documentation explaining why this change is correct
+3. **EXPLAIN THE FIX** - Show how the documentation applies to the specific problem
+4. **ONLY THEN MAKE THE CHANGE** - Never modify Effect code based on guesses or assumptions
+
+**This applies to:**
+
+- Service definitions and dependencies
+- Layer composition and provision
+- Type annotations and inference
+- Error handling patterns
+- Any Effect-specific APIs
+
+**If the docs don't clearly explain the solution, STOP and ask the user.**
+
 ## MCP Servers
 
 See `docs/MCP-SERVERS.md` for complete documentation. **ALWAYS use MCP servers for library documentation - never guess APIs.**
