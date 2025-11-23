@@ -11,6 +11,7 @@ The WowLab simulation engine is **event-based**, not time-based. However, exampl
 Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
 
 1. **For loops with iteration counts**
+
    ```typescript
    for (let i = 0; i < 10; i++) {
      // rotation logic
@@ -18,11 +19,13 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
    ```
 
 2. **Time-based waits**
+
    ```typescript
    yield* rotation.control.wait(500);
    ```
 
 3. **Sequential spell casting within loops**
+
    ```typescript
    for (let i = 0; i < 10; i++) {
      if (canBestialWrath) {
@@ -36,6 +39,7 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
 ### Why This Is Wrong
 
 1. **`rotation.control.wait()` doesn't exist**: The `ControlActions` service is implemented as an empty object:
+
    ```typescript
    // packages/innocent-rotation/src/internal/actions/control/index.ts
    export class ControlActions extends Effect.Service<ControlActions>()("ControlActions", {
@@ -57,7 +61,7 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
 
 The simulation engine follows this flow:
 
-```
+```text
 1. Initial APL_EVALUATE event scheduled at t=0
 2. Event loop dequeues next event
 3. Time advances to event.time
@@ -70,6 +74,7 @@ The simulation engine follows this flow:
 ```
 
 **Key insight**: The rotation is re-evaluated from the top on every APL_EVALUATE event. It should:
+
 - Run once per evaluation
 - Cast ONE spell
 - Return immediately (via interrupt)
@@ -100,6 +105,7 @@ return yield* Effect.interrupt;
 ```
 
 When a spell successfully casts:
+
 1. **Schedules the next APL_EVALUATE event** at cast complete time (respecting GCD)
 2. **Interrupts the rotation fiber** to stop execution immediately
 3. The rotation will be called again from the top when the next APL_EVALUATE event fires
@@ -152,6 +158,7 @@ export const BeastMasteryRotation: RotationDefinition = {
 ```
 
 Key differences:
+
 - **NO for loops** - rotation is called repeatedly by the event system
 - **NO wait() calls** - time advances via scheduled events
 - **NO iterations** - each call evaluates from top, casts one spell, returns

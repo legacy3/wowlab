@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import * as Entities from "@wowlab/core/Entities";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
@@ -28,45 +30,26 @@ const createSpellEntity = (
 
 export const BeastMasteryRotation: RotationDefinition = {
   name: "Beast Mastery Hunter",
-  spellIds: [193455, 217200, 34026, 186254], // Cobra Shot, Barbed Shot, Kill Command, Bestial Wrath
   run: (playerId) =>
     Effect.gen(function* () {
       const rotation = yield* Context.RotationContext;
 
-      yield* Effect.log("Starting Beast Mastery rotation");
+      // Priority-based APL - evaluates from top on each APL_EVALUATE event
+      // NO LOOPS - rotation is re-evaluated by the event system after each cast
 
-      // Simple rotation: Bestial Wrath -> Barbed Shot -> Kill Command -> Cobra Shot filler
-      for (let i = 0; i < 10; i++) {
-        // Use Bestial Wrath on cooldown
-        const canBestialWrath = yield* rotation.spell.canCast(playerId, 186254);
-        if (canBestialWrath) {
-          yield* rotation.spell.cast(playerId, 186254);
-          yield* rotation.control.wait(500);
-        }
+      // Priority 1: Bestial Wrath on cooldown
+      yield* rotation.spell.cast(playerId, 186254);
 
-        // Use Barbed Shot to maintain Frenzy
-        const canBarbedShot = yield* rotation.spell.canCast(playerId, 217200);
-        if (canBarbedShot) {
-          yield* rotation.spell.cast(playerId, 217200);
-          yield* rotation.control.wait(500);
-        }
+      // Priority 2: Barbed Shot to maintain Frenzy
+      yield* rotation.spell.cast(playerId, 217200);
 
-        // Use Kill Command on cooldown
-        const canKillCommand = yield* rotation.spell.canCast(playerId, 34026);
-        if (canKillCommand) {
-          yield* rotation.spell.cast(playerId, 34026);
-          yield* rotation.control.wait(500);
-        }
+      // Priority 3: Kill Command on cooldown
+      yield* rotation.spell.cast(playerId, 34026);
 
-        // Cobra Shot as filler
-        const canCobraShot = yield* rotation.spell.canCast(playerId, 193455);
-        if (canCobraShot) {
-          yield* rotation.spell.cast(playerId, 193455);
-          yield* rotation.control.wait(500);
-        }
-      }
+      // Priority 4: Cobra Shot as filler
+      yield* rotation.spell.cast(playerId, 193455);
 
-      yield* Effect.log("Rotation complete");
+      // If nothing can be cast, rotation will be re-evaluated at next event
     }),
   setupPlayer: (id, spells) => {
     const cobraShot = createSpellEntity(spells.find((s) => s.id === 193455)!);
@@ -92,4 +75,5 @@ export const BeastMasteryRotation: RotationDefinition = {
       spells: playerSpells,
     });
   },
+  spellIds: [193455, 217200, 34026, 186254], // Cobra Shot, Barbed Shot, Kill Command, Bestial Wrath
 };
