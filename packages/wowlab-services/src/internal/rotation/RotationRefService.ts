@@ -5,14 +5,11 @@ export class RotationRefService extends Effect.Service<RotationRefService>()(
   "RotationRefService",
   {
     effect: Effect.gen(function* () {
-      const ref = yield* Ref.make<Effect.Effect<void, unknown, unknown> | null>(
-        null,
-      );
+      const ref = yield* Ref.make<Effect.Effect<void, unknown> | null>(null);
 
       return {
         get: Ref.get(ref),
-        set: (effect: Effect.Effect<void, unknown, unknown>) =>
-          Ref.set(ref, effect),
+        set: (effect: Effect.Effect<void, unknown>) => Ref.set(ref, effect),
       };
     }),
   },

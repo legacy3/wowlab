@@ -9,20 +9,16 @@ import * as Errors from "../../errors/index.js";
 
 export type SpellModifier = {
   readonly name: string;
-  readonly beforeCast?: (
-    spell: Spell,
-  ) => Effect.Effect<Spell, Errors.Modifier, never>;
-  readonly onCast?: (
-    spell: Spell,
-  ) => Effect.Effect<void, Errors.Modifier, never>;
+  readonly beforeCast?: (spell: Spell) => Effect.Effect<Spell, Errors.Modifier>;
+  readonly onCast?: (spell: Spell) => Effect.Effect<void, Errors.Modifier>;
   readonly onHit?: (
     spell: Spell,
     target?: Unit,
-  ) => Effect.Effect<void, Errors.Modifier, never>;
+  ) => Effect.Effect<void, Errors.Modifier>;
   readonly onDamage?: (
     spell: Spell,
     damage: number,
-  ) => Effect.Effect<void, Errors.Modifier, never>;
+  ) => Effect.Effect<void, Errors.Modifier>;
 };
 
 export const composeModifiers = (

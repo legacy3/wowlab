@@ -26,9 +26,9 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       return {
         run: (durationMs: number) =>
           Effect.gen(function* () {
-            const startTime = yield* state.getState().pipe(
-              Effect.map((s) => s.currentTime),
-            );
+            const startTime = yield* state
+              .getState()
+              .pipe(Effect.map((s) => s.currentTime));
             const endTime = startTime + durationMs;
 
             // Main simulation loop

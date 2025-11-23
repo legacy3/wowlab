@@ -89,7 +89,7 @@ export const EVENT_PRIORITY: Record<EventType, number> = {
 };
 
 export interface SimulationEvent<T extends EventType = EventType> {
-  readonly execute: Effect.Effect<void, unknown, never>;
+  readonly execute: Effect.Effect<void, unknown>;
   readonly id: string;
 
   readonly payload: EventPayloadMap[T];
