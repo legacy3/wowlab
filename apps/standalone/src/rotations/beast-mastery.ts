@@ -71,6 +71,7 @@ export const BeastMasteryRotation: RotationDefinition = {
 
     return Entities.Unit.Unit.create({
       id,
+      isPlayer: true,
       name: "Beast Mastery Hunter",
       spells: playerSpells,
     });

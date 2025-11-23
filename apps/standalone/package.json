@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Standalone Node.js app for testing lib-innocent simulation",
   "scripts": {
-    "dev": "tsx --env-file=.env src/index.ts",
+    "dev": "pnpm --filter @wowlab/core --filter @wowlab/services --filter @wowlab/rotation --filter @wowlab/runtime build && tsx --env-file=.env src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",

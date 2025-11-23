@@ -123,11 +123,16 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             yield* Effect.logInfo(`[CastQueue] Enqueueing ${spell.info.name}`);
 
             // Find player unit (first unit marked as player)
+            console.log("[CastQueue] Current units:", currentState.units.toJS());
             const player = currentState.units
               .valueSeq()
-              .find((u) => u.isPlayer);
+              .find((u) => {
+                console.log("[CastQueue] Checking unit:", u.id, "isPlayer:", u.isPlayer);
+                return u.isPlayer;
+              });
 
             if (!player) {
+              console.error("[CastQueue] No player found! Available units:", currentState.units.keySeq().toArray());
               return yield* Effect.fail(new Error("Player unit not found"));
             }
 
@@ -228,17 +233,20 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             // Interrupt the rotation fiber - cast succeeded, stop execution
             return yield* Effect.interrupt;
           }).pipe(
-            Effect.mapError(
-              (err) =>
-                new Errors.Cast({
-                  caster: undefined,
-                  reason:
-                    typeof err === "object" && err !== null && "_tag" in err
-                      ? (err._tag as string)
-                      : "Unknown error",
-                  spell,
-                }),
-            ),
+            Effect.mapError((err) => {
+              const reason =
+                typeof err === "object" && err !== null && "_tag" in err
+                  ? (err._tag as string)
+                  : String(err);
+
+              console.error("[CastQueue] Error during enqueue:", err);
+
+              return new Errors.Cast({
+                caster: undefined,
+                reason,
+                spell,
+              });
+            }),
           ),
       };
     }),

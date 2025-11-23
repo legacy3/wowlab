@@ -6,7 +6,7 @@ import { UnitAccessor } from "../accessors/UnitAccessor.js";
 import { StateService } from "../state/StateService.js";
 
 export class UnitService extends Effect.Service<UnitService>()("UnitService", {
-  dependencies: [UnitAccessor.Default],
+  dependencies: [UnitAccessor.Default, StateService.Default],
   effect: Effect.gen(function* () {
     const state = yield* StateService;
     const accessor = yield* UnitAccessor;
