@@ -4,7 +4,7 @@ import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
-import { Map } from "immutable";
+import { Map, Set } from "immutable";
 import TinyQueue from "tinyqueue";
 
 interface SchedulerState {
@@ -12,6 +12,7 @@ interface SchedulerState {
   currentTime: number;
   index: Map<Schemas.Branded.EventID, Events.ScheduledEvent>;
   queue: TinyQueue<Events.ScheduledEvent>;
+  tombstones: Set<Schemas.Branded.EventID>;
 }
 
 const eventComparator = (
@@ -34,7 +35,41 @@ const createEmptyState = (): SchedulerState => ({
   currentTime: 0,
   index: Map<Schemas.Branded.EventID, Events.ScheduledEvent>(),
   queue: new TinyQueue<Events.ScheduledEvent>([], eventComparator),
+  tombstones: Set<Schemas.Branded.EventID>(),
 });
+
+const compactQueue = (state: SchedulerState): SchedulerState => {
+  const newQueue = new TinyQueue<Events.ScheduledEvent>([], eventComparator);
+
+  state.index.forEach((event) => {
+    newQueue.push(event);
+  });
+
+  return {
+    ...state,
+    queue: newQueue,
+    tombstones: Set<Schemas.Branded.EventID>(),
+  };
+};
+
+const peekSkippingTombstones = (
+  state: SchedulerState,
+): Events.ScheduledEvent | undefined => {
+  while (state.queue.length > 0) {
+    const event = state.queue.peek();
+    if (!event) {
+      return undefined;
+    }
+
+    if (state.tombstones.has(event.id)) {
+      state.queue.pop();
+    } else {
+      return event;
+    }
+  }
+
+  return undefined;
+};
 
 export class EventSchedulerService extends Effect.Service<EventSchedulerService>()(
   "EventSchedulerService",
@@ -46,14 +81,61 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
       const eventPubSub = yield* PubSub.unbounded<Events.ScheduledEvent>();
 
       return {
+        cancel: (id: Schemas.Branded.EventID) =>
+          Ref.update(stateRef, (state) => {
+            // Lazy tombstone: mark as dead and remove from index
+            const newState = {
+              ...state,
+              index: state.index.delete(id),
+              tombstones: state.tombstones.add(id),
+            };
+
+            // Compact if too many tombstones
+            if (
+              newState.tombstones.size > newState.queue.length / 2 &&
+              newState.queue.length > 0
+            ) {
+              return compactQueue(newState);
+            }
+
+            return newState;
+          }),
+
+        cancelWhere: (predicate: (event: Events.ScheduledEvent) => boolean) =>
+          Ref.update(stateRef, (state) => {
+            // Filter index, keeping only events that don't match predicate
+            const newIndex = state.index.filter((event) => !predicate(event));
+
+            // Rebuild queue from filtered index
+            const newQueue = new TinyQueue<Events.ScheduledEvent>(
+              [],
+              eventComparator,
+            );
+
+            newIndex.forEach((event) => {
+              newQueue.push(event);
+            });
+
+            return {
+              ...state,
+              index: newIndex,
+              queue: newQueue,
+              tombstones: Set<Schemas.Branded.EventID>(),
+            };
+          }),
+
         clear: () => Ref.set(stateRef, createEmptyState()),
 
         dequeue: () =>
           Ref.modify(stateRef, (state) => {
-            const event = state.queue.pop();
+            // Skip tombstoned events
+            const event = peekSkippingTombstones(state);
             if (!event) {
               return [undefined, state] as const;
             }
+
+            // Remove from queue (already popped by peekSkippingTombstones if it was clean)
+            state.queue.pop();
 
             return [
               event,
@@ -61,6 +143,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
                 ...state,
                 currentTime: event.time,
                 index: state.index.delete(event.id),
+                tombstones: state.tombstones.delete(event.id),
               },
             ] as const;
           }),
@@ -68,12 +151,13 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
         events: eventPubSub,
 
         isEmpty: () =>
-          Ref.get(stateRef).pipe(
-            Effect.map((state) => state.queue.length === 0),
-          ),
+          Ref.get(stateRef).pipe(Effect.map((state) => state.index.size === 0)),
 
         peek: () =>
-          Ref.get(stateRef).pipe(Effect.map((state) => state.queue.peek())),
+          Ref.modify(stateRef, (state) => {
+            const event = peekSkippingTombstones(state);
+            return [event, state] as const;
+          }),
 
         schedule: (event: Events.ScheduledEvent) =>
           Effect.gen(function* () {
@@ -109,7 +193,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
           })),
 
         size: () =>
-          Ref.get(stateRef).pipe(Effect.map((state) => state.queue.length)),
+          Ref.get(stateRef).pipe(Effect.map((state) => state.index.size)),
       };
     }),
   },
