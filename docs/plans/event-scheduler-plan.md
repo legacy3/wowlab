@@ -9,7 +9,7 @@ Principle: everything is immutable; scheduler API must feel frictionless.
 - Single source of truth for APL scheduling; never duplicate evaluations.
 - Deterministic ordering: `(time asc, priority desc, id asc)`.
 - Pure, immutable state management; easy to test with Vitest.
-- Ergonomic helpers so callers never fiddle with ids or priorities.
+- Ergonomic helpers so callers never fiddle with ids, priorities, or rotation plumbing.
 
 ## Event model
 
@@ -54,21 +54,23 @@ interface SchedulerState {
 
 ## Service API (Effect service)
 
-- `schedule(input) -> Effect<EventId>`: assigns `id` from counter, fills `priority` from `EVENT_PRIORITY`, rejects `time < currentTime`, inserts into queue and index, publishes to `events$`.
+- `schedule(input: ScheduledInput) -> Effect<EventId>`: assigns `id`, fills `priority` from `EVENT_PRIORITY`, rejects `time < currentTime`, inserts into queue/index, publishes to `events$`.
+- `ScheduledInput` is a tagged union (one variant per event type) so callers pass semantic params; builder fills payload/priority/execute.
 - `peek() -> Effect<Option<ScheduledEvent>>`: returns `queue.peek()`.
 - `dequeue() -> Effect<Option<ScheduledEvent>>`: pops from queue, updates `currentTime = event.time`, removes from index.
 - `clear()`: resets to empty queue and index.
 - `size()`, `isEmpty()`: query queue length.
-- `cancel(id)`: removes event from index, rebuilds queue without that event.
-- `cancelWhere(predicate)`: filters index, rebuilds queue.
+- `cancel(id)`: tombstone mark + index delete (lazy skip on pop).
+- `cancelWhere(predicate)`: filters index, rebuilds queue (rare, acceptable O(n)).
 - `events$`: PubSub stream of scheduled events for tracing.
+- `setCurrentTime(t)`: optional helper to sync from runner if time lives outside scheduler.
 
 ## APL ergonomics (guardrails)
 
 Single APL pending at any time:
 
 ```typescript
-scheduleAPL(at: number, rotation: Effect<void>): Effect<void>
+scheduleAPL(at: number): Effect<void>
 ```
 
 - Before scheduling, check if any `APL_EVALUATE` event exists in queue.
@@ -77,17 +79,19 @@ scheduleAPL(at: number, rotation: Effect<void>): Effect<void>
 - Only keeps earliest pending APL.
 
 ```typescript
-scheduleNextAPL({ castComplete, gcdExpiry, rotation }): Effect<Interrupted>
+scheduleNextAPL({ castComplete, gcdExpiry }): Effect<Interrupted>
 ```
 
 - Computes `at = Math.max(castComplete, gcdExpiry)`.
-- Calls `scheduleAPL(at, rotation)`.
+- Calls `scheduleAPL(at)`.
 - Returns `Effect.interrupt` to stop rotation fiber.
 
 Only two places schedule APL:
 
 1. Simulation start seeds one APL at `t=0`.
 2. CastQueue schedules next APL after successful cast (via `scheduleNextAPL`).
+
+Rotation source: `scheduleAPL` pulls rotation from `RotationProviderService` (set once per run by SimulationService); if none set, it is a no-op or logs error.
 
 ## Builder helpers
 
@@ -100,6 +104,22 @@ Convenience functions that hide priority, id, and payload construction:
 - `projectileImpact(spell, at)`: schedules `PROJECTILE_IMPACT` event.
 
 Callers provide semantic parameters; builders handle technical details.
+
+`ScheduledInput` union (example):
+
+```typescript
+type ScheduledInput =
+  | { type: "APL_EVALUATE"; at: number }
+  | { type: "SPELL_CAST_START"; at: number; spell; targetId }
+  | { type: "SPELL_CAST_COMPLETE"; at: number; spell; targetId }
+  | { type: "SPELL_COOLDOWN_READY"; at: number; spell }
+  | { type: "SPELL_CHARGE_READY"; at: number; spell }
+  | { type: "PROJECTILE_IMPACT"; at: number; projectileId; spell; casterUnitId; targetUnitId; damage }
+  | { type: "AURA_EXPIRE"; at: number; aura; unitId }
+  | { type: "AURA_STACK_DECAY"; at: number; aura; unitId }
+  | { type: "PERIODIC_POWER"; at: number }
+  | { type: "PERIODIC_SPELL"; at: number };
+```
 
 ## Invariants to enforce
 
@@ -125,6 +145,7 @@ Callers provide semantic parameters; builders handle technical details.
 - **cancel**: removes event; size decrements correctly.
 - **Reject past scheduling**: `time < currentTime` fails with error.
 - **Tie-breaking**: events at same time/priority ordered by id.
+- **Tombstones**: cancel marks are skipped on peek/dequeue and compacted when threshold hits.
 
 ### APL guard tests
 
@@ -145,13 +166,19 @@ Callers provide semantic parameters; builders handle technical details.
 - Export `EVENT_PRIORITY`.
 - Add `EventId` type: `type EventId = string & { readonly EventId: unique symbol }`.
 
+### packages/wowlab-services/src/internal/rotation/RotationProviderService.ts (new)
+
+- `set(rotation: Effect<void>)`, `get(): Effect<Option<Effect<void>>>`.
+- Provided per simulation run; consumed by scheduler APL helpers.
+
 ### packages/wowlab-services/src/internal/scheduler/EventSchedulerService.ts
 
-- Add index to state: `Immutable.Map<EventId, ScheduledEvent>`.
-- Implement APL guard: `scheduleAPL`, `scheduleNextAPL`.
+- Add index to state: `Immutable.Map<EventId, ScheduledEvent>` and tombstones set.
+- Implement typed `schedule` that accepts `ScheduledInput`, assigns id/priority/execute, returns `EventId`.
+- Implement APL guard: `scheduleAPL`, `scheduleNextAPL` pulling rotation from `RotationProviderService`.
 - Add builder helpers: `cooldownReady`, `chargeReady`, `auraExpire`, `periodicPower`, `projectileImpact`.
 - Update comparator: `(time asc, priority desc, id asc)`.
-- Implement cancel operations with queue rebuild.
+- Implement cancel with tombstones + optional compaction; cancelWhere rebuilds.
 
 ### packages/wowlab-services/__tests__/scheduler.test.ts
 
@@ -166,6 +193,7 @@ Callers provide semantic parameters; builders handle technical details.
 
 - Seed initial APL at `t=0`.
 - Delete periodic APL fallback.
+- Set `RotationProviderService` at run start; clear on completion.
 
 ### Event lifecycle hooks
 
