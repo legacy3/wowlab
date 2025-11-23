@@ -8,7 +8,15 @@ export interface PackageConfig {
 }
 
 export function createPackageConfig(config: PackageConfig) {
-  const defaultExternal = ["effect", "immutable", /^@packages\//];
+  const defaultExternal = [
+    // Keep Effect unbundled to preserve singleton services/context
+    /^effect(\/|$)/,
+    "immutable",
+
+    // Keep workspace packages external to avoid duplicate service singletons
+    /^@packages\//,
+    /^@wowlab\//,
+  ];
   const external = [...defaultExternal, ...(config.external || [])];
 
   return defineConfig({

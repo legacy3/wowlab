@@ -123,16 +123,28 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             yield* Effect.logInfo(`[CastQueue] Enqueueing ${spell.info.name}`);
 
             // Find player unit (first unit marked as player)
-            console.log("[CastQueue] Current units:", currentState.units.toJS());
-            const player = currentState.units
-              .valueSeq()
-              .find((u) => {
-                console.log("[CastQueue] Checking unit:", u.id, "isPlayer:", u.isPlayer);
-                return u.isPlayer;
-              });
+            console.log(
+              "[CastQueue] Current units:",
+              currentState.units.toJS(),
+            );
+
+            const player = currentState.units.valueSeq().find((u) => {
+              console.log(
+                "[CastQueue] Checking unit:",
+                u.id,
+                "isPlayer:",
+                u.isPlayer,
+              );
+
+              return u.isPlayer;
+            });
 
             if (!player) {
-              console.error("[CastQueue] No player found! Available units:", currentState.units.keySeq().toArray());
+              console.error(
+                "[CastQueue] No player found! Available units:",
+                currentState.units.keySeq().toArray(),
+              );
+
               return yield* Effect.fail(new Error("Player unit not found"));
             }
 
