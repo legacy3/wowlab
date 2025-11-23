@@ -371,6 +371,9 @@ importers:
       '@effect/platform-node':
         specifier: ^0.100.0
         version: 0.100.0(@effect/cluster@0.52.11(@effect/platform@0.93.3(effect@3.19.4))(@effect/rpc@0.72.1(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(@effect/sql@0.48.0(@effect/experimental@0.57.3(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(@effect/workflow@0.12.2(@effect/platform@0.93.3(effect@3.19.4))(@effect/rpc@0.72.1(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(effect@3.19.4))(effect@3.19.4))(@effect/platform@0.93.3(effect@3.19.4))(@effect/rpc@0.72.1(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(@effect/sql@0.48.0(@effect/experimental@0.57.3(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(@effect/platform@0.93.3(effect@3.19.4))(effect@3.19.4))(effect@3.19.4)
+      '@supabase/supabase-js':
+        specifier: ^2.47.11
+        version: 2.83.0
       '@wowlab/core':
         specifier: workspace:*
         version: link:../../packages/wowlab-core

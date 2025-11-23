@@ -5,9 +5,12 @@ import * as Effect from "effect/Effect";
 
 export interface RotationDefinition {
   name: string;
+  spellIds: number[];
   run: (
     playerId: Schemas.Branded.UnitID,
   ) => Effect.Effect<void, any, Context.RotationContext>;
-  setupPlayer: (id: Schemas.Branded.UnitID) => Entities.Unit.Unit;
-  spells: Schemas.Spell.SpellDataFlat[];
+  setupPlayer: (
+    id: Schemas.Branded.UnitID,
+    spells: Schemas.Spell.SpellDataFlat[],
+  ) => Entities.Unit.Unit;
 }

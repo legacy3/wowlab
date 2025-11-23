@@ -4,23 +4,21 @@ import * as Context from "@wowlab/rotation/Context";
 import * as Effect from "effect/Effect";
 import { Map, Record } from "immutable";
 
-import { mockSpells } from "../data/spells.js";
 import { RotationDefinition } from "../framework/types.js";
 
-// Helper to create a spell entity from mock data
+// Helper to create a spell entity from spell data
 const createSpellEntity = (
   data: Schemas.Spell.SpellDataFlat,
 ): Entities.Spell.Spell => {
   const info = Entities.Spell.SpellInfo.create({
     ...data,
     id: Schemas.Branded.SpellID(data.id),
-    maxCharges: 1, // Default for now
     modifiers: [],
   });
 
   return Entities.Spell.Spell.create(
     {
-      charges: 1,
+      charges: info.maxCharges || 1,
       cooldownExpiry: 0,
       info,
     },
@@ -30,6 +28,7 @@ const createSpellEntity = (
 
 export const FireMageRotation: RotationDefinition = {
   name: "Fire Mage Simple",
+  spellIds: [108853, 2948], // Fire Blast, Scorch
   run: (playerId) =>
     Effect.gen(function* () {
       const rotation = yield* Context.RotationContext;
@@ -59,9 +58,11 @@ export const FireMageRotation: RotationDefinition = {
 
       yield* Effect.log("Rotation complete");
     }),
-  setupPlayer: (id) => {
-    const fireBlast = createSpellEntity(mockSpells[0]);
-    const scorch = createSpellEntity(mockSpells[1]);
+  setupPlayer: (id, spells) => {
+    const fireBlast = createSpellEntity(
+      spells.find((s) => s.id === 108853)!,
+    );
+    const scorch = createSpellEntity(spells.find((s) => s.id === 2948)!);
 
     const playerSpells = {
       all: Map([
@@ -77,5 +78,4 @@ export const FireMageRotation: RotationDefinition = {
       spells: playerSpells,
     });
   },
-  spells: mockSpells,
 };

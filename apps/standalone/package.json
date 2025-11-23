@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Standalone Node.js app for testing lib-innocent simulation",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx --env-file=.env src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@effect/cli": "^0.72.1",
     "@effect/platform-node": "^0.100.0",
+    "@supabase/supabase-js": "^2.47.11",
     "@wowlab/core": "workspace:*",
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",

@@ -11,14 +11,24 @@ import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
 
+import { loadSpells } from "../data/spell-loader.js";
+import { createSupabaseClient } from "../data/supabase.js";
 import { RotationDefinition } from "./types.js";
 
 export const runRotation = (rotation: RotationDefinition) =>
   Effect.gen(function* () {
+    // 0. Load spell data from Supabase
+    yield* Effect.log("Loading spell data from Supabase...");
+    const supabase = yield* createSupabaseClient;
+    const spells = yield* Effect.promise(() =>
+      loadSpells(supabase, rotation.spellIds),
+    );
+    yield* Effect.log(`Loaded ${spells.length} spells from Supabase`);
+
     // 1. Setup Metadata Layer
     const metadataLayer = Metadata.InMemoryMetadata({
       items: [],
-      spells: rotation.spells,
+      spells,
     });
 
     // 2. Setup App Layer
@@ -35,7 +45,7 @@ export const runRotation = (rotation: RotationDefinition) =>
 
       // Setup Player
       const playerId = Schemas.Branded.UnitID("player");
-      const player = rotation.setupPlayer(playerId);
+      const player = rotation.setupPlayer(playerId, spells);
       yield* unitService.add(player);
       yield* Effect.log(`Added player: ${player.name}`);
 
