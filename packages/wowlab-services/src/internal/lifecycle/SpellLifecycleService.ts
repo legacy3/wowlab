@@ -17,7 +17,7 @@ export class SpellLifecycleService extends Effect.Service<SpellLifecycleService>
         Effect.gen(function* () {
           const spellModifiers = spell.info.modifiers;
 
-          const currentState = yield* state.getState;
+          const currentState = yield* state.getState();
           const caster = currentState.units.get(casterId);
           if (!caster) {
             return spellModifiers;

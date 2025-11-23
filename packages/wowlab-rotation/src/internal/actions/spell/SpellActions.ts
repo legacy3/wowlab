@@ -42,11 +42,8 @@ export class SpellActions extends Effect.Service<SpellActions>()(
             }
 
             // Enqueue cast - this will interrupt the fiber if successful
-            // TODO This compiles
-            yield* Effect.log(`Casting ${spell.info.name}`);
-
-            // This doesnt?
-            // yield* castQueue.enqueue(spell).pipe(Effect.orDie);
+            // If validation fails (cooldown, GCD, etc.), returns void and rotation continues
+            yield* castQueue.enqueue(spell);
           }),
       };
     }),

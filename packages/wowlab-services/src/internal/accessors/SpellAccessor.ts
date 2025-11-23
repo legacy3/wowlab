@@ -14,7 +14,7 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
       return {
         get: (unitId: Schemas.Branded.UnitID, spellId: number) =>
           Effect.gen(function* () {
-            const gameState = yield* state.getState;
+            const gameState = yield* state.getState();
             const unit = gameState.units.get(unitId);
 
             if (!unit) {

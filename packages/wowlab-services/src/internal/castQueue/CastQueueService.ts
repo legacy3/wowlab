@@ -104,6 +104,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
       SpellLifecycleService.Default,
       EventSchedulerService.Default,
       RotationRefService.Default,
+      StateService.Default,
     ],
     effect: Effect.gen(function* () {
       const lifecycle = yield* SpellLifecycleService;
@@ -117,7 +118,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
           targetId: Schemas.Branded.UnitID = Schemas.Branded.UnitID("enemy-1"),
         ) =>
           Effect.gen(function* () {
-            const currentState = yield* state.getState;
+            const currentState = yield* state.getState();
 
             yield* Effect.logInfo(`[CastQueue] Enqueueing ${spell.info.name}`);
 

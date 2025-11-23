@@ -50,7 +50,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
               }
             }
 
-            const finalState = yield* state.getState;
+            const finalState = yield* state.getState();
             return {
               eventsProcessed: 0, // TODO: track
               finalTime: finalState.currentTime,

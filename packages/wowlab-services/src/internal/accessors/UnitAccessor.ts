@@ -14,7 +14,7 @@ export class UnitAccessor extends Effect.Service<UnitAccessor>()(
       return {
         get: (unitId: Schemas.Branded.UnitID) =>
           Effect.gen(function* () {
-            const gameState = yield* state.getState;
+            const gameState = yield* state.getState();
             const unit = gameState.units.get(unitId);
 
             return unit
@@ -24,7 +24,7 @@ export class UnitAccessor extends Effect.Service<UnitAccessor>()(
 
         getAll: () =>
           Effect.gen(function* () {
-            const gameState = yield* state.getState;
+            const gameState = yield* state.getState();
             return Array.from(gameState.units.values());
           }),
       };

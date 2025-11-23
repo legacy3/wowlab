@@ -1,17 +1,19 @@
 import * as Entities from "@wowlab/core/Entities";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 
-export interface StateService {
-  readonly getState: Effect.Effect<Entities.GameState.GameState>;
-  readonly setState: (
-    state: Entities.GameState.GameState,
-  ) => Effect.Effect<void>;
-  readonly updateState: (
-    f: (state: Entities.GameState.GameState) => Entities.GameState.GameState,
-  ) => Effect.Effect<void>;
-}
+export class StateService extends Effect.Service<StateService>()(
+  "StateService",
+  {
+    effect: Effect.gen(function* () {
+      const ref = yield* Ref.make(Entities.GameState.createGameState());
 
-export const StateService = Context.GenericTag<StateService>(
-  "@wowlab/services/StateService",
-);
+      return {
+        getState: () => Ref.get(ref),
+        setState: (state: Entities.GameState.GameState) => Ref.set(ref, state),
+        updateState: (fn: (state: Entities.GameState.GameState) => Entities.GameState.GameState) =>
+          Ref.update(ref, fn),
+      };
+    }),
+  },
+) {}

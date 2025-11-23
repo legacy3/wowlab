@@ -11,7 +11,7 @@ export class ControlActions extends Effect.Service<ControlActions>()(
       return {
         wait: (durationMs: number) =>
           Effect.gen(function* () {
-            const currentState = yield* state.getState;
+            const currentState = yield* state.getState();
             const newTime = currentState.currentTime + durationMs;
 
             yield* state.updateState((s) => s.set("currentTime", newTime));

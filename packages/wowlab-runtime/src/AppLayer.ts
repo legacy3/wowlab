@@ -36,7 +36,7 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
   } = options;
 
   const BaseLayer = Layer.mergeAll(
-    State.StateServiceLive,
+    State.StateService.Default,
     logger,
     rng,
     metadata,
