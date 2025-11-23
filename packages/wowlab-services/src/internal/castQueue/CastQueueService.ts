@@ -120,29 +120,16 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
           Effect.gen(function* () {
             const currentState = yield* state.getState();
 
-            yield* Effect.logInfo(`[CastQueue] Enqueueing ${spell.info.name}`);
+            yield* Effect.logDebug(`[CastQueue] Enqueueing ${spell.info.name}`);
 
             // Find player unit (first unit marked as player)
-            console.log(
-              "[CastQueue] Current units:",
-              currentState.units.toJS(),
-            );
-
-            const player = currentState.units.valueSeq().find((u) => {
-              console.log(
-                "[CastQueue] Checking unit:",
-                u.id,
-                "isPlayer:",
-                u.isPlayer,
-              );
-
-              return u.isPlayer;
-            });
+            const player = currentState.units
+              .valueSeq()
+              .find((u) => u.isPlayer);
 
             if (!player) {
-              console.error(
-                "[CastQueue] No player found! Available units:",
-                currentState.units.keySeq().toArray(),
+              yield* Effect.logError(
+                `[CastQueue] No player found! Available units: ${currentState.units.keySeq().toArray()}`,
               );
 
               return yield* Effect.fail(new Error("Player unit not found"));
@@ -163,9 +150,16 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               player,
               currentState.currentTime,
             ).pipe(
-              Effect.tapError((error) =>
-                Effect.logDebug(`[CastQueue] Validation failed: ${error._tag}`),
-              ),
+              Effect.tapError((error) => {
+                const errorMsg =
+                  typeof error === "object" && error !== null && "_tag" in error
+                    ? error._tag
+                    : String(error);
+
+                return Effect.logDebug(
+                  `[CastQueue] ${spell.info.name} validation failed: ${errorMsg}`,
+                );
+              }),
               Effect.either,
             );
 
@@ -239,7 +233,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             }
 
             yield* Effect.logInfo(
-              `[CastQueue] Scheduled cast events for ${modifiedSpell.info.name}`,
+              `[Cast] ${modifiedSpell.info.name} at ${currentState.currentTime}ms`,
             );
 
             // Interrupt the rotation fiber - cast succeeded, stop execution
@@ -250,8 +244,6 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
                 typeof err === "object" && err !== null && "_tag" in err
                   ? (err._tag as string)
                   : String(err);
-
-              console.error("[CastQueue] Error during enqueue:", err);
 
               return new Errors.Cast({
                 caster: undefined,

@@ -1,12 +1,17 @@
+import type * as ManagedRuntime from "effect/ManagedRuntime";
+
 import * as Entities from "@wowlab/core/Entities";
+import * as Events from "@wowlab/core/Events";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
 import * as Simulation from "@wowlab/services/Simulation";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import type * as ManagedRuntime from "effect/ManagedRuntime";
+import * as PubSub from "effect/PubSub";
+import * as Queue from "effect/Queue";
 
+import { logEventTimeline } from "../utils/logging.js";
 import { RotationDefinition } from "./types.js";
 
 export const runRotationWithRuntime = (
@@ -37,17 +42,38 @@ export const runRotationWithRuntime = (
     yield* unitService.add(enemy);
     yield* Effect.log(`Added enemy: ${enemy.name}`);
 
-    // Fork Rotation
-    const rotationFiber = yield* Effect.fork(rotation.run(playerId));
-
-    // Run Simulation
+    // Run Simulation with rotation
     yield* Effect.log(`Running rotation: ${rotation.name}`);
-    const result = yield* sim.run(10000); // 10s fixed for now
 
-    // Join Rotation
-    yield* Fiber.join(rotationFiber);
+    // Collect events while running
+    const eventsCollected: Events.SimulationEvent[] = [];
+    const eventCollectorFiber = yield* Effect.fork(
+      Effect.gen(function* () {
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const eventStream = yield* PubSub.subscribe(sim.events);
 
-    yield* Effect.log(`Simulation complete. Final time: ${result.finalTime}ms`);
+            while (true) {
+              const event = yield* Queue.take(eventStream);
+              eventsCollected.push(event);
+            }
+          }),
+        );
+      }).pipe(Effect.catchAll(() => Effect.void)),
+    );
+
+    const result = yield* sim.run(rotation.run(playerId), 10000); // 10s fixed for now
+
+    // Stop collecting events
+    yield* Fiber.interrupt(eventCollectorFiber);
+
+    yield* Effect.log(
+      `\nSimulation complete. Final time: ${result.finalTime}ms`,
+    );
+    yield* Effect.log(`Events processed: ${result.eventsProcessed}`);
+
+    // Print event time table
+    logEventTimeline(eventsCollected);
 
     return result;
   });

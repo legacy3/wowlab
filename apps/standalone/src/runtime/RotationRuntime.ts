@@ -8,9 +8,9 @@ import * as LogLevel from "effect/LogLevel";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 
 export interface RotationRuntimeConfig {
-  readonly spells: Schemas.Spell.SpellDataFlat[];
   readonly items?: Schemas.Item.ItemDataFlat[];
   readonly logLevel?: LogLevel.LogLevel;
+  readonly spells: Schemas.Spell.SpellDataFlat[];
 }
 
 export const createRotationRuntime = (config: RotationRuntimeConfig) => {

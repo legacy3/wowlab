@@ -45,12 +45,15 @@ Two different StateService instances (`wcx26s` and `b122zn`) exist simultaneousl
 **Result:** Made it worse - scoped services create one instance per scope, and forked fibers create new scopes. Still got multiple instances.
 
 **Code:**
+
 ```typescript
 export class StateService extends Effect.Service<StateService>()(
   "StateService",
   {
     scoped: Effect.gen(function* () {
-      const ref = yield* SynchronizedRef.make(Entities.GameState.createGameState());
+      const ref = yield* SynchronizedRef.make(
+        Entities.GameState.createGameState(),
+      );
       // ...
     }),
   },
@@ -64,6 +67,7 @@ export class StateService extends Effect.Service<StateService>()(
 **Result:** Module was loaded 3 times (different bundles/chunks), creating 3 separate global refs. This is a bundling/module resolution issue that makes global variables unreliable.
 
 **Code:**
+
 ```typescript
 const makeStateRef = Effect.runSync(
   SynchronizedRef.make(Entities.GameState.createGameState()),
@@ -87,11 +91,12 @@ export class StateService extends Effect.Service<StateService>()(
 **Reasoning:** Found `Layer.merge(baseAppLayer)` after `Layer.provide(baseAppLayer)` in RotationRuntime, which would include StateService twice by reference.
 
 **Changes:**
+
 ```typescript
 // BEFORE (in RotationRuntime.ts)
 const fullLayer = Context.RotationContext.Default.pipe(
   Layer.provide(baseAppLayer),
-  Layer.merge(baseAppLayer),  // ← DUPLICATE!
+  Layer.merge(baseAppLayer), // ← DUPLICATE!
   // ...
 );
 
@@ -108,11 +113,13 @@ const fullLayer = Context.RotationContext.Default.pipe(
 ### 4. Attempted AppLayer.ts Fix ⚠️
 
 **Original code:**
+
 ```typescript
 return ServicesLayer.pipe(Layer.provide(BaseLayer), Layer.merge(BaseLayer));
 ```
 
 **Attempted fixes:**
+
 - `Layer.provide(ServicesLayer, BaseLayer)` → Services not exposed
 - `Layer.merge(appLayer, BaseLayer)` → SimulationService not found
 - `Layer.merge(BaseLayer, providedServices)` → Unknown result (testing interrupted)

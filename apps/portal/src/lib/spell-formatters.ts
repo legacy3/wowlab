@@ -222,7 +222,9 @@ export const formatScaling = (value: unknown): string | null => {
 };
 
 // Temporarily using Partial due to missing properties
-export const propertyFormatters: Partial<Record<SpellDataKey, PropertyFormatter>> = {
+export const propertyFormatters: Partial<
+  Record<SpellDataKey, PropertyFormatter>
+> = {
   id: formatNumber,
   name: formatString,
   description: formatString,

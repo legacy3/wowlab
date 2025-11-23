@@ -1,5 +1,6 @@
 import * as Events from "@wowlab/core/Events";
 import * as Effect from "effect/Effect";
+import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 import TinyQueue from "tinyqueue";
 
@@ -10,6 +11,9 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
       const queueRef = yield* Ref.make(
         new TinyQueue<Events.SimulationEvent>([], (a, b) => a.time - b.time),
       );
+
+      // Create PubSub for event stream
+      const eventPubSub = yield* PubSub.unbounded<Events.SimulationEvent>();
 
       return {
         clear: () =>
@@ -27,12 +31,19 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             return [event, queue] as const;
           }),
 
+        events: eventPubSub,
+
         peek: () => Ref.get(queueRef).pipe(Effect.map((queue) => queue.peek())),
 
         schedule: (event: Events.SimulationEvent) =>
-          Ref.update(queueRef, (queue) => {
-            queue.push(event);
-            return queue;
+          Effect.gen(function* () {
+            yield* Ref.update(queueRef, (queue) => {
+              queue.push(event);
+              return queue;
+            });
+
+            // Publish event to stream for observers
+            yield* PubSub.publish(eventPubSub, event);
           }),
       };
     }),

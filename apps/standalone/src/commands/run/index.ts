@@ -41,8 +41,8 @@ export const runCommand = Command.make(
 
       // Create runtime with loaded spell data
       const runtime = createRotationRuntime({
+        logLevel: LogLevel.Debug,
         spells,
-        logLevel: LogLevel.Warning,
       });
 
       try {
