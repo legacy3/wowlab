@@ -1,5 +1,6 @@
 import { Args, Command } from "@effect/cli";
 import * as Effect from "effect/Effect";
+import * as LogLevel from "effect/LogLevel";
 
 import { loadSpells } from "../../data/spell-loader.js";
 import { createSupabaseClient } from "../../data/supabase.js";
@@ -41,6 +42,7 @@ export const runCommand = Command.make(
       // Create runtime with loaded spell data
       const runtime = createRotationRuntime({
         spells,
+        logLevel: LogLevel.Warning,
       });
 
       try {

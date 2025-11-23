@@ -2,48 +2,98 @@ import chalk from "chalk";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import PrettyError from "pretty-error";
+import * as StackTraceParser from "stacktrace-parser";
 
 // Force color support for WSL and other terminals
 process.env.FORCE_COLOR = "3";
 
+// Constants for consistent formatting
+const SEPARATOR_WIDTH = 80;
+const INDENT = "    ";
+
 // Initialize pretty-error for formatting JavaScript stack traces
-const pe = new PrettyError();
-pe.skipNodeFiles();
-pe.skipPackage("effect");
+const prettyError = new PrettyError();
+prettyError.skipNodeFiles();
+prettyError.skipPackage("effect");
+
+const colorizeErrorMessage = (line: string): string => {
+  const errorMatch = line.match(/^(\([^)]+\))\s+(.*?):\s+(.*)$/);
+  if (!errorMatch) {
+    return line;
+  }
+
+  const [, type, errorName, message] = errorMatch;
+
+  return [
+    chalk.gray(type),
+    chalk.red.bold(errorName) + ":",
+    chalk.white(message),
+  ].join(" ");
+};
+
+const colorizeStackFrame = (frame: StackTraceParser.StackFrame): string => {
+  const method = frame.methodName || "<anonymous>";
+  const file = frame.file || "";
+
+  if (!file) {
+    return INDENT + chalk.gray("at ") + chalk.cyan(method);
+  }
+
+  const location = frame.column
+    ? `${file}:${frame.lineNumber}:${frame.column}`
+    : `${file}:${frame.lineNumber}`;
+
+  return [
+    INDENT + chalk.gray("at "),
+    chalk.cyan(method),
+    chalk.gray("(") + chalk.yellow(location) + chalk.gray(")"),
+  ].join(" ");
+};
+
+const colorizeStackTrace = (stackTrace: string): string => {
+  const lines = stackTrace.split("\n");
+  const [firstLine, ...restLines] = lines;
+
+  const colorizedMessage = colorizeErrorMessage(firstLine);
+  const frames = StackTraceParser.parse(restLines.join("\n"));
+  const colorizedFrames = frames.map(colorizeStackFrame).join("\n");
+
+  return colorizedMessage + "\n" + colorizedFrames;
+};
 
 export const printFormattedError = (
   exit: Exit.Exit<unknown, unknown>,
 ): void => {
-  if (!Exit.isFailure(exit)) {
-    return;
-  }
+  if (!Exit.isFailure(exit)) return;
 
-  const separator = "=".repeat(80);
-  const divider = "-".repeat(80);
+  const separator = chalk.red.bold("=".repeat(SEPARATOR_WIDTH));
+  const divider = chalk.gray("-".repeat(SEPARATOR_WIDTH));
 
-  console.error("\n" + chalk.red.bold(separator));
+  // Header
+  console.error(`\n${separator}`);
   console.error(chalk.red.bold("ERROR DETAILS"));
-  console.error(chalk.red.bold(separator) + "\n");
+  console.error(`${separator}\n`);
 
-  // Use Effect's Cause.pretty for structured error information
+  // Effect Cause section
   console.error(chalk.yellow.bold("Effect Cause:"));
-  console.error(Cause.pretty(exit.cause));
+  const causeOutput = Cause.pretty(exit.cause);
+  console.error(colorizeStackTrace(causeOutput));
 
-  console.error("\n" + chalk.gray(divider) + "\n");
-
-  // Extract defects and format them with pretty-error
+  // Defects section (if any)
   const defects = Cause.defects(exit.cause);
   if (defects.length > 0) {
-    console.error(chalk.cyan.bold("Defects (formatted):"));
+    console.error(`\n${divider}\n`);
+    console.error(chalk.cyan.bold("Defects:"));
 
     for (const defect of defects) {
       if (defect instanceof Error) {
-        console.error(pe.render(defect));
+        console.error(prettyError.render(defect));
       } else {
         console.error(chalk.red(String(defect)));
       }
     }
   }
 
-  console.error(chalk.red.bold(separator) + "\n");
+  // Footer
+  console.error(`\n${separator}\n`);
 };

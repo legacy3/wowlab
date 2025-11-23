@@ -4,6 +4,8 @@ import { Command } from "@effect/cli";
 import { NodeContext } from "@effect/platform-node";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Logger from "effect/Logger";
+import * as LogLevel from "effect/LogLevel";
 
 import { commands } from "./commands/index.js";
 import { printFormattedError } from "./utils/error-formatter.js";
@@ -17,7 +19,10 @@ const cli = Command.run(mainCommand, {
   version: "0.1.0",
 });
 
-const program = cli(process.argv).pipe(Effect.provide(NodeContext.layer));
+const program = cli(process.argv).pipe(
+  Effect.provide(NodeContext.layer),
+  Effect.provide(Logger.minimumLogLevel(LogLevel.Warning)),
+);
 
 Effect.runPromiseExit(program).then((exit) => {
   if (Exit.isFailure(exit)) {
