@@ -42,8 +42,15 @@ interface SchedulerState {
 | schedule  | O(log n) | Heap push + index insert |
 | peek      | O(1) | Heap peek only |
 | dequeue   | O(log n) | Heap pop + index delete |
-| cancel    | O(n) | Rebuild queue |
-| cancelWhere | O(n) | Filter and rebuild |
+| cancel    | O(1) mark, O(log n) skip | Tombstones + skip-stale on pop |
+| cancelWhere | O(n) | Filter and rebuild (rare; can compact) |
+
+### Optional performance tweak: lazy tombstones
+
+- Keep `tombstones: Set<EventId>` in state.
+- `cancel(id)`: add to tombstones and remove from index (no heap rebuild).
+- `peek/dequeue`: while heap.peek() is tombstoned, pop and continue; on real dequeue, delete id from tombstones.
+- Compaction trigger: when `tombstones.size > queue.length / 2`, rebuild heap from index to purge dead entries.
 
 ## Service API (Effect service)
 
