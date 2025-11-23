@@ -1,3 +1,4 @@
+import * as Errors from "@wowlab/core/Errors";
 import * as Events from "@wowlab/core/Events";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
@@ -76,6 +77,18 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
 
         schedule: (event: Events.ScheduledEvent) =>
           Effect.gen(function* () {
+            const state = yield* Ref.get(stateRef);
+
+            // Enforce time monotonicity: cannot schedule in the past
+            if (event.time < state.currentTime) {
+              return yield* Effect.fail(
+                new Errors.ScheduleInPast({
+                  currentTime: state.currentTime,
+                  eventTime: event.time,
+                }),
+              );
+            }
+
             yield* Ref.update(stateRef, (state) => {
               state.queue.push(event);
 
@@ -88,6 +101,12 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             // Publish event to stream for observers
             yield* PubSub.publish(eventPubSub, event);
           }),
+
+        setCurrentTime: (time: number) =>
+          Ref.update(stateRef, (state) => ({
+            ...state,
+            currentTime: time,
+          })),
 
         size: () =>
           Ref.get(stateRef).pipe(Effect.map((state) => state.queue.length)),

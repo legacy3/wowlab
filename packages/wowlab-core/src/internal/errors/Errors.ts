@@ -3,10 +3,6 @@ import * as Data from "effect/Data";
 import * as Entities from "../entities/index.js";
 import * as Branded from "../schemas/Branded.js";
 
-// ============================================================================
-// Accessor Errors
-// ============================================================================
-
 export class AuraNotFound extends Data.TaggedError("AuraNotFound")<{
   readonly auraId: Branded.SpellID;
   readonly unitId: Branded.UnitID;
@@ -27,10 +23,6 @@ export class DBCParse extends Data.TaggedError("DBCParse")<{
   readonly tableName: string;
   readonly reason: string;
 }> {}
-
-// ============================================================================
-// Casting Errors
-// ============================================================================
 
 export class GCDActive extends Data.TaggedError("GCDActive")<{
   readonly spell: Entities.Spell.Spell;
@@ -66,10 +58,6 @@ export class PlayerIsCasting extends Data.TaggedError("PlayerIsCasting")<{
   readonly castEndsAt: number;
 }> {}
 
-// ============================================================================
-// Data Errors
-// ============================================================================
-
 export class ProfileBundleNotFound extends Data.TaggedError(
   "ProfileBundleNotFound",
 )<{
@@ -78,6 +66,11 @@ export class ProfileBundleNotFound extends Data.TaggedError(
 
 export class ProjectileNotFound extends Data.TaggedError("ProjectileNotFound")<{
   readonly projectileId: Branded.ProjectileID;
+}> {}
+
+export class ScheduleInPast extends Data.TaggedError("ScheduleInPast")<{
+  readonly currentTime: number;
+  readonly eventTime: number;
 }> {}
 
 export class SpellInfoNotFound extends Data.TaggedError("SpellInfoNotFound")<{
@@ -94,10 +87,6 @@ export class SpellOnCooldown extends Data.TaggedError("SpellOnCooldown")<{
   readonly remainingCooldown: number;
   readonly spell: Entities.Spell.Spell;
 }> {}
-
-// ============================================================================
-// Modifier Errors
-// ============================================================================
 
 export class UnitNotFound extends Data.TaggedError("UnitNotFound")<{
   readonly unitId: Branded.UnitID;
