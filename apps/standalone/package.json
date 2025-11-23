@@ -21,6 +21,7 @@
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",
     "@wowlab/services": "workspace:*",
+    "chalk": "^5.6.2",
     "effect": "^3.19.4",
     "immutable": "^5.1.4",
     "pretty-error": "^4.0.0",
