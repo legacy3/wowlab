@@ -11,8 +11,11 @@ export class StateService extends Effect.Service<StateService>()(
       return {
         getState: () => Ref.get(ref),
         setState: (state: Entities.GameState.GameState) => Ref.set(ref, state),
-        updateState: (fn: (state: Entities.GameState.GameState) => Entities.GameState.GameState) =>
-          Ref.update(ref, fn),
+        updateState: (
+          fn: (
+            state: Entities.GameState.GameState,
+          ) => Entities.GameState.GameState,
+        ) => Ref.update(ref, fn),
       };
     }),
   },

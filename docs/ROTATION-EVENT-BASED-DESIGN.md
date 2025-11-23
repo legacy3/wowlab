@@ -21,7 +21,7 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
 2. **Time-based waits**
 
    ```typescript
-   yield* rotation.control.wait(500);
+   yield * rotation.control.wait(500);
    ```
 
 3. **Sequential spell casting within loops**
@@ -29,8 +29,8 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
    ```typescript
    for (let i = 0; i < 10; i++) {
      if (canBestialWrath) {
-       yield* rotation.spell.cast(playerId, 186254);
-       yield* rotation.control.wait(500);  // WRONG
+       yield * rotation.spell.cast(playerId, 186254);
+       yield * rotation.control.wait(500); // WRONG
      }
      // ... more casts with waits
    }
@@ -42,9 +42,12 @@ Both example rotations (`beast-mastery.ts`, `fire-mage.ts`) use:
 
    ```typescript
    // packages/innocent-rotation/src/internal/actions/control/index.ts
-   export class ControlActions extends Effect.Service<ControlActions>()("ControlActions", {
-     effect: Effect.succeed({}),
-   }) {}
+   export class ControlActions extends Effect.Service<ControlActions>()(
+     "ControlActions",
+     {
+       effect: Effect.succeed({}),
+     },
+   ) {}
    ```
 
 2. **Contradicts event-based architecture**: The simulation engine (`SimulationService`) uses a priority queue-based event loop that:
@@ -86,22 +89,23 @@ From `packages/innocent-services/src/internal/castQueue/index.ts:237-250`:
 
 ```typescript
 // After successful spell cast:
-const rotationEffect = yield* rotationRef.get;
+const rotationEffect = yield * rotationRef.get;
 if (rotationEffect !== null) {
   const gcdExpiry = triggersGcd ? startTime + gcd : startTime;
   const aplEvaluateTime = Math.max(completeTime, gcdExpiry);
 
-  yield* scheduler.schedule({
-    execute: rotationEffect,  // Schedule next APL evaluation
-    id: `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
-    type: Events.EventType.APL_EVALUATE,
-    time: aplEvaluateTime,  // At cast complete OR GCD expiry
-    priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-  });
+  yield *
+    scheduler.schedule({
+      execute: rotationEffect, // Schedule next APL evaluation
+      id: `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
+      type: Events.EventType.APL_EVALUATE,
+      time: aplEvaluateTime, // At cast complete OR GCD expiry
+      priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
+    });
 }
 
 // Interrupt the rotation fiber - cast succeeded, stop execution
-return yield* Effect.interrupt;
+return yield * Effect.interrupt;
 ```
 
 When a spell successfully casts:

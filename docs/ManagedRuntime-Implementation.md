@@ -206,7 +206,7 @@ export const runCommand = Command.make(
       try {
         // Run the rotation using the runtime
         yield* Effect.promise(() =>
-          runRotationWithRuntime(runtime, selectedRotation)
+          runRotationWithRuntime(runtime, selectedRotation),
         );
       } finally {
         // Ensure cleanup happens
