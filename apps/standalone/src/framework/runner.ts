@@ -3,7 +3,6 @@ import type * as ManagedRuntime from "effect/ManagedRuntime";
 import * as Entities from "@wowlab/core/Entities";
 import * as Events from "@wowlab/core/Events";
 import * as Schemas from "@wowlab/core/Schemas";
-import * as Context from "@wowlab/rotation/Context";
 import * as Simulation from "@wowlab/services/Simulation";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
@@ -15,10 +14,7 @@ import { logEventTimeline } from "../utils/logging.js";
 import { RotationDefinition } from "./types.js";
 
 export const runRotationWithRuntime = (
-  runtime: ManagedRuntime.ManagedRuntime<
-    Simulation.SimulationService | Unit.UnitService | Context.RotationContext,
-    never
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<any, never>,
   rotation: RotationDefinition,
   spells: Schemas.Spell.SpellDataFlat[],
 ) => {
