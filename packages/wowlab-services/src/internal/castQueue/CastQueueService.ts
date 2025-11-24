@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 
 import { SpellLifecycleService } from "../lifecycle/SpellLifecycleService.js";
+import { LogService } from "../log/LogService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
 import { StateService } from "../state/StateService.js";
 
@@ -114,11 +115,14 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
       SpellLifecycleService.Default,
       EventSchedulerService.Default,
       StateService.Default,
+      LogService.Default,
     ],
     effect: Effect.gen(function* () {
       const lifecycle = yield* SpellLifecycleService;
       const scheduler = yield* EventSchedulerService;
       const state = yield* StateService;
+      const logService = yield* LogService;
+      const logger = yield* logService.withName("CastQueueService");
 
       return {
         enqueue: (
@@ -128,7 +132,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
           Effect.gen(function* () {
             const currentState = yield* state.getState();
 
-            yield* Effect.logDebug(`[CastQueue] Enqueueing ${spell.info.name}`);
+            yield* logger.debug(`Enqueueing ${spell.info.name}`);
 
             // Find player unit (first unit marked as player)
             const player = currentState.units
@@ -136,8 +140,8 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               .find((u) => u.isPlayer);
 
             if (!player) {
-              yield* Effect.logError(
-                `[CastQueue] No player found! Available units: ${currentState.units.keySeq().toArray()}`,
+              yield* logger.error(
+                `No player found! Available units: ${currentState.units.keySeq().toArray()}`,
               );
 
               return yield* Effect.fail(new Error("Player unit not found"));
@@ -164,8 +168,8 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
                     ? error._tag
                     : String(error);
 
-                return Effect.logDebug(
-                  `[CastQueue] ${spell.info.name} validation failed: ${errorMsg}`,
+                return logger.debug(
+                  `${spell.info.name} validation failed: ${errorMsg}`,
                 );
               }),
               Effect.either,
@@ -212,9 +216,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
                 lifecycle.executeOnCast(modifiedSpell, player.id),
                 Effect.timeout("10 seconds"),
                 Effect.catchAll((error) =>
-                  Effect.logError(
-                    `[CastQueue] Modifier execution failed: ${error}`,
-                  ),
+                  logger.error(`Modifier execution failed: ${error}`),
                 ),
                 Effect.asVoid,
               ),
@@ -228,8 +230,8 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               type: Events.EventType.SPELL_CAST_COMPLETE,
             });
 
-            yield* Effect.logInfo(
-              `[Cast] ${modifiedSpell.info.name} at ${currentState.currentTime}ms`,
+            yield* logger.info(
+              `Cast ${modifiedSpell.info.name} at ${currentState.currentTime}ms`,
             );
 
             // Schedule cooldown ready event if spell has a cooldown

@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 
+import { LogService } from "../log/LogService.js";
 import { PeriodicTriggerService } from "../periodic/PeriodicTriggerService.js";
 import { RotationProviderService } from "../rotation/RotationProviderService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
@@ -19,12 +20,15 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       StateService.Default,
       RotationProviderService.Default,
       PeriodicTriggerService.Default,
+      LogService.Default,
     ],
     effect: Effect.gen(function* () {
       const state = yield* StateService;
       const scheduler = yield* EventSchedulerService;
       const rotationProvider = yield* RotationProviderService;
       const periodic = yield* PeriodicTriggerService;
+      const logService = yield* LogService;
+      const logger = yield* logService.withName("SimulationService");
       const snapshotPubSub =
         yield* PubSub.unbounded<Entities.GameState.GameState>();
       const eventsProcessedRef = yield* Ref.make(0);
@@ -111,7 +115,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
 
             // Warn if hit iteration limit
             if (iterationCount >= maxIterations) {
-              console.warn(
+              yield* logger.warn(
                 `Simulation hit max iteration limit (${maxIterations}). Possible infinite event loop.`,
               );
             }

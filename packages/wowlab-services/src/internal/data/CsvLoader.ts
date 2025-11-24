@@ -3,6 +3,8 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import Papa from "papaparse";
 
+import { LogService } from "../log/LogService.js";
+
 export class ParseError extends Data.TaggedError("ParseError")<{
   cause: unknown;
 }> {}
@@ -10,9 +12,12 @@ export class ParseError extends Data.TaggedError("ParseError")<{
 export const parseCsvData = <A, I>(
   csvContent: string,
   schema: Schema.Schema<A, I>,
-): Effect.Effect<A[], ParseError> =>
+): Effect.Effect<A[], ParseError, LogService> =>
   Effect.gen(function* () {
-    yield* Effect.log(`Parsing CSV with length: ${csvContent.length}`);
+    const logService = yield* LogService;
+    const logger = yield* logService.withName("CsvLoader");
+
+    yield* logger.info(`Parsing CSV with length: ${csvContent.length}`);
 
     const rows: A[] = [];
     let firstValidationError: unknown = null;
@@ -49,26 +54,24 @@ export const parseCsvData = <A, I>(
     });
 
     if (parseErrors.length > 0) {
-      yield* Effect.logError(
+      yield* logger.error(
         `Encountered ${parseErrors.length} CSV parsing errors.`,
       );
 
-      yield* Effect.logDebug(
-        `First CSV error: ${JSON.stringify(parseErrors[0])}`,
-      );
+      yield* logger.debug(`First CSV error: ${JSON.stringify(parseErrors[0])}`);
     }
 
     if (validationErrorCount > 0) {
-      yield* Effect.logWarning(
+      yield* logger.warn(
         `Encountered ${validationErrorCount} schema validation errors.`,
       );
 
       if (firstValidationError) {
-        yield* Effect.logDebug(
+        yield* logger.debug(
           `First validation error details: ${JSON.stringify(firstValidationError, null, 2)}`,
         );
 
-        yield* Effect.logDebug(
+        yield* logger.debug(
           `Row data causing error: ${JSON.stringify(firstRowData, null, 2)}`,
         );
       }

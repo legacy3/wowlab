@@ -39,7 +39,6 @@ export const composeModifiers = (
             }),
             Effect.withSpan(`modifier:${m.name}`),
             Effect.annotateLogs("modifier", m.name),
-            Effect.tap(() => Effect.logDebug(`[${m.name}] executed`)),
             Effect.mapError(
               (error) =>
                 new Errors.Modifier({
