@@ -25,9 +25,16 @@ export class SpellAccessor extends Effect.Service<SpellAccessor>()(
               spellId as Schemas.Branded.SpellID,
             );
 
-            return spell
-              ? Effect.succeed(spell)
-              : Effect.fail(new Errors.SpellNotFound({ spellId, unitId }));
+            if (!spell) {
+              return yield* Effect.fail(
+                new Errors.SpellNotFound({ spellId, unitId }),
+              );
+            }
+
+            // Recompute spell with current time to ensure isReady is fresh
+            const recomputedSpell = spell.with({}, gameState.currentTime);
+
+            return Effect.succeed(recomputedSpell);
           }).pipe(Effect.flatten),
       };
     }),

@@ -62,6 +62,7 @@ const applyImmediateEffects = (
   spell: Entities.Spell.Spell,
   player: Entities.Unit.Unit,
   currentTime: number,
+  targetId: Schemas.Branded.UnitID,
 ): Entities.Unit.Unit => {
   const gcd = 1500;
   const gcdCategory = 133;
@@ -95,9 +96,14 @@ const applyImmediateEffects = (
     });
   }
 
+  const isCasting = spell.info.castTime > 0;
+
   return Entities.Unit.Unit.create({
     ...player.toObject(),
-    isCasting: spell.info.castTime > 0,
+    castingSpellId: isCasting ? spell.info.id : null,
+    castRemaining: isCasting ? spell.info.castTime : 0,
+    castTarget: isCasting ? targetId : null,
+    isCasting,
     spells: {
       all: player.spells.all.set(spell.info.id, updatedSpell),
       meta: player.spells.meta.set(
@@ -148,7 +154,10 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             }
 
             // Get the current spell from player state (not the stale spell parameter)
-            const currentSpell = player.spells.all.get(spell.info.id) ?? spell;
+            const stateSpell = player.spells.all.get(spell.info.id) ?? spell;
+
+            // Recompute spell with current time to ensure isReady is fresh
+            const currentSpell = stateSpell.with({}, currentState.currentTime);
 
             // Apply beforeCast modifiers (can transform spell, e.g., make it instant)
             const modifiedSpell = yield* lifecycle.executeBeforeCast(
@@ -184,6 +193,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               modifiedSpell,
               player,
               currentState.currentTime,
+              targetId,
             );
 
             yield* state.updateState((s) =>
@@ -213,7 +223,29 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             const completeTime = startTime + castTime;
             yield* scheduler.schedule({
               execute: pipe(
-                lifecycle.executeOnCast(modifiedSpell, player.id),
+                Effect.gen(function* () {
+                  // Clear cast state
+                  yield* state.updateState((s) => {
+                    const currentPlayer = s.units.get(player.id);
+                    if (!currentPlayer) return s;
+
+                    const clearedPlayer = Entities.Unit.Unit.create({
+                      ...currentPlayer.toObject(),
+                      castingSpellId: null,
+                      castRemaining: 0,
+                      castTarget: null,
+                      isCasting: false,
+                    });
+
+                    return s.set(
+                      "units",
+                      s.units.set(player.id, clearedPlayer),
+                    );
+                  });
+
+                  // Execute onCast modifiers
+                  yield* lifecycle.executeOnCast(modifiedSpell, player.id);
+                }),
                 Effect.timeout("10 seconds"),
                 Effect.catchAll((error) =>
                   logger.error(`Modifier execution failed: ${error}`),

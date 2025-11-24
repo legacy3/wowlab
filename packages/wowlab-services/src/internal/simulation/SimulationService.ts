@@ -93,10 +93,11 @@ export class SimulationService extends Effect.Service<SimulationService>()(
               );
 
               // TODO Not sure about this
-              // Schedule APL if a resource became available
+              // Schedule APL if a resource became available or projectile impacted
               if (
                 nextEvent.type === Events.EventType.SPELL_COOLDOWN_READY ||
-                nextEvent.type === Events.EventType.SPELL_CHARGE_READY
+                nextEvent.type === Events.EventType.SPELL_CHARGE_READY ||
+                nextEvent.type === Events.EventType.PROJECTILE_IMPACT
               ) {
                 yield* scheduler.scheduleAPL(nextEvent.time);
               }

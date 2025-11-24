@@ -28,8 +28,8 @@
 
 - `scheduleInput` currently forces `execute: Effect.void`; callbacks for charge/projectile/auras won’t run.
 - Choose and implement one pattern:
-  1) Extend `ScheduledInput`/`buildEvent` to accept an `execute` effect; or
-  2) Replace `scheduleInput` usages with `schedule(...)` that sets `id`, `priority`, and `execute`.
+  1. Extend `ScheduledInput`/`buildEvent` to accept an `execute` effect; or
+  2. Replace `scheduleInput` usages with `schedule(...)` that sets `id`, `priority`, and `execute`.
 - Apply to:
   - `SPELL_CHARGE_READY`: increment charges in the execute handler.
   - `PROJECTILE_IMPACT`: run damage + onDamage pipeline.
