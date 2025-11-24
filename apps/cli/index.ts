@@ -20,12 +20,12 @@ loadEnvironment();
 // Import commands after env is loaded
 import { commands } from "./commands/index.js";
 
-const mainCommand = Command.make("lib-innocent", {}, () =>
+const mainCommand = Command.make("wowlab", {}, () =>
   Effect.log("Use --help to see available commands"),
 ).pipe(Command.withSubcommands(commands));
 
 const cli = Command.run(mainCommand, {
-  name: "lib-innocent CLI",
+  name: "wowlab CLI",
   version: "1.0.0",
 });
 

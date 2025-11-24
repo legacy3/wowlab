@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "CLI tools for lib-innocent development",
+  "description": "CLI tools for wowlab development",
   "bin": {
-    "lib-innocent": "./index.ts"
+    "wowlab": "./index.ts"
   },
   "scripts": {
     "dev": "tsx index.ts",

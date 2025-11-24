@@ -1,6 +1,5 @@
 import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
-// import type { ItemDataFlat } from "@packages/innocent-schemas/Item";
 import { supabaseClientAtom } from "@/atoms/supabase";
 
 export const itemAtomFamily = atomFamily((itemId: number) =>

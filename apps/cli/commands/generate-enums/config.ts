@@ -16,7 +16,7 @@ export const WOW_DOCS_PATH = path.join(
 export const OUTPUT_PATH = path.join(
   process.cwd(),
   "packages",
-  "lib-innocent",
+  "wowlab-core",
   "src",
   "schemas",
   "enums",

@@ -66,7 +66,7 @@ TypeScript library for WoW spell rotation simulation using Effect-TS and Immutab
 
 **Event-driven simulation:** Priority queue → Dequeue → Execute → Mutate GameState → Publish snapshot → Schedule events
 
-**Module exports:** `@packages/lib-innocent` (all), `/domain` (entities), `/services` (services), `/rotation` (rotation API)
+**Module exports:** `@wowlab/core` (entities, schemas), `@wowlab/services` (services), `@wowlab/rotation` (rotation API)
 
 ## Core Rules
 

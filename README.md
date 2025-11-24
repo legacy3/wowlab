@@ -26,13 +26,11 @@ WowLab provides a pure functional, event-driven simulation engine for analyzing 
 
 ### Packages
 
-- `packages/innocent-domain` - Core entities (Immutable.js Records)
-- `packages/innocent-services` - Effect services (state, spell, lifecycle)
-- `packages/innocent-rotation` - Rotation context & actions API
-- `packages/innocent-schemas` - DBC schemas, enums, branded types
-- `packages/innocent-bootstrap` - Effect Layer composition
-- `packages/innocent-spellbook` - Spell rotation implementations
-- `packages/innocent-parsers` - Game data parsers
+- `packages/wowlab-core` - Core entities, schemas, branded types (Immutable.js Records)
+- `packages/wowlab-services` - Effect services (state, spell, lifecycle)
+- `packages/wowlab-rotation` - Rotation context & actions API
+- `packages/wowlab-runtime` - Effect Layer composition and runtime
+- `packages/wowlab-spellbook` - Spell rotation implementations
 
 ### Docs
 
@@ -80,11 +78,10 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 
 **Core packages:**
 
-- `innocent-domain` - Immutable.js entities
-- `innocent-services` - Effect services (state, spell, lifecycle, simulation)
-- `innocent-rotation` - Rotation context & actions API
-- `innocent-schemas` - DBC schemas, enums, branded types
-- `innocent-bootstrap` - Effect Layer composition
+- `wowlab-core` - Immutable.js entities, schemas, branded types
+- `wowlab-services` - Effect services (state, spell, lifecycle, simulation)
+- `wowlab-rotation` - Rotation context & actions API
+- `wowlab-runtime` - Effect Layer composition
 
 ## MCP Tools (Optional)
 

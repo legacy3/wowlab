@@ -10,10 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
-    "paths": {
-      "@packages/lib-innocent": ["packages/lib-innocent/src/index.ts"],
-      "@packages/lib-innocent/*": ["packages/lib-innocent/src/*"]
-    },
+    // "paths": {},
     "plugins": [
       {
         "name": "@effect/language-service"

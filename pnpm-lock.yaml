@@ -394,175 +394,6 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/innocent-bootstrap:
-    dependencies:
-      '@packages/innocent-domain':
-        specifier: workspace:*
-        version: link:../innocent-domain
-      '@packages/innocent-parsers':
-        specifier: workspace:*
-        version: link:../innocent-parsers
-      '@packages/innocent-rotation':
-        specifier: workspace:*
-        version: link:../innocent-rotation
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      '@packages/innocent-services':
-        specifier: workspace:*
-        version: link:../innocent-services
-      '@packages/innocent-spellbook':
-        specifier: workspace:*
-        version: link:../innocent-spellbook
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-domain:
-    dependencies:
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-parsers:
-    dependencies:
-      '@packages/innocent-domain':
-        specifier: workspace:*
-        version: link:../innocent-domain
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-rotation:
-    dependencies:
-      '@packages/innocent-domain':
-        specifier: workspace:*
-        version: link:../innocent-domain
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      '@packages/innocent-services':
-        specifier: workspace:*
-        version: link:../innocent-services
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-schemas:
-    dependencies:
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-services:
-    dependencies:
-      '@packages/innocent-domain':
-        specifier: workspace:*
-        version: link:../innocent-domain
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      '@packages/innocent-spellbook':
-        specifier: workspace:*
-        version: link:../innocent-spellbook
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-      microdiff:
-        specifier: ^1.5.0
-        version: 1.5.0
-      tinyqueue:
-        specifier: ^3.0.0
-        version: 3.0.0
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
-  packages/innocent-spellbook:
-    dependencies:
-      '@packages/innocent-domain':
-        specifier: workspace:*
-        version: link:../innocent-domain
-      '@packages/innocent-schemas':
-        specifier: workspace:*
-        version: link:../innocent-schemas
-      effect:
-        specifier: ^3.19.4
-        version: 3.19.4
-      immutable:
-        specifier: ^5.1.4
-        version: 5.1.4
-    devDependencies:
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.10.1)(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
-
   packages/wowlab-core:
     dependencies:
       effect:
@@ -4259,9 +4090,6 @@ packages:
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
-
-  microdiff@1.5.0:
-    resolution: {integrity: sha512-Drq+/THMvDdzRYrK0oxJmOKiC24ayUV8ahrt8l3oRK51PWt6gdtrIGrlIH3pT/lFh1z93FbAcidtsHcWbnRz8Q==}
 
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
@@ -8207,7 +8035,7 @@ snapshots:
       eslint: 9.38.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.38.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.38.0(jiti@2.6.1))
@@ -8240,7 +8068,7 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.38.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -8255,7 +8083,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.38.0(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.3(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -9091,8 +8919,6 @@ snapshots:
   merge-descriptors@2.0.0: {}
 
   merge2@1.4.1: {}
-
-  microdiff@1.5.0: {}
 
   micromatch@4.0.8:
     dependencies:

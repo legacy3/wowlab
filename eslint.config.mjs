@@ -135,38 +135,6 @@ export default [
         },
       ],
 
-      // Ban old lib-innocent internal path aliases
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "@schemas*",
-                "@domain*",
-                "@services*",
-                "@data*",
-                "@bootstrap*",
-                "@rotation*",
-                "@parsers*",
-              ],
-              message:
-                "Old lib-innocent path aliases are deprecated. Use new package imports instead.",
-            },
-          ],
-        },
-      ],
-
-      // Enforce namespace imports for @packages/innocent-* packages
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            'ImportDeclaration[source.value^="@packages/innocent-"] > ImportSpecifier',
-          message:
-            'Use namespace imports for @packages/innocent-* packages. Example: import * as Data from "@packages/innocent-services/Data"',
-        },
-      ],
     },
   },
 
@@ -240,16 +208,6 @@ export default [
         },
       ],
 
-      // Enforce namespace imports for @packages/innocent-* packages
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            'ImportDeclaration[source.value^="@packages/innocent-"] > ImportSpecifier',
-          message:
-            'Use namespace imports for @packages/innocent-* packages. Example: import * as Data from "@packages/innocent-services/Data"',
-        },
-      ],
     },
   },
 
@@ -267,38 +225,6 @@ export default [
     rules: {
       ...baseTypeScriptRules,
 
-      // Ban old lib-innocent internal path aliases
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "@schemas*",
-                "@domain*",
-                "@services*",
-                "@data*",
-                "@bootstrap*",
-                "@rotation*",
-                "@parsers*",
-              ],
-              message:
-                "Old lib-innocent path aliases are deprecated. Use new package imports instead.",
-            },
-          ],
-        },
-      ],
-
-      // Enforce namespace imports for @packages/innocent-* packages
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            'ImportDeclaration[source.value^="@packages/innocent-"] > ImportSpecifier',
-          message:
-            'Use namespace imports for @packages/innocent-* packages. Example: import * as Data from "@packages/innocent-services/Data"',
-        },
-      ],
     },
   },
 ];
