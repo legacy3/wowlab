@@ -11,5 +11,5 @@ export * as cooldown from "./cooldown/index.js";
 export * as damage from "./damage/index.js";
 export {
   EventHandlerRegistry,
-  type HandlerRegistration,
+  type HandlerDefinition,
 } from "./registry/EventHandlerRegistry.js";

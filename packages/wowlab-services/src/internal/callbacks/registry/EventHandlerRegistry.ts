@@ -1,22 +1,15 @@
 import { Events } from "@wowlab/core";
 import * as Effect from "effect/Effect";
 
-/**
- * Registration input for a handler.
- */
-export interface HandlerRegistration<
+export interface HandlerDefinition<
   T extends Events.EventType = Events.EventType,
 > {
   readonly callback: Events.ExecutionCallback<T>;
-  readonly eventType: T;
   readonly name: string;
   readonly phase: Events.HandlerPhase;
   readonly phasePriority?: number;
 }
 
-/**
- * Internal metadata stored for each handler.
- */
 interface HandlerMetadata<T extends Events.EventType = Events.EventType> {
   readonly callback: Events.ExecutionCallback<T>;
   readonly name: string;
@@ -25,16 +18,6 @@ interface HandlerMetadata<T extends Events.EventType = Events.EventType> {
   readonly registrationOrder: number;
 }
 
-/**
- * Central registry for event handlers.
- * Handlers are registered at bootstrap and auto-injected into events.
- *
- * Phase execution order: CLEANUP → CORE → SECONDARY → POST
- *
- * Within each phase, handlers are sorted by:
- * 1. phasePriority (lower = earlier, default 0)
- * 2. registrationOrder (earlier registration = earlier execution)
- */
 export class EventHandlerRegistry extends Effect.Service<EventHandlerRegistry>()(
   "EventHandlerRegistry",
   {
@@ -80,41 +63,42 @@ export class EventHandlerRegistry extends Effect.Service<EventHandlerRegistry>()
         },
 
         register: <T extends Events.EventType>(
-          registration: HandlerRegistration<T>,
+          eventType: T,
+          handler: HandlerDefinition<T>,
         ) => {
-          const list = handlers.get(registration.eventType) ?? [];
+          const list = handlers.get(eventType) ?? [];
 
           list.push({
-            callback: registration.callback,
-            name: registration.name,
-            phase: registration.phase,
-            phasePriority: registration.phasePriority ?? 0,
+            callback: handler.callback,
+            name: handler.name,
+            phase: handler.phase,
+            phasePriority: handler.phasePriority ?? 0,
             registrationOrder: nextRegistrationOrder++,
           });
 
           sortHandlers(list);
-          handlers.set(registration.eventType, list);
+          handlers.set(eventType, list);
         },
 
-        registerMany: (
-          registrations: ReadonlyArray<HandlerRegistration>,
-        ): Effect.Effect<void> =>
-          Effect.sync(() => {
-            for (const reg of registrations) {
-              const list = handlers.get(reg.eventType) ?? [];
+        registerMany: <T extends Events.EventType>(
+          eventType: T,
+          handlerDefs: ReadonlyArray<HandlerDefinition<T>>,
+        ) => {
+          const list = handlers.get(eventType) ?? [];
 
-              list.push({
-                callback: reg.callback,
-                name: reg.name,
-                phase: reg.phase,
-                phasePriority: reg.phasePriority ?? 0,
-                registrationOrder: nextRegistrationOrder++,
-              });
+          for (const handler of handlerDefs) {
+            list.push({
+              callback: handler.callback,
+              name: handler.name,
+              phase: handler.phase,
+              phasePriority: handler.phasePriority ?? 0,
+              registrationOrder: nextRegistrationOrder++,
+            });
+          }
 
-              sortHandlers(list);
-              handlers.set(reg.eventType, list);
-            }
-          }),
+          sortHandlers(list);
+          handlers.set(eventType, list);
+        },
       };
     }),
   },
