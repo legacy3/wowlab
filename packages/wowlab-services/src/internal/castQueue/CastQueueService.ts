@@ -74,12 +74,23 @@ const applyImmediateEffects = (
         .set(gcdCategory, newGcdExpiry)
     : player.spells.meta.get("cooldownCategories");
 
-  // Consume a charge if spell has charges
   let updatedSpell = spell;
+
+  // Consume a charge if spell has charges
   if (spell.info.maxCharges > 0 && spell.charges > 0) {
     updatedSpell = spell.transform.charges.decrement({
       amount: 1,
       time: currentTime,
+    });
+  }
+
+  // Set cooldown if spell has a recovery time
+  if (spell.info.recoveryTime > 0) {
+    const cooldownExpiry = currentTime + spell.info.recoveryTime;
+
+    updatedSpell = updatedSpell.transform.cooldown.set({
+      time: currentTime,
+      value: cooldownExpiry,
     });
   }
 
@@ -220,6 +231,33 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             yield* Effect.logInfo(
               `[Cast] ${modifiedSpell.info.name} at ${currentState.currentTime}ms`,
             );
+
+            // Schedule cooldown ready event if spell has a cooldown
+            if (modifiedSpell.info.recoveryTime > 0) {
+              const cooldownReadyTime =
+                startTime + modifiedSpell.info.recoveryTime;
+
+              yield* scheduler.scheduleInput({
+                at: cooldownReadyTime,
+                spell: modifiedSpell,
+                type: Events.EventType.SPELL_COOLDOWN_READY,
+              });
+            }
+
+            // Schedule charge ready event if spell has charges and consumed one
+            if (
+              modifiedSpell.info.maxCharges > 0 &&
+              modifiedSpell.charges > 0
+            ) {
+              const chargeReadyTime =
+                startTime + modifiedSpell.info.chargeRecoveryTime;
+
+              yield* scheduler.scheduleInput({
+                at: chargeReadyTime,
+                spell: modifiedSpell,
+                type: Events.EventType.SPELL_CHARGE_READY,
+              });
+            }
 
             // Schedule next APL and interrupt rotation fiber
             const gcdExpiry = triggersGcd ? startTime + gcd : startTime;

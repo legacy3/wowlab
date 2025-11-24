@@ -47,25 +47,29 @@ export const runRotationWithRuntime = (
 
     // Collect events while running
     const eventsCollected: Events.SimulationEvent[] = [];
-    const eventCollectorFiber = yield* Effect.fork(
+    const result = yield* Effect.scoped(
       Effect.gen(function* () {
-        yield* Effect.scoped(
-          Effect.gen(function* () {
-            const eventStream = yield* PubSub.subscribe(sim.events);
+        const eventStream = yield* PubSub.subscribe(sim.events);
 
+        // Fork collector fiber after subscription is ready
+        const eventCollectorFiber = yield* Effect.fork(
+          Effect.gen(function* () {
             while (true) {
               const event = yield* Queue.take(eventStream);
               eventsCollected.push(event);
             }
-          }),
+          }).pipe(Effect.catchAll(() => Effect.void)),
         );
-      }).pipe(Effect.catchAll(() => Effect.void)),
+
+        // Now run simulation - collector is ready
+        const result = yield* sim.run(rotation.run(playerId), 10000);
+
+        // Stop collecting events
+        yield* Fiber.interrupt(eventCollectorFiber);
+
+        return result;
+      }),
     );
-
-    const result = yield* sim.run(rotation.run(playerId), 10000); // 10s fixed for now
-
-    // Stop collecting events
-    yield* Fiber.interrupt(eventCollectorFiber);
 
     yield* Effect.log(
       `\nSimulation complete. Final time: ${result.finalTime}ms`,

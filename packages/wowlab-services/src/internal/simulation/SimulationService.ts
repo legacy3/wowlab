@@ -1,4 +1,5 @@
 import * as Entities from "@wowlab/core/Entities";
+import * as Events from "@wowlab/core/Events";
 import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
@@ -86,6 +87,15 @@ export class SimulationService extends Effect.Service<SimulationService>()(
                   return Effect.failCause(cause);
                 }),
               );
+
+              // TODO Not sure about this
+              // Schedule APL if a resource became available
+              if (
+                nextEvent.type === Events.EventType.SPELL_COOLDOWN_READY ||
+                nextEvent.type === Events.EventType.SPELL_CHARGE_READY
+              ) {
+                yield* scheduler.scheduleAPL(nextEvent.time);
+              }
 
               // Increment events processed
               yield* Ref.update(eventsProcessedRef, (n) => n + 1);
