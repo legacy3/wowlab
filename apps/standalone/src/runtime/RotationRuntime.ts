@@ -7,6 +7,8 @@ import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 
+import { createServiceLogger } from "../utils/logging.js";
+
 export interface RotationRuntimeConfig {
   readonly items?: Schemas.Item.ItemDataFlat[];
   readonly logLevel?: LogLevel.LogLevel;
@@ -24,11 +26,15 @@ export const createRotationRuntime = (config: RotationRuntimeConfig) => {
   const baseAppLayer = createAppLayer({ metadata: metadataLayer });
 
   // 3. Build full layer with rotation context and logging
+  const loggerLayer = Layer.merge(
+    Logger.replace(Logger.defaultLogger, createServiceLogger()),
+    Logger.minimumLogLevel(config.logLevel ?? LogLevel.Debug),
+  );
+
   const fullLayer = Context.RotationContext.Default.pipe(
     Layer.provide(baseAppLayer),
     Layer.merge(baseAppLayer),
-    Layer.provide(Logger.pretty),
-    Layer.provide(Logger.minimumLogLevel(config.logLevel ?? LogLevel.Debug)),
+    Layer.provide(loggerLayer),
   );
 
   // 4. Convert layer to managed runtime

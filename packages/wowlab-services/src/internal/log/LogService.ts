@@ -7,10 +7,23 @@ export class LogService extends Effect.Service<LogService>()("LogService", {
         yield* Effect.annotateLogsScoped({ logger: name });
 
         return {
-          debug: (...args: unknown[]) => Effect.logDebug(...args),
-          error: (...args: unknown[]) => Effect.logError(...args),
-          info: (...args: unknown[]) => Effect.logInfo(...args),
-          warn: (...args: unknown[]) => Effect.logWarning(...args),
+          debug: (...args: unknown[]) =>
+            Effect.logDebug(...args).pipe(
+              Effect.annotateLogs({ logger: name }),
+            ),
+
+          error: (...args: unknown[]) =>
+            Effect.logError(...args).pipe(
+              Effect.annotateLogs({ logger: name }),
+            ),
+
+          info: (...args: unknown[]) =>
+            Effect.logInfo(...args).pipe(Effect.annotateLogs({ logger: name })),
+
+          warn: (...args: unknown[]) =>
+            Effect.logWarning(...args).pipe(
+              Effect.annotateLogs({ logger: name }),
+            ),
         };
       }).pipe(Effect.scoped),
   }),
