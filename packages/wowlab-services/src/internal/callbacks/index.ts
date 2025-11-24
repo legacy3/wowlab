@@ -10,8 +10,6 @@ export * as cast from "./cast/index.js";
 export * as cooldown from "./cooldown/index.js";
 export * as damage from "./damage/index.js";
 export {
-  defineHandler,
   EventHandlerRegistry,
-  type HandlerDefinition,
   type HandlerRegistration,
 } from "./registry/EventHandlerRegistry.js";

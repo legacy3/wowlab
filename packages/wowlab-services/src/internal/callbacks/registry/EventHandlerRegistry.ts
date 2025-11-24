@@ -1,82 +1,77 @@
 import { Events } from "@wowlab/core";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
-export interface HandlerDefinition<
+/**
+ * Registration input for a handler.
+ */
+export interface HandlerRegistration<
   T extends Events.EventType = Events.EventType,
 > {
   readonly callback: Events.ExecutionCallback<T>;
   readonly eventType: T;
   readonly name: string;
-  readonly priority: number;
+  readonly phase: Events.HandlerPhase;
+  readonly phasePriority?: number;
 }
 
-export interface HandlerRegistration<
-  T extends Events.EventType = Events.EventType,
-> {
+/**
+ * Internal metadata stored for each handler.
+ */
+interface HandlerMetadata<T extends Events.EventType = Events.EventType> {
   readonly callback: Events.ExecutionCallback<T>;
   readonly name: string;
-  readonly priority: number;
+  readonly phase: Events.HandlerPhase;
+  readonly phasePriority: number;
+  readonly registrationOrder: number;
 }
 
 /**
  * Central registry for event handlers.
  * Handlers are registered at bootstrap and auto-injected into events.
  *
- * Priority guide:
- * - 0-20: Critical pre-processing (state cleanup, validation)
- * - 20-50: Core game logic (damage, healing, resource changes)
- * - 50-100: Secondary effects (procs, triggers, modifiers)
- * - 100+: Post-processing (logging, metrics, cleanup)
+ * Phase execution order: CLEANUP → CORE → SECONDARY → POST
+ *
+ * Within each phase, handlers are sorted by:
+ * 1. phasePriority (lower = earlier, default 0)
+ * 2. registrationOrder (earlier registration = earlier execution)
  */
 export class EventHandlerRegistry extends Effect.Service<EventHandlerRegistry>()(
   "EventHandlerRegistry",
   {
     effect: Effect.sync(() => {
-      const handlers = new Map<
-        Events.EventType,
-        Array<HandlerRegistration<any>>
-      >();
+      const handlers = new Map<Events.EventType, Array<HandlerMetadata<any>>>();
+      let nextRegistrationOrder = 0;
+
+      const sortHandlers = (list: Array<HandlerMetadata<any>>) => {
+        list.sort(compareHandlers);
+      };
 
       return {
-        /**
-         * Register a handler for an event type.
-         * Lower priority numbers execute first (0 = highest priority).
-         */
-        register: <T extends Events.EventType>(
-          eventType: T,
-          name: string,
-          callback: Events.ExecutionCallback<T>,
-          priority: number = 100,
-        ) => {
-          const list = handlers.get(eventType) ?? [];
-          list.push({ callback, name, priority });
-          // Sort by priority ascending (lower = higher priority)
-          list.sort((a, b) => a.priority - b.priority);
-          handlers.set(eventType, list);
+        clear: (eventType: Events.EventType) => {
+          handlers.delete(eventType);
         },
 
-        /**
-         * Register multiple handlers at once.
-         */
-        registerMany: (definitions: ReadonlyArray<HandlerDefinition>) =>
-          Effect.sync(() => {
-            for (const def of definitions) {
-              const list = handlers.get(def.eventType) ?? [];
-              list.push({
-                callback: def.callback,
-                name: def.name,
-                priority: def.priority,
-              });
-              list.sort((a, b) => a.priority - b.priority);
-              handlers.set(def.eventType, list);
-            }
-          }),
+        clearAll: () => {
+          handlers.clear();
+          nextRegistrationOrder = 0;
+        },
 
-        /**
-         * Get all registered handlers for an event type.
-         * Returns handlers in priority order (lowest priority value first).
-         */
+        getHandlerInfo: <T extends Events.EventType>(
+          eventType: T,
+        ): ReadonlyArray<{
+          name: string;
+          phase: Events.HandlerPhase;
+          phasePriority: number;
+        }> => {
+          const list = handlers.get(eventType) ?? [];
+
+          return list.map((h) => ({
+            name: h.name,
+            phase: h.phase,
+            phasePriority: h.phasePriority,
+          }));
+        },
+
         getHandlers: <T extends Events.EventType>(
           eventType: T,
         ): ReadonlyArray<Events.ExecutionCallback<T>> => {
@@ -84,47 +79,65 @@ export class EventHandlerRegistry extends Effect.Service<EventHandlerRegistry>()
           return list.map((h) => h.callback);
         },
 
-        /**
-         * Get handler registrations with metadata.
-         * Useful for debugging.
-         */
-        getHandlerInfo: <T extends Events.EventType>(
-          eventType: T,
-        ): ReadonlyArray<HandlerRegistration<T>> => {
-          return handlers.get(eventType) ?? [];
+        register: <T extends Events.EventType>(
+          registration: HandlerRegistration<T>,
+        ) => {
+          const list = handlers.get(registration.eventType) ?? [];
+
+          list.push({
+            callback: registration.callback,
+            name: registration.name,
+            phase: registration.phase,
+            phasePriority: registration.phasePriority ?? 0,
+            registrationOrder: nextRegistrationOrder++,
+          });
+
+          sortHandlers(list);
+          handlers.set(registration.eventType, list);
         },
 
-        /**
-         * Clear all handlers for an event type.
-         * Useful for testing.
-         */
-        clear: (eventType: Events.EventType) => {
-          handlers.delete(eventType);
-        },
+        registerMany: (
+          registrations: ReadonlyArray<HandlerRegistration>,
+        ): Effect.Effect<void> =>
+          Effect.sync(() => {
+            for (const reg of registrations) {
+              const list = handlers.get(reg.eventType) ?? [];
 
-        /**
-         * Clear all handlers.
-         * Useful for testing.
-         */
-        clearAll: () => {
-          handlers.clear();
-        },
+              list.push({
+                callback: reg.callback,
+                name: reg.name,
+                phase: reg.phase,
+                phasePriority: reg.phasePriority ?? 0,
+                registrationOrder: nextRegistrationOrder++,
+              });
+
+              sortHandlers(list);
+              handlers.set(reg.eventType, list);
+            }
+          }),
       };
     }),
   },
 ) {}
 
 /**
- * Helper to create a handler definition.
+ * Compare handlers for sorting by phase → phasePriority → registrationOrder.
  */
-export const defineHandler = <T extends Events.EventType>(
-  eventType: T,
-  name: string,
-  callback: Events.ExecutionCallback<T>,
-  priority: number,
-): HandlerDefinition<T> => ({
-  callback,
-  eventType,
-  name,
-  priority,
-});
+function compareHandlers(a: HandlerMetadata, b: HandlerMetadata): number {
+  // 1. Phase order (CLEANUP < CORE < SECONDARY < POST)
+  const phaseCompare =
+    Events.PHASE_ORDER.indexOf(a.phase) - Events.PHASE_ORDER.indexOf(b.phase);
+
+  if (phaseCompare !== 0) {
+    return phaseCompare;
+  }
+
+  // 2. Phase priority (lower = earlier)
+  const priorityCompare = a.phasePriority - b.phasePriority;
+  if (priorityCompare !== 0) {
+    return priorityCompare;
+  }
+
+  // 3. Registration order
+  return a.registrationOrder - b.registrationOrder;
+}

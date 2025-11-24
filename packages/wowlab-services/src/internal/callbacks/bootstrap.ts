@@ -5,62 +5,57 @@ import * as Layer from "effect/Layer";
 import * as Cast from "./cast/index.js";
 import * as Cooldown from "./cooldown/index.js";
 import * as Damage from "./damage/index.js";
-import {
-  defineHandler,
-  EventHandlerRegistry,
-} from "./registry/EventHandlerRegistry.js";
+import { EventHandlerRegistry } from "./registry/EventHandlerRegistry.js";
 
 /**
  * Bootstrap layer that registers all event handlers.
  * Run this at application startup to configure the event system.
  *
- * Priority guide:
- * - 0-20: Critical pre-processing (state cleanup, validation)
- * - 20-50: Core game logic (damage, healing, resource changes)
- * - 50-100: Secondary effects (procs, triggers, modifiers)
- * - 100+: Post-processing (logging, metrics, cleanup)
+ * Phase execution order: CLEANUP → CORE → SECONDARY → POST
  */
 const registerAllHandlers = Effect.gen(function* () {
   const registry = yield* EventHandlerRegistry;
 
   // SPELL_CAST_COMPLETE handlers
-  registry.register(
-    Events.EventType.SPELL_CAST_COMPLETE,
-    "clearCastState",
-    Cast.clearCastState,
-    10, // Early: cleanup before other handlers
-  );
+  registry.register({
+    callback: Cast.clearCastState,
+    eventType: Events.EventType.SPELL_CAST_COMPLETE,
+    name: "clearCastState",
+    phase: Events.HandlerPhase.CLEANUP,
+    phasePriority: -10,
+  });
 
-  registry.register(
-    Events.EventType.SPELL_CAST_COMPLETE,
-    "executeOnCast",
-    Cast.executeOnCast,
-    50, // Mid: trigger spell modifiers
-  );
+  registry.register({
+    callback: Cast.executeOnCast,
+    eventType: Events.EventType.SPELL_CAST_COMPLETE,
+    name: "executeOnCast",
+    phase: Events.HandlerPhase.SECONDARY,
+  });
 
   // SPELL_COOLDOWN_READY handlers
-  registry.register(
-    Events.EventType.SPELL_COOLDOWN_READY,
-    "cooldownReady",
-    Cooldown.cooldownReady,
-    50, // Mid: update spell state
-  );
+  registry.register({
+    callback: Cooldown.cooldownReady,
+    eventType: Events.EventType.SPELL_COOLDOWN_READY,
+    name: "cooldownReady",
+    phase: Events.HandlerPhase.CORE,
+  });
 
   // SPELL_CHARGE_READY handlers
-  registry.register(
-    Events.EventType.SPELL_CHARGE_READY,
-    "incrementCharge",
-    Cooldown.incrementCharge,
-    50, // Mid: update spell charges
-  );
+  registry.register({
+    callback: Cooldown.incrementCharge,
+    eventType: Events.EventType.SPELL_CHARGE_READY,
+    name: "incrementCharge",
+    phase: Events.HandlerPhase.CORE,
+  });
 
   // PROJECTILE_IMPACT handlers
-  registry.register(
-    Events.EventType.PROJECTILE_IMPACT,
-    "applyDamage",
-    Damage.applyDamage,
-    40, // Core game logic: damage + onDamage modifiers
-  );
+  registry.register({
+    callback: Damage.applyDamage,
+    eventType: Events.EventType.PROJECTILE_IMPACT,
+    name: "applyDamage",
+    phase: Events.HandlerPhase.CORE,
+    phasePriority: -5,
+  });
 
   yield* Effect.log("Event handlers registered successfully");
 });
