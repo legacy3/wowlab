@@ -10,55 +10,15 @@ import { Map, Set } from "immutable";
 import { customAlphabet } from "nanoid";
 import TinyQueue from "tinyqueue";
 
+import { EventHandlerRegistry } from "../callbacks/registry/EventHandlerRegistry.js";
 import { RotationProviderService } from "../rotation/RotationProviderService.js";
 
-export type ScheduledInput =
-  | { type: Events.EventType.APL_EVALUATE; at: number }
-  | {
-      type: Events.EventType.SPELL_CAST_START;
-      at: number;
-      spell: Entities.Spell.Spell;
-      targetId: Schemas.Branded.UnitID | null;
-    }
-  | {
-      type: Events.EventType.SPELL_CAST_COMPLETE;
-      at: number;
-      spell: Entities.Spell.Spell;
-      targetId: Schemas.Branded.UnitID | null;
-    }
-  | {
-      type: Events.EventType.SPELL_COOLDOWN_READY;
-      at: number;
-      spell: Entities.Spell.Spell;
-    }
-  | {
-      type: Events.EventType.SPELL_CHARGE_READY;
-      at: number;
-      spell: Entities.Spell.Spell;
-    }
-  | {
-      type: Events.EventType.PROJECTILE_IMPACT;
-      at: number;
-      projectileId: Schemas.Branded.ProjectileID;
-      spell: Entities.Spell.Spell;
-      casterUnitId: Schemas.Branded.UnitID;
-      targetUnitId: Schemas.Branded.UnitID;
-      damage: number;
-    }
-  | {
-      type: Events.EventType.AURA_EXPIRE;
-      at: number;
-      aura: Entities.Aura.Aura;
-      unitId: Schemas.Branded.UnitID;
-    }
-  | {
-      type: Events.EventType.AURA_STACK_DECAY;
-      at: number;
-      aura: Entities.Aura.Aura;
-      unitId: Schemas.Branded.UnitID;
-    }
-  | { type: Events.EventType.PERIODIC_POWER; at: number }
-  | { type: Events.EventType.PERIODIC_SPELL; at: number };
+export type ScheduledInput<T extends Events.EventType = Events.EventType> = {
+  readonly at: number;
+  readonly callbacks?: ReadonlyArray<Events.ExecutionCallback<T>>;
+  readonly payload: Events.EventPayloadMap[T];
+  readonly type: T;
+};
 
 interface SchedulerState {
   counter: number;
@@ -77,128 +37,45 @@ const generateEventId = (counter: number): Schemas.Branded.EventID => {
   return Schemas.Branded.EventID(`${counter}_${nanoid()}`);
 };
 
-const buildEvent = (
-  input: ScheduledInput,
+/**
+ * Build an event, merging registered handlers with manual callbacks.
+ * Registered handlers (from registry) execute first in priority order,
+ * then manual callbacks execute in array order.
+ */
+const buildEvent = <T extends Events.EventType>(
+  input: ScheduledInput<T>,
   counter: number,
-): Events.ScheduledEvent => {
+  registry: EventHandlerRegistry,
+): Events.ScheduledEvent<T> => {
   const id = generateEventId(counter);
   const priority = Events.EVENT_PRIORITY[input.type];
 
-  switch (input.type) {
-    case Events.EventType.APL_EVALUATE:
-      return {
-        execute: Effect.void,
-        id,
-        payload: {},
-        priority,
-        time: input.at,
-        type: input.type,
-      };
+  // Get registered handlers for this event type
+  const registeredHandlers = registry.getHandlers(input.type);
 
-    case Events.EventType.AURA_EXPIRE:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { aura: input.aura, unitId: input.unitId },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
+  // Merge registered handlers with manual callbacks
+  // Registered handlers execute first (they're already priority-sorted)
+  const allCallbacks = [
+    ...registeredHandlers,
+    ...(input.callbacks ?? []),
+  ] as ReadonlyArray<Events.ExecutionCallback>;
 
-    case Events.EventType.AURA_STACK_DECAY:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { aura: input.aura, unitId: input.unitId },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.PERIODIC_POWER:
-      return {
-        execute: Effect.void,
-        id,
-        payload: {},
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.PERIODIC_SPELL:
-      return {
-        execute: Effect.void,
-        id,
-        payload: {},
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.PROJECTILE_IMPACT:
-      return {
-        execute: Effect.void,
-        id,
-        payload: {
-          casterUnitId: input.casterUnitId,
-          damage: input.damage,
-          projectileId: input.projectileId,
-          spell: input.spell,
-          targetUnitId: input.targetUnitId,
-        },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.SPELL_CAST_COMPLETE:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { spell: input.spell, targetId: input.targetId },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.SPELL_CAST_START:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { spell: input.spell, targetId: input.targetId },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.SPELL_CHARGE_READY:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { spell: input.spell },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-
-    case Events.EventType.SPELL_COOLDOWN_READY:
-      return {
-        execute: Effect.void,
-        id,
-        payload: { spell: input.spell },
-        priority,
-        time: input.at,
-        type: input.type,
-      };
-  }
+  return {
+    at: input.at,
+    callbacks: allCallbacks,
+    id,
+    payload: input.payload,
+    priority,
+    type: input.type,
+  } as Events.ScheduledEvent<T>;
 };
 
 const eventComparator = (
   a: Events.ScheduledEvent,
   b: Events.ScheduledEvent,
 ): number => {
-  if (a.time !== b.time) {
-    return a.time - b.time;
+  if (a.at !== b.at) {
+    return a.at - b.at;
   }
 
   if (a.priority !== b.priority) {
@@ -253,6 +130,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
   "EventSchedulerService",
   {
     effect: Effect.gen(function* () {
+      const registry = yield* EventHandlerRegistry;
       const stateRef = yield* Ref.make<SchedulerState>(createEmptyState());
 
       // Create PubSub for event stream
@@ -319,7 +197,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
               event,
               {
                 ...state,
-                currentTime: event.time,
+                currentTime: event.at,
                 index: state.index.delete(event.id),
                 tombstones: state.tombstones.delete(event.id),
               },
@@ -342,26 +220,37 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             const state = yield* Ref.get(stateRef);
 
             // Enforce time monotonicity: cannot schedule in the past
-            if (event.time < state.currentTime) {
+            if (event.at < state.currentTime) {
               return yield* Effect.fail(
                 new Errors.ScheduleInPast({
                   currentTime: state.currentTime,
-                  eventTime: event.time,
+                  eventTime: event.at,
                 }),
               );
             }
 
+            // Auto-inject registered handlers
+            const registeredHandlers = registry.getHandlers(event.type);
+            const eventWithHandlers = {
+              ...event,
+              callbacks: [
+                ...registeredHandlers,
+                ...event.callbacks,
+              ] as ReadonlyArray<Events.ExecutionCallback>,
+            };
+
             yield* Ref.update(stateRef, (state) => {
-              state.queue.push(event);
+              state.queue.push(eventWithHandlers);
 
               return {
                 ...state,
-                index: state.index.set(event.id, event),
+                counter: state.counter + 1,
+                index: state.index.set(eventWithHandlers.id, eventWithHandlers),
               };
             });
 
             // Publish event to stream for observers
-            yield* PubSub.publish(eventPubSub, event);
+            yield* PubSub.publish(eventPubSub, eventWithHandlers);
           }),
 
         scheduleAPL: (at: number) =>
@@ -384,7 +273,7 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
 
             if (existingAPL) {
               // If existing APL is at same or later time, drop new request
-              if (existingAPL.time <= at) {
+              if (existingAPL.at <= at) {
                 return;
               }
 
@@ -399,30 +288,30 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
             // Schedule new APL
             const input: ScheduledInput = {
               at,
+              callbacks: [
+                () => rotation as Effect.Effect<void, unknown, unknown>,
+              ],
+              payload: {},
               type: Events.EventType.APL_EVALUATE,
             };
 
-            const event = buildEvent(input, state.counter);
-            const eventWithRotation = {
-              ...event,
-              execute: Effect.asVoid(rotation),
-            };
+            const event = buildEvent(input, state.counter, registry);
 
             yield* Ref.update(stateRef, (state) => {
-              state.queue.push(eventWithRotation);
+              state.queue.push(event);
 
               return {
                 ...state,
                 counter: state.counter + 1,
-                index: state.index.set(eventWithRotation.id, eventWithRotation),
+                index: state.index.set(event.id, event),
               };
             });
 
             // Publish event to stream for observers
-            yield* PubSub.publish(eventPubSub, eventWithRotation);
+            yield* PubSub.publish(eventPubSub, event);
           }),
 
-        scheduleInput: (input: ScheduledInput) =>
+        scheduleInput: <T extends Events.EventType>(input: ScheduledInput<T>) =>
           Effect.gen(function* () {
             const state = yield* Ref.get(stateRef);
 
@@ -436,8 +325,8 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
               );
             }
 
-            // Build event from input
-            const event = buildEvent(input, state.counter);
+            // Build event from input with auto-injected handlers
+            const event = buildEvent(input, state.counter, registry);
 
             yield* Ref.update(stateRef, (state) => {
               state.queue.push(event);
@@ -501,9 +390,13 @@ export class EventSchedulerService extends Effect.Service<EventSchedulerService>
 export const cooldownReady = (
   spell: Entities.Spell.Spell,
   at: number,
-): ScheduledInput => ({
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.SPELL_COOLDOWN_READY>
+  > = [],
+): ScheduledInput<Events.EventType.SPELL_COOLDOWN_READY> => ({
   at,
-  spell,
+  callbacks,
+  payload: { spell },
   type: Events.EventType.SPELL_COOLDOWN_READY,
 });
 
@@ -513,9 +406,13 @@ export const cooldownReady = (
 export const chargeReady = (
   spell: Entities.Spell.Spell,
   at: number,
-): ScheduledInput => ({
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.SPELL_CHARGE_READY>
+  > = [],
+): ScheduledInput<Events.EventType.SPELL_CHARGE_READY> => ({
   at,
-  spell,
+  callbacks,
+  payload: { spell },
   type: Events.EventType.SPELL_CHARGE_READY,
 });
 
@@ -526,11 +423,14 @@ export const auraExpire = (
   aura: Entities.Aura.Aura,
   unitId: Schemas.Branded.UnitID,
   at: number,
-): ScheduledInput => ({
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.AURA_EXPIRE>
+  > = [],
+): ScheduledInput<Events.EventType.AURA_EXPIRE> => ({
   at,
-  aura,
+  callbacks,
+  payload: { aura, unitId },
   type: Events.EventType.AURA_EXPIRE,
-  unitId,
 });
 
 /**
@@ -540,26 +440,43 @@ export const auraStackDecay = (
   aura: Entities.Aura.Aura,
   unitId: Schemas.Branded.UnitID,
   at: number,
-): ScheduledInput => ({
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.AURA_STACK_DECAY>
+  > = [],
+): ScheduledInput<Events.EventType.AURA_STACK_DECAY> => ({
   at,
-  aura,
+  callbacks,
+  payload: { aura, unitId },
   type: Events.EventType.AURA_STACK_DECAY,
-  unitId,
 });
 
 /**
  * Creates a PERIODIC_POWER event input.
  */
-export const periodicPower = (at: number): ScheduledInput => ({
+export const periodicPower = (
+  at: number,
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.PERIODIC_POWER>
+  > = [],
+): ScheduledInput<Events.EventType.PERIODIC_POWER> => ({
   at,
+  callbacks,
+  payload: {},
   type: Events.EventType.PERIODIC_POWER,
 });
 
 /**
  * Creates a PERIODIC_SPELL event input.
  */
-export const periodicSpell = (at: number): ScheduledInput => ({
+export const periodicSpell = (
+  at: number,
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.PERIODIC_SPELL>
+  > = [],
+): ScheduledInput<Events.EventType.PERIODIC_SPELL> => ({
   at,
+  callbacks,
+  payload: {},
   type: Events.EventType.PERIODIC_SPELL,
 });
 
@@ -573,12 +490,18 @@ export const projectileImpact = (
   targetUnitId: Schemas.Branded.UnitID,
   damage: number,
   at: number,
-): ScheduledInput => ({
+  callbacks: ReadonlyArray<
+    Events.ExecutionCallback<Events.EventType.PROJECTILE_IMPACT>
+  > = [],
+): ScheduledInput<Events.EventType.PROJECTILE_IMPACT> => ({
   at,
-  casterUnitId,
-  damage,
-  projectileId,
-  spell,
-  targetUnitId,
+  callbacks,
+  payload: {
+    casterUnitId,
+    damage,
+    projectileId,
+    spell,
+    targetUnitId,
+  },
   type: Events.EventType.PROJECTILE_IMPACT,
 });

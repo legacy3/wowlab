@@ -64,7 +64,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
               const nextEvent = yield* scheduler.peek();
 
               // Stop if no more events or event exceeds max duration
-              if (!nextEvent || nextEvent.time > maxDuration) {
+              if (!nextEvent || nextEvent.at > maxDuration) {
                 break;
               }
 
@@ -73,16 +73,20 @@ export class SimulationService extends Effect.Service<SimulationService>()(
 
               // Advance currentTime to event time
               const currentState = yield* state.getState();
-              if (nextEvent.time > currentState.currentTime) {
+              if (nextEvent.at > currentState.currentTime) {
                 yield* state.updateState((s) =>
                   s
-                    .set("currentTime", nextEvent.time)
+                    .set("currentTime", nextEvent.at)
                     .set("iterationCount", iterationCount + 1),
                 );
               }
 
               // Execute the event and catch interruptions (from successful casts) and treat as success
-              yield* nextEvent.execute.pipe(
+              yield* Effect.forEach(
+                nextEvent.callbacks,
+                (callback) => callback(nextEvent.payload),
+                { discard: true },
+              ).pipe(
                 Effect.catchAllCause((cause) => {
                   if (cause._tag === "Interrupt") {
                     return Effect.void;
@@ -99,7 +103,7 @@ export class SimulationService extends Effect.Service<SimulationService>()(
                 nextEvent.type === Events.EventType.SPELL_CHARGE_READY ||
                 nextEvent.type === Events.EventType.PROJECTILE_IMPACT
               ) {
-                yield* scheduler.scheduleAPL(nextEvent.time);
+                yield* scheduler.scheduleAPL(nextEvent.at);
               }
 
               // Increment events processed

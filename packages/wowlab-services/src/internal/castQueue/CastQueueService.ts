@@ -2,6 +2,7 @@ import { Entities, Errors, Events, Schemas } from "@wowlab/core";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 
+// Callbacks are now auto-injected via EventHandlerRegistry
 import { SpellLifecycleService } from "../lifecycle/SpellLifecycleService.js";
 import { LogService } from "../log/LogService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
@@ -207,58 +208,18 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
             const triggersGcd =
               (modifiedSpell.info.interruptFlags & 0x08) === 0;
 
-            yield* scheduler.schedule({
-              execute: Effect.void,
-              id: Schemas.Branded.EventID(
-                `cast_start_${modifiedSpell.info.id}_${startTime}`,
-              ),
-              payload: { spell: modifiedSpell, targetId },
-              priority:
-                Events.EVENT_PRIORITY[Events.EventType.SPELL_CAST_START],
-              time: startTime,
+            // Schedule SPELL_CAST_START event
+            yield* scheduler.scheduleInput({
+              at: startTime,
+              payload: { casterId: player.id, spell: modifiedSpell, targetId },
               type: Events.EventType.SPELL_CAST_START,
             });
 
-            // Schedule SPELL_CAST_COMPLETE event
+            // Schedule SPELL_CAST_COMPLETE event (handlers auto-injected from registry)
             const completeTime = startTime + castTime;
-            yield* scheduler.schedule({
-              execute: pipe(
-                Effect.gen(function* () {
-                  // Clear cast state
-                  yield* state.updateState((s) => {
-                    const currentPlayer = s.units.get(player.id);
-                    if (!currentPlayer) return s;
-
-                    const clearedPlayer = Entities.Unit.Unit.create({
-                      ...currentPlayer.toObject(),
-                      castingSpellId: null,
-                      castRemaining: 0,
-                      castTarget: null,
-                      isCasting: false,
-                    });
-
-                    return s.set(
-                      "units",
-                      s.units.set(player.id, clearedPlayer),
-                    );
-                  });
-
-                  // Execute onCast modifiers
-                  yield* lifecycle.executeOnCast(modifiedSpell, player.id);
-                }),
-                Effect.timeout("10 seconds"),
-                Effect.catchAll((error) =>
-                  logger.error(`Modifier execution failed: ${error}`),
-                ),
-                Effect.asVoid,
-              ),
-              id: Schemas.Branded.EventID(
-                `cast_complete_${modifiedSpell.info.id}_${startTime}`,
-              ),
-              payload: { spell: modifiedSpell, targetId },
-              priority:
-                Events.EVENT_PRIORITY[Events.EventType.SPELL_CAST_COMPLETE],
-              time: completeTime,
+            yield* scheduler.scheduleInput({
+              at: completeTime,
+              payload: { casterId: player.id, spell: modifiedSpell, targetId },
               type: Events.EventType.SPELL_CAST_COMPLETE,
             });
 
@@ -273,7 +234,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
 
               yield* scheduler.scheduleInput({
                 at: cooldownReadyTime,
-                spell: modifiedSpell,
+                payload: { casterId: player.id, spell: modifiedSpell },
                 type: Events.EventType.SPELL_COOLDOWN_READY,
               });
             }
@@ -288,7 +249,7 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
 
               yield* scheduler.scheduleInput({
                 at: chargeReadyTime,
-                spell: modifiedSpell,
+                payload: { casterId: player.id, spell: modifiedSpell },
                 type: Events.EventType.SPELL_CHARGE_READY,
               });
             }

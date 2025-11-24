@@ -1,4 +1,5 @@
 import * as Accessors from "@wowlab/services/Accessors";
+import * as Callbacks from "@wowlab/services/Callbacks";
 import * as CastQueue from "@wowlab/services/CastQueue";
 import * as Lifecycle from "@wowlab/services/Lifecycle";
 import * as Log from "@wowlab/services/Log";
@@ -36,6 +37,7 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
 
   const BaseLayer = Layer.mergeAll(
     State.StateService.Default,
+    Callbacks.EventHandlerRegistry.Default,
     logger,
     rng,
     metadata,
@@ -52,5 +54,13 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     Simulation.SimulationService.Default,
   );
 
-  return ServicesLayer.pipe(Layer.provide(BaseLayer), Layer.merge(BaseLayer));
+  const fullAppLayer = ServicesLayer.pipe(
+    Layer.provide(BaseLayer),
+    Layer.merge(BaseLayer),
+  );
+
+  // Register all event handlers at bootstrap
+  return fullAppLayer.pipe(
+    Layer.provideMerge(Callbacks.EventHandlerBootstrapLayer),
+  );
 };

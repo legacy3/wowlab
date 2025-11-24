@@ -62,7 +62,7 @@ const extractEventDetails = (event: Events.SimulationEvent): string => {
 const formatEvents = (events: Events.SimulationEvent[]): EventLogEntry[] => {
   return events.map((event) => ({
     details: extractEventDetails(event),
-    time: `${event.time}ms`,
+    time: `${event.at}ms`,
     type: event.type,
   }));
 };
@@ -73,8 +73,8 @@ export const logEventTimeline = (events: Events.SimulationEvent[]): void => {
   }
 
   const timeline = [...events].sort((a, b) => {
-    if (a.time !== b.time) {
-      return a.time - b.time;
+    if (a.at !== b.at) {
+      return a.at - b.at;
     }
 
     if (a.priority !== b.priority) {

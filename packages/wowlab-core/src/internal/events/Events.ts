@@ -26,24 +26,28 @@ export enum EventType {
   PERIODIC_SPELL = "periodic_spell",
 }
 
-type EventPayloadMap = {
+export type EventPayloadMap = {
   [EventType.APL_EVALUATE]: Record<string, never>; // No payload
 
   [EventType.SPELL_CAST_COMPLETE]: {
+    casterId: Branded.UnitID;
     spell: Entities.Spell.Spell;
     targetId: Branded.UnitID | null;
   };
 
   [EventType.SPELL_CAST_START]: {
+    casterId: Branded.UnitID;
     spell: Entities.Spell.Spell;
     targetId: Branded.UnitID | null;
   };
 
   [EventType.SPELL_CHARGE_READY]: {
+    casterId: Branded.UnitID;
     spell: Entities.Spell.Spell;
   };
 
   [EventType.SPELL_COOLDOWN_READY]: {
+    casterId: Branded.UnitID;
     spell: Entities.Spell.Spell;
   };
 
@@ -88,6 +92,15 @@ export const EVENT_PRIORITY: Record<EventType, number> = {
   [EventType.SPELL_DAMAGE]: 95,
 };
 
+export type EventContext<T extends EventType = EventType> = EventPayloadMap[T];
+
+// Bivariant parameter allows storing specific event callbacks in wider arrays
+export type ExecutionCallback<T extends EventType = EventType> = {
+  bivarianceHack(
+    ctx: EventPayloadMap[T],
+  ): Effect.Effect<void, unknown, unknown>;
+}["bivarianceHack"];
+
 /**
  * Scheduled event in the priority queue.
  * Alias for SimulationEvent for consistency with the event scheduler plan.
@@ -96,11 +109,10 @@ export type ScheduledEvent<T extends EventType = EventType> =
   SimulationEvent<T>;
 
 export interface SimulationEvent<T extends EventType = EventType> {
-  readonly execute: Effect.Effect<void, unknown>;
+  readonly at: number;
+  readonly callbacks: ReadonlyArray<ExecutionCallback<T>>;
   readonly id: Branded.EventID;
-
   readonly payload: EventPayloadMap[T];
   readonly priority: number;
-  readonly time: number;
   readonly type: T;
 }
