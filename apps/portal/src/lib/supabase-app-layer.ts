@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import * as Layers from "@packages/innocent-bootstrap/Layers";
-import { createSupabaseMetadataService } from "./supabase-metadata-service";
 
-export const createSupabaseAppLayer = (supabase: SupabaseClient) => {
-  return Layers.AppLayer.create(createSupabaseMetadataService(supabase));
-};
+/**
+ * Placeholder app layer factory for Supabase-backed metadata.
+ * The legacy innocent bootstrap layer has been removed; callers should
+ * provide their own wiring when simulation support returns.
+ */
+export const createSupabaseAppLayer = (supabase: SupabaseClient) => ({
+  supabase,
+});

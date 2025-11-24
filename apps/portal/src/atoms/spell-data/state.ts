@@ -1,10 +1,9 @@
 import { atom } from "jotai";
 import { atomWithRefresh } from "jotai/utils";
-import type { SpellDataFlat } from "@packages/innocent-schemas/Spell";
 import { supabaseClientAtom } from "@/atoms/supabase";
 
-// Export SpellDataFlat for portal use
-export type { SpellDataFlat };
+// Minimal spell shape used by portal; aligns with Supabase rows.
+export type SpellDataFlat = { id: number; name: string } & Record<string, any>;
 
 export const spellListAtom = atomWithRefresh(async (get) => {
   const supabase = get(supabaseClientAtom);

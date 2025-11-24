@@ -8,10 +8,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollText } from "lucide-react";
-import type * as Events from "@packages/innocent-domain/Events";
 
 interface EventsCardProps {
-  events: Events.SimulationEvent[];
+  events: Array<Record<string, unknown>>;
 }
 
 export function EventsCard({ events }: EventsCardProps) {
