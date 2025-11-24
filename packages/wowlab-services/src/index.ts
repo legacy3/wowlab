@@ -9,7 +9,6 @@ export * as Rng from "./Rng.js";
 export * as Rotation from "./Rotation.js";
 export * as Scheduler from "./Scheduler.js";
 export * as Simulation from "./Simulation.js";
-export * as Spell from "./Spell.js";
 
 export * as State from "./State.js";
 export * as Unit from "./Unit.js";
