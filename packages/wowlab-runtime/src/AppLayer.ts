@@ -7,7 +7,6 @@ import * as Rng from "@wowlab/services/Rng";
 import * as Rotation from "@wowlab/services/Rotation";
 import * as Scheduler from "@wowlab/services/Scheduler";
 import * as Simulation from "@wowlab/services/Simulation";
-import * as Spell from "@wowlab/services/Spell";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Layer from "effect/Layer";
@@ -50,7 +49,6 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     CastQueue.CastQueueService.Default,
     Rotation.RotationProviderService.Default,
     Unit.UnitService.Default,
-    Spell.SpellService.Default,
     Simulation.SimulationService.Default,
   );
 

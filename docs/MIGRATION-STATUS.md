@@ -1,4 +1,4 @@
-# Migration Status: innocent-*→ @wowlab/*
+# Migration Status: innocent-_→ @wowlab/_
 
 **Status:** 🟡 In Progress (30-40% Complete)
 **Last Updated:** 2025-11-24
@@ -8,43 +8,43 @@
 
 ## Executive Summary
 
-The WowLab codebase has two parallel package systems: old `@packages/innocent-*` and new `@wowlab/*`. The new `apps/standalone` successfully demonstrates the @wowlab/* architecture works. However, `apps/portal` and `apps/cli` still depend on the old packages.
+The WowLab codebase has two parallel package systems: old `@packages/innocent-*` and new `@wowlab/*`. The new `apps/standalone` successfully demonstrates the @wowlab/\* architecture works. However, `apps/portal` and `apps/cli` still depend on the old packages.
 
-**Key Finding:** The new system has better architecture. Migrate portal/cli to @wowlab/*, then remove innocent-* packages.
+**Key Finding:** The new system has better architecture. Migrate portal/cli to @wowlab/_, then remove innocent-_ packages.
 
 ---
 
 ## Package Architecture
 
-### OLD SYSTEM (innocent-*)
+### OLD SYSTEM (innocent-\*)
 
-| Package | Purpose | Status |
-|---------|---------|--------|
-| `@packages/innocent-domain` | Domain entities and types | ✓ Migrated to @wowlab/core |
-| `@packages/innocent-schemas` | Data schemas (DBC, Character, Item, Spell) | ⚠️ Partially migrated |
-| `@packages/innocent-services` | Core services (21+ services) | ⚠️ Partially migrated |
-| `@packages/innocent-rotation` | Rotation API | ✓ Migrated to @wowlab/rotation |
-| `@packages/innocent-spellbook` | Spell definitions for all classes/specs | ❌ NOT migrated |
-| `@packages/innocent-bootstrap` | Layer composition utilities | ✓ Migrated to @wowlab/runtime |
-| `@packages/innocent-parsers` | SimC profile parser | ❌ NOT migrated |
+| Package                        | Purpose                                    | Status                         |
+| ------------------------------ | ------------------------------------------ | ------------------------------ |
+| `@packages/innocent-domain`    | Domain entities and types                  | ✓ Migrated to @wowlab/core     |
+| `@packages/innocent-schemas`   | Data schemas (DBC, Character, Item, Spell) | ⚠️ Partially migrated          |
+| `@packages/innocent-services`  | Core services (21+ services)               | ⚠️ Partially migrated          |
+| `@packages/innocent-rotation`  | Rotation API                               | ✓ Migrated to @wowlab/rotation |
+| `@packages/innocent-spellbook` | Spell definitions for all classes/specs    | ❌ NOT migrated                |
+| `@packages/innocent-bootstrap` | Layer composition utilities                | ✓ Migrated to @wowlab/runtime  |
+| `@packages/innocent-parsers`   | SimC profile parser                        | ❌ NOT migrated                |
 
-### NEW SYSTEM (@wowlab/*)
+### NEW SYSTEM (@wowlab/\*)
 
-| Package | Purpose | Replaces |
-|---------|---------|----------|
-| `@wowlab/core` | Domain entities, schemas, events, errors | innocent-domain + innocent-schemas |
-| `@wowlab/services` | Core services (~15 services) | innocent-services (subset) |
-| `@wowlab/rotation` | Rotation API | innocent-rotation |
-| `@wowlab/runtime` | App layer factory | innocent-bootstrap |
+| Package            | Purpose                                  | Replaces                           |
+| ------------------ | ---------------------------------------- | ---------------------------------- |
+| `@wowlab/core`     | Domain entities, schemas, events, errors | innocent-domain + innocent-schemas |
+| `@wowlab/services` | Core services (~15 services)             | innocent-services (subset)         |
+| `@wowlab/rotation` | Rotation API                             | innocent-rotation                  |
+| `@wowlab/runtime`  | App layer factory                        | innocent-bootstrap                 |
 
 ### Applications
 
-| App | Uses OLD | Uses NEW | Notes |
-|-----|----------|----------|-------|
-| **apps/portal** | ✓ All packages | ❌ None | Needs migration to @wowlab/* |
-| **apps/cli** | ✓ schemas, services | ✓ core, services | Mixed dependencies, needs migration |
-| **apps/standalone** | ❌ None | ✓ All packages | Primary development target |
-| **apps/mcp-server** | ❌ None | ❌ None | Independent |
+| App                 | Uses OLD            | Uses NEW         | Notes                               |
+| ------------------- | ------------------- | ---------------- | ----------------------------------- |
+| **apps/portal**     | ✓ All packages      | ❌ None          | Needs migration to @wowlab/\*       |
+| **apps/cli**        | ✓ schemas, services | ✓ core, services | Mixed dependencies, needs migration |
+| **apps/standalone** | ❌ None             | ✓ All packages   | Primary development target          |
+| **apps/mcp-server** | ❌ None             | ❌ None          | Independent                         |
 
 ---
 
@@ -94,7 +94,7 @@ The WowLab codebase has two parallel package systems: old `@packages/innocent-*`
 
 ---
 
-## What's Still Only in innocent-*
+## What's Still Only in innocent-\*
 
 ### Spellbook System
 
@@ -166,7 +166,7 @@ The WowLab codebase has two parallel package systems: old `@packages/innocent-*`
 
 ### What It Is
 
-Minimal proof-of-concept demonstrating the new @wowlab/* architecture. Shows the new packages work correctly.
+Minimal proof-of-concept demonstrating the new @wowlab/\* architecture. Shows the new packages work correctly.
 
 ### What It Contains
 
@@ -189,32 +189,32 @@ Minimal proof-of-concept demonstrating the new @wowlab/* architecture. Shows the
 
 ### apps/portal
 
-Depends on ALL innocent-*packages. Needs migration to @wowlab/* before old packages can be removed.
+Depends on ALL innocent-_packages. Needs migration to @wowlab/_ before old packages can be removed.
 
 ### apps/cli
 
-Mixed dependencies on both systems. Needs full migration to @wowlab/*.
+Mixed dependencies on both systems. Needs full migration to @wowlab/\*.
 
 ### apps/standalone
 
-✓ Already using only @wowlab/*
+✓ Already using only @wowlab/\*
 
 ---
 
 ## Recommendation
 
-### Migrate Portal and CLI, Then Remove innocent-*
+### Migrate Portal and CLI, Then Remove innocent-\*
 
 **Current blockers:**
 
-- apps/portal depends on ALL innocent-* packages
+- apps/portal depends on ALL innocent-\* packages
 - apps/cli has mixed dependencies
 
 **What to do:**
 
-1. **Migrate apps/portal** to @wowlab/*
-2. **Migrate apps/cli** to @wowlab/*
-3. **Remove innocent-* packages** once no dependencies remain
+1. **Migrate apps/portal** to @wowlab/\*
+2. **Migrate apps/cli** to @wowlab/\*
+3. **Remove innocent-\* packages** once no dependencies remain
 4. **Port missing features as needed** during migration
 
 **Features to port during migration:**
@@ -233,13 +233,13 @@ Mixed dependencies on both systems. Needs full migration to @wowlab/*.
 
 ## Migration Checklist
 
-To remove innocent-* packages:
+To remove innocent-\* packages:
 
-- [ ] Migrate apps/portal to @wowlab/*
-- [ ] Migrate apps/cli to @wowlab/*
+- [ ] Migrate apps/portal to @wowlab/\*
+- [ ] Migrate apps/cli to @wowlab/\*
 - [ ] Port required features (modifiers, spellbook, parser, etc.)
-- [ ] Verify no imports from @packages/innocent-* anywhere
-- [ ] Delete innocent-* packages
+- [ ] Verify no imports from @packages/innocent-\* anywhere
+- [ ] Delete innocent-\* packages
 - [ ] Update pnpm workspace config
 - [ ] Run pnpm build to verify everything works
 - [ ] Update documentation references
@@ -252,7 +252,7 @@ To remove innocent-* packages:
 **New system:** Clean architecture, 4 packages, Effect-TS patterns
 **Status:** New system works (proven by apps/standalone)
 
-apps/portal and apps/cli still depend on the old packages, so they need to be migrated before innocent-* can be removed. Port features as you migrate. The new architecture is better - migrate apps incrementally and bring over what you need.
+apps/portal and apps/cli still depend on the old packages, so they need to be migrated before innocent-\* can be removed. Port features as you migrate. The new architecture is better - migrate apps incrementally and bring over what you need.
 
 ---
 

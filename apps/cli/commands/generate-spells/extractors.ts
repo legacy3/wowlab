@@ -1,6 +1,6 @@
+import * as Schemas from "@wowlab/core/Schemas";
 import { kebabCase, pascalCase } from "change-case";
 import * as Schema from "effect/Schema";
-import * as Schemas from "@wowlab/core/Schemas";
 
 import type { RaidbotsTalentsSchema } from "./types";
 import type { SpecSpellMap, SpellEntry } from "./types";

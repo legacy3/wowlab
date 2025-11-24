@@ -94,10 +94,7 @@ export const createSupabaseMetadataService = (
         if (error) {
           if (error.code === "PGRST116") {
             return yield* Effect.fail(
-              new ItemNotFound(
-                itemId,
-                `Item ${itemId} not found in database`,
-              ),
+              new ItemNotFound(itemId, `Item ${itemId} not found in database`),
             );
           }
           return yield* Effect.fail(

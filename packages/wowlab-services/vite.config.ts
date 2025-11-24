@@ -14,7 +14,6 @@ export default createPackageConfig({
     Rotation: "src/Rotation.ts",
     Scheduler: "src/Scheduler.ts",
     Simulation: "src/Simulation.ts",
-    Spell: "src/Spell.ts",
     State: "src/State.ts",
     Unit: "src/Unit.ts",
   },

@@ -1,15 +1,18 @@
 import * as Effect from "effect/Effect";
 
 export class LogService extends Effect.Service<LogService>()("LogService", {
-  effect: Effect.succeed({
-    debug: (message: string, context?: Record<string, unknown>) =>
-      Effect.sync(() => console.debug(message, context)),
-    error: (message: string, context?: Record<string, unknown>) =>
-      Effect.sync(() => console.error(message, context)),
-    info: (message: string, context?: Record<string, unknown>) =>
-      Effect.sync(() => console.info(message, context)),
-    warn: (message: string, context?: Record<string, unknown>) =>
-      Effect.sync(() => console.warn(message, context)),
+  scoped: Effect.succeed({
+    withName: (name: string) =>
+      Effect.gen(function* () {
+        yield* Effect.annotateLogsScoped({ logger: name });
+
+        return {
+          debug: (...args: unknown[]) => Effect.logDebug(...args),
+          error: (...args: unknown[]) => Effect.logError(...args),
+          info: (...args: unknown[]) => Effect.logInfo(...args),
+          warn: (...args: unknown[]) => Effect.logWarning(...args),
+        };
+      }).pipe(Effect.scoped),
   }),
 }) {}
 

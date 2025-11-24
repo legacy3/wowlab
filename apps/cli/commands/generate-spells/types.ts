@@ -1,5 +1,6 @@
-import * as Schema from "effect/Schema";
 import type * as Schemas from "@wowlab/core/Schemas";
+
+import * as Schema from "effect/Schema";
 
 export interface SpecSpellMap {
   readonly classId: string;
