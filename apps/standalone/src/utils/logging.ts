@@ -31,22 +31,8 @@ const extractEventDetails = (event: Events.SimulationEvent): string => {
   return EVENT_SERIALIZERS[event.type](event as never);
 };
 
-export const formatEventTimeline = (
-  events: Events.SimulationEvent[],
-): EventLogEntry[] => {
-  const sortedEvents = [...events].sort((a, b) => {
-    if (a.time !== b.time) {
-      return a.time - b.time;
-    }
-
-    if (a.priority !== b.priority) {
-      return b.priority - a.priority;
-    }
-
-    return a.id.localeCompare(b.id);
-  });
-
-  return sortedEvents.map((event) => ({
+const formatEvents = (events: Events.SimulationEvent[]): EventLogEntry[] => {
+  return events.map((event) => ({
     details: extractEventDetails(event),
     time: `${event.time}ms`,
     type: event.type,
@@ -58,6 +44,21 @@ export const logEventTimeline = (events: Events.SimulationEvent[]): void => {
     return;
   }
 
-  console.log("\n=== Event Timeline ===\n");
-  console.table(formatEventTimeline(events));
+  const timeline = [...events].sort((a, b) => {
+    if (a.time !== b.time) {
+      return a.time - b.time;
+    }
+
+    if (a.priority !== b.priority) {
+      return b.priority - a.priority;
+    }
+
+    return a.id.localeCompare(b.id);
+  });
+
+  console.log("\n=== Event Timeline (Execution Order) ===\n");
+  console.table(formatEvents(timeline));
+
+  console.log("\n=== Event Log (Receival Order) ===\n");
+  console.table(formatEvents(events));
 };
