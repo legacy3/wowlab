@@ -22,7 +22,8 @@ WowLab provides a pure functional, event-driven simulation engine for analyzing 
 
 - `apps/portal` - Next.js 16 web application (Supabase, shadcn/ui)
 - `apps/cli` - Effect-TS CLI tools for game data management
-- `apps/proof-of-concept` - Experimental features
+- `apps/mcp-server` - MCP server for querying WoW spell and item data (`@wowlab/mcp-server` on npm)
+- `apps/standalone` - Standalone Node.js app for testing simulation
 
 ### Packages
 
@@ -30,12 +31,6 @@ WowLab provides a pure functional, event-driven simulation engine for analyzing 
 - `packages/wowlab-services` - Effect services (state, spell, lifecycle)
 - `packages/wowlab-rotation` - Rotation context & actions API
 - `packages/wowlab-runtime` - Effect Layer composition and runtime
-- `packages/wowlab-spellbook` - Spell rotation implementations
-
-### Docs
-
-- `docs/` - Architecture notes and planning docs
-- `CLAUDE.md` - AI agent guidance for this repository
 
 ## First-Time Setup
 
@@ -44,7 +39,7 @@ WowLab provides a pure functional, event-driven simulation engine for analyzing 
 corepack enable
 
 # activate the repo's pnpm version
-corepack prepare pnpm@9.12.0 --activate
+corepack prepare pnpm@10.22.0 --activate
 
 # install all workspace deps
 pnpm install
@@ -55,19 +50,17 @@ pnpm install
 ## Everyday Commands
 
 ```bash
-pnpm dev                         # run portal dev server
-pnpm build                       # build everything
-pnpm cli                         # run CLI tools
-pnpm test                        # run all tests
-pnpm lint                        # lint all packages
-pnpm typecheck                   # type check all packages
+pnpm dev      # run portal dev server
+pnpm build    # build everything (includes type checking)
+pnpm cli      # run CLI tools
+pnpm test     # run all tests
+pnpm lint     # lint all packages
 ```
 
 ### Quick pnpm vs npm TL;DR
 
 - `pnpm install` replaces `npm install` (never run npm/yarn here anymore).
 - `pnpm <script>` is the same as `npm run <script>` - you can drop the `run`.
-- Workspaces use filters: `pnpm --filter <package> <script>` targets one project.
 - `pnpm store` commands manage the shared cache (`pnpm store prune`, etc.).
 
 If someone forgets and runs `npm install`, blow away `node_modules` and rerun `pnpm install` to restore the workspace layout.
@@ -78,21 +71,39 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 
 **Core packages:**
 
-- `wowlab-core` - Immutable.js entities, schemas, branded types
-- `wowlab-services` - Effect services (state, spell, lifecycle, simulation)
-- `wowlab-rotation` - Rotation context & actions API
-- `wowlab-runtime` - Effect Layer composition
+- `@wowlab/core` - Immutable.js entities, schemas, branded types
+- `@wowlab/services` - Effect services (state, spell, lifecycle, simulation)
+- `@wowlab/rotation` - Rotation context & actions API
+- `@wowlab/runtime` - Effect Layer composition
 
-## MCP Tools (Optional)
+## MCP Server
 
-For AI-assisted development with Claude Code, configure these MCP servers:
+WowLab includes an MCP server for querying WoW spell and item data. Install it via npm:
+
+```bash
+npx @wowlab/mcp-server
+```
+
+Or configure it in your Claude Code settings:
+
+```json
+{
+  "wowlab": {
+    "command": "npx",
+    "args": ["-y", "@wowlab/mcp-server"]
+  }
+}
+```
+
+### Additional MCP Servers (Optional)
+
+For AI-assisted development with Claude Code, these MCP servers are also useful:
 
 ```json
 {
   "context7": {
-    "type": "stdio",
     "command": "npx",
-    "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY_HERE"]
+    "args": ["-y", "@upstash/context7-mcp"]
   },
   "effect-docs": {
     "command": "npx",
