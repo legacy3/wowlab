@@ -6,7 +6,7 @@ export const AUTOGEN_BANNER =
 export const OUTPUT_ROOT = path.join(
   process.cwd(),
   "packages",
-  "lib-innocent",
+  "wowlab-core",
   "src",
   "data",
   "spells",

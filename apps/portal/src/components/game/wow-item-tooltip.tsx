@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useAtom } from "jotai";
 import { itemAtomFamily } from "@/atoms/item-data";
-import { GameIcon } from "./game-icon";
+// import { GameIcon } from "./game-icon"; // Temporarily disabled
 import { Skeleton } from "@/components/ui/skeleton";
 import { QUALITY_COLORS } from "@/lib/game/item-quality";
 
@@ -22,7 +22,8 @@ function WowItemTooltipInner({ itemId }: WowItemTooltipProps) {
     >
       {/* Header */}
       <div className="flex items-center gap-3">
-        <GameIcon iconName={item.iconName} size="large" alt={item.name} />
+        {/* Temporarily disabled - iconName not in data */}
+        {/* <GameIcon iconName={item.iconName} size="large" alt={item.name} /> */}
         <div className="flex flex-1 flex-col gap-1">
           <span
             className="text-base font-semibold"

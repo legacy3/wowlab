@@ -1,0 +1,33 @@
+{
+  "name": "@wowlab/services",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./build/index.js",
+    "./*": "./build/*.js",
+    "./internal/*": null
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "vite build && tsc-alias -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@wowlab/core": "workspace:*",
+    "effect": "^3.19.4",
+    "immutable": "^5.1.4",
+    "nanoid": "^5.0.9",
+    "papaparse": "^5.5.3",
+    "tinyqueue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.5.0",
+    "tsc-alias": "^1.8.16",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}

@@ -1,4 +1,4 @@
-import type * as Branded from "@packages/innocent-schemas/Branded";
+import type * as Schemas from "@wowlab/core/Schemas";
 
 import * as Schema from "effect/Schema";
 
@@ -15,7 +15,7 @@ export interface SpecSpellMap {
 export interface SpellEntry {
   readonly name: string;
   readonly normalizedName: string;
-  readonly spellId: Branded.SpellID;
+  readonly spellId: Schemas.Branded.SpellID;
 }
 
 export const RaidbotsTalentsSchema = Schema.Array(

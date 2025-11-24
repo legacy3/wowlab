@@ -95,7 +95,7 @@ export const runCommand = (
   description: string,
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
-    const rootDir = path.join(process.cwd(), "packages", "lib-innocent");
+    const rootDir = path.join(process.cwd(), "packages", "wowlab-core");
     yield* Effect.logInfo(`${description}...`);
     yield* Effect.try({
       catch: (error) => new Error(`${description} failed: ${error}`),

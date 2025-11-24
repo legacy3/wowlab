@@ -1,10 +1,48 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Spell from "@packages/innocent-schemas/Spell";
-import * as Item from "@packages/innocent-schemas/Item";
-import * as Errors from "@packages/innocent-domain/Errors";
-import { MetadataService } from "@packages/innocent-services/Metadata";
+import * as Context from "effect/Context";
+
+// Minimal local types to keep portal compiling without legacy packages.
+export type SpellDataFlat = { id: number; name: string } & Record<string, any>;
+export type ItemDataFlat = { id: number; name: string } & Record<string, any>;
+
+export class SpellInfoNotFound extends Error {
+  constructor(
+    readonly spellId: number,
+    message?: string,
+  ) {
+    super(message ?? `Spell ${spellId} not found`);
+  }
+}
+
+export class ItemNotFound extends Error {
+  constructor(
+    readonly itemId: number,
+    message?: string,
+  ) {
+    super(message ?? `Item ${itemId} not found`);
+  }
+}
+
+export class DataError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export interface MetadataService {
+  readonly loadSpell: (
+    spellId: number,
+  ) => Effect.Effect<SpellDataFlat, SpellInfoNotFound | DataError>;
+  readonly loadItem: (
+    itemId: number,
+  ) => Effect.Effect<ItemDataFlat, ItemNotFound | DataError>;
+}
+
+export const MetadataService = Context.GenericTag<MetadataService>(
+  "portal/MetadataService",
+);
 
 export const createSupabaseMetadataService = (
   supabase: SupabaseClient,
@@ -21,30 +59,28 @@ export const createSupabaseMetadataService = (
         if (error) {
           if (error.code === "PGRST116") {
             return yield* Effect.fail(
-              new Errors.SpellInfoNotFound({
+              new SpellInfoNotFound(
                 spellId,
-                message: `Spell ${spellId} not found in database`,
-              }),
+                `Spell ${spellId} not found in database`,
+              ),
             );
           }
           return yield* Effect.fail(
-            new Errors.Data({
-              message: `Failed to fetch spell ${spellId}: ${error.message}`,
-            }),
+            new DataError(`Failed to fetch spell ${spellId}: ${error.message}`),
           );
         }
 
         if (!data) {
           return yield* Effect.fail(
-            new Errors.SpellInfoNotFound({
+            new SpellInfoNotFound(
               spellId,
-              message: `Spell ${spellId} not found in database`,
-            }),
+              `Spell ${spellId} not found in database`,
+            ),
           );
         }
 
         // Return as-is (already flat from DB)
-        return data as Spell.SpellDataFlat;
+        return data as SpellDataFlat;
       }),
 
     loadItem: (itemId: number) =>
@@ -58,29 +94,21 @@ export const createSupabaseMetadataService = (
         if (error) {
           if (error.code === "PGRST116") {
             return yield* Effect.fail(
-              new Errors.ItemNotFound({
-                itemId,
-                message: `Item ${itemId} not found in database`,
-              }),
+              new ItemNotFound(itemId, `Item ${itemId} not found in database`),
             );
           }
           return yield* Effect.fail(
-            new Errors.Data({
-              message: `Failed to fetch item ${itemId}: ${error.message}`,
-            }),
+            new DataError(`Failed to fetch item ${itemId}: ${error.message}`),
           );
         }
 
         if (!data) {
           return yield* Effect.fail(
-            new Errors.ItemNotFound({
-              itemId,
-              message: `Item ${itemId} not found in database`,
-            }),
+            new ItemNotFound(itemId, `Item ${itemId} not found in database`),
           );
         }
 
         // Return as-is
-        return data as Item.ItemDataFlat;
+        return data as ItemDataFlat;
       }),
   });

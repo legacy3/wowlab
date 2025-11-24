@@ -1,0 +1,36 @@
+{
+  "name": "@apps/standalone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Node.js app for testing wowlab simulation",
+  "scripts": {
+    "dev": "pnpm --filter @wowlab/core --filter @wowlab/services --filter @wowlab/rotation --filter @wowlab/runtime build && pnpm start",
+    "build": "tsc",
+    "start": "tsx --env-file=.env src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "ncu": "ncu -u"
+  },
+  "dependencies": {
+    "@effect/cli": "^0.72.1",
+    "@effect/platform-node": "^0.100.0",
+    "@supabase/supabase-js": "^2.84.0",
+    "@wowlab/core": "workspace:*",
+    "@wowlab/rotation": "workspace:*",
+    "@wowlab/runtime": "workspace:*",
+    "@wowlab/services": "workspace:*",
+    "chalk": "^5.6.2",
+    "date-fns": "^4.1.0",
+    "effect": "^3.19.4",
+    "immutable": "^5.1.4",
+    "pretty-error": "^4.0.0",
+    "stacktrace-parser": "^0.1.11",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5"
+  }
+}

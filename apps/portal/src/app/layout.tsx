@@ -6,6 +6,7 @@ import { ThemeProvider, JotaiProvider } from "@/providers";
 import { SiteShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSync } from "@/components/providers/auth-sync";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
         </JotaiProvider>
+        <Analytics />
       </body>
     </html>
   );

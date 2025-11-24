@@ -4,32 +4,48 @@ import dts from "vite-plugin-dts";
 
 export interface PackageConfig {
   entries: Record<string, string>;
-  external: string[];
+  external?: (string | RegExp)[];
 }
 
 export function createPackageConfig(config: PackageConfig) {
+  const defaultExternal = [
+    // Keep Effect unbundled to preserve singleton services/context
+    /^effect(\/|$)/,
+    "immutable",
+
+    // Keep workspace packages external to avoid duplicate service singletons
+    /^@packages\//,
+    /^@wowlab\//,
+  ];
+  const external = [...defaultExternal, ...(config.external || [])];
+
   return defineConfig({
-    resolve: {
-      alias: {
-        "@": resolve(process.cwd(), "./src"),
-      },
-    },
     build: {
       lib: {
         entry: config.entries,
         formats: ["es"],
       },
-      rollupOptions: {
-        external: config.external,
-      },
+      minify: false,
       outDir: "build",
+      rollupOptions: {
+        external,
+      },
+      sourcemap: true,
+    },
+    esbuild: {
+      keepNames: true,
     },
     plugins: [
       dts({
-        outDir: "build",
-        include: ["src/**/*.ts"],
         exclude: ["**/*.test.ts", "**/*.spec.ts"],
+        include: ["src/**/*.ts"],
+        outDir: "build",
       }),
     ],
+    resolve: {
+      alias: {
+        "@": resolve(process.cwd(), "./src"),
+      },
+    },
   });
 }

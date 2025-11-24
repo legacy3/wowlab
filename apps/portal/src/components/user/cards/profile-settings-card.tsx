@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom, useSetAtom } from "jotai";
 import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+// import { zodResolver } from "@hookform/resolvers/zod"; // Temporarily disabled
 import { z } from "zod";
 import {
   currentProfileAtom,
@@ -61,7 +61,8 @@ export function ProfileSettingsCard() {
   const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm({
-    resolver: zodResolver(handleSchema),
+    // Temporarily disabled - zod version conflict
+    // resolver: zodResolver(handleSchema),
     defaultValues: { handle: "" },
     mode: "onChange",
   });
