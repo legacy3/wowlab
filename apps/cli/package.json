@@ -26,8 +26,6 @@
     "@effect/printer-ansi": "^0.47.0",
     "@effect/rpc": "^0.72.1",
     "@effect/typeclass": "^0.38.0",
-    "@packages/innocent-schemas": "workspace:*",
-    "@packages/innocent-services": "workspace:*",
     "@supabase/supabase-js": "^2.83.0",
     "@wowlab/core": "workspace:*",
     "@wowlab/services": "workspace:*",
