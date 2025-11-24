@@ -48,7 +48,7 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     Accessors.SpellAccessor.Default,
     Lifecycle.SpellLifecycleService.Default,
     CastQueue.CastQueueService.Default,
-    Rotation.RotationRefService.Default,
+    Rotation.RotationProviderService.Default,
     Unit.UnitService.Default,
     Spell.SpellService.Default,
     Simulation.SimulationService.Default,

@@ -1,12 +1,10 @@
 import * as Entities from "@wowlab/core/Entities";
-import * as Events from "@wowlab/core/Events";
-import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
 
 import { PeriodicTriggerService } from "../periodic/PeriodicTriggerService.js";
-import { RotationRefService } from "../rotation/RotationRefService.js";
+import { RotationProviderService } from "../rotation/RotationProviderService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
 import { StateService } from "../state/StateService.js";
 import { UnitService } from "../unit/UnitService.js";
@@ -18,13 +16,13 @@ export class SimulationService extends Effect.Service<SimulationService>()(
       EventSchedulerService.Default,
       UnitService.Default,
       StateService.Default,
-      RotationRefService.Default,
+      RotationProviderService.Default,
       PeriodicTriggerService.Default,
     ],
     effect: Effect.gen(function* () {
       const state = yield* StateService;
       const scheduler = yield* EventSchedulerService;
-      const rotationRef = yield* RotationRefService;
+      const rotationProvider = yield* RotationProviderService;
       const periodic = yield* PeriodicTriggerService;
       const snapshotPubSub =
         yield* PubSub.unbounded<Entities.GameState.GameState>();
@@ -43,19 +41,12 @@ export class SimulationService extends Effect.Service<SimulationService>()(
             // Publish initial state
             yield* PubSub.publish(snapshotPubSub, startState);
 
-            // Set rotation in ref so CastQueue can access it
-            yield* rotationRef.set(rotation as Effect.Effect<void, unknown>);
+            // Set rotation for APL scheduling
+            yield* rotationProvider.set(rotation as Effect.Effect<void>);
 
-            // Clear any existing events and schedule initial APL evaluation
+            // Clear any existing events and schedule initial APL at t=0
             yield* scheduler.clear();
-            yield* scheduler.schedule({
-              execute: rotation as Effect.Effect<void, unknown>,
-              id: Schemas.Branded.EventID("initial_apl"),
-              payload: {},
-              priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-              time: 0,
-              type: Events.EventType.APL_EVALUATE,
-            });
+            yield* scheduler.scheduleAPL(0);
 
             // Start periodic triggers (resource regen, auto shot, etc.)
             yield* periodic.startPeriodic(maxDuration);
@@ -120,6 +111,9 @@ export class SimulationService extends Effect.Service<SimulationService>()(
             yield* PubSub.publish(snapshotPubSub, finalState);
 
             const eventsProcessed = yield* Ref.get(eventsProcessedRef);
+
+            // Clear rotation provider
+            yield* rotationProvider.clear();
 
             return {
               eventsProcessed,

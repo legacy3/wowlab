@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 
 import { SpellLifecycleService } from "../lifecycle/SpellLifecycleService.js";
-import { RotationRefService } from "../rotation/RotationRefService.js";
 import { EventSchedulerService } from "../scheduler/EventSchedulerService.js";
 import { StateService } from "../state/StateService.js";
 
@@ -103,14 +102,12 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
     dependencies: [
       SpellLifecycleService.Default,
       EventSchedulerService.Default,
-      RotationRefService.Default,
       StateService.Default,
     ],
     effect: Effect.gen(function* () {
       const lifecycle = yield* SpellLifecycleService;
       const scheduler = yield* EventSchedulerService;
       const state = yield* StateService;
-      const rotationRef = yield* RotationRefService;
 
       return {
         enqueue: (
@@ -220,30 +217,16 @@ export class CastQueueService extends Effect.Service<CastQueueService>()(
               type: Events.EventType.SPELL_CAST_COMPLETE,
             });
 
-            // Schedule APL re-evaluation
-            const rotationEffect = yield* rotationRef.get;
-            if (rotationEffect !== null) {
-              const gcdExpiry = triggersGcd ? startTime + gcd : startTime;
-              const aplEvaluateTime = Math.max(completeTime, gcdExpiry);
-
-              yield* scheduler.schedule({
-                execute: Effect.asVoid(rotationEffect),
-                id: Schemas.Branded.EventID(
-                  `apl_evaluate_${modifiedSpell.info.id}_${startTime}`,
-                ),
-                payload: {},
-                priority: Events.EVENT_PRIORITY[Events.EventType.APL_EVALUATE],
-                time: aplEvaluateTime,
-                type: Events.EventType.APL_EVALUATE,
-              });
-            }
-
             yield* Effect.logInfo(
               `[Cast] ${modifiedSpell.info.name} at ${currentState.currentTime}ms`,
             );
 
-            // Interrupt the rotation fiber - cast succeeded, stop execution
-            return yield* Effect.interrupt;
+            // Schedule next APL and interrupt rotation fiber
+            const gcdExpiry = triggersGcd ? startTime + gcd : startTime;
+            return yield* scheduler.scheduleNextAPL({
+              castComplete: completeTime,
+              gcdExpiry,
+            });
           }).pipe(
             Effect.mapError((err) => {
               const reason =
