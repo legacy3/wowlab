@@ -67,9 +67,7 @@ export const runRotationWithRuntime = (
       }),
     );
 
-    yield* Effect.log(
-      `\nSimulation complete. Final time: ${result.finalTime}ms`,
-    );
+    yield* Effect.log(`Simulation complete. Final time: ${result.finalTime}ms`);
     yield* Effect.log(`Events processed: ${result.eventsProcessed}`);
 
     // Print event time table
