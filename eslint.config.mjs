@@ -134,7 +134,6 @@ export default [
           packageNames: ["effect", "@effect/platform", "@effect/sql"],
         },
       ],
-
     },
   },
 
@@ -207,7 +206,6 @@ export default [
           packageNames: ["effect", "@effect/platform", "@effect/sql"],
         },
       ],
-
     },
   },
 
@@ -224,7 +222,6 @@ export default [
     plugins: baseTypeScriptPlugins,
     rules: {
       ...baseTypeScriptRules,
-
     },
   },
 ];

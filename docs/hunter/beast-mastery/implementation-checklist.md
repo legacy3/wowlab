@@ -8,10 +8,10 @@ The current `beast-mastery.ts` rotation has basic spell casting:
 
 ```typescript
 // Current implementation - VERY BASIC
-yield* rotation.spell.cast(playerId, 186254); // Bestial Wrath
-yield* rotation.spell.cast(playerId, 217200); // Barbed Shot
-yield* rotation.spell.cast(playerId, 34026);  // Kill Command
-yield* rotation.spell.cast(playerId, 193455); // Cobra Shot
+yield * rotation.spell.cast(playerId, 186254); // Bestial Wrath
+yield * rotation.spell.cast(playerId, 217200); // Barbed Shot
+yield * rotation.spell.cast(playerId, 34026); // Kill Command
+yield * rotation.spell.cast(playerId, 193455); // Cobra Shot
 ```
 
 **Missing:** All spell interactions, pet system, buff tracking, talent modifiers.
@@ -64,7 +64,11 @@ interface PetManager {
   getAnimalCompanion(ownerId: UnitID): Effect<Pet | null>;
 
   // Actions
-  commandPetAction(petId: UnitID, spellId: SpellID, target: UnitID): Effect<void>;
+  commandPetAction(
+    petId: UnitID,
+    spellId: SpellID,
+    target: UnitID,
+  ): Effect<void>;
 }
 ```
 
@@ -264,32 +268,32 @@ Need APL expression support for:
 
 ## Spell ID Reference
 
-| Ability | Player ID | Pet ID | Buff ID |
-|---------|-----------|--------|---------|
-| Kill Command | 34026 | 83381 | - |
-| Barbed Shot | 217200 | - | 246152 |
-| Bestial Wrath | 186254 | - | 186254 |
-| Cobra Shot | 193455 | - | - |
-| Multi-Shot | 2643 | - | 268877 |
-| Call of the Wild | 359844 | - | 359844 |
-| Bloodshed | 321530 | 321538 | - |
-| Frenzy | - | - | 272790 |
-| Beast Cleave | - | - | 118455 (pet) |
-| Thrill of the Hunt | - | - | 312365 |
-| Piercing Fangs | - | - | 392054 |
+| Ability            | Player ID | Pet ID | Buff ID      |
+| ------------------ | --------- | ------ | ------------ |
+| Kill Command       | 34026     | 83381  | -            |
+| Barbed Shot        | 217200    | -      | 246152       |
+| Bestial Wrath      | 186254    | -      | 186254       |
+| Cobra Shot         | 193455    | -      | -            |
+| Multi-Shot         | 2643      | -      | 268877       |
+| Call of the Wild   | 359844    | -      | 359844       |
+| Bloodshed          | 321530    | 321538 | -            |
+| Frenzy             | -         | -      | 272790       |
+| Beast Cleave       | -         | -      | 118455 (pet) |
+| Thrill of the Hunt | -         | -      | 312365       |
+| Piercing Fangs     | -         | -      | 392054       |
 
 ---
 
 ## Estimated Complexity
 
-| Phase | Effort | Dependencies |
-|-------|--------|--------------|
-| Phase 1 | Medium | None |
-| Phase 2 | High | Phase 1 |
-| Phase 3 | High | Phase 1, 2 |
-| Phase 4 | Medium | Phase 3 |
-| Phase 5 | Medium | Phase 3, 4 |
-| Phase 6 | Medium | Phase 3 |
-| Phase 7 | Low | All |
+| Phase   | Effort | Dependencies |
+| ------- | ------ | ------------ |
+| Phase 1 | Medium | None         |
+| Phase 2 | High   | Phase 1      |
+| Phase 3 | High   | Phase 1, 2   |
+| Phase 4 | Medium | Phase 3      |
+| Phase 5 | Medium | Phase 3, 4   |
+| Phase 6 | Medium | Phase 3      |
+| Phase 7 | Low    | All          |
 
 **Recommended order:** 1 → 2 → 3 → 4 → 6 → 5 → 7
