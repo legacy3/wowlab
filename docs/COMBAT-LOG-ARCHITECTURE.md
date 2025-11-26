@@ -49,19 +49,19 @@ Based on WoW's `CombatLogGetCurrentEventInfo()`.
 
 ### Base Parameters (Always Present)
 
-| Index | Parameter | Type | Description |
-|-------|-----------|------|-------------|
-| 1 | timestamp | number | Unix time with ms precision (e.g., `1555749627.861`) |
-| 2 | subevent | string | Event type (e.g., `SPELL_DAMAGE`) |
-| 3 | hideCaster | boolean | True if source unit is hidden |
-| 4 | sourceGUID | string | Source unit GUID |
-| 5 | sourceName | string | Source unit name |
-| 6 | sourceFlags | number | Unit type/reaction flags |
-| 7 | sourceRaidFlags | number | Raid target marker |
-| 8 | destGUID | string | Destination unit GUID |
-| 9 | destName | string | Destination unit name |
-| 10 | destFlags | number | Unit type/reaction flags |
-| 11 | destRaidFlags | number | Raid target marker |
+| Index | Parameter       | Type    | Description                                          |
+| ----- | --------------- | ------- | ---------------------------------------------------- |
+| 1     | timestamp       | number  | Unix time with ms precision (e.g., `1555749627.861`) |
+| 2     | subevent        | string  | Event type (e.g., `SPELL_DAMAGE`)                    |
+| 3     | hideCaster      | boolean | True if source unit is hidden                        |
+| 4     | sourceGUID      | string  | Source unit GUID                                     |
+| 5     | sourceName      | string  | Source unit name                                     |
+| 6     | sourceFlags     | number  | Unit type/reaction flags                             |
+| 7     | sourceRaidFlags | number  | Raid target marker                                   |
+| 8     | destGUID        | string  | Destination unit GUID                                |
+| 9     | destName        | string  | Destination unit name                                |
+| 10    | destFlags       | number  | Unit type/reaction flags                             |
+| 11    | destRaidFlags   | number  | Raid target marker                                   |
 
 ### Subevent Composition
 
@@ -75,54 +75,54 @@ SPELL_AURA_APPLIED = SPELL (prefix) + _AURA_APPLIED (suffix)
 
 ### Prefixes (Parameters 12-14)
 
-| Prefix | Param 12 | Param 13 | Param 14 |
-|--------|----------|----------|----------|
-| `SWING` | - | - | - |
-| `RANGE` | spellId | spellName | spellSchool |
-| `SPELL` | spellId | spellName | spellSchool |
-| `SPELL_PERIODIC` | spellId | spellName | spellSchool |
-| `SPELL_BUILDING` | spellId | spellName | spellSchool |
-| `ENVIRONMENTAL` | environmentalType | - | - |
+| Prefix           | Param 12          | Param 13  | Param 14    |
+| ---------------- | ----------------- | --------- | ----------- |
+| `SWING`          | -                 | -         | -           |
+| `RANGE`          | spellId           | spellName | spellSchool |
+| `SPELL`          | spellId           | spellName | spellSchool |
+| `SPELL_PERIODIC` | spellId           | spellName | spellSchool |
+| `SPELL_BUILDING` | spellId           | spellName | spellSchool |
+| `ENVIRONMENTAL`  | environmentalType | -         | -           |
 
 ### Suffixes (Parameters 15+)
 
-| Suffix | Parameters |
-|--------|------------|
-| `_DAMAGE` | amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand |
-| `_MISSED` | missType, isOffHand, amountMissed, critical |
-| `_HEAL` | amount, overhealing, absorbed, critical |
-| `_ENERGIZE` | amount, overEnergize, powerType, maxPower |
-| `_DRAIN` | amount, powerType, extraAmount, maxPower |
-| `_LEECH` | amount, powerType, extraAmount |
-| `_INTERRUPT` | extraSpellId, extraSpellName, extraSchool |
-| `_DISPEL` | extraSpellId, extraSpellName, extraSchool, auraType |
-| `_STOLEN` | extraSpellId, extraSpellName, extraSchool, auraType |
-| `_EXTRA_ATTACKS` | amount |
-| `_AURA_APPLIED` | auraType, amount |
-| `_AURA_REMOVED` | auraType, amount |
-| `_AURA_APPLIED_DOSE` | auraType, amount |
-| `_AURA_REMOVED_DOSE` | auraType, amount |
-| `_AURA_REFRESH` | auraType |
-| `_AURA_BROKEN` | auraType |
-| `_AURA_BROKEN_SPELL` | extraSpellId, extraSpellName, extraSchool, auraType |
-| `_CAST_START` | - |
-| `_CAST_SUCCESS` | - |
-| `_CAST_FAILED` | failedType |
-| `_INSTAKILL` | unconsciousOnDeath |
-| `_CREATE` | - |
-| `_SUMMON` | - |
-| `_RESURRECT` | - |
-| `_EMPOWER_START` | - |
-| `_EMPOWER_END` | empoweredRank |
-| `_EMPOWER_INTERRUPT` | empoweredRank |
+| Suffix               | Parameters                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `_DAMAGE`            | amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand |
+| `_MISSED`            | missType, isOffHand, amountMissed, critical                                                    |
+| `_HEAL`              | amount, overhealing, absorbed, critical                                                        |
+| `_ENERGIZE`          | amount, overEnergize, powerType, maxPower                                                      |
+| `_DRAIN`             | amount, powerType, extraAmount, maxPower                                                       |
+| `_LEECH`             | amount, powerType, extraAmount                                                                 |
+| `_INTERRUPT`         | extraSpellId, extraSpellName, extraSchool                                                      |
+| `_DISPEL`            | extraSpellId, extraSpellName, extraSchool, auraType                                            |
+| `_STOLEN`            | extraSpellId, extraSpellName, extraSchool, auraType                                            |
+| `_EXTRA_ATTACKS`     | amount                                                                                         |
+| `_AURA_APPLIED`      | auraType, amount                                                                               |
+| `_AURA_REMOVED`      | auraType, amount                                                                               |
+| `_AURA_APPLIED_DOSE` | auraType, amount                                                                               |
+| `_AURA_REMOVED_DOSE` | auraType, amount                                                                               |
+| `_AURA_REFRESH`      | auraType                                                                                       |
+| `_AURA_BROKEN`       | auraType                                                                                       |
+| `_AURA_BROKEN_SPELL` | extraSpellId, extraSpellName, extraSchool, auraType                                            |
+| `_CAST_START`        | -                                                                                              |
+| `_CAST_SUCCESS`      | -                                                                                              |
+| `_CAST_FAILED`       | failedType                                                                                     |
+| `_INSTAKILL`         | unconsciousOnDeath                                                                             |
+| `_CREATE`            | -                                                                                              |
+| `_SUMMON`            | -                                                                                              |
+| `_RESURRECT`         | -                                                                                              |
+| `_EMPOWER_START`     | -                                                                                              |
+| `_EMPOWER_END`       | empoweredRank                                                                                  |
+| `_EMPOWER_INTERRUPT` | empoweredRank                                                                                  |
 
 ### Special Events (No Prefix/Suffix)
 
-| Subevent | Parameters |
-|----------|------------|
-| `PARTY_KILL` | - |
-| `UNIT_DIED` | recapID, unconsciousOnDeath |
-| `UNIT_DESTROYED` | recapID, unconsciousOnDeath |
+| Subevent          | Parameters                  |
+| ----------------- | --------------------------- |
+| `PARTY_KILL`      | -                           |
+| `UNIT_DIED`       | recapID, unconsciousOnDeath |
+| `UNIT_DESTROYED`  | recapID, unconsciousOnDeath |
 | `UNIT_DISSIPATES` | recapID, unconsciousOnDeath |
 | `ENCHANT_APPLIED` | spellName, itemID, itemName |
 | `ENCHANT_REMOVED` | spellName, itemID, itemName |
@@ -167,9 +167,11 @@ interface DamageSuffix {
 }
 
 // Example composed event
-type SpellDamageEvent = CombatLogEventBase & SpellPrefix & DamageSuffix & {
-  readonly subevent: "SPELL_DAMAGE";
-};
+type SpellDamageEvent = CombatLogEventBase &
+  SpellPrefix &
+  DamageSuffix & {
+    readonly subevent: "SPELL_DAMAGE";
+  };
 
 // Aura suffix parameters
 interface AuraSuffix {
@@ -192,13 +194,13 @@ interface MissedSuffix {
 
 ```typescript
 enum SpellSchool {
-  Physical = 1,    // 0x01
-  Holy = 2,        // 0x02
-  Fire = 4,        // 0x04
-  Nature = 8,      // 0x08
-  Frost = 16,      // 0x10
-  Shadow = 32,     // 0x20
-  Arcane = 64,     // 0x40
+  Physical = 1, // 0x01
+  Holy = 2, // 0x02
+  Fire = 4, // 0x04
+  Nature = 8, // 0x08
+  Frost = 16, // 0x10
+  Shadow = 32, // 0x20
+  Arcane = 64, // 0x40
 }
 
 // Combined schools (bitmask OR)
@@ -272,7 +274,7 @@ type CombatLogSubevent =
   // Swing (melee auto-attack)
   | "SWING_DAMAGE"
   | "SWING_MISSED"
-  | "SWING_DAMAGE_LANDED"  // Advanced log only
+  | "SWING_DAMAGE_LANDED" // Advanced log only
 
   // Range (ranged auto-attack)
   | "RANGE_DAMAGE"
@@ -341,13 +343,13 @@ type CombatLogSubevent =
 
 These have no combat log equivalent and remain internal:
 
-| Event | Purpose |
-|-------|---------|
-| `APL_EVALUATE` | Trigger rotation to decide next action |
-| `COOLDOWN_READY` | Internal: cooldown expired |
-| `CHARGE_READY` | Internal: charge recovered |
-| `GCD_READY` | Internal: GCD expired |
-| `PROJECTILE_SCHEDULED` | Internal: schedule impact |
+| Event                  | Purpose                                |
+| ---------------------- | -------------------------------------- |
+| `APL_EVALUATE`         | Trigger rotation to decide next action |
+| `COOLDOWN_READY`       | Internal: cooldown expired             |
+| `CHARGE_READY`         | Internal: charge recovered             |
+| `GCD_READY`            | Internal: GCD expired                  |
+| `PROJECTILE_SCHEDULED` | Internal: schedule impact              |
 
 These are scheduling hints for the SimDriver, not processed by CombatLogProcessor.
 
@@ -403,23 +405,26 @@ const DamageSuffixSchema = Schema.Struct({
 Processes incoming combat log events:
 
 ```typescript
-class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()("CombatLogProcessor", {
-  effect: Effect.gen(function* () {
-    const state = yield* StateService;
+class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()(
+  "CombatLogProcessor",
+  {
+    effect: Effect.gen(function* () {
+      const state = yield* StateService;
 
-    return {
-      process: (event: CombatLogEvent) =>
-        Effect.gen(function* () {
-          // Route to handler based on subevent
-          const handler = getHandler(event.subevent);
-          yield* handler(event);
+      return {
+        process: (event: CombatLogEvent) =>
+          Effect.gen(function* () {
+            // Route to handler based on subevent
+            const handler = getHandler(event.subevent);
+            yield* handler(event);
 
-          // Trigger APL re-evaluation after state change
-          yield* triggerAPLEvaluation();
-        }),
-    };
-  }),
-}) {}
+            // Trigger APL re-evaluation after state change
+            yield* triggerAPLEvaluation();
+          }),
+      };
+    }),
+  },
+) {}
 ```
 
 ### 3. SimDriver Service
@@ -461,7 +466,7 @@ class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
               timestamp: castEnd,
               subevent: "SPELL_CAST_SUCCESS",
               // ...
-            })
+            }),
           );
 
           // Schedule damage/heal events based on spell type
@@ -491,7 +496,9 @@ class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
 
 ```typescript
 interface EventSource {
-  subscribe(handler: (event: CombatLogEvent) => Effect.Effect<void>): Effect.Effect<void>;
+  subscribe(
+    handler: (event: CombatLogEvent) => Effect.Effect<void>,
+  ): Effect.Effect<void>;
 }
 
 // Simulation mode - events come from SimDriver
@@ -672,3 +679,40 @@ Same CombatLogProcessor handles both - zero code changes needed.
 4. **Timing**: In-game, events arrive in real-time. In sim, we control time. How does the processor handle both?
 
 5. **Missing Events**: In-game, we might miss events (joined mid-combat). How do we handle state sync?
+
+## Implementation Guidance (2025 refresh)
+
+What worked best in practice
+
+- **Single source of truth**: Emit only WoW-style combat log events; all state mutation happens in `CombatLogProcessor` handlers.
+- **Rotation trigger**: After every processed combat-log event, re-run the rotation effect once (guard with a “running” flag to avoid re-entrancy).
+- **State clock**: Always advance `GameState.currentTime` to the event timestamp before handling; never schedule in the past.
+- **Light scheduler**: A tiny priority queue (time, then FIFO) inside the sim driver is enough for cast/impact sequencing.
+- **Type location**: Keep combat-log schemas under `Schemas/combatlog`;
+
+Pitfalls to avoid (lessons learned)
+
+- Cooldown/charge checks should still raise tagged errors (`SpellOnCooldown`, `PlayerIsCasting`, etc.) for observability, **but the rotation loop must catch them and continue** to the next spell choice so the APL keeps scanning.
+- Avoid nullable numeric fields in events unless the schema allows `null` (use `Schema.NullOr(Schema.Number)` when it truly can be null, otherwise omit the field).
+- Event-source parsing: `parse(raw: unknown[]) -> CombatLogEvent`; never treat a structured event as an array or vice versa.
+- Keep handler priorities explicit and small in number; sort once when registering to avoid per-event sorting churn.
+- Sim driver tasks should store `Effect<void, never, never>`; wrap higher-error effects with `Effect.ignore` or map errors before enqueueing.
+
+Recommended handler set (minimum viable)
+
+- CAST_START / CAST_SUCCESS / CAST_FAILED: set casting flags, clear on success/fail.
+- SPELL_DAMAGE / SPELL_PERIODIC_DAMAGE: apply damage to `UnitService.health.damage`.
+- SPELL_HEAL / SPELL_PERIODIC_HEAL: heal and clamp to max.
+- SPELL_AURA_APPLIED / REMOVED / REFRESH: add/remove aura records (when aura system exists).
+
+Rotation-friendly cast flow (sim mode)
+
+1. Rotation decides a spell → calls `SimDriver.executeCast` with spell metadata.
+2. Sim driver schedules CAST_START (if non-instant), CAST_SUCCESS, and impact events.
+3. Processor runs handlers, updates state, and re-triggers rotation.
+
+Testing / sanity checks
+
+- Run `pnpm dev run <rotation>` in `apps/standalone`; ensure events processed > 0 and `currentTime` advances beyond 0ms.
+- Add a trivial proc (e.g., “Kill Shot buff”) via `CombatLogProcessor.register` to verify handler wiring.
+- CI: `pnpm build` across workspace catches schema/typing drift; favor this over partial filters to avoid flag bleed into nested pnpm commands.
