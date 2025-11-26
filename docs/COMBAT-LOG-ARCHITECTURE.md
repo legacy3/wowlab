@@ -1,408 +1,185 @@
 # Combat Log Event Architecture
 
-Plan for restructuring the simulation around WoW's `COMBAT_LOG_EVENT_UNFILTERED`.
+Architecture for a WoW spell rotation simulator that runs in two modes:
 
-## Goal
+1. **Browser mode**: Full simulation, Supabase provides spell/item data
+2. **WoW mode**: Embedded V8 inside WoW client, receives real combat log events
 
-Unify event handling so the same sim core code works for:
+## Core Concept
 
-- **Simulation mode**: SimDriver generates combat log events
-- **In-game mode**: Real WoW combat log events feed directly in
-
-## Current Architecture
+The same simulation code runs in both environments. In WoW mode, it works like Hekili: the sim runs ahead predicting optimal actions, while real combat log events feed in to correct/confirm state (procs, cast confirmations, external buffs, etc.).
 
 ```text
-┌─────────────────────────────────────┐
-│ EventSchedulerService               │
-│ - Schedules custom events           │
-│ - SPELL_CAST_START, SPELL_DAMAGE,   │
-│   APL_EVALUATE, etc.                │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      Simulation Core                        │
+│                                                             │
+│  ┌─────────────┐    ┌──────────────┐    ┌───────────────┐  │
+│  │ GameState   │◄───│ CombatLog    │◄───│ Event Source  │  │
+│  │ (truth)     │    │ Processor    │    │               │  │
+│  └─────────────┘    └──────────────┘    └───────────────┘  │
+│         │                                       ▲           │
+│         ▼                                       │           │
+│  ┌─────────────┐                      ┌─────────┴────────┐ │
+│  │ APL/Rotation│                      │ Browser: SimDriver│ │
+│  │ (reads      │                      │ WoW: Real CLEU    │ │
+│  │  state)     │                      └──────────────────┘ │
+│  └─────────────┘                                           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Custom event types that loosely map to combat log but aren't 1:1.
+## Event Architecture
 
-## Proposed Architecture
+### Combat Log Events (WoW Format)
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│                    Event Source                         │
-├────────────────────────┬────────────────────────────────┤
-│ In-game:               │ Simulation:                    │
-│ WoW COMBAT_LOG_EVENT_  │ SimDriver generates            │
-│ UNFILTERED             │ COMBAT_LOG_EVENT_UNFILTERED    │
-└────────────────────────┴────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│              CombatLogProcessor (Sim Core)              │
-│ - Receives COMBAT_LOG_EVENT_UNFILTERED                  │
-│ - Parses subevent (SPELL_CAST_SUCCESS, etc.)            │
-│ - Updates GameState                                     │
-│ - Triggers APL evaluation                               │
-└─────────────────────────────────────────────────────────┘
+Events that match WoW's `COMBAT_LOG_EVENT_UNFILTERED`. Used for:
+
+- Input from WoW in live mode
+- Simulation output in browser mode
+- State synchronization between predicted and actual
+
+These use WoW's prefix+suffix structure:
+
+- `SPELL_CAST_SUCCESS` = SPELL prefix + _CAST_SUCCESS suffix
+- `SPELL_DAMAGE` = SPELL prefix + _DAMAGE suffix
+- `SPELL_AURA_APPLIED` = SPELL prefix + _AURA_APPLIED suffix
+
+### Single Internal Event: APL_EVALUATE
+
+One internal event for scheduling rotation evaluation. No WoW equivalent, never leaves the simulation.
+
+When to schedule `APL_EVALUATE`:
+
+- Cooldown expires → `scheduleAPL(cooldownExpiresAt)`
+- GCD expires → `scheduleAPL(gcdExpiresAt)`
+- Charge refills → `scheduleAPL(chargeReadyAt)`
+- Combat log event processed → `scheduleAPL(event.timestamp)`
+
+The scheduler dedupes APL events (keeps earliest). Spam `scheduleAPL` freely.
+
+```typescript
+// After processing any combat log event
+yield* scheduleAPL(event.timestamp);
+
+// When scheduling cooldown in handler
+const cooldownExpires = event.timestamp + spell.info.cooldown;
+yield* scheduleAPL(cooldownExpires);
 ```
+
+## WoW Mode: How It Works
+
+### Feed Everything, Handlers Are Idempotent
+
+Don't filter or categorize events. Feed all combat log events to CombatLogProcessor. Handlers check state and apply:
+
+```typescript
+// Handler for SPELL_AURA_APPLIED
+handle(event: SpellAuraApplied) {
+  const existingAura = state.getAura(event.destGUID, event.spellId);
+
+  if (existingAura) {
+    // Already have it (sim predicted it) → refresh duration
+    state.refreshAura(event.destGUID, event.spellId, event.timestamp);
+  } else {
+    // Don't have it (proc we couldn't predict) → add it
+    state.addAura(event.destGUID, event.spellId, event.timestamp);
+  }
+  // State converges either way
+}
+```
+
+No need to know if event is "correction" or "confirmation". State converges.
+
+### Lookahead Predictions (Hekili-style)
+
+To show "next 3 spells":
+
+1. Fork current GameState
+2. Run sim forward on fork (evaluate APL 3 times)
+3. Collect predicted spell sequence
+4. Display to user
+5. When real events arrive, update actual state
+6. Re-fork and re-predict when state changes
+
+Predictions are disposable. Ground truth always wins.
+
+### Timing
+
+Sim advances `currentTime` to event timestamps in both modes:
+
+- Browser: SimDriver controls time, schedules events in priority queue
+- WoW: Events arrive with real timestamps, sim advances to match
+
+The priority queue still works in WoW mode for scheduling `APL_EVALUATE`. Real combat log events inject with their actual timestamps.
 
 ## Combat Log Event Structure
 
 Based on WoW's `CombatLogGetCurrentEventInfo()`.
 
-### Base Parameters (Always Present)
-
-| Index | Parameter       | Type    | Description                                          |
-| ----- | --------------- | ------- | ---------------------------------------------------- |
-| 1     | timestamp       | number  | Unix time with ms precision (e.g., `1555749627.861`) |
-| 2     | subevent        | string  | Event type (e.g., `SPELL_DAMAGE`)                    |
-| 3     | hideCaster      | boolean | True if source unit is hidden                        |
-| 4     | sourceGUID      | string  | Source unit GUID                                     |
-| 5     | sourceName      | string  | Source unit name                                     |
-| 6     | sourceFlags     | number  | Unit type/reaction flags                             |
-| 7     | sourceRaidFlags | number  | Raid target marker                                   |
-| 8     | destGUID        | string  | Destination unit GUID                                |
-| 9     | destName        | string  | Destination unit name                                |
-| 10    | destFlags       | number  | Unit type/reaction flags                             |
-| 11    | destRaidFlags   | number  | Raid target marker                                   |
-
-### Subevent Composition
-
-Subevents are composed of **PREFIX + SUFFIX**:
-
-```text
-SPELL_DAMAGE = SPELL (prefix) + _DAMAGE (suffix)
-SWING_MISSED = SWING (prefix) + _MISSED (suffix)
-SPELL_AURA_APPLIED = SPELL (prefix) + _AURA_APPLIED (suffix)
-```
-
-### Prefixes (Parameters 12-14)
-
-| Prefix           | Param 12          | Param 13  | Param 14    |
-| ---------------- | ----------------- | --------- | ----------- |
-| `SWING`          | -                 | -         | -           |
-| `RANGE`          | spellId           | spellName | spellSchool |
-| `SPELL`          | spellId           | spellName | spellSchool |
-| `SPELL_PERIODIC` | spellId           | spellName | spellSchool |
-| `SPELL_BUILDING` | spellId           | spellName | spellSchool |
-| `ENVIRONMENTAL`  | environmentalType | -         | -           |
-
-### Suffixes (Parameters 15+)
-
-| Suffix               | Parameters                                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| `_DAMAGE`            | amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand |
-| `_MISSED`            | missType, isOffHand, amountMissed, critical                                                    |
-| `_HEAL`              | amount, overhealing, absorbed, critical                                                        |
-| `_ENERGIZE`          | amount, overEnergize, powerType, maxPower                                                      |
-| `_DRAIN`             | amount, powerType, extraAmount, maxPower                                                       |
-| `_LEECH`             | amount, powerType, extraAmount                                                                 |
-| `_INTERRUPT`         | extraSpellId, extraSpellName, extraSchool                                                      |
-| `_DISPEL`            | extraSpellId, extraSpellName, extraSchool, auraType                                            |
-| `_STOLEN`            | extraSpellId, extraSpellName, extraSchool, auraType                                            |
-| `_EXTRA_ATTACKS`     | amount                                                                                         |
-| `_AURA_APPLIED`      | auraType, amount                                                                               |
-| `_AURA_REMOVED`      | auraType, amount                                                                               |
-| `_AURA_APPLIED_DOSE` | auraType, amount                                                                               |
-| `_AURA_REMOVED_DOSE` | auraType, amount                                                                               |
-| `_AURA_REFRESH`      | auraType                                                                                       |
-| `_AURA_BROKEN`       | auraType                                                                                       |
-| `_AURA_BROKEN_SPELL` | extraSpellId, extraSpellName, extraSchool, auraType                                            |
-| `_CAST_START`        | -                                                                                              |
-| `_CAST_SUCCESS`      | -                                                                                              |
-| `_CAST_FAILED`       | failedType                                                                                     |
-| `_INSTAKILL`         | unconsciousOnDeath                                                                             |
-| `_CREATE`            | -                                                                                              |
-| `_SUMMON`            | -                                                                                              |
-| `_RESURRECT`         | -                                                                                              |
-| `_EMPOWER_START`     | -                                                                                              |
-| `_EMPOWER_END`       | empoweredRank                                                                                  |
-| `_EMPOWER_INTERRUPT` | empoweredRank                                                                                  |
-
-### Special Events (No Prefix/Suffix)
-
-| Subevent          | Parameters                  |
-| ----------------- | --------------------------- |
-| `PARTY_KILL`      | -                           |
-| `UNIT_DIED`       | recapID, unconsciousOnDeath |
-| `UNIT_DESTROYED`  | recapID, unconsciousOnDeath |
-| `UNIT_DISSIPATES` | recapID, unconsciousOnDeath |
-| `ENCHANT_APPLIED` | spellName, itemID, itemName |
-| `ENCHANT_REMOVED` | spellName, itemID, itemName |
-
-## TypeScript Types
+### Base Fields (All Events)
 
 ```typescript
-// Base event structure
 interface CombatLogEventBase {
-  readonly timestamp: number;
-  readonly subevent: CombatLogSubevent;
-  readonly hideCaster: boolean;
-  readonly sourceGUID: string;
-  readonly sourceName: string;
-  readonly sourceFlags: number;
-  readonly sourceRaidFlags: number;
-  readonly destGUID: string;
-  readonly destName: string;
-  readonly destFlags: number;
-  readonly destRaidFlags: number;
-}
-
-// Spell prefix parameters
-interface SpellPrefix {
-  readonly spellId: number;
-  readonly spellName: string;
-  readonly spellSchool: SpellSchool;
-}
-
-// Damage suffix parameters
-interface DamageSuffix {
-  readonly amount: number;
-  readonly overkill: number;
-  readonly school: SpellSchool;
-  readonly resisted: number | null;
-  readonly blocked: number | null;
-  readonly absorbed: number | null;
-  readonly critical: boolean;
-  readonly glancing: boolean;
-  readonly crushing: boolean;
-  readonly isOffHand: boolean;
-}
-
-// Example composed event
-type SpellDamageEvent = CombatLogEventBase &
-  SpellPrefix &
-  DamageSuffix & {
-    readonly subevent: "SPELL_DAMAGE";
-  };
-
-// Aura suffix parameters
-interface AuraSuffix {
-  readonly auraType: "BUFF" | "DEBUFF";
-  readonly amount?: number;
-}
-
-// Missed suffix parameters
-interface MissedSuffix {
-  readonly missType: MissType;
-  readonly isOffHand: boolean;
-  readonly amountMissed: number;
-  readonly critical: boolean;
+  timestamp: number;      // Unix time with ms precision
+  subevent: string;       // e.g., "SPELL_DAMAGE"
+  sourceGUID: string;     // Who did it
+  sourceName: string;
+  sourceFlags: number;    // Unit type flags
+  destGUID: string;       // Target
+  destName: string;
+  destFlags: number;
 }
 ```
 
-## Enums
+### Prefix Types
 
-### Spell School (Bitmask)
+| Prefix           | Extra Fields                    |
+| ---------------- | ------------------------------- |
+| `SWING`          | (none)                          |
+| `SPELL`          | spellId, spellName, spellSchool |
+| `SPELL_PERIODIC` | spellId, spellName, spellSchool |
+| `RANGE`          | spellId, spellName, spellSchool |
 
-```typescript
-enum SpellSchool {
-  Physical = 1, // 0x01
-  Holy = 2, // 0x02
-  Fire = 4, // 0x04
-  Nature = 8, // 0x08
-  Frost = 16, // 0x10
-  Shadow = 32, // 0x20
-  Arcane = 64, // 0x40
-}
+### Suffix Types
 
-// Combined schools (bitmask OR)
-// Frostfire = Frost | Fire = 20
-// Shadowflame = Shadow | Fire = 36
-// Chaos = 127 (all schools)
-```
+| Suffix               | Extra Fields                               |
+| -------------------- | ------------------------------------------ |
+| `_CAST_START`        | (none)                                     |
+| `_CAST_SUCCESS`      | (none)                                     |
+| `_CAST_FAILED`       | failedType                                 |
+| `_DAMAGE`            | amount, overkill, school, critical, etc.   |
+| `_HEAL`              | amount, overhealing, absorbed, critical    |
+| `_AURA_APPLIED`      | auraType ("BUFF" / "DEBUFF"), amount?      |
+| `_AURA_REMOVED`      | auraType, amount?                          |
+| `_AURA_REFRESH`      | auraType                                   |
+| `_AURA_APPLIED_DOSE` | auraType, amount (stack count)             |
+| `_AURA_REMOVED_DOSE` | auraType, amount (stack count)             |
+| `_ENERGIZE`          | amount, powerType                          |
+| `_MISSED`            | missType, amountMissed?                    |
+| `_INTERRUPT`         | extraSpellId, extraSpellName, extraSchool  |
 
-### Power Type
+### Priority Subevents for Rotation Sim
 
-```typescript
-enum PowerType {
-  Mana = 0,
-  Rage = 1,
-  Focus = 2,
-  Energy = 3,
-  ComboPoints = 4,
-  Runes = 5,
-  RunicPower = 6,
-  SoulShards = 7,
-  LunarPower = 8,
-  HolyPower = 9,
-  Maelstrom = 11,
-  Chi = 12,
-  Insanity = 13,
-  ArcaneCharges = 16,
-  Fury = 17,
-  Pain = 18,
-  Essence = 19,
-}
-```
+Focus on these first:
 
-### Miss Type
+| Subevent             | Why It Matters                       |
+| -------------------- | ------------------------------------ |
+| `SPELL_CAST_START`   | Player started casting               |
+| `SPELL_CAST_SUCCESS` | Cast completed, cooldown started     |
+| `SPELL_CAST_FAILED`  | Cast interrupted/failed              |
+| `SPELL_AURA_APPLIED` | Buff/proc activated                  |
+| `SPELL_AURA_REMOVED` | Buff expired/consumed                |
+| `SPELL_AURA_REFRESH` | Buff duration reset                  |
+| `SPELL_ENERGIZE`     | Resource gained (combo points, etc.) |
+| `SPELL_DAMAGE`       | For damage tracking/logging          |
+| `UNIT_DIED`          | Target dead, pick new target         |
 
-```typescript
-type MissType =
-  | "ABSORB"
-  | "BLOCK"
-  | "DEFLECT"
-  | "DODGE"
-  | "EVADE"
-  | "IMMUNE"
-  | "MISS"
-  | "PARRY"
-  | "REFLECT"
-  | "RESIST";
-```
-
-### Aura Type
-
-```typescript
-type AuraType = "BUFF" | "DEBUFF";
-```
-
-### Environmental Type
-
-```typescript
-type EnvironmentalType =
-  | "Drowning"
-  | "Falling"
-  | "Fatigue"
-  | "Fire"
-  | "Lava"
-  | "Slime";
-```
-
-## Complete Subevent List
-
-```typescript
-type CombatLogSubevent =
-  // Swing (melee auto-attack)
-  | "SWING_DAMAGE"
-  | "SWING_MISSED"
-  | "SWING_DAMAGE_LANDED" // Advanced log only
-
-  // Range (ranged auto-attack)
-  | "RANGE_DAMAGE"
-  | "RANGE_MISSED"
-
-  // Spell
-  | "SPELL_CAST_START"
-  | "SPELL_CAST_SUCCESS"
-  | "SPELL_CAST_FAILED"
-  | "SPELL_DAMAGE"
-  | "SPELL_MISSED"
-  | "SPELL_HEAL"
-  | "SPELL_ENERGIZE"
-  | "SPELL_DRAIN"
-  | "SPELL_LEECH"
-  | "SPELL_INTERRUPT"
-  | "SPELL_DISPEL"
-  | "SPELL_DISPEL_FAILED"
-  | "SPELL_STOLEN"
-  | "SPELL_EXTRA_ATTACKS"
-  | "SPELL_AURA_APPLIED"
-  | "SPELL_AURA_REMOVED"
-  | "SPELL_AURA_APPLIED_DOSE"
-  | "SPELL_AURA_REMOVED_DOSE"
-  | "SPELL_AURA_REFRESH"
-  | "SPELL_AURA_BROKEN"
-  | "SPELL_AURA_BROKEN_SPELL"
-  | "SPELL_INSTAKILL"
-  | "SPELL_DURABILITY_DAMAGE"
-  | "SPELL_DURABILITY_DAMAGE_ALL"
-  | "SPELL_CREATE"
-  | "SPELL_SUMMON"
-  | "SPELL_RESURRECT"
-  | "SPELL_ABSORBED"
-  | "SPELL_HEAL_ABSORBED"
-
-  // Spell Periodic (DoTs/HoTs)
-  | "SPELL_PERIODIC_DAMAGE"
-  | "SPELL_PERIODIC_MISSED"
-  | "SPELL_PERIODIC_HEAL"
-  | "SPELL_PERIODIC_ENERGIZE"
-  | "SPELL_PERIODIC_DRAIN"
-  | "SPELL_PERIODIC_LEECH"
-
-  // Empower (Evoker)
-  | "SPELL_EMPOWER_START"
-  | "SPELL_EMPOWER_END"
-  | "SPELL_EMPOWER_INTERRUPT"
-
-  // Environmental
-  | "ENVIRONMENTAL_DAMAGE"
-
-  // Special events
-  | "DAMAGE_SPLIT"
-  | "DAMAGE_SHIELD"
-  | "DAMAGE_SHIELD_MISSED"
-  | "ENCHANT_APPLIED"
-  | "ENCHANT_REMOVED"
-  | "PARTY_KILL"
-  | "UNIT_DIED"
-  | "UNIT_DESTROYED"
-  | "UNIT_DISSIPATES";
-```
-
-## Sim-Only Events
-
-These have no combat log equivalent and remain internal:
-
-| Event                  | Purpose                                |
-| ---------------------- | -------------------------------------- |
-| `APL_EVALUATE`         | Trigger rotation to decide next action |
-| `COOLDOWN_READY`       | Internal: cooldown expired             |
-| `CHARGE_READY`         | Internal: charge recovered             |
-| `GCD_READY`            | Internal: GCD expired                  |
-| `PROJECTILE_SCHEDULED` | Internal: schedule impact              |
-
-These are scheduling hints for the SimDriver, not processed by CombatLogProcessor.
+Everything else (ENVIRONMENTAL_DAMAGE, ENCHANT_APPLIED, etc.) can be ignored initially.
 
 ## Components
 
-### 1. CombatLogEvent Schema
+### CombatLogProcessor
 
-**Location:** `packages/wowlab-core/src/internal/events/CombatLogEvent.ts`
-
-Define the combat log event structure matching WoW's format using Effect Schema:
-
-```typescript
-import { Schema } from "effect";
-
-const CombatLogEventBaseSchema = Schema.Struct({
-  timestamp: Schema.Number,
-  subevent: CombatLogSubeventSchema,
-  hideCaster: Schema.Boolean,
-  sourceGUID: Schema.String,
-  sourceName: Schema.String,
-  sourceFlags: Schema.Number,
-  sourceRaidFlags: Schema.Number,
-  destGUID: Schema.String,
-  destName: Schema.String,
-  destFlags: Schema.Number,
-  destRaidFlags: Schema.Number,
-});
-
-const SpellPrefixSchema = Schema.Struct({
-  spellId: Schema.Number,
-  spellName: Schema.String,
-  spellSchool: Schema.Number,
-});
-
-const DamageSuffixSchema = Schema.Struct({
-  amount: Schema.Number,
-  overkill: Schema.Number,
-  school: Schema.Number,
-  resisted: Schema.NullOr(Schema.Number),
-  blocked: Schema.NullOr(Schema.Number),
-  absorbed: Schema.NullOr(Schema.Number),
-  critical: Schema.Boolean,
-  glancing: Schema.Boolean,
-  crushing: Schema.Boolean,
-  isOffHand: Schema.Boolean,
-});
-```
-
-### 2. CombatLogProcessor Service
-
-**Location:** `packages/wowlab-services/src/internal/combatlog/CombatLogProcessor.ts`
-
-Processes incoming combat log events:
+Receives all combat log events, routes to handlers, updates GameState:
 
 ```typescript
 class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()(
@@ -410,16 +187,25 @@ class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()(
   {
     effect: Effect.gen(function* () {
       const state = yield* StateService;
+      const handlers = yield* CombatLogHandlerRegistry;
+      const scheduler = yield* EventSchedulerService;
 
       return {
         process: (event: CombatLogEvent) =>
           Effect.gen(function* () {
-            // Route to handler based on subevent
-            const handler = getHandler(event.subevent);
-            yield* handler(event);
+            // Advance time to event timestamp
+            yield* state.updateState(s =>
+              s.set("currentTime", Math.max(s.currentTime, event.timestamp))
+            );
 
-            // Trigger APL re-evaluation after state change
-            yield* triggerAPLEvaluation();
+            // Get handler for this subevent
+            const handler = handlers.get(event.subevent);
+            if (handler) {
+              yield* handler(event);
+            }
+
+            // State changed, schedule APL re-evaluation
+            yield* scheduler.scheduleAPL(event.timestamp);
           }),
       };
     }),
@@ -427,292 +213,239 @@ class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()(
 ) {}
 ```
 
-### 3. SimDriver Service
+### SimDriver (Browser Mode)
 
-**Location:** `packages/wowlab-services/src/internal/simulation/SimDriver.ts`
-
-Generates combat log events based on spell mechanics:
+Generates combat log events based on spell execution:
 
 ```typescript
-class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
-  effect: Effect.gen(function* () {
-    const processor = yield* CombatLogProcessor;
-    const scheduler = yield* InternalScheduler;
+executeCast(casterId: string, spellId: number, targetId: string) {
+  const spell = yield* getSpellInfo(spellId);
+  const now = yield* getCurrentTime();
 
-    return {
-      executeCast: (casterId: string, spellId: number, targetId: string) =>
-        Effect.gen(function* () {
-          const currentTime = yield* getCurrentTime();
-          const spell = yield* getSpellInfo(spellId);
-
-          // Emit SPELL_CAST_START (for non-instant)
-          if (spell.castTime > 0) {
-            yield* processor.process({
-              timestamp: currentTime,
-              subevent: "SPELL_CAST_START",
-              sourceGUID: casterId,
-              destGUID: targetId,
-              spellId,
-              spellName: spell.name,
-              spellSchool: spell.schoolMask,
-              // ... base params
-            });
-          }
-
-          // Schedule SPELL_CAST_SUCCESS
-          const castEnd = currentTime + spell.castTime;
-          yield* scheduler.scheduleAt(castEnd, () =>
-            processor.process({
-              timestamp: castEnd,
-              subevent: "SPELL_CAST_SUCCESS",
-              // ...
-            }),
-          );
-
-          // Schedule damage/heal events based on spell type
-          // ...
-        }),
-
-      run: (duration: number) =>
-        Effect.gen(function* () {
-          // Main simulation loop
-          while ((yield* getCurrentTime()) < duration) {
-            // Process next scheduled event
-            const next = yield* scheduler.dequeue();
-            if (!next) break;
-
-            yield* advanceTime(next.at);
-            yield* next.execute();
-          }
-        }),
-    };
-  }),
-}) {}
-```
-
-### 4. EventSource Abstraction
-
-**Location:** `packages/wowlab-services/src/internal/events/EventSource.ts`
-
-```typescript
-interface EventSource {
-  subscribe(
-    handler: (event: CombatLogEvent) => Effect.Effect<void>,
-  ): Effect.Effect<void>;
-}
-
-// Simulation mode - events come from SimDriver
-class SimulatedEventSource implements EventSource {
-  private readonly queue = new PubSub<CombatLogEvent>();
-
-  emit(event: CombatLogEvent) {
-    return this.queue.publish(event);
-  }
-
-  subscribe(handler) {
-    return this.queue.subscribe(handler);
-  }
-}
-
-// In-game mode - events come from WoW
-class WoWEventSource implements EventSource {
-  constructor(private readonly connection: WoWConnection) {}
-
-  subscribe(handler) {
-    return Effect.async((resume) => {
-      this.connection.on("COMBAT_LOG_EVENT", (data) => {
-        const event = parseCombatLogEvent(data);
-        Effect.runPromise(handler(event));
-      });
+  // Emit SPELL_CAST_START (if has cast time)
+  if (spell.castTime > 0) {
+    yield* processor.process({
+      timestamp: now,
+      subevent: "SPELL_CAST_START",
+      sourceGUID: casterId,
+      destGUID: targetId,
+      spellId,
+      spellName: spell.name,
+      spellSchool: spell.schoolMask,
     });
   }
+
+  // Schedule SPELL_CAST_SUCCESS at cast end
+  const castEnd = now + spell.castTime;
+  yield* scheduler.scheduleAt(castEnd, () =>
+    processor.process({
+      timestamp: castEnd,
+      subevent: "SPELL_CAST_SUCCESS",
+      sourceGUID: casterId,
+      destGUID: targetId,
+      spellId,
+      spellName: spell.name,
+      spellSchool: spell.schoolMask,
+    })
+  );
 }
 ```
 
-## Migration Steps
+### WoWEventSource (WoW Mode)
 
-### Phase 1: Define Combat Log Types
+Receives real combat log events from WoW's Lua environment:
 
-1. Create `CombatLogEvent.ts` with base schema
-2. Create prefix schemas (SpellPrefix, etc.)
-3. Create suffix schemas (DamageSuffix, MissedSuffix, AuraSuffix, etc.)
-4. Create composed event types (SpellDamageEvent, etc.)
-5. Create enums (SpellSchool, PowerType, MissType, etc.)
-6. Add to `@wowlab/core` exports
+```typescript
+class WoWEventSource {
+  constructor(private processor: CombatLogProcessor) {}
 
-### Phase 2: Build CombatLogProcessor
+  // Called from Lua when COMBAT_LOG_EVENT_UNFILTERED fires
+  onCombatLogEvent(raw: unknown[]) {
+    const event = parseCombatLogEvent(raw);
+    Effect.runPromise(this.processor.process(event));
+  }
+}
+```
 
-1. Create processor service
-2. Implement handlers for priority subevents:
-   - `SPELL_CAST_START` → set casting state
-   - `SPELL_CAST_SUCCESS` → clear casting, trigger cooldown
-   - `SPELL_DAMAGE` → apply damage
-   - `SPELL_AURA_APPLIED` → add aura
-   - `SPELL_AURA_REMOVED` → remove aura
-   - `SPELL_ENERGIZE` → add resources
-3. Wire up state mutations
-4. Trigger APL after processing
+### Handler Examples
 
-### Phase 3: Build SimDriver
+```typescript
+// SPELL_CAST_SUCCESS handler
+const handleCastSuccess = (event: SpellCastSuccess) =>
+  Effect.gen(function* () {
+    const state = yield* StateService;
+    const scheduler = yield* EventSchedulerService;
+    const player = yield* getPlayer();
 
-1. Create SimDriver service
-2. Implement `executeCast` to generate events
-3. Implement internal scheduler for future events
-4. Generate correct sequence:
-   - `SPELL_CAST_START` (if cast time > 0)
-   - `SPELL_CAST_SUCCESS` (at cast end)
-   - `SPELL_DAMAGE` / `SPELL_HEAL` (on impact)
-   - `SPELL_AURA_APPLIED` (if applies buff/debuff)
+    // Clear casting state
+    yield* state.updateState(s =>
+      s.setIn(["units", player.id, "isCasting"], false)
+       .setIn(["units", player.id, "castingSpellId"], null)
+    );
 
-### Phase 4: Refactor Simulation Loop
+    // Start cooldown
+    const spell = player.spells.get(event.spellId);
+    if (spell && spell.info.cooldown > 0) {
+      const cooldownExpires = event.timestamp + spell.info.cooldown;
 
-1. Replace current EventSchedulerService
-2. SimDriver becomes top-level driver in sim mode
-3. CombatLogProcessor becomes core for both modes
+      yield* state.updateState(s =>
+        s.setIn(
+          ["units", player.id, "spells", event.spellId, "cooldownExpiry"],
+          cooldownExpires
+        )
+      );
 
-### Phase 5: Remove Old Event System
+      // Schedule APL when cooldown expires
+      yield* scheduler.scheduleAPL(cooldownExpires);
+    }
+  });
 
-1. Remove custom event types
-2. Remove old event handlers
-3. Clean up old scheduler
+// SPELL_AURA_APPLIED handler (idempotent)
+const handleAuraApplied = (event: SpellAuraApplied) =>
+  Effect.gen(function* () {
+    const state = yield* StateService;
+    const currentState = yield* state.getState();
+    const unit = currentState.units.get(event.destGUID);
 
-## File Changes Summary
+    if (!unit) return; // Not tracking this unit
 
-### New Files
+    const existingAura = unit.auras.get(event.spellId);
+    const auraInfo = yield* getAuraInfo(event.spellId);
+
+    if (existingAura) {
+      // Refresh existing aura
+      yield* state.updateState(s =>
+        s.setIn(
+          ["units", event.destGUID, "auras", event.spellId, "expiresAt"],
+          event.timestamp + auraInfo.duration
+        )
+      );
+    } else {
+      // Add new aura
+      const newAura = Aura.create({
+        spellId: event.spellId,
+        casterUnitId: event.sourceGUID,
+        expiresAt: event.timestamp + auraInfo.duration,
+        stacks: event.amount ?? 1,
+      });
+
+      yield* state.updateState(s =>
+        s.setIn(["units", event.destGUID, "auras", event.spellId], newAura)
+      );
+    }
+  });
+```
+
+## File Structure
+
+Matches existing package patterns (`internal/{feature}/`):
 
 ```text
-packages/wowlab-core/src/internal/events/
-├── CombatLogEvent.ts       # Base event schema
-├── CombatLogSubevent.ts    # Subevent union type
-├── CombatLogPrefix.ts      # Prefix schemas
-├── CombatLogSuffix.ts      # Suffix schemas
-├── CombatLogEnums.ts       # SpellSchool, PowerType, etc.
+packages/wowlab-core/src/internal/combatlog/
+├── CombatLogEvent.ts           # Base event schema
+├── CombatLogSubevent.ts        # Subevent union type
+├── prefixes/
+│   ├── SpellPrefix.ts
+│   ├── SwingPrefix.ts
+│   └── index.ts
+├── suffixes/
+│   ├── DamageSuffix.ts
+│   ├── AuraSuffix.ts
+│   ├── CastSuffix.ts
+│   └── index.ts
+├── events/                     # Composed event types
+│   ├── SpellCastSuccess.ts
+│   ├── SpellDamage.ts
+│   ├── SpellAuraApplied.ts
+│   └── index.ts
 └── index.ts
 
 packages/wowlab-services/src/internal/combatlog/
-├── CombatLogProcessor.ts   # Main processor
+├── CombatLogProcessor.ts       # Main processor service
+├── CombatLogHandlerRegistry.ts # Handler registration
 ├── handlers/
-│   ├── cast.ts             # SPELL_CAST_* handlers
-│   ├── damage.ts           # *_DAMAGE handlers
-│   ├── heal.ts             # *_HEAL handlers
-│   ├── aura.ts             # SPELL_AURA_* handlers
-│   ├── resource.ts         # SPELL_ENERGIZE, SPELL_DRAIN
-│   └── unit.ts             # UNIT_DIED, etc.
+│   ├── cast.ts                 # CAST_START, CAST_SUCCESS, CAST_FAILED
+│   ├── aura.ts                 # AURA_APPLIED, AURA_REMOVED, AURA_REFRESH
+│   ├── damage.ts               # DAMAGE, HEAL
+│   ├── resource.ts             # ENERGIZE
+│   └── index.ts
 └── index.ts
 
 packages/wowlab-services/src/internal/simulation/
-├── SimDriver.ts            # Simulation event generator
-├── InternalScheduler.ts    # For scheduling future events
+├── SimulationService.ts        # Existing, minimal changes
+├── SimDriver.ts                # NEW: Generates combat log events
+├── WoWEventSource.ts           # NEW: Receives WoW events
 └── index.ts
 ```
 
-### Modified Files
+Barrel exports:
 
-```text
-packages/wowlab-core/src/internal/events/Events.ts
-  - Keep APL_EVALUATE, COOLDOWN_READY, etc. as internal
-  - Remove SPELL_CAST_START, SPELL_DAMAGE, etc.
+- `packages/wowlab-core/src/CombatLog.ts` → re-exports from `internal/combatlog/`
+- `packages/wowlab-services/src/CombatLog.ts` → re-exports from `internal/combatlog/`
 
-packages/wowlab-runtime/src/AppLayer.ts
-  - Add CombatLogProcessor
-  - Add SimDriver (for sim mode)
-  - Add EventSource abstraction
-```
+## Migration Path
 
-## In-Game Integration (Future)
+### Phase 1: Combat Log Schemas
 
-### Addon Side (Lua)
+1. Create `packages/wowlab-core/src/internal/combatlog/` directory
+2. Define CombatLogEventBase schema
+3. Define prefix schemas (SpellPrefix, SwingPrefix)
+4. Define suffix schemas (DamageSuffix, AuraSuffix, etc.)
+5. Create composed event types (SpellCastSuccess, SpellDamage, etc.)
+6. Add barrel export `packages/wowlab-core/src/CombatLog.ts`
 
-```lua
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-frame:SetScript("OnEvent", function()
-  local info = {CombatLogGetCurrentEventInfo()}
-  -- Send to sim via WebSocket/IPC
-  SendToSim(SerializeEvent(info))
-end)
+### Phase 2: CombatLogProcessor
 
-function SerializeEvent(info)
-  return {
-    timestamp = info[1],
-    subevent = info[2],
-    hideCaster = info[3],
-    sourceGUID = info[4],
-    sourceName = info[5],
-    sourceFlags = info[6],
-    sourceRaidFlags = info[7],
-    destGUID = info[8],
-    destName = info[9],
-    destFlags = info[10],
-    destRaidFlags = info[11],
-    -- Remaining params depend on subevent
-    payload = {unpack(info, 12)}
-  }
-end
-```
+1. Create `packages/wowlab-services/src/internal/combatlog/` directory
+2. Create CombatLogHandlerRegistry service
+3. Create CombatLogProcessor service
+4. Implement handlers for priority subevents
+5. Make handlers idempotent (check state, apply if needed)
+6. Add barrel export `packages/wowlab-services/src/CombatLog.ts`
 
-### Sim Side (TypeScript)
+### Phase 3: SimDriver
 
-```typescript
-class WoWEventSource implements EventSource {
-  constructor(private connection: WoWConnection) {}
+1. Create SimDriver in `internal/simulation/`
+2. SimDriver generates combat log events → feeds CombatLogProcessor
+3. Replace CastQueueService internals to use SimDriver
 
-  subscribe(handler) {
-    this.connection.on("COMBAT_LOG_EVENT", (data) => {
-      const event = parseCombatLogEvent(data);
-      handler(event);
-    });
-  }
-}
-```
+### Phase 4: Wire Up
 
-Same CombatLogProcessor handles both - zero code changes needed.
+1. Update AppLayer to include CombatLogProcessor
+2. Browser mode: SimDriver feeds CombatLogProcessor
+3. Test with existing rotations
+4. WoW mode: Create WoWEventSource (when ready)
 
-## Open Questions
+## What Changes
 
-1. **GUIDs**: WoW uses GUIDs like `"Player-1096-06DF65C1"` or `"Creature-0-4253-0-160-94-00003AD5D7"`. Do we adopt this format or keep simple UnitID?
+| Component            | Before                          | After                                 |
+| -------------------- | ------------------------------- | ------------------------------------- |
+| Event format         | Custom EventType enum           | WoW combat log format                 |
+| Event payloads       | Rich domain objects (Spell)     | Primitives (spellId, spellName)       |
+| Internal events      | 4 types (APL, COOLDOWN, etc.)   | 1 type (APL_EVALUATE only)            |
+| Cast flow            | CastQueueService schedules      | SimDriver generates combat log events |
+| Handler trigger      | Per event type                  | Per subevent                          |
 
-2. **Unit Flags**: WoW uses bitmask flags for unit type/reaction. Do we need these for the sim?
+## What Stays The Same
 
-3. **Advanced Combat Log**: WoW has extended parameters (position, stats, etc.) when `advancedCombatLogging` is enabled. Do we want to support this?
+- GameState structure (units, spells, auras)
+- Immutable.js Records
+- StateService
+- APL/Rotation logic (reads from GameState)
+- Priority queue scheduler (for APL_EVALUATE)
+- Effect-TS service patterns
+- Layer composition
 
-4. **Timing**: In-game, events arrive in real-time. In sim, we control time. How does the processor handle both?
+## Key Design Decisions
 
-5. **Missing Events**: In-game, we might miss events (joined mid-combat). How do we handle state sync?
+1. **Handlers are idempotent**: Don't care if event is prediction or ground truth. Check state, apply change if needed, state converges.
 
-## Implementation Guidance (2025 refresh)
+2. **One internal event**: Just `APL_EVALUATE`. Schedule it whenever rotation should re-evaluate. Scheduler dedupes.
 
-What worked best in practice
+3. **Combat log events for WoW I/O**: Combat log events cross the WoW boundary. APL_EVALUATE never does.
 
-- **Single source of truth**: Emit only WoW-style combat log events; all state mutation happens in `CombatLogProcessor` handlers.
-- **Rotation trigger**: After every processed combat-log event, re-run the rotation effect once (guard with a “running” flag to avoid re-entrancy).
-- **State clock**: Always advance `GameState.currentTime` to the event timestamp before handling; never schedule in the past.
-- **Light scheduler**: A tiny priority queue (time, then FIFO) inside the sim driver is enough for cast/impact sequencing.
-- **Type location**: Keep combat-log schemas under `Schemas/combatlog`;
+4. **GameState is source of truth**: APL reads GameState, not events. Events just update state.
 
-Pitfalls to avoid (lessons learned)
+5. **Predictions are forks**: For lookahead, fork state, run sim, collect predictions, discard fork. Real events update actual state.
 
-- Cooldown/charge checks should still raise tagged errors (`SpellOnCooldown`, `PlayerIsCasting`, etc.) for observability, **but the rotation loop must catch them and continue** to the next spell choice so the APL keeps scanning.
-- Avoid nullable numeric fields in events unless the schema allows `null` (use `Schema.NullOr(Schema.Number)` when it truly can be null, otherwise omit the field).
-- Event-source parsing: `parse(raw: unknown[]) -> CombatLogEvent`; never treat a structured event as an array or vice versa.
-- Keep handler priorities explicit and small in number; sort once when registering to avoid per-event sorting churn.
-- Sim driver tasks should store `Effect<void, never, never>`; wrap higher-error effects with `Effect.ignore` or map errors before enqueueing.
-
-Recommended handler set (minimum viable)
-
-- CAST_START / CAST_SUCCESS / CAST_FAILED: set casting flags, clear on success/fail.
-- SPELL_DAMAGE / SPELL_PERIODIC_DAMAGE: apply damage to `UnitService.health.damage`.
-- SPELL_HEAL / SPELL_PERIODIC_HEAL: heal and clamp to max.
-- SPELL_AURA_APPLIED / REMOVED / REFRESH: add/remove aura records (when aura system exists).
-
-Rotation-friendly cast flow (sim mode)
-
-1. Rotation decides a spell → calls `SimDriver.executeCast` with spell metadata.
-2. Sim driver schedules CAST_START (if non-instant), CAST_SUCCESS, and impact events.
-3. Processor runs handlers, updates state, and re-triggers rotation.
-
-Testing / sanity checks
-
-- Run `pnpm dev run <rotation>` in `apps/standalone`; ensure events processed > 0 and `currentTime` advances beyond 0ms.
-- Add a trivial proc (e.g., “Kill Shot buff”) via `CombatLogProcessor.register` to verify handler wiring.
-- CI: `pnpm build` across workspace catches schema/typing drift; favor this over partial filters to avoid flag bleed into nested pnpm commands.
+6. **Feed everything in WoW mode**: No filtering. Let handlers decide what matters.
