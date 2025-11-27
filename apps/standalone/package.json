@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@effect/cli": "^0.72.1",
+    "@effect/platform": "^0.93.3",
     "@effect/platform-node": "^0.100.0",
     "@supabase/supabase-js": "^2.84.0",
     "@wowlab/core": "workspace:*",
