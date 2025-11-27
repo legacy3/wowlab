@@ -21,7 +21,7 @@ const cli = Command.run(mainCommand, {
 
 const program = cli(process.argv).pipe(
   Effect.provide(NodeContext.layer),
-  Effect.provide(Logger.minimumLogLevel(LogLevel.Warning)),
+  Effect.provide(Logger.minimumLogLevel(LogLevel.Info)),
 );
 
 Effect.runPromiseExit(program).then((exit) => {

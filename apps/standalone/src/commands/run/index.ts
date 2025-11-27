@@ -3,42 +3,121 @@ import * as Schemas from "@wowlab/core/Schemas";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
+import * as LogLevel from "effect/LogLevel";
 
 import { loadSpells } from "../../data/spell-loader.js";
 import { createSupabaseClient } from "../../data/supabase.js";
+import { RotationDefinition } from "../../framework/types.js";
 import { rotations } from "../../rotations/index.js";
-import { createRotationRuntime } from "../../runtime/RotationRuntime.js";
+import {
+  createRotationRuntime,
+  RotationRuntimeConfig,
+} from "../../runtime/RotationRuntime.js";
 
-const rotationArgument = Args.text({ name: "rotation" }).pipe(
+const rotationArg = Args.text({ name: "rotation" }).pipe(
   Args.withDescription("The name of the rotation to run"),
   Args.withDefault("beast-mastery"),
 );
 
-const durationOption = Options.integer("duration").pipe(
+const durationOpt = Options.integer("duration").pipe(
   Options.withAlias("d"),
   Options.withDescription("Simulation duration in seconds"),
   Options.withDefault(10),
 );
 
+const iterationsOpt = Options.integer("iterations").pipe(
+  Options.withAlias("n"),
+  Options.withDescription("Number of parallel simulations to run"),
+  Options.withDefault(1),
+);
+
+interface SimResult {
+  casts: number;
+  duration: number;
+  simId: number;
+}
+
+const runSimulation = (
+  simId: number,
+  config: RotationRuntimeConfig,
+  rotation: RotationDefinition,
+  duration: number,
+  silent: boolean,
+): Effect.Effect<SimResult> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() =>
+      createRotationRuntime({
+        ...config,
+        logLevel: silent ? LogLevel.None : config.logLevel,
+      }),
+    ),
+    (runtime) =>
+      Effect.promise(() =>
+        runtime.runPromise(
+          Effect.gen(function* () {
+            const playerId = Schemas.Branded.UnitID(`player-${simId}`);
+            const player = rotation.setupPlayer(playerId, config.spells);
+
+            const unitService = yield* Unit.UnitService;
+            yield* unitService.add(player);
+
+            const stateService = yield* State.StateService;
+
+            let casts = 0;
+            while (true) {
+              const state = yield* stateService.getState();
+              if (state.currentTime >= duration) break;
+              yield* rotation.run(playerId);
+              casts++;
+            }
+
+            return { casts, duration, simId };
+          }),
+        ),
+      ),
+    (runtime) => Effect.promise(() => runtime.dispose()),
+  );
+
+const printResults = (
+  results: SimResult[],
+  elapsed: number,
+): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    const iterations = results.length;
+    const totalCasts = results.reduce((sum, r) => sum + r.casts, 0);
+    const avgCasts = totalCasts / iterations;
+    const throughput = (iterations / elapsed) * 1000;
+
+    yield* Effect.log("");
+    yield* Effect.log("┌─────────────────────────────────────────┐");
+    yield* Effect.log("│           Simulation Results            │");
+    yield* Effect.log("├─────────────────────────────────────────┤");
+    yield* Effect.log(`│  Iterations:    ${String(iterations).padStart(20)}  │`);
+    yield* Effect.log(`│  Duration:      ${String(results[0].duration + "s").padStart(20)}  │`);
+    yield* Effect.log(`│  Elapsed:       ${String(elapsed + "ms").padStart(20)}  │`);
+    yield* Effect.log("├─────────────────────────────────────────┤");
+    yield* Effect.log(`│  Total Casts:   ${String(totalCasts).padStart(20)}  │`);
+    yield* Effect.log(`│  Avg Casts:     ${avgCasts.toFixed(1).padStart(20)}  │`);
+    yield* Effect.log(`│  Throughput:    ${(throughput.toFixed(1) + " sims/s").padStart(20)}  │`);
+    yield* Effect.log("└─────────────────────────────────────────┘");
+  });
+
 export const runCommand = Command.make(
   "run",
-  { duration: durationOption, rotation: rotationArgument },
-  ({ duration, rotation }) =>
+  { duration: durationOpt, iterations: iterationsOpt, rotation: rotationArg },
+  ({ duration, iterations, rotation }) =>
     Effect.gen(function* () {
       const selectedRotation = rotations[rotation as keyof typeof rotations];
 
       if (!selectedRotation) {
         yield* Effect.logError(
-          `Rotation '${rotation}' not found. Available rotations: ${Object.keys(
-            rotations,
-          ).join(", ")}`,
+          `Rotation '${rotation}' not found. Available: ${Object.keys(rotations).join(", ")}`,
         );
         return;
       }
 
       yield* Effect.log(`Loading spells for: ${selectedRotation.name}`);
 
-      // Load spell data from Supabase
       const supabase = yield* createSupabaseClient;
       const spells = yield* Effect.promise(() =>
         loadSpells(supabase, selectedRotation.spellIds),
@@ -46,44 +125,37 @@ export const runCommand = Command.make(
 
       yield* Effect.log(`Loaded ${spells.length} spells`);
 
-      // Create managed runtime and ensure proper disposal
-      yield* Effect.acquireUseRelease(
-        Effect.sync(() => createRotationRuntime({ spells })),
-        (runtime) => {
-          const program = Effect.gen(function* () {
-            yield* Effect.log(`Running rotation: ${selectedRotation.name}`);
-            yield* Effect.log(`Simulation duration: ${duration}s`);
-            yield* Effect.log("---");
+      const config: RotationRuntimeConfig = { spells };
 
-            // Create player unit with spells
-            const playerId = Schemas.Branded.UnitID("player-1");
-            const player = selectedRotation.setupPlayer(playerId, spells);
+      // Always run at least one simulation with full logging
+      yield* Effect.log(`Running rotation: ${selectedRotation.name}`);
+      yield* Effect.log(`Simulation duration: ${duration}s`);
+      yield* Effect.log("---");
 
-            // Register player in state
-            const unitService = yield* Unit.UnitService;
-            yield* unitService.add(player);
+      yield* runSimulation(1, config, selectedRotation, duration, false);
 
-            // Get state service for simulation loop
-            const stateService = yield* State.StateService;
+      yield* Effect.log("---");
 
-            // Simulation loop - re-evaluate rotation from top until duration reached
-            while (true) {
-              const state = yield* stateService.getState();
-              if (state.currentTime >= duration) {
-                break;
-              }
+      // Run parallel simulations if requested
+      if (iterations > 1) {
+        yield* Effect.log(
+          `Running ${iterations} parallel simulations (${duration}s each)...`,
+        );
 
-              // Run one APL evaluation (will cast one spell and advance time)
-              yield* selectedRotation.run(playerId);
-            }
+        const startTime = performance.now();
 
-            yield* Effect.log("---");
-            yield* Effect.log("Rotation complete");
-          });
+        const simEffects = Array.from({ length: iterations }, (_, i) =>
+          runSimulation(i + 1, config, selectedRotation, duration, true),
+        );
 
-          return Effect.promise(() => runtime.runPromise(program));
-        },
-        (runtime) => Effect.promise(() => runtime.dispose()),
-      );
+        const results = yield* Effect.all(simEffects, {
+          concurrency: "unbounded",
+        });
+
+        const elapsed = performance.now() - startTime;
+        yield* printResults(results, elapsed);
+      } else {
+        yield* Effect.log("Simulation complete");
+      }
     }),
 );
