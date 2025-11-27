@@ -1,5 +1,6 @@
-import { Args, Command } from "@effect/cli";
+import { Args, Command, Options } from "@effect/cli";
 import * as Schemas from "@wowlab/core/Schemas";
+import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 
@@ -13,10 +14,16 @@ const rotationArgument = Args.text({ name: "rotation" }).pipe(
   Args.withDefault("beast-mastery"),
 );
 
+const durationOption = Options.integer("duration").pipe(
+  Options.withAlias("d"),
+  Options.withDescription("Simulation duration in seconds"),
+  Options.withDefault(10),
+);
+
 export const runCommand = Command.make(
   "run",
-  { rotation: rotationArgument },
-  ({ rotation }) =>
+  { duration: durationOption, rotation: rotationArgument },
+  ({ duration, rotation }) =>
     Effect.gen(function* () {
       const selectedRotation = rotations[rotation as keyof typeof rotations];
 
@@ -45,6 +52,7 @@ export const runCommand = Command.make(
         (runtime) => {
           const program = Effect.gen(function* () {
             yield* Effect.log(`Running rotation: ${selectedRotation.name}`);
+            yield* Effect.log(`Simulation duration: ${duration}s`);
             yield* Effect.log("---");
 
             // Create player unit with spells
@@ -55,8 +63,19 @@ export const runCommand = Command.make(
             const unitService = yield* Unit.UnitService;
             yield* unitService.add(player);
 
-            // Run the rotation - it will log each cast
-            yield* selectedRotation.run(playerId);
+            // Get state service for simulation loop
+            const stateService = yield* State.StateService;
+
+            // Simulation loop - re-evaluate rotation from top until duration reached
+            while (true) {
+              const state = yield* stateService.getState();
+              if (state.currentTime >= duration) {
+                break;
+              }
+
+              // Run one APL evaluation (will cast one spell and advance time)
+              yield* selectedRotation.run(playerId);
+            }
 
             yield* Effect.log("---");
             yield* Effect.log("Rotation complete");

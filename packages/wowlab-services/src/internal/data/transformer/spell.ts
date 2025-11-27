@@ -153,7 +153,7 @@ export const transformSpell = (
       // Timing
       castTime: Option.isSome(castTime) ? castTime.value.base : 0,
       recoveryTime: Option.isSome(cooldown) ? cooldown.value.recovery : 0,
-      startRecoveryTime: 1500, // Default GCD
+      startRecoveryTime: Option.isSome(cooldown) ? cooldown.value.gcd : 1500,
 
       // Resources
       manaCost,
