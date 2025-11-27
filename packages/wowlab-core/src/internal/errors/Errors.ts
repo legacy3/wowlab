@@ -3,6 +3,13 @@ import * as Data from "effect/Data";
 import * as Entities from "../entities/index.js";
 import * as Branded from "../schemas/Branded.js";
 
+/** Union of all errors that can occur during rotation execution */
+export type RotationError =
+  | NoChargesAvailable
+  | SpellNotFound
+  | SpellOnCooldown
+  | UnitNotFound;
+
 export class AuraNotFound extends Data.TaggedError("AuraNotFound")<{
   readonly auraId: Branded.SpellID;
   readonly unitId: Branded.UnitID;
