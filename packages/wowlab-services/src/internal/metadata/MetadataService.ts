@@ -13,6 +13,7 @@ export interface MetadataService {
   ) => Effect.Effect<Entities.Spell.SpellInfo, Errors.SpellInfoNotFound>;
 }
 
+// eslint-disable-next-line no-redeclare
 export const MetadataService = Context.GenericTag<MetadataService>(
   "@wowlab/services/MetadataService",
 );

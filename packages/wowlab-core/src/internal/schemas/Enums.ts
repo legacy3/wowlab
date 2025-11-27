@@ -1,4 +1,7 @@
+/* eslint-disable no-redeclare */
 /* eslint-disable perfectionist/sort-enums */
+
+// TODO Redo this whole file properly
 import * as Schema from "effect/Schema";
 
 export enum PowerType {

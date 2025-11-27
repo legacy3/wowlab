@@ -46,11 +46,11 @@ export const extractCooldown = (spellId: number, cache: DbcCache) =>
   );
 
 // TODO: Add SpellInterrupts table to DbcCache
-export const extractInterrupts = (spellId: number, cache: DbcCache) =>
+export const extractInterrupts = (_spellId: number, _cache: DbcCache) =>
   Option.none();
 
 // TODO: Add SpellEmpower table to DbcCache
-export const extractEmpower = (spellId: number, cache: DbcCache) =>
+export const extractEmpower = (_spellId: number, _cache: DbcCache) =>
   Option.some({ canEmpower: false, stages: [] });
 
 export const extractCastTime = (

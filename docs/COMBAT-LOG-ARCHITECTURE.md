@@ -39,9 +39,9 @@ Events that match WoW's `COMBAT_LOG_EVENT_UNFILTERED`. Used for:
 
 These use WoW's prefix+suffix structure:
 
-- `SPELL_CAST_SUCCESS` = SPELL prefix + _CAST_SUCCESS suffix
-- `SPELL_DAMAGE` = SPELL prefix + _DAMAGE suffix
-- `SPELL_AURA_APPLIED` = SPELL prefix + _AURA_APPLIED suffix
+- `SPELL_CAST_SUCCESS` = SPELL prefix + \_CAST_SUCCESS suffix
+- `SPELL_DAMAGE` = SPELL prefix + \_DAMAGE suffix
+- `SPELL_AURA_APPLIED` = SPELL prefix + \_AURA_APPLIED suffix
 
 ### Single Internal Event: APL_EVALUATE
 
@@ -58,11 +58,11 @@ The scheduler dedupes APL events (keeps earliest). Spam `scheduleAPL` freely.
 
 ```typescript
 // After processing any combat log event
-yield* scheduleAPL(event.timestamp);
+yield * scheduleAPL(event.timestamp);
 
 // When scheduling cooldown in handler
 const cooldownExpires = event.timestamp + spell.info.cooldown;
-yield* scheduleAPL(cooldownExpires);
+yield * scheduleAPL(cooldownExpires);
 ```
 
 ## WoW Mode: How It Works
@@ -119,12 +119,12 @@ Based on WoW's `CombatLogGetCurrentEventInfo()`.
 
 ```typescript
 interface CombatLogEventBase {
-  timestamp: number;      // Unix time with ms precision
-  subevent: string;       // e.g., "SPELL_DAMAGE"
-  sourceGUID: string;     // Who did it
+  timestamp: number; // Unix time with ms precision
+  subevent: string; // e.g., "SPELL_DAMAGE"
+  sourceGUID: string; // Who did it
   sourceName: string;
-  sourceFlags: number;    // Unit type flags
-  destGUID: string;       // Target
+  sourceFlags: number; // Unit type flags
+  destGUID: string; // Target
   destName: string;
   destFlags: number;
 }
@@ -141,21 +141,21 @@ interface CombatLogEventBase {
 
 ### Suffix Types
 
-| Suffix               | Extra Fields                               |
-| -------------------- | ------------------------------------------ |
-| `_CAST_START`        | (none)                                     |
-| `_CAST_SUCCESS`      | (none)                                     |
-| `_CAST_FAILED`       | failedType                                 |
-| `_DAMAGE`            | amount, overkill, school, critical, etc.   |
-| `_HEAL`              | amount, overhealing, absorbed, critical    |
-| `_AURA_APPLIED`      | auraType ("BUFF" / "DEBUFF"), amount?      |
-| `_AURA_REMOVED`      | auraType, amount?                          |
-| `_AURA_REFRESH`      | auraType                                   |
-| `_AURA_APPLIED_DOSE` | auraType, amount (stack count)             |
-| `_AURA_REMOVED_DOSE` | auraType, amount (stack count)             |
-| `_ENERGIZE`          | amount, powerType                          |
-| `_MISSED`            | missType, amountMissed?                    |
-| `_INTERRUPT`         | extraSpellId, extraSpellName, extraSchool  |
+| Suffix               | Extra Fields                              |
+| -------------------- | ----------------------------------------- |
+| `_CAST_START`        | (none)                                    |
+| `_CAST_SUCCESS`      | (none)                                    |
+| `_CAST_FAILED`       | failedType                                |
+| `_DAMAGE`            | amount, overkill, school, critical, etc.  |
+| `_HEAL`              | amount, overhealing, absorbed, critical   |
+| `_AURA_APPLIED`      | auraType ("BUFF" / "DEBUFF"), amount?     |
+| `_AURA_REMOVED`      | auraType, amount?                         |
+| `_AURA_REFRESH`      | auraType                                  |
+| `_AURA_APPLIED_DOSE` | auraType, amount (stack count)            |
+| `_AURA_REMOVED_DOSE` | auraType, amount (stack count)            |
+| `_ENERGIZE`          | amount, powerType                         |
+| `_MISSED`            | missType, amountMissed?                   |
+| `_INTERRUPT`         | extraSpellId, extraSpellName, extraSchool |
 
 ### Priority Subevents for Rotation Sim
 
@@ -194,8 +194,8 @@ class CombatLogProcessor extends Effect.Service<CombatLogProcessor>()(
         process: (event: CombatLogEvent) =>
           Effect.gen(function* () {
             // Advance time to event timestamp
-            yield* state.updateState(s =>
-              s.set("currentTime", Math.max(s.currentTime, event.timestamp))
+            yield* state.updateState((s) =>
+              s.set("currentTime", Math.max(s.currentTime, event.timestamp)),
             );
 
             // Get handler for this subevent
@@ -278,9 +278,10 @@ const handleCastSuccess = (event: SpellCastSuccess) =>
     const player = yield* getPlayer();
 
     // Clear casting state
-    yield* state.updateState(s =>
-      s.setIn(["units", player.id, "isCasting"], false)
-       .setIn(["units", player.id, "castingSpellId"], null)
+    yield* state.updateState((s) =>
+      s
+        .setIn(["units", player.id, "isCasting"], false)
+        .setIn(["units", player.id, "castingSpellId"], null),
     );
 
     // Start cooldown
@@ -288,11 +289,11 @@ const handleCastSuccess = (event: SpellCastSuccess) =>
     if (spell && spell.info.cooldown > 0) {
       const cooldownExpires = event.timestamp + spell.info.cooldown;
 
-      yield* state.updateState(s =>
+      yield* state.updateState((s) =>
         s.setIn(
           ["units", player.id, "spells", event.spellId, "cooldownExpiry"],
-          cooldownExpires
-        )
+          cooldownExpires,
+        ),
       );
 
       // Schedule APL when cooldown expires
@@ -314,11 +315,11 @@ const handleAuraApplied = (event: SpellAuraApplied) =>
 
     if (existingAura) {
       // Refresh existing aura
-      yield* state.updateState(s =>
+      yield* state.updateState((s) =>
         s.setIn(
           ["units", event.destGUID, "auras", event.spellId, "expiresAt"],
-          event.timestamp + auraInfo.duration
-        )
+          event.timestamp + auraInfo.duration,
+        ),
       );
     } else {
       // Add new aura
@@ -329,8 +330,8 @@ const handleAuraApplied = (event: SpellAuraApplied) =>
         stacks: event.amount ?? 1,
       });
 
-      yield* state.updateState(s =>
-        s.setIn(["units", event.destGUID, "auras", event.spellId], newAura)
+      yield* state.updateState((s) =>
+        s.setIn(["units", event.destGUID, "auras", event.spellId], newAura),
       );
     }
   });
@@ -418,13 +419,13 @@ Barrel exports:
 
 ## What Changes
 
-| Component            | Before                          | After                                 |
-| -------------------- | ------------------------------- | ------------------------------------- |
-| Event format         | Custom EventType enum           | WoW combat log format                 |
-| Event payloads       | Rich domain objects (Spell)     | Primitives (spellId, spellName)       |
-| Internal events      | 4 types (APL, COOLDOWN, etc.)   | 1 type (APL_EVALUATE only)            |
-| Cast flow            | CastQueueService schedules      | SimDriver generates combat log events |
-| Handler trigger      | Per event type                  | Per subevent                          |
+| Component       | Before                        | After                                 |
+| --------------- | ----------------------------- | ------------------------------------- |
+| Event format    | Custom EventType enum         | WoW combat log format                 |
+| Event payloads  | Rich domain objects (Spell)   | Primitives (spellId, spellName)       |
+| Internal events | 4 types (APL, COOLDOWN, etc.) | 1 type (APL_EVALUATE only)            |
+| Cast flow       | CastQueueService schedules    | SimDriver generates combat log events |
+| Handler trigger | Per event type                | Per subevent                          |
 
 ## What Stays The Same
 

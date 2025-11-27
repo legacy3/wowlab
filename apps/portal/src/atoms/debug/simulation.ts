@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
 // TODO This exists so build compiles at the moment
-type SimulationEvent = any;
+type SimulationEvent = Record<string, unknown>;
 
 const simulationResultDataAtom = atom<{
   snapshots: number;

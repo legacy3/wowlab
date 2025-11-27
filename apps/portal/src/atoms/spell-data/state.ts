@@ -3,7 +3,10 @@ import { atomWithRefresh } from "jotai/utils";
 import { supabaseClientAtom } from "@/atoms/supabase";
 
 // Minimal spell shape used by portal; aligns with Supabase rows.
-export type SpellDataFlat = { id: number; name: string } & Record<string, any>;
+export type SpellDataFlat = { id: number; name: string } & Record<
+  string,
+  unknown
+>;
 
 export const spellListAtom = atomWithRefresh(async (get) => {
   const supabase = get(supabaseClientAtom);

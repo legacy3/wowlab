@@ -1,4 +1,3 @@
-import * as Entities from "@wowlab/core/Entities";
 import * as Errors from "@wowlab/core/Errors";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";

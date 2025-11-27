@@ -10,6 +10,7 @@ export interface SpellInfoService {
   ) => Effect.Effect<Entities.Spell.SpellInfo, Errors.SpellInfoNotFound>;
 }
 
+// eslint-disable-next-line no-redeclare
 export const SpellInfoService = Context.GenericTag<SpellInfoService>(
   "@wowlab/services/SpellInfoService",
 );

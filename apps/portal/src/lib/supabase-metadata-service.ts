@@ -4,8 +4,14 @@ import * as Layer from "effect/Layer";
 import * as Context from "effect/Context";
 
 // Minimal local types to keep portal compiling without legacy packages.
-export type SpellDataFlat = { id: number; name: string } & Record<string, any>;
-export type ItemDataFlat = { id: number; name: string } & Record<string, any>;
+export type SpellDataFlat = { id: number; name: string } & Record<
+  string,
+  unknown
+>;
+export type ItemDataFlat = { id: number; name: string } & Record<
+  string,
+  unknown
+>;
 
 export class SpellInfoNotFound extends Error {
   constructor(

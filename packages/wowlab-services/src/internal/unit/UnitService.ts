@@ -26,7 +26,6 @@ export class UnitService extends Effect.Service<UnitService>()("UnitService", {
         damage: (unitId: Schemas.Branded.UnitID, amount: number) =>
           Effect.gen(function* () {
             const unit = yield* accessor.get(unitId);
-            const currentState = yield* state.getState();
             const updatedHealth = unit.health.set(
               "current",
               Math.max(0, unit.health.current - amount),

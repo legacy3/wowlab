@@ -55,7 +55,7 @@ export const transformSpell = (
       Option.map((m) => ({ schoolMask: m.SchoolMask })),
     );
     const cooldown = extractCooldown(spellId, cache);
-    const interrupts = extractInterrupts(spellId, cache);
+    const _interrupts = extractInterrupts(spellId, cache);
     const attributes = pipe(
       misc,
       Option.map((m) => [
@@ -85,7 +85,7 @@ export const transformSpell = (
     const empower = extractEmpower(spellId, cache);
 
     // Cone relies on SpellTargetRestrictions (missing)
-    const cone = Option.none();
+    const _cone = Option.none();
     /*
     pipe(
       first(cache.spellTargetRestrictions.get(spellId)),
@@ -108,7 +108,7 @@ export const transformSpell = (
     );
 
     // Facing relies on SpellCastingRequirements (missing)
-    const facing = Option.none();
+    const _facing = Option.none();
     /*
     pipe(
       first(cache.spellCastingRequirements.get(spellId)),
