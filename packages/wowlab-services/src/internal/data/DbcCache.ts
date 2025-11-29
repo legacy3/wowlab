@@ -2,6 +2,7 @@ import { Dbc } from "@wowlab/core/Schemas";
 import { Map as ImmutableMap } from "immutable";
 
 export interface DbcCache {
+  difficulty: ImmutableMap<number, Dbc.DifficultyRow>;
   item: ImmutableMap<number, Dbc.ItemRow>;
   itemEffect: ImmutableMap<number, Dbc.ItemEffectRow>;
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
@@ -23,6 +24,7 @@ export interface DbcCache {
 }
 
 export interface RawDbcData {
+  difficulty: Dbc.DifficultyRow[];
   item: Dbc.ItemRow[];
   itemEffect: Dbc.ItemEffectRow[];
   itemSparse: Dbc.ItemSparseRow[];
@@ -44,6 +46,7 @@ export interface RawDbcData {
 }
 
 export const createCache = (rawData: RawDbcData): DbcCache => ({
+  difficulty: ImmutableMap(rawData.difficulty.map((row) => [row.ID, row])),
   item: ImmutableMap(rawData.item.map((row) => [row.ID, row])),
   itemEffect: ImmutableMap(rawData.itemEffect.map((row) => [row.ID, row])),
   itemSparse: ImmutableMap(rawData.itemSparse.map((row) => [row.ID, row])),

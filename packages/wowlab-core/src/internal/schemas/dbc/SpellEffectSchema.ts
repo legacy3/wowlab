@@ -5,6 +5,7 @@ import * as Branded from "../Branded.js";
 export const SpellEffectRowSchema = Schema.Struct({
   BonusCoefficientFromAP: Schema.Number,
   Coefficient: Schema.Number,
+  DifficultyID: Schema.Number,
   Effect: Schema.Number,
   EffectAmplitude: Schema.Number,
   EffectAttributes: Schema.Number,

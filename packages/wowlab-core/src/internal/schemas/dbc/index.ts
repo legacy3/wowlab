@@ -1,3 +1,4 @@
+export * from "./DifficultySchema.js";
 export * from "./ItemEffectSchema.js";
 export * from "./ItemSchema.js";
 export * from "./ItemSparseSchema.js";

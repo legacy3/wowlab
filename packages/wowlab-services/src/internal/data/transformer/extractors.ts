@@ -158,3 +158,95 @@ export const extractClassOptions = (spellId: number, cache: DbcCache) =>
       spellClassSet: o.SpellClassSet,
     })),
   );
+
+/**
+ * Get spell effects for a specific difficulty, walking the fallback chain if needed.
+ *
+ * The difficulty fallback chain works like this:
+ * - M+ (8) → Mythic Dungeon (23) → Heroic Dungeon (2) → Normal Dungeon (1) → None (0)
+ * - Mythic Raid (16) → Heroic Raid (15) → Normal Raid (14) → None (0)
+ * - LFR (17) → Normal Raid (14) → None (0)
+ *
+ * If no effects exist for the requested difficulty, we walk down the fallback chain
+ * until we find effects or reach DifficultyID 0 (None/default).
+ */
+export const getEffectsForDifficulty = (
+  effects: Dbc.SpellEffectRow[],
+  effectType: number,
+  difficultyId: number,
+  cache: DbcCache,
+): Dbc.SpellEffectRow[] => {
+  // Filter effects by effect type AND difficulty
+  const filtered = effects.filter(
+    (e) => e.Effect === effectType && e.DifficultyID === difficultyId,
+  );
+
+  // If we found effects or we're at base difficulty (0), return what we have
+  if (filtered.length > 0 || difficultyId === 0) {
+    return filtered;
+  }
+
+  // Walk the fallback chain
+  const difficultyRow = cache.difficulty.get(difficultyId);
+  if (!difficultyRow) {
+    // Unknown difficulty, fall back to base
+    return effects.filter(
+      (e) => e.Effect === effectType && e.DifficultyID === 0,
+    );
+  }
+
+  const nextDifficultyId = difficultyRow.FallbackDifficultyID;
+
+  // Prevent infinite loops (fallback points to self or is same as current)
+  if (nextDifficultyId === difficultyId) {
+    return filtered;
+  }
+
+  // Recurse down the fallback chain
+  return getEffectsForDifficulty(effects, effectType, nextDifficultyId, cache);
+};
+
+/**
+ * Check if a spell has AOE damage effects for a specific difficulty.
+ * Walks the difficulty fallback chain to find applicable effects.
+ */
+export const hasAoeDamageEffect = (
+  effects: Dbc.SpellEffectRow[],
+  difficultyId: number,
+  cache: DbcCache,
+): boolean => {
+  const damageEffects = getEffectsForDifficulty(
+    effects,
+    Enums.SpellEffect.SchoolDamage,
+    difficultyId,
+    cache,
+  );
+  const envDamageEffects = getEffectsForDifficulty(
+    effects,
+    Enums.SpellEffect.EnvironmentalDamage,
+    difficultyId,
+    cache,
+  );
+
+  return [...damageEffects, ...envDamageEffects].some(
+    (e) => e.EffectRadiusIndex_0 > 0 || e.EffectRadiusIndex_1 > 0,
+  );
+};
+
+/**
+ * Get the variance for damage effects at a specific difficulty.
+ */
+export const getVarianceForDifficulty = (
+  effects: Dbc.SpellEffectRow[],
+  difficultyId: number,
+  cache: DbcCache,
+): number => {
+  const damageEffects = getEffectsForDifficulty(
+    effects,
+    Enums.SpellEffect.SchoolDamage,
+    difficultyId,
+    cache,
+  );
+
+  return damageEffects[0]?.Variance ?? 0;
+};
