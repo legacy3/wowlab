@@ -2,14 +2,14 @@
 
 ## Current Performance (Nov 2025)
 
-| Iterations | Workers | Throughput | Time | Status |
-|------------|---------|------------|------|--------|
-| 100,000 | 8 | 13,692 sims/s | 7.3s | ✅ |
-| 1,000,000 | 16 | 23,097 sims/s | 43s | ✅ |
-| 5,000,000 | 16 | 24,923 sims/s | 3.3min | ✅ |
-| 10,000,000 | 16 | 24,332 sims/s | 6.8min | ✅ |
-| 16,000,000 | 16 | 24,611 sims/s | 10.8min | ✅ |
-| 20,000,000 | 16 | - | - | ❌ Crash ~40% |
+| Iterations | Workers | Throughput    | Time    | Status        |
+| ---------- | ------- | ------------- | ------- | ------------- |
+| 100,000    | 8       | 13,692 sims/s | 7.3s    | ✅            |
+| 1,000,000  | 16      | 23,097 sims/s | 43s     | ✅            |
+| 5,000,000  | 16      | 24,923 sims/s | 3.3min  | ✅            |
+| 10,000,000 | 16      | 24,332 sims/s | 6.8min  | ✅            |
+| 16,000,000 | 16      | 24,611 sims/s | 10.8min | ✅            |
+| 20,000,000 | 16      | -             | -       | ❌ Crash ~40% |
 
 **Target:** Beat Raidbots (16M+ permutations)
 
@@ -37,19 +37,21 @@ Main Thread                    Worker Threads (N)
 ### 🔴 HIGH IMPACT
 
 #### 1. Batch Size Tuning
+
 **Current:** Fixed 100 sims/batch
 **Optimal:** 500-2000 sims/batch for 16M+ iterations
 
 ```typescript
 // src/commands/run/index.ts
 const batchSizeOpt = Options.integer("batch-size").pipe(
-  Options.withDefault(500),  // Increase from 100
+  Options.withDefault(500), // Increase from 100
 );
 ```
 
 **Why:** Reduces message passing overhead. At 100 sims/batch, 16M iterations = 160k batches. At 1000 sims/batch = 16k batches.
 
 #### 2. Worker Pool Concurrency Config
+
 **Current:** No concurrency setting
 
 ```typescript
@@ -64,6 +66,7 @@ const pool = yield* Worker.makePool<...>({
 **Why:** Without explicit concurrency, Effect uses unbounded which can cause memory pressure.
 
 #### 3. Avoid Effect.promise() in Hot Path
+
 **Current:** Each sim wraps `runtime.runPromise()` in `Effect.promise()`
 
 ```typescript
@@ -76,6 +79,7 @@ const result = yield* Effect.promise(() =>
 **Better:** Batch multiple sims within a single `runPromise` call or use `runtime.runSync` if possible.
 
 #### 4. Increase Worker Heap Size
+
 **Current:** Default Node heap (~2GB)
 
 ```javascript
@@ -89,6 +93,7 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm start run ...
 ### 🟡 MEDIUM IMPACT
 
 #### 5. Effect Stream for Result Processing
+
 **Current:** Wave-based imperative loop
 
 ```typescript
@@ -97,17 +102,12 @@ import * as Stream from "effect/Stream";
 import * as Sink from "effect/Sink";
 
 const resultStream = Stream.fromIterable(batches).pipe(
-  Stream.mapConcurrently(workerCount * 4)((batch) =>
-    pool.executeEffect(batch)
-  ),
+  Stream.mapConcurrently(workerCount * 4)((batch) => pool.executeEffect(batch)),
   Stream.flatMap((result) => Stream.fromIterable(result.results)),
-  Stream.runFold(
-    { completedSims: 0, totalCasts: 0 },
-    (stats, result) => ({
-      completedSims: stats.completedSims + 1,
-      totalCasts: stats.totalCasts + result.casts,
-    })
-  )
+  Stream.runFold({ completedSims: 0, totalCasts: 0 }, (stats, result) => ({
+    completedSims: stats.completedSims + 1,
+    totalCasts: stats.totalCasts + result.casts,
+  })),
 );
 ```
 
@@ -124,7 +124,9 @@ const computeOptimalBatchSize = (iterations: number): number => {
 
 const computeWaveSize = (workerCount: number, iterations: number): number => {
   const targetWaves = Math.max(50, Math.min(200, iterations / 100_000));
-  return Math.ceil(iterations / targetWaves / computeOptimalBatchSize(iterations));
+  return Math.ceil(
+    iterations / targetWaves / computeOptimalBatchSize(iterations),
+  );
 };
 ```
 
@@ -158,19 +160,22 @@ const player = rotation.setupPlayer(playerId, spells);
 ### 🟢 LOWER IMPACT
 
 #### 9. Worker Recycling for Very Long Runs
+
 For 20M+ iterations, workers accumulate memory. Periodically terminate and respawn:
 
 ```typescript
 // Every N batches, check memory and recycle if needed
 if (batchId % 10000 === 0) {
   const usage = process.memoryUsage();
-  if (usage.heapUsed > 2 * 1024 * 1024 * 1024) { // 2GB
+  if (usage.heapUsed > 2 * 1024 * 1024 * 1024) {
+    // 2GB
     // Signal worker to restart
   }
 }
 ```
 
 #### 10. SharedArrayBuffer for Stats
+
 Avoid message passing for simple counters:
 
 ```typescript
@@ -181,6 +186,7 @@ const stats = new Int32Array(statsBuffer);
 ```
 
 #### 11. WebAssembly for Simulation Core
+
 If simulation logic is CPU-bound, compile hot paths to WASM.
 
 ---

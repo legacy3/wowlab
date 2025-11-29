@@ -1,30 +1,36 @@
 import { Args, Command, Options } from "@effect/cli";
-import { Worker, WorkerError } from "@effect/platform";
 import { NodeWorker } from "@effect/platform-node";
+import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
+import * as Worker from "@effect/platform/Worker";
+import * as WorkerError from "@effect/platform/WorkerError";
+import { RpcClient, RpcSerialization } from "@effect/rpc";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
+import * as Option from "effect/Option";
 import * as Scope from "effect/Scope";
 import * as os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Worker as NodeWorkerThread } from "node:worker_threads";
 
-import { loadSpells } from "../../data/spell-loader.js";
-import { createSupabaseClient } from "../../data/supabase.js";
 import type { RotationDefinition } from "../../framework/types.js";
-import { rotations } from "../../rotations/index.js";
-import {
-  createRotationRuntime,
-  type RotationRuntimeConfig,
-} from "../../runtime/RotationRuntime.js";
 import type {
   SimulationBatch,
   SimulationResult,
   WorkerInit,
 } from "../../workers/types.js";
+
+import { loadSpells } from "../../data/spell-loader.js";
+import { supabaseClient } from "../../data/supabase.js";
+import { rotations } from "../../rotations/index.js";
+import { SimulationRpcs } from "../../rpc/requests.js";
+import {
+  createRotationRuntime,
+  type RotationRuntimeConfig,
+} from "../../runtime/RotationRuntime.js";
 
 const rotationArg = Args.text({ name: "rotation" }).pipe(
   Args.withDescription("The name of the rotation to run"),
@@ -55,6 +61,14 @@ const batchSizeOpt = Options.integer("batch-size").pipe(
   Options.withAlias("b"),
   Options.withDescription("Simulations per worker batch"),
   Options.withDefault(100),
+);
+
+const serverOpt = Options.text("server").pipe(
+  Options.withAlias("s"),
+  Options.withDescription(
+    "Remote server URL (e.g., http://192.168.1.100:3847). If provided, runs simulation on remote daemon instead of locally.",
+  ),
+  Options.optional,
 );
 
 interface SimResult {
@@ -151,6 +165,7 @@ const printAggregatedResults = (
   simDuration: number,
   elapsed: number,
   workerCount: number,
+  remote?: string,
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
     const avgCasts = stats.totalCasts / stats.completedSims;
@@ -172,9 +187,15 @@ const printAggregatedResults = (
     yield* Effect.log(
       `│  Elapsed:       ${String((elapsed / 1000).toFixed(2) + "s").padStart(20)}  │`,
     );
-    yield* Effect.log(
-      `│  Workers:       ${String(workerCount).padStart(20)}  │`,
-    );
+    if (remote) {
+      yield* Effect.log(
+        `│  Server:        ${remote.padStart(20).slice(-20)}  │`,
+      );
+    } else {
+      yield* Effect.log(
+        `│  Workers:       ${String(workerCount).padStart(20)}  │`,
+      );
+    }
     yield* Effect.log("├─────────────────────────────────────────┤");
     yield* Effect.log(
       `│  Total Casts:   ${formatNum(stats.totalCasts).padStart(20)}  │`,
@@ -219,9 +240,9 @@ const runWithWorkers = (
 
     // Initialize all workers with spell data (sent once per worker)
     const initMessage: WorkerInit = {
-      type: "init",
       rotationName,
       spells,
+      type: "init",
     };
 
     // Send init to each worker
@@ -261,13 +282,13 @@ const runWithWorkers = (
         const simsInBatch = Math.min(batchSize, iterations - startSim);
 
         waveBatches.push({
-          type: "batch",
           batchId: batchId++,
           duration,
           simIds: Array.from(
             { length: simsInBatch },
             (_, j) => startSim + j + 1,
           ),
+          type: "batch",
         });
       }
 
@@ -306,7 +327,57 @@ const runWithWorkers = (
       }
     }
 
-    return { stats, sampleResults };
+    return { sampleResults, stats };
+  });
+
+// Run simulation on a remote server via RPC
+const runRemoteSimulation = (
+  serverUrl: string,
+  rotation: string,
+  duration: number,
+  iterations: number,
+  batchSize: number,
+): Effect.Effect<
+  { stats: AggregatedStats; elapsedMs: number },
+  string,
+  never
+> =>
+  Effect.gen(function* () {
+    yield* Effect.log(`Connecting to remote server: ${serverUrl}`);
+
+    // Create RPC client layer
+    const ProtocolLive = RpcClient.layerProtocolHttp({
+      url: `${serverUrl}/rpc`,
+    }).pipe(
+      Layer.provide([FetchHttpClient.layer, RpcSerialization.layerNdjson]),
+    );
+
+    const result = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const client = yield* RpcClient.make(SimulationRpcs);
+
+        // Run the simulation
+        const response = yield* client.RunSimulation({
+          batchSize,
+          duration,
+          iterations,
+          rotation,
+        });
+
+        return {
+          elapsedMs: response.stats.elapsedMs,
+          stats: {
+            completedSims: response.stats.completedSims,
+            totalCasts: response.stats.totalCasts,
+          },
+        };
+      }),
+    ).pipe(
+      Effect.provide(ProtocolLive),
+      Effect.mapError((e) => String(e)),
+    );
+
+    return result;
   });
 
 export const runCommand = Command.make(
@@ -316,10 +387,52 @@ export const runCommand = Command.make(
     duration: durationOpt,
     iterations: iterationsOpt,
     rotation: rotationArg,
+    server: serverOpt,
     workers: workersOpt,
   },
-  ({ batchSize, duration, iterations, rotation, workers }) =>
+  ({ batchSize, duration, iterations, rotation, server, workers }) =>
     Effect.gen(function* () {
+      // Check if we're using a remote server
+      if (Option.isSome(server)) {
+        const serverUrl = server.value;
+
+        yield* Effect.log(`Running simulation remotely on: ${serverUrl}`);
+        yield* Effect.log(`Rotation: ${rotation}`);
+        yield* Effect.log(`Duration: ${duration}s`);
+        yield* Effect.log(`Iterations: ${iterations}`);
+        yield* Effect.log("---");
+
+        const startTime = performance.now();
+        const result = yield* runRemoteSimulation(
+          serverUrl,
+          rotation,
+          duration,
+          iterations,
+          batchSize,
+        ).pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logError(`Remote simulation failed: ${error}`);
+              return yield* Effect.fail(error);
+            }),
+          ),
+        );
+
+        const totalElapsed = performance.now() - startTime;
+        yield* printAggregatedResults(
+          result.stats,
+          duration,
+          result.elapsedMs,
+          0,
+          serverUrl,
+        );
+        yield* Effect.log(
+          `Total time (including network): ${(totalElapsed / 1000).toFixed(2)}s`,
+        );
+        return;
+      }
+
+      // Local execution
       const selectedRotation = rotations[rotation as keyof typeof rotations];
 
       if (!selectedRotation) {
@@ -331,9 +444,8 @@ export const runCommand = Command.make(
 
       yield* Effect.log(`Loading spells for: ${selectedRotation.name}`);
 
-      const supabase = yield* createSupabaseClient;
       const spells = yield* Effect.promise(() =>
-        loadSpells(supabase, selectedRotation.spellIds),
+        loadSpells(supabaseClient, selectedRotation.spellIds),
       );
 
       yield* Effect.log(`Loaded ${spells.length} spells`);

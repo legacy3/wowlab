@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+**/build
+**/*.log
+.git
+.gitignore
+.DS_Store
+*.md
+!README.md
+.env
+.env.*
+apps/portal
+apps/cli
+apps/mcp-server
+apps/proof-of-concept
+docs

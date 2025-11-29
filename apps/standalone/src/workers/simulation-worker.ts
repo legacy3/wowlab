@@ -1,5 +1,5 @@
-import { WorkerRunner } from "@effect/platform";
 import { NodeWorkerRunner } from "@effect/platform-node";
+import * as WorkerRunner from "@effect/platform/WorkerRunner";
 import * as Entities from "@wowlab/core/Entities";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
@@ -13,7 +13,6 @@ import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 
-import { BeastMasteryRotation } from "../rotations/beast-mastery.js";
 import type {
   SimulationBatch,
   SimulationRequest,
@@ -21,6 +20,8 @@ import type {
   SingleSimResult,
   WorkerInit,
 } from "./types.js";
+
+import { BeastMasteryRotation } from "../rotations/beast-mastery.js";
 
 const rotations = {
   "beast-mastery": BeastMasteryRotation,
@@ -37,7 +38,7 @@ let workerState: {
 } | null = null;
 
 const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
-  Effect.gen(function* () {
+  Effect.sync(() => {
     const rotation = rotations[init.rotationName as keyof typeof rotations];
     if (!rotation) {
       return {

@@ -6,14 +6,14 @@ Design document for pre-computing simulation state to reduce per-simulation over
 
 Current simulation initialization performs significant redundant work **per-simulation**:
 
-| Work | Location | Cost | Frequency |
-|------|----------|------|-----------|
-| `spells.find()` × 4 | `setupPlayer` | O(n) × 4 | Per-sim |
-| `SpellInfo.create()` × 4 | `setupPlayer` | Object allocation | Per-sim |
-| `Spell.create()` × 4 | `setupPlayer` | Object allocation | Per-sim |
-| `Unit.create()` with defaults | `setupPlayer` | Object allocation + defaults | Per-sim |
-| `createGameState()` | `runBatch` | Object allocation | Per-sim |
-| Player ID string concat | `runBatch` | String allocation | Per-sim |
+| Work                          | Location      | Cost                         | Frequency |
+| ----------------------------- | ------------- | ---------------------------- | --------- |
+| `spells.find()` × 4           | `setupPlayer` | O(n) × 4                     | Per-sim   |
+| `SpellInfo.create()` × 4      | `setupPlayer` | Object allocation            | Per-sim   |
+| `Spell.create()` × 4          | `setupPlayer` | Object allocation            | Per-sim   |
+| `Unit.create()` with defaults | `setupPlayer` | Object allocation + defaults | Per-sim   |
+| `createGameState()`           | `runBatch`    | Object allocation            | Per-sim   |
+| Player ID string concat       | `runBatch`    | String allocation            | Per-sim   |
 
 For batch runs of 100,000+ simulations, this adds up to significant overhead. Profiling shows ~99% of time is spent in bootstrapping, not actual simulation logic.
 
@@ -174,9 +174,15 @@ export class SpellCatalog extends Effect.Service<SpellCatalog>()(
     effect: Effect.gen(function* () {
       // Will be configured via Layer
       return {
-        getSpellData: () => { throw new Error("Not configured"); },
-        getSpellEntity: () => { throw new Error("Not configured"); },
-        getRotationSpells: () => { throw new Error("Not configured"); },
+        getSpellData: () => {
+          throw new Error("Not configured");
+        },
+        getSpellEntity: () => {
+          throw new Error("Not configured");
+        },
+        getRotationSpells: () => {
+          throw new Error("Not configured");
+        },
       };
     }),
   },
@@ -184,29 +190,30 @@ export class SpellCatalog extends Effect.Service<SpellCatalog>()(
 
 export const makeSpellCatalog = (config: SpellCatalogConfig) => {
   // Pre-index spell data by ID - O(n) once
-  const spellDataMap = new Map(
-    config.spells.map((s) => [s.id, s])
-  );
+  const spellDataMap = new Map(config.spells.map((s) => [s.id, s]));
 
   // Pre-create SpellInfo for rotation spells
   const spellInfoMap = new Map(
     config.rotationSpellIds.map((id) => {
       const data = spellDataMap.get(id)!;
       return [id, SpellInfo.create({ ...data, modifiers: [] })];
-    })
+    }),
   );
 
   // Pre-create Spell entities for rotation spells
   const spellEntityMap = Map(
     config.rotationSpellIds.map((id) => {
       const info = spellInfoMap.get(id)!;
-      const spell = Spell.create({
-        charges: info.maxCharges || 1,
-        cooldownExpiry: 0,
-        info,
-      }, 0);
+      const spell = Spell.create(
+        {
+          charges: info.maxCharges || 1,
+          cooldownExpiry: 0,
+          info,
+        },
+        0,
+      );
       return [Branded.SpellID(id), spell];
-    })
+    }),
   );
 
   return Layer.succeed(SpellCatalog, {
@@ -252,7 +259,8 @@ export class UnitTemplates extends Effect.Service<UnitTemplates>()(
         player,
         raidMemberTemplate,
         spawnRaidMember: (index: number) =>
-          raidMemberTemplate.set("id", Branded.UnitID(`raid-${index}`))
+          raidMemberTemplate
+            .set("id", Branded.UnitID(`raid-${index}`))
             .set("name", `Raid Member ${index}`),
       };
     }),
@@ -265,36 +273,35 @@ export class UnitTemplates extends Effect.Service<UnitTemplates>()(
 ```typescript
 // packages/wowlab-services/src/internal/warmstate/WarmState.ts
 
-export class WarmState extends Effect.Service<WarmState>()(
-  "WarmState",
-  {
-    dependencies: [UnitTemplates.Default, StateService.Default],
-    effect: Effect.gen(function* () {
-      const templates = yield* UnitTemplates;
-      const stateService = yield* StateService;
+export class WarmState extends Effect.Service<WarmState>()("WarmState", {
+  dependencies: [UnitTemplates.Default, StateService.Default],
+  effect: Effect.gen(function* () {
+    const templates = yield* UnitTemplates;
+    const stateService = yield* StateService;
 
-      // Pre-build base game state with player
-      const baseGameState = createGameState()
-        .setIn(["units", templates.player.id], templates.player);
+    // Pre-build base game state with player
+    const baseGameState = createGameState().setIn(
+      ["units", templates.player.id],
+      templates.player,
+    );
 
-      return {
-        baseGameState,
+    return {
+      baseGameState,
 
-        reset: () => stateService.setState(baseGameState),
+      reset: () => stateService.setState(baseGameState),
 
-        resetWithRaid: (raidSize: number) =>
-          Effect.gen(function* () {
-            let state = baseGameState;
-            for (let i = 1; i <= raidSize; i++) {
-              const member = templates.spawnRaidMember(i);
-              state = state.setIn(["units", member.id], member);
-            }
-            yield* stateService.setState(state);
-          }),
-      };
-    }),
-  },
-) {}
+      resetWithRaid: (raidSize: number) =>
+        Effect.gen(function* () {
+          let state = baseGameState;
+          for (let i = 1; i <= raidSize; i++) {
+            const member = templates.spawnRaidMember(i);
+            state = state.setIn(["units", member.id], member);
+          }
+          yield* stateService.setState(state);
+        }),
+    };
+  }),
+}) {}
 ```
 
 ### Updated Worker Init
@@ -329,8 +336,8 @@ const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
         Effect.gen(function* () {
           const warmState = yield* WarmState;
           yield* warmState.reset(); // Initialize state
-        })
-      )
+        }),
+      ),
     );
 
     workerState = { runtime, rotation };
@@ -394,14 +401,14 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
 
 ### Expected Gains
 
-| Optimization | Estimated Impact |
-|--------------|------------------|
-| Map lookup instead of array.find() | ~5-10% |
-| Reuse SpellInfo/Spell templates | ~10-15% |
-| Pre-built Unit template | ~5-10% |
-| Pre-built GameState with player | ~10-15% |
-| Static player ID | Enables above |
-| **Combined** | **~25-40%** |
+| Optimization                       | Estimated Impact |
+| ---------------------------------- | ---------------- |
+| Map lookup instead of array.find() | ~5-10%           |
+| Reuse SpellInfo/Spell templates    | ~10-15%          |
+| Pre-built Unit template            | ~5-10%           |
+| Pre-built GameState with player    | ~10-15%          |
+| Static player ID                   | Enables above    |
+| **Combined**                       | **~25-40%**      |
 
 ## Cooldown Reset Consideration
 

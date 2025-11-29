@@ -1,6 +1,5 @@
 // Bootstrap for worker threads - uses tsx to run the actual worker
 import { register } from "tsx/esm/api";
-import { workerData } from "node:worker_threads";
 
 // Register tsx for TypeScript support
 register();
