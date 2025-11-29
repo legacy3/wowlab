@@ -250,3 +250,86 @@ export const getVarianceForDifficulty = (
 
   return damageEffects[0]?.Variance ?? 0;
 };
+
+/**
+ * Configuration for damage calculation.
+ */
+export interface DamageConfig {
+  /** Content tuning ID for the spell's context (e.g., dungeon, raid) */
+  contentTuningId: number;
+  /** Current expansion ID (e.g., 10 for TWW) */
+  expansion: number;
+  /** Character level */
+  level: number;
+  /** Current M+ season ID */
+  mythicPlusSeasonId: number;
+}
+
+/**
+ * Default damage config for TWW Season 2.
+ */
+export const DEFAULT_DAMAGE_CONFIG: DamageConfig = {
+  contentTuningId: 1279, // Backup/default content tuning
+  expansion: 10, // The War Within
+  level: 80,
+  mythicPlusSeasonId: 103,
+};
+
+/**
+ * Calculate the base damage for a spell effect using expected stat scaling.
+ *
+ * This replicates the damage calculation from the game client:
+ * 1. Find the ExpectedStat row for the given level/expansion
+ * 2. Find applicable ContentTuningXExpected entries for the content tuning + M+ season
+ * 3. Apply all ExpectedStatMod multipliers
+ * 4. Scale the effect's base points by the final multiplier
+ */
+export const getDamage = (
+  effect: Dbc.SpellEffectRow,
+  cache: DbcCache,
+  config: DamageConfig = DEFAULT_DAMAGE_CONFIG,
+): number => {
+  const { contentTuningId, expansion, level, mythicPlusSeasonId } = config;
+  const invalidExpansion = -2;
+
+  // Find the expected stat for this level/expansion
+  const matchingExpectedStats = cache.expectedStat
+    .filter(
+      (stat) =>
+        stat.Lvl === level &&
+        (stat.ExpansionID === expansion ||
+          stat.ExpansionID === invalidExpansion),
+    )
+    .sort((a, b) => b.ExpansionID - a.ExpansionID);
+
+  if (matchingExpectedStats.length === 0) {
+    return 0;
+  }
+
+  const expectedStat = matchingExpectedStats[0];
+
+  // Find valid content tuning x expected entries for this content tuning and M+ season
+  const validXExpecteds = cache.contentTuningXExpected.filter(
+    (x) =>
+      x.ContentTuningID === contentTuningId &&
+      (x.MinMythicPlusSeasonID === 0 ||
+        mythicPlusSeasonId >= x.MinMythicPlusSeasonID) &&
+      (x.MaxMythicPlusSeasonID === 0 ||
+        mythicPlusSeasonId < x.MaxMythicPlusSeasonID),
+  );
+
+  // Get the ExpectedStatMod entries and calculate the final multiplier
+  const mods = validXExpecteds
+    .map((x) => cache.expectedStatMod.get(x.ExpectedStatModID))
+    .filter((mod): mod is Dbc.ExpectedStatModRow => mod !== undefined);
+
+  let multiplier = expectedStat.CreatureSpellDamage;
+  for (const mod of mods) {
+    multiplier *= mod.CreatureSpellDamageMod;
+  }
+
+  // Calculate final damage value
+  const value = (multiplier / 100) * effect.EffectBasePointsF;
+
+  return Math.round(value);
+};

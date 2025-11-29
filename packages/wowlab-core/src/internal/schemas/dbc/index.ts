@@ -1,4 +1,7 @@
+export * from "./ContentTuningXExpectedSchema.js";
 export * from "./DifficultySchema.js";
+export * from "./ExpectedStatModSchema.js";
+export * from "./ExpectedStatSchema.js";
 export * from "./ItemEffectSchema.js";
 export * from "./ItemSchema.js";
 export * from "./ItemSparseSchema.js";
