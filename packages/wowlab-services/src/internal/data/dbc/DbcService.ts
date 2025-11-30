@@ -55,6 +55,17 @@ export interface DbcServiceInterface {
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRow | undefined, DbcError>;
 
+  readonly getSpellAuraOptions: (
+    spellId: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellAuraOptionsRow | undefined, DbcError>;
+
+  readonly getSpellCastingRequirements: (
+    spellId: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.SpellCastingRequirementsRow | undefined,
+    DbcError
+  >;
+
   readonly getSpellCastTimes: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.SpellCastTimesRow | undefined, DbcError>;
@@ -107,6 +118,17 @@ export interface DbcServiceInterface {
     spellId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellPowerRow>, DbcError>;
 
+  readonly getSpellProcsPerMinute: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellProcsPerMinuteRow | undefined, DbcError>;
+
+  readonly getSpellProcsPerMinuteMods: (
+    spellProcsPerMinuteId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteModRow>,
+    DbcError
+  >;
+
   readonly getSpellRadius: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRadiusRow | undefined, DbcError>;
@@ -114,6 +136,13 @@ export interface DbcServiceInterface {
   readonly getSpellRange: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRangeRow | undefined, DbcError>;
+
+  readonly getSpellTargetRestrictions: (
+    spellId: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.SpellTargetRestrictionsRow | undefined,
+    DbcError
+  >;
 }
 
 export class DbcService extends Context.Tag("@wowlab/services/DbcService")<

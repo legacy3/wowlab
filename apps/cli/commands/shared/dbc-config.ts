@@ -14,6 +14,8 @@ export const DBC_DATA_DIR = path.join(
 export const SPELL_TABLES = {
   manifestInterfaceData: { file: "ManifestInterfaceData.csv", schema: Dbc.ManifestInterfaceDataRowSchema },
   spell: { file: "Spell.csv", schema: Dbc.SpellRowSchema },
+  spellAuraOptions: { file: "SpellAuraOptions.csv", schema: Dbc.SpellAuraOptionsRowSchema },
+  spellCastingRequirements: { file: "SpellCastingRequirements.csv", schema: Dbc.SpellCastingRequirementsRowSchema },
   spellCastTimes: { file: "SpellCastTimes.csv", schema: Dbc.SpellCastTimesRowSchema },
   spellCategories: { file: "SpellCategories.csv", schema: Dbc.SpellCategoriesRowSchema },
   spellCategory: { file: "SpellCategory.csv", schema: Dbc.SpellCategoryRowSchema },
@@ -27,8 +29,11 @@ export const SPELL_TABLES = {
   spellMisc: { file: "SpellMisc.csv", schema: Dbc.SpellMiscRowSchema },
   spellName: { file: "SpellName.csv", schema: Dbc.SpellNameRowSchema },
   spellPower: { file: "SpellPower.csv", schema: Dbc.SpellPowerRowSchema },
+  spellProcsPerMinute: { file: "SpellProcsPerMinute.csv", schema: Dbc.SpellProcsPerMinuteRowSchema },
+  spellProcsPerMinuteMod: { file: "SpellProcsPerMinuteMod.csv", schema: Dbc.SpellProcsPerMinuteModRowSchema },
   spellRadius: { file: "SpellRadius.csv", schema: Dbc.SpellRadiusRowSchema },
   spellRange: { file: "SpellRange.csv", schema: Dbc.SpellRangeRowSchema },
+  spellTargetRestrictions: { file: "SpellTargetRestrictions.csv", schema: Dbc.SpellTargetRestrictionsRowSchema },
 } as const;
 
 // prettier-ignore

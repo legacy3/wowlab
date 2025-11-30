@@ -65,6 +65,12 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getSpell: (spellId) => Effect.succeed(cache.spell.get(spellId)),
 
+    getSpellAuraOptions: (spellId) =>
+      Effect.succeed(cache.spellAuraOptions.get(spellId)),
+
+    getSpellCastingRequirements: (spellId) =>
+      Effect.succeed(cache.spellCastingRequirements.get(spellId)),
+
     getSpellCastTimes: (id) => Effect.succeed(cache.spellCastTimes.get(id)),
 
     getSpellCategories: (spellId) =>
@@ -99,7 +105,18 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellPower: (spellId) =>
       Effect.succeed(cache.spellPower.get(spellId) ?? []),
 
+    getSpellProcsPerMinute: (id) =>
+      Effect.succeed(cache.spellProcsPerMinute.get(id)),
+
+    getSpellProcsPerMinuteMods: (spellProcsPerMinuteId) =>
+      Effect.succeed(
+        cache.spellProcsPerMinuteMod.get(spellProcsPerMinuteId) ?? [],
+      ),
+
     getSpellRadius: (id) => Effect.succeed(cache.spellRadius.get(id)),
 
     getSpellRange: (id) => Effect.succeed(cache.spellRange.get(id)),
+
+    getSpellTargetRestrictions: (spellId) =>
+      Effect.succeed(cache.spellTargetRestrictions.get(spellId)),
   } satisfies DbcServiceInterface);

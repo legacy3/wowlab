@@ -12,6 +12,11 @@ export interface DbcCache {
   itemXItemEffect: ImmutableMap<number, Dbc.ItemXItemEffectRow[]>;
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
   spell: ImmutableMap<number, Dbc.SpellRow>;
+  spellAuraOptions: ImmutableMap<number, Dbc.SpellAuraOptionsRow>;
+  spellCastingRequirements: ImmutableMap<
+    number,
+    Dbc.SpellCastingRequirementsRow
+  >;
   spellCastTimes: ImmutableMap<number, Dbc.SpellCastTimesRow>;
   spellCategories: ImmutableMap<number, Dbc.SpellCategoriesRow>;
   spellCategory: ImmutableMap<number, Dbc.SpellCategoryRow>;
@@ -25,8 +30,11 @@ export interface DbcCache {
   spellMisc: ImmutableMap<number, Dbc.SpellMiscRow>;
   spellName: ImmutableMap<number, Dbc.SpellNameRow>;
   spellPower: ImmutableMap<number, Dbc.SpellPowerRow[]>;
+  spellProcsPerMinute: ImmutableMap<number, Dbc.SpellProcsPerMinuteRow>;
+  spellProcsPerMinuteMod: ImmutableMap<number, Dbc.SpellProcsPerMinuteModRow[]>;
   spellRadius: ImmutableMap<number, Dbc.SpellRadiusRow>;
   spellRange: ImmutableMap<number, Dbc.SpellRangeRow>;
+  spellTargetRestrictions: ImmutableMap<number, Dbc.SpellTargetRestrictionsRow>;
 }
 
 export interface RawDbcData {
@@ -40,6 +48,8 @@ export interface RawDbcData {
   itemXItemEffect: Dbc.ItemXItemEffectRow[];
   manifestInterfaceData: Dbc.ManifestInterfaceDataRow[];
   spell: Dbc.SpellRow[];
+  spellAuraOptions: Dbc.SpellAuraOptionsRow[];
+  spellCastingRequirements: Dbc.SpellCastingRequirementsRow[];
   spellCastTimes: Dbc.SpellCastTimesRow[];
   spellCategories: Dbc.SpellCategoriesRow[];
   spellCategory: Dbc.SpellCategoryRow[];
@@ -53,8 +63,11 @@ export interface RawDbcData {
   spellMisc: Dbc.SpellMiscRow[];
   spellName: Dbc.SpellNameRow[];
   spellPower: Dbc.SpellPowerRow[];
+  spellProcsPerMinute: Dbc.SpellProcsPerMinuteRow[];
+  spellProcsPerMinuteMod: Dbc.SpellProcsPerMinuteModRow[];
   spellRadius: Dbc.SpellRadiusRow[];
   spellRange: Dbc.SpellRangeRow[];
+  spellTargetRestrictions: Dbc.SpellTargetRestrictionsRow[];
 }
 
 // prettier-ignore
@@ -69,6 +82,8 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   itemXItemEffect: groupByItemId(rawData.itemXItemEffect),
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),
   spell: ImmutableMap(rawData.spell.map((row) => [row.ID, row])),
+  spellAuraOptions: ImmutableMap(rawData.spellAuraOptions.map((row) => [row.SpellID, row])),
+  spellCastingRequirements: ImmutableMap(rawData.spellCastingRequirements.map((row) => [row.SpellID, row])),
   spellCastTimes: ImmutableMap(rawData.spellCastTimes.map((row) => [row.ID, row])),
   spellCategories: ImmutableMap(rawData.spellCategories.map((row) => [row.SpellID, row])),
   spellCategory: ImmutableMap(rawData.spellCategory.map((row) => [row.ID, row])),
@@ -82,8 +97,11 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   spellMisc: ImmutableMap(rawData.spellMisc.map((row) => [row.SpellID, row])),
   spellName: ImmutableMap(rawData.spellName.map((row) => [row.ID, row])),
   spellPower: groupBySpellId(rawData.spellPower),
+  spellProcsPerMinute: ImmutableMap(rawData.spellProcsPerMinute.map((row) => [row.ID, row])),
+  spellProcsPerMinuteMod: groupBySpellProcsPerMinuteId(rawData.spellProcsPerMinuteMod),
   spellRadius: ImmutableMap(rawData.spellRadius.map((row) => [row.ID, row])),
   spellRange: ImmutableMap(rawData.spellRange.map((row) => [row.ID, row])),
+  spellTargetRestrictions: ImmutableMap(rawData.spellTargetRestrictions.map((row) => [row.SpellID, row])),
 });
 
 const groupBySpellId = <T extends { SpellID: number }>(
@@ -120,6 +138,21 @@ const groupBySpellEmpowerId = <T extends { SpellEmpowerID: number }>(
   rows.forEach((row) => {
     const existing = grouped.get(row.SpellEmpowerID) || [];
     grouped.set(row.SpellEmpowerID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupBySpellProcsPerMinuteId = <
+  T extends { SpellProcsPerMinuteID: number },
+>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.SpellProcsPerMinuteID) || [];
+    grouped.set(row.SpellProcsPerMinuteID, [...existing, row]);
   });
 
   return ImmutableMap(grouped);
