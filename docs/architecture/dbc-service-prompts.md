@@ -115,7 +115,7 @@ Tasks:
    - getVarianceForDifficulty
    - getDamage
 
-3. Note: extractScaling and extractManaCost don't use cache, keep them as-is
+3. Note: extractScaling and extractManaCost don't use cache at the moment, normalize them
 
 4. Run `pnpm build` - expect errors in spell.ts and item.ts (fixed in Phase 4)
 
