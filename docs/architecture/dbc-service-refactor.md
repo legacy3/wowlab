@@ -1,23 +1,13 @@
 # DBC Service Refactor Plan
 
-Refactor WowLab's DBC extractors from pure sync functions with a preloaded cache to Effect-based operations with pluggable backends.
-
-## Current State
-
-- Extractors in `packages/wowlab-services/src/internal/data/transformer/extractors.ts` are pure sync functions
-- They take a `DbcCache` parameter with Immutable.js Maps preloaded from CSV (~800MB)
-- Example: `getEffectsForDifficulty(effects, effectType, difficultyId, cache)`
-- `DbcCache` interface has ~18 tables (spellEffect, spellMisc, difficulty, spellCooldowns, etc.)
+Replace sync extractors with Effect-based `DbcService` abstraction. Two backends: in-memory for CLI, Supabase for Portal.
 
 ## Goal
 
-1. Extractors become Effect-based operations that describe *what* data they need
-2. `DbcService` abstracts the data source
-3. Two implementations:
-   - `InMemoryDbcService` - for V8/CLI, reads from preloaded Immutable Maps
-   - `SupabaseDbcService` - for Portal/MCP, queries Supabase per call
-4. `transformSpell` composes extractors without knowing about backend
-5. Many small queries is acceptable - just don't load 800MB
+1. `DbcService` abstracts data source
+2. `InMemoryDbcService` - CLI/V8, reads from Immutable Maps
+3. `SupabaseDbcService` - Portal/MCP, queries Supabase
+4. Delete old `DbcCache` parameter plumbing entirely
 
 ## DbcService Interface
 
@@ -29,26 +19,60 @@ import * as Effect from "effect/Effect";
 import type { Dbc } from "@wowlab/core/Schemas";
 import type { DbcError } from "./errors.js";
 
-export interface DbcService {
-  // Spell tables
-  readonly getSpellEffects: (spellId: number) => Effect.Effect<ReadonlyArray<Dbc.SpellEffectRow>, DbcError>;
-  readonly getSpellMisc: (spellId: number) => Effect.Effect<Dbc.SpellMiscRow | undefined, DbcError>;
-  readonly getSpellCooldowns: (spellId: number) => Effect.Effect<Dbc.SpellCooldownsRow | undefined, DbcError>;
-  readonly getSpellCategories: (spellId: number) => Effect.Effect<Dbc.SpellCategoriesRow | undefined, DbcError>;
-  readonly getSpellClassOptions: (spellId: number) => Effect.Effect<Dbc.SpellClassOptionsRow | undefined, DbcError>;
-  readonly getSpellPower: (spellId: number) => Effect.Effect<ReadonlyArray<Dbc.SpellPowerRow>, DbcError>;
-  readonly getSpellName: (spellId: number) => Effect.Effect<Dbc.SpellNameRow | undefined, DbcError>;
+export interface DbcServiceInterface {
+  // Spell tables (keyed by SpellID)
+  readonly getSpellEffects: (
+    spellId: number,
+  ) => Effect.Effect<ReadonlyArray<Dbc.SpellEffectRow>, DbcError>;
+  readonly getSpellMisc: (
+    spellId: number,
+  ) => Effect.Effect<Dbc.SpellMiscRow | undefined, DbcError>;
+  readonly getSpellCooldowns: (
+    spellId: number,
+  ) => Effect.Effect<Dbc.SpellCooldownsRow | undefined, DbcError>;
+  readonly getSpellCategories: (
+    spellId: number,
+  ) => Effect.Effect<Dbc.SpellCategoriesRow | undefined, DbcError>;
+  readonly getSpellClassOptions: (
+    spellId: number,
+  ) => Effect.Effect<Dbc.SpellClassOptionsRow | undefined, DbcError>;
+  readonly getSpellPower: (
+    spellId: number,
+  ) => Effect.Effect<ReadonlyArray<Dbc.SpellPowerRow>, DbcError>;
+  readonly getSpellName: (
+    spellId: number,
+  ) => Effect.Effect<Dbc.SpellNameRow | undefined, DbcError>;
 
-  // Lookup tables (by ID, not SpellID)
-  readonly getDifficulty: (id: number) => Effect.Effect<Dbc.DifficultyRow | undefined, DbcError>;
-  readonly getSpellCastTimes: (id: number) => Effect.Effect<Dbc.SpellCastTimesRow | undefined, DbcError>;
-  readonly getSpellDuration: (id: number) => Effect.Effect<Dbc.SpellDurationRow | undefined, DbcError>;
-  readonly getSpellRange: (id: number) => Effect.Effect<Dbc.SpellRangeRow | undefined, DbcError>;
-  readonly getSpellRadius: (id: number) => Effect.Effect<Dbc.SpellRadiusRow | undefined, DbcError>;
-  readonly getSpellCategory: (id: number) => Effect.Effect<Dbc.SpellCategoryRow | undefined, DbcError>;
+  // Lookup tables (keyed by ID)
+  readonly getDifficulty: (
+    id: number,
+  ) => Effect.Effect<Dbc.DifficultyRow | undefined, DbcError>;
+  readonly getSpellCastTimes: (
+    id: number,
+  ) => Effect.Effect<Dbc.SpellCastTimesRow | undefined, DbcError>;
+  readonly getSpellDuration: (
+    id: number,
+  ) => Effect.Effect<Dbc.SpellDurationRow | undefined, DbcError>;
+  readonly getSpellRange: (
+    id: number,
+  ) => Effect.Effect<Dbc.SpellRangeRow | undefined, DbcError>;
+  readonly getSpellRadius: (
+    id: number,
+  ) => Effect.Effect<Dbc.SpellRadiusRow | undefined, DbcError>;
+  readonly getSpellCategory: (
+    id: number,
+  ) => Effect.Effect<Dbc.SpellCategoryRow | undefined, DbcError>;
+
+  // Batch (avoids N+1 on Supabase)
+  readonly getDifficultyChain: (
+    id: number,
+  ) => Effect.Effect<ReadonlyArray<Dbc.DifficultyRow>, DbcError>;
 }
 
-export const DbcService = Context.GenericTag<DbcService>("@wowlab/services/DbcService");
+export class DbcService extends Context.Tag("@wowlab/services/DbcService")<
+  DbcService,
+  DbcServiceInterface
+>() {}
 ```
 
 ## Error Types
@@ -58,52 +82,17 @@ File: `packages/wowlab-services/src/internal/data/dbc/errors.ts`
 ```typescript
 import * as Data from "effect/Data";
 
-export class RowNotFoundError extends Data.TaggedError("RowNotFoundError")<{
-  readonly table: string;
-  readonly key: number;
-  readonly message: string;
-}> {}
-
 export class DbcQueryError extends Data.TaggedError("DbcQueryError")<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
 
-export class DecodeError extends Data.TaggedError("DecodeError")<{
-  readonly table: string;
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
-
-export type DbcError = RowNotFoundError | DbcQueryError | DecodeError;
+export type DbcError = DbcQueryError;
 ```
 
-## Extractor Refactor
+## Extractors
 
-### Before (sync with cache parameter)
-
-```typescript
-export const getEffectsForDifficulty = (
-  effects: Dbc.SpellEffectRow[],
-  effectType: number,
-  difficultyId: number,
-  cache: DbcCache,
-): Dbc.SpellEffectRow[] => {
-  const filtered = effects.filter(
-    (e) => e.Effect === effectType && e.DifficultyID === difficultyId,
-  );
-
-  if (filtered.length > 0 || difficultyId === 0) {
-    return filtered;
-  }
-
-  const difficultyRow = cache.difficulty.get(difficultyId);
-  const parentId = difficultyRow?.FallbackDifficultyID ?? 0;
-  return getEffectsForDifficulty(effects, effectType, parentId, cache);
-};
-```
-
-### After (Effect-based with service)
+All extractors take `spellId` and return `Effect<T, DbcError, DbcService>`. No cache parameter.
 
 ```typescript
 export const getEffectsForDifficulty = (
@@ -123,13 +112,25 @@ export const getEffectsForDifficulty = (
       return filtered;
     }
 
-    const difficultyRow = yield* dbc.getDifficulty(difficultyId);
-    const parentId = difficultyRow?.FallbackDifficultyID ?? 0;
-    return yield* getEffectsForDifficulty(spellId, effectType, parentId);
+    // Batch-fetch difficulty chain (single query on Supabase)
+    const difficultyChain = yield* dbc.getDifficultyChain(difficultyId);
+
+    for (const difficulty of difficultyChain) {
+      const fallbackFiltered = effects.filter(
+        (e) => e.Effect === effectType && e.DifficultyID === difficulty.ID,
+      );
+      if (fallbackFiltered.length > 0) {
+        return fallbackFiltered;
+      }
+    }
+
+    return effects.filter(
+      (e) => e.Effect === effectType && e.DifficultyID === 0,
+    );
   });
 ```
 
-### transformSpell (composes extractors)
+## transformSpell
 
 ```typescript
 export const transformSpell = (
@@ -139,39 +140,34 @@ export const transformSpell = (
   Effect.gen(function* () {
     const dbc = yield* DbcService;
 
-    // Parallel fetch of independent data
-    const [effects, misc, cooldowns, power] = yield* Effect.all([
-      dbc.getSpellEffects(spellId),
-      dbc.getSpellMisc(spellId),
-      dbc.getSpellCooldowns(spellId),
-      dbc.getSpellPower(spellId),
-    ], { concurrency: "unbounded" });
+    const [effects, misc, cooldowns, power] = yield* Effect.all(
+      [
+        dbc.getSpellEffects(spellId),
+        dbc.getSpellMisc(spellId),
+        dbc.getSpellCooldowns(spellId),
+        dbc.getSpellPower(spellId),
+      ],
+      { concurrency: "unbounded" },
+    );
 
-    // Compose extractors
-    const damageEffects = yield* getEffectsForDifficulty(spellId, SpellEffect.SchoolDamage, difficultyId);
+    const damageEffects = yield* getEffectsForDifficulty(
+      spellId,
+      SpellEffect.SchoolDamage,
+      difficultyId,
+    );
     const scaling = extractScaling(damageEffects);
     const name = yield* extractName(spellId);
     const cooldown = yield* extractCooldown(spellId);
-    // ... more extractors
 
-    return {
-      id: spellId,
-      name,
-      scaling,
-      cooldown,
-      // ...
-    };
+    return { id: spellId, name, scaling, cooldown /* ... */ };
   });
 ```
 
 ## InMemoryDbcService
 
-File: `packages/wowlab-services/src/internal/data/dbc/InMemoryDbcService.ts`
-
 ```typescript
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Map as ImmutableMap } from "immutable";
 import { DbcService } from "./DbcService.js";
 import type { DbcCache } from "../DbcCache.js";
 
@@ -180,11 +176,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellEffects: (spellId) =>
       Effect.succeed(cache.spellEffect.get(spellId) ?? []),
 
-    getSpellMisc: (spellId) =>
-      Effect.succeed(cache.spellMisc.get(spellId)),
+    getSpellMisc: (spellId) => Effect.succeed(cache.spellMisc.get(spellId)),
 
-    getDifficulty: (id) =>
-      Effect.succeed(cache.difficulty.get(id)),
+    getDifficulty: (id) => Effect.succeed(cache.difficulty.get(id)),
 
     getSpellCooldowns: (spellId) =>
       Effect.succeed(cache.spellCooldowns.get(spellId)),
@@ -192,20 +186,15 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellCategories: (spellId) =>
       Effect.succeed(cache.spellCategories.get(spellId)),
 
-    getSpellCastTimes: (id) =>
-      Effect.succeed(cache.spellCastTimes.get(id)),
+    getSpellCastTimes: (id) => Effect.succeed(cache.spellCastTimes.get(id)),
 
-    getSpellDuration: (id) =>
-      Effect.succeed(cache.spellDuration.get(id)),
+    getSpellDuration: (id) => Effect.succeed(cache.spellDuration.get(id)),
 
-    getSpellRange: (id) =>
-      Effect.succeed(cache.spellRange.get(id)),
+    getSpellRange: (id) => Effect.succeed(cache.spellRange.get(id)),
 
-    getSpellRadius: (id) =>
-      Effect.succeed(cache.spellRadius.get(id)),
+    getSpellRadius: (id) => Effect.succeed(cache.spellRadius.get(id)),
 
-    getSpellCategory: (id) =>
-      Effect.succeed(cache.spellCategory.get(id)),
+    getSpellCategory: (id) => Effect.succeed(cache.spellCategory.get(id)),
 
     getSpellClassOptions: (spellId) =>
       Effect.succeed(cache.spellClassOptions.get(spellId)),
@@ -213,79 +202,136 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellPower: (spellId) =>
       Effect.succeed(cache.spellPower.get(spellId) ?? []),
 
-    getSpellName: (spellId) =>
-      Effect.succeed(cache.spellName.get(spellId)),
+    getSpellName: (spellId) => Effect.succeed(cache.spellName.get(spellId)),
+
+    getDifficultyChain: (id) =>
+      Effect.sync(() => {
+        const chain: Dbc.DifficultyRow[] = [];
+        let currentId = id;
+        while (currentId !== 0) {
+          const row = cache.difficulty.get(currentId);
+          if (!row) break;
+          chain.push(row);
+          currentId = row.FallbackDifficultyID ?? 0;
+        }
+        return chain;
+      }),
   });
 ```
 
 ## SupabaseDbcService
 
-File: `packages/wowlab-services/src/internal/data/dbc/SupabaseDbcService.ts`
-
 ```typescript
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Cache from "effect/Cache";
+import * as Duration from "effect/Duration";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DbcService } from "./DbcService.js";
-import { DbcQueryError, DecodeError } from "./errors.js";
+import { DbcService, type DbcServiceInterface } from "./DbcService.js";
+import { DbcQueryError } from "./errors.js";
 
 export const SupabaseDbcService = (supabase: SupabaseClient): Layer.Layer<DbcService> =>
-  Layer.succeed(DbcService, {
-    getSpellEffects: (spellId) =>
-      Effect.gen(function* () {
-        const { data, error } = yield* Effect.promise(() =>
-          supabase
-            .schema("raw_dbc")
-            .from("spell_effect")
-            .select("*")
-            .eq("SpellID", spellId)
-        );
+  Layer.effect(
+    DbcService,
+    Effect.gen(function* () {
+      const spellEffectsCache = yield* Cache.make({
+        capacity: 100,
+        timeToLive: Duration.minutes(5),
+        lookup: (spellId: number) =>
+          Effect.gen(function* () {
+            const { data, error } = yield* Effect.promise(() =>
+              supabase.schema("raw_dbc").from("spell_effect").select("*").eq("SpellID", spellId)
+            );
+            if (error) return yield* Effect.fail(new DbcQueryError({ message: error.message, cause: error }));
+            return data ?? [];
+          }),
+      });
 
-        if (error) {
-          return yield* Effect.fail(
-            new DbcQueryError({ message: error.message, cause: error })
-          );
-        }
+      const difficultyCache = yield* Cache.make({
+        capacity: 50,
+        timeToLive: Duration.minutes(5),
+        lookup: (id: number) =>
+          Effect.gen(function* () {
+            const { data, error } = yield* Effect.promise(() =>
+              supabase.schema("raw_dbc").from("difficulty").select("*").eq("ID", id).maybeSingle()
+            );
+            if (error) return yield* Effect.fail(new DbcQueryError({ message: error.message, cause: error }));
+            return data ?? undefined;
+          }),
+      });
 
-        return data ?? [];
-      }),
+      const service: DbcServiceInterface = {
+        getSpellEffects: (spellId) => spellEffectsCache.get(spellId),
+        getDifficulty: (id) => difficultyCache.get(id),
 
-    getDifficulty: (id) =>
-      Effect.gen(function* () {
-        const { data, error } = yield* Effect.promise(() =>
-          supabase
-            .schema("raw_dbc")
-            .from("difficulty")
-            .select("*")
-            .eq("ID", id)
-            .single()
-        );
+        getDifficultyChain: (id) =>
+          Effect.gen(function* () {
+            const { data, error } = yield* Effect.promise(() =>
+              supabase.rpc("get_difficulty_chain", { start_id: id })
+            );
+            if (error) return yield* Effect.fail(new DbcQueryError({ message: error.message, cause: error }));
+            return data ?? [];
+          }),
 
-        if (error) {
-          if (error.code === "PGRST116") {
-            return undefined; // Not found
-          }
-          return yield* Effect.fail(
-            new DbcQueryError({ message: error.message, cause: error })
-          );
-        }
+        getSpellMisc: (spellId) =>
+          Effect.gen(function* () {
+            const { data, error } = yield* Effect.promise(() =>
+              supabase.schema("raw_dbc").from("spell_misc").select("*").eq("SpellID", spellId).maybeSingle()
+            );
+            if (error) return yield* Effect.fail(new DbcQueryError({ message: error.message, cause: error }));
+            return data ?? undefined;
+          }),
 
-        return data;
-      }),
+        // Same pattern for remaining methods...
+        getSpellCooldowns: (spellId) => /* ... */,
+        getSpellCategories: (spellId) => /* ... */,
+        getSpellClassOptions: (spellId) => /* ... */,
+        getSpellPower: (spellId) => /* ... */,
+        getSpellName: (spellId) => /* ... */,
+        getSpellCastTimes: (id) => /* ... */,
+        getSpellDuration: (id) => /* ... */,
+        getSpellRange: (id) => /* ... */,
+        getSpellRadius: (id) => /* ... */,
+        getSpellCategory: (id) => /* ... */,
+      };
 
-    // ... similar pattern for other methods
-  });
+      return service;
+    })
+  );
+```
+
+## Required SQL
+
+```sql
+CREATE OR REPLACE FUNCTION raw_dbc.get_difficulty_chain(start_id INTEGER)
+RETURNS SETOF raw_dbc.difficulty
+LANGUAGE sql STABLE AS $$
+  WITH RECURSIVE chain AS (
+    SELECT d.* FROM raw_dbc.difficulty d WHERE d."ID" = start_id
+    UNION ALL
+    SELECT d.* FROM raw_dbc.difficulty d
+    INNER JOIN chain c ON d."ID" = c."FallbackDifficultyID"
+    WHERE c."FallbackDifficultyID" IS NOT NULL AND c."FallbackDifficultyID" != 0
+  )
+  SELECT * FROM chain;
+$$;
+
+-- Indexes
+CREATE INDEX idx_spell_effect_spell_id ON raw_dbc.spell_effect ("SpellID");
+CREATE INDEX idx_spell_effect_spell_difficulty ON raw_dbc.spell_effect ("SpellID", "DifficultyID");
+CREATE INDEX idx_spell_misc_spell_id ON raw_dbc.spell_misc ("SpellID");
+CREATE INDEX idx_spell_cooldowns_spell_id ON raw_dbc.spell_cooldowns ("SpellID");
+CREATE INDEX idx_spell_power_spell_id ON raw_dbc.spell_power ("SpellID");
+CREATE INDEX idx_difficulty_fallback ON raw_dbc.difficulty ("FallbackDifficultyID");
 ```
 
 ## Layer Composition
-
-File: `packages/wowlab-runtime/src/AppLayer.ts`
 
 ```typescript
 export interface AppLayerOptions<R> {
   readonly logger?: Layer.Layer<Log.LogService>;
   readonly metadata: Layer.Layer<Metadata.MetadataService, never, R>;
-  readonly dbc: Layer.Layer<Dbc.DbcService, never, R>;  // NEW
+  readonly dbc: Layer.Layer<Dbc.DbcService, never, R>;
   readonly rng?: Layer.Layer<Rng.RNGService>;
 }
 
@@ -293,7 +339,7 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
   const {
     logger = Log.ConsoleLogger,
     metadata,
-    dbc,  // NEW
+    dbc,
     rng = Rng.RNGServiceDefault,
   } = options;
 
@@ -302,92 +348,58 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     logger,
     rng,
     metadata,
-    dbc,  // NEW
+    dbc,
   );
-
-  // ... rest unchanged
+  // ...
 };
 ```
 
-### CLI/V8 Usage
+### CLI Usage
 
 ```typescript
-// Load CSV data as before
 const cache = createCache(rawData);
-
-// Create layers
 const dbcLayer = InMemoryDbcService(cache);
-const metadataLayer = InMemoryMetadata({ spells, items });
-
-// Run
 const runtime = createAppLayer({ metadata: metadataLayer, dbc: dbcLayer });
 ```
 
-### Portal/MCP Usage
+### Portal Usage
 
 ```typescript
-// Create layers
 const dbcLayer = SupabaseDbcService(supabaseClient);
-const metadataLayer = createSupabaseMetadataService(supabaseClient);
-
-// Run
 const runtime = createAppLayer({ metadata: metadataLayer, dbc: dbcLayer });
 ```
 
 ## File Structure
 
-```
+```text
 packages/wowlab-services/src/internal/data/dbc/
-├── DbcService.ts           # Service interface
-├── errors.ts               # Error types
-├── InMemoryDbcService.ts   # In-memory implementation
-├── SupabaseDbcService.ts   # Supabase implementation
-└── index.ts                # Barrel exports
+├── DbcService.ts
+├── errors.ts
+├── InMemoryDbcService.ts
+├── SupabaseDbcService.ts
+└── index.ts
 
 packages/wowlab-services/src/internal/data/transformer/
-├── extractors.ts           # Effect-based extractors (refactored)
-├── spell.ts                # transformSpell (refactored)
-└── item.ts                 # transformItem (refactored)
+├── extractors.ts
+├── spell.ts
+└── item.ts
 ```
 
-## Migration Path
-
-### Phase 1: Infrastructure
+## Implementation Steps
 
 1. Create `DbcService` interface and error types
-2. Create `InMemoryDbcService` that wraps existing `DbcCache`
-3. Add to layer composition with feature flag
+2. Create `InMemoryDbcService`
+3. Rewrite all extractors to use `DbcService` (delete old signatures)
+4. Rewrite `transformSpell` / `transformItem`
+5. Update all call sites
+6. Delete old `DbcCache` parameter from all functions
+7. Create `SupabaseDbcService`
+8. Add SQL function + indexes to Supabase
+9. Wire Portal to use Supabase layer
 
-### Phase 2: Extractor Conversion (one at a time)
+## What Gets Deleted
 
-1. Start with simplest extractor (e.g., `extractName`)
-2. Convert to Effect, add bridge function for backwards compat
-3. Update callers incrementally
-4. Repeat for each extractor
-
-### Phase 3: transformSpell
-
-1. Convert `transformSpell` to use Effect extractors
-2. Update all call sites (standalone, portal, etc.)
-3. Remove bridge functions
-
-### Phase 4: Supabase Implementation
-
-1. Implement `SupabaseDbcService`
-2. Add raw DBC tables to Supabase (using generate-ddl)
-3. Integration test with mocked Supabase
-4. Wire into Portal/MCP
-
-### Phase 5: Cleanup
-
-1. Remove old `DbcCache` parameter plumbing
-2. Remove bridge functions
-3. Update tests
-
-## Benefits
-
-1. **Same code, different backends** - V8 uses in-memory, Portal uses Supabase
-2. **No 800MB load** - Supabase queries only what's needed
-3. **Effect composition** - Natural error handling, concurrency
-4. **Testable** - Mock DbcService for unit tests
-5. **Incremental migration** - Convert one extractor at a time
+- `cache: DbcCache` parameter from all extractors
+- Old sync extractor signatures
+- Any `DbcCache` imports in transformer code
+- Bridge functions (none needed - clean cut)
