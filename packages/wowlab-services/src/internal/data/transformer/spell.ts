@@ -1,35 +1,26 @@
+import { DbcError } from "@wowlab/core/Errors";
 import * as Errors from "@wowlab/core/Errors";
 import { Branded, Spell } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
-import type { DbcCache } from "../DbcCache.js";
-
-import {
-  extractCastTime,
-  extractCharges,
-  extractClassOptions,
-  extractCooldown,
-  extractDescription,
-  extractDuration,
-  extractEmpower,
-  extractInterrupts,
-  extractManaCost,
-  extractName,
-  extractPower,
-  extractRadius,
-  extractRange,
-  extractScaling,
-} from "./extractors.js";
+import { DbcService } from "../dbc/DbcService.js";
+import { ExtractorService } from "./extractors.js";
 
 export const transformSpell = (
   spellId: number,
-  cache: DbcCache,
-): Effect.Effect<Spell.SpellDataFlat, Errors.SpellInfoNotFound> =>
+): Effect.Effect<
+  Spell.SpellDataFlat,
+  Errors.SpellInfoNotFound | DbcError,
+  DbcService | ExtractorService
+> =>
   Effect.gen(function* () {
-    const nameStr = cache.spellName.get(spellId);
-    if (!nameStr) {
+    const dbc = yield* DbcService;
+    const extractor = yield* ExtractorService;
+
+    const nameRow = yield* dbc.getSpellName(spellId);
+    if (!nameRow) {
       return yield* Effect.fail(
         new Errors.SpellInfoNotFound({
           message: `Spell ${spellId} not found in DBC cache`,
@@ -38,12 +29,12 @@ export const transformSpell = (
       );
     }
 
-    const misc = Option.fromNullable(cache.spellMisc.get(spellId));
-    const effects = cache.spellEffect.get(spellId) ?? [];
+    const misc = Option.fromNullable(yield* dbc.getSpellMisc(spellId));
+    const effects = yield* dbc.getSpellEffects(spellId);
 
     // Extract all properties using focused extractor functions
-    const range = extractRange(misc, cache);
-    const radius = extractRadius(effects, cache);
+    const range = yield* extractor.extractRange(misc);
+    const radius = yield* extractor.extractRadius(effects);
 
     // ImplicitTarget is on Effect, so we can extract it.
     const targeting = effects.flatMap((e) =>
@@ -54,8 +45,11 @@ export const transformSpell = (
       misc,
       Option.map((m) => ({ schoolMask: m.SchoolMask })),
     );
-    const cooldown = extractCooldown(spellId, cache);
-    const _interrupts = extractInterrupts(spellId, cache);
+    const cooldown = yield* extractor.extractCooldown(spellId);
+    const _interrupts = yield* extractor.extractInterrupts(spellId);
+
+    const spellCategories = yield* dbc.getSpellCategories(spellId);
+
     const attributes = pipe(
       misc,
       Option.map((m) => [
@@ -82,7 +76,7 @@ export const transformSpell = (
       misc,
       Option.map((m) => ({ speed: m.Speed })),
     );
-    const empower = extractEmpower(spellId, cache);
+    const empower = yield* extractor.extractEmpower(spellId);
 
     // Cone relies on SpellTargetRestrictions (missing)
     const _cone = Option.none();
@@ -93,17 +87,17 @@ export const transformSpell = (
     );
     */
 
-    const castTime = extractCastTime(misc, cache);
-    const duration = extractDuration(misc, cache);
-    const charges = extractCharges(spellId, cache);
+    const castTime = yield* extractor.extractCastTime(misc);
+    const duration = yield* extractor.extractDuration(misc);
+    const charges = yield* extractor.extractCharges(spellId);
 
     const defense = pipe(
-      Option.fromNullable(cache.spellCategories.get(spellId)),
+      Option.fromNullable(spellCategories),
       Option.map((c) => ({ defenseType: c.DefenseType })),
     );
-    const scaling = extractScaling(effects);
+    const scaling = extractor.extractScaling(effects);
     const dispel = pipe(
-      Option.fromNullable(cache.spellCategories.get(spellId)),
+      Option.fromNullable(spellCategories),
       Option.map((c) => ({ dispelType: c.DispelType })),
     );
 
@@ -119,21 +113,25 @@ export const transformSpell = (
     const triggers = effects
       .map((e) => e.EffectTriggerSpell)
       .filter((t) => t !== 0);
-    const manaCost = extractManaCost(effects);
-    const name = extractName(spellId, cache);
-    const descriptions = extractDescription(spellId, cache);
-    const power = extractPower(spellId, cache);
-    const classOptions = extractClassOptions(spellId, cache);
+    const manaCost = extractor.extractManaCost(effects);
+    const name = yield* extractor.extractName(spellId);
+    const descriptions = yield* extractor.extractDescription(spellId);
+    const power = yield* extractor.extractPower(spellId);
+    const classOptions = yield* extractor.extractClassOptions(spellId);
 
     // Icon resolution
-    const iconRow = pipe(
+    const iconFileDataId = pipe(
       misc,
-      Option.flatMap((m) =>
-        Option.fromNullable(
-          cache.manifestInterfaceData.get(m.SpellIconFileDataID),
-        ),
-      ),
+      Option.map((m) => m.SpellIconFileDataID),
+      Option.getOrElse(() => 0),
     );
+
+    const iconRow =
+      iconFileDataId > 0
+        ? Option.fromNullable(
+            yield* dbc.getManifestInterfaceData(iconFileDataId),
+          )
+        : Option.none();
 
     const fileName = pipe(
       iconRow,

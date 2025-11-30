@@ -1,17 +1,23 @@
+import { DbcError } from "@wowlab/core/Errors";
 import * as Errors from "@wowlab/core/Errors";
 import { Item } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
-import type { DbcCache } from "../DbcCache.js";
+import { DbcService } from "../dbc/DbcService.js";
 
 export const transformItem = (
   itemId: number,
-  cache: DbcCache,
-): Effect.Effect<Item.ItemDataFlat, Errors.ItemNotFound> =>
+): Effect.Effect<
+  Item.ItemDataFlat,
+  Errors.ItemNotFound | DbcError,
+  DbcService
+> =>
   Effect.gen(function* () {
-    const item = cache.item.get(itemId);
+    const dbc = yield* DbcService;
+
+    const item = yield* dbc.getItem(itemId);
     if (!item) {
       return yield* Effect.fail(
         new Errors.ItemNotFound({
@@ -21,33 +27,44 @@ export const transformItem = (
       );
     }
 
-    const sparse = cache.itemSparse.get(itemId);
+    const sparse = yield* dbc.getItemSparse(itemId);
 
     // Resolve File Name
+    const iconRow =
+      item.IconFileDataID > 0
+        ? Option.fromNullable(
+            yield* dbc.getManifestInterfaceData(item.IconFileDataID),
+          )
+        : Option.none();
+
     const fileName = pipe(
-      Option.fromNullable(cache.manifestInterfaceData.get(item.IconFileDataID)),
+      iconRow,
       Option.map((row) => row.FileName.toLowerCase().split(".")[0]),
       Option.getOrElse(() => "inv_misc_questionmark"),
     );
 
     // Resolve Effects
-    const effectLinks = cache.itemXItemEffect.get(itemId) || [];
-    const effects = effectLinks
-      .map((link) => {
-        const effect = cache.itemEffect.get(link.ItemEffectID);
-        if (!effect) {
-          return null;
-        }
+    const effectLinks = yield* dbc.getItemXItemEffects(itemId);
+    const effects: Array<{
+      categoryCooldown: number;
+      charges: number;
+      cooldown: number;
+      spellId: number;
+      triggerType: number;
+    }> = [];
 
-        return {
+    for (const link of effectLinks) {
+      const effect = yield* dbc.getItemEffect(link.ItemEffectID);
+      if (effect) {
+        effects.push({
           categoryCooldown: effect.CategoryCoolDownMSec,
           charges: effect.Charges,
           cooldown: effect.CoolDownMSec,
           spellId: effect.SpellID,
           triggerType: effect.TriggerType,
-        };
-      })
-      .filter((e): e is NonNullable<typeof e> => e !== null);
+        });
+      }
+    }
 
     // Resolve Stats (Basic mapping from Sparse)
     const stats: { type: number; value: number }[] = [];
