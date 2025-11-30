@@ -7,7 +7,7 @@ Replace sync extractors with Effect-based `DbcService` abstraction. Two backends
 | Phase | Status | Description                                     |
 | ----- | ------ | ----------------------------------------------- |
 | 0     | ✅     | Cleanup: Delete old code & wipe Supabase tables |
-| 1     | ⬜     | Create DbcService interface and error types     |
+| 1     | ✅     | Create DbcService interface and error types     |
 | 2     | ⬜     | Create InMemoryDbcService implementation        |
 | 3     | ⬜     | Rewrite extractors to use DbcService            |
 | 4     | ⬜     | Rewrite transformSpell/transformItem            |

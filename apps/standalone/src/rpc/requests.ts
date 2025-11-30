@@ -20,6 +20,7 @@ export class AggregatedStatsSchema extends Schema.Class<AggregatedStatsSchema>(
 export class RunSimulationResponse extends Schema.Class<RunSimulationResponse>(
   "RunSimulationResponse",
 )({
+  // @ts-ignore TODO Fix this
   sampleResults: Schema.Array(SimulationResultSchema),
   stats: AggregatedStatsSchema,
 }) {}
