@@ -1,7 +1,6 @@
 import {
   Activity,
   BarChart3,
-  BookOpen,
   Bug,
   Clock,
   FileCode,
@@ -49,7 +48,6 @@ export const menuConfig: MenuGroup[] = [
       { label: "DPS Rankings", href: "/dps-rankings", icon: Medal },
       { label: "Rotations", href: "/rotations", icon: Library },
       { label: "Charts", href: "/charts", icon: BarChart3 },
-      { label: "Spell Data", href: "/spell-data", icon: BookOpen },
     ],
   },
   {

@@ -4,17 +4,17 @@ Replace sync extractors with Effect-based `DbcService` abstraction. Two backends
 
 ## Progress Tracker
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| 0 | ⬜ | Cleanup: Delete old code & wipe Supabase tables |
-| 1 | ⬜ | Create DbcService interface and error types |
-| 2 | ⬜ | Create InMemoryDbcService implementation |
-| 3 | ⬜ | Rewrite extractors to use DbcService |
-| 4 | ⬜ | Rewrite transformSpell/transformItem |
-| 5 | ⬜ | Update all call sites and wire layers |
-| 6 | ⬜ | Create raw_dbc schema in Supabase |
-| 7 | ⬜ | Create SupabaseDbcService implementation |
-| 8 | ⬜ | Wire Portal to use Supabase layer |
+| Phase | Status | Description                                     |
+| ----- | ------ | ----------------------------------------------- |
+| 0     | ✅     | Cleanup: Delete old code & wipe Supabase tables |
+| 1     | ⬜     | Create DbcService interface and error types     |
+| 2     | ⬜     | Create InMemoryDbcService implementation        |
+| 3     | ⬜     | Rewrite extractors to use DbcService            |
+| 4     | ⬜     | Rewrite transformSpell/transformItem            |
+| 5     | ⬜     | Update all call sites and wire layers           |
+| 6     | ⬜     | Create raw_dbc schema in Supabase               |
+| 7     | ⬜     | Create SupabaseDbcService implementation        |
+| 8     | ⬜     | Wire Portal to use Supabase layer               |
 
 ---
 
@@ -33,12 +33,14 @@ apps/cli/commands/shared/data-updater.ts
 ### Update CLI Index
 
 Edit `apps/cli/commands/index.ts` to remove:
+
 - `updateItemDataCommand`
 - `updateSpellDataCommand`
 
 ### Wipe Supabase Tables
 
 Execute via Supabase MCP or migration:
+
 ```sql
 DROP TABLE IF EXISTS public.spell_data CASCADE;
 DROP TABLE IF EXISTS public.item_data CASCADE;
@@ -47,6 +49,7 @@ DROP TABLE IF EXISTS public.item_data CASCADE;
 ### Update Portal (remove spell_data/item_data references)
 
 Files to check and update:
+
 - `apps/portal/src/lib/supabase-metadata-service.ts`
 - `apps/portal/src/atoms/spell-data/state.ts`
 - `apps/portal/src/atoms/item-data/state.ts`
@@ -272,6 +275,7 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 ### File: `packages/wowlab-services/src/internal/data/transformer/extractors.ts`
 
 All extractors change signature from:
+
 ```typescript
 // OLD
 export const extractRange = (misc: Option<SpellMiscRow>, cache: DbcCache) => ...
@@ -285,6 +289,7 @@ export const extractRange = (misc: Option<SpellMiscRow>) =>
 ```
 
 Key changes:
+
 1. Remove `cache: DbcCache` parameter from all functions
 2. Add `yield* DbcService` to access the service
 3. Replace `cache.xxx.get(id)` with `yield* dbc.getXxx(id)`
@@ -357,9 +362,7 @@ import { InMemoryDbcService } from "@wowlab/services/Data";
 const cache = createCache(rawData);
 const dbcLayer = InMemoryDbcService(cache);
 
-const result = yield* transformSpell(spellId).pipe(
-  Effect.provide(dbcLayer)
-);
+const result = yield * transformSpell(spellId).pipe(Effect.provide(dbcLayer));
 ```
 
 ### Files to Update
@@ -431,6 +434,7 @@ $$;
 ### CLI Command for Upload
 
 Create new command to upload raw DBC data to Supabase (replaces old update commands):
+
 ```
 apps/cli/commands/upload-dbc/index.ts
 ```
@@ -555,15 +559,18 @@ packages/wowlab-services/src/internal/data/
 ## What Gets Deleted
 
 ### Phase 0
+
 - `apps/cli/commands/update-spell-data/` (entire directory)
 - `apps/cli/commands/update-item-data/` (entire directory)
 - `apps/cli/commands/shared/data-updater.ts`
 - Supabase tables: `public.spell_data`, `public.item_data`
 
 ### Phase 3-5
+
 - `cache: DbcCache` parameter from all extractors
 - All sync extractor implementations (replaced with Effect versions)
 - Old transformer signatures
 
 ### Not Deleted
+
 - `DbcCache` interface and `createCache` function (still used by InMemoryDbcService)

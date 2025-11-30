@@ -265,6 +265,7 @@ Tasks:
 After completing each phase:
 
 1. Update the progress tracker in `docs/architecture/dbc-service-refactor.md`:
+
    ```
    | Phase | Status | Description |
    |-------|--------|-------------|
