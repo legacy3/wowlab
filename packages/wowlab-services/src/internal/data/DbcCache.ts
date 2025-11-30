@@ -1,6 +1,7 @@
 import { Dbc } from "@wowlab/core/Schemas";
 import { Map as ImmutableMap } from "immutable";
 
+// prettier-ignore
 export interface DbcCache {
   contentTuningXExpected: Dbc.ContentTuningXExpectedRow[];
   difficulty: ImmutableMap<number, Dbc.DifficultyRow>;
@@ -13,10 +14,7 @@ export interface DbcCache {
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
   spell: ImmutableMap<number, Dbc.SpellRow>;
   spellAuraOptions: ImmutableMap<number, Dbc.SpellAuraOptionsRow>;
-  spellCastingRequirements: ImmutableMap<
-    number,
-    Dbc.SpellCastingRequirementsRow
-  >;
+  spellCastingRequirements: ImmutableMap<number, Dbc.SpellCastingRequirementsRow>;
   spellCastTimes: ImmutableMap<number, Dbc.SpellCastTimesRow>;
   spellCategories: ImmutableMap<number, Dbc.SpellCategoriesRow>;
   spellCategory: ImmutableMap<number, Dbc.SpellCategoryRow>;
@@ -37,6 +35,7 @@ export interface DbcCache {
   spellTargetRestrictions: ImmutableMap<number, Dbc.SpellTargetRestrictionsRow>;
 }
 
+// prettier-ignore
 export interface RawDbcData {
   contentTuningXExpected: Dbc.ContentTuningXExpectedRow[];
   difficulty: Dbc.DifficultyRow[];
