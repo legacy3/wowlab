@@ -83,6 +83,15 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellEffects: (spellId) =>
       Effect.succeed(cache.spellEffect.get(spellId) ?? []),
 
+    getSpellEmpower: (spellId) =>
+      Effect.succeed(cache.spellEmpower.get(spellId)),
+
+    getSpellEmpowerStages: (spellEmpowerId) =>
+      Effect.succeed(cache.spellEmpowerStage.get(spellEmpowerId) ?? []),
+
+    getSpellInterrupts: (spellId) =>
+      Effect.succeed(cache.spellInterrupts.get(spellId)),
+
     getSpellMisc: (spellId) => Effect.succeed(cache.spellMisc.get(spellId)),
 
     getSpellName: (spellId) => Effect.succeed(cache.spellName.get(spellId)),

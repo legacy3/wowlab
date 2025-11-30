@@ -83,6 +83,18 @@ export interface DbcServiceInterface {
     spellId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEffectRow>, DbcError>;
 
+  readonly getSpellEmpower: (
+    spellId: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellEmpowerRow | undefined, DbcError>;
+
+  readonly getSpellEmpowerStages: (
+    spellEmpowerId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerStageRow>, DbcError>;
+
+  readonly getSpellInterrupts: (
+    spellId: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellInterruptsRow | undefined, DbcError>;
+
   readonly getSpellMisc: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellMiscRow | undefined, DbcError>;

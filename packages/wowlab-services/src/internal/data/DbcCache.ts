@@ -19,6 +19,9 @@ export interface DbcCache {
   spellCooldowns: ImmutableMap<number, Dbc.SpellCooldownsRow>;
   spellDuration: ImmutableMap<number, Dbc.SpellDurationRow>;
   spellEffect: ImmutableMap<number, Dbc.SpellEffectRow[]>;
+  spellEmpower: ImmutableMap<number, Dbc.SpellEmpowerRow>;
+  spellEmpowerStage: ImmutableMap<number, Dbc.SpellEmpowerStageRow[]>;
+  spellInterrupts: ImmutableMap<number, Dbc.SpellInterruptsRow>;
   spellMisc: ImmutableMap<number, Dbc.SpellMiscRow>;
   spellName: ImmutableMap<number, Dbc.SpellNameRow>;
   spellPower: ImmutableMap<number, Dbc.SpellPowerRow[]>;
@@ -44,6 +47,9 @@ export interface RawDbcData {
   spellCooldowns: Dbc.SpellCooldownsRow[];
   spellDuration: Dbc.SpellDurationRow[];
   spellEffect: Dbc.SpellEffectRow[];
+  spellEmpower: Dbc.SpellEmpowerRow[];
+  spellEmpowerStage: Dbc.SpellEmpowerStageRow[];
+  spellInterrupts: Dbc.SpellInterruptsRow[];
   spellMisc: Dbc.SpellMiscRow[];
   spellName: Dbc.SpellNameRow[];
   spellPower: Dbc.SpellPowerRow[];
@@ -70,6 +76,9 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   spellCooldowns: ImmutableMap(rawData.spellCooldowns.map((row) => [row.SpellID, row])),
   spellDuration: ImmutableMap(rawData.spellDuration.map((row) => [row.ID, row])),
   spellEffect: groupBySpellId(rawData.spellEffect),
+  spellEmpower: ImmutableMap(rawData.spellEmpower.map((row) => [row.SpellID, row])),
+  spellEmpowerStage: groupBySpellEmpowerId(rawData.spellEmpowerStage),
+  spellInterrupts: ImmutableMap(rawData.spellInterrupts.map((row) => [row.SpellID, row])),
   spellMisc: ImmutableMap(rawData.spellMisc.map((row) => [row.SpellID, row])),
   spellName: ImmutableMap(rawData.spellName.map((row) => [row.ID, row])),
   spellPower: groupBySpellId(rawData.spellPower),
@@ -98,6 +107,19 @@ const groupByItemId = <T extends { ItemID: number }>(
   rows.forEach((row) => {
     const existing = grouped.get(row.ItemID) || [];
     grouped.set(row.ItemID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupBySpellEmpowerId = <T extends { SpellEmpowerID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.SpellEmpowerID) || [];
+    grouped.set(row.SpellEmpowerID, [...existing, row]);
   });
 
   return ImmutableMap(grouped);

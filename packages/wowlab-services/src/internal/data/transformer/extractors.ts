@@ -136,19 +136,68 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           });
         });
 
-      // TODO: Add SpellInterrupts table to DbcService
       const extractInterrupts = (
-        _spellId: number,
-      ): Effect.Effect<Option.Option<never>, DbcError> =>
-        Effect.succeed(Option.none());
-
-      // TODO: Add SpellEmpower table to DbcService
-      const extractEmpower = (
-        _spellId: number,
+        spellId: number,
       ): Effect.Effect<
-        Option.Option<{ canEmpower: boolean; stages: never[] }>,
+        Option.Option<{
+          auraInterruptFlags: [number, number];
+          channelInterruptFlags: [number, number];
+          interruptFlags: number;
+        }>,
         DbcError
-      > => Effect.succeed(Option.some({ canEmpower: false, stages: [] }));
+      > =>
+        Effect.gen(function* () {
+          const spellInterrupts = yield* dbcService.getSpellInterrupts(spellId);
+
+          if (!spellInterrupts) {
+            return Option.none();
+          }
+
+          return Option.some({
+            auraInterruptFlags: [
+              spellInterrupts.AuraInterruptFlags_0,
+              spellInterrupts.AuraInterruptFlags_1,
+            ] as [number, number],
+            channelInterruptFlags: [
+              spellInterrupts.ChannelInterruptFlags_0,
+              spellInterrupts.ChannelInterruptFlags_1,
+            ] as [number, number],
+            interruptFlags: spellInterrupts.InterruptFlags,
+          });
+        });
+
+      const extractEmpower = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          canEmpower: boolean;
+          stages: Array<{ durationMs: number; stage: number }>;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellEmpower = yield* dbcService.getSpellEmpower(spellId);
+
+          if (!spellEmpower) {
+            return Option.some({ canEmpower: false, stages: [] });
+          }
+
+          const empowerStages = yield* dbcService.getSpellEmpowerStages(
+            spellEmpower.ID,
+          );
+
+          const stages = empowerStages
+            .map((stage) => ({
+              durationMs: stage.DurationMs,
+              stage: stage.Stage,
+            }))
+            .sort((a, b) => a.stage - b.stage);
+
+          return Option.some({
+            canEmpower: true,
+            stages,
+          });
+        });
 
       const extractCastTime = (
         spellMisc: Option.Option<Dbc.SpellMiscRow>,
