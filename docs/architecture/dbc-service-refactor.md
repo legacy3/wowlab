@@ -11,7 +11,7 @@ Replace sync extractors with Effect-based `DbcService` abstraction. Two backends
 | 2     | ✅     | Create InMemoryDbcService implementation        |
 | 3     | ✅     | Rewrite extractors to use DbcService            |
 | 4     | ✅     | Rewrite transformSpell/transformItem            |
-| 5     | ⬜     | Update all call sites and wire layers           |
+| 5     | ✅     | Update all call sites and wire layers           |
 | 6     | ⬜     | Create raw_dbc schema in Supabase               |
 | 7     | ⬜     | Create SupabaseDbcService implementation        |
 | 8     | ⬜     | Wire Portal to use Supabase layer               |
