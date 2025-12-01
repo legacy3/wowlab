@@ -9,6 +9,11 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import {
+  DEFAULT_SUPABASE_ANON_KEY,
+  DEFAULT_SUPABASE_URL,
+} from "./config.js";
+
 const CACHE_CAPACITY = 1000;
 const CACHE_TTL = Duration.minutes(5);
 
@@ -731,8 +736,13 @@ export class SupabaseClientService extends Effect.Service<SupabaseClientService>
   "@wowlab/mcp-server/SupabaseClient",
   {
     effect: Effect.gen(function* () {
-      const url = yield* Config.string("SUPABASE_URL");
-      const key = yield* Config.string("SUPABASE_ANON_KEY");
+      // Use bundled defaults, allow env override
+      const url = yield* Config.string("SUPABASE_URL").pipe(
+        Config.withDefault(DEFAULT_SUPABASE_URL),
+      );
+      const key = yield* Config.string("SUPABASE_ANON_KEY").pipe(
+        Config.withDefault(DEFAULT_SUPABASE_ANON_KEY),
+      );
 
       const client = createClient(url, key);
 
