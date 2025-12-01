@@ -462,6 +462,9 @@ importers:
 
   packages/wowlab-services:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.49.1
+        version: 2.84.0
       '@wowlab/core':
         specifier: workspace:*
         version: link:../wowlab-core

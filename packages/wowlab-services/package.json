@@ -18,6 +18,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "@wowlab/core": "workspace:*",
     "effect": "^3.19.4",
     "immutable": "^5.1.4",
