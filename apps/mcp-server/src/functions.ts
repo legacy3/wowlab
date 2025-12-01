@@ -166,13 +166,13 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
   getEffectsForDifficulty: {
     args: {
       difficultyId: {
-        description: "Difficulty ID (0 for normal)",
-        required: true,
+        description: "Difficulty ID (default: 0 for normal)",
+        required: false,
         type: "number",
       },
       effectType: {
-        description: "SpellEffect enum value (e.g., 2 for SchoolDamage)",
-        required: true,
+        description: "SpellEffect enum value (default: 2 for SchoolDamage)",
+        required: false,
         type: "number",
       },
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -186,8 +186,8 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
   getVarianceForDifficulty: {
     args: {
       difficultyId: {
-        description: "Difficulty ID (0 for normal)",
-        required: true,
+        description: "Difficulty ID (default: 0 for normal)",
+        required: false,
         type: "number",
       },
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -201,8 +201,8 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
   hasAoeDamageEffect: {
     args: {
       difficultyId: {
-        description: "Difficulty ID (0 for normal)",
-        required: true,
+        description: "Difficulty ID (default: 0 for normal)",
+        required: false,
         type: "number",
       },
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -367,8 +367,8 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const effectType = args.effectType as number;
-      const difficultyId = args.difficultyId as number;
+      const effectType = (args.effectType as number) ?? 2; // Default to SchoolDamage
+      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.getEffectsForDifficulty(
@@ -383,7 +383,7 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const difficultyId = args.difficultyId as number;
+      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.getVarianceForDifficulty(effects, difficultyId);
@@ -394,7 +394,7 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const difficultyId = args.difficultyId as number;
+      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.hasAoeDamageEffect(effects, difficultyId);

@@ -75,7 +75,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               ),
             ),
           { concurrency: 10 },
-        ),
+        ).pipe(Effect.map((spells) => ({ count: spells.length, spells }))),
 
       // Get multiple items by ID
       get_items_batch: ({ ids }) =>
@@ -90,25 +90,33 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               ),
             ),
           { concurrency: 10 },
-        ),
+        ).pipe(Effect.map((items) => ({ count: items.length, items }))),
 
       // Search spells by name
       search_spells: ({ limit, query }) =>
         searchSpells(client, query, limit ?? 10).pipe(
+          Effect.map((results) => ({ count: results.length, results })),
           Effect.catchAll((e) =>
-            Effect.succeed([
-              { description: "", id: 0, name: `Error: ${String(e)}` },
-            ]),
+            Effect.succeed({
+              count: 0,
+              results: [
+                { description: `Error: ${String(e)}`, id: 0, name: "Error" },
+              ],
+            }),
           ),
         ),
 
       // Search items by name
       search_items: ({ limit, query }) =>
         searchItems(client, query, limit ?? 10).pipe(
+          Effect.map((results) => ({ count: results.length, results })),
           Effect.catchAll((e) =>
-            Effect.succeed([
-              { description: "", id: 0, name: `Error: ${String(e)}` },
-            ]),
+            Effect.succeed({
+              count: 0,
+              results: [
+                { description: `Error: ${String(e)}`, id: 0, name: "Error" },
+              ],
+            }),
           ),
         ),
 
@@ -116,11 +124,14 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
       query_table: ({ ascending, filters, limit, orderBy, select, table }) => {
         // Validate table is allowed
         if (!ALLOWED_TABLES.includes(table as AllowedTable)) {
-          return Effect.succeed([
-            {
-              error: `Table '${table}' is not allowed. Use get_schema to see available tables.`,
-            } as Record<string, unknown>,
-          ]);
+          return Effect.succeed({
+            count: 0,
+            rows: [
+              {
+                error: `Table '${table}' is not allowed. Use get_schema to see available tables.`,
+              } as Record<string, unknown>,
+            ],
+          });
         }
 
         return queryTable(client, {
@@ -131,11 +142,20 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
           select: select ? [...select] : undefined, // Convert readonly to mutable
           table,
         }).pipe(
-          Effect.map((rows) => rows as Array<Record<string, unknown>>),
+          Effect.map((rows) => ({
+            count: rows.length,
+            rows: rows as Array<Record<string, unknown>>,
+          })),
           Effect.catchAll((e) =>
-            Effect.succeed([
-              { error: `Query error: ${String(e)}` } as Record<string, unknown>,
-            ]),
+            Effect.succeed({
+              count: 0,
+              rows: [
+                { error: `Query error: ${String(e)}` } as Record<
+                  string,
+                  unknown
+                >,
+              ],
+            }),
           ),
         );
       },
@@ -143,8 +163,8 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
       // Get table schema
       get_schema: ({ table }) => {
         if (!table) {
-          // Return list of available tables
-          return Effect.succeed(ALLOWED_TABLES as unknown as string[]);
+          // Return list of available tables (wrapped in object)
+          return Effect.succeed({ tables: [...ALLOWED_TABLES] });
         }
 
         // Validate table is allowed
@@ -167,8 +187,10 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
         // Validate function is allowed
         if (!ALLOWED_FUNCTIONS.includes(fn as AllowedFunction)) {
           return Effect.succeed({
-            allowed: ALLOWED_FUNCTIONS,
-            error: `Function '${fn}' is not allowed. Use list_functions to see available functions.`,
+            result: {
+              allowed: ALLOWED_FUNCTIONS,
+              error: `Function '${fn}' is not allowed. Use list_functions to see available functions.`,
+            },
           });
         }
 
@@ -180,19 +202,25 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
         ) as Effect.Effect<unknown, unknown, never>;
 
         return effect.pipe(
+          // Wrap result in object for MCP structuredContent compatibility
+          Effect.map((result) => ({ result })),
           Effect.catchAll((e) =>
             Effect.succeed({
-              cause: String(e),
-              error: `Function call failed`,
-              function: fn,
+              result: {
+                cause: String(e),
+                error: `Function call failed`,
+                function: fn,
+              },
             }),
           ),
         );
       },
 
       // List available functions
-      list_functions: ({ function: filter }) =>
-        Effect.succeed(getFunctionMetadata(filter)),
+      list_functions: ({ function: filter }) => {
+        const functions = getFunctionMetadata(filter);
+        return Effect.succeed({ count: functions.length, functions });
+      },
 
       // Get server status
       get_status: () =>
@@ -226,7 +254,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               latencyMs,
             },
             timestamp: new Date().toISOString(),
-            version: "0.3.0",
+            version: "0.5.0",
           };
         }).pipe(
           Effect.catchAll(() =>
@@ -234,7 +262,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               status: "unhealthy" as const,
               supabase: { connected: false },
               timestamp: new Date().toISOString(),
-              version: "0.3.0",
+              version: "0.5.0",
             }),
           ),
         ),

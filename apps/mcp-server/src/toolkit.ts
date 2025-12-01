@@ -5,10 +5,14 @@ import {
   AllowedFunctionSchema,
   AllowedTableSchema,
   FilterSchema,
-  FunctionMetadataSchema,
-  ItemSearchResultSchema,
+  FunctionCallResponseSchema,
+  FunctionListResponseSchema,
+  ItemBatchResponseSchema,
+  ItemSearchResponseSchema,
+  QueryTableResponseSchema,
   SchemaOutputSchema,
-  SpellSearchResultSchema,
+  SpellBatchResponseSchema,
+  SpellSearchResponseSchema,
   StatusOutputSchema,
 } from "./schemas.js";
 
@@ -45,7 +49,7 @@ export const GetSpellsBatch = Tool.make("get_spells_batch", {
       }),
     ),
   },
-  success: Schema.Array(Schema.Unknown),
+  success: SpellBatchResponseSchema,
 });
 
 export const GetItemsBatch = Tool.make("get_items_batch", {
@@ -59,7 +63,7 @@ export const GetItemsBatch = Tool.make("get_items_batch", {
       }),
     ),
   },
-  success: Schema.Array(Schema.Unknown),
+  success: ItemBatchResponseSchema,
 });
 
 export const SearchSpells = Tool.make("search_spells", {
@@ -78,7 +82,7 @@ export const SearchSpells = Tool.make("search_spells", {
       description: "Search term to match against spell names",
     }),
   },
-  success: Schema.Array(SpellSearchResultSchema),
+  success: SpellSearchResponseSchema,
 });
 
 export const SearchItems = Tool.make("search_items", {
@@ -97,7 +101,7 @@ export const SearchItems = Tool.make("search_items", {
       description: "Search term to match against item names",
     }),
   },
-  success: Schema.Array(ItemSearchResultSchema),
+  success: ItemSearchResponseSchema,
 });
 
 export const QueryTable = Tool.make("query_table", {
@@ -136,9 +140,7 @@ export const QueryTable = Tool.make("query_table", {
         "Table name (use get_schema without table param to list all)",
     }),
   },
-  success: Schema.Array(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  ),
+  success: QueryTableResponseSchema,
 });
 
 export const GetSchema = Tool.make("get_schema", {
@@ -169,7 +171,7 @@ export const CallFunction = Tool.make("call_function", {
       description: "Function name (use list_functions to see available)",
     }),
   },
-  success: Schema.Unknown,
+  success: FunctionCallResponseSchema,
 });
 
 export const ListFunctions = Tool.make("list_functions", {
@@ -182,7 +184,7 @@ export const ListFunctions = Tool.make("list_functions", {
       }),
     ),
   },
-  success: Schema.Array(FunctionMetadataSchema),
+  success: FunctionListResponseSchema,
 });
 
 export const GetStatus = Tool.make("get_status", {

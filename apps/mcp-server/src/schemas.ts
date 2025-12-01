@@ -195,8 +195,13 @@ export const TableSchemaSchema = Schema.Struct({
   table: Schema.String,
 });
 
+// List of tables response (wrapped in object for MCP structuredContent)
+export const TableListSchema = Schema.Struct({
+  tables: Schema.Array(Schema.String),
+});
+
 export const SchemaOutputSchema = Schema.Union(
-  Schema.Array(Schema.String), // List of tables
+  TableListSchema, // List of tables (wrapped)
   TableSchemaSchema, // Single table schema
 );
 
@@ -216,6 +221,44 @@ export const ItemSearchResultSchema = Schema.Struct({
   description: Schema.String,
   id: Schema.Number,
   name: Schema.String,
+});
+
+// Wrapped array responses for MCP structuredContent compatibility
+export const SpellSearchResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  results: Schema.Array(SpellSearchResultSchema),
+});
+
+export const ItemSearchResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  results: Schema.Array(ItemSearchResultSchema),
+});
+
+export const SpellBatchResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  spells: Schema.Array(Schema.Unknown),
+});
+
+export const ItemBatchResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  items: Schema.Array(Schema.Unknown),
+});
+
+export const QueryTableResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  rows: Schema.Array(
+    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  ),
+});
+
+export const FunctionListResponseSchema = Schema.Struct({
+  count: Schema.Number,
+  functions: Schema.Array(FunctionMetadataSchema),
+});
+
+// Wrapped response for call_function to handle null/array/primitive returns
+export const FunctionCallResponseSchema = Schema.Struct({
+  result: Schema.Unknown,
 });
 
 export type ItemSearchResult = Schema.Schema.Type<
