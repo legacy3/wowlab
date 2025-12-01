@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
+import { createRequire } from "module";
 
 import { WowLabToolHandlers } from "./handlers.js";
 import { SupabaseClientService, SupabaseDbcServiceLayer } from "./supabase.js";
@@ -15,8 +16,11 @@ import { WowLabToolkit } from "./toolkit.js";
 // Server Configuration
 // ============================================================================
 
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version: string };
+
 const SERVER_NAME = "wowlab";
-const SERVER_VERSION = "0.3.0";
+const SERVER_VERSION = pkg.version;
 
 // ============================================================================
 // Main Server Layer
