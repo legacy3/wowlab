@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "ncu": "ncu -u",
-    "prepare": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "mcp",
