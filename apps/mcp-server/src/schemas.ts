@@ -1,11 +1,6 @@
 import * as Schema from "effect/Schema";
 
-// ============================================================================
-// Allowed Tables (whitelisted for query_table tool)
-// ============================================================================
-
 export const AllowedTableSchema = Schema.Literal(
-  // Spell tables
   "spell",
   "spell_name",
   "spell_misc",
@@ -23,12 +18,10 @@ export const AllowedTableSchema = Schema.Literal(
   "spell_empower",
   "spell_empower_stage",
   "spell_aura_options",
-  // Item tables
   "item",
   "item_sparse",
   "item_effect",
   "item_x_item_effect",
-  // Shared tables
   "difficulty",
   "expected_stat",
   "expected_stat_mod",
@@ -64,10 +57,6 @@ export const ALLOWED_TABLES = [
   "expected_stat_mod",
   "content_tuning_x_expected",
 ] as const;
-
-// ============================================================================
-// Allowed Functions (whitelisted for call_function tool)
-// ============================================================================
 
 export const AllowedFunctionSchema = Schema.Literal(
   "getDamage",
@@ -111,10 +100,6 @@ export const ALLOWED_FUNCTIONS = [
   "extractDescription",
 ] as const;
 
-// ============================================================================
-// Filter Schema for query_table
-// ============================================================================
-
 export const FilterValueSchema = Schema.Union(
   Schema.String,
   Schema.Number,
@@ -140,10 +125,6 @@ export const FilterSchema = Schema.Record({
 export type Filter = Schema.Schema.Type<typeof FilterSchema>;
 export type FilterValue = Schema.Schema.Type<typeof FilterValueSchema>;
 
-// ============================================================================
-// Function Metadata Schema
-// ============================================================================
-
 export const FunctionArgSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   required: Schema.Boolean,
@@ -164,10 +145,6 @@ export type FunctionMetadata = Schema.Schema.Type<
   typeof FunctionMetadataSchema
 >;
 
-// ============================================================================
-// Status Output Schema
-// ============================================================================
-
 export const StatusOutputSchema = Schema.Struct({
   status: Schema.Literal("healthy", "degraded", "unhealthy"),
   supabase: Schema.Struct({
@@ -180,10 +157,6 @@ export const StatusOutputSchema = Schema.Struct({
 
 export type StatusOutput = Schema.Schema.Type<typeof StatusOutputSchema>;
 
-// ============================================================================
-// Schema Output Schema
-// ============================================================================
-
 export const ColumnInfoSchema = Schema.Struct({
   name: Schema.String,
   nullable: Schema.Boolean,
@@ -195,21 +168,16 @@ export const TableSchemaSchema = Schema.Struct({
   table: Schema.String,
 });
 
-// List of tables response (wrapped in object for MCP structuredContent)
 export const TableListSchema = Schema.Struct({
   tables: Schema.Array(Schema.String),
 });
 
 export const SchemaOutputSchema = Schema.Union(
-  TableListSchema, // List of tables (wrapped)
-  TableSchemaSchema, // Single table schema
+  TableListSchema,
+  TableSchemaSchema,
 );
 
 export type SchemaOutput = Schema.Schema.Type<typeof SchemaOutputSchema>;
-
-// ============================================================================
-// Search Result Schemas
-// ============================================================================
 
 export const SpellSearchResultSchema = Schema.Struct({
   description: Schema.String,
@@ -223,7 +191,6 @@ export const ItemSearchResultSchema = Schema.Struct({
   name: Schema.String,
 });
 
-// Wrapped array responses for MCP structuredContent compatibility
 export const SpellSearchResponseSchema = Schema.Struct({
   count: Schema.Number,
   results: Schema.Array(SpellSearchResultSchema),
@@ -256,7 +223,6 @@ export const FunctionListResponseSchema = Schema.Struct({
   functions: Schema.Array(FunctionMetadataSchema),
 });
 
-// Wrapped response for call_function to handle null/array/primitive returns
 export const FunctionCallResponseSchema = Schema.Struct({
   result: Schema.Unknown,
 });

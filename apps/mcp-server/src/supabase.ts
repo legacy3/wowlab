@@ -14,10 +14,6 @@ import { DEFAULT_SUPABASE_ANON_KEY, DEFAULT_SUPABASE_URL } from "./config.js";
 const CACHE_CAPACITY = 1000;
 const CACHE_TTL = Duration.minutes(5);
 
-// ============================================================================
-// Query Helpers
-// ============================================================================
-
 const query = <T>(
   supabase: SupabaseClient,
   table: string,
@@ -74,10 +70,6 @@ const queryOneByForeignKey = <T>(
     Effect.map((rows) => rows[0]),
   );
 
-// ============================================================================
-// Raw Query for MCP Tools
-// ============================================================================
-
 export interface QueryTableParams {
   ascending?: boolean;
   filters?: Record<string, unknown>;
@@ -106,7 +98,6 @@ export const queryTable = (
       .from(table)
       .select(select?.join(",") ?? "*");
 
-    // Apply filters
     if (filters) {
       for (const [column, value] of Object.entries(filters)) {
         if (value === null || value === undefined) {
@@ -149,12 +140,10 @@ export const queryTable = (
       }
     }
 
-    // Apply ordering
     if (orderBy) {
       builder = builder.order(orderBy, { ascending });
     }
 
-    // Apply limit
     builder = builder.limit(limit);
 
     const result = yield* Effect.tryPromise({
@@ -176,10 +165,6 @@ export const queryTable = (
 
     return result.data ?? [];
   });
-
-// ============================================================================
-// Search Functions for MCP Tools
-// ============================================================================
 
 export const searchSpells = (
   supabase: SupabaseClient,
@@ -219,7 +204,6 @@ export const searchSpells = (
       return [];
     }
 
-    // Get descriptions
     const descResult = yield* Effect.tryPromise({
       catch: (cause) =>
         new DbcQueryError({
@@ -298,10 +282,6 @@ export const searchItems = (
     );
   });
 
-// ============================================================================
-// Schema Query
-// ============================================================================
-
 export const getTableSchema = (
   supabase: SupabaseClient,
   table: string,
@@ -313,7 +293,6 @@ export const getTableSchema = (
   DbcQueryError
 > =>
   Effect.gen(function* () {
-    // Get a sample row to infer columns
     const sampleResult = yield* Effect.tryPromise({
       catch: (cause) =>
         new DbcQueryError({
@@ -337,17 +316,12 @@ export const getTableSchema = (
     return { columns, table };
   });
 
-// ============================================================================
-// SupabaseDbcService Layer
-// ============================================================================
-
 export const SupabaseDbcServiceLive = (
   supabase: SupabaseClient,
 ): Layer.Layer<DbcService> =>
   Layer.effect(
     DbcService,
     Effect.gen(function* () {
-      // Create caches for lookup tables
       const difficultyCache = yield* Cache.make({
         capacity: CACHE_CAPACITY,
         lookup: (id: number) =>
@@ -442,7 +416,6 @@ export const SupabaseDbcServiceLive = (
         timeToLive: CACHE_TTL,
       });
 
-      // Spell-keyed caches
       const spellEffectsCache = yield* Cache.make({
         capacity: CACHE_CAPACITY,
         lookup: (spellId: number) =>
@@ -613,7 +586,6 @@ export const SupabaseDbcServiceLive = (
         timeToLive: CACHE_TTL,
       });
 
-      // Item caches
       const itemCache = yield* Cache.make({
         capacity: CACHE_CAPACITY,
         lookup: (itemId: number) =>
@@ -725,15 +697,10 @@ export const SupabaseDbcServiceLive = (
     }),
   );
 
-// ============================================================================
-// Supabase Client Layer (from environment)
-// ============================================================================
-
 export class SupabaseClientService extends Effect.Service<SupabaseClientService>()(
   "@wowlab/mcp-server/SupabaseClient",
   {
     effect: Effect.gen(function* () {
-      // Use bundled defaults, allow env override
       const url = yield* Config.string("SUPABASE_URL").pipe(
         Config.withDefault(DEFAULT_SUPABASE_URL),
       );
@@ -748,10 +715,6 @@ export class SupabaseClientService extends Effect.Service<SupabaseClientService>
   },
 ) {}
 
-// ============================================================================
-// Combined Service Layer
-// ============================================================================
-
 export const SupabaseDbcServiceLayer = Layer.unwrapEffect(
   Effect.gen(function* () {
     const { client } = yield* SupabaseClientService;
@@ -759,5 +722,4 @@ export const SupabaseDbcServiceLayer = Layer.unwrapEffect(
   }),
 );
 
-// Export the client for use in handlers
 export { type SupabaseClient };

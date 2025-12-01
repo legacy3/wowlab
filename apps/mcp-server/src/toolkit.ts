@@ -16,10 +16,6 @@ import {
   StatusOutputSchema,
 } from "./schemas.js";
 
-// ============================================================================
-// Tool Definitions
-// ============================================================================
-
 export const GetSpell = Tool.make("get_spell", {
   description:
     "Get complete spell data by ID. Returns all spell properties including timing, resources, range, damage, and effects.",
@@ -193,10 +189,6 @@ export const GetStatus = Tool.make("get_status", {
   parameters: {},
   success: StatusOutputSchema,
 });
-
-// ============================================================================
-// Toolkit
-// ============================================================================
 
 export const WowLabToolkit = Toolkit.make(
   GetSpell,

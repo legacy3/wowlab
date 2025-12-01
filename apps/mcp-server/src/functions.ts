@@ -4,10 +4,6 @@ import * as Option from "effect/Option";
 
 import type { AllowedFunction, FunctionMetadata } from "./schemas.js";
 
-// ============================================================================
-// Function Metadata for LLM Discovery
-// ============================================================================
-
 export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
   extractCastTime: {
     args: {
@@ -214,12 +210,7 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
   },
 };
 
-// ============================================================================
-// Function Handlers (secure static map - no dynamic access)
-// ============================================================================
-
 type HandlerArgs = Record<string, unknown>;
-// Using DbcService | ExtractorService for Requirements since these handlers need both services
 type HandlerEffect = Effect.Effect<
   unknown,
   unknown,
@@ -367,8 +358,8 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const effectType = (args.effectType as number) ?? 2; // Default to SchoolDamage
-      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
+      const effectType = (args.effectType as number) ?? 2;
+      const difficultyId = (args.difficultyId as number) ?? 0;
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.getEffectsForDifficulty(
@@ -383,7 +374,7 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
+      const difficultyId = (args.difficultyId as number) ?? 0;
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.getVarianceForDifficulty(effects, difficultyId);
@@ -394,16 +385,12 @@ export const FUNCTION_HANDLERS: Record<
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const spellId = args.spellId as number;
-      const difficultyId = (args.difficultyId as number) ?? 0; // Default to normal
+      const difficultyId = (args.difficultyId as number) ?? 0;
 
       const effects = yield* dbc.getSpellEffects(spellId);
       return yield* extractor.hasAoeDamageEffect(effects, difficultyId);
     }),
 };
-
-// ============================================================================
-// Helper to get function metadata
-// ============================================================================
 
 export const getFunctionMetadata = (filter?: string): FunctionMetadata[] => {
   const allMetadata = Object.values(FUNCTION_METADATA);
