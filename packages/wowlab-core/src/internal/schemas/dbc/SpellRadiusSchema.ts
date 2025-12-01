@@ -1,11 +1,11 @@
 import * as Schema from "effect/Schema";
 
 export const SpellRadiusRowSchema = Schema.Struct({
-  ID: Schema.Number,
-  Radius: Schema.Number,
-  RadiusMax: Schema.Number,
-  RadiusMin: Schema.Number,
-  RadiusPerLevel: Schema.Number,
+  ID: Schema.NumberFromString,
+  Radius: Schema.NumberFromString,
+  RadiusMax: Schema.NumberFromString,
+  RadiusMin: Schema.NumberFromString,
+  RadiusPerLevel: Schema.NumberFromString,
 });
 
 export type SpellRadiusRow = Schema.Schema.Type<typeof SpellRadiusRowSchema>;

@@ -3,15 +3,15 @@ import * as Schema from "effect/Schema";
 import * as Branded from "../Branded.js";
 
 export const SpellTargetRestrictionsRowSchema = Schema.Struct({
-  ConeDegrees: Schema.Number,
-  DifficultyID: Schema.Number,
-  ID: Schema.Number,
-  MaxTargetLevel: Schema.Number,
-  MaxTargets: Schema.Number,
+  ConeDegrees: Schema.NumberFromString,
+  DifficultyID: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  MaxTargetLevel: Schema.NumberFromString,
+  MaxTargets: Schema.NumberFromString,
   SpellID: Branded.SpellIDSchema,
-  TargetCreatureType: Schema.Number,
-  Targets: Schema.Number,
-  Width: Schema.Number,
+  TargetCreatureType: Schema.NumberFromString,
+  Targets: Schema.NumberFromString,
+  Width: Schema.NumberFromString,
 });
 
 export type SpellTargetRestrictionsRow = Schema.Schema.Type<

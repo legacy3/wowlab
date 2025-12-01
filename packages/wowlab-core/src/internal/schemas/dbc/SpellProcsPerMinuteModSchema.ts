@@ -1,11 +1,11 @@
 import * as Schema from "effect/Schema";
 
 export const SpellProcsPerMinuteModRowSchema = Schema.Struct({
-  Coeff: Schema.Number,
-  ID: Schema.Number,
-  Param: Schema.Number,
-  SpellProcsPerMinuteID: Schema.Number,
-  Type: Schema.Number,
+  Coeff: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  Param: Schema.NumberFromString,
+  SpellProcsPerMinuteID: Schema.NumberFromString,
+  Type: Schema.NumberFromString,
 });
 
 export type SpellProcsPerMinuteModRow = Schema.Schema.Type<

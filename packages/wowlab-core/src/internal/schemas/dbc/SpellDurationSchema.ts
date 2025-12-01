@@ -1,9 +1,9 @@
 import * as Schema from "effect/Schema";
 
 export const SpellDurationRowSchema = Schema.Struct({
-  Duration: Schema.Number,
-  ID: Schema.Number,
-  MaxDuration: Schema.Number,
+  Duration: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  MaxDuration: Schema.NumberFromString,
 });
 
 export type SpellDurationRow = Schema.Schema.Type<

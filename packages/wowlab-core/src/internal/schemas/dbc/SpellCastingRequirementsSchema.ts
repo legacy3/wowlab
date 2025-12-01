@@ -3,13 +3,13 @@ import * as Schema from "effect/Schema";
 import * as Branded from "../Branded.js";
 
 export const SpellCastingRequirementsRowSchema = Schema.Struct({
-  FacingCasterFlags: Schema.Number,
-  ID: Schema.Number,
-  MinFactionID: Schema.Number,
-  MinReputation: Schema.Number,
-  RequiredAreasID: Schema.Number,
-  RequiredAuraVision: Schema.Number,
-  RequiresSpellFocus: Schema.Number,
+  FacingCasterFlags: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  MinFactionID: Schema.NumberFromString,
+  MinReputation: Schema.NumberFromString,
+  RequiredAreasID: Schema.NumberFromString,
+  RequiredAuraVision: Schema.NumberFromString,
+  RequiresSpellFocus: Schema.NumberFromString,
   SpellID: Branded.SpellIDSchema,
 });
 

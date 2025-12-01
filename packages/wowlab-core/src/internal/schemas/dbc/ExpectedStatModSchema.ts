@@ -1,16 +1,16 @@
 import * as Schema from "effect/Schema";
 
 export const ExpectedStatModRowSchema = Schema.Struct({
-  ArmorConstantMod: Schema.Number,
-  CreatureArmorMod: Schema.Number,
-  CreatureAutoAttackDPSMod: Schema.Number,
-  CreatureHealthMod: Schema.Number,
-  CreatureSpellDamageMod: Schema.Number,
-  ID: Schema.Number,
-  PlayerHealthMod: Schema.Number,
-  PlayerManaMod: Schema.Number,
-  PlayerPrimaryStatMod: Schema.Number,
-  PlayerSecondaryStatMod: Schema.Number,
+  ArmorConstantMod: Schema.NumberFromString,
+  CreatureArmorMod: Schema.NumberFromString,
+  CreatureAutoAttackDPSMod: Schema.NumberFromString,
+  CreatureHealthMod: Schema.NumberFromString,
+  CreatureSpellDamageMod: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  PlayerHealthMod: Schema.NumberFromString,
+  PlayerManaMod: Schema.NumberFromString,
+  PlayerPrimaryStatMod: Schema.NumberFromString,
+  PlayerSecondaryStatMod: Schema.NumberFromString,
 });
 
 export type ExpectedStatModRow = Schema.Schema.Type<

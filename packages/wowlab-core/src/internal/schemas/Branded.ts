@@ -3,10 +3,10 @@
 import * as Brand from "effect/Brand";
 import * as Schema from "effect/Schema";
 
-export const SpellIDSchema = Schema.Number.pipe(
+export const SpellIDSchema = Schema.NumberFromString.pipe(
   Schema.int(),
-  Schema.filter((n) => n === -1 || n > 0, {
-    message: () => "Expected -1 or a positive integer",
+  Schema.filter((n) => n === -1 || n >= 0, {
+    message: () => "Expected -1 or a non-negative integer",
   }),
   Schema.brand("SpellID"),
 );
@@ -14,8 +14,8 @@ export const SpellIDSchema = Schema.Number.pipe(
 export type SpellID = Schema.Schema.Type<typeof SpellIDSchema>;
 
 export const SpellID = Brand.refined<SpellID>(
-  (n) => Number.isInteger(n) && (n === -1 || n > 0),
-  (n) => Brand.error(`Expected ${n} to be -1 or a positive integer`),
+  (n) => Number.isInteger(n) && (n === -1 || n >= 0),
+  (n) => Brand.error(`Expected ${n} to be -1 or a non-negative integer`),
 );
 
 export const UnitIDSchema = Schema.String.pipe(

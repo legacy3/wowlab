@@ -3,16 +3,16 @@ import * as Schema from "effect/Schema";
 import * as Branded from "../Branded.js";
 
 export const ItemEffectRowSchema = Schema.Struct({
-  CategoryCoolDownMSec: Schema.Number,
-  Charges: Schema.Number,
-  ChrSpecializationID: Schema.Number,
-  CoolDownMSec: Schema.Number,
-  ID: Schema.Number,
-  LegacySlotIndex: Schema.Number,
-  PlayerConditionID: Schema.Number,
-  SpellCategoryID: Schema.Number,
+  CategoryCoolDownMSec: Schema.NumberFromString,
+  Charges: Schema.NumberFromString,
+  ChrSpecializationID: Schema.NumberFromString,
+  CoolDownMSec: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  LegacySlotIndex: Schema.NumberFromString,
+  PlayerConditionID: Schema.NumberFromString,
+  SpellCategoryID: Schema.NumberFromString,
   SpellID: Branded.SpellIDSchema,
-  TriggerType: Schema.Number,
+  TriggerType: Schema.NumberFromString,
 });
 
 export type ItemEffectRow = Schema.Schema.Type<typeof ItemEffectRowSchema>;

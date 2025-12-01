@@ -1,13 +1,13 @@
 import * as Schema from "effect/Schema";
 
 export const SpellCategoryRowSchema = Schema.Struct({
-  ChargeRecoveryTime: Schema.Number,
-  Flags: Schema.Number,
-  ID: Schema.Number,
-  MaxCharges: Schema.Number,
+  ChargeRecoveryTime: Schema.NumberFromString,
+  Flags: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  MaxCharges: Schema.NumberFromString,
   Name_lang: Schema.optional(Schema.String),
-  TypeMask: Schema.Number,
-  UsesPerWeek: Schema.Number,
+  TypeMask: Schema.NumberFromString,
+  UsesPerWeek: Schema.NumberFromString,
 });
 
 export type SpellCategoryRow = Schema.Schema.Type<

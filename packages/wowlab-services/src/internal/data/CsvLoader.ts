@@ -29,7 +29,7 @@ export const parseCsvData = <A, I>(
       catch: (error) => new ParseError({ cause: error }),
       try: () => {
         Papa.parse(csvContent, {
-          dynamicTyping: true,
+          dynamicTyping: false,
           header: true,
           skipEmptyLines: true,
           step: (result) => {
