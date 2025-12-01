@@ -6,7 +6,7 @@ export default function DataInspectorPage() {
     <PageLayout
       title="Data Inspector"
       description="Query and inspect spell or item data by ID"
-      breadcrumbs={[{ label: "Data Inspector" }]}
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Data Inspector" }]}
     >
       <DataInspectorContent />
     </PageLayout>
