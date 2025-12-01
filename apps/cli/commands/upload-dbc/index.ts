@@ -34,6 +34,13 @@ const dryRunOption = Options.boolean("dry-run").pipe(
   ),
 );
 
+const fromOption = Options.choice("from", DBC_TABLE_KEYS).pipe(
+  Options.optional,
+  Options.withDescription(
+    "Start uploading from this table (inclusive), skipping all tables before it.",
+  ),
+);
+
 const truncateTable = (
   supabase: SupabaseClient,
   tableName: string,
@@ -148,6 +155,7 @@ const uploadTable = (
 const uploadDbcProgram = (
   tableFilter: Option.Option<DbcTableKey>,
   dryRun: boolean,
+  fromTable: Option.Option<DbcTableKey>,
 ): Effect.Effect<
   number,
   MissingEnvironmentError | SupabaseError,
@@ -156,9 +164,21 @@ const uploadDbcProgram = (
   Effect.gen(function* () {
     const supabase = yield* createSupabaseClient();
 
-    const tablesToUpload = Option.isSome(tableFilter)
+    let tablesToUpload = Option.isSome(tableFilter)
       ? [tableFilter.value]
       : DBC_TABLE_KEYS;
+
+    // If --from is specified, skip tables before it
+    if (Option.isSome(fromTable)) {
+      const fromIndex = tablesToUpload.indexOf(fromTable.value);
+      if (fromIndex > 0) {
+        yield* Effect.logInfo(
+          `Skipping ${fromIndex} tables before ${fromTable.value}...`,
+        );
+
+        tablesToUpload = tablesToUpload.slice(fromIndex);
+      }
+    }
 
     const modeLabel = dryRun ? "[DRY RUN] " : "";
     yield* Effect.logInfo(
@@ -172,11 +192,12 @@ const uploadDbcProgram = (
     }
 
     yield* Effect.logInfo(`\n${modeLabel}✓ Complete! Total rows: ${totalRows}`);
+
     return totalRows;
   });
 
 export const uploadDbcCommand = Command.make(
   "upload-dbc",
-  { dryRun: dryRunOption, table: tableOption },
-  ({ dryRun, table }) => uploadDbcProgram(table, dryRun),
+  { dryRun: dryRunOption, from: fromOption, table: tableOption },
+  ({ dryRun, from, table }) => uploadDbcProgram(table, dryRun, from),
 );
