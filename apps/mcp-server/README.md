@@ -62,20 +62,23 @@ npm install -g @wowlab/mcp-server
 
 **Available Functions:**
 
-- `getDamage` - Calculate spell damage for a difficulty
-- `getEffectsForDifficulty` - Get spell effects scaled for difficulty
+- `getDamage` - Calculate spell damage for a level/difficulty
+- `getEffectsForDifficulty` - Get spell effects filtered by difficulty
 - `getVarianceForDifficulty` - Get damage variance for difficulty
 - `hasAoeDamageEffect` - Check if spell has AoE damage
-- `extractCooldown` - Get spell cooldown info
-- `extractCastTime` - Get spell cast time
-- `extractDuration` - Get spell duration
-- `extractRange` - Get spell range
-- `extractRadius` - Get spell AoE radius
-- `extractPowerCost` - Get resource costs
-- `extractAuraOptions` - Get aura/buff details
-- `extractInterrupts` - Get interrupt behavior
+- `extractCooldown` - Get cooldown info
+- `extractCastTime` - Get cast time
+- `extractDuration` - Get duration
+- `extractRange` - Get range
+- `extractRadius` - Get AoE radius
+- `extractCharges` - Get charge info
+- `extractPower` - Get resource costs
+- `extractScaling` - Get SP/AP coefficients
+- `extractEmpower` - Get Evoker empower stages
+- `extractInterrupts` - Get interrupt flags
 - `extractClassOptions` - Get class restrictions
-- And more...
+- `extractName` - Get spell name
+- `extractDescription` - Get spell description
 
 ### Utility
 
