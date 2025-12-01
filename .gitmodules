@@ -1,6 +1,0 @@
-[submodule "third_party/wowlab-data"]
-	path = third_party/wowlab-data
-	url = https://github.com/legacy3/wowlab-data
-[submodule "third_party/simc"]
-	path = third_party/simc
-	url = https://github.com/simulationcraft/simc
