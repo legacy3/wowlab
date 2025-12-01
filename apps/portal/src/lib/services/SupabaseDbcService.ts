@@ -2,12 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type * as Schemas from "@wowlab/core/Schemas";
 
 import { DbcQueryError } from "@wowlab/core/Errors";
+import { DbcService, type DbcServiceInterface } from "@wowlab/services/Data";
 import * as Cache from "effect/Cache";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-
-import { DbcService, type DbcServiceInterface } from "./DbcService.js";
 
 // TODO Persist this permanently somewhere
 const CACHE_CAPACITY = 1000;

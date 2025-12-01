@@ -14,7 +14,7 @@ Replace sync extractors with Effect-based `DbcService` abstraction. Two backends
 | 5     | ✅     | Update all call sites and wire layers           |
 | 6     | ✅     | Create raw_dbc schema in Supabase               |
 | 7     | ✅     | Create SupabaseDbcService implementation        |
-| 8     | ⬜     | Wire Portal to use Supabase layer               |
+| 8     | ✅     | Wire Portal to use Supabase layer               |
 
 ---
 
@@ -516,22 +516,28 @@ export const SupabaseDbcService = (
 
 **Goal:** Connect the Portal app to use SupabaseDbcService.
 
-### Update Portal Service Layer
+### Move SupabaseDbcService to Portal
+
+The `SupabaseDbcService` implementation was moved from `@wowlab/services` to `apps/portal/src/lib/services/` to avoid coupling the core library to Supabase. This keeps `@wowlab/services` backend-agnostic.
+
+Files created:
+
+- `apps/portal/src/lib/services/SupabaseDbcService.ts` - The implementation
+- `apps/portal/src/lib/services/dbc-layer.ts` - Factory function
+- `apps/portal/src/lib/services/index.ts` - Barrel export
+
+### Usage
 
 ```typescript
-// apps/portal/src/lib/services/dbc-layer.ts
-import { SupabaseDbcService } from "@wowlab/services/Data";
-import { createSupabaseClient } from "../supabase/client";
+import { createPortalDbcLayer } from "@/lib/services";
+import { createClient } from "@/lib/supabase/server";
 
-export const createPortalDbcLayer = () => {
-  const supabase = createSupabaseClient();
-  return SupabaseDbcService(supabase);
-};
+const supabase = await createClient();
+const dbcLayer = createPortalDbcLayer(supabase);
+const spell = await Effect.runPromise(
+  transformSpell(spellId).pipe(Effect.provide(dbcLayer)),
+);
 ```
-
-### Update Components Using Spell/Item Data
-
-Replace direct Supabase queries with DbcService usage.
 
 ---
 
@@ -541,9 +547,7 @@ Replace direct Supabase queries with DbcService usage.
 packages/wowlab-services/src/internal/data/
 ├── dbc/
 │   ├── DbcService.ts
-│   ├── errors.ts
 │   ├── InMemoryDbcService.ts
-│   ├── SupabaseDbcService.ts
 │   └── index.ts
 ├── transformer/
 │   ├── extractors.ts
@@ -551,6 +555,11 @@ packages/wowlab-services/src/internal/data/
 │   ├── item.ts
 │   └── index.ts
 ├── DbcCache.ts (kept for InMemoryDbcService)
+└── index.ts
+
+apps/portal/src/lib/services/
+├── SupabaseDbcService.ts
+├── dbc-layer.ts
 └── index.ts
 ```
 
