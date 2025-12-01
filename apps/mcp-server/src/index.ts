@@ -1,35 +1,46 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@effect/ai";
+import { NodeRuntime, NodeSink, NodeStream } from "@effect/platform-node";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as LogLevel from "effect/LogLevel";
+import { createRequire } from "module";
 
-import {
-  registerItemTools,
-  registerQueryTools,
-  registerSchemaTools,
-  registerSpellTools,
-} from "./tools/index.js";
+import { WowLabToolHandlers } from "./handlers.js";
+import { SupabaseClientService, SupabaseDbcServiceLayer } from "./supabase.js";
+import { WowLabToolkit } from "./toolkit.js";
 
-// Create server instance
-const server = new McpServer({
-  name: "wowlab-mcp",
-  version: "0.2.0",
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version: string };
+
+const McpServerLayer = McpServer.layerStdio({
+  name: "wowlab",
+  stdin: NodeStream.stdin,
+  stdout: NodeSink.stdout,
+  version: pkg.version,
 });
 
-// Register all tools
-registerSpellTools(server);
-registerItemTools(server);
-registerQueryTools(server);
-registerSchemaTools(server);
+const ToolkitLayer = Layer.effectDiscard(
+  McpServer.registerToolkit(WowLabToolkit),
+);
 
-// Start the server
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("WowLab MCP server running on stdio");
-}
+const ServerLayer = ToolkitLayer.pipe(
+  Layer.provide(WowLabToolHandlers),
+  Layer.provide(McpServerLayer),
+  Layer.provide(SupabaseDbcServiceLayer),
+  Layer.provide(SupabaseClientService.Default),
+  Layer.provide(Logger.minimumLogLevel(LogLevel.Info)),
+);
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+const main = Layer.launch(ServerLayer).pipe(
+  Effect.catchAllCause((cause) =>
+    Effect.sync(() => {
+      console.error("Fatal error:", cause);
+      process.exit(1);
+    }),
+  ),
+);
+
+NodeRuntime.runMain(main);
