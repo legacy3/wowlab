@@ -52,3 +52,7 @@ apps/gamedata-server/data/
 *.tgz
 coverage/
 .mcp.json
+
+# Third party data (local only)
+third_party/simc/
+third_party/wowlab-data/
