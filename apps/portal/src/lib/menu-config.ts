@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bug,
   Clock,
+  Database,
   FileCode,
   FileText,
   Library,
@@ -57,6 +58,7 @@ export const menuConfig: MenuGroup[] = [
       { label: "Timeline", href: "/timeline", icon: Clock },
       { label: "Workbench", href: "/workbench", icon: Activity },
       { label: "Computing", href: "/computing", icon: Loader2 },
+      { label: "Data Inspector", href: "/data-inspector", icon: Database },
     ],
   },
   {
