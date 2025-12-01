@@ -1,35 +1,64 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@effect/ai";
+import { NodeRuntime, NodeSink, NodeStream } from "@effect/platform-node";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as LogLevel from "effect/LogLevel";
 
-import {
-  registerItemTools,
-  registerQueryTools,
-  registerSchemaTools,
-  registerSpellTools,
-} from "./tools/index.js";
+import { WowLabToolHandlers } from "./handlers.js";
+import { SupabaseClientService, SupabaseDbcServiceLayer } from "./supabase.js";
+import { WowLabToolkit } from "./toolkit.js";
 
-// Create server instance
-const server = new McpServer({
-  name: "wowlab-mcp",
-  version: "0.2.0",
+// ============================================================================
+// Server Configuration
+// ============================================================================
+
+const SERVER_NAME = "wowlab";
+const SERVER_VERSION = "0.3.0";
+
+// ============================================================================
+// Main Server Layer
+// ============================================================================
+
+const McpServerLayer = McpServer.layerStdio({
+  name: SERVER_NAME,
+  stdin: NodeStream.stdin,
+  stdout: NodeSink.stdout,
+  version: SERVER_VERSION,
 });
 
-// Register all tools
-registerSpellTools(server);
-registerItemTools(server);
-registerQueryTools(server);
-registerSchemaTools(server);
+// Register toolkit with MCP server
+const ToolkitLayer = Layer.effectDiscard(
+  McpServer.registerToolkit(WowLabToolkit),
+);
 
-// Start the server
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("WowLab MCP server running on stdio");
-}
+// Compose all layers
+// WowLabToolHandlers already includes ExtractorService.Default
+const ServerLayer = ToolkitLayer.pipe(
+  // Provide tool handlers (includes ExtractorService)
+  Layer.provide(WowLabToolHandlers),
+  // Provide MCP server
+  Layer.provide(McpServerLayer),
+  // Provide database services
+  Layer.provide(SupabaseDbcServiceLayer),
+  Layer.provide(SupabaseClientService.Default),
+  // Add stderr logging (MCP uses stdout for protocol)
+  Layer.provide(Logger.minimumLogLevel(LogLevel.Info)),
+);
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+// ============================================================================
+// Entry Point
+// ============================================================================
+
+const main = Layer.launch(ServerLayer).pipe(
+  Effect.catchAllCause((cause) =>
+    Effect.sync(() => {
+      console.error("Fatal error:", cause);
+      process.exit(1);
+    }),
+  ),
+);
+
+NodeRuntime.runMain(main);
