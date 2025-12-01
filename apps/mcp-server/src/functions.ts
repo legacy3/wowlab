@@ -124,6 +124,17 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     returns: "{ attackPower: number, spellPower: number }",
   },
 
+  extractTargetRestrictions: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description:
+      "Extract target restriction information for a spell, including cone degrees, max targets, and width.",
+    name: "extractTargetRestrictions",
+    returns:
+      "{ coneDegrees: number, maxTargetLevel: number, maxTargets: number, targetCreatureType: number, targets: number, width: number } | null",
+  },
+
   getDamage: {
     args: {
       contentTuningId: {
@@ -327,6 +338,16 @@ export const FUNCTION_HANDLERS: Record<
       const extractor = yield* ExtractorService;
       const effects = yield* dbc.getSpellEffects(args.spellId as number);
       return extractor.extractScaling(effects);
+    }),
+
+  extractTargetRestrictions: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractTargetRestrictions(
+        args.spellId as number,
+      );
+
+      return Option.getOrNull(result);
     }),
 
   getDamage: (args) =>

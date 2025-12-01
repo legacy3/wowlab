@@ -11,6 +11,7 @@ export const AllowedTableSchema = Schema.Literal(
   "spell_category",
   "spell_class_options",
   "spell_cast_times",
+  "spell_casting_requirements",
   "spell_duration",
   "spell_range",
   "spell_radius",
@@ -18,10 +19,14 @@ export const AllowedTableSchema = Schema.Literal(
   "spell_empower",
   "spell_empower_stage",
   "spell_aura_options",
+  "spell_target_restrictions",
+  "spell_procs_per_minute",
+  "spell_procs_per_minute_mod",
   "item",
   "item_sparse",
   "item_effect",
   "item_x_item_effect",
+  "manifest_interface_data",
   "difficulty",
   "expected_stat",
   "expected_stat_mod",
@@ -41,6 +46,7 @@ export const ALLOWED_TABLES = [
   "spell_category",
   "spell_class_options",
   "spell_cast_times",
+  "spell_casting_requirements",
   "spell_duration",
   "spell_range",
   "spell_radius",
@@ -48,10 +54,14 @@ export const ALLOWED_TABLES = [
   "spell_empower",
   "spell_empower_stage",
   "spell_aura_options",
+  "spell_target_restrictions",
+  "spell_procs_per_minute",
+  "spell_procs_per_minute_mod",
   "item",
   "item_sparse",
   "item_effect",
   "item_x_item_effect",
+  "manifest_interface_data",
   "difficulty",
   "expected_stat",
   "expected_stat_mod",
@@ -76,6 +86,7 @@ export const AllowedFunctionSchema = Schema.Literal(
   "extractClassOptions",
   "extractName",
   "extractDescription",
+  "extractTargetRestrictions",
 );
 
 export type AllowedFunction = Schema.Schema.Type<typeof AllowedFunctionSchema>;
@@ -98,6 +109,7 @@ export const ALLOWED_FUNCTIONS = [
   "extractClassOptions",
   "extractName",
   "extractDescription",
+  "extractTargetRestrictions",
 ] as const;
 
 export const FilterValueSchema = Schema.Union(

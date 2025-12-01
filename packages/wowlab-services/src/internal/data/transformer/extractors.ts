@@ -539,6 +539,37 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         return Math.abs(manaDrainEffect?.EffectBasePointsF ?? 0);
       };
 
+      const extractTargetRestrictions = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          coneDegrees: number;
+          maxTargetLevel: number;
+          maxTargets: number;
+          targetCreatureType: number;
+          targets: number;
+          width: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const restrictions =
+            yield* dbcService.getSpellTargetRestrictions(spellId);
+
+          if (!restrictions) {
+            return Option.none();
+          }
+
+          return Option.some({
+            coneDegrees: restrictions.ConeDegrees,
+            maxTargetLevel: restrictions.MaxTargetLevel,
+            maxTargets: restrictions.MaxTargets,
+            targetCreatureType: restrictions.TargetCreatureType,
+            targets: restrictions.Targets,
+            width: restrictions.Width,
+          });
+        });
+
       return {
         extractCastTime,
         extractCharges,
@@ -554,6 +585,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         extractRadius,
         extractRange,
         extractScaling,
+        extractTargetRestrictions,
         getDamage,
         getEffectsForDifficulty,
         getVarianceForDifficulty,

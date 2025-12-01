@@ -78,14 +78,9 @@ export const transformSpell = (
     );
     const empower = yield* extractor.extractEmpower(spellId);
 
-    // Cone relies on SpellTargetRestrictions (missing)
-    const _cone = Option.none();
-    /*
-    pipe(
-      first(cache.spellTargetRestrictions.get(spellId)),
-      Option.map((t) => ({ degrees: t.ConeDegrees })),
-    );
-    */
+    // Cone from SpellTargetRestrictions
+    const targetRestrictions =
+      yield* extractor.extractTargetRestrictions(spellId);
 
     const castTime = yield* extractor.extractCastTime(misc);
     const duration = yield* extractor.extractDuration(misc);
@@ -172,7 +167,9 @@ export const transformSpell = (
       rangeMin1: Option.isSome(range) ? range.value.ally.min : 0,
 
       // Geometry
-      coneDegrees: 0, // Option.isSome(cone) ? cone.value.degrees : 0,
+      coneDegrees: Option.isSome(targetRestrictions)
+        ? targetRestrictions.value.coneDegrees
+        : 0,
       radiusMax: radius.length > 0 ? radius[0].max : 0,
       radiusMin: radius.length > 0 ? radius[0].min : 0,
 
