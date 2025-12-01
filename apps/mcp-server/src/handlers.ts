@@ -6,8 +6,13 @@ import {
 } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { createRequire } from "module";
 
 import { FUNCTION_HANDLERS, getFunctionMetadata } from "./functions.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version: string };
+
 import {
   ALLOWED_FUNCTIONS,
   ALLOWED_TABLES,
@@ -160,7 +165,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               latencyMs,
             },
             timestamp: new Date().toISOString(),
-            version: "0.5.0",
+            version: pkg.version,
           };
         }).pipe(
           Effect.catchAll(() =>
@@ -168,7 +173,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
               status: "unhealthy" as const,
               supabase: { connected: false },
               timestamp: new Date().toISOString(),
-              version: "0.5.0",
+              version: pkg.version,
             }),
           ),
         ),
