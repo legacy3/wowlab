@@ -40,12 +40,12 @@
   },
   "dependencies": {
     "@effect/ai": "^0.32.1",
-    "@effect/platform": "^0.93.6",
+    "@effect/platform": "^0.93.3",
     "@effect/platform-node": "^0.100.0",
     "@supabase/supabase-js": "^2.48.1",
     "@wowlab/core": "workspace:*",
     "@wowlab/services": "workspace:*",
-    "effect": "^3.19.8"
+    "effect": "^3.19.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
