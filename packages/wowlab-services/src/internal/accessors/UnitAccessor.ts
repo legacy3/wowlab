@@ -27,6 +27,15 @@ export class UnitAccessor extends Effect.Service<UnitAccessor>()(
             const gameState = yield* state.getState();
             return Array.from(gameState.units.values());
           }),
+
+        updateSpell: (
+          unitId: Schemas.Branded.UnitID,
+          spellId: Schemas.Branded.SpellID,
+          updatedSpell: Entities.Spell.Spell,
+        ) =>
+          state.updateState((s) =>
+            s.setIn(["units", unitId, "spells", "all", spellId], updatedSpell),
+          ),
       };
     }),
   },

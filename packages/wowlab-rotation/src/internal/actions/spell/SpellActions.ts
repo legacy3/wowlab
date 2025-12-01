@@ -1,39 +1,40 @@
 import * as Errors from "@wowlab/core/Errors";
 import { Branded } from "@wowlab/core/Schemas";
 import * as Accessors from "@wowlab/services/Accessors";
-import * as CastQueue from "@wowlab/services/CastQueue";
+import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
 
 export class SpellActions extends Effect.Service<SpellActions>()(
   "SpellActions",
   {
-    dependencies: [
-      Unit.UnitService.Default,
-      Accessors.UnitAccessor.Default,
-      CastQueue.CastQueueService.Default,
-    ],
+    dependencies: [Unit.UnitService.Default, Accessors.UnitAccessor.Default],
     effect: Effect.gen(function* () {
       const unitAccessor = yield* Accessors.UnitAccessor;
-      const castQueue = yield* CastQueue.CastQueueService;
+      const stateService = yield* State.StateService;
 
       return {
         canCast: (unitId: Branded.UnitID, spellId: number) =>
           Effect.gen(function* () {
+            const state = yield* stateService.getState();
+            const currentTime = state.currentTime;
+
             const unit = yield* unitAccessor.get(unitId);
             const spell = unit.spells.all.get(Branded.SpellID(spellId));
 
-            // Check cooldown, resource, etc.
-            // For now, just check existence
-            return spell !== undefined;
+            if (!spell) return false;
+
+            // Check if spell is off cooldown
+            const updatedSpell = spell.with({}, currentTime);
+            return updatedSpell.isReady;
           }),
 
         cast: (unitId: Branded.UnitID, spellId: number) =>
           Effect.gen(function* () {
-            // Get unit
-            const unit = yield* unitAccessor.get(unitId);
+            const state = yield* stateService.getState();
+            const currentTime = state.currentTime;
 
-            // Get spell from unit
+            const unit = yield* unitAccessor.get(unitId);
             const spell = unit.spells.all.get(Branded.SpellID(spellId));
             if (!spell) {
               return yield* Effect.fail(
@@ -41,9 +42,64 @@ export class SpellActions extends Effect.Service<SpellActions>()(
               );
             }
 
-            // Enqueue cast - this will interrupt the fiber if successful
-            // If validation fails (cooldown, GCD, etc.), returns void and rotation continues
-            yield* castQueue.enqueue(spell);
+            // Recompute spell state at current time
+            const spellAtCurrentTime = spell.with({}, currentTime);
+
+            // Check if spell is ready
+            if (!spellAtCurrentTime.isReady) {
+              return yield* Effect.fail(
+                new Errors.SpellOnCooldown({
+                  remainingCooldown:
+                    spellAtCurrentTime.cooldownExpiry - currentTime,
+                  spell: spellAtCurrentTime,
+                }),
+              );
+            }
+
+            // Log the cast
+            yield* Effect.logInfo(
+              `[${currentTime.toFixed(3)}s] SPELL_CAST_SUCCESS: ${unit.name} casts ${spell.info.name} (${spellId})`,
+            );
+
+            // Determine cooldown: use chargeRecoveryTime for charge-based spells, otherwise recoveryTime
+            // chargeRecoveryTime > 0 indicates a charge-based spell (like Barbed Shot, Kill Command)
+            // recoveryTime is used for traditional cooldowns (like Bestial Wrath)
+            const isChargeBased = spell.info.chargeRecoveryTime > 0;
+            const cooldownMs = isChargeBased
+              ? spell.info.chargeRecoveryTime
+              : spell.info.recoveryTime || 0;
+            const cooldownSeconds = cooldownMs / 1000;
+
+            // Trigger the spell's cooldown if it has one
+            if (cooldownSeconds > 0) {
+              const newCooldownExpiry = currentTime + cooldownSeconds;
+              const updatedSpell = spellAtCurrentTime.with(
+                { cooldownExpiry: newCooldownExpiry },
+                currentTime,
+              );
+
+              yield* unitAccessor.updateSpell(
+                unitId,
+                Branded.SpellID(spellId),
+                updatedSpell,
+              );
+            }
+
+            // Only advance simulation time if spell triggers the GCD
+            // startRecoveryTime == 0 means the spell is off-GCD (like Bestial Wrath)
+            const gcdMs = spell.info.startRecoveryTime;
+            const consumedGCD = gcdMs > 0;
+
+            if (consumedGCD) {
+              const gcdSeconds = gcdMs / 1000;
+              const newTime = currentTime + gcdSeconds;
+              yield* stateService.updateState((s) =>
+                s.set("currentTime", newTime),
+              );
+            }
+
+            // Return whether this cast consumed the GCD
+            return { consumedGCD };
           }),
       };
     }),

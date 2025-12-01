@@ -1,13 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
 
-const SupabaseConfig = Config.all({
-  anonKey: Config.string("SUPABASE_ANON_KEY"),
-  url: Config.string("SUPABASE_URL"),
-});
+// Supabase credentials from environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? "";
 
-export const createSupabaseClient = Effect.gen(function* () {
-  const config = yield* SupabaseConfig;
-  return createClient(config.url, config.anonKey);
-});
+export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

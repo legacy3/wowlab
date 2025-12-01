@@ -119,9 +119,12 @@ export const DraggableTabLayout = ({
     }),
   );
 
+  const sectionsSize = sections.size;
+  const sectionsHash = sections.hashCode();
   const orderedSections = useMemo(
     () => sections.toArray(),
-    [sections.size, sections.hashCode()],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sectionsSize, sectionsHash],
   );
 
   const items = useMemo(

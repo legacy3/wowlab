@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import * as Entities from "@wowlab/core/Entities";
+import * as Errors from "@wowlab/core/Errors";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
 import * as Effect from "effect/Effect";
@@ -28,28 +29,45 @@ const createSpellEntity = (
   );
 };
 
+// TODO Remove this crap and fix it so rotas don't need to return
+const tryCast = (
+  rotation: Context.RotationContext,
+  playerId: Schemas.Branded.UnitID,
+  spellId: number,
+): Effect.Effect<
+  { cast: true; consumedGCD: boolean } | { cast: false },
+  Errors.SpellNotFound | Errors.UnitNotFound
+> =>
+  rotation.spell.cast(playerId, spellId).pipe(
+    Effect.map(({ consumedGCD }) => ({ cast: true as const, consumedGCD })),
+    Effect.catchTag("SpellOnCooldown", () =>
+      Effect.succeed({ cast: false as const }),
+    ),
+  );
+
 export const BeastMasteryRotation: RotationDefinition = {
   name: "Beast Mastery Hunter",
   run: (playerId) =>
     Effect.gen(function* () {
       const rotation = yield* Context.RotationContext;
 
-      // Priority-based APL - evaluates from top on each APL_EVALUATE event
-      // NO LOOPS - rotation is re-evaluated by the event system after each cast
+      // Priority-based APL - evaluates from top, tries each spell in order
+      // Returns after a spell consumes the GCD, continues for off-GCD spells
 
-      // Priority 1: Bestial Wrath on cooldown
-      yield* rotation.spell.cast(playerId, 186254);
+      // Priority 1: Bestial Wrath on cooldown (off-GCD)
+      const bw = yield* tryCast(rotation, playerId, 186254);
+      if (bw.cast && bw.consumedGCD) return;
 
       // Priority 2: Barbed Shot to maintain Frenzy
-      yield* rotation.spell.cast(playerId, 217200);
+      const bs = yield* tryCast(rotation, playerId, 217200);
+      if (bs.cast && bs.consumedGCD) return;
 
       // Priority 3: Kill Command on cooldown
-      yield* rotation.spell.cast(playerId, 34026);
+      const kc = yield* tryCast(rotation, playerId, 34026);
+      if (kc.cast && kc.consumedGCD) return;
 
-      // Priority 4: Cobra Shot as filler
-      yield* rotation.spell.cast(playerId, 193455);
-
-      // If nothing can be cast, rotation will be re-evaluated at next event
+      // Priority 4: Cobra Shot as filler (always ready - no cooldown)
+      yield* tryCast(rotation, playerId, 193455);
     }),
   setupPlayer: (id, spells) => {
     const cobraShot = createSpellEntity(spells.find((s) => s.id === 193455)!);

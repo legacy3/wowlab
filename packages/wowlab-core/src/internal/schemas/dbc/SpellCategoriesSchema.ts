@@ -3,17 +3,17 @@ import * as Schema from "effect/Schema";
 import * as Branded from "../Branded.js";
 
 export const SpellCategoriesRowSchema = Schema.Struct({
-  Category: Schema.Number,
-  ChargeCategory: Schema.Number,
-  DefenseType: Schema.Number,
-  DifficultyID: Schema.Number,
-  DiminishType: Schema.Number,
-  DispelType: Schema.Number,
-  ID: Schema.Number,
-  Mechanic: Schema.Number,
-  PreventionType: Schema.Number,
+  Category: Schema.NumberFromString,
+  ChargeCategory: Schema.NumberFromString,
+  DefenseType: Schema.NumberFromString,
+  DifficultyID: Schema.NumberFromString,
+  DiminishType: Schema.NumberFromString,
+  DispelType: Schema.NumberFromString,
+  ID: Schema.NumberFromString,
+  Mechanic: Schema.NumberFromString,
+  PreventionType: Schema.NumberFromString,
   SpellID: Branded.SpellIDSchema,
-  StartRecoveryCategory: Schema.Number,
+  StartRecoveryCategory: Schema.NumberFromString,
 });
 
 export type SpellCategoriesRow = Schema.Schema.Type<

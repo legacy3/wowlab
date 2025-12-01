@@ -2,8 +2,10 @@
 
 import { Command } from "@effect/cli";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import * as Log from "@wowlab/services/Log";
 import { config } from "dotenv";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,4 +31,6 @@ const cli = Command.run(mainCommand, {
   version: "1.0.0",
 });
 
-cli(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
+const AppLayer = Layer.merge(NodeContext.layer, Log.LogService.Default);
+
+cli(process.argv).pipe(Effect.provide(AppLayer), NodeRuntime.runMain);

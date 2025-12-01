@@ -1,160 +1,564 @@
+import { DbcError } from "@wowlab/core/Errors";
 import { Dbc, Enums } from "@wowlab/core/Schemas";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
-import type { DbcCache } from "../DbcCache.js";
+import { DbcService } from "../dbc/DbcService.js";
 
-export const first = <T>(arr?: T[]): Option.Option<T> =>
-  arr?.[0] ? Option.some(arr[0]) : Option.none();
+// ============================================================================
+// Pure helper functions
+// ============================================================================
 
-export const extractRange = (
-  misc: Option.Option<Dbc.SpellMiscRow>,
-  cache: DbcCache,
-) =>
-  pipe(
-    misc,
-    Option.flatMap((m) =>
-      Option.fromNullable(cache.spellRange.get(m.RangeIndex)),
-    ),
-    Option.map((r) => ({
-      ally: { max: r.RangeMax_1, min: r.RangeMin_1 },
-      enemy: { max: r.RangeMax_0, min: r.RangeMin_0 },
-    })),
-  );
+const first = <T>(array?: readonly T[]): Option.Option<T> =>
+  array?.[0] ? Option.some(array[0]) : Option.none();
 
-export const extractRadius = (effects: Dbc.SpellEffectRow[], cache: DbcCache) =>
-  effects.flatMap((e) =>
-    [e.EffectRadiusIndex_0, e.EffectRadiusIndex_1]
-      .filter((i) => i !== 0)
-      .map((i) => Option.fromNullable(cache.spellRadius.get(i)))
-      .filter(Option.isSome)
-      .map((r) => ({
-        max: r.value.RadiusMax,
-        min: r.value.RadiusMin,
-        radius: r.value.Radius,
-      })),
-  );
+// ============================================================================
+// Configuration
+// ============================================================================
 
-export const extractCooldown = (spellId: number, cache: DbcCache) =>
-  pipe(
-    Option.fromNullable(cache.spellCooldowns.get(spellId)),
-    Option.map((c) => ({
-      category: c.CategoryRecoveryTime,
-      gcd: c.StartRecoveryTime,
-      recovery: c.RecoveryTime,
-    })),
-  );
+export interface DamageConfig {
+  readonly contentTuningId: number;
+  readonly expansion: number;
+  readonly level: number;
+  readonly mythicPlusSeasonId: number;
+}
 
-// TODO: Add SpellInterrupts table to DbcCache
-export const extractInterrupts = (spellId: number, cache: DbcCache) =>
-  Option.none();
+export const DEFAULT_DAMAGE_CONFIG: DamageConfig = {
+  contentTuningId: 1279,
+  expansion: 10,
+  level: 80,
+  mythicPlusSeasonId: 103,
+};
 
-// TODO: Add SpellEmpower table to DbcCache
-export const extractEmpower = (spellId: number, cache: DbcCache) =>
-  Option.some({ canEmpower: false, stages: [] });
+// ============================================================================
+// ExtractorService
+// ============================================================================
 
-export const extractCastTime = (
-  misc: Option.Option<Dbc.SpellMiscRow>,
-  cache: DbcCache,
-) =>
-  pipe(
-    misc,
-    Option.flatMap((m) =>
-      m.CastingTimeIndex !== 0
-        ? Option.fromNullable(cache.spellCastTimes.get(m.CastingTimeIndex))
-        : Option.none(),
-    ),
-    Option.map((c) => ({ base: c.Base, min: c.Minimum })),
-  );
+export class ExtractorService extends Effect.Service<ExtractorService>()(
+  "@wowlab/services/ExtractorService",
+  {
+    effect: Effect.gen(function* () {
+      const dbcService = yield* DbcService;
 
-export const extractDuration = (
-  misc: Option.Option<Dbc.SpellMiscRow>,
-  cache: DbcCache,
-) =>
-  pipe(
-    misc,
-    Option.flatMap((m) =>
-      m.DurationIndex !== 0
-        ? Option.fromNullable(cache.spellDuration.get(m.DurationIndex))
-        : Option.none(),
-    ),
-    Option.map((d) => ({ duration: d.Duration, max: d.MaxDuration })),
-  );
+      const extractRange = (
+        spellMisc: Option.Option<Dbc.SpellMiscRow>,
+      ): Effect.Effect<
+        Option.Option<{
+          ally: { max: number; min: number };
+          enemy: { max: number; min: number };
+        }>,
+        DbcError
+      > =>
+        pipe(
+          spellMisc,
+          Option.match({
+            onNone: () => Effect.succeed(Option.none()),
+            onSome: (misc) =>
+              Effect.gen(function* () {
+                const spellRange = yield* dbcService.getSpellRange(
+                  misc.RangeIndex,
+                );
 
-export const extractCharges = (spellId: number, cache: DbcCache) =>
-  pipe(
-    Option.fromNullable(cache.spellCategories.get(spellId)),
-    Option.flatMap((c) =>
-      c.ChargeCategory !== 0
-        ? Option.fromNullable(cache.spellCategory.get(c.ChargeCategory))
-        : Option.none(),
-    ),
-    Option.map((c) => ({
-      maxCharges: c.MaxCharges,
-      rechargeTime: c.ChargeRecoveryTime,
-    })),
-  );
+                if (!spellRange) {
+                  return Option.none();
+                }
 
-export const extractScaling = (effects: Dbc.SpellEffectRow[]) =>
-  effects
-    .filter(
-      (e) =>
-        e.Effect === Enums.SpellEffect.SchoolDamage ||
-        e.Effect === Enums.SpellEffect.Heal,
-    )
-    .map((e) => ({
-      attackPower: e.BonusCoefficientFromAP,
-      spellPower: e.EffectBonusCoefficient,
-    }))[0] || { attackPower: 0, spellPower: 0 };
+                return Option.some({
+                  ally: {
+                    max: spellRange.RangeMax_1,
+                    min: spellRange.RangeMin_1,
+                  },
+                  enemy: {
+                    max: spellRange.RangeMax_0,
+                    min: spellRange.RangeMin_0,
+                  },
+                });
+              }),
+          }),
+        );
 
-export const extractManaCost = (effects: Dbc.SpellEffectRow[]): number =>
-  Math.abs(
-    effects.find(
-      (e) =>
-        e.Effect === Enums.SpellEffect.PowerDrain &&
-        e.EffectMiscValue_0 === Enums.PowerType.Mana,
-    )?.EffectBasePointsF ?? 0,
-  );
+      const extractRadius = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+      ): Effect.Effect<
+        Array<{ max: number; min: number; radius: number }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const radiusResults: Array<{
+            max: number;
+            min: number;
+            radius: number;
+          }> = [];
 
-export const extractName = (spellId: number, cache: DbcCache): string =>
-  pipe(
-    Option.fromNullable(cache.spellName.get(spellId)),
-    Option.map((n) => n.Name_lang || ""),
-    Option.getOrElse(() => `Spell ${spellId}`),
-  );
+          for (const effect of spellEffects) {
+            const radiusIndices = [
+              effect.EffectRadiusIndex_0,
+              effect.EffectRadiusIndex_1,
+            ];
 
-export const extractDescription = (
-  spellId: number,
-  cache: DbcCache,
-): { description: string; auraDescription: string } =>
-  pipe(
-    Option.fromNullable(cache.spell.get(spellId)),
-    Option.map((n) => ({
-      auraDescription: n.AuraDescription_lang || "",
-      description: n.Description_lang || "",
-    })),
-    Option.getOrElse(() => ({ auraDescription: "", description: "" })),
-  );
+            for (const radiusIndex of radiusIndices) {
+              if (radiusIndex !== 0) {
+                const spellRadius =
+                  yield* dbcService.getSpellRadius(radiusIndex);
 
-export const extractPower = (spellId: number, cache: DbcCache) =>
-  pipe(
-    Option.fromNullable(cache.spellPower.get(spellId)),
-    Option.flatMap(first),
-    Option.map((p) => ({
-      powerCost: p.ManaCost,
-      powerCostPct: p.PowerCostPct,
-      powerType: p.PowerType,
-    })),
-  );
+                if (spellRadius) {
+                  radiusResults.push({
+                    max: spellRadius.RadiusMax,
+                    min: spellRadius.RadiusMin,
+                    radius: spellRadius.Radius,
+                  });
+                }
+              }
+            }
+          }
 
-export const extractClassOptions = (spellId: number, cache: DbcCache) =>
-  pipe(
-    Option.fromNullable(cache.spellClassOptions.get(spellId)),
-    Option.map((o) => ({
-      spellClassMask1: o.SpellClassMask_0,
-      spellClassMask2: o.SpellClassMask_1,
-      spellClassMask3: o.SpellClassMask_2,
-      spellClassMask4: o.SpellClassMask_3,
-      spellClassSet: o.SpellClassSet,
-    })),
-  );
+          return radiusResults;
+        });
+
+      const extractCooldown = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{ category: number; gcd: number; recovery: number }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellCooldowns = yield* dbcService.getSpellCooldowns(spellId);
+
+          if (!spellCooldowns) {
+            return Option.none();
+          }
+
+          return Option.some({
+            category: spellCooldowns.CategoryRecoveryTime,
+            gcd: spellCooldowns.StartRecoveryTime,
+            recovery: spellCooldowns.RecoveryTime,
+          });
+        });
+
+      const extractInterrupts = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          auraInterruptFlags: [number, number];
+          channelInterruptFlags: [number, number];
+          interruptFlags: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellInterrupts = yield* dbcService.getSpellInterrupts(spellId);
+
+          if (!spellInterrupts) {
+            return Option.none();
+          }
+
+          return Option.some({
+            auraInterruptFlags: [
+              spellInterrupts.AuraInterruptFlags_0,
+              spellInterrupts.AuraInterruptFlags_1,
+            ] as [number, number],
+            channelInterruptFlags: [
+              spellInterrupts.ChannelInterruptFlags_0,
+              spellInterrupts.ChannelInterruptFlags_1,
+            ] as [number, number],
+            interruptFlags: spellInterrupts.InterruptFlags,
+          });
+        });
+
+      const extractEmpower = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          canEmpower: boolean;
+          stages: Array<{ durationMs: number; stage: number }>;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellEmpower = yield* dbcService.getSpellEmpower(spellId);
+
+          if (!spellEmpower) {
+            return Option.some({ canEmpower: false, stages: [] });
+          }
+
+          const empowerStages = yield* dbcService.getSpellEmpowerStages(
+            spellEmpower.ID,
+          );
+
+          const stages = empowerStages
+            .map((stage) => ({
+              durationMs: stage.DurationMs,
+              stage: stage.Stage,
+            }))
+            .sort((a, b) => a.stage - b.stage);
+
+          return Option.some({
+            canEmpower: true,
+            stages,
+          });
+        });
+
+      const extractCastTime = (
+        spellMisc: Option.Option<Dbc.SpellMiscRow>,
+      ): Effect.Effect<
+        Option.Option<{ base: number; min: number }>,
+        DbcError
+      > =>
+        pipe(
+          spellMisc,
+          Option.match({
+            onNone: () => Effect.succeed(Option.none()),
+            onSome: (misc) => {
+              if (misc.CastingTimeIndex === 0) {
+                return Effect.succeed(Option.none());
+              }
+
+              return Effect.gen(function* () {
+                const castTimes = yield* dbcService.getSpellCastTimes(
+                  misc.CastingTimeIndex,
+                );
+
+                if (!castTimes) {
+                  return Option.none();
+                }
+
+                return Option.some({
+                  base: castTimes.Base,
+                  min: castTimes.Minimum,
+                });
+              });
+            },
+          }),
+        );
+
+      const extractDuration = (
+        spellMisc: Option.Option<Dbc.SpellMiscRow>,
+      ): Effect.Effect<
+        Option.Option<{ duration: number; max: number }>,
+        DbcError
+      > =>
+        pipe(
+          spellMisc,
+          Option.match({
+            onNone: () => Effect.succeed(Option.none()),
+            onSome: (misc) => {
+              if (misc.DurationIndex === 0) {
+                return Effect.succeed(Option.none());
+              }
+
+              return Effect.gen(function* () {
+                const spellDuration = yield* dbcService.getSpellDuration(
+                  misc.DurationIndex,
+                );
+
+                if (!spellDuration) {
+                  return Option.none();
+                }
+
+                return Option.some({
+                  duration: spellDuration.Duration,
+                  max: spellDuration.MaxDuration,
+                });
+              });
+            },
+          }),
+        );
+
+      const extractCharges = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{ maxCharges: number; rechargeTime: number }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellCategories = yield* dbcService.getSpellCategories(spellId);
+
+          if (!spellCategories || spellCategories.ChargeCategory === 0) {
+            return Option.none();
+          }
+
+          const spellCategory = yield* dbcService.getSpellCategory(
+            spellCategories.ChargeCategory,
+          );
+
+          if (!spellCategory) {
+            return Option.none();
+          }
+
+          return Option.some({
+            maxCharges: spellCategory.MaxCharges,
+            rechargeTime: spellCategory.ChargeRecoveryTime,
+          });
+        });
+
+      const extractName = (spellId: number): Effect.Effect<string, DbcError> =>
+        Effect.gen(function* () {
+          const spellName = yield* dbcService.getSpellName(spellId);
+
+          return pipe(
+            Option.fromNullable(spellName),
+            Option.map((name) => name.Name_lang || ""),
+            Option.getOrElse(() => `Spell ${spellId}`),
+          );
+        });
+
+      const extractDescription = (
+        spellId: number,
+      ): Effect.Effect<
+        { description: string; auraDescription: string },
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spell = yield* dbcService.getSpell(spellId);
+
+          return pipe(
+            Option.fromNullable(spell),
+            Option.map((spellRow) => ({
+              auraDescription: spellRow.AuraDescription_lang || "",
+              description: spellRow.Description_lang || "",
+            })),
+            Option.getOrElse(() => ({ auraDescription: "", description: "" })),
+          );
+        });
+
+      const extractPower = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          powerCost: number;
+          powerCostPct: number;
+          powerType: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const spellPowers = yield* dbcService.getSpellPower(spellId);
+          const firstPower = first(spellPowers);
+
+          if (Option.isNone(firstPower)) {
+            return Option.none();
+          }
+
+          return Option.some({
+            powerCost: firstPower.value.ManaCost,
+            powerCostPct: firstPower.value.PowerCostPct,
+            powerType: firstPower.value.PowerType,
+          });
+        });
+
+      const extractClassOptions = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          spellClassMask1: number;
+          spellClassMask2: number;
+          spellClassMask3: number;
+          spellClassMask4: number;
+          spellClassSet: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const classOptions = yield* dbcService.getSpellClassOptions(spellId);
+
+          if (!classOptions) {
+            return Option.none();
+          }
+
+          return Option.some({
+            spellClassMask1: classOptions.SpellClassMask_0,
+            spellClassMask2: classOptions.SpellClassMask_1,
+            spellClassMask3: classOptions.SpellClassMask_2,
+            spellClassMask4: classOptions.SpellClassMask_3,
+            spellClassSet: classOptions.SpellClassSet,
+          });
+        });
+
+      const getEffectsForDifficulty = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+        effectType: number,
+        difficultyId: number,
+      ): Effect.Effect<readonly Dbc.SpellEffectRow[], DbcError> =>
+        Effect.gen(function* () {
+          const matchingEffects = spellEffects.filter(
+            (effect) =>
+              effect.Effect === effectType &&
+              effect.DifficultyID === difficultyId,
+          );
+
+          if (matchingEffects.length > 0 || difficultyId === 0) {
+            return matchingEffects;
+          }
+
+          const difficultyRow = yield* dbcService.getDifficulty(difficultyId);
+
+          if (!difficultyRow) {
+            return spellEffects.filter(
+              (effect) =>
+                effect.Effect === effectType && effect.DifficultyID === 0,
+            );
+          }
+
+          const fallbackDifficultyId = difficultyRow.FallbackDifficultyID;
+
+          if (fallbackDifficultyId === difficultyId) {
+            return matchingEffects;
+          }
+
+          return yield* getEffectsForDifficulty(
+            spellEffects,
+            effectType,
+            fallbackDifficultyId,
+          );
+        });
+
+      const hasAoeDamageEffect = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+        difficultyId: number,
+      ): Effect.Effect<boolean, DbcError> =>
+        Effect.gen(function* () {
+          const schoolDamageEffects = yield* getEffectsForDifficulty(
+            spellEffects,
+            Enums.SpellEffect.SchoolDamage,
+            difficultyId,
+          );
+
+          const environmentalDamageEffects = yield* getEffectsForDifficulty(
+            spellEffects,
+            Enums.SpellEffect.EnvironmentalDamage,
+            difficultyId,
+          );
+
+          const allDamageEffects = [
+            ...schoolDamageEffects,
+            ...environmentalDamageEffects,
+          ];
+
+          return allDamageEffects.some(
+            (effect) =>
+              effect.EffectRadiusIndex_0 > 0 || effect.EffectRadiusIndex_1 > 0,
+          );
+        });
+
+      const getVarianceForDifficulty = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+        difficultyId: number,
+      ): Effect.Effect<number, DbcError> =>
+        Effect.gen(function* () {
+          const damageEffects = yield* getEffectsForDifficulty(
+            spellEffects,
+            Enums.SpellEffect.SchoolDamage,
+            difficultyId,
+          );
+
+          return damageEffects[0]?.Variance ?? 0;
+        });
+
+      const getDamage = (
+        spellEffect: Dbc.SpellEffectRow,
+        config: DamageConfig = DEFAULT_DAMAGE_CONFIG,
+      ): Effect.Effect<number, DbcError> =>
+        Effect.gen(function* () {
+          const { contentTuningId, expansion, level, mythicPlusSeasonId } =
+            config;
+
+          const expectedStats = yield* dbcService.getExpectedStats(
+            level,
+            expansion,
+          );
+
+          const sortedExpectedStats = [...expectedStats].sort(
+            (a, b) => b.ExpansionID - a.ExpansionID,
+          );
+
+          if (sortedExpectedStats.length === 0) {
+            return 0;
+          }
+
+          const expectedStat = sortedExpectedStats[0];
+
+          const contentTuningExpecteds =
+            yield* dbcService.getContentTuningXExpected(
+              contentTuningId,
+              mythicPlusSeasonId,
+            );
+
+          const expectedStatMods: Dbc.ExpectedStatModRow[] = [];
+
+          for (const tuningExpected of contentTuningExpecteds) {
+            const expectedStatMod = yield* dbcService.getExpectedStatMod(
+              tuningExpected.ExpectedStatModID,
+            );
+
+            if (expectedStatMod) {
+              expectedStatMods.push(expectedStatMod);
+            }
+          }
+
+          let damageMultiplier = expectedStat.CreatureSpellDamage;
+
+          for (const statMod of expectedStatMods) {
+            damageMultiplier *= statMod.CreatureSpellDamageMod;
+          }
+
+          const damageValue =
+            (damageMultiplier / 100) * spellEffect.EffectBasePointsF;
+
+          return Math.round(damageValue);
+        });
+
+      const extractScaling = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+      ): { attackPower: number; spellPower: number } => {
+        const scalingEffect = spellEffects.find(
+          (effect) =>
+            effect.Effect === Enums.SpellEffect.SchoolDamage ||
+            effect.Effect === Enums.SpellEffect.Heal,
+        );
+
+        if (!scalingEffect) {
+          return { attackPower: 0, spellPower: 0 };
+        }
+
+        return {
+          attackPower: scalingEffect.BonusCoefficientFromAP,
+          spellPower: scalingEffect.EffectBonusCoefficient,
+        };
+      };
+
+      const extractManaCost = (
+        spellEffects: readonly Dbc.SpellEffectRow[],
+      ): number => {
+        const manaDrainEffect = spellEffects.find(
+          (effect) =>
+            effect.Effect === Enums.SpellEffect.PowerDrain &&
+            effect.EffectMiscValue_0 === Enums.PowerType.Mana,
+        );
+
+        return Math.abs(manaDrainEffect?.EffectBasePointsF ?? 0);
+      };
+
+      return {
+        extractCastTime,
+        extractCharges,
+        extractClassOptions,
+        extractCooldown,
+        extractDescription,
+        extractDuration,
+        extractEmpower,
+        extractInterrupts,
+        extractManaCost,
+        extractName,
+        extractPower,
+        extractRadius,
+        extractRange,
+        extractScaling,
+        getDamage,
+        getEffectsForDifficulty,
+        getVarianceForDifficulty,
+        hasAoeDamageEffect,
+      };
+    }),
+  },
+) {}

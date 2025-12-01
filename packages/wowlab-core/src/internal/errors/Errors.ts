@@ -3,6 +3,15 @@ import * as Data from "effect/Data";
 import * as Entities from "../entities/index.js";
 import * as Branded from "../schemas/Branded.js";
 
+export type DbcError = DbcQueryError;
+
+/** Union of all errors that can occur during rotation execution */
+export type RotationError =
+  | NoChargesAvailable
+  | SpellNotFound
+  | SpellOnCooldown
+  | UnitNotFound;
+
 export class AuraNotFound extends Data.TaggedError("AuraNotFound")<{
   readonly auraId: Branded.SpellID;
   readonly unitId: Branded.UnitID;
@@ -22,6 +31,11 @@ export class DataError extends Data.TaggedError("Data")<{
 export class DBCParse extends Data.TaggedError("DBCParse")<{
   readonly tableName: string;
   readonly reason: string;
+}> {}
+
+export class DbcQueryError extends Data.TaggedError("DbcQueryError")<{
+  readonly message: string;
+  readonly cause?: unknown;
 }> {}
 
 export class GCDActive extends Data.TaggedError("GCDActive")<{

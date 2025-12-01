@@ -1,4 +1,7 @@
+/* eslint-disable no-redeclare */
 /* eslint-disable perfectionist/sort-enums */
+
+// TODO Redo this whole file properly
 import * as Schema from "effect/Schema";
 
 export enum PowerType {
@@ -149,6 +152,7 @@ export enum SpellEffect {
   SchoolDamage = 2,
   Heal = 10,
   PowerDrain = 30,
+  EnvironmentalDamage = 46,
 }
 
 export const SpellEffectSchema = Schema.Enums(SpellEffect);

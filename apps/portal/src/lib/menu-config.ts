@@ -1,9 +1,9 @@
 import {
   Activity,
   BarChart3,
-  BookOpen,
   Bug,
   Clock,
+  Database,
   FileCode,
   FileText,
   Library,
@@ -49,7 +49,6 @@ export const menuConfig: MenuGroup[] = [
       { label: "DPS Rankings", href: "/dps-rankings", icon: Medal },
       { label: "Rotations", href: "/rotations", icon: Library },
       { label: "Charts", href: "/charts", icon: BarChart3 },
-      { label: "Spell Data", href: "/spell-data", icon: BookOpen },
     ],
   },
   {
@@ -59,6 +58,7 @@ export const menuConfig: MenuGroup[] = [
       { label: "Timeline", href: "/timeline", icon: Clock },
       { label: "Workbench", href: "/workbench", icon: Activity },
       { label: "Computing", href: "/computing", icon: Loader2 },
+      { label: "Data Inspector", href: "/data-inspector", icon: Database },
     ],
   },
   {

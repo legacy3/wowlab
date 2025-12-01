@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @wowlab/core --filter @wowlab/services --filter @wowlab/rotation --filter @wowlab/runtime build && pnpm start",
     "build": "tsc",
-    "start": "tsx --env-file=.env src/index.ts",
+    "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@effect/cli": "^0.72.1",
+    "@effect/platform": "^0.93.3",
     "@effect/platform-node": "^0.100.0",
+    "@effect/rpc": "^0.72.1",
     "@supabase/supabase-js": "^2.84.0",
     "@wowlab/core": "workspace:*",
     "@wowlab/rotation": "workspace:*",
