@@ -17,8 +17,9 @@ import {
 } from "./schemas.js";
 
 export const GetSpell = Tool.make("get_spell", {
-  description:
-    "Get complete spell data when you have a spell ID. Returns timing, resources, range, damage, effects, and all computed fields. Use search_spells first if you only know the spell name.",
+  description: `WHEN: You have a spell ID and need full details.
+NOT IF: You only have a name → use search_spells first.
+Returns: id, name, description, timing, resources, range, damage, effects.`,
   parameters: {
     id: Schema.Number.annotations({ description: "The spell ID to look up" }),
   },
@@ -31,8 +32,9 @@ export const GetSpell = Tool.make("get_spell", {
   .annotate(Tool.OpenWorld, false);
 
 export const GetItem = Tool.make("get_item", {
-  description:
-    "Get complete item data when you have an item ID. Returns stats, effects, pricing, and all computed fields. Use search_items first if you only know the item name.",
+  description: `WHEN: You have an item ID and need full details.
+NOT IF: You only have a name → use search_items first.
+Returns: id, name, description, stats, effects, pricing.`,
   parameters: {
     id: Schema.Number.annotations({ description: "The item ID to look up" }),
   },
@@ -45,8 +47,9 @@ export const GetItem = Tool.make("get_item", {
   .annotate(Tool.OpenWorld, false);
 
 export const GetSpellsBatch = Tool.make("get_spells_batch", {
-  description:
-    "Get multiple spells by ID in one request. Use this instead of multiple get_spell calls when you need data for several spells. Max 50 IDs per request.",
+  description: `WHEN: You need full details for multiple spells (2+) and have their IDs.
+USE INSTEAD OF: Multiple get_spell calls.
+Returns: Array of spell objects (max 50).`,
   parameters: {
     ids: Schema.Array(Schema.Number).pipe(
       Schema.maxItems(50),
@@ -64,8 +67,9 @@ export const GetSpellsBatch = Tool.make("get_spells_batch", {
   .annotate(Tool.OpenWorld, false);
 
 export const GetItemsBatch = Tool.make("get_items_batch", {
-  description:
-    "Get multiple items by ID in one request. Use this instead of multiple get_item calls when you need data for several items. Max 50 IDs per request.",
+  description: `WHEN: You need full details for multiple items (2+) and have their IDs.
+USE INSTEAD OF: Multiple get_item calls.
+Returns: Array of item objects (max 50).`,
   parameters: {
     ids: Schema.Array(Schema.Number).pipe(
       Schema.maxItems(50),
@@ -83,8 +87,10 @@ export const GetItemsBatch = Tool.make("get_items_batch", {
   .annotate(Tool.OpenWorld, false);
 
 export const SearchSpells = Tool.make("search_spells", {
-  description:
-    "Find spells by name when you don't know the spell ID. Returns matching spell IDs, names, and descriptions. Use this first, then get_spell for full details.",
+  description: `WHEN: You know a spell name but not its ID.
+WORKFLOW: search_spells → get ID from results → get_spell(id) for full details.
+NOT IF: You already have the spell ID → use get_spell directly.
+Returns: Array of {id, name, description}.`,
   parameters: {
     limit: Schema.optional(
       Schema.Number.pipe(
@@ -107,8 +113,10 @@ export const SearchSpells = Tool.make("search_spells", {
   .annotate(Tool.OpenWorld, false);
 
 export const SearchItems = Tool.make("search_items", {
-  description:
-    "Find items by name when you don't know the item ID. Returns matching item IDs, names, and descriptions. Use this first, then get_item for full details.",
+  description: `WHEN: You know an item name but not its ID.
+WORKFLOW: search_items → get ID from results → get_item(id) for full details.
+NOT IF: You already have the item ID → use get_item directly.
+Returns: Array of {id, name, description}.`,
   parameters: {
     limit: Schema.optional(
       Schema.Number.pipe(
@@ -131,8 +139,10 @@ export const SearchItems = Tool.make("search_items", {
   .annotate(Tool.OpenWorld, false);
 
 export const QueryTable = Tool.make("query_table", {
-  description:
-    "Query raw DBC database tables directly. Only use this for advanced lookups when get_spell/get_item don't provide the data you need. Call get_schema first to see available tables and columns.",
+  description: `WHEN: get_spell/get_item don't have the data you need.
+REQUIRES: Call get_schema first to see available tables/columns.
+NOT IF: You just need spell or item data → use get_spell/get_item.
+Returns: Array of rows with selected columns.`,
   parameters: {
     ascending: Schema.optional(
       Schema.Boolean.annotations({
@@ -174,8 +184,9 @@ export const QueryTable = Tool.make("query_table", {
   .annotate(Tool.OpenWorld, false);
 
 export const GetSchema = Tool.make("get_schema", {
-  description:
-    "Discover available database tables and their columns. Call without parameters to list all tables. Call with a table name to see its columns. Use before query_table.",
+  description: `WHEN: You need to use query_table but don't know the schema.
+WORKFLOW: get_schema() → list tables → get_schema(table) → see columns → query_table.
+Returns: Tables list (no param) or columns for a specific table.`,
   parameters: {
     table: Schema.optional(
       Schema.String.annotations({
@@ -192,8 +203,9 @@ export const GetSchema = Tool.make("get_schema", {
   .annotate(Tool.OpenWorld, false);
 
 export const CallFunction = Tool.make("call_function", {
-  description:
-    "Compute derived spell/item values like damage, cooldowns, or scaling coefficients. Call list_functions first to see available functions and required parameters.",
+  description: `WHEN: You need computed values (damage, cooldowns, scaling) not in raw data.
+REQUIRES: Call list_functions first to see available functions and args.
+Returns: Computed value or data object.`,
   parameters: {
     args: Schema.Record({
       key: Schema.String,
@@ -214,8 +226,9 @@ export const CallFunction = Tool.make("call_function", {
   .annotate(Tool.OpenWorld, false);
 
 export const ListFunctions = Tool.make("list_functions", {
-  description:
-    "List available extractor functions for computing derived spell/item data. Shows function signatures and descriptions. Call this before using call_function.",
+  description: `WHEN: You need to use call_function but don't know available functions.
+WORKFLOW: list_functions → pick function → call_function with correct args.
+Returns: Function names, signatures, and descriptions.`,
   parameters: {
     function: Schema.optional(
       Schema.String.annotations({
@@ -232,8 +245,9 @@ export const ListFunctions = Tool.make("list_functions", {
   .annotate(Tool.OpenWorld, false);
 
 export const GetStatus = Tool.make("get_status", {
-  description:
-    "Check if the server is healthy and connected to the database. Use this to diagnose connection issues or verify the server is working.",
+  description: `WHEN: Diagnosing connection issues or verifying server health.
+NOT IF: You just want to query data → use other tools directly.
+Returns: Server status and DB connection state.`,
   parameters: {},
   success: StatusOutputSchema,
 })
