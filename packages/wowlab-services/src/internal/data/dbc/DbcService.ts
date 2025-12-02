@@ -59,6 +59,13 @@ export interface DbcServiceInterface {
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellAuraOptionsRow | undefined, DbcError>;
 
+  readonly getSpellAuraRestrictions: (
+    spellId: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.SpellAuraRestrictionsRow | undefined,
+    DbcError
+  >;
+
   readonly getSpellCastingRequirements: (
     spellId: number,
   ) => Effect.Effect<
@@ -86,6 +93,13 @@ export interface DbcServiceInterface {
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellCooldownsRow | undefined, DbcError>;
 
+  readonly getSpellDescriptionVariables: (
+    id: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.SpellDescriptionVariablesRow | undefined,
+    DbcError
+  >;
+
   readonly getSpellDuration: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.SpellDurationRow | undefined, DbcError>;
@@ -105,6 +119,14 @@ export interface DbcServiceInterface {
   readonly getSpellInterrupts: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellInterruptsRow | undefined, DbcError>;
+
+  readonly getSpellLearnSpell: (
+    spellId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLearnSpellRow>, DbcError>;
+
+  readonly getSpellLevels: (
+    spellId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLevelsRow>, DbcError>;
 
   readonly getSpellMisc: (
     spellId: number,
@@ -137,10 +159,33 @@ export interface DbcServiceInterface {
     id: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRangeRow | undefined, DbcError>;
 
+  readonly getSpellReplacement: (
+    spellId: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellReplacementRow | undefined, DbcError>;
+
+  readonly getSpellShapeshift: (
+    spellId: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellShapeshiftRow | undefined, DbcError>;
+
+  readonly getSpellShapeshiftForm: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.SpellShapeshiftFormRow | undefined, DbcError>;
+
   readonly getSpellTargetRestrictions: (
     spellId: number,
   ) => Effect.Effect<
     Schemas.Dbc.SpellTargetRestrictionsRow | undefined,
+    DbcError
+  >;
+
+  readonly getSpellTotems: (
+    spellId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellTotemsRow>, DbcError>;
+
+  readonly getSpellXDescriptionVariables: (
+    spellId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
     DbcError
   >;
 }

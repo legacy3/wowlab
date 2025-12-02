@@ -31,6 +31,15 @@ export const AllowedTableSchema = Schema.Literal(
   "expected_stat",
   "expected_stat_mod",
   "content_tuning_x_expected",
+  "spell_aura_restrictions",
+  "spell_description_variables",
+  "spell_learn_spell",
+  "spell_levels",
+  "spell_replacement",
+  "spell_shapeshift",
+  "spell_shapeshift_form",
+  "spell_totems",
+  "spell_x_description_variables",
 );
 
 export type AllowedTable = Schema.Schema.Type<typeof AllowedTableSchema>;
@@ -66,6 +75,15 @@ export const ALLOWED_TABLES = [
   "expected_stat",
   "expected_stat_mod",
   "content_tuning_x_expected",
+  "spell_aura_restrictions",
+  "spell_description_variables",
+  "spell_learn_spell",
+  "spell_levels",
+  "spell_replacement",
+  "spell_shapeshift",
+  "spell_shapeshift_form",
+  "spell_totems",
+  "spell_x_description_variables",
 ] as const;
 
 export const AllowedFunctionSchema = Schema.Literal(

@@ -14,17 +14,21 @@ export interface DbcCache {
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
   spell: ImmutableMap<number, Dbc.SpellRow>;
   spellAuraOptions: ImmutableMap<number, Dbc.SpellAuraOptionsRow>;
+  spellAuraRestrictions: ImmutableMap<number, Dbc.SpellAuraRestrictionsRow>;
   spellCastingRequirements: ImmutableMap<number, Dbc.SpellCastingRequirementsRow>;
   spellCastTimes: ImmutableMap<number, Dbc.SpellCastTimesRow>;
   spellCategories: ImmutableMap<number, Dbc.SpellCategoriesRow>;
   spellCategory: ImmutableMap<number, Dbc.SpellCategoryRow>;
   spellClassOptions: ImmutableMap<number, Dbc.SpellClassOptionsRow>;
   spellCooldowns: ImmutableMap<number, Dbc.SpellCooldownsRow>;
+  spellDescriptionVariables: ImmutableMap<number, Dbc.SpellDescriptionVariablesRow>;
   spellDuration: ImmutableMap<number, Dbc.SpellDurationRow>;
   spellEffect: ImmutableMap<number, Dbc.SpellEffectRow[]>;
   spellEmpower: ImmutableMap<number, Dbc.SpellEmpowerRow>;
   spellEmpowerStage: ImmutableMap<number, Dbc.SpellEmpowerStageRow[]>;
   spellInterrupts: ImmutableMap<number, Dbc.SpellInterruptsRow>;
+  spellLearnSpell: ImmutableMap<number, Dbc.SpellLearnSpellRow[]>;
+  spellLevels: ImmutableMap<number, Dbc.SpellLevelsRow[]>;
   spellMisc: ImmutableMap<number, Dbc.SpellMiscRow>;
   spellName: ImmutableMap<number, Dbc.SpellNameRow>;
   spellPower: ImmutableMap<number, Dbc.SpellPowerRow[]>;
@@ -32,7 +36,12 @@ export interface DbcCache {
   spellProcsPerMinuteMod: ImmutableMap<number, Dbc.SpellProcsPerMinuteModRow[]>;
   spellRadius: ImmutableMap<number, Dbc.SpellRadiusRow>;
   spellRange: ImmutableMap<number, Dbc.SpellRangeRow>;
+  spellReplacement: ImmutableMap<number, Dbc.SpellReplacementRow>;
+  spellShapeshift: ImmutableMap<number, Dbc.SpellShapeshiftRow>;
+  spellShapeshiftForm: ImmutableMap<number, Dbc.SpellShapeshiftFormRow>;
   spellTargetRestrictions: ImmutableMap<number, Dbc.SpellTargetRestrictionsRow>;
+  spellTotems: ImmutableMap<number, Dbc.SpellTotemsRow[]>;
+  spellXDescriptionVariables: ImmutableMap<number, Dbc.SpellXDescriptionVariablesRow[]>;
 }
 
 // prettier-ignore
@@ -48,17 +57,21 @@ export interface RawDbcData {
   manifestInterfaceData: Dbc.ManifestInterfaceDataRow[];
   spell: Dbc.SpellRow[];
   spellAuraOptions: Dbc.SpellAuraOptionsRow[];
+  spellAuraRestrictions: Dbc.SpellAuraRestrictionsRow[];
   spellCastingRequirements: Dbc.SpellCastingRequirementsRow[];
   spellCastTimes: Dbc.SpellCastTimesRow[];
   spellCategories: Dbc.SpellCategoriesRow[];
   spellCategory: Dbc.SpellCategoryRow[];
   spellClassOptions: Dbc.SpellClassOptionsRow[];
   spellCooldowns: Dbc.SpellCooldownsRow[];
+  spellDescriptionVariables: Dbc.SpellDescriptionVariablesRow[];
   spellDuration: Dbc.SpellDurationRow[];
   spellEffect: Dbc.SpellEffectRow[];
   spellEmpower: Dbc.SpellEmpowerRow[];
   spellEmpowerStage: Dbc.SpellEmpowerStageRow[];
   spellInterrupts: Dbc.SpellInterruptsRow[];
+  spellLearnSpell: Dbc.SpellLearnSpellRow[];
+  spellLevels: Dbc.SpellLevelsRow[];
   spellMisc: Dbc.SpellMiscRow[];
   spellName: Dbc.SpellNameRow[];
   spellPower: Dbc.SpellPowerRow[];
@@ -66,7 +79,12 @@ export interface RawDbcData {
   spellProcsPerMinuteMod: Dbc.SpellProcsPerMinuteModRow[];
   spellRadius: Dbc.SpellRadiusRow[];
   spellRange: Dbc.SpellRangeRow[];
+  spellReplacement: Dbc.SpellReplacementRow[];
+  spellShapeshift: Dbc.SpellShapeshiftRow[];
+  spellShapeshiftForm: Dbc.SpellShapeshiftFormRow[];
   spellTargetRestrictions: Dbc.SpellTargetRestrictionsRow[];
+  spellTotems: Dbc.SpellTotemsRow[];
+  spellXDescriptionVariables: Dbc.SpellXDescriptionVariablesRow[];
 }
 
 // prettier-ignore
@@ -82,17 +100,21 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),
   spell: ImmutableMap(rawData.spell.map((row) => [row.ID, row])),
   spellAuraOptions: ImmutableMap(rawData.spellAuraOptions.map((row) => [row.SpellID, row])),
+  spellAuraRestrictions: ImmutableMap(rawData.spellAuraRestrictions.map((row) => [row.SpellID, row])),
   spellCastingRequirements: ImmutableMap(rawData.spellCastingRequirements.map((row) => [row.SpellID, row])),
   spellCastTimes: ImmutableMap(rawData.spellCastTimes.map((row) => [row.ID, row])),
   spellCategories: ImmutableMap(rawData.spellCategories.map((row) => [row.SpellID, row])),
   spellCategory: ImmutableMap(rawData.spellCategory.map((row) => [row.ID, row])),
   spellClassOptions: ImmutableMap(rawData.spellClassOptions.map((row) => [row.SpellID, row])),
   spellCooldowns: ImmutableMap(rawData.spellCooldowns.map((row) => [row.SpellID, row])),
+  spellDescriptionVariables: ImmutableMap(rawData.spellDescriptionVariables.map((row) => [row.ID, row])),
   spellDuration: ImmutableMap(rawData.spellDuration.map((row) => [row.ID, row])),
   spellEffect: groupBySpellId(rawData.spellEffect),
   spellEmpower: ImmutableMap(rawData.spellEmpower.map((row) => [row.SpellID, row])),
   spellEmpowerStage: groupBySpellEmpowerId(rawData.spellEmpowerStage),
   spellInterrupts: ImmutableMap(rawData.spellInterrupts.map((row) => [row.SpellID, row])),
+  spellLearnSpell: groupBySpellId(rawData.spellLearnSpell),
+  spellLevels: groupBySpellId(rawData.spellLevels),
   spellMisc: ImmutableMap(rawData.spellMisc.map((row) => [row.SpellID, row])),
   spellName: ImmutableMap(rawData.spellName.map((row) => [row.ID, row])),
   spellPower: groupBySpellId(rawData.spellPower),
@@ -100,7 +122,12 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   spellProcsPerMinuteMod: groupBySpellProcsPerMinuteId(rawData.spellProcsPerMinuteMod),
   spellRadius: ImmutableMap(rawData.spellRadius.map((row) => [row.ID, row])),
   spellRange: ImmutableMap(rawData.spellRange.map((row) => [row.ID, row])),
+  spellReplacement: ImmutableMap(rawData.spellReplacement.map((row) => [row.SpellID, row])),
+  spellShapeshift: ImmutableMap(rawData.spellShapeshift.map((row) => [row.SpellID, row])),
+  spellShapeshiftForm: ImmutableMap(rawData.spellShapeshiftForm.map((row) => [row.ID, row])),
   spellTargetRestrictions: ImmutableMap(rawData.spellTargetRestrictions.map((row) => [row.SpellID, row])),
+  spellTotems: groupBySpellId(rawData.spellTotems),
+  spellXDescriptionVariables: groupBySpellId(rawData.spellXDescriptionVariables),
 });
 
 const groupBySpellId = <T extends { SpellID: number }>(

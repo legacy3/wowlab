@@ -574,6 +574,112 @@ export const SupabaseDbcServiceLive = (
         timeToLive: CACHE_TTL,
       });
 
+      const spellAuraRestrictionsCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryOneByForeignKey<Schemas.Dbc.SpellAuraRestrictionsRow>(
+            supabase,
+            "spell_aura_restrictions",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellDescriptionVariablesCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (id: number) =>
+          queryById<Schemas.Dbc.SpellDescriptionVariablesRow>(
+            supabase,
+            "spell_description_variables",
+            id,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellLearnSpellCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryByForeignKey<Schemas.Dbc.SpellLearnSpellRow>(
+            supabase,
+            "spell_learn_spell",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellLevelsCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryByForeignKey<Schemas.Dbc.SpellLevelsRow>(
+            supabase,
+            "spell_levels",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellReplacementCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryOneByForeignKey<Schemas.Dbc.SpellReplacementRow>(
+            supabase,
+            "spell_replacement",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellShapeshiftCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryOneByForeignKey<Schemas.Dbc.SpellShapeshiftRow>(
+            supabase,
+            "spell_shapeshift",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellShapeshiftFormCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (id: number) =>
+          queryById<Schemas.Dbc.SpellShapeshiftFormRow>(
+            supabase,
+            "spell_shapeshift_form",
+            id,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellTotemsCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryByForeignKey<Schemas.Dbc.SpellTotemsRow>(
+            supabase,
+            "spell_totems",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const spellXDescriptionVariablesCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (spellId: number) =>
+          queryByForeignKey<Schemas.Dbc.SpellXDescriptionVariablesRow>(
+            supabase,
+            "spell_x_description_variables",
+            "SpellID",
+            spellId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
       const spellProcsPerMinuteModsCache = yield* Cache.make({
         capacity: CACHE_CAPACITY,
         lookup: (spellProcsPerMinuteId: number) =>
@@ -668,6 +774,8 @@ export const SupabaseDbcServiceLive = (
         getManifestInterfaceData: (id) => manifestInterfaceDataCache.get(id),
         getSpell: (spellId) => spellCache.get(spellId),
         getSpellAuraOptions: (spellId) => spellAuraOptionsCache.get(spellId),
+        getSpellAuraRestrictions: (spellId) =>
+          spellAuraRestrictionsCache.get(spellId),
         getSpellCastingRequirements: (spellId) =>
           spellCastingRequirementsCache.get(spellId),
         getSpellCastTimes: (id) => spellCastTimesCache.get(id),
@@ -675,12 +783,16 @@ export const SupabaseDbcServiceLive = (
         getSpellCategory: (id) => spellCategoryCache.get(id),
         getSpellClassOptions: (spellId) => spellClassOptionsCache.get(spellId),
         getSpellCooldowns: (spellId) => spellCooldownsCache.get(spellId),
+        getSpellDescriptionVariables: (id) =>
+          spellDescriptionVariablesCache.get(id),
         getSpellDuration: (id) => spellDurationCache.get(id),
         getSpellEffects: (spellId) => spellEffectsCache.get(spellId),
         getSpellEmpower: (spellId) => spellEmpowerCache.get(spellId),
         getSpellEmpowerStages: (spellEmpowerId) =>
           spellEmpowerStagesCache.get(spellEmpowerId),
         getSpellInterrupts: (spellId) => spellInterruptsCache.get(spellId),
+        getSpellLearnSpell: (spellId) => spellLearnSpellCache.get(spellId),
+        getSpellLevels: (spellId) => spellLevelsCache.get(spellId),
         getSpellMisc: (spellId) => spellMiscCache.get(spellId),
         getSpellName: (spellId) => spellNameCache.get(spellId),
         getSpellPower: (spellId) => spellPowerCache.get(spellId),
@@ -689,8 +801,14 @@ export const SupabaseDbcServiceLive = (
           spellProcsPerMinuteModsCache.get(spellProcsPerMinuteId),
         getSpellRadius: (id) => spellRadiusCache.get(id),
         getSpellRange: (id) => spellRangeCache.get(id),
+        getSpellReplacement: (spellId) => spellReplacementCache.get(spellId),
+        getSpellShapeshift: (spellId) => spellShapeshiftCache.get(spellId),
+        getSpellShapeshiftForm: (id) => spellShapeshiftFormCache.get(id),
         getSpellTargetRestrictions: (spellId) =>
           spellTargetRestrictionsCache.get(spellId),
+        getSpellTotems: (spellId) => spellTotemsCache.get(spellId),
+        getSpellXDescriptionVariables: (spellId) =>
+          spellXDescriptionVariablesCache.get(spellId),
       };
 
       return service;

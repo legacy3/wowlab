@@ -68,6 +68,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellAuraOptions: (spellId) =>
       Effect.succeed(cache.spellAuraOptions.get(spellId)),
 
+    getSpellAuraRestrictions: (spellId) =>
+      Effect.succeed(cache.spellAuraRestrictions.get(spellId)),
+
     getSpellCastingRequirements: (spellId) =>
       Effect.succeed(cache.spellCastingRequirements.get(spellId)),
 
@@ -84,6 +87,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellCooldowns: (spellId) =>
       Effect.succeed(cache.spellCooldowns.get(spellId)),
 
+    getSpellDescriptionVariables: (id) =>
+      Effect.succeed(cache.spellDescriptionVariables.get(id)),
+
     getSpellDuration: (id) => Effect.succeed(cache.spellDuration.get(id)),
 
     getSpellEffects: (spellId) =>
@@ -97,6 +103,12 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getSpellInterrupts: (spellId) =>
       Effect.succeed(cache.spellInterrupts.get(spellId)),
+
+    getSpellLearnSpell: (spellId) =>
+      Effect.succeed(cache.spellLearnSpell.get(spellId) ?? []),
+
+    getSpellLevels: (spellId) =>
+      Effect.succeed(cache.spellLevels.get(spellId) ?? []),
 
     getSpellMisc: (spellId) => Effect.succeed(cache.spellMisc.get(spellId)),
 
@@ -117,6 +129,21 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getSpellRange: (id) => Effect.succeed(cache.spellRange.get(id)),
 
+    getSpellReplacement: (spellId) =>
+      Effect.succeed(cache.spellReplacement.get(spellId)),
+
+    getSpellShapeshift: (spellId) =>
+      Effect.succeed(cache.spellShapeshift.get(spellId)),
+
+    getSpellShapeshiftForm: (id) =>
+      Effect.succeed(cache.spellShapeshiftForm.get(id)),
+
     getSpellTargetRestrictions: (spellId) =>
       Effect.succeed(cache.spellTargetRestrictions.get(spellId)),
+
+    getSpellTotems: (spellId) =>
+      Effect.succeed(cache.spellTotems.get(spellId) ?? []),
+
+    getSpellXDescriptionVariables: (spellId) =>
+      Effect.succeed(cache.spellXDescriptionVariables.get(spellId) ?? []),
   } satisfies DbcServiceInterface);

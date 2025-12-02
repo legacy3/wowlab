@@ -20,10 +20,10 @@ import { DBC_TABLE_KEYS, DBC_TABLES, type DbcTableKey } from "./config.js";
 
 const BATCH_SIZE = 1000;
 
-const tableOption = Options.choice("table", DBC_TABLE_KEYS).pipe(
-  Options.optional,
+const tablesOption = Options.choice("tables", DBC_TABLE_KEYS).pipe(
+  Options.repeated,
   Options.withDescription(
-    "Specific table to upload. If not provided, uploads all tables.",
+    "Specific tables to upload. Can be specified multiple times. If not provided, uploads all tables.",
   ),
 );
 
@@ -153,7 +153,7 @@ const uploadTable = (
   });
 
 const uploadDbcProgram = (
-  tableFilter: Option.Option<DbcTableKey>,
+  tablesFilter: ReadonlyArray<DbcTableKey>,
   dryRun: boolean,
   fromTable: Option.Option<DbcTableKey>,
 ): Effect.Effect<
@@ -164,9 +164,8 @@ const uploadDbcProgram = (
   Effect.gen(function* () {
     const supabase = yield* createSupabaseClient();
 
-    let tablesToUpload = Option.isSome(tableFilter)
-      ? [tableFilter.value]
-      : DBC_TABLE_KEYS;
+    let tablesToUpload: readonly DbcTableKey[] =
+      tablesFilter.length > 0 ? tablesFilter : DBC_TABLE_KEYS;
 
     // If --from is specified, skip tables before it
     if (Option.isSome(fromTable)) {
@@ -198,6 +197,6 @@ const uploadDbcProgram = (
 
 export const uploadDbcCommand = Command.make(
   "upload-dbc",
-  { dryRun: dryRunOption, from: fromOption, table: tableOption },
-  ({ dryRun, from, table }) => uploadDbcProgram(table, dryRun, from),
+  { dryRun: dryRunOption, from: fromOption, tables: tablesOption },
+  ({ dryRun, from, tables }) => uploadDbcProgram(tables, dryRun, from),
 );
