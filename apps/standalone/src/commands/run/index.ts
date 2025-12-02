@@ -43,7 +43,7 @@ const rotationArg = Args.text({ name: "rotation" }).pipe(
 const durationOpt = Options.integer("duration").pipe(
   Options.withAlias("d"),
   Options.withDescription("Simulation duration in seconds"),
-  Options.withDefault(10),
+  Options.withDefault(60),
 );
 
 const iterationsOpt = Options.integer("iterations").pipe(

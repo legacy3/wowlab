@@ -11,17 +11,18 @@ import { RotationDefinition } from "../framework/types.js";
 const SpellIds = {
   // Core Rotational Abilities
   KILL_COMMAND: 34026, // Pet ability trigger, 30 Focus, 7.5s CD (2 charges with Alpha Predator)
-  BARBED_SHOT: 217200, // DoT + Frenzy trigger, 12s CD (2 charges)
+  BARBED_SHOT: 217200, // DoT + Frenzy trigger, 18s recharge (2 charges)
   COBRA_SHOT: 193455, // Focus spender, reduces Kill Command CD by 1s
   MULTI_SHOT: 2643, // AoE, triggers Beast Cleave
 
   // Major Cooldowns
+  // NOTE: Bestial Wrath DBC shows startRecoveryTime=1500 but in-game it's off-GCD
   BESTIAL_WRATH: 19574, // 15s duration, 90s CD - damage buff for Hunter and pets
-  CALL_OF_THE_WILD: 359844, // 20s duration, 180s CD - summons stable pets
-  BLOODSHED: 321538, // Pet command, 60s CD - bleed DoT
+  CALL_OF_THE_WILD: 359844, // 20s duration, 120s CD - summons stable pets
+  BLOODSHED: 321530, // Pet command, 60s CD - bleed DoT (321538 is the DoT effect, 321530 is the cast)
 
   // Execute / Utility
-  KILL_SHOT: 53351, // Execute at 20% health, 10s CD
+  KILL_SHOT: 53351, // Execute at 20% health, 10s recharge
   EXPLOSIVE_SHOT: 212431, // AoE damage, 30s CD
 } as const;
 

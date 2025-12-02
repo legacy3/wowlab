@@ -104,13 +104,14 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 
 ### Bloodshed
 
-- **Spell ID**: 321538
+- **Spell ID**: 321530 (cast), 321538 (DoT effect)
 - **Type**: Pet command
 - **Cooldown**: 60 seconds
 - **Mechanics**:
   - Commands pet to attack with increased damage
   - Applied as DoT/bleed on target
   - Pet executes Bloodshed attack
+- **Note**: Use 321530 for the castable ability, 321538 is the DoT aura
 
 ## Utility/Situational Spells
 
@@ -190,3 +191,25 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 - **Spell ID**: 136
 - **Type**: Pet heal
 - **Mechanics**: Heals pet over time
+
+## References
+
+### Hekili APL Spell IDs
+
+Source: [HunterBeastMastery.lua](https://github.com/Hekili/hekili/blob/thewarwithin/TheWarWithin/HunterBeastMastery.lua)
+
+| Spell | ID |
+|-------|-----|
+| barbed_shot | 217200 |
+| bestial_wrath | 19574 |
+| bloodshed | 321530 |
+| call_of_the_wild | 359844 |
+| cobra_shot | 193455 |
+| counter_shot | 147362 |
+| dire_beast | 120679 |
+| explosive_shot | 212431 |
+| kill_command | 34026 |
+| kill_shot | 53351 |
+| multishot | 2643 |
+| summon_pet | 883 |
+| wailing_arrow | 355589 |
