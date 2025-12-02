@@ -5,6 +5,17 @@ import * as Option from "effect/Option";
 import type { AllowedFunction, FunctionMetadata } from "./schemas.js";
 
 export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
+  extractAuraRestrictions: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description:
+      "Extract aura restriction information for a spell (required/excluded auras on caster/target).",
+    name: "extractAuraRestrictions",
+    returns:
+      "{ casterAuraSpell, casterAuraState, targetAuraSpell, targetAuraState, excludeCasterAuraSpell, excludeCasterAuraState, excludeTargetAuraSpell, excludeTargetAuraState } | null",
+  },
+
   extractCastTime: {
     args: {
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -50,6 +61,15 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     returns: "{ description: string, auraDescription: string }",
   },
 
+  extractDescriptionVariables: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description: "Get the description variables string for a spell.",
+    name: "extractDescriptionVariables",
+    returns: "string | null",
+  },
+
   extractDuration: {
     args: {
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -76,6 +96,26 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     name: "extractInterrupts",
     returns:
       "{ auraInterruptFlags: [number, number], channelInterruptFlags: [number, number], interruptFlags: number } | null",
+  },
+
+  extractLearnSpells: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description:
+      "Extract learn spell relationships (spells learned together, spell overrides).",
+    name: "extractLearnSpells",
+    returns: "Array<{ learnSpellId: number, overridesSpellId: number }>",
+  },
+
+  extractLevels: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description: "Extract level requirements for a spell.",
+    name: "extractLevels",
+    returns:
+      "{ baseLevel: number, maxLevel: number, maxPassiveAuraLevel: number, spellLevel: number } | null",
   },
 
   extractName: {
@@ -115,6 +155,15 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     returns: "{ ally: { min, max }, enemy: { min, max } } | null",
   },
 
+  extractReplacement: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description: "Get the replacement spell ID if this spell replaces another.",
+    name: "extractReplacement",
+    returns: "{ replacementSpellId: number } | null",
+  },
+
   extractScaling: {
     args: {
       spellId: { description: "The spell ID", required: true, type: "number" },
@@ -122,6 +171,17 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     description: "Extract spell power and attack power scaling coefficients.",
     name: "extractScaling",
     returns: "{ attackPower: number, spellPower: number }",
+  },
+
+  extractShapeshift: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description:
+      "Extract shapeshift form requirements for a spell (which forms can/cannot use it).",
+    name: "extractShapeshift",
+    returns:
+      "{ shapeshiftMask: [number, number], shapeshiftExclude: [number, number], stanceBarOrder: number } | null",
   },
 
   extractTargetRestrictions: {
@@ -133,6 +193,16 @@ export const FUNCTION_METADATA: Record<AllowedFunction, FunctionMetadata> = {
     name: "extractTargetRestrictions",
     returns:
       "{ coneDegrees: number, maxTargetLevel: number, maxTargets: number, targetCreatureType: number, targets: number, width: number } | null",
+  },
+
+  extractTotems: {
+    args: {
+      spellId: { description: "The spell ID", required: true, type: "number" },
+    },
+    description: "Extract totem requirements for a spell (Shaman).",
+    name: "extractTotems",
+    returns:
+      "{ requiredTotemCategories: [number, number], totems: [number, number] } | null",
   },
 
   getDamage: {
@@ -232,6 +302,15 @@ export const FUNCTION_HANDLERS: Record<
   AllowedFunction,
   (args: HandlerArgs) => HandlerEffect
 > = {
+  extractAuraRestrictions: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractAuraRestrictions(
+        args.spellId as number,
+      );
+      return Option.getOrNull(result);
+    }),
+
   extractCastTime: (args) =>
     Effect.gen(function* () {
       const dbc = yield* DbcService;
@@ -272,6 +351,15 @@ export const FUNCTION_HANDLERS: Record<
       return yield* extractor.extractDescription(args.spellId as number);
     }),
 
+  extractDescriptionVariables: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractDescriptionVariables(
+        args.spellId as number,
+      );
+      return Option.getOrNull(result);
+    }),
+
   extractDuration: (args) =>
     Effect.gen(function* () {
       const dbc = yield* DbcService;
@@ -297,6 +385,19 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
       const result = yield* extractor.extractInterrupts(args.spellId as number);
+      return Option.getOrNull(result);
+    }),
+
+  extractLearnSpells: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      return yield* extractor.extractLearnSpells(args.spellId as number);
+    }),
+
+  extractLevels: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractLevels(args.spellId as number);
       return Option.getOrNull(result);
     }),
 
@@ -332,12 +433,28 @@ export const FUNCTION_HANDLERS: Record<
       return Option.getOrNull(result);
     }),
 
+  extractReplacement: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractReplacement(
+        args.spellId as number,
+      );
+      return Option.getOrNull(result);
+    }),
+
   extractScaling: (args) =>
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
       const effects = yield* dbc.getSpellEffects(args.spellId as number);
       return extractor.extractScaling(effects);
+    }),
+
+  extractShapeshift: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractShapeshift(args.spellId as number);
+      return Option.getOrNull(result);
     }),
 
   extractTargetRestrictions: (args) =>
@@ -347,6 +464,13 @@ export const FUNCTION_HANDLERS: Record<
         args.spellId as number,
       );
 
+      return Option.getOrNull(result);
+    }),
+
+  extractTotems: (args) =>
+    Effect.gen(function* () {
+      const extractor = yield* ExtractorService;
+      const result = yield* extractor.extractTotems(args.spellId as number);
       return Option.getOrNull(result);
     }),
 

@@ -23,6 +23,7 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   // Core
   auraDescription: "",
   description: "",
+  descriptionVariables: "",
   fileName: "inv_misc_questionmark",
   id: Branded.SpellID(-1),
   name: "",
@@ -86,10 +87,43 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   spellClassMask4: 0,
   spellClassSet: 0,
 
+  // Levels (from spell_levels)
+  baseLevel: 0,
+  maxLevel: 0,
+  maxPassiveAuraLevel: 0,
+  spellLevel: 0,
+
+  // Aura Restrictions (from spell_aura_restrictions)
+  casterAuraSpell: 0,
+  casterAuraState: 0,
+  excludeCasterAuraSpell: 0,
+  excludeCasterAuraState: 0,
+  excludeTargetAuraSpell: 0,
+  excludeTargetAuraState: 0,
+  targetAuraSpell: 0,
+  targetAuraState: 0,
+
+  // Replacement (from spell_replacement)
+  replacementSpellId: 0,
+
+  // Shapeshift (from spell_shapeshift)
+  shapeshiftExclude0: 0,
+  shapeshiftExclude1: 0,
+  shapeshiftMask0: 0,
+  shapeshiftMask1: 0,
+  stanceBarOrder: 0,
+
+  // Totems (from spell_totems)
+  requiredTotemCategory0: 0,
+  requiredTotemCategory1: 0,
+  totem0: 0,
+  totem1: 0,
+
   // Arrays
   attributes: [],
   effectTriggerSpell: [],
   implicitTarget: [],
+  learnSpells: [],
 
   // Modifiers
   modifiers: [],

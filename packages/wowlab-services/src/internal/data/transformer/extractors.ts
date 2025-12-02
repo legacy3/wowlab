@@ -570,22 +570,213 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           });
         });
 
+      const extractAuraRestrictions = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          casterAuraSpell: number;
+          casterAuraState: number;
+          excludeCasterAuraSpell: number;
+          excludeCasterAuraState: number;
+          excludeTargetAuraSpell: number;
+          excludeTargetAuraState: number;
+          targetAuraSpell: number;
+          targetAuraState: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const restrictions =
+            yield* dbcService.getSpellAuraRestrictions(spellId);
+
+          if (!restrictions) {
+            return Option.none();
+          }
+
+          return Option.some({
+            casterAuraSpell: restrictions.CasterAuraSpell,
+            casterAuraState: restrictions.CasterAuraState,
+            excludeCasterAuraSpell: restrictions.ExcludeCasterAuraSpell,
+            excludeCasterAuraState: restrictions.ExcludeCasterAuraState,
+            excludeTargetAuraSpell: restrictions.ExcludeTargetAuraSpell,
+            excludeTargetAuraState: restrictions.ExcludeTargetAuraState,
+            targetAuraSpell: restrictions.TargetAuraSpell,
+            targetAuraState: restrictions.TargetAuraState,
+          });
+        });
+
+      const extractLevels = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          baseLevel: number;
+          maxLevel: number;
+          maxPassiveAuraLevel: number;
+          spellLevel: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const levels = yield* dbcService.getSpellLevels(spellId);
+
+          // TODO Take the first level entry for now (usually difficulty 0)
+          const level = first(levels);
+
+          if (Option.isNone(level)) {
+            return Option.none();
+          }
+
+          return Option.some({
+            baseLevel: level.value.BaseLevel,
+            maxLevel: level.value.MaxLevel,
+            maxPassiveAuraLevel: level.value.MaxPassiveAuraLevel,
+            spellLevel: level.value.SpellLevel,
+          });
+        });
+
+      const extractLearnSpells = (
+        spellId: number,
+      ): Effect.Effect<
+        Array<{
+          learnSpellId: number;
+          overridesSpellId: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const learnSpells = yield* dbcService.getSpellLearnSpell(spellId);
+
+          return learnSpells.map((ls) => ({
+            learnSpellId: ls.LearnSpellID,
+            overridesSpellId: ls.OverridesSpellID,
+          }));
+        });
+
+      const extractReplacement = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{ replacementSpellId: number }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const replacement = yield* dbcService.getSpellReplacement(spellId);
+
+          if (!replacement) {
+            return Option.none();
+          }
+
+          return Option.some({
+            replacementSpellId: replacement.ReplacementSpellID,
+          });
+        });
+
+      const extractShapeshift = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          shapeshiftExclude: [number, number];
+          shapeshiftMask: [number, number];
+          stanceBarOrder: number;
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const shapeshift = yield* dbcService.getSpellShapeshift(spellId);
+
+          if (!shapeshift) {
+            return Option.none();
+          }
+
+          return Option.some({
+            shapeshiftExclude: [
+              shapeshift.ShapeshiftExclude_0,
+              shapeshift.ShapeshiftExclude_1,
+            ] as [number, number],
+            shapeshiftMask: [
+              shapeshift.ShapeshiftMask_0,
+              shapeshift.ShapeshiftMask_1,
+            ] as [number, number],
+            stanceBarOrder: shapeshift.StanceBarOrder,
+          });
+        });
+
+      const extractTotems = (
+        spellId: number,
+      ): Effect.Effect<
+        Option.Option<{
+          requiredTotemCategories: [number, number];
+          totems: [number, number];
+        }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const totemsData = yield* dbcService.getSpellTotems(spellId);
+
+          const totem = first(totemsData);
+
+          if (Option.isNone(totem)) {
+            return Option.none();
+          }
+
+          return Option.some({
+            requiredTotemCategories: [
+              totem.value.RequiredTotemCategoryID_0,
+              totem.value.RequiredTotemCategoryID_1,
+            ] as [number, number],
+            totems: [totem.value.Totem_0, totem.value.Totem_1] as [
+              number,
+              number,
+            ],
+          });
+        });
+
+      const extractDescriptionVariables = (
+        spellId: number,
+      ): Effect.Effect<Option.Option<string>, DbcError> =>
+        Effect.gen(function* () {
+          const xDescVars =
+            yield* dbcService.getSpellXDescriptionVariables(spellId);
+
+          const firstXDescVar = first(xDescVars);
+
+          if (Option.isNone(firstXDescVar)) {
+            return Option.none();
+          }
+
+          const descVars = yield* dbcService.getSpellDescriptionVariables(
+            firstXDescVar.value.SpellDescriptionVariablesID,
+          );
+
+          if (!descVars) {
+            return Option.none();
+          }
+
+          return Option.some(descVars.Variables);
+        });
+
       return {
+        extractAuraRestrictions,
         extractCastTime,
         extractCharges,
         extractClassOptions,
         extractCooldown,
         extractDescription,
+        extractDescriptionVariables,
         extractDuration,
         extractEmpower,
         extractInterrupts,
+        extractLearnSpells,
+        extractLevels,
         extractManaCost,
         extractName,
         extractPower,
         extractRadius,
         extractRange,
+        extractReplacement,
         extractScaling,
+        extractShapeshift,
         extractTargetRestrictions,
+        extractTotems,
         getDamage,
         getEffectsForDifficulty,
         getVarianceForDifficulty,

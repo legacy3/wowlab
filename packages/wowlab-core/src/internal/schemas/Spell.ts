@@ -6,6 +6,7 @@ export const SpellDataFlatSchema = Schema.Struct({
   // Core
   auraDescription: Schema.String,
   description: Schema.String,
+  descriptionVariables: Schema.String,
   fileName: Schema.String,
   id: Branded.SpellIDSchema,
   name: Schema.String,
@@ -69,10 +70,48 @@ export const SpellDataFlatSchema = Schema.Struct({
   spellClassMask4: Schema.Number,
   spellClassSet: Schema.Number,
 
+  // Levels (from spell_levels)
+  baseLevel: Schema.Number,
+  maxLevel: Schema.Number,
+  maxPassiveAuraLevel: Schema.Number,
+  spellLevel: Schema.Number,
+
+  // Aura Restrictions (from spell_aura_restrictions)
+  casterAuraSpell: Schema.Number,
+  casterAuraState: Schema.Number,
+  excludeCasterAuraSpell: Schema.Number,
+  excludeCasterAuraState: Schema.Number,
+  excludeTargetAuraSpell: Schema.Number,
+  excludeTargetAuraState: Schema.Number,
+  targetAuraSpell: Schema.Number,
+  targetAuraState: Schema.Number,
+
+  // Replacement (from spell_replacement)
+  replacementSpellId: Schema.Number,
+
+  // Shapeshift (from spell_shapeshift)
+  shapeshiftExclude0: Schema.Number,
+  shapeshiftExclude1: Schema.Number,
+  shapeshiftMask0: Schema.Number,
+  shapeshiftMask1: Schema.Number,
+  stanceBarOrder: Schema.Number,
+
+  // Totems (from spell_totems)
+  requiredTotemCategory0: Schema.Number,
+  requiredTotemCategory1: Schema.Number,
+  totem0: Schema.Number,
+  totem1: Schema.Number,
+
   // Arrays (already flat)
   attributes: Schema.Array(Schema.Number),
   effectTriggerSpell: Schema.Array(Schema.Number),
   implicitTarget: Schema.Array(Schema.Number),
+  learnSpells: Schema.Array(
+    Schema.Struct({
+      learnSpellId: Schema.Number,
+      overridesSpellId: Schema.Number,
+    }),
+  ),
 });
 
 export type SpellDataFlat = Schema.Schema.Type<typeof SpellDataFlatSchema>;

@@ -113,6 +113,14 @@ export const transformSpell = (
     const descriptions = yield* extractor.extractDescription(spellId);
     const power = yield* extractor.extractPower(spellId);
     const classOptions = yield* extractor.extractClassOptions(spellId);
+    const auraRestrictions = yield* extractor.extractAuraRestrictions(spellId);
+    const levels = yield* extractor.extractLevels(spellId);
+    const learnSpells = yield* extractor.extractLearnSpells(spellId);
+    const replacement = yield* extractor.extractReplacement(spellId);
+    const shapeshift = yield* extractor.extractShapeshift(spellId);
+    const totems = yield* extractor.extractTotems(spellId);
+    const descriptionVariables =
+      yield* extractor.extractDescriptionVariables(spellId);
 
     // Icon resolution
     const iconFileDataId = pipe(
@@ -139,6 +147,7 @@ export const transformSpell = (
       // Core
       auraDescription: descriptions.auraDescription,
       description: descriptions.description,
+      descriptionVariables: Option.getOrElse(descriptionVariables, () => ""),
       fileName,
       id: Branded.SpellID(spellId),
       name,
@@ -222,9 +231,76 @@ export const transformSpell = (
         ? classOptions.value.spellClassSet
         : 0,
 
+      // Levels
+      baseLevel: Option.isSome(levels) ? levels.value.baseLevel : 0,
+      maxLevel: Option.isSome(levels) ? levels.value.maxLevel : 0,
+      maxPassiveAuraLevel: Option.isSome(levels)
+        ? levels.value.maxPassiveAuraLevel
+        : 0,
+      spellLevel: Option.isSome(levels) ? levels.value.spellLevel : 0,
+
+      // Aura Restrictions
+      casterAuraSpell: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.casterAuraSpell
+        : 0,
+      casterAuraState: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.casterAuraState
+        : 0,
+      excludeCasterAuraSpell: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.excludeCasterAuraSpell
+        : 0,
+      excludeCasterAuraState: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.excludeCasterAuraState
+        : 0,
+      excludeTargetAuraSpell: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.excludeTargetAuraSpell
+        : 0,
+      excludeTargetAuraState: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.excludeTargetAuraState
+        : 0,
+      targetAuraSpell: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.targetAuraSpell
+        : 0,
+      targetAuraState: Option.isSome(auraRestrictions)
+        ? auraRestrictions.value.targetAuraState
+        : 0,
+
+      // Replacement
+      replacementSpellId: Option.isSome(replacement)
+        ? replacement.value.replacementSpellId
+        : 0,
+
+      // Shapeshift
+      shapeshiftExclude0: Option.isSome(shapeshift)
+        ? shapeshift.value.shapeshiftExclude[0]
+        : 0,
+      shapeshiftExclude1: Option.isSome(shapeshift)
+        ? shapeshift.value.shapeshiftExclude[1]
+        : 0,
+      shapeshiftMask0: Option.isSome(shapeshift)
+        ? shapeshift.value.shapeshiftMask[0]
+        : 0,
+      shapeshiftMask1: Option.isSome(shapeshift)
+        ? shapeshift.value.shapeshiftMask[1]
+        : 0,
+      stanceBarOrder: Option.isSome(shapeshift)
+        ? shapeshift.value.stanceBarOrder
+        : 0,
+
+      // Totems
+      requiredTotemCategory0: Option.isSome(totems)
+        ? totems.value.requiredTotemCategories[0]
+        : 0,
+      requiredTotemCategory1: Option.isSome(totems)
+        ? totems.value.requiredTotemCategories[1]
+        : 0,
+      totem0: Option.isSome(totems) ? totems.value.totems[0] : 0,
+      totem1: Option.isSome(totems) ? totems.value.totems[1] : 0,
+
       // Arrays
       attributes: Option.getOrElse(attributes, () => []),
       effectTriggerSpell: triggers.length > 0 ? triggers : [],
       implicitTarget: targeting.length > 0 ? targeting : [],
+      learnSpells,
     };
   });
