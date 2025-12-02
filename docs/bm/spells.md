@@ -198,18 +198,18 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 
 Source: [HunterBeastMastery.lua](https://github.com/Hekili/hekili/blob/thewarwithin/TheWarWithin/HunterBeastMastery.lua)
 
-| Spell | ID |
-|-------|-----|
-| barbed_shot | 217200 |
-| bestial_wrath | 19574 |
-| bloodshed | 321530 |
+| Spell            | ID     |
+| ---------------- | ------ |
+| barbed_shot      | 217200 |
+| bestial_wrath    | 19574  |
+| bloodshed        | 321530 |
 | call_of_the_wild | 359844 |
-| cobra_shot | 193455 |
-| counter_shot | 147362 |
-| dire_beast | 120679 |
-| explosive_shot | 212431 |
-| kill_command | 34026 |
-| kill_shot | 53351 |
-| multishot | 2643 |
-| summon_pet | 883 |
-| wailing_arrow | 355589 |
+| cobra_shot       | 193455 |
+| counter_shot     | 147362 |
+| dire_beast       | 120679 |
+| explosive_shot   | 212431 |
+| kill_command     | 34026  |
+| kill_shot        | 53351  |
+| multishot        | 2643   |
+| summon_pet       | 883    |
+| wailing_arrow    | 355589 |
