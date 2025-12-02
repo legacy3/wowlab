@@ -51,6 +51,7 @@ const group = (label: string, items: MenuItem[]): MenuGroup => ({
   items,
 });
 
+// prettier-ignore
 export const menuConfig: MenuGroup[] = [
   group("Simulate", [
     item("Simulate", "/sim", Zap),

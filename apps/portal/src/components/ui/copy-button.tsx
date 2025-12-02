@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react";
 
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { Button } from "@/components/ui/button";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 
 interface CopyButtonProps {
@@ -18,19 +18,16 @@ export function CopyButton({ className, value }: CopyButtonProps) {
 
   return (
     <Button
+      data-slot="copy-button"
       variant="ghost"
-      size="icon"
+      size="icon-sm"
       className={cn(
-        "h-8 w-8 text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+        "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
         className,
       )}
       onClick={handleCopy}
     >
-      {state.copied ? (
-        <Check className="h-4 w-4 text-success" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
+      {state.copied ? <Check className="text-success" /> : <Copy />}
     </Button>
   );
 }

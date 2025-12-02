@@ -48,7 +48,12 @@ function SortableCard({ id, children, title }: SortableCardProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      data-slot="sortable-card"
+      data-dragging={isDragging}
+      style={style}
+    >
       <Card
         className={cn(
           "cursor-default",
@@ -60,11 +65,11 @@ function SortableCard({ id, children, title }: SortableCardProps) {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="text-muted-foreground hover:text-foreground cursor-grab touch-none active:cursor-grabbing"
+                className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
               >
-                <GripVertical className="h-4 w-4" />
+                <GripVertical className="size-4" />
               </button>
               <CardTitle>{title}</CardTitle>
             </div>
@@ -150,7 +155,7 @@ export function SortableCardList({ items, onReorder }: SortableCardListProps) {
             {activeItem.title && (
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <GripVertical className="text-primary h-4 w-4" />
+                  <GripVertical className="size-4 text-primary" />
                   <CardTitle>{activeItem.title}</CardTitle>
                 </div>
               </CardHeader>

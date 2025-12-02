@@ -62,30 +62,31 @@ export const SortableSection = memo(
     return (
       <section
         ref={setNodeRef}
+        data-slot="sortable-section"
+        data-dragging={isDragging}
         style={style}
         className={cn(
-          "bg-card/60 rounded-xl border p-4 shadow-sm",
+          "rounded-xl border bg-card/60 p-4 shadow-sm",
           isDragging && "z-50 cursor-grabbing shadow-lg ring-2 ring-primary",
         )}
-        data-dragging={isDragging ? "true" : "false"}
       >
         <div className="flex items-center gap-3">
           {disabled ? (
-            <div className="text-muted-foreground/30 flex h-9 w-9 items-center justify-center rounded-md border border-dashed">
-              <GripVertical className="h-4 w-4" />
+            <div className="flex size-9 items-center justify-center rounded-md border border-dashed text-muted-foreground/30">
+              <GripVertical className="size-4" />
             </div>
           ) : (
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground touch-none cursor-grab active:cursor-grabbing"
+              className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
               aria-label={`Drag ${title}`}
               onPointerDown={onDragHandlePointerDown}
               {...attributes}
               {...listeners}
             >
-              <GripVertical className="h-4 w-4" />
+              <GripVertical className="size-4" />
             </Button>
           )}
           <button
@@ -98,7 +99,7 @@ export const SortableSection = memo(
             <span>{title}</span>
             <ChevronDown
               className={cn(
-                "h-4 w-4 transition-transform duration-150",
+                "size-4 transition-transform duration-150",
                 visible && "rotate-180",
               )}
             />

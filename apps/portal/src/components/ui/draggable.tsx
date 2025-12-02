@@ -34,11 +34,14 @@ export function Draggable({ id, children, className }: DraggableProps) {
   return (
     <div
       ref={setNodeRef}
+      data-slot="draggable"
+      data-dragging={isDragging}
       style={style}
       className={cn("group relative", className)}
     >
       <button
         ref={setActivatorNodeRef}
+        data-slot="draggable-handle"
         type="button"
         aria-label="Drag to reorder"
         className={cn(
@@ -48,7 +51,7 @@ export function Draggable({ id, children, className }: DraggableProps) {
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-5 w-5" aria-hidden="true" />
+        <GripVertical className="size-5" aria-hidden="true" />
       </button>
       {children}
     </div>
