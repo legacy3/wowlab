@@ -1,0 +1,6 @@
+- version: v1.0.0
+  date: 2025-12-02
+  changes:
+    - type: feature
+      title: Initial Release
+      description: Will be filled later
