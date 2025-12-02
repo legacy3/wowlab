@@ -19,6 +19,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { env } from "./env";
+
 export type MenuItem = {
   label: string;
   href: string;
@@ -73,8 +75,8 @@ export const menuConfig: MenuGroup[] = [
   ]),
   group("About", [
     item("Changelog", "/changelog", ScrollText),
-    link("GitHub", "https://github.com/legacy3/wowlab", GitBranch),
-    link("MCP Server", "https://github.com/legacy3/wowlab/tree/main/apps/mcp-server", Plug),
+    link("GitHub", env.GITHUB_REPO_URL, GitBranch),
+    link("MCP Server", `${env.GITHUB_REPO_URL}/tree/main/apps/mcp-server`, Plug),
   ]),
   group("Debug", [
     item("Simulation", "/debug/simulation", Bug),
