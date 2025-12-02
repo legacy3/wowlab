@@ -1,3 +1,5 @@
+/* eslint-disable perfectionist/sort-modules */
+
 import { Rpc, RpcGroup } from "@effect/rpc";
 import * as Schema from "effect/Schema";
 
@@ -15,17 +17,6 @@ export class AggregatedStatsSchema extends Schema.Class<AggregatedStatsSchema>(
 }) {}
 
 /**
- * Schema for the full simulation response
- */
-export class RunSimulationResponse extends Schema.Class<RunSimulationResponse>(
-  "RunSimulationResponse",
-)({
-  // @ts-ignore TODO Fix this
-  sampleResults: Schema.Array(SimulationResultSchema),
-  stats: AggregatedStatsSchema,
-}) {}
-
-/**
  * Schema for a single simulation result
  */
 export class SimulationResultSchema extends Schema.Class<SimulationResultSchema>(
@@ -34,6 +25,16 @@ export class SimulationResultSchema extends Schema.Class<SimulationResultSchema>
   casts: Schema.Number,
   duration: Schema.Number,
   simId: Schema.Number,
+}) {}
+
+/**
+ * Schema for the full simulation response
+ */
+export class RunSimulationResponse extends Schema.Class<RunSimulationResponse>(
+  "RunSimulationResponse",
+)({
+  sampleResults: Schema.Array(SimulationResultSchema),
+  stats: AggregatedStatsSchema,
 }) {}
 
 /**

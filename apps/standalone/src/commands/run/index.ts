@@ -444,8 +444,9 @@ export const runCommand = Command.make(
 
       yield* Effect.log(`Loading spells for: ${selectedRotation.name}`);
 
-      const spells = yield* Effect.promise(() =>
-        loadSpells(supabaseClient, selectedRotation.spellIds),
+      const spells = yield* loadSpells(
+        supabaseClient,
+        selectedRotation.spellIds,
       );
 
       yield* Effect.log(`Loaded ${spells.length} spells`);

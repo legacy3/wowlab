@@ -171,10 +171,10 @@ export const SimulationHandlersLive: Layer.Layer<
       );
 
       // Load spells
-      const spells = yield* Effect.tryPromise({
-        catch: (e) => String(e),
-        try: () => loadSpells(supabaseClient, selectedRotation.spellIds),
-      });
+      const spells = yield* loadSpells(
+        supabaseClient,
+        selectedRotation.spellIds,
+      );
 
       // Determine worker count
       const workerCount = Math.max(4, os.cpus().length - 1);

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @wowlab/core --filter @wowlab/services --filter @wowlab/rotation --filter @wowlab/runtime build && pnpm start",
     "build": "tsc",
-    "start": "tsx src/index.ts",
+    "start": "tsx --env-file=.env src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
