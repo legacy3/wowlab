@@ -36,10 +36,13 @@ const KEY_ORDER = [
 export const readChangelog = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const exists = yield* fs.exists(CHANGELOG_PATH);
+
   if (!exists) {
     return [] as ChangelogEntry[];
   }
+
   const content = yield* fs.readFileString(CHANGELOG_PATH, "utf8");
+
   return (YAML.parse(content) ?? []) as ChangelogEntry[];
 });
 
@@ -52,18 +55,23 @@ export const writeChangelog = (entries: ChangelogEntry[]) =>
       sortMapEntries: (a, b) => {
         const aIdx = KEY_ORDER.indexOf(String(a.key));
         const bIdx = KEY_ORDER.indexOf(String(b.key));
+
         if (aIdx === -1 && bIdx === -1) {
           return 0;
         }
+
         if (aIdx === -1) {
           return 1;
         }
+
         if (bIdx === -1) {
           return -1;
         }
+
         return aIdx - bIdx;
       },
     });
+
     yield* fs.writeFileString(CHANGELOG_PATH, content);
   });
 
@@ -74,6 +82,7 @@ export const parseVersion = (
   if (!match) {
     return null;
   }
+
   return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
 };
 
@@ -85,12 +94,16 @@ export const bumpVersion = (
   if (!parsed) {
     return version;
   }
+
   const [major, minor, patch] = parsed;
+
   switch (type) {
     case "major":
       return `v${major + 1}.0.0`;
+
     case "minor":
       return `v${major}.${minor + 1}.0`;
+
     case "patch":
       return `v${major}.${minor}.${patch + 1}`;
   }

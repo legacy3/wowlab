@@ -148,7 +148,7 @@ const addProgram = (opts: AddOptions) =>
         initial: false,
         message: "Sync to Supabase now?",
       });
-      
+
       if (shouldSync) {
         yield* syncToSupabase;
       }
