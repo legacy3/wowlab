@@ -1,98 +1,103 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-import * as Entities from "@wowlab/core/Entities";
-import * as Errors from "@wowlab/core/Errors";
-import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
 import * as Effect from "effect/Effect";
-import { Map, Record } from "immutable";
 
+import { tryCast } from "../framework/rotation-utils.js";
 import { RotationDefinition } from "../framework/types.js";
 
-// Helper to create a spell entity from spell data
-const createSpellEntity = (
-  data: Schemas.Spell.SpellDataFlat,
-): Entities.Spell.Spell => {
-  const info = Entities.Spell.SpellInfo.create({
-    ...data,
-    id: Schemas.Branded.SpellID(data.id),
-    modifiers: [],
-  });
+// =============================================================================
+// Beast Mastery Hunter Spell IDs
+// =============================================================================
 
-  return Entities.Spell.Spell.create(
-    {
-      charges: info.maxCharges || 1,
-      cooldownExpiry: 0,
-      info,
-    },
-    0,
-  );
-};
+const SpellIds = {
+  // Core Rotational Abilities
+  KILL_COMMAND: 34026, // Pet ability trigger, 30 Focus, 7.5s CD (2 charges with Alpha Predator)
+  BARBED_SHOT: 217200, // DoT + Frenzy trigger, 12s CD (2 charges)
+  COBRA_SHOT: 193455, // Focus spender, reduces Kill Command CD by 1s
+  MULTI_SHOT: 2643, // AoE, triggers Beast Cleave
 
-// TODO Remove this crap and fix it so rotas don't need to return
-const tryCast = (
-  rotation: Context.RotationContext,
-  playerId: Schemas.Branded.UnitID,
-  spellId: number,
-): Effect.Effect<
-  { cast: true; consumedGCD: boolean } | { cast: false },
-  Errors.SpellNotFound | Errors.UnitNotFound
-> =>
-  rotation.spell.cast(playerId, spellId).pipe(
-    Effect.map(({ consumedGCD }) => ({ cast: true as const, consumedGCD })),
-    Effect.catchTag("SpellOnCooldown", () =>
-      Effect.succeed({ cast: false as const }),
-    ),
-  );
+  // Major Cooldowns
+  BESTIAL_WRATH: 19574, // 15s duration, 90s CD - damage buff for Hunter and pets
+  CALL_OF_THE_WILD: 359844, // 20s duration, 180s CD - summons stable pets
+  BLOODSHED: 321538, // Pet command, 60s CD - bleed DoT
+
+  // Execute / Utility
+  KILL_SHOT: 53351, // Execute at 20% health, 10s CD
+  EXPLOSIVE_SHOT: 212431, // AoE damage, 30s CD
+} as const;
+
+// =============================================================================
+// Beast Mastery Hunter Rotation
+// =============================================================================
 
 export const BeastMasteryRotation: RotationDefinition = {
   name: "Beast Mastery Hunter",
+
+  spellIds: [
+    SpellIds.COBRA_SHOT,
+    SpellIds.BARBED_SHOT,
+    SpellIds.KILL_COMMAND,
+    SpellIds.MULTI_SHOT,
+    SpellIds.BESTIAL_WRATH,
+    SpellIds.CALL_OF_THE_WILD,
+    SpellIds.BLOODSHED,
+    SpellIds.KILL_SHOT,
+    SpellIds.EXPLOSIVE_SHOT,
+  ],
+
   run: (playerId) =>
     Effect.gen(function* () {
       const rotation = yield* Context.RotationContext;
 
-      // Priority-based APL - evaluates from top, tries each spell in order
-      // Returns after a spell consumes the GCD, continues for off-GCD spells
+      // =======================================================================
+      // Beast Mastery Single Target APL
+      // Based on SimC APL structure: cds -> st priority
+      // =======================================================================
 
-      // Priority 1: Bestial Wrath on cooldown (off-GCD)
-      const bw = yield* tryCast(rotation, playerId, 186254);
+      // -----------------------------------------------------------------------
+      // Cooldowns (off-GCD abilities)
+      // -----------------------------------------------------------------------
+
+      // Bestial Wrath - Major offensive cooldown
+      const bw = yield* tryCast(rotation, playerId, SpellIds.BESTIAL_WRATH);
       if (bw.cast && bw.consumedGCD) return;
 
-      // Priority 2: Barbed Shot to maintain Frenzy
-      const bs = yield* tryCast(rotation, playerId, 217200);
+      // Call of the Wild - Major cooldown, summons stable pets
+      const cotw = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.CALL_OF_THE_WILD,
+      );
+      if (cotw.cast && cotw.consumedGCD) return;
+
+      // -----------------------------------------------------------------------
+      // Single Target Priority
+      // -----------------------------------------------------------------------
+
+      // Barbed Shot - Prevent charge cap
+      // TODO: Add charge cap check (full_recharge_time<gcd)
+      const bs = yield* tryCast(rotation, playerId, SpellIds.BARBED_SHOT);
       if (bs.cast && bs.consumedGCD) return;
 
-      // Priority 3: Kill Command on cooldown
-      const kc = yield* tryCast(rotation, playerId, 34026);
+      // Bloodshed - Use on cooldown
+      const bloodshed = yield* tryCast(rotation, playerId, SpellIds.BLOODSHED);
+      if (bloodshed.cast && bloodshed.consumedGCD) return;
+
+      // Kill Shot - Execute phase
+      // TODO: Add health threshold check (target below 20% or Deathblow proc)
+      const ks = yield* tryCast(rotation, playerId, SpellIds.KILL_SHOT);
+      if (ks.cast && ks.consumedGCD) return;
+
+      // Kill Command - Core damage ability
+      // TODO: Add charge comparison (charges_fractional>=barbed_shot.charges_fractional)
+      const kc = yield* tryCast(rotation, playerId, SpellIds.KILL_COMMAND);
       if (kc.cast && kc.consumedGCD) return;
 
-      // Priority 4: Cobra Shot as filler (always ready - no cooldown)
-      yield* tryCast(rotation, playerId, 193455);
+      // Explosive Shot - If talented with Thundering Hooves
+      // TODO: Add talent check
+      const es = yield* tryCast(rotation, playerId, SpellIds.EXPLOSIVE_SHOT);
+      if (es.cast && es.consumedGCD) return;
+
+      // Cobra Shot - Filler ability (reduces Kill Command CD by 1s)
+      yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT);
     }),
-  setupPlayer: (id, spells) => {
-    const cobraShot = createSpellEntity(spells.find((s) => s.id === 193455)!);
-    const barbedShot = createSpellEntity(spells.find((s) => s.id === 217200)!);
-    const killCommand = createSpellEntity(spells.find((s) => s.id === 34026)!);
-    const bestialWrath = createSpellEntity(
-      spells.find((s) => s.id === 186254)!,
-    );
-
-    const playerSpells = {
-      all: Map([
-        [cobraShot.info.id, cobraShot],
-        [barbedShot.info.id, barbedShot],
-        [killCommand.info.id, killCommand],
-        [bestialWrath.info.id, bestialWrath],
-      ]),
-      meta: Record({ cooldownCategories: Map<number, number>() })(),
-    };
-
-    return Entities.Unit.Unit.create({
-      id,
-      isPlayer: true,
-      name: "Beast Mastery Hunter",
-      spells: playerSpells,
-    });
-  },
-  spellIds: [193455, 217200, 34026, 186254], // Cobra Shot, Barbed Shot, Kill Command, Bestial Wrath
 };

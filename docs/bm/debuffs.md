@@ -5,6 +5,7 @@ Target debuffs applied by BM Hunter abilities.
 ## Core Debuffs
 
 ### Barbed Shot (DoT)
+
 - **Spell ID**: 217200
 - **Type**: Bleed/Physical DoT
 - **Duration**: 8 seconds
@@ -15,6 +16,7 @@ Target debuffs applied by BM Hunter abilities.
   - Multiple can exist (tracked by `min:dot.barbed_shot.remains`)
 
 ### Bloodshed
+
 - **Spell ID**: From Bloodshed talent
 - **Type**: Bleed DoT
 - **Mechanics**:
@@ -22,6 +24,7 @@ Target debuffs applied by BM Hunter abilities.
   - Tracked via `hunter_main_pet_base_td_t::dots.bloodshed`
 
 ### Serpent Sting
+
 - **Spell ID**: From spec data
 - **Type**: Nature DoT
 - **Mechanics**:
@@ -31,6 +34,7 @@ Target debuffs applied by BM Hunter abilities.
 ## Dark Ranger Debuffs
 
 ### Black Arrow DoT
+
 - **Spell ID**: 468574
 - **Type**: Shadow DoT
 - **Duration**: From talent data
@@ -40,6 +44,7 @@ Target debuffs applied by BM Hunter abilities.
   - Umbral Reach: Can spread via Bleak Powder
 
 ### Phantom Pain
+
 - **Spell ID**: From talent data
 - **Type**: Shadow damage
 - **Mechanics**:
@@ -49,12 +54,14 @@ Target debuffs applied by BM Hunter abilities.
 ## Hero Talent Debuffs
 
 ### Wild Instincts
+
 - **Spell ID**: 424567
 - **Type**: Damage taken increase
 - **Value**: From effect #1
 - **Mechanics**: Applied by certain abilities
 
 ### Outland Venom
+
 - **Spell ID**: From talent data
 - **Type**: Critical damage taken increase
 - **Value**: From effect #1
@@ -63,6 +70,7 @@ Target debuffs applied by BM Hunter abilities.
 ## Shared Hunter Debuffs
 
 ### Sentinel
+
 - **Spell ID**: 450387
 - **Type**: Stacking debuff
 - **Mechanics**:
@@ -71,10 +79,12 @@ Target debuffs applied by BM Hunter abilities.
   - Overwatch: Can trigger implosion at low health
 
 ### Sentinel Tick Target Data
+
 - Tracked via `hunter_td_t::debuffs.sentinel`
 - Each tick decrements stacks
 
 ### Crescent Steel
+
 - **Spell ID**: 451531
 - **Type**: DoT-like effect
 - **Mechanics**:
@@ -82,6 +92,7 @@ Target debuffs applied by BM Hunter abilities.
   - Tick callback adds Sentinel stacks
 
 ### Lunar Storm
+
 - **Spell ID**: From talent data
 - **Type**: Damage taken increase
 - **Schools**: From effect #1
@@ -89,6 +100,7 @@ Target debuffs applied by BM Hunter abilities.
 - **Trigger**: Lunar Storm periodic damage
 
 ### Kill Zone
+
 - **Spell ID**: From talent data
 - **Type**: Damage taken increase
 - **Value**: From effect #2
@@ -96,6 +108,7 @@ Target debuffs applied by BM Hunter abilities.
 - **Notes**: Expires when Volley ends
 
 ### Spotter's Mark
+
 - **Spell ID**: From spec data
 - **Type**: Damage taken increase (for Aimed Shot)
 - **Value**: From effect #1 + Avian Specialization bonus
@@ -104,6 +117,7 @@ Target debuffs applied by BM Hunter abilities.
   - Triggers On Target buff on consumption
 
 ### Ohnahran Winds
+
 - **Spell ID**: From talent data
 - **Type**: Damage taken increase
 - **Value**: From effect #1 + Avian Specialization bonus
@@ -150,6 +164,7 @@ struct hunter_td_t : actor_target_data_t {
 ## Pet Target Data
 
 ### Main Pet Target Data
+
 ```cpp
 struct hunter_main_pet_base_td_t : actor_target_data_t {
   struct dots_t {
@@ -167,6 +182,7 @@ struct hunter_main_pet_td_t : hunter_main_pet_base_td_t {
 ### Special Pet Target Data
 
 #### Fenryr Target Data
+
 ```cpp
 struct fenryr_td_t : actor_target_data_t {
   struct dots_t {
@@ -176,6 +192,7 @@ struct fenryr_td_t : actor_target_data_t {
 ```
 
 #### Bear Target Data
+
 ```cpp
 struct bear_td_t : actor_target_data_t {
   struct dots_t {

@@ -9,15 +9,18 @@ Season 3 uses **Hero Talent-specific** tier sets instead of spec-specific. BM Hu
 ### Dark Ranger Set
 
 #### 2-Piece Bonus
+
 - **Set ID**: `HERO_DARK_RANGER, TWW3, B2`
 - **Effect**: See Dark Ranger specific mechanics
 
 #### 4-Piece Bonus
+
 - **Set ID**: `HERO_DARK_RANGER, TWW3, B4`
 - **Buff ID**: 1236975
 - **Effect**: Kill Shot during Deathblow can grant Blighted Quiver
 
 **Implementation:**
+
 ```cpp
 // Blighted Quiver chance on Kill Shot during Deathblow
 if (specialization() == HUNTER_BEAST_MASTERY)
@@ -29,6 +32,7 @@ if (buffs.deathblow->up() && rng().roll(blighted_quiver_chance))
 ```
 
 **Blighted Quiver Buff:**
+
 ```cpp
 buffs.blighted_quiver = make_buff(this, "blighted_quiver",
   tier_set.tww_s3_dark_ranger_4pc_buff);
@@ -37,6 +41,7 @@ buffs.blighted_quiver = make_buff(this, "blighted_quiver",
 ### Pack Leader Set
 
 #### 2-Piece Bonus
+
 - **Set ID**: `HERO_PACK_LEADER, TWW3, B2`
 - **Buffs**:
   - Grizzled Fur (Mastery): 1236564
@@ -45,6 +50,7 @@ buffs.blighted_quiver = make_buff(this, "blighted_quiver",
 - **Effect**: Pack Leader beast summons grant stat buffs
 
 **Implementation:**
+
 ```cpp
 buffs.grizzled_fur = make_buff(this, "grizzled_fur",
   tier_set.tww_s3_pack_leader_2pc_mastery_buff)
@@ -63,12 +69,14 @@ buffs.sharpened_fangs = make_buff(this, "sharpened_fangs",
 ```
 
 #### 4-Piece Bonus
+
 - **Set ID**: `HERO_PACK_LEADER, TWW3, B4`
 - **Stampede Buff**: 1250068
 - **Stampede Damage**: 201594
 - **Effect**: Triggers Stampede damage
 
 **Implementation:**
+
 ```cpp
 struct stampede_t : hunter_ranged_attack_t {
   struct damage_t : public hunter_ranged_attack_t {

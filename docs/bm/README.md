@@ -18,6 +18,7 @@ Comprehensive documentation of Beast Mastery Hunter mechanics extracted from Sim
 ## Quick Reference
 
 ### Core Rotation Priority (Single Target)
+
 1. **Kill Shot/Black Arrow** (execute phase, <20% or Deathblow)
 2. **Bestial Wrath** (delayed for Howl of Pack Leader timing with TWW3 4pc)
 3. **Barbed Shot** (prevent cap, maintain Frenzy)
@@ -28,18 +29,22 @@ Comprehensive documentation of Beast Mastery Hunter mechanics extracted from Sim
 8. **Cobra Shot** (filler, gated by Focus cap or Hogstrider stacks)
 
 ### Key Resources
+
 - **Focus**: Primary resource (100 base, 5/sec regen)
 - **Pet Frenzy Stacks**: Up to 3 stacks from Barbed Shot
 - **Barbed Shot Charges**: 2 base charges (3 with Alpha Predator)
 
 ### Critical Proc Mechanics
+
 - **Wild Call**: Auto Shot crits reset Barbed Shot charge
 - **Dire Command**: Kill Command can spawn Dire Beast
 - **Scent of Blood**: Bestial Wrath resets Barbed Shot charges
 - **Killer Cobra**: Cobra Shot resets KC during Bestial Wrath
 
 ### Spec Identity
+
 Beast Mastery is a ranged spec that deals damage primarily through pets. The spec revolves around:
+
 - Maintaining Frenzy stacks on pets via Barbed Shot
 - Synchronizing cooldowns (Bestial Wrath, Call of the Wild)
 - Maximizing Kill Command usage
@@ -49,11 +54,13 @@ Beast Mastery is a ranged spec that deals damage primarily through pets. The spe
 ### Hero Talent Key Interactions
 
 **Pack Leader:**
+
 - Kill Command consumes Howl buff to summon beasts
 - Bestial Wrath waits for Howl cooldown to align with Lead From the Front
 - Dire Beast summons feed Huntmaster's Call stacks (leads to Hati/Fenryr)
 
 **Dark Ranger:**
+
 - Black Arrow replaces Kill Shot (usable <10% OR >80% OR with Deathblow)
 - Withering Fire windows dictate Kill Command/Barbed Shot timing
 - Must execute abilities when Withering Fire tick is 0.5-3 GCDs away

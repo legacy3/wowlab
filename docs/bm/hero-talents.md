@@ -22,36 +22,37 @@ Kill Command Cast
 ```
 
 ### Beast Cycle Order
+
 1. **Wyvern** - Grants damage buff (Wyvern's Cry)
 2. **Boar** - Charges and hits targets, grants Hogstrider
 3. **Bear** - Applies bleed, grants damage buff
 
 ### Pack Leader Talents
 
-| Talent | Effect |
-|--------|--------|
-| **Howl of the Pack Leader** | Kill Command summons beasts |
-| **Pack Mentality** | Pet damage increase |
-| **Dire Summons** | Reduces Howl CD on Kill Command/Cobra Shot |
-| **Better Together** | Increases Frenzy effectiveness |
-| **Ursine Fury** | Boar Charge can trigger Mongoose Fury |
-| **Envenomed Fangs** | Pet attacks apply nature damage |
-| **Fury of the Wyvern** | Kill Command extends Wyvern's Cry |
-| **Hogstrider** | Boar Charge stacks increase Cobra Shot |
-| **No Mercy** | Kill Shot triggers pet attack |
-| **Lead From the Front** | Major CDs grant damage buff |
+| Talent                      | Effect                                     |
+| --------------------------- | ------------------------------------------ |
+| **Howl of the Pack Leader** | Kill Command summons beasts                |
+| **Pack Mentality**          | Pet damage increase                        |
+| **Dire Summons**            | Reduces Howl CD on Kill Command/Cobra Shot |
+| **Better Together**         | Increases Frenzy effectiveness             |
+| **Ursine Fury**             | Boar Charge can trigger Mongoose Fury      |
+| **Envenomed Fangs**         | Pet attacks apply nature damage            |
+| **Fury of the Wyvern**      | Kill Command extends Wyvern's Cry          |
+| **Hogstrider**              | Boar Charge stacks increase Cobra Shot     |
+| **No Mercy**                | Kill Shot triggers pet attack              |
+| **Lead From the Front**     | Major CDs grant damage buff                |
 
 ### Key Buff IDs
 
-| Buff | Spell ID | Effect |
-|------|----------|--------|
-| Wyvern Ready | From talent | Indicates Wyvern summon ready |
-| Boar Ready | From talent | Indicates Boar summon ready |
-| Bear Ready | From talent | Indicates Bear summon ready |
-| Howl Cooldown | From talent | ICD between summons |
-| Wyvern's Cry | From talent | Damage increase |
-| Hogstrider | 472640 | Cobra Shot bonus |
-| Lead From the Front | 472743 | Damage increase |
+| Buff                | Spell ID    | Effect                        |
+| ------------------- | ----------- | ----------------------------- |
+| Wyvern Ready        | From talent | Indicates Wyvern summon ready |
+| Boar Ready          | From talent | Indicates Boar summon ready   |
+| Bear Ready          | From talent | Indicates Bear summon ready   |
+| Howl Cooldown       | From talent | ICD between summons           |
+| Wyvern's Cry        | From talent | Damage increase               |
+| Hogstrider          | 472640      | Cobra Shot bonus              |
+| Lead From the Front | 472743      | Damage increase               |
 
 ### Pack Leader Implementation
 
@@ -99,28 +100,28 @@ Black Arrow Cast
 
 ### Dark Ranger Talents
 
-| Talent | Effect |
-|--------|--------|
-| **Black Arrow** | Replaces Kill Shot with shadow execute |
-| **Bleak Arrows** | Auto Shot replaced, chance for Deathblow |
-| **Shadow Hounds** | Black Arrow DoT spawns Dark Hounds |
-| **Bleak Powder** | Black Arrow splashes to nearby targets |
-| **Umbral Reach** | Bleak Powder spreads Black Arrow DoT |
-| **Ebon Bowstring** | Black Arrow can trigger Deathblow |
-| **Withering Fire** | Major CDs enable extra Black Arrows |
-| **Banshee's Mark** | Black Arrow can summon Murder of Crows |
-| **Phantom Pain** | Aimed Shot replicates to Black Arrow targets |
-| **The Bell Tolls** | Black Arrow grants damage buff |
+| Talent             | Effect                                       |
+| ------------------ | -------------------------------------------- |
+| **Black Arrow**    | Replaces Kill Shot with shadow execute       |
+| **Bleak Arrows**   | Auto Shot replaced, chance for Deathblow     |
+| **Shadow Hounds**  | Black Arrow DoT spawns Dark Hounds           |
+| **Bleak Powder**   | Black Arrow splashes to nearby targets       |
+| **Umbral Reach**   | Bleak Powder spreads Black Arrow DoT         |
+| **Ebon Bowstring** | Black Arrow can trigger Deathblow            |
+| **Withering Fire** | Major CDs enable extra Black Arrows          |
+| **Banshee's Mark** | Black Arrow can summon Murder of Crows       |
+| **Phantom Pain**   | Aimed Shot replicates to Black Arrow targets |
+| **The Bell Tolls** | Black Arrow grants damage buff               |
 
 ### Key Buff/Debuff IDs
 
-| Name | Type | Effect |
-|------|------|--------|
-| Deathblow | Player Buff | Enables Black Arrow at any health |
-| Withering Fire | Player Buff | Extra Black Arrows, Deathblow on tick |
-| The Bell Tolls | Player Buff | Damage increase (stacking) |
-| Blighted Quiver | Player Buff | Extra Withering Fire arrows |
-| Black Arrow DoT | Target DoT | Shadow damage, spawns hounds |
+| Name            | Type        | Effect                                |
+| --------------- | ----------- | ------------------------------------- |
+| Deathblow       | Player Buff | Enables Black Arrow at any health     |
+| Withering Fire  | Player Buff | Extra Black Arrows, Deathblow on tick |
+| The Bell Tolls  | Player Buff | Damage increase (stacking)            |
+| Blighted Quiver | Player Buff | Extra Withering Fire arrows           |
+| Black Arrow DoT | Target DoT  | Shadow damage, spawns hounds          |
 
 ### Dark Ranger Implementation
 
@@ -157,10 +158,12 @@ if (talents.shadow_hounds.ok() && rppm.shadow_hounds->trigger()) {
 ### Dark Ranger APL Differences
 
 The APL has separate action lists for Dark Ranger builds:
+
 - `drst` - Dark Ranger Single Target
 - `drcleave` - Dark Ranger Cleave
 
 Key differences:
+
 1. Kill Shot replaced by Black Arrow
 2. Priority on maintaining Withering Fire windows
 3. Withering Fire tick timing optimization
@@ -179,12 +182,14 @@ actions.drst+=/cobra_shot,if=buff.withering_fire.down
 ## Hero Talent Selection
 
 ### Pack Leader Strengths
+
 - Strong sustained damage
 - Better AoE with Boar Charge
 - Synergy with Frenzy stacking
 - More active pet management
 
 ### Dark Ranger Strengths
+
 - Strong execute phases
 - Shadow Hound spawns add damage
 - Withering Fire windows
@@ -193,11 +198,13 @@ actions.drst+=/cobra_shot,if=buff.withering_fire.down
 ### Build Recommendations
 
 **Pack Leader + Standard BM**
+
 - Better for consistent damage profiles
 - Strong with Call of the Wild builds
 - Good for Mythic+ with Boar charges
 
 **Dark Ranger + BM**
+
 - Better for execute-heavy fights
 - Strong opener (Black Arrow at >80%)
 - Good burst windows with Withering Fire

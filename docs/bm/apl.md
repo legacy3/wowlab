@@ -40,6 +40,7 @@ actions.cds+=/potion,if=...
 ```
 
 ### Cooldown Timing Rules
+
 - **With Call of the Wild**: Use during CotW
 - **Without CotW**: Use during Bestial Wrath
 - **End of Fight**: Use if fight ends soon
@@ -172,6 +173,7 @@ actions.drcleave+=/explosive_shot
 ## Trinket Usage
 
 Complex trinket logic based on:
+
 - Trinket type (use buff vs use damage)
 - Call of the Wild timing
 - Bestial Wrath timing
@@ -179,6 +181,7 @@ Complex trinket logic based on:
 - Special trinket interactions (Netherprism, Araz's Ritual Forge)
 
 ### Key Trinket Variables
+
 ```
 variable,name=quiver_variable  # For Blighted Quiver optimization
 variable,name=bw_variable      # For Bestial Wrath alignment
@@ -187,27 +190,34 @@ variable,name=bw_variable      # For Bestial Wrath alignment
 ## Key APL Expressions
 
 ### Target Selection
+
 ```
 target_if=min:dot.barbed_shot.remains
 ```
+
 Apply Barbed Shot to target with lowest DoT remaining.
 
 ### Charge Management
+
 ```
 full_recharge_time<gcd
 charges_fractional>=cooldown.kill_command.charges_fractional
 ```
 
 ### Buff Timing
+
 ```
 buff.withering_fire.tick_time_remains>gcd&buff.withering_fire.tick_time_remains<3
 ```
+
 Execute ability when Withering Fire tick is imminent.
 
 ### Lead From the Front Optimization
+
 ```
 buff.howl_of_the_pack_leader_cooldown.remains-buff.lead_from_the_front.duration<buff.lead_from_the_front.duration%gcd*0.5
 ```
+
 Align Bestial Wrath with Lead From the Front expiry.
 
 ## APL Decision Tree Summary

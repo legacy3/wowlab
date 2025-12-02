@@ -5,6 +5,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 ## Core Rotational Abilities
 
 ### Kill Command
+
 - **Spell ID**: 34026
 - **Type**: Pet ability trigger
 - **Focus Cost**: 30
@@ -20,6 +21,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Extends Wyvern's Cry duration (Pack Leader)
 
 ### Barbed Shot
+
 - **Spell ID**: 217200
 - **Type**: Ranged attack with DoT
 - **Focus Cost**: 0 (generates Focus via buff)
@@ -36,11 +38,13 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Brutal Companion BA at 3 Frenzy stacks
 
 **Barbed Shot Player Buff (ID: 246152)**
+
 - Duration: 8 seconds
 - Regenerates Focus over duration
 - Multiple buffs can exist simultaneously
 
 ### Cobra Shot
+
 - **Spell ID**: 193455
 - **Type**: Ranged attack
 - **Focus Cost**: 35
@@ -54,10 +58,12 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Hogstrider: Increases targets hit based on stacks
 
 **Cobra Shot Snakeskin Quiver (Background)**
+
 - Triggered by Snakeskin Quiver talent
 - Free Cobra Shot on proc
 
 ### Multi-Shot (BM)
+
 - **Spell ID**: 2643 (BM variant)
 - **Type**: AoE ranged attack
 - **Focus Cost**: 40
@@ -70,6 +76,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 ## Major Cooldowns
 
 ### Bestial Wrath
+
 - **Spell ID**: 19574
 - **Type**: Offensive cooldown
 - **Cooldown**: 90 seconds
@@ -83,6 +90,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Lead From the Front: Triggers on cast (Pack Leader)
 
 ### Call of the Wild
+
 - **Spell ID**: 359844 (talent), 206332 (buff/effect)
 - **Type**: Major cooldown
 - **Cooldown**: 180 seconds
@@ -95,6 +103,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Triggers Withering Fire (Dark Ranger)
 
 ### Bloodshed
+
 - **Spell ID**: 321538
 - **Type**: Pet command
 - **Cooldown**: 60 seconds
@@ -106,6 +115,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 ## Utility/Situational Spells
 
 ### Kill Shot
+
 - **Spell ID**: 53351
 - **Type**: Execute
 - **Focus Cost**: 10
@@ -118,6 +128,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Sic 'Em: Hits additional targets during Deathblow
 
 ### Black Arrow (Dark Ranger replacement for Kill Shot)
+
 - **Spell ID**: 466930 (main), 468574 (DoT)
 - **Type**: Execute with DoT
 - **Mechanics**:
@@ -129,6 +140,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Withering Fire: Additional Black Arrows during buff
 
 ### Counter Shot
+
 - **Spell ID**: 147362
 - **Type**: Interrupt
 - **Cooldown**: 24 seconds
@@ -136,6 +148,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 - **Mechanics**: Interrupts spellcasting
 
 ### Explosive Shot
+
 - **Spell ID**: 212431 (cast), 212680 (damage)
 - **Type**: AoE damage
 - **Focus Cost**: 20
@@ -148,6 +161,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 ## Auto Attack
 
 ### Auto Shot
+
 - **Spell ID**: 75
 - **Type**: Auto attack
 - **Mechanics**:
@@ -156,6 +170,7 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
   - Bleak Arrows: Replaced auto shot (Dark Ranger)
 
 ### Bleak Arrows (Dark Ranger)
+
 - **Spell ID**: 468572
 - **Type**: Replacement auto shot
 - **Mechanics**:
@@ -165,11 +180,13 @@ Complete list of BM Hunter spells with mechanics and spell IDs.
 ## Pet Commands
 
 ### Summon Pet / Call Pet
+
 - **Spell ID**: 883
 - **Type**: Pet summon
 - **Mechanics**: Summons your active pet
 
 ### Mend Pet
+
 - **Spell ID**: 136
 - **Type**: Pet heal
 - **Mechanics**: Heals pet over time

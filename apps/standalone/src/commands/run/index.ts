@@ -16,7 +16,10 @@ import * as os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Worker as NodeWorkerThread } from "node:worker_threads";
 
-import type { RotationDefinition } from "../../framework/types.js";
+import {
+  createRotationPlayer,
+  type RotationDefinition,
+} from "../../framework/types.js";
 import type {
   SimulationBatch,
   SimulationResult,
@@ -96,7 +99,11 @@ const runSimulation = (
         runtime.runPromise(
           Effect.gen(function* () {
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
-            const player = rotation.setupPlayer(playerId, config.spells);
+            const player = createRotationPlayer(
+              rotation,
+              playerId,
+              config.spells,
+            );
 
             const unitService = yield* Unit.UnitService;
             yield* unitService.add(player);

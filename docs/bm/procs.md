@@ -5,6 +5,7 @@ Proc mechanics and triggers for BM Hunter.
 ## Core Procs
 
 ### Wild Call
+
 - **Tracked via**: `procs.wild_call`
 - **Trigger**: Auto Shot critical strikes
 - **Effect**: Resets one charge of Barbed Shot
@@ -12,6 +13,7 @@ Proc mechanics and triggers for BM Hunter.
 - **Notes**: Critical component of Barbed Shot charge management
 
 ### Dire Command
+
 - **Tracked via**: `procs.dire_command`
 - **Trigger**: Kill Command cast
 - **Effect**: Summons a Dire Beast
@@ -19,6 +21,7 @@ Proc mechanics and triggers for BM Hunter.
 - **Code Location**: `kill_command_t::execute()`
 
 ### War Orders (Kill Command Reset)
+
 - **Tracked via**: Implicit in Barbed Shot
 - **Trigger**: Barbed Shot cast
 - **Effect**: Resets Kill Command cooldown
@@ -26,6 +29,7 @@ Proc mechanics and triggers for BM Hunter.
 - **Code Location**: `barbed_shot_t::execute()`
 
 ### Killer Cobra (Kill Command Reset)
+
 - **Trigger**: Cobra Shot during Bestial Wrath
 - **Effect**: Resets Kill Command cooldown
 - **Chance**: 100% during Bestial Wrath
@@ -34,6 +38,7 @@ Proc mechanics and triggers for BM Hunter.
 ## Dark Ranger Procs
 
 ### Deathblow
+
 - **Tracked via**: `procs.deathblow`
 - **Trigger**: Multiple sources:
   - Kill Command (chance from Deathblow talent)
@@ -44,12 +49,14 @@ Proc mechanics and triggers for BM Hunter.
 - **BM Chance**: From `deathblow.chance` (effect #2 for BM)
 
 ### Blighted Quiver (TWW S3)
+
 - **Tracked via**: `buffs.blighted_quiver`
 - **Trigger**: Kill Shot during Deathblow
 - **Effect**: Additional Withering Fire arrows
 - **Chance**: From tier set effect
 
 ### Shadow Hounds
+
 - **Type**: RPPM (Real Procs Per Minute)
 - **Trigger**: Black Arrow DoT ticks
 - **Effect**: Spawns Dark Hound pet
@@ -58,6 +65,7 @@ Proc mechanics and triggers for BM Hunter.
 ## Pack Leader Procs
 
 ### Huntmaster's Call (Hati/Fenryr)
+
 - **Tracked via**: `buffs.huntmasters_call`
 - **Trigger**: Dire Beast summon
 - **Effect**: At max stacks, 50% chance for Fenryr or Hati
@@ -74,17 +82,20 @@ Proc mechanics and triggers for BM Hunter.
   ```
 
 ### Howl of the Pack Leader
+
 - **Trigger**: Cooldown buff expires
 - **Effect**: Readies next beast summon (Wyvern/Boar/Bear)
 - **Mechanics**: Cycles through beasts in order
 
 ### Ursine Fury (Mongoose Fury from Bear)
+
 - **Tracked via**: Implicit in Boar Charge
 - **Trigger**: Boar Charge damage
 - **Effect**: Triggers Mongoose Fury buff
 - **Chance**: From Ursine Fury talent effect #1
 
 ### Hogstrider Stacks
+
 - **Trigger**: Boar Charge impacts
 - **Effect**: Cobra Shot hits more targets, deals more damage
 - **Mechanics**: Increments on each Boar Charge impact
@@ -92,6 +103,7 @@ Proc mechanics and triggers for BM Hunter.
 ## Tier Set Procs (TWW S3)
 
 ### Pack Leader 2pc
+
 - **Trigger**: Pack Leader beast summons
 - **Effect**: Grants one of three stat buffs:
   - Grizzled Fur (Mastery)
@@ -99,15 +111,18 @@ Proc mechanics and triggers for BM Hunter.
   - Sharpened Fangs (Crit)
 
 ### Pack Leader 4pc (Stampede)
+
 - **Trigger**: Specific Pack Leader conditions
 - **Effect**: Triggers Stampede damage
 
 ### Dark Ranger 4pc
+
 - **Trigger**: Kill Shot during Deathblow
 - **Effect**: Chance to gain Blighted Quiver
 - **Chance**: From tier set effect #2 (BM) or #3 (MM)
 
 ## Snakeskin Quiver Proc
+
 - **Tracked via**: `procs.snakeskin_quiver`
 - **Trigger**: Various conditions per talent
 - **Effect**: Free Cobra Shot
@@ -132,6 +147,7 @@ if (rppm.effect_name->trigger()) {
 ## Proc Tracking in SimC
 
 Procs are tracked via the `proc_t` class:
+
 ```cpp
 void hunter_t::init_procs() {
   if (talents.dire_command.ok())
@@ -147,6 +163,7 @@ void hunter_t::init_procs() {
 ```
 
 Procs report in simulation output:
+
 - Total occurrences
 - Procs per minute (PPM)
 - Procs per execute (PPE)

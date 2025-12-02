@@ -7,17 +7,20 @@ Beast Mastery (BM) Hunter is a ranged DPS specialization that commands powerful 
 ## Core Mechanics
 
 ### Mastery: Master of Beasts
+
 - **Spell ID**: 76657
 - Increases damage done by your pets
 - Affects all pet damage including Kill Command, basic attacks, and Beast Cleave
 
 ### Focus System
+
 - **Base Focus**: 100
 - **Regen Rate**: 5 Focus/second (base)
 - Primary spenders: Cobra Shot (35), Kill Command (30)
 - Primary generator: Barbed Shot (generates over time via buff)
 
 ### Pet Frenzy System
+
 The Frenzy mechanic is central to BM gameplay:
 
 ```
@@ -29,12 +32,15 @@ Barbed Shot Cast
 ```
 
 **Frenzy Buff (ID: 272790)**
+
 - Attack speed increase per stack (base 10%)
 - Can stack to 3
 - Modified by talents (Savagery, Better Together)
 
 ### Beast Cleave System
+
 When Multi-Shot is cast, Beast Cleave is applied:
+
 - **Player Buff (ID: 268877)**: Enables player cleave damage
 - **Pet Buff (ID: 118455)**: Pet melee attacks cleave nearby targets
 - **Pet Cleave Damage (ID: 118459)**: The actual cleave damage
@@ -65,6 +71,7 @@ Hunter Actions
 ## Key Cooldowns
 
 ### Bestial Wrath
+
 - **Spell ID**: 19574
 - Major damage cooldown
 - Affects both Hunter and pets
@@ -72,12 +79,14 @@ Hunter Actions
 - Cooldown: 90 seconds (reducible)
 
 ### Call of the Wild
+
 - **Spell ID**: 359844
 - Summons additional pets from stable
 - Reduces Kill Command and Barbed Shot CDs while active
 - Activates Bloody Frenzy (permanent Beast Cleave during)
 
 ## Stat Priority (General)
+
 1. Haste (more Barbed Shots, faster Kill Commands)
 2. Critical Strike
 3. Mastery
