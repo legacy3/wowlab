@@ -1,18 +1,21 @@
 import {
-  Activity,
+  BarChart2,
   BarChart3,
   Bug,
-  Clock,
-  Database,
+  Cpu,
+  Crown,
   FileCode,
-  FileText,
-  Library,
-  Loader2,
+  GitBranch,
+  History,
   LucideIcon,
   Medal,
+  Plug,
+  RotateCcw,
+  ScrollText,
+  Search,
   Target,
-  TrendingUp,
   Upload,
+  Wrench,
   Zap,
 } from "lucide-react";
 
@@ -20,6 +23,7 @@ export type MenuItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  external?: boolean;
 };
 
 export type MenuGroup = {
@@ -27,46 +31,52 @@ export type MenuGroup = {
   items: MenuItem[];
 };
 
+const item = (label: string, href: string, icon: LucideIcon): MenuItem => ({
+  label,
+  href,
+  icon,
+});
+
+const link = (label: string, href: string, icon: LucideIcon): MenuItem => ({
+  label,
+  href,
+  icon,
+  external: true,
+});
+
+const group = (label: string, items: MenuItem[]): MenuGroup => ({
+  label,
+  items,
+});
+
 export const menuConfig: MenuGroup[] = [
-  {
-    label: "Simulate",
-    items: [
-      { label: "Simulate", href: "/sim", icon: Zap },
-      { label: "Results", href: "/sim/results", icon: Activity },
-      { label: "Import", href: "/sim/import", icon: Upload },
-    ],
-  },
-  {
-    label: "Optimize",
-    items: [
-      { label: "Top Gear", href: "/top-gear", icon: TrendingUp },
-      { label: "Drop Optimizer", href: "/drop-optimizer", icon: Target },
-    ],
-  },
-  {
-    label: "Discover",
-    items: [
-      { label: "DPS Rankings", href: "/dps-rankings", icon: Medal },
-      { label: "Rotations", href: "/rotations", icon: Library },
-      { label: "Charts", href: "/charts", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Advanced",
-    items: [
-      { label: "Editor", href: "/editor", icon: FileCode },
-      { label: "Timeline", href: "/timeline", icon: Clock },
-      { label: "Workbench", href: "/workbench", icon: Activity },
-      { label: "Computing", href: "/computing", icon: Loader2 },
-      { label: "Data Inspector", href: "/data-inspector", icon: Database },
-    ],
-  },
-  {
-    label: "About",
-    items: [{ label: "Changelog", href: "/changelog", icon: FileText }],
-  },
-  {
-    label: "Debug",
-    items: [{ label: "Simulation", href: "/debug/simulation", icon: Bug }],
-  },
+  group("Simulate", [
+    item("Simulate", "/sim", Zap),
+    item("Results", "/sim/results", BarChart2),
+    item("Import", "/sim/import", Upload),
+  ]),
+  group("Optimize", [
+    item("Top Gear", "/top-gear", Crown),
+    item("Drop Optimizer", "/drop-optimizer", Target),
+  ]),
+  group("Discover", [
+    item("DPS Rankings", "/dps-rankings", Medal),
+    item("Rotations", "/rotations", RotateCcw),
+    item("Charts", "/charts", BarChart3),
+  ]),
+  group("Advanced", [
+    item("Editor", "/editor", FileCode),
+    item("Timeline", "/timeline", History),
+    item("Workbench", "/workbench", Wrench),
+    item("Computing", "/computing", Cpu),
+    item("Data Inspector", "/data-inspector", Search),
+  ]),
+  group("About", [
+    item("Changelog", "/changelog", ScrollText),
+    link("GitHub", "https://github.com/legacy3/wowlab", GitBranch),
+    link("MCP Server", "https://github.com/legacy3/wowlab/tree/main/apps/mcp-server", Plug),
+  ]),
+  group("Debug", [
+    item("Simulation", "/debug/simulation", Bug),
+  ]),
 ];
