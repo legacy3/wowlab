@@ -12,13 +12,13 @@ export interface RotationDefinition {
   /** Display name for the rotation */
   readonly name: string;
 
-  /** All spell IDs needed by this rotation (used to load spell data) */
-  readonly spellIds: readonly number[];
-
   /** The APL logic that decides what to cast each GCD */
   readonly run: (
     playerId: Schemas.Branded.UnitID,
   ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
+
+  /** All spell IDs needed by this rotation (used to load spell data) */
+  readonly spellIds: readonly number[];
 }
 
 /**

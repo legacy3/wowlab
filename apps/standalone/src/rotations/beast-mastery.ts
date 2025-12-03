@@ -10,20 +10,20 @@ import { RotationDefinition } from "../framework/types.js";
 
 const SpellIds = {
   // Core Rotational Abilities
-  KILL_COMMAND: 34026, // Pet ability trigger, 30 Focus, 7.5s CD (2 charges with Alpha Predator)
   BARBED_SHOT: 217200, // DoT + Frenzy trigger, 18s recharge (2 charges)
   COBRA_SHOT: 193455, // Focus spender, reduces Kill Command CD by 1s
+  KILL_COMMAND: 34026, // Pet ability trigger, 30 Focus, 7.5s CD (2 charges with Alpha Predator)
   MULTI_SHOT: 2643, // AoE, triggers Beast Cleave
 
   // Major Cooldowns
   // NOTE: Bestial Wrath DBC shows startRecoveryTime=1500 but in-game it's off-GCD
   BESTIAL_WRATH: 19574, // 15s duration, 90s CD - damage buff for Hunter and pets
-  CALL_OF_THE_WILD: 359844, // 20s duration, 120s CD - summons stable pets
   BLOODSHED: 321530, // Pet command, 60s CD - bleed DoT (321538 is the DoT effect, 321530 is the cast)
+  CALL_OF_THE_WILD: 359844, // 20s duration, 120s CD - summons stable pets
 
   // Execute / Utility
-  KILL_SHOT: 53351, // Execute at 20% health, 10s recharge
   EXPLOSIVE_SHOT: 212431, // AoE damage, 30s CD
+  KILL_SHOT: 53351, // Execute at 20% health, 10s recharge
 } as const;
 
 // =============================================================================
@@ -32,18 +32,6 @@ const SpellIds = {
 
 export const BeastMasteryRotation: RotationDefinition = {
   name: "Beast Mastery Hunter",
-
-  spellIds: [
-    SpellIds.COBRA_SHOT,
-    SpellIds.BARBED_SHOT,
-    SpellIds.KILL_COMMAND,
-    SpellIds.MULTI_SHOT,
-    SpellIds.BESTIAL_WRATH,
-    SpellIds.CALL_OF_THE_WILD,
-    SpellIds.BLOODSHED,
-    SpellIds.KILL_SHOT,
-    SpellIds.EXPLOSIVE_SHOT,
-  ],
 
   run: (playerId) =>
     Effect.gen(function* () {
@@ -101,4 +89,16 @@ export const BeastMasteryRotation: RotationDefinition = {
       // Cobra Shot - Filler ability (reduces Kill Command CD by 1s)
       yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT);
     }),
+
+  spellIds: [
+    SpellIds.COBRA_SHOT,
+    SpellIds.BARBED_SHOT,
+    SpellIds.KILL_COMMAND,
+    SpellIds.MULTI_SHOT,
+    SpellIds.BESTIAL_WRATH,
+    SpellIds.CALL_OF_THE_WILD,
+    SpellIds.BLOODSHED,
+    SpellIds.KILL_SHOT,
+    SpellIds.EXPLOSIVE_SHOT,
+  ],
 };

@@ -16,10 +16,6 @@ import * as os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Worker as NodeWorkerThread } from "node:worker_threads";
 
-import {
-  createRotationPlayer,
-  type RotationDefinition,
-} from "../../framework/types.js";
 import type {
   SimulationBatch,
   SimulationResult,
@@ -28,6 +24,10 @@ import type {
 
 import { loadSpells } from "../../data/spell-loader.js";
 import { supabaseClient } from "../../data/supabase.js";
+import {
+  createRotationPlayer,
+  type RotationDefinition,
+} from "../../framework/types.js";
 import { rotations } from "../../rotations/index.js";
 import { SimulationRpcs } from "../../rpc/requests.js";
 import {

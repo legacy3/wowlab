@@ -53,3 +53,20 @@ export const EventID = Brand.refined<EventID>(
   (s) => s.length > 0,
   (s) => Brand.error(`Expected non-empty string, got "${s}"`),
 );
+
+// Combat log branded types
+export const UnitFlagsSchema = Schema.Number.pipe(Schema.brand("UnitFlags"));
+export type UnitFlags = Schema.Schema.Type<typeof UnitFlagsSchema>;
+export const UnitFlags = Brand.nominal<UnitFlags>();
+
+export const RaidFlagsSchema = Schema.Number.pipe(Schema.brand("RaidFlags"));
+export type RaidFlags = Schema.Schema.Type<typeof RaidFlagsSchema>;
+export const RaidFlags = Brand.nominal<RaidFlags>();
+
+export const SpellSchoolFlagsSchema = Schema.Number.pipe(
+  Schema.brand("SpellSchoolFlags"),
+);
+export type SpellSchoolFlags = Schema.Schema.Type<
+  typeof SpellSchoolFlagsSchema
+>;
+export const SpellSchoolFlags = Brand.nominal<SpellSchoolFlags>();

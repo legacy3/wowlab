@@ -156,3 +156,64 @@ export enum SpellEffect {
 }
 
 export const SpellEffectSchema = Schema.Enums(SpellEffect);
+
+// Combat Log Enums
+
+/**
+ * Miss types for SPELL_MISSED and SWING_MISSED events
+ * Reference: https://warcraft.wiki.gg/wiki/COMBAT_LOG_EVENT
+ */
+export const MissType = Schema.Literal(
+  "ABSORB",
+  "BLOCK",
+  "DEFLECT",
+  "DODGE",
+  "EVADE",
+  "IMMUNE",
+  "MISS",
+  "PARRY",
+  "REFLECT",
+  "RESIST",
+);
+export type MissType = Schema.Schema.Type<typeof MissType>;
+
+/**
+ * Aura type for aura-related events
+ */
+export const AuraType = Schema.Literal("BUFF", "DEBUFF");
+export type AuraType = Schema.Schema.Type<typeof AuraType>;
+
+/**
+ * Environmental damage types
+ */
+export const EnvironmentalType = Schema.Literal(
+  "Drowning",
+  "Falling",
+  "Fatigue",
+  "Fire",
+  "Lava",
+  "Slime",
+);
+export type EnvironmentalType = Schema.Schema.Type<typeof EnvironmentalType>;
+
+/**
+ * Cast failed types
+ */
+export const CastFailedType = Schema.Literal(
+  "Another action is in progress",
+  "Can't do that while moving",
+  "Interrupted",
+  "Invalid target",
+  "Item is not ready yet",
+  "No path available",
+  "Not enough energy",
+  "Not enough focus",
+  "Not enough mana",
+  "Not enough rage",
+  "Not ready yet",
+  "Not yet recovered",
+  "Out of range",
+  "Target not in line of sight",
+  "You are dead",
+);
+export type CastFailedType = Schema.Schema.Type<typeof CastFailedType>;
