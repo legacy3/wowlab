@@ -68,7 +68,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
               `Energize: ${event.destName} +${event.amount} power`,
             );
             break;
-            
+
           case "SPELL_PERIODIC_DAMAGE":
             yield* Effect.logDebug(
               `Damage: ${event.spellName} hit ${event.destName} for ${event.amount}`,

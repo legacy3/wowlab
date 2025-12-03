@@ -2,223 +2,339 @@
 
 Comprehensive analysis of what's documented in `@docs/bm/` vs what's implemented in `@packages/`.
 
-## Already Implemented (Foundation)
+---
 
-| Component                             | Status | Location                             |
-| ------------------------------------- | ------ | ------------------------------------ |
-| Unit entity with auras, spells, power | ✅     | `@wowlab/core/entities/Unit.ts`      |
-| Spell entity with charges/cooldowns   | ✅     | `@wowlab/core/entities/Spell.ts`     |
-| Aura entity with stacks/expiry        | ✅     | `@wowlab/core/entities/Aura.ts`      |
-| GameState with time tracking          | ✅     | `@wowlab/core/entities/GameState.ts` |
-| Power system (Focus support)          | ✅     | `@wowlab/core/entities/Power.ts`     |
-| Spell info schema (100+ fields)       | ✅     | `@wowlab/core/schemas/Spell.ts`      |
-| Effect-TS service framework           | ✅     | `@wowlab/services/`                  |
-| SpellActions.canCast/cast             | ✅     | `@wowlab/rotation/SpellActions.ts`   |
-| GCD handling                          | ✅     | `@wowlab/rotation/`                  |
-| DBC schemas (Spell*, Item*)           | ✅     | `@wowlab/core/schemas/dbc/`          |
+## Foundation Status
+
+### Implemented (Ready to Use)
+
+| Component          | Location                                 | Notes                                          |
+| ------------------ | ---------------------------------------- | ---------------------------------------------- |
+| Unit entity        | `@wowlab/core/entities/Unit.ts`          | Auras, spells, power, position, paperDoll      |
+| Spell entity       | `@wowlab/core/entities/Spell.ts`         | Charges, cooldowns, transforms                 |
+| Aura entity        | `@wowlab/core/entities/Aura.ts`          | Stacks, expiry, transforms                     |
+| GameState          | `@wowlab/core/entities/GameState.ts`     | Units, projectiles, time tracking              |
+| Power system       | `@wowlab/core/entities/Power.ts`         | Current/max values                             |
+| SpellInfo schema   | `@wowlab/core/entities/Spell.ts`         | 100+ fields from DBC                           |
+| Effect-TS services | `@wowlab/services/`                      | Full service framework                         |
+| Combat Log Schemas | `@wowlab/core/schemas/combat-log/`       | Full WoW CLEU event types                      |
+| EventQueue         | `@wowlab/services/combat-log/EventQueue` | Effect.Queue for events                        |
+| HandlerRegistry    | `@wowlab/services/combat-log/Handler*`   | Subscribe by subevent + spellId                |
+| CombatLogService   | `@wowlab/services/combat-log/CombatLog*` | Unified emit + subscribe API                   |
+| SimDriver          | `@wowlab/services/combat-log/SimDriver`  | Event loop: dequeue → handlers → emit → mutate |
+| Emitter            | `@wowlab/services/combat-log/Emitter`    | emit(), emitAt(), emitBatch() for handlers     |
+| StateService       | `@wowlab/services/state/StateService`    | GameState ref with get/set/update              |
+| DBC schemas        | `@wowlab/core/schemas/dbc/`              | Spell*, Item* from game data                   |
+
+### Event System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           SimDriver.run(endTime)                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  1. Poll EventQueue                                                      │
+│  2. Update StateService.currentTime                                      │
+│  3. Create Emitter for this event                                        │
+│  4. Get handlers from HandlerRegistry                                    │
+│  5. Execute handlers (sorted by priority)                                │
+│  6. Queue emitted events (sorted by timestamp)                           │
+│  7. Apply generic state mutations                                        │
+│  8. Repeat until queue empty or endTime reached                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Handler signature:**
+
+```typescript
+type EventHandler<E, R, Err> = (
+  event: E,
+  emitter: Emitter,
+) => Effect.Effect<void, Err, R>;
+```
+
+**Register a handler:**
+
+```typescript
+yield *
+  combatLog.onSpell("SPELL_CAST_SUCCESS", KILL_COMMAND, onKillCommandCast, {
+    id: "bm:kill-command",
+    priority: 10,
+  });
+```
 
 ---
 
 ## Not Implemented (Ordered by Priority)
 
-### Phase 1: Entity Graph & Stat System
+### Phase 1: State Mutations in SimDriver
 
-| #   | Feature                         | Notes                                         |
-| --- | ------------------------------- | --------------------------------------------- |
-| 1.1 | **Pet as Unit entity**          | Shared Unit type with `PetBehavior` trait     |
-| 1.2 | **PetManager service**          | Lifecycle: summon, despawn, target sync       |
-| 1.3 | **Pet scaling module**          | AP=0.6x, Stamina=0.7x from hunter             |
-| 1.4 | **Stat propagation**            | Haste→GCD/swing/tick, Crit/Vers/Mastery hooks |
-| 1.5 | **Main Pet + Animal Companion** | Two permanent pets (AC auto-attacks only)     |
-| 1.6 | **Temporary pet pool**          | Dire Beast, CotW pets, Pack Leader beasts     |
+The SimDriver currently logs events but doesn't mutate GameState. We need:
 
-### Phase 2: Damage Pipeline
+| #    | Feature                | Notes                                              |
+| ---- | ---------------------- | -------------------------------------------------- |
+| 1.1  | **Aura application**   | SPELL_AURA_APPLIED → add aura to unit              |
+| 1.2  | **Aura removal**       | SPELL_AURA_REMOVED → remove aura from unit         |
+| 1.3  | **Aura stack changes** | SPELL_AURA_APPLIED_DOSE → update stacks            |
+| 1.4  | **Aura refresh**       | SPELL_AURA_REFRESH → reset duration                |
+| 1.5  | **Power changes**      | SPELL_ENERGIZE → add power, spell costs → subtract |
+| 1.6  | **Health changes**     | SPELL_DAMAGE/HEAL → update health                  |
+| 1.7  | **Unit summoning**     | SPELL_SUMMON → add unit to GameState               |
+| 1.8  | **Unit death**         | UNIT_DIED → mark unit dead or remove               |
+| 1.9  | **Cooldown tracking**  | SPELL_CAST_SUCCESS → start cooldown                |
+| 1.10 | **Cast state**         | SPELL_CAST_START/SUCCESS → update isCasting        |
 
-| #   | Feature                               | Notes                            |
-| --- | ------------------------------------- | -------------------------------- |
-| 2.1 | **AP scaling framework**              | Coefficient × AP × modifiers     |
-| 2.2 | **Mastery: Master of Beasts** (76657) | Pet damage multiplier            |
-| 2.3 | **Crit damage calculation**           | Base 2x, Piercing Fangs modifier |
-| 2.4 | **Versatility modifier**              | Damage and damage reduction      |
-| 2.5 | **Target armor tables**               | Physical damage mitigation       |
-| 2.6 | **AoE damage reduction**              | Beyond target cap                |
+### Phase 2: Pet System
 
-### Phase 3: Continuous Systems (Auto-attacks & DoTs)
+| #   | Feature                    | Notes                                     |
+| --- | -------------------------- | ----------------------------------------- |
+| 2.1 | **Pet as Unit entity**     | Reuse Unit type, add isPet/petType fields |
+| 2.2 | **PetManager service**     | Lifecycle: summon, despawn, target sync   |
+| 2.3 | **Pet scaling**            | AP=0.6x, Stamina=0.7x from hunter         |
+| 2.4 | **Main Pet + Animal Comp** | Two permanent pets (AC auto-attacks only) |
+| 2.5 | **Temporary pet pool**     | Dire Beast, CotW pets, Pack Leader beasts |
+| 2.6 | **SPELL_SUMMON handler**   | Create pet unit on summon event           |
 
-| #   | Feature                       | Notes                                         |
-| --- | ----------------------------- | --------------------------------------------- |
-| 3.1 | **Auto-attack system**        | Hunter ranged autos                           |
-| 3.2 | **Pet auto-attacks**          | Claw/Bite/Smack + swing timer                 |
-| 3.3 | **Auto-attack crit tracking** | Required for Wild Call                        |
-| 3.4 | **DoT tick system**           | Scheduled periodic events                     |
-| 3.5 | **Barbed Shot DoT** (217200)  | 8s bleed, ticks reduce KC CD (Master Handler) |
-| 3.6 | **Bloodshed DoT** (321538)    | Pet applies bleed                             |
-| 3.7 | **Haste affects tick rate**   | Dynamic tick scheduling                       |
+### Phase 3: Continuous Systems (Scheduled Events)
 
-### Phase 4: Buff/Debuff Framework
+| #   | Feature                     | Notes                                         |
+| --- | --------------------------- | --------------------------------------------- |
+| 3.1 | **Auto-attack scheduler**   | Schedule SWING_DAMAGE/RANGE_DAMAGE events     |
+| 3.2 | **Pet auto-attacks**        | Claw/Bite/Smack + swing timer                 |
+| 3.3 | **DoT tick scheduler**      | Schedule SPELL_PERIODIC_DAMAGE events         |
+| 3.4 | **Barbed Shot DoT**         | 8s bleed, ticks reduce KC CD (Master Handler) |
+| 3.5 | **Bloodshed DoT**           | Pet applies bleed                             |
+| 3.6 | **Haste affects tick rate** | Dynamic tick scheduling based on haste        |
+| 3.7 | **Focus regen scheduler**   | Schedule SPELL_PERIODIC_ENERGIZE for focus    |
 
-| #    | Feature                              | Notes                                  |
-| ---- | ------------------------------------ | -------------------------------------- |
-| 4.1  | **Buff application service**         | Generic buff/debuff handling           |
-| 4.2  | **Stacking rules**                   | Add vs refresh vs cap                  |
-| 4.3  | **Duration extension**               | For Fury of the Wyvern, etc.           |
-| 4.4  | **Snapshot vs dynamic flags**        | Most BM buffs are dynamic              |
-| 4.5  | **Frenzy** (272790)                  | 0-3 stacks, attack speed per stack     |
-| 4.6  | **Bestial Wrath hunter** (19574)     | 25% damage, 15s duration               |
-| 4.7  | **Bestial Wrath pet** (186254)       | Separate buff, triggers Piercing Fangs |
-| 4.8  | **Beast Cleave player** (268877)     | Enables cleave mode                    |
-| 4.9  | **Beast Cleave pet** (118455)        | Cleave on melee (snapshot per-hit)     |
-| 4.10 | **Thrill of the Hunt** (257946)      | Crit stacks from Barbed Shot           |
-| 4.11 | **Barbed Shot Focus regen** (246152) | Focus/tick, multiple instances         |
-| 4.12 | **Piercing Fangs** (392054)          | Pet crit damage during BW              |
+### Phase 4: Damage Pipeline
 
-### Phase 5: Proc System
+| #   | Feature                       | Notes                                 |
+| --- | ----------------------------- | ------------------------------------- |
+| 4.1 | **AP scaling framework**      | Coefficient x AP x modifiers          |
+| 4.2 | **Mastery: Master of Beasts** | Pet damage multiplier                 |
+| 4.3 | **Crit damage calculation**   | Base 2x, Piercing Fangs modifier      |
+| 4.4 | **Versatility modifier**      | Damage and damage reduction           |
+| 4.5 | **Target armor tables**       | Physical damage mitigation            |
+| 4.6 | **AoE damage reduction**      | Beyond target cap                     |
+| 4.7 | **Stat propagation**          | Haste→GCD/swing/tick, Crit/Vers hooks |
 
-| #   | Feature            | Notes                                                             |
-| --- | ------------------ | ----------------------------------------------------------------- |
-| 5.1 | **Proc framework** | RNG roll + proc tracking                                          |
-| 5.2 | **Wild Call**      | Auto crit → Barbed Shot charge reset (all active pets contribute) |
-| 5.3 | **Killer Cobra**   | Cobra Shot during BW → KC reset (100%)                            |
-| 5.4 | **Scent of Blood** | BW cast → full Barbed Shot charges                                |
-| 5.5 | **Dire Command**   | KC cast → chance to spawn Dire Beast                              |
-| 5.6 | **War Orders**     | Barbed Shot → chance to reset KC                                  |
-| 5.7 | **Deathblow**      | Multiple triggers → enables Kill Shot at any HP                   |
+### Phase 5: Core BM Spell Handlers
 
-### Phase 6: Core Spell Effects
+Each spell becomes an event handler registered with `combatLog.onSpell()`:
 
-| #    | Feature                             | Notes                                           |
-| ---- | ----------------------------------- | ----------------------------------------------- |
-| 6.1  | **Kill Command** (34026)            | Triggers pet Kill Command (83381)               |
-| 6.2  | **Kill Command pet damage** (83381) | AP × coefficient × mastery                      |
-| 6.3  | **Kill Cleave**                     | KC cleaves during Beast Cleave                  |
-| 6.4  | **Barbed Shot** (217200)            | Apply DoT + Frenzy stack + Focus buff           |
-| 6.5  | **Cobra Shot** (193455)             | Damage + KC CD reduction (-1s)                  |
-| 6.6  | **Multi-Shot** (2643)               | AoE damage + Beast Cleave buff                  |
-| 6.7  | **Bestial Wrath cast**              | Apply buff + Scent of Blood reset               |
-| 6.8  | **Call of the Wild** (359844)       | Summon pets periodically, CD reduction per tick |
-| 6.9  | **Bloodshed** (321530)              | Pet attack + DoT                                |
-| 6.10 | **Kill Shot** (53351)               | Execute <20% or Deathblow                       |
-| 6.11 | **Stomp**                           | AoE on Barbed Shot cast                         |
+| #   | Spell                     | Trigger Event      | Handler Emits                         |
+| --- | ------------------------- | ------------------ | ------------------------------------- |
+| 5.1 | **Kill Command** (34026)  | SPELL_CAST_SUCCESS | Pet KC cast → SPELL_DAMAGE            |
+| 5.2 | **Barbed Shot** (217200)  | SPELL_CAST_SUCCESS | DoT events, Frenzy aura, Focus buff   |
+| 5.3 | **Cobra Shot** (193455)   | SPELL_CAST_SUCCESS | SPELL_DAMAGE, KC CD reduction         |
+| 5.4 | **Multi-Shot** (2643)     | SPELL_CAST_SUCCESS | AoE SPELL_DAMAGE, Beast Cleave aura   |
+| 5.5 | **Bestial Wrath** (19574) | SPELL_CAST_SUCCESS | Hunter + Pet BW auras, Scent of Blood |
+| 5.6 | **Call of the Wild**      | SPELL_CAST_SUCCESS | SPELL_SUMMON for each pet             |
+| 5.7 | **Bloodshed** (321530)    | SPELL_CAST_SUCCESS | Pet attack + DoT                      |
+| 5.8 | **Kill Shot** (53351)     | SPELL_CAST_SUCCESS | Execute damage                        |
 
-### Phase 7: Focus Economy
+### Phase 6: Buff/Debuff Handlers
 
-| #   | Feature                             | Notes                      |
-| --- | ----------------------------------- | -------------------------- |
-| 7.1 | **Base Focus regen**                | 5/sec                      |
-| 7.2 | **Barbed Shot Focus buff stacking** | Multiple instances running |
-| 7.3 | **Focus cost system**               | KC=30, Cobra=35, Multi=40  |
-| 7.4 | **Focus cap check**                 | 100 base, don't overcap    |
-| 7.5 | **Bestial Wrath cost reduction**    | If talented                |
+Handlers that respond to aura events:
 
-### Phase 8: APL/Rotation Framework
+| #   | Buff                        | Trigger Event      | Effect                     |
+| --- | --------------------------- | ------------------ | -------------------------- |
+| 6.1 | **Frenzy** (272790)         | SPELL_AURA_APPLIED | +attack speed per stack    |
+| 6.2 | **Bestial Wrath** (19574)   | SPELL_AURA_APPLIED | +25% damage                |
+| 6.3 | **Beast Cleave** (268877)   | SPELL_AURA_APPLIED | Enable cleave mode         |
+| 6.4 | **Thrill of the Hunt**      | SPELL_AURA_APPLIED | +crit from Barbed Shot     |
+| 6.5 | **Piercing Fangs** (392054) | SPELL_AURA_APPLIED | +pet crit damage during BW |
 
-| #   | Feature                          | Notes                                   |
-| --- | -------------------------------- | --------------------------------------- |
-| 8.1 | **Condition evaluator**          | `buff.X.up`, `charges_fractional>=Y`    |
-| 8.2 | **Action list structure**        | Named lists (st, cleave, cds)           |
-| 8.3 | **Target selection**             | `target_if=min:dot.barbed_shot.remains` |
-| 8.4 | **Charge management conditions** | `full_recharge_time<gcd`                |
-| 8.5 | **Buff timing conditions**       | `buff.X.tick_time_remains>gcd`          |
-| 8.6 | **Multi-target detection**       | Switch st↔cleave                       |
+### Phase 7: Proc Handlers
+
+Handlers that roll RNG and emit proc events:
+
+| #   | Proc               | Trigger Event       | Condition                        | Effect                      |
+| --- | ------------------ | ------------------- | -------------------------------- | --------------------------- |
+| 7.1 | **Wild Call**      | SWING_DAMAGE (crit) | Pet auto-attack crits            | Reset Barbed Shot charge    |
+| 7.2 | **Killer Cobra**   | SPELL_CAST_SUCCESS  | Cobra Shot during BW             | Reset KC cooldown (100%)    |
+| 7.3 | **Scent of Blood** | SPELL_AURA_APPLIED  | BW applied                       | Full Barbed Shot charges    |
+| 7.4 | **Dire Command**   | SPELL_CAST_SUCCESS  | Kill Command cast                | Chance to summon Dire Beast |
+| 7.5 | **War Orders**     | SPELL_CAST_SUCCESS  | Barbed Shot cast                 | Chance to reset KC          |
+| 7.6 | **Deathblow**      | Various             | KC, Bleak Arrows, Withering Fire | Enable Kill Shot any HP     |
+
+### Phase 8: Focus Economy
+
+| #   | Feature                    | Notes                      |
+| --- | -------------------------- | -------------------------- |
+| 8.1 | **Base Focus regen**       | 5/sec scheduled events     |
+| 8.2 | **Barbed Shot Focus buff** | Multiple instances running |
+| 8.3 | **Focus cost deduction**   | On SPELL_CAST_SUCCESS      |
+| 8.4 | **Focus cap check**        | 100 base, don't overcap    |
+| 8.5 | **BW cost reduction**      | If talented                |
 
 ### Phase 9: Cooldown/Charge Interactions
 
-| #   | Feature                        | Notes                         |
-| --- | ------------------------------ | ----------------------------- |
-| 9.1 | **Barbed Wrath**               | Barbed Shot → BW CD reduction |
-| 9.2 | **Master Handler**             | DoT tick → KC CD reduction    |
-| 9.3 | **Alpha Predator**             | +1 Kill Command charge        |
-| 9.4 | **CotW CD reduction per tick** | Per pet summoned              |
-| 9.5 | **Charge reset mechanics**     | Scent of Blood, Wild Call     |
+| #   | Feature                    | Notes                         |
+| --- | -------------------------- | ----------------------------- |
+| 9.1 | **Barbed Wrath**           | Barbed Shot → BW CD reduction |
+| 9.2 | **Master Handler**         | DoT tick → KC CD reduction    |
+| 9.3 | **Alpha Predator**         | +1 Kill Command charge        |
+| 9.4 | **CotW CD reduction**      | Per pet summoned              |
+| 9.5 | **Charge reset mechanics** | Scent of Blood, Wild Call     |
 
-### Phase 10: Hero Talents - Pack Leader
+### Phase 10: APL/Rotation Framework
 
-| #     | Feature                                   | Notes                                |
-| ----- | ----------------------------------------- | ------------------------------------ |
-| 10.1  | **Howl of the Pack Leader state machine** | Cycle: Wyvern→Boar→Bear              |
-| 10.2  | **Beast summon on KC**                    | Consume Howl buff → summon           |
-| 10.3  | **Wyvern summon + Wyvern's Cry buff**     | Damage increase                      |
-| 10.4  | **Boar Charge**                           | Damage + Hogstrider stacks           |
-| 10.5  | **Bear + Rend Flesh DoT**                 | Bleed + damage buff                  |
-| 10.6  | **Fury of the Wyvern**                    | KC extends Wyvern's Cry              |
-| 10.7  | **Lead From the Front** (472743)          | BW triggers damage buff              |
-| 10.8  | **Hogstrider** (472640)                   | Boar Charge → Cobra Shot enhancement |
-| 10.9  | **Huntmaster's Call** (459731)            | Dire Beast → stacks → Fenryr/Hati    |
-| 10.10 | **Fenryr**                                | 2x AP, Ravenous Leap, grants haste   |
-| 10.11 | **Hati**                                  | 2x AP, grants damage buff            |
+| #    | Feature                    | Notes                                   |
+| ---- | -------------------------- | --------------------------------------- |
+| 10.1 | **Condition evaluator**    | `buff.X.up`, `charges_fractional>=Y`    |
+| 10.2 | **Action list structure**  | Named lists (st, cleave, cds)           |
+| 10.3 | **Target selection**       | `target_if=min:dot.barbed_shot.remains` |
+| 10.4 | **Charge management**      | `full_recharge_time<gcd`                |
+| 10.5 | **Buff timing conditions** | `buff.X.tick_time_remains>gcd`          |
+| 10.6 | **Multi-target detection** | Switch st↔cleave                       |
 
-### Phase 11: Hero Talents - Dark Ranger
+### Phase 11: Hero Talents - Pack Leader
 
-| #    | Feature                               | Notes                                  |
-| ---- | ------------------------------------- | -------------------------------------- |
-| 11.1 | **Black Arrow** (466930)              | Replaces Kill Shot                     |
-| 11.2 | **Black Arrow DoT** (468574)          | Shadow damage                          |
-| 11.3 | **Bleak Arrows auto-attack** (468572) | Replace auto shot                      |
-| 11.4 | **Deathblow proc sources**            | KC, Bleak Arrows, Withering Fire ticks |
-| 11.5 | **Withering Fire buff**               | Extra Black Arrows per tick            |
-| 11.6 | **Shadow Hounds RPPM**                | DoT tick → spawn Dark Hound            |
-| 11.7 | **Dark Hound**                        | 5x AP pet                              |
-| 11.8 | **Bleak Powder**                      | Black Arrow splash damage              |
-| 11.9 | **The Bell Tolls**                    | Stacking damage buff                   |
+| #    | Feature                           | Notes                             |
+| ---- | --------------------------------- | --------------------------------- |
+| 11.1 | **Howl of the Pack Leader state** | Cycle: Wyvern→Boar→Bear           |
+| 11.2 | **Beast summon on KC**            | Consume Howl buff → SPELL_SUMMON  |
+| 11.3 | **Wyvern + Wyvern's Cry buff**    | Damage increase                   |
+| 11.4 | **Boar Charge + Hogstrider**      | Damage + stacks                   |
+| 11.5 | **Bear + Rend Flesh DoT**         | Bleed + damage buff               |
+| 11.6 | **Fury of the Wyvern**            | KC extends Wyvern's Cry           |
+| 11.7 | **Huntmaster's Call**             | Dire Beast → stacks → Fenryr/Hati |
 
-### Phase 12: Tier Sets (TWW S3)
+### Phase 12: Hero Talents - Dark Ranger
 
-| #    | Feature             | Notes                                         |
-| ---- | ------------------- | --------------------------------------------- |
-| 12.1 | **Pack Leader 2pc** | Beast summon → stat buff (Mastery/Haste/Crit) |
-| 12.2 | **Pack Leader 4pc** | Stampede damage                               |
-| 12.3 | **Dark Ranger 4pc** | Blighted Quiver proc                          |
+| #    | Feature                      | Notes                            |
+| ---- | ---------------------------- | -------------------------------- |
+| 12.1 | **Black Arrow** (466930)     | Replaces Kill Shot               |
+| 12.2 | **Black Arrow DoT** (468574) | Shadow damage                    |
+| 12.3 | **Bleak Arrows auto-attack** | Replace auto shot                |
+| 12.4 | **Deathblow proc sources**   | KC, Bleak Arrows, Withering Fire |
+| 12.5 | **Withering Fire buff**      | Extra Black Arrows per tick      |
+| 12.6 | **Shadow Hounds RPPM**       | DoT tick → spawn Dark Hound      |
+
+### Phase 13: Tier Sets (TWW S3)
+
+| #    | Feature             | Notes                    |
+| ---- | ------------------- | ------------------------ |
+| 13.1 | **Pack Leader 2pc** | Beast summon → stat buff |
+| 13.2 | **Pack Leader 4pc** | Stampede damage          |
+| 13.3 | **Dark Ranger 4pc** | Blighted Quiver proc     |
 
 ---
 
-## Tricky Interactions
+## Handler Implementation Pattern
 
-These mechanics require careful implementation to avoid bugs:
+Every spell/proc/buff becomes an event handler:
 
-### 1. Pet Stat Recalculation
+```typescript
+// packages/wowlab-specs/hunter/beast-mastery/spells/kill-command.ts
+import * as Effect from "effect/Effect";
+import type { EventHandler, Emitter } from "@wowlab/services/CombatLog";
+import type { SpellCastSuccess } from "@wowlab/core/Schemas";
+import { StateService } from "@wowlab/services/State";
+import { RNGService } from "@wowlab/services/Rng";
+import { KILL_COMMAND, PET_KILL_COMMAND, DIRE_BEAST } from "../constants.js";
 
-Pet stats must recalculate dynamically whenever hunter buffs or external auras change. Only a few effects (e.g., Bestial Wrath damage amp) snapshot, while Frenzy attack speed stacks compound with haste and GCD.
+export const onKillCommandCast: EventHandler<SpellCastSuccess> = (
+  event,
+  emitter,
+) =>
+  Effect.gen(function* () {
+    const state = yield* StateService;
+    const rng = yield* RNGService;
+    const gameState = yield* state.getState();
 
-### 2. Beast Cleave Snapshots
+    // Get pet from state
+    const pet = getPetFromState(gameState);
+    if (!pet) return;
 
-Beast Cleave applies per-hit snapshots of damage modifiers. Pets added mid-buff shouldn't retroactively cleave, and Animal Companion's hidden pet cleaves at half value.
+    // Pet performs Kill Command - emit damage event
+    emitter.emit(
+      new SpellDamage({
+        timestamp: event.timestamp,
+        sourceGUID: pet.id,
+        sourceName: pet.name,
+        destGUID: event.destGUID,
+        destName: event.destName,
+        spellId: PET_KILL_COMMAND,
+        spellName: "Kill Command",
+        spellSchool: 1,
+        amount: calculateKCDamage(gameState),
+        // ... other damage fields
+      }),
+    );
 
-### 3. Wild Call Proc Density
+    // Dire Command proc check (15% chance)
+    const roll = yield* rng.next();
+    if (roll < 0.15) {
+      emitter.emit(
+        new SpellSummon({
+          timestamp: event.timestamp,
+          sourceGUID: event.sourceGUID,
+          sourceName: event.sourceName,
+          destGUID: generatePetGUID(),
+          destName: "Dire Beast",
+          spellId: DIRE_BEAST,
+          spellName: "Dire Beast",
+          spellSchool: 1,
+        }),
+      );
+    }
+  });
+```
 
-Wild Call proc rate is tied to auto-attack crits from every active beast, so any haste/crit buff or temporary pet changes the proc density. Make reset logic idempotent across queued Barbed Shot charges.
+**Register in spec module:**
 
-### 4. Bestial Wrath Event Stream
+```typescript
+// packages/wowlab-specs/hunter/beast-mastery/index.ts
+export const registerBMHandlers = Effect.gen(function* () {
+  const combatLog = yield* CombatLogService;
 
-Bestial Wrath reduces pet Focus costs and Kill Command cooldowns while extending via Barbed Shot ticks (Scent of Blood). Ensure one event stream handles both duration extension and cooldown refunds.
+  yield* combatLog.onSpell(
+    "SPELL_CAST_SUCCESS",
+    KILL_COMMAND,
+    onKillCommandCast,
+    {
+      id: "bm:kill-command",
+      priority: 10,
+    },
+  );
 
-### 5. Call of the Wild Despawn
+  yield* combatLog.onSpell(
+    "SPELL_CAST_SUCCESS",
+    BARBED_SHOT,
+    onBarbedShotCast,
+    {
+      id: "bm:barbed-shot",
+      priority: 10,
+    },
+  );
 
-Call of the Wild summons inherit current buffs but expire while their queued attacks may still be mid-flight. Handle despawn + pending damage carefully to avoid orphaned events.
-
-### 6. Killer Cobra Timing
-
-Multi-pet Kill Command resolution: pet must be in range. Dire Beasts without Kill Command shouldn't satisfy killer abilities, and Killer Cobra should only reset Kill Command after Cobra Shot _hits_ during Bestial Wrath.
+  // ... more handlers
+});
+```
 
 ---
 
 ## Recommended Implementation Order
 
 ```
-Phase 1  → Entity graph + stat scaling
-Phase 2  → Damage pipeline
-Phase 3  → Auto-attacks + DoT system
-Phase 4  → Buff/debuff framework
-Phase 5  → Proc system
-Phase 6  → Core spells
-Phase 7  → Focus economy
-Phase 8  → APL framework
+Phase 1  → State mutations in SimDriver (auras, power, health, cooldowns)
+Phase 2  → Pet system (Unit-based pets, PetManager, scaling)
+Phase 3  → Scheduled events (auto-attacks, DoTs, focus regen)
+Phase 4  → Damage pipeline (AP scaling, mastery, crit, armor)
+Phase 5  → Core BM spell handlers
+Phase 6  → Buff/debuff handlers
+Phase 7  → Proc handlers
+Phase 8  → Focus economy
 Phase 9  → Cooldown interactions
-Phase 10 → Hero talents (Pack Leader)
-Phase 11 → Hero talents (Dark Ranger)
-Phase 12 → Tier sets
+Phase 10 → APL framework
+Phase 11 → Hero talents (Pack Leader)
+Phase 12 → Hero talents (Dark Ranger)
+Phase 13 → Tier sets
 ```
 
-This order minimizes rework since each phase builds on the previous foundation.
+This order ensures each phase has its dependencies ready.
 
 ---
 
@@ -226,21 +342,21 @@ This order minimizes rework since each phase builds on the previous foundation.
 
 ### P0 (Must have for basic simulation)
 
-- Pet system (main pet, Kill Command trigger)
-- Damage calculations (AP scaling, mastery)
-- Core buffs (Frenzy, Bestial Wrath)
+- State mutations (auras, power, cooldowns)
+- Pet system (main pet, KC trigger)
+- Auto-attack system (Wild Call dependency)
+- Core spell handlers (KC, Barbed Shot, Cobra Shot, BW)
 - Core procs (Wild Call, Killer Cobra, Scent of Blood)
-- Auto-attack system
-- APL framework
+- Focus economy
 
 ### P1 (Needed for accurate simulation)
 
-- Full spell roster
-- All core talent effects
+- Full spell roster handlers
+- All buff/debuff handlers
 - DoT system with tick callbacks
-- Charge/cooldown interactions
+- Cooldown interactions
 - Multi-target handling
-- Focus economy
+- Damage pipeline with mastery/crit
 
 ### P2 (Hero talents)
 
@@ -255,16 +371,30 @@ This order minimizes rework since each phase builds on the previous foundation.
 
 ---
 
-## Pet Modeling Recommendation
+## Tricky Interactions
 
-Based on Codex analysis:
+These mechanics require careful implementation:
 
-1. **Model each pet as a `Unit`** - Main pet, companion, dire beast, CotW pets all as Unit entities so they automatically benefit from existing aura, stat, and event machinery
+### 1. Pet Stat Recalculation
 
-2. **Shared `PetBehavior` trait** - Common interface for pet actions and scaling
+Pet stats must recalculate dynamically whenever hunter buffs change. Use event handlers on SPELL_AURA_APPLIED/REMOVED to trigger recalculation.
 
-3. **Lightweight temporary pets** - Dire Beasts and CotW pets can be lightweight `Unit` records with limited action sets and lifetimes scheduled via the event queue
+### 2. Beast Cleave Snapshots
 
-4. **PetManager service** - Higher-level service purely for lifecycle/orchestration (summon, despawn, target sync) rather than storing bespoke pet state outside Units
+Beast Cleave applies per-hit snapshots. The handler for SWING_DAMAGE needs to check Beast Cleave buff and snapshot modifiers.
 
-This keeps scaling, buffs, and logging centralized while maintaining flexibility for different pet types.
+### 3. Wild Call Proc Density
+
+Wild Call triggers on pet auto-attack crits. Handler on SWING_DAMAGE checks critical flag and pet source.
+
+### 4. Bestial Wrath Event Stream
+
+BW handler emits both hunter and pet aura events, plus Scent of Blood reset. Duration extension from Barbed Shot ticks handled by separate handler.
+
+### 5. Killer Cobra Timing
+
+Cobra Shot handler checks if BW buff is active before resetting KC cooldown.
+
+### 6. Scheduled Event Ordering
+
+DoT ticks, auto-attacks, and focus regen all use `emitter.emitAt()` with precise timestamps. SimDriver processes in timestamp order.
