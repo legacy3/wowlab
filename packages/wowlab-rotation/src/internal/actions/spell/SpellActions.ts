@@ -1,6 +1,7 @@
 import * as Errors from "@wowlab/core/Errors";
-import { Branded } from "@wowlab/core/Schemas";
+import { Branded, CombatLog } from "@wowlab/core/Schemas";
 import * as Accessors from "@wowlab/services/Accessors";
+import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
@@ -8,10 +9,15 @@ import * as Effect from "effect/Effect";
 export class SpellActions extends Effect.Service<SpellActions>()(
   "SpellActions",
   {
-    dependencies: [Unit.UnitService.Default, Accessors.UnitAccessor.Default],
+    dependencies: [
+      Unit.UnitService.Default,
+      Accessors.UnitAccessor.Default,
+      CombatLogService.CombatLogService.Default,
+    ],
     effect: Effect.gen(function* () {
       const unitAccessor = yield* Accessors.UnitAccessor;
       const stateService = yield* State.StateService;
+      const combatLog = yield* CombatLogService.CombatLogService;
 
       return {
         canCast: (unitId: Branded.UnitID, spellId: number) =>
@@ -55,6 +61,24 @@ export class SpellActions extends Effect.Service<SpellActions>()(
                 }),
               );
             }
+
+            // Emit SPELL_CAST_SUCCESS event to the combat log
+            const castEvent = new CombatLog.SpellCastSuccess({
+              destFlags: 0,
+              destGUID: "", // Self-cast for now
+              destName: "",
+              destRaidFlags: 0,
+              hideCaster: false,
+              sourceFlags: 0,
+              sourceGUID: unitId,
+              sourceName: unit.name,
+              sourceRaidFlags: 0,
+              spellId,
+              spellName: spell.info.name,
+              spellSchool: spell.info.schoolMask ?? 1,
+              timestamp: currentTime,
+            });
+            yield* combatLog.emit(castEvent);
 
             // Log the cast
             yield* Effect.logInfo(

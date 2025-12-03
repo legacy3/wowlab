@@ -1,4 +1,5 @@
 import * as Accessors from "@wowlab/services/Accessors";
+import * as CombatLog from "@wowlab/services/CombatLog";
 import * as Log from "@wowlab/services/Log";
 import * as Metadata from "@wowlab/services/Metadata";
 import * as Rng from "@wowlab/services/Rng";
@@ -27,6 +28,12 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     metadata,
   );
 
+  // Combat log service layer (depends on StateService)
+  const CombatLogLayer = Layer.mergeAll(
+    CombatLog.CombatLogService.Default,
+    CombatLog.SimDriver.Default,
+  ).pipe(Layer.provide(BaseLayer));
+
   const ServicesLayer = Layer.mergeAll(
     Accessors.UnitAccessor.Default,
     Accessors.SpellAccessor.Default,
@@ -34,5 +41,9 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
     Unit.UnitService.Default,
   );
 
-  return ServicesLayer.pipe(Layer.provide(BaseLayer), Layer.merge(BaseLayer));
+  return ServicesLayer.pipe(
+    Layer.provide(BaseLayer),
+    Layer.merge(BaseLayer),
+    Layer.merge(CombatLogLayer),
+  );
 };

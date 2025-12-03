@@ -5,6 +5,7 @@ import * as Worker from "@effect/platform/Worker";
 import * as WorkerError from "@effect/platform/WorkerError";
 import { RpcClient, RpcSerialization } from "@effect/rpc";
 import * as Schemas from "@wowlab/core/Schemas";
+import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
@@ -28,6 +29,7 @@ import {
   createRotationPlayer,
   type RotationDefinition,
 } from "../../framework/types.js";
+import { registerBMHandlers } from "../../handlers/index.js";
 import { rotations } from "../../rotations/index.js";
 import { SimulationRpcs } from "../../rpc/requests.js";
 import {
@@ -98,6 +100,9 @@ const runSimulation = (
       Effect.promise(() =>
         runtime.runPromise(
           Effect.gen(function* () {
+            // Register BM handlers for spell effects
+            yield* registerBMHandlers;
+
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
             const player = createRotationPlayer(
               rotation,
@@ -109,6 +114,7 @@ const runSimulation = (
             yield* unitService.add(player);
 
             const stateService = yield* State.StateService;
+            const simDriver = yield* CombatLogService.SimDriver;
 
             let casts = 0;
             while (true) {
@@ -116,6 +122,9 @@ const runSimulation = (
               if (state.currentTime >= duration) break;
               yield* rotation.run(playerId);
               casts++;
+
+              // Process any queued combat log events (triggers handlers)
+              yield* simDriver.run(state.currentTime + 100);
             }
 
             return { casts, duration, simId };

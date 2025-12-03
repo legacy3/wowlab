@@ -29,8 +29,11 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
       event: CombatLog.CombatLog.CombatLogEvent,
     ): Effect.Effect<void, HandlerError> =>
       Effect.gen(function* () {
-        // Update simulation time
-        yield* state.updateState((s) => s.set("currentTime", event.timestamp));
+        // Update simulation time (only advance forward, never backwards)
+        yield* state.updateState((s) => {
+          const newTime = Math.max(s.currentTime, event.timestamp);
+          return s.set("currentTime", newTime);
+        });
 
         // Create emitter for this event
         const emitter = yield* makeEmitter(event.timestamp);
