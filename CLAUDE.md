@@ -49,10 +49,11 @@ See `docs/MCP-SERVERS.md` for complete documentation. **ALWAYS use MCP servers f
 
 TypeScript library for WoW spell rotation simulation using Effect-TS and Immutable.js. pnpm monorepo.
 
-- `packages/*` - 7 internal packages (domain, services, schemas, rotation, bootstrap, spellbook, parsers)
+- `packages/*` - 4 internal packages (core, services, rotation, runtime)
 - `apps/portal/` - Next.js 16 web app (Supabase, shadcn/ui, Jotai)
 - `apps/cli/` - Effect-TS CLI tools
-- `apps/proof-of-concept/` - Experimental features
+- `apps/mcp-server/` - MCP server for WoW spell/item data
+- `apps/standalone/` - Standalone simulation CLI
 
 ## Commands
 

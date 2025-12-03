@@ -5,8 +5,8 @@ MCP (Model Context Protocol) server for querying World of Warcraft spell and ite
 ## Features
 
 - **Full Spell/Item Data**: Get complete transformed data including all computed fields
-- **DBC Table Access**: Query 25+ game data tables directly
-- **Extractor Functions**: Call 17 specialized functions to compute damage, durations, cooldowns, etc.
+- **DBC Table Access**: Query 38 game data tables directly
+- **Extractor Functions**: Call 25 specialized functions to compute damage, durations, cooldowns, etc.
 - **Schema Discovery**: Introspect available tables and columns
 - **Zero Configuration**: Works out of the box with the WowLab database
 - **Efficient Batch Queries**: Retrieve multiple spells or items in a single request
@@ -49,9 +49,9 @@ npm install -g @wowlab/mcp-server
 
 **Available Tables:**
 
-- Spell: `spell`, `spell_name`, `spell_misc`, `spell_effect`, `spell_power`, `spell_cooldowns`, `spell_categories`, `spell_category`, `spell_class_options`, `spell_cast_times`, `spell_duration`, `spell_range`, `spell_radius`, `spell_interrupts`, `spell_empower`, `spell_empower_stage`, `spell_aura_options`
+- Spell: `spell`, `spell_name`, `spell_misc`, `spell_effect`, `spell_power`, `spell_cooldowns`, `spell_categories`, `spell_category`, `spell_class_options`, `spell_cast_times`, `spell_casting_requirements`, `spell_duration`, `spell_range`, `spell_radius`, `spell_interrupts`, `spell_empower`, `spell_empower_stage`, `spell_aura_options`, `spell_target_restrictions`, `spell_procs_per_minute`, `spell_procs_per_minute_mod`, `spell_aura_restrictions`, `spell_description_variables`, `spell_learn_spell`, `spell_levels`, `spell_replacement`, `spell_shapeshift`, `spell_shapeshift_form`, `spell_totems`, `spell_x_description_variables`
 - Item: `item`, `item_sparse`, `item_effect`, `item_x_item_effect`
-- Shared: `difficulty`, `expected_stat`, `expected_stat_mod`, `content_tuning_x_expected`
+- Shared: `difficulty`, `expected_stat`, `expected_stat_mod`, `content_tuning_x_expected`, `manifest_interface_data`
 
 ### Extractor Functions
 
@@ -66,19 +66,27 @@ npm install -g @wowlab/mcp-server
 - `getEffectsForDifficulty` - Get spell effects filtered by difficulty
 - `getVarianceForDifficulty` - Get damage variance for difficulty
 - `hasAoeDamageEffect` - Check if spell has AoE damage
+- `extractAuraRestrictions` - Get aura restrictions
 - `extractCooldown` - Get cooldown info
 - `extractCastTime` - Get cast time
+- `extractDescriptionVariables` - Get description variable substitutions
 - `extractDuration` - Get duration
 - `extractRange` - Get range
 - `extractRadius` - Get AoE radius
 - `extractCharges` - Get charge info
+- `extractLearnSpells` - Get spells learned from this spell
+- `extractLevels` - Get spell level requirements
 - `extractPower` - Get resource costs
+- `extractReplacement` - Get spell replacement info
 - `extractScaling` - Get SP/AP coefficients
+- `extractShapeshift` - Get shapeshift requirements
 - `extractEmpower` - Get Evoker empower stages
 - `extractInterrupts` - Get interrupt flags
 - `extractClassOptions` - Get class restrictions
 - `extractName` - Get spell name
 - `extractDescription` - Get spell description
+- `extractTargetRestrictions` - Get target restrictions
+- `extractTotems` - Get totem requirements
 
 ### Utility
 

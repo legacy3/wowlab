@@ -43,7 +43,7 @@ pnpm start run beast-mastery -n 10000 --server http://192.168.1.100:3847
 
 **Options:**
 
-- `-d, --duration` - Simulation duration in seconds (default: 10)
+- `-d, --duration` - Simulation duration in seconds (default: 60)
 - `-n, --iterations` - Number of simulations to run (default: 1)
 - `-w, --workers` - Worker threads (0=single-threaded, -1=auto)
 - `-b, --batch-size` - Simulations per worker batch (default: 100)

@@ -24,9 +24,9 @@ Open [http://localhost:3000](http://localhost:3000)
 Copy `.env.example` to `.env` and fill in your Supabase credentials:
 
 ```bash
+NEXT_PUBLIC_APP_URL=https://wowlab.gg
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 Get these from: Supabase Dashboard → Project Settings → API
@@ -45,9 +45,9 @@ In Vercel dashboard:
 Project Settings → Environment Variables:
 
 ```bash
+NEXT_PUBLIC_APP_URL
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
 ```
 
 Set for: Production, Preview, Development
