@@ -13,6 +13,7 @@ export {
   isSpellEvent,
   type AuraEvent,
   type DamageEvent,
+  type DrainEvent,
   type EnergizeEvent,
   type HealEvent,
   type SpellEvent,

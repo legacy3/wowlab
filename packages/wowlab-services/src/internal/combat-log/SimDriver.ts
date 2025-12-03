@@ -1,15 +1,5 @@
-/**
- * Simulation Driver
- *
- * Event processing loop that:
- * 1. Dequeues events from the queue
- * 2. Calls registered handlers
- * 3. Queues any emitted events
- * 4. Applies state mutations
- */
-import type * as CombatLog from "@wowlab/core/Schemas";
-
 import { HandlerError } from "@wowlab/core/Errors";
+import * as CombatLog from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
@@ -17,89 +7,23 @@ import * as Stream from "effect/Stream";
 import { StateService } from "../state/StateService.js";
 import { CombatLogService } from "./CombatLogService.js";
 import { getEmitted, makeEmitter } from "./Emitter.js";
+import { registerStateMutationHandlers } from "./handlers/index.js";
 
-/**
- * SimDriver service for processing combat log events
- */
 export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
   dependencies: [CombatLogService.Default, StateService.Default],
   effect: Effect.gen(function* () {
     const combatLog = yield* CombatLogService;
     const state = yield* StateService;
 
-    /**
-     * Apply generic state mutations based on event type.
-     * These are automatic state updates that happen for all events.
-     */
-    const applyEventToState = (
-      event: CombatLog.CombatLog.CombatLogEvent,
-    ): Effect.Effect<void> =>
-      Effect.gen(function* () {
-        switch (event._tag) {
-          case "SPELL_AURA_APPLIED":
-            yield* Effect.logDebug(
-              `Aura applied: ${event.spellName} on ${event.destName}`,
-            );
-            break;
-
-          case "SPELL_AURA_APPLIED_DOSE":
-            yield* Effect.logDebug(
-              `Aura stack: ${event.spellName} (${event.amount}) on ${event.destName}`,
-            );
-            break;
-
-          case "SPELL_AURA_REFRESH":
-            yield* Effect.logDebug(
-              `Aura refresh: ${event.spellName} on ${event.destName}`,
-            );
-            break;
-
-          case "SPELL_AURA_REMOVED":
-            yield* Effect.logDebug(
-              `Aura removed: ${event.spellName} from ${event.destName}`,
-            );
-            break;
-
-          case "SPELL_DAMAGE":
-            break;
-
-          case "SPELL_ENERGIZE":
-            yield* Effect.logDebug(
-              `Energize: ${event.destName} +${event.amount} power`,
-            );
-            break;
-
-          case "SPELL_PERIODIC_DAMAGE":
-            yield* Effect.logDebug(
-              `Damage: ${event.spellName} hit ${event.destName} for ${event.amount}`,
-            );
-            break;
-
-          case "SPELL_SUMMON":
-            yield* Effect.logDebug(
-              `Summon: ${event.sourceName} summoned ${event.destName}`,
-            );
-            break;
-
-          case "SWING_DAMAGE":
-            yield* Effect.logDebug(
-              `Swing: ${event.sourceName} hit ${event.destName} for ${event.amount}`,
-            );
-            break;
-
-          case "UNIT_DIED":
-            yield* Effect.logDebug(`Unit died: ${event.destName}`);
-            break;
-        }
-      });
+    // TODO Rethink this approach
+    yield* registerStateMutationHandlers(combatLog);
 
     /**
      * Process a single event:
      * 1. Update simulation time
      * 2. Create emitter for handlers
-     * 3. Run all matching handlers
+     * 3. Run all matching handlers (including state mutation handlers)
      * 4. Queue emitted events
-     * 5. Apply generic state mutations
      */
     const processEvent = (
       event: CombatLog.CombatLog.CombatLogEvent,
@@ -111,15 +35,14 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
         // Create emitter for this event
         const emitter = yield* makeEmitter(event.timestamp);
 
-        // Get and run handlers
+        // Get and run handlers (sorted by priority, state mutations run last)
         const handlers = yield* combatLog.getHandlers(event);
 
         for (const entry of handlers) {
-          // Handler may have requirements, but we ignore them for now
-          // The handler is responsible for providing its own context
           const handlerEffect = entry.handler(event, emitter) as Effect.Effect<
             void,
-            unknown
+            unknown,
+            StateService
           >;
 
           yield* Effect.catchAll(handlerEffect, (cause) =>
@@ -131,6 +54,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
               }),
             ),
           ).pipe(
+            Effect.provideService(StateService, state),
             Effect.withSpan(`handler:${entry.id}`),
             Effect.annotateLogs("handler", entry.id),
             Effect.annotateLogs("subevent", event._tag),
@@ -143,9 +67,6 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
           const sorted = [...emitted].sort((a, b) => a.timestamp - b.timestamp);
           yield* combatLog.emitBatch(sorted);
         }
-
-        // Apply generic state mutations
-        yield* applyEventToState(event);
 
         // Log event
         yield* Effect.logDebug(`Processed: ${event._tag}`);
@@ -161,7 +82,9 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
           while (true) {
             const maybeEvent = yield* combatLog.poll;
 
-            if (Option.isNone(maybeEvent)) break;
+            if (Option.isNone(maybeEvent)) {
+              break;
+            }
 
             const event = maybeEvent.value;
             if (event.timestamp > endTime) {
@@ -190,6 +113,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
 
           const event = maybeEvent.value;
           yield* processEvent(event);
+
           return Option.some(event);
         }),
 
@@ -218,6 +142,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
             yield* processEvent(event).pipe(
               Effect.mapError((err) => Option.some(err)),
             );
+
             return event;
           }),
         ),

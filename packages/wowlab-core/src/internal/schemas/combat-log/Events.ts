@@ -157,6 +157,7 @@ export class SpellAuraRefresh extends Schema.TaggedClass<SpellAuraRefresh>()(
   {
     ...CombatLogEventBase.fields,
     ...SpellPrefix.fields,
+    amount: Schema.NullOr(Schema.Number),
     auraType: AuraType,
   },
 ) {}
@@ -452,6 +453,7 @@ export class UnitDestroyed extends Schema.TaggedClass<UnitDestroyed>()(
   {
     ...CombatLogEventBase.fields,
     recapID: Schema.NullOr(Schema.Number),
+    unconsciousOnDeath: Schema.NullOr(Schema.Boolean),
   },
 ) {}
 

@@ -114,11 +114,19 @@ export type DamageEvent = Extract<
 >;
 
 /**
+ * Extract drain events
+ */
+export type DrainEvent = Extract<
+  CombatLogEvent,
+  { amount: number; powerType: number; extraAmount: number }
+>;
+
+/**
  * Extract energize events
  */
 export type EnergizeEvent = Extract<
   CombatLogEvent,
-  { amount: number; powerType: number }
+  { amount: number; powerType: number; overEnergize: number }
 >;
 
 /**
