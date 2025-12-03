@@ -574,7 +574,7 @@ const SupabaseDbcServiceLive = (
 export const loadSpells = (
   supabase: SupabaseClient,
   spellIds: readonly number[],
-): Effect.Effect<Schemas.Spell.SpellDataFlat[], never, never> => {
+): Effect.Effect<Schemas.Spell.SpellDataFlat[]> => {
   if (spellIds.length === 0) {
     return Effect.succeed([]);
   }
