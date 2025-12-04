@@ -55,32 +55,32 @@ const COBRA_SHOT_KC_CDR = 1;
 const onBestialWrathCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Emit the buff application
-      const auraEvent = new CombatLog.SpellAuraApplied({
-        amount: null, // Not a stacking buff
-        auraType: "BUFF",
-        destFlags: event.sourceFlags,
-        destGUID: event.sourceGUID,
-        destName: event.sourceName,
-        destRaidFlags: event.sourceRaidFlags,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.BESTIAL_WRATH_BUFF,
-        spellName: "Bestial Wrath",
-        spellSchool: 1, // Physical
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(auraEvent);
-
-      yield* Effect.logDebug(
-        `[BM] Bestial Wrath buff applied to ${event.sourceName}`,
-      );
+  Effect.gen(function* () {
+    // Emit the buff application
+    const auraEvent = new CombatLog.SpellAuraApplied({
+      amount: null, // Not a stacking buff
+      auraType: "BUFF",
+      destFlags: event.sourceFlags,
+      destGUID: event.sourceGUID,
+      destName: event.sourceName,
+      destRaidFlags: event.sourceRaidFlags,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.BESTIAL_WRATH_BUFF,
+      spellName: "Bestial Wrath",
+      spellSchool: 1, // Physical
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(auraEvent);
+
+    yield* Effect.logDebug(
+      `[BM] Bestial Wrath buff applied to ${event.sourceName}`,
+    );
+  });
 
 // =============================================================================
 // Handler: Barbed Shot
@@ -94,34 +94,34 @@ const onBestialWrathCast: CombatLogService.EventHandler<
 const onBarbedShotCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Apply Barbed Shot buff to hunter (Focus regen over 8s)
-      const focusBuff = new CombatLog.SpellAuraApplied({
-        amount: null,
-        auraType: "BUFF",
-        destFlags: event.sourceFlags,
-        destGUID: event.sourceGUID,
-        destName: event.sourceName,
-        destRaidFlags: event.sourceRaidFlags,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.BARBED_SHOT_BUFF,
-        spellName: "Barbed Shot",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(focusBuff);
-
-      yield* Effect.logDebug(
-        `[BM] Barbed Shot buff applied to ${event.sourceName}`,
-      );
-
-      // TODO: Also apply Frenzy to pet when we have pet system
+  Effect.gen(function* () {
+    // Apply Barbed Shot buff to hunter (Focus regen over 8s)
+    const focusBuff = new CombatLog.SpellAuraApplied({
+      amount: null,
+      auraType: "BUFF",
+      destFlags: event.sourceFlags,
+      destGUID: event.sourceGUID,
+      destName: event.sourceName,
+      destRaidFlags: event.sourceRaidFlags,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.BARBED_SHOT_BUFF,
+      spellName: "Barbed Shot",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(focusBuff);
+
+    yield* Effect.logDebug(
+      `[BM] Barbed Shot buff applied to ${event.sourceName}`,
+    );
+
+    // TODO: Also apply Frenzy to pet when we have pet system
+  });
 
 // =============================================================================
 // Handler: Kill Command
@@ -135,51 +135,51 @@ const onBarbedShotCast: CombatLogService.EventHandler<
 const onKillCommandCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Guard: need a target for damage
-      if (!event.destGUID || !event.destName) {
-        yield* Effect.logDebug(
-          `[BM] Kill Command cast but no target - skipping damage`,
-        );
-        return;
-      }
-
-      // Emit pet's Kill Command damage
-      // The pet is the source, target is the enemy
-      const damageEvent = new CombatLog.SpellDamage({
-        absorbed: null,
-        amount: 0, // Damage calculated by damage pipeline (not implemented yet)
-        blocked: null,
-        critical: false,
-        crushing: false,
-        destFlags: event.destFlags,
-        destGUID: event.destGUID,
-        destName: event.destName,
-        destRaidFlags: event.destRaidFlags,
-        glancing: false,
-        hideCaster: false,
-        isOffHand: false,
-        overkill: -1,
-        resisted: null,
-        school: 1, // Physical
-        sourceFlags: event.sourceFlags, // TODO: Should be pet's flags
-        sourceGUID: event.sourceGUID, // TODO: Should be pet's GUID
-        sourceName: "Pet", // TODO: Should be pet's name
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.PET_KILL_COMMAND,
-        spellName: "Kill Command",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(damageEvent);
-
+  Effect.gen(function* () {
+    // Guard: need a target for damage
+    if (!event.destGUID || !event.destName) {
       yield* Effect.logDebug(
-        `[BM] Kill Command damage from pet on ${event.destName}`,
+        `[BM] Kill Command cast but no target - skipping damage`,
       );
+      return;
+    }
 
-      // TODO: Dire Command proc check (15% chance) - needs RNG service
+    // Emit pet's Kill Command damage
+    // The pet is the source, target is the enemy
+    const damageEvent = new CombatLog.SpellDamage({
+      absorbed: null,
+      amount: 0, // Damage calculated by damage pipeline (not implemented yet)
+      blocked: null,
+      critical: false,
+      crushing: false,
+      destFlags: event.destFlags,
+      destGUID: event.destGUID,
+      destName: event.destName,
+      destRaidFlags: event.destRaidFlags,
+      glancing: false,
+      hideCaster: false,
+      isOffHand: false,
+      overkill: -1,
+      resisted: null,
+      school: 1, // Physical
+      sourceFlags: event.sourceFlags, // TODO: Should be pet's flags
+      sourceGUID: event.sourceGUID, // TODO: Should be pet's GUID
+      sourceName: "Pet", // TODO: Should be pet's name
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.PET_KILL_COMMAND,
+      spellName: "Kill Command",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(damageEvent);
+
+    yield* Effect.logDebug(
+      `[BM] Kill Command damage from pet on ${event.destName}`,
+    );
+
+    // TODO: Dire Command proc check (15% chance) - needs RNG service
+  });
 
 // =============================================================================
 // Handler: Cobra Shot
@@ -193,17 +193,69 @@ const onKillCommandCast: CombatLogService.EventHandler<
 const onCobraShotCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Guard: need a target for damage
-      if (!event.destGUID || !event.destName) {
-        yield* Effect.logDebug(
-          `[BM] Cobra Shot cast but no target - skipping damage`,
-        );
-        // Still reduce KC cooldown even without target
-        return;
-      }
+  Effect.gen(function* () {
+    // Guard: need a target for damage
+    if (!event.destGUID || !event.destName) {
+      yield* Effect.logDebug(
+        `[BM] Cobra Shot cast but no target - skipping damage`,
+      );
+      // Still reduce KC cooldown even without target
+      return;
+    }
 
-      // Emit Cobra Shot damage
+    // Emit Cobra Shot damage
+    const damageEvent = new CombatLog.SpellDamage({
+      absorbed: null,
+      amount: 0, // Damage calculated by damage pipeline
+      blocked: null,
+      critical: false,
+      crushing: false,
+      destFlags: event.destFlags,
+      destGUID: event.destGUID,
+      destName: event.destName,
+      destRaidFlags: event.destRaidFlags,
+      glancing: false,
+      hideCaster: false,
+      isOffHand: false,
+      overkill: -1,
+      resisted: null,
+      school: 8, // Nature
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.COBRA_SHOT,
+      spellName: "Cobra Shot",
+      spellSchool: 8, // Nature
+      timestamp: event.timestamp,
+    });
+
+    emitter.emit(damageEvent);
+
+    yield* Effect.logDebug(
+      `[BM] Cobra Shot damage on ${event.destName}, KC CDR: ${COBRA_SHOT_KC_CDR}s`,
+    );
+
+    // TODO: Reduce KC cooldown - needs access to spell cooldown state
+    // TODO: Killer Cobra - reset KC if Bestial Wrath is active
+  });
+
+// =============================================================================
+// Handler: Multi-Shot
+// =============================================================================
+
+/**
+ * When Multi-Shot is cast:
+ * 1. Deal damage to all targets
+ * 2. Apply Beast Cleave buff to pet (4 seconds)
+ */
+const onMultiShotCast: CombatLogService.EventHandler<
+  CombatLog.SpellCastSuccess
+> = (event, emitter) =>
+  Effect.gen(function* () {
+    // Emit Multi-Shot damage (AoE - would need target list in real impl)
+    // Only emit damage if we have a target
+    if (event.destGUID && event.destName) {
       const damageEvent = new CombatLog.SpellDamage({
         absorbed: null,
         amount: 0, // Damage calculated by damage pipeline
@@ -219,98 +271,44 @@ const onCobraShotCast: CombatLogService.EventHandler<
         isOffHand: false,
         overkill: -1,
         resisted: null,
-        school: 8, // Nature
+        school: 1, // Physical
         sourceFlags: event.sourceFlags,
         sourceGUID: event.sourceGUID,
         sourceName: event.sourceName,
         sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.COBRA_SHOT,
-        spellName: "Cobra Shot",
-        spellSchool: 8, // Nature
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(damageEvent);
-
-      yield* Effect.logDebug(
-        `[BM] Cobra Shot damage on ${event.destName}, KC CDR: ${COBRA_SHOT_KC_CDR}s`,
-      );
-
-      // TODO: Reduce KC cooldown - needs access to spell cooldown state
-      // TODO: Killer Cobra - reset KC if Bestial Wrath is active
-    });
-
-// =============================================================================
-// Handler: Multi-Shot
-// =============================================================================
-
-/**
- * When Multi-Shot is cast:
- * 1. Deal damage to all targets
- * 2. Apply Beast Cleave buff to pet (4 seconds)
- */
-const onMultiShotCast: CombatLogService.EventHandler<
-  CombatLog.SpellCastSuccess
-> = (event, emitter) =>
-    Effect.gen(function* () {
-      // Emit Multi-Shot damage (AoE - would need target list in real impl)
-      // Only emit damage if we have a target
-      if (event.destGUID && event.destName) {
-        const damageEvent = new CombatLog.SpellDamage({
-          absorbed: null,
-          amount: 0, // Damage calculated by damage pipeline
-          blocked: null,
-          critical: false,
-          crushing: false,
-          destFlags: event.destFlags,
-          destGUID: event.destGUID,
-          destName: event.destName,
-          destRaidFlags: event.destRaidFlags,
-          glancing: false,
-          hideCaster: false,
-          isOffHand: false,
-          overkill: -1,
-          resisted: null,
-          school: 1, // Physical
-          sourceFlags: event.sourceFlags,
-          sourceGUID: event.sourceGUID,
-          sourceName: event.sourceName,
-          sourceRaidFlags: event.sourceRaidFlags,
-          spellId: SpellIds.MULTI_SHOT,
-          spellName: "Multi-Shot",
-          spellSchool: 1,
-          timestamp: event.timestamp,
-        });
-
-        emitter.emit(damageEvent);
-      }
-
-      // Apply Beast Cleave buff to pet (always happens regardless of target)
-      // TODO: Need pet GUID - for now apply to hunter as placeholder
-      const beastCleaveEvent = new CombatLog.SpellAuraApplied({
-        amount: null,
-        auraType: "BUFF",
-        destFlags: event.sourceFlags, // TODO: Pet's flags
-        destGUID: event.sourceGUID, // TODO: Pet's GUID
-        destName: "Pet", // TODO: Pet's name
-        destRaidFlags: event.sourceRaidFlags,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.BEAST_CLEAVE,
-        spellName: "Beast Cleave",
+        spellId: SpellIds.MULTI_SHOT,
+        spellName: "Multi-Shot",
         spellSchool: 1,
         timestamp: event.timestamp,
       });
 
-      emitter.emit(beastCleaveEvent);
+      emitter.emit(damageEvent);
+    }
 
-      yield* Effect.logDebug(
-        `[BM] Multi-Shot + Beast Cleave applied`,
-      );
+    // Apply Beast Cleave buff to pet (always happens regardless of target)
+    // TODO: Need pet GUID - for now apply to hunter as placeholder
+    const beastCleaveEvent = new CombatLog.SpellAuraApplied({
+      amount: null,
+      auraType: "BUFF",
+      destFlags: event.sourceFlags, // TODO: Pet's flags
+      destGUID: event.sourceGUID, // TODO: Pet's GUID
+      destName: "Pet", // TODO: Pet's name
+      destRaidFlags: event.sourceRaidFlags,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.BEAST_CLEAVE,
+      spellName: "Beast Cleave",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(beastCleaveEvent);
+
+    yield* Effect.logDebug(`[BM] Multi-Shot + Beast Cleave applied`);
+  });
 
 // =============================================================================
 // Handler: Call of the Wild
@@ -324,48 +322,46 @@ const onMultiShotCast: CombatLogService.EventHandler<
 const onCallOfTheWildCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Summon first temporary pet
-      const summon1 = new CombatLog.SpellSummon({
-        destFlags: 0,
-        destGUID: `Creature-0-0-0-0-0-${Date.now()}-1`, // Generated GUID
-        destName: "Wild Pet 1",
-        destRaidFlags: 0,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.CALL_OF_THE_WILD,
-        spellName: "Call of the Wild",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      // Summon second temporary pet
-      const summon2 = new CombatLog.SpellSummon({
-        destFlags: 0,
-        destGUID: `Creature-0-0-0-0-0-${Date.now()}-2`, // Generated GUID
-        destName: "Wild Pet 2",
-        destRaidFlags: 0,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.CALL_OF_THE_WILD,
-        spellName: "Call of the Wild",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(summon1);
-      emitter.emit(summon2);
-
-      yield* Effect.logDebug(
-        `[BM] Call of the Wild: summoned 2 temporary pets`,
-      );
+  Effect.gen(function* () {
+    // Summon first temporary pet
+    const summon1 = new CombatLog.SpellSummon({
+      destFlags: 0,
+      destGUID: `Creature-0-0-0-0-0-${Date.now()}-1`, // Generated GUID
+      destName: "Wild Pet 1",
+      destRaidFlags: 0,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.CALL_OF_THE_WILD,
+      spellName: "Call of the Wild",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    // Summon second temporary pet
+    const summon2 = new CombatLog.SpellSummon({
+      destFlags: 0,
+      destGUID: `Creature-0-0-0-0-0-${Date.now()}-2`, // Generated GUID
+      destName: "Wild Pet 2",
+      destRaidFlags: 0,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.CALL_OF_THE_WILD,
+      spellName: "Call of the Wild",
+      spellSchool: 1,
+      timestamp: event.timestamp,
+    });
+
+    emitter.emit(summon1);
+    emitter.emit(summon2);
+
+    yield* Effect.logDebug(`[BM] Call of the Wild: summoned 2 temporary pets`);
+  });
 
 // =============================================================================
 // Handler: Kill Shot
@@ -377,47 +373,47 @@ const onCallOfTheWildCast: CombatLogService.EventHandler<
 const onKillShotCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Guard: need a target for damage
-      if (!event.destGUID || !event.destName) {
-        yield* Effect.logDebug(
-          `[BM] Kill Shot cast but no target - skipping damage`,
-        );
-        return;
-      }
-
-      const damageEvent = new CombatLog.SpellDamage({
-        absorbed: null,
-        amount: 0, // High damage, calculated by pipeline
-        blocked: null,
-        critical: false,
-        crushing: false,
-        destFlags: event.destFlags,
-        destGUID: event.destGUID,
-        destName: event.destName,
-        destRaidFlags: event.destRaidFlags,
-        glancing: false,
-        hideCaster: false,
-        isOffHand: false,
-        overkill: -1,
-        resisted: null,
-        school: 1, // Physical
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID,
-        sourceName: event.sourceName,
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.KILL_SHOT,
-        spellName: "Kill Shot",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(damageEvent);
-
+  Effect.gen(function* () {
+    // Guard: need a target for damage
+    if (!event.destGUID || !event.destName) {
       yield* Effect.logDebug(
-        `[BM] Kill Shot execute damage on ${event.destName}`,
+        `[BM] Kill Shot cast but no target - skipping damage`,
       );
+      return;
+    }
+
+    const damageEvent = new CombatLog.SpellDamage({
+      absorbed: null,
+      amount: 0, // High damage, calculated by pipeline
+      blocked: null,
+      critical: false,
+      crushing: false,
+      destFlags: event.destFlags,
+      destGUID: event.destGUID,
+      destName: event.destName,
+      destRaidFlags: event.destRaidFlags,
+      glancing: false,
+      hideCaster: false,
+      isOffHand: false,
+      overkill: -1,
+      resisted: null,
+      school: 1, // Physical
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID,
+      sourceName: event.sourceName,
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.KILL_SHOT,
+      spellName: "Kill Shot",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(damageEvent);
+
+    yield* Effect.logDebug(
+      `[BM] Kill Shot execute damage on ${event.destName}`,
+    );
+  });
 
 // =============================================================================
 // Handler: Bloodshed
@@ -429,42 +425,42 @@ const onKillShotCast: CombatLogService.EventHandler<
 const onBloodshedCast: CombatLogService.EventHandler<
   CombatLog.SpellCastSuccess
 > = (event, emitter) =>
-    Effect.gen(function* () {
-      // Guard: need a target to apply debuff
-      if (!event.destGUID || !event.destName) {
-        yield* Effect.logDebug(
-          `[BM] Bloodshed cast but no target specified - skipping debuff`,
-        );
-        return;
-      }
-
-      // Apply Bloodshed debuff to target
-      const debuffEvent = new CombatLog.SpellAuraApplied({
-        amount: null,
-        auraType: "DEBUFF",
-        destFlags: event.destFlags,
-        destGUID: event.destGUID,
-        destName: event.destName,
-        destRaidFlags: event.destRaidFlags,
-        hideCaster: false,
-        sourceFlags: event.sourceFlags,
-        sourceGUID: event.sourceGUID, // TODO: Should be pet's GUID
-        sourceName: "Pet",
-        sourceRaidFlags: event.sourceRaidFlags,
-        spellId: SpellIds.BLOODSHED,
-        spellName: "Bloodshed",
-        spellSchool: 1,
-        timestamp: event.timestamp,
-      });
-
-      emitter.emit(debuffEvent);
-
+  Effect.gen(function* () {
+    // Guard: need a target to apply debuff
+    if (!event.destGUID || !event.destName) {
       yield* Effect.logDebug(
-        `[BM] Bloodshed debuff applied to ${event.destName}`,
+        `[BM] Bloodshed cast but no target specified - skipping debuff`,
       );
+      return;
+    }
 
-      // TODO: Schedule periodic damage ticks
+    // Apply Bloodshed debuff to target
+    const debuffEvent = new CombatLog.SpellAuraApplied({
+      amount: null,
+      auraType: "DEBUFF",
+      destFlags: event.destFlags,
+      destGUID: event.destGUID,
+      destName: event.destName,
+      destRaidFlags: event.destRaidFlags,
+      hideCaster: false,
+      sourceFlags: event.sourceFlags,
+      sourceGUID: event.sourceGUID, // TODO: Should be pet's GUID
+      sourceName: "Pet",
+      sourceRaidFlags: event.sourceRaidFlags,
+      spellId: SpellIds.BLOODSHED,
+      spellName: "Bloodshed",
+      spellSchool: 1,
+      timestamp: event.timestamp,
     });
+
+    emitter.emit(debuffEvent);
+
+    yield* Effect.logDebug(
+      `[BM] Bloodshed debuff applied to ${event.destName}`,
+    );
+
+    // TODO: Schedule periodic damage ticks
+  });
 
 // =============================================================================
 // Register All BM Handlers
