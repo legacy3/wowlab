@@ -1,14 +1,8 @@
-/**
- * Combat Log Service
- *
- * High-level service that combines the event queue and handler registry.
- * Provides a unified API for emitting events and subscribing to handlers.
- */
 import type * as CombatLog from "@wowlab/core/Schemas";
 
 import * as Effect from "effect/Effect";
 
-import { EventQueue } from "./EventQueue.js";
+import { EventQueue, type SimulationEvent } from "./EventQueue.js";
 import {
   HandlerRegistry,
   type EventFilter,
@@ -17,9 +11,6 @@ import {
   type Subscription,
 } from "./HandlerRegistry.js";
 
-/**
- * CombatLogService - unified API for combat log events
- */
 export class CombatLogService extends Effect.Service<CombatLogService>()(
   "CombatLogService",
   {
@@ -29,63 +20,27 @@ export class CombatLogService extends Effect.Service<CombatLogService>()(
       const registry = yield* HandlerRegistry;
 
       return {
-        // ====================================================================
-        // Event Queue Operations
-        // ====================================================================
+        awaitShutdown: eventQueue.awaitShutdown,
 
-        /**
-         * Emit a single event to the queue
-         */
-        emit: (event: CombatLog.CombatLog.CombatLogEvent) =>
-          eventQueue.offer(event),
+        clearHandlers: registry.clear,
 
-        /**
-         * Emit multiple events to the queue
-         */
-        emitBatch: (events: readonly CombatLog.CombatLog.CombatLogEvent[]) =>
+        emit: (event: SimulationEvent) => eventQueue.offer(event),
+
+        emitBatch: (events: readonly SimulationEvent[]) =>
           eventQueue.offerAll(events),
 
-        /**
-         * Take the next event from the queue (suspends if empty)
-         */
-        take: eventQueue.take,
+        getHandlers: registry.getHandlers,
 
-        /**
-         * Take all events from the queue
-         */
-        takeAll: eventQueue.takeAll,
+        handlerCount: registry.count,
 
-        /**
-         * Poll for the next event (returns Option, doesn't suspend)
-         */
-        poll: eventQueue.poll,
-
-        /**
-         * Get the current queue size
-         */
-        queueSize: eventQueue.size,
-
-        /**
-         * Check if the queue is empty
-         */
         isQueueEmpty: eventQueue.isEmpty,
 
-        // ====================================================================
-        // Handler Registry Operations
-        // ====================================================================
-
-        /**
-         * Subscribe to events matching a filter
-         */
         on: <E extends CombatLog.CombatLog.CombatLogEvent, R, Err>(
           filter: EventFilter,
           handler: EventHandler<E, R, Err>,
           options?: HandlerOptions,
         ): Effect.Effect<Subscription> => registry.on(filter, handler, options),
 
-        /**
-         * Convenience: subscribe to a specific spell event
-         */
         onSpell: <R, Err>(
           subevent: CombatLog.CombatLog.Subevent,
           spellId: number,
@@ -94,39 +49,17 @@ export class CombatLogService extends Effect.Service<CombatLogService>()(
         ): Effect.Effect<Subscription> =>
           registry.onSpell(subevent, spellId, handler, options),
 
-        /**
-         * Get all handlers for an event
-         */
-        getHandlers: registry.getHandlers,
+        poll: eventQueue.poll,
 
-        /**
-         * Unsubscribe a handler by ID
-         */
-        unsubscribe: registry.unsubscribe,
+        queueSize: eventQueue.size,
 
-        /**
-         * Clear all handlers
-         */
-        clearHandlers: registry.clear,
-
-        /**
-         * Get the number of registered handlers
-         */
-        handlerCount: registry.count,
-
-        // ====================================================================
-        // Lifecycle
-        // ====================================================================
-
-        /**
-         * Shutdown the service
-         */
         shutdown: eventQueue.shutdown,
 
-        /**
-         * Wait for shutdown
-         */
-        awaitShutdown: eventQueue.awaitShutdown,
+        take: eventQueue.take,
+
+        takeAll: eventQueue.takeAll,
+
+        unsubscribe: registry.unsubscribe,
       };
     }),
   },

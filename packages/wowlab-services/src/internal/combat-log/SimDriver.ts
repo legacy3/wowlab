@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 
+import type { SimulationEvent } from "./EventQueue.js";
+
 import { StateService } from "../state/StateService.js";
 import { CombatLogService } from "./CombatLogService.js";
 import { getEmitted, makeEmitter } from "./Emitter.js";
@@ -15,30 +17,32 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
     const combatLog = yield* CombatLogService;
     const state = yield* StateService;
 
-    // TODO Rethink this approach
     yield* registerStateMutationHandlers(combatLog);
 
-    /**
-     * Process a single event:
-     * 1. Update simulation time
-     * 2. Create emitter for handlers
-     * 3. Run all matching handlers (including state mutation handlers)
-     * 4. Queue emitted events
-     */
-    const processEvent = (
-      event: CombatLog.CombatLog.CombatLogEvent,
+    const processLabRecoveryEvent = (
+      event: CombatLog.CombatLog.LabRecoveryReady,
     ): Effect.Effect<void, HandlerError> =>
       Effect.gen(function* () {
-        // Update simulation time (only advance forward, never backwards)
         yield* state.updateState((s) => {
           const newTime = Math.max(s.currentTime, event.timestamp);
           return s.set("currentTime", newTime);
         });
 
-        // Create emitter for this event
-        const emitter = yield* makeEmitter(event.timestamp);
+        yield* Effect.logDebug(
+          `LAB_RECOVERY_READY: category ${event.category} from spell ${event.triggeringSpellId}`,
+        );
+      });
 
-        // Get and run handlers (sorted by priority, state mutations run last)
+    const processCLEUEvent = (
+      event: CombatLog.CombatLog.CombatLogEvent,
+    ): Effect.Effect<void, HandlerError> =>
+      Effect.gen(function* () {
+        yield* state.updateState((s) => {
+          const newTime = Math.max(s.currentTime, event.timestamp);
+          return s.set("currentTime", newTime);
+        });
+
+        const emitter = yield* makeEmitter(event.timestamp);
         const handlers = yield* combatLog.getHandlers(event);
 
         for (const entry of handlers) {
@@ -64,69 +68,28 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
           );
         }
 
-        // Queue emitted events (sorted by timestamp)
         const emitted = yield* getEmitted(emitter);
         if (emitted.length > 0) {
-          const sorted = [...emitted].sort((a, b) => a.timestamp - b.timestamp);
-          yield* combatLog.emitBatch(sorted);
+          yield* combatLog.emitBatch(emitted);
         }
 
-        // Log event
         yield* Effect.logDebug(`Processed: ${event._tag}`);
       });
 
+    const processEvent = (
+      event: SimulationEvent,
+    ): Effect.Effect<void, HandlerError> => {
+      if (CombatLog.CombatLog.isLabRecoveryReady(event)) {
+        return processLabRecoveryEvent(event);
+      }
+
+      return processCLEUEvent(event);
+    };
+
     return {
-      /**
-       * Run simulation until endTime.
-       * Processes all events with timestamp <= endTime.
-       */
-      run: (endTime: number): Effect.Effect<void, HandlerError> =>
-        Effect.gen(function* () {
-          while (true) {
-            const maybeEvent = yield* combatLog.poll;
-
-            if (Option.isNone(maybeEvent)) {
-              break;
-            }
-
-            const event = maybeEvent.value;
-            if (event.timestamp > endTime) {
-              // Put it back and stop
-              yield* combatLog.emit(event);
-              break;
-            }
-
-            yield* processEvent(event);
-          }
-        }),
-
-      /**
-       * Process a single event (for debugging/stepping)
-       */
-      step: (): Effect.Effect<
-        Option.Option<CombatLog.CombatLog.CombatLogEvent>,
-        HandlerError
-      > =>
-        Effect.gen(function* () {
-          const maybeEvent = yield* combatLog.poll;
-
-          if (Option.isNone(maybeEvent)) {
-            return Option.none();
-          }
-
-          const event = maybeEvent.value;
-          yield* processEvent(event);
-
-          return Option.some(event);
-        }),
-
-      /**
-       * Run as Stream for advanced composition.
-       * Maps HandlerError to Option.none() for the stream termination semantics.
-       */
       asStream: (
         endTime: number,
-      ): Stream.Stream<CombatLog.CombatLog.CombatLogEvent, HandlerError> =>
+      ): Stream.Stream<SimulationEvent, HandlerError> =>
         Stream.repeatEffectOption(
           Effect.gen(function* () {
             const maybeEvent = yield* combatLog.poll;
@@ -141,7 +104,6 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
               return yield* Effect.fail(Option.none<never>());
             }
 
-            // Process event and map errors to Option.some for the stream
             yield* processEvent(event).pipe(
               Effect.mapError((err) => Option.some(err)),
             );
@@ -150,10 +112,55 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
           }),
         ),
 
-      /**
-       * Process a single event directly (without taking from queue)
-       */
       processEvent,
+
+      run: (endTime: number): Effect.Effect<void, HandlerError> =>
+        Effect.gen(function* () {
+          while (true) {
+            const maybeEvent = yield* combatLog.poll;
+
+            if (Option.isNone(maybeEvent)) {
+              break;
+            }
+
+            const event = maybeEvent.value;
+            if (event.timestamp > endTime) {
+              yield* combatLog.emit(event);
+              break;
+            }
+
+            yield* processEvent(event);
+          }
+        }),
+
+      scheduleRecovery: (
+        timestamp: number,
+        category: number,
+        triggeringSpellId: number,
+        unitGUID: string,
+      ): Effect.Effect<void> =>
+        combatLog.emit(
+          new CombatLog.CombatLog.LabRecoveryReady({
+            category,
+            timestamp,
+            triggeringSpellId,
+            unitGUID,
+          }),
+        ),
+
+      step: (): Effect.Effect<Option.Option<SimulationEvent>, HandlerError> =>
+        Effect.gen(function* () {
+          const maybeEvent = yield* combatLog.poll;
+
+          if (Option.isNone(maybeEvent)) {
+            return Option.none();
+          }
+
+          const event = maybeEvent.value;
+          yield* processEvent(event);
+
+          return Option.some(event);
+        }),
     };
   }),
 }) {}

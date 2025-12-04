@@ -1,69 +1,138 @@
-/**
- * Event Queue Service
- *
- * An unbounded queue for combat log events using Effect.Queue.
- * Events are processed in FIFO order.
- */
 import type * as CombatLog from "@wowlab/core/Schemas";
 
 import * as Effect from "effect/Effect";
-import * as Queue from "effect/Queue";
+import * as Option from "effect/Option";
+import * as Ref from "effect/Ref";
+import TinyQueue from "tinyqueue";
 
-/**
- * EventQueue service for managing combat log events.
- * Uses an unbounded queue to store events.
- */
+export type SimulationEvent =
+  | CombatLog.CombatLog.CombatLogEvent
+  | CombatLog.CombatLog.LabEvent;
+
+interface QueueEntry {
+  event: SimulationEvent;
+  insertionOrder: number;
+}
+
+const compareEntries = (a: QueueEntry, b: QueueEntry): number => {
+  const timeDiff = a.event.timestamp - b.event.timestamp;
+  if (timeDiff !== 0) {
+    return timeDiff;
+  }
+
+  return a.insertionOrder - b.insertionOrder;
+};
+
 export class EventQueue extends Effect.Service<EventQueue>()("EventQueue", {
   effect: Effect.gen(function* () {
-    const queue = yield* Queue.unbounded<CombatLog.CombatLog.CombatLogEvent>();
+    const queueRef = yield* Ref.make(
+      new TinyQueue<QueueEntry>([], compareEntries),
+    );
+    const counterRef = yield* Ref.make(0);
 
     return {
-      /**
-       * Add a single event to the queue
-       */
-      offer: (event: CombatLog.CombatLog.CombatLogEvent) =>
-        Queue.offer(queue, event),
+      awaitShutdown: Effect.void,
 
-      /**
-       * Add multiple events to the queue
-       */
-      offerAll: (events: readonly CombatLog.CombatLog.CombatLogEvent[]) =>
-        Queue.offerAll(queue, events),
+      clear: Ref.set(queueRef, new TinyQueue<QueueEntry>([], compareEntries)),
 
-      /**
-       * Take the next event from the queue (suspends if empty)
-       */
-      take: Queue.take(queue),
+      isEmpty: Effect.gen(function* () {
+        const queue = yield* Ref.get(queueRef);
+        return queue.length === 0;
+      }),
 
-      /**
-       * Take all events from the queue (returns empty if none)
-       */
-      takeAll: Queue.takeAll(queue),
+      offer: (event: SimulationEvent) =>
+        Effect.gen(function* () {
+          const order = yield* Ref.getAndUpdate(counterRef, (n) => n + 1);
 
-      /**
-       * Poll for the next event (returns Option, doesn't suspend)
-       */
-      poll: Queue.poll(queue),
+          yield* Ref.update(queueRef, (queue) => {
+            queue.push({ event, insertionOrder: order });
+            return queue;
+          });
+        }),
 
-      /**
-       * Get the current queue size
-       */
-      size: Queue.size(queue),
+      offerAll: (events: readonly SimulationEvent[]) =>
+        Effect.gen(function* () {
+          if (events.length === 0) {
+            return;
+          }
 
-      /**
-       * Check if the queue is empty
-       */
-      isEmpty: Effect.map(Queue.size(queue), (s) => s === 0),
+          const startOrder = yield* Ref.getAndUpdate(
+            counterRef,
+            (n) => n + events.length,
+          );
 
-      /**
-       * Shutdown the queue
-       */
-      shutdown: Queue.shutdown(queue),
+          yield* Ref.update(queueRef, (queue) => {
+            events.forEach((event, i) => {
+              queue.push({ event, insertionOrder: startOrder + i });
+            });
 
-      /**
-       * Wait for the queue to shutdown
-       */
-      awaitShutdown: Queue.awaitShutdown(queue),
+            return queue;
+          });
+        }),
+
+      peek: Effect.gen(function* () {
+        const queue = yield* Ref.get(queueRef);
+
+        return queue.length === 0
+          ? Option.none<SimulationEvent>()
+          : Option.some(queue.peek()!.event);
+      }),
+
+      peekTimestamp: Effect.gen(function* () {
+        const queue = yield* Ref.get(queueRef);
+
+        return queue.length === 0
+          ? Option.none<number>()
+          : Option.some(queue.peek()!.event.timestamp);
+      }),
+
+      poll: Effect.gen(function* () {
+        const entry = yield* Ref.modify(queueRef, (queue) => {
+          const result = queue.pop();
+
+          return [result, queue] as const;
+        });
+
+        return entry === undefined
+          ? Option.none<SimulationEvent>()
+          : Option.some(entry.event);
+      }),
+
+      shutdown: Effect.void,
+
+      size: Effect.gen(function* () {
+        const queue = yield* Ref.get(queueRef);
+
+        return queue.length;
+      }),
+
+      take: Effect.gen(function* () {
+        const entry = yield* Ref.modify(queueRef, (queue) => {
+          const result = queue.pop();
+
+          return [result, queue] as const;
+        });
+
+        if (entry === undefined) {
+          return yield* Effect.die("Queue is empty");
+        }
+
+        return entry.event;
+      }),
+
+      takeAll: Effect.gen(function* () {
+        const queue = yield* Ref.getAndSet(
+          queueRef,
+          new TinyQueue<QueueEntry>([], compareEntries),
+        );
+
+        const entries: QueueEntry[] = [];
+        while (queue.length > 0) {
+          entries.push(queue.pop()!);
+        }
+
+        return entries.map((e) => e.event) as readonly SimulationEvent[];
+      }),
     };
   }),
 }) {}

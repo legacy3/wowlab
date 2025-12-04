@@ -60,6 +60,14 @@ export {
   UnitDied,
 } from "./Events.js";
 
+// Lab events (simulation-generated)
+export {
+  isLabEvent,
+  isLabRecoveryReady,
+  LabEvent,
+  LabRecoveryReady,
+} from "./LabEvents.js";
+
 // Prefixes
 export { EnvironmentalPrefix, SpellPrefix } from "./Prefix.js";
 
