@@ -32,13 +32,6 @@ const applyDamage = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    const spellInfo =
-      "spellName" in event ? ` (${event.spellName})` : " (melee)";
-
-    yield* Effect.logDebug(
-      `Damage: ${event.destName} -${event.amount} HP${spellInfo}`,
-    );
   });
 
 export const DAMAGE_MUTATIONS: readonly StateMutation[] = [

@@ -52,10 +52,6 @@ const energize = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Energize: ${event.destName} +${event.amount} power (type ${event.powerType})`,
-    );
   });
 
 const drain = (
@@ -90,10 +86,6 @@ const drain = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Drain: ${event.destName} -${event.amount} power (type ${event.powerType})`,
-    );
   });
 
 export const POWER_MUTATIONS: readonly StateMutation[] = [

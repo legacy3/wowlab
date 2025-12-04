@@ -11,7 +11,6 @@ export { HandlerRegistry } from "./HandlerRegistry.js";
 export { registerStateMutationHandlers } from "./handlers/index.js";
 
 export { SimDriver } from "./SimDriver.js";
-
 export type {
   EventFilter,
   EventHandler,
@@ -19,3 +18,8 @@ export type {
   HandlerOptions,
   Subscription,
 } from "./HandlerRegistry.js";
+
+export type {
+  EventStreamSubscribeOptions,
+  EventStreamSubscription,
+} from "./SimDriver.js";

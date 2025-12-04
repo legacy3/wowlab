@@ -27,10 +27,6 @@ const summonUnit = (
 
       return s.set("units", s.units.set(destId, newUnit));
     });
-
-    yield* Effect.logDebug(
-      `Summon: ${event.sourceName} summoned ${event.destName}`,
-    );
   });
 
 const unitDied = (
@@ -58,8 +54,6 @@ const unitDied = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(`Unit died: ${event.destName}`);
   });
 
 const destroyUnit = (
@@ -72,8 +66,6 @@ const destroyUnit = (
       const destId = Branded.UnitID(event.destGUID);
       return s.set("units", s.units.delete(destId));
     });
-
-    yield* Effect.logDebug(`Unit destroyed: ${event.destName}`);
   });
 
 export const UNIT_MUTATIONS: readonly StateMutation[] = [

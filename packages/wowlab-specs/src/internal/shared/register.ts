@@ -11,7 +11,7 @@ const withTargetGuard = (handler: SpellHandler): SpellHandler["handler"] =>
         event.destGUID &&
         event.destName
           ? handler.handler(event, emitter)
-          : Effect.logDebug(`[${handler.id}] No target - skipping`)
+          : Effect.void
     : handler.handler;
 
 export const registerSpec = (
@@ -27,10 +27,6 @@ export const registerSpec = (
         { id: h.id, priority: h.priority ?? 10 },
       );
     }
-
-    yield* Effect.logInfo(
-      `[${spec.id}] Registered ${spec.handlers.length} handlers`,
-    );
   });
 
 export const registerClass = (
@@ -40,10 +36,6 @@ export const registerClass = (
     for (const spec of classDef.specs) {
       yield* registerSpec(spec);
     }
-
-    yield* Effect.logInfo(
-      `[${classDef.id}] Registered ${classDef.specs.length} specs`,
-    );
   });
 
 export const registerSpecs = (

@@ -36,10 +36,6 @@ export const registerStateMutationHandlers = (
         { id: `state:${subevent}`, priority: STATE_MUTATION_PRIORITY },
       );
     }
-
-    yield* Effect.logDebug(
-      `Registered ${ALL_MUTATIONS.length} state mutation handlers`,
-    );
   });
 
 export type { StateMutation } from "./types.js";

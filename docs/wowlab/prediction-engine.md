@@ -134,7 +134,9 @@ Pub/sub system for CLEU events. Consumers subscribe and filter for events they c
 ```typescript
 simDriver.subscribe({
   filter: ["SPELL_CAST_SUCCESS", "SPELL_AURA_APPLIED", "SPELL_DAMAGE"],
-  onEvent: (event) => { /* build timeline, calculate DPS, etc. */ }
+  onEvent: (event) => {
+    /* build timeline, calculate DPS, etc. */
+  },
 });
 ```
 
@@ -152,7 +154,9 @@ Full GameState emitted after every event. For debugging/inspection.
 ```typescript
 simDriver.subscribe({
   includeStateSnapshots: true,
-  onEvent: (event, stateSnapshot) => { /* inspect full state at this point */ }
+  onEvent: (event, stateSnapshot) => {
+    /* inspect full state at this point */
+  },
 });
 ```
 

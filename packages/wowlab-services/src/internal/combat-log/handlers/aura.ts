@@ -47,10 +47,6 @@ const applyAura = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Aura applied: ${event.spellName} (${event.spellId}) on ${event.destName}`,
-    );
   });
 
 const removeAura = (
@@ -79,10 +75,6 @@ const removeAura = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Aura removed: ${event.spellName} (${event.spellId}) from ${event.destName}`,
-    );
   });
 
 const updateAuraStacks = (
@@ -122,10 +114,6 @@ const updateAuraStacks = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Aura stack: ${event.spellName} (${event.amount}) on ${event.destName}`,
-    );
   });
 
 const removeAuraStacks = (
@@ -163,10 +151,6 @@ const removeAuraStacks = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Aura stack removed: ${event.spellName} (${event.amount}) from ${event.destName}`,
-    );
   });
 
 const refreshAura = (
@@ -207,10 +191,6 @@ const refreshAura = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Aura refresh: ${event.spellName} on ${event.destName}`,
-    );
   });
 
 export const AURA_MUTATIONS: readonly StateMutation[] = [

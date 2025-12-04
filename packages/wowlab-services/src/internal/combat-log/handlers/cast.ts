@@ -34,10 +34,6 @@ const startCast = (
 
       return s.set("units", s.units.set(sourceId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Cast start: ${event.sourceName} casting ${event.spellName}`,
-    );
   });
 
 const startCooldown = (
@@ -85,10 +81,6 @@ const startCooldown = (
 
       return s.set("units", s.units.set(sourceId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Cast success: ${event.spellName} (${event.spellId})`,
-    );
   });
 
 const completeCast = (

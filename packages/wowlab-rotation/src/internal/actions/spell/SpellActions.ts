@@ -80,11 +80,6 @@ export class SpellActions extends Effect.Service<SpellActions>()(
             });
             yield* combatLog.emit(castEvent);
 
-            // Log the cast
-            yield* Effect.logInfo(
-              `[${currentTime.toFixed(3)}s] SPELL_CAST_SUCCESS: ${unit.name} casts ${spell.info.name} (${spellId})`,
-            );
-
             // Determine cooldown: use chargeRecoveryTime for charge-based spells, otherwise recoveryTime
             // chargeRecoveryTime > 0 indicates a charge-based spell (like Barbed Shot, Kill Command)
             // recoveryTime is used for traditional cooldowns (like Bestial Wrath)

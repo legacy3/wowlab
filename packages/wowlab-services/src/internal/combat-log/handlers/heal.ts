@@ -35,10 +35,6 @@ const applyHealing = (
 
       return s.set("units", s.units.set(destId, updatedUnit));
     });
-
-    yield* Effect.logDebug(
-      `Heal: ${event.destName} +${event.amount} HP (${event.spellName})`,
-    );
   });
 
 export const HEAL_MUTATIONS: readonly StateMutation[] = [

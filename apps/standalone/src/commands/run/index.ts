@@ -37,6 +37,16 @@ import {
   createRotationRuntime,
   type RotationRuntimeConfig,
 } from "../../runtime/RotationRuntime.js";
+import {
+  printAggregatedResults,
+  printResults,
+  type AggregatedStats,
+  type SimResult,
+} from "../../utils/results.js";
+import {
+  EVENT_STREAM_FILTER,
+  formatTimelineEvent,
+} from "../../utils/timeline.js";
 
 const rotationArg = Args.text({ name: "rotation" }).pipe(
   Args.withDescription("The name of the rotation to run"),
@@ -72,16 +82,10 @@ const batchSizeOpt = Options.integer("batch-size").pipe(
 const serverOpt = Options.text("server").pipe(
   Options.withAlias("s"),
   Options.withDescription(
-    "Remote server URL (e.g., http://192.168.1.100:3847). If provided, runs simulation on remote daemon instead of locally.",
+    "Remote server URL (e.g., http://192.168.1.100:3847)",
   ),
   Options.optional,
 );
-
-interface SimResult {
-  casts: number;
-  duration: number;
-  simId: number;
-}
 
 const runSimulation = (
   simId: number,
@@ -116,122 +120,36 @@ const runSimulation = (
             const stateService = yield* State.StateService;
             const simDriver = yield* CombatLogService.SimDriver;
 
-            let casts = 0;
-            while (true) {
-              const state = yield* stateService.getState();
-              if (state.currentTime >= duration) break;
-              yield* rotation.run(playerId);
-              casts++;
+            const simulationLoop = Effect.gen(function* () {
+              let casts = 0;
+              while (true) {
+                const state = yield* stateService.getState();
+                if (state.currentTime >= duration) break;
+                yield* rotation.run(playerId);
+                casts++;
+                yield* simDriver.run(state.currentTime + 100);
+              }
+              return { casts, duration, simId };
+            });
 
-              // Process any queued combat log events (triggers handlers)
-              yield* simDriver.run(state.currentTime + 100);
+            if (silent) {
+              return yield* simulationLoop;
             }
 
-            return { casts, duration, simId };
+            return yield* Effect.acquireUseRelease(
+              simDriver.subscribe({
+                filter: EVENT_STREAM_FILTER,
+                onEvent: (event) => Effect.log(formatTimelineEvent(event)),
+              }),
+              () => simulationLoop,
+              (subscription) => subscription.unsubscribe,
+            );
           }),
         ),
       ),
     (runtime) => Effect.promise(() => runtime.dispose()),
   );
 
-const printResults = (
-  results: SimResult[],
-  elapsed: number,
-  workerCount?: number,
-): Effect.Effect<void> =>
-  Effect.gen(function* () {
-    const iterations = results.length;
-    const totalCasts = results.reduce((sum, r) => sum + r.casts, 0);
-    const avgCasts = totalCasts / iterations;
-    const throughput = (iterations / elapsed) * 1000;
-
-    yield* Effect.log("");
-    yield* Effect.log("┌─────────────────────────────────────────┐");
-    yield* Effect.log("│           Simulation Results            │");
-    yield* Effect.log("├─────────────────────────────────────────┤");
-    yield* Effect.log(
-      `│  Iterations:    ${String(iterations).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Duration:      ${String(results[0].duration + "s").padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Elapsed:       ${String(elapsed.toFixed(1) + "ms").padStart(20)}  │`,
-    );
-    if (workerCount !== undefined && workerCount > 0) {
-      yield* Effect.log(
-        `│  Workers:       ${String(workerCount).padStart(20)}  │`,
-      );
-    }
-    yield* Effect.log("├─────────────────────────────────────────┤");
-    yield* Effect.log(
-      `│  Total Casts:   ${String(totalCasts).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Avg Casts:     ${avgCasts.toFixed(1).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Throughput:    ${(throughput.toFixed(1) + " sims/s").padStart(20)}  │`,
-    );
-    yield* Effect.log("└─────────────────────────────────────────┘");
-  });
-
-const printAggregatedResults = (
-  stats: AggregatedStats,
-  simDuration: number,
-  elapsed: number,
-  workerCount: number,
-  remote?: string,
-): Effect.Effect<void> =>
-  Effect.gen(function* () {
-    const avgCasts = stats.totalCasts / stats.completedSims;
-    const throughput = (stats.completedSims / elapsed) * 1000;
-
-    // Format large numbers with commas
-    const formatNum = (n: number) => n.toLocaleString();
-
-    yield* Effect.log("");
-    yield* Effect.log("┌─────────────────────────────────────────┐");
-    yield* Effect.log("│           Simulation Results            │");
-    yield* Effect.log("├─────────────────────────────────────────┤");
-    yield* Effect.log(
-      `│  Iterations:    ${formatNum(stats.completedSims).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Duration:      ${String(simDuration + "s").padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Elapsed:       ${String((elapsed / 1000).toFixed(2) + "s").padStart(20)}  │`,
-    );
-    if (remote) {
-      yield* Effect.log(
-        `│  Server:        ${remote.padStart(20).slice(-20)}  │`,
-      );
-    } else {
-      yield* Effect.log(
-        `│  Workers:       ${String(workerCount).padStart(20)}  │`,
-      );
-    }
-    yield* Effect.log("├─────────────────────────────────────────┤");
-    yield* Effect.log(
-      `│  Total Casts:   ${formatNum(stats.totalCasts).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Avg Casts:     ${avgCasts.toFixed(1).padStart(20)}  │`,
-    );
-    yield* Effect.log(
-      `│  Throughput:    ${(formatNum(Math.round(throughput)) + " sims/s").padStart(20)}  │`,
-    );
-    yield* Effect.log("└─────────────────────────────────────────┘");
-  });
-
-// Aggregated stats - avoids storing all results in memory
-interface AggregatedStats {
-  completedSims: number;
-  totalCasts: number;
-}
-
-// Helper to run simulations using worker threads with streaming
 const runWithWorkers = (
   iterations: number,
   duration: number,
@@ -245,7 +163,6 @@ const runWithWorkers = (
   Scope.Scope | Worker.WorkerManager | Worker.Spawner
 > =>
   Effect.gen(function* () {
-    // Create the worker pool
     const pool = yield* Worker.makePool<
       WorkerInit | SimulationBatch,
       SimulationResult,
@@ -254,14 +171,8 @@ const runWithWorkers = (
       size: workerCount,
     });
 
-    // Initialize all workers with spell data (sent once per worker)
-    const initMessage: WorkerInit = {
-      rotationName,
-      spells,
-      type: "init",
-    };
+    const initMessage: WorkerInit = { rotationName, spells, type: "init" };
 
-    // Send init to each worker
     yield* Effect.all(
       Array.from({ length: workerCount }, () =>
         pool.executeEffect(initMessage),
@@ -274,16 +185,9 @@ const runWithWorkers = (
       `Initialized ${workerCount} workers, processing ${totalBatches} batches...`,
     );
 
-    // Process batches in chunks to avoid memory issues
-    // Keep only aggregated stats, not all results
-    const stats: AggregatedStats = {
-      completedSims: 0,
-      totalCasts: 0,
-    };
-    const sampleResults: SimResult[] = []; // Keep first few for display
-
-    // Process in waves to limit concurrent batch objects in memory
-    const waveSize = workerCount * 10; // 10 batches per worker in flight
+    const stats: AggregatedStats = { completedSims: 0, totalCasts: 0 };
+    const sampleResults: SimResult[] = [];
+    const waveSize = workerCount * 10;
     let batchId = 0;
 
     for (
@@ -296,7 +200,6 @@ const runWithWorkers = (
       for (let i = 0; i < waveSize && batchId * batchSize < iterations; i++) {
         const startSim = batchId * batchSize;
         const simsInBatch = Math.min(batchSize, iterations - startSim);
-
         waveBatches.push({
           batchId: batchId++,
           duration,
@@ -308,7 +211,6 @@ const runWithWorkers = (
         });
       }
 
-      // Execute this wave
       const waveResults = yield* Effect.all(
         waveBatches.map((batch) =>
           pool
@@ -318,13 +220,10 @@ const runWithWorkers = (
         { concurrency: "unbounded" },
       );
 
-      // Aggregate results immediately, don't store
       for (const batchResults of waveResults) {
         for (const result of batchResults) {
           stats.completedSims++;
           stats.totalCasts += result.casts;
-
-          // Keep first 10 samples for display
           if (sampleResults.length < 10) {
             sampleResults.push({
               casts: result.casts,
@@ -335,7 +234,6 @@ const runWithWorkers = (
         }
       }
 
-      // Log progress for long runs
       if (iterations > 100000 && stats.completedSims % 500000 === 0) {
         yield* Effect.log(
           `Progress: ${stats.completedSims.toLocaleString()} / ${iterations.toLocaleString()} (${((stats.completedSims / iterations) * 100).toFixed(1)}%)`,
@@ -346,7 +244,6 @@ const runWithWorkers = (
     return { sampleResults, stats };
   });
 
-// Run simulation on a remote server via RPC
 const runRemoteSimulation = (
   serverUrl: string,
   rotation: string,
@@ -361,7 +258,6 @@ const runRemoteSimulation = (
   Effect.gen(function* () {
     yield* Effect.log(`Connecting to remote server: ${serverUrl}`);
 
-    // Create RPC client layer
     const ProtocolLive = RpcClient.layerProtocolHttp({
       url: `${serverUrl}/rpc`,
     }).pipe(
@@ -371,15 +267,12 @@ const runRemoteSimulation = (
     const result = yield* Effect.scoped(
       Effect.gen(function* () {
         const client = yield* RpcClient.make(SimulationRpcs);
-
-        // Run the simulation
         const response = yield* client.RunSimulation({
           batchSize,
           duration,
           iterations,
           rotation,
         });
-
         return {
           elapsedMs: response.stats.elapsedMs,
           stats: {
@@ -408,7 +301,6 @@ export const runCommand = Command.make(
   },
   ({ batchSize, duration, iterations, rotation, server, workers }) =>
     Effect.gen(function* () {
-      // Check if we're using a remote server
       if (Option.isSome(server)) {
         const serverUrl = server.value;
 
@@ -448,7 +340,6 @@ export const runCommand = Command.make(
         return;
       }
 
-      // Local execution
       const selectedRotation = rotations[rotation as keyof typeof rotations];
 
       if (!selectedRotation) {
@@ -459,28 +350,22 @@ export const runCommand = Command.make(
       }
 
       yield* Effect.log(`Loading spells for: ${selectedRotation.name}`);
-
       const spells = yield* loadSpells(
         supabaseClient,
         selectedRotation.spellIds,
       );
-
       yield* Effect.log(`Loaded ${spells.length} spells`);
 
       const config: RotationRuntimeConfig = { spells };
 
-      // Always run at least one simulation with full logging
       yield* Effect.log(`Running rotation: ${selectedRotation.name}`);
       yield* Effect.log(`Simulation duration: ${duration}s`);
       yield* Effect.log("---");
 
       yield* runSimulation(1, config, selectedRotation, duration, false);
-
       yield* Effect.log("---");
 
-      // Run parallel simulations if requested
       if (iterations > 1) {
-        // workers=0 means single-threaded, workers=-1 (default) means auto-detect
         const useWorkers = workers !== 0;
         const workerCount =
           workers > 0 ? workers : Math.max(4, os.cpus().length - 1);
@@ -491,8 +376,6 @@ export const runCommand = Command.make(
           );
 
           const startTime = performance.now();
-
-          // Use the bootstrap wrapper which sets up tsx properly
           const workerPath = fileURLToPath(
             new URL("../../workers/worker-bootstrap.mjs", import.meta.url),
           );
@@ -517,17 +400,14 @@ export const runCommand = Command.make(
           const elapsed = performance.now() - startTime;
           yield* printAggregatedResults(stats, duration, elapsed, workerCount);
         } else {
-          // Single-threaded mode (original behavior)
           yield* Effect.log(
             `Running ${iterations} parallel simulations (single-threaded)...`,
           );
 
           const startTime = performance.now();
-
           const simEffects = Array.from({ length: iterations }, (_, i) =>
             runSimulation(i + 1, config, selectedRotation, duration, true),
           );
-
           const results = yield* Effect.all(simEffects, {
             concurrency: "unbounded",
           });
