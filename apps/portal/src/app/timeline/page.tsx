@@ -1,14 +1,14 @@
 import { PageLayout } from "@/components/page";
-import { TimelineDashboard } from "@/components/timeline";
+import { TimelineContent } from "@/components/timeline";
 
 export default function TimelinePage() {
   return (
     <PageLayout
       title="Combat Timeline"
-      description="View detailed combat event timeline"
+      description="Compare timeline rendering approaches"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Timeline" }]}
     >
-      <TimelineDashboard />
+      <TimelineContent />
     </PageLayout>
   );
 }

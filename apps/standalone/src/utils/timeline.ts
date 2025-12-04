@@ -46,7 +46,7 @@ export const formatTimelineEvent = (
   event: CombatLog.CombatLogEvent,
 ): string => {
   const timestamp = `[${event.timestamp.toFixed(3)}s]`;
-  
+
   const source =
     "sourceName" in event
       ? describeUnit(
