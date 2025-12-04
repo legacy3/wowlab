@@ -8,7 +8,8 @@ import * as Schemas from "@wowlab/core/Schemas";
 import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
-import { BeastMastery, registerSpec } from "@wowlab/specs";
+import * as Hunter from "@wowlab/specs/Hunter";
+import * as Shared from "@wowlab/specs/Shared";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
@@ -100,7 +101,7 @@ const runSimulation = (
       Effect.promise(() =>
         runtime.runPromise(
           Effect.gen(function* () {
-            yield* registerSpec(BeastMastery);
+            yield* Shared.registerSpec(Hunter.BeastMastery);
 
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
             const player = createRotationPlayer(

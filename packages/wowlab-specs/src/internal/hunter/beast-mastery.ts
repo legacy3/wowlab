@@ -1,11 +1,17 @@
-import * as Effect from "effect/Effect";
-
 import { CombatLog } from "@wowlab/core/Schemas";
+import * as Effect from "effect/Effect";
 
 import type { SpecDefinition, SpellHandler } from "../shared/types.js";
 
-import { AURA_DEFAULTS, DAMAGE_DEFAULTS, fromTrigger } from "../shared/events.js";
+import {
+  AURA_DEFAULTS,
+  DAMAGE_DEFAULTS,
+  fromTrigger,
+} from "../shared/events.js";
 import { BMSpells, HunterSpells } from "./constants.js";
+
+let summonCounter = 0;
+const nextSummonId = () => ++summonCounter;
 
 const bestialWrath: SpellHandler = {
   handler: (event, emitter) =>
@@ -13,10 +19,10 @@ const bestialWrath: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellAuraApplied({
           ...fromTrigger(event, { toSelf: true }),
+          auraType: "BUFF",
           spellId: BMSpells.BESTIAL_WRATH,
           spellName: "Bestial Wrath",
           spellSchool: 1,
-          auraType: "BUFF",
           ...AURA_DEFAULTS,
         }),
       );
@@ -32,10 +38,10 @@ const barbedShot: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellAuraApplied({
           ...fromTrigger(event, { toSelf: true }),
+          auraType: "BUFF",
           spellId: BMSpells.BARBED_SHOT_BUFF,
           spellName: "Barbed Shot",
           spellSchool: 1,
-          auraType: "BUFF",
           ...AURA_DEFAULTS,
         }),
       );
@@ -43,10 +49,10 @@ const barbedShot: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellAuraApplied({
           ...fromTrigger(event, { toSelf: true }),
+          auraType: "BUFF",
           spellId: BMSpells.FRENZY,
           spellName: "Frenzy",
           spellSchool: 1,
-          auraType: "BUFF",
           ...AURA_DEFAULTS,
         }),
       );
@@ -63,10 +69,10 @@ const killCommand: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellDamage({
           ...fromTrigger(event),
+          school: 1,
           spellId: BMSpells.PET_KILL_COMMAND,
           spellName: "Kill Command",
           spellSchool: 1,
-          school: 1,
           ...DAMAGE_DEFAULTS,
         }),
       );
@@ -83,10 +89,10 @@ const cobraShot: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellDamage({
           ...fromTrigger(event),
+          school: 8,
           spellId: BMSpells.COBRA_SHOT,
           spellName: "Cobra Shot",
           spellSchool: 8,
-          school: 8,
           ...DAMAGE_DEFAULTS,
         }),
       );
@@ -105,10 +111,10 @@ const multiShot: SpellHandler = {
         emitter.emit(
           new CombatLog.SpellDamage({
             ...fromTrigger(event),
+            school: 1,
             spellId: BMSpells.MULTI_SHOT,
             spellName: "Multi-Shot",
             spellSchool: 1,
-            school: 1,
             ...DAMAGE_DEFAULTS,
           }),
         );
@@ -117,10 +123,10 @@ const multiShot: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellAuraApplied({
           ...fromTrigger(event, { toSelf: true }),
+          auraType: "BUFF",
           spellId: BMSpells.BEAST_CLEAVE,
           spellName: "Beast Cleave",
           spellSchool: 1,
-          auraType: "BUFF",
           ...AURA_DEFAULTS,
         }),
       );
@@ -133,29 +139,29 @@ const multiShot: SpellHandler = {
 const callOfTheWild: SpellHandler = {
   handler: (event, emitter) =>
     Effect.sync(() => {
-      const timestamp = Date.now();
+      const t = event.timestamp;
       emitter.emit(
         new CombatLog.SpellSummon({
           ...fromTrigger(event),
+          destFlags: 0x2111,
+          destGUID: `Creature-0-0-0-0-${BMSpells.CALL_OF_THE_WILD}-${t}-${nextSummonId()}`,
+          destName: "Wild Pet",
+          destRaidFlags: 0,
           spellId: BMSpells.CALL_OF_THE_WILD,
           spellName: "Call of the Wild",
           spellSchool: 1,
-          destGUID: `Creature-0-0-0-0-${BMSpells.CALL_OF_THE_WILD}-${timestamp}-1`,
-          destName: "Wild Pet",
-          destFlags: 0x2111,
-          destRaidFlags: 0,
         }),
       );
       emitter.emit(
         new CombatLog.SpellSummon({
           ...fromTrigger(event),
+          destFlags: 0x2111,
+          destGUID: `Creature-0-0-0-0-${BMSpells.CALL_OF_THE_WILD}-${t}-${nextSummonId()}`,
+          destName: "Wild Pet",
+          destRaidFlags: 0,
           spellId: BMSpells.CALL_OF_THE_WILD,
           spellName: "Call of the Wild",
           spellSchool: 1,
-          destGUID: `Creature-0-0-0-0-${BMSpells.CALL_OF_THE_WILD}-${timestamp}-2`,
-          destName: "Wild Pet",
-          destFlags: 0x2111,
-          destRaidFlags: 0,
         }),
       );
     }),
@@ -170,10 +176,10 @@ const killShot: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellDamage({
           ...fromTrigger(event),
+          school: 1,
           spellId: HunterSpells.KILL_SHOT,
           spellName: "Kill Shot",
           spellSchool: 1,
-          school: 1,
           ...DAMAGE_DEFAULTS,
         }),
       );
@@ -190,10 +196,10 @@ const bloodshed: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellAuraApplied({
           ...fromTrigger(event),
+          auraType: "DEBUFF",
           spellId: BMSpells.BLOODSHED,
           spellName: "Bloodshed",
           spellSchool: 1,
-          auraType: "DEBUFF",
           ...AURA_DEFAULTS,
         }),
       );
@@ -211,13 +217,13 @@ const direBeast: SpellHandler = {
       emitter.emit(
         new CombatLog.SpellSummon({
           ...fromTrigger(event),
+          destFlags: 0x2111,
+          destGUID: `Creature-0-0-0-0-${BMSpells.DIRE_BEAST_SUMMON}-${event.timestamp}-${nextSummonId()}`,
+          destName: "Dire Beast",
+          destRaidFlags: 0,
           spellId: BMSpells.DIRE_BEAST_SUMMON,
           spellName: "Dire Beast",
           spellSchool: 1,
-          destGUID: `Creature-0-0-0-0-${BMSpells.DIRE_BEAST_SUMMON}-${Date.now()}`,
-          destName: "Dire Beast",
-          destFlags: 0x2111,
-          destRaidFlags: 0,
         }),
       );
     }),
