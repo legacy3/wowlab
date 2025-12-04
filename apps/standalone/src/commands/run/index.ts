@@ -8,6 +8,7 @@ import * as Schemas from "@wowlab/core/Schemas";
 import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
+import { BeastMastery, registerSpec } from "@wowlab/specs";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
@@ -29,7 +30,6 @@ import {
   createRotationPlayer,
   type RotationDefinition,
 } from "../../framework/types.js";
-import { registerBMHandlers } from "../../handlers/index.js";
 import { rotations } from "../../rotations/index.js";
 import { SimulationRpcs } from "../../rpc/requests.js";
 import {
@@ -100,8 +100,7 @@ const runSimulation = (
       Effect.promise(() =>
         runtime.runPromise(
           Effect.gen(function* () {
-            // Register BM handlers for spell effects
-            yield* registerBMHandlers;
+            yield* registerSpec(BeastMastery);
 
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
             const player = createRotationPlayer(

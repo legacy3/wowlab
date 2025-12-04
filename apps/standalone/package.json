@@ -23,6 +23,7 @@
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",
     "@wowlab/services": "workspace:*",
+    "@wowlab/specs": "workspace:*",
     "chalk": "^5.6.2",
     "date-fns": "^4.1.0",
     "effect": "^3.19.4",
