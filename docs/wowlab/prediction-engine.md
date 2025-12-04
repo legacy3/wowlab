@@ -123,6 +123,41 @@ Three modes (inspired by Hekili analysis):
 
 Hekili's approach: don't guess procs. Re-scrape actual aura state. Only model deterministic pseudo-RNG (stack counters, guaranteed procs).
 
+## Live SimDriver Output
+
+The Live SimDriver exposes two output channels:
+
+### A) Event Stream (Primary)
+
+Pub/sub system for CLEU events. Consumers subscribe and filter for events they care about.
+
+```typescript
+simDriver.subscribe({
+  filter: ["SPELL_CAST_SUCCESS", "SPELL_AURA_APPLIED", "SPELL_DAMAGE"],
+  onEvent: (event) => { /* build timeline, calculate DPS, etc. */ }
+});
+```
+
+This is how SimC works - the combat log IS the output. Consumers build their views from events:
+
+- **Timeline**: Subscribe to all events, render chronologically
+- **Aura uptime**: Subscribe to `SPELL_AURA_APPLIED` / `SPELL_AURA_REMOVED`, track durations
+- **DPS breakdown**: Subscribe to damage events, aggregate by spell
+- **Resource graph**: Subscribe to `SPELL_ENERGIZE` / `SPELL_CAST_SUCCESS`, track over time
+
+### B) State Snapshots (Opt-in)
+
+Full GameState emitted after every event. For debugging/inspection.
+
+```typescript
+simDriver.subscribe({
+  includeStateSnapshots: true,
+  onEvent: (event, stateSnapshot) => { /* inspect full state at this point */ }
+});
+```
+
+Heavy - only enable when user wants to step through and inspect each state change.
+
 ## Consumer Use Cases
 
 ### In-Game Overlay (Hekili-style)
@@ -133,20 +168,34 @@ Hekili's approach: don't guess procs. Re-scrape actual aura state. Only model de
 
 ### Timeline Renderer (Portal)
 
-- Subscribes to: **Live SimDriver events**
-- Shows: What actually happened in the simulation
+- Subscribes to: **Event stream**
+- Filters: All events (or user-selected subset)
+- Builds: Chronological timeline view
 - Updates: As simulation runs
 
-### State Tracker
+### DPS/HPS Charts (Portal)
 
-- Subscribes to: **Live SimDriver state**
-- Purpose: Maintain authoritative game state
-- Used by: Prediction SimDriver as fork source
+- Subscribes to: **Event stream**
+- Filters: `SPELL_DAMAGE`, `SPELL_PERIODIC_DAMAGE`, `SPELL_HEAL`, etc.
+- Builds: DPS over time, damage breakdown by spell, etc.
 
-### CLI Output
+### Aura Uptime (Portal)
 
-- Subscribes to: **Live SimDriver events**
-- Shows: ASCII timeline of events
+- Subscribes to: **Event stream**
+- Filters: `SPELL_AURA_APPLIED`, `SPELL_AURA_REMOVED`, `SPELL_AURA_REFRESH`
+- Builds: Buff/debuff uptime bars, stack tracking
+
+### State Inspector (Portal - Debug)
+
+- Subscribes to: **State snapshots**
+- Shows: Full GameState at each point in time
+- Use case: Debugging, understanding sim behavior
+
+### CLI Output (Standalone)
+
+- Subscribes to: **Event stream**
+- Filters: `SPELL_CAST_SUCCESS` (or configurable)
+- Shows: ASCII timeline of casts
 
 ## Implementation Requirements
 
