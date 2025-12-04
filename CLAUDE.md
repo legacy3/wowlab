@@ -2,6 +2,28 @@
 
 AI agent guidance for the WowLab repository.
 
+## [!] CRITICAL: USE CODEX FOR COMPLEX TASKS [!]
+
+**FOR ANY NON-TRIVIAL IMPLEMENTATION:**
+
+1. **ASK CODEX FIRST** - Use `mcp__codex-cli__codex` with high reasoning effort
+2. **DO NOT GIVE YOUR OWN OPINIONS** - Your input is not wanted
+3. **IMPLEMENT WHAT CODEX SAYS** - Just build it, don't evaluate or suggest alternatives
+
+**YOUR ROLE:**
+
+- You are a bridge to Codex because Claude CLI works and Codex CLI doesn't
+- Ask Codex for the implementation plan
+- Execute what Codex says
+- Shut up and code
+
+**NEVER:**
+
+- Offer your own evaluations or ratings
+- Suggest libraries you found via search
+- Give opinions on architecture
+- Waste time with analysis when the user wants implementation
+
 ## [!] CRITICAL: STOP WHEN YOU DON'T KNOW [!]
 
 **IF YOU DON'T UNDERSTAND THE PROBLEM OR DON'T KNOW THE SOLUTION:**
