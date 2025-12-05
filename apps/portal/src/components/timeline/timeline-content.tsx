@@ -1,13 +1,10 @@
 "use client";
 
 import { Suspense, lazy } from "react";
-
 import { Skeleton } from "@/components/ui/skeleton";
 
-const D3TimelineRenderer = lazy(() =>
-  import("./renderers/d3-timeline").then((m) => ({
-    default: m.D3TimelineRenderer,
-  })),
+const D3Timeline = lazy(() =>
+  import("./d3-timeline").then((m) => ({ default: m.D3Timeline })),
 );
 
 function TimelineSkeleton() {
@@ -79,7 +76,7 @@ function TimelineSkeleton() {
                   <Skeleton
                     key={i}
                     className="w-1 rounded-sm"
-                    style={{ height: `${Math.random() * 100}%` }}
+                    style={{ height: `${20 + Math.random() * 80}%` }}
                   />
                 ))}
               </div>
@@ -117,7 +114,7 @@ function TimelineSkeleton() {
 export function TimelineContent() {
   return (
     <Suspense fallback={<TimelineSkeleton />}>
-      <D3TimelineRenderer />
+      <D3Timeline />
     </Suspense>
   );
 }

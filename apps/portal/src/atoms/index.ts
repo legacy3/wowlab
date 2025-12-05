@@ -8,3 +8,4 @@ export * from "./workbench";
 export * from "./top-gear";
 export * from "./computing";
 export * from "./user";
+export * from "./timeline";
