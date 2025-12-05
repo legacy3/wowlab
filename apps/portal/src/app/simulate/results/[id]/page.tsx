@@ -1,18 +1,7 @@
 import { PageLayout } from "@/components/page";
 import { SimulationResultTabs } from "@/components/simulate/simulation-result-tabs";
 
-type Props = {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; compare?: string }>;
-};
-
-export default async function SimulationResultPage({
-  params,
-  searchParams,
-}: Props) {
-  const { id } = await params;
-  const { tab = "overview", compare } = await searchParams;
-
+export default function SimulationResultPage() {
   return (
     <PageLayout
       title="Simulation Results"
@@ -23,7 +12,7 @@ export default async function SimulationResultPage({
         { label: "Results" },
       ]}
     >
-      <SimulationResultTabs resultId={id} activeTab={tab} compareId={compare} />
+      <SimulationResultTabs />
     </PageLayout>
   );
 }

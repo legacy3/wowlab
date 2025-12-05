@@ -2,13 +2,8 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { PageLayout } from "@/components/page";
 import { AccountTabs } from "@/components/account/account-tabs";
 
-type Props = {
-  searchParams: Promise<{ tab?: string }>;
-};
-
-export default async function AccountPage({ searchParams }: Props) {
+export default async function AccountPage() {
   const { profile, supabase } = await requireAuth();
-  const { tab = "rotations" } = await searchParams;
 
   const { data: rotations } = await supabase
     .from("rotations")
@@ -22,11 +17,7 @@ export default async function AccountPage({ searchParams }: Props) {
       title="Account"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Account" }]}
     >
-      <AccountTabs
-        profile={profile}
-        rotations={rotations ?? []}
-        activeTab={tab}
-      />
+      <AccountTabs profile={profile} rotations={rotations ?? []} />
     </PageLayout>
   );
 }
