@@ -4,10 +4,6 @@ import { createContext, useContext, useCallback, type ReactNode } from "react";
 import type Konva from "konva";
 import { getSpell, formatTime, formatDamage } from "@/atoms/timeline";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface TooltipState {
   x: number;
   y: number;
@@ -39,10 +35,6 @@ export interface TimelineContextValue {
   margin: { top: number; left: number };
 }
 
-// =============================================================================
-// Context
-// =============================================================================
-
 const TimelineContext = createContext<TimelineContextValue | null>(null);
 
 export function useTimelineContext(): TimelineContextValue {
@@ -52,10 +44,6 @@ export function useTimelineContext(): TimelineContextValue {
   }
   return ctx;
 }
-
-// =============================================================================
-// Provider
-// =============================================================================
 
 interface TimelineProviderProps {
   children: ReactNode;
@@ -121,13 +109,6 @@ export function TimelineProvider({
   );
 }
 
-// =============================================================================
-// Shared Utilities
-// =============================================================================
-
-/**
- * Calculate opacity based on selection state
- */
 export function getSpellOpacity(
   selectedSpell: number | null,
   spellId: number,
@@ -138,9 +119,6 @@ export function getSpellOpacity(
   return selectedSpell === spellId ? defaultOpacity : dimmedOpacity;
 }
 
-/**
- * Check if a spell is currently highlighted (selected or hovered)
- */
 export function isSpellHighlighted(
   selectedSpell: number | null,
   hoveredSpell: number | null,
@@ -149,9 +127,6 @@ export function isSpellHighlighted(
   return selectedSpell === spellId || hoveredSpell === spellId;
 }
 
-/**
- * Check if a time range is visible within the viewport
- */
 export function isRangeVisible(
   startX: number,
   endX: number,
@@ -161,9 +136,6 @@ export function isRangeVisible(
   return startX <= innerWidth + padding && endX >= -padding;
 }
 
-/**
- * Check if a point is visible within the viewport
- */
 export function isPointVisible(
   x: number,
   innerWidth: number,
@@ -171,10 +143,6 @@ export function isPointVisible(
 ): boolean {
   return x >= -padding && x <= innerWidth + padding;
 }
-
-// =============================================================================
-// Tooltip Content Builders
-// =============================================================================
 
 export function buildSpellTooltip(
   spellId: number,

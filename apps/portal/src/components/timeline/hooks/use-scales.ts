@@ -24,10 +24,6 @@ interface Scales {
   visibleRange: { start: number; end: number };
 }
 
-/**
- * Hook providing scale functions for timeline.
- * Simple linear transformations for time/damage/focus.
- */
 export function useScales({
   bounds,
   innerWidth,

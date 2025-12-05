@@ -1,10 +1,6 @@
 import { useMemo } from "react";
 import type { TrackId } from "@/atoms/timeline";
 
-// =============================================================================
-// Track Metrics - Consolidated magic numbers
-// =============================================================================
-
 export const TRACK_METRICS = {
   // Margins
   margin: { top: 10, right: 20, bottom: 30, left: 90 },
@@ -46,10 +42,6 @@ export const TRACK_METRICS = {
   trackGap: 4,
   cornerRadius: 4,
 } as const;
-
-// =============================================================================
-// Track Configuration
-// =============================================================================
 
 export interface TrackConfig {
   readonly id: TrackId;

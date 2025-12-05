@@ -11,6 +11,8 @@ import {
   Minimize2,
   ChevronDown,
   ChevronRight,
+  Expand,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -75,9 +77,31 @@ export function Timeline() {
 
   // Local state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [zenMode, setZenMode] = useState(false);
+
+  // Escape key to exit zen mode
+  useEffect(() => {
+    if (!zenMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setZenMode(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    // Prevent body scroll in zen mode
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [zenMode]);
 
   // Container size
-  const { width: containerWidth } = useResizeObserver(containerRef);
+  const { width: containerWidth, height: containerHeight } =
+    useResizeObserver(containerRef);
   const innerWidth = Math.max(0, containerWidth - MARGIN.left - MARGIN.right);
 
   // Track layout
@@ -210,15 +234,26 @@ export function Timeline() {
     [zoomToRange],
   );
 
-  const stageHeight = totalHeight + MARGIN.top + MARGIN.bottom;
+  const defaultStageHeight = totalHeight + MARGIN.top + MARGIN.bottom;
+  // In zen mode, use container height if available (for full-height canvas)
+  const stageHeight =
+    zenMode && containerHeight > 0 ? containerHeight : defaultStageHeight;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className={cn(
+        "flex flex-col gap-3",
+        zenMode &&
+          "fixed inset-0 z-50 bg-background p-4 overflow-auto animate-in fade-in duration-200",
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           {formatTime(viewRange.start)} - {formatTime(viewRange.end)}
-          <span className="ml-2 opacity-60">(Scroll to zoom, drag to pan)</span>
+          <span className="ml-2 opacity-60">
+            {zenMode ? "(ESC to exit)" : "(Scroll to zoom, drag to pan)"}
+          </span>
         </span>
         <div className="flex gap-1">
           <Button
@@ -257,13 +292,30 @@ export function Timeline() {
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
+          <div className="w-px h-6 bg-border mx-1" />
+          <Button
+            variant={zenMode ? "secondary" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setZenMode(!zenMode)}
+            title={zenMode ? "Exit zen mode (ESC)" : "Zen mode"}
+          >
+            {zenMode ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Expand className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
       {/* Main timeline */}
       <div
         ref={containerRef}
-        className="relative w-full rounded-lg border bg-background overflow-hidden cursor-grab active:cursor-grabbing"
+        className={cn(
+          "relative w-full rounded-lg border bg-background overflow-hidden cursor-grab active:cursor-grabbing",
+          zenMode && "flex-1 min-h-0",
+        )}
       >
         <Stage
           ref={stageRef}

@@ -5,9 +5,6 @@ interface Size {
   height: number;
 }
 
-/**
- * Hook to observe element size changes.
- */
 export function useResizeObserver(
   ref: React.RefObject<HTMLElement | null>,
 ): Size {
@@ -41,9 +38,6 @@ export function useResizeObserver(
   return size;
 }
 
-/**
- * Hook to create a throttled callback.
- */
 export function useThrottledCallback<T extends (...args: never[]) => void>(
   callback: T,
   delay: number,

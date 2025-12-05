@@ -25,9 +25,6 @@ interface UseZoomReturn {
   zoomToRange: (start: number, end: number) => void;
 }
 
-/**
- * Custom hook for zoom behavior using pointer-centric zooming.
- */
 export function useZoom({
   totalDuration,
   innerWidth,

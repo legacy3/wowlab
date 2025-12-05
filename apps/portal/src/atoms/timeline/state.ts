@@ -1,10 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type SpellSchool =
   | "physical"
   | "fire"
@@ -91,10 +87,6 @@ export type TrackId =
   | "debuffs"
   | "damage"
   | "resources";
-
-// =============================================================================
-// Spell Database (Hunter BM)
-// =============================================================================
 
 export const SPELLS: Record<number, SpellInfo> = {
   34026: {
@@ -206,10 +198,6 @@ export const SCHOOL_COLORS: Record<SpellSchool, string> = {
   arcane: "#FF66FF",
   holy: "#FFE680",
 };
-
-// =============================================================================
-// Mock Data Generator
-// =============================================================================
 
 const DURATION = 600; // 10 minutes
 
@@ -624,20 +612,13 @@ function generatePhases(): PhaseMarker[] {
   ];
 }
 
-// =============================================================================
-// Atoms
-// =============================================================================
-
-// Combat data atom
 export const combatDataAtom = atom<CombatData>(generateCombatData());
 
-// Timeline bounds
 export const timelineBoundsAtom = atom<TimelineBounds>({
   min: 0,
   max: DURATION,
 });
 
-// Derived atoms for filtered data
 export const playerBuffsAtom = atom((get) => {
   const data = get(combatDataAtom);
   return data.buffs.filter((b) => b.type === "buff" && b.target === "Player");
@@ -676,7 +657,6 @@ export const maxDamageAtom = atom((get) => {
   return Math.max(...data.damage.map((d) => d.amount));
 });
 
-// UI State atoms
 export const expandedTracksAtom = atomWithStorage<Set<TrackId>>(
   "timeline-expanded-tracks",
   new Set(["phases", "casts", "buffs", "debuffs", "damage", "resources"]),
@@ -702,12 +682,7 @@ export const expandedTracksAtom = atomWithStorage<Set<TrackId>>(
 export const selectedSpellAtom = atom<number | null>(null);
 export const hoveredSpellAtom = atom<number | null>(null);
 
-// View range (controlled by zoom) - start with 60s window for comfortable viewing
 export const viewRangeAtom = atom({ start: 0, end: 60 });
-
-// =============================================================================
-// Utility Functions
-// =============================================================================
 
 export function formatDamage(amount: number): string {
   if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
