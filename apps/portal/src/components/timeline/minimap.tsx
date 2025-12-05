@@ -67,7 +67,7 @@ export const Minimap = memo(function Minimap({
     [bounds, innerWidth, viewRange, onRangeSelect],
   );
 
-  // Use window-level listeners for reliable drag handling
+  // Use window-level listeners for reliable drag handling (mouse + touch)
   useEffect(() => {
     if (!isDragging) return;
 
@@ -75,16 +75,31 @@ export const Minimap = memo(function Minimap({
       updateRangeFromX(e.clientX);
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      // Prevent scrolling while dragging
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        updateRangeFromX(e.touches[0].clientX);
+      }
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", handleEnd);
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleEnd);
+    window.addEventListener("touchcancel", handleEnd);
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("touchcancel", handleEnd);
     };
   }, [isDragging, updateRangeFromX]);
 
@@ -92,11 +107,15 @@ export const Minimap = memo(function Minimap({
   const densityBars = useMemo(() => {
     const bucketSize = (bounds.max - bounds.min) / minimapDensityBuckets;
     const buckets = new Array(minimapDensityBuckets).fill(0);
+
     casts.forEach((c) => {
       const bucket = Math.floor((c.timestamp - bounds.min) / bucketSize);
-      if (bucket >= 0 && bucket < minimapDensityBuckets) buckets[bucket]++;
+      if (bucket >= 0 && bucket < minimapDensityBuckets) {
+        buckets[bucket]++;
+      }
     });
     const maxDensity = Math.max(...buckets, 1);
+
     return buckets.map((count, i) => ({
       x: (i / minimapDensityBuckets) * innerWidth,
       width: innerWidth / minimapDensityBuckets,
@@ -119,11 +138,22 @@ export const Minimap = memo(function Minimap({
     updateRangeFromX(e.clientX);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      updateRangeFromX(e.touches[0].clientX);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
       onMouseDown={handleMouseDown}
-      style={{ cursor: isDragging ? "grabbing" : "pointer" }}
+      onTouchStart={handleTouchStart}
+      style={{
+        cursor: isDragging ? "grabbing" : "pointer",
+        touchAction: "none",
+      }}
     >
       <Stage
         width={innerWidth + MARGIN.left + MARGIN.right}

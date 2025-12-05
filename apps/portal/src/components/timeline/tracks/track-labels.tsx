@@ -38,6 +38,7 @@ export const TrackLabels = memo(function TrackLabels({
             x={8}
             y={labelY}
             onClick={() => track.collapsible && onToggleTrack(track.id)}
+            onTap={() => track.collapsible && onToggleTrack(track.id)}
           >
             {track.collapsible && (
               <Text

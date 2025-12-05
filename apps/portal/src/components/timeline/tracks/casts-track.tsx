@@ -107,6 +107,11 @@ export const CastsTrack = memo(function CastsTrack({
                 selectedSpell === cast.spellId ? null : cast.spellId,
               )
             }
+            onTap={() =>
+              onSpellSelect(
+                selectedSpell === cast.spellId ? null : cast.spellId,
+              )
+            }
             onMouseEnter={(e) => {
               onSpellHover(cast.spellId);
               const tooltip = buildSpellTooltip(cast.spellId, cast.timestamp, {
