@@ -1,10 +1,10 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Text, Circle } from "react-konva";
+import { Group, Rect, Text, Circle, Line } from "react-konva";
 import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
-import { TRACK_METRICS } from "../hooks";
+import { TRACK_METRICS, getZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 
 interface Buff {
@@ -13,7 +13,30 @@ interface Buff {
   start: number;
   end: number;
   stacks?: number;
+  target?: string;
 }
+
+type BuffCategory = "self" | "pet" | "external";
+
+// Categorize buffs by their target/source
+function getBuffCategory(buff: Buff, spellId: number): BuffCategory {
+  // Pet buffs
+  const petBuffs = [272790]; // Frenzy
+  if (petBuffs.includes(spellId) || buff.target === "Pet") return "pet";
+
+  // Self buffs (player-applied)
+  const selfBuffs = [19574, 359844, 186265, 393777, 281036]; // BW, CotW, Turtle, Dire Pack, Thrill
+  if (selfBuffs.includes(spellId) || buff.target === "Player") return "self";
+
+  return "external";
+}
+
+const CATEGORY_ORDER: BuffCategory[] = ["self", "pet", "external"];
+const CATEGORY_LABELS: Record<BuffCategory, string> = {
+  self: "Self",
+  pet: "Pet",
+  external: "Ext",
+};
 
 interface BuffsTrackProps {
   buffs: Map<number, Buff[]>;
@@ -29,6 +52,14 @@ interface BuffsTrackProps {
   hideTooltip: () => void;
 }
 
+interface ProcessedBuff {
+  buff: Buff;
+  category: BuffCategory;
+  categoryIndex: number;
+  laneIndex: number;
+  refreshMarks: number[]; // timestamps where buff was refreshed
+}
+
 export const BuffsTrack = memo(function BuffsTrack({
   buffs,
   y,
@@ -39,102 +70,308 @@ export const BuffsTrack = memo(function BuffsTrack({
   showTooltip,
   hideTooltip,
 }: BuffsTrackProps) {
-  const { buffHeight, buffGap, buffCornerRadius } = TRACK_METRICS;
+  const { buffHeight, buffGap, buffCornerRadius, buffCategoryGap } =
+    TRACK_METRICS;
+  const zoomLevel = getZoomLevel(visibleRange);
 
-  // Flatten buffs with row indices
-  const allBuffs = useMemo(() => {
-    let rowIndex = 0;
-    const result: Array<{ buff: Buff; rowIndex: number }> = [];
+  // Process buffs into categories with lane assignment
+  const { processedBuffs, categoryLaneCounts, totalHeight } = useMemo(() => {
+    const categorized = new Map<BuffCategory, Map<number, Buff[]>>();
 
-    buffs.forEach((spellBuffs) => {
+    // Group by category, then by spell
+    buffs.forEach((spellBuffs, spellId) => {
       spellBuffs.forEach((buff) => {
-        result.push({ buff, rowIndex });
+        const category = getBuffCategory(buff, spellId);
+        if (!categorized.has(category)) {
+          categorized.set(category, new Map());
+        }
+        const catMap = categorized.get(category)!;
+        if (!catMap.has(spellId)) {
+          catMap.set(spellId, []);
+        }
+        catMap.get(spellId)!.push(buff);
       });
-      rowIndex++;
     });
 
-    return result;
-  }, [buffs]);
+    const result: ProcessedBuff[] = [];
+    const laneCounts: Record<BuffCategory, number> = {
+      self: 0,
+      pet: 0,
+      external: 0,
+    };
+    let currentY = 0;
 
-  // Filter to visible buffs BEFORE rendering
+    // Process each category
+    CATEGORY_ORDER.forEach((category, categoryIndex) => {
+      const categoryBuffs = categorized.get(category);
+      if (!categoryBuffs || categoryBuffs.size === 0) return;
+
+      // Assign lanes within category - one lane per spell type
+      let laneIndex = 0;
+      categoryBuffs.forEach((spellBuffs, spellId) => {
+        // Sort buffs by start time
+        const sorted = [...spellBuffs].sort((a, b) => a.start - b.start);
+
+        // Merge overlapping buffs of same spell into single bar with refresh marks
+        const merged: Array<{ buff: Buff; refreshMarks: number[] }> = [];
+        sorted.forEach((buff) => {
+          const last = merged[merged.length - 1];
+          if (last && buff.start <= last.buff.end + 0.5) {
+            // Overlapping or very close - merge and mark refresh
+            last.refreshMarks.push(buff.start);
+            last.buff = {
+              ...last.buff,
+              end: Math.max(last.buff.end, buff.end),
+              stacks: Math.max(last.buff.stacks ?? 1, buff.stacks ?? 1),
+            };
+          } else {
+            merged.push({ buff, refreshMarks: [] });
+          }
+        });
+
+        merged.forEach(({ buff, refreshMarks }) => {
+          result.push({
+            buff,
+            category,
+            categoryIndex,
+            laneIndex,
+            refreshMarks,
+          });
+        });
+
+        laneIndex++;
+      });
+
+      laneCounts[category] = laneIndex;
+      currentY += laneIndex * (buffHeight + buffGap);
+      if (laneIndex > 0) currentY += buffCategoryGap;
+    });
+
+    return {
+      processedBuffs: result,
+      categoryLaneCounts: laneCounts,
+      totalHeight: Math.max(currentY - buffCategoryGap, buffHeight),
+    };
+  }, [buffs, buffHeight, buffGap, buffCategoryGap]);
+
+  // Filter to visible buffs
   const visibleBuffs = useMemo(() => {
-    return allBuffs.filter(
+    return processedBuffs.filter(
       ({ buff }) =>
         buff.end >= visibleRange.start && buff.start <= visibleRange.end,
     );
-  }, [allBuffs, visibleRange.start, visibleRange.end]);
+  }, [processedBuffs, visibleRange.start, visibleRange.end]);
 
-  return (
-    <Group y={y}>
-      {visibleBuffs.map(({ buff, rowIndex }) => {
-        const startX = timeToX(buff.start);
-        const endX = timeToX(buff.end);
-        const width = Math.max(4, endX - startX);
-        const by = rowIndex * (buffHeight + buffGap) + 2;
-        const spell = getSpell(buff.spellId);
-        const opacity = getSpellOpacity(selectedSpell, buff.spellId, 0.85, 0.3);
+  // Calculate Y position for a buff
+  const getBuffY = (pb: ProcessedBuff): number => {
+    let y = 0;
+    for (let i = 0; i < pb.categoryIndex; i++) {
+      const cat = CATEGORY_ORDER[i];
+      const lanes = categoryLaneCounts[cat];
+      if (lanes > 0) {
+        y += lanes * (buffHeight + buffGap) + buffCategoryGap;
+      }
+    }
+    y += pb.laneIndex * (buffHeight + buffGap);
+    return y;
+  };
 
-        return (
-          <Group
-            key={buff.id}
-            x={startX}
-            y={by}
-            opacity={opacity}
-            onMouseEnter={(e) => {
-              const tooltip = buildSpellTooltip(buff.spellId, buff.start, {
-                duration: { start: buff.start, end: buff.end },
-                stacks: buff.stacks,
-              });
-              if (tooltip) showTooltip(e, tooltip);
-            }}
-            onMouseLeave={hideTooltip}
-          >
-            <Rect
-              width={width}
-              height={buffHeight}
-              fill={spell?.color ?? "#888"}
-              cornerRadius={buffCornerRadius}
-              perfectDrawEnabled={false}
-            />
-            {width > 60 && (
-              <Text
-                text={spell?.name ?? ""}
-                x={6}
-                y={buffHeight / 2 - 5}
-                fontSize={10}
-                fontStyle="500"
-                fill="#fff"
-                listening={false}
-                perfectDrawEnabled={false}
-              />
-            )}
-            {/* Stack indicator */}
-            {buff.stacks && buff.stacks > 1 && (
-              <>
-                <Circle
-                  x={width - 8}
-                  y={8}
-                  radius={6}
-                  fill="#000"
-                  opacity={0.6}
+  // Render envelope view for aggregate zoom
+  if (zoomLevel === "aggregate") {
+    return (
+      <Group y={y}>
+        {visibleBuffs.map(
+          ({ buff, category, categoryIndex, laneIndex, refreshMarks }) => {
+            const startX = timeToX(buff.start);
+            const endX = timeToX(buff.end);
+            const width = Math.max(4, endX - startX);
+            const by = getBuffY({
+              buff,
+              category,
+              categoryIndex,
+              laneIndex,
+              refreshMarks,
+            });
+            const spell = getSpell(buff.spellId);
+            const opacity = getSpellOpacity(
+              selectedSpell,
+              buff.spellId,
+              0.7,
+              0.2,
+            );
+
+            // Calculate uptime opacity based on duration vs visible range
+            const visibleDuration =
+              Math.min(buff.end, visibleRange.end) -
+              Math.max(buff.start, visibleRange.start);
+            const rangeDuration = visibleRange.end - visibleRange.start;
+            const uptimeRatio = visibleDuration / rangeDuration;
+
+            return (
+              <Group key={buff.id} x={startX} y={by} opacity={opacity}>
+                {/* Start marker */}
+                <Rect
+                  x={0}
+                  y={0}
+                  width={3}
+                  height={buffHeight}
+                  fill={spell?.color ?? "#888"}
+                  cornerRadius={1}
+                  perfectDrawEnabled={false}
+                />
+                {/* Connecting line */}
+                <Line
+                  points={[3, buffHeight / 2, width - 3, buffHeight / 2]}
+                  stroke={spell?.color ?? "#888"}
+                  strokeWidth={1}
+                  opacity={Math.max(0.3, uptimeRatio)}
+                  dash={[4, 4]}
                   listening={false}
                   perfectDrawEnabled={false}
                 />
+                {/* End marker */}
+                <Rect
+                  x={width - 3}
+                  y={0}
+                  width={3}
+                  height={buffHeight}
+                  fill={spell?.color ?? "#888"}
+                  cornerRadius={1}
+                  perfectDrawEnabled={false}
+                />
+              </Group>
+            );
+          },
+        )}
+      </Group>
+    );
+  }
+
+  return (
+    <Group y={y}>
+      {/* Category labels removed - handled by TrackLabels component */}
+
+      {/* Buff bars */}
+      {visibleBuffs.map(
+        ({ buff, category, categoryIndex, laneIndex, refreshMarks }) => {
+          const startX = timeToX(buff.start);
+          const endX = timeToX(buff.end);
+          const width = Math.max(4, endX - startX);
+          const by = getBuffY({
+            buff,
+            category,
+            categoryIndex,
+            laneIndex,
+            refreshMarks,
+          });
+          const spell = getSpell(buff.spellId);
+          const opacity = getSpellOpacity(
+            selectedSpell,
+            buff.spellId,
+            0.85,
+            0.3,
+          );
+
+          // Determine label based on available width
+          // Approximate: 6px per character at fontSize 10
+          const spellName = spell?.name ?? "";
+          const nameWidth = spellName.length * 6;
+          const availableWidth = width - 12; // padding for text
+          const showFullName = availableWidth >= nameWidth;
+          const showInitials = width > 30;
+
+          const initials = spellName
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 3);
+
+          return (
+            <Group
+              key={buff.id}
+              x={startX}
+              y={by}
+              opacity={opacity}
+              onMouseEnter={(e) => {
+                const tooltip = buildSpellTooltip(buff.spellId, buff.start, {
+                  duration: { start: buff.start, end: buff.end },
+                  stacks: buff.stacks,
+                  refreshCount: refreshMarks.length,
+                });
+                if (tooltip) showTooltip(e, tooltip);
+              }}
+              onMouseLeave={hideTooltip}
+            >
+              {/* Main bar */}
+              <Rect
+                width={width}
+                height={buffHeight}
+                fill={spell?.color ?? "#888"}
+                cornerRadius={buffCornerRadius}
+                perfectDrawEnabled={false}
+              />
+
+              {/* Refresh marks */}
+              {refreshMarks.map((markTime, i) => {
+                const markX = timeToX(markTime) - startX;
+                if (markX < 2 || markX > width - 2) return null;
+                return (
+                  <Line
+                    key={i}
+                    points={[markX, 2, markX, buffHeight - 2]}
+                    stroke="#fff"
+                    strokeWidth={1}
+                    opacity={0.4}
+                    listening={false}
+                    perfectDrawEnabled={false}
+                  />
+                );
+              })}
+
+              {/* Label - show full name if it fits, otherwise initials */}
+              {(showFullName || showInitials) && (
                 <Text
-                  text={String(buff.stacks)}
-                  x={width - 12}
-                  y={4}
-                  fontSize={9}
-                  fontStyle="bold"
+                  text={showFullName ? spellName : initials}
+                  x={4}
+                  y={buffHeight / 2 - 5}
+                  fontSize={showFullName ? 10 : 9}
+                  fontStyle={showFullName ? "500" : "bold"}
                   fill="#fff"
                   listening={false}
                   perfectDrawEnabled={false}
                 />
-              </>
-            )}
-          </Group>
-        );
-      })}
+              )}
+
+              {/* Stack badge (at right edge, inside bar) */}
+              {buff.stacks && buff.stacks > 1 && (
+                <Group x={width - 14} y={buffHeight / 2 - 6}>
+                  <Circle
+                    x={6}
+                    y={6}
+                    radius={6}
+                    fill="#000"
+                    opacity={0.6}
+                    listening={false}
+                    perfectDrawEnabled={false}
+                  />
+                  <Text
+                    text={String(buff.stacks)}
+                    x={0}
+                    y={2}
+                    width={12}
+                    align="center"
+                    fontSize={8}
+                    fontStyle="bold"
+                    fill="#fff"
+                    listening={false}
+                    perfectDrawEnabled={false}
+                  />
+                </Group>
+              )}
+            </Group>
+          );
+        },
+      )}
     </Group>
   );
 });

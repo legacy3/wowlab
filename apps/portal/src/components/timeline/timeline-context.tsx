@@ -51,26 +51,44 @@ export function buildSpellTooltip(
     target?: string;
     damage?: number;
     isCrit?: boolean;
-    duration?: { start: number; end: number };
+    duration?: { start: number; end: number } | number;
     stacks?: number;
+    refreshCount?: number;
   },
 ) {
   const spell = getSpell(spellId);
   if (!spell) return null;
+
+  // Handle duration as either object or number
+  const durationObj =
+    extra?.duration !== undefined
+      ? typeof extra.duration === "number"
+        ? null // Just a cast duration, not a range
+        : extra.duration
+      : null;
+
+  const castDuration =
+    extra?.duration !== undefined && typeof extra.duration === "number"
+      ? extra.duration
+      : null;
 
   return (
     <div className="space-y-1">
       <div className="font-semibold" style={{ color: spell.color }}>
         {spell.name}
       </div>
-      {extra?.duration ? (
+      {durationObj ? (
         <div className="text-xs text-muted-foreground">
-          Duration: {formatTime(extra.duration.start)} -{" "}
-          {formatTime(extra.duration.end)}
+          Duration: {formatTime(durationObj.start)} -{" "}
+          {formatTime(durationObj.end)} (
+          {(durationObj.end - durationObj.start).toFixed(1)}s)
         </div>
       ) : (
         <div className="text-xs text-muted-foreground">
           Time: {formatTime(timestamp)}
+          {castDuration !== null && castDuration > 0 && (
+            <span className="ml-1">(cast: {castDuration.toFixed(1)}s)</span>
+          )}
         </div>
       )}
       {extra?.target && (
@@ -87,6 +105,11 @@ export function buildSpellTooltip(
       {extra?.stacks && extra.stacks > 1 && (
         <div className="text-xs text-muted-foreground">
           Stacks: {extra.stacks}
+        </div>
+      )}
+      {extra?.refreshCount !== undefined && extra.refreshCount > 0 && (
+        <div className="text-xs text-muted-foreground">
+          Refreshed: {extra.refreshCount}x
         </div>
       )}
     </div>

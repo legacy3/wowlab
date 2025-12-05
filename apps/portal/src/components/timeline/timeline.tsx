@@ -335,8 +335,17 @@ export function Timeline() {
     useResizeObserver(containerRef);
   const innerWidth = Math.max(0, containerWidth - MARGIN.left - MARGIN.right);
 
-  // Track layout
-  const { tracks, totalHeight } = useTrackLayout(expandedTracks);
+  // Calculate available height for tracks in zen mode
+  const availableTrackHeight =
+    zenMode && containerHeight > 0
+      ? containerHeight - MARGIN.top - MARGIN.bottom
+      : undefined;
+
+  // Track layout - pass available height for zen mode expansion
+  const { tracks, totalHeight } = useTrackLayout(
+    expandedTracks,
+    availableTrackHeight,
+  );
 
   // Zoom state
   const {
@@ -584,7 +593,7 @@ export function Timeline() {
         ref={containerRef}
         className={cn(
           "relative w-full rounded-lg border bg-background overflow-hidden cursor-grab active:cursor-grabbing",
-          zenMode && "flex-1 min-h-0",
+          zenMode ? "flex-1 min-h-0" : "min-h-[500px]",
         )}
       >
         <Stage
