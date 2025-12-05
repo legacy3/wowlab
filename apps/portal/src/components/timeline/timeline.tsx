@@ -31,8 +31,8 @@ import {
 } from "@/atoms/timeline";
 
 import {
-  useKonvaZoom,
-  useKonvaScales,
+  useZoom,
+  useScales,
   useTrackLayout,
   useResizeObserver,
   useThrottledCallback,
@@ -57,7 +57,7 @@ import {
 
 const { margin: MARGIN } = TRACK_METRICS;
 
-export function KonvaTimeline() {
+export function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
@@ -93,14 +93,14 @@ export function KonvaTimeline() {
     resetZoom,
     fitAll,
     zoomToRange,
-  } = useKonvaZoom({
+  } = useZoom({
     totalDuration: bounds.max - bounds.min,
     innerWidth,
     initialWindow: 60,
   });
 
   // Scales
-  const { timeToX, damageToY, focusToY, visibleRange } = useKonvaScales({
+  const { timeToX, damageToY, focusToY, visibleRange } = useScales({
     bounds,
     innerWidth,
     damageTrackHeight: tracks.damage.height,

@@ -1,12 +1,12 @@
 import { useCallback, useState, useRef } from "react";
 import type Konva from "konva";
 
-export interface KonvaZoomState {
+export interface ZoomState {
   scale: number;
   x: number;
 }
 
-interface UseKonvaZoomParams {
+interface UseZoomParams {
   totalDuration: number;
   innerWidth: number;
   initialWindow?: number;
@@ -14,9 +14,9 @@ interface UseKonvaZoomParams {
   maxScale?: number;
 }
 
-interface UseKonvaZoomReturn {
-  zoomState: KonvaZoomState;
-  setZoomState: React.Dispatch<React.SetStateAction<KonvaZoomState>>;
+interface UseZoomReturn {
+  zoomState: ZoomState;
+  setZoomState: React.Dispatch<React.SetStateAction<ZoomState>>;
   handleWheel: (e: Konva.KonvaEventObject<WheelEvent>) => void;
   zoomIn: () => void;
   zoomOut: () => void;
@@ -26,20 +26,19 @@ interface UseKonvaZoomReturn {
 }
 
 /**
- * Custom hook for Konva zoom behavior using pointer-centric zooming.
- * Implements the same zoom logic as D3 but for Konva canvas.
+ * Custom hook for zoom behavior using pointer-centric zooming.
  */
-export function useKonvaZoom({
+export function useZoom({
   totalDuration,
   innerWidth,
   initialWindow = 60,
   minScale = 1,
   maxScale = 50,
-}: UseKonvaZoomParams): UseKonvaZoomReturn {
+}: UseZoomParams): UseZoomReturn {
   // Calculate initial scale factor (how much to zoom in to show initialWindow)
   const initialScale = Math.max(1, totalDuration / initialWindow);
 
-  const [zoomState, setZoomState] = useState<KonvaZoomState>({
+  const [zoomState, setZoomState] = useState<ZoomState>({
     scale: initialScale,
     x: 0,
   });

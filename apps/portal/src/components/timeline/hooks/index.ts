@@ -1,6 +1,10 @@
-export { useTimelineScales } from "./use-timeline-scales";
-export { useTimelineZoom } from "./use-timeline-zoom";
-export { useTrackLayout, TRACK_CONFIGS } from "./use-track-layout";
+export { useZoom, type ZoomState } from "./use-zoom";
+export { useScales } from "./use-scales";
+export {
+  useTrackLayout,
+  TRACK_CONFIGS,
+  TRACK_METRICS,
+} from "./use-track-layout";
 export type {
   TrackConfig,
   TrackLayout,

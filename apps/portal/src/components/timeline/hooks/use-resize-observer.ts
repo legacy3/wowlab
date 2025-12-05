@@ -1,28 +1,23 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 interface Size {
   width: number;
   height: number;
 }
 
+/**
+ * Hook to observe element size changes.
+ */
 export function useResizeObserver(
   ref: React.RefObject<HTMLElement | null>,
 ): Size {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-  const observerRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
 
-    // Initial size
-    setSize({
-      width: element.clientWidth,
-      height: element.clientHeight,
-    });
-
-    // Create observer
-    observerRef.current = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
         setSize({
@@ -32,46 +27,53 @@ export function useResizeObserver(
       }
     });
 
-    observerRef.current.observe(element);
+    observer.observe(element);
 
-    // Cleanup
-    return () => {
-      observerRef.current?.disconnect();
-      observerRef.current = null;
-    };
+    // Initial measurement
+    setSize({
+      width: element.clientWidth,
+      height: element.clientHeight,
+    });
+
+    return () => observer.disconnect();
   }, [ref]);
 
   return size;
 }
 
-// Throttled callback hook for high-frequency events like mouse move
+/**
+ * Hook to create a throttled callback.
+ */
 export function useThrottledCallback<T extends (...args: never[]) => void>(
   callback: T,
   delay: number,
 ): T {
   const lastCall = useRef(0);
-  const frameRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-      }
-    };
-  }, []);
+  const lastArgs = useRef<Parameters<T> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   return useCallback(
     ((...args: Parameters<T>) => {
       const now = Date.now();
+      lastArgs.current = args;
+
       if (now - lastCall.current >= delay) {
         lastCall.current = now;
         callback(...args);
-      } else if (frameRef.current === null) {
-        frameRef.current = requestAnimationFrame(() => {
-          frameRef.current = null;
-          lastCall.current = Date.now();
-          callback(...args);
-        });
+      } else {
+        // Schedule a trailing call
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(
+          () => {
+            lastCall.current = Date.now();
+            if (lastArgs.current) {
+              callback(...lastArgs.current);
+            }
+          },
+          delay - (now - lastCall.current),
+        );
       }
     }) as T,
     [callback, delay],

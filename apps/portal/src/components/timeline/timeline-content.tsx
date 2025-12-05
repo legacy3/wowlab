@@ -3,8 +3,8 @@
 import { Suspense, lazy } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const D3Timeline = lazy(() =>
-  import("./d3-timeline").then((m) => ({ default: m.D3Timeline })),
+const Timeline = lazy(() =>
+  import("./timeline").then((m) => ({ default: m.Timeline })),
 );
 
 function TimelineSkeleton() {
@@ -76,7 +76,7 @@ function TimelineSkeleton() {
                   <Skeleton
                     key={i}
                     className="w-1 rounded-sm"
-                    style={{ height: `${20 + Math.random() * 80}%` }}
+                    style={{ height: `${20 + ((i * 17 + 11) % 80)}%` }}
                   />
                 ))}
               </div>
@@ -114,7 +114,7 @@ function TimelineSkeleton() {
 export function TimelineContent() {
   return (
     <Suspense fallback={<TimelineSkeleton />}>
-      <D3Timeline />
+      <Timeline />
     </Suspense>
   );
 }

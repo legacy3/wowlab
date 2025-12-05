@@ -1,17 +1,17 @@
 import { useMemo } from "react";
 import type { TimelineBounds } from "@/atoms/timeline";
-import type { KonvaZoomState } from "./use-konva-zoom";
+import type { ZoomState } from "./use-zoom";
 
-interface UseKonvaScalesParams {
+interface UseScalesParams {
   bounds: TimelineBounds;
   innerWidth: number;
   damageTrackHeight: number;
   resourceTrackHeight: number;
   maxDamage: number;
-  zoomState: KonvaZoomState;
+  zoomState: ZoomState;
 }
 
-interface KonvaScales {
+interface Scales {
   /** Convert time to x coordinate (accounting for zoom/pan) */
   timeToX: (time: number) => number;
   /** Convert x coordinate to time (accounting for zoom/pan) */
@@ -25,17 +25,17 @@ interface KonvaScales {
 }
 
 /**
- * Hook providing scale functions for Konva timeline.
- * Replaces D3 scales with simple linear transformations.
+ * Hook providing scale functions for timeline.
+ * Simple linear transformations for time/damage/focus.
  */
-export function useKonvaScales({
+export function useScales({
   bounds,
   innerWidth,
   damageTrackHeight,
   resourceTrackHeight,
   maxDamage,
   zoomState,
-}: UseKonvaScalesParams): KonvaScales {
+}: UseScalesParams): Scales {
   const { scale, x: offsetX } = zoomState;
 
   // Base time-to-pixel ratio (unzoomed)
