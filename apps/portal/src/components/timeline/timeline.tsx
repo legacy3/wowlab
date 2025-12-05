@@ -345,7 +345,7 @@ export function Timeline() {
   // Toggle track expansion
   const toggleTrack = useCallback(
     (trackId: TrackId) => {
-      setExpandedTracks((prev) => {
+      setExpandedTracks((prev: Set<TrackId>) => {
         const next = new Set(prev);
         if (next.has(trackId)) {
           next.delete(trackId);
