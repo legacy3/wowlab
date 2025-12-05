@@ -7,6 +7,7 @@ import {
   FileCode,
   GitBranch,
   History,
+  Layers,
   LucideIcon,
   Medal,
   Plug,
@@ -70,6 +71,7 @@ export const menuConfig: MenuGroup[] = [
   group("Advanced", [
     item("Editor", "/editor", FileCode),
     item("Timeline", "/timeline", History),
+    item("Timeline Konva", "/timeline-konva", Layers),
     item("Workbench", "/workbench", Wrench),
     item("Computing", "/computing", Cpu),
     item("Data Inspector", "/data-inspector", Search),
