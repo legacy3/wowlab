@@ -3,15 +3,19 @@ import {
   select,
   zoom,
   zoomIdentity,
+  scaleLinear,
   type D3ZoomEvent,
   type ZoomBehavior,
+  type ScaleLinear,
 } from "d3";
 
 interface UseTimelineZoomParams {
   svgRef: React.RefObject<SVGSVGElement | null>;
   innerWidth: number;
   totalHeight: number;
+  baseScale?: ScaleLinear<number, number>;
   onZoom: (transform: { k: number; x: number }) => void;
+  onScaleChange?: (newScale: ScaleLinear<number, number>) => void;
 }
 
 interface UseTimelineZoomReturn {
@@ -20,11 +24,17 @@ interface UseTimelineZoomReturn {
   resetZoom: () => void;
 }
 
+/**
+ * Custom hook for D3 zoom behavior with proper rescaleX support.
+ * Uses zoom.rescaleX() for efficient axis updates during zoom operations.
+ */
 export function useTimelineZoom({
   svgRef,
   innerWidth,
   totalHeight,
+  baseScale,
   onZoom,
+  onScaleChange,
 }: UseTimelineZoomParams): UseTimelineZoomReturn {
   const zoomBehaviorRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(
     null,
@@ -34,6 +44,10 @@ export function useTimelineZoom({
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg || innerWidth <= 0 || totalHeight <= 0) return;
+
+    // Create a reference scale if one isn't provided
+    const xScale =
+      baseScale ?? scaleLinear().domain([0, 60]).range([0, innerWidth]);
 
     const zoomBehavior = zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 30])
@@ -46,7 +60,14 @@ export function useTimelineZoom({
         [innerWidth, totalHeight],
       ])
       .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
-        onZoom({ k: event.transform.k, x: event.transform.x });
+        const transform = event.transform;
+        onZoom({ k: transform.k, x: transform.x });
+
+        // Use rescaleX for efficient scale transformation
+        if (onScaleChange && baseScale) {
+          const newScale = transform.rescaleX(xScale);
+          onScaleChange(newScale as ScaleLinear<number, number>);
+        }
       });
 
     const selection = select(svg);
@@ -58,7 +79,7 @@ export function useTimelineZoom({
       selection.on(".zoom", null);
       zoomBehaviorRef.current = null;
     };
-  }, [svgRef, innerWidth, totalHeight, onZoom]);
+  }, [svgRef, innerWidth, totalHeight, baseScale, onZoom, onScaleChange]);
 
   const zoomIn = useCallback(() => {
     const svg = svgRef.current;

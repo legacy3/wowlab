@@ -9,7 +9,13 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { select, axisBottom, type Selection } from "d3";
+import {
+  select,
+  axisBottom,
+  brushX,
+  type BrushBehavior,
+  type D3BrushEvent,
+} from "d3";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -253,42 +259,44 @@ export function D3Timeline() {
     }
     phasesGroup.attr("transform", `translate(0,${tracks.phases.y})`);
 
-    // Phase rectangles
-    const phaseRects = phasesGroup
+    // Phase rectangles - using modern join() pattern
+    phasesGroup
       .selectAll<SVGRectElement, (typeof combatData.phases)[0]>("rect.phase")
-      .data(combatData.phases, (d) => d.id);
-
-    phaseRects
-      .enter()
-      .append("rect")
-      .attr("class", "phase")
-      .merge(phaseRects)
+      .data(combatData.phases, (d) => d.id)
+      .join(
+        (enter) =>
+          enter
+            .append("rect")
+            .attr("class", "phase")
+            .attr("opacity", 0)
+            .call((sel) => sel.transition().duration(300).attr("opacity", 0.2)),
+        (update) => update,
+        (exit) => exit.transition().duration(200).attr("opacity", 0).remove(),
+      )
       .attr("x", (d) => x(d.start))
       .attr("y", 2)
       .attr("width", (d) => Math.max(0, x(d.end) - x(d.start)))
       .attr("height", tracks.phases.height - 4)
       .attr("fill", (d) => d.color)
-      .attr("opacity", 0.2)
       .attr("rx", 2);
 
-    phaseRects.exit().remove();
-
-    // Phase labels
-    const phaseLabels = phasesGroup
-      .selectAll<
-        SVGTextElement,
-        (typeof combatData.phases)[0]
-      >("text.phase-label")
+    // Phase labels - using join()
+    phasesGroup
+      .selectAll<SVGTextElement, (typeof combatData.phases)[0]>("text.phase-label")
       .data(
         combatData.phases.filter((p) => x(p.end) - x(p.start) > 50),
         (d) => d.id,
-      );
-
-    phaseLabels
-      .enter()
-      .append("text")
-      .attr("class", "phase-label")
-      .merge(phaseLabels)
+      )
+      .join(
+        (enter) =>
+          enter
+            .append("text")
+            .attr("class", "phase-label")
+            .attr("opacity", 0)
+            .call((sel) => sel.transition().duration(300).attr("opacity", 1)),
+        (update) => update,
+        (exit) => exit.transition().duration(200).attr("opacity", 0).remove(),
+      )
       .attr("x", (d) => x(d.start) + (x(d.end) - x(d.start)) / 2)
       .attr("y", tracks.phases.height / 2 + 4)
       .attr("text-anchor", "middle")
@@ -297,21 +305,12 @@ export function D3Timeline() {
       .attr("font-weight", "600")
       .text((d) => d.name);
 
-    phaseLabels.exit().remove();
-
-    // Phase boundary lines
-    const phaseLines = phasesGroup
-      .selectAll<
-        SVGLineElement,
-        (typeof combatData.phases)[0]
-      >("line.phase-boundary")
-      .data(combatData.phases, (d) => d.id);
-
-    phaseLines
-      .enter()
-      .append("line")
+    // Phase boundary lines - using join()
+    phasesGroup
+      .selectAll<SVGLineElement, (typeof combatData.phases)[0]>("line.phase-boundary")
+      .data(combatData.phases, (d) => d.id)
+      .join("line")
       .attr("class", "phase-boundary")
-      .merge(phaseLines)
       .attr("x1", (d) => x(d.start))
       .attr("x2", (d) => x(d.start))
       .attr("y1", 0)
@@ -319,8 +318,6 @@ export function D3Timeline() {
       .attr("stroke", (d) => d.color)
       .attr("stroke-opacity", 0.5)
       .attr("stroke-dasharray", "4,2");
-
-    phaseLines.exit().remove();
   }, [combatData.phases, tracks.phases, totalHeight, x, innerWidth]);
 
   // Render casts track
@@ -360,19 +357,28 @@ export function D3Timeline() {
       row.map((cast) => ({ ...cast, rowIndex })),
     );
 
-    // Cast groups
+    // Cast groups - using modern join() pattern
     const castGroups = castsGroup
       .selectAll<SVGGElement, (typeof castsWithRow)[0]>("g.cast")
-      .data(castsWithRow, (d) => d.id);
+      .data(castsWithRow, (d) => d.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append("g")
+            .attr("class", "cast")
+            .attr("opacity", 0);
 
-    const castEnter = castGroups.enter().append("g").attr("class", "cast");
+          g.append("rect").attr("class", "cast-bg");
+          g.append("text").attr("class", "cast-label");
 
-    castEnter.append("rect").attr("class", "cast-bg");
-    castEnter.append("text").attr("class", "cast-label");
+          g.transition().duration(200).attr("opacity", 1);
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.transition().duration(150).attr("opacity", 0).remove(),
+      );
 
-    const castMerged = castEnter.merge(castGroups);
-
-    castMerged
+    castGroups
       .attr("transform", (d) => {
         const cx = x(d.timestamp);
         const cy = d.rowIndex * (CAST_SIZE + 3) + 4;
@@ -383,7 +389,7 @@ export function D3Timeline() {
         selectedSpell !== null && selectedSpell !== d.spellId ? 0.3 : 1,
       );
 
-    castMerged
+    castGroups
       .select<SVGRectElement>("rect.cast-bg")
       .attr("width", CAST_SIZE)
       .attr("height", CAST_SIZE)
@@ -396,7 +402,7 @@ export function D3Timeline() {
       )
       .attr("stroke-width", 2);
 
-    castMerged
+    castGroups
       .select<SVGTextElement>("text.cast-label")
       .attr("x", CAST_SIZE / 2)
       .attr("y", CAST_SIZE / 2 + 4)
@@ -415,7 +421,7 @@ export function D3Timeline() {
       });
 
     // Event handlers
-    castMerged
+    castGroups
       .on("mouseenter", function (event, d) {
         setHoveredSpell(d.spellId);
         const spell = getSpell(d.spellId);
@@ -449,8 +455,6 @@ export function D3Timeline() {
       .on("click", function (_, d) {
         setSelectedSpell((prev) => (prev === d.spellId ? null : d.spellId));
       });
-
-    castGroups.exit().remove();
   }, [
     combatData.casts,
     tracks.casts,
@@ -492,19 +496,30 @@ export function D3Timeline() {
       rowIndex++;
     });
 
+    // Buff groups - using modern join() pattern
     const buffGroups = buffsGroup
       .selectAll<SVGGElement, (typeof allBuffs)[0]>("g.buff")
-      .data(allBuffs, (d) => d.buff.id);
+      .data(allBuffs, (d) => d.buff.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append("g")
+            .attr("class", "buff")
+            .attr("opacity", 0);
 
-    const buffEnter = buffGroups.enter().append("g").attr("class", "buff");
-    buffEnter.append("rect").attr("class", "buff-bg");
-    buffEnter.append("text").attr("class", "buff-label");
-    buffEnter.append("circle").attr("class", "buff-stack-bg");
-    buffEnter.append("text").attr("class", "buff-stack");
+          g.append("rect").attr("class", "buff-bg");
+          g.append("text").attr("class", "buff-label");
+          g.append("circle").attr("class", "buff-stack-bg");
+          g.append("text").attr("class", "buff-stack");
 
-    const buffMerged = buffEnter.merge(buffGroups);
+          g.transition().duration(250).attr("opacity", 1);
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.transition().duration(200).attr("opacity", 0).remove(),
+      );
 
-    buffMerged.each(function (d) {
+    buffGroups.each(function (d) {
       const bx = x(d.buff.start);
       const bw = Math.max(4, x(d.buff.end) - x(d.buff.start));
       const by = d.rowIndex * (BUFF_HEIGHT + 3) + 2;
@@ -555,7 +570,7 @@ export function D3Timeline() {
     });
 
     // Tooltip handlers
-    buffMerged
+    buffGroups
       .on("mouseenter", function (event, d) {
         const spell = getSpell(d.buff.spellId);
         if (!spell) return;
@@ -583,8 +598,6 @@ export function D3Timeline() {
         });
       })
       .on("mouseleave", () => setTooltip(null));
-
-    buffGroups.exit().remove();
   }, [
     buffsBySpell,
     tracks.buffs,
@@ -610,41 +623,47 @@ export function D3Timeline() {
 
     const DEBUFF_HEIGHT = 18;
 
-    const debuffRects = debuffsGroup
+    // Debuff rectangles - using modern join() pattern
+    debuffsGroup
       .selectAll<SVGRectElement, (typeof debuffs)[0]>("rect.debuff")
-      .data(debuffs, (d) => d.id);
-
-    debuffRects
-      .enter()
-      .append("rect")
-      .attr("class", "debuff")
-      .merge(debuffRects)
+      .data(debuffs, (d) => d.id)
+      .join(
+        (enter) =>
+          enter
+            .append("rect")
+            .attr("class", "debuff")
+            .attr("opacity", 0)
+            .call((sel) => sel.transition().duration(200).attr("opacity", 0.7)),
+        (update) => update,
+        (exit) => exit.transition().duration(150).attr("opacity", 0).remove(),
+      )
       .attr("x", (d) => x(d.start))
       .attr("y", (_, i) => (i % 2) * (DEBUFF_HEIGHT + 2) + 2)
       .attr("width", (d) => Math.max(4, x(d.end) - x(d.start)))
       .attr("height", DEBUFF_HEIGHT)
       .attr("rx", 3)
       .attr("fill", (d) => getSpell(d.spellId)?.color ?? "#888")
-      .attr("opacity", 0.7)
       .attr("stroke", (d) => getSpell(d.spellId)?.color ?? "#888")
       .attr("stroke-width", 1)
       .attr("stroke-dasharray", "3,2");
 
-    debuffRects.exit().remove();
-
-    // Labels
-    const debuffLabels = debuffsGroup
+    // Labels - using join()
+    debuffsGroup
       .selectAll<SVGTextElement, (typeof debuffs)[0]>("text.debuff-label")
       .data(
         debuffs.filter((d) => x(d.end) - x(d.start) > 50),
         (d) => d.id,
-      );
-
-    debuffLabels
-      .enter()
-      .append("text")
-      .attr("class", "debuff-label")
-      .merge(debuffLabels)
+      )
+      .join(
+        (enter) =>
+          enter
+            .append("text")
+            .attr("class", "debuff-label")
+            .attr("opacity", 0)
+            .call((sel) => sel.transition().duration(200).attr("opacity", 1)),
+        (update) => update,
+        (exit) => exit.transition().duration(150).attr("opacity", 0).remove(),
+      )
       .attr("x", (d) => x(d.start) + 6)
       .attr(
         "y",
@@ -653,8 +672,6 @@ export function D3Timeline() {
       .attr("fill", "#fff")
       .attr("font-size", "9px")
       .text((d) => getSpell(d.spellId)?.name ?? "");
-
-    debuffLabels.exit().remove();
   }, [debuffs, tracks.debuffs, x, innerWidth]);
 
   // Render damage track
@@ -672,20 +689,28 @@ export function D3Timeline() {
     }
     damageGroup.attr("transform", `translate(0,${tracks.damage.y})`);
 
+    // Damage groups - using modern join() pattern
     const damageGroups = damageGroup
       .selectAll<SVGGElement, (typeof combatData.damage)[0]>("g.damage-event")
-      .data(combatData.damage, (d) => d.id);
+      .data(combatData.damage, (d) => d.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append("g")
+            .attr("class", "damage-event")
+            .attr("opacity", 0);
 
-    const damageEnter = damageGroups
-      .enter()
-      .append("g")
-      .attr("class", "damage-event");
-    damageEnter.append("rect").attr("class", "damage-bar");
-    damageEnter.append("circle").attr("class", "crit-indicator");
+          g.append("rect").attr("class", "damage-bar");
+          g.append("circle").attr("class", "crit-indicator");
 
-    const damageMerged = damageEnter.merge(damageGroups);
+          g.transition().duration(200).attr("opacity", 1);
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.transition().duration(150).attr("opacity", 0).remove(),
+      );
 
-    damageMerged.each(function (d) {
+    damageGroups.each(function (d) {
       const spell = getSpell(d.spellId);
       const dx = x(d.timestamp);
       const dy = damageY(d.amount);
@@ -712,7 +737,7 @@ export function D3Timeline() {
     });
 
     // Tooltip handlers
-    damageMerged
+    damageGroups
       .on("mouseenter", function (event, d) {
         const spell = getSpell(d.spellId);
         if (!spell) return;
@@ -740,8 +765,6 @@ export function D3Timeline() {
         });
       })
       .on("mouseleave", () => setTooltip(null));
-
-    damageGroups.exit().remove();
   }, [
     combatData.damage,
     tracks.damage,
@@ -789,17 +812,13 @@ export function D3Timeline() {
       .attr("stroke", "#3B82F6")
       .attr("stroke-width", 2);
 
-    // Threshold lines
+    // Threshold lines - using join()
     const thresholds = [30, 60, 90];
-    const thresholdLines = resourceGroup
+    resourceGroup
       .selectAll<SVGLineElement, number>("line.threshold")
-      .data(thresholds);
-
-    thresholdLines
-      .enter()
-      .append("line")
+      .data(thresholds)
+      .join("line")
       .attr("class", "threshold")
-      .merge(thresholdLines)
       .attr("x1", 0)
       .attr("x2", innerWidth)
       .attr("y1", (d) => resourceY(d))
@@ -807,8 +826,6 @@ export function D3Timeline() {
       .attr("stroke", "hsl(var(--border))")
       .attr("stroke-opacity", 0.3)
       .attr("stroke-dasharray", "2,4");
-
-    thresholdLines.exit().remove();
   }, [
     combatData.resources,
     tracks.resources,
@@ -837,20 +854,22 @@ export function D3Timeline() {
       layout: tracks[track.id],
     })).filter((t) => t.layout.visible || t.collapsible);
 
+    // Track labels - using modern join() pattern
     const labelGroups = labelsGroup
       .selectAll<SVGGElement, (typeof labelData)[0]>("g.track-label")
-      .data(labelData, (d) => d.id);
+      .data(labelData, (d) => d.id)
+      .join(
+        (enter) => {
+          const g = enter.append("g").attr("class", "track-label");
+          g.append("text").attr("class", "collapse-icon");
+          g.append("text").attr("class", "label-text");
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.remove(),
+      );
 
-    const labelEnter = labelGroups
-      .enter()
-      .append("g")
-      .attr("class", "track-label");
-    labelEnter.append("text").attr("class", "collapse-icon");
-    labelEnter.append("text").attr("class", "label-text");
-
-    const labelMerged = labelEnter.merge(labelGroups);
-
-    labelMerged.each(function (d) {
+    labelGroups.each(function (d) {
       const labelY = d.collapsible
         ? d.layout.y + (d.layout.visible ? d.layout.height / 2 : 10)
         : d.layout.y + d.layout.height / 2;
@@ -878,17 +897,16 @@ export function D3Timeline() {
     });
 
     // Click handler for collapsible tracks
-    labelMerged
+    labelGroups
       .filter((d) => d.collapsible)
       .on("click", (_, d) => toggleTrack(d.id));
-
-    labelGroups.exit().remove();
   }, [tracks, innerWidth, toggleTrack]);
 
-  // Render minimap
+  // Render minimap with brush for navigation
   useEffect(() => {
     const minimap = minimapRef.current;
-    if (!minimap || innerWidth <= 0) return;
+    const mainSvg = svgRef.current;
+    if (!minimap || !mainSvg || innerWidth <= 0) return;
 
     const root = select(minimap);
 
@@ -917,28 +935,18 @@ export function D3Timeline() {
       .attr("fill", "hsl(var(--muted))")
       .attr("rx", 2);
 
-    // Phases
-    const phaseRects = g
-      .selectAll<
-        SVGRectElement,
-        (typeof combatData.phases)[0]
-      >("rect.minimap-phase")
-      .data(combatData.phases, (d) => d.id);
-
-    phaseRects
-      .enter()
-      .append("rect")
+    // Phases - using join()
+    g.selectAll<SVGRectElement, (typeof combatData.phases)[0]>("rect.minimap-phase")
+      .data(combatData.phases, (d) => d.id)
+      .join("rect")
       .attr("class", "minimap-phase")
-      .merge(phaseRects)
       .attr("x", (d) => minimapX(d.start))
       .attr("width", (d) => minimapX(d.end) - minimapX(d.start))
       .attr("height", MINIMAP_HEIGHT - 10)
       .attr("fill", (d) => d.color)
       .attr("opacity", 0.15);
 
-    phaseRects.exit().remove();
-
-    // Cast density
+    // Cast density - using join()
     const buckets = new Array(60).fill(0);
     combatData.casts.forEach((c) => {
       const bucket = Math.floor(c.timestamp);
@@ -946,17 +954,13 @@ export function D3Timeline() {
     });
     const maxDensity = Math.max(...buckets, 1);
 
-    const densityRects = g
-      .selectAll<SVGRectElement, number>("rect.density")
+    g.selectAll<SVGRectElement, { count: number; i: number }>("rect.density")
       .data(
         buckets.map((count, i) => ({ count, i })).filter((d) => d.count > 0),
-      );
-
-    densityRects
-      .enter()
-      .append("rect")
+        (d) => d.i,
+      )
+      .join("rect")
       .attr("class", "density")
-      .merge(densityRects)
       .attr("x", (d) => minimapX(d.i))
       .attr("y", (d) => MINIMAP_HEIGHT - 10 - (d.count / maxDensity) * 20)
       .attr("width", Math.max(1, minimapX(1) - minimapX(0)))
@@ -964,26 +968,46 @@ export function D3Timeline() {
       .attr("fill", "hsl(var(--primary))")
       .attr("opacity", 0.4);
 
-    densityRects.exit().remove();
-
-    // Viewport indicator
-    let viewport = g.select<SVGRectElement>("rect.viewport");
-    if (viewport.empty()) {
-      viewport = g.append("rect").attr("class", "viewport");
+    // Brush for navigation
+    let brushGroup = g.select<SVGGElement>("g.brush");
+    if (brushGroup.empty()) {
+      brushGroup = g.append("g").attr("class", "brush");
     }
-    viewport
-      .attr("x", minimapX(viewRange.start))
-      .attr(
-        "width",
-        Math.max(4, minimapX(viewRange.end) - minimapX(viewRange.start)),
-      )
-      .attr("height", MINIMAP_HEIGHT - 10)
-      .attr("fill", "hsl(var(--primary))")
-      .attr("opacity", 0.2)
-      .attr("stroke", "hsl(var(--primary))")
-      .attr("stroke-width", 1)
-      .attr("rx", 2);
-  }, [combatData.phases, combatData.casts, bounds, viewRange, innerWidth, x]);
+
+    const brush = brushX<unknown>()
+      .extent([
+        [0, 0],
+        [innerWidth, MINIMAP_HEIGHT - 10],
+      ])
+      .on("brush", (event: D3BrushEvent<unknown>) => {
+        if (!event.selection || event.sourceEvent === undefined) return;
+        const [x0, x1] = event.selection as [number, number];
+        const newStart = minimapX.invert(x0);
+        const newEnd = minimapX.invert(x1);
+        setViewRange({ start: newStart, end: newEnd });
+      });
+
+    brushGroup.call(brush);
+
+    // Set initial brush position based on current view range
+    const brushSelection: [number, number] = [
+      minimapX(viewRange.start),
+      minimapX(viewRange.end),
+    ];
+
+    // Only move brush if it's significantly different (avoid feedback loop)
+    brushGroup.call(brush.move, brushSelection);
+
+    // Style the brush
+    brushGroup.selectAll(".selection").attr("fill", "hsl(var(--primary))").attr("opacity", 0.25);
+
+    brushGroup.selectAll(".handle").attr("fill", "hsl(var(--primary))");
+
+    // Cleanup
+    return () => {
+      brushGroup.on(".brush", null);
+    };
+  }, [combatData.phases, combatData.casts, bounds, viewRange, innerWidth, x, setViewRange]);
 
   // ==========================================================================
   // Render
