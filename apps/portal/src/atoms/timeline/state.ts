@@ -211,6 +211,8 @@ export const SCHOOL_COLORS: Record<SpellSchool, string> = {
 // Mock Data Generator
 // =============================================================================
 
+const DURATION = 600; // 10 minutes
+
 function generateCombatData(): CombatData {
   const casts: CastEvent[] = [];
   const buffs: BuffEvent[] = [];
@@ -257,7 +259,15 @@ function generateCombatData(): CombatData {
   let frenzyStacks = 0;
   let frenzyEnd = 0;
 
-  while (t < 60) {
+  // Cooldown tracking
+  let lastBestialWrath = -90;
+  let lastBloodshed = -45;
+  let lastTurtle = -180;
+  let lastCounterShot = -24;
+  let lastCallOfTheWild = -120;
+  let lastBarrage = -20;
+
+  while (t < DURATION) {
     resources.push({
       type: "resource",
       id: id(),
@@ -343,8 +353,8 @@ function generateCombatData(): CombatData {
 
     focus = Math.min(120, focus + 10 * gcd);
 
-    // Cooldowns
-    if (Math.abs(t - 30) < 0.1) {
+    // Bestial Wrath (90s CD)
+    if (t - lastBestialWrath >= 90) {
       casts.push({
         type: "cast",
         id: id(),
@@ -362,9 +372,11 @@ function generateCombatData(): CombatData {
         end: t + 15,
         target: "Player",
       });
+      lastBestialWrath = t;
     }
 
-    if (Math.abs(t - 20) < 0.1 || Math.abs(t - 45) < 0.1) {
+    // Bloodshed (45s CD)
+    if (t - lastBloodshed >= 45) {
       casts.push({
         type: "cast",
         id: id(),
@@ -382,9 +394,47 @@ function generateCombatData(): CombatData {
         end: t + 12,
         target: "Rashok",
       });
+      lastBloodshed = t;
     }
 
-    if (Math.abs(t - 35) < 0.1) {
+    // Call of the Wild (2 min CD)
+    if (t - lastCallOfTheWild >= 120) {
+      casts.push({
+        type: "cast",
+        id: id(),
+        spellId: 359844,
+        timestamp: t,
+        duration: 0,
+        target: "Player",
+        successful: true,
+      });
+      buffs.push({
+        type: "buff",
+        id: id(),
+        spellId: 359844,
+        start: t,
+        end: t + 20,
+        target: "Player",
+      });
+      // Dire Pack proc during Call of the Wild
+      buffs.push({
+        type: "buff",
+        id: id(),
+        spellId: 393777,
+        start: t + 2,
+        end: t + 20,
+        target: "Player",
+      });
+      lastCallOfTheWild = t;
+    }
+
+    // Aspect of the Turtle (3 min CD, used during high damage phases)
+    const inHighDamagePhase =
+      (t >= 85 && t <= 95) ||
+      (t >= 200 && t <= 210) ||
+      (t >= 340 && t <= 350) ||
+      (t >= 480 && t <= 490);
+    if (inHighDamagePhase && t - lastTurtle >= 180) {
       casts.push({
         type: "cast",
         id: id(),
@@ -402,9 +452,22 @@ function generateCombatData(): CombatData {
         end: t + 8,
         target: "Player",
       });
+      lastTurtle = t;
     }
 
-    if (Math.abs(t - 27) < 0.1) {
+    // Counter Shot (24s CD, used at specific boss cast times)
+    const bossIsCasting =
+      (t >= 27 && t <= 28) ||
+      (t >= 75 && t <= 76) ||
+      (t >= 130 && t <= 131) ||
+      (t >= 185 && t <= 186) ||
+      (t >= 240 && t <= 241) ||
+      (t >= 300 && t <= 301) ||
+      (t >= 360 && t <= 361) ||
+      (t >= 420 && t <= 421) ||
+      (t >= 480 && t <= 481) ||
+      (t >= 540 && t <= 541);
+    if (bossIsCasting && t - lastCounterShot >= 24) {
       casts.push({
         type: "cast",
         id: id(),
@@ -414,9 +477,39 @@ function generateCombatData(): CombatData {
         target: "Rashok",
         successful: true,
       });
+      lastCounterShot = t;
     }
 
-    if (t > 50 && Math.floor(t * 10) % 100 === 0 && focus >= 10) {
+    // Barrage (20s CD)
+    if (t - lastBarrage >= 20 && focus >= 60) {
+      casts.push({
+        type: "cast",
+        id: id(),
+        spellId: 120360,
+        timestamp: t,
+        duration: 3,
+        target: getTarget(),
+        successful: true,
+      });
+      // Barrage does multiple hits
+      for (let hit = 0; hit < 5; hit++) {
+        const isCrit = Math.random() < 0.3;
+        damage.push({
+          type: "damage",
+          id: id(),
+          spellId: 120360,
+          timestamp: t + 0.3 * hit,
+          amount: Math.round(45000 * (isCrit ? 2 : 1)),
+          isCrit,
+          target: targets[Math.floor(Math.random() * targets.length)],
+        });
+      }
+      lastBarrage = t;
+      focus -= 60;
+    }
+
+    // Execute phase Kill Shots (target below 20%)
+    if (t > DURATION * 0.8 && Math.floor(t * 10) % 60 === 0 && focus >= 10) {
       casts.push({
         type: "cast",
         id: id(),
@@ -442,18 +535,22 @@ function generateCombatData(): CombatData {
     t += gcd;
   }
 
-  // Thrill of the Hunt procs
-  [3, 12, 24, 38, 52].forEach((procTime) => {
+  // Thrill of the Hunt procs (every ~30 seconds throughout the fight)
+  for (
+    let procTime = 3;
+    procTime < DURATION;
+    procTime += 25 + Math.random() * 10
+  ) {
     buffs.push({
       type: "buff",
       id: id(),
       spellId: 281036,
       start: procTime,
       end: procTime + 8,
-      stacks: 3,
+      stacks: Math.floor(Math.random() * 3) + 1,
       target: "Player",
     });
-  });
+  }
 
   return { casts, buffs, damage, resources, phases: generatePhases() };
 }
@@ -465,24 +562,64 @@ function generatePhases(): PhaseMarker[] {
       id: "p1",
       name: "Phase 1",
       start: 0,
-      end: 25,
+      end: 90,
       color: "#3B82F6",
     },
     {
       type: "phase",
       id: "p2",
-      name: "Intermission",
-      start: 25,
-      end: 32,
+      name: "Intermission 1",
+      start: 90,
+      end: 110,
       color: "#F59E0B",
     },
     {
       type: "phase",
       id: "p3",
       name: "Phase 2",
-      start: 32,
-      end: 60,
+      start: 110,
+      end: 210,
       color: "#EF4444",
+    },
+    {
+      type: "phase",
+      id: "p4",
+      name: "Intermission 2",
+      start: 210,
+      end: 230,
+      color: "#F59E0B",
+    },
+    {
+      type: "phase",
+      id: "p5",
+      name: "Phase 3",
+      start: 230,
+      end: 350,
+      color: "#8B5CF6",
+    },
+    {
+      type: "phase",
+      id: "p6",
+      name: "Intermission 3",
+      start: 350,
+      end: 370,
+      color: "#F59E0B",
+    },
+    {
+      type: "phase",
+      id: "p7",
+      name: "Phase 4",
+      start: 370,
+      end: 480,
+      color: "#10B981",
+    },
+    {
+      type: "phase",
+      id: "p8",
+      name: "Burn Phase",
+      start: 480,
+      end: DURATION,
+      color: "#DC2626",
     },
   ];
 }
@@ -495,7 +632,10 @@ function generatePhases(): PhaseMarker[] {
 export const combatDataAtom = atom<CombatData>(generateCombatData());
 
 // Timeline bounds
-export const timelineBoundsAtom = atom<TimelineBounds>({ min: 0, max: 60 });
+export const timelineBoundsAtom = atom<TimelineBounds>({
+  min: 0,
+  max: DURATION,
+});
 
 // Derived atoms for filtered data
 export const playerBuffsAtom = atom((get) => {
@@ -562,7 +702,7 @@ export const expandedTracksAtom = atomWithStorage<Set<TrackId>>(
 export const selectedSpellAtom = atom<number | null>(null);
 export const hoveredSpellAtom = atom<number | null>(null);
 
-// View range (controlled by zoom)
+// View range (controlled by zoom) - start with 60s window for comfortable viewing
 export const viewRangeAtom = atom({ start: 0, end: 60 });
 
 // =============================================================================

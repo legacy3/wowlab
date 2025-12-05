@@ -6,6 +6,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Minimize2,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -135,10 +136,12 @@ export function D3Timeline() {
     setTransform(newTransform);
   }, []);
 
-  const { zoomIn, zoomOut, resetZoom } = useTimelineZoom({
+  const { zoomIn, zoomOut, resetZoom, fitAll, zoomToRange } = useTimelineZoom({
     svgRef,
     innerWidth,
     totalHeight,
+    totalDuration: bounds.max - bounds.min,
+    initialWindow: 60, // Show 60 seconds initially
     onZoom: handleZoom,
   });
 
@@ -282,7 +285,9 @@ export function D3Timeline() {
 
     // Phase labels - using join()
     phasesGroup
-      .selectAll<SVGTextElement, (typeof combatData.phases)[0]>("text.phase-label")
+      .selectAll<SVGTextElement, (typeof combatData.phases)[0]>(
+        "text.phase-label",
+      )
       .data(
         combatData.phases.filter((p) => x(p.end) - x(p.start) > 50),
         (d) => d.id,
@@ -307,7 +312,9 @@ export function D3Timeline() {
 
     // Phase boundary lines - using join()
     phasesGroup
-      .selectAll<SVGLineElement, (typeof combatData.phases)[0]>("line.phase-boundary")
+      .selectAll<SVGLineElement, (typeof combatData.phases)[0]>(
+        "line.phase-boundary",
+      )
       .data(combatData.phases, (d) => d.id)
       .join("line")
       .attr("class", "phase-boundary")
@@ -363,10 +370,7 @@ export function D3Timeline() {
       .data(castsWithRow, (d) => d.id)
       .join(
         (enter) => {
-          const g = enter
-            .append("g")
-            .attr("class", "cast")
-            .attr("opacity", 0);
+          const g = enter.append("g").attr("class", "cast").attr("opacity", 0);
 
           g.append("rect").attr("class", "cast-bg");
           g.append("text").attr("class", "cast-label");
@@ -502,10 +506,7 @@ export function D3Timeline() {
       .data(allBuffs, (d) => d.buff.id)
       .join(
         (enter) => {
-          const g = enter
-            .append("g")
-            .attr("class", "buff")
-            .attr("opacity", 0);
+          const g = enter.append("g").attr("class", "buff").attr("opacity", 0);
 
           g.append("rect").attr("class", "buff-bg");
           g.append("text").attr("class", "buff-label");
@@ -936,7 +937,9 @@ export function D3Timeline() {
       .attr("rx", 2);
 
     // Phases - using join()
-    g.selectAll<SVGRectElement, (typeof combatData.phases)[0]>("rect.minimap-phase")
+    g.selectAll<SVGRectElement, (typeof combatData.phases)[0]>(
+      "rect.minimap-phase",
+    )
       .data(combatData.phases, (d) => d.id)
       .join("rect")
       .attr("class", "minimap-phase")
@@ -947,10 +950,13 @@ export function D3Timeline() {
       .attr("opacity", 0.15);
 
     // Cast density - using join()
-    const buckets = new Array(60).fill(0);
+    // Use 100 buckets across the full timeline for consistent density visualization
+    const numBuckets = 100;
+    const bucketSize = (bounds.max - bounds.min) / numBuckets;
+    const buckets = new Array(numBuckets).fill(0);
     combatData.casts.forEach((c) => {
-      const bucket = Math.floor(c.timestamp);
-      if (bucket >= 0 && bucket < 60) buckets[bucket]++;
+      const bucket = Math.floor((c.timestamp - bounds.min) / bucketSize);
+      if (bucket >= 0 && bucket < numBuckets) buckets[bucket]++;
     });
     const maxDensity = Math.max(...buckets, 1);
 
@@ -961,14 +967,14 @@ export function D3Timeline() {
       )
       .join("rect")
       .attr("class", "density")
-      .attr("x", (d) => minimapX(d.i))
+      .attr("x", (d) => minimapX(bounds.min + d.i * bucketSize))
       .attr("y", (d) => MINIMAP_HEIGHT - 10 - (d.count / maxDensity) * 20)
-      .attr("width", Math.max(1, minimapX(1) - minimapX(0)))
+      .attr("width", Math.max(1, minimapX(bucketSize) - minimapX(0)))
       .attr("height", (d) => (d.count / maxDensity) * 20)
       .attr("fill", "hsl(var(--primary))")
       .attr("opacity", 0.4);
 
-    // Brush for navigation
+    // Brush for navigation - controls the main timeline zoom
     let brushGroup = g.select<SVGGElement>("g.brush");
     if (brushGroup.empty()) {
       brushGroup = g.append("g").attr("class", "brush");
@@ -979,35 +985,46 @@ export function D3Timeline() {
         [0, 0],
         [innerWidth, MINIMAP_HEIGHT - 10],
       ])
-      .on("brush", (event: D3BrushEvent<unknown>) => {
-        if (!event.selection || event.sourceEvent === undefined) return;
+      .on("brush end", (event: D3BrushEvent<unknown>) => {
+        // Only respond to user-initiated events (not programmatic moves)
+        if (!event.selection || !event.sourceEvent) return;
         const [x0, x1] = event.selection as [number, number];
         const newStart = minimapX.invert(x0);
         const newEnd = minimapX.invert(x1);
-        setViewRange({ start: newStart, end: newEnd });
+        // Use zoomToRange to actually move the main timeline
+        zoomToRange(newStart, newEnd);
       });
 
     brushGroup.call(brush);
 
-    // Set initial brush position based on current view range
+    // Sync brush position with current view range (from main timeline zoom)
     const brushSelection: [number, number] = [
       minimapX(viewRange.start),
       minimapX(viewRange.end),
     ];
-
-    // Only move brush if it's significantly different (avoid feedback loop)
+    // Use a silent move (no event) to avoid feedback loop
     brushGroup.call(brush.move, brushSelection);
 
     // Style the brush
-    brushGroup.selectAll(".selection").attr("fill", "hsl(var(--primary))").attr("opacity", 0.25);
-
+    brushGroup
+      .selectAll(".selection")
+      .attr("fill", "hsl(var(--primary))")
+      .attr("opacity", 0.25);
     brushGroup.selectAll(".handle").attr("fill", "hsl(var(--primary))");
 
     // Cleanup
     return () => {
       brushGroup.on(".brush", null);
     };
-  }, [combatData.phases, combatData.casts, bounds, viewRange, innerWidth, x, setViewRange]);
+  }, [
+    combatData.phases,
+    combatData.casts,
+    bounds,
+    viewRange,
+    innerWidth,
+    x,
+    zoomToRange,
+  ]);
 
   // ==========================================================================
   // Render
@@ -1027,6 +1044,7 @@ export function D3Timeline() {
             size="icon"
             className="h-8 w-8"
             onClick={zoomOut}
+            title="Zoom out"
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
@@ -1035,6 +1053,7 @@ export function D3Timeline() {
             size="icon"
             className="h-8 w-8"
             onClick={resetZoom}
+            title="Reset to 60s view"
           >
             <Maximize2 className="h-4 w-4" />
           </Button>
@@ -1042,7 +1061,17 @@ export function D3Timeline() {
             variant="outline"
             size="icon"
             className="h-8 w-8"
+            onClick={fitAll}
+            title="Fit all (show entire timeline)"
+          >
+            <Minimize2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
             onClick={zoomIn}
+            title="Zoom in"
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
