@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 interface Size {
   width: number;
@@ -52,8 +52,8 @@ export function useThrottledCallback<T extends (...args: never[]) => void>(
   const lastArgs = useRef<Parameters<T> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  return useCallback(
-    ((...args: Parameters<T>) => {
+  const throttled = useMemo(() => {
+    const fn = (...args: Parameters<T>) => {
       const now = Date.now();
       lastArgs.current = args;
 
@@ -75,7 +75,9 @@ export function useThrottledCallback<T extends (...args: never[]) => void>(
           delay - (now - lastCall.current),
         );
       }
-    }) as T,
-    [callback, delay],
-  );
+    };
+    return fn as T;
+  }, [callback, delay]);
+
+  return throttled;
 }

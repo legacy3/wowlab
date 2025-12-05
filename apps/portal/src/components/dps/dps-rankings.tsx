@@ -50,7 +50,6 @@ import {
   FIGHT_LENGTHS,
   TIME_WINDOWS,
   type TrendDirection,
-  type WowClass,
 } from "@/atoms/dps-rankings";
 
 function DpsRankingsInner() {

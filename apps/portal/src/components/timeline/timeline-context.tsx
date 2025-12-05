@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useRef,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
 import type Konva from "konva";
 import { getSpell, formatTime, formatDamage } from "@/atoms/timeline";
 
