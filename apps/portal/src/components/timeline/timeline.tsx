@@ -397,10 +397,22 @@ export function Timeline() {
 
   const handleMouseDown = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
-      if (e.evt.button !== 0) return;
+      if (e.evt.button !== 0) {
+        return;
+      }
 
       const stage = stageRef.current;
-      if (!stage) return;
+      if (!stage) {
+        return;
+      }
+
+      const target = e.target;
+      const isStage = target === stage;
+      const isNonListening = !target.listening();
+
+      if (!isStage && !isNonListening) {
+        return;
+      }
 
       isDragging.current = true;
       lastPointerPos.current = stage.getPointerPosition();
@@ -410,13 +422,18 @@ export function Timeline() {
 
   const handleMouseMove = useCallback(
     (_e: Konva.KonvaEventObject<MouseEvent>) => {
-      if (!isDragging.current) return;
+      if (!isDragging.current) {
+        return;
+      }
 
       const stage = stageRef.current;
-      if (!stage) return;
-
+      if (!stage) {
+        return;
+      }
       const pos = stage.getPointerPosition();
-      if (!pos || !lastPointerPos.current) return;
+      if (!pos || !lastPointerPos.current) {
+        return;
+      }
 
       const dx = pos.x - lastPointerPos.current.x;
       lastPointerPos.current = pos;
@@ -424,6 +441,7 @@ export function Timeline() {
       setZoomState((prev) => {
         const maxX = 0;
         const minX = -(innerWidth * prev.scale - innerWidth);
+
         return {
           ...prev,
           x: Math.min(maxX, Math.max(minX, prev.x + dx)),
@@ -448,6 +466,14 @@ export function Timeline() {
 
       const stage = stageRef.current;
       if (!stage) {
+        return;
+      }
+
+      const target = e.target;
+      const isStage = target === stage;
+      const isNonListening = !target.listening();
+
+      if (!isStage && !isNonListening) {
         return;
       }
 
