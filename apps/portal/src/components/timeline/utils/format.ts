@@ -1,13 +1,10 @@
+const compactFormatter = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 export function formatDamage(amount: number): string {
-  if (amount >= 1000000) {
-    return `${(amount / 1000000).toFixed(1)}M`;
-  }
-
-  if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(0)}K`;
-  }
-
-  return amount.toString();
+  return compactFormatter.format(amount);
 }
 
 export function formatTime(seconds: number): string {

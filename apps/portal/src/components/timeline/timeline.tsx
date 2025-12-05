@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState, useEffect, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
+import { useThrottledCallback } from "@react-hookz/web";
 import { Stage, Layer, Text, Group } from "react-konva";
 import Konva from "konva";
 import {
@@ -43,7 +44,6 @@ import {
   useScales,
   useTrackLayout,
   useResizeObserver,
-  useThrottledCallback,
   useExport,
   useDragPan,
   useFpsCounter,
@@ -328,7 +328,11 @@ export function Timeline() {
     zoomState,
   });
 
-  const throttledSetTooltip = useThrottledCallback(setTooltip, 16);
+  const throttledSetTooltip = useThrottledCallback(
+    setTooltip,
+    [setTooltip],
+    16,
+  );
 
   const showTooltip = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>, content: React.ReactNode) => {
