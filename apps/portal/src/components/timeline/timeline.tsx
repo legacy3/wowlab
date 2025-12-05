@@ -51,6 +51,7 @@ import {
 
 import { type TooltipState } from "./timeline-context";
 import { TimelineTooltip } from "./timeline-tooltip";
+import { TimelineSettings } from "./timeline-settings";
 import { Minimap } from "./minimap";
 import {
   GridLayer,
@@ -70,6 +71,7 @@ const { margin: MARGIN } = TRACK_METRICS;
 interface TimelineHeaderProps {
   visibleRange: { start: number; end: number };
   zenMode: boolean;
+  showFps: boolean;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -77,11 +79,13 @@ interface TimelineHeaderProps {
   onToggleZenMode: () => void;
   onExportPNG: () => void;
   onExportPDF: () => void;
+  onShowFpsChange: (value: boolean) => void;
 }
 
 const TimelineHeader = memo(function TimelineHeader({
   visibleRange,
   zenMode,
+  showFps,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -89,6 +93,7 @@ const TimelineHeader = memo(function TimelineHeader({
   onToggleZenMode,
   onExportPNG,
   onExportPDF,
+  onShowFpsChange,
 }: TimelineHeaderProps) {
   return (
     <div className="flex items-center justify-between">
@@ -166,6 +171,7 @@ const TimelineHeader = memo(function TimelineHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <TimelineSettings showFps={showFps} onShowFpsChange={onShowFpsChange} />
       </div>
     </div>
   );
@@ -265,6 +271,7 @@ export function Timeline() {
   // Local state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [zenMode, setZenMode] = useState(false);
+  const [showFps, setShowFps] = useState(false);
   const [fps, setFps] = useState(0);
   const fpsTextRef = useRef<Konva.Text>(null);
 
@@ -287,8 +294,13 @@ export function Timeline() {
     };
   }, [zenMode]);
 
-  // FPS counter animation
+  // FPS counter animation - only runs when showFps is enabled
   useEffect(() => {
+    if (!showFps) {
+      setFps(0);
+      return;
+    }
+
     const layer = fpsTextRef.current?.getLayer();
     if (!layer) {
       return;
@@ -316,7 +328,7 @@ export function Timeline() {
     return () => {
       anim.stop();
     };
-  }, []);
+  }, [showFps]);
 
   // Container size
   const { width: containerWidth, height: containerHeight } =
@@ -556,6 +568,7 @@ export function Timeline() {
       <TimelineHeader
         visibleRange={visibleRange}
         zenMode={zenMode}
+        showFps={showFps}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
         onResetZoom={resetZoom}
@@ -563,6 +576,7 @@ export function Timeline() {
         onToggleZenMode={toggleZenMode}
         onExportPNG={exportPNG}
         onExportPDF={exportPDF}
+        onShowFpsChange={setShowFps}
       />
 
       {/* Main timeline */}
@@ -700,15 +714,17 @@ export function Timeline() {
             />
 
             {/* FPS Counter */}
-            <Text
-              ref={fpsTextRef}
-              x={innerWidth - 60}
-              y={-MARGIN.top + 8}
-              text={`FPS: ${fps}`}
-              fontSize={12}
-              fontFamily="monospace"
-              fill="#888"
-            />
+            {showFps && (
+              <Text
+                ref={fpsTextRef}
+                x={innerWidth - 60}
+                y={-MARGIN.top + 8}
+                text={`FPS: ${fps}`}
+                fontSize={12}
+                fontFamily="monospace"
+                fill="#888"
+              />
+            )}
           </Layer>
         </Stage>
         <TimelineTooltip tooltip={tooltip} />
