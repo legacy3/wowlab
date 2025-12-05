@@ -1,5 +1,4 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 
 export type SpellSchool =
   | "physical"
@@ -201,11 +200,22 @@ export const SCHOOL_COLORS: Record<SpellSchool, string> = {
 
 const DURATION = 600; // 10 minutes
 
+// Seeded random number generator for deterministic data
+function createSeededRandom(seed: number) {
+  return () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+}
+
 function generateCombatData(): CombatData {
   const casts: CastEvent[] = [];
   const buffs: BuffEvent[] = [];
   const damage: DamageEvent[] = [];
   const resources: ResourceEvent[] = [];
+
+  // Use seeded random for deterministic output
+  const random = createSeededRandom(42);
 
   let idx = 0;
   const id = () => `evt-${idx++}`;
@@ -217,7 +227,7 @@ function generateCombatData(): CombatData {
     "Lava Wave",
     "Searing Slam Add",
   ];
-  const getTarget = () => targets[Math.floor(Math.random() * 3)];
+  const getTarget = () => targets[Math.floor(random() * 3)];
 
   // Initial buffs
   buffs.push({
@@ -321,9 +331,9 @@ function generateCombatData(): CombatData {
 
       const baseDamage =
         spellCast === 34026 ? 180000 : spellCast === 217200 ? 95000 : 120000;
-      const isCrit = Math.random() < 0.35;
+      const isCrit = random() < 0.35;
       const dmg = Math.round(
-        baseDamage * (1 + (Math.random() - 0.5) * 0.1) * (isCrit ? 2 : 1),
+        baseDamage * (1 + (random() - 0.5) * 0.1) * (isCrit ? 2 : 1),
       );
 
       damage.push({
@@ -481,7 +491,7 @@ function generateCombatData(): CombatData {
       });
       // Barrage does multiple hits
       for (let hit = 0; hit < 5; hit++) {
-        const isCrit = Math.random() < 0.3;
+        const isCrit = random() < 0.3;
         damage.push({
           type: "damage",
           id: id(),
@@ -489,7 +499,7 @@ function generateCombatData(): CombatData {
           timestamp: t + 0.3 * hit,
           amount: Math.round(45000 * (isCrit ? 2 : 1)),
           isCrit,
-          target: targets[Math.floor(Math.random() * targets.length)],
+          target: targets[Math.floor(random() * targets.length)],
         });
       }
       lastBarrage = t;
@@ -508,7 +518,7 @@ function generateCombatData(): CombatData {
         successful: true,
       });
 
-      const isCrit = Math.random() < 0.45;
+      const isCrit = random() < 0.45;
       damage.push({
         type: "damage",
         id: id(),
@@ -527,7 +537,7 @@ function generateCombatData(): CombatData {
   for (
     let procTime = 3;
     procTime < DURATION;
-    procTime += 25 + Math.random() * 10
+    procTime += 25 + random() * 10
   ) {
     buffs.push({
       type: "buff",
@@ -535,7 +545,7 @@ function generateCombatData(): CombatData {
       spellId: 281036,
       start: procTime,
       end: procTime + 8,
-      stacks: Math.floor(Math.random() * 3) + 1,
+      stacks: Math.floor(random() * 3) + 1,
       target: "Player",
     });
   }
@@ -657,32 +667,12 @@ export const maxDamageAtom = atom((get) => {
   return Math.max(...data.damage.map((d) => d.amount));
 });
 
-export const expandedTracksAtom = atomWithStorage<Set<TrackId>>(
-  "timeline-expanded-tracks",
+export const expandedTracksAtom = atom<Set<TrackId>>(
   new Set(["phases", "casts", "buffs", "debuffs", "damage", "resources"]),
-  {
-    getItem: (key, initialValue) => {
-      const stored = localStorage.getItem(key);
-      if (!stored) return initialValue;
-      try {
-        return new Set(JSON.parse(stored) as TrackId[]);
-      } catch {
-        return initialValue;
-      }
-    },
-    setItem: (key, value) => {
-      localStorage.setItem(key, JSON.stringify([...value]));
-    },
-    removeItem: (key) => {
-      localStorage.removeItem(key);
-    },
-  },
 );
 
 export const selectedSpellAtom = atom<number | null>(null);
 export const hoveredSpellAtom = atom<number | null>(null);
-
-export const viewRangeAtom = atom({ start: 0, end: 60 });
 
 export function formatDamage(amount: number): string {
   if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;

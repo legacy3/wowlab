@@ -1,15 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group, Rect, Text, Circle } from "react-konva";
 import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS } from "../hooks";
-import {
-  getSpellOpacity,
-  isRangeVisible,
-  buildSpellTooltip,
-} from "../timeline-context";
+import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 
 interface Buff {
   id: string;
@@ -24,6 +20,7 @@ interface BuffsTrackProps {
   y: number;
   timeToX: (time: number) => number;
   innerWidth: number;
+  visibleRange: { start: number; end: number };
   selectedSpell: number | null;
   showTooltip: (
     e: Konva.KonvaEventObject<MouseEvent>,
@@ -32,17 +29,19 @@ interface BuffsTrackProps {
   hideTooltip: () => void;
 }
 
-export function BuffsTrack({
+export const BuffsTrack = memo(function BuffsTrack({
   buffs,
   y,
   timeToX,
   innerWidth,
+  visibleRange,
   selectedSpell,
   showTooltip,
   hideTooltip,
 }: BuffsTrackProps) {
   const { buffHeight, buffGap, buffCornerRadius } = TRACK_METRICS;
 
+  // Flatten buffs with row indices
   const allBuffs = useMemo(() => {
     let rowIndex = 0;
     const result: Array<{ buff: Buff; rowIndex: number }> = [];
@@ -57,17 +56,23 @@ export function BuffsTrack({
     return result;
   }, [buffs]);
 
+  // Filter to visible buffs BEFORE rendering
+  const visibleBuffs = useMemo(() => {
+    return allBuffs.filter(
+      ({ buff }) =>
+        buff.end >= visibleRange.start && buff.start <= visibleRange.end,
+    );
+  }, [allBuffs, visibleRange.start, visibleRange.end]);
+
   return (
     <Group y={y}>
-      {allBuffs.map(({ buff, rowIndex }) => {
+      {visibleBuffs.map(({ buff, rowIndex }) => {
         const startX = timeToX(buff.start);
         const endX = timeToX(buff.end);
         const width = Math.max(4, endX - startX);
         const by = rowIndex * (buffHeight + buffGap) + 2;
         const spell = getSpell(buff.spellId);
         const opacity = getSpellOpacity(selectedSpell, buff.spellId, 0.85, 0.3);
-
-        if (!isRangeVisible(startX, endX, innerWidth)) return null;
 
         return (
           <Group
@@ -89,6 +94,7 @@ export function BuffsTrack({
               height={buffHeight}
               fill={spell?.color ?? "#888"}
               cornerRadius={buffCornerRadius}
+              perfectDrawEnabled={false}
             />
             {width > 60 && (
               <Text
@@ -99,6 +105,7 @@ export function BuffsTrack({
                 fontStyle="500"
                 fill="#fff"
                 listening={false}
+                perfectDrawEnabled={false}
               />
             )}
             {/* Stack indicator */}
@@ -111,6 +118,7 @@ export function BuffsTrack({
                   fill="#000"
                   opacity={0.6}
                   listening={false}
+                  perfectDrawEnabled={false}
                 />
                 <Text
                   text={String(buff.stacks)}
@@ -120,6 +128,7 @@ export function BuffsTrack({
                   fontStyle="bold"
                   fill="#fff"
                   listening={false}
+                  perfectDrawEnabled={false}
                 />
               </>
             )}
@@ -128,4 +137,4 @@ export function BuffsTrack({
       })}
     </Group>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import type Konva from "konva";
 
 export interface ZoomState {
@@ -40,8 +40,17 @@ export function useZoom({
     x: 0,
   });
 
-  // Ref for smooth animation
+  // Ref for smooth animation - cleanup on unmount to prevent RAF leak
   const animationRef = useRef<number | null>(null);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
   // Handle wheel zoom (pointer-centric)
   const handleWheel = useCallback(
@@ -55,54 +64,75 @@ export function useZoom({
       if (!pointer) return;
 
       const scaleBy = 1.05;
-      const oldScale = zoomState.scale;
 
-      // Calculate pointer position in the data space
-      const mousePointTo = (pointer.x - zoomState.x) / oldScale;
+      setZoomState((prev) => {
+        const oldScale = prev.scale;
 
-      // Determine zoom direction
-      let direction = e.evt.deltaY > 0 ? -1 : 1;
+        // Calculate pointer position in the data space
+        const mousePointTo = (pointer.x - prev.x) / oldScale;
 
-      // When we zoom on trackpad, e.evt.ctrlKey is true
-      if (e.evt.ctrlKey) {
-        direction = -direction;
-      }
+        // Determine zoom direction
+        let direction = e.evt.deltaY > 0 ? -1 : 1;
 
-      const newScale = Math.min(
-        maxScale,
-        Math.max(
-          minScale,
-          direction > 0 ? oldScale * scaleBy : oldScale / scaleBy,
-        ),
-      );
+        // When we zoom on trackpad, e.evt.ctrlKey is true
+        if (e.evt.ctrlKey) {
+          direction = -direction;
+        }
 
-      // Calculate new position to keep pointer at same data point
-      const newX = pointer.x - mousePointTo * newScale;
+        const newScale = Math.min(
+          maxScale,
+          Math.max(
+            minScale,
+            direction > 0 ? oldScale * scaleBy : oldScale / scaleBy,
+          ),
+        );
 
-      // Constrain panning to valid range
-      const maxX = 0;
-      const minX = -(innerWidth * newScale - innerWidth);
+        // Calculate new position to keep pointer at same data point
+        const newX = pointer.x - mousePointTo * newScale;
 
-      setZoomState({
-        scale: newScale,
-        x: Math.min(maxX, Math.max(minX, newX)),
+        // Constrain panning to valid range
+        const maxX = 0;
+        const minX = -(innerWidth * newScale - innerWidth);
+
+        return {
+          scale: newScale,
+          x: Math.min(maxX, Math.max(minX, newX)),
+        };
       });
     },
-    [zoomState, innerWidth, minScale, maxScale],
+    [innerWidth, minScale, maxScale],
   );
 
-  // Animate zoom to target
+  // Animate zoom to target - uses functional setState to avoid stale closures
   const animateZoom = useCallback(
     (targetScale: number, targetX: number, duration = 200) => {
-      if (animationRef.current) {
+      if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
       }
 
-      const startScale = zoomState.scale;
-      const startX = zoomState.x;
-      const startTime = performance.now();
+      // Capture starting values at animation start
+      let startScale: number | null = null;
+      let startX: number | null = null;
+      let startTime: number | null = null;
 
       const animate = (currentTime: number) => {
+        if (startTime === null) {
+          startTime = currentTime;
+          // Get current state at animation start
+          setZoomState((prev) => {
+            startScale = prev.scale;
+            startX = prev.x;
+            return prev;
+          });
+          animationRef.current = requestAnimationFrame(animate);
+          return;
+        }
+
+        if (startScale === null || startX === null) {
+          animationRef.current = requestAnimationFrame(animate);
+          return;
+        }
+
         const elapsed = currentTime - startTime;
         const progress = Math.min(1, elapsed / duration);
 
@@ -116,12 +146,14 @@ export function useZoom({
 
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
+        } else {
+          animationRef.current = null;
         }
       };
 
       animationRef.current = requestAnimationFrame(animate);
     },
-    [zoomState],
+    [],
   );
 
   const zoomIn = useCallback(() => {

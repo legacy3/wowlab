@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { Group, Rect, Text, Line } from "react-konva";
 
 interface Phase {
@@ -17,19 +18,29 @@ interface PhasesTrackProps {
   timeToX: (time: number) => number;
   innerWidth: number;
   totalHeight: number;
+  visibleRange: { start: number; end: number };
 }
 
-export function PhasesTrack({
+export const PhasesTrack = memo(function PhasesTrack({
   phases,
   y,
   height,
   timeToX,
   innerWidth,
   totalHeight,
+  visibleRange,
 }: PhasesTrackProps) {
+  // Filter to visible phases
+  const visiblePhases = useMemo(() => {
+    return phases.filter(
+      (phase) =>
+        phase.end >= visibleRange.start && phase.start <= visibleRange.end,
+    );
+  }, [phases, visibleRange.start, visibleRange.end]);
+
   return (
     <Group y={y}>
-      {phases.map((phase) => {
+      {visiblePhases.map((phase) => {
         const startX = Math.max(0, timeToX(phase.start));
         const endX = Math.min(innerWidth, timeToX(phase.end));
         const width = endX - startX;
@@ -47,6 +58,7 @@ export function PhasesTrack({
               opacity={0.2}
               cornerRadius={2}
               listening={false}
+              perfectDrawEnabled={false}
             />
             {/* Phase label */}
             {width > 50 && (
@@ -60,6 +72,7 @@ export function PhasesTrack({
                 fontStyle="bold"
                 fill={phase.color}
                 listening={false}
+                perfectDrawEnabled={false}
               />
             )}
             {/* Phase boundary line */}
@@ -70,10 +83,11 @@ export function PhasesTrack({
               opacity={0.5}
               dash={[4, 2]}
               listening={false}
+              perfectDrawEnabled={false}
             />
           </Group>
         );
       })}
     </Group>
   );
-}
+});

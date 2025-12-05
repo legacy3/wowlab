@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import type Konva from "konva";
 import { getSpell, type CastEvent } from "@/atoms/timeline";
@@ -8,7 +8,6 @@ import { TRACK_METRICS } from "../hooks";
 import {
   getSpellOpacity,
   isSpellHighlighted,
-  isPointVisible,
   buildSpellTooltip,
 } from "../timeline-context";
 
@@ -17,6 +16,7 @@ interface CastsTrackProps {
   y: number;
   timeToX: (time: number) => number;
   innerWidth: number;
+  visibleRange: { start: number; end: number };
   selectedSpell: number | null;
   hoveredSpell: number | null;
   onSpellSelect: (spellId: number | null) => void;
@@ -28,11 +28,12 @@ interface CastsTrackProps {
   hideTooltip: () => void;
 }
 
-export function CastsTrack({
+export const CastsTrack = memo(function CastsTrack({
   casts,
   y,
   timeToX,
   innerWidth,
+  visibleRange,
   selectedSpell,
   hoveredSpell,
   onSpellSelect,
@@ -42,7 +43,7 @@ export function CastsTrack({
 }: CastsTrackProps) {
   const { castSize, castGap, cornerRadius } = TRACK_METRICS;
 
-  // Row layout to avoid overlaps - use timestamps only to avoid recalc on zoom
+  // Row layout to avoid overlaps - computed based on timestamps only
   const castsWithRow = useMemo(() => {
     const rows: CastEvent[][] = [];
     const sortedCasts = [...casts].sort((a, b) => a.timestamp - b.timestamp);
@@ -66,12 +67,20 @@ export function CastsTrack({
     );
   }, [casts]);
 
+  // Filter to visible casts BEFORE rendering - data is time-sorted
+  const visibleCasts = useMemo(() => {
+    const padding = 1; // Small time padding for shapes near edges
+    return castsWithRow.filter(
+      (cast) =>
+        cast.timestamp >= visibleRange.start - padding &&
+        cast.timestamp <= visibleRange.end + padding,
+    );
+  }, [castsWithRow, visibleRange.start, visibleRange.end]);
+
   return (
     <Group y={y}>
-      {castsWithRow.map((cast) => {
+      {visibleCasts.map((cast) => {
         const cx = timeToX(cast.timestamp);
-        if (!isPointVisible(cx, innerWidth, castSize)) return null;
-
         const spell = getSpell(cast.spellId);
         const cy = cast.rowIndex * (castSize + castGap + 1) + 4;
         const opacity = getSpellOpacity(selectedSpell, cast.spellId);
@@ -117,6 +126,7 @@ export function CastsTrack({
               cornerRadius={cornerRadius}
               stroke={highlighted ? "#fff" : undefined}
               strokeWidth={highlighted ? 2 : 0}
+              perfectDrawEnabled={false}
             />
             <Text
               text={initials}
@@ -128,10 +138,11 @@ export function CastsTrack({
               fontStyle="bold"
               fill="#fff"
               listening={false}
+              perfectDrawEnabled={false}
             />
           </Group>
         );
       })}
     </Group>
   );
-}
+});

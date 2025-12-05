@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Stage, Layer } from "react-konva";
 import type Konva from "konva";
@@ -27,7 +27,6 @@ import {
   expandedTracksAtom,
   selectedSpellAtom,
   hoveredSpellAtom,
-  viewRangeAtom,
   formatTime,
   type TrackId,
 } from "@/atoms/timeline";
@@ -59,21 +58,176 @@ import {
 
 const { margin: MARGIN } = TRACK_METRICS;
 
+// Memoized header component
+interface TimelineHeaderProps {
+  visibleRange: { start: number; end: number };
+  zenMode: boolean;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
+  onFitAll: () => void;
+  onToggleZenMode: () => void;
+}
+
+const TimelineHeader = memo(function TimelineHeader({
+  visibleRange,
+  zenMode,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
+  onFitAll,
+  onToggleZenMode,
+}: TimelineHeaderProps) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-muted-foreground">
+        {formatTime(visibleRange.start)} - {formatTime(visibleRange.end)}
+        <span className="ml-2 opacity-60">
+          {zenMode ? "(ESC to exit)" : "(Scroll to zoom, drag to pan)"}
+        </span>
+      </span>
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onZoomOut}
+          title="Zoom out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onResetZoom}
+          title="Reset to 60s view"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onFitAll}
+          title="Fit all (show entire timeline)"
+        >
+          <Minimize2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onZoomIn}
+          title="Zoom in"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <div className="w-px h-6 bg-border mx-1" />
+        <Button
+          variant={zenMode ? "secondary" : "outline"}
+          size="icon"
+          className="h-8 w-8"
+          onClick={onToggleZenMode}
+          title={zenMode ? "Exit zen mode (ESC)" : "Zen mode"}
+        >
+          {zenMode ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+// Memoized track toggle buttons
+interface TrackTogglesProps {
+  expandedTracks: Set<TrackId>;
+  onToggleTrack: (trackId: TrackId) => void;
+}
+
+const TrackToggles = memo(function TrackToggles({
+  expandedTracks,
+  onToggleTrack,
+}: TrackTogglesProps) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {TRACK_CONFIGS.filter((t) => t.collapsible).map((track) => (
+        <Button
+          key={track.id}
+          variant={expandedTracks.has(track.id) ? "secondary" : "outline"}
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => onToggleTrack(track.id)}
+        >
+          {expandedTracks.has(track.id) ? (
+            <ChevronDown className="mr-1 h-3 w-3" />
+          ) : (
+            <ChevronRight className="mr-1 h-3 w-3" />
+          )}
+          {track.label}
+        </Button>
+      ))}
+    </div>
+  );
+});
+
+// Memoized legend component - subscribes to its own atoms
+const TimelineLegend = memo(function TimelineLegend() {
+  const uniqueSpells = useAtomValue(uniqueSpellsAtom);
+  const [selectedSpell, setSelectedSpell] = useAtom(selectedSpellAtom);
+
+  return (
+    <div className="flex flex-wrap gap-3 text-xs">
+      {uniqueSpells.map((spell) => (
+        <button
+          key={spell.id}
+          className={cn(
+            "flex items-center gap-1.5 rounded px-2 py-1 transition-opacity",
+            selectedSpell === spell.id
+              ? "bg-accent"
+              : selectedSpell !== null
+                ? "opacity-40"
+                : "hover:bg-accent/50",
+          )}
+          onClick={() =>
+            setSelectedSpell((prev) => (prev === spell.id ? null : spell.id))
+          }
+        >
+          <div
+            className="h-3 w-3 rounded"
+            style={{ background: spell.color }}
+          />
+          <span className="text-muted-foreground">{spell.name}</span>
+        </button>
+      ))}
+      {selectedSpell && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-xs"
+          onClick={() => setSelectedSpell(null)}
+        >
+          Clear filter
+        </Button>
+      )}
+    </div>
+  );
+});
+
 export function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  // Atoms
+  // Static data atoms (only read once, data doesn't change)
   const combatData = useAtomValue(combatDataAtom);
   const bounds = useAtomValue(timelineBoundsAtom);
   const buffsBySpell = useAtomValue(buffsBySpellAtom);
   const debuffs = useAtomValue(debuffsAtom);
-  const uniqueSpells = useAtomValue(uniqueSpellsAtom);
   const maxDamage = useAtomValue(maxDamageAtom);
+
+  // Interactive atoms
   const [expandedTracks, setExpandedTracks] = useAtom(expandedTracksAtom);
   const [selectedSpell, setSelectedSpell] = useAtom(selectedSpellAtom);
   const [hoveredSpell, setHoveredSpell] = useAtom(hoveredSpellAtom);
-  const [viewRange, setViewRange] = useAtom(viewRangeAtom);
 
   // Local state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -90,7 +244,6 @@ export function Timeline() {
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    // Prevent body scroll in zen mode
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -123,7 +276,7 @@ export function Timeline() {
     initialWindow: 60,
   });
 
-  // Scales
+  // Scales - visibleRange is derived from zoom state here
   const { timeToX, damageToY, focusToY, visibleRange } = useScales({
     bounds,
     innerWidth,
@@ -156,13 +309,6 @@ export function Timeline() {
     throttledSetTooltip(null);
   }, [throttledSetTooltip]);
 
-  // Update view range when zoom changes
-  useEffect(() => {
-    if (innerWidth > 0) {
-      setViewRange(visibleRange);
-    }
-  }, [visibleRange, innerWidth, setViewRange]);
-
   // Toggle track expansion
   const toggleTrack = useCallback(
     (trackId: TrackId) => {
@@ -185,7 +331,6 @@ export function Timeline() {
 
   const handleMouseDown = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
-      // Only start drag on left click and when clicking on stage/layer (not shapes)
       if (e.evt.button !== 0) return;
 
       const stage = stageRef.current;
@@ -210,15 +355,16 @@ export function Timeline() {
       const dx = pos.x - lastPointerPos.current.x;
       lastPointerPos.current = pos;
 
-      const maxX = 0;
-      const minX = -(innerWidth * zoomState.scale - innerWidth);
-
-      setZoomState((prev) => ({
-        ...prev,
-        x: Math.min(maxX, Math.max(minX, prev.x + dx)),
-      }));
+      setZoomState((prev) => {
+        const maxX = 0;
+        const minX = -(innerWidth * prev.scale - innerWidth);
+        return {
+          ...prev,
+          x: Math.min(maxX, Math.max(minX, prev.x + dx)),
+        };
+      });
     },
-    [innerWidth, zoomState.scale, setZoomState],
+    [innerWidth, setZoomState],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -235,9 +381,10 @@ export function Timeline() {
   );
 
   const defaultStageHeight = totalHeight + MARGIN.top + MARGIN.bottom;
-  // In zen mode, use container height if available (for full-height canvas)
   const stageHeight =
     zenMode && containerHeight > 0 ? containerHeight : defaultStageHeight;
+
+  const toggleZenMode = useCallback(() => setZenMode((z) => !z), []);
 
   return (
     <div
@@ -248,66 +395,15 @@ export function Timeline() {
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {formatTime(viewRange.start)} - {formatTime(viewRange.end)}
-          <span className="ml-2 opacity-60">
-            {zenMode ? "(ESC to exit)" : "(Scroll to zoom, drag to pan)"}
-          </span>
-        </span>
-        <div className="flex gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={zoomOut}
-            title="Zoom out"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={resetZoom}
-            title="Reset to 60s view"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={fitAll}
-            title="Fit all (show entire timeline)"
-          >
-            <Minimize2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={zoomIn}
-            title="Zoom in"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <div className="w-px h-6 bg-border mx-1" />
-          <Button
-            variant={zenMode ? "secondary" : "outline"}
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setZenMode(!zenMode)}
-            title={zenMode ? "Exit zen mode (ESC)" : "Zen mode"}
-          >
-            {zenMode ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <Expand className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
+      <TimelineHeader
+        visibleRange={visibleRange}
+        zenMode={zenMode}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onResetZoom={resetZoom}
+        onFitAll={fitAll}
+        onToggleZenMode={toggleZenMode}
+      />
 
       {/* Main timeline */}
       <div
@@ -344,6 +440,7 @@ export function Timeline() {
               totalHeight={totalHeight}
               timeToX={timeToX}
               bounds={bounds}
+              visibleRange={visibleRange}
             />
 
             {/* Phases track (always visible) */}
@@ -355,6 +452,7 @@ export function Timeline() {
                 timeToX={timeToX}
                 innerWidth={innerWidth}
                 totalHeight={totalHeight}
+                visibleRange={visibleRange}
               />
             )}
 
@@ -365,6 +463,7 @@ export function Timeline() {
                 y={tracks.casts.y}
                 timeToX={timeToX}
                 innerWidth={innerWidth}
+                visibleRange={visibleRange}
                 selectedSpell={selectedSpell}
                 hoveredSpell={hoveredSpell}
                 onSpellSelect={setSelectedSpell}
@@ -381,6 +480,7 @@ export function Timeline() {
                 y={tracks.buffs.y}
                 timeToX={timeToX}
                 innerWidth={innerWidth}
+                visibleRange={visibleRange}
                 selectedSpell={selectedSpell}
                 showTooltip={showTooltip}
                 hideTooltip={hideTooltip}
@@ -394,6 +494,7 @@ export function Timeline() {
                 y={tracks.debuffs.y}
                 timeToX={timeToX}
                 innerWidth={innerWidth}
+                visibleRange={visibleRange}
               />
             )}
 
@@ -406,6 +507,7 @@ export function Timeline() {
                 timeToX={timeToX}
                 damageToY={damageToY}
                 innerWidth={innerWidth}
+                visibleRange={visibleRange}
                 selectedSpell={selectedSpell}
                 showTooltip={showTooltip}
                 hideTooltip={hideTooltip}
@@ -421,6 +523,7 @@ export function Timeline() {
                 timeToX={timeToX}
                 focusToY={focusToY}
                 innerWidth={innerWidth}
+                visibleRange={visibleRange}
               />
             )}
 
@@ -430,6 +533,7 @@ export function Timeline() {
               totalHeight={totalHeight}
               timeToX={timeToX}
               bounds={bounds}
+              visibleRange={visibleRange}
             />
           </Layer>
         </Stage>
@@ -442,67 +546,20 @@ export function Timeline() {
           phases={combatData.phases}
           casts={combatData.casts}
           bounds={bounds}
-          viewRange={viewRange}
+          viewRange={visibleRange}
           innerWidth={innerWidth}
           onRangeSelect={handleMinimapRangeSelect}
         />
       </div>
 
       {/* Track toggles */}
-      <div className="flex flex-wrap gap-2">
-        {TRACK_CONFIGS.filter((t) => t.collapsible).map((track) => (
-          <Button
-            key={track.id}
-            variant={expandedTracks.has(track.id) ? "secondary" : "outline"}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => toggleTrack(track.id)}
-          >
-            {expandedTracks.has(track.id) ? (
-              <ChevronDown className="mr-1 h-3 w-3" />
-            ) : (
-              <ChevronRight className="mr-1 h-3 w-3" />
-            )}
-            {track.label}
-          </Button>
-        ))}
-      </div>
+      <TrackToggles
+        expandedTracks={expandedTracks}
+        onToggleTrack={toggleTrack}
+      />
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-xs">
-        {uniqueSpells.map((spell) => (
-          <button
-            key={spell.id}
-            className={cn(
-              "flex items-center gap-1.5 rounded px-2 py-1 transition-opacity",
-              selectedSpell === spell.id
-                ? "bg-accent"
-                : selectedSpell !== null
-                  ? "opacity-40"
-                  : "hover:bg-accent/50",
-            )}
-            onClick={() =>
-              setSelectedSpell((prev) => (prev === spell.id ? null : spell.id))
-            }
-          >
-            <div
-              className="h-3 w-3 rounded"
-              style={{ background: spell.color }}
-            />
-            <span className="text-muted-foreground">{spell.name}</span>
-          </button>
-        ))}
-        {selectedSpell && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-xs"
-            onClick={() => setSelectedSpell(null)}
-          >
-            Clear filter
-          </Button>
-        )}
-      </div>
+      {/* Legend - has its own atom subscriptions */}
+      <TimelineLegend />
     </div>
   );
 }

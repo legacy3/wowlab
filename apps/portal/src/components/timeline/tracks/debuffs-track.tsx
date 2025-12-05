@@ -1,9 +1,9 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { Group, Rect, Text } from "react-konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS } from "../hooks";
-import { isRangeVisible } from "../timeline-context";
 
 interface Debuff {
   id: string;
@@ -17,27 +17,35 @@ interface DebuffsTrackProps {
   y: number;
   timeToX: (time: number) => number;
   innerWidth: number;
+  visibleRange: { start: number; end: number };
 }
 
-export function DebuffsTrack({
+export const DebuffsTrack = memo(function DebuffsTrack({
   debuffs,
   y,
   timeToX,
   innerWidth,
+  visibleRange,
 }: DebuffsTrackProps) {
   const { debuffHeight, debuffGap, debuffDash, buffCornerRadius } =
     TRACK_METRICS;
 
+  // Filter to visible debuffs BEFORE rendering
+  const visibleDebuffs = useMemo(() => {
+    return debuffs.filter(
+      (debuff) =>
+        debuff.end >= visibleRange.start && debuff.start <= visibleRange.end,
+    );
+  }, [debuffs, visibleRange.start, visibleRange.end]);
+
   return (
     <Group y={y}>
-      {debuffs.map((debuff, i) => {
+      {visibleDebuffs.map((debuff, i) => {
         const startX = timeToX(debuff.start);
         const endX = timeToX(debuff.end);
         const width = Math.max(4, endX - startX);
         const dy = (i % 2) * (debuffHeight + debuffGap) + 2;
         const spell = getSpell(debuff.spellId);
-
-        if (!isRangeVisible(startX, endX, innerWidth)) return null;
 
         return (
           <Group key={debuff.id} x={startX} y={dy} opacity={0.7}>
@@ -49,6 +57,7 @@ export function DebuffsTrack({
               stroke={spell?.color ?? "#888"}
               strokeWidth={1}
               dash={[...debuffDash]}
+              perfectDrawEnabled={false}
             />
             {width > 50 && (
               <Text
@@ -58,6 +67,7 @@ export function DebuffsTrack({
                 fontSize={9}
                 fill="#fff"
                 listening={false}
+                perfectDrawEnabled={false}
               />
             )}
           </Group>
@@ -65,4 +75,4 @@ export function DebuffsTrack({
       })}
     </Group>
   );
-}
+});

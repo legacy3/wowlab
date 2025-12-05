@@ -1,112 +1,12 @@
 "use client";
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
-import type Konva from "konva";
+import type { ReactNode } from "react";
 import { getSpell, formatTime, formatDamage } from "@/atoms/timeline";
 
 export interface TooltipState {
   x: number;
   y: number;
   content: ReactNode;
-}
-
-export interface TimelineContextValue {
-  // Scales
-  timeToX: (time: number) => number;
-  innerWidth: number;
-
-  // Selection state
-  selectedSpell: number | null;
-  hoveredSpell: number | null;
-  onSpellSelect: (spellId: number | null) => void;
-  onSpellHover: (spellId: number | null) => void;
-
-  // Tooltip
-  showTooltip: (
-    e: Konva.KonvaEventObject<MouseEvent>,
-    content: ReactNode,
-  ) => void;
-  hideTooltip: () => void;
-
-  // Container ref for tooltip positioning
-  containerRef: React.RefObject<HTMLDivElement | null>;
-
-  // Margins for tooltip offset
-  margin: { top: number; left: number };
-}
-
-const TimelineContext = createContext<TimelineContextValue | null>(null);
-
-export function useTimelineContext(): TimelineContextValue {
-  const ctx = useContext(TimelineContext);
-  if (!ctx) {
-    throw new Error("useTimelineContext must be used within TimelineProvider");
-  }
-  return ctx;
-}
-
-interface TimelineProviderProps {
-  children: ReactNode;
-  timeToX: (time: number) => number;
-  innerWidth: number;
-  selectedSpell: number | null;
-  hoveredSpell: number | null;
-  onSpellSelect: (spellId: number | null) => void;
-  onSpellHover: (spellId: number | null) => void;
-  onTooltip: (tooltip: TooltipState | null) => void;
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  margin: { top: number; left: number };
-}
-
-export function TimelineProvider({
-  children,
-  timeToX,
-  innerWidth,
-  selectedSpell,
-  hoveredSpell,
-  onSpellSelect,
-  onSpellHover,
-  onTooltip,
-  containerRef,
-  margin,
-}: TimelineProviderProps) {
-  const showTooltip = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent>, content: ReactNode) => {
-      const stage = e.target.getStage();
-      if (!stage) return;
-      const pos = stage.getPointerPosition();
-      if (!pos) return;
-      onTooltip({
-        x: pos.x + margin.left,
-        y: pos.y + margin.top,
-        content,
-      });
-    },
-    [onTooltip, margin.left, margin.top],
-  );
-
-  const hideTooltip = useCallback(() => {
-    onTooltip(null);
-  }, [onTooltip]);
-
-  const value: TimelineContextValue = {
-    timeToX,
-    innerWidth,
-    selectedSpell,
-    hoveredSpell,
-    onSpellSelect,
-    onSpellHover,
-    showTooltip,
-    hideTooltip,
-    containerRef,
-    margin,
-  };
-
-  return (
-    <TimelineContext.Provider value={value}>
-      {children}
-    </TimelineContext.Provider>
-  );
 }
 
 export function getSpellOpacity(

@@ -44,6 +44,7 @@ export const TrackLabels = memo(function TrackLabels({
                 text={expandedTracks.has(track.id) ? "\u25BC" : "\u25B6"}
                 fontSize={10}
                 fill="#888"
+                perfectDrawEnabled={false}
               />
             )}
             <Text
@@ -52,6 +53,7 @@ export const TrackLabels = memo(function TrackLabels({
               fontSize={11}
               fontStyle="500"
               fill="#ddd"
+              perfectDrawEnabled={false}
             />
           </Group>
         );

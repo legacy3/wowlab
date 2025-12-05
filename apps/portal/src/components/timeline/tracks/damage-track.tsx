@@ -1,14 +1,11 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { Group, Rect, Circle } from "react-konva";
 import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS } from "../hooks";
-import {
-  getSpellOpacity,
-  isPointVisible,
-  buildSpellTooltip,
-} from "../timeline-context";
+import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 
 interface DamageEvent {
   id: string;
@@ -26,6 +23,7 @@ interface DamageTrackProps {
   timeToX: (time: number) => number;
   damageToY: (amount: number) => number;
   innerWidth: number;
+  visibleRange: { start: number; end: number };
   selectedSpell: number | null;
   showTooltip: (
     e: Konva.KonvaEventObject<MouseEvent>,
@@ -34,25 +32,34 @@ interface DamageTrackProps {
   hideTooltip: () => void;
 }
 
-export function DamageTrack({
+export const DamageTrack = memo(function DamageTrack({
   damage,
   y,
   height,
   timeToX,
   damageToY,
   innerWidth,
+  visibleRange,
   selectedSpell,
   showTooltip,
   hideTooltip,
 }: DamageTrackProps) {
   const { damageBarWidth, damageCritRadius } = TRACK_METRICS;
 
+  // Filter to visible damage events BEFORE rendering
+  const visibleDamage = useMemo(() => {
+    const padding = 0.5; // Small time padding
+    return damage.filter(
+      (dmg) =>
+        dmg.timestamp >= visibleRange.start - padding &&
+        dmg.timestamp <= visibleRange.end + padding,
+    );
+  }, [damage, visibleRange.start, visibleRange.end]);
+
   return (
     <Group y={y}>
-      {damage.map((dmg) => {
+      {visibleDamage.map((dmg) => {
         const dx = timeToX(dmg.timestamp);
-        if (!isPointVisible(dx, innerWidth, damageBarWidth)) return null;
-
         const spell = getSpell(dmg.spellId);
         const dy = damageToY(dmg.amount);
         const dh = height - 5 - dy;
@@ -80,6 +87,7 @@ export function DamageTrack({
               height={Math.max(0, dh)}
               fill={spell?.color ?? "#888"}
               cornerRadius={1}
+              perfectDrawEnabled={false}
             />
             {dmg.isCrit && (
               <Circle
@@ -88,6 +96,7 @@ export function DamageTrack({
                 radius={damageCritRadius}
                 fill="#FFD700"
                 listening={false}
+                perfectDrawEnabled={false}
               />
             )}
           </Group>
@@ -95,4 +104,4 @@ export function DamageTrack({
       })}
     </Group>
   );
-}
+});
