@@ -2,8 +2,8 @@
 
 import { useCallback, useRef, useState, useEffect, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Stage, Layer } from "react-konva";
-import type Konva from "konva";
+import { Stage, Layer, Text } from "react-konva";
+import Konva from "konva";
 import {
   ZoomIn,
   ZoomOut,
@@ -265,6 +265,8 @@ export function Timeline() {
   // Local state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [zenMode, setZenMode] = useState(false);
+  const [fps, setFps] = useState(0);
+  const fpsTextRef = useRef<Konva.Text>(null);
 
   // Escape key to exit zen mode
   useEffect(() => {
@@ -284,6 +286,37 @@ export function Timeline() {
       document.body.style.overflow = "";
     };
   }, [zenMode]);
+
+  // FPS counter animation
+  useEffect(() => {
+    const layer = fpsTextRef.current?.getLayer();
+    if (!layer) {
+      return;
+    }
+
+    const fpsHistory: number[] = [];
+    const maxSamples = 30;
+
+    const anim = new Konva.Animation((frame) => {
+      if (!frame) {
+        return;
+      }
+
+      fpsHistory.push(frame.frameRate);
+      if (fpsHistory.length > maxSamples) {
+        fpsHistory.shift();
+      }
+
+      const avgFps = fpsHistory.reduce((a, b) => a + b, 0) / fpsHistory.length;
+      setFps(Math.round(avgFps));
+    }, layer);
+
+    anim.start();
+
+    return () => {
+      anim.stop();
+    };
+  }, []);
 
   // Container size
   const { width: containerWidth, height: containerHeight } =
@@ -376,7 +409,7 @@ export function Timeline() {
   );
 
   const handleMouseMove = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent>) => {
+    (_e: Konva.KonvaEventObject<MouseEvent>) => {
       if (!isDragging.current) return;
 
       const stage = stageRef.current;
@@ -401,6 +434,67 @@ export function Timeline() {
   );
 
   const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    lastPointerPos.current = null;
+  }, []);
+
+  // Touch event handlers for mobile support
+  const handleTouchStart = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      // Only handle single touch for panning
+      if (e.evt.touches.length !== 1) {
+        return;
+      }
+
+      const stage = stageRef.current;
+      if (!stage) {
+        return;
+      }
+
+      isDragging.current = true;
+      lastPointerPos.current = stage.getPointerPosition();
+    },
+    [],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (!isDragging.current) {
+        return;
+      }
+
+      // Only handle single touch for panning
+      if (e.evt.touches.length !== 1) {
+        return;
+      }
+
+      const stage = stageRef.current;
+      if (!stage) {
+        return;
+      }
+
+      const pos = stage.getPointerPosition();
+      if (!pos || !lastPointerPos.current) {
+        return;
+      }
+
+      const dx = pos.x - lastPointerPos.current.x;
+      lastPointerPos.current = pos;
+
+      setZoomState((prev) => {
+        const maxX = 0;
+        const minX = -(innerWidth * prev.scale - innerWidth);
+
+        return {
+          ...prev,
+          x: Math.min(maxX, Math.max(minX, prev.x + dx)),
+        };
+      });
+    },
+    [innerWidth, setZoomState],
+  );
+
+  const handleTouchEnd = useCallback(() => {
     isDragging.current = false;
     lastPointerPos.current = null;
   }, []);
@@ -462,6 +556,9 @@ export function Timeline() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Track labels layer (static) */}
           <Layer y={MARGIN.top} listening={false}>
@@ -574,6 +671,17 @@ export function Timeline() {
               timeToX={timeToX}
               bounds={bounds}
               visibleRange={visibleRange}
+            />
+
+            {/* FPS Counter */}
+            <Text
+              ref={fpsTextRef}
+              x={innerWidth - 60}
+              y={-MARGIN.top + 8}
+              text={`FPS: ${fps}`}
+              fontSize={12}
+              fontFamily="monospace"
+              fill="#888"
             />
           </Layer>
         </Stage>

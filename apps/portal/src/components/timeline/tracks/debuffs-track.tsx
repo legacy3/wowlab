@@ -30,21 +30,29 @@ export const DebuffsTrack = memo(function DebuffsTrack({
   const { debuffHeight, debuffGap, debuffDash, buffCornerRadius } =
     TRACK_METRICS;
 
+  // Assign row indices BEFORE filtering to prevent jumping
+  const debuffsWithRow = useMemo(() => {
+    return debuffs.map((debuff, i) => ({
+      debuff,
+      rowIndex: i % 2,
+    }));
+  }, [debuffs]);
+
   // Filter to visible debuffs BEFORE rendering
   const visibleDebuffs = useMemo(() => {
-    return debuffs.filter(
-      (debuff) =>
+    return debuffsWithRow.filter(
+      ({ debuff }) =>
         debuff.end >= visibleRange.start && debuff.start <= visibleRange.end,
     );
-  }, [debuffs, visibleRange.start, visibleRange.end]);
+  }, [debuffsWithRow, visibleRange.start, visibleRange.end]);
 
   return (
     <Group y={y}>
-      {visibleDebuffs.map((debuff, i) => {
+      {visibleDebuffs.map(({ debuff, rowIndex }) => {
         const startX = timeToX(debuff.start);
         const endX = timeToX(debuff.end);
         const width = Math.max(4, endX - startX);
-        const dy = (i % 2) * (debuffHeight + debuffGap) + 2;
+        const dy = rowIndex * (debuffHeight + debuffGap) + 2;
         const spell = getSpell(debuff.spellId);
 
         return (

@@ -664,7 +664,14 @@ export const maxDamageAtom = atom((get) => {
 });
 
 export const expandedTracksAtom = atom<Set<TrackId>>(
-  new Set<TrackId>(["phases", "casts", "buffs", "debuffs", "damage", "resources"]),
+  new Set<TrackId>([
+    "phases",
+    "casts",
+    "buffs",
+    "debuffs",
+    "damage",
+    "resources",
+  ]),
 );
 
 export const selectedSpellAtom = atom<number | null>(null);
