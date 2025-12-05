@@ -75,7 +75,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
     let inCritical = false;
     let criticalStart: number | null = null;
 
-    processedResources.forEach((r, i) => {
+    processedResources.forEach((r) => {
       const x = timeToX(r.timestamp);
       const fy = focusToY(r.focus);
       line.push(x, fy);
@@ -288,7 +288,9 @@ export const ResourcesTrack = memo(function ResourcesTrack({
       {/* Critical threshold glow effect when line crosses it */}
       {zoomLevel === "fine" &&
         processedResources.map((r, i) => {
-          if (i === 0) return null;
+          if (i === 0) {
+            return null;
+          }
           const prev = processedResources[i - 1];
 
           // Check if crossed critical threshold
@@ -298,7 +300,9 @@ export const ResourcesTrack = memo(function ResourcesTrack({
             (prev.focus < resourceCriticalThreshold &&
               r.focus >= resourceCriticalThreshold);
 
-          if (!crossed) return null;
+          if (!crossed) {
+            return null;
+          }
 
           const x = timeToX(r.timestamp);
           const crossY = focusToY(resourceCriticalThreshold);

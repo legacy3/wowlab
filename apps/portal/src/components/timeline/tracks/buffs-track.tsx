@@ -3,46 +3,32 @@
 import { memo, useMemo } from "react";
 import { Group, Rect, Text, Circle, Line } from "react-konva";
 import type Konva from "konva";
-import { getSpell } from "@/atoms/timeline";
+import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 
-interface Buff {
-  id: string;
-  spellId: number;
-  start: number;
-  end: number;
-  stacks?: number;
-  target?: string;
-}
-
 type BuffCategory = "self" | "pet" | "external";
 
-// Categorize buffs by their target/source
-function getBuffCategory(buff: Buff, spellId: number): BuffCategory {
-  // Pet buffs
-  const petBuffs = [272790]; // Frenzy
-  if (petBuffs.includes(spellId) || buff.target === "Pet") return "pet";
+function getBuffCategory(buff: BuffEvent, spellId: number): BuffCategory {
+  const petBuffs = [272790];
+  if (petBuffs.includes(spellId) || buff.target === "Pet") {
+    return "pet";
+  }
 
-  // Self buffs (player-applied)
-  const selfBuffs = [19574, 359844, 186265, 393777, 281036]; // BW, CotW, Turtle, Dire Pack, Thrill
-  if (selfBuffs.includes(spellId) || buff.target === "Player") return "self";
+  const selfBuffs = [19574, 359844, 186265, 393777, 281036];
+  if (selfBuffs.includes(spellId) || buff.target === "Player") {
+    return "self";
+  }
 
   return "external";
 }
 
 const CATEGORY_ORDER: BuffCategory[] = ["self", "pet", "external"];
-const CATEGORY_LABELS: Record<BuffCategory, string> = {
-  self: "Self",
-  pet: "Pet",
-  external: "Ext",
-};
 
 interface BuffsTrackProps {
-  buffs: Map<number, Buff[]>;
+  buffs: Map<number, BuffEvent[]>;
   y: number;
   timeToX: (time: number) => number;
-  innerWidth: number;
   visibleRange: { start: number; end: number };
   selectedSpell: number | null;
   showTooltip: (
@@ -53,18 +39,17 @@ interface BuffsTrackProps {
 }
 
 interface ProcessedBuff {
-  buff: Buff;
+  buff: BuffEvent;
   category: BuffCategory;
   categoryIndex: number;
   laneIndex: number;
-  refreshMarks: number[]; // timestamps where buff was refreshed
+  refreshMarks: number[];
 }
 
 export const BuffsTrack = memo(function BuffsTrack({
   buffs,
   y,
   timeToX,
-  innerWidth,
   visibleRange,
   selectedSpell,
   showTooltip,
@@ -75,8 +60,8 @@ export const BuffsTrack = memo(function BuffsTrack({
   const zoomLevel = getZoomLevel(visibleRange);
 
   // Process buffs into categories with lane assignment
-  const { processedBuffs, categoryLaneCounts, totalHeight } = useMemo(() => {
-    const categorized = new Map<BuffCategory, Map<number, Buff[]>>();
+  const { processedBuffs, categoryLaneCounts } = useMemo(() => {
+    const categorized = new Map<BuffCategory, Map<number, BuffEvent[]>>();
 
     // Group by category, then by spell
     buffs.forEach((spellBuffs, spellId) => {
@@ -101,19 +86,17 @@ export const BuffsTrack = memo(function BuffsTrack({
     };
     let currentY = 0;
 
-    // Process each category
     CATEGORY_ORDER.forEach((category, categoryIndex) => {
       const categoryBuffs = categorized.get(category);
-      if (!categoryBuffs || categoryBuffs.size === 0) return;
+      if (!categoryBuffs || categoryBuffs.size === 0) {
+        return;
+      }
 
-      // Assign lanes within category - one lane per spell type
       let laneIndex = 0;
-      categoryBuffs.forEach((spellBuffs, spellId) => {
-        // Sort buffs by start time
+      categoryBuffs.forEach((spellBuffs) => {
         const sorted = [...spellBuffs].sort((a, b) => a.start - b.start);
 
-        // Merge overlapping buffs of same spell into single bar with refresh marks
-        const merged: Array<{ buff: Buff; refreshMarks: number[] }> = [];
+        const merged: Array<{ buff: BuffEvent; refreshMarks: number[] }> = [];
         sorted.forEach((buff) => {
           const last = merged[merged.length - 1];
           if (last && buff.start <= last.buff.end + 0.5) {

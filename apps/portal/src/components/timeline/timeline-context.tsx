@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { getSpell, formatTime, formatDamage } from "@/atoms/timeline";
+import { getSpell } from "@/atoms/timeline";
+import { formatTime, formatDamage } from "./utils";
 
 export interface TooltipState {
   x: number;

@@ -44,7 +44,9 @@ export const PhasesTrack = memo(function PhasesTrack({
         const startX = Math.max(0, timeToX(phase.start));
         const endX = Math.min(innerWidth, timeToX(phase.end));
         const width = endX - startX;
-        if (width <= 0) return null;
+        if (width <= 0) {
+          return null;
+        }
 
         return (
           <Group key={phase.id}>

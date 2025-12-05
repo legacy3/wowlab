@@ -34,9 +34,9 @@ import {
   expandedTracksAtom,
   selectedSpellAtom,
   hoveredSpellAtom,
-  formatTime,
   type TrackId,
 } from "@/atoms/timeline";
+import { formatTime } from "./utils";
 
 import {
   useZoom,
@@ -45,6 +45,8 @@ import {
   useResizeObserver,
   useThrottledCallback,
   useExport,
+  useDragPan,
+  useFpsCounter,
   TRACK_CONFIGS,
   TRACK_METRICS,
 } from "./hooks";
@@ -272,12 +274,16 @@ export function Timeline() {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [zenMode, setZenMode] = useState(false);
   const [showFps, setShowFps] = useState(false);
-  const [fps, setFps] = useState(0);
   const fpsTextRef = useRef<Konva.Text>(null);
+
+  // FPS counter using extracted hook
+  const fps = useFpsCounter({ enabled: showFps, layerRef: fpsTextRef });
 
   // Escape key to exit zen mode
   useEffect(() => {
-    if (!zenMode) return;
+    if (!zenMode) {
+      return;
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -293,42 +299,6 @@ export function Timeline() {
       document.body.style.overflow = "";
     };
   }, [zenMode]);
-
-  // FPS counter animation - only runs when showFps is enabled
-  useEffect(() => {
-    if (!showFps) {
-      setFps(0);
-      return;
-    }
-
-    const layer = fpsTextRef.current?.getLayer();
-    if (!layer) {
-      return;
-    }
-
-    const fpsHistory: number[] = [];
-    const maxSamples = 30;
-
-    const anim = new Konva.Animation((frame) => {
-      if (!frame) {
-        return;
-      }
-
-      fpsHistory.push(frame.frameRate);
-      if (fpsHistory.length > maxSamples) {
-        fpsHistory.shift();
-      }
-
-      const avgFps = fpsHistory.reduce((a, b) => a + b, 0) / fpsHistory.length;
-      setFps(Math.round(avgFps));
-    }, layer);
-
-    anim.start();
-
-    return () => {
-      anim.stop();
-    };
-  }, [showFps]);
 
   // Container size
   const { width: containerWidth, height: containerHeight } =
@@ -380,9 +350,13 @@ export function Timeline() {
   const showTooltip = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>, content: React.ReactNode) => {
       const stage = e.target.getStage();
-      if (!stage) return;
+      if (!stage) {
+        return;
+      }
       const pos = stage.getPointerPosition();
-      if (!pos) return;
+      if (!pos) {
+        return;
+      }
       throttledSetTooltip({
         x: pos.x + MARGIN.left,
         y: pos.y + MARGIN.top,
@@ -412,139 +386,15 @@ export function Timeline() {
     [setExpandedTracks],
   );
 
-  // Handle drag for panning via pointer events
-  const isDragging = useRef(false);
-  const lastPointerPos = useRef<{ x: number; y: number } | null>(null);
-
-  const handleMouseDown = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent>) => {
-      if (e.evt.button !== 0) {
-        return;
-      }
-
-      const stage = stageRef.current;
-      if (!stage) {
-        return;
-      }
-
-      const target = e.target;
-      const isStage = target === stage;
-      const isNonListening = !target.listening();
-
-      if (!isStage && !isNonListening) {
-        return;
-      }
-
-      isDragging.current = true;
-      lastPointerPos.current = stage.getPointerPosition();
-    },
-    [],
-  );
-
-  const handleMouseMove = useCallback(
-    (_e: Konva.KonvaEventObject<MouseEvent>) => {
-      if (!isDragging.current) {
-        return;
-      }
-
-      const stage = stageRef.current;
-      if (!stage) {
-        return;
-      }
-      const pos = stage.getPointerPosition();
-      if (!pos || !lastPointerPos.current) {
-        return;
-      }
-
-      const dx = pos.x - lastPointerPos.current.x;
-      lastPointerPos.current = pos;
-
-      setZoomState((prev) => {
-        const maxX = 0;
-        const minX = -(innerWidth * prev.scale - innerWidth);
-
-        return {
-          ...prev,
-          x: Math.min(maxX, Math.max(minX, prev.x + dx)),
-        };
-      });
-    },
-    [innerWidth, setZoomState],
-  );
-
-  const handleMouseUp = useCallback(() => {
-    isDragging.current = false;
-    lastPointerPos.current = null;
-  }, []);
-
-  // Touch event handlers for mobile support
-  const handleTouchStart = useCallback(
-    (e: Konva.KonvaEventObject<TouchEvent>) => {
-      // Only handle single touch for panning
-      if (e.evt.touches.length !== 1) {
-        return;
-      }
-
-      const stage = stageRef.current;
-      if (!stage) {
-        return;
-      }
-
-      const target = e.target;
-      const isStage = target === stage;
-      const isNonListening = !target.listening();
-
-      if (!isStage && !isNonListening) {
-        return;
-      }
-
-      isDragging.current = true;
-      lastPointerPos.current = stage.getPointerPosition();
-    },
-    [],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: Konva.KonvaEventObject<TouchEvent>) => {
-      if (!isDragging.current) {
-        return;
-      }
-
-      // Only handle single touch for panning
-      if (e.evt.touches.length !== 1) {
-        return;
-      }
-
-      const stage = stageRef.current;
-      if (!stage) {
-        return;
-      }
-
-      const pos = stage.getPointerPosition();
-      if (!pos || !lastPointerPos.current) {
-        return;
-      }
-
-      const dx = pos.x - lastPointerPos.current.x;
-      lastPointerPos.current = pos;
-
-      setZoomState((prev) => {
-        const maxX = 0;
-        const minX = -(innerWidth * prev.scale - innerWidth);
-
-        return {
-          ...prev,
-          x: Math.min(maxX, Math.max(minX, prev.x + dx)),
-        };
-      });
-    },
-    [innerWidth, setZoomState],
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    isDragging.current = false;
-    lastPointerPos.current = null;
-  }, []);
+  // Drag pan handlers using extracted hook
+  const {
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useDragPan({ stageRef, innerWidth, setZoomState });
 
   // Handle range select from minimap
   const handleMinimapRangeSelect = useCallback(
@@ -659,13 +509,11 @@ export function Timeline() {
               />
             )}
 
-            {/* Buffs track */}
             {tracks.buffs.visible && (
               <BuffsTrack
                 buffs={buffsBySpell}
                 y={tracks.buffs.y}
                 timeToX={timeToX}
-                innerWidth={innerWidth}
                 visibleRange={visibleRange}
                 selectedSpell={selectedSpell}
                 showTooltip={showTooltip}
@@ -673,18 +521,15 @@ export function Timeline() {
               />
             )}
 
-            {/* Debuffs track */}
             {tracks.debuffs.visible && (
               <DebuffsTrack
                 debuffs={debuffs}
                 y={tracks.debuffs.y}
                 timeToX={timeToX}
-                innerWidth={innerWidth}
                 visibleRange={visibleRange}
               />
             )}
 
-            {/* Damage track */}
             {tracks.damage.visible && (
               <DamageTrack
                 damage={combatData.damage}
@@ -692,7 +537,6 @@ export function Timeline() {
                 height={tracks.damage.height}
                 timeToX={timeToX}
                 damageToY={damageToY}
-                innerWidth={innerWidth}
                 visibleRange={visibleRange}
                 selectedSpell={selectedSpell}
                 showTooltip={showTooltip}

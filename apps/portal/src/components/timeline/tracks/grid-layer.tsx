@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import { Rect, Line } from "react-konva";
 import { TRACK_METRICS } from "../hooks";
+import { generateTicks, filterVisibleTicks } from "../utils";
 
 interface GridLayerProps {
   innerWidth: number;
@@ -19,26 +20,17 @@ export const GridLayer = memo(function GridLayer({
   bounds,
   visibleRange,
 }: GridLayerProps) {
-  // Calculate tick positions based on bounds
-  const ticks = useMemo(() => {
-    const tickCount = TRACK_METRICS.gridTickCount;
-    const range = bounds.max - bounds.min;
-    const step = range / tickCount;
-    return Array.from(
-      { length: tickCount + 1 },
-      (_, i) => bounds.min + i * step,
-    );
-  }, [bounds]);
+  const tickCount = TRACK_METRICS.gridTickCount;
 
-  // Filter ticks to visible range
-  const visibleTicks = useMemo(() => {
-    const padding = (bounds.max - bounds.min) / TRACK_METRICS.gridTickCount;
-    return ticks.filter(
-      (tick) =>
-        tick >= visibleRange.start - padding &&
-        tick <= visibleRange.end + padding,
-    );
-  }, [ticks, visibleRange.start, visibleRange.end, bounds]);
+  const ticks = useMemo(
+    () => generateTicks({ bounds, tickCount }),
+    [bounds, tickCount],
+  );
+
+  const visibleTicks = useMemo(
+    () => filterVisibleTicks(ticks, { bounds, tickCount, visibleRange }),
+    [ticks, bounds, tickCount, visibleRange],
+  );
 
   return (
     <>

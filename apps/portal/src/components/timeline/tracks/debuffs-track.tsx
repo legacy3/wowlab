@@ -3,27 +3,18 @@
 import { memo, useMemo } from "react";
 import { Group, Rect, Text, Line } from "react-konva";
 import type Konva from "konva";
-import { getSpell } from "@/atoms/timeline";
+import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 
-interface Debuff {
-  id: string;
-  spellId: number;
-  start: number;
-  end: number;
-  stacks?: number;
-  target?: string;
-}
-
 type TargetCategory = "boss" | "adds" | "other";
 
-// Categorize debuffs by target
 function getTargetCategory(target: string | undefined): TargetCategory {
-  if (!target) return "other";
+  if (!target) {
+    return "other";
+  }
   const lowerTarget = target.toLowerCase();
 
-  // Boss names (common raid boss patterns)
   const bossPatterns = [
     "rashok",
     "boss",
@@ -33,27 +24,24 @@ function getTargetCategory(target: string | undefined): TargetCategory {
     "elder",
     "primal",
   ];
-  if (bossPatterns.some((p) => lowerTarget.includes(p))) return "boss";
+  if (bossPatterns.some((p) => lowerTarget.includes(p))) {
+    return "boss";
+  }
 
-  // Add patterns
   const addPatterns = ["add", "wave", "slam", "elemental", "minion"];
-  if (addPatterns.some((p) => lowerTarget.includes(p))) return "adds";
+  if (addPatterns.some((p) => lowerTarget.includes(p))) {
+    return "adds";
+  }
 
-  return "boss"; // Default to boss for named targets
+  return "boss";
 }
 
 const TARGET_ORDER: TargetCategory[] = ["boss", "adds"];
-const TARGET_LABELS: Record<TargetCategory, string> = {
-  boss: "Boss",
-  adds: "Adds",
-  other: "Other",
-};
 
 interface DebuffsTrackProps {
-  debuffs: Debuff[];
+  debuffs: BuffEvent[];
   y: number;
   timeToX: (time: number) => number;
-  innerWidth: number;
   visibleRange: { start: number; end: number };
   selectedSpell?: number | null;
   showTooltip?: (
@@ -64,7 +52,7 @@ interface DebuffsTrackProps {
 }
 
 interface ProcessedDebuff {
-  debuff: Debuff;
+  debuff: BuffEvent;
   targetCategory: TargetCategory;
   laneIndex: number;
 }
@@ -73,7 +61,6 @@ export const DebuffsTrack = memo(function DebuffsTrack({
   debuffs,
   y,
   timeToX,
-  innerWidth,
   visibleRange,
   selectedSpell = null,
   showTooltip,
@@ -85,8 +72,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
 
   // Process debuffs into target-based lanes with proper overlap handling
   const { processedDebuffs, targetLaneCounts, totalHeight } = useMemo(() => {
-    // Group by target category
-    const categorized = new Map<TargetCategory, Debuff[]>();
+    const categorized = new Map<TargetCategory, BuffEvent[]>();
     TARGET_ORDER.forEach((cat) => categorized.set(cat, []));
 
     debuffs.forEach((debuff) => {
@@ -106,16 +92,15 @@ export const DebuffsTrack = memo(function DebuffsTrack({
     };
     let currentY = 0;
 
-    // Process each target category
     TARGET_ORDER.forEach((targetCategory) => {
       const categoryDebuffs = categorized.get(targetCategory) ?? [];
-      if (categoryDebuffs.length === 0) return;
+      if (categoryDebuffs.length === 0) {
+        return;
+      }
 
-      // Sort by start time
       const sorted = [...categoryDebuffs].sort((a, b) => a.start - b.start);
 
-      // Assign lanes within category using interval scheduling
-      const lanes: Array<{ endTime: number; debuffs: Debuff[] }> = [];
+      const lanes: Array<{ endTime: number; debuffs: BuffEvent[] }> = [];
 
       sorted.forEach((debuff) => {
         // Find a lane where this debuff doesn't overlap

@@ -44,11 +44,12 @@ export const Minimap = memo(function Minimap({
     [bounds, innerWidth],
   );
 
-  // Convert mouse X position to time range
   const updateRangeFromX = useCallback(
     (clientX: number) => {
       const container = containerRef.current;
-      if (!container) return;
+      if (!container) {
+        return;
+      }
 
       const rect = container.getBoundingClientRect();
       const x = clientX - rect.left - MARGIN.left;

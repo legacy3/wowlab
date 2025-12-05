@@ -6,6 +6,7 @@ import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel, type ZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import { formatDamage } from "../utils";
 
 interface DamageEvent {
   id: string;
@@ -22,7 +23,6 @@ interface DamageTrackProps {
   height: number;
   timeToX: (time: number) => number;
   damageToY: (amount: number) => number;
-  innerWidth: number;
   visibleRange: { start: number; end: number };
   selectedSpell: number | null;
   showTooltip: (
@@ -52,7 +52,6 @@ export const DamageTrack = memo(function DamageTrack({
   height,
   timeToX,
   damageToY,
-  innerWidth,
   visibleRange,
   selectedSpell,
   showTooltip,
@@ -362,9 +361,3 @@ export const DamageTrack = memo(function DamageTrack({
     </Group>
   );
 });
-
-function formatDamage(amount: number): string {
-  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-  if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
-  return amount.toString();
-}

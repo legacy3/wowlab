@@ -58,10 +58,14 @@ export function useZoom({
       e.evt.preventDefault();
 
       const stage = e.target.getStage();
-      if (!stage) return;
+      if (!stage) {
+        return;
+      }
 
       const pointer = stage.getPointerPosition();
-      if (!pointer) return;
+      if (!pointer) {
+        return;
+      }
 
       const scaleBy = 1.05;
 
@@ -192,7 +196,9 @@ export function useZoom({
 
   const zoomToRange = useCallback(
     (start: number, end: number) => {
-      if (innerWidth <= 0) return;
+      if (innerWidth <= 0) {
+        return;
+      }
 
       // Calculate the scale factor needed to show this range
       const rangeSize = end - start;

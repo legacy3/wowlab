@@ -2,8 +2,8 @@
 
 import { memo, useMemo } from "react";
 import { Group, Line, Text } from "react-konva";
-import { formatTime } from "@/atoms/timeline";
 import { TRACK_METRICS } from "../hooks";
+import { formatTime, generateTicks, filterVisibleTicks } from "../utils";
 
 interface XAxisProps {
   innerWidth: number;
@@ -20,25 +20,17 @@ export const XAxis = memo(function XAxis({
   bounds,
   visibleRange,
 }: XAxisProps) {
-  const ticks = useMemo(() => {
-    const tickCount = TRACK_METRICS.axisTickCount;
-    const range = bounds.max - bounds.min;
-    const step = range / tickCount;
-    return Array.from(
-      { length: tickCount + 1 },
-      (_, i) => bounds.min + i * step,
-    );
-  }, [bounds]);
+  const tickCount = TRACK_METRICS.axisTickCount;
 
-  // Filter ticks to visible range
-  const visibleTicks = useMemo(() => {
-    const padding = (bounds.max - bounds.min) / TRACK_METRICS.axisTickCount;
-    return ticks.filter(
-      (tick) =>
-        tick >= visibleRange.start - padding &&
-        tick <= visibleRange.end + padding,
-    );
-  }, [ticks, visibleRange.start, visibleRange.end, bounds]);
+  const ticks = useMemo(
+    () => generateTicks({ bounds, tickCount }),
+    [bounds, tickCount],
+  );
+
+  const visibleTicks = useMemo(
+    () => filterVisibleTicks(ticks, { bounds, tickCount, visibleRange }),
+    [ticks, bounds, tickCount, visibleRange],
+  );
 
   return (
     <Group y={totalHeight}>

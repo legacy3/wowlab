@@ -32,21 +32,23 @@ interface CastsTrackProps {
 type SpellCategory = "rotational" | "cooldown" | "utility";
 
 function getSpellCategory(spellId: number): SpellCategory {
-  // Major cooldowns get their own lane
-  const cooldowns = [19574, 359844, 321530]; // Bestial Wrath, Call of the Wild, Bloodshed
-  // Utility spells
-  const utility = [186265, 147362]; // Aspect of the Turtle, Counter Shot
+  const cooldowns = [19574, 359844, 321530];
+  const utility = [186265, 147362];
 
-  if (cooldowns.includes(spellId)) return "cooldown";
-  if (utility.includes(spellId)) return "utility";
+  if (cooldowns.includes(spellId)) {
+    return "cooldown";
+  }
+  if (utility.includes(spellId)) {
+    return "utility";
+  }
   return "rotational";
 }
 
-// Lane assignment: 0 = rotational primary, 1 = rotational secondary, 2 = cooldowns/utility
 function getLaneForSpell(spellId: number, rotationalIndex: number): number {
   const category = getSpellCategory(spellId);
-  if (category === "cooldown" || category === "utility") return 2;
-  // Alternate rotational spells between lanes 0 and 1
+  if (category === "cooldown" || category === "utility") {
+    return 2;
+  }
   return rotationalIndex % 2;
 }
 
@@ -94,7 +96,9 @@ export const CastsTrack = memo(function CastsTrack({
 
     sortedCasts.forEach((cast) => {
       const spell = getSpell(cast.spellId);
-      if (!spell) return;
+      if (!spell) {
+        return;
+      }
 
       // Get rotational index for this spell
       if (getSpellCategory(cast.spellId) === "rotational") {
