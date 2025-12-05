@@ -11,7 +11,7 @@ const listeners = new Set<() => void>();
 
 function subscribe(callback: () => void) {
   listeners.add(callback);
-  
+
   return () => listeners.delete(callback);
 }
 

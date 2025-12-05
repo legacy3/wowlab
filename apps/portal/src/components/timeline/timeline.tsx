@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState, useEffect, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Stage, Layer, Text } from "react-konva";
+import { Stage, Layer, Text, Group } from "react-konva";
 import Konva from "konva";
 import {
   ZoomIn,
@@ -69,7 +69,6 @@ import {
 
 const { margin: MARGIN } = TRACK_METRICS;
 
-// Memoized header component
 interface TimelineHeaderProps {
   visibleRange: { start: number; end: number };
   zenMode: boolean;
@@ -179,7 +178,6 @@ const TimelineHeader = memo(function TimelineHeader({
   );
 });
 
-// Memoized track toggle buttons
 interface TrackTogglesProps {
   expandedTracks: Set<TrackId>;
   onToggleTrack: (trackId: TrackId) => void;
@@ -211,7 +209,6 @@ const TrackToggles = memo(function TrackToggles({
   );
 });
 
-// Memoized legend component - subscribes to its own atoms
 const TimelineLegend = memo(function TimelineLegend() {
   const uniqueSpells = useAtomValue(uniqueSpellsAtom);
   const [selectedSpell, setSelectedSpell] = useAtom(selectedSpellAtom);
@@ -258,28 +255,22 @@ export function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  // Static data atoms (only read once, data doesn't change)
   const combatData = useAtomValue(combatDataAtom);
   const bounds = useAtomValue(timelineBoundsAtom);
   const buffsBySpell = useAtomValue(buffsBySpellAtom);
   const debuffs = useAtomValue(debuffsAtom);
   const maxDamage = useAtomValue(maxDamageAtom);
 
-  // Interactive atoms
   const [expandedTracks, setExpandedTracks] = useAtom(expandedTracksAtom);
   const [selectedSpell, setSelectedSpell] = useAtom(selectedSpellAtom);
   const [hoveredSpell, setHoveredSpell] = useAtom(hoveredSpellAtom);
 
-  // Local state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [zenMode, setZenMode] = useState(false);
   const [showFps, setShowFps] = useState(false);
   const fpsTextRef = useRef<Konva.Text>(null);
-
-  // FPS counter using extracted hook
   const fps = useFpsCounter({ enabled: showFps, layerRef: fpsTextRef });
 
-  // Escape key to exit zen mode
   useEffect(() => {
     if (!zenMode) {
       return;
@@ -300,24 +291,19 @@ export function Timeline() {
     };
   }, [zenMode]);
 
-  // Container size
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
   const innerWidth = Math.max(0, containerWidth - MARGIN.left - MARGIN.right);
-
-  // Calculate available height for tracks in zen mode
   const availableTrackHeight =
     zenMode && containerHeight > 0
       ? containerHeight - MARGIN.top - MARGIN.bottom
       : undefined;
 
-  // Track layout - pass available height for zen mode expansion
   const { tracks, totalHeight } = useTrackLayout(
     expandedTracks,
     availableTrackHeight,
   );
 
-  // Zoom state
   const {
     zoomState,
     setZoomState,
@@ -333,7 +319,6 @@ export function Timeline() {
     initialWindow: 60,
   });
 
-  // Scales - visibleRange is derived from zoom state here
   const { timeToX, damageToY, focusToY, visibleRange } = useScales({
     bounds,
     innerWidth,
@@ -343,20 +328,20 @@ export function Timeline() {
     zoomState,
   });
 
-  // Throttled tooltip setter
   const throttledSetTooltip = useThrottledCallback(setTooltip, 16);
 
-  // Tooltip handlers for tracks
   const showTooltip = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>, content: React.ReactNode) => {
       const stage = e.target.getStage();
       if (!stage) {
         return;
       }
+
       const pos = stage.getPointerPosition();
       if (!pos) {
         return;
       }
+
       throttledSetTooltip({
         x: pos.x + MARGIN.left,
         y: pos.y + MARGIN.top,
@@ -370,23 +355,23 @@ export function Timeline() {
     throttledSetTooltip(null);
   }, [throttledSetTooltip]);
 
-  // Toggle track expansion
   const toggleTrack = useCallback(
     (trackId: TrackId) => {
       setExpandedTracks((prev: Set<TrackId>) => {
         const next = new Set(prev);
+
         if (next.has(trackId)) {
           next.delete(trackId);
         } else {
           next.add(trackId);
         }
+
         return next;
       });
     },
     [setExpandedTracks],
   );
 
-  // Drag pan handlers using extracted hook
   const {
     handleMouseDown,
     handleMouseMove,
@@ -396,7 +381,6 @@ export function Timeline() {
     handleTouchEnd,
   } = useDragPan({ stageRef, innerWidth, setZoomState });
 
-  // Handle range select from minimap
   const handleMinimapRangeSelect = useCallback(
     (start: number, end: number) => {
       zoomToRange(start, end);
@@ -423,7 +407,6 @@ export function Timeline() {
           "fixed inset-0 z-50 bg-background p-4 overflow-auto animate-in fade-in duration-200",
       )}
     >
-      {/* Header */}
       <TimelineHeader
         visibleRange={visibleRange}
         zenMode={zenMode}
@@ -438,7 +421,6 @@ export function Timeline() {
         onShowFpsChange={setShowFps}
       />
 
-      {/* Main timeline */}
       <div
         ref={containerRef}
         className={cn(
@@ -459,7 +441,6 @@ export function Timeline() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Track labels layer (static) */}
           <Layer y={MARGIN.top} listening={false}>
             <TrackLabels
               tracks={tracks}
@@ -468,18 +449,7 @@ export function Timeline() {
             />
           </Layer>
 
-          {/* Main content layer */}
           <Layer x={MARGIN.left} y={MARGIN.top}>
-            {/* Background and grid */}
-            <GridLayer
-              innerWidth={innerWidth}
-              totalHeight={totalHeight}
-              timeToX={timeToX}
-              bounds={bounds}
-              visibleRange={visibleRange}
-            />
-
-            {/* Phases track (always visible) */}
             {tracks.phases.visible && (
               <PhasesTrack
                 phases={combatData.phases}
@@ -492,81 +462,94 @@ export function Timeline() {
               />
             )}
 
-            {/* Casts track */}
-            {tracks.casts.visible && (
-              <CastsTrack
-                casts={combatData.casts}
-                y={tracks.casts.y}
-                timeToX={timeToX}
+            <Group
+              clipX={0}
+              clipY={tracks.phases.visible ? tracks.phases.height : 0}
+              clipWidth={innerWidth}
+              clipHeight={
+                totalHeight - (tracks.phases.visible ? tracks.phases.height : 0)
+              }
+            >
+              <GridLayer
                 innerWidth={innerWidth}
-                visibleRange={visibleRange}
-                selectedSpell={selectedSpell}
-                hoveredSpell={hoveredSpell}
-                onSpellSelect={setSelectedSpell}
-                onSpellHover={setHoveredSpell}
-                showTooltip={showTooltip}
-                hideTooltip={hideTooltip}
-              />
-            )}
-
-            {tracks.buffs.visible && (
-              <BuffsTrack
-                buffs={buffsBySpell}
-                y={tracks.buffs.y}
+                totalHeight={totalHeight}
                 timeToX={timeToX}
-                visibleRange={visibleRange}
-                selectedSpell={selectedSpell}
-                showTooltip={showTooltip}
-                hideTooltip={hideTooltip}
-              />
-            )}
-
-            {tracks.debuffs.visible && (
-              <DebuffsTrack
-                debuffs={debuffs}
-                y={tracks.debuffs.y}
-                timeToX={timeToX}
+                bounds={bounds}
                 visibleRange={visibleRange}
               />
-            )}
 
-            {tracks.damage.visible && (
-              <DamageTrack
-                damage={combatData.damage}
-                y={tracks.damage.y}
-                height={tracks.damage.height}
-                timeToX={timeToX}
-                damageToY={damageToY}
-                visibleRange={visibleRange}
-                selectedSpell={selectedSpell}
-                showTooltip={showTooltip}
-                hideTooltip={hideTooltip}
-              />
-            )}
+              {tracks.casts.visible && (
+                <CastsTrack
+                  casts={combatData.casts}
+                  y={tracks.casts.y}
+                  timeToX={timeToX}
+                  innerWidth={innerWidth}
+                  visibleRange={visibleRange}
+                  selectedSpell={selectedSpell}
+                  hoveredSpell={hoveredSpell}
+                  onSpellSelect={setSelectedSpell}
+                  onSpellHover={setHoveredSpell}
+                  showTooltip={showTooltip}
+                  hideTooltip={hideTooltip}
+                />
+              )}
 
-            {/* Resources track */}
-            {tracks.resources.visible && (
-              <ResourcesTrack
-                resources={combatData.resources}
-                y={tracks.resources.y}
-                height={tracks.resources.height}
-                timeToX={timeToX}
-                focusToY={focusToY}
+              {tracks.buffs.visible && (
+                <BuffsTrack
+                  buffs={buffsBySpell}
+                  y={tracks.buffs.y}
+                  timeToX={timeToX}
+                  visibleRange={visibleRange}
+                  selectedSpell={selectedSpell}
+                  showTooltip={showTooltip}
+                  hideTooltip={hideTooltip}
+                />
+              )}
+
+              {tracks.debuffs.visible && (
+                <DebuffsTrack
+                  debuffs={debuffs}
+                  y={tracks.debuffs.y}
+                  timeToX={timeToX}
+                  visibleRange={visibleRange}
+                />
+              )}
+
+              {tracks.damage.visible && (
+                <DamageTrack
+                  damage={combatData.damage}
+                  y={tracks.damage.y}
+                  height={tracks.damage.height}
+                  timeToX={timeToX}
+                  damageToY={damageToY}
+                  visibleRange={visibleRange}
+                  selectedSpell={selectedSpell}
+                  showTooltip={showTooltip}
+                  hideTooltip={hideTooltip}
+                />
+              )}
+
+              {tracks.resources.visible && (
+                <ResourcesTrack
+                  resources={combatData.resources}
+                  y={tracks.resources.y}
+                  height={tracks.resources.height}
+                  timeToX={timeToX}
+                  focusToY={focusToY}
+                  innerWidth={innerWidth}
+                  visibleRange={visibleRange}
+                />
+              )}
+
+              <XAxis
                 innerWidth={innerWidth}
+                totalHeight={totalHeight}
+                timeToX={timeToX}
+                bounds={bounds}
                 visibleRange={visibleRange}
               />
-            )}
+            </Group>
 
-            {/* X Axis */}
-            <XAxis
-              innerWidth={innerWidth}
-              totalHeight={totalHeight}
-              timeToX={timeToX}
-              bounds={bounds}
-              visibleRange={visibleRange}
-            />
-
-            {/* FPS Counter */}
             {showFps && (
               <Text
                 ref={fpsTextRef}
@@ -583,7 +566,6 @@ export function Timeline() {
         <TimelineTooltip tooltip={tooltip} />
       </div>
 
-      {/* Minimap */}
       <div className="rounded border bg-card overflow-hidden">
         <Minimap
           phases={combatData.phases}
@@ -595,13 +577,11 @@ export function Timeline() {
         />
       </div>
 
-      {/* Track toggles */}
       <TrackToggles
         expandedTracks={expandedTracks}
         onToggleTrack={toggleTrack}
       />
 
-      {/* Legend - has its own atom subscriptions */}
       <TimelineLegend />
     </div>
   );
