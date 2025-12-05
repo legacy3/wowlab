@@ -17,7 +17,11 @@ function AuthButtonInner() {
   }
 
   return (
-    <Button variant="default" size="sm" onClick={() => router.push("/sign-in")}>
+    <Button
+      variant="default"
+      size="sm"
+      onClick={() => router.push("/auth/sign-in")}
+    >
       Sign In
     </Button>
   );

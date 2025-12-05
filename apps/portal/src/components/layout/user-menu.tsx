@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserAvatar } from "@/components/user/user-avatar";
+import { UserAvatar } from "@/components/account/user-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Settings, LogOut, FileCode, History } from "lucide-react";
 
@@ -25,7 +25,7 @@ function UserMenuInner() {
   const handleSignOut = async () => {
     await signOut();
 
-    router.push("/sign-in");
+    router.push("/auth/sign-in");
     router.refresh();
   };
 
@@ -52,19 +52,19 @@ function UserMenuInner() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/user/profile")}>
+        <DropdownMenuItem onClick={() => router.push("/account")}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/user/profile")}>
+        <DropdownMenuItem onClick={() => router.push("/account?tab=rotations")}>
           <FileCode className="mr-2 h-4 w-4" />
           <span>My Rotations</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/user/history")}>
+        <DropdownMenuItem onClick={() => router.push("/account?tab=history")}>
           <History className="mr-2 h-4 w-4" />
           <span>History</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/user/settings")}>
+        <DropdownMenuItem onClick={() => router.push("/account/settings")}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

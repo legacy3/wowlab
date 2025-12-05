@@ -1,21 +1,14 @@
 import {
-  BarChart2,
-  BarChart3,
   Bug,
-  Cpu,
   Crown,
   FileCode,
   GitBranch,
-  History,
   LucideIcon,
   Medal,
   Plug,
   RotateCcw,
   ScrollText,
   Search,
-  Target,
-  Upload,
-  Wrench,
   Zap,
 } from "lucide-react";
 
@@ -54,25 +47,20 @@ const group = (label: string, items: MenuItem[]): MenuGroup => ({
 // prettier-ignore
 export const menuConfig: MenuGroup[] = [
   group("Simulate", [
-    item("Simulate", "/sim", Zap),
-    item("Results", "/sim/results", BarChart2),
-    item("Import", "/sim/import", Upload),
+    item("Simulate", "/simulate", Zap),
   ]),
   group("Optimize", [
-    item("Top Gear", "/top-gear", Crown),
-    item("Drop Optimizer", "/drop-optimizer", Target),
+    item("Optimize", "/optimize", Crown),
   ]),
   group("Discover", [
-    item("DPS Rankings", "/dps-rankings", Medal),
+    item("Rankings", "/rankings", Medal),
     item("Rotations", "/rotations", RotateCcw),
-    item("Charts", "/charts", BarChart3),
   ]),
-  group("Advanced", [
-    item("Editor", "/editor", FileCode),
-    item("Timeline", "/timeline", History),
-    item("Workbench", "/workbench", Wrench),
-    item("Computing", "/computing", Cpu),
-    item("Data Inspector", "/data-inspector", Search),
+  group("Create", [
+    item("Editor", "/rotations/editor", FileCode),
+  ]),
+  group("Lab", [
+    item("Data Inspector", "/lab/data-inspector", Search),
   ]),
   group("About", [
     item("Changelog", "/changelog", ScrollText),

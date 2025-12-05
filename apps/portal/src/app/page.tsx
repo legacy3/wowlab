@@ -91,13 +91,13 @@ export default function Home() {
               <CardDescription>Get started with common tasks</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
-              <Link href="/sim">
+              <Link href="/simulate">
                 <Button variant="outline" className="w-full justify-start">
                   <PlayCircle className="mr-2 h-4 w-4" />
                   Run Simulation
                 </Button>
               </Link>
-              <Link href="/editor">
+              <Link href="/rotations/editor">
                 <Button variant="outline" className="w-full justify-start">
                   <Code2 className="mr-2 h-4 w-4" />
                   Create Rotation
@@ -109,10 +109,10 @@ export default function Home() {
                   Browse Rotations
                 </Button>
               </Link>
-              <Link href="/charts">
+              <Link href="/rankings">
                 <Button variant="outline" className="w-full justify-start">
                   <BarChart3 className="mr-2 h-4 w-4" />
-                  View Analytics
+                  View Rankings
                 </Button>
               </Link>
             </CardContent>

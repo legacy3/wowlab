@@ -9,7 +9,7 @@ export async function requireAuth() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/sign-in");
+    redirect("/auth/sign-in");
   }
 
   // Get the user's profile
@@ -20,7 +20,7 @@ export async function requireAuth() {
     .single();
 
   if (!profile) {
-    redirect("/sign-in");
+    redirect("/auth/sign-in");
   }
 
   return { user, profile, supabase };

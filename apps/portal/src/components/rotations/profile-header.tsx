@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { UserAvatar } from "@/components/user/user-avatar";
+import { UserAvatar } from "@/components/account/user-avatar";
 import { Calendar, Code2, GitFork, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Profile } from "@/lib/supabase/types";
