@@ -155,26 +155,52 @@ export function Timeline() {
     [setExpandedTracks],
   );
 
-  // Handle drag for panning
-  const handleDragMove = useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
-      const stage = e.target;
-      if (stage !== stageRef.current) return;
+  // Handle drag for panning via pointer events
+  const isDragging = useRef(false);
+  const lastPointerPos = useRef<{ x: number; y: number } | null>(null);
 
-      const newX = stage.x();
+  const handleMouseDown = useCallback(
+    (e: Konva.KonvaEventObject<MouseEvent>) => {
+      // Only start drag on left click and when clicking on stage/layer (not shapes)
+      if (e.evt.button !== 0) return;
+
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      isDragging.current = true;
+      lastPointerPos.current = stage.getPointerPosition();
+    },
+    [],
+  );
+
+  const handleMouseMove = useCallback(
+    (e: Konva.KonvaEventObject<MouseEvent>) => {
+      if (!isDragging.current) return;
+
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const pos = stage.getPointerPosition();
+      if (!pos || !lastPointerPos.current) return;
+
+      const dx = pos.x - lastPointerPos.current.x;
+      lastPointerPos.current = pos;
+
       const maxX = 0;
       const minX = -(innerWidth * zoomState.scale - innerWidth);
 
       setZoomState((prev) => ({
         ...prev,
-        x: Math.min(maxX, Math.max(minX, newX)),
+        x: Math.min(maxX, Math.max(minX, prev.x + dx)),
       }));
-
-      // Reset stage position since we handle it via transform
-      stage.x(0);
     },
     [innerWidth, zoomState.scale, setZoomState],
   );
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    lastPointerPos.current = null;
+  }, []);
 
   // Handle range select from minimap
   const handleMinimapRangeSelect = useCallback(
@@ -237,22 +263,17 @@ export function Timeline() {
       {/* Main timeline */}
       <div
         ref={containerRef}
-        className="relative w-full rounded-lg border bg-background overflow-hidden"
+        className="relative w-full rounded-lg border bg-background overflow-hidden cursor-grab active:cursor-grabbing"
       >
         <Stage
           ref={stageRef}
           width={containerWidth || 800}
           height={stageHeight}
           onWheel={handleWheel}
-          draggable
-          onDragMove={handleDragMove}
-          dragBoundFunc={(pos) => ({
-            x: Math.min(
-              0,
-              Math.max(-(innerWidth * zoomState.scale - innerWidth), pos.x),
-            ),
-            y: 0,
-          })}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           {/* Track labels layer (static) */}
           <Layer y={MARGIN.top} listening={false}>
