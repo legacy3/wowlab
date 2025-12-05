@@ -13,9 +13,16 @@ import {
   ChevronRight,
   Expand,
   X,
+  Download,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   combatDataAtom,
@@ -37,6 +44,7 @@ import {
   useTrackLayout,
   useResizeObserver,
   useThrottledCallback,
+  useExport,
   TRACK_CONFIGS,
   TRACK_METRICS,
 } from "./hooks";
@@ -67,6 +75,8 @@ interface TimelineHeaderProps {
   onResetZoom: () => void;
   onFitAll: () => void;
   onToggleZenMode: () => void;
+  onExportPNG: () => void;
+  onExportPDF: () => void;
 }
 
 const TimelineHeader = memo(function TimelineHeader({
@@ -77,6 +87,8 @@ const TimelineHeader = memo(function TimelineHeader({
   onResetZoom,
   onFitAll,
   onToggleZenMode,
+  onExportPNG,
+  onExportPDF,
 }: TimelineHeaderProps) {
   return (
     <div className="flex items-center justify-between">
@@ -133,6 +145,27 @@ const TimelineHeader = memo(function TimelineHeader({
         >
           {zenMode ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
         </Button>
+        <div className="w-px h-6 bg-border mx-1" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              title="Download timeline"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onExportPNG}>
+              Download PNG
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportPDF}>
+              Download PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
@@ -386,6 +419,11 @@ export function Timeline() {
 
   const toggleZenMode = useCallback(() => setZenMode((z) => !z), []);
 
+  const { exportPNG, exportPDF } = useExport({
+    stageRef,
+    contentHeight: totalHeight + MARGIN.top + MARGIN.bottom,
+  });
+
   return (
     <div
       className={cn(
@@ -403,6 +441,8 @@ export function Timeline() {
         onResetZoom={resetZoom}
         onFitAll={fitAll}
         onToggleZenMode={toggleZenMode}
+        onExportPNG={exportPNG}
+        onExportPDF={exportPDF}
       />
 
       {/* Main timeline */}

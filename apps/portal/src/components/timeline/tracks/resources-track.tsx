@@ -62,7 +62,9 @@ export const ResourcesTrack = memo(function ResourcesTrack({
     });
 
     // Close the area
-    const lastX = timeToX(visibleResources[visibleResources.length - 1].timestamp);
+    const lastX = timeToX(
+      visibleResources[visibleResources.length - 1].timestamp,
+    );
     areaPoints.push(lastX, height - 5);
 
     return { linePoints, areaPoints };

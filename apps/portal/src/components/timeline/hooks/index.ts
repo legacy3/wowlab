@@ -11,3 +11,4 @@ export type {
   TrackLayoutResult,
 } from "./use-track-layout";
 export { useResizeObserver, useThrottledCallback } from "./use-resize-observer";
+export { useExport } from "./use-export";

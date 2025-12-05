@@ -534,11 +534,7 @@ function generateCombatData(): CombatData {
   }
 
   // Thrill of the Hunt procs (every ~30 seconds throughout the fight)
-  for (
-    let procTime = 3;
-    procTime < DURATION;
-    procTime += 25 + random() * 10
-  ) {
+  for (let procTime = 3; procTime < DURATION; procTime += 25 + random() * 10) {
     buffs.push({
       type: "buff",
       id: id(),
