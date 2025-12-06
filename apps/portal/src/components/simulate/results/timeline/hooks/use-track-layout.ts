@@ -75,9 +75,18 @@ export function getZoomLevel(visibleRange: {
   end: number;
 }): ZoomLevel {
   const duration = visibleRange.end - visibleRange.start;
-  if (duration < TRACK_METRICS.zoomLevels.fine) return "fine";
-  if (duration < TRACK_METRICS.zoomLevels.medium) return "medium";
-  if (duration < TRACK_METRICS.zoomLevels.coarse) return "coarse";
+  if (duration < TRACK_METRICS.zoomLevels.fine) {
+    return "fine";
+  }
+
+  if (duration < TRACK_METRICS.zoomLevels.medium) {
+    return "medium";
+  }
+
+  if (duration < TRACK_METRICS.zoomLevels.coarse) {
+    return "coarse";
+  }
+
   return "aggregate";
 }
 

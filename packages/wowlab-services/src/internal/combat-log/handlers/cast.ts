@@ -92,10 +92,14 @@ const completeCast = (
     yield* state.updateState((s) => {
       const sourceId = Branded.UnitID(event.sourceGUID);
       const unit = s.units.get(sourceId);
-      if (!unit) return s;
+      if (!unit) {
+        return s;
+      }
 
       const spellId = Branded.SpellID(event.spellId);
-      if (unit.castingSpellId !== spellId) return s;
+      if (unit.castingSpellId !== spellId) {
+        return s;
+      }
 
       const updatedUnit = Entities.Unit.Unit.create({
         ...unit.toObject(),

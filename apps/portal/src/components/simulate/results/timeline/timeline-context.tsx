@@ -16,7 +16,10 @@ export function getSpellOpacity(
   defaultOpacity = 1,
   dimmedOpacity = 0.3,
 ): number {
-  if (selectedSpell === null) return defaultOpacity;
+  if (selectedSpell === null) {
+    return defaultOpacity;
+  }
+
   return selectedSpell === spellId ? defaultOpacity : dimmedOpacity;
 }
 
@@ -58,7 +61,9 @@ export function buildSpellTooltip(
   },
 ) {
   const spell = getSpell(spellId);
-  if (!spell) return null;
+  if (!spell) {
+    return null;
+  }
 
   // Handle duration as either object or number
   const durationObj =
@@ -78,6 +83,7 @@ export function buildSpellTooltip(
       <div className="font-semibold" style={{ color: spell.color }}>
         {spell.name}
       </div>
+
       {durationObj ? (
         <div className="text-xs text-muted-foreground">
           Duration: {formatTime(durationObj.start)} -{" "}
@@ -92,22 +98,26 @@ export function buildSpellTooltip(
           )}
         </div>
       )}
+
       {extra?.target && (
         <div className="text-xs text-muted-foreground">
           Target: {extra.target}
         </div>
       )}
+
       {extra?.damage !== undefined && (
         <div className="text-sm">
           {formatDamage(extra.damage)}
           {extra.isCrit && <span className="ml-1 text-yellow-400">CRIT!</span>}
         </div>
       )}
+
       {extra?.stacks && extra.stacks > 1 && (
         <div className="text-xs text-muted-foreground">
           Stacks: {extra.stacks}
         </div>
       )}
+
       {extra?.refreshCount !== undefined && extra.refreshCount > 0 && (
         <div className="text-xs text-muted-foreground">
           Refreshed: {extra.refreshCount}x

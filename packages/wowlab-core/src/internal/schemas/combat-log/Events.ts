@@ -21,13 +21,6 @@ import {
   MissedSuffix,
 } from "./Suffix.js";
 
-// ============================================================================
-// SPELL Events (Base + SpellPrefix + optional suffix)
-// ============================================================================
-
-/**
- * ENCOUNTER_END - Boss encounter ended
- */
 export class EncounterEnd extends Schema.TaggedClass<EncounterEnd>()(
   "ENCOUNTER_END",
   {
@@ -336,13 +329,6 @@ export class SpellMissed extends Schema.TaggedClass<SpellMissed>()(
   },
 ) {}
 
-// ============================================================================
-// RANGE Events (Base + SpellPrefix + optional suffix)
-// ============================================================================
-
-/**
- * SPELL_PERIODIC_DAMAGE - DoT tick damage
- */
 export class SpellPeriodicDamage extends Schema.TaggedClass<SpellPeriodicDamage>()(
   "SPELL_PERIODIC_DAMAGE",
   {
@@ -364,13 +350,6 @@ export class SpellPeriodicDrain extends Schema.TaggedClass<SpellPeriodicDrain>()
   },
 ) {}
 
-// ============================================================================
-// SWING Events (Base + optional suffix, no spell prefix)
-// ============================================================================
-
-/**
- * SPELL_PERIODIC_ENERGIZE - Periodic power gain
- */
 export class SpellPeriodicEnergize extends Schema.TaggedClass<SpellPeriodicEnergize>()(
   "SPELL_PERIODIC_ENERGIZE",
   {
@@ -392,13 +371,6 @@ export class SpellPeriodicHeal extends Schema.TaggedClass<SpellPeriodicHeal>()(
   },
 ) {}
 
-// ============================================================================
-// ENVIRONMENTAL Events (Base + EnvironmentalPrefix + DamageSuffix)
-// ============================================================================
-
-/**
- * SPELL_STOLEN - Aura stolen (e.g., Spellsteal)
- */
 export class SpellStolen extends Schema.TaggedClass<SpellStolen>()(
   "SPELL_STOLEN",
   {
@@ -408,13 +380,6 @@ export class SpellStolen extends Schema.TaggedClass<SpellStolen>()(
   },
 ) {}
 
-// ============================================================================
-// Special Events
-// ============================================================================
-
-/**
- * SPELL_SUMMON - Summon created
- */
 export class SpellSummon extends Schema.TaggedClass<SpellSummon>()(
   "SPELL_SUMMON",
   {

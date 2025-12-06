@@ -32,9 +32,10 @@ export const ResourcesTrack = memo(function ResourcesTrack({
     TRACK_METRICS;
   const zoomLevel = getZoomLevel(visibleRange);
 
-  // Filter to visible resources with padding for line continuity
+  // TODO Track all resources
   const visibleResources = useMemo(() => {
     const padding = (visibleRange.end - visibleRange.start) * 0.1;
+
     return resources.filter(
       (r) =>
         r.timestamp >= visibleRange.start - padding &&
@@ -50,6 +51,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
 
     // Downsample to ~100 points
     const step = Math.ceil(visibleResources.length / 100);
+
     return visibleResources.filter((_, i) => i % step === 0);
   }, [visibleResources, zoomLevel]);
 
@@ -78,6 +80,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
     processedResources.forEach((r) => {
       const x = timeToX(r.timestamp);
       const fy = focusToY(r.focus);
+
       line.push(x, fy);
       area.push(x, fy);
 
@@ -98,6 +101,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
       const lastX = timeToX(
         processedResources[processedResources.length - 1].timestamp,
       );
+
       critical.push(criticalStart, lastX);
     }
 
@@ -105,6 +109,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
     const lastX = timeToX(
       processedResources[processedResources.length - 1].timestamp,
     );
+
     area.push(lastX, height - 5);
 
     return { linePoints: line, areaPoints: area, criticalZonePoints: critical };
@@ -118,7 +123,9 @@ export const ResourcesTrack = memo(function ResourcesTrack({
 
   // Calculate gain/loss markers for fine zoom
   const gainLossMarkers = useMemo(() => {
-    if (zoomLevel !== "fine") return [];
+    if (zoomLevel !== "fine") {
+      return [];
+    }
 
     const markers: Array<{
       x: number;
@@ -291,6 +298,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
           if (i === 0) {
             return null;
           }
+
           const prev = processedResources[i - 1];
 
           // Check if crossed critical threshold

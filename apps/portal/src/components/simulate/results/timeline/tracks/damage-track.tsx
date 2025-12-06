@@ -112,7 +112,9 @@ export const DamageTrack = memo(function DamageTrack({
 
   // Calculate DPS area points for background
   const dpsAreaPoints = useMemo(() => {
-    if (damageBuckets.length === 0) return { line: [], area: [] };
+    if (damageBuckets.length === 0) {
+      return { line: [], area: [] };
+    }
 
     const linePoints: number[] = [];
     const areaPoints: number[] = [];
@@ -123,7 +125,6 @@ export const DamageTrack = memo(function DamageTrack({
 
     damageBuckets.forEach((bucket) => {
       const x = timeToX(bucket.timestamp + bucketSize / 2);
-      // Scale DPS (damage per bucket) to Y position
       const dps = bucket.totalDamage / bucketSize;
       const maxDps = Math.max(
         ...damageBuckets.map((b) => b.totalDamage / bucketSize),
@@ -138,6 +139,7 @@ export const DamageTrack = memo(function DamageTrack({
     const lastX = timeToX(
       damageBuckets[damageBuckets.length - 1].timestamp + bucketSize / 2,
     );
+
     areaPoints.push(lastX, height - 5);
 
     return { line: linePoints, area: areaPoints };
@@ -214,12 +216,14 @@ export const DamageTrack = memo(function DamageTrack({
           bucket.spellBreakdown.forEach((data, spellId) => {
             const spell = getSpell(spellId);
             const barHeight = (data.amount / maxBucketDamage) * (height - 10);
+
             spellBars.push({
               spellId,
               y: currentY - barHeight,
               h: barHeight,
               color: spell?.color ?? "#888",
             });
+
             currentY -= barHeight;
           });
 
@@ -308,12 +312,11 @@ export const DamageTrack = memo(function DamageTrack({
         bucket.events.map((dmg) => {
           const dx = timeToX(dmg.timestamp);
           const spell = getSpell(dmg.spellId);
-          // Clamp dy to ensure markers stay within track bounds
           const rawY = damageToY(dmg.amount);
           const markerRadius = dmg.isCrit
             ? damageCritRadius
             : damageMarkerRadius;
-          const minY = markerRadius + 2; // Keep marker inside track with padding
+          const minY = markerRadius + 2;
           const dy = Math.max(minY, rawY);
           const stemHeight = height - 5 - dy;
           const opacity = getSpellOpacity(selectedSpell, dmg.spellId, 1, 0.15);

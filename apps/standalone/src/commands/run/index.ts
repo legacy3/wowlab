@@ -122,13 +122,18 @@ const runSimulation = (
 
             const simulationLoop = Effect.gen(function* () {
               let casts = 0;
+
               while (true) {
                 const state = yield* stateService.getState();
-                if (state.currentTime >= duration) break;
+                if (state.currentTime >= duration) {
+                  break;
+                }
+
                 yield* rotation.run(playerId);
                 casts++;
                 yield* simDriver.run(state.currentTime + 100);
               }
+
               return { casts, duration, simId };
             });
 

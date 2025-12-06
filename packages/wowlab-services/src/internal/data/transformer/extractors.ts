@@ -6,16 +6,8 @@ import * as Option from "effect/Option";
 
 import { DbcService } from "../dbc/DbcService.js";
 
-// ============================================================================
-// Pure helper functions
-// ============================================================================
-
 const first = <T>(array?: readonly T[]): Option.Option<T> =>
   array?.[0] ? Option.some(array[0]) : Option.none();
-
-// ============================================================================
-// Configuration
-// ============================================================================
 
 export interface DamageConfig {
   readonly contentTuningId: number;
@@ -30,10 +22,6 @@ export const DEFAULT_DAMAGE_CONFIG: DamageConfig = {
   level: 80,
   mythicPlusSeasonId: 103,
 };
-
-// ============================================================================
-// ExtractorService
-// ============================================================================
 
 export class ExtractorService extends Effect.Service<ExtractorService>()(
   "@wowlab/services/ExtractorService",

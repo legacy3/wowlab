@@ -70,7 +70,9 @@ export const Minimap = memo(function Minimap({
 
   // Use window-level listeners for reliable drag handling (mouse + touch)
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       updateRangeFromX(e.clientX);
@@ -115,6 +117,7 @@ export const Minimap = memo(function Minimap({
         buckets[bucket]++;
       }
     });
+
     const maxDensity = Math.max(...buckets, 1);
 
     return buckets.map((count, i) => ({

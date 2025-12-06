@@ -26,7 +26,9 @@ export const TrackLabels = memo(function TrackLabels({
     <Group>
       {TRACK_CONFIGS.map((track) => {
         const layout = tracks[track.id];
-        if (!layout.visible && !track.collapsible) return null;
+        if (!layout.visible && !track.collapsible) {
+          return null;
+        }
 
         const labelY = track.collapsible
           ? layout.y + (layout.visible ? layout.height / 2 : 10)

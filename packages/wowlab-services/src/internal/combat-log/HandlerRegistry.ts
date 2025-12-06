@@ -10,13 +10,6 @@ import { Map } from "immutable";
 
 import type { Emitter } from "./Emitter.js";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Filter for matching events
- */
 export interface EventFilter {
   /** Optional spell ID to match */
   readonly spellId?: number;
@@ -66,13 +59,6 @@ export interface Subscription {
   readonly unsubscribe: Effect.Effect<void>;
 }
 
-// ============================================================================
-// Handler Registry Service
-// ============================================================================
-
-/**
- * HandlerRegistry service for managing event handler subscriptions.
- */
 export class HandlerRegistry extends Effect.Service<HandlerRegistry>()(
   "HandlerRegistry",
   {

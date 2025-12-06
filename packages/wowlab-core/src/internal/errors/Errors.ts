@@ -115,11 +115,6 @@ export class ProjectileNotFound extends Data.TaggedError("ProjectileNotFound")<{
   readonly projectileId: Branded.ProjectileID;
 }> {}
 
-// ============================================================================
-// Combat Log Errors
-// ============================================================================
-
-/** Error when trying to take from an empty event queue */
 export class QueueEmpty extends Data.TaggedError("QueueEmpty")<{
   readonly message: string;
 }> {}

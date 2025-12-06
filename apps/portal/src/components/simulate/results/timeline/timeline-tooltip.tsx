@@ -7,7 +7,9 @@ interface TimelineTooltipProps {
 }
 
 export function TimelineTooltip({ tooltip }: TimelineTooltipProps) {
-  if (!tooltip) return null;
+  if (!tooltip) {
+    return null;
+  }
 
   return (
     <div

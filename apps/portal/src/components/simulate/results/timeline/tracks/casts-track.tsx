@@ -38,9 +38,11 @@ function getSpellCategory(spellId: number): SpellCategory {
   if (cooldowns.includes(spellId)) {
     return "cooldown";
   }
+
   if (utility.includes(spellId)) {
     return "utility";
   }
+
   return "rotational";
 }
 
@@ -49,6 +51,7 @@ function getLaneForSpell(spellId: number, rotationalIndex: number): number {
   if (category === "cooldown" || category === "utility") {
     return 2;
   }
+
   return rotationalIndex % 2;
 }
 
@@ -87,6 +90,7 @@ export const CastsTrack = memo(function CastsTrack({
 
     // Track end times per lane for overlap detection
     const laneEndTimes: number[] = Array(castLaneCount).fill(-Infinity);
+
     // Track rotational spell index for alternating
     const rotationalSpellIndices = new Map<number, number>();
     let rotationalCounter = 0;
@@ -134,10 +138,12 @@ export const CastsTrack = memo(function CastsTrack({
       if (isOverflow) {
         // Mark as overflow, will be shown as +N badge
         const windowKey = Math.floor(cast.timestamp * 2) / 2; // 0.5s windows
+
         overflowWindows.set(
           windowKey,
           (overflowWindows.get(windowKey) ?? 0) + 1,
         );
+
         assignedLane = 0; // Default to lane 0 for positioning
       } else {
         // Update lane end time
@@ -158,6 +164,7 @@ export const CastsTrack = memo(function CastsTrack({
   // Filter to visible casts
   const visibleCasts = useMemo(() => {
     const padding = 1;
+
     return castsWithLanes.filter(
       (cast) =>
         !cast.isOverflow &&
@@ -184,6 +191,7 @@ export const CastsTrack = memo(function CastsTrack({
       .forEach((cast) => {
         const windowKey = Math.floor(cast.timestamp * 2) / 2;
         const existing = windowCounts.get(windowKey);
+
         if (existing) {
           existing.count++;
         } else {
@@ -204,7 +212,9 @@ export const CastsTrack = memo(function CastsTrack({
 
   // Density heatmap for aggregate zoom level
   const densityBuckets = useMemo(() => {
-    if (zoomLevel !== "aggregate") return null;
+    if (zoomLevel !== "aggregate") {
+      return null;
+    }
 
     const bucketSize = 1; // 1 second buckets
     const buckets = new Map<number, { count: number; spells: Set<number> }>();
@@ -216,6 +226,7 @@ export const CastsTrack = memo(function CastsTrack({
       ) {
         const bucketKey = Math.floor(cast.timestamp / bucketSize) * bucketSize;
         const existing = buckets.get(bucketKey);
+
         if (existing) {
           existing.count++;
           existing.spells.add(cast.spellId);
@@ -289,6 +300,7 @@ export const CastsTrack = memo(function CastsTrack({
       {visibleCasts.map((cast) => {
         const cx = timeToX(cast.timestamp);
         const spell = getSpell(cast.spellId);
+
         // Add top padding (2px) to keep casts within track bounds
         const cy = cast.lane * (castHeight + castLaneGap) + 2;
 

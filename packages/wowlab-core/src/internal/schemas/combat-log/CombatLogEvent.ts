@@ -101,13 +101,6 @@ export type AuraEvent = Extract<CombatLogEvent, { auraType: AuraType }>;
 
 export type CombatLogEvent = Schema.Schema.Type<typeof CombatLogEvent>;
 
-// ============================================================================
-// Type Helpers
-// ============================================================================
-
-/**
- * Extract damage events (amount, overkill, school, etc.)
- */
 export type DamageEvent = Extract<
   CombatLogEvent,
   { amount: number; overkill: number }
@@ -147,13 +140,6 @@ export type SpellEvent = Extract<CombatLogEvent, { spellId: number }>;
  */
 export type Subevent = CombatLogEvent["_tag"];
 
-// ============================================================================
-// Type Guards
-// ============================================================================
-
-/**
- * Check if event has spell info
- */
 export const isSpellEvent = (event: CombatLogEvent): event is SpellEvent =>
   "spellId" in event;
 

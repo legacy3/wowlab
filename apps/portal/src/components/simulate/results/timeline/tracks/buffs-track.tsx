@@ -232,8 +232,6 @@ export const BuffsTrack = memo(function BuffsTrack({
 
   return (
     <Group y={y}>
-      {/* Category labels removed - handled by TrackLabels component */}
-
       {/* Buff bars */}
       {visibleBuffs.map(
         ({ buff, category, categoryIndex, laneIndex, refreshMarks }) => {
@@ -255,8 +253,7 @@ export const BuffsTrack = memo(function BuffsTrack({
             0.3,
           );
 
-          // Determine label based on available width
-          // Approximate: 6px per character at fontSize 10
+          //
           const spellName = spell?.name ?? "";
           const nameWidth = spellName.length * 6;
           const availableWidth = width - 12; // padding for text
@@ -281,7 +278,10 @@ export const BuffsTrack = memo(function BuffsTrack({
                   stacks: buff.stacks,
                   refreshCount: refreshMarks.length,
                 });
-                if (tooltip) showTooltip(e, tooltip);
+
+                if (tooltip) {
+                  showTooltip(e, tooltip);
+                }
               }}
               onMouseLeave={hideTooltip}
             >
@@ -297,7 +297,10 @@ export const BuffsTrack = memo(function BuffsTrack({
               {/* Refresh marks */}
               {refreshMarks.map((markTime, i) => {
                 const markX = timeToX(markTime) - startX;
-                if (markX < 2 || markX > width - 2) return null;
+                if (markX < 2 || markX > width - 2) {
+                  return null;
+                }
+
                 return (
                   <Line
                     key={i}

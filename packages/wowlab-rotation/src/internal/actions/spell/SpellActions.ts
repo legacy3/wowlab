@@ -28,7 +28,9 @@ export class SpellActions extends Effect.Service<SpellActions>()(
             const unit = yield* unitAccessor.get(unitId);
             const spell = unit.spells.all.get(Branded.SpellID(spellId));
 
-            if (!spell) return false;
+            if (!spell) {
+              return false;
+            }
 
             // Check if spell is off cooldown
             const updatedSpell = spell.with({}, currentTime);

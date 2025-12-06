@@ -40,7 +40,9 @@ export function useExport({
   const getExportDataURL = useCallback(
     (height: number) => {
       const stage = stageRef.current;
-      if (!stage) return null;
+      if (!stage) {
+        return null;
+      }
 
       return stage.toDataURL({
         pixelRatio: EXPORT_CONFIG.pixelRatio,
@@ -55,7 +57,9 @@ export function useExport({
 
   const exportPNG = useCallback(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    if (!stage) {
+      return;
+    }
 
     const dataURL = stage.toDataURL({
       pixelRatio: 3, // Higher for PNG since file size is less concern

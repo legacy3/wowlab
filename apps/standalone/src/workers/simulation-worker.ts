@@ -129,8 +129,12 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
               let casts = 0;
               while (true) {
                 const state = yield* stateService.getState();
-                if (state.currentTime >= batch.duration) break;
+                if (state.currentTime >= batch.duration) {
+                  break;
+                }
+
                 yield* rotation.run(playerId);
+
                 casts++;
               }
 
