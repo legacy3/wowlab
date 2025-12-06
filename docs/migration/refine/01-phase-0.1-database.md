@@ -29,8 +29,6 @@ Use the Supabase MCP to apply this migration:
 
 CREATE TABLE user_settings (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  class TEXT,
-  spec TEXT,
   theme TEXT DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
   "compactMode" BOOLEAN DEFAULT false,
   "showTooltips" BOOLEAN DEFAULT true,
@@ -41,8 +39,6 @@ CREATE TABLE user_settings (
 );
 
 COMMENT ON TABLE user_settings IS 'Private user settings and preferences';
-COMMENT ON COLUMN user_settings.class IS 'Selected WoW class (e.g. warrior, mage)';
-COMMENT ON COLUMN user_settings.spec IS 'Selected specialization (e.g. arms, frost)';
 COMMENT ON COLUMN user_settings.theme IS 'UI theme preference';
 COMMENT ON COLUMN user_settings."compactMode" IS 'Enable compact UI mode';
 COMMENT ON COLUMN user_settings."showTooltips" IS 'Show spell tooltips on hover';
@@ -134,15 +130,15 @@ These tables already exist and are correct:
 
 ## Checklist
 
-- [ ] Check/create update_updated_at_column() function
-- [ ] Create user_settings table (note: uses camelCase for column names)
-- [ ] Enable RLS on user_settings
-- [ ] Create SELECT policy (own settings)
-- [ ] Create INSERT policy (own settings)
-- [ ] Create UPDATE policy (own settings)
-- [ ] Create updated_at trigger
-- [ ] Create auto-create trigger on signup
-- [ ] Backfill existing users
-- [ ] Verify table in list_tables
-- [ ] Verify RLS is enabled
-- [ ] Verify all triggers work
+- [x] Check/create update_updated_at_column() function (using existing `update_timestamp_columns`)
+- [x] Create user_settings table (note: uses camelCase for column names)
+- [x] Enable RLS on user_settings
+- [x] Create SELECT policy (own settings)
+- [x] Create INSERT policy (own settings)
+- [x] Create UPDATE policy (own settings)
+- [x] Create updated_at trigger
+- [x] Create auto-create trigger on signup
+- [x] Backfill existing users
+- [x] Verify table in list_tables
+- [x] Verify RLS is enabled
+- [x] Verify all triggers work

@@ -71,7 +71,7 @@ The existing QueryClient will be:
 | Table                  | Purpose                               | Status        |
 | ---------------------- | ------------------------------------- | ------------- |
 | `user_profiles`        | Public profile (handle, avatar)       | EXISTS        |
-| `user_settings`        | Private settings (class, spec, theme) | CREATE in 0.1 |
+| `user_settings`        | Private settings (theme, UI prefs)    | CREATE in 0.1 |
 | `rotations`            | User rotation scripts                 | EXISTS        |
 | `rotation_sim_results` | Simulation results                    | EXISTS        |
 | `fight_profiles`       | Fight type configurations             | CREATE in 0.2 |
