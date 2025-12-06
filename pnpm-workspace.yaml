@@ -5,6 +5,7 @@ packages:
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - better-sqlite3
+  - core-js
   - esbuild
   - msgpackr-extract
   - sharp

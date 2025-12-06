@@ -19,14 +19,11 @@ export class ControlActions extends Effect.Service<ControlActions>()(
 
         waitUntil: (condition: Effect.Effect<boolean>) =>
           Effect.gen(function* () {
-            // Poll until condition is true
-            // This is a naive implementation for the prototype
             while (true) {
               const result = yield* condition;
-              if (result) break;
-
-              // Advance time slightly to avoid infinite loops in simulation if condition depends on time
-              // In a real event loop, this would yield to the scheduler
+              if (result) {
+                break;
+              }
               yield* Effect.sleep("100 millis");
             }
           }),

@@ -19,7 +19,9 @@ export class ProfileComposer extends Effect.Service<ProfileComposer>()(
           const cache = yield* Ref.get(cacheRef);
           const cached = cache.get(signature);
 
-          if (cached) return cached;
+          if (cached) {
+            return cached;
+          }
 
           // TODO: Load and compose profiles
           const composed: ComposedProfile = { bundles: [], signature };
@@ -27,6 +29,7 @@ export class ProfileComposer extends Effect.Service<ProfileComposer>()(
           yield* Ref.update(cacheRef, (prev) => {
             const next = new Map(prev);
             next.set(signature, composed);
+
             return next;
           });
 

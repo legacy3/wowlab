@@ -156,3 +156,81 @@ export enum SpellEffect {
 }
 
 export const SpellEffectSchema = Schema.Enums(SpellEffect);
+
+// Combat Log Enums
+
+/**
+ * Miss types for SPELL_MISSED and SWING_MISSED events
+ * Reference: https://warcraft.wiki.gg/wiki/COMBAT_LOG_EVENT
+ */
+export const MissType = Schema.Literal(
+  "ABSORB",
+  "BLOCK",
+  "DEFLECT",
+  "DODGE",
+  "EVADE",
+  "IMMUNE",
+  "MISS",
+  "PARRY",
+  "REFLECT",
+  "RESIST",
+);
+export type MissType = Schema.Schema.Type<typeof MissType>;
+
+/**
+ * Aura type for aura-related events
+ */
+export const AuraType = Schema.Literal("BUFF", "DEBUFF");
+export type AuraType = Schema.Schema.Type<typeof AuraType>;
+
+/**
+ * Environmental damage types
+ */
+export const EnvironmentalType = Schema.Literal(
+  "Drowning",
+  "Falling",
+  "Fatigue",
+  "Fire",
+  "Lava",
+  "Slime",
+);
+export type EnvironmentalType = Schema.Schema.Type<typeof EnvironmentalType>;
+
+/**
+ * Cast failed types
+ */
+export const CastFailedType = Schema.Literal(
+  "Another action is in progress",
+  "Can't do that while moving",
+  "Interrupted",
+  "Invalid target",
+  "Item is not ready yet",
+  "No path available",
+  "Not enough energy",
+  "Not enough focus",
+  "Not enough mana",
+  "Not enough rage",
+  "Not ready yet",
+  "Not yet recovered",
+  "Out of range",
+  "Target not in line of sight",
+  "You are dead",
+  "A more powerful spell is already active",
+  "Can't do that while asleep",
+  "Can't do that while charmed",
+  "Can't do that while confused",
+  "Can't do that while fleeing",
+  "Can't do that while horrified",
+  "Can't do that while incapacitated",
+  "Can't do that while silenced",
+  "Can't do that while stunned",
+  "No target",
+  "Target needs to be in front of you.",
+  "Target too close",
+  "You are in combat",
+  "You are in shapeshift form",
+  "You are unable to move",
+  "You can't do that yet",
+  "You must be behind your target.",
+);
+export type CastFailedType = Schema.Schema.Type<typeof CastFailedType>;

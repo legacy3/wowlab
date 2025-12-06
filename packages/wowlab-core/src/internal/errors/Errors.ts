@@ -3,6 +3,14 @@ import * as Data from "effect/Data";
 import * as Entities from "../entities/index.js";
 import * as Branded from "../schemas/Branded.js";
 
+/** Union of all combat log errors */
+export type CombatLogError =
+  | QueueEmpty
+  | HandlerError
+  | EventValidationError
+  | HandlerNotFound
+  | DuplicateHandlerId;
+
 export type DbcError = DbcQueryError;
 
 /** Union of all errors that can occur during rotation execution */
@@ -38,10 +46,35 @@ export class DbcQueryError extends Data.TaggedError("DbcQueryError")<{
   readonly cause?: unknown;
 }> {}
 
+/** Error when trying to subscribe with a duplicate handler ID */
+export class DuplicateHandlerId extends Data.TaggedError("DuplicateHandlerId")<{
+  readonly handlerId: string;
+}> {}
+
+/** Error when an event fails validation */
+export class EventValidationError extends Data.TaggedError(
+  "EventValidationError",
+)<{
+  readonly event: unknown;
+  readonly message: string;
+}> {}
+
 export class GCDActive extends Data.TaggedError("GCDActive")<{
   readonly spell: Entities.Spell.Spell;
   readonly gcdEndsAt: number;
   readonly currentTime: number;
+}> {}
+
+/** Error when an event handler fails */
+export class HandlerError extends Data.TaggedError("HandlerError")<{
+  readonly handlerId: string;
+  readonly eventTag: string;
+  readonly cause: unknown;
+}> {}
+
+/** Error when a handler is not found for an event */
+export class HandlerNotFound extends Data.TaggedError("HandlerNotFound")<{
+  readonly handlerId: string;
 }> {}
 
 export class ItemNotFound extends Data.TaggedError("ItemNotFound")<{
@@ -80,6 +113,10 @@ export class ProfileBundleNotFound extends Data.TaggedError(
 
 export class ProjectileNotFound extends Data.TaggedError("ProjectileNotFound")<{
   readonly projectileId: Branded.ProjectileID;
+}> {}
+
+export class QueueEmpty extends Data.TaggedError("QueueEmpty")<{
+  readonly message: string;
 }> {}
 
 export class ScheduleInPast extends Data.TaggedError("ScheduleInPast")<{

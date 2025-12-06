@@ -49,7 +49,7 @@ export const WowLabToolHandlers = WowLabToolkit.toLayer(
         const effect = handler(args).pipe(
           Effect.provideService(DbcService, dbc),
           Effect.provideService(ExtractorService, extractor),
-        ) as Effect.Effect<unknown, unknown, never>;
+        ) as Effect.Effect<unknown, unknown>;
 
         return effect.pipe(
           Effect.map((result) => ({ result })),

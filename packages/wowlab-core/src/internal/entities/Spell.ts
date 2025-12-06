@@ -11,10 +11,6 @@ import {
   expiryTransform,
 } from "./Transforms.js";
 
-// ============================================================================
-// SpellInfo
-// ============================================================================
-
 interface SpellInfoProps extends SpellSchema.SpellDataFlat {
   readonly modifiers: readonly SpellModifier[];
 }
@@ -150,10 +146,6 @@ export const createNotFoundSpellInfo = (id: Branded.SpellID): SpellInfo =>
     id,
     name: `Not Found (${id})`,
   });
-
-// ============================================================================
-// Spell Entity
-// ============================================================================
 
 interface SpellComputedProps {
   readonly isReady: boolean;

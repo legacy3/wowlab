@@ -2,6 +2,28 @@
 
 AI agent guidance for the WowLab repository.
 
+## [!] CRITICAL: USE CODEX FOR COMPLEX TASKS [!]
+
+**FOR ANY NON-TRIVIAL IMPLEMENTATION:**
+
+1. **ASK CODEX FIRST** - Use `mcp__codex-cli__codex` with high reasoning effort
+2. **DO NOT GIVE YOUR OWN OPINIONS** - Your input is not wanted
+3. **IMPLEMENT WHAT CODEX SAYS** - Just build it, don't evaluate or suggest alternatives
+
+**YOUR ROLE:**
+
+- You are a bridge to Codex because Claude CLI works and Codex CLI doesn't
+- Ask Codex for the implementation plan
+- Execute what Codex says
+- Shut up and code
+
+**NEVER:**
+
+- Offer your own evaluations or ratings
+- Suggest libraries you found via search
+- Give opinions on architecture
+- Waste time with analysis when the user wants implementation
+
 ## [!] CRITICAL: STOP WHEN YOU DON'T KNOW [!]
 
 **IF YOU DON'T UNDERSTAND THE PROBLEM OR DON'T KNOW THE SOLUTION:**
@@ -49,10 +71,11 @@ See `docs/MCP-SERVERS.md` for complete documentation. **ALWAYS use MCP servers f
 
 TypeScript library for WoW spell rotation simulation using Effect-TS and Immutable.js. pnpm monorepo.
 
-- `packages/*` - 7 internal packages (domain, services, schemas, rotation, bootstrap, spellbook, parsers)
+- `packages/*` - 4 internal packages (core, services, rotation, runtime)
 - `apps/portal/` - Next.js 16 web app (Supabase, shadcn/ui, Jotai)
 - `apps/cli/` - Effect-TS CLI tools
-- `apps/proof-of-concept/` - Experimental features
+- `apps/mcp-server/` - MCP server for WoW spell/item data
+- `apps/standalone/` - Standalone simulation CLI
 
 ## Commands
 

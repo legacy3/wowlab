@@ -53,7 +53,7 @@ function NamespacePageInner({ namespace }: NamespacePageProps) {
                   : `No rotations found for @${namespace}`}
               </p>
               {isOwnProfile && (
-                <a href="/editor">
+                <a href="/rotations/editor">
                   <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
                     Create Rotation
                   </button>
