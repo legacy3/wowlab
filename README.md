@@ -31,6 +31,7 @@ WowLab provides a pure functional, event-driven simulation engine for analyzing 
 - `packages/wowlab-services` - Effect services (state, spell, lifecycle)
 - `packages/wowlab-rotation` - Rotation context & actions API
 - `packages/wowlab-runtime` - Effect Layer composition and runtime
+- `packages/wowlab-specs` - Class and spec definitions
 
 ## First-Time Setup
 
@@ -75,6 +76,7 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 - `@wowlab/services` - Effect services (state, spell, lifecycle, simulation)
 - `@wowlab/rotation` - Rotation context & actions API
 - `@wowlab/runtime` - Effect Layer composition
+- `@wowlab/specs` - Class and spec definitions
 
 ## MCP Server
 

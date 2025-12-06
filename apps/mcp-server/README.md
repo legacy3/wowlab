@@ -175,4 +175,4 @@ await get_schema({ table: "spell_misc" });
 
 ## License
 
-MIT
+[PolyForm Noncommercial License 1.0.0](../../LICENSE.md)
