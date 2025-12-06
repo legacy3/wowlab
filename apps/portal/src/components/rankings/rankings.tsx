@@ -43,7 +43,6 @@ import {
   selectedFightLengthAtom,
   selectedTimeWindowAtom,
   specRankingsAtom,
-  mostWantedItemsAtom,
   topSimCharactersAtom,
   CLASS_COLORS,
   RAID_TIERS,
@@ -51,6 +50,7 @@ import {
   TIME_WINDOWS,
   type TrendDirection,
 } from "@/atoms/dps-rankings";
+import { useMostWantedItems } from "@/hooks/use-most-wanted-items";
 
 function SpecRankingsTab() {
   const [tier, setTier] = useAtom(selectedTierAtom);
@@ -221,7 +221,16 @@ function SpecRankingsTab() {
 }
 
 function MostWantedItemsTab() {
-  const [mostWantedItems] = useAtom(mostWantedItemsAtom);
+  const {
+    result: mostWantedResult,
+    query: { isLoading },
+  } = useMostWantedItems();
+
+  const mostWantedItems = mostWantedResult?.data ?? [];
+
+  if (isLoading) {
+    return <MostWantedItemsSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -468,6 +477,26 @@ function TrendPill({
       {isPositive ? "+" : ""}
       {value.toFixed(1)}%
     </span>
+  );
+}
+
+function MostWantedItemsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <div className="space-y-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

@@ -262,9 +262,7 @@ function useFightProfiles() {
 
 ## Step 6: Most Wanted Items (Materialized View)
 
-Update atoms/dps-rankings/state.ts to use Refine hook or keep as Jotai with DB fetch:
-
-Option A: Create a hook (recommended):
+Create a Refine hook:
 
 // apps/portal/src/hooks/use-most-wanted-items.ts
 import { useList } from "@refinedev/core";
@@ -277,35 +275,6 @@ export function useMostWantedItems() {
     pagination: { pageSize: 10 },
   });
 }
-
-Option B: Update existing atom to fetch from DB:
-
-// atoms/dps-rankings/state.ts
-export const mostWantedItemsAtom = atomWithRefresh(async () => {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("most_wanted_items")
-    .select("*")
-    .order("rank")
-    .limit(10);
-
-  if (error) throw error;
-
-  return (data ?? []).map((row): WantedItem => ({
-    rank: row.rank,
-    id: row.id,
-    name: row.name,
-    slot: row.slot,
-    itemLevel: row.itemLevel,
-    classes: row.classes as WowClass[],
-    dpsGain: row.dpsGain,
-    source: row.source,
-    quality: row.quality,
-  }));
-});
-
-Choose Option A if you want consistency with Refine.
-Choose Option B if you want to minimize component changes for now.
 
 ## Step 7: Clean Up Remaining Supabase Atom Usages
 

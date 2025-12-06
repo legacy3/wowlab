@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Card,
   CardContent,
@@ -17,32 +17,62 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { RefreshCw, RotateCcw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw, RotateCcw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { settingsCardOrderAtom } from "@/atoms/user/settings-ui";
+import { useSetAtom } from "jotai";
+import { RESET } from "jotai/utils";
+import { getSupabaseClient } from "@/lib/refine/data-provider";
 
-// Mock initial values - these will be replaced with real state management
-const MOCK_SEED = "a1b2c3d4e5f6";
-const MOCK_MAX_PARALLEL = 50;
 const MIN_PARALLEL = 1;
 const MAX_PARALLEL = 200;
+const DEFAULT_MAX_PARALLEL = 50;
 
 export function SimulationSettingsCard() {
-  const [seed, setSeed] = useState(MOCK_SEED);
-  const [maxParallel, setMaxParallel] = useState([MOCK_MAX_PARALLEL]);
+  const { settings, isLoading, isUpdating, updateSettings } = useUserSettings();
+  const resetSettingsCardOrder = useSetAtom(settingsCardOrderAtom);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
-  const handleRegenerateSeed = () => {
-    // Mock seed generation - will be replaced with actual implementation
-    const newSeed = Array.from({ length: 12 }, () =>
-      Math.floor(Math.random() * 16).toString(16),
-    ).join("");
-    setSeed(newSeed);
-    toast.success("Simulation seed regenerated");
-  };
+  const seed = settings?.simulationSeed ?? "";
+  const maxParallel = settings?.maxParallelSimulations ?? DEFAULT_MAX_PARALLEL;
 
-  const handleResetInterface = () => {
-    // Mock interface reset - will be replaced with actual implementation
+  const handleRegenerateSeed = useCallback(async () => {
+    setIsRegenerating(true);
+    try {
+      const { data, error } = await getSupabaseClient().rpc(
+        "generate_random_seed",
+      );
+
+      if (error) {
+        throw error;
+      }
+      
+      updateSettings({ simulationSeed: data });
+      toast.success("Simulation seed regenerated");
+    } catch {
+      toast.error("Failed to regenerate seed");
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [updateSettings]);
+
+  const handleMaxParallelChange = useCallback(
+    (value: number[]) => {
+      updateSettings({ maxParallelSimulations: value[0] });
+    },
+    [updateSettings],
+  );
+
+  const handleResetInterface = useCallback(() => {
+    resetSettingsCardOrder(RESET);
     toast.success("Interface configuration reset to defaults");
-  };
+  }, [resetSettingsCardOrder]);
+
+  if (isLoading) {
+    return <SimulationSettingsCardSkeleton />;
+  }
 
   return (
     <Card>
@@ -67,9 +97,14 @@ export function SimulationSettingsCard() {
                 variant="outline"
                 size="icon"
                 onClick={handleRegenerateSeed}
+                disabled={isRegenerating || isUpdating}
                 title="Regenerate seed"
               >
-                <RefreshCw className="h-4 w-4" />
+                {isRegenerating || isUpdating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
               </Button>
             </div>
             <FieldDescription>
@@ -88,13 +123,12 @@ export function SimulationSettingsCard() {
                   min={MIN_PARALLEL}
                   max={MAX_PARALLEL}
                   step={1}
-                  value={maxParallel}
-                  onValueChange={setMaxParallel}
+                  value={[maxParallel]}
+                  onValueCommit={handleMaxParallelChange}
+                  disabled={isUpdating}
                   className="flex-1"
                 />
-                <div className="w-12 text-center font-medium">
-                  {maxParallel[0]}
-                </div>
+                <div className="w-12 text-center font-medium">{maxParallel}</div>
               </div>
               <FieldDescription>
                 Number of simulations that can run concurrently (1-200)
@@ -115,6 +149,47 @@ export function SimulationSettingsCard() {
             <FieldDescription>
               Reset all customized panel positions and layouts to defaults
             </FieldDescription>
+          </Field>
+        </FieldGroup>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SimulationSettingsCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Simulation Settings</CardTitle>
+        <CardDescription>
+          Configure simulation parameters and interface preferences
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="seed">Simulation Seed</FieldLabel>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 flex-1" />
+              <Skeleton className="h-10 w-10" />
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="max-parallel">
+              Maximum Parallel Simulations
+            </FieldLabel>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-2 flex-1" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel>Interface Configuration</FieldLabel>
+            <Skeleton className="h-10 w-48" />
           </Field>
         </FieldGroup>
       </CardContent>
