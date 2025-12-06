@@ -1,28 +1,83 @@
 "use client";
 
-import { Suspense } from "react";
+import { useList, useGetIdentity } from "@refinedev/core";
 import { ProfileHeader } from "@/components/rotations/profile-header";
 import { RotationsList } from "@/components/rotations/rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileCode } from "lucide-react";
-import type { Database } from "@/lib/supabase/database.types";
-
-type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
+import type { Rotation, Profile, UserIdentity } from "@/lib/supabase/types";
 
 interface NamespacePageProps {
   namespace: string;
 }
 
-function NamespacePageInner({ namespace }: NamespacePageProps) {
-  // TODO: Implement with Refine useOne/useList hooks in data migration phase
-  const user = null as {
-    id: string;
-    handle?: string;
-    avatarUrl?: string | null;
-  } | null;
-  const rotations: Rotation[] = [];
-  const isOwnProfile = false;
+function NamespacePageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="flex items-center gap-6 p-6">
+          <Skeleton className="h-24 w-24 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div>
+        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6 space-y-3">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function NamespacePage({ namespace }: NamespacePageProps) {
+  const { data: identity } = useGetIdentity<UserIdentity>();
+
+  const {
+    result: profileResult,
+    query: { isLoading: profileLoading },
+  } = useList<Profile>({
+    resource: "user_profiles",
+    filters: [{ field: "handle", operator: "eq", value: namespace }],
+    pagination: { pageSize: 1 },
+  });
+
+  const user = profileResult?.data?.[0];
+
+  const {
+    result: rotationsResult,
+    query: { isLoading: rotationsLoading },
+  } = useList<Rotation>({
+    resource: "rotations",
+    filters: [
+      { field: "namespace", operator: "eq", value: namespace },
+      { field: "deletedAt", operator: "null", value: true },
+    ],
+    sorters: [{ field: "updatedAt", order: "desc" }],
+    queryOptions: {
+      enabled: !!namespace,
+    },
+  });
+
+  const rotations = rotationsResult?.data ?? [];
+  const isOwnProfile = identity?.handle === namespace;
+
+  if (profileLoading || rotationsLoading) {
+     return <NamespacePageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -61,44 +116,5 @@ function NamespacePageInner({ namespace }: NamespacePageProps) {
         )}
       </div>
     </div>
-  );
-}
-
-function NamespacePageSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="flex items-center gap-6 p-6">
-          <Skeleton className="h-24 w-24 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div>
-        <Skeleton className="h-8 w-48 mb-4" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6 space-y-3">
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function NamespacePage({ namespace }: NamespacePageProps) {
-  return (
-    <Suspense fallback={<NamespacePageSkeleton />}>
-      <NamespacePageInner namespace={namespace} />
-    </Suspense>
   );
 }
