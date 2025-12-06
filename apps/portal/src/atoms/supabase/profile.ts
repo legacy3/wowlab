@@ -12,7 +12,7 @@ export const currentProfileAtom = atomWithRefresh(async (get) => {
 
   const supabase = get(supabaseClientAtom);
   const { data, error } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("*")
     .eq("id", user.id)
     .maybeSingle();
@@ -29,7 +29,7 @@ export const profileByIdAtomFamily = atomFamily((userId: string) =>
   atom(async (get) => {
     const supabase = get(supabaseClientAtom);
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("*")
       .eq("id", userId)
       .single();
@@ -67,7 +67,7 @@ export const profileSettingsAtom = atom(
 
     const supabase = get(supabaseClientAtom);
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .update(updates)
       .eq("id", user.id)
       .select()
@@ -101,7 +101,7 @@ export const checkHandleAvailabilityAtom = atom(
   async (get, set, handle: string): Promise<boolean> => {
     const supabase = get(supabaseClientAtom);
     const { data } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("handle")
       .eq("handle", handle)
       .maybeSingle();

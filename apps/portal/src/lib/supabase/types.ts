@@ -1,6 +1,6 @@
 import type { Database } from "./database.types";
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
 export type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
 

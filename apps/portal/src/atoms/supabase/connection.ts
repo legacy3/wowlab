@@ -14,7 +14,10 @@ export interface ConnectionStatus {
 export const connectionStatusAtom = atomWithRefresh(async (get) => {
   try {
     const supabase = get(supabaseClientAtom);
-    const { error } = await supabase.from("profiles").select("id").limit(1);
+    const { error } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .limit(1);
 
     if (error) {
       return {

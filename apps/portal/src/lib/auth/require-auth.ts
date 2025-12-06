@@ -14,7 +14,7 @@ export async function requireAuth() {
 
   // Get the user's profile
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("*")
     .eq("id", user.id)
     .single();
@@ -38,7 +38,7 @@ export async function getAuth() {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("*")
     .eq("id", user.id)
     .single();

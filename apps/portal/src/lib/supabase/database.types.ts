@@ -38,33 +38,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      profiles: {
-        Row: {
-          avatarUrl: string | null;
-          createdAt: string;
-          email: string;
-          handle: string;
-          id: string;
-          updatedAt: string;
-        };
-        Insert: {
-          avatarUrl?: string | null;
-          createdAt?: string;
-          email: string;
-          handle: string;
-          id: string;
-          updatedAt?: string;
-        };
-        Update: {
-          avatarUrl?: string | null;
-          createdAt?: string;
-          email?: string;
-          handle?: string;
-          id?: string;
-          updatedAt?: string;
-        };
-        Relationships: [];
-      };
       reserved_handles: {
         Row: {
           createdAt: string;
@@ -222,6 +195,65 @@ export type Database = {
           },
         ];
       };
+      user_profiles: {
+        Row: {
+          avatarUrl: string | null;
+          createdAt: string;
+          email: string;
+          handle: string;
+          id: string;
+          updatedAt: string;
+        };
+        Insert: {
+          avatarUrl?: string | null;
+          createdAt?: string;
+          email: string;
+          handle: string;
+          id: string;
+          updatedAt?: string;
+        };
+        Update: {
+          avatarUrl?: string | null;
+          createdAt?: string;
+          email?: string;
+          handle?: string;
+          id?: string;
+          updatedAt?: string;
+        };
+        Relationships: [];
+      };
+      user_settings: {
+        Row: {
+          createdAt: string;
+          id: string;
+          maxParallelSimulations: number | null;
+          simulationSeed: string;
+          updatedAt: string;
+        };
+        Insert: {
+          createdAt?: string;
+          id: string;
+          maxParallelSimulations?: number | null;
+          simulationSeed?: string;
+          updatedAt?: string;
+        };
+        Update: {
+          createdAt?: string;
+          id?: string;
+          maxParallelSimulations?: number | null;
+          simulationSeed?: string;
+          updatedAt?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_id_fkey";
+            columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       spec_rankings_hourly: {
@@ -255,20 +287,7 @@ export type Database = {
     };
     Functions: {
       generate_default_handle: { Args: { user_id: string }; Returns: string };
-      get_item_schema: {
-        Args: never;
-        Returns: {
-          column_name: string;
-          data_type: string;
-        }[];
-      };
-      get_spell_schema: {
-        Args: never;
-        Returns: {
-          column_name: string;
-          data_type: string;
-        }[];
-      };
+      generate_random_seed: { Args: never; Returns: string };
     };
     Enums: {
       [_ in never]: never;
@@ -951,6 +970,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      spell_aura_restrictions: {
+        Row: {
+          CasterAuraSpell: number | null;
+          CasterAuraState: number | null;
+          CasterAuraType: number | null;
+          DifficultyID: number | null;
+          ExcludeCasterAuraSpell: number | null;
+          ExcludeCasterAuraState: number | null;
+          ExcludeCasterAuraType: number | null;
+          ExcludeTargetAuraSpell: number | null;
+          ExcludeTargetAuraState: number | null;
+          ExcludeTargetAuraType: number | null;
+          ID: number;
+          SpellID: number | null;
+          TargetAuraSpell: number | null;
+          TargetAuraState: number | null;
+          TargetAuraType: number | null;
+        };
+        Insert: {
+          CasterAuraSpell?: number | null;
+          CasterAuraState?: number | null;
+          CasterAuraType?: number | null;
+          DifficultyID?: number | null;
+          ExcludeCasterAuraSpell?: number | null;
+          ExcludeCasterAuraState?: number | null;
+          ExcludeCasterAuraType?: number | null;
+          ExcludeTargetAuraSpell?: number | null;
+          ExcludeTargetAuraState?: number | null;
+          ExcludeTargetAuraType?: number | null;
+          ID: number;
+          SpellID?: number | null;
+          TargetAuraSpell?: number | null;
+          TargetAuraState?: number | null;
+          TargetAuraType?: number | null;
+        };
+        Update: {
+          CasterAuraSpell?: number | null;
+          CasterAuraState?: number | null;
+          CasterAuraType?: number | null;
+          DifficultyID?: number | null;
+          ExcludeCasterAuraSpell?: number | null;
+          ExcludeCasterAuraState?: number | null;
+          ExcludeCasterAuraType?: number | null;
+          ExcludeTargetAuraSpell?: number | null;
+          ExcludeTargetAuraState?: number | null;
+          ExcludeTargetAuraType?: number | null;
+          ID?: number;
+          SpellID?: number | null;
+          TargetAuraSpell?: number | null;
+          TargetAuraState?: number | null;
+          TargetAuraType?: number | null;
+        };
+        Relationships: [];
+      };
       spell_cast_times: {
         Row: {
           Base: number | null;
@@ -1134,6 +1207,21 @@ export type Database = {
           RecoveryTime?: number | null;
           SpellID?: number;
           StartRecoveryTime?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_description_variables: {
+        Row: {
+          ID: number;
+          Variables: string | null;
+        };
+        Insert: {
+          ID: number;
+          Variables?: string | null;
+        };
+        Update: {
+          ID?: number;
+          Variables?: string | null;
         };
         Relationships: [];
       };
@@ -1344,6 +1432,57 @@ export type Database = {
           ID?: number;
           InterruptFlags?: number | null;
           SpellID?: number;
+        };
+        Relationships: [];
+      };
+      spell_learn_spell: {
+        Row: {
+          ID: number;
+          LearnSpellID: number | null;
+          OverridesSpellID: number | null;
+          SpellID: number | null;
+        };
+        Insert: {
+          ID: number;
+          LearnSpellID?: number | null;
+          OverridesSpellID?: number | null;
+          SpellID?: number | null;
+        };
+        Update: {
+          ID?: number;
+          LearnSpellID?: number | null;
+          OverridesSpellID?: number | null;
+          SpellID?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_levels: {
+        Row: {
+          BaseLevel: number | null;
+          DifficultyID: number | null;
+          ID: number;
+          MaxLevel: number | null;
+          MaxPassiveAuraLevel: number | null;
+          SpellID: number | null;
+          SpellLevel: number | null;
+        };
+        Insert: {
+          BaseLevel?: number | null;
+          DifficultyID?: number | null;
+          ID: number;
+          MaxLevel?: number | null;
+          MaxPassiveAuraLevel?: number | null;
+          SpellID?: number | null;
+          SpellLevel?: number | null;
+        };
+        Update: {
+          BaseLevel?: number | null;
+          DifficultyID?: number | null;
+          ID?: number;
+          MaxLevel?: number | null;
+          MaxPassiveAuraLevel?: number | null;
+          SpellID?: number | null;
+          SpellLevel?: number | null;
         };
         Relationships: [];
       };
@@ -1623,6 +1762,117 @@ export type Database = {
         };
         Relationships: [];
       };
+      spell_replacement: {
+        Row: {
+          ID: number;
+          ReplacementSpellID: number | null;
+          SpellID: number | null;
+        };
+        Insert: {
+          ID: number;
+          ReplacementSpellID?: number | null;
+          SpellID?: number | null;
+        };
+        Update: {
+          ID?: number;
+          ReplacementSpellID?: number | null;
+          SpellID?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_shapeshift: {
+        Row: {
+          ID: number;
+          ShapeshiftExclude_0: number | null;
+          ShapeshiftExclude_1: number | null;
+          ShapeshiftMask_0: number | null;
+          ShapeshiftMask_1: number | null;
+          SpellID: number | null;
+          StanceBarOrder: number | null;
+        };
+        Insert: {
+          ID: number;
+          ShapeshiftExclude_0?: number | null;
+          ShapeshiftExclude_1?: number | null;
+          ShapeshiftMask_0?: number | null;
+          ShapeshiftMask_1?: number | null;
+          SpellID?: number | null;
+          StanceBarOrder?: number | null;
+        };
+        Update: {
+          ID?: number;
+          ShapeshiftExclude_0?: number | null;
+          ShapeshiftExclude_1?: number | null;
+          ShapeshiftMask_0?: number | null;
+          ShapeshiftMask_1?: number | null;
+          SpellID?: number | null;
+          StanceBarOrder?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_shapeshift_form: {
+        Row: {
+          AttackIconFileID: number | null;
+          BonusActionBar: number | null;
+          CombatRoundTime: number | null;
+          CreatureDisplayID: number | null;
+          CreatureType: number | null;
+          DamageVariance: number | null;
+          Flags: number | null;
+          ID: number;
+          MountTypeID: number | null;
+          Name_lang: string | null;
+          PresetSpellID_0: number | null;
+          PresetSpellID_1: number | null;
+          PresetSpellID_2: number | null;
+          PresetSpellID_3: number | null;
+          PresetSpellID_4: number | null;
+          PresetSpellID_5: number | null;
+          PresetSpellID_6: number | null;
+          PresetSpellID_7: number | null;
+        };
+        Insert: {
+          AttackIconFileID?: number | null;
+          BonusActionBar?: number | null;
+          CombatRoundTime?: number | null;
+          CreatureDisplayID?: number | null;
+          CreatureType?: number | null;
+          DamageVariance?: number | null;
+          Flags?: number | null;
+          ID: number;
+          MountTypeID?: number | null;
+          Name_lang?: string | null;
+          PresetSpellID_0?: number | null;
+          PresetSpellID_1?: number | null;
+          PresetSpellID_2?: number | null;
+          PresetSpellID_3?: number | null;
+          PresetSpellID_4?: number | null;
+          PresetSpellID_5?: number | null;
+          PresetSpellID_6?: number | null;
+          PresetSpellID_7?: number | null;
+        };
+        Update: {
+          AttackIconFileID?: number | null;
+          BonusActionBar?: number | null;
+          CombatRoundTime?: number | null;
+          CreatureDisplayID?: number | null;
+          CreatureType?: number | null;
+          DamageVariance?: number | null;
+          Flags?: number | null;
+          ID?: number;
+          MountTypeID?: number | null;
+          Name_lang?: string | null;
+          PresetSpellID_0?: number | null;
+          PresetSpellID_1?: number | null;
+          PresetSpellID_2?: number | null;
+          PresetSpellID_3?: number | null;
+          PresetSpellID_4?: number | null;
+          PresetSpellID_5?: number | null;
+          PresetSpellID_6?: number | null;
+          PresetSpellID_7?: number | null;
+        };
+        Relationships: [];
+      };
       spell_target_restrictions: {
         Row: {
           ConeDegrees: number | null;
@@ -1656,6 +1906,51 @@ export type Database = {
           TargetCreatureType?: number | null;
           Targets?: number | null;
           Width?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_totems: {
+        Row: {
+          ID: number;
+          RequiredTotemCategoryID_0: number | null;
+          RequiredTotemCategoryID_1: number | null;
+          SpellID: number | null;
+          Totem_0: number | null;
+          Totem_1: number | null;
+        };
+        Insert: {
+          ID: number;
+          RequiredTotemCategoryID_0?: number | null;
+          RequiredTotemCategoryID_1?: number | null;
+          SpellID?: number | null;
+          Totem_0?: number | null;
+          Totem_1?: number | null;
+        };
+        Update: {
+          ID?: number;
+          RequiredTotemCategoryID_0?: number | null;
+          RequiredTotemCategoryID_1?: number | null;
+          SpellID?: number | null;
+          Totem_0?: number | null;
+          Totem_1?: number | null;
+        };
+        Relationships: [];
+      };
+      spell_x_description_variables: {
+        Row: {
+          ID: number;
+          SpellDescriptionVariablesID: number | null;
+          SpellID: number | null;
+        };
+        Insert: {
+          ID: number;
+          SpellDescriptionVariablesID?: number | null;
+          SpellID?: number | null;
+        };
+        Update: {
+          ID?: number;
+          SpellDescriptionVariablesID?: number | null;
+          SpellID?: number | null;
         };
         Relationships: [];
       };

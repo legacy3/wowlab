@@ -265,7 +265,7 @@ head=,id=212011,bonus_id=6652/10877...`}
       }
 
       acc[profile.group].push(profile);
-      
+
       return acc;
     },
     {} as Record<string, FightProfile[]>,

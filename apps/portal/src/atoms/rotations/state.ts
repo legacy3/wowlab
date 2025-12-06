@@ -34,7 +34,7 @@ export const profileByHandleAtomFamily = atomFamily((handle: string) =>
   atom(async (get) => {
     const supabase = get(supabaseClientAtom);
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("*")
       .eq("handle", handle)
       .single();
@@ -97,7 +97,7 @@ export const saveRotationAtom = atom(
 
     // Get user handle for namespace (handle is always set during onboarding)
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("user_profiles")
       .select("handle")
       .eq("id", user.id)
       .single();

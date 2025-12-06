@@ -16,7 +16,7 @@ import { ProfileHeader } from "@/components/rotations/profile-header";
 import { RotationsList } from "@/components/rotations/rotations-list";
 import type { Database } from "@/lib/supabase/database.types";
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
 type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
 
 type Props = {
