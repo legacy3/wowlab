@@ -68,13 +68,13 @@ The existing QueryClient will be:
 
 ## Database Tables
 
-| Table                  | Purpose                               | Status        |
-| ---------------------- | ------------------------------------- | ------------- |
-| `user_profiles`        | Public profile (handle, avatar)       | EXISTS        |
-| `user_settings`        | Private settings (theme, UI prefs)    | CREATE in 0.1 |
-| `rotations`            | User rotation scripts                 | EXISTS        |
-| `rotation_sim_results` | Simulation results                    | EXISTS        |
-| `fight_profiles`       | Fight type configurations             | CREATE in 0.2 |
+| Table                  | Purpose                            | Status        |
+| ---------------------- | ---------------------------------- | ------------- |
+| `user_profiles`        | Public profile (handle, avatar)    | EXISTS        |
+| `user_settings`        | Private settings (theme, UI prefs) | CREATE in 0.1 |
+| `rotations`            | User rotation scripts              | EXISTS        |
+| `rotation_sim_results` | Simulation results                 | EXISTS        |
+| `fight_profiles`       | Fight type configurations          | CREATE in 0.2 |
 
 ## Materialized Views
 
