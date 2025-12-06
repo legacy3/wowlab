@@ -1,34 +1,30 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/account/user-avatar";
-import { Calendar, Code2, GitFork, Star } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { Profile } from "@/lib/supabase/types";
+import { Code2, GitFork, Star } from "lucide-react";
+import type { UserIdentity } from "@/lib/supabase/types";
 
 interface ProfileHeaderProps {
-  profile: Profile;
+  user: UserIdentity;
   rotationCount?: number;
 }
 
-export function ProfileHeader({
-  profile,
-  rotationCount = 0,
-}: ProfileHeaderProps) {
+export function ProfileHeader({ user, rotationCount = 0 }: ProfileHeaderProps) {
   return (
     <Card className="border-2">
       <CardContent className="p-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           <UserAvatar
-            profile={profile}
+            user={user}
             className="h-24 w-24"
             fallbackClassName="text-2xl"
           />
 
           <div className="flex-1 space-y-4">
             <div>
-              <h1 className="text-3xl font-bold">@{profile.handle}</h1>
-              {profile.email && (
+              <h1 className="text-3xl font-bold">@{user.handle ?? "user"}</h1>
+              {user.email && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  {profile.email}
+                  {user.email}
                 </p>
               )}
             </div>
@@ -53,18 +49,6 @@ export function ProfileHeader({
                 <span className="font-medium">0</span>
                 <span className="text-muted-foreground">Stars</span>
               </div>
-
-              {profile.createdAt && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    Joined{" "}
-                    {formatDistanceToNow(new Date(profile.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

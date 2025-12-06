@@ -1,9 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
-// import { profileByIdAtomFamily, currentUserAtom } from "@/atoms";
 import { useGetIdentity } from "@refinedev/core";
 import {
   Card,
@@ -21,57 +18,33 @@ interface UserProfileInnerProps {
 }
 
 function UserProfileInner({ userId }: UserProfileInnerProps) {
-  // TODO(refine-migration): Now using Refine data hooks
-  // const [currentUser] = useAtom(currentUserAtom);
-  // const profileAtom = useMemo(() => profileByIdAtomFamily(userId), [userId]);
-  // const [profile] = useAtom(profileAtom);
   const { data: identity } = useGetIdentity<{ id: string }>();
-  // TODO(refine-migration): useOne returns different structure, fix in Phase 4/5
-  // const { result: profileData } = useOne({
-  //   resource: "profiles",
-  //   id: userId,
-  // });
-  const currentUser = identity ? { id: identity.id } : null;
-  // Temporary placeholder until Refine migration is complete
-  const profile = {
+  const currentUserId = identity?.id;
+  // TODO: Fetch user using useOne hook once data migration is complete
+  const user = {
     id: userId,
     handle: "user",
     email: "",
     avatarUrl: null as string | null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
-  if (!profile) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>User Not Found</CardTitle>
-          <CardDescription>
-            The requested user profile could not be found
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  const isOwnProfile = currentUser?.id === profile.id;
+  const isOwnProfile = currentUserId === user.id;
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-start gap-4">
           <UserAvatar
-            profile={profile}
+            user={user}
             className="h-16 w-16"
             fallbackClassName="text-lg"
           />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <CardTitle>@{profile.handle}</CardTitle>
+              <CardTitle>@{user.handle}</CardTitle>
               {isOwnProfile && <Badge variant="secondary">You</Badge>}
             </div>
-            <CardDescription>{profile.email}</CardDescription>
+            <CardDescription>{user.email}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -81,36 +54,8 @@ function UserProfileInner({ userId }: UserProfileInnerProps) {
             <h3 className="text-sm font-medium text-muted-foreground">
               User ID
             </h3>
-            <p className="text-sm font-mono mt-1">{profile.id}</p>
+            <p className="text-sm font-mono mt-1">{user.id}</p>
           </div>
-          {profile.createdAt && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Member Since
-              </h3>
-              <p className="text-sm mt-1">
-                {new Date(profile.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          )}
-          {profile.updatedAt && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Last Updated
-              </h3>
-              <p className="text-sm mt-1">
-                {new Date(profile.updatedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

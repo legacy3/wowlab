@@ -1,39 +1,78 @@
-// TODO(refine-migration): Replace with Refine auth in Phase 4/5
-// import { requireAuth } from "@/lib/auth/require-auth";
+"use client";
+
+import { redirect } from "next/navigation";
+import { useGetIdentity, useIsAuthenticated, useList } from "@refinedev/core";
 import { PageLayout } from "@/components/page";
 import { AccountTabs } from "@/components/account/account-tabs";
-import type { Database } from "@/lib/supabase/database.types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader } from "@/components/ui/card";
+import type { UserIdentity, Rotation } from "@/lib/supabase/types";
 
-type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
+function AccountSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <Skeleton className="h-6 w-48 mt-2" />
+          <Skeleton className="h-4 w-32" />
+        </CardHeader>
+      </Card>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export default async function AccountPage() {
-  // TODO(refine-migration): Replace with Refine useIsAuthenticated + useGetIdentity hooks
-  // For now, this page will show empty state - implement with Refine in Phase 4/5
-  // const { profile, supabase } = await requireAuth();
-  // const { data: rotations } = await supabase
-  //   .from("rotations")
-  //   .select("*")
-  //   .eq("user_id", profile.id)
-  //   .is("deleted_at", null)
-  //   .order("updated_at", { ascending: false });
+export default function AccountPage() {
+  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
+  const { data: identity, isLoading: identityLoading } =
+    useGetIdentity<UserIdentity>();
 
-  // Temporary placeholder until Refine migration
-  const profile = {
-    id: "",
-    handle: "",
-    avatarUrl: null as string | null,
-    createdAt: new Date().toISOString(),
-    email: "",
-    updatedAt: new Date().toISOString(),
-  };
-  const rotations: Rotation[] = [];
+  const {
+    result: rotationsResult,
+    query: { isLoading: rotationsLoading },
+  } = useList<Rotation>({
+    resource: "rotations",
+    filters: [
+      { field: "userId", operator: "eq", value: identity?.id },
+      { field: "deletedAt", operator: "null", value: true },
+    ],
+    sorters: [{ field: "updatedAt", order: "desc" }],
+    queryOptions: {
+      enabled: !!identity?.id,
+    },
+  });
+
+  if (authLoading || identityLoading || rotationsLoading) {
+    return (
+      <PageLayout
+        title="Account"
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Account" }]}
+      >
+        <AccountSkeleton />
+      </PageLayout>
+    );
+  }
+
+  if (!auth?.authenticated || !identity) {
+    redirect("/auth/sign-in");
+  }
+
+  const rotations = rotationsResult?.data ?? [];
 
   return (
     <PageLayout
       title="Account"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Account" }]}
     >
-      <AccountTabs profile={profile} rotations={rotations} />
+      <AccountTabs user={identity} rotations={rotations} />
     </PageLayout>
   );
 }

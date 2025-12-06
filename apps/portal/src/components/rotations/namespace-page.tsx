@@ -1,13 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
-// import {
-//   profileByHandleAtomFamily,
-//   rotationsByNamespaceAtomFamily,
-// } from "@/atoms/rotations/state";
-// import { currentUserAtom } from "@/atoms/supabase/auth";
 import { ProfileHeader } from "@/components/rotations/profile-header";
 import { RotationsList } from "@/components/rotations/rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,24 +15,19 @@ interface NamespacePageProps {
 }
 
 function NamespacePageInner({ namespace }: NamespacePageProps) {
-  // TODO(refine-migration): Replace with Refine useOne/useList hooks
-  // const [profile] = useAtom(profileByHandleAtomFamily(namespace));
-  // const [rotations] = useAtom(rotationsByNamespaceAtomFamily(namespace));
-  // const [currentUser] = useAtom(currentUserAtom);
-  // const isOwnProfile = profile && currentUser && currentUser.id === profile.id;
-
-  // Temporary placeholders until Refine migration
-  const profile = null;
+  // TODO: Implement with Refine useOne/useList hooks in data migration phase
+  const user = null as {
+    id: string;
+    handle?: string;
+    avatarUrl?: string | null;
+  } | null;
   const rotations: Rotation[] = [];
   const isOwnProfile = false;
 
   return (
     <div className="space-y-6">
-      {profile && (
-        <ProfileHeader
-          profile={profile}
-          rotationCount={rotations?.length ?? 0}
-        />
+      {user && (
+        <ProfileHeader user={user} rotationCount={rotations?.length ?? 0} />
       )}
 
       <div>

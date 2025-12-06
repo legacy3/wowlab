@@ -2,9 +2,6 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
-// import { currentUserAtom } from "@/atoms";
 import { useIsAuthenticated } from "@refinedev/core";
 import { SignInForm } from "./sign-in-form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,18 +9,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function SignInInner() {
   const router = useRouter();
-  // TODO(refine-migration): Now using Refine auth
-  // const [user] = useAtom(currentUserAtom);
   const { data: authData } = useIsAuthenticated();
-  const user = authData?.authenticated ? authData : null;
+  const isAuthenticated = authData?.authenticated;
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [isAuthenticated, router]);
 
-  if (user) {
+  if (isAuthenticated) {
     return null;
   }
 

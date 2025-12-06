@@ -1,15 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
-// import {
-//   rotationAtomFamily,
-//   profileByHandleAtomFamily,
-//   rotationSimResultsAtomFamily,
-//   parentRotationAtomFamily,
-//   forkRotationsAtomFamily,
-// } from "@/atoms/rotations/state";
 import {
   Card,
   CardContent,
@@ -49,14 +40,7 @@ interface RotationDetailInnerProps {
 }
 
 function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
-  // TODO(refine-migration): Replace with Refine useOne/useList hooks
-  // const [rotation] = useAtom(rotationAtomFamily(`${namespace}/${slug}`));
-  // const [profile] = useAtom(profileByHandleAtomFamily(namespace));
-  // const [simResults] = useAtom(rotationSimResultsAtomFamily(rotation.id));
-  // const [parent] = useAtom(parentRotationAtomFamily(rotation.parentId));
-  // const [forks] = useAtom(forkRotationsAtomFamily(rotation.id));
-
-  // Temporary placeholder data until Refine migration
+  // TODO: Implement with Refine useOne/useList hooks in data migration phase
   const rotation = {
     id: "",
     name: "Loading...",
@@ -72,7 +56,8 @@ function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
     publishedAt: null as string | null,
     parentId: null as string | null,
   };
-  const profile = null;
+  // TODO: Fetch profile using Refine useOne hook in data migration phase
+  const author = null as { handle?: string; avatarUrl?: string | null } | null;
   const simResults: {
     id: string;
     scenario: string;
@@ -98,7 +83,7 @@ function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          {profile && <UserAvatar profile={profile} className="h-14 w-14" />}
+          {author && <UserAvatar user={author} className="h-14 w-14" />}
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-2xl font-bold">{rotation.name}</h2>

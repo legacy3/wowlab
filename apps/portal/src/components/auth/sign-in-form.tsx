@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useSetAtom } from "jotai";
-// import { signInWithOAuthAtom } from "@/atoms";
 import { useLogin } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -20,9 +17,6 @@ import { Github, MessageCircle, Sparkles } from "lucide-react";
 export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<"discord" | "github" | null>(null);
-
-  // TODO(refine-migration): Now using Refine login
-  // const signInWithOAuth = useSetAtom(signInWithOAuthAtom);
   const { mutate: login } = useLogin<{
     provider: "discord" | "github";
     redirectTo: string;

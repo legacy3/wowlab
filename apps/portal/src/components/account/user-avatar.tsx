@@ -1,26 +1,28 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { Profile } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
-  profile: Profile;
+  user: {
+    handle?: string;
+    avatarUrl?: string | null;
+  };
   className?: string;
   fallbackClassName?: string;
 }
 
 export function UserAvatar({
-  profile,
+  user,
   className,
   fallbackClassName,
 }: UserAvatarProps) {
-  const initials = profile.handle?.[0]?.toUpperCase() ?? "?";
+  const initials = user.handle?.[0]?.toUpperCase() ?? "?";
 
   return (
     <Avatar className={cn(className)}>
-      {profile.avatarUrl && (
-        <AvatarImage src={profile.avatarUrl} alt={`@${profile.handle}`} />
+      {user.avatarUrl && (
+        <AvatarImage src={user.avatarUrl} alt={`@${user.handle}`} />
       )}
       <AvatarFallback className={cn(fallbackClassName)}>
         {initials}
