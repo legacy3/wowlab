@@ -2,15 +2,15 @@
 
 ## Stack
 
-| Layer      | Technology                           |
-| ---------- | ------------------------------------ |
-| Framework  | Next.js 16 App Router                |
-| Data Layer | Refine + @refinedev/supabase         |
-| Auth       | Refine authProvider + Supabase OAuth |
-| Caching    | TanStack Query + IndexedDB           |
-| Spell Data | Effect-TS + TanStack Query           |
-| UI State   | Jotai                                |
-| Components | shadcn/ui                            |
+| Layer       | Technology                           |
+| ----------- | ------------------------------------ |
+| Framework   | Next.js 16 App Router                |
+| Data Layer  | Refine + @refinedev/supabase         |
+| Auth        | Refine authProvider + Supabase OAuth |
+| Caching     | TanStack Query + IndexedDB           |
+| Spell Data  | Effect-TS + TanStack Query           |
+| URL State   | nuqs                                 |
+| Components  | shadcn/ui                            |
 
 ---
 
@@ -54,7 +54,6 @@ src/
 │
 ├── providers/
 │   ├── refine-provider.tsx       # Refine + TanStack Query + persistence
-│   ├── jotai-provider.tsx        # Jotai for UI state
 │   └── theme-provider.tsx        # Theme
 │
 ├── queries/
@@ -64,17 +63,6 @@ src/
 ├── hooks/
 │   ├── use-spell.ts              # useSpell, useSpellName, useSpellEffects
 │   └── use-item.ts               # useItem, useItemSparse
-│
-├── atoms/                        # UI-only state
-│   ├── ui/
-│   │   └── sortable-state.ts     # Layout preferences
-│   ├── sim/
-│   │   ├── config.ts             # Simulation parameters
-│   │   └── results.ts            # Simulation results
-│   ├── editor/
-│   │   └── state.ts              # Editor preferences
-│   └── charts/
-│       └── state.ts              # Chart state
 │
 └── components/                   # Pure UI components
     ├── layout/
@@ -165,6 +153,9 @@ export function RefineProvider({ children }: { children: React.ReactNode }) {
         {
           name: "user_profiles",
           show: "/users/:handle",
+        },
+        {
+          name: "user_preferences",
         },
         {
           name: "rotation_sim_results",
@@ -390,7 +381,6 @@ export const useSpellEffects = (id: number) => useQuery(spellEffectsQuery(id));
 ```typescript
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { RefineProvider } from "@/providers/refine-provider";
-import { JotaiProvider } from "@/providers/jotai-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { SiteShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
@@ -401,12 +391,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <NuqsAdapter>
           <RefineProvider>
-            <JotaiProvider>
-              <ThemeProvider>
-                <SiteShell>{children}</SiteShell>
-                <Toaster />
-              </ThemeProvider>
-            </JotaiProvider>
+            <ThemeProvider>
+              <SiteShell>{children}</SiteShell>
+              <Toaster />
+            </ThemeProvider>
           </RefineProvider>
         </NuqsAdapter>
       </body>
@@ -544,12 +532,12 @@ export default function AccountPage() {
 | --------------- | ---------------------------------------------------------------------- |
 | Rotations CRUD  | Refine `useList`, `useOne`, `useCreate`, `useUpdate`, `useDelete`      |
 | User profiles   | Refine `useOne`, `useUpdate`                                           |
+| User prefs      | Refine `useOne`, `useUpdate` on `user_preferences`                     |
 | Sim results     | Refine `useList`, `useCreate`                                          |
 | Auth state      | Refine `useGetIdentity`, `useIsAuthenticated`, `useLogin`, `useLogout` |
 | Spell/item data | TanStack Query via `useSpell`, `useItem` (Effect-TS backend)           |
-| UI preferences  | Jotai `atomWithStorage`                                                |
-| Sim config      | Jotai atoms                                                            |
-| Editor state    | Jotai atoms                                                            |
+| URL state       | nuqs (filters, pagination, shareable state)                            |
+| Ephemeral UI    | React `useState`                                                       |
 
 ---
 
@@ -558,6 +546,7 @@ export default function AccountPage() {
 ```bash
 pnpm add @refinedev/core @refinedev/supabase @refinedev/nextjs-router
 pnpm add @tanstack/react-query-persist-client idb-keyval
+pnpm remove jotai
 ```
 
 ---
@@ -565,13 +554,8 @@ pnpm add @tanstack/react-query-persist-client idb-keyval
 ## Files to Delete
 
 ```
-src/atoms/supabase/auth.ts
-src/atoms/supabase/actions.ts
-src/atoms/supabase/profile.ts
-src/atoms/supabase/connection.ts
-src/atoms/rotations/state.ts
-src/atoms/changelog/state.ts
-src/atoms/dps-rankings/state.ts
+src/atoms/                        # Entire directory (replaced by Refine + React state)
+src/providers/jotai-provider.tsx
 src/lib/auth/require-auth.ts
 src/components/providers/auth-sync.tsx
 ```
