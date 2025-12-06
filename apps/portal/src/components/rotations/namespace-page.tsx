@@ -1,6 +1,7 @@
 "use client";
 
 import { useList, useGetIdentity } from "@refinedev/core";
+import Link from "next/link";
 import { ProfileHeader } from "@/components/rotations/profile-header";
 import { RotationsList } from "@/components/rotations/rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,7 +77,7 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
   const isOwnProfile = identity?.handle === namespace;
 
   if (profileLoading || rotationsLoading) {
-     return <NamespacePageSkeleton />;
+    return <NamespacePageSkeleton />;
   }
 
   return (
@@ -105,11 +106,12 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
                   : `No rotations found for @${namespace}`}
               </p>
               {isOwnProfile && (
-                <a href="/rotations/editor">
-                  <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-                    Create Rotation
-                  </button>
-                </a>
+                <Link
+                  href="/rotations/editor"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Create Rotation
+                </Link>
               )}
             </CardContent>
           </Card>

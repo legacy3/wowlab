@@ -83,7 +83,6 @@ export const specRankingsAtom = atomWithRefresh(async () => {
   );
 });
 
-
 export const topSimCharactersAtom = atomWithRefresh(async () => {
   const supabase = createClient();
 

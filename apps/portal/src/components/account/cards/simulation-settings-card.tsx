@@ -48,7 +48,7 @@ export function SimulationSettingsCard() {
       if (error) {
         throw error;
       }
-      
+
       updateSettings({ simulationSeed: data });
       toast.success("Simulation seed regenerated");
     } catch {
@@ -128,7 +128,9 @@ export function SimulationSettingsCard() {
                   disabled={isUpdating}
                   className="flex-1"
                 />
-                <div className="w-12 text-center font-medium">{maxParallel}</div>
+                <div className="w-12 text-center font-medium">
+                  {maxParallel}
+                </div>
               </div>
               <FieldDescription>
                 Number of simulations that can run concurrently (1-200)

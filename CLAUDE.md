@@ -55,7 +55,7 @@ Never use `pnpm --filter` or `pnpm typecheck`.
 ## PROJECT STRUCTURE
 
 - `packages/*` — Effect-TS simulation library
-- `apps/portal/` — Next.js 16, shadcn/ui, Jotai
+- `apps/portal/` — Next.js 16, shadcn/ui, Refine + Jotai
 - `apps/cli/` — CLI tools
 - `apps/mcp-server/` — WoW data MCP server
 
@@ -65,7 +65,9 @@ Never use `pnpm --filter` or `pnpm typecheck`.
 
 **Next.js:** Server components for pages, client components for interactivity. PageLayout wrapper. Suspense with skeletons.
 
-**Jotai:** `useAtom()` only. Async atoms wrapped in Suspense. Domain folders in `atoms/`.
+**Data Layer:** Refine + @refinedev/supabase for Supabase data (rotations, profiles, settings, sim results). Use `useList`, `useOne`, `useCreate`, `useUpdate` hooks.
+
+**UI State:** Jotai for ephemeral UI state only (editor, timeline, charts, computing, workbench). Domain folders in `atoms/`.
 
 **Naming:** `Feature` → `FeatureInner` → `FeatureSkeleton`
 
