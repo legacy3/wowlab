@@ -54,5 +54,5 @@ coverage/
 .mcp.json
 
 # Third party data (local only)
-third_party/simc/
-third_party/wowlab-data/
+third_party/*
+!third_party/README.md
