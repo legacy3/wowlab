@@ -260,8 +260,12 @@ head=,id=212011,bonus_id=6652/10877...`}
   // Group profiles by category
   const groupedProfiles = FIGHT_PROFILES.reduce(
     (acc, profile) => {
-      if (!acc[profile.group]) acc[profile.group] = [];
+      if (!acc[profile.group]) {
+        acc[profile.group] = [];
+      }
+
       acc[profile.group].push(profile);
+      
       return acc;
     },
     {} as Record<string, FightProfile[]>,
