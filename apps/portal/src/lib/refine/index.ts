@@ -1,2 +1,4 @@
-// Exports will be added in Phase 2
+export { createDataProvider } from "./data-provider";
+export { createAuthProvider } from "./auth-provider";
+export { createAccessControlProvider } from "./access-control";
 export { createPersister } from "./persister";
