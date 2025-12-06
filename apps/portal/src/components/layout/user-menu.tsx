@@ -2,8 +2,10 @@
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useAtom, useSetAtom } from "jotai";
-import { currentUserAtom, currentProfileAtom, signOutAtom } from "@/atoms";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useAtom, useSetAtom } from "jotai";
+// import { currentUserAtom, currentProfileAtom, signOutAtom } from "@/atoms";
+import { useGetIdentity, useLogout } from "@refinedev/core";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +20,32 @@ import { User, Settings, LogOut, FileCode, History } from "lucide-react";
 
 function UserMenuInner() {
   const router = useRouter();
-  const [user] = useAtom(currentUserAtom);
-  const [profile] = useAtom(currentProfileAtom);
-  const signOut = useSetAtom(signOutAtom);
+  // TODO(refine-migration): Now using Refine auth hooks
+  // const [user] = useAtom(currentUserAtom);
+  // const [profile] = useAtom(currentProfileAtom);
+  // const signOut = useSetAtom(signOutAtom);
+  const { data: identity } = useGetIdentity<{
+    id: string;
+    email: string;
+    handle: string;
+  }>();
+  const { mutate: logout } = useLogout();
+
+  // Map identity to user/profile shape
+  const user = identity ? { id: identity.id, email: identity.email } : null;
+  const profile = identity
+    ? {
+        id: identity.id,
+        handle: identity.handle || "user",
+        email: identity.email,
+        avatarUrl: null as string | null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    : null;
 
   const handleSignOut = async () => {
-    await signOut();
-
+    logout();
     router.push("/auth/sign-in");
     router.refresh();
   };

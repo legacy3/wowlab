@@ -1,11 +1,19 @@
 "use client";
 
-import { useAtom } from "jotai";
-
-import { itemCombosAtom } from "@/atoms/sim/results";
+// TODO(refine-migration): Replace with Refine data hooks in Phase 4/5
+// import { useAtom } from "jotai";
+// import { itemCombosAtom } from "@/atoms/sim/results";
 
 export function ResultsCombos() {
-  const [itemCombos] = useAtom(itemCombosAtom);
+  // TODO(refine-migration): Replace with Refine useList hook
+  // const [itemCombos] = useAtom(itemCombosAtom);
+  const itemCombos: {
+    rank: number;
+    dps: number;
+    gain: number;
+    gainPercent: number;
+    items: string[];
+  }[] = [];
 
   if (itemCombos.length === 0) {
     return (

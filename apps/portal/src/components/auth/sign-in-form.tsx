@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { signInWithOAuthAtom } from "@/atoms";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useSetAtom } from "jotai";
+// import { signInWithOAuthAtom } from "@/atoms";
+import { useLogin } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import {
@@ -19,22 +21,22 @@ export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<"discord" | "github" | null>(null);
 
-  const signInWithOAuth = useSetAtom(signInWithOAuthAtom);
+  // TODO(refine-migration): Now using Refine login
+  // const signInWithOAuth = useSetAtom(signInWithOAuthAtom);
+  const { mutate: login } = useLogin<{
+    provider: "discord" | "github";
+    redirectTo: string;
+  }>();
 
   const handleOAuthSignIn = async (provider: "discord" | "github") => {
     setError(null);
     setLoading(provider);
 
     try {
-      const { error } = await signInWithOAuth({
+      login({
         provider,
         redirectTo: getAuthCallbackUrl(),
       });
-
-      if (error) {
-        setError(error.message);
-        setLoading(null);
-      }
     } catch {
       setError("An unexpected error occurred");
       setLoading(null);

@@ -1,11 +1,13 @@
-import { useAtom } from "jotai";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useAtom } from "jotai";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { itemCombosAtom } from "@/atoms/sim";
+// TODO(refine-migration): itemCombosAtom deleted - implement with Refine
+// import { itemCombosAtom } from "@/atoms/sim";
 
 const intl = {
   number: new Intl.NumberFormat("en-US"),
@@ -20,7 +22,9 @@ function formatPercent(value: number) {
 }
 
 export function AvgGainCard() {
-  const [itemCombos] = useAtom(itemCombosAtom);
+  // TODO(refine-migration): Replace with Refine hooks
+  // const [itemCombos] = useAtom(itemCombosAtom);
+  const itemCombos: { gain: number; gainPercent: number }[] = [];
 
   const averageGain =
     itemCombos.length > 0

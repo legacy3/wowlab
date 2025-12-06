@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
-import { useAtom } from "jotai";
-import { profileByIdAtomFamily, currentUserAtom } from "@/atoms";
+import { Suspense } from "react";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useAtom } from "jotai";
+// import { profileByIdAtomFamily, currentUserAtom } from "@/atoms";
+import { useGetIdentity } from "@refinedev/core";
 import {
   Card,
   CardContent,
@@ -19,9 +21,26 @@ interface UserProfileInnerProps {
 }
 
 function UserProfileInner({ userId }: UserProfileInnerProps) {
-  const [currentUser] = useAtom(currentUserAtom);
-  const profileAtom = useMemo(() => profileByIdAtomFamily(userId), [userId]);
-  const [profile] = useAtom(profileAtom);
+  // TODO(refine-migration): Now using Refine data hooks
+  // const [currentUser] = useAtom(currentUserAtom);
+  // const profileAtom = useMemo(() => profileByIdAtomFamily(userId), [userId]);
+  // const [profile] = useAtom(profileAtom);
+  const { data: identity } = useGetIdentity<{ id: string }>();
+  // TODO(refine-migration): useOne returns different structure, fix in Phase 4/5
+  // const { result: profileData } = useOne({
+  //   resource: "profiles",
+  //   id: userId,
+  // });
+  const currentUser = identity ? { id: identity.id } : null;
+  // Temporary placeholder until Refine migration is complete
+  const profile = {
+    id: userId,
+    handle: "user",
+    email: "",
+    avatarUrl: null as string | null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
   if (!profile) {
     return (

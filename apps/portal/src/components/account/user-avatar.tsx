@@ -15,7 +15,7 @@ export function UserAvatar({
   className,
   fallbackClassName,
 }: UserAvatarProps) {
-  const initials = profile.handle[0].toUpperCase();
+  const initials = profile.handle?.[0]?.toUpperCase() ?? "?";
 
   return (
     <Avatar className={cn(className)}>

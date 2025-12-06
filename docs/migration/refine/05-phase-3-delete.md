@@ -140,15 +140,57 @@ The app should load but some features won't work yet.
 
 ## Checklist
 
-- [ ] Delete apps/portal/src/atoms/supabase/ directory
-- [ ] Delete apps/portal/src/atoms/rotations/ directory
-- [ ] Delete apps/portal/src/atoms/sim/results.ts
-- [ ] Delete apps/portal/src/atoms/sim/results-ui.ts
-- [ ] Update apps/portal/src/atoms/sim/index.ts
-- [ ] Delete apps/portal/src/lib/auth/require-auth.ts
-- [ ] Delete apps/portal/src/components/providers/auth-sync.tsx
-- [ ] Update apps/portal/src/atoms/index.ts
-- [ ] Comment out broken imports (with TODO notes)
-- [ ] Keep JotaiProvider in layout
-- [ ] Run pnpm build (should pass)
-- [ ] Document list of broken components for next phases
+- [x] Delete apps/portal/src/atoms/supabase/ directory
+- [x] Delete apps/portal/src/atoms/rotations/ directory
+- [x] Delete apps/portal/src/atoms/sim/results.ts
+- [x] Delete apps/portal/src/atoms/sim/results-ui.ts
+- [x] Update apps/portal/src/atoms/sim/index.ts
+- [x] Delete apps/portal/src/lib/auth/require-auth.ts
+- [x] Delete apps/portal/src/components/providers/auth-sync.tsx
+- [x] Update apps/portal/src/atoms/index.ts
+- [x] Comment out broken imports (with TODO notes)
+- [x] Keep JotaiProvider in layout
+- [x] Run pnpm build (should pass)
+- [x] Document list of broken components for next phases
+
+## Components with Placeholder Data for Phase 4/5
+
+The following components have been updated with placeholder data and TODO(refine-migration) comments. They build and render but lack real data until Refine hooks are implemented:
+
+### Auth Components (now using Refine hooks - DONE)
+
+- `apps/portal/src/components/layout/auth-button.tsx` - uses `useIsAuthenticated`
+- `apps/portal/src/components/layout/user-menu.tsx` - uses `useGetIdentity`, `useLogout`
+- `apps/portal/src/components/auth/sign-in-content.tsx` - uses `useIsAuthenticated`
+- `apps/portal/src/components/auth/sign-in-form.tsx` - uses `useLogin`
+- `apps/portal/src/components/auth/sign-out-button.tsx` - uses `useLogout`
+
+### Rotations Components (need `useList`, `useOne` for rotations resource)
+
+- `apps/portal/src/components/rotations/rotations-content.tsx` - needs `useList({ resource: "rotations" })`
+- `apps/portal/src/components/rotations/rotation-detail-page.tsx` - needs `useOne({ resource: "rotations" })` + profiles + sim results + forks
+- `apps/portal/src/components/rotations/namespace-page.tsx` - needs `useOne({ resource: "user_profiles" })` + `useList({ resource: "rotations" })`
+
+### Account Components (need user profile + rotations data)
+
+- `apps/portal/src/app/account/page.tsx` - needs auth + user profile + user rotations
+- `apps/portal/src/app/account/settings/page.tsx` - server-side auth removed
+- `apps/portal/src/components/account/user-profile.tsx` - needs profile data
+- `apps/portal/src/components/account/cards/profile-settings-card.tsx` - uses `useGetIdentity`
+
+### Simulation Results Components (need sim results data)
+
+- `apps/portal/src/components/simulate/results-equipment.tsx` - needs character + gear + slot alternatives
+- `apps/portal/src/components/simulate/results-overview.tsx` - needs card order state
+- `apps/portal/src/components/simulate/results-combos.tsx` - needs combos data
+- `apps/portal/src/components/simulate/cards/character-equipment-card.tsx` - needs character + professions + item combos
+- `apps/portal/src/components/simulate/cards/avg-gain-card.tsx` - needs item combos data
+- `apps/portal/src/components/simulate/cards/baseline-dps-card.tsx` - needs baseline DPS data
+- `apps/portal/src/components/simulate/cards/best-dps-card.tsx` - needs best combo data
+- `apps/portal/src/components/simulate/cards/combos-analyzed-card.tsx` - needs combos count
+
+### Other
+
+- `apps/portal/src/atoms/changelog/state.ts` - `changelogEntriesAtom` returns empty array
+- `apps/portal/src/lib/auth/index.ts` - exports commented out
+- `apps/portal/src/app/layout.tsx` - AuthSync component removed

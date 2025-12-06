@@ -6,7 +6,6 @@ import "./globals.css";
 import { ThemeProvider, JotaiProvider, RefineProvider } from "@/providers";
 import { SiteShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthSync } from "@/components/providers/auth-sync";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -37,7 +36,6 @@ export default function RootLayout({
         <NuqsAdapter>
           <JotaiProvider>
             <RefineProvider>
-              <AuthSync />
               <ThemeProvider
                 attribute="class"
                 defaultTheme="system"

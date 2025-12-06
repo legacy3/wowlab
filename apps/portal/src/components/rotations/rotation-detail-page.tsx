@@ -1,14 +1,15 @@
 "use client";
 
 import { Suspense } from "react";
-import { useAtom } from "jotai";
-import {
-  rotationAtomFamily,
-  profileByHandleAtomFamily,
-  rotationSimResultsAtomFamily,
-  parentRotationAtomFamily,
-  forkRotationsAtomFamily,
-} from "@/atoms/rotations/state";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useAtom } from "jotai";
+// import {
+//   rotationAtomFamily,
+//   profileByHandleAtomFamily,
+//   rotationSimResultsAtomFamily,
+//   parentRotationAtomFamily,
+//   forkRotationsAtomFamily,
+// } from "@/atoms/rotations/state";
 import {
   Card,
   CardContent,
@@ -48,11 +49,49 @@ interface RotationDetailInnerProps {
 }
 
 function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
-  const [rotation] = useAtom(rotationAtomFamily(`${namespace}/${slug}`));
-  const [profile] = useAtom(profileByHandleAtomFamily(namespace));
-  const [simResults] = useAtom(rotationSimResultsAtomFamily(rotation.id));
-  const [parent] = useAtom(parentRotationAtomFamily(rotation.parentId));
-  const [forks] = useAtom(forkRotationsAtomFamily(rotation.id));
+  // TODO(refine-migration): Replace with Refine useOne/useList hooks
+  // const [rotation] = useAtom(rotationAtomFamily(`${namespace}/${slug}`));
+  // const [profile] = useAtom(profileByHandleAtomFamily(namespace));
+  // const [simResults] = useAtom(rotationSimResultsAtomFamily(rotation.id));
+  // const [parent] = useAtom(parentRotationAtomFamily(rotation.parentId));
+  // const [forks] = useAtom(forkRotationsAtomFamily(rotation.id));
+
+  // Temporary placeholder data until Refine migration
+  const rotation = {
+    id: "",
+    name: "Loading...",
+    status: "pending" as "pending" | "approved" | "rejected",
+    spec: "",
+    patchRange: "",
+    description: "",
+    script: "",
+    version: 1,
+    updatedAt: null as string | null,
+    class: "",
+    visibility: "private",
+    publishedAt: null as string | null,
+    parentId: null as string | null,
+  };
+  const profile = null;
+  const simResults: {
+    id: string;
+    scenario: string;
+    gearSet: string;
+    patch: string;
+    meanDps: number;
+  }[] = [];
+  const parent = null as {
+    id: string;
+    name: string;
+    namespace: string;
+    version: number | null;
+  } | null;
+  const forks: {
+    id: string;
+    name: string;
+    namespace: string;
+    version: number | null;
+  }[] = [];
 
   return (
     <div className="space-y-6">

@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useAtom } from "jotai";
-import { browseRotationsAtom } from "@/atoms";
+// TODO(refine-migration): Replace with Refine useList hook in Phase 4/5
+// import { useAtom } from "jotai";
+// import { browseRotationsAtom } from "@/atoms";
 import { RotationsList } from "./rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,9 +18,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Library, Search, X } from "lucide-react";
+import type { Database } from "@/lib/supabase/database.types";
+
+type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
 
 function RotationsBrowseInner() {
-  const [rotations] = useAtom(browseRotationsAtom);
+  // TODO(refine-migration): Replace with Refine useList({ resource: "rotations" })
+  // const [rotations] = useAtom(browseRotationsAtom);
+  const rotations: Rotation[] = [];
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
