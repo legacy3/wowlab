@@ -12,6 +12,7 @@ import {
   completeSimJobAtom,
   failSimJobAtom,
 } from "@/atoms/simulation/job";
+import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
 import {
   loadSpellsForRotation,
   createBrowserRuntime,
@@ -51,6 +52,7 @@ export function useSimulation(options?: UseSimulationOptions) {
   const updateProgress = useSetAtom(updateSimProgressAtom);
   const completeJob = useSetAtom(completeSimJobAtom);
   const failJob = useSetAtom(failSimJobAtom);
+  const setDrawerOpen = useSetAtom(computingDrawerOpenAtom);
 
   const run = useCallback(
     async (rotation: RotationDefinition, durationSeconds: number) => {
@@ -68,6 +70,9 @@ export function useSimulation(options?: UseSimulationOptions) {
         rotationId: rotation.name.toLowerCase().replace(/\s+/g, "-"),
         totalIterations: Math.ceil((durationSeconds * 1000) / 100), // Approx ticks
       });
+
+      // Open the computing drawer to show progress
+      setDrawerOpen(true);
 
       setState((prev) => ({ ...prev, jobId }));
 
@@ -188,6 +193,7 @@ export function useSimulation(options?: UseSimulationOptions) {
       updateProgress,
       completeJob,
       failJob,
+      setDrawerOpen,
       options,
     ],
   );
