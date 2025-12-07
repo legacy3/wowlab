@@ -55,12 +55,7 @@ function EditorContentSkeleton() {
   );
 }
 
-type EditorContentProps = {
-  rotationId?: string;
-  sourceId?: string;
-};
-
-export function EditorContent(_props: EditorContentProps) {
+export function EditorContent() {
   return (
     <Suspense fallback={<EditorContentSkeleton />}>
       <EditorContentInner />
