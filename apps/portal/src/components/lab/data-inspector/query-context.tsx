@@ -3,6 +3,7 @@
 import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useStore } from "jotai";
 import { useDataProvider } from "@refinedev/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { createPortalDbcLayer } from "@/lib/services";
 import {
   DbcService,
@@ -37,6 +38,7 @@ export function useQuery() {
 export function QueryProvider({ children }: { children: ReactNode }) {
   const store = useStore();
   const dataProvider = useDataProvider()();
+  const queryClient = useQueryClient();
 
   const query = useCallback(async () => {
     const id = store.get(queryIdAtom);
@@ -48,7 +50,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
     store.set(transformedDataAtom, null);
 
     try {
-      const dbcLayer = createPortalDbcLayer(dataProvider);
+      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
       const extractorWithDeps = Layer.provide(dbcLayer)(
         ExtractorService.Default,
       );
@@ -120,7 +122,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
     } finally {
       store.set(queryLoadingAtom, false);
     }
-  }, [store, dataProvider]);
+  }, [store, queryClient, dataProvider]);
 
   return (
     <QueryContext.Provider value={{ query }}>{children}</QueryContext.Provider>
