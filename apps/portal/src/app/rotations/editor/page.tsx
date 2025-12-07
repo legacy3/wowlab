@@ -5,9 +5,7 @@ type Props = {
   searchParams: Promise<{ source?: string }>;
 };
 
-export default async function RotationEditorPage({ searchParams }: Props) {
-  const { source } = await searchParams;
-
+export default async function RotationEditorPage(_props: Props) {
   return (
     <PageLayout
       title="Rotation Editor"
@@ -18,7 +16,7 @@ export default async function RotationEditorPage({ searchParams }: Props) {
         { label: "Editor" },
       ]}
     >
-      <EditorContent sourceId={source} />
+      <EditorContent />
     </PageLayout>
   );
 }

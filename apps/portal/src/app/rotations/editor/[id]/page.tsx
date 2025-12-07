@@ -5,9 +5,7 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function EditRotationPage({ params }: Props) {
-  const { id } = await params;
-
+export default async function EditRotationPage(_props: Props) {
   return (
     <PageLayout
       title="Edit Rotation"
@@ -18,7 +16,7 @@ export default async function EditRotationPage({ params }: Props) {
         { label: "Editor" },
       ]}
     >
-      <EditorContent rotationId={id} />
+      <EditorContent />
     </PageLayout>
   );
 }
