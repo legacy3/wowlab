@@ -75,10 +75,7 @@ export function DraggableDashboard<T extends string>({
         {items.map((id) => {
           const { className } = components[id];
           return (
-            <Skeleton
-              key={id}
-              className={cn("h-48 rounded-xl", className)}
-            />
+            <Skeleton key={id} className={cn("h-48 rounded-xl", className)} />
           );
         })}
       </div>

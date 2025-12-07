@@ -10,6 +10,7 @@ import {
   isSpellHighlighted,
   buildSpellTooltip,
 } from "../timeline-context";
+import { getSpellLabel } from "../utils";
 
 interface CastsTrackProps {
   casts: CastEvent[];
@@ -321,17 +322,11 @@ export const CastsTrack = memo(function CastsTrack({
           cast.spellId,
         );
 
-        // Determine label based on available width
-        // Approximate: 6px per character at fontSize 9, 5px at fontSize 8
         const spellName = spell?.name ?? "";
-        const nameWidth = spellName.length * 6;
-        const availableWidth = width - 8; // padding
-        const showFullName = availableWidth >= nameWidth;
-        const initials = spellName
-          .split(" ")
-          .map((w) => w[0])
-          .join("")
-          .slice(0, 2);
+        const availableWidth = width - 8;
+        const label = getSpellLabel(spellName, availableWidth, {
+          maxInitials: 2,
+        });
 
         // Determine if channeled (has duration > 0)
         const isChanneled = cast.duration > 0;
@@ -354,11 +349,15 @@ export const CastsTrack = memo(function CastsTrack({
             }
             onMouseEnter={(e) => {
               onSpellHover(cast.spellId);
+
               const tooltip = buildSpellTooltip(cast.spellId, cast.timestamp, {
                 target: cast.target,
                 duration: cast.duration > 0 ? cast.duration : undefined,
               });
-              if (tooltip) showTooltip(e, tooltip);
+
+              if (tooltip) {
+                showTooltip(e, tooltip);
+              }
             }}
             onMouseLeave={() => {
               onSpellHover(null);
@@ -393,15 +392,14 @@ export const CastsTrack = memo(function CastsTrack({
               </>
             )}
 
-            {/* Label - show full name if it fits, otherwise initials */}
             <Text
-              text={showFullName ? spellName : initials}
+              text={label.text}
               x={4}
               width={width - 8}
               height={castHeight}
               align="center"
               verticalAlign="middle"
-              fontSize={showFullName ? 9 : 10}
+              fontSize={label.fontSize}
               fontStyle="bold"
               fill="#fff"
               listening={false}
