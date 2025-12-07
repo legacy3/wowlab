@@ -42,21 +42,23 @@ import {
   selectedTierAtom,
   selectedFightLengthAtom,
   selectedTimeWindowAtom,
-  specRankingsAtom,
-  topSimCharactersAtom,
   CLASS_COLORS,
   RAID_TIERS,
   FIGHT_LENGTHS,
   TIME_WINDOWS,
   type TrendDirection,
+  type WowClass,
 } from "@/atoms/dps-rankings";
 import { useMostWantedItems } from "@/hooks/use-most-wanted-items";
+import { useSpecRankings } from "@/hooks/use-spec-rankings";
+import { useTopSims } from "@/hooks/use-top-sims";
 
 function SpecRankingsTab() {
   const [tier, setTier] = useAtom(selectedTierAtom);
   const [fightLength, setFightLength] = useAtom(selectedFightLengthAtom);
   const [timeWindow, setTimeWindow] = useAtom(selectedTimeWindowAtom);
-  const [specRankings] = useAtom(specRankingsAtom);
+  const { result: specRankingsResult } = useSpecRankings();
+  const specRankings = specRankingsResult?.data ?? [];
 
   const specHeaderMeta = useMemo(
     () => ({
@@ -157,28 +159,29 @@ function SpecRankingsTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {specRankings.map((ranking) => (
+                  {specRankings.map((ranking, index) => (
                     <TableRow
-                      key={ranking.rank}
+                      key={`${ranking.class}-${ranking.spec}`}
                       className={cn(
-                        ranking.rank <= 3 &&
+                        index < 3 &&
                           "bg-primary/5 hover:bg-primary/10 dark:bg-primary/10/50",
                       )}
                     >
                       <TableCell className="text-center font-semibold">
-                        {ranking.rank}
+                        {index + 1}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <span
                             className="h-2.5 w-2.5 rounded-full"
                             style={{
-                              backgroundColor: CLASS_COLORS[ranking.wowClass],
+                              backgroundColor:
+                                CLASS_COLORS[ranking.class as WowClass],
                             }}
                           />
                           <div>
                             <p className="font-medium">
-                              {ranking.spec} {ranking.wowClass}
+                              {ranking.spec} {ranking.class}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {specHeaderMeta.window} • Median of top parses
@@ -187,16 +190,13 @@ function SpecRankingsTab() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
-                        {ranking.dps.toLocaleString()}
+                        {Math.round(ranking.avgDps).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        <TrendPill
-                          direction={ranking.direction}
-                          value={ranking.changePercent}
-                        />
+                        <TrendPill direction="flat" value={0} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {ranking.sampleSize.toLocaleString()}
+                        {ranking.simCount.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -321,7 +321,15 @@ function MostWantedItemsTab() {
 }
 
 function TopSimsTab() {
-  const [topSimCharacters] = useAtom(topSimCharactersAtom);
+  const {
+    result: topSimsResult,
+    query: { isLoading: isLoadingTopSims },
+  } = useTopSims();
+  const topSims = topSimsResult?.data ?? [];
+
+  if (isLoadingTopSims) {
+    return <TopSimsSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -334,7 +342,7 @@ function TopSimsTab() {
       </div>
       <Card>
         <CardContent className="space-y-4 pt-6">
-          {topSimCharacters.length === 0 ? (
+          {topSims.length === 0 ? (
             <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
               <div className="rounded-full bg-muted p-3">
                 <BarChart3 className="h-6 w-6 text-muted-foreground" />
@@ -354,17 +362,14 @@ function TopSimsTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>#</TableHead>
-                    <TableHead>Character</TableHead>
+                    <TableHead>Rotation</TableHead>
                     <TableHead className="hidden md:table-cell">Spec</TableHead>
                     <TableHead className="hidden lg:table-cell">
-                      Realm
+                      Author
                     </TableHead>
                     <TableHead className="text-right">DPS</TableHead>
                     <TableHead className="hidden md:table-cell text-right">
-                      Percentile
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell text-right">
-                      Gearscore
+                      Scenario
                     </TableHead>
                     <TableHead className="hidden md:table-cell text-right">
                       Date
@@ -373,16 +378,16 @@ function TopSimsTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topSimCharacters.map((sim, index) => (
+                  {topSims.map((sim, index) => (
                     <TableRow key={sim.id}>
                       <TableCell className="text-muted-foreground">
                         {index + 1}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{sim.character}</span>
+                          <span className="font-medium">{sim.rotationName}</span>
                           <span className="text-xs text-muted-foreground md:hidden">
-                            {sim.spec} {sim.wowClass}
+                            {sim.spec} {sim.class}
                           </span>
                         </div>
                       </TableCell>
@@ -391,31 +396,28 @@ function TopSimsTab() {
                           variant="outline"
                           className="text-xs"
                           style={{
-                            borderColor: CLASS_COLORS[sim.wowClass],
-                            color: CLASS_COLORS[sim.wowClass],
+                            borderColor: CLASS_COLORS[sim.class as WowClass],
+                            color: CLASS_COLORS[sim.class as WowClass],
                           }}
                         >
-                          {sim.spec} {sim.wowClass}
+                          {sim.spec} {sim.class}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-muted-foreground">
-                        {sim.realm} • {sim.region}
+                        {sim.author}
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
-                        {sim.dps.toLocaleString()}
+                        {Math.round(sim.dps).toLocaleString()}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
-                        {sim.percentile}th
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-right tabular-nums text-muted-foreground">
-                        {sim.gearscore.toLocaleString()}
+                        {sim.scenario}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right text-muted-foreground">
-                        {sim.runDate}
+                        {new Date(sim.simDate).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <a
-                          href={sim.reportUrl}
+                          href={`#/sim/${sim.id}`}
                           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                         >
                           Open
@@ -428,7 +430,7 @@ function TopSimsTab() {
               </Table>
             </div>
           )}
-          {topSimCharacters.length > 0 && (
+          {topSims.length > 0 && (
             <TablePagination
               className="border-none pt-0"
               totalCount={50}
@@ -496,6 +498,26 @@ function MostWantedItemsSkeleton() {
           <div className="space-y-3">
             {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function TopSimsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <div className="space-y-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
             ))}
           </div>
         </CardContent>

@@ -19,6 +19,8 @@ The portal app is migrating to a **Refine-first architecture**:
 | ---------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
 | `hooks/use-changelog.ts`                             | `useList`                                         | `changelog`                                          |
 | `hooks/use-most-wanted-items.ts`                     | `useList`                                         | `view_most_wanted_items`                             |
+| `hooks/use-spec-rankings.ts`                         | `useList`                                         | `view_spec_rankings_hourly`                          |
+| `hooks/use-top-sims.ts`                              | `useList`                                         | `view_top_sims_daily`                                |
 | `hooks/use-user-settings.ts`                         | `useOne`, `useUpdate`                             | `user_settings`                                      |
 | `hooks/use-sim-results.ts`                           | `useList`, `useCreate`                            | `rotation_sim_results`                               |
 | `components/rotations/rotations-content.tsx`         | `useList`                                         | `rotations`                                          |
@@ -72,8 +74,8 @@ These work but bypass Refine, creating inconsistency:
 
 | File                                              | Current Pattern                                                        | Problem                              |
 | ------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `atoms/dps-rankings/state.ts`                     | `atomWithRefresh` + `createClient().from("view_spec_rankings_hourly")` | Jotai atom directly queries Supabase |
-| `atoms/dps-rankings/state.ts`                     | `atomWithRefresh` + `createClient().from("view_top_sims_daily")`       | Jotai atom directly queries Supabase |
+| ~~`atoms/dps-rankings/state.ts`~~                 | ~~`atomWithRefresh` + `createClient().from("view_spec_rankings_hourly")`~~ | **FIXED** - Now uses `useSpecRankings` hook |
+| ~~`atoms/dps-rankings/state.ts`~~                 | ~~`atomWithRefresh` + `createClient().from("view_top_sims_daily")`~~       | **FIXED** - Now uses `useTopSims` hook |
 | `components/lab/data-inspector/query-context.tsx` | `createClient()` + Effect pipeline                                     | Entire query system bypasses Refine  |
 | `lib/services/SupabaseDbcService.ts`              | `supabase.schema("raw_dbc").from(table)`                               | Direct queries to raw_dbc schema     |
 
@@ -97,9 +99,9 @@ These work but bypass Refine, creating inconsistency:
 
 ### Priority 2: Migrate DPS Rankings
 
-- [ ] `atoms/dps-rankings/state.ts` → Replace `specRankingsAtom` with hook
-- [ ] `atoms/dps-rankings/state.ts` → Replace `topSimCharactersAtom` with hook
-- [ ] Update consuming components to use hooks instead of atoms
+- [x] `atoms/dps-rankings/state.ts` → Replace `specRankingsAtom` with hook (**DONE**)
+- [x] `atoms/dps-rankings/state.ts` → Replace `topSimCharactersAtom` with hook (**DONE**)
+- [x] Update consuming components to use hooks instead of atoms (**DONE**)
 
 ### Priority 3: Data Inspector Decision
 
@@ -149,8 +151,8 @@ These work but bypass Refine, creating inconsistency:
 
 ### Atoms That Currently Fetch Data (Should Migrate)
 
-- `atoms/dps-rankings/state.ts` - `specRankingsAtom`, `topSimCharactersAtom`
-- `atoms/changelog/state.ts` - Currently broken, needs migration
+- ~~`atoms/dps-rankings/state.ts`~~ - ~~`specRankingsAtom`, `topSimCharactersAtom`~~ **MIGRATED** to hooks
+- ~~`atoms/changelog/state.ts`~~ - **MIGRATED** to `useChangelog` hook
 
 ---
 

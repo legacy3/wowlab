@@ -1,7 +1,4 @@
 import { atom } from "jotai";
-import { atomWithRefresh } from "jotai/utils";
-import { createClient } from "@/lib/supabase/client";
-import type { SpecRankingRow, TopSimRow } from "@/lib/supabase/types";
 
 export type TrendDirection = "up" | "down" | "flat";
 
@@ -17,94 +14,9 @@ export type WowClass =
   | "Warlock"
   | "Warrior";
 
-export interface SpecRanking {
-  readonly rank: number;
-  readonly spec: string;
-  readonly wowClass: WowClass;
-  readonly dps: number;
-  readonly changePercent: number;
-  readonly direction: TrendDirection;
-  readonly sampleSize: number;
-}
-
-export interface CharacterSim {
-  readonly id: string;
-  readonly character: string;
-  readonly spec: string;
-  readonly wowClass: WowClass;
-  readonly dps: number;
-  readonly percentile: number;
-  readonly realm: string;
-  readonly region: string;
-  readonly gearscore: number;
-  readonly runDate: string;
-  readonly reportUrl: string;
-}
-
 export const selectedTierAtom = atom<string>("sunwell");
 export const selectedFightLengthAtom = atom<string>("patchwerk");
 export const selectedTimeWindowAtom = atom<string>("7d");
-
-export const specRankingsAtom = atomWithRefresh(async () => {
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from("view_spec_rankings_hourly")
-    .select("*")
-    .order("avgDps", { ascending: false })
-    .limit(10);
-
-  if (error) {
-    throw error;
-  }
-
-  return (data ?? []).map(
-    (row: SpecRankingRow, index): SpecRanking => ({
-      rank: index + 1,
-      spec: row.spec,
-      wowClass: row.class as WowClass,
-      dps: Math.round(row.avgDps),
-      // TODO: Calculate trend from historical data when available
-      changePercent: 0,
-      direction: "flat",
-      sampleSize: row.simCount,
-    }),
-  );
-});
-
-export const topSimCharactersAtom = atomWithRefresh(async () => {
-  const supabase = createClient();
-
-  const { data, error } = await supabase
-    .from("view_top_sims_daily")
-    .select("*")
-    .limit(10);
-
-  if (error) {
-    throw error;
-  }
-
-  // Transform database rows to UI format
-  return (data ?? []).map(
-    (row: TopSimRow, index): CharacterSim => ({
-      id: row.id,
-      character: row.rotationName,
-      spec: row.spec,
-      wowClass: row.class as WowClass,
-      dps: Math.round(row.dps),
-      // TODO: Calculate percentile from rank when we have more data
-      percentile: 99 - index, // Rough estimate based on rank
-      // TODO: Add realm/region when user profiles include this data
-      realm: "N/A",
-      region: "N/A",
-      // TODO: Add gearscore when gear tracking is implemented
-      gearscore: 0,
-      runDate: new Date(row.simDate).toISOString().split("T")[0],
-      // TODO: Link to actual sim result page
-      reportUrl: `#/sim/${row.id}`,
-    }),
-  );
-});
 
 export const CLASS_COLORS: Record<WowClass, string> = {
   "Death Knight": "#C41E3A",
