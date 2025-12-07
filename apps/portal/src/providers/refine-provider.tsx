@@ -84,6 +84,9 @@ export function RefineProvider({ children }: RefineProviderProps) {
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
             disableTelemetry: true,
+            reactQuery: {
+              clientConfig: queryClient,
+            },
           }}
         >
           {children}
