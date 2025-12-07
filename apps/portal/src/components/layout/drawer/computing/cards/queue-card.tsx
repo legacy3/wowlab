@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtom, useSetAtom } from "jotai";
-import { Loader2, Pause, Play, X } from "lucide-react";
+import { AlertCircle, Loader2, Pause, Play, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-import { cancelJobAtom, jobsAtom, toggleJobAtom } from "@/atoms/computing";
+import {
+  cancelJobAtom,
+  jobsAtom,
+  toggleJobAtom,
+  PHASE_LABELS,
+} from "@/atoms/computing";
 
 export function QueueCard() {
   const [jobs] = useAtom(jobsAtom);
@@ -44,17 +49,28 @@ export function QueueCard() {
                             ? "default"
                             : job.status === "queued"
                               ? "secondary"
-                              : job.status === "paused"
-                                ? "outline"
+                              : job.status === "failed"
+                                ? "destructive"
                                 : "outline"
                         }
                       >
                         {job.status === "running" && (
                           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                         )}
+                        {job.status === "failed" && (
+                          <AlertCircle className="mr-1 h-3 w-3" />
+                        )}
                         {job.status}
                       </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {PHASE_LABELS[job.phase]}
+                      </Badge>
                     </div>
+                    {job.phaseDetail && (
+                      <p className="text-xs text-muted-foreground">
+                        {job.phaseDetail}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       {job.current} simulations • ETA: {job.eta}
                     </p>

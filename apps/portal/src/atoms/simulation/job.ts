@@ -1,55 +1,5 @@
-# Phase 3: Computing Drawer Integration
-
-> Wire simulation to the computing drawer. Show phases: "Preparing spells", "Booting engine", "Running simulation".
-
-## Step 1: Define SimulationJob
-
-```typescript
-// apps/portal/src/atoms/computing/state.ts
-
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 
-export type SimulationPhase =
-  | "preparing-spells"
-  | "booting-engine"
-  | "running"
-  | "uploading"
-  | "completed"
-  | "failed";
-
-export const PHASE_LABELS: Record<SimulationPhase, string> = {
-  "preparing-spells": "Preparing spells",
-  "booting-engine": "Booting simulation engine",
-  running: "Running simulation",
-  uploading: "Uploading results",
-  completed: "Completed",
-  failed: "Failed",
-};
-
-export interface SimulationJob {
-  id: string;
-  name: string;
-  status: "running" | "queued" | "completed" | "paused" | "failed";
-  progress: number;
-  current: string;
-  eta: string;
-  phase: SimulationPhase;
-  phaseDetail: string;
-  rotationId: string;
-  resultId: string | null;
-  error: string | null;
-}
-
-export const jobsAtom = atomWithStorage<SimulationJob[]>("computing-jobs", []);
-```
-
-## Step 2: Create Job Atoms
-
-```typescript
-// apps/portal/src/atoms/simulation/job.ts
-
-import { atom } from "jotai";
 import {
   jobsAtom,
   type SimulationJob,
@@ -80,7 +30,9 @@ export const createSimJobAtom = atom(
       error: null,
     };
 
-    set(jobsAtom, [job, ...get(jobsAtom)]);
+    const jobs = get(jobsAtom);
+    set(jobsAtom, [job, ...jobs]);
+
     return id;
   },
 );
@@ -92,9 +44,10 @@ export const updateSimPhaseAtom = atom(
     set,
     params: { jobId: string; phase: SimulationPhase; detail: string },
   ) => {
+    const jobs = get(jobsAtom);
     set(
       jobsAtom,
-      get(jobsAtom).map((job) =>
+      jobs.map((job) =>
         job.id === params.jobId
           ? { ...job, phase: params.phase, phaseDetail: params.detail }
           : job,
@@ -108,15 +61,22 @@ export const updateSimProgressAtom = atom(
   (
     get,
     set,
-    params: { jobId: string; current: number; total: number; eta?: string },
+    params: {
+      jobId: string;
+      current: number;
+      total: number;
+      eta?: string;
+    },
   ) => {
+    const jobs = get(jobsAtom);
     const progress = Math.min(
       100,
       Math.max(0, Math.round((params.current / params.total) * 100)),
     );
+
     set(
       jobsAtom,
-      get(jobsAtom).map((job) =>
+      jobs.map((job) =>
         job.id === params.jobId
           ? {
               ...job,
@@ -133,9 +93,10 @@ export const updateSimProgressAtom = atom(
 export const completeSimJobAtom = atom(
   null,
   (get, set, params: { jobId: string; resultId: string | null }) => {
+    const jobs = get(jobsAtom);
     set(
       jobsAtom,
-      get(jobsAtom).map((job) =>
+      jobs.map((job) =>
         job.id === params.jobId
           ? {
               ...job,
@@ -155,9 +116,10 @@ export const completeSimJobAtom = atom(
 export const failSimJobAtom = atom(
   null,
   (get, set, params: { jobId: string; error: string }) => {
+    const jobs = get(jobsAtom);
     set(
       jobsAtom,
-      get(jobsAtom).map((job) =>
+      jobs.map((job) =>
         job.id === params.jobId
           ? {
               ...job,
@@ -172,35 +134,3 @@ export const failSimJobAtom = atom(
     );
   },
 );
-```
-
-## Step 3: Update Queue Card
-
-```typescript
-// apps/portal/src/components/layout/drawer/computing/cards/queue-card.tsx
-
-import { PHASE_LABELS } from "@/atoms/computing/state";
-
-// Show phase badge and detail for each job:
-<Badge variant="outline" className="text-xs">
-  {PHASE_LABELS[job.phase]}
-</Badge>
-
-{job.phaseDetail && (
-  <p className="text-xs text-muted-foreground">{job.phaseDetail}</p>
-)}
-```
-
-## Phase Flow
-
-```
-1. Job created    → status: "running", phase: "preparing-spells"
-2. Spells loading → phaseDetail: "Loading spell 2/5"
-3. Runtime init   → phase: "booting-engine"
-4. Sim running    → phase: "running", progress: 0-100%
-5. Done           → status: "completed", phase: "completed"
-```
-
-## Next Phase
-
-→ [Phase 4: Results & Persistence](./04-results-persistence.md)

@@ -1,46 +1,46 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
-export interface ComputingJob {
+// -----------------------------------------------------------------------------
+// Simulation Phase
+// -----------------------------------------------------------------------------
+
+export type SimulationPhase =
+  | "preparing-spells"
+  | "booting-engine"
+  | "running"
+  | "uploading"
+  | "completed"
+  | "failed";
+
+export const PHASE_LABELS: Record<SimulationPhase, string> = {
+  "preparing-spells": "Preparing spells",
+  "booting-engine": "Booting simulation engine",
+  running: "Running simulation",
+  uploading: "Uploading results",
+  completed: "Completed",
+  failed: "Failed",
+};
+
+// -----------------------------------------------------------------------------
+// Simulation Job
+// -----------------------------------------------------------------------------
+
+export interface SimulationJob {
   id: string;
   name: string;
-  status: "running" | "queued" | "completed" | "paused";
+  status: "running" | "queued" | "completed" | "paused" | "failed";
   progress: number;
   current: string;
   eta: string;
+  phase: SimulationPhase;
+  phaseDetail: string;
+  rotationId: string;
+  resultId: string | null;
+  error: string | null;
 }
 
-const DEFAULT_JOBS: ComputingJob[] = [
-  {
-    id: "1",
-    name: "Top Gear Optimization",
-    status: "running",
-    progress: 67,
-    current: "1,672 / 2,496",
-    eta: "8 minutes",
-  },
-  {
-    id: "2",
-    name: "Gear Comparison Batch",
-    status: "queued",
-    progress: 0,
-    current: "0 / 450",
-    eta: "Pending",
-  },
-  {
-    id: "3",
-    name: "Stat Weight Analysis",
-    status: "completed",
-    progress: 100,
-    current: "1,000 / 1,000",
-    eta: "Completed",
-  },
-];
-
-export const jobsAtom = atomWithStorage<ComputingJob[]>(
-  "computing-jobs",
-  DEFAULT_JOBS,
-);
+export const jobsAtom = atomWithStorage<SimulationJob[]>("computing-jobs", []);
 
 export type ComputingCardId =
   | "active-jobs"
@@ -63,19 +63,16 @@ export const toggleJobAtom = atom(null, (get, set, jobId: string) => {
   const jobs = get(jobsAtom);
   set(
     jobsAtom,
-    jobs.map((job) =>
-      job.id === jobId
-        ? {
-            ...job,
-            status:
-              job.status === "running"
-                ? ("paused" as const)
-                : job.status === "paused"
-                  ? ("running" as const)
-                  : job.status,
-          }
-        : job,
-    ),
+    jobs.map((job) => {
+      if (job.id !== jobId) return job;
+      const newStatus =
+        job.status === "running"
+          ? ("paused" as const)
+          : job.status === "paused"
+            ? ("running" as const)
+            : job.status;
+      return { ...job, status: newStatus };
+    }),
   );
 });
 
