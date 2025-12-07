@@ -15,9 +15,10 @@ import {
   rectSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { type ComponentType } from "react";
+import { type ComponentType, useSyncExternalStore } from "react";
 
 import { Draggable } from "./draggable";
+import { Skeleton } from "./skeleton";
 import { cn } from "@/lib/utils";
 
 export interface DashboardItem {
@@ -40,6 +41,13 @@ export function DraggableDashboard<T extends string>({
   components,
   gridClassName = "grid gap-4 md:auto-rows-min md:grid-cols-3",
 }: DraggableDashboardProps<T>) {
+  // Prevent hydration mismatch for card orders stored in localStorage
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
@@ -59,6 +67,23 @@ export function DraggableDashboard<T extends string>({
 
     onReorder(arrayMove([...items], oldIndex, newIndex));
   };
+
+  // Show skeleton grid until client has read localStorage
+  if (!mounted) {
+    return (
+      <div className={cn(gridClassName)}>
+        {items.map((id) => {
+          const { className } = components[id];
+          return (
+            <Skeleton
+              key={id}
+              className={cn("h-48 rounded-xl", className)}
+            />
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <DndContext
