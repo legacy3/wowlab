@@ -50,20 +50,20 @@ export interface ComputingJob {
 
   // NEW: Simulation-specific fields
   phase?: SimulationPhase;
-  phaseDetail?: string;        // "Loading Kill Command (2/5)"
-  rotationId?: string;         // "beast-mastery"
-  resultId?: string;           // Supabase result ID when done
-  error?: string;              // Error message if failed
+  phaseDetail?: string; // "Loading Kill Command (2/5)"
+  rotationId?: string; // "beast-mastery"
+  resultId?: string; // Supabase result ID when done
+  error?: string; // Error message if failed
 }
 
 // Human-readable phase labels
 export const PHASE_LABELS: Record<SimulationPhase, string> = {
   "preparing-spells": "Preparing spells",
   "booting-engine": "Booting simulation engine",
-  "running": "Running simulation",
-  "uploading": "Uploading results",
-  "completed": "Completed",
-  "failed": "Failed",
+  running: "Running simulation",
+  uploading: "Uploading results",
+  completed: "Completed",
+  failed: "Failed",
 };
 ```
 
@@ -74,7 +74,11 @@ export const PHASE_LABELS: Record<SimulationPhase, string> = {
 
 import { atom } from "jotai";
 import { nanoid } from "nanoid";
-import { jobsAtom, type ComputingJob, type SimulationPhase } from "@/atoms/computing/state";
+import {
+  jobsAtom,
+  type ComputingJob,
+  type SimulationPhase,
+} from "@/atoms/computing/state";
 
 export interface CreateSimJobParams {
   name: string;

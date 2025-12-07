@@ -13,7 +13,7 @@ apps/portal/src/lib/simulation/
 ├── index.ts              # Re-exports
 ├── types.ts              # RotationDefinition, SimulationConfig, SimulationResult
 ├── runtime.ts            # Browser-adapted createBrowserRuntime
-├── rotation-utils.ts     # tryCast, runPriorityList helpers
+├── rotation-utils.ts     # tryCast, runPriorityList, createPlayerWithSpells
 └── rotations/
     ├── index.ts          # Registry
     └── beast-mastery.ts  # BM Hunter rotation
@@ -26,21 +26,39 @@ Copy from `apps/standalone/src/framework/types.ts`:
 ```typescript
 // apps/portal/src/lib/simulation/types.ts
 
+import type * as Errors from "@wowlab/core/Errors";
 import type * as Schemas from "@wowlab/core/Schemas";
+import type * as Context from "@wowlab/rotation/Context";
 import type * as Effect from "effect/Effect";
 
+/**
+ * Definition for a rotation that can be run by the browser simulation.
+ */
 export interface RotationDefinition {
-  name: string;
-  run: (playerId: Schemas.Branded.UnitID) => Effect.Effect<void, never, any>;
-  spellIds: readonly number[];
+  /** Display name for the rotation */
+  readonly name: string;
+
+  /** The APL logic that decides what to cast each GCD */
+  readonly run: (
+    playerId: Schemas.Branded.UnitID,
+  ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
+
+  /** All spell IDs needed by this rotation (used to load spell data) */
+  readonly spellIds: readonly number[];
 }
 
+/**
+ * Configuration for running a simulation.
+ */
 export interface SimulationConfig {
   rotation: RotationDefinition;
   spells: Schemas.Spell.SpellDataFlat[];
   durationMs: number;
 }
 
+/**
+ * Result of a simulation run.
+ */
 export interface SimulationResult {
   events: Schemas.CombatLog.CombatLogEvent[];
   casts: number;
@@ -57,25 +75,113 @@ Copy from `apps/standalone/src/framework/rotation-utils.ts`:
 ```typescript
 // apps/portal/src/lib/simulation/rotation-utils.ts
 
+import * as Entities from "@wowlab/core/Entities";
+import * as Errors from "@wowlab/core/Errors";
+import * as Schemas from "@wowlab/core/Schemas";
+import * as Context from "@wowlab/rotation/Context";
 import * as Effect from "effect/Effect";
-import * as RotationContext from "@wowlab/rotation/Context";
+import { Map, Record } from "immutable";
 
-export const tryCast = (spellId: number) =>
-  Effect.gen(function* () {
-    const ctx = yield* RotationContext.RotationContext;
-    const canCast = yield* ctx.spellActions.canCast(spellId);
-    if (canCast) {
-      yield* ctx.spellActions.cast(spellId);
-      return true;
-    }
-    return false;
+/**
+ * Creates a spell entity from flat spell data.
+ */
+export const createSpellEntity = (
+  data: Schemas.Spell.SpellDataFlat,
+): Entities.Spell.Spell => {
+  const info = Entities.Spell.SpellInfo.create({
+    ...data,
+    id: Schemas.Branded.SpellID(data.id),
+    modifiers: [],
   });
 
-export const runPriorityList = (spellIds: readonly number[]) =>
+  return Entities.Spell.Spell.create(
+    {
+      charges: info.maxCharges || 1,
+      cooldownExpiry: 0,
+      info,
+    },
+    0,
+  );
+};
+
+/**
+ * Creates a player unit with spells derived from the provided spell IDs.
+ * Automatically filters out any spell IDs that aren't found in the spell data.
+ */
+export const createPlayerWithSpells = (
+  id: Schemas.Branded.UnitID,
+  name: string,
+  spellIds: readonly number[],
+  spellData: Schemas.Spell.SpellDataFlat[],
+): Entities.Unit.Unit => {
+  // Build lookup by raw number for easier matching
+  const spellMap = new globalThis.Map<number, Schemas.Spell.SpellDataFlat>();
+  for (const spell of spellData) {
+    spellMap.set(spell.id, spell);
+  }
+
+  const spellEntities: [Schemas.Branded.SpellID, Entities.Spell.Spell][] = [];
+
+  for (const spellId of spellIds) {
+    const data = spellMap.get(spellId);
+    if (!data) {
+      console.warn(`Spell ID ${spellId} not found in spell data`);
+      continue;
+    }
+
+    const entity = createSpellEntity(data);
+    spellEntities.push([entity.info.id, entity]);
+  }
+
+  return Entities.Unit.Unit.create({
+    id,
+    isPlayer: true,
+    name,
+    spells: {
+      all: Map(spellEntities),
+      meta: Record({ cooldownCategories: Map<number, number>() })(),
+    },
+  });
+};
+
+/**
+ * Result of attempting to cast a spell.
+ */
+export type CastResult =
+  | { readonly cast: true; readonly consumedGCD: boolean }
+  | { readonly cast: false };
+
+/**
+ * Attempts to cast a spell, returning whether it was cast and consumed the GCD.
+ * Silently handles SpellOnCooldown errors by returning { cast: false }.
+ */
+export const tryCast = (
+  rotation: Context.RotationContext,
+  playerId: Schemas.Branded.UnitID,
+  spellId: number,
+): Effect.Effect<CastResult, Errors.SpellNotFound | Errors.UnitNotFound> =>
+  rotation.spell.cast(playerId, spellId).pipe(
+    Effect.map(({ consumedGCD }) => ({ cast: true as const, consumedGCD })),
+    Effect.catchTag("SpellOnCooldown", () =>
+      Effect.succeed({ cast: false as const }),
+    ),
+  );
+
+/**
+ * Runs a priority list of spells, stopping after the first one consumes the GCD.
+ * Each spell is tried in order. Off-GCD spells that succeed won't stop the list.
+ */
+export const runPriorityList = (
+  rotation: Context.RotationContext,
+  playerId: Schemas.Branded.UnitID,
+  spellIds: readonly number[],
+): Effect.Effect<void, Errors.SpellNotFound | Errors.UnitNotFound> =>
   Effect.gen(function* () {
     for (const spellId of spellIds) {
-      const didCast = yield* tryCast(spellId);
-      if (didCast) return;
+      const result = yield* tryCast(rotation, playerId, spellId);
+      if (result.cast && result.consumedGCD) {
+        return;
+      }
     }
   });
 ```
@@ -87,26 +193,84 @@ Copy from `apps/standalone/src/rotations/beast-mastery.ts`:
 ```typescript
 // apps/portal/src/lib/simulation/rotations/beast-mastery.ts
 
-import type { RotationDefinition } from "../types";
-import { runPriorityList } from "../rotation-utils";
+import * as Context from "@wowlab/rotation/Context";
+import * as Effect from "effect/Effect";
 
-// Spell IDs for Beast Mastery Hunter
-const KILL_COMMAND = 34026;
-const BARBED_SHOT = 217200;
-const COBRA_SHOT = 193455;
-const BESTIAL_WRATH = 19574;
-const MULTI_SHOT = 2643;
+import { tryCast } from "../rotation-utils";
+import type { RotationDefinition } from "../types";
+
+const SpellIds = {
+  BARBED_SHOT: 217200,
+  BESTIAL_WRATH: 19574,
+  BLOODSHED: 321530,
+  CALL_OF_THE_WILD: 359844,
+  COBRA_SHOT: 193455,
+  EXPLOSIVE_SHOT: 212431,
+  KILL_COMMAND: 34026,
+  KILL_SHOT: 53351,
+  MULTI_SHOT: 2643,
+} as const;
 
 export const BeastMasteryRotation: RotationDefinition = {
-  name: "Beast Mastery",
-  spellIds: [KILL_COMMAND, BARBED_SHOT, COBRA_SHOT, BESTIAL_WRATH, MULTI_SHOT],
-  run: () =>
-    runPriorityList([
-      BESTIAL_WRATH,
-      BARBED_SHOT,
-      KILL_COMMAND,
-      COBRA_SHOT,
-    ]),
+  name: "Beast Mastery Hunter",
+
+  run: (playerId) =>
+    Effect.gen(function* () {
+      const rotation = yield* Context.RotationContext;
+
+      const bw = yield* tryCast(rotation, playerId, SpellIds.BESTIAL_WRATH);
+      if (bw.cast && bw.consumedGCD) {
+        return;
+      }
+
+      const cotw = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.CALL_OF_THE_WILD,
+      );
+      if (cotw.cast && cotw.consumedGCD) {
+        return;
+      }
+
+      const bs = yield* tryCast(rotation, playerId, SpellIds.BARBED_SHOT);
+      if (bs.cast && bs.consumedGCD) {
+        return;
+      }
+
+      const bloodshed = yield* tryCast(rotation, playerId, SpellIds.BLOODSHED);
+      if (bloodshed.cast && bloodshed.consumedGCD) {
+        return;
+      }
+
+      const ks = yield* tryCast(rotation, playerId, SpellIds.KILL_SHOT);
+      if (ks.cast && ks.consumedGCD) {
+        return;
+      }
+
+      const kc = yield* tryCast(rotation, playerId, SpellIds.KILL_COMMAND);
+      if (kc.cast && kc.consumedGCD) {
+        return;
+      }
+
+      const es = yield* tryCast(rotation, playerId, SpellIds.EXPLOSIVE_SHOT);
+      if (es.cast && es.consumedGCD) {
+        return;
+      }
+
+      yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT);
+    }),
+
+  spellIds: [
+    SpellIds.COBRA_SHOT,
+    SpellIds.BARBED_SHOT,
+    SpellIds.KILL_COMMAND,
+    SpellIds.MULTI_SHOT,
+    SpellIds.BESTIAL_WRATH,
+    SpellIds.CALL_OF_THE_WILD,
+    SpellIds.BLOODSHED,
+    SpellIds.KILL_SHOT,
+    SpellIds.EXPLOSIVE_SHOT,
+  ],
 };
 ```
 
@@ -196,13 +360,13 @@ export { getRotation, listRotations, BeastMasteryRotation } from "./rotations";
 
 ## Checklist
 
-- [ ] Create `lib/simulation/types.ts` with RotationDefinition, SimulationConfig, SimulationResult
-- [ ] Create `lib/simulation/rotation-utils.ts` with tryCast, runPriorityList
-- [ ] Create `lib/simulation/rotations/beast-mastery.ts`
-- [ ] Create `lib/simulation/rotations/index.ts` with registry
-- [ ] Create `lib/simulation/runtime.ts` with createBrowserRuntime
-- [ ] Create `lib/simulation/index.ts` re-exports
-- [ ] Verify imports resolve correctly (`pnpm build`)
+- [x] Create `lib/simulation/types.ts` with RotationDefinition, SimulationConfig, SimulationResult
+- [x] Create `lib/simulation/rotation-utils.ts` with tryCast, runPriorityList, createPlayerWithSpells
+- [x] Create `lib/simulation/rotations/beast-mastery.ts`
+- [x] Create `lib/simulation/rotations/index.ts` with registry
+- [x] Create `lib/simulation/runtime.ts` with createBrowserRuntime
+- [x] Create `lib/simulation/index.ts` re-exports
+- [x] Verify imports resolve correctly (`pnpm build`)
 
 ## Success Criteria
 

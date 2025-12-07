@@ -13,7 +13,7 @@ const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
 
 // Load a spell (already works in data inspector)
 const spell = await Effect.runPromise(
-  transformSpell(spellId).pipe(Effect.provide(appLayer))
+  transformSpell(spellId).pipe(Effect.provide(appLayer)),
 );
 ```
 
@@ -145,7 +145,7 @@ export async function loadSpellsById(
 export * from "./types";
 export * from "./runtime";
 export * from "./rotation-utils";
-export * from "./loader";  // ADD THIS
+export * from "./loader"; // ADD THIS
 export { getRotation, listRotations, BeastMasteryRotation } from "./rotations";
 ```
 

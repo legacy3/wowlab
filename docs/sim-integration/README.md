@@ -5,6 +5,7 @@
 ## Key Principle
 
 **ALL simulations run client-side.** The browser:
+
 1. Loads spell data (cached in IndexedDB)
 2. Boots the Effect-TS simulation runtime
 3. Executes the rotation loop
@@ -14,12 +15,12 @@ No server-side execution. No API routes for running sims. No SSE streaming.
 
 ## Phase Overview
 
-| Phase | Description | What It Creates |
-|-------|-------------|-----------------|
-| **1** | [Browser Runtime](./01-browser-runtime.md) | `lib/simulation/` with runtime, types, rotations |
-| **2** | [Spell Loading](./02-spell-loading.md) | Spell loader using existing dbcLayer |
-| **3** | [Computing Integration](./03-computing-integration.md) | Job tracking with phase states in drawer |
-| **4** | [Results & Persistence](./04-results-persistence.md) | Simulation runner, upload, UI wiring |
+| Phase | Description                                            | What It Creates                                  |
+| ----- | ------------------------------------------------------ | ------------------------------------------------ |
+| **1** | [Browser Runtime](./01-browser-runtime.md)             | `lib/simulation/` with runtime, types, rotations |
+| **2** | [Spell Loading](./02-spell-loading.md)                 | Spell loader using existing dbcLayer             |
+| **3** | [Computing Integration](./03-computing-integration.md) | Job tracking with phase states in drawer         |
+| **4** | [Results & Persistence](./04-results-persistence.md)   | Simulation runner, upload, UI wiring             |
 
 ## How To Use These Docs
 
@@ -35,13 +36,13 @@ Each phase is a **self-contained prompt**. Feed one file to Claude Code and it k
 
 ## What Already Exists
 
-| Component | Location | Status |
-|-----------|----------|--------|
-| Spell loading | `lib/services/dbc-layer.ts` | Working (data inspector) |
-| Computing drawer | `components/layout/drawer/computing/` | Working (mock data) |
-| Job atoms | `atoms/computing/state.ts` | Working (mock data) |
-| Standalone runtime | `apps/standalone/src/runtime/` | Working (CLI) |
-| Rotations | `apps/standalone/src/rotations/` | Working (CLI) |
+| Component          | Location                              | Status                   |
+| ------------------ | ------------------------------------- | ------------------------ |
+| Spell loading      | `lib/services/dbc-layer.ts`           | Working (data inspector) |
+| Computing drawer   | `components/layout/drawer/computing/` | Working (mock data)      |
+| Job atoms          | `atoms/computing/state.ts`            | Working (mock data)      |
+| Standalone runtime | `apps/standalone/src/runtime/`        | Working (CLI)            |
+| Rotations          | `apps/standalone/src/rotations/`      | Working (CLI)            |
 
 ## Target Architecture
 
