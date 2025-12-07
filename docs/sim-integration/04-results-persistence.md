@@ -22,6 +22,7 @@ import * as Schemas from "@wowlab/core/Schemas";
 import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
+import * as Metadata from "@wowlab/services/Metadata";
 import * as Hunter from "@wowlab/specs/Hunter";
 import * as Shared from "@wowlab/specs/Shared";
 import type { BrowserRuntime } from "./runtime";
@@ -36,32 +37,37 @@ export interface RunProgress {
 export type OnRunProgress = (progress: RunProgress) => void;
 
 /**
- * Creates a player unit for the rotation.
+ * Creates a player unit for the rotation using metadata service.
  */
-function createRotationPlayer(
-  rotation: RotationDefinition,
+const createRotationPlayer = (
   playerId: Schemas.Branded.UnitID,
-  spells: Schemas.Spell.SpellDataFlat[],
-) {
-  // Build spell map for the player
-  const spellMap = new Map<number, Schemas.Spell.SpellDataFlat>();
-  for (const spell of spells) {
-    spellMap.set(spell.id, spell);
-  }
+  rotationSpellIds: readonly number[],
+) =>
+  Effect.gen(function* () {
+    const metadata = yield* Metadata.MetadataService;
 
-  // Create player unit with rotation spells
-  return {
-    id: playerId,
-    name: "Player",
-    type: "player" as const,
-    level: 80,
-    health: 100000,
-    maxHealth: 100000,
-    spells: spellMap,
-    auras: new Map(),
-    power: new Map([["focus", { current: 100, max: 100 }]]),
-  };
-}
+    // Get spells from metadata (already loaded in runtime config)
+    const spellMap = new Map<number, Schemas.Spell.SpellDataFlat>();
+    for (const spellId of rotationSpellIds) {
+      const spell = yield* metadata.getSpell(spellId);
+      if (spell) {
+        spellMap.set(spellId, spell);
+      }
+    }
+
+    // Create player unit
+    return {
+      id: playerId,
+      name: "Player",
+      type: "player" as const,
+      level: 80,
+      health: 100000,
+      maxHealth: 100000,
+      spells: spellMap,
+      auras: new Map(),
+      power: new Map([["focus", { current: 100, max: 100 }]]),
+    };
+  });
 
 /**
  * Runs the simulation loop in the browser.
@@ -77,13 +83,17 @@ export async function runSimulationLoop(
       // Register spec (Hunter BM for now)
       yield* Shared.registerSpec(Hunter.BeastMastery);
 
-      // Create player
+      // Create and register the player unit
       const playerId = Schemas.Branded.UnitID("player-1");
-      const unitService = yield* Unit.UnitService;
-      // Note: In real impl, get spells from metadata service
-      // For now, we'll create a minimal player
+      const player = yield* createRotationPlayer(playerId, rotation.spellIds);
 
+      const unitService = yield* Unit.UnitService;
+      yield* unitService.add(player);
+
+      // Reset state for clean simulation
       const stateService = yield* State.StateService;
+      yield* stateService.reset();
+
       const simDriver = yield* CombatLogService.SimDriver;
 
       const events: Schemas.CombatLog.CombatLogEvent[] = [];
@@ -107,8 +117,6 @@ export async function runSimulationLoop(
       let currentTime = 0;
 
       while (currentTime < durationMs) {
-        const state = yield* stateService.getState();
-
         // Execute rotation priority list
         yield* rotation.run(playerId);
         casts++;
@@ -175,6 +183,7 @@ export interface SimulationState {
   result: SimulationResult | null;
   error: Error | null;
   jobId: string | null;
+  resultId: string | null; // Supabase record ID for viewing/sharing
 }
 
 export interface UseSimulationOptions {
@@ -188,6 +197,7 @@ export function useSimulation(options?: UseSimulationOptions) {
     result: null,
     error: null,
     jobId: null,
+    resultId: null,
   });
 
   const queryClient = useQueryClient();
@@ -208,6 +218,7 @@ export function useSimulation(options?: UseSimulationOptions) {
         result: null,
         error: null,
         jobId: null,
+        resultId: null,
       });
 
       // Create job in computing drawer
@@ -287,7 +298,7 @@ export function useSimulation(options?: UseSimulationOptions) {
           detail: "Saving results to database",
         });
 
-        const resultId = await uploadSimulationResult(result, rotation);
+        const resultId = await uploadSimulationResult({ result, rotation });
 
         // Mark complete
         completeJob({ jobId, resultId });
@@ -297,6 +308,7 @@ export function useSimulation(options?: UseSimulationOptions) {
           result,
           error: null,
           jobId,
+          resultId, // Surface the Supabase record ID
         });
 
         options?.onComplete?.(result);
@@ -315,6 +327,7 @@ export function useSimulation(options?: UseSimulationOptions) {
           result: null,
           error: err,
           jobId,
+          resultId: null,
         });
 
         options?.onError?.(err);
@@ -349,14 +362,20 @@ export function useSimulation(options?: UseSimulationOptions) {
 import { createClient } from "@/lib/supabase/client";
 import type { SimulationResult, RotationDefinition } from "./types";
 
+export interface UploadParams {
+  result: SimulationResult;
+  rotation: RotationDefinition;
+  rotationDbId?: string; // UUID from rotations table if linked
+}
+
 /**
  * Uploads simulation result to Supabase.
  * Returns the created record ID.
  */
 export async function uploadSimulationResult(
-  result: SimulationResult,
-  rotation: RotationDefinition,
+  params: UploadParams,
 ): Promise<string> {
+  const { result, rotation, rotationDbId } = params;
   const supabase = createClient();
 
   // Get current user (optional - supports anonymous)
@@ -368,7 +387,7 @@ export async function uploadSimulationResult(
     .from("rotation_sim_results")
     .insert({
       user_id: user?.id ?? null,
-      rotation_id: null, // TODO: Link to rotation table if exists
+      rotation_id: rotationDbId ?? null,
       duration: result.durationMs / 1000,
       iterations: 1,
       fight_type: "patchwerk",
@@ -378,6 +397,8 @@ export async function uploadSimulationResult(
       std_dev: 0,
       timeline: result.events,
       sim_version: "0.1.0",
+      // Store rotation name for display even without DB link
+      scenario: { rotationName: rotation.name },
     })
     .select("id")
     .single();
@@ -401,9 +422,10 @@ export async function uploadSimulationResult(
 import { useSimulation } from "@/hooks/use-simulation";
 import { BeastMasteryRotation } from "@/lib/simulation";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function QuickSimContent() {
-  const { run, isRunning, result, error } = useSimulation({
+  const { run, isRunning, result, error, resultId } = useSimulation({
     onComplete: (result) => {
       console.log("Simulation complete!", result);
     },
@@ -420,11 +442,21 @@ export function QuickSimContent() {
       </Button>
 
       {result && (
-        <div className="p-4 bg-muted rounded">
+        <div className="p-4 bg-muted rounded space-y-2">
           <p>DPS: {Math.round(result.dps).toLocaleString()}</p>
           <p>Total Damage: {result.totalDamage.toLocaleString()}</p>
           <p>Casts: {result.casts}</p>
           <p>Events: {result.events.length}</p>
+
+          {/* Link to saved result */}
+          {resultId && (
+            <Link
+              href={`/simulate/results/${resultId}`}
+              className="text-sm text-primary underline"
+            >
+              View full results →
+            </Link>
+          )}
         </div>
       )}
 

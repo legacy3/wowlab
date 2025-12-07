@@ -86,7 +86,3 @@ apps/portal/src/
 3. Results display in UI (DPS, damage, events)
 4. Result saved to Supabase
 5. All runs 100% client-side
-
-## Reference
-
-See `prompts/client-sim-prompt.md` for the original implementation prompt with code examples.

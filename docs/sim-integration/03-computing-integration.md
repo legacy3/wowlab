@@ -256,124 +256,36 @@ function JobRow({ job }: { job: ComputingJob }) {
 }
 ```
 
-## Step 4: Create Simulation Runner Hook
+## Step 4: Test the Atoms
+
+At this point, you can test the atoms work by manually creating a job:
 
 ```typescript
-// apps/portal/src/hooks/use-run-simulation.ts
-
-"use client";
-
+// In a test component or console:
 import { useSetAtom } from "jotai";
-import { useQueryClient } from "@tanstack/react-query";
-import { useDataProvider } from "@refinedev/core";
-import {
-  createSimJobAtom,
-  updateSimPhaseAtom,
-  updateSimProgressAtom,
-  completeSimJobAtom,
-  failSimJobAtom,
-} from "@/atoms/simulation/job";
-import {
-  loadSpellsForRotation,
-  createBrowserRuntime,
-  type RotationDefinition,
-  type SimulationResult,
-} from "@/lib/simulation";
-import { runSimulationLoop } from "@/lib/simulation/runner";
+import { createSimJobAtom, updateSimPhaseAtom } from "@/atoms/simulation/job";
 
-export interface RunSimulationParams {
-  rotation: RotationDefinition;
-  durationMs: number;
-  name?: string;
-}
-
-export function useRunSimulation() {
-  const queryClient = useQueryClient();
-  const dataProvider = useDataProvider()();
-
+function TestJobCreation() {
   const createJob = useSetAtom(createSimJobAtom);
   const updatePhase = useSetAtom(updateSimPhaseAtom);
-  const updateProgress = useSetAtom(updateSimProgressAtom);
-  const completeJob = useSetAtom(completeSimJobAtom);
-  const failJob = useSetAtom(failSimJobAtom);
 
-  const run = async (params: RunSimulationParams): Promise<SimulationResult> => {
+  const handleTest = () => {
     const jobId = createJob({
-      name: params.name ?? `${params.rotation.name} Simulation`,
-      rotationId: params.rotation.name.toLowerCase().replace(/\s+/g, "-"),
-      totalIterations: 1, // Single sim for now
+      name: "Test Simulation",
+      rotationId: "beast-mastery",
+      totalIterations: 100,
     });
 
-    try {
-      // Phase 1: Preparing spells
-      updatePhase({
-        jobId,
-        phase: "preparing-spells",
-        detail: "Loading spell data from cache",
-      });
-
-      const spells = await loadSpellsForRotation(
-        params.rotation,
-        queryClient,
-        dataProvider,
-        (progress) => {
-          updatePhase({
-            jobId,
-            phase: "preparing-spells",
-            detail: `Loading spell ${progress.loaded}/${progress.total}`,
-          });
-        },
-      );
-
-      // Phase 2: Booting engine
-      updatePhase({
-        jobId,
-        phase: "booting-engine",
-        detail: "Initializing simulation runtime",
-      });
-
-      const runtime = createBrowserRuntime({ spells });
-
-      // Phase 3: Running simulation
-      updatePhase({
-        jobId,
-        phase: "running",
-        detail: "Executing rotation",
-      });
-
-      const result = await runSimulationLoop(
-        runtime,
-        params.rotation,
-        params.durationMs,
-        (progress) => {
-          updateProgress({
-            jobId,
-            current: progress.currentTime,
-            total: params.durationMs,
-            eta: `${Math.ceil((params.durationMs - progress.currentTime) / 1000)}s remaining`,
-          });
-        },
-      );
-
-      // Dispose runtime
-      await runtime.dispose();
-
-      // Mark completed
-      completeJob({ jobId });
-
-      return result;
-    } catch (error) {
-      failJob({
-        jobId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
+    // Simulate phase transitions
+    setTimeout(() => updatePhase({ jobId, phase: "booting-engine", detail: "Loading runtime" }), 1000);
+    setTimeout(() => updatePhase({ jobId, phase: "running", detail: "Executing" }), 2000);
   };
 
-  return { run };
+  return <button onClick={handleTest}>Create Test Job</button>;
 }
 ```
+
+**Note:** The full `useSimulation` hook that orchestrates everything is created in Phase 4.
 
 ## Checklist
 
@@ -381,8 +293,8 @@ export function useRunSimulation() {
 - [ ] Add `SimulationPhase` type and `PHASE_LABELS` constant
 - [ ] Create `atoms/simulation/job.ts` with job management atoms
 - [ ] Update queue-card.tsx to display phase badges and details
-- [ ] Create `useRunSimulation` hook
-- [ ] Test: Run simulation, watch computing drawer update phases
+- [ ] Test: Create job manually, verify it appears in computing drawer
+- [ ] Test: Phase transitions update the badge correctly
 
 ## Phase Flow
 

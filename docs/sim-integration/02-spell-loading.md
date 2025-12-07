@@ -32,6 +32,7 @@ apps/portal/src/lib/simulation/
 import { createPortalDbcLayer } from "@/lib/services/dbc-layer";
 import { ExtractorService, transformSpell } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as Layer from "effect/Layer";
 import type { QueryClient } from "@tanstack/react-query";
 import type { DataProvider } from "@refinedev/core";
@@ -63,25 +64,31 @@ export async function loadSpellsForRotation(
   const extractorLayer = Layer.provide(dbcLayer)(ExtractorService.Default);
   const appLayer = Layer.mergeAll(dbcLayer, extractorLayer);
 
-  // Load spells with progress tracking
+  // Load spells with progress tracking using atomic counter
   const spells = await Effect.runPromise(
-    Effect.forEach(
-      spellIds,
-      (spellId, index) =>
-        Effect.gen(function* () {
-          const spell = yield* transformSpell(spellId);
+    Effect.gen(function* () {
+      // Atomic counter for accurate progress with concurrency
+      const loadedCount = yield* Ref.make(0);
 
-          // Report progress
-          onProgress?.({
-            loaded: index + 1,
-            total,
-            currentSpellId: spellId,
-          });
+      return yield* Effect.forEach(
+        spellIds,
+        (spellId) =>
+          Effect.gen(function* () {
+            const spell = yield* transformSpell(spellId);
 
-          return spell;
-        }),
-      { concurrency: 5 }, // Load 5 at a time
-    ).pipe(Effect.provide(appLayer)),
+            // Atomically increment and report progress
+            const loaded = yield* Ref.updateAndGet(loadedCount, (n) => n + 1);
+            onProgress?.({
+              loaded,
+              total,
+              currentSpellId: spellId,
+            });
+
+            return spell;
+          }),
+        { concurrency: 5 }, // Load 5 at a time
+      );
+    }).pipe(Effect.provide(appLayer)),
   );
 
   return spells;
@@ -103,22 +110,27 @@ export async function loadSpellsById(
   const appLayer = Layer.mergeAll(dbcLayer, extractorLayer);
 
   const spells = await Effect.runPromise(
-    Effect.forEach(
-      spellIds,
-      (spellId, index) =>
-        Effect.gen(function* () {
-          const spell = yield* transformSpell(spellId);
+    Effect.gen(function* () {
+      const loadedCount = yield* Ref.make(0);
 
-          onProgress?.({
-            loaded: index + 1,
-            total,
-            currentSpellId: spellId,
-          });
+      return yield* Effect.forEach(
+        spellIds,
+        (spellId) =>
+          Effect.gen(function* () {
+            const spell = yield* transformSpell(spellId);
 
-          return spell;
-        }),
-      { concurrency: 5 },
-    ).pipe(Effect.provide(appLayer)),
+            const loaded = yield* Ref.updateAndGet(loadedCount, (n) => n + 1);
+            onProgress?.({
+              loaded,
+              total,
+              currentSpellId: spellId,
+            });
+
+            return spell;
+          }),
+        { concurrency: 5 },
+      );
+    }).pipe(Effect.provide(appLayer)),
   );
 
   return spells;
