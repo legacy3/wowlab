@@ -299,14 +299,14 @@ export type Database = {
       // Materialized view - aggregation query, non-null due to WHERE filters
       view_spec_rankings_hourly: {
         Row: {
-          avg_dps: number;
+          avgDps: number;
           class: string;
-          last_updated: string;
-          max_dps: number;
-          median_dps: number;
-          min_dps: number;
-          sim_count: number;
+          maxDps: number;
+          medianDps: number;
+          minDps: number;
+          simCount: number;
           spec: string;
+          updatedAt: string;
         };
         Relationships: [];
       };
@@ -316,13 +316,13 @@ export type Database = {
           author: string;
           class: string;
           dps: number;
-          gear_set: string;
+          gearSet: string;
           id: string;
-          last_updated: string;
-          rotation_name: string;
+          rotationName: string;
           scenario: string;
-          sim_date: string;
+          simDate: string;
           spec: string;
+          updatedAt: string;
         };
         Relationships: [];
       };

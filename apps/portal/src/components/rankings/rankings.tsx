@@ -278,19 +278,23 @@ function MostWantedItemsTab() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {item.classes.map((wowClass) => (
-                          <Badge
-                            key={wowClass}
-                            variant="outline"
-                            className="text-xs"
-                            style={{
-                              borderColor: CLASS_COLORS[wowClass],
-                              color: CLASS_COLORS[wowClass],
-                            }}
-                          >
-                            {wowClass}
-                          </Badge>
-                        ))}
+                        {item.classes.map((className) => {
+                          const wowClass =
+                            className as keyof typeof CLASS_COLORS;
+                          return (
+                            <Badge
+                              key={className}
+                              variant="outline"
+                              className="text-xs"
+                              style={{
+                                borderColor: CLASS_COLORS[wowClass],
+                                color: CLASS_COLORS[wowClass],
+                              }}
+                            >
+                              {className}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-medium tabular-nums">
