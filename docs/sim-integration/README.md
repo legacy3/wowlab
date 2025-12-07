@@ -15,12 +15,15 @@ No server-side execution. No API routes for running sims. No SSE streaming.
 
 ## Phase Overview
 
-| Phase | Description                                            | What It Creates                                  |
-| ----- | ------------------------------------------------------ | ------------------------------------------------ |
-| **1** | [Browser Runtime](./01-browser-runtime.md)             | `lib/simulation/` with runtime, types, rotations |
-| **2** | [Spell Loading](./02-spell-loading.md)                 | Spell loader using existing dbcLayer             |
-| **3** | [Computing Integration](./03-computing-integration.md) | Job tracking with phase states in drawer         |
-| **4** | [Results & Persistence](./04-results-persistence.md)   | Simulation runner, upload, UI wiring             |
+| Phase | Description                                              | What It Creates                                  |
+| ----- | -------------------------------------------------------- | ------------------------------------------------ |
+| **1** | [Browser Runtime](./01-browser-runtime.md)               | `lib/simulation/` with runtime, types, rotations |
+| **2** | [Spell Loading](./02-spell-loading.md)                   | Spell loader using existing dbcLayer             |
+| **3** | [Computing Integration](./03-computing-integration.md)   | Job tracking with phase states in drawer         |
+| **4** | [Results & Persistence](./04-results-persistence.md)     | Simulation runner, upload, UI wiring             |
+| **5** | [Event Collection](./05-event-collection.md)             | Understanding CombatLogEvent → CombatData        |
+| **6** | [Implementation Plan](./06-implementation-plan.md)       | Step-by-step timeline integration                |
+| **7** | [Current State Analysis](./07-current-state-analysis.md) | What exists, what's broken, quick fixes          |
 
 ## How To Use These Docs
 
