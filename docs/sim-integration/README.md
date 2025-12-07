@@ -1,214 +1,92 @@
-# Simulation Integration Plan
+# Client-Side Simulation Integration
 
-> Integrating the WoW simulation engine from `apps/standalone` into `apps/portal`
+> Simulations run in the browser. Results upload to Supabase.
 
-## Executive Summary
+## Key Principle
 
-This document set provides a comprehensive plan for bringing actual simulation capabilities to the portal web application. Currently, the portal uses mock data for simulation results. The standalone CLI app has a fully working simulation engine.
+**ALL simulations run client-side.** The browser:
+1. Loads spell data (cached in IndexedDB)
+2. Boots the Effect-TS simulation runtime
+3. Executes the rotation loop
+4. Uploads results to Supabase
 
-**Goal:** Run real simulations from the portal UI, with live progress updates and persisted results.
-
----
-
-## Current State
-
-| Component         | Status                                                         |
-| ----------------- | -------------------------------------------------------------- |
-| `apps/standalone` | Full simulation engine with worker threads, can run 100k+ sims |
-| `apps/portal`     | UI complete with mock data, needs real simulation integration  |
-| `packages/*`      | Shared Effect-TS services used by standalone                   |
-
----
+No server-side execution. No API routes for running sims. No SSE streaming.
 
 ## Phase Overview
 
-| Phase | Description                                        | Complexity | Dependencies |
-| ----- | -------------------------------------------------- | ---------- | ------------ |
-| **0** | [Current State Analysis](./00-current-state.md)    | -          | None         |
-| **1** | [Runtime Extraction](./01-runtime-extraction.md)   | Medium     | Phase 0      |
-| **2** | [API Layer](./02-api-layer.md)                     | Medium     | Phase 1      |
-| **3** | [Portal Wiring](./03-portal-wiring.md)             | Medium     | Phase 2      |
-| **4** | [Streaming & Progress](./04-streaming-progress.md) | High       | Phase 3      |
-| **5** | [Persistence & Polish](./05-persistence-polish.md) | Medium     | Phase 4      |
+| Phase | Description | What It Creates |
+|-------|-------------|-----------------|
+| **1** | [Browser Runtime](./01-browser-runtime.md) | `lib/simulation/` with runtime, types, rotations |
+| **2** | [Spell Loading](./02-spell-loading.md) | Spell loader using existing dbcLayer |
+| **3** | [Computing Integration](./03-computing-integration.md) | Job tracking with phase states in drawer |
+| **4** | [Results & Persistence](./04-results-persistence.md) | Simulation runner, upload, UI wiring |
 
-**Supplementary:** [User Flow Trace](./user-flow-trace.md) - Complete trace from /simulate to results
+## How To Use These Docs
 
----
+Each phase is a **self-contained prompt**. Feed one file to Claude Code and it knows exactly what to do.
 
-## Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        apps/portal (Next.js)                        │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐     ┌──────────────────────────────────────┐  │
-│  │   /simulate     │     │          API Routes                  │  │
-│  │   UI Components │────▶│  POST /api/simulations               │  │
-│  │                 │     │  GET  /api/simulations/[id]          │  │
-│  │  QuickSimContent│     │  GET  /api/simulations/[id]/stream   │  │
-│  │  ResultTabs     │◀────│  DELETE /api/simulations/[id]        │  │
-│  │  Timeline       │ SSE │                                      │  │
-│  │  Charts         │     └──────────────┬───────────────────────┘  │
-│  └─────────────────┘                    │                          │
-│                                         ▼                          │
-│                          ┌──────────────────────────────────────┐  │
-│                          │          JobManager                  │  │
-│                          │  - Job lifecycle                     │  │
-│                          │  - Progress streaming                │  │
-│                          │  - Result transformation             │  │
-│                          └──────────────┬───────────────────────┘  │
-└─────────────────────────────────────────┼───────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                    @wowlab/sim-engine (NEW)                         │
-├─────────────────────────────────────────────────────────────────────┤
-│  SimulationRuntime  │  SpellLoader  │  RotationRegistry            │
-│  runSimulation()    │  loadSpells() │  getRotation()               │
-│  runBatch()         │               │  BeastMasteryRotation        │
-└─────────────────────────────────────────────────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Existing Packages                              │
-├─────────────────────────────────────────────────────────────────────┤
-│  @wowlab/core       │  @wowlab/services  │  @wowlab/rotation       │
-│  @wowlab/runtime    │  @wowlab/specs     │                          │
-└─────────────────────────────────────────────────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Supabase                                     │
-├─────────────────────────────────────────────────────────────────────┤
-│  spell DBC tables   │  simulation_jobs   │  rotation_sim_results   │
-└─────────────────────────────────────────────────────────────────────┘
+```bash
+# Example workflow:
+1. Read 01-browser-runtime.md
+2. Implement all checklist items
+3. Verify build passes
+4. Move to next phase
 ```
 
----
+## What Already Exists
 
-## Key Decisions
+| Component | Location | Status |
+|-----------|----------|--------|
+| Spell loading | `lib/services/dbc-layer.ts` | Working (data inspector) |
+| Computing drawer | `components/layout/drawer/computing/` | Working (mock data) |
+| Job atoms | `atoms/computing/state.ts` | Working (mock data) |
+| Standalone runtime | `apps/standalone/src/runtime/` | Working (CLI) |
+| Rotations | `apps/standalone/src/rotations/` | Working (CLI) |
 
-### 1. Server-Side Execution
+## Target Architecture
 
-Run simulations on the server (API routes), not in the browser. Effect-TS runtime stays server-side.
+```
+Browser
+  └─→ loadSpellsForRotation() ─→ React Query + IndexedDB cache
+  └─→ createBrowserRuntime() ─→ Effect ManagedRuntime
+  └─→ runSimulationLoop() ─→ Events, DPS, etc.
+  └─→ uploadSimulationResult() ─→ Supabase rotation_sim_results
+```
 
-**Rationale:**
+## Files To Create
 
-- Effect layers expect single `Effect.provide` tree
-- Heavy computation better suited for server
-- Spell data access via Supabase server client
-- Future: distribute to worker daemon
+```
+apps/portal/src/
+├── lib/simulation/
+│   ├── index.ts          # Re-exports
+│   ├── types.ts          # RotationDefinition, SimulationResult
+│   ├── runtime.ts        # createBrowserRuntime
+│   ├── loader.ts         # loadSpellsForRotation
+│   ├── runner.ts         # runSimulationLoop
+│   ├── upload.ts         # uploadSimulationResult
+│   ├── rotation-utils.ts # tryCast, runPriorityList
+│   └── rotations/
+│       ├── index.ts      # Registry
+│       └── beast-mastery.ts
+├── atoms/simulation/
+│   └── job.ts            # Simulation job atoms
+└── hooks/
+    └── use-simulation.ts # Full simulation hook
+```
 
-### 2. SSE for Progress
+## Success Criteria
 
-Use Server-Sent Events (not WebSocket) for streaming progress.
+1. Click "Run Simulation" in portal
+2. Computing drawer shows job with phases:
+   - "Preparing spells"
+   - "Booting simulation engine"
+   - "Running simulation" (with progress)
+   - "Uploading results"
+   - "Completed"
+3. Results display in UI (DPS, damage, events)
+4. Result saved to Supabase
+5. All runs 100% client-side
 
-**Rationale:**
+## Reference
 
-- Simpler than WebSocket for unidirectional data
-- Native browser support via `EventSource`
-- Works with standard HTTP infrastructure
-- Easy to implement in Next.js API routes
-
-### 3. New Package for Shared Runtime
-
-Extract simulation runtime to `@wowlab/sim-engine` package.
-
-**Rationale:**
-
-- Avoid duplicating code between standalone and portal
-- Clear separation of concerns
-- Easier testing and maintenance
-- Both apps import same logic
-
-### 4. In-Memory Job State with Database Backup
-
-Jobs stored in memory for fast access, persisted to Supabase for recovery.
-
-**Rationale:**
-
-- Low latency for progress updates
-- Survives server restarts
-- Audit trail of all simulations
-- Enables history/comparison features
-
----
-
-## Success Metrics
-
-| Metric                    | Target                        |
-| ------------------------- | ----------------------------- |
-| Single sim latency        | < 2s for 60s fight            |
-| Batch throughput          | 1000 iterations/minute        |
-| Progress update frequency | 10 updates/second             |
-| Results persistence       | 100% saved to DB              |
-| Error recovery            | Jobs marked failed on restart |
-
----
-
-## Risk Mitigation
-
-| Risk                               | Mitigation                       |
-| ---------------------------------- | -------------------------------- |
-| Server crashes during sim          | Graceful shutdown + job recovery |
-| SSE connection drops               | Reconnection with retry          |
-| Memory pressure from large batches | Batch processing with cleanup    |
-| Rate limit abuse                   | Per-user rate limiting           |
-| Slow spell data loading            | 5-minute cache                   |
-
----
-
-## Out of Scope
-
-- Distributed execution across multiple servers
-- Client-side simulation (keep server-side)
-- Real-time multiplayer features
-- Mobile app
-
----
-
-## Getting Started
-
-1. Read [Phase 0: Current State Analysis](./00-current-state.md) to understand what exists
-2. Review [User Flow Trace](./user-flow-trace.md) for the target experience
-3. Implement phases in order (each depends on previous)
-
----
-
-## Document Index
-
-1. **[Phase 0: Current State Analysis](./00-current-state.md)**
-   - Standalone app architecture
-   - Portal app architecture
-   - Gap analysis
-
-2. **[Phase 1: Runtime Extraction](./01-runtime-extraction.md)**
-   - Create `@wowlab/sim-engine` package
-   - Extract RotationRuntime, SpellLoader, rotations
-   - Update standalone to use new package
-
-3. **[Phase 2: API Layer](./02-api-layer.md)**
-   - Create `/api/simulations` routes
-   - Implement JobManager
-   - Result transformation
-
-4. **[Phase 3: Portal Wiring](./03-portal-wiring.md)**
-   - Create React hooks for API
-   - Update QuickSimContent
-   - Wire results page to real data
-
-5. **[Phase 4: Streaming & Progress](./04-streaming-progress.md)**
-   - SSE stream implementation
-   - Real-time progress updates
-   - Partial results preview
-
-6. **[Phase 5: Persistence & Polish](./05-persistence-polish.md)**
-   - Database schema updates
-   - Simulation history
-   - Rate limiting & observability
-
-7. **[User Flow Trace](./user-flow-trace.md)**
-   - Complete user journey
-   - Component trees at each step
-   - Data flow diagrams
+See `prompts/client-sim-prompt.md` for the original implementation prompt with code examples.
