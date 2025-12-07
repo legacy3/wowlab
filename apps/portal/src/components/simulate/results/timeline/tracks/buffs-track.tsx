@@ -6,6 +6,7 @@ import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import { getSpellLabel, shouldShowLabel } from "../utils";
 
 type BuffCategory = "self" | "pet" | "external";
 
@@ -127,7 +128,10 @@ export const BuffsTrack = memo(function BuffsTrack({
 
       laneCounts[category] = laneIndex;
       currentY += laneIndex * (buffHeight + buffGap);
-      if (laneIndex > 0) currentY += buffCategoryGap;
+
+      if (laneIndex > 0) {
+        currentY += buffCategoryGap;
+      }
     });
 
     return {
@@ -253,18 +257,10 @@ export const BuffsTrack = memo(function BuffsTrack({
             0.3,
           );
 
-          //
           const spellName = spell?.name ?? "";
-          const nameWidth = spellName.length * 6;
-          const availableWidth = width - 12; // padding for text
-          const showFullName = availableWidth >= nameWidth;
-          const showInitials = width > 30;
-
-          const initials = spellName
-            .split(" ")
-            .map((w) => w[0])
-            .join("")
-            .slice(0, 3);
+          const availableWidth = width - 12;
+          const label = getSpellLabel(spellName, availableWidth);
+          const showLabel = shouldShowLabel(width);
 
           return (
             <Group
@@ -314,14 +310,13 @@ export const BuffsTrack = memo(function BuffsTrack({
                 );
               })}
 
-              {/* Label - show full name if it fits, otherwise initials */}
-              {(showFullName || showInitials) && (
+              {showLabel && (
                 <Text
-                  text={showFullName ? spellName : initials}
+                  text={label.text}
                   x={4}
                   y={buffHeight / 2 - 5}
-                  fontSize={showFullName ? 10 : 9}
-                  fontStyle={showFullName ? "500" : "bold"}
+                  fontSize={label.fontSize}
+                  fontStyle={label.showFullName ? "500" : "bold"}
                   fill="#fff"
                   listening={false}
                   perfectDrawEnabled={false}

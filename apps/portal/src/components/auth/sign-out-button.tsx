@@ -1,17 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useSetAtom } from "jotai";
-import { signOutAtom } from "@/atoms";
+import { useLogout } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 
 export function SignOutButton() {
   const router = useRouter();
-  const signOut = useSetAtom(signOutAtom);
+  const { mutate: logout } = useLogout();
 
   const handleSignOut = async () => {
-    await signOut();
-
+    logout();
     router.push("/auth/sign-in");
     router.refresh();
   };

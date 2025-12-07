@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSetAtom } from "jotai";
-import { signInWithOAuthAtom } from "@/atoms";
+import { useLogin } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import {
@@ -18,23 +17,20 @@ import { Github, MessageCircle, Sparkles } from "lucide-react";
 export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<"discord" | "github" | null>(null);
-
-  const signInWithOAuth = useSetAtom(signInWithOAuthAtom);
+  const { mutate: login } = useLogin<{
+    provider: "discord" | "github";
+    redirectTo: string;
+  }>();
 
   const handleOAuthSignIn = async (provider: "discord" | "github") => {
     setError(null);
     setLoading(provider);
 
     try {
-      const { error } = await signInWithOAuth({
+      login({
         provider,
         redirectTo: getAuthCallbackUrl(),
       });
-
-      if (error) {
-        setError(error.message);
-        setLoading(null);
-      }
     } catch {
       setError("An unexpected error occurred");
       setLoading(null);

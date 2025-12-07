@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -14,90 +14,108 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { RefreshCw, RotateCcw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { settingsCardOrderAtom } from "@/atoms/user/settings-ui";
+import { useSetAtom } from "jotai";
+import { RESET } from "jotai/utils";
 
-// Mock initial values - these will be replaced with real state management
-const MOCK_SEED = "a1b2c3d4e5f6";
-const MOCK_MAX_PARALLEL = 50;
-const MIN_PARALLEL = 1;
-const MAX_PARALLEL = 200;
+const MIN_DURATION = 30;
+const MAX_DURATION = 600;
+const DEFAULT_DURATION = 300;
+
+const MIN_ITERATIONS = 100;
+const MAX_ITERATIONS = 10000;
+const DEFAULT_ITERATIONS = 1000;
 
 export function SimulationSettingsCard() {
-  const [seed, setSeed] = useState(MOCK_SEED);
-  const [maxParallel, setMaxParallel] = useState([MOCK_MAX_PARALLEL]);
+  const { settings, isLoading, isUpdating, updateSettings } = useUserSettings();
+  const resetSettingsCardOrder = useSetAtom(settingsCardOrderAtom);
 
-  const handleRegenerateSeed = () => {
-    // Mock seed generation - will be replaced with actual implementation
-    const newSeed = Array.from({ length: 12 }, () =>
-      Math.floor(Math.random() * 16).toString(16),
-    ).join("");
-    setSeed(newSeed);
-    toast.success("Simulation seed regenerated");
-  };
+  const fightDuration = settings?.defaultFightDuration ?? DEFAULT_DURATION;
+  const iterations = settings?.defaultIterations ?? DEFAULT_ITERATIONS;
 
-  const handleResetInterface = () => {
-    // Mock interface reset - will be replaced with actual implementation
+  const handleFightDurationChange = useCallback(
+    (value: number[]) => {
+      updateSettings({ defaultFightDuration: value[0] });
+    },
+    [updateSettings],
+  );
+
+  const handleIterationsChange = useCallback(
+    (value: number[]) => {
+      updateSettings({ defaultIterations: value[0] });
+    },
+    [updateSettings],
+  );
+
+  const handleResetInterface = useCallback(() => {
+    resetSettingsCardOrder(RESET);
     toast.success("Interface configuration reset to defaults");
-  };
+  }, [resetSettingsCardOrder]);
+
+  if (isLoading) {
+    return <SimulationSettingsCardSkeleton />;
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Simulation Settings</CardTitle>
         <CardDescription>
-          Configure simulation parameters and interface preferences
+          Configure default simulation parameters
         </CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="seed">Simulation Seed</FieldLabel>
-            <div className="flex gap-2">
-              <Input
-                id="seed"
-                value={seed}
-                disabled
-                className="font-mono opacity-60"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleRegenerateSeed}
-                title="Regenerate seed"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-            <FieldDescription>
-              Random seed used for simulation calculations
-            </FieldDescription>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="max-parallel">
-              Maximum Parallel Simulations
+            <FieldLabel htmlFor="fight-duration">
+              Default Fight Duration
             </FieldLabel>
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Slider
-                  id="max-parallel"
-                  min={MIN_PARALLEL}
-                  max={MAX_PARALLEL}
-                  step={1}
-                  value={maxParallel}
-                  onValueChange={setMaxParallel}
+                  id="fight-duration"
+                  min={MIN_DURATION}
+                  max={MAX_DURATION}
+                  step={30}
+                  value={[fightDuration]}
+                  onValueCommit={handleFightDurationChange}
+                  disabled={isUpdating}
                   className="flex-1"
                 />
-                <div className="w-12 text-center font-medium">
-                  {maxParallel[0]}
+                <div className="w-16 text-center font-medium">
+                  {fightDuration}s
                 </div>
               </div>
               <FieldDescription>
-                Number of simulations that can run concurrently (1-200)
+                Default fight duration in seconds (30-600)
+              </FieldDescription>
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="iterations">Default Iterations</FieldLabel>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Slider
+                  id="iterations"
+                  min={MIN_ITERATIONS}
+                  max={MAX_ITERATIONS}
+                  step={100}
+                  value={[iterations]}
+                  onValueCommit={handleIterationsChange}
+                  disabled={isUpdating}
+                  className="flex-1"
+                />
+                <div className="w-16 text-center font-medium">{iterations}</div>
+              </div>
+              <FieldDescription>
+                Number of simulation iterations for accuracy (100-10000)
               </FieldDescription>
             </div>
           </Field>
@@ -115,6 +133,49 @@ export function SimulationSettingsCard() {
             <FieldDescription>
               Reset all customized panel positions and layouts to defaults
             </FieldDescription>
+          </Field>
+        </FieldGroup>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SimulationSettingsCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Simulation Settings</CardTitle>
+        <CardDescription>
+          Configure default simulation parameters
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="fight-duration">
+              Default Fight Duration
+            </FieldLabel>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-2 flex-1" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="iterations">Default Iterations</FieldLabel>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-2 flex-1" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
+          </Field>
+
+          <Field>
+            <FieldLabel>Interface Configuration</FieldLabel>
+            <Skeleton className="h-10 w-48" />
           </Field>
         </FieldGroup>
       </CardContent>

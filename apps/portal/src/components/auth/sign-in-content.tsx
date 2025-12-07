@@ -2,23 +2,23 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { currentUserAtom } from "@/atoms";
+import { useIsAuthenticated } from "@refinedev/core";
 import { SignInForm } from "./sign-in-form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function SignInInner() {
   const router = useRouter();
-  const [user] = useAtom(currentUserAtom);
+  const { data: authData } = useIsAuthenticated();
+  const isAuthenticated = authData?.authenticated;
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [isAuthenticated, router]);
 
-  if (user) {
+  if (isAuthenticated) {
     return null;
   }
 

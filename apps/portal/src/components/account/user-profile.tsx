@@ -1,8 +1,6 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
-import { useAtom } from "jotai";
-import { profileByIdAtomFamily, currentUserAtom } from "@/atoms";
+import { useGetIdentity, useOne } from "@refinedev/core";
 import {
   Card,
   CardContent,
@@ -13,46 +11,59 @@ import {
 import { UserAvatar } from "@/components/account/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Profile } from "@/lib/supabase/types";
 
-interface UserProfileInnerProps {
+interface UserProfileProps {
   userId: string;
 }
 
-function UserProfileInner({ userId }: UserProfileInnerProps) {
-  const [currentUser] = useAtom(currentUserAtom);
-  const profileAtom = useMemo(() => profileByIdAtomFamily(userId), [userId]);
-  const [profile] = useAtom(profileAtom);
+function UserProfileInner({ userId }: UserProfileProps) {
+  const { data: identity } = useGetIdentity<{ id: string }>();
+  const {
+    result,
+    query: { isLoading },
+  } = useOne<Profile>({
+    resource: "user_profiles",
+    id: userId,
+  });
 
-  if (!profile) {
+  const currentUserId = identity?.id;
+  const user = result;
+
+  if (isLoading) {
+    return <UserProfileSkeleton />;
+  }
+
+  if (!user) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>User Not Found</CardTitle>
           <CardDescription>
-            The requested user profile could not be found
+            The requested user profile could not be found.
           </CardDescription>
         </CardHeader>
       </Card>
     );
   }
 
-  const isOwnProfile = currentUser?.id === profile.id;
+  const isOwnProfile = currentUserId === user.id;
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-start gap-4">
           <UserAvatar
-            profile={profile}
+            user={user}
             className="h-16 w-16"
             fallbackClassName="text-lg"
           />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <CardTitle>@{profile.handle}</CardTitle>
+              <CardTitle>@{user.handle}</CardTitle>
               {isOwnProfile && <Badge variant="secondary">You</Badge>}
             </div>
-            <CardDescription>{profile.email}</CardDescription>
+            <CardDescription>{user.email}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -62,36 +73,8 @@ function UserProfileInner({ userId }: UserProfileInnerProps) {
             <h3 className="text-sm font-medium text-muted-foreground">
               User ID
             </h3>
-            <p className="text-sm font-mono mt-1">{profile.id}</p>
+            <p className="text-sm font-mono mt-1">{user.id}</p>
           </div>
-          {profile.createdAt && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Member Since
-              </h3>
-              <p className="text-sm mt-1">
-                {new Date(profile.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          )}
-          {profile.updatedAt && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Last Updated
-              </h3>
-              <p className="text-sm mt-1">
-                {new Date(profile.updatedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -128,10 +111,6 @@ function UserProfileSkeleton() {
   );
 }
 
-export function UserProfile({ userId }: { userId: string }) {
-  return (
-    <Suspense fallback={<UserProfileSkeleton />}>
-      <UserProfileInner userId={userId} />
-    </Suspense>
-  );
+export function UserProfile({ userId }: UserProfileProps) {
+  return <UserProfileInner userId={userId} />;
 }

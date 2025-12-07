@@ -91,7 +91,10 @@ export const DamageTrack = memo(function DamageTrack({
       bucket.totalDamage += dmg.amount;
       bucket.maxDamage = Math.max(bucket.maxDamage, dmg.amount);
       bucket.events.push(dmg);
-      if (dmg.isCrit) bucket.hasCrit = true;
+
+      if (dmg.isCrit) {
+        bucket.hasCrit = true;
+      }
 
       // Track spell breakdown
       const spellData = bucket.spellBreakdown.get(dmg.spellId) ?? {
@@ -101,7 +104,9 @@ export const DamageTrack = memo(function DamageTrack({
       };
       spellData.amount += dmg.amount;
       spellData.count++;
-      if (dmg.isCrit) spellData.crits++;
+      if (dmg.isCrit) {
+        spellData.crits++;
+      }
       bucket.spellBreakdown.set(dmg.spellId, spellData);
     });
 
@@ -332,7 +337,10 @@ export const DamageTrack = memo(function DamageTrack({
                   isCrit: dmg.isCrit,
                   target: dmg.target,
                 });
-                if (tooltip) showTooltip(e, tooltip);
+
+                if (tooltip) {
+                  showTooltip(e, tooltip);
+                }
               }}
               onMouseLeave={hideTooltip}
             >

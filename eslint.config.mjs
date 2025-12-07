@@ -145,6 +145,14 @@ export default [
     },
   },
 
+  // Combat log files - allow redeclaration for Effect Schema type+value pattern
+  {
+    files: ["**/combat-log/*.ts"],
+    rules: {
+      "no-redeclare": "off",
+    },
+  },
+
   // Config files without TypeScript project
   {
     files: ["*.config.ts", "*.config.mts", "*.config.js", "*.config.mjs"],

@@ -1,14 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
-import { useAtom } from "jotai";
+import { Suspense, useState } from "react";
+// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
+// import { useAtom } from "jotai";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DraggableDashboard,
   type DashboardConfig,
 } from "@/components/ui/draggable-dashboard";
-import { resultsCardOrderAtom, type ResultsCardId } from "@/atoms/sim";
+// TODO(refine-migration): resultsCardOrderAtom deleted - implement with Refine/localStorage
+// import { resultsCardOrderAtom, type ResultsCardId } from "@/atoms/sim";
 import {
   BestDpsCard,
   BaselineDpsCard,
@@ -17,6 +19,15 @@ import {
   CharacterEquipmentCard,
   ItemCombosCard,
 } from "./cards";
+
+// Temporary type definition until Refine migration
+type ResultsCardId =
+  | "best-dps"
+  | "baseline-dps"
+  | "avg-gain"
+  | "combos-analyzed"
+  | "character-equipment"
+  | "item-combos";
 
 const components: DashboardConfig<ResultsCardId> = {
   "best-dps": {
@@ -50,7 +61,16 @@ export function ResultsOverview() {
 }
 
 function ResultsOverviewInner() {
-  const [order, setOrder] = useAtom(resultsCardOrderAtom);
+  // TODO(refine-migration): Replace with Refine/localStorage for persistence
+  // const [order, setOrder] = useAtom(resultsCardOrderAtom);
+  const [order, setOrder] = useState<ResultsCardId[]>([
+    "best-dps",
+    "baseline-dps",
+    "avg-gain",
+    "combos-analyzed",
+    "character-equipment",
+    "item-combos",
+  ]);
 
   return (
     <DraggableDashboard

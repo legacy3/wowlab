@@ -2,17 +2,16 @@
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { currentUserAtom } from "@/atoms";
+import { useIsAuthenticated } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserMenu } from "./user-menu";
 
 function AuthButtonInner() {
   const router = useRouter();
-  const [user] = useAtom(currentUserAtom);
+  const { data: authData } = useIsAuthenticated();
 
-  if (user) {
+  if (authData?.authenticated) {
     return <UserMenu />;
   }
 

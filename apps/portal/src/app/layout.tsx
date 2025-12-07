@@ -3,10 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
-import { ThemeProvider, JotaiProvider } from "@/providers";
+import { ThemeProvider, JotaiProvider, RefineProvider } from "@/providers";
 import { SiteShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthSync } from "@/components/providers/auth-sync";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -36,16 +35,17 @@ export default function RootLayout({
       >
         <NuqsAdapter>
           <JotaiProvider>
-            <AuthSync />
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <SiteShell>{children}</SiteShell>
-              <Toaster />
-            </ThemeProvider>
+            <RefineProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <SiteShell>{children}</SiteShell>
+                <Toaster />
+              </ThemeProvider>
+            </RefineProvider>
           </JotaiProvider>
         </NuqsAdapter>
         <Analytics />

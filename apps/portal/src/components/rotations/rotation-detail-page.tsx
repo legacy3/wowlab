@@ -1,14 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import { useAtom } from "jotai";
-import {
-  rotationAtomFamily,
-  profileByHandleAtomFamily,
-  rotationSimResultsAtomFamily,
-  parentRotationAtomFamily,
-  forkRotationsAtomFamily,
-} from "@/atoms/rotations/state";
+import { useList, useOne } from "@refinedev/core";
 import {
   Card,
   CardContent,
@@ -41,25 +33,137 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Rotation, Profile, SimResult } from "@/lib/supabase/types";
 
-interface RotationDetailInnerProps {
+interface RotationDetailProps {
   namespace: string;
   slug: string;
 }
 
-function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
-  const [rotation] = useAtom(rotationAtomFamily(`${namespace}/${slug}`));
-  const [profile] = useAtom(profileByHandleAtomFamily(namespace));
-  const [simResults] = useAtom(rotationSimResultsAtomFamily(rotation.id));
-  const [parent] = useAtom(parentRotationAtomFamily(rotation.parentId));
-  const [forks] = useAtom(forkRotationsAtomFamily(rotation.id));
+function RotationDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <Skeleton className="h-6 w-24" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-5 w-12" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {[1, 2].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[1, 2, 3].map((j) => (
+                <Skeleton key={j} className="h-16 w-full" />
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function RotationDetail({ namespace, slug }: RotationDetailProps) {
+  const {
+    result: rotationResult,
+    query: { isLoading: rotationLoading, isError: rotationError },
+  } = useList<Rotation>({
+    resource: "rotations",
+    filters: [
+      { field: "namespace", operator: "eq", value: namespace },
+      { field: "slug", operator: "eq", value: slug },
+      { field: "deletedAt", operator: "null", value: true },
+    ],
+    pagination: { pageSize: 1 },
+  });
+
+  const rotation = rotationResult?.data?.[0];
+
+  const {
+    result: profileResult,
+    query: { isLoading: profileLoading },
+  } = useOne<Profile>({
+    resource: "user_profiles",
+    id: rotation?.userId ?? "",
+    queryOptions: {
+      enabled: !!rotation?.userId,
+    },
+  });
+
+  const author = profileResult;
+
+  const { result: simResultsResult } = useList<SimResult>({
+    resource: "rotation_sim_results",
+    filters: [{ field: "rotationId", operator: "eq", value: rotation?.id }],
+    sorters: [{ field: "createdAt", order: "desc" }],
+    queryOptions: {
+      enabled: !!rotation?.id,
+    },
+  });
+
+  const simResults = simResultsResult?.data ?? [];
+
+  const { result: parent } = useOne<Rotation>({
+    resource: "rotations",
+    id: rotation?.parentId ?? "",
+    queryOptions: {
+      enabled: !!rotation?.parentId,
+    },
+  });
+
+  const { result: forksResult } = useList<Rotation>({
+    resource: "rotations",
+    filters: [
+      { field: "parentId", operator: "eq", value: rotation?.id },
+      { field: "deletedAt", operator: "null", value: true },
+    ],
+    sorters: [{ field: "createdAt", order: "desc" }],
+    queryOptions: {
+      enabled: !!rotation?.id,
+    },
+  });
+
+  const forks = forksResult?.data ?? [];
+
+  if (rotationLoading || profileLoading) {
+    return <RotationDetailSkeleton />;
+  }
+
+  if (rotationError || !rotation) {
+    return <div>Rotation not found</div>;
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          {profile && <UserAvatar profile={profile} className="h-14 w-14" />}
+          {author && <UserAvatar user={author} className="h-14 w-14" />}
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-2xl font-bold">{rotation.name}</h2>
@@ -295,61 +399,5 @@ function RotationDetailInner({ namespace, slug }: RotationDetailInnerProps) {
         </Card>
       )}
     </div>
-  );
-}
-
-function RotationDetailSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-        </div>
-        <Skeleton className="h-6 w-24" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-            <Skeleton className="h-5 w-12" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-64 w-full" />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {[1, 2].map((i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[1, 2, 3].map((j) => (
-                <Skeleton key={j} className="h-16 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function RotationDetail({ namespace, slug }: RotationDetailInnerProps) {
-  return (
-    <Suspense fallback={<RotationDetailSkeleton />}>
-      <RotationDetailInner namespace={namespace} slug={slug} />
-    </Suspense>
   );
 }

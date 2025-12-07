@@ -14,13 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import { ProfileHeader } from "@/components/rotations/profile-header";
 import { RotationsList } from "@/components/rotations/rotations-list";
-import type { Database } from "@/lib/supabase/database.types";
-
-type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
-type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
+import type { UserIdentity, Rotation } from "@/lib/supabase/types";
 
 type Props = {
-  profile: Profile;
+  user: UserIdentity;
   rotations: Rotation[];
 };
 
@@ -162,10 +159,10 @@ function HistoryTab() {
   );
 }
 
-export function AccountTabs({ profile, rotations }: Props) {
+export function AccountTabs({ user, rotations }: Props) {
   return (
     <div className="space-y-6">
-      <ProfileHeader profile={profile} rotationCount={rotations.length} />
+      <ProfileHeader user={user} rotationCount={rotations.length} />
 
       <UrlTabs
         defaultTab="rotations"

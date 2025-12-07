@@ -6,27 +6,16 @@ import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "../hooks";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import { getSpellLabel, shouldShowLabel } from "../utils";
 
-type TargetCategory = "boss" | "adds" | "other";
+type TargetCategory = "boss" | "adds";
 
 function getTargetCategory(target: string | undefined): TargetCategory {
   if (!target) {
-    return "other";
-  }
-  const lowerTarget = target.toLowerCase();
-
-  const bossPatterns = [
-    "rashok",
-    "boss",
-    "lord",
-    "king",
-    "queen",
-    "elder",
-    "primal",
-  ];
-  if (bossPatterns.some((p) => lowerTarget.includes(p))) {
     return "boss";
   }
+
+  const lowerTarget = target.toLowerCase();
 
   const addPatterns = ["add", "wave", "slam", "elemental", "minion"];
   if (addPatterns.some((p) => lowerTarget.includes(p))) {
@@ -77,18 +66,13 @@ export const DebuffsTrack = memo(function DebuffsTrack({
 
     debuffs.forEach((debuff) => {
       const category = getTargetCategory(debuff.target);
-      if (categorized.has(category)) {
-        categorized.get(category)!.push(debuff);
-      } else {
-        categorized.get("boss")!.push(debuff); // Default to boss
-      }
+      categorized.get(category)!.push(debuff);
     });
 
     const result: ProcessedDebuff[] = [];
     const laneCounts: Record<TargetCategory, number> = {
       boss: 0,
       adds: 0,
-      other: 0,
     };
     let currentY = 0;
 
@@ -235,19 +219,10 @@ export const DebuffsTrack = memo(function DebuffsTrack({
           0.25,
         );
 
-        // Determine label based on available width
-        // Approximate: 6px per character at fontSize 9
         const spellName = spell?.name ?? "";
-        const nameWidth = spellName.length * 6;
-        const availableWidth = width - 12; // padding
-        const showFullName = availableWidth >= nameWidth;
-        const showInitials = width > 30;
-
-        const initials = spellName
-          .split(" ")
-          .map((w) => w[0])
-          .join("")
-          .slice(0, 3);
+        const availableWidth = width - 12;
+        const label = getSpellLabel(spellName, availableWidth);
+        const showLabel = shouldShowLabel(width);
 
         return (
           <Group
@@ -266,7 +241,10 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                     stacks: debuff.stacks,
                   },
                 );
-                if (tooltip) showTooltip(e, tooltip);
+
+                if (tooltip) {
+                  showTooltip(e, tooltip);
+                }
               }
             }}
             onMouseLeave={() => hideTooltip?.()}
@@ -310,14 +288,13 @@ export const DebuffsTrack = memo(function DebuffsTrack({
               </Group>
             )}
 
-            {/* Label - show full name if it fits, otherwise initials */}
-            {(showFullName || showInitials) && (
+            {showLabel && (
               <Text
-                text={showFullName ? spellName : initials}
+                text={label.text}
                 x={4}
                 y={debuffHeight / 2 - 4}
-                fontSize={showFullName ? 9 : 8}
-                fontStyle={showFullName ? undefined : "bold"}
+                fontSize={label.fontSize}
+                fontStyle={label.showFullName ? undefined : "bold"}
                 fill="#fff"
                 listening={false}
                 perfectDrawEnabled={false}

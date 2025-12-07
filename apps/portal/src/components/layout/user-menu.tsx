@@ -2,8 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useAtom, useSetAtom } from "jotai";
-import { currentUserAtom, currentProfileAtom, signOutAtom } from "@/atoms";
+import { useGetIdentity, useLogout } from "@refinedev/core";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,21 +14,20 @@ import {
 import { UserAvatar } from "@/components/account/user-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Settings, LogOut, FileCode, History } from "lucide-react";
+import type { UserIdentity } from "@/lib/supabase/types";
 
 function UserMenuInner() {
   const router = useRouter();
-  const [user] = useAtom(currentUserAtom);
-  const [profile] = useAtom(currentProfileAtom);
-  const signOut = useSetAtom(signOutAtom);
+  const { data: identity } = useGetIdentity<UserIdentity>();
+  const { mutate: logout } = useLogout();
 
   const handleSignOut = async () => {
-    await signOut();
-
+    logout();
     router.push("/auth/sign-in");
     router.refresh();
   };
 
-  if (!user || !profile) {
+  if (!identity) {
     return null;
   }
 
@@ -37,17 +35,17 @@ function UserMenuInner() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="relative flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          <UserAvatar profile={profile} className="h-9 w-9" />
+          <UserAvatar user={identity} className="h-9 w-9" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              @{profile.handle}
+              @{identity.handle ?? "user"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {identity.email}
             </p>
           </div>
         </DropdownMenuLabel>

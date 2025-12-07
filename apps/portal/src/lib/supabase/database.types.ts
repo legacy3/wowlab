@@ -38,6 +38,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      fight_profiles: {
+        Row: {
+          category: string;
+          description: string;
+          id: string;
+          label: string;
+          order: number;
+        };
+        Insert: {
+          category: string;
+          description: string;
+          id: string;
+          label: string;
+          order?: number;
+        };
+        Update: {
+          category?: string;
+          description?: string;
+          id?: string;
+          label?: string;
+          order?: number;
+        };
+        Relationships: [];
+      };
       reserved_handles: {
         Row: {
           createdAt: string;
@@ -224,70 +248,88 @@ export type Database = {
       };
       user_settings: {
         Row: {
-          createdAt: string;
+          compactMode: boolean | null;
+          createdAt: string | null;
+          defaultFightDuration: number | null;
+          defaultIterations: number | null;
           id: string;
-          maxParallelSimulations: number | null;
-          simulationSeed: string;
-          updatedAt: string;
+          showTooltips: boolean | null;
+          theme: string | null;
+          updatedAt: string | null;
         };
         Insert: {
-          createdAt?: string;
+          compactMode?: boolean | null;
+          createdAt?: string | null;
+          defaultFightDuration?: number | null;
+          defaultIterations?: number | null;
           id: string;
-          maxParallelSimulations?: number | null;
-          simulationSeed?: string;
-          updatedAt?: string;
+          showTooltips?: boolean | null;
+          theme?: string | null;
+          updatedAt?: string | null;
         };
         Update: {
-          createdAt?: string;
+          compactMode?: boolean | null;
+          createdAt?: string | null;
+          defaultFightDuration?: number | null;
+          defaultIterations?: number | null;
           id?: string;
-          maxParallelSimulations?: number | null;
-          simulationSeed?: string;
-          updatedAt?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_settings_id_fkey";
-            columns: ["id"];
-            isOneToOne: true;
-            referencedRelation: "user_profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-    };
-    Views: {
-      spec_rankings_hourly: {
-        Row: {
-          avg_dps: number | null;
-          class: string | null;
-          last_updated: string | null;
-          max_dps: number | null;
-          median_dps: number | null;
-          min_dps: number | null;
-          sim_count: number | null;
-          spec: string | null;
+          showTooltips?: boolean | null;
+          theme?: string | null;
+          updatedAt?: string | null;
         };
         Relationships: [];
       };
-      top_sims_daily: {
+    };
+    Views: {
+      // Materialized view - hardcoded VALUES, all columns non-null
+      view_most_wanted_items: {
         Row: {
-          author: string | null;
-          class: string | null;
-          dps: number | null;
-          gear_set: string | null;
-          id: string | null;
-          last_updated: string | null;
-          rotation_name: string | null;
-          scenario: string | null;
-          sim_date: string | null;
-          spec: string | null;
+          classes: string[];
+          dpsGain: number;
+          id: number;
+          itemLevel: number;
+          name: string;
+          quality: number;
+          rank: number;
+          slot: string;
+          source: string;
+        };
+        Relationships: [];
+      };
+      // Materialized view - aggregation query, non-null due to WHERE filters
+      view_spec_rankings_hourly: {
+        Row: {
+          avgDps: number;
+          class: string;
+          maxDps: number;
+          medianDps: number;
+          minDps: number;
+          simCount: number;
+          spec: string;
+          updatedAt: string;
+        };
+        Relationships: [];
+      };
+      // Materialized view - JOIN query with non-null source columns
+      view_top_sims_daily: {
+        Row: {
+          author: string;
+          class: string;
+          dps: number;
+          gearSet: string;
+          id: string;
+          rotationName: string;
+          scenario: string;
+          simDate: string;
+          spec: string;
+          updatedAt: string;
         };
         Relationships: [];
       };
     };
     Functions: {
       generate_default_handle: { Args: { user_id: string }; Returns: string };
-      generate_random_seed: { Args: never; Returns: string };
+      generate_random_seed: { Args: Record<string, never>; Returns: string };
     };
     Enums: {
       [_ in never]: never;

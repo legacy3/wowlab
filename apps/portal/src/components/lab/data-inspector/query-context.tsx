@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useStore } from "jotai";
-import { createClient } from "@/lib/supabase/client";
+import { useDataProvider } from "@refinedev/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { createPortalDbcLayer } from "@/lib/services";
 import {
   DbcService,
@@ -20,7 +21,21 @@ import {
   queryErrorAtom,
   rawDataAtom,
   transformedDataAtom,
+  type DataType,
+  type HistoryEntry,
 } from "@/atoms/data-inspector";
+
+function appendHistoryEntry(
+  prev: HistoryEntry[],
+  id: number,
+  type: DataType,
+): HistoryEntry[] {
+  if (prev.some((e) => e.id === id && e.type === type)) {
+    return prev;
+  }
+
+  return [{ id, type, timestamp: Date.now() }, ...prev];
+}
 
 type QueryContextValue = {
   query: () => Promise<void>;
@@ -30,12 +45,17 @@ const QueryContext = createContext<QueryContextValue | null>(null);
 
 export function useQuery() {
   const ctx = useContext(QueryContext);
-  if (!ctx) throw new Error("useQuery must be used within QueryProvider");
+  if (!ctx) {
+    throw new Error("useQuery must be used within QueryProvider");
+  }
+
   return ctx.query;
 }
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   const store = useStore();
+  const dataProvider = useDataProvider()();
+  const queryClient = useQueryClient();
 
   const query = useCallback(async () => {
     const id = store.get(queryIdAtom);
@@ -47,8 +67,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
     store.set(transformedDataAtom, null);
 
     try {
-      const supabase = createClient();
-      const dbcLayer = createPortalDbcLayer(supabase);
+      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
       const extractorWithDeps = Layer.provide(dbcLayer)(
         ExtractorService.Default,
       );
@@ -79,13 +98,9 @@ export function QueryProvider({ children }: { children: ReactNode }) {
           transformSpell(id).pipe(Effect.provide(appLayer)),
         );
         store.set(transformedDataAtom, spell);
-        store.set(queryHistoryAtom, (prev) => {
-          if (prev.some((e) => e.id === id && e.type === "spell")) {
-            return prev;
-          }
-
-          return [{ id, type: "spell", timestamp: Date.now() }, ...prev];
-        });
+        store.set(queryHistoryAtom, (prev) =>
+          appendHistoryEntry(prev, id, "spell"),
+        );
       } else {
         const rawProgram = Effect.gen(function* () {
           const dbc = yield* DbcService;
@@ -107,20 +122,16 @@ export function QueryProvider({ children }: { children: ReactNode }) {
           transformItem(id).pipe(Effect.provide(appLayer)),
         );
         store.set(transformedDataAtom, item);
-        store.set(queryHistoryAtom, (prev) => {
-          if (prev.some((e) => e.id === id && e.type === "item")) {
-            return prev;
-          }
-
-          return [{ id, type: "item", timestamp: Date.now() }, ...prev];
-        });
+        store.set(queryHistoryAtom, (prev) =>
+          appendHistoryEntry(prev, id, "item"),
+        );
       }
     } catch (e) {
       store.set(queryErrorAtom, e instanceof Error ? e.message : String(e));
     } finally {
       store.set(queryLoadingAtom, false);
     }
-  }, [store]);
+  }, [store, queryClient, dataProvider]);
 
   return (
     <QueryContext.Provider value={{ query }}>{children}</QueryContext.Provider>

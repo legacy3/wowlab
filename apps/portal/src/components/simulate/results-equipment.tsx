@@ -1,6 +1,7 @@
 "use client";
 
-import { useAtom } from "jotai";
+// TODO(refine-migration): Replace with Refine data hooks in Phase 4/5
+// import { useAtom } from "jotai";
 import { Package, User } from "lucide-react";
 
 import {
@@ -10,18 +11,31 @@ import {
   EQUIPMENT_RIGHT_COLUMN,
   EQUIPMENT_TRINKET_SLOTS,
   EQUIPMENT_WEAPON_SLOTS,
+  type EquipmentSlot,
+  type EquipmentSlotItem,
+  type AlternativeItem,
 } from "@/components/equipment";
 import { Separator } from "@/components/ui/separator";
-import {
-  characterAtom,
-  gearAtom,
-  slotAlternativesAtom,
-} from "@/atoms/sim/results";
+// TODO(refine-migration): Replace with Refine useOne hook
+// import {
+//   characterAtom,
+//   gearAtom,
+//   slotAlternativesAtom,
+// } from "@/atoms/sim/results";
+
+type Gear = Record<EquipmentSlot, EquipmentSlotItem | null>;
+type SlotAlternatives = Record<EquipmentSlot, AlternativeItem[]>;
 
 export function ResultsEquipment() {
-  const [character] = useAtom(characterAtom);
-  const [gear] = useAtom(gearAtom);
-  const [slotAlternatives] = useAtom(slotAlternativesAtom);
+  // TODO(refine-migration): Replace with Refine hooks
+  // const [character] = useAtom(characterAtom);
+  // const [gear] = useAtom(gearAtom);
+  // const [slotAlternatives] = useAtom(slotAlternativesAtom);
+
+  // Temporary placeholder data until Refine migration
+  const character = { name: "", race: "", class: "" };
+  const gear = {} as Gear;
+  const slotAlternatives = {} as SlotAlternatives;
 
   return (
     <>

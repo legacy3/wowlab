@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useAtom } from "jotai";
-import { browseRotationsAtom } from "@/atoms";
+import { useState } from "react";
+import { useList } from "@refinedev/core";
 import { RotationsList } from "./rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,15 +16,56 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Library, Search, X } from "lucide-react";
+import type { Rotation } from "@/lib/supabase/types";
 
-function RotationsBrowseInner() {
-  const [rotations] = useAtom(browseRotationsAtom);
+function RotationsBrowseSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="space-y-3">
+          <Skeleton className="h-6 w-32" />
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((j) => (
+              <Skeleton key={j} className="h-48" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function RotationsBrowse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  if (!rotations || rotations.length === 0) {
+  const {
+    result,
+    query: { isLoading, isError },
+  } = useList<Rotation>({
+    resource: "rotations",
+    filters: [
+      { field: "visibility", operator: "eq", value: "public" },
+      { field: "status", operator: "eq", value: "approved" },
+      { field: "deletedAt", operator: "null", value: true },
+    ],
+    sorters: [{ field: "updatedAt", order: "desc" }],
+    pagination: { pageSize: 50 },
+  });
+
+  if (isLoading) {
+    return <RotationsBrowseSkeleton />;
+  }
+
+  if (isError) {
+    return <div>Error loading rotations</div>;
+  }
+
+  const rotations = result?.data ?? [];
+
+  if (rotations.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
@@ -149,30 +189,5 @@ function RotationsBrowseInner() {
 
       <RotationsList rotations={filteredRotations} groupByClass={true} />
     </div>
-  );
-}
-
-function RotationsBrowseSkeleton() {
-  return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="space-y-3">
-          <Skeleton className="h-6 w-32" />
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((j) => (
-              <Skeleton key={j} className="h-48" />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function RotationsBrowse() {
-  return (
-    <Suspense fallback={<RotationsBrowseSkeleton />}>
-      <RotationsBrowseInner />
-    </Suspense>
   );
 }
