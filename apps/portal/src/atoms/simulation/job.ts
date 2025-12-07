@@ -28,6 +28,7 @@ export const createSimJobAtom = atom(
       rotationId: params.rotationId,
       resultId: null,
       error: null,
+      result: null,
     };
 
     const jobs = get(jobsAtom);
@@ -92,7 +93,15 @@ export const updateSimProgressAtom = atom(
 
 export const completeSimJobAtom = atom(
   null,
-  (get, set, params: { jobId: string; resultId: string | null }) => {
+  (
+    get,
+    set,
+    params: {
+      jobId: string;
+      resultId: string | null;
+      result: SimulationJob["result"];
+    },
+  ) => {
     const jobs = get(jobsAtom);
     set(
       jobsAtom,
@@ -106,6 +115,7 @@ export const completeSimJobAtom = atom(
               phaseDetail: "Simulation complete",
               eta: "Completed",
               resultId: params.resultId,
+              result: params.result,
             }
           : job,
       ),

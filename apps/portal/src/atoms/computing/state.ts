@@ -38,6 +38,14 @@ export interface SimulationJob {
   rotationId: string;
   resultId: string | null;
   error: string | null;
+  // Store result directly for local viewing (no Supabase needed)
+  result: {
+    dps: number;
+    totalDamage: number;
+    durationMs: number;
+    events: unknown[];
+    casts: number;
+  } | null;
 }
 
 export const jobsAtom = atomWithStorage<SimulationJob[]>("computing-jobs", []);

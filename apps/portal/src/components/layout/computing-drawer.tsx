@@ -3,7 +3,14 @@
 import { useAtom, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import Link from "next/link";
-import { Cpu, AlertCircle, CheckCircle2, Loader2, X, ExternalLink } from "lucide-react";
+import {
+  Cpu,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  X,
+  ExternalLink,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,6 +87,15 @@ function JobCard({ job }: { job: SimulationJob }) {
 
       {job.status === "failed" && job.error && (
         <p className="text-sm text-red-500">{job.error}</p>
+      )}
+
+      {job.status === "completed" && job.result && (
+        <Button variant="outline" size="sm" className="w-full" asChild>
+          <Link href={`/simulate/results/${job.id}`}>
+            View Results
+            <ExternalLink className="ml-2 h-3 w-3" />
+          </Link>
+        </Button>
       )}
     </div>
   );

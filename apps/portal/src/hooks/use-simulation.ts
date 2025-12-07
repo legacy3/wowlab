@@ -146,7 +146,17 @@ export function useSimulation(options?: UseSimulationOptions) {
         const resultId = await uploadSimulationResult({ result, rotation });
 
         // Mark complete (resultId may be null if upload was skipped)
-        completeJob({ jobId, resultId: resultId ?? null });
+        completeJob({
+          jobId,
+          resultId: resultId ?? null,
+          result: {
+            dps: result.dps,
+            totalDamage: result.totalDamage,
+            durationMs: result.durationMs,
+            events: result.events,
+            casts: result.casts,
+          },
+        });
 
         setState({
           isRunning: false,
