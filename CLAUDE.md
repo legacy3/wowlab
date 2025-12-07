@@ -3,43 +3,14 @@
 ## RULES (FOLLOW THESE OR STOP)
 
 1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
 
-1. **STOP WHEN STUCK** — If you don't know the solution, say "I don't know" and stop. No guessing. No random attempts.
+2. **STOP WHEN STUCK** — If you don't know the solution, say "I don't know" and stop. No guessing. No random attempts.
 
-1. **CHECK DOCS BEFORE EFFECT CHANGES** — Use Effect Docs MCP. Quote the docs. If docs don't explain it, stop and ask.
+3. **CHECK DOCS BEFORE EFFECT CHANGES** — Use Effect Docs MCP. Quote the docs. If docs don't explain it, stop and ask.
 
-1. **NO DESTRUCTIVE ACTIONS WITHOUT ASKING** — Don't delete files, drop columns, or remove code without explicit approval.
+4. **NO DESTRUCTIVE ACTIONS WITHOUT ASKING** — Don't delete files, drop columns, or remove code without explicit approval.
 
-1. **TALK BEFORE ACTING** — For anything complex, explain what you plan to do and wait for approval.
+5. **TALK BEFORE ACTING** — For anything complex, explain what you plan to do and wait for approval.
 
 ## COMMANDS
 
@@ -55,7 +26,7 @@ Never use `pnpm --filter` or `pnpm typecheck`.
 ## PROJECT STRUCTURE
 
 - `packages/*` — Effect-TS simulation library
-- `apps/portal/` — Next.js 16, shadcn/ui, Refine + Jotai
+- `apps/portal/` — Next.js 16, shadcn/ui, Jotai
 - `apps/cli/` — CLI tools
 - `apps/mcp-server/` — WoW data MCP server
 
@@ -65,9 +36,7 @@ Never use `pnpm --filter` or `pnpm typecheck`.
 
 **Next.js:** Server components for pages, client components for interactivity. PageLayout wrapper. Suspense with skeletons.
 
-**Data Layer:** Refine + @refinedev/supabase for Supabase data (rotations, profiles, settings, sim results). Use `useList`, `useOne`, `useCreate`, `useUpdate` hooks.
-
-**UI State:** Jotai for ephemeral UI state only (editor, timeline, charts, computing, workbench). Domain folders in `atoms/`.
+**Jotai:** `useAtom()` only. Async atoms wrapped in Suspense. Domain folders in `atoms/`.
 
 **Naming:** `Feature` → `FeatureInner` → `FeatureSkeleton`
 
