@@ -73,7 +73,7 @@ function HandleEditForm({
 }) {
   const { data: identity } = useGetIdentity<{ id: string }>();
   const { mutateAsync: updateProfile, mutation } = useUpdate<Profile>();
-  
+
   const isUpdating = mutation.isPending;
 
   const form = useForm<HandleFormValues>({
@@ -138,9 +138,7 @@ function HandleEditForm({
             <FieldDescription>
               3-20 characters, lowercase letters, numbers, and hyphens only
             </FieldDescription>
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />

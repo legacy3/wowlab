@@ -79,9 +79,9 @@ These work but bypass Refine, creating inconsistency:
 
 ### 3. Incomplete Component Migrations
 
-| File                                                 | TODO                                        |
-| ---------------------------------------------------- | ------------------------------------------- |
-| ~~`components/account/user-profile.tsx`~~            | ~~"migrate to useOne"~~ **FIXED**           |
+| File                                                     | TODO                                 |
+| -------------------------------------------------------- | ------------------------------------ |
+| ~~`components/account/user-profile.tsx`~~                | ~~"migrate to useOne"~~ **FIXED**    |
 | ~~`components/account/cards/profile-settings-card.tsx`~~ | ~~Refine update mutation~~ **FIXED** |
 
 ---

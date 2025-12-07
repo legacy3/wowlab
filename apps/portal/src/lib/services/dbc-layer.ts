@@ -1,24 +1,20 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataProvider } from "@refinedev/core";
 
-import { SupabaseDbcService } from "./SupabaseDbcService";
+import { RefineDbcService } from "./RefineDbcService";
 
 /**
- * Creates a DbcService layer backed by Supabase for the Portal app.
- * Use this with Effect.provide() when running transformSpell/transformItem.
+ * Creates a DbcService layer backed by Refine's DataProvider.
+ * All caching is handled by Refine's React Query + IndexedDB persistence (60-day cache).
  *
  * @example
- * ```ts
- * // Server Component
- * const supabase = await createClient();
- * const dbcLayer = createPortalDbcLayer(supabase);
+ * ```tsx
+ * // In a React component
+ * const dataProvider = useDataProvider()();
+ * const dbcLayer = createPortalDbcLayer(dataProvider);
  * const spell = await Effect.runPromise(
  *   transformSpell(spellId).pipe(Effect.provide(dbcLayer))
  * );
- *
- * // Client Component
- * const supabase = createBrowserClient();
- * const dbcLayer = createPortalDbcLayer(supabase);
  * ```
  */
-export const createPortalDbcLayer = (supabase: SupabaseClient) =>
-  SupabaseDbcService(supabase);
+export const createPortalDbcLayer = (dataProvider: DataProvider) =>
+  RefineDbcService(dataProvider);
