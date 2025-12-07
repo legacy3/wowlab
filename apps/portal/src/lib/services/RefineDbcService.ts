@@ -23,7 +23,7 @@ const getOne = <T extends BaseRecord>(
       const result = await dataProvider.getOne<T>({
         resource,
         id,
-        meta: { schema: RAW_DBC_SCHEMA },
+        meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
       });
 
       return result.data;
@@ -46,7 +46,7 @@ const getList = <T extends BaseRecord>(
         resource,
         filters,
         pagination: { mode: "off" },
-        meta: { schema: RAW_DBC_SCHEMA },
+        meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
       });
 
       return result.data;
@@ -316,7 +316,7 @@ export const RefineDbcService = (
               resource: "expected_stat",
               filters: [{ field: "Lvl", operator: "eq", value: level }],
               pagination: { mode: "off" },
-              meta: { schema: RAW_DBC_SCHEMA },
+              meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
             });
 
           return result.data.filter(
@@ -344,7 +344,7 @@ export const RefineDbcService = (
                 },
               ],
               pagination: { mode: "off" },
-              meta: { schema: RAW_DBC_SCHEMA },
+              meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
             });
 
           return result.data.filter(

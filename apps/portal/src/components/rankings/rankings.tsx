@@ -385,7 +385,9 @@ function TopSimsTab() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{sim.rotationName}</span>
+                          <span className="font-medium">
+                            {sim.rotationName}
+                          </span>
                           <span className="text-xs text-muted-foreground md:hidden">
                             {sim.spec} {sim.class}
                           </span>

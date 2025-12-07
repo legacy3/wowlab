@@ -72,12 +72,12 @@ This is the documented/expected pattern from Refine's official docs.
 
 These work but bypass Refine, creating inconsistency:
 
-| File                                              | Current Pattern                                                        | Problem                              |
-| ------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
+| File                                              | Current Pattern                                                            | Problem                                     |
+| ------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------- |
 | ~~`atoms/dps-rankings/state.ts`~~                 | ~~`atomWithRefresh` + `createClient().from("view_spec_rankings_hourly")`~~ | **FIXED** - Now uses `useSpecRankings` hook |
-| ~~`atoms/dps-rankings/state.ts`~~                 | ~~`atomWithRefresh` + `createClient().from("view_top_sims_daily")`~~       | **FIXED** - Now uses `useTopSims` hook |
-| `components/lab/data-inspector/query-context.tsx` | `createClient()` + Effect pipeline                                     | Entire query system bypasses Refine  |
-| `lib/services/SupabaseDbcService.ts`              | `supabase.schema("raw_dbc").from(table)`                               | Direct queries to raw_dbc schema     |
+| ~~`atoms/dps-rankings/state.ts`~~                 | ~~`atomWithRefresh` + `createClient().from("view_top_sims_daily")`~~       | **FIXED** - Now uses `useTopSims` hook      |
+| `components/lab/data-inspector/query-context.tsx` | `createClient()` + Effect pipeline                                         | Entire query system bypasses Refine         |
+| `lib/services/SupabaseDbcService.ts`              | `supabase.schema("raw_dbc").from(table)`                                   | Direct queries to raw_dbc schema            |
 
 ### 3. Incomplete Component Migrations
 
