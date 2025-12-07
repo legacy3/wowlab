@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import { useGetIdentity } from "@refinedev/core";
+import { useGetIdentity, useOne } from "@refinedev/core";
 import {
   Card,
   CardContent,
@@ -12,21 +11,41 @@ import {
 import { UserAvatar } from "@/components/account/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Profile } from "@/lib/supabase/types";
 
-interface UserProfileInnerProps {
+interface UserProfileProps {
   userId: string;
 }
 
-function UserProfileInner({ userId }: UserProfileInnerProps) {
+function UserProfileInner({ userId }: UserProfileProps) {
   const { data: identity } = useGetIdentity<{ id: string }>();
-  const currentUserId = identity?.id;
-  // TODO: Fetch user using useOne hook once data migration is complete
-  const user = {
+  const {
+    result,
+    query: { isLoading },
+  } = useOne<Profile>({
+    resource: "user_profiles",
     id: userId,
-    handle: "user",
-    email: "",
-    avatarUrl: null as string | null,
-  };
+  });
+
+  const currentUserId = identity?.id;
+  const user = result;
+
+  if (isLoading) {
+    return <UserProfileSkeleton />;
+  }
+
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Not Found</CardTitle>
+          <CardDescription>
+            The requested user profile could not be found.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   const isOwnProfile = currentUserId === user.id;
 
@@ -92,10 +111,6 @@ function UserProfileSkeleton() {
   );
 }
 
-export function UserProfile({ userId }: { userId: string }) {
-  return (
-    <Suspense fallback={<UserProfileSkeleton />}>
-      <UserProfileInner userId={userId} />
-    </Suspense>
-  );
+export function UserProfile({ userId }: UserProfileProps) {
+  return <UserProfileInner userId={userId} />;
 }

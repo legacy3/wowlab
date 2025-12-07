@@ -15,16 +15,18 @@ The portal app is migrating to a **Refine-first architecture**:
 
 ## Correctly Using Refine Hooks
 
-| File                                            | Hooks Used                                        | Resource(s)                                          |
-| ----------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
-| `hooks/use-changelog.ts`                        | `useList`                                         | `changelog`                                          |
-| `hooks/use-most-wanted-items.ts`                | `useList`                                         | `view_most_wanted_items`                             |
-| `hooks/use-user-settings.ts`                    | `useOne`, `useUpdate`                             | `user_settings`                                      |
-| `hooks/use-sim-results.ts`                      | `useList`, `useCreate`                            | `rotation_sim_results`                               |
-| `components/rotations/rotations-content.tsx`    | `useList`                                         | `rotations`                                          |
-| `components/rotations/rotation-detail-page.tsx` | `useList`, `useOne`                               | `rotations`, `user_profiles`, `rotation_sim_results` |
-| `components/rotations/namespace-page.tsx`       | `useList`, `useGetIdentity`                       | `user_profiles`, `rotations`                         |
-| `app/account/page.tsx`                          | `useIsAuthenticated`, `useGetIdentity`, `useList` | `rotations`                                          |
+| File                                                 | Hooks Used                                        | Resource(s)                                          |
+| ---------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
+| `hooks/use-changelog.ts`                             | `useList`                                         | `changelog`                                          |
+| `hooks/use-most-wanted-items.ts`                     | `useList`                                         | `view_most_wanted_items`                             |
+| `hooks/use-user-settings.ts`                         | `useOne`, `useUpdate`                             | `user_settings`                                      |
+| `hooks/use-sim-results.ts`                           | `useList`, `useCreate`                            | `rotation_sim_results`                               |
+| `components/rotations/rotations-content.tsx`         | `useList`                                         | `rotations`                                          |
+| `components/rotations/rotation-detail-page.tsx`      | `useList`, `useOne`                               | `rotations`, `user_profiles`, `rotation_sim_results` |
+| `components/rotations/namespace-page.tsx`            | `useList`, `useGetIdentity`                       | `user_profiles`, `rotations`                         |
+| `components/account/user-profile.tsx`                | `useOne`, `useGetIdentity`                        | `user_profiles`                                      |
+| `components/account/cards/profile-settings-card.tsx` | `useUpdate`, `useGetIdentity`                     | `user_profiles`                                      |
+| `app/account/page.tsx`                               | `useIsAuthenticated`, `useGetIdentity`, `useList` | `rotations`                                          |
 
 ---
 
@@ -77,12 +79,10 @@ These work but bypass Refine, creating inconsistency:
 
 ### 3. Incomplete Component Migrations
 
-These have TODO comments indicating unfinished work:
-
-| File                                                 | TODO                                     |
-| ---------------------------------------------------- | ---------------------------------------- |
-| `components/account/user-profile.tsx`                | "migrate to useOne"                      |
-| `components/account/cards/profile-settings-card.tsx` | Refine validation/update mutation needed |
+| File                                                 | TODO                                        |
+| ---------------------------------------------------- | ------------------------------------------- |
+| ~~`components/account/user-profile.tsx`~~            | ~~"migrate to useOne"~~ **FIXED**           |
+| ~~`components/account/cards/profile-settings-card.tsx`~~ | ~~Refine update mutation~~ **FIXED** |
 
 ---
 
@@ -109,8 +109,8 @@ These have TODO comments indicating unfinished work:
 
 ### Priority 4: Complete Account Pages
 
-- [ ] `components/account/user-profile.tsx` → Migrate to `useOne`
-- [ ] `components/account/cards/profile-settings-card.tsx` → Add `useUpdate` mutation
+- [x] `components/account/user-profile.tsx` → Migrate to `useOne` (**DONE**)
+- [x] `components/account/cards/profile-settings-card.tsx` → Add `useUpdate` mutation (**DONE**)
 
 ---
 
