@@ -26,6 +26,7 @@ const getOne = <T extends BaseRecord>(
     try: () =>
       queryClient.ensureQueryData({
         queryKey: dbcKeys.one(resource, id),
+        meta: { persist: true },
         queryFn: async () => {
           const result = await dataProvider.getOne<T>({
             resource,
@@ -52,6 +53,7 @@ const getList = <T extends BaseRecord>(
     try: () =>
       queryClient.ensureQueryData({
         queryKey: dbcKeys.list(resource, filters),
+        meta: { persist: true },
         queryFn: async () => {
           const result = await dataProvider.getList<T>({
             resource,
@@ -399,6 +401,7 @@ export const RefineDbcService = (
             queryKey: dbcKeys.list("expected_stat", [
               { field: "Lvl", operator: "eq", value: level },
             ]),
+            meta: { persist: true },
             queryFn: async () => {
               const result =
                 await dataProvider.getList<Schemas.Dbc.ExpectedStatRow>({
@@ -433,6 +436,7 @@ export const RefineDbcService = (
                 value: contentTuningId,
               },
             ]),
+            meta: { persist: true },
             queryFn: async () => {
               const result =
                 await dataProvider.getList<Schemas.Dbc.ContentTuningXExpectedRow>(
@@ -449,6 +453,7 @@ export const RefineDbcService = (
                     meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
                   },
                 );
+
               return result.data;
             },
           });

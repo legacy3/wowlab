@@ -44,7 +44,8 @@ export function RefineProvider({ children }: RefineProviderProps) {
         maxAge: 60 * DAY,
         buster: GAME_CONFIG.patchVersion,
         dehydrateOptions: {
-          shouldDehydrateQuery: ({ state }) => state.status === "success",
+          shouldDehydrateQuery: (query) =>
+            query.state.status === "success" && query.meta?.persist === true,
         },
       }}
     >
