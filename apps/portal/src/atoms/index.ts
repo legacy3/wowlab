@@ -4,7 +4,6 @@ export * from "./charts";
 export * from "./computing";
 export * from "./ui";
 export * from "./workbench";
-export * from "./changelog";
 export * from "./debug";
 export * from "./data-inspector";
 export * from "./user"; // settings-ui.ts only
