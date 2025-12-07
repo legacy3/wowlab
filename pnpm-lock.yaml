@@ -292,6 +292,9 @@ importers:
       '@wowlab/services':
         specifier: workspace:*
         version: link:../../packages/wowlab-services
+      '@wowlab/specs':
+        specifier: workspace:*
+        version: link:../../packages/wowlab-specs
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useAtom } from "jotai";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,10 @@ import {
   Check,
   ChevronsUpDown,
   User,
+  Loader2,
 } from "lucide-react";
+import { useSimulation } from "@/hooks/use-simulation";
+import { BeastMasteryRotation } from "@/lib/simulation";
 import {
   CharacterSummaryCard,
   EquipmentColumn,
@@ -204,6 +208,12 @@ function QuickSimContentInner() {
   const [iterations, setIterations] = useAtom(iterationsAtom);
   const [targetType, setTargetType] = useAtom(targetTypeAtom);
 
+  const { run, isRunning, result, error, resultId } = useSimulation({
+    onComplete: (result) => {
+      console.log("Simulation complete!", result);
+    },
+  });
+
   const selectedProfile =
     FIGHT_PROFILES.find((p) => p.id === targetType) ?? FIGHT_PROFILES[0];
 
@@ -222,13 +232,10 @@ function QuickSimContentInner() {
     setParsedData(null);
   };
 
-  const handleRunSim = () => {
-    console.log("Running simulation:", {
-      parsedData,
-      targetType,
-      fightDuration,
-      iterations,
-    });
+  const handleRunSim = async () => {
+    // For now, use the BeastMasteryRotation directly
+    // Later this will be derived from the parsed character spec
+    await run(BeastMasteryRotation, fightDuration);
   };
 
   // Zen state: just the paste area
@@ -464,10 +471,63 @@ head=,id=212011,bonus_id=6652/10877...`}
       </Collapsible>
 
       {/* Run Button */}
-      <Button size="lg" onClick={handleRunSim} className="w-full">
-        <Play className="mr-2 h-4 w-4" />
-        Run Simulation
+      <Button
+        size="lg"
+        onClick={handleRunSim}
+        disabled={isRunning}
+        className="w-full"
+      >
+        {isRunning ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Running...
+          </>
+        ) : (
+          <>
+            <Play className="mr-2 h-4 w-4" />
+            Run Simulation
+          </>
+        )}
       </Button>
+
+      {/* Results Display */}
+      {result && (
+        <Card>
+          <CardContent className="pt-6 space-y-2">
+            <p className="text-lg font-semibold">
+              DPS: {Math.round(result.dps).toLocaleString()}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Total Damage: {result.totalDamage.toLocaleString()}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Casts: {result.casts}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Events: {result.events.length}
+            </p>
+
+            {/* Link to saved result */}
+            {resultId && (
+              <Link
+                href={`/simulate/results/${resultId}`}
+                className="text-sm text-primary underline hover:no-underline"
+              >
+                View full results
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="pt-6">
+            <p className="text-sm text-destructive">{error.message}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
