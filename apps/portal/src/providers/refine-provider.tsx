@@ -77,7 +77,7 @@ export function RefineProvider({ children }: RefineProviderProps) {
               list: "/api/fight-profiles",
             },
             {
-              name: "most_wanted_items",
+              name: "view_most_wanted_items",
             },
           ]}
           options={{

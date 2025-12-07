@@ -78,11 +78,11 @@ The existing QueryClient will be:
 
 ## Materialized Views
 
-| View                   | Purpose                  | Status        |
-| ---------------------- | ------------------------ | ------------- |
-| `top_sims_daily`       | Top simulations by DPS   | EXISTS        |
-| `spec_rankings_hourly` | Spec rankings by avg DPS | EXISTS        |
-| `most_wanted_items`    | Top gear by DPS gain     | CREATE in 0.2 |
+| View                        | Purpose                  | Status        |
+| --------------------------- | ------------------------ | ------------- |
+| `view_top_sims_daily`       | Top simulations by DPS   | EXISTS        |
+| `view_spec_rankings_hourly` | Spec rankings by avg DPS | EXISTS        |
+| `view_most_wanted_items`    | Top gear by DPS gain     | CREATE in 0.2 |
 
 ## Files to Delete (Phase 3)
 
@@ -138,4 +138,4 @@ apps/portal/src/providers/jotai-provider.tsx  # KEEP until Phase 7
 | `sessionAtom`                    | `useIsAuthenticated()`                                   |
 | `specRankingsAtom`               | Keep as-is (reads from materialized view)                |
 | `topSimCharactersAtom`           | Keep as-is (reads from materialized view)                |
-| `mostWantedItemsAtom`            | Convert to fetch from `most_wanted_items` view           |
+| `mostWantedItemsAtom`            | Convert to fetch from `view_most_wanted_items` view      |

@@ -60,7 +60,7 @@ export const specRankingsAtom = atomWithRefresh(async () => {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("spec_rankings_hourly")
+    .from("view_spec_rankings_hourly")
     .select("*")
     .order("avg_dps", { ascending: false })
     .limit(10);
@@ -87,7 +87,7 @@ export const topSimCharactersAtom = atomWithRefresh(async () => {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("top_sims_daily")
+    .from("view_top_sims_daily")
     .select("*")
     .limit(10);
 

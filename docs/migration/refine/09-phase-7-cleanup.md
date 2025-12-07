@@ -51,7 +51,7 @@ export * from "./sim";         // config.ts only, not results
 // - user_settings: useOne, useUpdate (via useUserSettings hook)
 // - rotation_sim_results: useList, useCreate
 // - fight_profiles: useList (static data)
-// - most_wanted_items: useList (materialized view)
+// - view_most_wanted_items: useList (materialized view)
 
 ## Step 3: Clean Up atoms/sim/index.ts
 

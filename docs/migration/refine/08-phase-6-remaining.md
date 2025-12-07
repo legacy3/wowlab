@@ -11,7 +11,7 @@ I'm migrating to Refine. Phase 5 (rotations) is complete.
 
 1. **Column names are camelCase**: userId, rotationId, meanDps, etc.
 2. **user_settings already exists for all users**: Phase 0.1 created auto-insert trigger
-3. **most_wanted_items is a materialized view**: Read-only, no mutations
+3. **view_most_wanted_items is a materialized view**: Read-only, no mutations
 
 ## Resources to Migrate
 
@@ -19,7 +19,7 @@ I'm migrating to Refine. Phase 5 (rotations) is complete.
 2. **user_settings** - Private user settings (class, spec, theme, etc.)
 3. **rotation_sim_results** - Simulation result history
 4. **fight_profiles** - Static reference data
-5. **most_wanted_items** - Materialized view for DPS rankings
+5. **view_most_wanted_items** - Materialized view for DPS rankings
 
 ## Step 1: User Profile Page
 
@@ -270,7 +270,7 @@ import type { WantedItem } from "@/atoms/dps-rankings/state";
 
 export function useMostWantedItems() {
   return useList<WantedItem>({
-    resource: "most_wanted_items",
+    resource: "view_most_wanted_items",
     sorters: [{ field: "rank", order: "asc" }],
     pagination: { pageSize: 10 },
   });

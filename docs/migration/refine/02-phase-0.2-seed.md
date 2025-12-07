@@ -5,7 +5,7 @@
 ```
 I'm migrating to Refine. The database tables are created (Phase 0.1).
 
-**YOUR TASK**: Create the fight_profiles table and most_wanted_items materialized view. Seed with initial data. Do NOT modify any frontend code yet - that comes in later phases.
+**YOUR TASK**: Create the fight_profiles table and view_most_wanted_items materialized view. Seed with initial data. Do NOT modify any frontend code yet - that comes in later phases.
 
 ## Step 1: Create fight_profiles Table
 
@@ -29,13 +29,13 @@ INSERT INTO fight_profiles (id, label, description, category, "order") VALUES
 ALTER TABLE fight_profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read access" ON fight_profiles FOR SELECT USING (true);
 
-## Step 2: Create most_wanted_items Materialized View
+## Step 2: Create view_most_wanted_items Materialized View
 
 This shows top items by DPS gain. Currently static data - will be computed from sim results later when item stat weight tracking is implemented.
 
-Note: Named `most_wanted_items` (not `wanted_items`) to match existing naming pattern of `top_sims_daily` and `spec_rankings_hourly`.
+Note: Named `view_most_wanted_items` with `view_` prefix to match naming pattern of `view_top_sims_daily` and `view_spec_rankings_hourly`.
 
-CREATE MATERIALIZED VIEW most_wanted_items AS
+CREATE MATERIALIZED VIEW view_most_wanted_items AS
 SELECT
   row_number() OVER (ORDER BY "dpsGain" DESC) AS rank,
   id,
@@ -59,10 +59,10 @@ FROM (VALUES
   (50068, 'Royal Scepter of Terenas II', 'Main Hand', 284, ARRAY['Priest', 'Mage'], 101, 'The Lich King - ICC 25H', 5)
 ) AS t(id, name, slot, "itemLevel", classes, "dpsGain", source, quality);
 
-COMMENT ON MATERIALIZED VIEW most_wanted_items IS 'Top items by DPS gain. Currently static data, will be computed from sim results when item tracking is implemented.';
+COMMENT ON MATERIALIZED VIEW view_most_wanted_items IS 'Top items by DPS gain. Currently static data, will be computed from sim results when item tracking is implemented.';
 
-CREATE INDEX most_wanted_items_rank_idx ON most_wanted_items (rank);
-CREATE INDEX most_wanted_items_slot_idx ON most_wanted_items (slot);
+CREATE INDEX view_most_wanted_items_rank_idx ON view_most_wanted_items (rank);
+CREATE INDEX view_most_wanted_items_slot_idx ON view_most_wanted_items (slot);
 
 ## Step 3: Create Sample Rotations (Optional)
 
@@ -93,8 +93,8 @@ If you want sample data for testing, insert some rotations. Otherwise skip this 
 
 Refresh the existing views to ensure they're up to date:
 
-REFRESH MATERIALIZED VIEW top_sims_daily;
-REFRESH MATERIALIZED VIEW spec_rankings_hourly;
+REFRESH MATERIALIZED VIEW view_top_sims_daily;
+REFRESH MATERIALIZED VIEW view_spec_rankings_hourly;
 
 ## Step 5: Verify
 
@@ -103,12 +103,12 @@ Run these queries to verify:
 -- Check fight_profiles
 SELECT * FROM fight_profiles ORDER BY "order";
 
--- Check most_wanted_items
-SELECT rank, name, slot, "dpsGain" FROM most_wanted_items ORDER BY rank LIMIT 5;
+-- Check view_most_wanted_items
+SELECT rank, name, slot, "dpsGain" FROM view_most_wanted_items ORDER BY rank LIMIT 5;
 
 -- Check existing views still work
-SELECT COUNT(*) FROM top_sims_daily;
-SELECT COUNT(*) FROM spec_rankings_hourly;
+SELECT COUNT(*) FROM view_top_sims_daily;
+SELECT COUNT(*) FROM view_spec_rankings_hourly;
 
 ## DO NOT DO in this phase
 
@@ -121,7 +121,7 @@ SELECT COUNT(*) FROM spec_rankings_hourly;
 ## Expected Outcome
 
 - `fight_profiles` table created and populated
-- `most_wanted_items` materialized view created with initial data
+- `view_most_wanted_items` materialized view created with initial data
 - Existing materialized views refreshed
 - No frontend code changes
 
@@ -130,9 +130,9 @@ SELECT COUNT(*) FROM spec_rankings_hourly;
 - [ ] Create `fight_profiles` table
 - [ ] Insert fight profile data (patchwerk, movement, aoe)
 - [ ] Enable RLS on `fight_profiles` with public read
-- [ ] Create `most_wanted_items` materialized view
-- [ ] Create indexes on `most_wanted_items` (rank, slot)
-- [ ] Refresh `top_sims_daily` view
-- [ ] Refresh `spec_rankings_hourly` view
+- [ ] Create `view_most_wanted_items` materialized view
+- [ ] Create indexes on `view_most_wanted_items` (rank, slot)
+- [ ] Refresh `view_top_sims_daily` view
+- [ ] Refresh `view_spec_rankings_hourly` view
 - [ ] Verify data in tables/views
 - [ ] Run `pnpm build` (should still pass - no code changes)

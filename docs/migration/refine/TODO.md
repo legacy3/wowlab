@@ -26,10 +26,10 @@ Master checklist for the entire migration. Check items off as you complete each 
 - [ ] Create `fight_profiles` table
 - [ ] Insert fight profile data (patchwerk, movement, aoe)
 - [ ] Enable RLS on `fight_profiles` with public read policy
-- [ ] Create `most_wanted_items` materialized view
-- [ ] Create indexes on `most_wanted_items` (rank, slot)
-- [ ] Refresh `top_sims_daily` materialized view
-- [ ] Refresh `spec_rankings_hourly` materialized view
+- [ ] Create `view_most_wanted_items` materialized view
+- [ ] Create indexes on `view_most_wanted_items` (rank, slot)
+- [ ] Refresh `view_top_sims_daily` materialized view
+- [ ] Refresh `view_spec_rankings_hourly` materialized view
 - [ ] Verify data in tables/views
 - [ ] Run `pnpm build` (should pass - no code changes)
 
