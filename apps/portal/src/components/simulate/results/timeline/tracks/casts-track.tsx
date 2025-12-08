@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import { Group, Rect, Text, Line } from "react-konva";
 import type Konva from "konva";
 import { getSpell, type CastEvent } from "@/atoms/timeline";
-import { TRACK_METRICS, getZoomLevel } from "../hooks";
+import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 import {
   getSpellOpacity,
   isSpellHighlighted,
@@ -328,7 +328,7 @@ export const CastsTrack = memo(function CastsTrack({
           maxInitials: 2,
         });
 
-        // Determine if channeled (has duration > 0)
+        // TODO Get this from spell data
         const isChanneled = cast.duration > 0;
 
         return (

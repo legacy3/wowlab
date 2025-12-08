@@ -1,5 +1,6 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+
+import { createPersistedOrderAtom } from "./utils";
 
 export type DataType = "spell" | "item";
 
@@ -11,16 +12,12 @@ export type HistoryEntry = {
 
 export type DataInspectorCardId = "controls" | "history" | "transformed";
 
-const DEFAULT_ORDER: DataInspectorCardId[] = [
-  "controls",
-  "history",
-  "transformed",
-];
-
-export const dataInspectorOrderAtom = atomWithStorage<DataInspectorCardId[]>(
-  "data-inspector-order-v2",
-  DEFAULT_ORDER,
-);
+export const dataInspectorOrderAtom =
+  createPersistedOrderAtom<DataInspectorCardId>("data-inspector-order-v2", [
+    "controls",
+    "history",
+    "transformed",
+  ]);
 
 export const queryHistoryAtom = atom<HistoryEntry[]>([]);
 

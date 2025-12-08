@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { TimelineBounds } from "@/atoms/timeline";
-import type { ZoomState } from "./use-zoom";
+import type { ZoomState } from "@/hooks/canvas";
 
 interface UseScalesParams {
   bounds: TimelineBounds;
@@ -12,15 +12,11 @@ interface UseScalesParams {
 }
 
 interface Scales {
-  /** Convert time to x coordinate (accounting for zoom/pan) */
   timeToX: (time: number) => number;
-  /** Convert x coordinate to time (accounting for zoom/pan) */
   xToTime: (x: number) => number;
-  /** Convert damage amount to y coordinate within damage track */
   damageToY: (amount: number) => number;
-  /** Convert focus value to y coordinate within resource track */
   focusToY: (focus: number) => number;
-  /** Get visible time range based on current zoom */
+
   visibleRange: { start: number; end: number };
 }
 
@@ -44,6 +40,7 @@ export function useScales({
   const timeToX = useMemo(() => {
     return (time: number): number => {
       const baseX = (time - bounds.min) * basePixelsPerSecond;
+
       return baseX * scale + offsetX;
     };
   }, [bounds.min, basePixelsPerSecond, scale, offsetX]);
@@ -52,6 +49,7 @@ export function useScales({
   const xToTime = useMemo(() => {
     return (x: number): number => {
       const baseX = (x - offsetX) / scale;
+
       return baseX / basePixelsPerSecond + bounds.min;
     };
   }, [bounds.min, basePixelsPerSecond, scale, offsetX]);
@@ -61,6 +59,7 @@ export function useScales({
     const range = damageTrackHeight - 10; // 5px padding top and bottom
     return (amount: number): number => {
       const normalized = amount / maxDamage;
+
       return damageTrackHeight - 5 - normalized * range;
     };
   }, [damageTrackHeight, maxDamage]);
@@ -69,8 +68,10 @@ export function useScales({
   const focusToY = useMemo(() => {
     const range = resourceTrackHeight - 10; // 5px padding top and bottom
     const maxFocus = 120;
+
     return (focus: number): number => {
       const normalized = focus / maxFocus;
+
       return resourceTrackHeight - 5 - normalized * range;
     };
   }, [resourceTrackHeight]);

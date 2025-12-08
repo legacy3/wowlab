@@ -1,4 +1,4 @@
-import { atomWithStorage } from "jotai/utils";
+import { createPersistedOrderAtom } from "../utils";
 
 export type EditorCardId =
   | "rotation-script"
@@ -6,7 +6,7 @@ export type EditorCardId =
   | "syntax-reference"
   | "validation";
 
-export const editorCardOrderAtom = atomWithStorage<readonly EditorCardId[]>(
+export const editorCardOrderAtom = createPersistedOrderAtom<EditorCardId>(
   "editor-card-order",
   ["rotation-script", "templates", "syntax-reference", "validation"],
 );

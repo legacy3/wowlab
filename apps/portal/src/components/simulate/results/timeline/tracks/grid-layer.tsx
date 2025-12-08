@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Rect, Line } from "react-konva";
-import { TRACK_METRICS } from "../hooks";
+import { TRACK_METRICS } from "@/hooks/timeline";
 import { generateTicks, filterVisibleTicks } from "../utils";
 
 interface GridLayerProps {
@@ -49,6 +49,7 @@ export const GridLayer = memo(function GridLayer({
       {visibleTicks.map((tick, i) => {
         const x = timeToX(tick);
         const isMajor = Math.round(tick) % 10 === 0;
+
         return (
           <Line
             key={`grid-${tick}-${i}`}

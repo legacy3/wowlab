@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import { Group, Rect, Circle, Line } from "react-konva";
 import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
-import { TRACK_METRICS, getZoomLevel, type ZoomLevel } from "../hooks";
+import { TRACK_METRICS, getZoomLevel, type ZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 import { formatDamage } from "../utils";
 
@@ -43,6 +43,7 @@ interface DamageBucket {
 
 function getBucketSize(zoomLevel: ZoomLevel): number {
   const { damageBucketSizes } = TRACK_METRICS;
+
   return damageBucketSizes[zoomLevel];
 }
 
@@ -102,11 +103,14 @@ export const DamageTrack = memo(function DamageTrack({
         count: 0,
         crits: 0,
       };
+
       spellData.amount += dmg.amount;
       spellData.count++;
+
       if (dmg.isCrit) {
         spellData.crits++;
       }
+
       bucket.spellBreakdown.set(dmg.spellId, spellData);
     });
 

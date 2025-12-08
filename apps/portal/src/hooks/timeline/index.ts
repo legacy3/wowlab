@@ -1,4 +1,3 @@
-export { useZoom, type ZoomState } from "./use-zoom";
 export { useScales } from "./use-scales";
 export {
   useTrackLayout,
@@ -12,10 +11,6 @@ export type {
   TrackLayoutResult,
   ZoomLevel,
 } from "./use-track-layout";
-export { useResizeObserver } from "./use-resize-observer";
-export { useExport } from "./use-export";
-export { useDragPan } from "./use-drag-pan";
-export { useFpsCounter } from "./use-fps-counter";
 export {
   useLaneAssignment,
   useCategoryLaneAssignment,

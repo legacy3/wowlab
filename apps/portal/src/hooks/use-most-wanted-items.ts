@@ -1,10 +1,8 @@
-import { useList } from "@refinedev/core";
 import type { MostWantedItem } from "@/lib/supabase/types";
+import { useSupabaseView } from "./use-supabase-view";
 
 export function useMostWantedItems() {
-  return useList<MostWantedItem>({
-    resource: "view_most_wanted_items",
-    sorters: [{ field: "rank", order: "asc" }],
-    pagination: { pageSize: 10 },
-  });
+  return useSupabaseView<MostWantedItem>("view_most_wanted_items", [
+    { field: "rank", order: "asc" },
+  ]);
 }

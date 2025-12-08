@@ -2,9 +2,6 @@ export * from "./editor";
 export * from "./timeline";
 export * from "./charts";
 export * from "./computing";
-export * from "./ui";
-export * from "./workbench";
-export * from "./debug";
 export * from "./data-inspector";
 export * from "./user"; // settings-ui.ts only
 export * from "./dps-rankings"; // UI filters + DB fetch

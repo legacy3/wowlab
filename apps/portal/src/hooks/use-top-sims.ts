@@ -1,10 +1,8 @@
-import { useList } from "@refinedev/core";
 import type { TopSimRow } from "@/lib/supabase/types";
+import { useSupabaseView } from "./use-supabase-view";
 
 export function useTopSims() {
-  return useList<TopSimRow>({
-    resource: "view_top_sims_daily",
-    sorters: [{ field: "dps", order: "desc" }],
-    pagination: { pageSize: 10 },
-  });
+  return useSupabaseView<TopSimRow>("view_top_sims_daily", [
+    { field: "dps", order: "desc" },
+  ]);
 }

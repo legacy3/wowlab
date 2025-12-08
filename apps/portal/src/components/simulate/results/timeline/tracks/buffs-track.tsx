@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import { Group, Rect, Text, Circle, Line } from "react-konva";
 import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
-import { TRACK_METRICS, getZoomLevel } from "../hooks";
+import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 import { getSpellLabel, shouldShowLabel } from "../utils";
 
@@ -71,10 +71,12 @@ export const BuffsTrack = memo(function BuffsTrack({
         if (!categorized.has(category)) {
           categorized.set(category, new Map());
         }
+
         const catMap = categorized.get(category)!;
         if (!catMap.has(spellId)) {
           catMap.set(spellId, []);
         }
+
         catMap.get(spellId)!.push(buff);
       });
     });
@@ -155,11 +157,14 @@ export const BuffsTrack = memo(function BuffsTrack({
     for (let i = 0; i < pb.categoryIndex; i++) {
       const cat = CATEGORY_ORDER[i];
       const lanes = categoryLaneCounts[cat];
+
       if (lanes > 0) {
         y += lanes * (buffHeight + buffGap) + buffCategoryGap;
       }
     }
+
     y += pb.laneIndex * (buffHeight + buffGap);
+
     return y;
   };
 

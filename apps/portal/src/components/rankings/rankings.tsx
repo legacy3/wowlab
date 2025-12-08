@@ -264,7 +264,7 @@ function MostWantedItemsTab() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">
-                          <WowItemLink itemId={item.id} />
+                          <WowItemLink itemId={item.id as number} />
                         </span>
                         <p className="text-xs text-muted-foreground">
                           {item.source}
@@ -276,7 +276,7 @@ function MostWantedItemsTab() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {item.classes.map((className) => {
+                        {item.classes.map((className: string) => {
                           const wowClass =
                             className as keyof typeof CLASS_COLORS;
                           return (
