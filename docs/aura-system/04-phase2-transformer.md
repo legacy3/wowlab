@@ -1,4 +1,4 @@
-# Phase 2: Aura Transformer and Service
+# Phase 2: Aura Transformer
 
 ## Goal
 
@@ -11,17 +11,15 @@ Create a transformer that extracts `AuraDataFlat` from DBC tables, following the
 
 ## Architecture
 
-Following the established pattern:
-
 ```
 transformAura(spellId)
     ↓
 DbcService (spell_misc, spell_duration, spell_effect, spell_aura_options)
     ↓
 AuraDataFlat
-    ↓
-MetadataService cache (optional, for batch loading)
 ```
+
+The transformer is a pure function that takes a spell ID and returns `AuraDataFlat`. It uses the existing `DbcService` and `ExtractorService` dependencies.
 
 ## DBC Table Mapping
 
@@ -51,14 +49,14 @@ Add to the existing ExtractorService:
 
 ```typescript
 import {
-  SX_REFRESH_EXTENDS_DURATION,
+  hasSpellAttribute,
   SX_DOT_HASTED,
-  SX_TICK_ON_APPLICATION,
   SX_DURATION_HASTED,
+  SX_REFRESH_EXTENDS_DURATION,
   SX_ROLLING_PERIODIC,
   SX_TICK_MAY_CRIT,
-  hasSpellAttribute,
-} from "@wowlab/core/constants/SpellAttributes";
+  SX_TICK_ON_APPLICATION,
+} from "@wowlab/core/Constants";
 
 // Aura type constants
 const PERIODIC_DAMAGE_AURAS = [3, 53, 64]; // A_PERIODIC_DAMAGE, A_PERIODIC_LEECH, A_PERIODIC_MANA_LEECH
@@ -73,66 +71,48 @@ const ALL_PERIODIC_AURAS = [
   ...PERIODIC_ENERGIZE_AURAS,
 ];
 
-// Add to ExtractorService interface:
-extractAuraFlags: (
-  misc: Option.Option<SpellMiscRow>,
-) => Effect.Effect<{
-  pandemicRefresh: boolean;
-  hastedTicks: boolean;
-  tickOnApplication: boolean;
-  durationHasted: boolean;
-  rollingPeriodic: boolean;
-  tickMayCrit: boolean;
-}, never, never>;
+// Add to ExtractorService return object:
 
-extractPeriodicInfo: (
-  effects: readonly SpellEffectRow[],
-) => Effect.Effect<{
-  tickPeriodMs: number;
-  periodicType: "damage" | "heal" | "trigger" | "energize" | null;
-}, never, never>;
-
-// Implementation:
-extractAuraFlags: (misc) =>
+extractAuraFlags: (misc: Option.Option<Dbc.SpellMiscRow>) =>
   Effect.succeed(
     pipe(
       misc,
       Option.map((m) => {
         const attrs: Record<string, number> = {};
         for (let i = 0; i <= 15; i++) {
-          attrs[`Attributes_${i}`] = (m as any)[`Attributes_${i}`] ?? 0;
+          attrs[`Attributes_${i}`] = (m as Record<string, number>)[`Attributes_${i}`] ?? 0;
         }
         return {
-          pandemicRefresh: hasSpellAttribute(attrs, SX_REFRESH_EXTENDS_DURATION),
-          hastedTicks: hasSpellAttribute(attrs, SX_DOT_HASTED),
-          tickOnApplication: hasSpellAttribute(attrs, SX_TICK_ON_APPLICATION),
           durationHasted: hasSpellAttribute(attrs, SX_DURATION_HASTED),
+          hastedTicks: hasSpellAttribute(attrs, SX_DOT_HASTED),
+          pandemicRefresh: hasSpellAttribute(attrs, SX_REFRESH_EXTENDS_DURATION),
           rollingPeriodic: hasSpellAttribute(attrs, SX_ROLLING_PERIODIC),
           tickMayCrit: hasSpellAttribute(attrs, SX_TICK_MAY_CRIT),
+          tickOnApplication: hasSpellAttribute(attrs, SX_TICK_ON_APPLICATION),
         };
       }),
       Option.getOrElse(() => ({
-        pandemicRefresh: false,
-        hastedTicks: false,
-        tickOnApplication: false,
         durationHasted: false,
+        hastedTicks: false,
+        pandemicRefresh: false,
         rollingPeriodic: false,
         tickMayCrit: false,
+        tickOnApplication: false,
       })),
     ),
   ),
 
-extractPeriodicInfo: (effects) =>
-  Effect.succeed(() => {
+extractPeriodicInfo: (effects: readonly Dbc.SpellEffectRow[]) =>
+  Effect.succeed((() => {
     const periodicEffect = effects.find((e) =>
       ALL_PERIODIC_AURAS.includes(e.EffectAura),
     );
 
     if (!periodicEffect) {
-      return { tickPeriodMs: 0, periodicType: null };
+      return { periodicType: null, tickPeriodMs: 0 };
     }
 
-    let periodicType: "damage" | "heal" | "trigger" | "energize" | null = null;
+    let periodicType: Aura.PeriodicType | null = null;
     if (PERIODIC_DAMAGE_AURAS.includes(periodicEffect.EffectAura)) {
       periodicType = "damage";
     } else if (PERIODIC_HEAL_AURAS.includes(periodicEffect.EffectAura)) {
@@ -144,10 +124,10 @@ extractPeriodicInfo: (effects) =>
     }
 
     return {
-      tickPeriodMs: periodicEffect.EffectAuraPeriod,
       periodicType,
+      tickPeriodMs: periodicEffect.EffectAuraPeriod,
     };
-  }),
+  })()),
 ```
 
 ### 2. Create Aura Transformer
@@ -165,12 +145,6 @@ import * as Option from "effect/Option";
 import { DbcService } from "../dbc/DbcService.js";
 import { ExtractorService } from "./extractors.js";
 
-/**
- * Determine refresh behavior based on flags and periodic status.
- * - Periodic spells default to "pandemic"
- * - Non-periodic spells default to "duration"
- * - Explicit SX_REFRESH_EXTENDS_DURATION forces "pandemic"
- */
 function determineRefreshBehavior(
   pandemicRefresh: boolean,
   tickPeriodMs: number,
@@ -191,7 +165,6 @@ export const transformAura = (
     const dbc = yield* DbcService;
     const extractor = yield* ExtractorService;
 
-    // Verify spell exists
     const nameRow = yield* dbc.getSpellName(spellId);
     if (!nameRow) {
       return yield* Effect.fail(
@@ -204,28 +177,18 @@ export const transformAura = (
 
     const misc = Option.fromNullable(yield* dbc.getSpellMisc(spellId));
     const effects = yield* dbc.getSpellEffects(spellId);
-
-    // Extract duration
     const duration = yield* extractor.extractDuration(misc);
-
-    // Extract aura options (stacking)
     const auraOptions = yield* dbc.getSpellAuraOptions(spellId);
     const maxStacks = auraOptions?.CumulativeAura ?? 1;
-
-    // Extract periodic info
     const periodicInfo = yield* extractor.extractPeriodicInfo(effects);
-
-    // Extract aura behavior flags
     const flags = yield* extractor.extractAuraFlags(misc);
 
-    // Determine refresh behavior
     const refreshBehavior = determineRefreshBehavior(
       flags.pandemicRefresh,
       periodicInfo.tickPeriodMs,
     );
 
     return {
-      spellId: Branded.SpellID(spellId),
       baseDurationMs: pipe(
         duration,
         Option.map((d) => d.duration),
@@ -233,132 +196,53 @@ export const transformAura = (
       ),
       maxDurationMs: pipe(
         duration,
-        Option.map((d) => d.maxDuration),
+        Option.map((d) => d.max),
         Option.getOrElse(() => 0),
       ),
       maxStacks: maxStacks === 0 ? 1 : maxStacks,
-      tickPeriodMs: periodicInfo.tickPeriodMs,
       periodicType: periodicInfo.periodicType,
       refreshBehavior,
+      spellId: Branded.SpellID(spellId),
+      tickPeriodMs: periodicInfo.tickPeriodMs,
       ...flags,
     } satisfies Aura.AuraDataFlat;
   });
 ```
 
-### 3. Create AuraService
+### 3. Export from transformer index
 
-**File:** `packages/wowlab-services/src/internal/aura/AuraService.ts`
+**File:** `packages/wowlab-services/src/internal/data/transformer/index.ts`
 
 ```typescript
-import { Context, Data, Effect, Ref } from "effect";
-import { Map as ImmutableMap } from "immutable";
-import type { Aura, Branded } from "@wowlab/core/Schemas";
-import { DbcError } from "@wowlab/core/Errors";
-import * as Errors from "@wowlab/core/Errors";
-
-export class AuraNotFoundError extends Data.TaggedError("AuraNotFoundError")<{
-  readonly spellId: number;
-}> {}
-
-export class AuraService extends Context.Tag("AuraService")<
-  AuraService,
-  {
-    readonly getAura: (
-      spellId: Branded.SpellID,
-    ) => Effect.Effect<Aura.AuraDataFlat, AuraNotFoundError>;
-
-    readonly preloadAuras: (
-      spellIds: readonly Branded.SpellID[],
-    ) => Effect.Effect<void, AuraNotFoundError>;
-  }
->() {}
+export * from "./aura.js";
+export * from "./extractors.js";
+export * from "./item.js";
+export * from "./spell.js";
 ```
 
-### 4. Implement AuraService
+## Usage
 
-**File:** `packages/wowlab-services/src/internal/aura/AuraServiceImpl.ts`
-
-```typescript
-import { Effect, Layer, Ref } from "effect";
-import { Map as ImmutableMap } from "immutable";
-import type { Aura, Branded } from "@wowlab/core/Schemas";
-
-import { DbcService } from "../data/dbc/DbcService.js";
-import { ExtractorService } from "../data/transformer/extractors.js";
-import { transformAura } from "../data/transformer/aura.js";
-import { AuraService, AuraNotFoundError } from "./AuraService.js";
-
-export const AuraServiceLive = Layer.effect(
-  AuraService,
-  Effect.gen(function* () {
-    const cache =
-      yield* Ref.make(ImmutableMap<Branded.SpellID, Aura.AuraDataFlat>());
-
-    const getAura = (spellId: Branded.SpellID) =>
-      Effect.gen(function* () {
-        const cached = yield* Ref.get(cache);
-        const existing = cached.get(spellId);
-        if (existing) return existing;
-
-        const aura = yield* transformAura(spellId).pipe(
-          Effect.mapError(() => new AuraNotFoundError({ spellId })),
-        );
-
-        yield* Ref.update(cache, (c) => c.set(spellId, aura));
-        return aura;
-      });
-
-    return {
-      getAura,
-      preloadAuras: (spellIds) =>
-        Effect.forEach(spellIds, getAura, { concurrency: 10 }).pipe(
-          Effect.asVoid,
-        ),
-    };
-  }),
-).pipe(Layer.provide(/* DbcService, ExtractorService layers */));
-```
-
-### 5. Create Index Export
-
-**File:** `packages/wowlab-services/src/internal/aura/index.ts`
+The transformer is used during simulation setup to load aura definitions:
 
 ```typescript
-export { AuraService, AuraNotFoundError } from "./AuraService.js";
-export { AuraServiceLive } from "./AuraServiceImpl.js";
-```
+const program = Effect.gen(function* () {
+  // Load aura data for spells in the rotation
+  const corruptionData = yield* transformAura(172);
 
-### 6. Export from wowlab-services
-
-Update `packages/wowlab-services/src/index.ts` or appropriate barrel file:
-
-```typescript
-export * from "./internal/aura/index.js";
+  // Include in simulation config
+  const config = {
+    auras: new Map([[172, corruptionData]]),
+    // ...
+  };
+});
 ```
 
 ## Verification
 
-```typescript
-const program = Effect.gen(function* () {
-  const auraService = yield* AuraService;
-
-  // Test with Corruption (classic DoT)
-  const corruption = yield* auraService.getAura(Branded.SpellID(172));
-  console.log("Corruption:");
-  console.log("  Duration:", corruption.baseDurationMs, "ms");
-  console.log("  Tick Period:", corruption.tickPeriodMs, "ms");
-  console.log("  Refresh:", corruption.refreshBehavior);
-  console.log("  Pandemic:", corruption.pandemicRefresh);
-  console.log("  Hasted Ticks:", corruption.hastedTicks);
-});
+```bash
+pnpm build
 ```
-
-## Notes
-
-- The transformer uses existing `DbcService` and `ExtractorService` dependencies
-- Cache is per-service instance (consider moving to `MetadataService` if needed globally)
-- `transformAura` can be called directly for one-off lookups or via `AuraService` for caching
 
 ## Next Phase
 
-Proceed to `05-phase3-scheduler-and-generations.md` to implement runtime scheduling state.
+Proceed to `05-phase3-handler-integration.md` to integrate with combat log handlers.

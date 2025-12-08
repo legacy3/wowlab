@@ -2,39 +2,91 @@
 
 ## Goal
 
-Update aura handlers to use `AuraService` for spell data and `aura.expiresAt` for stale event detection.
+Update aura handlers to use `AuraDataFlat` from simulation config and implement stale event detection via `aura.expiresAt`.
 
 ## Prerequisites
 
 - Phase 1-2 complete
-- Emitter stamps `event.timestamp` when scheduling (see 00-overview.md)
+- Emitter stamps `event.timestamp` when scheduling (see `00-overview.md`)
+
+## Architecture
+
+Aura data flows through the system as immutable config:
+
+```
+Simulation Setup:
+  transformAura(spellId) → AuraDataFlat → SimulationConfig.auras
+
+Runtime:
+  Handler reads from config.auras.get(spellId)
+  Handler updates GameState.units[].auras
+  Handler schedules events via Emitter
+```
 
 ## Tasks
 
-### 1. Update SPELL_AURA_APPLIED Handler
+### 1. Extend Aura Entity for Periodic Ticks
+
+**File:** `packages/wowlab-core/src/internal/schemas/Aura.ts`
+
+Update the runtime `AuraSchema` to include tick fields:
 
 ```typescript
-export const applyAura = (event: SpellAuraApplied, emitter: Emitter) =>
+export const AuraSchema = Schema.Struct({
+  casterUnitId: Branded.UnitIDSchema,
+  expiresAt: Schema.Number,
+  spellId: Branded.SpellIDSchema,
+  stacks: Schema.Number,
+  // Periodic tick fields (snapshotted at application)
+  nextTickAt: Schema.optional(Schema.Number),
+  tickPeriodMs: Schema.optional(Schema.Number),
+});
+```
+
+### 2. Update SPELL_AURA_APPLIED Handler
+
+```typescript
+export const applyAura = (
+  event: SpellAuraApplied,
+  emitter: Emitter,
+  config: SimulationConfig,
+) =>
   Effect.gen(function* () {
     const state = yield* StateService.getState();
     const unit = state.units.get(event.destGUID);
     if (!unit) return;
 
-    const auraData = yield* AuraService.pipe(
-      Effect.flatMap((svc) => svc.getAura(event.spellId)),
-      Effect.catchAll(() => Effect.succeed(null)),
-    );
-
+    const auraData = config.auras.get(event.spellId);
     const durationMs = auraData?.baseDurationMs ?? 0;
     const expiresAt =
       durationMs > 0 ? state.currentTime + durationMs / 1000 : Infinity;
 
-    const aura = {
+    const aura: Aura = {
       casterUnitId: event.sourceGUID,
       spellId: event.spellId,
       stacks: 1,
       expiresAt,
     };
+
+    // Add periodic tick info if applicable
+    if (auraData && auraData.tickPeriodMs > 0) {
+      const tickPeriodMs = auraData.hastedTicks
+        ? auraData.tickPeriodMs / (1 + getHastePercent(unit))
+        : auraData.tickPeriodMs;
+
+      const firstTickDelay = auraData.tickOnApplication ? 0 : tickPeriodMs;
+      aura.nextTickAt = state.currentTime + firstTickDelay / 1000;
+      aura.tickPeriodMs = tickPeriodMs;
+
+      // Schedule first tick
+      emitter.emitAt(firstTickDelay, {
+        _tag:
+          auraData.periodicType === "heal"
+            ? "SPELL_PERIODIC_HEAL"
+            : "SPELL_PERIODIC_DAMAGE",
+        ...event,
+      });
+    }
 
     yield* StateService.updateState((s) =>
       s.setIn(["units", event.destGUID, "auras", "all", event.spellId], aura),
@@ -50,7 +102,7 @@ export const applyAura = (event: SpellAuraApplied, emitter: Emitter) =>
   });
 ```
 
-### 2. Update SPELL_AURA_REMOVED Handler
+### 3. Update SPELL_AURA_REMOVED Handler
 
 ```typescript
 export const removeAura = (event: SpellAuraRemoved) =>
@@ -76,10 +128,14 @@ export const removeAura = (event: SpellAuraRemoved) =>
   });
 ```
 
-### 3. Update SPELL_AURA_REFRESH Handler
+### 4. Update SPELL_AURA_REFRESH Handler
 
 ```typescript
-export const refreshAura = (event: SpellAuraRefresh, emitter: Emitter) =>
+export const refreshAura = (
+  event: SpellAuraRefresh,
+  emitter: Emitter,
+  config: SimulationConfig,
+) =>
   Effect.gen(function* () {
     const state = yield* StateService.getState();
     const unit = state.units.get(event.destGUID);
@@ -88,10 +144,7 @@ export const refreshAura = (event: SpellAuraRefresh, emitter: Emitter) =>
     const aura = unit.auras.all.get(event.spellId);
     if (!aura) return;
 
-    const auraData = yield* AuraService.pipe(
-      Effect.flatMap((svc) => svc.getAura(event.spellId)),
-      Effect.catchAll(() => Effect.succeed(null)),
-    );
+    const auraData = config.auras.get(event.spellId);
     if (!auraData) return;
 
     // Calculate new duration (pandemic: carry up to 30% of remaining)
@@ -118,16 +171,58 @@ export const refreshAura = (event: SpellAuraRefresh, emitter: Emitter) =>
   });
 ```
 
-### 4. Forced Removal (Dispel, Death)
+### 5. Handle Periodic Tick
 
-For non-expiration removals, update `expiresAt` first:
+```typescript
+export const handlePeriodicDamage = (
+  event: SpellPeriodicDamage,
+  emitter: Emitter,
+) =>
+  Effect.gen(function* () {
+    const state = yield* StateService.getState();
+    const unit = state.units.get(event.destGUID);
+    if (!unit) return;
+
+    const aura = unit.auras.all.get(event.spellId);
+    if (!aura) return;
+
+    // Stale check
+    if (!aura.nextTickAt || event.timestamp < aura.nextTickAt - 0.001) return;
+
+    // Don't tick after aura expired
+    if (state.currentTime > aura.expiresAt) return;
+
+    const tickPeriodMs = aura.tickPeriodMs;
+    if (!tickPeriodMs || tickPeriodMs <= 0) return;
+
+    // Schedule next tick
+    const nextTickAt = state.currentTime + tickPeriodMs / 1000;
+
+    if (nextTickAt <= aura.expiresAt) {
+      yield* StateService.updateState((s) =>
+        s.setIn(
+          ["units", event.destGUID, "auras", "all", event.spellId, "nextTickAt"],
+          nextTickAt,
+        ),
+      );
+
+      emitter.emitAt(tickPeriodMs, {
+        _tag: "SPELL_PERIODIC_DAMAGE",
+        ...event,
+      });
+    }
+  });
+```
+
+### 6. Forced Removal (Dispel, Death)
+
+For non-expiration removals, update `expiresAt` first so the stale check passes:
 
 ```typescript
 export const dispelAura = (event: SpellDispel, emitter: Emitter) =>
   Effect.gen(function* () {
     const state = yield* StateService.getState();
 
-    // Set expiresAt to now so stale check passes
     yield* StateService.updateState((s) =>
       s.setIn(
         ["units", event.destGUID, "auras", "all", event.spellId, "expiresAt"],
@@ -135,7 +230,6 @@ export const dispelAura = (event: SpellDispel, emitter: Emitter) =>
       ),
     );
 
-    // Emit immediate removal
     emitter.emitAt(0, {
       _tag: "SPELL_AURA_REMOVED",
       ...event,
@@ -143,15 +237,21 @@ export const dispelAura = (event: SpellDispel, emitter: Emitter) =>
   });
 ```
 
-### 5. Stack Handlers
+### 7. Stack Handlers
 
-`SPELL_AURA_APPLIED_DOSE` and `SPELL_AURA_REMOVED_DOSE` update `aura.stacks`. Use `auraData.maxStacks` to cap.
+`SPELL_AURA_APPLIED_DOSE` and `SPELL_AURA_REMOVED_DOSE` update `aura.stacks`. Use `config.auras.get(spellId).maxStacks` to cap.
 
 ## Verification
 
-1. Apply aura, check `expiresAt` is set
-2. Refresh before expiry, check `expiresAt` extended with pandemic
-3. Let old removal fire, check aura still exists (stale event ignored)
-4. Let new removal fire, check aura removed
-5. Dispel aura, check it's removed immediately
-6. Apply permanent aura, dispel it, check it's removed
+1. Apply aura → `expiresAt` is set correctly
+2. Refresh before expiry → `expiresAt` extended with pandemic
+3. Let old removal fire → aura still exists (stale event ignored)
+4. Let new removal fire → aura removed
+5. Dispel aura → removed immediately
+6. Apply permanent aura, dispel it → removed
+7. Apply DoT → ticks fire at correct intervals
+8. Refresh DoT → tick cycle continues, only `expiresAt` changes
+
+## Next Phase
+
+Proceed to `06-phase4-simulation-setup.md` to integrate aura loading into simulation initialization.
