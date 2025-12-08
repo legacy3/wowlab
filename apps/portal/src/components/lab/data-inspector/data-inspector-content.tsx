@@ -9,14 +9,13 @@ import {
   dataInspectorOrderAtom,
   type DataInspectorCardId,
 } from "@/atoms/data-inspector";
-import { ControlsCard, HistoryCard, TransformedCard, RawCard } from "./cards";
+import { ControlsCard, HistoryCard, TransformedCard } from "./cards";
 import { QueryProvider } from "./query-context";
 
 const components: DashboardConfig<DataInspectorCardId> = {
   controls: { Component: ControlsCard },
   history: { Component: HistoryCard },
   transformed: { Component: TransformedCard, className: "md:col-span-2" },
-  raw: { Component: RawCard, className: "md:col-span-2" },
 };
 
 export function DataInspectorContent() {

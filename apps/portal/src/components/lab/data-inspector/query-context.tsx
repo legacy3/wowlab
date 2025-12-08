@@ -5,21 +5,14 @@ import { useStore } from "jotai";
 import { useDataProvider } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createPortalDbcLayer } from "@/lib/services";
-import {
-  DbcService,
-  ExtractorService,
-  transformSpell,
-  transformItem,
-} from "@wowlab/services/Data";
+import { transformSpell, transformItem } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import {
   queryHistoryAtom,
   queryIdAtom,
   queryTypeAtom,
   queryLoadingAtom,
   queryErrorAtom,
-  rawDataAtom,
   transformedDataAtom,
   type DataType,
   type HistoryEntry,
@@ -63,37 +56,12 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 
     store.set(queryLoadingAtom, true);
     store.set(queryErrorAtom, null);
-    store.set(rawDataAtom, null);
     store.set(transformedDataAtom, null);
 
     try {
-      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
-      const extractorWithDeps = Layer.provide(dbcLayer)(
-        ExtractorService.Default,
-      );
-      const appLayer = Layer.mergeAll(dbcLayer, extractorWithDeps);
+      const appLayer = createPortalDbcLayer(queryClient, dataProvider);
 
       if (dataType === "spell") {
-        const rawProgram = Effect.gen(function* () {
-          const dbc = yield* DbcService;
-
-          // TODO Actually return the affected dbc files
-          const [name, misc, effects, cooldowns, power] = yield* Effect.all([
-            dbc.getSpellName(id),
-            dbc.getSpellMisc(id),
-            dbc.getSpellEffects(id),
-            dbc.getSpellCooldowns(id),
-            dbc.getSpellPower(id),
-          ]);
-
-          return { name, misc, effects, cooldowns, power };
-        });
-
-        const raw = await Effect.runPromise(
-          rawProgram.pipe(Effect.provide(dbcLayer)),
-        );
-        store.set(rawDataAtom, raw);
-
         const spell = await Effect.runPromise(
           transformSpell(id).pipe(Effect.provide(appLayer)),
         );
@@ -102,22 +70,6 @@ export function QueryProvider({ children }: { children: ReactNode }) {
           appendHistoryEntry(prev, id, "spell"),
         );
       } else {
-        const rawProgram = Effect.gen(function* () {
-          const dbc = yield* DbcService;
-          const [item, sparse, effects] = yield* Effect.all([
-            dbc.getItem(id),
-            dbc.getItemSparse(id),
-            dbc.getItemXItemEffects(id),
-          ]);
-
-          return { item, sparse, effects };
-        });
-
-        const raw = await Effect.runPromise(
-          rawProgram.pipe(Effect.provide(dbcLayer)),
-        );
-        store.set(rawDataAtom, raw);
-
         const item = await Effect.runPromise(
           transformItem(id).pipe(Effect.provide(appLayer)),
         );

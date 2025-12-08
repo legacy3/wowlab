@@ -9,21 +9,16 @@ export type HistoryEntry = {
   timestamp: number;
 };
 
-export type DataInspectorCardId =
-  | "controls"
-  | "history"
-  | "transformed"
-  | "raw";
+export type DataInspectorCardId = "controls" | "history" | "transformed";
 
 const DEFAULT_ORDER: DataInspectorCardId[] = [
   "controls",
   "history",
   "transformed",
-  "raw",
 ];
 
 export const dataInspectorOrderAtom = atomWithStorage<DataInspectorCardId[]>(
-  "data-inspector-order",
+  "data-inspector-order-v2",
   DEFAULT_ORDER,
 );
 
@@ -35,5 +30,4 @@ export const queryTypeAtom = atom<DataType>("spell");
 // Result state atoms
 export const queryLoadingAtom = atom(false);
 export const queryErrorAtom = atom<string | null>(null);
-export const rawDataAtom = atom<Record<string, unknown> | null>(null);
 export const transformedDataAtom = atom<unknown | null>(null);

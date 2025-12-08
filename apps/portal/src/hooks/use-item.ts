@@ -8,11 +8,6 @@ import { createPortalDbcLayer } from "@/lib/services";
 import { transformItem } from "@wowlab/services/Data";
 import type { Item } from "@wowlab/core/Schemas";
 
-/**
- * Hook to fetch transformed item data by ID.
- * Raw DBC data is cached in IndexedDB via RefineDbcService.
- * Transformation is fast (~1ms) since all lookups hit cache.
- */
 export function useItem(itemId: number | null | undefined) {
   const queryClient = useQueryClient();
   const dataProvider = useDataProvider()();
@@ -23,11 +18,10 @@ export function useItem(itemId: number | null | undefined) {
       if (itemId == null) {
         throw new Error("Item ID is required");
       }
-
-      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
+      const layer = createPortalDbcLayer(queryClient, dataProvider);
 
       return Effect.runPromise(
-        transformItem(itemId).pipe(Effect.provide(dbcLayer)),
+        transformItem(itemId).pipe(Effect.provide(layer)),
       );
     },
     enabled: itemId != null,

@@ -5,7 +5,9 @@ import { useSpell } from "@/hooks/use-spell";
 
 export function WowSpellLink({ spellId }: { spellId: number }) {
   const { data: spell, isLoading } = useSpell(spellId);
-  const name = isLoading ? `Spell ${spellId}` : (spell?.name ?? `Spell ${spellId}`);
+  const name = isLoading
+    ? `Spell ${spellId}`
+    : (spell?.name ?? `Spell ${spellId}`);
 
   return (
     <a
