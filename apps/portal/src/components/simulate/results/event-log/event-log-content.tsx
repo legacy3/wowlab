@@ -15,8 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WowSpellLink } from "@/components/game";
 import { jobsAtom } from "@/atoms/computing";
-import { SPELLS } from "@/atoms/timeline";
 import type { SimulationEvent } from "@/lib/simulation/types";
 import { isResourceSnapshot } from "@/lib/simulation/transform-events";
 
@@ -28,7 +28,6 @@ interface DisplayEvent {
   category: EventCategory;
   type: string;
   spellId: number | null;
-  spellName: string;
   source: string;
   target: string;
   details: string;
@@ -66,14 +65,6 @@ function getEventCategory(tag: string): EventCategory {
   return "other";
 }
 
-function getSpellName(spellId: number | null): string {
-  if (spellId === null) {
-    return "-";
-  }
-
-  return SPELLS[spellId]?.name ?? `Spell ${spellId}`;
-}
-
 function formatTimestamp(ms: number): string {
   const totalSeconds = ms / 1000;
   const minutes = Math.floor(totalSeconds / 60);
@@ -90,7 +81,6 @@ function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
       category: "resource",
       type: "RESOURCE_SNAPSHOT",
       spellId: null,
-      spellName: "-",
       source: "Player",
       target: "-",
       details: `Focus: ${event.focus}/${event.maxFocus}`,
@@ -102,7 +92,6 @@ function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
 
   // Extract spell info if available
   const spellId = "spellId" in event ? event.spellId : null;
-  const spellName = getSpellName(spellId);
 
   // Extract source/target
   const source = "sourceName" in event ? (event.sourceName as string) : "-";
@@ -137,7 +126,6 @@ function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
     category,
     type: tag,
     spellId,
-    spellName,
     source,
     target,
     details,
@@ -173,7 +161,6 @@ export function EventLogContent() {
 
         return (
           event.type.toLowerCase().includes(searchLower) ||
-          event.spellName.toLowerCase().includes(searchLower) ||
           event.source.toLowerCase().includes(searchLower) ||
           event.target.toLowerCase().includes(searchLower) ||
           event.details.toLowerCase().includes(searchLower)
@@ -280,8 +267,10 @@ export function EventLogContent() {
                         {event.type}
                       </TableCell>
                       <TableCell>
-                        {event.spellName !== "-" ? (
-                          <span className="text-sm">{event.spellName}</span>
+                        {event.spellId !== null ? (
+                          <span className="text-sm">
+                            <WowSpellLink spellId={event.spellId} />
+                          </span>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

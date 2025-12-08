@@ -264,9 +264,7 @@ function MostWantedItemsTab() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">
-                          <WowItemLink itemId={item.id} quality={item.quality}>
-                            {item.name}
-                          </WowItemLink>
+                          <WowItemLink itemId={item.id} />
                         </span>
                         <p className="text-xs text-muted-foreground">
                           {item.source}

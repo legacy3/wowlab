@@ -101,9 +101,7 @@ export function EquipmentSlotCard({
       {item ? (
         <div>
           <p className="truncate text-sm font-medium">
-            <WowItemLink itemId={item.id} quality={item.quality ?? 1}>
-              {item.name}
-            </WowItemLink>
+            <WowItemLink itemId={item.id} />
           </p>
           <div
             className={cn(
@@ -173,9 +171,7 @@ export function EquipmentSlotCard({
                   </div>
                   <div className="min-w-0">
                     <div className="truncate">
-                      <WowItemLink itemId={alt.id} quality={alt.quality ?? 1}>
-                        {alt.name}
-                      </WowItemLink>
+                      <WowItemLink itemId={alt.id} />
                     </div>
                     <div className="text-[10px] text-muted-foreground">
                       iLvl {alt.ilvl}

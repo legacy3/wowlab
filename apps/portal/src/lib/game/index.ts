@@ -1,2 +1,7 @@
-export { QUALITY_COLORS, QUALITY_NAMES } from "./item-quality";
-export type { ItemQuality } from "./item-quality";
+export {
+  getSpellSchoolColor,
+  getSpellSchoolName,
+  SCHOOL_COLORS,
+  SCHOOL_NAMES,
+} from "./spell-school";
+export type { SpellSchool } from "./spell-school";
