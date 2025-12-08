@@ -172,9 +172,10 @@ export function EventLogContent() {
     });
   }, [displayEvents, filter, categoryFilter]);
 
+  // Export raw simulation events, not the display-transformed version
   const exportJson = useMemo(() => {
-    return JSON.stringify(filteredEvents, null, 2);
-  }, [filteredEvents]);
+    return JSON.stringify(rawEvents, null, 2);
+  }, [rawEvents]);
 
   const categories: (EventCategory | "all")[] = [
     "all",

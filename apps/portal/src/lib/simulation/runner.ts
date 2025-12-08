@@ -116,9 +116,10 @@ export async function runSimulationLoop(
           return;
         }
 
+        // Keep timestamp in seconds to match combat log events
         const snapshot: ResourceSnapshot = {
           _tag: "RESOURCE_SNAPSHOT",
-          timestamp: state.currentTime * 1000, // Convert to ms
+          timestamp: state.currentTime,
           focus: focusPower.current,
           maxFocus: focusPower.max,
         };

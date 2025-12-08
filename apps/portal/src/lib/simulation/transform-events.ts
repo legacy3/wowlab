@@ -34,10 +34,11 @@ interface CastInProgress {
  * Transforms raw CombatLogEvents into timeline-compatible CombatData.
  *
  * Key transformations:
- * - Timestamps: ms → seconds
  * - Event _tag → timeline type
  * - Pairs SPELL_AURA_APPLIED/REMOVED into BuffEvent ranges
  * - Pairs SPELL_CAST_START/SUCCESS into CastEvent with duration
+ *
+ * Note: Combat log event timestamps are already in seconds from the simulation.
  */
 export function transformEvents(
   events: readonly Schemas.CombatLog.CombatLogEvent[],
@@ -58,7 +59,8 @@ export function transformEvents(
   const id = () => `evt-${idx++}`;
 
   for (const event of events) {
-    const timeSec = event.timestamp / 1000;
+    // Timestamps are already in seconds from the simulation
+    const timeSec = event.timestamp;
 
     switch (event._tag) {
       case "SPELL_CAST_START": {
@@ -284,6 +286,8 @@ export function isResourceSnapshot(
 /**
  * Transforms events including resource snapshots.
  * Use this when the runner emits RESOURCE_SNAPSHOT events.
+ *
+ * Note: All timestamps (combat log and resource snapshots) are in seconds.
  */
 export function transformEventsWithResources(
   events: readonly (Schemas.CombatLog.CombatLogEvent | ResourceSnapshot)[],
@@ -297,10 +301,11 @@ export function transformEventsWithResources(
 
   for (const event of events) {
     if (isResourceSnapshot(event)) {
+      // Timestamps are already in seconds
       resources.push({
         type: "resource",
         id: id(),
-        timestamp: event.timestamp / 1000,
+        timestamp: event.timestamp,
         focus: event.focus,
         maxFocus: event.maxFocus,
       });
