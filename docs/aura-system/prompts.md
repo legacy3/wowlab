@@ -10,6 +10,7 @@ Copy-paste these prompts to a fresh Claude instance for each phase.
 TASK: Create the AuraState schema for the aura system.
 
 READ FIRST:
+- docs/wowlab/00-data-flow.md
 - docs/aura-system/03-phase1-data-structures.md
 
 RULES:
@@ -42,6 +43,7 @@ IF YOU GET STUCK:
 TASK: Add instanceId to aura event payloads.
 
 READ FIRST:
+- docs/wowlab/00-data-flow.md
 - docs/aura-system/ (find the event payload definitions)
 
 RULES:
@@ -71,6 +73,7 @@ IF YOU GET STUCK:
 TASK: Implement the aura handlers.
 
 READ FIRST:
+- docs/wowlab/00-data-flow.md
 - docs/aura-system/00-overview.md (understand the architecture)
 - docs/aura-system/05-phase3-handler-integration.md (the actual code)
 
