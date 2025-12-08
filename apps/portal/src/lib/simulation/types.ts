@@ -14,6 +14,7 @@ export interface RotationDefinition {
   /** The APL logic that decides what to cast each GCD */
   readonly run: (
     playerId: Schemas.Branded.UnitID,
+    targetId: Schemas.Branded.UnitID,
   ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
 
   /** All spell IDs needed by this rotation (used to load spell data) */

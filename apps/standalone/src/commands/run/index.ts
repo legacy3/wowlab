@@ -27,6 +27,7 @@ import type {
 
 import { loadSpells } from "../../data/spell-loader.js";
 import { supabaseClient } from "../../data/supabase.js";
+import { createTargetDummy } from "../../framework/rotation-utils.js";
 import {
   createRotationPlayer,
   type RotationDefinition,
@@ -108,14 +109,18 @@ const runSimulation = (
             yield* Shared.registerSpec(Hunter.BeastMastery);
 
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
+            const targetId = Schemas.Branded.UnitID(`target-${simId}`);
+
             const player = createRotationPlayer(
               rotation,
               playerId,
               config.spells,
             );
+            const target = createTargetDummy(targetId);
 
             const unitService = yield* Unit.UnitService;
             yield* unitService.add(player);
+            yield* unitService.add(target);
 
             const stateService = yield* State.StateService;
             const simDriver = yield* CombatLogService.SimDriver;
@@ -129,7 +134,7 @@ const runSimulation = (
                   break;
                 }
 
-                yield* rotation.run(playerId);
+                yield* rotation.run(playerId, targetId);
                 casts++;
                 yield* simDriver.run(state.currentTime + 100);
               }

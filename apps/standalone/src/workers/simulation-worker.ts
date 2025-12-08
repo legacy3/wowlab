@@ -21,6 +21,7 @@ import type {
   WorkerInit,
 } from "./types.js";
 
+import { createTargetDummy } from "../framework/rotation-utils.js";
 import { createRotationPlayer } from "../framework/types.js";
 import { BeastMasteryRotation } from "../rotations/beast-mastery.js";
 
@@ -121,10 +122,14 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
               );
 
               const playerId = Schemas.Branded.UnitID(`player-${simId}`);
+              const targetId = Schemas.Branded.UnitID(`target-${simId}`);
+
               const player = createRotationPlayer(rotation, playerId, spells);
+              const target = createTargetDummy(targetId);
 
               const unitService = yield* Unit.UnitService;
               yield* unitService.add(player);
+              yield* unitService.add(target);
 
               let casts = 0;
               while (true) {
@@ -133,7 +138,7 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
                   break;
                 }
 
-                yield* rotation.run(playerId);
+                yield* rotation.run(playerId, targetId);
 
                 casts++;
               }

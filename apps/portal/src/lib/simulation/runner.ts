@@ -14,7 +14,7 @@ import type {
   SimulationResult,
 } from "./types";
 import type { ResourceSnapshot } from "./transformers";
-import { createPlayerWithSpells } from "./rotation-utils";
+import { createPlayerWithSpells, createTargetDummy } from "./rotation-utils";
 
 export interface RunProgress {
   currentTime: number;
@@ -70,17 +70,21 @@ export async function runSimulationLoop(
       const stateService = yield* State.StateService;
       yield* stateService.setState(Entities.GameState.createGameState());
 
-      // Create and register the player unit
+      // Create and register the player and target units
       const playerId = Schemas.Branded.UnitID("player-1");
+      const targetId = Schemas.Branded.UnitID("target-1");
+
       const player = createPlayerWithSpells(
         playerId,
         rotation.name,
         rotation.spellIds,
         spells,
       );
+      const target = createTargetDummy(targetId);
 
       const unitService = yield* Unit.UnitService;
       yield* unitService.add(player);
+      yield* unitService.add(target);
 
       // Get SimDriver for event processing and time advancement
       const simDriver = yield* CombatLogService.SimDriver;
@@ -137,7 +141,10 @@ export async function runSimulationLoop(
         }
 
         // Execute rotation priority list
-        yield* Effect.catchAll(rotation.run(playerId), () => Effect.void);
+        yield* Effect.catchAll(
+          rotation.run(playerId, targetId),
+          () => Effect.void,
+        );
         casts++;
 
         // Advance simulation time by processing events up to currentTime + 100ms
