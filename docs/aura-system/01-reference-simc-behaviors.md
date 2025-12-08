@@ -32,8 +32,8 @@ Useful stack policy flags: `reverse`, `reverse_stack_reduction`, `consume_all_st
 
 ## Application / Refresh / Expire Flow (SimC)
 
-1) Apply → schedule expiration → prime ticks if needed.
-2) Refresh → adjust duration per behavior → rebuild expiration → optional tick carry.
-3) Expire → cancel ticks → clear stacks → fire callbacks.
+1. Apply → schedule expiration → prime ticks if needed.
+2. Refresh → adjust duration per behavior → rebuild expiration → optional tick carry.
+3. Expire → cancel ticks → clear stacks → fire callbacks.
 
 Use this doc to reason about expected outcomes; actual implementation rules live in the phase docs.

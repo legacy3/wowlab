@@ -1,5 +1,6 @@
 export * as Accessors from "./Accessors.js";
 export * as CombatLog from "./CombatLog.js";
+export * as Config from "./Config.js";
 export * as Data from "./Data.js";
 export * as Log from "./Log.js";
 export * as Metadata from "./Metadata.js";

@@ -37,21 +37,22 @@ if (auraData.tickPeriodMs > 0 && auraData.periodicType) {
 const handlePeriodicTick = (
   event: (SpellPeriodicDamage | SpellPeriodicHeal) & { tickPeriodMs?: number },
   emitter: Emitter,
-) => Effect.gen(function* () {
-  const state = yield* StateService.getState();
-  const unit = state.units.get(event.destGUID);
-  if (!unit) return;
+) =>
+  Effect.gen(function* () {
+    const state = yield* StateService.getState();
+    const unit = state.units.get(event.destGUID);
+    if (!unit) return;
 
-  const aura = unit.auras.all.get(event.spellId);
-  if (!aura) return; // stale tick
+    const aura = unit.auras.all.get(event.spellId);
+    if (!aura) return; // stale tick
 
-  const tickPeriodMs = event.tickPeriodMs ?? 0;
-  if (tickPeriodMs <= 0) return;
+    const tickPeriodMs = event.tickPeriodMs ?? 0;
+    if (tickPeriodMs <= 0) return;
 
-  // Apply periodic effect...
+    // Apply periodic effect...
 
-  emitter.emitAt(tickPeriodMs, { ...event, tickPeriodMs });
-});
+    emitter.emitAt(tickPeriodMs, { ...event, tickPeriodMs });
+  });
 ```
 
 ## Refresh Interaction

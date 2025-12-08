@@ -16,10 +16,10 @@ ProfileComposer.compose()
 
 ## Tasks
 
-1) **Collect aura spellIds** from rotation (CastSpell actions, etc.).
-2) **Batch load aura data** with `transformAura` inside an Effect loop; skip missing spells gracefully.
-3) **Extend SimulationConfig** to include `auras: Map<SpellID, AuraDataFlat>`.
-4) **Pass config to handlers** (via registry context or explicit param) so state handlers can read `config.auras.get(spellId)`.
+1. **Collect aura spellIds** from rotation (CastSpell actions, etc.).
+2. **Batch load aura data** with `transformAura` inside an Effect loop; skip missing spells gracefully.
+3. **Extend SimulationConfig** to include `auras: Map<SpellID, AuraDataFlat>`.
+4. **Pass config to handlers** (via registry context or explicit param) so state handlers can read `config.auras.get(spellId)`.
 
 ## Verification
 

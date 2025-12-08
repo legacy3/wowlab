@@ -2,12 +2,14 @@ import * as Entities from "@wowlab/core/Entities";
 import { Branded, CombatLog, Enums } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
+import type { Emitter } from "../Emitter.js";
 import type { StateMutation } from "./types.js";
 
 import { StateService } from "../../state/StateService.js";
 
 const energize = (
   event: CombatLog.EnergizeEvent,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;
@@ -56,6 +58,7 @@ const energize = (
 
 const drain = (
   event: CombatLog.DrainEvent,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;

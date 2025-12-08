@@ -4,12 +4,12 @@ Use this to decode DBC fields when building AuraDataFlat. Everything is queryabl
 
 ## Key Tables
 
-| Table            | Purpose                                            |
-| ---------------- | -------------------------------------------------- |
-| `spell_misc`     | Attributes (bitmasks), duration index, range index |
-| `spell_duration` | Duration lookup (ID → milliseconds)                |
-| `spell_effect`   | Effect types, tick periods, aura types             |
-| `spell_aura_options` | Stack caps, proc chances, RPPM                 |
+| Table                | Purpose                                            |
+| -------------------- | -------------------------------------------------- |
+| `spell_misc`         | Attributes (bitmasks), duration index, range index |
+| `spell_duration`     | Duration lookup (ID → milliseconds)                |
+| `spell_effect`       | Effect types, tick periods, aura types             |
+| `spell_aura_options` | Stack caps, proc chances, RPPM                     |
 
 ## Joins
 
@@ -33,27 +33,27 @@ mask   = 1 << bit
 
 ### Aura-Relevant Attributes
 
-| Attribute                     | Value | Meaning                               |
-| ----------------------------- | ----- | ------------------------------------- |
-| `SX_REFRESH_EXTENDS_DURATION` | 436   | Pandemic refresh                      |
-| `SX_ROLLING_PERIODIC`         | 334   | Rolling periodic                      |
-| `SX_DURATION_HASTED`          | 273   | Aura duration scales with haste       |
-| `SX_TICK_ON_APPLICATION`      | 169   | First tick fires immediately          |
-| `SX_DOT_HASTED`               | 173   | Tick period scales with haste         |
-| `SX_DOT_HASTED_MELEE`         | 278   | Tick period scales with melee haste   |
-| `SX_TICK_MAY_CRIT`            | 265   | Periodic ticks can crit               |
-| `SX_TREAT_AS_PERIODIC`        | 121   | Treat as periodic                     |
+| Attribute                     | Value | Meaning                             |
+| ----------------------------- | ----- | ----------------------------------- |
+| `SX_REFRESH_EXTENDS_DURATION` | 436   | Pandemic refresh                    |
+| `SX_ROLLING_PERIODIC`         | 334   | Rolling periodic                    |
+| `SX_DURATION_HASTED`          | 273   | Aura duration scales with haste     |
+| `SX_TICK_ON_APPLICATION`      | 169   | First tick fires immediately        |
+| `SX_DOT_HASTED`               | 173   | Tick period scales with haste       |
+| `SX_DOT_HASTED_MELEE`         | 278   | Tick period scales with melee haste |
+| `SX_TICK_MAY_CRIT`            | 265   | Periodic ticks can crit             |
+| `SX_TREAT_AS_PERIODIC`        | 121   | Treat as periodic                   |
 
 ## Periodic Aura Types (EffectAura)
 
-| Value | Name                       | Purpose                         |
-| ----- | -------------------------- | --------------------------------|
-| 3     | `A_PERIODIC_DAMAGE`        | DoT                             |
-| 8     | `A_PERIODIC_HEAL`          | HoT                             |
-| 20    | `A_PERIODIC_HEAL_PCT`      | % HoT                           |
-| 23    | `A_PERIODIC_TRIGGER_SPELL` | Trigger spell periodically      |
-| 24    | `A_PERIODIC_ENERGIZE`      | Resource gain                   |
-| 53    | `A_PERIODIC_LEECH`         | Damage + heal                   |
+| Value | Name                       | Purpose                    |
+| ----- | -------------------------- | -------------------------- |
+| 3     | `A_PERIODIC_DAMAGE`        | DoT                        |
+| 8     | `A_PERIODIC_HEAL`          | HoT                        |
+| 20    | `A_PERIODIC_HEAL_PCT`      | % HoT                      |
+| 23    | `A_PERIODIC_TRIGGER_SPELL` | Trigger spell periodically |
+| 24    | `A_PERIODIC_ENERGIZE`      | Resource gain              |
+| 53    | `A_PERIODIC_LEECH`         | Damage + heal              |
 
 ## Modifier Aura Types (EffectAura = 107/108)
 

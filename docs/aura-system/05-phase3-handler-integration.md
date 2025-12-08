@@ -12,9 +12,9 @@ Prereqs: Phases 1-2; emitter stamps `event.timestamp` per `docs/wowlab/00-data-f
 
 ## Apply Flow (`SPELL_AURA_APPLIED`)
 
-1) Add aura to state with `{ casterUnitId, spellId, stacks: 1 }`.
-2) If `baseDurationMs > 0`, schedule removal: `emitAt(baseDurationMs, SPELL_AURA_REMOVED)`.
-3) If periodic (`periodicType` and `tickPeriodMs > 0`):
+1. Add aura to state with `{ casterUnitId, spellId, stacks: 1 }`.
+2. If `baseDurationMs > 0`, schedule removal: `emitAt(baseDurationMs, SPELL_AURA_REMOVED)`.
+3. If periodic (`periodicType` and `tickPeriodMs > 0`):
    - Compute `tickPeriodMs` snapshot (apply haste when `hastedTicks`).
    - `firstTickDelay = auraData.tickOnApplication ? 0 : tickPeriodMs`.
    - Schedule tick event with `_tag` matching periodicType (heal → SPELL_PERIODIC_HEAL; damage/other → SPELL_PERIODIC_DAMAGE) and include `tickPeriodMs` in payload. Snapshot stays in payload, not on entity.

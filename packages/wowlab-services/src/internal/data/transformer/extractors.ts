@@ -1,5 +1,6 @@
+import * as Constants from "@wowlab/core/Constants";
 import { DbcError } from "@wowlab/core/Errors";
-import { Dbc, Enums } from "@wowlab/core/Schemas";
+import { Aura, Dbc, Enums } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
@@ -742,7 +743,93 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           return Option.some(descVars.Variables);
         });
 
+      /**
+       * Extract aura-related flags from spell attributes.
+       * Per docs/aura-system/04-phase2-transformer.md mapping table.
+       */
+      const extractAuraFlags = (
+        attributes: readonly number[],
+      ): {
+        durationHasted: boolean;
+        hastedTicks: boolean;
+        pandemicRefresh: boolean;
+        rollingPeriodic: boolean;
+        tickMayCrit: boolean;
+        tickOnApplication: boolean;
+      } => ({
+        durationHasted: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_DURATION_HASTED,
+        ),
+        hastedTicks: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_DOT_HASTED,
+        ),
+        pandemicRefresh: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_REFRESH_EXTENDS_DURATION,
+        ),
+        rollingPeriodic: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_ROLLING_PERIODIC,
+        ),
+        tickMayCrit: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_TICK_MAY_CRIT,
+        ),
+        tickOnApplication: Constants.hasSpellAttribute(
+          attributes,
+          Constants.SX_TICK_ON_APPLICATION,
+        ),
+      });
+
+      /**
+       * Periodic EffectAura values from docs/aura-system/02-reference-spell-data.md
+       */
+      const PERIODIC_AURA_TYPES: ReadonlyMap<number, Aura.PeriodicType> =
+        new Map([
+          [20, "heal"], // A_PERIODIC_HEAL_PCT
+          [23, "trigger_spell"], // A_PERIODIC_TRIGGER_SPELL
+          [24, "energize"], // A_PERIODIC_ENERGIZE
+          [3, "damage"], // A_PERIODIC_DAMAGE
+          [53, "leech"], // A_PERIODIC_LEECH
+          [8, "heal"], // A_PERIODIC_HEAL
+        ]);
+
+      /**
+       * Extract periodic info from spell effects.
+       * Returns periodicType and tickPeriodMs from the first matching periodic effect.
+       */
+      const extractPeriodicInfo = (
+        effects: readonly Dbc.SpellEffectRow[],
+      ): { periodicType: Aura.PeriodicType | null; tickPeriodMs: number } => {
+        for (const effect of effects) {
+          const periodicType = PERIODIC_AURA_TYPES.get(effect.EffectAura);
+          if (periodicType && effect.EffectAuraPeriod > 0) {
+            return {
+              periodicType,
+              tickPeriodMs: effect.EffectAuraPeriod,
+            };
+          }
+        }
+
+        return { periodicType: null, tickPeriodMs: 0 };
+      };
+
+      /**
+       * Determine refresh behavior based on pandemic flag and periodic type.
+       * Per docs/aura-system/04-phase2-transformer.md:
+       * pandemic flag or any periodic tickPeriodMs>0 => "pandemic"; else "duration"
+       */
+      const determineRefreshBehavior = (
+        pandemicFlag: boolean,
+        tickPeriodMs: number,
+      ): Aura.RefreshBehavior =>
+        pandemicFlag || tickPeriodMs > 0 ? "pandemic" : "duration";
+
       return {
+        determineRefreshBehavior,
+        extractAuraFlags,
         extractAuraRestrictions,
         extractCastTime,
         extractCharges,
@@ -757,6 +844,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         extractLevels,
         extractManaCost,
         extractName,
+        extractPeriodicInfo,
         extractPower,
         extractRadius,
         extractRange,

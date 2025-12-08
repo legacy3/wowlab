@@ -8,6 +8,7 @@ import * as Stream from "effect/Stream";
 
 import type { SimulationEvent } from "./EventQueue.js";
 
+import { SimulationConfigService } from "../config/SimulationConfigService.js";
 import { StateService } from "../state/StateService.js";
 import { CombatLogService } from "./CombatLogService.js";
 import { getEmitted, makeEmitter } from "./Emitter.js";
@@ -38,10 +39,15 @@ interface EventStreamSubscriberEntry {
 }
 
 export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
-  dependencies: [CombatLogService.Default, StateService.Default],
+  dependencies: [
+    CombatLogService.Default,
+    StateService.Default,
+    SimulationConfigService.Default,
+  ],
   effect: Effect.gen(function* () {
     const combatLog = yield* CombatLogService;
     const state = yield* StateService;
+    const simConfig = yield* SimulationConfigService;
 
     yield* registerStateMutationHandlers(combatLog);
 
@@ -137,7 +143,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
           const handlerEffect = entry.handler(event, emitter) as Effect.Effect<
             void,
             unknown,
-            StateService
+            StateService | SimulationConfigService
           >;
 
           yield* Effect.catchAll(handlerEffect, (cause) =>
@@ -150,6 +156,7 @@ export class SimDriver extends Effect.Service<SimDriver>()("SimDriver", {
             ),
           ).pipe(
             Effect.provideService(StateService, state),
+            Effect.provideService(SimulationConfigService, simConfig),
             Effect.withSpan(`handler:${entry.id}`),
             Effect.annotateLogs("handler", entry.id),
             Effect.annotateLogs("subevent", event._tag),

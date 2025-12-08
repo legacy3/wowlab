@@ -2,12 +2,14 @@ import * as Entities from "@wowlab/core/Entities";
 import { Branded, CombatLog } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
+import type { Emitter } from "../Emitter.js";
 import type { StateMutation } from "./types.js";
 
 import { StateService } from "../../state/StateService.js";
 
 const applyDamage = (
   event: CombatLog.DamageEvent,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;

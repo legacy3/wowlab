@@ -4,17 +4,17 @@ Read this first, then `docs/wowlab/00-data-flow.md` for the full timing diagram.
 
 ## Document Map
 
-| #  | Doc                                        | Purpose                                  |
-|----|--------------------------------------------|------------------------------------------|
-| 0  | 00-overview.md                             | Big picture + phase order                |
-| R1 | 01-reference-simc-behaviors.md             | SimC semantics (reference only)          |
-| R2 | 02-reference-spell-data.md                 | DBC fields/attributes (reference only)   |
-| 1  | 03-phase1-data-structures.md               | AuraDataFlat + runtime Aura schema       |
-| 2  | 04-phase2-transformer.md                   | `transformAura()` DBC → AuraDataFlat     |
-| 3  | 05-phase3-handler-integration.md           | CLEU handlers using config + scheduler   |
-| 4  | 06-phase4-periodic-ticks.md                | Periodic tick scheduling via EventQueue  |
-| 5  | 07-phase5-simulation-setup.md              | Load aura data into SimulationConfig     |
-| P  | prompts.md                                 | Ready-to-paste tasks per phase           |
+| #   | Doc                              | Purpose                                 |
+| --- | -------------------------------- | --------------------------------------- |
+| 0   | 00-overview.md                   | Big picture + phase order               |
+| R1  | 01-reference-simc-behaviors.md   | SimC semantics (reference only)         |
+| R2  | 02-reference-spell-data.md       | DBC fields/attributes (reference only)  |
+| 1   | 03-phase1-data-structures.md     | AuraDataFlat + runtime Aura schema      |
+| 2   | 04-phase2-transformer.md         | `transformAura()` DBC → AuraDataFlat    |
+| 3   | 05-phase3-handler-integration.md | CLEU handlers using config + scheduler  |
+| 4   | 06-phase4-periodic-ticks.md      | Periodic tick scheduling via EventQueue |
+| 5   | 07-phase5-simulation-setup.md    | Load aura data into SimulationConfig    |
+| P   | prompts.md                       | Ready-to-paste tasks per phase          |
 
 ## Core Principles (match data flow diagram)
 
@@ -25,6 +25,6 @@ Read this first, then `docs/wowlab/00-data-flow.md` for the full timing diagram.
 
 ## Phase Order at a Glance
 
-1) Define schemas and constants → 2) Transform DBC → 3) Wire CLEU handlers to config + scheduler → 4) Tick scheduling and refresh semantics → 5) Preload all AuraDataFlat into `SimulationConfig`.
+1. Define schemas and constants → 2) Transform DBC → 3) Wire CLEU handlers to config + scheduler → 4) Tick scheduling and refresh semantics → 5) Preload all AuraDataFlat into `SimulationConfig`.
 
 Stick to this order when running the prompts; later phases assume earlier pieces exist.

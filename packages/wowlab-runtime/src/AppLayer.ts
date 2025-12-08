@@ -1,5 +1,6 @@
 import * as Accessors from "@wowlab/services/Accessors";
 import * as CombatLog from "@wowlab/services/CombatLog";
+import * as Config from "@wowlab/services/Config";
 import * as Log from "@wowlab/services/Log";
 import * as Metadata from "@wowlab/services/Metadata";
 import * as Rng from "@wowlab/services/Rng";
@@ -23,12 +24,13 @@ export const createAppLayer = <R>(options: AppLayerOptions<R>) => {
 
   const BaseLayer = Layer.mergeAll(
     State.StateService.Default,
+    Config.SimulationConfigService.Default,
     logger,
     rng,
     metadata,
   );
 
-  // Combat log service layer (depends on StateService)
+  // Combat log depends on StateService
   const CombatLogLayer = Layer.mergeAll(
     CombatLog.CombatLogService.Default,
     CombatLog.SimDriver.Default,
