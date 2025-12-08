@@ -56,3 +56,5 @@ coverage/
 # Third party data (local only)
 third_party/*
 !third_party/README.md
+
+.npm*

@@ -41,9 +41,9 @@ export function MobileMenu() {
                 <Zap className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-bold">Innocent</span>
+                <span className="font-bold">WoW Lab</span>
                 <span className="text-xs text-muted-foreground">
-                  Rotation Sim
+                  Simulator Toolkit
                 </span>
               </div>
             </Link>
