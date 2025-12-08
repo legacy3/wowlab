@@ -13,7 +13,7 @@
 
 ## Architecture
 
-All state lives in immutable `GameState`. The `Aura` entity has `expiresAt` - this is the single source of truth for expiration.
+All state lives in immutable `GameState`. Aura entities only keep CLEU-observable fields (`casterUnitId`, `spellId`, `stacks`); expiration timing is owned entirely by the Event Queue scheduler.
 
 The event queue (TinyQueue) is the scheduler. Events are scheduled via `emitter.emitAt()`.
 
@@ -38,36 +38,32 @@ When an aura is refreshed, a new removal event is scheduled. The old one still f
 ```typescript
 // SPELL_AURA_REMOVED handler:
 const aura = getAura(unit, spellId);
-if (!aura) return; // Already gone
-if (event.timestamp < aura.expiresAt - 0.001) return; // Stale (was refreshed)
+if (!aura) return; // Already gone – stale event
 removeAura(unit, spellId);
 ```
 
-TinyQueue processes events in timestamp order. Old removals fire first, see `expiresAt` was extended, and no-op.
+TinyQueue processes events in timestamp order. Old removals fire first; because the refresh left a valid aura and scheduled a later removal, the stale event observes "no aura" and returns.
 
 ## Forced Removals (Dispel, Death, Cancel)
 
-For non-expiration removals, set `expiresAt = currentTime` before emitting removal:
+For non-expiration removals, delete the aura immediately and emit the CLEU removal event—there is no timing field to mutate:
 
 ```typescript
 // Dispel handler
-aura.expiresAt = state.currentTime;
+yield* StateService.updateState((s) =>
+  s.deleteIn(["units", event.destGUID, "auras", "all", event.spellId]),
+);
 emitter.emitAt(0, SPELL_AURA_REMOVED);
 ```
 
-This ensures the stale check passes.
+Pending scheduled removals become stale automatically because `getAura` now returns `undefined`.
 
 ## Permanent Auras
 
-Auras with no duration have `expiresAt = Infinity`. The stale check skips infinite values:
-
-```typescript
-if (Number.isFinite(aura.expiresAt) && event.timestamp < aura.expiresAt - 0.001)
-  return;
-```
+Permanent auras never enqueue a removal event. Because the scheduler has nothing pending for them, they persist until a dispel/death/cancel explicitly removes the aura from GameState; the same `if (!aura) return` stale guard handles every leftover removal event.
 
 ## Periodic Ticks
 
-Same pattern. Store `nextTickAt` and `tickPeriodMs` (snapshotted at application) on the Aura entity. When a tick fires, compare `event.timestamp` against `nextTickAt`.
+Periodic ticks are scheduled exclusively through the Event Queue: snapshot any needed tick period into the queued event payload when calling `emitAt`, and have the tick handler simply call `getAura(...)` to decide whether the event is stale. No tick metadata lives on the aura entity.
 
-On refresh, tick cycle continues uninterrupted - only `expiresAt` changes.
+On refresh, the tick cycle continues uninterrupted—only a new removal event is scheduled; pending tick events keep firing until the aura is removed.

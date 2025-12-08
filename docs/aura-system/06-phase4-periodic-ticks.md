@@ -4,23 +4,11 @@
 
 Schedule periodic damage/heal ticks using the same pattern as removal events.
 
-## Aura Entity Extension
+## Aura Entity
 
-Add tick fields to the Aura entity:
+The runtime Aura entity stays identical to the CLEU-visible shape (`casterUnitId`, `spellId`, `stacks`). Do **not** add `expiresAt`, `nextTickAt`, or `tickPeriodMs`; as stated in `00-data-flow.md`, the Event Queue is the single source of truth for timing.
 
-```typescript
-export const Aura = Schema.Struct({
-  casterUnitId: Branded.UnitIDSchema,
-  spellId: Branded.SpellIDSchema,
-  stacks: Schema.Number,
-  expiresAt: Schema.Number,
-  // Periodic tick fields (optional, only for DoTs/HoTs)
-  nextTickAt: Schema.optional(Schema.Number),
-  tickPeriodMs: Schema.optional(Schema.Number), // Snapshotted at application
-});
-```
-
-The `tickPeriodMs` is snapshotted at application time (includes haste). This ensures ticks remain consistent even if haste changes mid-duration.
+Tick period is snapshotted at application time (includes haste) and stored in the event payload, not on the entity. This ensures ticks remain consistent even if haste changes mid-duration.
 
 ## Tasks
 
@@ -35,24 +23,15 @@ if (auraData.tickPeriodMs > 0) {
     : auraData.tickPeriodMs;
 
   const firstTickDelay = auraData.tickOnApplication ? 0 : tickPeriodMs;
-  const nextTickAt = state.currentTime + firstTickDelay / 1000;
 
-  // Store tick info on aura
-  yield *
-    StateService.updateState((s) =>
-      s.mergeIn(["units", event.destGUID, "auras", "all", event.spellId], {
-        nextTickAt,
-        tickPeriodMs,
-      }),
-    );
-
+  // Schedule first tick - snapshot lives in the queued event, NOT on the aura entity
   emitter.emitAt(firstTickDelay, {
     _tag:
       auraData.periodicType === "heal"
         ? "SPELL_PERIODIC_HEAL"
         : "SPELL_PERIODIC_DAMAGE",
     ...event,
-    amount: 0, // Calculated by damage system
+    tickPeriodMs, // stash the snapshot on the queued event
   });
 }
 ```
@@ -61,7 +40,7 @@ if (auraData.tickPeriodMs > 0) {
 
 ```typescript
 export const handlePeriodicDamage = (
-  event: SpellPeriodicDamage,
+  event: SpellPeriodicDamage & { tickPeriodMs?: number },
   emitter: Emitter,
 ) =>
   Effect.gen(function* () {
@@ -70,52 +49,25 @@ export const handlePeriodicDamage = (
     if (!unit) return;
 
     const aura = unit.auras.all.get(event.spellId);
-    if (!aura) return;
+    if (!aura) return; // stale tick, aura already gone
 
-    // Stale check
-    if (!aura.nextTickAt || event.timestamp < aura.nextTickAt - 0.001) return;
+    const tickPeriodMs = event.tickPeriodMs ?? 0;
+    if (tickPeriodMs <= 0) return;
 
-    // Don't tick after aura expired (use > not >= to allow final tick)
-    if (state.currentTime > aura.expiresAt) return;
+    // Apply damage/heal logic...
 
-    // Use snapshotted tick period from aura
-    const tickPeriodMs = aura.tickPeriodMs;
-    if (!tickPeriodMs || tickPeriodMs <= 0) return;
-
-    // Schedule next tick
-    const nextTickAt = state.currentTime + tickPeriodMs / 1000;
-
-    // Only schedule if next tick would be before expiry
-    if (nextTickAt <= aura.expiresAt) {
-      yield* StateService.updateState((s) =>
-        s.setIn(
-          [
-            "units",
-            event.destGUID,
-            "auras",
-            "all",
-            event.spellId,
-            "nextTickAt",
-          ],
-          nextTickAt,
-        ),
-      );
-
-      emitter.emitAt(tickPeriodMs, {
-        _tag: "SPELL_PERIODIC_DAMAGE",
-        ...event,
-      });
-    }
+    // Schedule next tick (the snapshot stays with the queued event)
+    emitter.emitAt(tickPeriodMs, {
+      ...event,
+      tickPeriodMs,
+    });
   });
 ```
 
+Staleness is determined solely by aura presence—no timing fields on the entity.
+
 ### 3. Refresh Behavior
 
-On refresh, keep the current tick cycle running. The `nextTickAt` and `tickPeriodMs` are preserved - only `expiresAt` changes.
-
-```typescript
-// In refreshAura: don't touch nextTickAt or tickPeriodMs
-// The tick cycle continues uninterrupted with the original snapshot
-```
+Refreshing a periodic aura does not touch any entity fields—the tick cadence is controlled entirely by the already-scheduled periodic events. When a refresh occurs, you only reschedule the removal event; any previously queued ticks will keep firing so long as `getAura` returns the aura, and they become stale automatically once the aura is gone.
 
 This matches WoW behavior where refreshing a DoT doesn't reset the tick timer.

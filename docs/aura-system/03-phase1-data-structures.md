@@ -30,10 +30,10 @@ Add `AuraDataFlatSchema` alongside the existing `AuraSchema`:
 import * as Schema from "effect/Schema";
 import * as Branded from "./Branded.js";
 
-// Existing transient aura state (runtime aura instance on a unit)
+// Runtime aura state (CLEU-observable fields only per 00-data-flow.md)
+// Timing (expiresAt, nextTickAt) lives in the scheduler, not on the entity
 export const AuraSchema = Schema.Struct({
   casterUnitId: Branded.UnitIDSchema,
-  expiresAt: Schema.Number,
   spellId: Branded.SpellIDSchema,
   stacks: Schema.Number,
 });

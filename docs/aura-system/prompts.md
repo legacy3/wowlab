@@ -25,17 +25,18 @@ File: packages/wowlab-core/src/internal/schemas/Aura.ts
 ## Phase 2: Event Payloads
 
 ```
-TASK: Add instanceId to aura event payloads.
+TASK: Add tickPeriodMs to periodic event payloads.
 
 READ FIRST:
 - docs/wowlab/00-data-flow.md
-- docs/aura-system/ (find the event payload definitions)
+- docs/aura-system/06-phase4-periodic-ticks.md
 
 RULES:
 1. Implement EXACTLY what the docs say.
-2. If you're unsure about ANYTHING, stop and ask me.
+2. Timing data (tickPeriodMs snapshot) lives in event payloads, NOT on entities.
+3. If you're unsure about ANYTHING, stop and ask me.
 
-Events that need instanceId: SPELL_AURA_APPLIED, SPELL_AURA_REMOVED, SPELL_AURA_REFRESH, SPELL_PERIODIC_DAMAGE, SPELL_PERIODIC_HEAL
+Events that need tickPeriodMs: SPELL_PERIODIC_DAMAGE, SPELL_PERIODIC_HEAL
 ```
 
 ---
