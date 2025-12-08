@@ -8,12 +8,11 @@ import { UrlTabs } from "@/components/ui/url-tabs";
 import { ResultsOverview } from "./results-overview";
 import { TimelineContent } from "@/components/simulate/results/timeline";
 import { ChartsContent } from "@/components/simulate/results/charts";
+import { EventLogContent } from "@/components/simulate/results/event-log";
 import { jobsAtom } from "@/atoms/computing";
-import {
-  combatDataAtom,
-  timelineBoundsAtom,
-  type CombatData,
-} from "@/atoms/timeline";
+import { combatDataAtom, timelineBoundsAtom } from "@/atoms/timeline";
+import { transformEventsWithResources } from "@/lib/simulation/transform-events";
+import type { SimulationEvent } from "@/lib/simulation/types";
 
 function useLoadLocalJob() {
   const params = useParams();
@@ -28,77 +27,14 @@ function useLoadLocalJob() {
     const job = jobs.find((j) => j.id === jobId);
     if (!job?.result?.events) return;
 
-    // Transform simulation events to timeline format
-    const events = job.result.events as Array<{
-      type: string;
-      timestamp: number;
-      spellId?: number;
-      damage?: number;
-      isCrit?: boolean;
-      focus?: number;
-    }>;
+    // Events are CombatLogEvents with _tag discriminator (possibly mixed with ResourceSnapshots)
+    const events = job.result.events as SimulationEvent[];
 
-    const durationSec = job.result.durationMs / 1000;
-    let idx = 0;
-    const id = () => `evt-${idx++}`;
+    const durationMs = job.result.durationMs;
+    const durationSec = durationMs / 1000;
 
-    const casts: CombatData["casts"] = [];
-    const damage: CombatData["damage"] = [];
-    const resources: CombatData["resources"] = [];
-    const buffs: CombatData["buffs"] = [];
-
-    for (const evt of events) {
-      if (evt.type === "cast" && evt.spellId) {
-        casts.push({
-          type: "cast",
-          id: id(),
-          spellId: evt.spellId,
-          timestamp: evt.timestamp,
-          duration: 0,
-          target: "Target",
-          successful: true,
-        });
-      }
-
-      if (evt.type === "damage" && evt.spellId && evt.damage) {
-        damage.push({
-          type: "damage",
-          id: id(),
-          spellId: evt.spellId,
-          timestamp: evt.timestamp,
-          amount: evt.damage,
-          isCrit: evt.isCrit ?? false,
-          target: "Target",
-        });
-      }
-
-      if (evt.type === "resource" && evt.focus !== undefined) {
-        resources.push({
-          type: "resource",
-          id: id(),
-          timestamp: evt.timestamp,
-          focus: evt.focus,
-          maxFocus: 120,
-        });
-      }
-    }
-
-    const combatData: CombatData = {
-      casts,
-      damage,
-      resources,
-      buffs,
-      phases: [
-        {
-          type: "phase",
-          id: "p1",
-          name: "Combat",
-          start: 0,
-          end: durationSec,
-          color: "#3B82F6",
-        },
-      ],
-    };
+    // Transform using the proper event transformer
+    const combatData = transformEventsWithResources(events, durationMs);
 
     setCombatData(combatData);
     setBounds({ min: 0, max: durationSec });
@@ -126,6 +62,11 @@ export function SimulationResultTabs() {
           value: "charts",
           label: "Charts",
           content: <ChartsContent />,
+        },
+        {
+          value: "events",
+          label: "Event Log",
+          content: <EventLogContent />,
         },
       ]}
     />

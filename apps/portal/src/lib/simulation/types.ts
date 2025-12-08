@@ -2,6 +2,7 @@ import type * as Errors from "@wowlab/core/Errors";
 import type * as Schemas from "@wowlab/core/Schemas";
 import type * as Context from "@wowlab/rotation/Context";
 import type * as Effect from "effect/Effect";
+import type { ResourceSnapshot } from "./transform-events";
 
 /**
  * Definition for a rotation that can be run by the browser simulation.
@@ -29,10 +30,18 @@ export interface SimulationConfig {
 }
 
 /**
+ * Combined event type for simulation results.
+ * Includes both combat log events and resource snapshots.
+ */
+export type SimulationEvent =
+  | Schemas.CombatLog.CombatLogEvent
+  | ResourceSnapshot;
+
+/**
  * Result of a simulation run.
  */
 export interface SimulationResult {
-  events: Schemas.CombatLog.CombatLogEvent[];
+  events: SimulationEvent[];
   casts: number;
   durationMs: number;
   totalDamage: number;

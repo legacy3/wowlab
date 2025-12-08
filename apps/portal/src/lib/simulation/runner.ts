@@ -8,7 +8,12 @@ import * as Shared from "@wowlab/specs/Shared";
 import * as Effect from "effect/Effect";
 
 import type { BrowserRuntime } from "./runtime";
-import type { RotationDefinition, SimulationResult } from "./types";
+import type {
+  RotationDefinition,
+  SimulationEvent,
+  SimulationResult,
+} from "./types";
+import type { ResourceSnapshot } from "./transform-events";
 import { createPlayerWithSpells } from "./rotation-utils";
 
 export interface RunProgress {
@@ -19,11 +24,30 @@ export interface RunProgress {
 
 export type OnRunProgress = (progress: RunProgress) => void;
 
-// Event types we track for damage calculation
+/**
+ * Event types collected for timeline visualization.
+ * See docs/sim-integration/05-event-collection.md for details.
+ */
 const EVENT_STREAM_FILTER = [
+  // Casts
+  "SPELL_CAST_START",
   "SPELL_CAST_SUCCESS",
+  "SPELL_CAST_FAILED",
+
+  // Damage
   "SPELL_DAMAGE",
+  "SPELL_PERIODIC_DAMAGE",
+
+  // Auras
   "SPELL_AURA_APPLIED",
+  "SPELL_AURA_REMOVED",
+  "SPELL_AURA_REFRESH",
+  "SPELL_AURA_APPLIED_DOSE",
+  "SPELL_AURA_REMOVED_DOSE",
+
+  // Resources
+  "SPELL_ENERGIZE",
+  "SPELL_DRAIN",
 ] as const;
 
 /**
@@ -61,8 +85,8 @@ export async function runSimulationLoop(
       // Get SimDriver for event processing and time advancement
       const simDriver = yield* CombatLogService.SimDriver;
 
-      // Track results
-      const events: Schemas.CombatLog.CombatLogEvent[] = [];
+      // Track results - includes both combat log events and resource snapshots
+      const events: SimulationEvent[] = [];
       let casts = 0;
       let totalDamage = 0;
 
@@ -77,6 +101,30 @@ export async function runSimulationLoop(
           return Effect.void;
         },
       });
+
+      // Helper to emit resource snapshot
+      const emitResourceSnapshot = (
+        state: Entities.GameState.GameState,
+      ): void => {
+        const playerUnit = state.units.get(playerId);
+        if (!playerUnit) {
+          return;
+        }
+
+        const focusPower = playerUnit.power.get(Schemas.Enums.PowerType.Focus);
+        if (!focusPower) {
+          return;
+        }
+
+        const snapshot: ResourceSnapshot = {
+          _tag: "RESOURCE_SNAPSHOT",
+          timestamp: state.currentTime * 1000, // Convert to ms
+          focus: focusPower.current,
+          maxFocus: focusPower.max,
+        };
+
+        events.push(snapshot);
+      };
 
       // Main simulation loop (matches standalone pattern)
       while (true) {
@@ -94,10 +142,13 @@ export async function runSimulationLoop(
         // Advance simulation time by processing events up to currentTime + 100ms
         yield* simDriver.run(state.currentTime + 100);
 
-        // Report progress (every 10 ticks to reduce overhead)
+        // Emit resource snapshot after state changes (every 10 ticks to reduce data size)
         if (casts % 10 === 0) {
+          const updatedState = yield* stateService.getState();
+          emitResourceSnapshot(updatedState);
+
           onProgress?.({
-            currentTime: state.currentTime,
+            currentTime: updatedState.currentTime,
             totalTime: durationSeconds,
             casts,
           });
