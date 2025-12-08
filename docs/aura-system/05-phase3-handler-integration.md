@@ -201,7 +201,14 @@ export const handlePeriodicDamage = (
     if (nextTickAt <= aura.expiresAt) {
       yield* StateService.updateState((s) =>
         s.setIn(
-          ["units", event.destGUID, "auras", "all", event.spellId, "nextTickAt"],
+          [
+            "units",
+            event.destGUID,
+            "auras",
+            "all",
+            event.spellId,
+            "nextTickAt",
+          ],
           nextTickAt,
         ),
       );
