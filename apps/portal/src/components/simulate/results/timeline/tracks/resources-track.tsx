@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Group, Line, Rect, Text } from "react-konva";
-import { TRACK_METRICS, getZoomLevel } from "../hooks";
+import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 
 interface ResourcePoint {
   timestamp: number;

@@ -1,5 +1,6 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+
+import { createPersistedOrderAtom } from "../utils";
 
 // Mock data generators for simulation analytics
 
@@ -160,15 +161,7 @@ export const detailedDataAtom = atom<DetailedDataPoint[]>(
 // Chart order management
 export type ChartId = "dps" | "resource" | "ability" | "cooldown" | "detailed";
 
-const DEFAULT_CHART_ORDER: ChartId[] = [
-  "dps",
-  "resource",
-  "ability",
-  "cooldown",
-  "detailed",
-];
-
-export const chartsOrderAtom = atomWithStorage<ChartId[]>(
+export const chartsOrderAtom = createPersistedOrderAtom<ChartId>(
   "charts-order",
-  DEFAULT_CHART_ORDER,
+  ["dps", "resource", "ability", "cooldown", "detailed"],
 );

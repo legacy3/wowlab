@@ -44,7 +44,7 @@ export function SignInForm() {
           <Sparkles className="h-6 w-6 text-primary" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome to Innocent
+          Welcome to WoW Lab
         </h1>
         <p className="text-sm text-muted-foreground">
           World of Warcraft rotation simulation toolkit

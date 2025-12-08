@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import { Group, Rect, Text, Line } from "react-konva";
 import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
-import { TRACK_METRICS, getZoomLevel } from "../hooks";
+import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
 import { getSpellLabel, shouldShowLabel } from "../utils";
 
@@ -136,14 +136,18 @@ export const DebuffsTrack = memo(function DebuffsTrack({
   const getDebuffY = (pd: ProcessedDebuff): number => {
     let yPos = 0;
     const categoryIndex = TARGET_ORDER.indexOf(pd.targetCategory);
+
     for (let i = 0; i < categoryIndex; i++) {
       const cat = TARGET_ORDER[i];
       const lanes = targetLaneCounts[cat];
+
       if (lanes > 0) {
         yPos += lanes * (debuffHeight + debuffGap);
       }
     }
+
     yPos += pd.laneIndex * (debuffHeight + debuffGap);
+
     return yPos;
   };
 

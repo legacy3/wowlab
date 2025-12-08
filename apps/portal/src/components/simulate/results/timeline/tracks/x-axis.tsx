@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Group, Line, Text } from "react-konva";
-import { TRACK_METRICS } from "../hooks";
+import { TRACK_METRICS } from "@/hooks/timeline";
 import { formatTime, generateTicks, filterVisibleTicks } from "../utils";
 
 interface XAxisProps {

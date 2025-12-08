@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Group, Text } from "react-konva";
 import type { TrackId } from "@/atoms/timeline";
-import { TRACK_CONFIGS } from "../hooks";
+import { TRACK_CONFIGS } from "@/hooks/timeline";
 
 interface TrackLayout {
   y: number;

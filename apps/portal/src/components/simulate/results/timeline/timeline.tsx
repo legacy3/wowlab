@@ -41,15 +41,17 @@ import { formatTime } from "./utils";
 
 import {
   useZoom,
-  useScales,
-  useTrackLayout,
   useResizeObserver,
   useExport,
   useDragPan,
   useFpsCounter,
+} from "@/hooks/canvas";
+import {
+  useScales,
+  useTrackLayout,
   TRACK_CONFIGS,
   TRACK_METRICS,
-} from "./hooks";
+} from "@/hooks/timeline";
 
 import { type TooltipState } from "./timeline-context";
 import { TimelineTooltip } from "./timeline-tooltip";

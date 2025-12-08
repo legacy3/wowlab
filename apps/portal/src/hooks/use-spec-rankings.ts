@@ -1,10 +1,8 @@
-import { useList } from "@refinedev/core";
 import type { SpecRankingRow } from "@/lib/supabase/types";
+import { useSupabaseView } from "./use-supabase-view";
 
 export function useSpecRankings() {
-  return useList<SpecRankingRow>({
-    resource: "view_spec_rankings_hourly",
-    sorters: [{ field: "avgDps", order: "desc" }],
-    pagination: { pageSize: 10 },
-  });
+  return useSupabaseView<SpecRankingRow>("view_spec_rankings_hourly", [
+    { field: "avgDps", order: "desc" },
+  ]);
 }

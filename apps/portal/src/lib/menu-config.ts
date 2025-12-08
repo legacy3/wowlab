@@ -1,5 +1,4 @@
 import {
-  Bug,
   Crown,
   FileCode,
   GitBranch,
@@ -66,8 +65,5 @@ export const menuConfig: MenuGroup[] = [
     item("Changelog", "/changelog", ScrollText),
     link("GitHub", env.GITHUB_REPO_URL, GitBranch),
     link("MCP Server", `${env.GITHUB_REPO_URL}/tree/main/apps/mcp-server`, Plug),
-  ]),
-  group("Debug", [
-    item("Simulation", "/debug/simulation", Bug),
   ]),
 ];

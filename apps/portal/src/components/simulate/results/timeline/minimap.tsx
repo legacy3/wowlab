@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Stage, Layer, Group, Rect } from "react-konva";
 import type { CastEvent } from "@/atoms/timeline";
-import { TRACK_METRICS } from "./hooks";
+import { TRACK_METRICS } from "@/hooks/timeline";
 
 const { margin: MARGIN, minimapHeight: MINIMAP_HEIGHT } = TRACK_METRICS;
 
@@ -39,6 +39,7 @@ export const Minimap = memo(function Minimap({
   const timeToX = useCallback(
     (time: number) => {
       const ratio = (time - bounds.min) / (bounds.max - bounds.min);
+
       return ratio * innerWidth;
     },
     [bounds, innerWidth],
@@ -113,6 +114,7 @@ export const Minimap = memo(function Minimap({
 
     casts.forEach((c) => {
       const bucket = Math.floor((c.timestamp - bounds.min) / bucketSize);
+
       if (bucket >= 0 && bucket < minimapDensityBuckets) {
         buckets[bucket]++;
       }

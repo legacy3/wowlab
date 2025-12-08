@@ -1,19 +1,13 @@
 "use client";
 
-import { atomWithStorage } from "jotai/utils";
+import { createPersistedOrderAtom } from "../utils";
 
 export type TopGearCardId =
   | "current-gear"
   | "optimization-status"
   | "upgrade-path";
 
-const DEFAULT_TOP_GEAR_CARD_ORDER: TopGearCardId[] = [
-  "current-gear",
-  "optimization-status",
-  "upgrade-path",
-];
-
-export const topGearCardOrderAtom = atomWithStorage<TopGearCardId[]>(
+export const topGearCardOrderAtom = createPersistedOrderAtom<TopGearCardId>(
   "top-gear-card-order",
-  [...DEFAULT_TOP_GEAR_CARD_ORDER],
+  ["current-gear", "optimization-status", "upgrade-path"],
 );
