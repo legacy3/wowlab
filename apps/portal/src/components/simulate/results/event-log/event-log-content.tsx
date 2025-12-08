@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copy-button";
 import { WowSpellLink } from "@/components/game";
 import { jobsAtom } from "@/atoms/computing";
 import type { SimulationEvent } from "@/lib/simulation/types";
@@ -171,6 +172,10 @@ export function EventLogContent() {
     });
   }, [displayEvents, filter, categoryFilter]);
 
+  const exportJson = useMemo(() => {
+    return JSON.stringify(filteredEvents, null, 2);
+  }, [filteredEvents]);
+
   const categories: (EventCategory | "all")[] = [
     "all",
     "cast",
@@ -194,9 +199,12 @@ export function EventLogContent() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">
-              Event Log ({filteredEvents.length.toLocaleString()} events)
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">
+                Event Log ({filteredEvents.length.toLocaleString()} events)
+              </CardTitle>
+              <CopyButton value={exportJson} />
+            </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <Badge
