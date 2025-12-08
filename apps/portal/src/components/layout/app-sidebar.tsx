@@ -35,7 +35,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-bold">WoW Lab</span>
                   <span className="text-xs text-sidebar-foreground/70">
-                    Rotation Sim
+                    Simulator Toolkit
                   </span>
                 </div>
               </Link>
