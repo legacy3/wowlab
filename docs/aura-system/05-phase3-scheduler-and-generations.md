@@ -6,8 +6,20 @@ Implement the core scheduling logic with generation-based validity checking.
 
 ## Prerequisites
 
-- Phase 1 complete (data structures)
-- Phase 2 complete (AuraDefinitionService)
+- Phase 1 complete (`AuraDataFlat` schema and constants)
+- Phase 2 complete (`AuraService` and `transformAura`)
+
+## Architecture
+
+**Runtime state lives in wowlab-services**, not wowlab-core.
+
+```
+AuraDataFlat (wowlab-core)     ← Static definition from DBC
+       ↓
+AuraScheduleState (wowlab-services)  ← Runtime scheduling state
+       ↓
+Unit.auras.meta.schedules      ← Per-unit schedule tracking
+```
 
 ## The Key Insight
 
@@ -20,34 +32,81 @@ We cannot cancel events from TinyQueue. Instead:
 
 ## Tasks
 
-### 1. Create RefreshCalculator
+### 1. Create AuraScheduleState Type
+
+**File:** `packages/wowlab-services/src/internal/aura/AuraScheduleState.ts`
+
+This is runtime state, NOT a Schema.Class. Plain TypeScript interface.
+
+```typescript
+import type { RefreshBehavior } from "@wowlab/core/Schemas";
+
+/**
+ * Runtime scheduling state for an active aura.
+ * Stored in Unit.auras.meta.schedules (Immutable.Map).
+ *
+ * This is NOT static definition data - it changes during simulation.
+ */
+export interface AuraScheduleState {
+  // Removal scheduling
+  readonly removalAt: number; // When removal is scheduled (seconds, sim time)
+  readonly removalGeneration: number; // Incremented on each reschedule
+
+  // Tick scheduling
+  readonly tickAt: number | undefined;
+  readonly tickGeneration: number;
+  readonly tickProgress: number | undefined; // Fraction of current tick elapsed (0-1)
+
+  // Cached from AuraDataFlat (avoid repeated lookups)
+  readonly baseDurationMs: number;
+  readonly pandemicCapMs: number; // baseDuration * 0.3
+  readonly refreshBehavior: RefreshBehavior;
+  readonly tickPeriodMs: number; // 0 if not periodic
+  readonly hastedTicks: boolean;
+  readonly tickOnApplication: boolean;
+  readonly stackCap: number;
+
+  // For haste calculations
+  readonly casterUnitId: string;
+  readonly hasteSnapshot: number | undefined; // Snapshot haste at application
+}
+
+/**
+ * Create a new schedule state (immutable update).
+ */
+export function updateScheduleState(
+  state: AuraScheduleState,
+  updates: Partial<AuraScheduleState>,
+): AuraScheduleState {
+  return { ...state, ...updates };
+}
+```
+
+### 2. Create RefreshCalculator
 
 **File:** `packages/wowlab-services/src/internal/aura/RefreshCalculator.ts`
 
 ```typescript
-import type {
-  AuraDefinition,
-  AuraScheduleState,
-  RefreshBehavior,
-} from "@wowlab/core/schemas/aura";
+import type { AuraDataFlat, RefreshBehavior } from "@wowlab/core/Schemas";
+import type { AuraScheduleState } from "./AuraScheduleState.js";
 
 /**
  * Calculate new duration when refreshing an aura.
  *
  * @param currentTime - Current simulation time (seconds)
  * @param schedule - Current schedule state
- * @param definition - Aura definition with refresh behavior
+ * @param auraData - Aura definition with refresh behavior
  * @returns New duration in milliseconds, or 0 if refresh is disabled
  */
 export function resolveRefreshDuration(
   currentTime: number,
   schedule: AuraScheduleState,
-  definition: AuraDefinition,
+  auraData: AuraDataFlat,
 ): number {
   const remainingMs = Math.max(0, (schedule.removalAt - currentTime) * 1000);
-  const baseMs = definition.baseDurationMs;
+  const baseMs = auraData.baseDurationMs;
 
-  switch (definition.refreshBehavior) {
+  switch (auraData.refreshBehavior) {
     case "disabled":
       return 0;
 
@@ -65,16 +124,12 @@ export function resolveRefreshDuration(
 
     case "tick": {
       const tickProgress = schedule.tickProgress ?? 0;
-      const tickCarry = tickProgress * (definition.tickPeriodMs ?? 0);
+      const tickCarry = tickProgress * auraData.tickPeriodMs;
       return baseMs + tickCarry;
     }
 
     case "max":
       return Math.max(remainingMs, baseMs);
-
-    case "custom":
-      // Future: per-spell callbacks
-      return baseMs;
 
     default:
       return baseMs;
@@ -94,36 +149,28 @@ export function getHastedTickPeriod(
 }
 ```
 
-### 2. Create AuraScheduler Service
+### 3. Create AuraScheduler Functions
 
 **File:** `packages/wowlab-services/src/internal/aura/AuraScheduler.ts`
 
 ```typescript
-import { Effect } from "effect";
-import { Map as ImmutableMap } from "immutable";
-import type {
-  AuraDefinition,
-  AuraScheduleState,
-} from "@wowlab/core/schemas/aura";
-import type { SpellID, UnitID } from "@wowlab/core/branded";
+import type { AuraDataFlat, Branded } from "@wowlab/core/Schemas";
 import type { Emitter } from "../combat-log/Emitter.js";
-import {
-  resolveRefreshDuration,
-  getHastedTickPeriod,
-} from "./RefreshCalculator.js";
+import type { AuraScheduleState } from "./AuraScheduleState.js";
+import { resolveRefreshDuration } from "./RefreshCalculator.js";
 
 /**
  * Create initial schedule state when applying an aura.
  */
 export function createScheduleState(
-  definition: AuraDefinition,
+  auraData: AuraDataFlat,
   casterUnitId: string,
   currentTime: number,
   hasteSnapshot?: number,
 ): AuraScheduleState {
   const removalAt =
-    definition.baseDurationMs > 0
-      ? currentTime + definition.baseDurationMs / 1000
+    auraData.baseDurationMs > 0
+      ? currentTime + auraData.baseDurationMs / 1000
       : Infinity; // Permanent buff
 
   return {
@@ -132,45 +179,47 @@ export function createScheduleState(
     tickGeneration: 0,
     tickAt: undefined,
     tickProgress: undefined,
-    baseDurationMs: definition.baseDurationMs,
-    pandemicCapMs: definition.baseDurationMs * 0.3,
-    refreshBehavior: definition.refreshBehavior,
-    tickPeriodMs: definition.tickPeriodMs,
-    hastedTicks: definition.flags.hastedTicks,
-    tickOnApplication: definition.flags.tickOnApplication,
-    stackCap: definition.maxStacks,
+    baseDurationMs: auraData.baseDurationMs,
+    pandemicCapMs: auraData.baseDurationMs * 0.3,
+    refreshBehavior: auraData.refreshBehavior,
+    tickPeriodMs: auraData.tickPeriodMs,
+    hastedTicks: auraData.hastedTicks,
+    tickOnApplication: auraData.tickOnApplication,
+    stackCap: auraData.maxStacks,
     casterUnitId,
     hasteSnapshot,
   };
 }
 
 /**
+ * Event base fields needed for scheduling removal events.
+ */
+export interface RemovalEventBase {
+  sourceGUID: string;
+  sourceName: string;
+  sourceFlags: number;
+  sourceRaidFlags: number;
+  destGUID: string;
+  destName: string;
+  destFlags: number;
+  destRaidFlags: number;
+  spellId: number;
+  spellName: string;
+  spellSchool: number;
+}
+
+/**
  * Schedule aura removal event.
- *
- * @param emitter - Event emitter
- * @param schedule - Current schedule state (will be mutated)
- * @param eventBase - Base fields for the SPELL_AURA_REMOVED event
  */
 export function scheduleRemoval(
   emitter: Emitter,
   schedule: AuraScheduleState,
-  eventBase: {
-    sourceGUID: string;
-    sourceName: string;
-    sourceFlags: number;
-    sourceRaidFlags: number;
-    destGUID: string;
-    destName: string;
-    destFlags: number;
-    destRaidFlags: number;
-    spellId: number;
-    spellName: string;
-    spellSchool: number;
-  },
+  eventBase: RemovalEventBase,
+  currentTime: number,
 ): void {
   if (schedule.baseDurationMs <= 0) return; // Permanent, no removal
 
-  const delayMs = (schedule.removalAt - emitter.currentTime) * 1000;
+  const delayMs = (schedule.removalAt - currentTime) * 1000;
   if (delayMs <= 0) return; // Already expired
 
   emitter.emitAt(Math.max(0, delayMs), {
@@ -185,43 +234,36 @@ export function scheduleRemoval(
 
 /**
  * Reschedule aura removal after a refresh.
- *
- * @param emitter - Event emitter
- * @param schedule - Current schedule state (will be mutated)
- * @param definition - Aura definition
- * @param eventBase - Base event fields
- * @returns New removal time, or 0 if refresh is disabled
+ * Returns updated schedule state and new duration.
  */
 export function rescheduleRemoval(
   emitter: Emitter,
   schedule: AuraScheduleState,
-  definition: AuraDefinition,
-  eventBase: Parameters<typeof scheduleRemoval>[2],
-): number {
-  const newDurationMs = resolveRefreshDuration(
-    emitter.currentTime,
-    schedule,
-    definition,
-  );
+  auraData: AuraDataFlat,
+  eventBase: RemovalEventBase,
+  currentTime: number,
+): { schedule: AuraScheduleState; newDurationMs: number } {
+  const newDurationMs = resolveRefreshDuration(currentTime, schedule, auraData);
 
-  if (newDurationMs === 0) return 0; // Refresh disabled
+  if (newDurationMs === 0) {
+    return { schedule, newDurationMs: 0 }; // Refresh disabled
+  }
 
-  // Increment generation to invalidate any pending removal
-  schedule.removalGeneration++;
-  schedule.removalAt = emitter.currentTime + newDurationMs / 1000;
+  // Create new schedule with incremented generation
+  const newSchedule: AuraScheduleState = {
+    ...schedule,
+    removalGeneration: schedule.removalGeneration + 1,
+    removalAt: currentTime + newDurationMs / 1000,
+  };
 
   // Schedule new removal
-  scheduleRemoval(emitter, schedule, eventBase);
+  scheduleRemoval(emitter, newSchedule, eventBase, currentTime);
 
-  return newDurationMs;
+  return { schedule: newSchedule, newDurationMs };
 }
 
 /**
  * Check if a removal event is still valid.
- *
- * @param event - The SPELL_AURA_REMOVED event
- * @param schedule - Current schedule state
- * @returns true if the event should be processed, false if stale
  */
 export function isRemovalValid(
   event: { timestamp: number; _removalGeneration?: number },
@@ -246,77 +288,79 @@ export function isRemovalValid(
 }
 
 /**
- * Mark an aura for immediate removal (dispel, death, etc.).
- * Sets generation to -1 so any pending scheduled removal will be ignored.
+ * Invalidate schedule for immediate removal (dispel, death, etc.).
  */
-export function invalidateSchedule(schedule: AuraScheduleState): void {
-  schedule.removalGeneration = -1;
-  schedule.tickGeneration = -1;
+export function invalidateSchedule(
+  schedule: AuraScheduleState,
+): AuraScheduleState {
+  return {
+    ...schedule,
+    removalGeneration: -1,
+    tickGeneration: -1,
+  };
 }
 ```
 
-### 3. Create ScheduleState Helpers for Unit
+### 4. Create Schedule State Helpers for Unit
 
 **File:** `packages/wowlab-services/src/internal/aura/ScheduleStateHelpers.ts`
 
 ```typescript
 import { Map as ImmutableMap } from "immutable";
-import type { Unit } from "@wowlab/core/entities";
-import type { AuraScheduleState } from "@wowlab/core/schemas/aura";
-import type { SpellID } from "@wowlab/core/branded";
+import type { Unit } from "@wowlab/core/Entities";
+import type { Branded } from "@wowlab/core/Schemas";
+import type { AuraScheduleState } from "./AuraScheduleState.js";
 
 /**
  * Get schedule state for an aura on a unit.
  */
 export function getSchedule(
-  unit: Unit,
-  spellId: SpellID,
+  schedules: ImmutableMap<Branded.SpellID, AuraScheduleState>,
+  spellId: Branded.SpellID,
 ): AuraScheduleState | undefined {
-  return unit.auras.meta.schedules?.get(spellId);
+  return schedules.get(spellId);
 }
 
 /**
- * Set schedule state for an aura on a unit.
- * Returns a new Unit instance (immutable update).
+ * Set schedule state for an aura.
+ * Returns new schedules map (immutable).
  */
 export function setSchedule(
-  unit: Unit,
-  spellId: SpellID,
+  schedules: ImmutableMap<Branded.SpellID, AuraScheduleState>,
+  spellId: Branded.SpellID,
   schedule: AuraScheduleState,
-): Unit {
-  const currentSchedules = unit.auras.meta.schedules ?? ImmutableMap();
-  const newSchedules = currentSchedules.set(spellId, schedule);
-
-  return unit.setIn(["auras", "meta", "schedules"], newSchedules);
+): ImmutableMap<Branded.SpellID, AuraScheduleState> {
+  return schedules.set(spellId, schedule);
 }
 
 /**
- * Delete schedule state for an aura on a unit.
- * Returns a new Unit instance (immutable update).
+ * Delete schedule state for an aura.
+ * Returns new schedules map (immutable).
  */
-export function deleteSchedule(unit: Unit, spellId: SpellID): Unit {
-  const currentSchedules = unit.auras.meta.schedules;
-  if (!currentSchedules) return unit;
-
-  const newSchedules = currentSchedules.delete(spellId);
-  return unit.setIn(["auras", "meta", "schedules"], newSchedules);
+export function deleteSchedule(
+  schedules: ImmutableMap<Branded.SpellID, AuraScheduleState>,
+  spellId: Branded.SpellID,
+): ImmutableMap<Branded.SpellID, AuraScheduleState> {
+  return schedules.delete(spellId);
 }
 ```
 
-### 4. Update Index Export
+### 5. Create Index Export
 
 **File:** `packages/wowlab-services/src/internal/aura/index.ts`
 
 ```typescript
-export {
-  AuraDefinitionService,
-  SpellNotFoundError,
-} from "./AuraDefinitionService.js";
-export { AuraDefinitionServiceLive } from "./AuraDefinitionServiceImpl.js";
+export { AuraService, AuraNotFoundError } from "./AuraService.js";
+export { AuraServiceLive } from "./AuraServiceImpl.js";
+
+export type { AuraScheduleState } from "./AuraScheduleState.js";
+export { updateScheduleState } from "./AuraScheduleState.js";
+
 export {
   resolveRefreshDuration,
   getHastedTickPeriod,
 } from "./RefreshCalculator.js";
+
 export {
   createScheduleState,
   scheduleRemoval,
@@ -324,6 +368,9 @@ export {
   isRemovalValid,
   invalidateSchedule,
 } from "./AuraScheduler.js";
+
+export type { RemovalEventBase } from "./AuraScheduler.js";
+
 export {
   getSchedule,
   setSchedule,
@@ -337,26 +384,46 @@ Test the refresh calculation:
 
 ```typescript
 import { resolveRefreshDuration } from "./RefreshCalculator.js";
+import type { AuraScheduleState } from "./AuraScheduleState.js";
+import type { AuraDataFlat } from "@wowlab/core/Schemas";
 
 // Test pandemic refresh
 const schedule: AuraScheduleState = {
   removalAt: 10.0, // Expires at t=10
   removalGeneration: 1,
+  tickGeneration: 0,
+  tickAt: undefined,
+  tickProgress: undefined,
   baseDurationMs: 12000, // 12s base
   pandemicCapMs: 3600, // 30% = 3.6s
   refreshBehavior: "pandemic",
-  // ... other fields
+  tickPeriodMs: 0,
+  hastedTicks: false,
+  tickOnApplication: false,
+  stackCap: 1,
+  casterUnitId: "player",
+  hasteSnapshot: undefined,
 };
 
-const definition: AuraDefinition = {
+const auraData: AuraDataFlat = {
+  spellId: 172 as any,
   baseDurationMs: 12000,
+  maxDurationMs: 12000,
+  maxStacks: 1,
+  tickPeriodMs: 0,
+  periodicType: null,
   refreshBehavior: "pandemic",
-  // ... other fields
+  pandemicRefresh: true,
+  hastedTicks: false,
+  tickOnApplication: false,
+  durationHasted: false,
+  rollingPeriodic: false,
+  tickMayCrit: false,
 };
 
 // At t=6, remaining = 4s
 const currentTime = 6.0;
-const newDuration = resolveRefreshDuration(currentTime, schedule, definition);
+const newDuration = resolveRefreshDuration(currentTime, schedule, auraData);
 
 // Expected: 12000 + min(4000, 3600) = 15600ms
 console.assert(newDuration === 15600);
@@ -370,7 +437,7 @@ import { isRemovalValid } from "./AuraScheduler.js";
 const schedule: AuraScheduleState = {
   removalAt: 10.0,
   removalGeneration: 3,
-  // ...
+  // ... other fields
 };
 
 // Stale event (wrong generation)

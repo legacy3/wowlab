@@ -2,22 +2,51 @@
 
 ## Goal
 
-Create the core data structures needed for the aura scheduling system.
+Create the core data structures needed for the aura scheduling system, following the established `SpellDataFlat` / `ItemDataFlat` pattern.
 
 ## Prerequisites
 
 - Read `00-overview.md` to understand the problem
 - Read `02-reference-spell-data.md` to understand spell attributes
 
+## Architecture Decision
+
+**Pattern:** Follow the existing flat schema pattern used by `SpellDataFlat` and `ItemDataFlat`.
+
+**Why not nested Schema.Class?**
+
+- Consistency with existing data layer
+- Simpler serialization/caching
+- Mechanical transforms from DBC tables
+- Separates static definition data from runtime scheduling state
+
+**Data separation:**
+
+1. `AuraDataFlat` (wowlab-core) - Static aura definition from DBC tables
+2. `AuraScheduleState` (wowlab-services) - Runtime scheduling state for simulation
+
 ## Tasks
 
-### 1. Create RefreshBehavior Type
+### 1. Create AuraDataFlat Schema
 
-**File:** `packages/wowlab-core/src/internal/schemas/aura/RefreshBehavior.ts`
+**File:** `packages/wowlab-core/src/internal/schemas/Aura.ts`
+
+Add `AuraDataFlat` alongside the existing `Aura` schema:
 
 ```typescript
-import { Schema } from "effect";
+import * as Schema from "effect/Schema";
+import * as Branded from "./Branded.js";
 
+// Existing transient aura state (keep as-is)
+export const Aura = Schema.Struct({
+  casterUnitId: Branded.UnitIDSchema,
+  expiresAt: Schema.Number,
+  spellId: Branded.SpellIDSchema,
+  stacks: Schema.Number,
+});
+export type Aura = Schema.Schema.Type<typeof Aura>;
+
+// Refresh behavior for aura reapplication
 export const RefreshBehavior = Schema.Literal(
   "disabled", // No refresh allowed
   "duration", // Replace duration entirely (non-periodic default)
@@ -25,92 +54,50 @@ export const RefreshBehavior = Schema.Literal(
   "extend", // Add full duration to remaining
   "tick", // Carry residual tick fraction
   "max", // Keep maximum of remaining vs new
-  "custom", // Per-spell callback (future)
 );
-
 export type RefreshBehavior = Schema.Schema.Type<typeof RefreshBehavior>;
-```
 
-### 2. Create AuraFlags Schema
+// Periodic effect type
+export const PeriodicType = Schema.Literal(
+  "damage",
+  "heal",
+  "trigger",
+  "energize",
+);
+export type PeriodicType = Schema.Schema.Type<typeof PeriodicType>;
 
-**File:** `packages/wowlab-core/src/internal/schemas/aura/AuraFlags.ts`
+// Flat aura definition - mirrors SpellDataFlat pattern
+export const AuraDataFlatSchema = Schema.Struct({
+  // Core
+  spellId: Branded.SpellIDSchema,
 
-```typescript
-import { Schema } from "effect";
+  // Duration (from spell_duration via spell_misc.DurationIndex)
+  baseDurationMs: Schema.Number,
+  maxDurationMs: Schema.Number,
 
-export class AuraFlags extends Schema.Class<AuraFlags>("AuraFlags")({
+  // Stacking (from spell_aura_options.CumulativeAura)
+  maxStacks: Schema.Number, // 0 or 1 means no stacking
+
+  // Periodic (from spell_effect where EffectAura is periodic type)
+  tickPeriodMs: Schema.Number, // 0 if not periodic
+  periodicType: Schema.NullOr(PeriodicType), // null if not periodic
+
+  // Refresh behavior (derived from attributes + periodic status)
+  refreshBehavior: RefreshBehavior,
+
+  // Behavior flags (flattened from spell_misc.Attributes_*)
   pandemicRefresh: Schema.Boolean, // SX_REFRESH_EXTENDS_DURATION (436)
   hastedTicks: Schema.Boolean, // SX_DOT_HASTED (173)
   tickOnApplication: Schema.Boolean, // SX_TICK_ON_APPLICATION (169)
   durationHasted: Schema.Boolean, // SX_DURATION_HASTED (273)
   rollingPeriodic: Schema.Boolean, // SX_ROLLING_PERIODIC (334)
   tickMayCrit: Schema.Boolean, // SX_TICK_MAY_CRIT (265)
-}) {}
+});
+
+export type AuraDataFlat = Schema.Schema.Type<typeof AuraDataFlatSchema>;
 ```
 
-### 3. Create AuraDefinition Schema
-
-**File:** `packages/wowlab-core/src/internal/schemas/aura/AuraDefinition.ts`
-
-```typescript
-import { Schema } from "effect";
-import { RefreshBehavior } from "./RefreshBehavior.js";
-import { AuraFlags } from "./AuraFlags.js";
-
-export const PeriodicType = Schema.Literal("damage", "heal");
-export type PeriodicType = Schema.Schema.Type<typeof PeriodicType>;
-
-export class AuraDefinition extends Schema.Class<AuraDefinition>(
-  "AuraDefinition",
-)({
-  spellId: Schema.Number,
-  baseDurationMs: Schema.Number, // From SpellDuration table
-  maxStacks: Schema.Number, // From SpellAuraOptions.CumulativeAura (default 1)
-  tickPeriodMs: Schema.optionalWith(Schema.Number, { exact: true }), // From SpellEffect.EffectAuraPeriod
-  periodicType: Schema.optionalWith(PeriodicType, { exact: true }), // "damage" or "heal" based on EffectAura
-  refreshBehavior: RefreshBehavior,
-  flags: AuraFlags,
-}) {}
-```
-
-### 4. Create AuraScheduleState Schema
-
-**File:** `packages/wowlab-core/src/internal/schemas/aura/AuraScheduleState.ts`
-
-This is the key structure that tracks scheduled events for validity checking.
-
-```typescript
-import { Schema } from "effect";
-import { RefreshBehavior } from "./RefreshBehavior.js";
-
-export class AuraScheduleState extends Schema.Class<AuraScheduleState>(
-  "AuraScheduleState",
-)({
-  // Removal scheduling
-  removalAt: Schema.Number, // When removal is scheduled (seconds, sim time)
-  removalGeneration: Schema.Number, // Incremented on each reschedule
-
-  // Tick scheduling
-  tickAt: Schema.optionalWith(Schema.Number, { exact: true }),
-  tickGeneration: Schema.Number,
-  tickProgress: Schema.optionalWith(Schema.Number, { exact: true }), // Fraction of current tick elapsed
-
-  // Cached from spell data (avoid re-lookups)
-  baseDurationMs: Schema.Number,
-  pandemicCapMs: Schema.Number, // baseDuration * 0.3
-  refreshBehavior: RefreshBehavior,
-  tickPeriodMs: Schema.optionalWith(Schema.Number, { exact: true }),
-  hastedTicks: Schema.Boolean,
-  tickOnApplication: Schema.Boolean,
-  stackCap: Schema.Number,
-
-  // For haste calculations
-  casterUnitId: Schema.String,
-  hasteSnapshot: Schema.optionalWith(Schema.Number, { exact: true }),
-}) {}
-```
-
-### 5. Create Spell Attribute Constants
+### 2. Create Spell Attribute Constants
 
 **File:** `packages/wowlab-core/src/internal/constants/SpellAttributes.ts`
 
@@ -141,7 +128,20 @@ export const SX_CANNOT_CRIT = 93;
 export const SX_ALWAYS_HIT = 114;
 export const SX_NO_THREAT = 42;
 
-// Helper function
+/**
+ * Check if a spell has a specific attribute.
+ * Attributes are stored as bitmasks in Attributes_0 through Attributes_15.
+ *
+ * @param attributes - Object with Attributes_0 through Attributes_15 keys
+ * @param attribute - The attribute constant (e.g., SX_DOT_HASTED = 173)
+ * @returns true if the attribute is set
+ *
+ * @example
+ * // SX_REFRESH_EXTENDS_DURATION = 436
+ * // Column 13, Bit 20, so Attributes_13 & (1 << 20)
+ * const attrs = { Attributes_13: 1048576 }; // 1 << 20
+ * hasSpellAttribute(attrs, 436) // true
+ */
 export function hasSpellAttribute(
   attributes: Record<string, number>,
   attribute: number,
@@ -154,45 +154,33 @@ export function hasSpellAttribute(
 }
 ```
 
-### 6. Update Unit.AuraCollection Meta Type
+### 3. Create Constants Index
 
-**File:** `packages/wowlab-core/src/internal/entities/Unit.ts`
-
-Update the `AuraCollection` interface to properly type the `meta` field:
+**File:** `packages/wowlab-core/src/internal/constants/index.ts`
 
 ```typescript
-import { Map as ImmutableMap } from "immutable";
-import type { AuraScheduleState } from "../schemas/aura/AuraScheduleState.js";
-import type { SpellID } from "../branded/SpellID.js";
-
-interface AuraCollectionMeta {
-  schedules: ImmutableMap<SpellID, AuraScheduleState>;
-}
-
-interface AuraCollection {
-  all: ImmutableMap<SpellID, Aura>;
-  meta: AuraCollectionMeta;
-}
+export * from "./SpellAttributes.js";
 ```
 
-### 7. Create Index File
+### 4. Export from wowlab-core
 
-**File:** `packages/wowlab-core/src/internal/schemas/aura/index.ts`
+Update the main exports to include the new types:
 
-```typescript
-export { RefreshBehavior } from "./RefreshBehavior.js";
-export { AuraFlags } from "./AuraFlags.js";
-export { AuraDefinition, PeriodicType } from "./AuraDefinition.js";
-export { AuraScheduleState } from "./AuraScheduleState.js";
-```
+**File:** `packages/wowlab-core/src/Schemas.ts` (or appropriate export file)
+
+Add exports for:
+
+- `AuraDataFlat`, `AuraDataFlatSchema`
+- `RefreshBehavior`
+- `PeriodicType`
+- `hasSpellAttribute` and spell attribute constants
 
 ## Verification
 
 After implementation, verify:
 
-1. All schemas compile without errors
-2. `AuraScheduleState` can be created and serialized
-3. `hasSpellAttribute` correctly decodes bitmasks:
+1. All schemas compile without errors: `pnpm build`
+2. `hasSpellAttribute` correctly decodes bitmasks:
    ```typescript
    // Test: SX_REFRESH_EXTENDS_DURATION = 436
    // Column 13, Bit 20, so Attributes_13 & (1 << 20)
@@ -200,6 +188,12 @@ After implementation, verify:
    assert(hasSpellAttribute(attrs, 436) === true);
    ```
 
+## What's NOT in Phase 1
+
+- `AuraScheduleState` - This is runtime state, belongs in wowlab-services (Phase 3)
+- `AuraDefinitionService` - This transforms DBC → AuraDataFlat (Phase 2)
+- `AuraCollectionMeta` changes to Unit - Deferred until scheduler is implemented (Phase 3)
+
 ## Next Phase
 
-Once complete, proceed to `04-phase2-aura-definition-service.md` to implement loading spell data.
+Once complete, proceed to `04-phase2-aura-definition-service.md` to implement the transformer and service.
