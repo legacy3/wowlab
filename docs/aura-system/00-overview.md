@@ -1,69 +1,60 @@
-# WoWLab Aura System Implementation
-
-This directory contains the implementation plan for a proper aura/buff system in WoWLab, based on analysis of SimulationCraft's approach.
+# WoWLab Aura System
 
 ## Document Structure
 
-| Phase | Document                                 | Description                                           |
-| ----- | ---------------------------------------- | ----------------------------------------------------- |
-| 0     | `00-overview.md`                         | This file - overview and context                      |
-| 1     | `01-reference-simc-behaviors.md`         | SimC aura behaviors reference (read-only)             |
-| 2     | `02-reference-spell-data.md`             | Spell data sources and attribute bitmasks (read-only) |
-| 3     | `03-phase1-data-structures.md`           | Implement core data structures                        |
-| 4     | `04-phase2-aura-definition-service.md`   | Implement spell data loading                          |
-| 5     | `05-phase3-scheduler-and-generations.md` | Implement generation-based scheduling                 |
-| 6     | `06-phase4-handler-integration.md`       | Integrate with existing handlers                      |
-| 7     | `07-phase5-periodic-ticks.md`            | Implement periodic tick scheduling                    |
+| Doc                                    | Description                     |
+| -------------------------------------- | ------------------------------- |
+| `01-reference-simc-behaviors.md`       | SimC aura behaviors (read-only) |
+| `02-reference-spell-data.md`           | Spell data sources (read-only)  |
+| `03-phase1-data-structures.md`         | AuraDataFlat schema             |
+| `04-phase2-aura-definition-service.md` | AuraService                     |
+| `05-phase3-handler-integration.md`     | Handler updates                 |
+| `06-phase4-periodic-ticks.md`          | Tick scheduling                 |
 
-## The Core Problem
+## Architecture
 
-WoWLab emits native CLEU events (SPELL_AURA_APPLIED, SPELL_AURA_REMOVED, etc.) and uses a TinyQueue priority queue that **doesn't support cancellation**.
+All state lives in immutable `GameState`. The `Aura` entity has `expiresAt` - this is the single source of truth for expiration.
 
-When we apply an aura:
+The event queue (TinyQueue) is the scheduler. No separate scheduling mechanism needed.
 
-1. We schedule `SPELL_AURA_REMOVED` at `currentTime + duration`
-2. If `SPELL_AURA_REFRESH` happens before expiry, the old removal is still queued
-3. We need to "cancel" the old removal without actually removing it from the queue
+## Emitter Contract
 
-## The Solution: Generation-Based Validity Checking
+`emitter.emitAt(delayMs, event)` schedules an event. The emitter MUST set `event.timestamp = currentTime + delayMs / 1000` when the event is enqueued. Handlers receive events with accurate timestamps.
 
-Instead of cancelling events, we check if they're still valid when they fire:
+## Stale Event Handling
+
+When an aura is refreshed, a new removal event is scheduled. The old one still fires but is ignored:
 
 ```
-SPELL_AURA_APPLIED:
-  schedule.removalGeneration++
-  schedule.removalAt = currentTime + duration
-  emitAt(duration, { ...SPELL_AURA_REMOVED, generation: schedule.removalGeneration })
-
-SPELL_AURA_REFRESH:
-  schedule.removalGeneration++  // Invalidates old scheduled removal
-  newDuration = calculateRefreshDuration(...)
-  emitAt(newDuration, { ...SPELL_AURA_REMOVED, generation: schedule.removalGeneration })
-
 SPELL_AURA_REMOVED handler:
-  if (event.generation !== schedule.removalGeneration) return  // Stale, ignore
-  // Actually remove the aura
+  aura = getAura(unit, spellId)
+  if (!aura) return                                    // Already gone
+  if (event.timestamp < aura.expiresAt - 0.001) return // Stale (was refreshed)
+  removeAura(unit, spellId)
 ```
 
-## Key Constraints
+TinyQueue processes events in timestamp order. Old removals fire first, see `expiresAt` was extended, and no-op.
 
-1. **Must emit proper CLEU events** - No custom event types
-2. **Must use Effect-TS patterns** - No async/await
-3. **Must use spell data from database** - Not hardcoded durations
-4. **Must handle all refresh behaviors** - Pandemic, extend, tick carryover, etc.
-5. **Must be deterministic** - Same inputs = same outputs
+## Forced Removals (Dispel, Death, Cancel)
 
-## Current Architecture
+For non-expiration removals, set `expiresAt = currentTime` before emitting removal:
 
-- `packages/wowlab-services/src/internal/combat-log/EventQueue.ts` - TinyQueue wrapper
-- `packages/wowlab-services/src/internal/combat-log/Emitter.ts` - Event emission
-- `packages/wowlab-services/src/internal/combat-log/handlers/aura.ts` - Current aura handlers
-- `packages/wowlab-core/src/internal/entities/Unit.ts` - Unit with auras collection
-- `packages/wowlab-core/src/internal/entities/Aura.ts` - Aura entity
+```
+// Dispel handler
+aura.expiresAt = state.currentTime
+emitter.emitAt(0, SPELL_AURA_REMOVED)
+```
 
-## Dependencies
+This ensures the stale check passes. Alternatively, emit immediately without scheduling.
 
-- Effect-TS for all logic
-- Immutable.js for state
-- TinyQueue for event scheduling
-- MCP server for spell data access
+## Permanent Auras
+
+Auras with no duration have `expiresAt = Infinity`. The stale check skips infinite values:
+
+```
+if (Number.isFinite(aura.expiresAt) && event.timestamp < aura.expiresAt - 0.001) return;
+```
+
+## Periodic Ticks
+
+Same pattern. Store `nextTickAt` and `tickPeriodMs` (snapshotted) on the Aura entity. When a tick fires, compare `event.timestamp` against `nextTickAt`.
