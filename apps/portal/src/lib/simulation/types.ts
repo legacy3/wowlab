@@ -2,7 +2,7 @@ import type * as Errors from "@wowlab/core/Errors";
 import type * as Schemas from "@wowlab/core/Schemas";
 import type * as Context from "@wowlab/rotation/Context";
 import type * as Effect from "effect/Effect";
-import type { ResourceSnapshot } from "./transform-events";
+import type { ResourceSnapshot } from "./transformers";
 
 /**
  * Definition for a rotation that can be run by the browser simulation.

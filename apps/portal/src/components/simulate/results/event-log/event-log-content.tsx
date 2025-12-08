@@ -19,7 +19,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { WowSpellLink } from "@/components/game";
 import { jobsAtom } from "@/atoms/computing";
 import type { SimulationEvent } from "@/lib/simulation/types";
-import { isResourceSnapshot } from "@/lib/simulation/transform-events";
+import { isResourceSnapshot } from "@/lib/simulation/transformers";
 
 type EventCategory = "cast" | "damage" | "aura" | "resource" | "other";
 

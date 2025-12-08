@@ -11,7 +11,7 @@ import { ChartsContent } from "@/components/simulate/results/charts";
 import { EventLogContent } from "@/components/simulate/results/event-log";
 import { jobsAtom } from "@/atoms/computing";
 import { combatDataAtom, timelineBoundsAtom } from "@/atoms/timeline";
-import { transformEventsWithResources } from "@/lib/simulation/transform-events";
+import { transformEventsWithResources } from "@/lib/simulation/transformers";
 import type { SimulationEvent } from "@/lib/simulation/types";
 
 function useLoadLocalJob() {

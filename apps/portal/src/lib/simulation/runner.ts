@@ -13,7 +13,7 @@ import type {
   SimulationEvent,
   SimulationResult,
 } from "./types";
-import type { ResourceSnapshot } from "./transform-events";
+import type { ResourceSnapshot } from "./transformers";
 import { createPlayerWithSpells } from "./rotation-utils";
 
 export interface RunProgress {
