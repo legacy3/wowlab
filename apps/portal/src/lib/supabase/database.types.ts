@@ -80,139 +80,53 @@ export type Database = {
         };
         Relationships: [];
       };
-      rotation_sim_results: {
-        Row: {
-          createdAt: string;
-          duration: number;
-          fightType: string;
-          gearSet: string;
-          id: string;
-          iterations: number;
-          maxDps: number;
-          meanDps: number;
-          minDps: number;
-          patch: string;
-          rotationId: string;
-          scenario: string;
-          simVersion: string;
-          statWeights: Json | null;
-          stdDev: number | null;
-          timeline: Json | null;
-        };
-        Insert: {
-          createdAt?: string;
-          duration: number;
-          fightType: string;
-          gearSet?: string;
-          id?: string;
-          iterations: number;
-          maxDps: number;
-          meanDps: number;
-          minDps: number;
-          patch: string;
-          rotationId: string;
-          scenario?: string;
-          simVersion: string;
-          statWeights?: Json | null;
-          stdDev?: number | null;
-          timeline?: Json | null;
-        };
-        Update: {
-          createdAt?: string;
-          duration?: number;
-          fightType?: string;
-          gearSet?: string;
-          id?: string;
-          iterations?: number;
-          maxDps?: number;
-          meanDps?: number;
-          minDps?: number;
-          patch?: string;
-          rotationId?: string;
-          scenario?: string;
-          simVersion?: string;
-          statWeights?: Json | null;
-          stdDev?: number | null;
-          timeline?: Json | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "rotation_sim_results_rotation_id_fkey";
-            columns: ["rotationId"];
-            isOneToOne: false;
-            referencedRelation: "rotations";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       rotations: {
         Row: {
           class: string;
-          config: Json | null;
           createdAt: string;
-          deletedAt: string | null;
           description: string | null;
+          forkedFromId: string | null;
           id: string;
+          isPublic: boolean;
           name: string;
-          namespace: string;
-          parentId: string | null;
-          patchRange: string;
-          publishedAt: string | null;
           script: string;
           slug: string;
           spec: string;
-          status: string;
           updatedAt: string;
           userId: string;
-          version: number;
-          visibility: string;
         };
         Insert: {
           class: string;
-          config?: Json | null;
           createdAt?: string;
-          deletedAt?: string | null;
           description?: string | null;
+          forkedFromId?: string | null;
           id?: string;
+          isPublic?: boolean;
           name: string;
-          namespace: string;
-          parentId?: string | null;
-          patchRange?: string;
-          publishedAt?: string | null;
           script: string;
           slug: string;
           spec: string;
-          status?: string;
           updatedAt?: string;
           userId: string;
-          version?: number;
-          visibility?: string;
         };
         Update: {
           class?: string;
-          config?: Json | null;
           createdAt?: string;
-          deletedAt?: string | null;
           description?: string | null;
+          forkedFromId?: string | null;
           id?: string;
+          isPublic?: boolean;
           name?: string;
-          namespace?: string;
-          parentId?: string | null;
-          patchRange?: string;
-          publishedAt?: string | null;
           script?: string;
           slug?: string;
           spec?: string;
-          status?: string;
           updatedAt?: string;
           userId?: string;
-          version?: number;
-          visibility?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "rotations_parent_id_fkey";
-            columns: ["parentId"];
+            foreignKeyName: "rotations_forkedFromId_fkey";
+            columns: ["forkedFromId"];
             isOneToOne: false;
             referencedRelation: "rotations";
             referencedColumns: ["id"];
@@ -296,7 +210,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      // Materialized view - aggregation query, non-null due to WHERE filters
+      // Materialized view - mock spec rankings
       view_spec_rankings_hourly: {
         Row: {
           avgDps: number;
@@ -310,7 +224,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      // Materialized view - JOIN query with non-null source columns
+      // Materialized view - mock top sims
       view_top_sims_daily: {
         Row: {
           author: string;

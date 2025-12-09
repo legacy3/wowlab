@@ -25,6 +25,3 @@ export type RotationInsert =
 
 export type RotationUpdate =
   Database["public"]["Tables"]["rotations"]["Update"];
-
-export type SimResult =
-  Database["public"]["Tables"]["rotation_sim_results"]["Row"];
