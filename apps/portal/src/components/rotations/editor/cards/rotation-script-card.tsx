@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import {
   Card,
@@ -9,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { CodeEditor } from "@/components/ui/code-editor";
 import { Loader2, Save } from "lucide-react";
 import type { RotationFormValues } from "../rotation-editor";
 
@@ -28,6 +29,15 @@ export function RotationScriptCard({
   isMutating,
   isFormValid,
 }: RotationScriptCardProps) {
+  const { onChange, onBlur, value } = scriptField;
+
+  const handleChange = useCallback(
+    (newValue: string) => {
+      onChange(newValue);
+    },
+    [onChange]
+  );
+
   return (
     <Card className="md:col-span-2">
       <CardHeader>
@@ -53,16 +63,18 @@ export function RotationScriptCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <Textarea
-          placeholder="Enter your rotation script..."
-          className="font-mono text-sm min-h-[400px] resize-y"
+      <CardContent className="space-y-2">
+        <CodeEditor
+          value={value}
+          onChange={handleChange}
+          onBlur={onBlur}
+          language="typescript"
+          height={400}
           disabled={isMutating}
-          aria-invalid={scriptInvalid}
-          {...scriptField}
+          className={scriptInvalid ? "border-destructive" : undefined}
         />
         {scriptInvalid && scriptError && (
-          <p className="text-sm text-destructive mt-2">{scriptError}</p>
+          <p className="text-sm text-destructive">{scriptError}</p>
         )}
       </CardContent>
     </Card>
