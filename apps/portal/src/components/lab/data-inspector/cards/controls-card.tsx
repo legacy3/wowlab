@@ -63,6 +63,12 @@ export function ControlsCard() {
             id="dataId"
             value={id}
             onChange={(e) => setId(parseInt(e.target.value, 10) || 0)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                query();
+              }
+            }}
             placeholder={`Enter ${dataType} ID...`}
           />
         </div>
