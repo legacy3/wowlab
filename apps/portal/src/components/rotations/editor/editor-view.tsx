@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Expand,
   Loader2,
+  PanelRight,
   Play,
   Save,
   Settings,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CodeEditor, type MonacoInstance } from "@/components/ui/code-editor";
+import {
+  CodeEditor,
+  useCodeEditorRef,
+  type MonacoInstance,
+} from "@/components/ui/code-editor";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useZenMode } from "@/hooks/use-zen-mode";
 import { SettingsPanel, type SettingsValues } from "./settings-panel";
+import { EditorSidebar } from "./panels";
 import type { Rotation } from "@/lib/supabase/types";
 
 interface EditorViewProps {
@@ -66,14 +72,43 @@ export function EditorView({
 }: EditorViewProps) {
   const { isZen, toggleZen } = useZenMode();
   const [editorReady, setEditorReady] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const editorRef = useCodeEditorRef();
 
   const handleBeforeMount = useCallback((monaco: MonacoInstance) => {
     monaco.typescript.typescriptDefaults.setCompilerOptions({ noLib: true });
   }, []);
 
-  const handleMount = useCallback(() => {
-    setEditorReady(true);
-  }, []);
+  const handleMount = useCallback(
+    (...args: Parameters<typeof editorRef.onMount>) => {
+      editorRef.onMount(...args);
+      setEditorReady(true);
+    },
+    [editorRef],
+  );
+
+  const handleInsert = useCallback(
+    (text: string) => {
+      const editor = editorRef.editorRef.current;
+      if (!editor) return;
+
+      const selection = editor.getSelection();
+      if (!selection) return;
+
+      // Insert at cursor position
+      editor.executeEdits("insert", [
+        {
+          range: selection,
+          text: text,
+          forceMoveMarkers: true,
+        },
+      ]);
+
+      // Focus the editor after insert
+      editor.focus();
+    },
+    [editorRef],
+  );
 
   const isDisabled = isSaving || isTesting;
 
@@ -86,7 +121,7 @@ export function EditorView({
           : "h-[calc(100dvh-10rem)]",
       )}
     >
-      {/* Minimal header */}
+      {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-2 shrink-0 bg-background">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
@@ -104,6 +139,15 @@ export function EditorView({
         </div>
 
         <div className="flex items-center gap-1">
+          <Button
+            variant={showSidebar ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setShowSidebar(!showSidebar)}
+            title={showSidebar ? "Hide sidebar" : "Show sidebar"}
+          >
+            <PanelRight className="h-4 w-4" />
+          </Button>
+
           <Button
             variant={isZen ? "secondary" : "ghost"}
             size="sm"
@@ -137,25 +181,34 @@ export function EditorView({
         </div>
       </div>
 
-      {/* Full-height editor */}
-      <div className="flex-1 min-h-0 relative">
-        {!editorReady && <EditorSkeleton />}
-        <div
-          className={cn("h-full", !editorReady && "invisible absolute inset-0")}
-        >
-          <CodeEditor
-            value={script}
-            onChange={onScriptChange}
-            beforeMount={handleBeforeMount}
-            onMount={handleMount}
-            language="typescript"
-            height="100%"
-            className="rounded-none border-0 h-full"
-          />
+      {/* Editor + Sidebar */}
+      <div className="flex-1 min-h-0 flex">
+        {/* Editor */}
+        <div className="flex-1 min-w-0 relative">
+          {!editorReady && <EditorSkeleton />}
+          <div
+            className={cn(
+              "h-full",
+              !editorReady && "invisible absolute inset-0",
+            )}
+          >
+            <CodeEditor
+              value={script}
+              onChange={onScriptChange}
+              beforeMount={handleBeforeMount}
+              onMount={handleMount}
+              language="typescript"
+              height="100%"
+              className="rounded-none border-0 h-full"
+            />
+          </div>
         </div>
+
+        {/* Sidebar */}
+        {showSidebar && <EditorSidebar onInsert={handleInsert} />}
       </div>
 
-      {/* Minimal footer */}
+      {/* Footer */}
       <div className="flex items-center justify-center gap-3 border-t px-4 py-3 bg-muted/30 shrink-0">
         <Button
           variant="outline"
