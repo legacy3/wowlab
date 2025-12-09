@@ -1,17 +1,11 @@
-"use client";
-
-import { Copy, Check } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-
-interface Snippet {
+export interface Snippet {
   id: string;
   name: string;
   description: string;
   code: string;
 }
 
-const SNIPPETS: Snippet[] = [
+export const SNIPPETS: Snippet[] = [
   {
     id: "rotation-template",
     name: "Rotation Template",
@@ -106,59 +100,3 @@ yield* tryCast(rotation, playerId, SpellIds.MINOR_COOLDOWN);`,
 yield* tryCast(rotation, playerId, SpellIds.FILLER_SPELL, targetId);`,
   },
 ];
-
-interface SnippetsProps {
-  onInsert: (snippet: string) => void;
-}
-
-export function Snippets({ onInsert }: SnippetsProps) {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const handleCopy = (id: string, code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
-
-  return (
-    <div className="space-y-2">
-      {SNIPPETS.map((snippet) => (
-        <div
-          key={snippet.id}
-          className="group rounded-md border bg-card p-2 hover:bg-accent/50 transition-colors"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <span className="font-medium text-sm">{snippet.name}</span>
-              <p className="text-[10px] text-muted-foreground">
-                {snippet.description}
-              </p>
-            </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => handleCopy(snippet.id, snippet.code)}
-              >
-                {copiedId === snippet.id ? (
-                  <Check className="h-3 w-3 text-green-500" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={() => onInsert(snippet.code)}
-              >
-                Insert
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}

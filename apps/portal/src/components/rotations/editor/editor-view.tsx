@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useZenMode } from "@/hooks/use-zen-mode";
 import { SettingsPanel, type SettingsValues } from "./settings-panel";
-import { EditorSidebar } from "./panels";
+import { EditorSidebar } from "./sidebar";
 import type { Rotation } from "@/lib/supabase/types";
 
 interface EditorViewProps {

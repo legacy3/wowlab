@@ -22,7 +22,14 @@ const DATA_TYPE_LABELS: Record<DataType, string> = {
 };
 
 export function ControlsCard() {
-  const { id, setId, type: dataType, setType: setDataType, loading, query } = useDataInspector();
+  const {
+    id,
+    setId,
+    type: dataType,
+    setType: setDataType,
+    loading,
+    query,
+  } = useDataInspector();
 
   return (
     <Card className="h-full">

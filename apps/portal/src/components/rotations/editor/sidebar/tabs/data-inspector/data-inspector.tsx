@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ExternalLink, Loader2, Wand2, Package, Sparkles } from "lucide-react";
+import {
+  Search,
+  ExternalLink,
+  Loader2,
+  Wand2,
+  Package,
+  Sparkles,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +18,18 @@ import type { DataType } from "@/atoms/data-inspector";
 import type { Spell } from "@wowlab/core/Schemas";
 
 function isSpellData(data: unknown): data is Spell.SpellDataFlat {
-  return data !== null && typeof data === "object" && "castTime" in data && "recoveryTime" in data;
+  return (
+    data !== null &&
+    typeof data === "object" &&
+    "castTime" in data &&
+    "recoveryTime" in data
+  );
 }
 
 export function DataInspector() {
   const [search, setSearch] = useState("");
-  const { id, setId, type, setType, loading, error, data, query } = useDataInspector();
+  const { id, setId, type, setType, loading, error, data, query } =
+    useDataInspector();
 
   const handleSearch = () => {
     const asNumber = parseInt(search, 10);
@@ -73,9 +86,7 @@ export function DataInspector() {
       )}
 
       {error && (
-        <p className="text-sm text-destructive text-center py-2">
-          {error}
-        </p>
+        <p className="text-sm text-destructive text-center py-2">{error}</p>
       )}
 
       {data && !loading && (
@@ -101,13 +112,17 @@ export function DataInspector() {
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Cooldown</p>
                     <p className="font-medium">
-                      {data.recoveryTime > 0 ? `${data.recoveryTime / 1000}s` : "None"}
+                      {data.recoveryTime > 0
+                        ? `${data.recoveryTime / 1000}s`
+                        : "None"}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Cast Time</p>
                     <p className="font-medium">
-                      {data.castTime > 0 ? `${data.castTime / 1000}s` : "Instant"}
+                      {data.castTime > 0
+                        ? `${data.castTime / 1000}s`
+                        : "Instant"}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -119,7 +134,9 @@ export function DataInspector() {
                   <div className="space-y-1">
                     <p className="text-muted-foreground">GCD</p>
                     <p className="font-medium">
-                      {data.startRecoveryTime > 0 ? `${data.startRecoveryTime / 1000}s` : "Off-GCD"}
+                      {data.startRecoveryTime > 0
+                        ? `${data.startRecoveryTime / 1000}s`
+                        : "Off-GCD"}
                     </p>
                   </div>
                 </div>
@@ -149,9 +166,7 @@ export function DataInspector() {
       {!data && !loading && !error && (
         <div className="text-center py-6 text-muted-foreground">
           <p className="text-sm">Search for a {type} by ID</p>
-          <p className="text-xs mt-1">
-            Enter an ID and press Enter to search
-          </p>
+          <p className="text-xs mt-1">Enter an ID and press Enter to search</p>
         </div>
       )}
     </div>
