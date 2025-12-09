@@ -1,9 +1,3 @@
-/**
- * Cast Tracker
- *
- * Tracks cast starts to pair with success/fail events for duration calculation.
- */
-
 interface CastInProgress {
   spellId: number;
   startTime: number;
@@ -20,9 +14,6 @@ export interface ResolvedCast {
 export class CastTracker {
   readonly #active = new Map<string, CastInProgress>();
 
-  /**
-   * Record a cast starting.
-   */
   start(
     sourceGUID: string,
     spellId: number,
@@ -36,9 +27,6 @@ export class CastTracker {
     });
   }
 
-  /**
-   * Resolve a cast (success or fail) and return the computed duration.
-   */
   resolve(
     sourceGUID: string,
     spellId: number,

@@ -1,8 +1,3 @@
-/**
- * Damage Event Handlers
- *
- * Handles SPELL_DAMAGE and SPELL_PERIODIC_DAMAGE events.
- */
 import { defineHandler } from "../registry";
 
 export const damageHandler = defineHandler(

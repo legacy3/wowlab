@@ -90,12 +90,15 @@ export function EditorView({
   const handleInsert = useCallback(
     (text: string) => {
       const editor = editorRef.editorRef.current;
-      if (!editor) return;
+      if (!editor) {
+        return;
+      }
 
       const selection = editor.getSelection();
-      if (!selection) return;
+      if (!selection) {
+        return;
+      }
 
-      // Insert at cursor position
       editor.executeEdits("insert", [
         {
           range: selection,

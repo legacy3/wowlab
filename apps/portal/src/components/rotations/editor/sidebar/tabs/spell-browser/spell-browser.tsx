@@ -21,7 +21,9 @@ export function SpellBrowser({ onInsert }: SpellBrowserProps) {
   const [search, setSearch] = useState("");
 
   const filteredSpells = useMemo(() => {
-    if (!search) return MOCK_SPELLS;
+    if (!search) {
+      return MOCK_SPELLS;
+    }
     const lower = search.toLowerCase();
     return MOCK_SPELLS.filter(
       (spell) =>

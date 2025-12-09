@@ -17,7 +17,9 @@ export function useZenMode(options: UseZenModeOptions = {}) {
   const toggleZen = useCallback(() => setIsZen((z) => !z), []);
 
   useEffect(() => {
-    if (!isZen) return;
+    if (!isZen) {
+      return;
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {

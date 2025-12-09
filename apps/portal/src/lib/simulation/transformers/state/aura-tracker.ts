@@ -1,8 +1,3 @@
-/**
- * Aura Tracker
- *
- * Tracks active auras to pair APPLIED/REMOVED events into BuffEvent ranges.
- */
 import type { BuffEvent } from "@/atoms/timeline";
 import type { IdGenerator } from "../context";
 
@@ -17,9 +12,6 @@ interface ActiveAura {
 export class AuraTracker {
   readonly #active = new Map<string, ActiveAura>();
 
-  /**
-   * Record an aura being applied.
-   */
   apply(
     destGUID: string,
     spellId: number,
@@ -36,9 +28,6 @@ export class AuraTracker {
     });
   }
 
-  /**
-   * Update stack count (for APPLIED_DOSE / REMOVED_DOSE).
-   */
   updateStacks(destGUID: string, spellId: number, stacks: number): void {
     const aura = this.#active.get(this.#key(destGUID, spellId));
     if (aura) {
@@ -46,9 +35,6 @@ export class AuraTracker {
     }
   }
 
-  /**
-   * Handle aura refresh - closes current segment and starts a new one.
-   */
   refresh(
     destGUID: string,
     spellId: number,
@@ -60,7 +46,6 @@ export class AuraTracker {
     const aura = this.#active.get(key);
 
     if (aura) {
-      // Close the old segment
       emit({
         type: aura.type,
         id: ids.next("buff"),
@@ -71,14 +56,10 @@ export class AuraTracker {
         target: aura.target,
       });
 
-      // Start new segment
       aura.start = timestamp;
     }
   }
 
-  /**
-   * Remove an aura and emit the final segment.
-   */
   remove(
     destGUID: string,
     spellId: number,
@@ -104,9 +85,6 @@ export class AuraTracker {
     }
   }
 
-  /**
-   * Close any auras still active at fight end.
-   */
   flushOpen(
     endTime: number,
     ids: IdGenerator,

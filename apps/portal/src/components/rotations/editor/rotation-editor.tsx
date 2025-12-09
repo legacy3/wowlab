@@ -105,12 +105,12 @@ function RotationEditorInner({
     setScript(initialScript);
   };
 
-  // Handle save - creates rotation if draft, updates if existing
   const handleSave = async () => {
-    if (!identity?.id) return;
+    if (!identity?.id) {
+      return;
+    }
 
     if (isDraftMode && draft) {
-      // First save - create the rotation
       const insertValues: RotationInsert = {
         userId: identity.id,
         name: draft.name,

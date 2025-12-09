@@ -55,7 +55,6 @@ export function useDataInspector(): UseDataInspectorResult {
   // Race condition handling: track the latest request
   const requestIdRef = useRef(0);
 
-  // Read atoms with hooks for reactivity
   const [id, setId] = useAtom(queryIdAtom);
   const [type, setType] = useAtom(queryTypeAtom);
   const loading = useAtomValue(queryLoadingAtom);
@@ -67,7 +66,6 @@ export function useDataInspector(): UseDataInspectorResult {
     const currentId = store.get(queryIdAtom);
     const currentType = store.get(queryTypeAtom);
 
-    // Increment request ID for race condition handling
     const thisRequestId = ++requestIdRef.current;
 
     store.set(queryLoadingAtom, true);
@@ -93,7 +91,6 @@ export function useDataInspector(): UseDataInspectorResult {
         );
       }
 
-      // Only update state if this is still the latest request
       if (thisRequestId === requestIdRef.current) {
         store.set(transformedDataAtom, result);
         store.set(queryHistoryAtom, (prev) =>
@@ -101,12 +98,10 @@ export function useDataInspector(): UseDataInspectorResult {
         );
       }
     } catch (e) {
-      // Only update error state if this is still the latest request
       if (thisRequestId === requestIdRef.current) {
         store.set(queryErrorAtom, e instanceof Error ? e.message : String(e));
       }
     } finally {
-      // Only clear loading if this is still the latest request
       if (thisRequestId === requestIdRef.current) {
         store.set(queryLoadingAtom, false);
       }

@@ -590,9 +590,12 @@ export function TopTalentCombinationsTab() {
 
   const filteredCombinations = useMemo(() => {
     return MOCK_TALENT_COMBINATIONS.filter((combo) => {
-      if (selectedClass !== "all" && combo.class !== selectedClass)
+      if (selectedClass !== "all" && combo.class !== selectedClass) {
         return false;
-      if (selectedSpec !== "all" && combo.spec !== selectedSpec) return false;
+      }
+      if (selectedSpec !== "all" && combo.spec !== selectedSpec) {
+        return false;
+      }
       return true;
     }).map((combo, index) => ({ ...combo, rank: index + 1 }));
   }, [selectedClass, selectedSpec]);

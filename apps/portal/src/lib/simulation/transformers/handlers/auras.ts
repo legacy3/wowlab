@@ -1,9 +1,3 @@
-/**
- * Aura Event Handlers
- *
- * Handles SPELL_AURA_APPLIED, SPELL_AURA_REMOVED, SPELL_AURA_REFRESH,
- * SPELL_AURA_APPLIED_DOSE, and SPELL_AURA_REMOVED_DOSE events.
- */
 import { defineHandler } from "../registry";
 
 export const auraAppliedHandler = defineHandler(

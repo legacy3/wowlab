@@ -1,8 +1,3 @@
-/**
- * Cast Event Handlers
- *
- * Handles SPELL_CAST_START, SPELL_CAST_SUCCESS, and SPELL_CAST_FAILED events.
- */
 import { defineHandler } from "../registry";
 
 export const castStartHandler = defineHandler(

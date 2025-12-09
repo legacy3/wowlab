@@ -22,12 +22,15 @@ function useLoadLocalJob() {
   const setBounds = useSetAtom(timelineBoundsAtom);
 
   useEffect(() => {
-    if (!jobId) return;
+    if (!jobId) {
+      return;
+    }
 
     const job = jobs.find((j) => j.id === jobId);
-    if (!job?.result?.events) return;
+    if (!job?.result?.events) {
+      return;
+    }
 
-    // Events are CombatLogEvents with _tag discriminator (possibly mixed with ResourceSnapshots)
     const events = job.result.events as SimulationEvent[];
 
     const durationMs = job.result.durationMs;

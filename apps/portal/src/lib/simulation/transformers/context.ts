@@ -1,10 +1,4 @@
-/**
- * Transform Context
- *
- * Provides shared state and emitters for event handlers during transformation.
- */
 import type {
-  CombatData,
   CastEvent,
   DamageEvent,
   BuffEvent,
@@ -45,25 +39,19 @@ export interface TransformResult {
   readonly phases: PhaseMarker[];
 }
 
-/**
- * Creates a fresh transform context for processing events.
- */
 export function createContext(durationMs: number): TransformContext & {
   flush(): TransformResult;
 } {
   const durationSec = durationMs / 1000;
 
-  // Output arrays
   const casts: CastEvent[] = [];
   const damage: DamageEvent[] = [];
   const buffs: BuffEvent[] = [];
   const resources: ResourceEvent[] = [];
 
-  // State trackers
   const castTracker = new CastTracker();
   const auraTracker = new AuraTracker();
 
-  // ID generator with per-prefix counters
   const counters = new Map<string, number>();
   const ids: IdGenerator = {
     next(prefix: string): string {
@@ -73,7 +61,6 @@ export function createContext(durationMs: number): TransformContext & {
     },
   };
 
-  // Emitters push to output arrays
   const emit: TransformEmitters = {
     cast: (event) => casts.push(event),
     damage: (event) => damage.push(event),
@@ -93,14 +80,9 @@ export function createContext(durationMs: number): TransformContext & {
 
   return {
     ...ctx,
-    /**
-     * Finalizes the transformation by closing any open auras and generating phases.
-     */
     flush(): TransformResult {
-      // Close any auras still active at fight end
       auraTracker.flushOpen(durationSec, ids, emit.buff);
 
-      // Default combat phase
       const phases: PhaseMarker[] = [
         {
           type: "phase",
