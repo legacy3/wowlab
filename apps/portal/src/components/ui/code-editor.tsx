@@ -68,7 +68,7 @@ export function CodeEditor({
       monacoRef.current = monaco;
       beforeMount?.(monaco);
     },
-    [beforeMount]
+    [beforeMount],
   );
 
   const handleMount: OnMount = useCallback(
@@ -86,14 +86,14 @@ export function CodeEditor({
 
       onMount?.(editor, monaco);
     },
-    [onMount, autoFocus, onBlur]
+    [onMount, autoFocus, onBlur],
   );
 
   const handleChange: OnChange = useCallback(
     (newValue) => {
       onChange?.(newValue ?? "");
     },
-    [onChange]
+    [onChange],
   );
 
   return (
@@ -101,7 +101,7 @@ export function CodeEditor({
       className={cn(
         "relative overflow-hidden rounded-md border bg-muted/30",
         disabled && "opacity-50 pointer-events-none",
-        className
+        className,
       )}
     >
       <MonacoEditor
@@ -147,10 +147,13 @@ export function useCodeEditorRef() {
   const editorRef = useRef<EditorInstance | null>(null);
   const monacoRef = useRef<MonacoInstance | null>(null);
 
-  const onMount = useCallback((editor: EditorInstance, monaco: MonacoInstance) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-  }, []);
+  const onMount = useCallback(
+    (editor: EditorInstance, monaco: MonacoInstance) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
+    },
+    [],
+  );
 
   return {
     editorRef,

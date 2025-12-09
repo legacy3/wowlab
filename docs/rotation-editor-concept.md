@@ -11,6 +11,7 @@ The rotation editor enables users to **create**, **test**, and **share** custom 
 ## Current State Analysis
 
 ### Existing Components
+
 ```
 apps/portal/src/
 ├── app/rotations/
@@ -34,20 +35,21 @@ apps/portal/src/
 ```
 
 ### Database Schema (rotations table)
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| userId | uuid | Owner |
-| slug | text | URL-friendly identifier |
-| name | text | Display name |
-| class | text | WoW class |
-| spec | text | Specialization |
-| script | text | Rotation code |
-| description | text? | Optional description |
-| isPublic | boolean | Visibility |
-| forkedFromId | uuid? | Parent rotation for forks |
-| createdAt | timestamp | Created |
-| updatedAt | timestamp | Last modified |
+
+| Column       | Type      | Description               |
+| ------------ | --------- | ------------------------- |
+| id           | uuid      | Primary key               |
+| userId       | uuid      | Owner                     |
+| slug         | text      | URL-friendly identifier   |
+| name         | text      | Display name              |
+| class        | text      | WoW class                 |
+| spec         | text      | Specialization            |
+| script       | text      | Rotation code             |
+| description  | text?     | Optional description      |
+| isPublic     | boolean   | Visibility                |
+| forkedFromId | uuid?     | Parent rotation for forks |
+| createdAt    | timestamp | Created                   |
+| updatedAt    | timestamp | Last modified             |
 
 ---
 
@@ -434,6 +436,7 @@ const handleTest = async () => {
 ```
 
 **Required Changes:**
+
 - Add `parseRotationScript()` function to convert text to `RotationDefinition`
 - Add "Test" button to `RotationScriptCard`
 - Wire up `useSimulation` hook in the editor
@@ -559,46 +562,51 @@ interface ValidationResult {
 
 ## URL Structure
 
-| Route | Purpose |
-|-------|---------|
-| `/rotations` | Browse public rotations |
-| `/rotations/[id]` | View single rotation (detail page) |
-| `/rotations/editor` | Create new rotation |
-| `/rotations/editor/[id]` | Edit existing rotation |
-| `/rotations/editor?fork=[id]` | Fork a rotation |
-| `/account?tab=rotations` | Manage my rotations |
-| `/simulate` | Quick sim (with rotation selector) |
-| `/simulate/results/[id]` | View simulation results |
+| Route                         | Purpose                            |
+| ----------------------------- | ---------------------------------- |
+| `/rotations`                  | Browse public rotations            |
+| `/rotations/[id]`             | View single rotation (detail page) |
+| `/rotations/editor`           | Create new rotation                |
+| `/rotations/editor/[id]`      | Edit existing rotation             |
+| `/rotations/editor?fork=[id]` | Fork a rotation                    |
+| `/account?tab=rotations`      | Manage my rotations                |
+| `/simulate`                   | Quick sim (with rotation selector) |
+| `/simulate/results/[id]`      | View simulation results            |
 
 ---
 
 ## Implementation Phases
 
 ### Phase 1: Core Editor Polish
+
 - [ ] Replace `<Textarea>` with Monaco Editor (syntax highlighting)
 - [ ] Add "Test" button that runs simulation
 - [ ] Show spell icons/tooltips for recognized abilities
 - [ ] Add validation feedback in editor
 
 ### Phase 2: Simulation Integration
+
 - [ ] Create rotation parser (script → RotationDefinition)
 - [ ] Wire editor "Test" to useSimulation hook
 - [ ] Add "Edit Rotation" link from simulation results
 - [ ] Add rotation selector to Quick Sim page
 
 ### Phase 3: User Management
+
 - [ ] Build `/account?tab=rotations` component
 - [ ] Add "Duplicate" action to rotation cards
 - [ ] Add rotation quick actions (edit, view, test)
 - [ ] Show fork count on public rotations
 
 ### Phase 4: Discovery & Social
+
 - [ ] Improve browse page with better filtering
 - [ ] Add sort options (newest, most forked, trending)
 - [ ] Add "Featured" rotations section
 - [ ] Add rotation search by spell names
 
 ### Phase 5: Advanced Features
+
 - [ ] Rotation versioning (save versions)
 - [ ] Diff view between versions
 - [ ] Import/Export as JSON
@@ -609,18 +617,21 @@ interface ValidationResult {
 ## Technical Notes
 
 ### Existing Hooks to Leverage
+
 - `useRotation(id)` - Fetch single rotation
 - `useRotationMutations()` - Create/update/delete
 - `useSimulation()` - Run simulation with job tracking
 - `useList<Rotation>()` - List rotations with filters
 
 ### Key Atoms
+
 - `fightDurationAtom` - Simulation duration
 - `iterationsAtom` - Number of iterations
 - `targetTypeAtom` - Target type (patchwerk, movement, etc.)
 - `computingDrawerOpenAtom` - Controls simulation drawer
 
 ### Simulation Flow
+
 1. Editor calls `run(rotation, duration)`
 2. Creates job in `simJobsAtom`
 3. Opens computing drawer

@@ -1,38 +1,30 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogIn } from "lucide-react";
 import { useRotation, useRotationMutations } from "@/hooks/rotations";
-import type { UserIdentity, RotationInsert } from "@/lib/supabase/types";
-import { RotationMetadataCard } from "./cards/rotation-metadata-card";
-import { RotationScriptCard } from "./cards/rotation-script-card";
+import type {
+  UserIdentity,
+  RotationInsert,
+  Rotation,
+} from "@/lib/supabase/types";
+import { MetadataSetup, type MetadataSubmitValues } from "./metadata-setup";
+import { EditorView } from "./editor-view";
+import type { SettingsValues } from "./settings-panel";
 
-const rotationSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .max(50, "Slug too long")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Slug can only contain lowercase letters, numbers, and hyphens",
-    ),
-  class: z.string().min(1, "Class is required"),
-  spec: z.string().min(1, "Spec is required"),
-  script: z.string().min(1, "Script is required"),
-  description: z.string().optional(),
-  isPublic: z.boolean(),
-});
+const DEFAULT_SCRIPT = `// Priority list for your rotation
+// Add abilities in order of priority
 
-export type RotationFormValues = z.infer<typeof rotationSchema>;
+actions=auto_attack
+
+// Add your rotation logic here
+// actions+=/ability_name,if=condition
+`;
 
 interface RotationEditorProps {
   rotationId?: string;
@@ -41,17 +33,34 @@ interface RotationEditorProps {
 
 function RotationEditorSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-3 md:auto-rows-min">
-      <Skeleton className="h-80 w-full" />
-      <Skeleton className="h-96 w-full md:col-span-2" />
+    <div className="flex flex-col h-[600px] rounded-lg border overflow-hidden">
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="flex-1" />
+      <Skeleton className="h-14 w-full" />
     </div>
   );
+}
+
+// Draft rotation type for unsaved rotations
+interface DraftRotation {
+  name: string;
+  slug: string;
+  class: string;
+  spec: string;
+  description: string | null;
+  script: string;
+  isPublic: boolean;
 }
 
 function RotationEditorInner({
   rotationId,
   forkSourceId,
 }: RotationEditorProps) {
+  // Draft state for new/fork rotations (not yet saved to DB)
+  const [draft, setDraft] = useState<DraftRotation | null>(null);
+  const [script, setScript] = useState(DEFAULT_SCRIPT);
+  const [isTesting, setIsTesting] = useState(false);
+
   const { data: auth, isLoading: authLoading } = useIsAuthenticated();
   const { data: identity, isLoading: identityLoading } =
     useGetIdentity<UserIdentity>();
@@ -73,90 +82,100 @@ function RotationEditorInner({
 
   const isEditMode = !!rotationId;
   const isForkMode = !!forkSourceId && !rotationId;
+  const isNewMode = !rotationId && !forkSourceId;
+  const isDraftMode = draft !== null && !isEditMode;
 
-  const form = useForm<RotationFormValues>({
-    resolver: zodResolver(rotationSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      class: "",
-      spec: "",
-      script: "",
-      description: "",
-      isPublic: false,
-    },
-    mode: "onChange",
-  });
-
+  // Sync script state when existing rotation loads
   useEffect(() => {
     if (isEditMode && existingRotation) {
-      form.reset({
-        name: existingRotation.name,
-        slug: existingRotation.slug,
-        class: existingRotation.class,
-        spec: existingRotation.spec,
-        script: existingRotation.script,
-        description: existingRotation.description ?? "",
-        isPublic: existingRotation.isPublic,
-      });
+      setScript(existingRotation.script);
     }
-  }, [isEditMode, existingRotation, form]);
+  }, [isEditMode, existingRotation]);
 
-  useEffect(() => {
-    if (isForkMode && forkSource) {
-      form.reset({
-        name: `${forkSource.name} (Fork)`,
-        slug: `${forkSource.slug}-fork`,
-        class: forkSource.class,
-        spec: forkSource.spec,
-        script: forkSource.script,
-        description: forkSource.description ?? "",
-        isPublic: false,
-      });
-    }
-  }, [isForkMode, forkSource, form]);
+  // Handle metadata form submission - just store in local state, don't create yet
+  const handleMetadataSubmit = (values: MetadataSubmitValues) => {
+    // Priority: fork source script > selected template > default
+    const initialScript = forkSource?.script ?? values.template.script;
+    setDraft({
+      name: values.name,
+      slug: values.slug,
+      class: values.class,
+      spec: values.spec,
+      description: values.description || null,
+      script: initialScript,
+      isPublic: false,
+    });
+    setScript(initialScript);
+  };
 
-  const handleSave = async (values: RotationFormValues) => {
-    if (!identity?.id) {
-      return;
-    }
+  // Handle save - creates rotation if draft, updates if existing
+  const handleSave = async () => {
+    if (!identity?.id) return;
 
-    if (isEditMode && rotationId) {
-      await updateRotation(rotationId, {
-        name: values.name,
-        slug: values.slug,
-        class: values.class,
-        spec: values.spec,
-        script: values.script,
-        description: values.description || null,
-        isPublic: values.isPublic,
-      });
-    } else {
+    if (isDraftMode && draft) {
+      // First save - create the rotation
       const insertValues: RotationInsert = {
         userId: identity.id,
-        name: values.name,
-        slug: values.slug,
-        class: values.class,
-        spec: values.spec,
-        script: values.script,
-        description: values.description || null,
-        isPublic: values.isPublic,
+        name: draft.name,
+        slug: draft.slug,
+        class: draft.class,
+        spec: draft.spec,
+        script: script,
+        description: draft.description,
+        isPublic: draft.isPublic,
         forkedFromId: forkSourceId ?? null,
       };
       await createRotation(insertValues);
+      // createRotation redirects to /rotations/editor/[id] on success
+    } else if (isEditMode && rotationId) {
+      // Update existing rotation
+      await updateRotation(rotationId, { script });
     }
   };
 
+  // Handle test button
+  const handleTest = async () => {
+    setIsTesting(true);
+    // TODO: Wire up simulation here
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsTesting(false);
+  };
+
+  // Handle settings update from zen editor (only for existing rotations)
+  const handleSettingsChange = async (values: SettingsValues) => {
+    if (isDraftMode && draft) {
+      // Update draft in memory
+      setDraft({
+        ...draft,
+        name: values.name,
+        slug: values.slug,
+        description: values.description || null,
+        isPublic: values.isPublic,
+      });
+    } else if (isEditMode && rotationId) {
+      // Update in database
+      await updateRotation(rotationId, {
+        name: values.name,
+        slug: values.slug,
+        description: values.description || null,
+        isPublic: values.isPublic,
+      });
+    }
+  };
+
+  // Handle delete (only for existing rotations)
   const handleDelete = async () => {
     if (rotationId) {
       await deleteRotation(rotationId);
     }
   };
 
+  // Auth loading
   if (authLoading || identityLoading) {
     return <RotationEditorSkeleton />;
   }
 
+  // Not authenticated
   if (!auth?.authenticated || !identity) {
     return (
       <Card>
@@ -177,14 +196,17 @@ function RotationEditorInner({
     );
   }
 
+  // Loading existing rotation
   if (isEditMode && isLoadingRotation) {
     return <RotationEditorSkeleton />;
   }
 
+  // Loading fork source
   if (isForkMode && isLoadingForkSource) {
     return <RotationEditorSkeleton />;
   }
 
+  // Rotation not found
   if (isEditMode && (isErrorRotation || !existingRotation)) {
     return (
       <div className="text-center py-12">
@@ -197,6 +219,7 @@ function RotationEditorInner({
     );
   }
 
+  // Fork source not found
   if (isForkMode && (isErrorForkSource || !forkSource)) {
     return (
       <div className="text-center py-12">
@@ -209,8 +232,8 @@ function RotationEditorInner({
     );
   }
 
+  // Check ownership for edit mode
   const isOwner = existingRotation?.userId === identity?.id;
-
   if (isEditMode && !isOwner) {
     return (
       <div className="text-center py-12">
@@ -222,87 +245,81 @@ function RotationEditorInner({
     );
   }
 
-  return (
-    <form
-      onSubmit={form.handleSubmit(handleSave)}
-      className="grid gap-4 md:grid-cols-3 md:auto-rows-min"
-    >
-      <Controller
-        name="name"
-        control={form.control}
-        render={({ field: nameField, fieldState: nameState }) => (
-          <Controller
-            name="slug"
-            control={form.control}
-            render={({ field: slugField, fieldState: slugState }) => (
-              <Controller
-                name="class"
-                control={form.control}
-                render={({ field: classField, fieldState: classState }) => (
-                  <Controller
-                    name="spec"
-                    control={form.control}
-                    render={({ field: specField, fieldState: specState }) => (
-                      <Controller
-                        name="description"
-                        control={form.control}
-                        render={({
-                          field: descField,
-                          fieldState: descState,
-                        }) => (
-                          <Controller
-                            name="isPublic"
-                            control={form.control}
-                            render={({ field: publicField }) => (
-                              <RotationMetadataCard
-                                nameField={nameField}
-                                nameInvalid={nameState.invalid}
-                                nameError={nameState.error?.message}
-                                slugField={slugField}
-                                slugInvalid={slugState.invalid}
-                                slugError={slugState.error?.message}
-                                classField={classField}
-                                classInvalid={classState.invalid}
-                                classError={classState.error?.message}
-                                specField={specField}
-                                specInvalid={specState.invalid}
-                                specError={specState.error?.message}
-                                descriptionField={descField}
-                                descriptionInvalid={descState.invalid}
-                                descriptionError={descState.error?.message}
-                                isPublicField={publicField}
-                                isEditMode={isEditMode}
-                                isMutating={isMutating}
-                                onDelete={handleDelete}
-                              />
-                            )}
-                          />
-                        )}
-                      />
-                    )}
-                  />
-                )}
-              />
-            )}
-          />
-        )}
-      />
+  // NEW/FORK MODE without draft: Show metadata setup
+  if ((isNewMode || isForkMode) && !draft) {
+    const defaultValues =
+      isForkMode && forkSource
+        ? {
+            name: `${forkSource.name} (Fork)`,
+            slug: `${forkSource.slug}-fork`,
+            class: forkSource.class,
+            spec: forkSource.spec,
+            description: forkSource.description ?? "",
+          }
+        : undefined;
 
-      <Controller
-        name="script"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <RotationScriptCard
-            scriptField={field}
-            scriptInvalid={fieldState.invalid}
-            scriptError={fieldState.error?.message}
-            isMutating={isMutating}
-            isFormValid={form.formState.isValid}
-          />
-        )}
+    return (
+      <div className="py-8">
+        <MetadataSetup
+          defaultValues={defaultValues}
+          onSubmit={handleMetadataSubmit}
+        />
+      </div>
+    );
+  }
+
+  // DRAFT MODE: Show zen editor with draft rotation (not yet saved)
+  if (isDraftMode && draft) {
+    // Create a fake rotation object for the zen editor
+    const draftAsRotation: Rotation = {
+      id: "",
+      userId: identity.id,
+      name: draft.name,
+      slug: draft.slug,
+      class: draft.class,
+      spec: draft.spec,
+      script: draft.script,
+      description: draft.description,
+      isPublic: draft.isPublic,
+      forkedFromId: forkSourceId ?? null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return (
+      <EditorView
+        rotation={draftAsRotation}
+        script={script}
+        isSaving={isMutating}
+        isTesting={isTesting}
+        isDraft={true}
+        onScriptChange={setScript}
+        onSave={handleSave}
+        onTest={handleTest}
+        onSettingsChange={handleSettingsChange}
       />
-    </form>
-  );
+    );
+  }
+
+  // EDIT MODE: Show editor with existing rotation
+  if (isEditMode && existingRotation) {
+    return (
+      <EditorView
+        rotation={existingRotation}
+        script={script}
+        isSaving={isMutating}
+        isTesting={isTesting}
+        isDraft={false}
+        onScriptChange={setScript}
+        onSave={handleSave}
+        onTest={handleTest}
+        onSettingsChange={handleSettingsChange}
+        onDelete={handleDelete}
+      />
+    );
+  }
+
+  return null;
 }
 
 export function RotationEditor(props: RotationEditorProps) {
@@ -312,3 +329,5 @@ export function RotationEditor(props: RotationEditorProps) {
     </Suspense>
   );
 }
+
+export type { MetadataFormValues as RotationFormValues } from "./metadata-setup";
