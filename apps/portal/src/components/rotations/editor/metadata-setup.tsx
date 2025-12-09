@@ -71,72 +71,16 @@ const EMPTY_TEMPLATE: RotationTemplate = {
   id: "empty",
   name: "Empty",
   description: "Start from scratch",
-  script: `// Priority list for your rotation
-// Add abilities in order of priority
-
-actions=auto_attack
-
-// Add your rotation logic here
-// actions+=/ability_name,if=condition
+  script: `const cobraShot = yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT, targetId);
+if (cobraShot.cast && cobraShot.consumedGCD) {
+  return;
+}
 `,
 };
 
 // Templates per spec - can be expanded later
 const SPEC_TEMPLATES: Record<string, RotationTemplate[]> = {
-  "Beast Mastery": [
-    EMPTY_TEMPLATE,
-    {
-      id: "bm-st",
-      name: "Single Target",
-      description: "Standard single target priority",
-      script: `// Beast Mastery - Single Target
-actions=auto_shot
-
-// Cooldowns
-actions+=/bestial_wrath
-actions+=/kill_command
-actions+=/cobra_shot,if=focus>50
-
-// Filler
-actions+=/steady_shot
-`,
-    },
-    {
-      id: "bm-aoe",
-      name: "Multi-Target",
-      description: "AoE and cleave priority",
-      script: `// Beast Mastery - Multi-Target
-actions=auto_shot
-
-// AoE
-actions+=/multi_shot,if=active_enemies>2
-actions+=/bestial_wrath
-actions+=/kill_command
-
-// Filler
-actions+=/cobra_shot
-`,
-    },
-  ],
-  Shadow: [
-    EMPTY_TEMPLATE,
-    {
-      id: "shadow-st",
-      name: "Single Target",
-      description: "Standard shadow priority",
-      script: `// Shadow Priest - Single Target
-actions=mind_blast
-
-// DoTs
-actions+=/vampiric_touch,if=!ticking
-actions+=/shadow_word_pain,if=!ticking
-actions+=/devouring_plague,if=insanity>=50
-
-// Filler
-actions+=/mind_flay
-`,
-    },
-  ],
+  //
 };
 
 // Default template for specs without specific templates
