@@ -9,11 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, Package, Wand2 } from "lucide-react";
+import { History, Package, Sparkles, Wand2 } from "lucide-react";
 import {
   queryHistoryAtom,
   queryIdAtom,
   queryTypeAtom,
+  type DataType,
 } from "@/atoms/data-inspector";
 import { useQuery } from "../query-context";
 
@@ -23,7 +24,7 @@ export function HistoryCard() {
   const setDataType = useSetAtom(queryTypeAtom);
   const query = useQuery();
 
-  const handleSelect = (entryId: number, entryType: "spell" | "item") => {
+  const handleSelect = (entryId: number, entryType: DataType) => {
     setId(entryId);
     setDataType(entryType);
 
@@ -57,6 +58,8 @@ export function HistoryCard() {
                 >
                   {entry.type === "spell" ? (
                     <Wand2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  ) : entry.type === "aura" ? (
+                    <Sparkles className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   ) : (
                     <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   )}

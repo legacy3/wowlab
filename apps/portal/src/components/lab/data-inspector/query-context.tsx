@@ -5,7 +5,11 @@ import { useStore } from "jotai";
 import { useDataProvider } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createPortalDbcLayer } from "@/lib/services";
-import { transformSpell, transformItem } from "@wowlab/services/Data";
+import {
+  transformSpell,
+  transformItem,
+  transformAura,
+} from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
 import {
   queryHistoryAtom,
@@ -65,14 +69,25 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         const spell = await Effect.runPromise(
           transformSpell(id).pipe(Effect.provide(appLayer)),
         );
+
         store.set(transformedDataAtom, spell);
         store.set(queryHistoryAtom, (prev) =>
           appendHistoryEntry(prev, id, "spell"),
+        );
+      } else if (dataType === "aura") {
+        const aura = await Effect.runPromise(
+          transformAura(id).pipe(Effect.provide(appLayer)),
+        );
+
+        store.set(transformedDataAtom, aura);
+        store.set(queryHistoryAtom, (prev) =>
+          appendHistoryEntry(prev, id, "aura"),
         );
       } else {
         const item = await Effect.runPromise(
           transformItem(id).pipe(Effect.provide(appLayer)),
         );
+
         store.set(transformedDataAtom, item);
         store.set(queryHistoryAtom, (prev) =>
           appendHistoryEntry(prev, id, "item"),

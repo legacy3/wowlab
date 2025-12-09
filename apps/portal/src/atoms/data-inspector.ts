@@ -2,7 +2,7 @@ import { atom } from "jotai";
 
 import { createPersistedOrderAtom } from "./utils";
 
-export type DataType = "spell" | "item";
+export type DataType = "spell" | "item" | "aura";
 
 export type HistoryEntry = {
   id: number;

@@ -66,10 +66,9 @@ function getEventCategory(tag: string): EventCategory {
   return "other";
 }
 
-function formatTimestamp(ms: number): string {
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = (totalSeconds % 60).toFixed(2);
+function formatTimestamp(timestamp: number): string {
+  const minutes = Math.floor(timestamp / 60);
+  const seconds = (timestamp % 60).toFixed(2);
 
   return `${minutes}:${seconds.padStart(5, "0")}`;
 }

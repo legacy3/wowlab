@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Wand2, Package } from "lucide-react";
+import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
 import {
   queryIdAtom,
   queryTypeAtom,
@@ -20,6 +20,12 @@ import {
   type DataType,
 } from "@/atoms/data-inspector";
 import { useQuery } from "../query-context";
+
+const DATA_TYPE_LABELS: Record<DataType, string> = {
+  spell: "Spell",
+  item: "Item",
+  aura: "Aura",
+};
 
 export function ControlsCard() {
   const [id, setId] = useAtom(queryIdAtom);
@@ -52,13 +58,15 @@ export function ControlsCard() {
               <Package className="h-4 w-4" />
               Item
             </TabsTrigger>
+            <TabsTrigger value="aura" className="flex-1 gap-2">
+              <Sparkles className="h-4 w-4" />
+              Aura
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="space-y-2">
-          <Label htmlFor="dataId">
-            {dataType === "spell" ? "Spell" : "Item"} ID
-          </Label>
+          <Label htmlFor="dataId">{DATA_TYPE_LABELS[dataType]} ID</Label>
           <Input
             type="number"
             id="dataId"
@@ -77,7 +85,7 @@ export function ControlsCard() {
           ) : (
             <>
               <Search className="mr-2 h-4 w-4" />
-              Query {dataType === "spell" ? "Spell" : "Item"}
+              Query {DATA_TYPE_LABELS[dataType]}
             </>
           )}
         </Button>
