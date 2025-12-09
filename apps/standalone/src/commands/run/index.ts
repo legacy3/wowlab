@@ -136,7 +136,7 @@ const runSimulation = (
 
                 yield* rotation.run(playerId, targetId);
                 casts++;
-                yield* simDriver.run(state.currentTime + 100);
+                yield* simDriver.run(state.currentTime + 0.1);
               }
 
               return { casts, duration, simId };

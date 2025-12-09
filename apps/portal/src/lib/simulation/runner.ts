@@ -148,7 +148,7 @@ export async function runSimulationLoop(
         casts++;
 
         // Advance simulation time by processing events up to currentTime + 100ms
-        yield* simDriver.run(state.currentTime + 100);
+        yield* simDriver.run(state.currentTime + 0.1);
 
         // Emit resource snapshot after state changes (every 10 ticks to reduce data size)
         if (casts % 10 === 0) {
