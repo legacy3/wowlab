@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CodeEditor } from "@/components/ui/code-editor";
+import { CodeEditor, type MonacoInstance } from "@/components/ui/code-editor";
 import { Loader2, Save } from "lucide-react";
 import type { RotationFormValues } from "../rotation-editor";
 
@@ -31,11 +31,15 @@ export function RotationScriptCard({
 }: RotationScriptCardProps) {
   const { onChange, onBlur, value } = scriptField;
 
+  const handleBeforeMount = useCallback((monaco: MonacoInstance) => {
+    monaco.typescript.typescriptDefaults.setCompilerOptions({ noLib: true });
+  }, []);
+
   const handleChange = useCallback(
     (newValue: string) => {
       onChange(newValue);
     },
-    [onChange]
+    [onChange],
   );
 
   return (
@@ -68,6 +72,7 @@ export function RotationScriptCard({
           value={value}
           onChange={handleChange}
           onBlur={onBlur}
+          beforeMount={handleBeforeMount}
           language="typescript"
           height={400}
           disabled={isMutating}
