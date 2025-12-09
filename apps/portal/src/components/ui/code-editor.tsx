@@ -137,6 +137,8 @@ export function CodeEditor({
           smoothScrolling: true,
           fontFamily: "var(--font-mono, 'Fira Code', Consolas, monospace)",
           fontLigatures: true,
+          fixedOverflowWidgets: true,
+          mouseStyle: "text",
         }}
       />
     </div>

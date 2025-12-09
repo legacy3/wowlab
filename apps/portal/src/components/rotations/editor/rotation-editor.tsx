@@ -17,13 +17,10 @@ import { MetadataSetup, type MetadataSubmitValues } from "./metadata-setup";
 import { EditorView } from "./editor-view";
 import type { SettingsValues } from "./settings-panel";
 
-const DEFAULT_SCRIPT = `// Priority list for your rotation
-// Add abilities in order of priority
-
-actions=auto_attack
-
-// Add your rotation logic here
-// actions+=/ability_name,if=condition
+const DEFAULT_SCRIPT = `const cobraShot = yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT, targetId);
+if (cobraShot.cast && cobraShot.consumedGCD) {
+  return;
+}
 `;
 
 interface RotationEditorProps {
