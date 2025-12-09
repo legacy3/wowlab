@@ -25,6 +25,7 @@ UNIQUE(userId, slug)
 **URL pattern:** `/@{handle}/{slug}` where handle comes from `user_profiles`.
 
 **RLS:**
+
 - SELECT: `"isPublic" = true` OR `"userId" = auth.uid()`
 - INSERT: `"userId" = auth.uid()`
 - UPDATE: `"userId" = auth.uid()`
@@ -39,6 +40,7 @@ Before implementing, follow these patterns from the existing codebase:
 ### Data Fetching - Refine Hooks
 
 **DO use Refine hooks in client components:**
+
 ```typescript
 // Fetch single record
 const { data: rotation, isLoading } = useOne<Rotation>({
@@ -48,7 +50,10 @@ const { data: rotation, isLoading } = useOne<Rotation>({
 });
 
 // Fetch list with filters
-const { result, query: { isLoading } } = useList<Rotation>({
+const {
+  result,
+  query: { isLoading },
+} = useList<Rotation>({
   resource: "rotations",
   filters: [{ field: "isPublic", operator: "eq", value: true }],
   sorters: [{ field: "updatedAt", order: "desc" }],
@@ -65,6 +70,7 @@ const { mutateAsync: deleteRotation } = useDelete();
 ### Forms - react-hook-form + Zod
 
 Follow the profile-settings-card.tsx pattern:
+
 ```typescript
 const form = useForm<RotationFormValues>({
   defaultValues: { name: "", slug: "", ... },
@@ -96,6 +102,7 @@ const rotationSchema = z.object({
 ### URL State - nuqs
 
 For editor mode (create/edit/fork), use nuqs:
+
 ```typescript
 import { useQueryState, parseAsStringLiteral } from "nuqs";
 
@@ -111,6 +118,7 @@ const [mode, setMode] = useQueryState(
 ### Jotai - UI State Only
 
 Jotai is for **UI state persistence**, not form data:
+
 ```typescript
 // Good: Card ordering (persisted to localStorage)
 export const editorCardOrderAtom = createPersistedOrderAtom<EditorCardId>(
@@ -124,9 +132,15 @@ export const editorCardOrderAtom = createPersistedOrderAtom<EditorCardId>(
 ### Custom Hooks - Wrapper Pattern
 
 Follow use-user-settings.ts pattern:
+
 ```typescript
 export function useRotation(id: string | undefined) {
-  const { data: rotation, isLoading, isError, refetch } = useOne<Rotation>({
+  const {
+    data: rotation,
+    isLoading,
+    isError,
+    refetch,
+  } = useOne<Rotation>({
     resource: "rotations",
     id: id ?? "",
     queryOptions: { enabled: !!id },
@@ -163,6 +177,7 @@ export function useRotationMutations() {
 ### Page Structure
 
 Pages are thin - just layout + pass params to client components:
+
 ```typescript
 // app/rotations/editor/page.tsx
 export default async function RotationEditorPage({ searchParams }: Props) {
@@ -221,11 +236,13 @@ function RotationEditorSkeleton() {
 The schema change broke these - fix them first:
 
 **rotation-card.tsx** - Remove references to:
+
 - `rotation.status` → remove status badge
 - `rotation.visibility` → use `rotation.isPublic`
 - `rotation.patchRange` → remove from display
 
 **rotation-detail-page.tsx** - Fix:
+
 - Remove `namespace` filter → use userId + join to user_profiles
 - Remove `deletedAt` filter → removed from schema
 - Remove `SimResult` references → table dropped
@@ -233,6 +250,7 @@ The schema change broke these - fix them first:
 - Remove `version`, `patchRange`, `visibility`, `publishedAt` references
 
 **rotations-content.tsx** - Fix:
+
 - Change `visibility: "public"` → `isPublic: true`
 - Remove `status` filter
 - Remove `deletedAt` filter
@@ -241,6 +259,7 @@ The schema change broke these - fix them first:
 ### Phase 2: Create Rotation Hooks
 
 **File: `hooks/rotations/use-rotation.ts`**
+
 ```typescript
 export function useRotation(id: string | undefined) {
   return useOne<Rotation>({
@@ -252,6 +271,7 @@ export function useRotation(id: string | undefined) {
 ```
 
 **File: `hooks/rotations/use-rotation-mutations.ts`**
+
 ```typescript
 export function useRotationMutations() {
   // createRotation, updateRotation, deleteRotation
@@ -260,6 +280,7 @@ export function useRotationMutations() {
 ```
 
 **File: `hooks/rotations/index.ts`**
+
 ```typescript
 export { useRotation } from "./use-rotation";
 export { useRotationMutations } from "./use-rotation-mutations";
@@ -270,6 +291,7 @@ export { useRotationMutations } from "./use-rotation-mutations";
 **File: `components/rotations/editor/rotation-editor.tsx`**
 
 Single component that handles create/edit/fork:
+
 - Props: `{ rotationId?: string; forkSourceId?: string }`
 - Uses `useRotation` to fetch for edit/fork
 - Uses `useForm` for form state
@@ -279,24 +301,29 @@ Single component that handles create/edit/fork:
 ### Phase 4: Update Editor Cards
 
 **rotation-metadata-card.tsx** (new)
+
 - Form fields: name, slug, class, spec, description, isPublic
 - Receives form control via props (not atoms)
 
 **rotation-script-card.tsx**
+
 - Textarea for script (Monaco later)
 - Save/delete buttons
 - Dirty indicator
 
 **validation-card.tsx**
+
 - Real-time validation of form values
 - Uses form.watch() to react to changes
 
 **templates-card.tsx**
+
 - Apply template → calls form.setValue()
 
 ### Phase 5: Update Pages
 
 Keep pages thin - just pass IDs:
+
 ```typescript
 // /rotations/editor/page.tsx
 <RotationEditor forkSourceId={searchParams.fork} />

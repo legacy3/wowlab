@@ -1,3 +1,6 @@
+"use client";
+
+import type { ControllerRenderProps } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -6,11 +9,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Save } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Save } from "lucide-react";
+import type { RotationFormValues } from "../rotation-editor";
 
-export function RotationScriptCard() {
+interface RotationScriptCardProps {
+  scriptField: ControllerRenderProps<RotationFormValues, "script">;
+  scriptInvalid: boolean;
+  scriptError?: string;
+  isMutating: boolean;
+  isFormValid: boolean;
+}
+
+export function RotationScriptCard({
+  scriptField,
+  scriptInvalid,
+  scriptError,
+  isMutating,
+  isFormValid,
+}: RotationScriptCardProps) {
   return (
-    <Card>
+    <Card className="md:col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -19,53 +38,32 @@ export function RotationScriptCard() {
               Edit your custom rotation priority
             </CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            disabled={isMutating || !isFormValid}
+          >
+            {isMutating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
               <Save className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-            <Button size="sm">
-              <Play className="mr-2 h-4 w-4" />
-              Test
-            </Button>
-          </div>
+            )}
+            {isMutating ? "Saving..." : "Save"}
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-lg border bg-muted/50 p-4 font-mono text-sm">
-          <pre className="text-muted-foreground">
-            {`// Shadow Priest Rotation Priority
-
-// Pre-pull
-if (time.before_combat) {
-  cast(vampiric_touch);
-}
-
-// Combat loop
-if (cooldown.shadowfiend.ready) {
-  cast(shadowfiend);
-}
-
-if (buff.shadow_word_pain.remains < 3) {
-  cast(shadow_word_pain);
-}
-
-if (buff.vampiric_touch.remains < 3) {
-  cast(vampiric_touch);
-}
-
-if (cooldown.mind_blast.ready) {
-  cast(mind_blast);
-}
-
-if (target.health.percent < 20) {
-  cast(shadow_word_death);
-}
-
-// Filler
-cast(mind_flay);`}
-          </pre>
-        </div>
+        <Textarea
+          placeholder="Enter your rotation script..."
+          className="font-mono text-sm min-h-[400px] resize-y"
+          disabled={isMutating}
+          aria-invalid={scriptInvalid}
+          {...scriptField}
+        />
+        {scriptInvalid && scriptError && (
+          <p className="text-sm text-destructive mt-2">{scriptError}</p>
+        )}
       </CardContent>
     </Card>
   );

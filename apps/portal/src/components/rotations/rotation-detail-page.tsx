@@ -1,6 +1,6 @@
 "use client";
 
-import { useList, useOne } from "@refinedev/core";
+import { useList, useOne, useGetIdentity } from "@refinedev/core";
 import {
   Card,
   CardContent,
@@ -13,13 +13,14 @@ import { Separator } from "@/components/ui/separator";
 import { UserAvatar } from "@/components/account/user-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  CheckCircle,
   Clock,
   Code,
   Copy,
   Download,
   Edit,
   GitFork,
+  Globe,
+  Lock,
   Share2,
   Trash2,
   TrendingUp,
@@ -33,11 +34,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Rotation, Profile, SimResult } from "@/lib/supabase/types";
+import type { Rotation, Profile, UserIdentity } from "@/lib/supabase/types";
+import Link from "next/link";
 
 interface RotationDetailProps {
-  namespace: string;
-  slug: string;
+  rotationId: string;
 }
 
 function RotationDetailSkeleton() {
@@ -88,24 +89,19 @@ function RotationDetailSkeleton() {
   );
 }
 
-export function RotationDetail({ namespace, slug }: RotationDetailProps) {
+export function RotationDetail({ rotationId }: RotationDetailProps) {
+  const { data: identity } = useGetIdentity<UserIdentity>();
+
   const {
-    result: rotationResult,
+    result: rotation,
     query: { isLoading: rotationLoading, isError: rotationError },
-  } = useList<Rotation>({
+  } = useOne<Rotation>({
     resource: "rotations",
-    filters: [
-      { field: "namespace", operator: "eq", value: namespace },
-      { field: "slug", operator: "eq", value: slug },
-      { field: "deletedAt", operator: "null", value: true },
-    ],
-    pagination: { pageSize: 1 },
+    id: rotationId,
   });
 
-  const rotation = rotationResult?.data?.[0];
-
   const {
-    result: profileResult,
+    result: author,
     query: { isLoading: profileLoading },
   } = useOne<Profile>({
     resource: "user_profiles",
@@ -115,32 +111,19 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
     },
   });
 
-  const author = profileResult;
-
-  const { result: simResultsResult } = useList<SimResult>({
-    resource: "rotation_sim_results",
-    filters: [{ field: "rotationId", operator: "eq", value: rotation?.id }],
-    sorters: [{ field: "createdAt", order: "desc" }],
-    queryOptions: {
-      enabled: !!rotation?.id,
-    },
-  });
-
-  const simResults = simResultsResult?.data ?? [];
-
   const { result: parent } = useOne<Rotation>({
     resource: "rotations",
-    id: rotation?.parentId ?? "",
+    id: rotation?.forkedFromId ?? "",
     queryOptions: {
-      enabled: !!rotation?.parentId,
+      enabled: !!rotation?.forkedFromId,
     },
   });
 
   const { result: forksResult } = useList<Rotation>({
     resource: "rotations",
     filters: [
-      { field: "parentId", operator: "eq", value: rotation?.id },
-      { field: "deletedAt", operator: "null", value: true },
+      { field: "forkedFromId", operator: "eq", value: rotation?.id },
+      { field: "isPublic", operator: "eq", value: true },
     ],
     sorters: [{ field: "createdAt", order: "desc" }],
     queryOptions: {
@@ -149,6 +132,8 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
   });
 
   const forks = forksResult?.data ?? [];
+
+  const isOwner = identity?.id === rotation?.userId;
 
   if (rotationLoading || profileLoading) {
     return <RotationDetailSkeleton />;
@@ -160,27 +145,29 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           {author && <UserAvatar user={author} className="h-14 w-14" />}
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-2xl font-bold">{rotation.name}</h2>
-              {rotation.status === "approved" && (
-                <Badge variant="outline" className="border-green-500/50">
-                  <CheckCircle className="mr-1 h-3 w-3" />
-                  Approved
-                </Badge>
-              )}
-              {rotation.status === "pending" && (
-                <Badge variant="outline" className="border-yellow-500/50">
-                  Pending
-                </Badge>
-              )}
+              <Badge variant="outline">
+                {rotation.isPublic ? (
+                  <>
+                    <Globe className="mr-1 h-3 w-3" />
+                    Public
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-1 h-3 w-3" />
+                    Private
+                  </>
+                )}
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              by @{namespace} • {rotation.spec} • {rotation.patchRange}
+              by @{author?.handle ?? "unknown"} • {rotation.class} •{" "}
+              {rotation.spec}
             </p>
             {rotation.description && (
               <p className="text-sm text-foreground mt-2">
@@ -191,9 +178,11 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
         </div>
 
         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-          <Button variant="default" size="sm">
-            <GitFork className="mr-2 h-4 w-4" />
-            Fork
+          <Button variant="default" size="sm" asChild>
+            <Link href={`/rotations/editor?fork=${rotation.id}`}>
+              <GitFork className="mr-2 h-4 w-4" />
+              Fork
+            </Link>
           </Button>
           <Button variant="outline" size="sm">
             <Copy className="mr-2 h-4 w-4" />
@@ -214,21 +203,26 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
                 <Download className="mr-2 h-4 w-4" />
                 Export JSON
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+              {isOwner && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={`/rotations/editor/${rotation.id}`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Rotation Script */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -239,7 +233,8 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
               </CardDescription>
             </div>
             <Badge variant="secondary">
-              <Code className="mr-1 h-3 w-3" />v{rotation.version ?? 1}
+              <Code className="mr-1 h-3 w-3" />
+              {rotation.slug}
             </Badge>
           </div>
         </CardHeader>
@@ -253,53 +248,15 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
             <Clock className="h-3 w-3" />
             <span>
               Last updated{" "}
-              {rotation.updatedAt
-                ? formatDistanceToNow(new Date(rotation.updatedAt), {
-                    addSuffix: true,
-                  })
-                : "unknown"}
+              {formatDistanceToNow(new Date(rotation.updatedAt), {
+                addSuffix: true,
+              })}
             </span>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Simulation Results */}
-        {simResults && simResults.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Data</CardTitle>
-              <CardDescription>
-                Simulation results across scenarios
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {simResults.slice(0, 5).map((result) => (
-                <div
-                  key={result.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium capitalize">
-                      {result.scenario.replace("-", " ")}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {result.gearSet.replace("-", " ")} • {result.patch}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">
-                      {result.meanDps.toFixed(1)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">DPS</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Metadata */}
         <Card>
           <CardHeader>
             <CardTitle>Details</CardTitle>
@@ -314,90 +271,78 @@ export function RotationDetail({ namespace, slug }: RotationDetailProps) {
             </div>
             <Separator />
             <div>
-              <p className="text-sm font-medium">Patch Range</p>
+              <p className="text-sm font-medium">Visibility</p>
               <p className="text-sm text-muted-foreground">
-                {rotation.patchRange}
+                {rotation.isPublic ? "Public" : "Private"}
               </p>
             </div>
             <Separator />
             <div>
-              <p className="text-sm font-medium">Visibility</p>
-              <p className="text-sm text-muted-foreground capitalize">
-                {rotation.visibility}
+              <p className="text-sm font-medium">Created</p>
+              <p className="text-sm text-muted-foreground">
+                {formatDistanceToNow(new Date(rotation.createdAt), {
+                  addSuffix: true,
+                })}
               </p>
             </div>
-            {rotation.publishedAt && (
-              <>
-                <Separator />
+          </CardContent>
+        </Card>
+
+        {(parent || forks.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Fork History</CardTitle>
+              <CardDescription>Related rotations</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {parent && (
                 <div>
-                  <p className="text-sm font-medium">Published</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(rotation.publishedAt), {
-                      addSuffix: true,
-                    })}
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    Forked from
                   </p>
+                  <Link
+                    href={`/rotations/${parent.id}`}
+                    className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{parent.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {parent.class} • {parent.spec}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </Link>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              )}
 
-      {/* Version History */}
-      {(parent || (forks && forks.length > 0)) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Version History</CardTitle>
-            <CardDescription>Forks and parent rotations</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {parent && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">
-                  Forked from
-                </p>
-                <a
-                  href={`/rotations/${parent.id}`}
-                  className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{parent.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      @{parent.namespace} • v{parent.version ?? 1}
-                    </p>
+              {forks.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    Forks ({forks.length})
+                  </p>
+                  <div className="space-y-2">
+                    {forks.slice(0, 5).map((fork) => (
+                      <Link
+                        key={fork.id}
+                        href={`/rotations/${fork.id}`}
+                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{fork.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {fork.class} • {fork.spec}
+                          </p>
+                        </div>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </Link>
+                    ))}
                   </div>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </a>
-              </div>
-            )}
-
-            {forks && forks.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">
-                  Forks ({forks.length})
-                </p>
-                <div className="space-y-2">
-                  {forks.slice(0, 5).map((fork) => (
-                    <a
-                      key={fork.id}
-                      href={`/rotations/${fork.id}`}
-                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{fork.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          @{fork.namespace} • v{fork.version ?? 1}
-                        </p>
-                      </div>
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </a>
-                  ))}
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

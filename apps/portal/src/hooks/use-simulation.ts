@@ -18,7 +18,6 @@ import {
   loadAurasForRotation,
   createBrowserRuntime,
   runSimulationLoop,
-  uploadSimulationResult,
   type RotationDefinition,
   type SimulationResult,
 } from "@/lib/simulation";
@@ -156,19 +155,9 @@ export function useSimulation(options?: UseSimulationOptions) {
           },
         );
 
-        // Phase 4: Upload results (optional - skipped if no rotationDbId)
-        updatePhase({
-          jobId,
-          phase: "uploading",
-          detail: "Saving results to database",
-        });
-
-        const resultId = await uploadSimulationResult({ result, rotation });
-
-        // Mark complete (resultId may be null if upload was skipped)
         completeJob({
           jobId,
-          resultId: resultId ?? null,
+          resultId: null,
           result: {
             dps: result.dps,
             totalDamage: result.totalDamage,
@@ -183,7 +172,7 @@ export function useSimulation(options?: UseSimulationOptions) {
           result,
           error: null,
           jobId,
-          resultId, // May be null if upload was skipped
+          resultId: null,
         });
 
         options?.onComplete?.(result);

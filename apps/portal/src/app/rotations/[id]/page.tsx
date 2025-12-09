@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { PageLayout } from "@/components/page";
 import { RotationDetail } from "@/components/rotations/rotation-detail-page";
 import { notFound } from "next/navigation";
@@ -11,7 +10,6 @@ interface RotationPageProps {
 
 export default async function RotationPage({ params }: RotationPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
 
   // Validate UUID format
   const uuidRegex =
@@ -20,33 +18,16 @@ export default async function RotationPage({ params }: RotationPageProps) {
     notFound();
   }
 
-  // Fetch rotation and profile
-  const { data: rotation } = await supabase
-    .from("rotations")
-    .select("*, profiles!rotations_user_id_fkey(handle)")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
-
-  if (!rotation) {
-    notFound();
-  }
-
-  const profile = Array.isArray(rotation.profiles)
-    ? rotation.profiles[0]
-    : rotation.profiles;
-  const authorHandle = profile?.handle || "unknown";
-
   return (
     <PageLayout
-      title={rotation.name}
+      title="Rotation"
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Rotations", href: "/rotations" },
-        { label: rotation.name },
+        { label: "View" },
       ]}
     >
-      <RotationDetail namespace={authorHandle} slug={rotation.slug} />
+      <RotationDetail rotationId={id} />
     </PageLayout>
   );
 }
