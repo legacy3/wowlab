@@ -1,6 +1,5 @@
 "use client";
 
-import { useAtom, useAtomValue } from "jotai";
 import {
   Card,
   CardContent,
@@ -13,13 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
-import {
-  queryIdAtom,
-  queryTypeAtom,
-  queryLoadingAtom,
-  type DataType,
-} from "@/atoms/data-inspector";
-import { useQuery } from "../query-context";
+import type { DataType } from "@/atoms/data-inspector";
+import { useDataInspector } from "@/hooks/use-data-inspector";
 
 const DATA_TYPE_LABELS: Record<DataType, string> = {
   spell: "Spell",
@@ -28,10 +22,7 @@ const DATA_TYPE_LABELS: Record<DataType, string> = {
 };
 
 export function ControlsCard() {
-  const [id, setId] = useAtom(queryIdAtom);
-  const [dataType, setDataType] = useAtom(queryTypeAtom);
-  const loading = useAtomValue(queryLoadingAtom);
-  const query = useQuery();
+  const { id, setId, type: dataType, setType: setDataType, loading, query } = useDataInspector();
 
   return (
     <Card className="h-full">

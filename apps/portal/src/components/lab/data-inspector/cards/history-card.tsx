@@ -1,6 +1,5 @@
 "use client";
 
-import { useAtomValue, useSetAtom } from "jotai";
 import {
   Card,
   CardContent,
@@ -10,23 +9,15 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, Package, Sparkles, Wand2 } from "lucide-react";
-import {
-  queryHistoryAtom,
-  queryIdAtom,
-  queryTypeAtom,
-  type DataType,
-} from "@/atoms/data-inspector";
-import { useQuery } from "../query-context";
+import type { DataType } from "@/atoms/data-inspector";
+import { useDataInspector } from "@/hooks/use-data-inspector";
 
 export function HistoryCard() {
-  const history = useAtomValue(queryHistoryAtom);
-  const setId = useSetAtom(queryIdAtom);
-  const setDataType = useSetAtom(queryTypeAtom);
-  const query = useQuery();
+  const { history, setId, setType, query } = useDataInspector();
 
   const handleSelect = (entryId: number, entryType: DataType) => {
     setId(entryId);
-    setDataType(entryType);
+    setType(entryType);
 
     // Query after a microtask to ensure atoms are updated
     queueMicrotask(() => query());

@@ -10,7 +10,6 @@ import {
   type DataInspectorCardId,
 } from "@/atoms/data-inspector";
 import { ControlsCard, HistoryCard, TransformedCard } from "./cards";
-import { QueryProvider } from "./query-context";
 
 const components: DashboardConfig<DataInspectorCardId> = {
   controls: { Component: ControlsCard },
@@ -22,13 +21,11 @@ export function DataInspectorContent() {
   const [order, setOrder] = useAtom(dataInspectorOrderAtom);
 
   return (
-    <QueryProvider>
-      <DraggableDashboard
-        items={order}
-        onReorder={setOrder}
-        components={components}
-        gridClassName="grid gap-4 md:grid-cols-2"
-      />
-    </QueryProvider>
+    <DraggableDashboard
+      items={order}
+      onReorder={setOrder}
+      components={components}
+      gridClassName="grid gap-4 md:grid-cols-2"
+    />
   );
 }
