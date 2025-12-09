@@ -27,7 +27,7 @@ import { useZenMode } from "@/hooks/use-zen-mode";
 import { SettingsPanel, type SettingsValues } from "./settings-panel";
 import type { Rotation } from "@/lib/supabase/types";
 
-interface ZenEditorProps {
+interface EditorViewProps {
   rotation: Rotation;
   script: string;
   isSaving: boolean;
@@ -63,7 +63,7 @@ export function EditorView({
   onTest,
   onSettingsChange,
   onDelete,
-}: ZenEditorProps) {
+}: EditorViewProps) {
   const { isZen, toggleZen } = useZenMode();
   const [editorReady, setEditorReady] = useState(false);
 
