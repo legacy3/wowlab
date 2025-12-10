@@ -20,3 +20,7 @@ The simulation engine processes combat events the same way the game does. Spells
 
 - Check out [MCP Server](/docs/01-mcp-server) to query game data with Claude or Cursor
 - Read [Data Flow](/docs/02-data-flow) to understand how the simulation engine works
+
+## Contributing
+
+These docs are just markdown files. You can [view and edit them on GitHub](https://github.com/legacy3/wowlab/tree/main/apps/portal/src/content).

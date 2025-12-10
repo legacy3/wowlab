@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toSlug } from "@/lib/slugify";
 import { Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,12 +92,7 @@ export function SettingsPanel({
             id="settings-slug"
             disabled={isDisabled}
             {...form.register("slug")}
-            onChange={(e) =>
-              form.setValue(
-                "slug",
-                e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-              )
-            }
+            onChange={(e) => form.setValue("slug", toSlug(e.target.value))}
           />
           <FieldDescription>URL-friendly identifier</FieldDescription>
           {form.formState.errors.slug && (

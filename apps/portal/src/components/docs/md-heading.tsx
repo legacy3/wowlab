@@ -1,4 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { toSlug } from "@/lib/slugify";
+import { Link } from "lucide-react";
 
 type MdHeadingProps = {
   level: 1 | 2 | 3 | 4;
@@ -15,7 +19,21 @@ const styles = {
 
 export function MdHeading({ level, children, className }: MdHeadingProps) {
   const Tag = `h${level}` as const;
-  return <Tag className={cn(styles[level], className)}>{children}</Tag>;
+  const text = typeof children === "string" ? children : String(children);
+  const id = `h${level}-${toSlug(text)}`;
+
+  return (
+    <Tag id={id} className={cn("group relative", styles[level], className)}>
+      {children}
+      <a
+        href={`#${id}`}
+        className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        aria-label="Link to this section"
+      >
+        <Link className="h-4 w-4" />
+      </a>
+    </Tag>
+  );
 }
 
 export function MdH1({ children, className }: Omit<MdHeadingProps, "level">) {

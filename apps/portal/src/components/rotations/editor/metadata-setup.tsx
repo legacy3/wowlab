@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toSlug } from "@/lib/slugify";
 import { ArrowRight, Check, ChevronsUpDown, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,16 +147,12 @@ export function MetadataSetup({ defaultValues, onSubmit }: MetadataSetupProps) {
     setSelectedTemplate(EMPTY_TEMPLATE);
   }, [selectedSpec]);
 
-  // Auto-generate slug from name
   const watchedName = form.watch("name");
   useEffect(() => {
     if (watchedName && !form.formState.dirtyFields.slug) {
-      const slug = watchedName
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .slice(0, 50);
-      form.setValue("slug", slug, { shouldValidate: true });
+      form.setValue("slug", toSlug(watchedName).slice(0, 50), {
+        shouldValidate: true,
+      });
     }
   }, [watchedName, form]);
 

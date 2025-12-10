@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PageLayout } from "@/components/page";
 import { getDocMeta, getAllDocSlugs, docsIndex } from "@/lib/docs";
+import { DocNav } from "@/components/docs/doc-nav";
 import { FileText } from "lucide-react";
 
 // All the docs <(o_o)>
@@ -32,6 +33,11 @@ export default async function DocPage({ params }: Props) {
     notFound();
   }
 
+  const currentIndex = docsIndex.findIndex((d) => d.slug === slug);
+  const prev = currentIndex > 0 ? docsIndex[currentIndex - 1] : null;
+  const next =
+    currentIndex < docsIndex.length - 1 ? docsIndex[currentIndex + 1] : null;
+
   return (
     <PageLayout
       title={meta.title}
@@ -61,8 +67,12 @@ export default async function DocPage({ params }: Props) {
           </nav>
         </aside>
 
-        <article className="flex-1 min-w-0 max-w-3xl prose prose-invert">
-          <Content />
+        <article className="flex-1 min-w-0 max-w-3xl">
+          <div className="prose prose-invert">
+            <Content />
+          </div>
+
+          <DocNav prev={prev} next={next} />
         </article>
       </div>
     </PageLayout>
