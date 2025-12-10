@@ -243,7 +243,7 @@ export type Database = {
     };
     Functions: {
       generate_default_handle: { Args: { user_id: string }; Returns: string };
-      generate_random_seed: { Args: Record<string, never>; Returns: string };
+      generate_random_seed: { Args: never; Returns: string };
     };
     Enums: {
       [_ in never]: never;
@@ -254,6 +254,195 @@ export type Database = {
   };
   raw_dbc: {
     Tables: {
+      chr_classes: {
+        Row: {
+          AlteredFormCharacterCreationIdleVisualFallback: number | null;
+          ArmorTypeMask: number | null;
+          AttackPowerPerAgility: number | null;
+          AttackPowerPerStrength: number | null;
+          CharacterCreationAnimLoopWaitTimeMsFallback: number | null;
+          CharacterCreationGroundVisualFallback: number | null;
+          CharacterCreationIdleGroundVisualFallback: number | null;
+          CinematicSequenceID: number | null;
+          ClassColorB: number | null;
+          ClassColorG: number | null;
+          ClassColorR: number | null;
+          CreateScreenFileDataID: number | null;
+          DamageBonusStat: number | null;
+          DefaultSpec: number | null;
+          Description_lang: string | null;
+          DisabledString_lang: string | null;
+          DisplayPower: number | null;
+          FemaleCharacterCreationIdleVisualFallback: number | null;
+          FemaleCharacterCreationVisualFallback: number | null;
+          Field_9_0_1_34490_018: number | null;
+          Filename: string | null;
+          Flags: number | null;
+          HasRelicSlot: number | null;
+          HasStrengthAttackBonus: number | null;
+          Hyphenated_name_female_lang: string | null;
+          Hyphenated_name_male_lang: string | null;
+          IconFileDataID: number | null;
+          ID: number;
+          LowResScreenFileDataID: number | null;
+          MaleCharacterCreationIdleVisualFallback: number | null;
+          MaleCharacterCreationVisualFallback: number | null;
+          Name_female_lang: string | null;
+          Name_lang: string | null;
+          Name_male_lang: string | null;
+          PetNameToken: string | null;
+          PrimaryStatPriority: number | null;
+          RangedAttackPowerPerAgility: number | null;
+          RoleInfoString_lang: string | null;
+          RolesMask: number | null;
+          SelectScreenFileDataID: number | null;
+          SpellClassSet: number | null;
+          SpellTextureBlobFileDataID: number | null;
+          StartingLevel: number | null;
+        };
+        Insert: {
+          AlteredFormCharacterCreationIdleVisualFallback?: number | null;
+          ArmorTypeMask?: number | null;
+          AttackPowerPerAgility?: number | null;
+          AttackPowerPerStrength?: number | null;
+          CharacterCreationAnimLoopWaitTimeMsFallback?: number | null;
+          CharacterCreationGroundVisualFallback?: number | null;
+          CharacterCreationIdleGroundVisualFallback?: number | null;
+          CinematicSequenceID?: number | null;
+          ClassColorB?: number | null;
+          ClassColorG?: number | null;
+          ClassColorR?: number | null;
+          CreateScreenFileDataID?: number | null;
+          DamageBonusStat?: number | null;
+          DefaultSpec?: number | null;
+          Description_lang?: string | null;
+          DisabledString_lang?: string | null;
+          DisplayPower?: number | null;
+          FemaleCharacterCreationIdleVisualFallback?: number | null;
+          FemaleCharacterCreationVisualFallback?: number | null;
+          Field_9_0_1_34490_018?: number | null;
+          Filename?: string | null;
+          Flags?: number | null;
+          HasRelicSlot?: number | null;
+          HasStrengthAttackBonus?: number | null;
+          Hyphenated_name_female_lang?: string | null;
+          Hyphenated_name_male_lang?: string | null;
+          IconFileDataID?: number | null;
+          ID: number;
+          LowResScreenFileDataID?: number | null;
+          MaleCharacterCreationIdleVisualFallback?: number | null;
+          MaleCharacterCreationVisualFallback?: number | null;
+          Name_female_lang?: string | null;
+          Name_lang?: string | null;
+          Name_male_lang?: string | null;
+          PetNameToken?: string | null;
+          PrimaryStatPriority?: number | null;
+          RangedAttackPowerPerAgility?: number | null;
+          RoleInfoString_lang?: string | null;
+          RolesMask?: number | null;
+          SelectScreenFileDataID?: number | null;
+          SpellClassSet?: number | null;
+          SpellTextureBlobFileDataID?: number | null;
+          StartingLevel?: number | null;
+        };
+        Update: {
+          AlteredFormCharacterCreationIdleVisualFallback?: number | null;
+          ArmorTypeMask?: number | null;
+          AttackPowerPerAgility?: number | null;
+          AttackPowerPerStrength?: number | null;
+          CharacterCreationAnimLoopWaitTimeMsFallback?: number | null;
+          CharacterCreationGroundVisualFallback?: number | null;
+          CharacterCreationIdleGroundVisualFallback?: number | null;
+          CinematicSequenceID?: number | null;
+          ClassColorB?: number | null;
+          ClassColorG?: number | null;
+          ClassColorR?: number | null;
+          CreateScreenFileDataID?: number | null;
+          DamageBonusStat?: number | null;
+          DefaultSpec?: number | null;
+          Description_lang?: string | null;
+          DisabledString_lang?: string | null;
+          DisplayPower?: number | null;
+          FemaleCharacterCreationIdleVisualFallback?: number | null;
+          FemaleCharacterCreationVisualFallback?: number | null;
+          Field_9_0_1_34490_018?: number | null;
+          Filename?: string | null;
+          Flags?: number | null;
+          HasRelicSlot?: number | null;
+          HasStrengthAttackBonus?: number | null;
+          Hyphenated_name_female_lang?: string | null;
+          Hyphenated_name_male_lang?: string | null;
+          IconFileDataID?: number | null;
+          ID?: number;
+          LowResScreenFileDataID?: number | null;
+          MaleCharacterCreationIdleVisualFallback?: number | null;
+          MaleCharacterCreationVisualFallback?: number | null;
+          Name_female_lang?: string | null;
+          Name_lang?: string | null;
+          Name_male_lang?: string | null;
+          PetNameToken?: string | null;
+          PrimaryStatPriority?: number | null;
+          RangedAttackPowerPerAgility?: number | null;
+          RoleInfoString_lang?: string | null;
+          RolesMask?: number | null;
+          SelectScreenFileDataID?: number | null;
+          SpellClassSet?: number | null;
+          SpellTextureBlobFileDataID?: number | null;
+          StartingLevel?: number | null;
+        };
+        Relationships: [];
+      };
+      chr_specialization: {
+        Row: {
+          AnimReplacements: number | null;
+          ClassID: number | null;
+          Description_lang: string | null;
+          FemaleName_lang: string | null;
+          Flags: number | null;
+          ID: number;
+          MasterySpellID_0: number | null;
+          MasterySpellID_1: number | null;
+          Name_lang: string | null;
+          OrderIndex: number | null;
+          PetTalentType: number | null;
+          PrimaryStatPriority: number | null;
+          Role: number | null;
+          SpellIconFileID: number | null;
+        };
+        Insert: {
+          AnimReplacements?: number | null;
+          ClassID?: number | null;
+          Description_lang?: string | null;
+          FemaleName_lang?: string | null;
+          Flags?: number | null;
+          ID: number;
+          MasterySpellID_0?: number | null;
+          MasterySpellID_1?: number | null;
+          Name_lang?: string | null;
+          OrderIndex?: number | null;
+          PetTalentType?: number | null;
+          PrimaryStatPriority?: number | null;
+          Role?: number | null;
+          SpellIconFileID?: number | null;
+        };
+        Update: {
+          AnimReplacements?: number | null;
+          ClassID?: number | null;
+          Description_lang?: string | null;
+          FemaleName_lang?: string | null;
+          Flags?: number | null;
+          ID?: number;
+          MasterySpellID_0?: number | null;
+          MasterySpellID_1?: number | null;
+          Name_lang?: string | null;
+          OrderIndex?: number | null;
+          PetTalentType?: number | null;
+          PrimaryStatPriority?: number | null;
+          Role?: number | null;
+          SpellIconFileID?: number | null;
+        };
+        Relationships: [];
+      };
       content_tuning_x_expected: {
         Row: {
           ContentTuningID: number;
@@ -863,6 +1052,54 @@ export type Database = {
           FileName?: string;
           FilePath?: string;
           ID?: number;
+        };
+        Relationships: [];
+      };
+      skill_line_x_trait_tree: {
+        Row: {
+          ID: number;
+          SkillLineID: number | null;
+          TraitTreeID: number | null;
+          Variant: number | null;
+        };
+        Insert: {
+          ID: number;
+          SkillLineID?: number | null;
+          TraitTreeID?: number | null;
+          Variant?: number | null;
+        };
+        Update: {
+          ID?: number;
+          SkillLineID?: number | null;
+          TraitTreeID?: number | null;
+          Variant?: number | null;
+        };
+        Relationships: [];
+      };
+      specialization_spells: {
+        Row: {
+          Description_lang: string | null;
+          DisplayOrder: number | null;
+          ID: number;
+          OverridesSpellID: number | null;
+          SpecID: number | null;
+          SpellID: number | null;
+        };
+        Insert: {
+          Description_lang?: string | null;
+          DisplayOrder?: number | null;
+          ID: number;
+          OverridesSpellID?: number | null;
+          SpecID?: number | null;
+          SpellID?: number | null;
+        };
+        Update: {
+          Description_lang?: string | null;
+          DisplayOrder?: number | null;
+          ID?: number;
+          OverridesSpellID?: number | null;
+          SpecID?: number | null;
+          SpellID?: number | null;
         };
         Relationships: [];
       };
@@ -1907,6 +2144,201 @@ export type Database = {
           ID?: number;
           SpellDescriptionVariablesID?: number | null;
           SpellID?: number | null;
+        };
+        Relationships: [];
+      };
+      talent: {
+        Row: {
+          CategoryMask_0: number | null;
+          CategoryMask_1: number | null;
+          ClassID: number | null;
+          ColumnIndex: number | null;
+          Description_lang: string | null;
+          Flags: number | null;
+          ID: number;
+          OverridesSpellID: number | null;
+          PrereqRank_0: number | null;
+          PrereqRank_1: number | null;
+          PrereqRank_2: number | null;
+          PrereqTalent_0: number | null;
+          PrereqTalent_1: number | null;
+          PrereqTalent_2: number | null;
+          RequiredSpellID: number | null;
+          SpecID: number | null;
+          SpellID: number | null;
+          SpellRank_0: number | null;
+          SpellRank_1: number | null;
+          SpellRank_2: number | null;
+          SpellRank_3: number | null;
+          SpellRank_4: number | null;
+          SpellRank_5: number | null;
+          SpellRank_6: number | null;
+          SpellRank_7: number | null;
+          SpellRank_8: number | null;
+          TabID: number | null;
+          TierID: number | null;
+        };
+        Insert: {
+          CategoryMask_0?: number | null;
+          CategoryMask_1?: number | null;
+          ClassID?: number | null;
+          ColumnIndex?: number | null;
+          Description_lang?: string | null;
+          Flags?: number | null;
+          ID: number;
+          OverridesSpellID?: number | null;
+          PrereqRank_0?: number | null;
+          PrereqRank_1?: number | null;
+          PrereqRank_2?: number | null;
+          PrereqTalent_0?: number | null;
+          PrereqTalent_1?: number | null;
+          PrereqTalent_2?: number | null;
+          RequiredSpellID?: number | null;
+          SpecID?: number | null;
+          SpellID?: number | null;
+          SpellRank_0?: number | null;
+          SpellRank_1?: number | null;
+          SpellRank_2?: number | null;
+          SpellRank_3?: number | null;
+          SpellRank_4?: number | null;
+          SpellRank_5?: number | null;
+          SpellRank_6?: number | null;
+          SpellRank_7?: number | null;
+          SpellRank_8?: number | null;
+          TabID?: number | null;
+          TierID?: number | null;
+        };
+        Update: {
+          CategoryMask_0?: number | null;
+          CategoryMask_1?: number | null;
+          ClassID?: number | null;
+          ColumnIndex?: number | null;
+          Description_lang?: string | null;
+          Flags?: number | null;
+          ID?: number;
+          OverridesSpellID?: number | null;
+          PrereqRank_0?: number | null;
+          PrereqRank_1?: number | null;
+          PrereqRank_2?: number | null;
+          PrereqTalent_0?: number | null;
+          PrereqTalent_1?: number | null;
+          PrereqTalent_2?: number | null;
+          RequiredSpellID?: number | null;
+          SpecID?: number | null;
+          SpellID?: number | null;
+          SpellRank_0?: number | null;
+          SpellRank_1?: number | null;
+          SpellRank_2?: number | null;
+          SpellRank_3?: number | null;
+          SpellRank_4?: number | null;
+          SpellRank_5?: number | null;
+          SpellRank_6?: number | null;
+          SpellRank_7?: number | null;
+          SpellRank_8?: number | null;
+          TabID?: number | null;
+          TierID?: number | null;
+        };
+        Relationships: [];
+      };
+      trait_definition: {
+        Row: {
+          ID: number;
+          OverrideDescription_lang: string | null;
+          OverrideIcon: number | null;
+          OverrideName_lang: string | null;
+          OverridesSpellID: number | null;
+          OverrideSubtext_lang: string | null;
+          SpellID: number | null;
+          VisibleSpellID: number | null;
+        };
+        Insert: {
+          ID: number;
+          OverrideDescription_lang?: string | null;
+          OverrideIcon?: number | null;
+          OverrideName_lang?: string | null;
+          OverridesSpellID?: number | null;
+          OverrideSubtext_lang?: string | null;
+          SpellID?: number | null;
+          VisibleSpellID?: number | null;
+        };
+        Update: {
+          ID?: number;
+          OverrideDescription_lang?: string | null;
+          OverrideIcon?: number | null;
+          OverrideName_lang?: string | null;
+          OverridesSpellID?: number | null;
+          OverrideSubtext_lang?: string | null;
+          SpellID?: number | null;
+          VisibleSpellID?: number | null;
+        };
+        Relationships: [];
+      };
+      trait_node_entry: {
+        Row: {
+          ID: number;
+          MaxRanks: number | null;
+          NodeEntryType: number | null;
+          TraitDefinitionID: number | null;
+          TraitSubTreeID: number | null;
+        };
+        Insert: {
+          ID: number;
+          MaxRanks?: number | null;
+          NodeEntryType?: number | null;
+          TraitDefinitionID?: number | null;
+          TraitSubTreeID?: number | null;
+        };
+        Update: {
+          ID?: number;
+          MaxRanks?: number | null;
+          NodeEntryType?: number | null;
+          TraitDefinitionID?: number | null;
+          TraitSubTreeID?: number | null;
+        };
+        Relationships: [];
+      };
+      trait_node_x_trait_node_entry: {
+        Row: {
+          _Index: number | null;
+          ID: number;
+          TraitNodeEntryID: number | null;
+          TraitNodeID: number | null;
+        };
+        Insert: {
+          _Index?: number | null;
+          ID: number;
+          TraitNodeEntryID?: number | null;
+          TraitNodeID?: number | null;
+        };
+        Update: {
+          _Index?: number | null;
+          ID?: number;
+          TraitNodeEntryID?: number | null;
+          TraitNodeID?: number | null;
+        };
+        Relationships: [];
+      };
+      trait_sub_tree: {
+        Row: {
+          Description_lang: string | null;
+          ID: number;
+          Name_lang: string | null;
+          TraitTreeID: number | null;
+          UiTextureAtlasElementID: number | null;
+        };
+        Insert: {
+          Description_lang?: string | null;
+          ID: number;
+          Name_lang?: string | null;
+          TraitTreeID?: number | null;
+          UiTextureAtlasElementID?: number | null;
+        };
+        Update: {
+          Description_lang?: string | null;
+          ID?: number;
+          Name_lang?: string | null;
+          TraitTreeID?: number | null;
+          UiTextureAtlasElementID?: number | null;
         };
         Relationships: [];
       };

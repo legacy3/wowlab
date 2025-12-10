@@ -108,6 +108,35 @@ export const RefineDbcService = (
   dataProvider: DataProvider,
 ): Layer.Layer<DbcService> =>
   Layer.succeed(DbcService, {
+    // Class/spec tables
+    getChrClass: (id) =>
+      getOne<Schemas.Dbc.ChrClassesRow>(
+        queryClient,
+        dataProvider,
+        "chr_classes",
+        id,
+      ),
+    getChrClasses: () =>
+      getList<Schemas.Dbc.ChrClassesRow>(
+        queryClient,
+        dataProvider,
+        "chr_classes",
+        [],
+      ),
+    getChrSpecialization: (id) =>
+      getOne<Schemas.Dbc.ChrSpecializationRow>(
+        queryClient,
+        dataProvider,
+        "chr_specialization",
+        id,
+      ),
+    getChrSpecializations: () =>
+      getList<Schemas.Dbc.ChrSpecializationRow>(
+        queryClient,
+        dataProvider,
+        "chr_specialization",
+        [],
+      ),
     // Lookup tables (keyed by ID)
     getDifficulty: (id) =>
       getOne<Schemas.Dbc.DifficultyRow>(
@@ -145,6 +174,14 @@ export const RefineDbcService = (
         dataProvider,
         "manifest_interface_data",
         id,
+      ),
+    getSpecializationSpells: (specId) =>
+      getListByFilter<Schemas.Dbc.SpecializationSpellsRow>(
+        queryClient,
+        dataProvider,
+        "specialization_spells",
+        "SpecID",
+        specId,
       ),
     getSpell: (spellId) =>
       getOne<Schemas.Dbc.SpellRow>(queryClient, dataProvider, "spell", spellId),

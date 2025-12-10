@@ -3,6 +3,8 @@ import { Map as ImmutableMap } from "immutable";
 
 // prettier-ignore
 export interface DbcCache {
+  chrClasses: ImmutableMap<number, Dbc.ChrClassesRow>;
+  chrSpecialization: ImmutableMap<number, Dbc.ChrSpecializationRow>;
   contentTuningXExpected: Dbc.ContentTuningXExpectedRow[];
   difficulty: ImmutableMap<number, Dbc.DifficultyRow>;
   expectedStat: Dbc.ExpectedStatRow[];
@@ -12,6 +14,7 @@ export interface DbcCache {
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
   itemXItemEffect: ImmutableMap<number, Dbc.ItemXItemEffectRow[]>;
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
+  specializationSpells: ImmutableMap<number, Dbc.SpecializationSpellsRow[]>;
   spell: ImmutableMap<number, Dbc.SpellRow>;
   spellAuraOptions: ImmutableMap<number, Dbc.SpellAuraOptionsRow>;
   spellAuraRestrictions: ImmutableMap<number, Dbc.SpellAuraRestrictionsRow>;
@@ -46,6 +49,8 @@ export interface DbcCache {
 
 // prettier-ignore
 export interface RawDbcData {
+  chrClasses: Dbc.ChrClassesRow[];
+  chrSpecialization: Dbc.ChrSpecializationRow[];
   contentTuningXExpected: Dbc.ContentTuningXExpectedRow[];
   difficulty: Dbc.DifficultyRow[];
   expectedStat: Dbc.ExpectedStatRow[];
@@ -55,6 +60,7 @@ export interface RawDbcData {
   itemSparse: Dbc.ItemSparseRow[];
   itemXItemEffect: Dbc.ItemXItemEffectRow[];
   manifestInterfaceData: Dbc.ManifestInterfaceDataRow[];
+  specializationSpells: Dbc.SpecializationSpellsRow[];
   spell: Dbc.SpellRow[];
   spellAuraOptions: Dbc.SpellAuraOptionsRow[];
   spellAuraRestrictions: Dbc.SpellAuraRestrictionsRow[];
@@ -89,6 +95,8 @@ export interface RawDbcData {
 
 // prettier-ignore
 export const createCache = (rawData: RawDbcData): DbcCache => ({
+  chrClasses: ImmutableMap(rawData.chrClasses.map((row) => [row.ID, row])),
+  chrSpecialization: ImmutableMap(rawData.chrSpecialization.map((row) => [row.ID, row])),
   contentTuningXExpected: rawData.contentTuningXExpected,
   difficulty: ImmutableMap(rawData.difficulty.map((row) => [row.ID, row])),
   expectedStat: rawData.expectedStat,
@@ -98,6 +106,7 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   itemSparse: ImmutableMap(rawData.itemSparse.map((row) => [row.ID, row])),
   itemXItemEffect: groupByItemId(rawData.itemXItemEffect),
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),
+  specializationSpells: groupBySpecId(rawData.specializationSpells),
   spell: ImmutableMap(rawData.spell.map((row) => [row.ID, row])),
   spellAuraOptions: ImmutableMap(rawData.spellAuraOptions.map((row) => [row.SpellID, row])),
   spellAuraRestrictions: ImmutableMap(rawData.spellAuraRestrictions.map((row) => [row.SpellID, row])),
@@ -138,6 +147,19 @@ const groupBySpellId = <T extends { SpellID: number }>(
   rows.forEach((row) => {
     const existing = grouped.get(row.SpellID) || [];
     grouped.set(row.SpellID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupBySpecId = <T extends { SpecID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.SpecID) || [];
+    grouped.set(row.SpecID, [...existing, row]);
   });
 
   return ImmutableMap(grouped);

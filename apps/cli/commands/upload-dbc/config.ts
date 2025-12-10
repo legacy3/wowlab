@@ -8,6 +8,8 @@ export interface DbcTableMapping<T = unknown> extends TableConfig<T> {
 
 // prettier-ignore
 export const DBC_TABLES = {
+  chrClasses: { file: "ChrClasses.csv", schema: Dbc.ChrClassesRowSchema, tableName: "chr_classes" },
+  chrSpecialization: { file: "ChrSpecialization.csv", schema: Dbc.ChrSpecializationRowSchema, tableName: "chr_specialization" },
   contentTuningXExpected: { file: "ContentTuningXExpected.csv", schema: Dbc.ContentTuningXExpectedRowSchema, tableName: "content_tuning_x_expected" },
   difficulty: { file: "Difficulty.csv", schema: Dbc.DifficultyRowSchema, tableName: "difficulty" },
   expectedStat: { file: "ExpectedStat.csv", schema: Dbc.ExpectedStatRowSchema, tableName: "expected_stat" },
@@ -17,6 +19,8 @@ export const DBC_TABLES = {
   itemSparse: { file: "ItemSparse.csv", schema: Dbc.ItemSparseRowSchema, tableName: "item_sparse" },
   itemXItemEffect: { file: "ItemXItemEffect.csv", schema: Dbc.ItemXItemEffectRowSchema, tableName: "item_x_item_effect" },
   manifestInterfaceData: { file: "ManifestInterfaceData.csv", schema: Dbc.ManifestInterfaceDataRowSchema, tableName: "manifest_interface_data" },
+  skillLineXTraitTree: { file: "SkillLineXTraitTree.csv", schema: Dbc.SkillLineXTraitTreeRowSchema, tableName: "skill_line_x_trait_tree" },
+  specializationSpells: { file: "SpecializationSpells.csv", schema: Dbc.SpecializationSpellsRowSchema, tableName: "specialization_spells" },
   spell: { file: "Spell.csv", schema: Dbc.SpellRowSchema, tableName: "spell" },
   spellAuraOptions: { file: "SpellAuraOptions.csv", schema: Dbc.SpellAuraOptionsRowSchema, tableName: "spell_aura_options" },
   spellAuraRestrictions: { file: "SpellAuraRestrictions.csv", schema: Dbc.SpellAuraRestrictionsRowSchema, tableName: "spell_aura_restrictions" },
@@ -47,6 +51,11 @@ export const DBC_TABLES = {
   spellTargetRestrictions: { file: "SpellTargetRestrictions.csv", schema: Dbc.SpellTargetRestrictionsRowSchema, tableName: "spell_target_restrictions" },
   spellTotems: { file: "SpellTotems.csv", schema: Dbc.SpellTotemsRowSchema, tableName: "spell_totems" },
   spellXDescriptionVariables: { file: "SpellXDescriptionVariables.csv", schema: Dbc.SpellXDescriptionVariablesRowSchema, tableName: "spell_x_description_variables" },
+  talent: { file: "Talent.csv", schema: Dbc.TalentRowSchema, tableName: "talent" },
+  traitDefinition: { file: "TraitDefinition.csv", schema: Dbc.TraitDefinitionRowSchema, tableName: "trait_definition" },
+  traitNodeEntry: { file: "TraitNodeEntry.csv", schema: Dbc.TraitNodeEntryRowSchema, tableName: "trait_node_entry" },
+  traitNodeXTraitNodeEntry: { file: "TraitNodeXTraitNodeEntry.csv", schema: Dbc.TraitNodeXTraitNodeEntryRowSchema, tableName: "trait_node_x_trait_node_entry" },
+  traitSubTree: { file: "TraitSubTree.csv", schema: Dbc.TraitSubTreeRowSchema, tableName: "trait_sub_tree" },
 } as const;
 
 export type DbcTableKey = keyof typeof DBC_TABLES;
