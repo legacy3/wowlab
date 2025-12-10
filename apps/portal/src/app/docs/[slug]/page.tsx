@@ -5,9 +5,9 @@ import { getDocMeta, getAllDocSlugs, docsIndex } from "@/lib/docs";
 import { FileText } from "lucide-react";
 
 // All the docs <(o_o)>
-import Overview from "@/content/docs/00-overview.md";
-import McpServer from "@/content/docs/01-mcp-server.md";
-import DataFlow from "@/content/docs/02-data-flow.md";
+import Overview from "@/content/00-overview.md";
+import McpServer from "@/content/01-mcp-server.md";
+import DataFlow from "@/content/02-data-flow.md";
 
 const docs: Record<string, React.ComponentType> = {
   "00-overview": Overview,
