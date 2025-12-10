@@ -83,12 +83,14 @@ export function useSpecCoverage(): UseSpecCoverageResult {
               Effect.gen(function* () {
                 while (true) {
                   const msg = yield* Queue.take(dequeue);
+
                   yield* Effect.sync(() => setProgress(msg));
                 }
               }),
             );
 
             const extractor = yield* ExtractorService;
+
             return yield* extractor.buildSpecCoverage(SUPPORTED_SPELL_IDS);
           }),
         ).pipe(Effect.provide(fullLayer)),
