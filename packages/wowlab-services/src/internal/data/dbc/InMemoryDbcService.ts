@@ -8,6 +8,16 @@ import { DbcService, type DbcServiceInterface } from "./DbcService.js";
 
 export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
   Layer.succeed(DbcService, {
+    getChrClass: (id) => Effect.succeed(cache.chrClasses.get(id)),
+
+    getChrClasses: () => Effect.succeed([...cache.chrClasses.values()]),
+
+    getChrSpecialization: (id) =>
+      Effect.succeed(cache.chrSpecialization.get(id)),
+
+    getChrSpecializations: () =>
+      Effect.succeed([...cache.chrSpecialization.values()]),
+
     getContentTuningXExpected: (contentTuningId, mythicPlusSeasonId) =>
       Effect.succeed(
         cache.contentTuningXExpected.filter(
@@ -62,6 +72,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getManifestInterfaceData: (id) =>
       Effect.succeed(cache.manifestInterfaceData.get(id)),
+
+    getSpecializationSpells: (specId) =>
+      Effect.succeed(cache.specializationSpells.get(specId) ?? []),
 
     getSpell: (spellId) => Effect.succeed(cache.spell.get(spellId)),
 

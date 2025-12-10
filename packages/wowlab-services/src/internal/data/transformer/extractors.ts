@@ -827,7 +827,141 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
       ): Aura.RefreshBehavior =>
         pandemicFlag || tickPeriodMs > 0 ? "pandemic" : "duration";
 
+      const extractSpellsForSpec = (
+        specId: number,
+      ): Effect.Effect<
+        Array<{ spellId: number; spellName: string }>,
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const specSpells = yield* dbcService.getSpecializationSpells(specId);
+          const results: Array<{ spellId: number; spellName: string }> = [];
+
+          for (const specSpell of specSpells) {
+            // TODO Some spells in specialization_spells don't have entries in spell_name?
+            const spellName = yield* extractName(specSpell.SpellID).pipe(
+              Effect.orElseSucceed(() => `Spell ${specSpell.SpellID}`),
+            );
+
+            results.push({
+              spellId: specSpell.SpellID,
+              spellName,
+            });
+          }
+
+          return results.sort((a, b) => a.spellName.localeCompare(b.spellName));
+        });
+
+      // TODO Not sure if this really belongs here, extractors getting kinda bloated
+      const buildSpecCoverage = (
+        supportedSpellIds: ReadonlySet<number>,
+      ): Effect.Effect<
+        {
+          classes: Array<{
+            id: number;
+            name: string;
+            color: string;
+            specs: Array<{
+              id: number;
+              name: string;
+              spells: Array<{
+                id: number;
+                name: string;
+                supported: boolean;
+              }>;
+            }>;
+          }>;
+        },
+        DbcError
+      > =>
+        Effect.gen(function* () {
+          const allClasses = yield* dbcService.getChrClasses();
+          const allSpecs = yield* dbcService.getChrSpecializations();
+
+          // Filter out Adventurer class (ID 14) and build class map
+          const validClasses = allClasses.filter(
+            (c) => c.ID !== 14 && c.Name_lang,
+          );
+
+          // Filter out Initial/Devourer specs
+          const validSpecs = allSpecs.filter(
+            (s) => s.Name_lang && s.Name_lang !== "Initial",
+            // && s.Name_lang !== "Devourer",
+          );
+
+          // Group specs by ClassID
+          const specsByClass = new Map<number, typeof validSpecs>();
+          for (const spec of validSpecs) {
+            if (spec.ClassID == null) {
+              continue;
+            }
+
+            const existing = specsByClass.get(spec.ClassID) ?? [];
+            existing.push(spec);
+            specsByClass.set(spec.ClassID, existing);
+          }
+
+          const classes: Array<{
+            id: number;
+            name: string;
+            color: string;
+            specs: Array<{
+              id: number;
+              name: string;
+              spells: Array<{ id: number; name: string; supported: boolean }>;
+            }>;
+          }> = [];
+
+          for (const cls of validClasses) {
+            // TOOD Move this to some utility function
+            const r = cls.ClassColorR ?? 128;
+            const g = cls.ClassColorG ?? 128;
+            const b = cls.ClassColorB ?? 128;
+            const color = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+
+            const classSpecs = specsByClass.get(cls.ID) ?? [];
+
+            // Sort specs by OrderIndex
+            classSpecs.sort(
+              (a, b) => (a.OrderIndex ?? 0) - (b.OrderIndex ?? 0),
+            );
+
+            const specs: Array<{
+              id: number;
+              name: string;
+              spells: Array<{ id: number; name: string; supported: boolean }>;
+            }> = [];
+
+            for (const spec of classSpecs) {
+              const spellsForSpec = yield* extractSpellsForSpec(spec.ID);
+
+              specs.push({
+                id: spec.ID,
+                name: spec.Name_lang!,
+                spells: spellsForSpec.map((s) => ({
+                  id: s.spellId,
+                  name: s.spellName,
+                  supported: supportedSpellIds.has(s.spellId),
+                })),
+              });
+            }
+
+            classes.push({
+              color,
+              id: cls.ID,
+              name: cls.Name_lang!,
+              specs,
+            });
+          }
+
+          // Sort classes by ID
+          classes.sort((a, b) => a.id - b.id);
+
+          return { classes };
+        });
+
       return {
+        buildSpecCoverage,
         determineRefreshBehavior,
         extractAuraFlags,
         extractAuraRestrictions,
@@ -851,6 +985,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         extractReplacement,
         extractScaling,
         extractShapeshift,
+        extractSpellsForSpec,
         extractTargetRestrictions,
         extractTotems,
         getDamage,

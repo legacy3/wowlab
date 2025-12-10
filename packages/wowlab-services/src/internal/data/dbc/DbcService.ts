@@ -4,6 +4,24 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 
 export interface DbcServiceInterface {
+  readonly getChrClass: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ChrClassesRow | undefined, DbcError>;
+
+  readonly getChrClasses: () => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ChrClassesRow>,
+    DbcError
+  >;
+
+  readonly getChrSpecialization: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ChrSpecializationRow | undefined, DbcError>;
+
+  readonly getChrSpecializations: () => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ChrSpecializationRow>,
+    DbcError
+  >;
+
   readonly getContentTuningXExpected: (
     contentTuningId: number,
     mythicPlusSeasonId: number,
@@ -51,6 +69,13 @@ export interface DbcServiceInterface {
     Schemas.Dbc.ManifestInterfaceDataRow | undefined,
     DbcError
   >;
+  readonly getSpecializationSpells: (
+    specId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
+    DbcError
+  >;
+
   readonly getSpell: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRow | undefined, DbcError>;

@@ -475,6 +475,36 @@ const SupabaseDbcServiceLive = (
       });
 
       return Layer.succeed(DbcService, {
+        // TODO Add proper lookup functions and caches for all chr tables
+        getChrClass: (id) =>
+          query<Schemas.Dbc.ChrClassesRow | undefined>(
+            supabase,
+            "chr_classes",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+
+        getChrClasses: () =>
+          query<Schemas.Dbc.ChrClassesRow[]>(
+            supabase,
+            "chr_classes",
+            (builder) => builder.select("*").order("ID"),
+          ),
+
+        getChrSpecialization: (id) =>
+          query<Schemas.Dbc.ChrSpecializationRow | undefined>(
+            supabase,
+            "chr_specialization",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+
+        getChrSpecializations: () =>
+          query<Schemas.Dbc.ChrSpecializationRow[]>(
+            supabase,
+            "chr_specialization",
+            (builder) =>
+              builder.select("*").order("ClassID").order("OrderIndex"),
+          ),
+
         getContentTuningXExpected: (contentTuningId, mythicPlusSeasonId) =>
           query<Schemas.Dbc.ContentTuningXExpectedRow[]>(
             supabase,
@@ -528,6 +558,13 @@ const SupabaseDbcServiceLive = (
         getItemSparse: (itemId) => itemSparseCache.get(itemId),
         getItemXItemEffects: (itemId) => itemXItemEffectsCache.get(itemId),
         getManifestInterfaceData: (id) => manifestInterfaceDataCache.get(id),
+        getSpecializationSpells: (specId) =>
+          query<Schemas.Dbc.SpecializationSpellsRow[]>(
+            supabase,
+            "specialization_spells",
+            (builder) => builder.select("*").eq("SpecID", specId),
+          ),
+
         getSpell: (spellId) => spellCache.get(spellId),
         getSpellAuraOptions: (spellId) => spellAuraOptionsCache.get(spellId),
         getSpellAuraRestrictions: (spellId) =>

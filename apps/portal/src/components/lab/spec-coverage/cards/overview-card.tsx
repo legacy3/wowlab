@@ -1,36 +1,85 @@
 "use client";
 
 import { useMemo } from "react";
-import { Wand2, Users, TrendingUp } from "lucide-react";
+import { Wand2, Users, TrendingUp, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GAME_CONFIG } from "@/lib/config/game";
-import {
-  SPEC_COVERAGE_DATA,
-  CLASS_ORDER,
-  CLASS_COLORS,
-  calculateCoverage,
-  getOverallStats,
-  type WowClassName,
-} from "@/lib/mock/spec-coverage";
 import { getCoverageTextColor } from "@/lib/utils/coverage";
+import { useSpecCoverageContext } from "../spec-coverage-context";
 
 export function OverviewCard() {
-  const stats = useMemo(() => getOverallStats(), []);
+  const { data, loading, error, calculateCoverage, getOverallStats } =
+    useSpecCoverageContext();
+
+  const stats = useMemo(() => getOverallStats(), [getOverallStats]);
 
   const classStats = useMemo(() => {
-    return CLASS_ORDER.map((className) => {
-      const specs = SPEC_COVERAGE_DATA.filter((s) => s.className === className);
-      const allSpells = specs.flatMap((s) => s.spells);
+    if (!data) {
+      return [];
+    }
 
-      return {
-        className,
-        coverage: calculateCoverage(allSpells),
-        color: CLASS_COLORS[className as WowClassName],
-      };
-    }).sort((a, b) => b.coverage - a.coverage);
-  }, []);
+    return data.classes
+      .map((cls) => {
+        const allSpells = cls.specs.flatMap((s) => s.spells);
+        return {
+          className: cls.name,
+          coverage: calculateCoverage(allSpells),
+          color: cls.color,
+        };
+      })
+      .sort((a, b) => b.coverage - a.coverage);
+  }, [data, calculateCoverage]);
+
+  if (loading) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="h-5 w-5" />
+              Coverage Overview
+            </CardTitle>
+            <Badge variant="outline" className="font-mono text-xs">
+              {GAME_CONFIG.patchVersion}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {GAME_CONFIG.expansionName} - {GAME_CONFIG.seasonName}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">
+              Loading coverage data...
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-5 w-5" />
+            Coverage Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">Error: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
 
   return (
     <Card className="h-full">
