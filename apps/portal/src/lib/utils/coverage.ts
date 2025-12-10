@@ -30,6 +30,6 @@ export function getCoverageTextColor(percentage: number): string {
   if (percentage >= 50) {
     return "text-amber-600 dark:text-amber-400";
   }
-  
+
   return "text-rose-600 dark:text-rose-400";
 }

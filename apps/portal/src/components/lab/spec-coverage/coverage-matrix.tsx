@@ -35,7 +35,7 @@ function SpecCell({ spec }: SpecCellProps) {
             className={cn(
               "flex h-8 w-full cursor-default items-center justify-center rounded-sm transition-all hover:scale-105 hover:brightness-110",
               getCoverageColor(coverage),
-              "text-white font-medium text-xs"
+              "text-white font-medium text-xs",
             )}
           >
             <span className="hidden sm:inline">{coverage}%</span>
@@ -89,7 +89,7 @@ function ClassRow({ className, specs, maxSpecs }: ClassRowProps) {
       <div
         className={cn(
           "w-10 shrink-0 text-center text-xs font-semibold tabular-nums",
-          getCoverageTextColor(classCoverage)
+          getCoverageTextColor(classCoverage),
         )}
       >
         {classCoverage}%
@@ -149,7 +149,7 @@ export function CoverageMatrix() {
 
   const maxSpecs = useMemo(() => {
     return Math.max(
-      ...Object.values(groupedByClass).map((specs) => specs.length)
+      ...Object.values(groupedByClass).map((specs) => specs.length),
     );
   }, [groupedByClass]);
 

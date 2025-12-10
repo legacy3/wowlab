@@ -23,6 +23,7 @@ export function OverviewCard() {
     return CLASS_ORDER.map((className) => {
       const specs = SPEC_COVERAGE_DATA.filter((s) => s.className === className);
       const allSpells = specs.flatMap((s) => s.spells);
+
       return {
         className,
         coverage: calculateCoverage(allSpells),
@@ -120,7 +121,9 @@ export function OverviewCard() {
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: stat.color }}
                   />
-                  <span className="text-muted-foreground">{stat.className}</span>
+                  <span className="text-muted-foreground">
+                    {stat.className}
+                  </span>
                 </div>
                 <span
                   className={`relative tabular-nums font-semibold ${getCoverageTextColor(stat.coverage)}`}

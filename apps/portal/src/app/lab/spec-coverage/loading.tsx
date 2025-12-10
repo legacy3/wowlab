@@ -15,6 +15,7 @@ export default function SpecCoverageLoading() {
       <div className="grid gap-4">
         {/* Overview Card Skeleton */}
         <Skeleton className="h-56 rounded-xl" />
+
         {/* Matrix Card Skeleton */}
         <Skeleton className="h-[500px] rounded-xl" />
       </div>
