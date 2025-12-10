@@ -15,7 +15,7 @@ That's it. Top to bottom priority. The simulation handles cooldowns, GCDs, and t
 
 ## It's just JavaScript
 
-Your rotation runs as a closure, so you have full access to JavaScript. The `yield*` syntax comes from [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator). Think of it like `await`, it runs the cast and continues.
+Your rotation runs as a closure, so you have full access to JavaScript. The `yield*` syntax comes from [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator). Think of it like `await`. When an actionable function like `tryCast` succeeds, the rotation stops and restarts from the top on the next decision tick. This means your priority list is re-evaluated fresh each time.
 
 **Only the order of casts matters.** Use any logic you want to decide what to cast:
 
