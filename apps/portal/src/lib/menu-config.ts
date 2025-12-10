@@ -1,14 +1,15 @@
 import {
-  Crown,
-  FileCode,
-  GitBranch,
-  LucideIcon,
-  Medal,
-  Plug,
-  RotateCcw,
-  ScrollText,
-  Search,
-  Zap,
+  BookOpen,
+  FlaskConical,
+  GitFork,
+  History,
+  type LucideIcon,
+  PencilRuler,
+  Play,
+  Sparkles,
+  Swords,
+  Table,
+  Trophy,
 } from "lucide-react";
 
 import { env } from "./env";
@@ -46,24 +47,25 @@ const group = (label: string, items: MenuItem[]): MenuGroup => ({
 // prettier-ignore
 export const menuConfig: MenuGroup[] = [
   group("Simulate", [
-    item("Simulate", "/simulate", Zap),
+    item("Simulate", "/simulate", Play),
   ]),
   group("Optimize", [
-    item("Optimize", "/optimize", Crown),
+    item("Optimize", "/optimize", Sparkles),
   ]),
   group("Discover", [
-    item("Rankings", "/rankings", Medal),
-    item("Rotations", "/rotations", RotateCcw),
+    item("Rankings", "/rankings", Trophy),
+    item("Rotations", "/rotations", Swords),
   ]),
   group("Create", [
-    item("Editor", "/rotations/editor", FileCode),
+    item("Editor", "/rotations/editor", PencilRuler),
   ]),
   group("Lab", [
-    item("Data Inspector", "/lab/data-inspector", Search),
+    item("Data Inspector", "/lab/data-inspector", Table),
   ]),
   group("About", [
-    item("Changelog", "/changelog", ScrollText),
-    link("GitHub", env.GITHUB_REPO_URL, GitBranch),
-    link("MCP Server", `${env.GITHUB_REPO_URL}/tree/main/apps/mcp-server`, Plug),
+    item("About", "/about", FlaskConical),
+    item("Changelog", "/changelog", History),
+    item("Docs", "/docs", BookOpen),
+    link("GitHub", env.GITHUB_REPO_URL, GitFork),
   ]),
 ];

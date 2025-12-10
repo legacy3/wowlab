@@ -56,7 +56,6 @@ const scheduleAuraEvents = (
 
     emitter.emitAt(firstTickDelay, {
       _tag: tickTag,
-      tickPeriodMs: actualTickPeriodMs,
       absorbed: 0,
       amount: 0,
       blocked: 0,
@@ -76,6 +75,7 @@ const scheduleAuraEvents = (
       spellId: event.spellId,
       spellName: event.spellName,
       spellSchool: event.spellSchool,
+      tickPeriodMs: actualTickPeriodMs,
     } as any);
   }
 };
