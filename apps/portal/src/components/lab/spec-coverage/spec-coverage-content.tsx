@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useAtom } from "jotai";
-import { Play } from "lucide-react";
+import { ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,10 +45,16 @@ export function SpecCoverageContent() {
         {loading ? (
           <>
             <div className="text-center space-y-1">
-              <p className="text-sm font-medium">
-                {progress
-                  ? `${progress.className} — ${progress.specName}`
-                  : "Initializing..."}
+              <p className="text-sm font-medium flex items-center justify-center gap-1">
+                {progress ? (
+                  <>
+                    {progress.className}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    {progress.specName}
+                  </>
+                ) : (
+                  "Initializing..."
+                )}
               </p>
               <p className="text-xs text-muted-foreground">
                 {progress

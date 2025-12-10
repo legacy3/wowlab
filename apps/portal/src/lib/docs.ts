@@ -31,6 +31,11 @@ export const docsIndex: DocMeta[] = [
     title: "Writing Rotations",
     description: "How to write rotation priority lists",
   },
+  {
+    slug: "05-spec-coverage",
+    title: "Spec Coverage",
+    description: "Check which spells are supported for each spec",
+  },
 ];
 
 function flattenDocs(docs: DocMeta[], prefix = ""): DocMeta[] {
