@@ -19,10 +19,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCoverageColor, getCoverageTextColor } from "@/lib/utils/coverage";
 import {
-  useSpecCoverageContext,
+  useSpecCoverage,
   type SpecCoverageClass,
-} from "./spec-coverage-context";
-import type { SpecCoverageSpell } from "@/hooks/use-spec-coverage";
+  type SpecCoverageSpell,
+} from "@/hooks/use-spec-coverage";
+import { calculateCoverage, getCounts } from "@/lib/spec-coverage";
 import { WowSpellLink } from "@/components/game";
 
 interface SelectedSpec {
@@ -44,7 +45,6 @@ interface SpecCellProps {
 }
 
 function SpecCell({ spec, className, classColor, onSelect }: SpecCellProps) {
-  const { calculateCoverage, getCounts } = useSpecCoverageContext();
   const coverage = calculateCoverage(spec.spells);
   const counts = getCounts(spec.spells);
 
@@ -103,7 +103,6 @@ interface ClassRowProps {
 }
 
 function ClassRow({ cls, maxSpecs, onSelectSpec }: ClassRowProps) {
-  const { calculateCoverage } = useSpecCoverageContext();
   const allSpells = cls.specs.flatMap((s) => s.spells);
   const classCoverage = calculateCoverage(allSpells);
 
@@ -179,7 +178,9 @@ function SpellListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  if (!spec) return null;
+  if (!spec) {
+    return null;
+  }
 
   const supported = spec.spells.filter((s) => s.supported);
   const missing = spec.spells.filter((s) => !s.supported);
@@ -248,12 +249,14 @@ function SpellListDialog({
 }
 
 export function CoverageMatrix() {
-  const { data, loading, error } = useSpecCoverageContext();
+  const { data, loading, error } = useSpecCoverage();
   const [selectedSpec, setSelectedSpec] = useState<SelectedSpec | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const maxSpecs = useMemo(() => {
-    if (!data) return 0;
+    if (!data) {
+      return 0;
+    }
     return Math.max(...data.classes.map((cls) => cls.specs.length));
   }, [data]);
 
@@ -277,7 +280,9 @@ export function CoverageMatrix() {
     return <p className="text-sm text-destructive">Error: {error}</p>;
   }
 
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
 
   return (
     <>

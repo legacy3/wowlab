@@ -1,42 +1,46 @@
 "use client";
 
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback } from "react";
 import { useDataProvider } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { createPortalDbcLayer } from "@/lib/services";
-import { ExtractorService } from "@wowlab/services/Data";
+import { useAtom } from "jotai";
 import * as Effect from "effect/Effect";
+import * as PubSub from "effect/PubSub";
+import * as Queue from "effect/Queue";
+import * as Layer from "effect/Layer";
 import { Hunter } from "@wowlab/specs";
 import { getAllSupportedSpellIds } from "@wowlab/specs/Shared";
+import {
+  ExtractorService,
+  SpecCoverageProgressService,
+} from "@wowlab/services/Data";
+import { createPortalDbcLayer } from "@/lib/services";
+import {
+  SpecCoverageProgressLive,
+  type SpecCoverageData,
+  type SpecCoverageProgress,
+} from "@/lib/spec-coverage";
+import {
+  specCoverageDataAtom,
+  specCoverageLoadingAtom,
+  specCoverageErrorAtom,
+  specCoverageProgressAtom,
+} from "@/atoms/spec-coverage";
 
-export interface SpecCoverageSpell {
-  id: number;
-  name: string;
-  supported: boolean;
-}
-
-export interface SpecCoverageSpec {
-  id: number;
-  name: string;
-  spells: SpecCoverageSpell[];
-}
-
-export interface SpecCoverageClass {
-  id: number;
-  name: string;
-  color: string;
-  specs: SpecCoverageSpec[];
-}
-
-export interface SpecCoverageData {
-  classes: SpecCoverageClass[];
-}
+// Re-export types for convenience
+export type { SpecCoverageData, SpecCoverageProgress };
+export type {
+  SpecCoverageClass,
+  SpecCoverageSpec,
+  SpecCoverageSpell,
+} from "@/lib/spec-coverage";
 
 export interface UseSpecCoverageResult {
   data: SpecCoverageData | null;
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  progress: SpecCoverageProgress | null;
+  fetch: () => Promise<void>;
 }
 
 // TODO Refactor this, it's kinda hacked at the moment
@@ -47,23 +51,47 @@ export function useSpecCoverage(): UseSpecCoverageResult {
   const dataProvider = useDataProvider()();
   const queryClient = useQueryClient();
 
-  const [data, setData] = useState<SpecCoverageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useAtom(specCoverageDataAtom);
+  const [loading, setLoading] = useAtom(specCoverageLoadingAtom);
+  const [error, setError] = useAtom(specCoverageErrorAtom);
+  const [progress, setProgress] = useAtom(specCoverageProgressAtom);
 
   const fetch = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setProgress(null);
 
     try {
-      const layer = createPortalDbcLayer(queryClient, dataProvider);
+      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
+      const progressLayer = SpecCoverageProgressLive;
+      const fullLayer = Layer.mergeAll(dbcLayer, progressLayer);
 
       const result = await Effect.runPromise(
-        Effect.gen(function* () {
-          const extractor = yield* ExtractorService;
+        Effect.scoped(
+          Effect.gen(function* () {
+            const progressService = yield* SpecCoverageProgressService;
 
-          return yield* extractor.buildSpecCoverage(SUPPORTED_SPELL_IDS);
-        }).pipe(Effect.provide(layer)),
+            // Subscribe to progress updates (scoped - auto-unsubscribes)
+            const dequeue = yield* PubSub.subscribe(progressService.pubsub);
+
+            // Fork fiber to consume progress and update React state
+            yield* Effect.fork(
+              Effect.gen(function* () {
+                while (true) {
+                  const msg = yield* Queue.take(dequeue);
+                  yield* Effect.sync(() => setProgress(msg));
+                }
+              }),
+            );
+
+            const extractor = yield* ExtractorService;
+            return yield* extractor.buildSpecCoverage(SUPPORTED_SPELL_IDS);
+          }),
+        ).pipe(Effect.provide(fullLayer)),
       );
 
       setData(result);
@@ -72,52 +100,15 @@ export function useSpecCoverage(): UseSpecCoverageResult {
     } finally {
       setLoading(false);
     }
-  }, [queryClient, dataProvider]);
-
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
-
-  return {
-    data,
+  }, [
+    queryClient,
+    dataProvider,
     loading,
-    error,
-    refetch: fetch,
-  };
-}
+    setData,
+    setLoading,
+    setError,
+    setProgress,
+  ]);
 
-// TODO Move helper fuctions to lib/ or something
-export function calculateCoverage(spells: SpecCoverageSpell[]): number {
-  if (spells.length === 0) {
-    return 0;
-  }
-
-  const supported = spells.filter((s) => s.supported).length;
-
-  return Math.round((supported / spells.length) * 100);
-}
-
-export function getCounts(spells: SpecCoverageSpell[]) {
-  return {
-    supported: spells.filter((s) => s.supported).length,
-    total: spells.length,
-  };
-}
-
-export function getOverallStats(data: SpecCoverageData) {
-  const allSpells = data.classes.flatMap((c) =>
-    c.specs.flatMap((s) => s.spells),
-  );
-  const supported = allSpells.filter((s) => s.supported).length;
-
-  return {
-    totalClasses: data.classes.length,
-    totalSpecs: data.classes.reduce((sum, c) => sum + c.specs.length, 0),
-    totalSpells: allSpells.length,
-    supportedSpells: supported,
-    coverage:
-      allSpells.length > 0
-        ? Math.round((supported / allSpells.length) * 100)
-        : 0,
-  };
+  return { data, loading, error, progress, fetch };
 }

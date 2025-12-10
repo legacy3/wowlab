@@ -11,32 +11,55 @@ import { dbcKeys } from "./dbc-keys";
 
 const RAW_DBC_SCHEMA = "raw_dbc";
 
+const cachedQuery = <T>(
+  queryClient: QueryClient,
+  queryKey: readonly unknown[],
+  queryFn: () => Promise<T>,
+  errorMessage: string,
+): Effect.Effect<T, DbcQueryError> =>
+  Effect.tryPromise({
+    catch: (cause) => new DbcQueryError({ cause, message: errorMessage }),
+    try: async () => {
+      const data = await queryClient.ensureQueryData({
+        queryKey,
+        meta: { persist: true },
+        queryFn: async () => {
+          const result = await queryFn();
+
+          // React Query v5 doesn't allow undefined, use null as sentinel
+          return result ?? null;
+        },
+      });
+
+      // Convert null sentinel back to undefined for Effect layer
+      return (data ?? undefined) as T;
+    },
+  });
+
 const getOne = <T extends BaseRecord>(
   queryClient: QueryClient,
   dataProvider: DataProvider,
   resource: string,
   id: number,
 ): Effect.Effect<T | undefined, DbcQueryError> =>
-  Effect.tryPromise({
-    catch: (cause) =>
-      new DbcQueryError({
-        cause,
-        message: `Failed to fetch ${resource} with ID ${id}`,
-      }),
-    try: () =>
-      queryClient.ensureQueryData({
-        queryKey: dbcKeys.one(resource, id),
-        meta: { persist: true },
-        queryFn: async () => {
-          const result = await dataProvider.getOne<T>({
-            resource,
-            id,
-            meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
-          });
-          return result.data;
-        },
-      }),
-  });
+  cachedQuery(
+    queryClient,
+    dbcKeys.one(resource, id),
+    async () => {
+      try {
+        const result = await dataProvider.getOne<T>({
+          resource,
+          id,
+          meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+        });
+
+        return result.data;
+      } catch {
+        return undefined;
+      }
+    },
+    `Failed to fetch ${resource} with ID ${id}`,
+  );
 
 const getList = <T extends BaseRecord>(
   queryClient: QueryClient,
@@ -44,27 +67,21 @@ const getList = <T extends BaseRecord>(
   resource: string,
   filters: CrudFilter[],
 ): Effect.Effect<T[], DbcQueryError> =>
-  Effect.tryPromise({
-    catch: (cause) =>
-      new DbcQueryError({
-        cause,
-        message: `Failed to fetch ${resource} list`,
-      }),
-    try: () =>
-      queryClient.ensureQueryData({
-        queryKey: dbcKeys.list(resource, filters),
-        meta: { persist: true },
-        queryFn: async () => {
-          const result = await dataProvider.getList<T>({
-            resource,
-            filters,
-            pagination: { mode: "off" },
-            meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
-          });
-          return result.data;
-        },
-      }),
-  });
+  cachedQuery(
+    queryClient,
+    dbcKeys.list(resource, filters),
+    async () => {
+      const result = await dataProvider.getList<T>({
+        resource,
+        filters,
+        pagination: { mode: "off" },
+        meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+      });
+
+      return result.data;
+    },
+    `Failed to fetch ${resource} list`,
+  );
 
 const getOneByFilter = <T extends BaseRecord>(
   queryClient: QueryClient,
@@ -427,83 +444,36 @@ export const RefineDbcService = (
 
     // Complex queries
     getExpectedStats: (level, expansion) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          new DbcQueryError({
-            cause,
-            message: "Failed to fetch expected_stat",
-          }),
-        try: async () => {
-          const data = await queryClient.ensureQueryData({
-            queryKey: dbcKeys.list("expected_stat", [
-              { field: "Lvl", operator: "eq", value: level },
-            ]),
-            meta: { persist: true },
-            queryFn: async () => {
-              const result =
-                await dataProvider.getList<Schemas.Dbc.ExpectedStatRow>({
-                  resource: "expected_stat",
-                  filters: [{ field: "Lvl", operator: "eq", value: level }],
-                  pagination: { mode: "off" },
-                  meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
-                });
-              return result.data;
-            },
-          });
-
-          return data.filter(
+      getList<Schemas.Dbc.ExpectedStatRow>(
+        queryClient,
+        dataProvider,
+        "expected_stat",
+        [{ field: "Lvl", operator: "eq", value: level }],
+      ).pipe(
+        Effect.map((data) =>
+          data.filter(
             (row) => row.ExpansionID === expansion || row.ExpansionID === -2,
-          );
-        },
-      }),
+          ),
+        ),
+      ),
 
     getContentTuningXExpected: (contentTuningId, mythicPlusSeasonId) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          new DbcQueryError({
-            cause,
-            message: "Failed to fetch content_tuning_x_expected",
-          }),
-        try: async () => {
-          const data = await queryClient.ensureQueryData({
-            queryKey: dbcKeys.list("content_tuning_x_expected", [
-              {
-                field: "ContentTuningID",
-                operator: "eq",
-                value: contentTuningId,
-              },
-            ]),
-            meta: { persist: true },
-            queryFn: async () => {
-              const result =
-                await dataProvider.getList<Schemas.Dbc.ContentTuningXExpectedRow>(
-                  {
-                    resource: "content_tuning_x_expected",
-                    filters: [
-                      {
-                        field: "ContentTuningID",
-                        operator: "eq",
-                        value: contentTuningId,
-                      },
-                    ],
-                    pagination: { mode: "off" },
-                    meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
-                  },
-                );
-
-              return result.data;
-            },
-          });
-
-          return data.filter(
+      getList<Schemas.Dbc.ContentTuningXExpectedRow>(
+        queryClient,
+        dataProvider,
+        "content_tuning_x_expected",
+        [{ field: "ContentTuningID", operator: "eq", value: contentTuningId }],
+      ).pipe(
+        Effect.map((data) =>
+          data.filter(
             (row) =>
               (row.MinMythicPlusSeasonID === 0 ||
                 row.MinMythicPlusSeasonID <= mythicPlusSeasonId) &&
               (row.MaxMythicPlusSeasonID === 0 ||
                 row.MaxMythicPlusSeasonID > mythicPlusSeasonId),
-          );
-        },
-      }),
+          ),
+        ),
+      ),
 
     getDifficultyChain: (id) =>
       Effect.gen(function* () {

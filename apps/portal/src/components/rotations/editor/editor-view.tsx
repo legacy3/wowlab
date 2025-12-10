@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -87,6 +87,7 @@ export function EditorView({
     [editorRef],
   );
 
+  /* eslint-disable react-hooks/preserve-manual-memoization -- ref.current access pattern is intentional */
   const handleInsert = useCallback(
     (text: string) => {
       const editor = editorRef.editorRef.current;
@@ -107,11 +108,11 @@ export function EditorView({
         },
       ]);
 
-      // Focus the editor after insert
       editor.focus();
     },
     [editorRef],
   );
+  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   const isDisabled = isSaving || isTesting;
 

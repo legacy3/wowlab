@@ -6,6 +6,7 @@ import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
 import { DbcService } from "../dbc/DbcService.js";
+import { SpecCoverageProgressService } from "../SpecCoverageProgress.js";
 
 const first = <T>(array?: readonly T[]): Option.Option<T> =>
   array?.[0] ? Option.some(array[0]) : Option.none();
@@ -872,9 +873,12 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             }>;
           }>;
         },
-        DbcError
+        DbcError,
+        SpecCoverageProgressService
       > =>
         Effect.gen(function* () {
+          const progressService = yield* SpecCoverageProgressService;
+
           const allClasses = yield* dbcService.getChrClasses();
           const allSpecs = yield* dbcService.getChrSpecializations();
 
@@ -900,6 +904,9 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             existing.push(spec);
             specsByClass.set(spec.ClassID, existing);
           }
+
+          const totalSpecs = validSpecs.length;
+          let loadedSpecs = 0;
 
           const classes: Array<{
             id: number;
@@ -934,6 +941,15 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
             for (const spec of classSpecs) {
               const spellsForSpec = yield* extractSpellsForSpec(spec.ID);
+
+              loadedSpecs++;
+
+              yield* progressService.publish({
+                className: cls.Name_lang!,
+                loaded: loadedSpecs,
+                specName: spec.Name_lang!,
+                total: totalSpecs,
+              });
 
               specs.push({
                 id: spec.ID,

@@ -1,10 +1,6 @@
 import type * as Schemas from "@wowlab/core/Schemas";
 import type { CombatData } from "@/atoms/timeline";
-import {
-  createTransformer,
-  type AnyEventHandler,
-  type EventHandler,
-} from "./registry";
+import { createTransformer, type AnyEventHandler } from "./registry";
 import {
   castHandlers,
   auraHandlers,
@@ -12,7 +8,6 @@ import {
   resourceSnapshotHandler,
   energizeHandler,
   drainHandler,
-  isResourceSnapshot,
   type ResourceSnapshot,
 } from "./handlers";
 

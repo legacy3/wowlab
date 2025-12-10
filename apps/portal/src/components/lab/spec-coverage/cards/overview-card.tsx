@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GAME_CONFIG } from "@/lib/config/game";
 import { getCoverageTextColor } from "@/lib/utils/coverage";
-import { useSpecCoverageContext } from "../spec-coverage-context";
+import { useSpecCoverage } from "@/hooks/use-spec-coverage";
+import { calculateCoverage, getOverallStats } from "@/lib/spec-coverage";
 
 export function OverviewCard() {
-  const { data, loading, error, calculateCoverage, getOverallStats } =
-    useSpecCoverageContext();
+  const { data, loading, error } = useSpecCoverage();
 
-  const stats = useMemo(() => getOverallStats(), [getOverallStats]);
+  const stats = useMemo(() => (data ? getOverallStats(data) : null), [data]);
 
   const classStats = useMemo(() => {
     if (!data) {
@@ -30,7 +30,7 @@ export function OverviewCard() {
         };
       })
       .sort((a, b) => b.coverage - a.coverage);
-  }, [data, calculateCoverage]);
+  }, [data]);
 
   if (loading) {
     return (

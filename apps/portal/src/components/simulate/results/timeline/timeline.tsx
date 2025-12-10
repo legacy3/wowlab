@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useEffect, memo } from "react";
+import { useCallback, useRef, useState, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { useThrottledCallback } from "@react-hookz/web";
 import { Stage, Layer, Text, Group } from "react-konva";

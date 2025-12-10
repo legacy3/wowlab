@@ -142,7 +142,10 @@ export function EventLogContent() {
   );
 
   const job = jobs.find((j) => j.id === jobId);
-  const rawEvents = (job?.result?.events ?? []) as SimulationEvent[];
+  const rawEvents = useMemo(
+    () => (job?.result?.events ?? []) as SimulationEvent[],
+    [job?.result?.events],
+  );
 
   const displayEvents = useMemo(() => {
     return rawEvents.map(transformEvent);
