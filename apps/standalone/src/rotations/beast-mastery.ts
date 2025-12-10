@@ -1,8 +1,9 @@
 import * as Context from "@wowlab/rotation/Context";
 import * as Effect from "effect/Effect";
 
+import type { RotationDefinition } from "../framework/types.js";
+
 import { tryCast } from "../framework/rotation-utils.js";
-import { RotationDefinition } from "../framework/types.js";
 
 const SpellIds = {
   BARBED_SHOT: 217200,
@@ -19,10 +20,11 @@ const SpellIds = {
 export const BeastMasteryRotation: RotationDefinition = {
   name: "Beast Mastery Hunter",
 
-  run: (playerId) =>
+  run: (playerId, targetId) =>
     Effect.gen(function* () {
       const rotation = yield* Context.RotationContext;
 
+      // Off-GCD abilities (no target needed)
       const bw = yield* tryCast(rotation, playerId, SpellIds.BESTIAL_WRATH);
       if (bw.cast && bw.consumedGCD) {
         return;
@@ -37,32 +39,58 @@ export const BeastMasteryRotation: RotationDefinition = {
         return;
       }
 
-      const bs = yield* tryCast(rotation, playerId, SpellIds.BARBED_SHOT);
+      // Targeted abilities
+      const bs = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.BARBED_SHOT,
+        targetId,
+      );
       if (bs.cast && bs.consumedGCD) {
         return;
       }
 
-      const bloodshed = yield* tryCast(rotation, playerId, SpellIds.BLOODSHED);
+      const bloodshed = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.BLOODSHED,
+        targetId,
+      );
       if (bloodshed.cast && bloodshed.consumedGCD) {
         return;
       }
 
-      const ks = yield* tryCast(rotation, playerId, SpellIds.KILL_SHOT);
+      const ks = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.KILL_SHOT,
+        targetId,
+      );
       if (ks.cast && ks.consumedGCD) {
         return;
       }
 
-      const kc = yield* tryCast(rotation, playerId, SpellIds.KILL_COMMAND);
+      const kc = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.KILL_COMMAND,
+        targetId,
+      );
       if (kc.cast && kc.consumedGCD) {
         return;
       }
 
-      const es = yield* tryCast(rotation, playerId, SpellIds.EXPLOSIVE_SHOT);
+      const es = yield* tryCast(
+        rotation,
+        playerId,
+        SpellIds.EXPLOSIVE_SHOT,
+        targetId,
+      );
       if (es.cast && es.consumedGCD) {
         return;
       }
 
-      yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT);
+      yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT, targetId);
     }),
 
   spellIds: [

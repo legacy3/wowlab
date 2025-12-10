@@ -4,6 +4,7 @@ export default createPackageConfig({
   entries: {
     Accessors: "src/Accessors.ts",
     CombatLog: "src/CombatLog.ts",
+    Config: "src/Config.ts",
     Data: "src/Data.ts",
     index: "src/index.ts",
     Log: "src/Log.ts",

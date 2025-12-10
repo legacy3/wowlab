@@ -37,7 +37,11 @@ export class SpellActions extends Effect.Service<SpellActions>()(
             return updatedSpell.isReady;
           }),
 
-        cast: (unitId: Branded.UnitID, spellId: number) =>
+        cast: (
+          unitId: Branded.UnitID,
+          spellId: number,
+          targetId?: Branded.UnitID,
+        ) =>
           Effect.gen(function* () {
             const state = yield* stateService.getState();
             const currentTime = state.currentTime;
@@ -64,11 +68,26 @@ export class SpellActions extends Effect.Service<SpellActions>()(
               );
             }
 
+            // TODO This seemed hacked
+            let destGUID = "";
+            let destName = "";
+
+            if (targetId) {
+              const targetResult = yield* Effect.either(
+                unitAccessor.get(targetId),
+              );
+
+              if (targetResult._tag === "Right") {
+                destGUID = targetId;
+                destName = targetResult.right.name;
+              }
+            }
+
             // Emit SPELL_CAST_SUCCESS event to the combat log
             const castEvent = new CombatLog.SpellCastSuccess({
               destFlags: 0,
-              destGUID: "", // Self-cast for now
-              destName: "",
+              destGUID,
+              destName,
               destRaidFlags: 0,
               hideCaster: false,
               sourceFlags: 0,

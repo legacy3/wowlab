@@ -5,6 +5,7 @@ import { DbcQueryError } from "@wowlab/core/Errors";
 import {
   DbcService,
   ExtractorService,
+  transformAura,
   transformSpell,
 } from "@wowlab/services/Data";
 import * as Cache from "effect/Cache";
@@ -568,9 +569,6 @@ const SupabaseDbcServiceLive = (
     }),
   );
 
-/**
- * Load spells using transformSpell from the DBC data
- */
 export const loadSpells = (
   supabase: SupabaseClient,
   spellIds: readonly number[],
@@ -594,4 +592,30 @@ export const loadSpells = (
       ),
     { concurrency: 10 },
   ).pipe(Effect.provide(FullLayer), Effect.orDie);
+};
+
+export const loadAuras = (
+  supabase: SupabaseClient,
+  spellIds: readonly number[],
+): Effect.Effect<Schemas.Aura.AuraDataFlat[]> => {
+  if (spellIds.length === 0) {
+    return Effect.succeed([]);
+  }
+
+  const DbcLayer = SupabaseDbcServiceLive(supabase);
+  const ExtractorLayer = ExtractorService.Default.pipe(Layer.provide(DbcLayer));
+  const FullLayer = Layer.merge(DbcLayer, ExtractorLayer);
+
+  return Effect.forEach(
+    spellIds,
+    (spellId) =>
+      transformAura(spellId).pipe(Effect.catchAll(() => Effect.succeed(null))),
+    { concurrency: 10 },
+  ).pipe(
+    Effect.map((results) =>
+      results.filter((r): r is Schemas.Aura.AuraDataFlat => r !== null),
+    ),
+    Effect.provide(FullLayer),
+    Effect.orDie,
+  );
 };

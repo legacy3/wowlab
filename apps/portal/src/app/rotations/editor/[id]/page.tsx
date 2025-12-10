@@ -1,11 +1,13 @@
 import { PageLayout } from "@/components/page";
-import { EditorContent } from "@/components/rotations/editor";
+import { RotationEditor } from "@/components/rotations/editor";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function EditRotationPage(_props: Props) {
+export default async function EditRotationPage({ params }: Props) {
+  const { id } = await params;
+
   return (
     <PageLayout
       title="Edit Rotation"
@@ -13,10 +15,10 @@ export default async function EditRotationPage(_props: Props) {
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Rotations", href: "/rotations" },
-        { label: "Editor" },
+        { label: "Edit" },
       ]}
     >
-      <EditorContent />
+      <RotationEditor rotationId={id} />
     </PageLayout>
   );
 }

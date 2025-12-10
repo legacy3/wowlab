@@ -52,6 +52,7 @@ import {
   TRACK_CONFIGS,
   TRACK_METRICS,
 } from "@/hooks/timeline";
+import { useZenMode } from "@/hooks/use-zen-mode";
 
 import { type TooltipState } from "./timeline-context";
 import { TimelineTooltip } from "./timeline-tooltip";
@@ -268,30 +269,10 @@ export function Timeline() {
   const [hoveredSpell, setHoveredSpell] = useAtom(hoveredSpellAtom);
 
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const [zenMode, setZenMode] = useState(false);
+  const { isZen: zenMode, toggleZen: toggleZenMode } = useZenMode();
   const [showFps, setShowFps] = useState(false);
   const fpsTextRef = useRef<Konva.Text>(null);
   const fps = useFpsCounter({ enabled: showFps, layerRef: fpsTextRef });
-
-  useEffect(() => {
-    if (!zenMode) {
-      return;
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setZenMode(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [zenMode]);
 
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
@@ -397,8 +378,6 @@ export function Timeline() {
   const defaultStageHeight = totalHeight + MARGIN.top + MARGIN.bottom;
   const stageHeight =
     zenMode && containerHeight > 0 ? containerHeight : defaultStageHeight;
-
-  const toggleZenMode = useCallback(() => setZenMode((z) => !z), []);
 
   const { exportPNG, exportPDF } = useExport({
     stageRef,

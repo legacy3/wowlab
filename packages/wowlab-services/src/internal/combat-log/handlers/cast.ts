@@ -2,12 +2,14 @@ import * as Entities from "@wowlab/core/Entities";
 import { Branded, CombatLog } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
+import type { Emitter } from "../Emitter.js";
 import type { StateMutation } from "./types.js";
 
 import { StateService } from "../../state/StateService.js";
 
 const startCast = (
   event: CombatLog.SpellCastStart,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;
@@ -38,6 +40,7 @@ const startCast = (
 
 const startCooldown = (
   event: CombatLog.SpellCastSuccess,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;
@@ -85,6 +88,7 @@ const startCooldown = (
 
 const completeCast = (
   event: CombatLog.SpellCastSuccess,
+  _emitter: Emitter,
 ): Effect.Effect<void, never, StateService> =>
   Effect.gen(function* () {
     const state = yield* StateService;
@@ -117,7 +121,9 @@ export const CAST_MUTATIONS: readonly StateMutation[] = [
   ["SPELL_CAST_START", startCast],
   [
     "SPELL_CAST_SUCCESS",
-    (e: CombatLog.SpellCastSuccess) =>
-      Effect.all([startCooldown(e), completeCast(e)], { discard: true }),
+    (e: CombatLog.SpellCastSuccess, emitter: Emitter) =>
+      Effect.all([startCooldown(e, emitter), completeCast(e, emitter)], {
+        discard: true,
+      }),
   ],
 ];

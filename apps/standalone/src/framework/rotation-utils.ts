@@ -6,6 +6,23 @@ import * as Effect from "effect/Effect";
 import { Map, Record } from "immutable";
 
 /**
+ * Creates a target dummy enemy unit.
+ */
+export const createTargetDummy = (
+  id: Schemas.Branded.UnitID,
+  name = "Target Dummy",
+): Entities.Unit.Unit =>
+  Entities.Unit.Unit.create({
+    health: Entities.Power.Power.create({
+      current: 10_000_000,
+      max: 10_000_000,
+    }),
+    id,
+    isPlayer: false,
+    name,
+  });
+
+/**
  * Creates a spell entity from flat spell data.
  */
 export const createSpellEntity = (
@@ -82,8 +99,9 @@ export const tryCast = (
   rotation: Context.RotationContext,
   playerId: Schemas.Branded.UnitID,
   spellId: number,
+  targetId?: Schemas.Branded.UnitID,
 ): Effect.Effect<CastResult, Errors.SpellNotFound | Errors.UnitNotFound> =>
-  rotation.spell.cast(playerId, spellId).pipe(
+  rotation.spell.cast(playerId, spellId, targetId).pipe(
     Effect.map(({ consumedGCD }) => ({ cast: true as const, consumedGCD })),
     Effect.catchTag("SpellOnCooldown", () =>
       Effect.succeed({ cast: false as const }),
@@ -98,10 +116,11 @@ export const runPriorityList = (
   rotation: Context.RotationContext,
   playerId: Schemas.Branded.UnitID,
   spellIds: readonly number[],
+  targetId?: Schemas.Branded.UnitID,
 ): Effect.Effect<void, Errors.SpellNotFound | Errors.UnitNotFound> =>
   Effect.gen(function* () {
     for (const spellId of spellIds) {
-      const result = yield* tryCast(rotation, playerId, spellId);
+      const result = yield* tryCast(rotation, playerId, spellId, targetId);
       if (result.cast && result.consumedGCD) {
         return;
       }

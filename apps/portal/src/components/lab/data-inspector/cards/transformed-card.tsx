@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAtomValue } from "jotai";
 import {
   Card,
   CardContent,
@@ -17,19 +16,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wand2, AlertCircle, ChevronDown } from "lucide-react";
 import { JsonView } from "../json-view";
-import {
-  queryTypeAtom,
-  queryLoadingAtom,
-  queryErrorAtom,
-  transformedDataAtom,
-} from "@/atoms/data-inspector";
+import { useDataInspector } from "@/hooks/use-data-inspector";
 
 export function TransformedCard() {
   const [open, setOpen] = useState(true);
-  const dataType = useAtomValue(queryTypeAtom);
-  const loading = useAtomValue(queryLoadingAtom);
-  const error = useAtomValue(queryErrorAtom);
-  const data = useAtomValue(transformedDataAtom);
+  const { type: dataType, loading, error, data } = useDataInspector();
 
   return (
     <Card>

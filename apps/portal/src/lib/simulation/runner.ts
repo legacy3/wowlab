@@ -13,8 +13,8 @@ import type {
   SimulationEvent,
   SimulationResult,
 } from "./types";
-import type { ResourceSnapshot } from "./transform-events";
-import { createPlayerWithSpells } from "./rotation-utils";
+import type { ResourceSnapshot } from "./transformers";
+import { createPlayerWithSpells, createTargetDummy } from "./rotation-utils";
 
 export interface RunProgress {
   currentTime: number;
@@ -70,17 +70,21 @@ export async function runSimulationLoop(
       const stateService = yield* State.StateService;
       yield* stateService.setState(Entities.GameState.createGameState());
 
-      // Create and register the player unit
+      // Create and register the player and target units
       const playerId = Schemas.Branded.UnitID("player-1");
+      const targetId = Schemas.Branded.UnitID("target-1");
+
       const player = createPlayerWithSpells(
         playerId,
         rotation.name,
         rotation.spellIds,
         spells,
       );
+      const target = createTargetDummy(targetId);
 
       const unitService = yield* Unit.UnitService;
       yield* unitService.add(player);
+      yield* unitService.add(target);
 
       // Get SimDriver for event processing and time advancement
       const simDriver = yield* CombatLogService.SimDriver;
@@ -116,9 +120,10 @@ export async function runSimulationLoop(
           return;
         }
 
+        // Keep timestamp in seconds to match combat log events
         const snapshot: ResourceSnapshot = {
           _tag: "RESOURCE_SNAPSHOT",
-          timestamp: state.currentTime * 1000, // Convert to ms
+          timestamp: state.currentTime,
           focus: focusPower.current,
           maxFocus: focusPower.max,
         };
@@ -136,11 +141,14 @@ export async function runSimulationLoop(
         }
 
         // Execute rotation priority list
-        yield* Effect.catchAll(rotation.run(playerId), () => Effect.void);
+        yield* Effect.catchAll(
+          rotation.run(playerId, targetId),
+          () => Effect.void,
+        );
         casts++;
 
         // Advance simulation time by processing events up to currentTime + 100ms
-        yield* simDriver.run(state.currentTime + 100);
+        yield* simDriver.run(state.currentTime + 0.1);
 
         // Emit resource snapshot after state changes (every 10 ticks to reduce data size)
         if (casts % 10 === 0) {

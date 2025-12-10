@@ -1,1 +1,1 @@
-export { EditorContent } from "./editor-content";
+export { RotationEditor } from "./rotation-editor";

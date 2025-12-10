@@ -40,10 +40,7 @@ export default function AccountPage() {
     query: { isLoading: rotationsLoading },
   } = useList<Rotation>({
     resource: "rotations",
-    filters: [
-      { field: "userId", operator: "eq", value: identity?.id },
-      { field: "deletedAt", operator: "null", value: true },
-    ],
+    filters: [{ field: "userId", operator: "eq", value: identity?.id }],
     sorters: [{ field: "updatedAt", order: "desc" }],
     queryOptions: {
       enabled: !!identity?.id,

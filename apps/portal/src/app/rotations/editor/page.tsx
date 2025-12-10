@@ -1,22 +1,24 @@
 import { PageLayout } from "@/components/page";
-import { EditorContent } from "@/components/rotations/editor";
+import { RotationEditor } from "@/components/rotations/editor";
 
 type Props = {
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{ fork?: string }>;
 };
 
-export default async function RotationEditorPage(_props: Props) {
+export default async function RotationEditorPage({ searchParams }: Props) {
+  const { fork } = await searchParams;
+
   return (
     <PageLayout
-      title="Rotation Editor"
-      description="Create and edit custom rotation logic"
+      title="New Rotation"
+      description="Create a new custom rotation"
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Rotations", href: "/rotations" },
-        { label: "Editor" },
+        { label: "New" },
       ]}
     >
-      <EditorContent />
+      <RotationEditor forkSourceId={fork} />
     </PageLayout>
   );
 }

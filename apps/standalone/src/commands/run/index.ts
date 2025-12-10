@@ -25,8 +25,9 @@ import type {
   WorkerInit,
 } from "../../workers/types.js";
 
-import { loadSpells } from "../../data/spell-loader.js";
+import { loadAuras, loadSpells } from "../../data/spell-loader.js";
 import { supabaseClient } from "../../data/supabase.js";
+import { createTargetDummy } from "../../framework/rotation-utils.js";
 import {
   createRotationPlayer,
   type RotationDefinition,
@@ -108,14 +109,18 @@ const runSimulation = (
             yield* Shared.registerSpec(Hunter.BeastMastery);
 
             const playerId = Schemas.Branded.UnitID(`player-${simId}`);
+            const targetId = Schemas.Branded.UnitID(`target-${simId}`);
+
             const player = createRotationPlayer(
               rotation,
               playerId,
               config.spells,
             );
+            const target = createTargetDummy(targetId);
 
             const unitService = yield* Unit.UnitService;
             yield* unitService.add(player);
+            yield* unitService.add(target);
 
             const stateService = yield* State.StateService;
             const simDriver = yield* CombatLogService.SimDriver;
@@ -129,9 +134,9 @@ const runSimulation = (
                   break;
                 }
 
-                yield* rotation.run(playerId);
+                yield* rotation.run(playerId, targetId);
                 casts++;
-                yield* simDriver.run(state.currentTime + 100);
+                yield* simDriver.run(state.currentTime + 0.1);
               }
 
               return { casts, duration, simId };
@@ -355,13 +360,15 @@ export const runCommand = Command.make(
       }
 
       yield* Effect.log(`Loading spells for: ${selectedRotation.name}`);
-      const spells = yield* loadSpells(
-        supabaseClient,
-        selectedRotation.spellIds,
+      const [spells, auras] = yield* Effect.all([
+        loadSpells(supabaseClient, selectedRotation.spellIds),
+        loadAuras(supabaseClient, selectedRotation.spellIds),
+      ]);
+      yield* Effect.log(
+        `Loaded ${spells.length} spells, ${auras.length} auras`,
       );
-      yield* Effect.log(`Loaded ${spells.length} spells`);
 
-      const config: RotationRuntimeConfig = { spells };
+      const config: RotationRuntimeConfig = { auras, spells };
 
       yield* Effect.log(`Running rotation: ${selectedRotation.name}`);
       yield* Effect.log(`Simulation duration: ${duration}s`);

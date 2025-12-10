@@ -15,10 +15,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copy-button";
 import { WowSpellLink } from "@/components/game";
 import { jobsAtom } from "@/atoms/computing";
 import type { SimulationEvent } from "@/lib/simulation/types";
-import { isResourceSnapshot } from "@/lib/simulation/transform-events";
+import { isResourceSnapshot } from "@/lib/simulation/transformers";
 
 type EventCategory = "cast" | "damage" | "aura" | "resource" | "other";
 
@@ -65,10 +66,9 @@ function getEventCategory(tag: string): EventCategory {
   return "other";
 }
 
-function formatTimestamp(ms: number): string {
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = (totalSeconds % 60).toFixed(2);
+function formatTimestamp(timestamp: number): string {
+  const minutes = Math.floor(timestamp / 60);
+  const seconds = (timestamp % 60).toFixed(2);
 
   return `${minutes}:${seconds.padStart(5, "0")}`;
 }
@@ -171,6 +171,11 @@ export function EventLogContent() {
     });
   }, [displayEvents, filter, categoryFilter]);
 
+  // Export raw simulation events, not the display-transformed version
+  const exportJson = useMemo(() => {
+    return JSON.stringify(rawEvents, null, 2);
+  }, [rawEvents]);
+
   const categories: (EventCategory | "all")[] = [
     "all",
     "cast",
@@ -194,9 +199,12 @@ export function EventLogContent() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">
-              Event Log ({filteredEvents.length.toLocaleString()} events)
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">
+                Event Log ({filteredEvents.length.toLocaleString()} events)
+              </CardTitle>
+              <CopyButton value={exportJson} />
+            </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <Badge

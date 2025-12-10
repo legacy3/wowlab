@@ -8,16 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  CheckCircle,
-  Clock,
-  Code2,
-  Eye,
-  GitFork,
-  Link2,
-  Lock,
-  Star,
-} from "lucide-react";
+import { Clock, Code2, GitFork, Lock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Rotation } from "@/lib/supabase/types";
 
@@ -39,23 +30,14 @@ export function RotationCard({ rotation }: RotationCardProps) {
                 </CardTitle>
               </div>
               <CardDescription className="truncate">
-                {rotation.spec} • {rotation.patchRange}
+                {rotation.class} • {rotation.spec}
               </CardDescription>
             </div>
 
-            {rotation.status === "approved" && (
-              <Badge variant="outline" className="border-green-500/50 shrink-0">
-                <CheckCircle className="mr-1 h-3 w-3" />
-                Approved
-              </Badge>
-            )}
-
-            {rotation.status === "pending" && (
-              <Badge
-                variant="outline"
-                className="border-yellow-500/50 shrink-0"
-              >
-                Pending
+            {rotation.forkedFromId && (
+              <Badge variant="outline" className="border-blue-500/50 shrink-0">
+                <GitFork className="mr-1 h-3 w-3" />
+                Fork
               </Badge>
             )}
           </div>
@@ -71,50 +53,22 @@ export function RotationCard({ rotation }: RotationCardProps) {
           <Separator />
 
           <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                <span>0</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <GitFork className="h-3 w-3" />
-                <span>0</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-3 w-3" />
-                <span>0</span>
-              </div>
-            </div>
-
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              <time dateTime={rotation.updatedAt ?? undefined}>
-                {rotation.updatedAt
-                  ? formatDistanceToNow(new Date(rotation.updatedAt), {
-                      addSuffix: true,
-                    })
-                  : "Unknown"}
+              <time dateTime={rotation.updatedAt}>
+                {formatDistanceToNow(new Date(rotation.updatedAt), {
+                  addSuffix: true,
+                })}
               </time>
             </div>
-          </div>
 
-          {rotation.visibility !== "public" && (
-            <div>
+            {!rotation.isPublic && (
               <Badge variant="secondary" className="text-xs">
-                {rotation.visibility === "private" ? (
-                  <>
-                    <Lock className="mr-1 h-3 w-3" />
-                    Private
-                  </>
-                ) : (
-                  <>
-                    <Link2 className="mr-1 h-3 w-3" />
-                    Unlisted
-                  </>
-                )}
+                <Lock className="mr-1 h-3 w-3" />
+                Private
               </Badge>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
     </Link>

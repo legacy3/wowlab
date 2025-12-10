@@ -20,7 +20,6 @@ export function RotationsList({
     );
   }
 
-  // Group by class
   const grouped = rotations.reduce(
     (acc, rotation) => {
       if (!acc[rotation.class]) {

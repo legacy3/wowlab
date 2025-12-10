@@ -38,7 +38,6 @@ function RotationsBrowseSkeleton() {
 export function RotationsBrowse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const {
@@ -46,11 +45,7 @@ export function RotationsBrowse() {
     query: { isLoading, isError },
   } = useList<Rotation>({
     resource: "rotations",
-    filters: [
-      { field: "visibility", operator: "eq", value: "public" },
-      { field: "status", operator: "eq", value: "approved" },
-      { field: "deletedAt", operator: "null", value: true },
-    ],
+    filters: [{ field: "isPublic", operator: "eq", value: true }],
     sorters: [{ field: "updatedAt", order: "desc" }],
     pagination: { pageSize: 50 },
   });
@@ -88,14 +83,11 @@ export function RotationsBrowse() {
 
     const matchesClass =
       classFilter === "all" || rotation.class === classFilter;
-    const matchesStatus =
-      statusFilter === "all" || rotation.status === statusFilter;
 
-    return matchesSearch && matchesClass && matchesStatus;
+    return matchesSearch && matchesClass;
   });
 
-  const activeFilterCount =
-    (classFilter !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
+  const activeFilterCount = classFilter !== "all" ? 1 : 0;
 
   return (
     <div className="space-y-4">
@@ -128,7 +120,7 @@ export function RotationsBrowse() {
       {showFilters && (
         <Card>
           <CardContent className="pt-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Class</label>
                 <Select value={classFilter} onValueChange={setClassFilter}>
@@ -143,20 +135,9 @@ export function RotationsBrowse() {
                     <SelectItem value="Paladin">Paladin</SelectItem>
                     <SelectItem value="Druid">Druid</SelectItem>
                     <SelectItem value="Shaman">Shaman</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="Hunter">Hunter</SelectItem>
+                    <SelectItem value="Rogue">Rogue</SelectItem>
+                    <SelectItem value="Warrior">Warrior</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -167,7 +148,6 @@ export function RotationsBrowse() {
                   size="sm"
                   onClick={() => {
                     setClassFilter("all");
-                    setStatusFilter("all");
                     setSearchQuery("");
                   }}
                   className="w-full"
