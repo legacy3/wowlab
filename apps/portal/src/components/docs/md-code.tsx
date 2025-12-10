@@ -1,10 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { CodeBlock } from "@/components/ui/code-block";
 import { MdMermaid } from "./md-mermaid";
-import { CopyButton } from "@/components/ui/copy-button";
 
 type MdInlineCodeProps = {
   children: React.ReactNode;
@@ -43,17 +41,7 @@ export function MdCode({ className, children }: MdCodeBlockProps) {
   }
 
   if (match) {
-    return (
-      <div className="group relative my-6 rounded-lg overflow-hidden">
-        <CopyButton
-          value={code}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-        />
-        <SyntaxHighlighter style={oneDark} language={language} PreTag="div">
-          {code}
-        </SyntaxHighlighter>
-      </div>
-    );
+    return <CodeBlock code={code} language={language} className="my-6" />;
   }
 
   return <MdInlineCode>{children}</MdInlineCode>;

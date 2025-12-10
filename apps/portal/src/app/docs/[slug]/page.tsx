@@ -8,12 +8,16 @@ import { FileText } from "lucide-react";
 // All the docs <(o_o)>
 import Overview from "@/content/00-overview.md";
 import McpServer from "@/content/01-mcp-server.md";
-import DataFlow from "@/content/02-data-flow.md";
+import Architecture from "@/content/02-architecture.md";
+import Contributing from "@/content/03-contributing.md";
+import Rotations from "@/content/04-rotations.md";
 
 const docs: Record<string, React.ComponentType> = {
   "00-overview": Overview,
   "01-mcp-server": McpServer,
-  "02-data-flow": DataFlow,
+  "02-architecture": Architecture,
+  "03-contributing": Contributing,
+  "04-rotations": Rotations,
 };
 
 type Props = {

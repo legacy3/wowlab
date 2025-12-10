@@ -1,26 +1,33 @@
-# Overview
+# WoWLab
 
-WoW Lab is a browser-based simulation engine for World of Warcraft. It runs entirely client-side using game data from the WoW DBC files.
+A combat simulation platform for World of Warcraft. Run sims, write rotation scripts, and query game data.
 
 ## What you can do
 
-- **Simulate rotations** - Write and test rotation scripts in JavaScript
-- **Inspect spell data** - Browse transformed spell/item data with all computed fields
-- **Query game data** - Use the MCP server to query DBC tables with AI assistants
+**Run simulations** in the browser. Test rotations and compare builds, no install required.
 
-## Architecture
+**Write rotation scripts** to customize decision logic. Match your playstyle or theorycraft new approaches.
 
-The simulation engine processes combat events the same way the game does. Spells, buffs, damage, and resources are all tracked in an event-driven system.
-
-- **Effect-TS** powers the core simulation runtime
-- **Supabase** hosts the spell/item database
-- **IndexedDB** caches data locally in your browser
+**Query game data** with the MCP server. Any tool (Claude, Cursor, your own scripts) can pull spell and item data from WoW's DBC files.
 
 ## Getting started
 
-- Check out [MCP Server](/docs/01-mcp-server) to query game data with Claude or Cursor
-- Read [Data Flow](/docs/02-data-flow) to understand how the simulation engine works
+### Run a simulation
 
-## Contributing
+1. Open the portal
+2. Select a spec and gear profile
+3. Hit run and see results
 
-These docs are just markdown files. You can [view and edit them on GitHub](https://github.com/legacy3/wowlab/tree/main/apps/portal/src/content).
+### Customize a rotation
+
+Rotation scripts define what abilities to use and when. Start by copying an existing script and tweaking the priority logic.
+
+### Query WoW data
+
+The [MCP Server](/docs/01-mcp-server) exposes WoW spell/item data to AI assistants and other tools. Useful for theorycrafting, building tools, or just looking up game mechanics.
+
+## Going deeper
+
+- [Writing Rotations](/docs/04-rotations)
+- [Architecture](/docs/02-architecture)
+- [Contributing](/docs/03-contributing)
