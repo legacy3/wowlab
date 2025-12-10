@@ -11,7 +11,7 @@ yield * tryCast(rotation, playerId, KILL_COMMAND, targetId);
 yield * tryCast(rotation, playerId, COBRA_SHOT, targetId);
 ```
 
-That's it. Top to bottom priority. The simulation handles cooldowns, GCDs, and timing.
+That's it—the list runs from top to bottom in priority order. The simulation handles cooldowns, GCDs, and timing.
 
 ## It's just JavaScript
 

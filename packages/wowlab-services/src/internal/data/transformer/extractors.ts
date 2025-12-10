@@ -882,15 +882,14 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           const allClasses = yield* dbcService.getChrClasses();
           const allSpecs = yield* dbcService.getChrSpecializations();
 
-          // Filter out Adventurer class (ID 14) and build class map
+          // Filter out non-playable classes (Adventurer=14, Traveler=15) and build class map
           const validClasses = allClasses.filter(
-            (c) => c.ID !== 14 && c.Name_lang,
+            (c) => c.ID !== 14 && c.ID !== 15 && c.Name_lang,
           );
 
-          // Filter out Initial/Devourer specs
+          // Filter out Initial specs
           const validSpecs = allSpecs.filter(
             (s) => s.Name_lang && s.Name_lang !== "Initial",
-            // && s.Name_lang !== "Devourer",
           );
 
           // Group specs by ClassID

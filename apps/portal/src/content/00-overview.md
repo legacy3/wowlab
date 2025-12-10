@@ -1,10 +1,10 @@
 # WoWLab
 
-A combat simulation platform for World of Warcraft. Run sims, write rotation scripts, and query game data.
+WoWLab is a combat simulation platform for World of Warcraft. You can run sims, write rotation scripts, and query game data in one place.
 
 ## What you can do
 
-**Run simulations** in the browser. Test rotations and compare builds, no install required.
+**Run simulations** in the browser. Test rotations and compare builds with no install required.
 
 **Write rotation scripts** to customize decision logic. Match your playstyle or theorycraft new approaches.
 
@@ -16,7 +16,7 @@ A combat simulation platform for World of Warcraft. Run sims, write rotation scr
 
 1. Open the portal
 2. Select a spec and gear profile
-3. Hit run and see results
+3. Click Run to view the results
 
 ### Customize a rotation
 
@@ -24,7 +24,7 @@ Rotation scripts define what abilities to use and when. Start by copying an exis
 
 ### Query WoW data
 
-The [MCP Server](/docs/01-mcp-server) exposes WoW spell/item data to AI assistants and other tools. Useful for theorycrafting, building tools, or just looking up game mechanics.
+The [MCP Server](/docs/01-mcp-server) exposes WoW spell/item data to AI assistants and other tools. It's useful for theorycrafting, building tools, or quickly looking up game mechanics.
 
 ## Going deeper
 

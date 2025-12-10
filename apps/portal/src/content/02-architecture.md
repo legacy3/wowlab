@@ -4,7 +4,7 @@ How the simulation works under the hood.
 
 ## Events in, events out
 
-The simulation is a loop that processes events in time order. Your rotation emits spell casts, handlers react and schedule more events, repeat until done.
+The simulation is a loop that processes events in time order. Your rotation emits spell casts, handlers react by scheduling more events, and the loop repeats until the sim finishes.
 
 ```mermaid
 flowchart LR
@@ -52,8 +52,8 @@ sequenceDiagram
 
 ## Refreshing and stale events
 
-When you refresh a DoT, a new removal gets scheduled. The old removal event still fires but handlers check if it's still valid. If the aura was already refreshed, they ignore it. No need to hunt down and cancel old events.
+When you refresh a DoT, a new removal gets scheduled. The old removal event still fires, but handlers first check whether the aura is still valid. If it was already refreshed, they ignore it. No need to hunt down and cancel old events.
 
 ## Static data
 
-Spell and item stats come from WoW's data files, loaded once before simulation starts.
+Spell and item stats load once from WoW's data files before the simulation starts.

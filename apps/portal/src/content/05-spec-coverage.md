@@ -34,10 +34,10 @@ The matrix uses color coding to indicate coverage:
 
 ## Loading time
 
-The data takes around 60 seconds to load and process because it fetches spell information for every spec in the game. Once loaded, it stays cached for your session.
+Loading takes about 60 seconds because the tool fetches spell data for every spec before displaying results. Once loaded, it stays cached for your session.
 
 ## Interpreting results
 
 High coverage means most of the spec's abilities are implemented. Low coverage means the spec may not simulate accurately yet.
 
-Keep in mind that coverage percentage alone does not tell the whole story. A spec might have high coverage but still be missing a key rotational ability. Click into individual specs to see exactly which spells are supported.
+Keep in mind that coverage percentage alone doesn't tell the whole story. A spec might have high coverage but still be missing a key rotational ability.
