@@ -15,8 +15,10 @@ type DocTreeProps = {
   basePath?: string;
 };
 
+// TODO Move this somehwere else
 function extractNumber(slug: string): string | null {
   const match = slug.match(/^(\d+)-/);
+
   return match ? String(parseInt(match[1], 10) + 1) : null;
 }
 
@@ -39,6 +41,7 @@ function ItemLabel({ item }: { item: DocMeta }) {
 
 function ItemNumber({ slug }: { slug: string }) {
   const number = extractNumber(slug);
+
   if (number) {
     return (
       <span className="text-muted-foreground font-mono text-xs tabular-nums w-4 text-right shrink-0">
@@ -46,6 +49,7 @@ function ItemNumber({ slug }: { slug: string }) {
       </span>
     );
   }
+
   return <FileText className="h-4 w-4 text-muted-foreground shrink-0" />;
 }
 
@@ -92,6 +96,7 @@ function DocTreeNode({ item, basePath, depth = 0 }: DocTreeNodeProps) {
           <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="font-medium text-sm">{item.title}</span>
         </CollapsibleTrigger>
+
         <CollapsibleContent>
           <ul className="space-y-1 mt-1">
             {item.children!.map((child) => (
