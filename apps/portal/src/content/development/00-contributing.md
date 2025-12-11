@@ -1,6 +1,6 @@
 # Contributing
 
-How to set up the development environment.
+Want to hack on WoW Lab? Here is how to get set up.
 
 ## Prerequisites
 
@@ -8,6 +8,8 @@ How to set up the development environment.
 - pnpm 10+
 
 ## Setup
+
+Clone the repo and install deps:
 
 ```bash
 git clone https://github.com/legacy3/wowlab.git
@@ -22,18 +24,16 @@ Copy [apps/portal/.env.example](https://github.com/legacy3/wowlab/blob/main/apps
 ## Commands
 
 ```bash
-pnpm build    # Build all packages
-pnpm dev      # Run portal dev server
-pnpm test     # Run tests
-pnpm lint     # Lint
+pnpm build    # compile everything
+pnpm dev      # run the portal locally
+pnpm test     # run tests
+pnpm lint     # check for lint errors
 ```
 
 ## Code style
 
-- Effect-TS for effectful code
-- Immutable.js for state
-- No async/await, no type casts
+We lean on [Effect-TS](https://effect.website/) for effectful code in the core packages. The portal uses [Refine](https://refine.dev/) for data fetching and routing. [Immutable.js](https://immutable-js.com/) handles the simulation state.
 
 ## Editing docs
 
-Docs are markdown in `apps/portal/src/content/`. Add new docs to `src/lib/docs.ts`.
+Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs.ts`.

@@ -56,4 +56,4 @@ When you refresh a DoT, a new removal gets scheduled. The old removal event stil
 
 ## Static data
 
-Spell and item stats load once from WoW's data files before the simulation starts.
+Spell data loads from WoW's data files before the simulation starts.

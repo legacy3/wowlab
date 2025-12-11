@@ -106,10 +106,11 @@ The same hop-and-resolve pattern repeats everywhere: `DurationIndex` → `spell_
 
 ## Caching keeps it fast
 
-Fetching a dozen tables per spell sounds expensive, so we layer caching and concurrency to hide the cost:
+Fetching a dozen tables per spell sounds expensive, so we layer caching, batching, and concurrency to hide the cost:
 
 1. **Persistent browser cache** - We use [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) to permanently cache all spell data for a patch. Once fetched, data stays local until a new patch drops.
-2. **Parallel fetching** - Independent lookups run side by side, so we do not wait for `spell_duration` before checking `spell_range`.
+2. **Automatic batching** - When a page renders 50 spell tooltips, we do not fire 50 separate queries. All the IDs get bundled into a single `WHERE ID IN (...)` call. One trip to the database, 50 results back.
+3. **Parallel fetching** - Independent lookups run side by side, so we do not wait for `spell_duration` before checking `spell_range`.
 
 ```mermaid
 flowchart TD
