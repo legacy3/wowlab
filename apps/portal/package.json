@@ -56,6 +56,7 @@
     "@types/mdx": "^2.0.13",
     "@vercel/analytics": "^1.5.0",
     "@wowlab/core": "workspace:*",
+    "@wowlab/parsers": "workspace:*",
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",
     "@wowlab/services": "workspace:*",

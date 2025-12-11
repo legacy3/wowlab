@@ -39,7 +39,9 @@ export const SPELL_TABLES = {
 // prettier-ignore
 export const ITEM_TABLES = {
   item: { file: "Item.csv", schema: Dbc.ItemRowSchema },
+  itemAppearance: { file: "ItemAppearance.csv", schema: Dbc.ItemAppearanceRowSchema },
   itemEffect: { file: "ItemEffect.csv", schema: Dbc.ItemEffectRowSchema },
+  itemModifiedAppearance: { file: "ItemModifiedAppearance.csv", schema: Dbc.ItemModifiedAppearanceRowSchema },
   itemSparse: { file: "ItemSparse.csv", schema: Dbc.ItemSparseRowSchema },
   itemXItemEffect: { file: "ItemXItemEffect.csv", schema: Dbc.ItemXItemEffectRowSchema },
   manifestInterfaceData: { file: "ManifestInterfaceData.csv", schema: Dbc.ManifestInterfaceDataRowSchema },

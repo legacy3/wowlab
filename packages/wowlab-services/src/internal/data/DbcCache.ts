@@ -10,7 +10,9 @@ export interface DbcCache {
   expectedStat: Dbc.ExpectedStatRow[];
   expectedStatMod: ImmutableMap<number, Dbc.ExpectedStatModRow>;
   item: ImmutableMap<number, Dbc.ItemRow>;
+  itemAppearance: ImmutableMap<number, Dbc.ItemAppearanceRow>;
   itemEffect: ImmutableMap<number, Dbc.ItemEffectRow>;
+  itemModifiedAppearance: ImmutableMap<number, Dbc.ItemModifiedAppearanceRow>;
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
   itemXItemEffect: ImmutableMap<number, Dbc.ItemXItemEffectRow[]>;
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
@@ -56,7 +58,9 @@ export interface RawDbcData {
   expectedStat: Dbc.ExpectedStatRow[];
   expectedStatMod: Dbc.ExpectedStatModRow[];
   item: Dbc.ItemRow[];
+  itemAppearance: Dbc.ItemAppearanceRow[];
   itemEffect: Dbc.ItemEffectRow[];
+  itemModifiedAppearance: Dbc.ItemModifiedAppearanceRow[];
   itemSparse: Dbc.ItemSparseRow[];
   itemXItemEffect: Dbc.ItemXItemEffectRow[];
   manifestInterfaceData: Dbc.ManifestInterfaceDataRow[];
@@ -102,7 +106,9 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   expectedStat: rawData.expectedStat,
   expectedStatMod: ImmutableMap(rawData.expectedStatMod.map((row) => [row.ID, row])),
   item: ImmutableMap(rawData.item.map((row) => [row.ID, row])),
+  itemAppearance: ImmutableMap(rawData.itemAppearance.map((row) => [row.ID, row])),
   itemEffect: ImmutableMap(rawData.itemEffect.map((row) => [row.ID, row])),
+  itemModifiedAppearance: ImmutableMap(rawData.itemModifiedAppearance.map((row) => [row.ItemID, row])),
   itemSparse: ImmutableMap(rawData.itemSparse.map((row) => [row.ID, row])),
   itemXItemEffect: groupByItemId(rawData.itemXItemEffect),
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),

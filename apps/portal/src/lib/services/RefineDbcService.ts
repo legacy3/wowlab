@@ -433,6 +433,21 @@ export const RefineDbcService = (
       ),
 
     // Item tables
+    getItemAppearance: (id) =>
+      getOne<Schemas.Dbc.ItemAppearanceRow>(
+        queryClient,
+        dataProvider,
+        "item_appearance",
+        id,
+      ),
+    getItemModifiedAppearance: (itemId) =>
+      getOneByFilter<Schemas.Dbc.ItemModifiedAppearanceRow>(
+        queryClient,
+        dataProvider,
+        "item_modified_appearance",
+        "ItemID",
+        itemId,
+      ),
     getItemXItemEffects: (itemId) =>
       getListByFilter<Schemas.Dbc.ItemXItemEffectRow>(
         queryClient,

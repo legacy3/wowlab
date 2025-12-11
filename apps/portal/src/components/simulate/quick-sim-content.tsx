@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import {
   ChevronsUpDown,
   User,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useSimulation } from "@/hooks/use-simulation";
 import { BeastMasteryRotation } from "@/lib/simulation";
@@ -47,14 +48,16 @@ import {
   EQUIPMENT_RIGHT_COLUMN,
   EQUIPMENT_TRINKET_SLOTS,
   EQUIPMENT_WEAPON_SLOTS,
-  type EquipmentSlot,
-  type EquipmentSlotItem,
-  type CharacterSummary,
-  type CharacterProfession,
 } from "@/components/equipment";
 import {
+  clearCharacterAtom,
   fightDurationAtom,
+  isParsingAtom,
   iterationsAtom,
+  parseErrorAtom,
+  parsedCharacterAtom,
+  setSimcInputAtom,
+  simcInputAtom,
   targetTypeAtom,
   type TargetType,
 } from "@/atoms/sim";
@@ -87,123 +90,19 @@ const FIGHT_PROFILES: FightProfile[] = [
   },
 ];
 
-// Mock parsed data - in real implementation this comes from SimC parser
-interface ParsedSimcData {
-  character: CharacterSummary;
-  professions: CharacterProfession[];
-  gear: Record<EquipmentSlot, EquipmentSlotItem | null>;
-}
-
-const MOCK_PARSED_DATA: ParsedSimcData = {
-  character: {
-    name: "Wellenwilli",
-    server: "Blackmoore",
-    region: "EU",
-    level: 80,
-    spec: "Restoration",
-    race: "Tauren",
-    class: "Shaman",
-  },
-  professions: [
-    { name: "Alchemy", rank: 100 },
-    { name: "Jewelcrafting", rank: 85 },
-  ],
-  gear: {
-    head: {
-      id: 212011,
-      ilvl: 623,
-      name: "Waves of the Forgotten Reservoir",
-      isUpgrade: false,
-    },
-    neck: {
-      id: 215136,
-      ilvl: 619,
-      name: "Amulet of Earthen Craftsmanship",
-      isUpgrade: false,
-    },
-    shoulder: {
-      id: 212014,
-      ilvl: 619,
-      name: "Spaulders of the Forgotten Reservoir",
-      isUpgrade: false,
-    },
-    back: {
-      id: 222817,
-      ilvl: 616,
-      name: "Consecrated Cloak",
-      isUpgrade: false,
-    },
-    chest: {
-      id: 212010,
-      ilvl: 623,
-      name: "Robes of the Forgotten Reservoir",
-      isUpgrade: false,
-    },
-    wrist: {
-      id: 219334,
-      ilvl: 619,
-      name: "Devoted Wristguards",
-      isUpgrade: false,
-    },
-    hands: {
-      id: 212012,
-      ilvl: 619,
-      name: "Grips of the Forgotten Reservoir",
-      isUpgrade: false,
-    },
-    waist: { id: 219331, ilvl: 619, name: "Devoted Sash", isUpgrade: false },
-    legs: {
-      id: 212013,
-      ilvl: 619,
-      name: "Legwraps of the Forgotten Reservoir",
-      isUpgrade: false,
-    },
-    feet: { id: 219333, ilvl: 616, name: "Devoted Slippers", isUpgrade: false },
-    finger1: {
-      id: 215135,
-      ilvl: 619,
-      name: "Ring of Earthen Resolve",
-      isUpgrade: true,
-    },
-    finger2: {
-      id: 225577,
-      ilvl: 623,
-      name: "Seal of the Poisoned Pact",
-      isUpgrade: false,
-    },
-    trinket1: {
-      id: 225648,
-      ilvl: 623,
-      name: "Candle of Collective Anguish",
-      isUpgrade: false,
-    },
-    trinket2: {
-      id: 219314,
-      ilvl: 619,
-      name: "Carved Blazikon Wax",
-      isUpgrade: true,
-    },
-    mainHand: {
-      id: 222568,
-      ilvl: 623,
-      name: "Siphoning Dagger",
-      isUpgrade: false,
-    },
-    offHand: {
-      id: 222566,
-      ilvl: 619,
-      name: "Vagabond's Torch",
-      isUpgrade: false,
-    },
-  },
-};
-
 function QuickSimContentInner() {
-  const [simcString, setSimcString] = useState("");
-  const [parsedData, setParsedData] = useState<ParsedSimcData | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [fightPickerOpen, setFightPickerOpen] = useState(false);
 
+  // Character atoms
+  const simcInput = useAtomValue(simcInputAtom);
+  const setSimcInput = useSetAtom(setSimcInputAtom);
+  const clearCharacter = useSetAtom(clearCharacterAtom);
+  const parsedData = useAtomValue(parsedCharacterAtom);
+  const parseError = useAtomValue(parseErrorAtom);
+  const isParsing = useAtomValue(isParsingAtom);
+
+  // Config atoms
   const [fightDuration, setFightDuration] = useAtom(fightDurationAtom);
   const [iterations, setIterations] = useAtom(iterationsAtom);
   const [targetType, setTargetType] = useAtom(targetTypeAtom);
@@ -218,18 +117,11 @@ function QuickSimContentInner() {
     FIGHT_PROFILES.find((p) => p.id === targetType) ?? FIGHT_PROFILES[0];
 
   const handleSimcChange = (value: string) => {
-    setSimcString(value);
-
-    if (value.trim().length > 50) {
-      setParsedData(MOCK_PARSED_DATA);
-    } else {
-      setParsedData(null);
-    }
+    setSimcInput(value);
   };
 
   const handleClear = () => {
-    setSimcString("");
-    setParsedData(null);
+    clearCharacter();
   };
 
   const handleRunSim = async () => {
@@ -241,9 +133,9 @@ function QuickSimContentInner() {
   // Zen state: just the paste area
   if (!parsedData) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl space-y-4">
         <Textarea
-          value={simcString}
+          value={simcInput}
           onChange={(e) => handleSimcChange(e.target.value)}
           placeholder={`Paste your SimulationCraft export here...
 
@@ -257,9 +149,36 @@ spec=restoration
 talents=CgQAL+iDLHPJSLC...
 
 head=,id=212011,bonus_id=6652/10877...`}
-          className="min-h-[320px] border-dashed border-2 font-mono text-sm focus:border-solid"
+          className="min-h-80 border-dashed border-2 font-mono text-sm focus:border-solid"
           autoFocus
         />
+
+        {/* Parsing indicator */}
+        {isParsing && (
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Parsing SimC data...
+          </div>
+        )}
+
+        {/* Parse error display */}
+        {parseError && (
+          <Card className="border-destructive">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">
+                    Failed to parse SimC export
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {parseError}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -327,7 +246,7 @@ head=,id=212011,bonus_id=6652/10877...`}
               <EquipmentSlotCard
                 key={slot}
                 slot={slot}
-                item={gear[slot]}
+                itemId={gear[slot]}
                 position={index === 0 ? "left" : "right"}
               />
             ))}
@@ -341,7 +260,7 @@ head=,id=212011,bonus_id=6652/10877...`}
               <EquipmentSlotCard
                 key={slot}
                 slot={slot}
-                item={gear[slot]}
+                itemId={gear[slot]}
                 position={index === 0 ? "left" : "right"}
               />
             ))}
@@ -379,7 +298,7 @@ head=,id=212011,bonus_id=6652/10877...`}
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[var(--radix-popover-trigger-width)] p-0"
+            className="w-(--radix-popover-trigger-width) p-0"
             align="start"
           >
             <Command>
@@ -535,7 +454,7 @@ head=,id=212011,bonus_id=6652/10877...`}
 function QuickSimContentSkeleton() {
   return (
     <div className="mx-auto max-w-2xl">
-      <Skeleton className="h-[320px] w-full rounded-lg" />
+      <Skeleton className="h-80 w-full rounded-lg" />
     </div>
   );
 }

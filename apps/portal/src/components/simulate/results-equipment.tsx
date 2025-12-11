@@ -1,7 +1,5 @@
 "use client";
 
-// TODO(refine-migration): Replace with Refine data hooks in Phase 4/5
-// import { useAtom } from "jotai";
 import { Package, User } from "lucide-react";
 
 import {
@@ -12,30 +10,15 @@ import {
   EQUIPMENT_TRINKET_SLOTS,
   EQUIPMENT_WEAPON_SLOTS,
   type EquipmentSlot,
-  type EquipmentSlotItem,
-  type AlternativeItem,
 } from "@/components/equipment";
 import { Separator } from "@/components/ui/separator";
-// TODO(refine-migration): Replace with Refine useOne hook
-// import {
-//   characterAtom,
-//   gearAtom,
-//   slotAlternativesAtom,
-// } from "@/atoms/sim/results";
 
-type Gear = Record<EquipmentSlot, EquipmentSlotItem | null>;
-type SlotAlternatives = Record<EquipmentSlot, AlternativeItem[]>;
+type Gear = Record<EquipmentSlot, number | null>;
 
 export function ResultsEquipment() {
-  // TODO(refine-migration): Replace with Refine hooks
-  // const [character] = useAtom(characterAtom);
-  // const [gear] = useAtom(gearAtom);
-  // const [slotAlternatives] = useAtom(slotAlternativesAtom);
-
-  // Temporary placeholder data until Refine migration
+  // TODO: Replace with actual data from simulation results
   const character = { name: "", race: "", class: "" };
   const gear = {} as Gear;
-  const slotAlternatives = {} as SlotAlternatives;
 
   return (
     <>
@@ -43,7 +26,6 @@ export function ResultsEquipment() {
         <EquipmentColumn
           gear={gear}
           position="left"
-          showUpgradeBadge
           slots={EQUIPMENT_LEFT_COLUMN}
         />
 
@@ -62,7 +44,6 @@ export function ResultsEquipment() {
         <EquipmentColumn
           gear={gear}
           position="right"
-          showUpgradeBadge
           slots={EQUIPMENT_RIGHT_COLUMN}
         />
       </div>
@@ -74,10 +55,8 @@ export function ResultsEquipment() {
           <EquipmentSlotCard
             key={slot}
             slot={slot}
-            item={gear[slot]}
+            itemId={gear[slot]}
             position={index === 0 ? "left" : "right"}
-            showUpgradeBadge
-            alternatives={slotAlternatives[slot]}
           />
         ))}
       </div>
@@ -87,22 +66,19 @@ export function ResultsEquipment() {
       <div className="grid grid-cols-2 gap-3">
         {EQUIPMENT_WEAPON_SLOTS.map((slot, index) => {
           const position = index === 0 ? "left" : "right";
-          const item = gear[slot];
           const isOffHand = slot === "offHand";
 
           return (
             <EquipmentSlotCard
               key={slot}
               slot={slot}
-              item={item}
+              itemId={gear[slot]}
               position={position}
               emptyIcon={
                 isOffHand ? (
                   <Package className="h-4 w-4 text-muted-foreground" />
                 ) : undefined
               }
-              showUpgradeBadge
-              alternatives={slotAlternatives[slot]}
             />
           );
         })}

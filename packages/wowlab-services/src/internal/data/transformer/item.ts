@@ -7,6 +7,7 @@ import * as Option from "effect/Option";
 
 import { DbcService } from "../dbc/DbcService.js";
 
+// TODO Add actual extrators for items
 export const transformItem = (
   itemId: number,
 ): Effect.Effect<
@@ -29,11 +30,27 @@ export const transformItem = (
 
     const sparse = yield* dbc.getItemSparse(itemId);
 
-    // Resolve File Name
+    // Resolve File Name - first try Item.IconFileDataID, then fallback to appearance
+    let iconFileDataId = item.IconFileDataID;
+
+    if (iconFileDataId === 0) {
+      const modifiedAppearance = yield* dbc.getItemModifiedAppearance(itemId);
+
+      if (modifiedAppearance) {
+        const appearance = yield* dbc.getItemAppearance(
+          modifiedAppearance.ItemAppearanceID,
+        );
+
+        if (appearance && appearance.DefaultIconFileDataID > 0) {
+          iconFileDataId = appearance.DefaultIconFileDataID;
+        }
+      }
+    }
+
     const iconRow =
-      item.IconFileDataID > 0
+      iconFileDataId > 0
         ? Option.fromNullable(
-            yield* dbc.getManifestInterfaceData(item.IconFileDataID),
+            yield* dbc.getManifestInterfaceData(iconFileDataId),
           )
         : Option.none();
 

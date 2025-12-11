@@ -51,9 +51,20 @@ export interface DbcServiceInterface {
     itemId: number,
   ) => Effect.Effect<Schemas.Dbc.ItemRow | undefined, DbcError>;
 
+  readonly getItemAppearance: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemAppearanceRow | undefined, DbcError>;
+
   readonly getItemEffect: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.ItemEffectRow | undefined, DbcError>;
+
+  readonly getItemModifiedAppearance: (
+    itemId: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.ItemModifiedAppearanceRow | undefined,
+    DbcError
+  >;
 
   readonly getItemSparse: (
     itemId: number,

@@ -699,6 +699,29 @@ export const SupabaseDbcServiceLive = (
         timeToLive: CACHE_TTL,
       });
 
+      const itemAppearanceCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (id: number) =>
+          queryById<Schemas.Dbc.ItemAppearanceRow>(
+            supabase,
+            "item_appearance",
+            id,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
+      const itemModifiedAppearanceCache = yield* Cache.make({
+        capacity: CACHE_CAPACITY,
+        lookup: (itemId: number) =>
+          queryOneByForeignKey<Schemas.Dbc.ItemModifiedAppearanceRow>(
+            supabase,
+            "item_modified_appearance",
+            "ItemID",
+            itemId,
+          ),
+        timeToLive: CACHE_TTL,
+      });
+
       const itemSparseCache = yield* Cache.make({
         capacity: CACHE_CAPACITY,
         lookup: (itemId: number) =>
@@ -797,7 +820,10 @@ export const SupabaseDbcServiceLive = (
           ),
 
         getItem: (itemId) => itemCache.get(itemId),
+        getItemAppearance: (id) => itemAppearanceCache.get(id),
         getItemEffect: (id) => itemEffectCache.get(id),
+        getItemModifiedAppearance: (itemId) =>
+          itemModifiedAppearanceCache.get(itemId),
         getItemSparse: (itemId) => itemSparseCache.get(itemId),
         getItemXItemEffects: (itemId) => itemXItemEffectsCache.get(itemId),
         getManifestInterfaceData: (id) => manifestInterfaceDataCache.get(id),

@@ -3,11 +3,7 @@ export {
   type CharacterProfession,
   type CharacterSummary,
 } from "./character-summary-card";
-export {
-  EquipmentSlotCard,
-  type EquipmentSlotItem,
-  type AlternativeItem,
-} from "./equipment-slot-card";
+export { EquipmentSlotCard } from "./equipment-slot-card";
 export { EquipmentColumn } from "./equipment-column";
 export {
   EQUIPMENT_LEFT_COLUMN,

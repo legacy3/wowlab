@@ -63,7 +63,12 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getItem: (itemId) => Effect.succeed(cache.item.get(itemId)),
 
+    getItemAppearance: (id) => Effect.succeed(cache.itemAppearance.get(id)),
+
     getItemEffect: (id) => Effect.succeed(cache.itemEffect.get(id)),
+
+    getItemModifiedAppearance: (itemId) =>
+      Effect.succeed(cache.itemModifiedAppearance.get(itemId)),
 
     getItemSparse: (itemId) => Effect.succeed(cache.itemSparse.get(itemId)),
 

@@ -1,19 +1,15 @@
 import type { EquipmentSlot } from "./slots";
-import type { EquipmentSlotItem } from "./equipment-slot-card";
-
 import { EquipmentSlotCard } from "./equipment-slot-card";
 
 type EquipmentColumnProps = {
-  gear: Record<EquipmentSlot, EquipmentSlotItem | null | undefined>;
+  gear: Record<EquipmentSlot, number | null>;
   position?: "left" | "right";
-  showUpgradeBadge?: boolean;
   slots: ReadonlyArray<EquipmentSlot>;
 };
 
 export function EquipmentColumn({
   gear,
   position = "left",
-  showUpgradeBadge = false,
   slots,
 }: EquipmentColumnProps) {
   return (
@@ -22,9 +18,8 @@ export function EquipmentColumn({
         <EquipmentSlotCard
           key={slot}
           slot={slot}
-          item={gear[slot] ?? null}
+          itemId={gear[slot]}
           position={position}
-          showUpgradeBadge={showUpgradeBadge}
         />
       ))}
     </div>
