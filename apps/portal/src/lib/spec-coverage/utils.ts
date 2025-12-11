@@ -1,3 +1,5 @@
+import type { HandlerInfo } from "@wowlab/specs/Shared";
+
 export interface SpecCoverageSpell {
   id: number;
   name: string;
@@ -20,6 +22,8 @@ export interface SpecCoverageClass {
 export interface SpecCoverageData {
   classes: SpecCoverageClass[];
 }
+
+export type UntrackedSpell = HandlerInfo;
 
 export function calculateCoverage(spells: SpecCoverageSpell[]): number {
   if (spells.length === 0) {

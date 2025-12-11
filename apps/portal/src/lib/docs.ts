@@ -5,42 +5,29 @@ export type DocMeta = {
   children?: DocMeta[];
 };
 
+function page(slug: string, title: string, description?: string): DocMeta {
+  return { slug, title, description };
+}
+
+function group(slug: string, title: string, children: DocMeta[]): DocMeta {
+  return { slug, title, children };
+}
+
+// prettier-ignore
 export const docsIndex: DocMeta[] = [
-  {
-    slug: "00-overview",
-    title: "Overview",
-    description: "What WoWLab is and what you can do with it",
-  },
-  {
-    slug: "01-mcp-server",
-    title: "MCP Server",
-    description: "Query WoW spell/item data with AI tools",
-  },
-  {
-    slug: "02-architecture",
-    title: "Architecture",
-    description: "How the simulation engine works internally",
-  },
-  {
-    slug: "03-contributing",
-    title: "Contributing",
-    description: "Dev setup for working on WoWLab",
-  },
-  {
-    slug: "04-rotations",
-    title: "Writing Rotations",
-    description: "How to write rotation priority lists",
-  },
-  {
-    slug: "05-spec-coverage",
-    title: "Spec Coverage",
-    description: "Check which spells are supported for each spec",
-  },
-  {
-    slug: "06-data-model",
-    title: "Data Model",
-    description: "How spell data is assembled at runtime",
-  },
+  page("00-overview", "Overview", "What WoWLab is and what you can do with it"),
+  group("guides", "Guides", [
+    page("00-rotations", "Writing Rotations", "How to write rotation priority lists"),
+    page("01-spec-coverage", "Spec Coverage", "Check which spells are supported for each spec"),
+  ]),
+  group("reference", "Reference", [
+    page("00-architecture", "Architecture", "How the simulation engine works internally"),
+    page("01-data-model", "Data Model", "How spell data is assembled at runtime"),
+    page("02-mcp-server", "MCP Server", "Query WoW spell/item data with AI tools"),
+  ]),
+  group("development", "Development", [
+    page("00-contributing", "Contributing", "Dev setup for working on WoWLab"),
+  ]),
 ];
 
 function flattenDocs(docs: DocMeta[], prefix = ""): DocMeta[] {
@@ -57,11 +44,12 @@ function flattenDocs(docs: DocMeta[], prefix = ""): DocMeta[] {
 }
 
 const flatDocs = flattenDocs(docsIndex);
+const pageDocs = flatDocs.filter((doc) => !doc.children);
 
 export function getDocMeta(slug: string): DocMeta | undefined {
   return flatDocs.find((doc) => doc.slug === slug);
 }
 
 export function getAllDocSlugs(): string[] {
-  return flatDocs.map((doc) => doc.slug);
+  return pageDocs.map((doc) => doc.slug);
 }

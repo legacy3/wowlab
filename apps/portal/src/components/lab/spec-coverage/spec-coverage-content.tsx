@@ -15,11 +15,12 @@ import {
   type SpecCoverageCardId,
 } from "@/atoms/spec-coverage";
 import { useSpecCoverage } from "@/hooks/use-spec-coverage";
-import { OverviewCard, MatrixCard } from "./cards";
+import { OverviewCard, MatrixCard, UntrackedCard } from "./cards";
 
 const components: DashboardConfig<SpecCoverageCardId> = {
   overview: { Component: OverviewCard },
   matrix: { Component: MatrixCard },
+  untracked: { Component: UntrackedCard },
 };
 
 export function SpecCoverageContent() {

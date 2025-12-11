@@ -9,7 +9,10 @@ import * as PubSub from "effect/PubSub";
 import * as Queue from "effect/Queue";
 import * as Layer from "effect/Layer";
 import { Hunter } from "@wowlab/specs";
-import { getAllSupportedSpellIds } from "@wowlab/specs/Shared";
+import {
+  getAllSupportedSpellIds,
+  getAllHandlerInfo,
+} from "@wowlab/specs/Shared";
 import {
   ExtractorService,
   SpecCoverageProgressService,
@@ -19,16 +22,18 @@ import {
   SpecCoverageProgressLive,
   type SpecCoverageData,
   type SpecCoverageProgress,
+  type UntrackedSpell,
 } from "@/lib/spec-coverage";
 import {
   specCoverageDataAtom,
   specCoverageLoadingAtom,
   specCoverageErrorAtom,
   specCoverageProgressAtom,
+  untrackedSpellsAtom,
 } from "@/atoms/spec-coverage";
 
 // Re-export types for convenience
-export type { SpecCoverageData, SpecCoverageProgress };
+export type { SpecCoverageData, SpecCoverageProgress, UntrackedSpell };
 export type {
   SpecCoverageClass,
   SpecCoverageSpec,
@@ -40,12 +45,13 @@ export interface UseSpecCoverageResult {
   loading: boolean;
   error: string | null;
   progress: SpecCoverageProgress | null;
+  untrackedSpells: UntrackedSpell[];
   fetch: () => Promise<void>;
 }
 
-// TODO Refactor this, it's kinda hacked at the moment
 const ALL_CLASSES = [Hunter.Hunter];
 const SUPPORTED_SPELL_IDS = getAllSupportedSpellIds(ALL_CLASSES);
+const ALL_HANDLER_INFO = getAllHandlerInfo(ALL_CLASSES);
 
 export function useSpecCoverage(): UseSpecCoverageResult {
   const dataProvider = useDataProvider()();
@@ -55,6 +61,7 @@ export function useSpecCoverage(): UseSpecCoverageResult {
   const [loading, setLoading] = useAtom(specCoverageLoadingAtom);
   const [error, setError] = useAtom(specCoverageErrorAtom);
   const [progress, setProgress] = useAtom(specCoverageProgressAtom);
+  const [untrackedSpells, setUntrackedSpells] = useAtom(untrackedSpellsAtom);
 
   const fetch = useCallback(async () => {
     if (loading) {
@@ -64,6 +71,7 @@ export function useSpecCoverage(): UseSpecCoverageResult {
     setLoading(true);
     setError(null);
     setProgress(null);
+    setUntrackedSpells([]);
 
     try {
       const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
@@ -97,6 +105,18 @@ export function useSpecCoverage(): UseSpecCoverageResult {
       );
 
       setData(result);
+
+      const allDbcSpellIds = new Set(
+        result.classes.flatMap((c) =>
+          c.specs.flatMap((s) => s.spells.map((spell) => spell.id)),
+        ),
+      );
+
+      const untracked: UntrackedSpell[] = ALL_HANDLER_INFO.filter(
+        (h) => !allDbcSpellIds.has(h.spellId),
+      );
+
+      setUntrackedSpells(untracked);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -110,7 +130,8 @@ export function useSpecCoverage(): UseSpecCoverageResult {
     setLoading,
     setError,
     setProgress,
+    setUntrackedSpells,
   ]);
 
-  return { data, loading, error, progress, fetch };
+  return { data, loading, error, progress, untrackedSpells, fetch };
 }
