@@ -20,10 +20,6 @@ export interface SpellLoadProgress {
 
 export type OnSpellProgress = (progress: SpellLoadProgress) => void;
 
-/**
- * Internal helper that loads spells by ID with progress tracking.
- * Shared implementation for both public functions.
- */
 async function loadSpellsInternal(
   spellIds: readonly number[],
   queryClient: QueryClient,
@@ -32,8 +28,6 @@ async function loadSpellsInternal(
 ) {
   const total = spellIds.length;
 
-  // Create layers (same pattern as data inspector)
-  // Note: Layer.succeed-based layers don't require scoping for cleanup
   const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
   const extractorLayer = Layer.provide(ExtractorService.Default, dbcLayer);
   const appLayer = Layer.mergeAll(dbcLayer, extractorLayer);
@@ -60,7 +54,7 @@ async function loadSpellsInternal(
 
             return spell;
           }),
-        { concurrency: 5 }, // Load 5 at a time
+        { concurrency: "unbounded", batching: true },
       );
     }).pipe(Effect.provide(appLayer)),
   );
@@ -134,7 +128,7 @@ async function loadAurasInternal(
 
             return aura._tag === "Right" ? aura.right : null;
           }),
-        { concurrency: 5 },
+        { concurrency: "unbounded", batching: true },
       );
 
       return results.filter((r): r is NonNullable<typeof r> => r !== null);

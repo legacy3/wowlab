@@ -1,9 +1,3 @@
-/**
- * Aura Transformer
- *
- * Transforms DBC spell data into AuraDataFlat.
- * Per docs/aura-system/04-phase2-transformer.md
- */
 import { DbcError } from "@wowlab/core/Errors";
 import * as Errors from "@wowlab/core/Errors";
 import { Aura, Branded } from "@wowlab/core/Schemas";
@@ -14,14 +8,6 @@ import * as Option from "effect/Option";
 import { DbcService } from "../dbc/DbcService.js";
 import { ExtractorService } from "./extractors.js";
 
-/**
- * Transform a spell into AuraDataFlat.
- *
- * Data path per docs/aura-system/04-phase2-transformer.md:
- * spellId → DbcService (spell_misc, spell_duration, spell_effect, spell_aura_options)
- *        → ExtractorService helpers
- *        → AuraDataFlat
- */
 export const transformAura = (
   spellId: number,
 ): Effect.Effect<
@@ -33,7 +19,6 @@ export const transformAura = (
     const dbc = yield* DbcService;
     const extractor = yield* ExtractorService;
 
-    // Validate spell exists (SpellInfoNotFound on miss)
     const nameRow = yield* dbc.getSpellName(spellId);
     if (!nameRow) {
       return yield* Effect.fail(
@@ -44,12 +29,19 @@ export const transformAura = (
       );
     }
 
-    // Fetch spell_misc for attributes and duration index
-    const misc = Option.fromNullable(yield* dbc.getSpellMisc(spellId));
+    const [misc, effects, auraOptions] = yield* Effect.all(
+      [
+        dbc.getSpellMisc(spellId),
+        dbc.getSpellEffects(spellId),
+        dbc.getSpellAuraOptions(spellId),
+      ],
+      { batching: true },
+    );
 
-    // Extract attributes array from misc
+    const miscOpt = Option.fromNullable(misc);
+
     const attributes = pipe(
-      misc,
+      miscOpt,
       Option.map((m) => [
         m.Attributes_0,
         m.Attributes_1,
@@ -71,49 +63,25 @@ export const transformAura = (
       Option.getOrElse(() => [] as number[]),
     );
 
-    // Fetch spell effects for periodic info
-    const effects = yield* dbc.getSpellEffects(spellId);
+    const durationOpt = yield* extractor.extractDuration(miscOpt);
 
-    // Fetch spell_aura_options for maxStacks
-    const auraOptions = yield* dbc.getSpellAuraOptions(spellId);
-
-    // Extract duration via extractor (handles DurationIndex lookup)
-    const durationOpt = yield* extractor.extractDuration(misc);
-
-    // Extract periodic info from effects
     const periodicInfo = extractor.extractPeriodicInfo(effects);
-
-    // Extract aura flags from attributes
     const auraFlags = extractor.extractAuraFlags(attributes);
-
-    // Determine refresh behavior
     const refreshBehavior = extractor.determineRefreshBehavior(
       auraFlags.pandemicRefresh,
       periodicInfo.tickPeriodMs,
     );
 
-    // Build AuraDataFlat per docs/aura-system/04-phase2-transformer.md mapping table
-    const auraData: Aura.AuraDataFlat = {
+    return {
       spellId: Branded.SpellID(spellId),
-
-      // Duration from spell_duration via misc DurationIndex
-      // Default to 0 when missing
       baseDurationMs: Option.isSome(durationOpt)
         ? durationOpt.value.duration
         : 0,
       maxDurationMs: Option.isSome(durationOpt) ? durationOpt.value.max : 0,
-
-      // Max stacks from spell_aura_options.CumulativeAura (0→1 per docs)
       maxStacks: auraOptions?.CumulativeAura ? auraOptions.CumulativeAura : 1,
-
-      // Periodic info from spell_effect
       periodicType: periodicInfo.periodicType,
       tickPeriodMs: periodicInfo.tickPeriodMs,
-
-      // Refresh behavior derived from flags
       refreshBehavior,
-
-      // Flags from attributes
       durationHasted: auraFlags.durationHasted,
       hastedTicks: auraFlags.hastedTicks,
       pandemicRefresh: auraFlags.pandemicRefresh,
@@ -121,6 +89,4 @@ export const transformAura = (
       tickMayCrit: auraFlags.tickMayCrit,
       tickOnApplication: auraFlags.tickOnApplication,
     };
-
-    return auraData;
   });

@@ -47,6 +47,16 @@ export interface DbcCache {
   spellTargetRestrictions: ImmutableMap<number, Dbc.SpellTargetRestrictionsRow>;
   spellTotems: ImmutableMap<number, Dbc.SpellTotemsRow[]>;
   spellXDescriptionVariables: ImmutableMap<number, Dbc.SpellXDescriptionVariablesRow[]>;
+  traitDefinition: ImmutableMap<number, Dbc.TraitDefinitionRow>;
+  traitEdge: ImmutableMap<number, Dbc.TraitEdgeRow[]>; // keyed by TraitTreeID (from LeftTraitNode lookup)
+  traitNode: ImmutableMap<number, Dbc.TraitNodeRow>;
+  traitNodeEntry: ImmutableMap<number, Dbc.TraitNodeEntryRow>;
+  traitNodesByTree: ImmutableMap<number, Dbc.TraitNodeRow[]>; // keyed by TraitTreeID
+  traitNodeXTraitNodeEntry: ImmutableMap<number, Dbc.TraitNodeXTraitNodeEntryRow[]>; // keyed by TraitNodeID
+  traitSubTree: ImmutableMap<number, Dbc.TraitSubTreeRow>;
+  traitTree: ImmutableMap<number, Dbc.TraitTreeRow>;
+  traitTreeLoadout: ImmutableMap<number, Dbc.TraitTreeLoadoutRow>; // keyed by ChrSpecializationID
+  traitTreeLoadoutEntry: ImmutableMap<number, Dbc.TraitTreeLoadoutEntryRow[]>; // keyed by TraitTreeLoadoutID
 }
 
 // prettier-ignore
@@ -95,6 +105,15 @@ export interface RawDbcData {
   spellTargetRestrictions: Dbc.SpellTargetRestrictionsRow[];
   spellTotems: Dbc.SpellTotemsRow[];
   spellXDescriptionVariables: Dbc.SpellXDescriptionVariablesRow[];
+  traitDefinition: Dbc.TraitDefinitionRow[];
+  traitEdge: Dbc.TraitEdgeRow[];
+  traitNode: Dbc.TraitNodeRow[];
+  traitNodeEntry: Dbc.TraitNodeEntryRow[];
+  traitNodeXTraitNodeEntry: Dbc.TraitNodeXTraitNodeEntryRow[];
+  traitSubTree: Dbc.TraitSubTreeRow[];
+  traitTree: Dbc.TraitTreeRow[];
+  traitTreeLoadout: Dbc.TraitTreeLoadoutRow[];
+  traitTreeLoadoutEntry: Dbc.TraitTreeLoadoutEntryRow[];
 }
 
 // prettier-ignore
@@ -143,6 +162,16 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   spellTargetRestrictions: ImmutableMap(rawData.spellTargetRestrictions.map((row) => [row.SpellID, row])),
   spellTotems: groupBySpellId(rawData.spellTotems),
   spellXDescriptionVariables: groupBySpellId(rawData.spellXDescriptionVariables),
+  traitDefinition: ImmutableMap(rawData.traitDefinition.map((row) => [row.ID, row])),
+  traitEdge: groupTraitEdgesByTreeId(rawData.traitEdge, rawData.traitNode),
+  traitNode: ImmutableMap(rawData.traitNode.map((row) => [row.ID, row])),
+  traitNodeEntry: ImmutableMap(rawData.traitNodeEntry.map((row) => [row.ID, row])),
+  traitNodesByTree: groupByTraitTreeId(rawData.traitNode),
+  traitNodeXTraitNodeEntry: groupByTraitNodeId(rawData.traitNodeXTraitNodeEntry),
+  traitSubTree: ImmutableMap(rawData.traitSubTree.map((row) => [row.ID, row])),
+  traitTree: ImmutableMap(rawData.traitTree.map((row) => [row.ID, row])),
+  traitTreeLoadout: ImmutableMap(rawData.traitTreeLoadout.map((row) => [row.ChrSpecializationID, row])),
+  traitTreeLoadoutEntry: groupByTraitTreeLoadoutId(rawData.traitTreeLoadoutEntry),
 });
 
 const groupBySpellId = <T extends { SpellID: number }>(
@@ -207,6 +236,69 @@ const groupBySpellProcsPerMinuteId = <
   rows.forEach((row) => {
     const existing = grouped.get(row.SpellProcsPerMinuteID) || [];
     grouped.set(row.SpellProcsPerMinuteID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByTraitTreeId = <T extends { TraitTreeID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.TraitTreeID) || [];
+    grouped.set(row.TraitTreeID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByTraitNodeId = <T extends { TraitNodeID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.TraitNodeID) || [];
+    grouped.set(row.TraitNodeID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByTraitTreeLoadoutId = <T extends { TraitTreeLoadoutID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.TraitTreeLoadoutID) || [];
+    grouped.set(row.TraitTreeLoadoutID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupTraitEdgesByTreeId = (
+  edges: Dbc.TraitEdgeRow[],
+  nodes: Dbc.TraitNodeRow[],
+): ImmutableMap<number, Dbc.TraitEdgeRow[]> => {
+  // Build a map of nodeId -> treeId
+  const nodeToTree = new Map<number, number>();
+  nodes.forEach((node) => {
+    nodeToTree.set(node.ID, node.TraitTreeID);
+  });
+
+  // Group edges by the tree of their left node
+  const grouped = new Map<number, Dbc.TraitEdgeRow[]>();
+  edges.forEach((edge) => {
+    const treeId = nodeToTree.get(edge.LeftTraitNodeID);
+    
+    if (treeId !== undefined) {
+      const existing = grouped.get(treeId) || [];
+      grouped.set(treeId, [...existing, edge]);
+    }
   });
 
   return ImmutableMap(grouped);

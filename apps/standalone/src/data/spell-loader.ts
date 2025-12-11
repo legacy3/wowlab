@@ -628,6 +628,73 @@ const SupabaseDbcServiceLive = (
         getSpellTotems: (spellId) => spellTotemsCache.get(spellId),
         getSpellXDescriptionVariables: (spellId) =>
           spellXDescriptionVariablesCache.get(spellId),
+
+        getTraitDefinition: (id) =>
+          query<Schemas.Dbc.TraitDefinitionRow | undefined>(
+            supabase,
+            "trait_definition",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitEdgesForTree: (treeId) =>
+          query<Schemas.Dbc.TraitEdgeRow[]>(supabase, "trait_edge", (builder) =>
+            builder
+              .select("*, trait_node!inner(TraitTreeID)")
+              .eq("trait_node.TraitTreeID", treeId),
+          ),
+        getTraitNode: (id) =>
+          query<Schemas.Dbc.TraitNodeRow | undefined>(
+            supabase,
+            "trait_node",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitNodeEntry: (id) =>
+          query<Schemas.Dbc.TraitNodeEntryRow | undefined>(
+            supabase,
+            "trait_node_entry",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitNodesForTree: (treeId) =>
+          query<Schemas.Dbc.TraitNodeRow[]>(supabase, "trait_node", (builder) =>
+            builder.select("*").eq("TraitTreeID", treeId),
+          ),
+        getTraitNodeXTraitNodeEntries: (nodeId) =>
+          query<Schemas.Dbc.TraitNodeXTraitNodeEntryRow[]>(
+            supabase,
+            "trait_node_x_trait_node_entry",
+            (builder) => builder.select("*").eq("TraitNodeID", nodeId),
+          ),
+        getTraitSubTree: (id) =>
+          query<Schemas.Dbc.TraitSubTreeRow | undefined>(
+            supabase,
+            "trait_sub_tree",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitTree: (id) =>
+          query<Schemas.Dbc.TraitTreeRow | undefined>(
+            supabase,
+            "trait_tree",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitTreeLoadout: (specId) =>
+          query<Schemas.Dbc.TraitTreeLoadoutRow | undefined>(
+            supabase,
+            "trait_tree_loadout",
+            (builder) =>
+              builder
+                .select("*")
+                .eq("ChrSpecializationID", specId)
+                .maybeSingle(),
+          ),
+        getTraitTreeLoadoutEntries: (loadoutId) =>
+          query<Schemas.Dbc.TraitTreeLoadoutEntryRow[]>(
+            supabase,
+            "trait_tree_loadout_entry",
+            (builder) =>
+              builder
+                .select("*")
+                .eq("TraitTreeLoadoutID", loadoutId)
+                .order("OrderIndex"),
+          ),
       });
     }),
   );

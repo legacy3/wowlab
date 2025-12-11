@@ -14,8 +14,8 @@ WoW Lab is a combat simulation platform for World of Warcraft. You can run sims,
 
 ### Run a simulation
 
-1. Open the portal
-2. Select a spec and gear profile
+1. Open the [simulate page](/simulate)
+2. Paste a profile from the [SimulationCraft addon](https://www.curseforge.com/wow/addons/simulationcraft)
 3. Click Run to view the results
 
 ### Customize a rotation
@@ -24,10 +24,10 @@ Rotation scripts define what abilities to use and when. Start by copying an exis
 
 ### Query WoW data
 
-The [MCP Server](/docs/01-mcp-server) exposes WoW spell/item data to AI assistants and other tools. It's useful for theorycrafting, building tools, or quickly looking up game mechanics.
+The [MCP Server](/docs/reference/02-mcp-server) exposes WoW spell/item data to AI assistants and other tools. It's useful for theorycrafting, building tools, or quickly looking up game mechanics.
 
 ## Going deeper
 
-- [Writing Rotations](/docs/04-rotations)
-- [Architecture](/docs/02-architecture)
-- [Contributing](/docs/03-contributing)
+- [Writing Rotations](/docs/guides/00-writing-rotations)
+- [Architecture](/docs/reference/00-architecture)
+- [Contributing](/docs/development/00-contributing)

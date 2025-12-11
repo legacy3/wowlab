@@ -224,6 +224,52 @@ export interface DbcServiceInterface {
     ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
     DbcError
   >;
+
+  readonly getTraitDefinition: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
+
+  readonly getTraitEdgesForTree: (
+    treeId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitEdgeRow>, DbcError>;
+
+  readonly getTraitNode: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitNodeRow | undefined, DbcError>;
+
+  readonly getTraitNodeEntry: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitNodeEntryRow | undefined, DbcError>;
+
+  readonly getTraitNodesForTree: (
+    treeId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
+
+  readonly getTraitNodeXTraitNodeEntries: (
+    nodeId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>,
+    DbcError
+  >;
+
+  readonly getTraitSubTree: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitSubTreeRow | undefined, DbcError>;
+
+  readonly getTraitTree: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitTreeRow | undefined, DbcError>;
+
+  readonly getTraitTreeLoadout: (
+    specId: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitTreeLoadoutRow | undefined, DbcError>;
+
+  readonly getTraitTreeLoadoutEntries: (
+    loadoutId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
+    DbcError
+  >;
 }
 
 export class DbcService extends Context.Tag("@wowlab/services/DbcService")<

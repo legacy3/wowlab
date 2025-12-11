@@ -1,18 +1,17 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDataProvider } from "@refinedev/core";
-import * as Effect from "effect/Effect";
+import { useQuery } from "@tanstack/react-query";
+import type * as Effect from "effect/Effect";
 
-import { createPortalDbcLayer } from "@/lib/services";
+import type { PortalDbcLayerContext } from "@/lib/services";
+import { usePortalDbcBatch } from "@/providers/portal-batch-provider";
 
 export function usePortalDbcEntity<T>(
   type: string,
   id: number | null | undefined,
-  transformFn: (id: number) => Effect.Effect<T, unknown, unknown>,
+  transformFn: (id: number) => Effect.Effect<T, unknown, PortalDbcLayerContext>,
 ) {
-  const queryClient = useQueryClient();
-  const dataProvider = useDataProvider()();
+  const loadEntity = usePortalDbcBatch(type, transformFn);
 
   return useQuery({
     queryKey: [type, "transformed", id],
@@ -21,11 +20,7 @@ export function usePortalDbcEntity<T>(
         throw new Error(`${type} ID is required`);
       }
 
-      const layer = createPortalDbcLayer(queryClient, dataProvider);
-
-      return Effect.runPromise(
-        transformFn(id).pipe(Effect.provide(layer)) as Effect.Effect<T>,
-      );
+      return loadEntity(id);
     },
     enabled: id != null,
   });

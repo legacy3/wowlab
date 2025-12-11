@@ -1,9 +1,66 @@
 import type { BaseRecord, CrudFilter, DataProvider } from "@refinedev/core";
-import type * as Schemas from "@wowlab/core/Schemas";
 import type { QueryClient } from "@tanstack/react-query";
+import type * as Schemas from "@wowlab/core/Schemas";
 
 import { DbcQueryError } from "@wowlab/core/Errors";
-import { DbcService } from "@wowlab/services/Data";
+import {
+  DbcBatchFetcher,
+  DbcResolvers,
+  DbcService,
+  GetChrClass,
+  GetChrSpecialization,
+  GetDifficulty,
+  GetExpectedStatMod,
+  GetItem,
+  GetItemAppearance,
+  GetItemEffect,
+  GetItemModifiedAppearance,
+  GetItemSparse,
+  GetItemXItemEffects,
+  GetManifestInterfaceData,
+  GetSpecializationSpells,
+  GetSpell,
+  GetSpellAuraOptions,
+  GetSpellAuraRestrictions,
+  GetSpellCastingRequirements,
+  GetSpellCastTimes,
+  GetSpellCategories,
+  GetSpellCategory,
+  GetSpellClassOptions,
+  GetSpellCooldowns,
+  GetSpellDescriptionVariables,
+  GetSpellDuration,
+  GetSpellEffects,
+  GetSpellEmpower,
+  GetSpellEmpowerStages,
+  GetSpellInterrupts,
+  GetSpellLearnSpell,
+  GetSpellLevels,
+  GetSpellMisc,
+  GetSpellName,
+  GetSpellPower,
+  GetSpellProcsPerMinute,
+  GetSpellProcsPerMinuteMods,
+  GetSpellRadius,
+  GetSpellRange,
+  GetSpellReplacement,
+  GetSpellShapeshift,
+  GetSpellShapeshiftForm,
+  GetSpellTargetRestrictions,
+  GetSpellTotems,
+  GetSpellXDescriptionVariables,
+  GetTraitDefinition,
+  GetTraitEdgesForTree,
+  GetTraitNode,
+  GetTraitNodeEntry,
+  GetTraitNodesForTree,
+  GetTraitNodeXTraitNodeEntries,
+  GetTraitSubTree,
+  GetTraitTree,
+  GetTraitTreeLoadout,
+  GetTraitTreeLoadoutEntries,
+  makeDbcResolvers,
+} from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -11,506 +68,912 @@ import { dbcKeys } from "./dbc-keys";
 
 const RAW_DBC_SCHEMA = "raw_dbc";
 
-const cachedQuery = <T>(
-  queryClient: QueryClient,
-  queryKey: readonly unknown[],
-  queryFn: () => Promise<T>,
-  errorMessage: string,
-): Effect.Effect<T, DbcQueryError> =>
-  Effect.tryPromise({
-    catch: (cause) => new DbcQueryError({ cause, message: errorMessage }),
-    try: async () => {
-      const data = await queryClient.ensureQueryData({
-        queryKey,
-        meta: { persist: true },
-        queryFn: async () => {
-          const result = await queryFn();
-
-          // React Query v5 doesn't allow undefined, use null as sentinel
-          return result ?? null;
-        },
-      });
-
-      // Convert null sentinel back to undefined for Effect layer
-      return (data ?? undefined) as T;
-    },
-  });
-
-const getOne = <T extends BaseRecord>(
+const fetchByIds = <T extends BaseRecord>(
   queryClient: QueryClient,
   dataProvider: DataProvider,
   resource: string,
-  id: number,
-): Effect.Effect<T | undefined, DbcQueryError> =>
-  cachedQuery(
-    queryClient,
-    dbcKeys.one(resource, id),
-    async () => {
-      try {
-        const result = await dataProvider.getOne<T>({
-          resource,
-          id,
-          meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
-        });
-
-        return result.data;
-      } catch {
-        return undefined;
+  ids: readonly number[],
+): Effect.Effect<T[], DbcQueryError> =>
+  Effect.tryPromise({
+    catch: (cause) =>
+      new DbcQueryError({
+        cause,
+        message: `Failed to batch fetch ${resource} with IDs [${ids.slice(0, 5).join(", ")}${ids.length > 5 ? "..." : ""}]`,
+      }),
+    try: async () => {
+      if (ids.length === 0) {
+        return [];
       }
-    },
-    `Failed to fetch ${resource} with ID ${id}`,
-  );
 
-const getList = <T extends BaseRecord>(
+      const result = await dataProvider.getList<T>({
+        resource,
+        filters: [{ field: "ID", operator: "in", value: ids }],
+        pagination: { mode: "off" },
+        meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+      });
+
+      for (const row of result.data) {
+        // TODO Not sure about this cast lol
+        const id = (row as unknown as { ID: number }).ID;
+
+        queryClient.setQueryData(dbcKeys.one(resource, id), row);
+      }
+
+      return result.data;
+    },
+  });
+
+const fetchByFk = <T extends BaseRecord>(
+  queryClient: QueryClient,
+  dataProvider: DataProvider,
+  resource: string,
+  fkField: string,
+  fkValues: readonly number[],
+): Effect.Effect<T[], DbcQueryError> =>
+  Effect.tryPromise({
+    catch: (cause) =>
+      new DbcQueryError({
+        cause,
+        message: `Failed to batch fetch ${resource} by ${fkField}`,
+      }),
+    try: async () => {
+      if (fkValues.length === 0) {
+        return [];
+      }
+
+      const sortedValues = [...fkValues].sort((a, b) => a - b);
+      const cacheKey = dbcKeys.list(resource, [
+        { field: fkField, operator: "in", value: sortedValues },
+      ]);
+
+      return queryClient.fetchQuery({
+        queryKey: cacheKey,
+        queryFn: async () => {
+          const result = await dataProvider.getList<T>({
+            resource,
+            filters: [{ field: fkField, operator: "in", value: fkValues }],
+            pagination: { mode: "off" },
+            meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+          });
+
+          return result.data;
+        },
+      });
+    },
+  });
+
+const fetchAll = <T extends BaseRecord>(
+  queryClient: QueryClient,
+  dataProvider: DataProvider,
+  resource: string,
+): Effect.Effect<T[], DbcQueryError> =>
+  Effect.tryPromise({
+    catch: (cause) =>
+      new DbcQueryError({
+        cause,
+        message: `Failed to fetch all ${resource}`,
+      }),
+    try: async () => {
+      const cacheKey = dbcKeys.list(resource, []);
+
+      return queryClient.fetchQuery({
+        queryKey: cacheKey,
+        queryFn: async () => {
+          const result = await dataProvider.getList<T>({
+            resource,
+            pagination: { mode: "off" },
+            meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+          });
+
+          return result.data;
+        },
+      });
+    },
+  });
+
+const fetchWithFilters = <T extends BaseRecord>(
   queryClient: QueryClient,
   dataProvider: DataProvider,
   resource: string,
   filters: CrudFilter[],
 ): Effect.Effect<T[], DbcQueryError> =>
-  cachedQuery(
-    queryClient,
-    dbcKeys.list(resource, filters),
-    async () => {
-      const result = await dataProvider.getList<T>({
-        resource,
-        filters,
-        pagination: { mode: "off" },
-        meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+  Effect.tryPromise({
+    catch: (cause) =>
+      new DbcQueryError({
+        cause,
+        message: `Failed to fetch ${resource} with filters`,
+      }),
+    try: async () => {
+      const cacheKey = dbcKeys.list(resource, filters);
+
+      return queryClient.fetchQuery({
+        queryKey: cacheKey,
+        queryFn: async () => {
+          const result = await dataProvider.getList<T>({
+            resource,
+            filters,
+            pagination: { mode: "off" },
+            meta: { schema: RAW_DBC_SCHEMA, idColumnName: "ID" },
+          });
+
+          return result.data;
+        },
       });
-
-      return result.data;
     },
-    `Failed to fetch ${resource} list`,
-  );
+  });
 
-const getOneByFilter = <T extends BaseRecord>(
+const createBatchFetcher = (
   queryClient: QueryClient,
   dataProvider: DataProvider,
-  resource: string,
-  field: string,
-  value: number,
-): Effect.Effect<T | undefined, DbcQueryError> =>
-  getList<T>(queryClient, dataProvider, resource, [
-    { field, operator: "eq", value },
-  ]).pipe(Effect.map((rows) => rows[0]));
-
-const getListByFilter = <T extends BaseRecord>(
-  queryClient: QueryClient,
-  dataProvider: DataProvider,
-  resource: string,
-  field: string,
-  value: number,
-): Effect.Effect<T[], DbcQueryError> =>
-  getList<T>(queryClient, dataProvider, resource, [
-    { field, operator: "eq", value },
-  ]);
-
-/**
- * Creates a DbcService layer that uses React Query's caching via queryClient.ensureQueryData.
- * All data is cached in React Query and persisted to IndexedDB (60-day cache).
- *
- * @example
- * ```tsx
- * // In a React component
- * const dataProvider = useDataProvider()();
- * const queryClient = useQueryClient();
- * const dbcLayer = RefineDbcService(queryClient, dataProvider);
- * const spell = await Effect.runPromise(
- *   transformSpell(spellId).pipe(Effect.provide(dbcLayer))
- * );
- * ```
- */
-export const RefineDbcService = (
-  queryClient: QueryClient,
-  dataProvider: DataProvider,
-): Layer.Layer<DbcService> =>
-  Layer.succeed(DbcService, {
-    // Class/spec tables
-    getChrClass: (id) =>
-      getOne<Schemas.Dbc.ChrClassesRow>(
+): Layer.Layer<DbcBatchFetcher> =>
+  Layer.succeed(DbcBatchFetcher, {
+    // By ID
+    fetchChrClassesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ChrClassesRow>(
         queryClient,
         dataProvider,
         "chr_classes",
-        id,
+        ids,
       ),
-    getChrClasses: () =>
-      getList<Schemas.Dbc.ChrClassesRow>(
-        queryClient,
-        dataProvider,
-        "chr_classes",
-        [],
-      ),
-    getChrSpecialization: (id) =>
-      getOne<Schemas.Dbc.ChrSpecializationRow>(
+    fetchChrSpecializationsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ChrSpecializationRow>(
         queryClient,
         dataProvider,
         "chr_specialization",
-        id,
+        ids,
       ),
-    getChrSpecializations: () =>
-      getList<Schemas.Dbc.ChrSpecializationRow>(
-        queryClient,
-        dataProvider,
-        "chr_specialization",
-        [],
-      ),
-    // Lookup tables (keyed by ID)
-    getDifficulty: (id) =>
-      getOne<Schemas.Dbc.DifficultyRow>(
+    fetchDifficultiesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.DifficultyRow>(
         queryClient,
         dataProvider,
         "difficulty",
-        id,
+        ids,
       ),
-    getExpectedStatMod: (id) =>
-      getOne<Schemas.Dbc.ExpectedStatModRow>(
+    fetchExpectedStatModsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ExpectedStatModRow>(
         queryClient,
         dataProvider,
         "expected_stat_mod",
-        id,
+        ids,
       ),
-    getItem: (itemId) =>
-      getOne<Schemas.Dbc.ItemRow>(queryClient, dataProvider, "item", itemId),
-    getItemEffect: (id) =>
-      getOne<Schemas.Dbc.ItemEffectRow>(
+    fetchItemAppearancesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemAppearanceRow>(
+        queryClient,
+        dataProvider,
+        "item_appearance",
+        ids,
+      ),
+    fetchItemEffectsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemEffectRow>(
         queryClient,
         dataProvider,
         "item_effect",
-        id,
+        ids,
       ),
-    getItemSparse: (itemId) =>
-      getOne<Schemas.Dbc.ItemSparseRow>(
+    fetchItemSparsesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemSparseRow>(
         queryClient,
         dataProvider,
         "item_sparse",
-        itemId,
+        ids,
       ),
-    getManifestInterfaceData: (id) =>
-      getOne<Schemas.Dbc.ManifestInterfaceDataRow>(
+    fetchItemsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemRow>(queryClient, dataProvider, "item", ids),
+    fetchManifestInterfaceDataByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ManifestInterfaceDataRow>(
         queryClient,
         dataProvider,
         "manifest_interface_data",
-        id,
+        ids,
       ),
-    getSpecializationSpells: (specId) =>
-      getListByFilter<Schemas.Dbc.SpecializationSpellsRow>(
-        queryClient,
-        dataProvider,
-        "specialization_spells",
-        "SpecID",
-        specId,
-      ),
-    getSpell: (spellId) =>
-      getOne<Schemas.Dbc.SpellRow>(queryClient, dataProvider, "spell", spellId),
-    getSpellCastTimes: (id) =>
-      getOne<Schemas.Dbc.SpellCastTimesRow>(
+    fetchSpellCastTimesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellCastTimesRow>(
         queryClient,
         dataProvider,
         "spell_cast_times",
-        id,
+        ids,
       ),
-    getSpellCategory: (id) =>
-      getOne<Schemas.Dbc.SpellCategoryRow>(
+    fetchSpellCategoriesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellCategoryRow>(
         queryClient,
         dataProvider,
         "spell_category",
-        id,
+        ids,
       ),
-    getSpellDescriptionVariables: (id) =>
-      getOne<Schemas.Dbc.SpellDescriptionVariablesRow>(
+    fetchSpellDescriptionVariablesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellDescriptionVariablesRow>(
         queryClient,
         dataProvider,
         "spell_description_variables",
-        id,
+        ids,
       ),
-    getSpellDuration: (id) =>
-      getOne<Schemas.Dbc.SpellDurationRow>(
+    fetchSpellDurationsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellDurationRow>(
         queryClient,
         dataProvider,
         "spell_duration",
-        id,
+        ids,
       ),
-    getSpellName: (spellId) =>
-      getOne<Schemas.Dbc.SpellNameRow>(
+    fetchSpellNamesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellNameRow>(
         queryClient,
         dataProvider,
         "spell_name",
-        spellId,
+        ids,
       ),
-    getSpellProcsPerMinute: (id) =>
-      getOne<Schemas.Dbc.SpellProcsPerMinuteRow>(
+    fetchSpellProcsPerMinuteByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellProcsPerMinuteRow>(
         queryClient,
         dataProvider,
         "spell_procs_per_minute",
-        id,
+        ids,
       ),
-    getSpellRadius: (id) =>
-      getOne<Schemas.Dbc.SpellRadiusRow>(
+    fetchSpellRadiusByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellRadiusRow>(
         queryClient,
         dataProvider,
         "spell_radius",
-        id,
+        ids,
       ),
-    getSpellRange: (id) =>
-      getOne<Schemas.Dbc.SpellRangeRow>(
+    fetchSpellRangesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellRangeRow>(
         queryClient,
         dataProvider,
         "spell_range",
-        id,
+        ids,
       ),
-    getSpellShapeshiftForm: (id) =>
-      getOne<Schemas.Dbc.SpellShapeshiftFormRow>(
+    fetchSpellShapeshiftFormsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellShapeshiftFormRow>(
         queryClient,
         dataProvider,
         "spell_shapeshift_form",
-        id,
+        ids,
+      ),
+    fetchSpellsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.SpellRow>(queryClient, dataProvider, "spell", ids),
+    fetchTraitDefinitionsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitDefinitionRow>(
+        queryClient,
+        dataProvider,
+        "trait_definition",
+        ids,
+      ),
+    fetchTraitNodeEntriesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitNodeEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_entry",
+        ids,
+      ),
+    fetchTraitNodesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitNodeRow>(
+        queryClient,
+        dataProvider,
+        "trait_node",
+        ids,
+      ),
+    fetchTraitSubTreesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitSubTreeRow>(
+        queryClient,
+        dataProvider,
+        "trait_sub_tree",
+        ids,
+      ),
+    fetchTraitTreesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitTreeRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree",
+        ids,
       ),
 
-    // Tables queried by SpellID (single row)
-    getSpellAuraOptions: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellAuraOptionsRow>(
+    // By SpellID (FK, single result)
+    fetchSpellAuraOptionsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellAuraOptionsRow>(
         queryClient,
         dataProvider,
         "spell_aura_options",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellAuraRestrictions: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellAuraRestrictionsRow>(
+    fetchSpellAuraRestrictionsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellAuraRestrictionsRow>(
         queryClient,
         dataProvider,
         "spell_aura_restrictions",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellCastingRequirements: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellCastingRequirementsRow>(
+    fetchSpellCastingRequirementsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellCastingRequirementsRow>(
         queryClient,
         dataProvider,
         "spell_casting_requirements",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellCategories: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellCategoriesRow>(
+    fetchSpellCategoriesBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellCategoriesRow>(
         queryClient,
         dataProvider,
         "spell_categories",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellClassOptions: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellClassOptionsRow>(
+    fetchSpellClassOptionsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellClassOptionsRow>(
         queryClient,
         dataProvider,
         "spell_class_options",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellCooldowns: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellCooldownsRow>(
+    fetchSpellCooldownsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellCooldownsRow>(
         queryClient,
         dataProvider,
         "spell_cooldowns",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellEmpower: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellEmpowerRow>(
+    fetchSpellEmpowerBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellEmpowerRow>(
         queryClient,
         dataProvider,
         "spell_empower",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellInterrupts: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellInterruptsRow>(
+    fetchSpellInterruptsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellInterruptsRow>(
         queryClient,
         dataProvider,
         "spell_interrupts",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellMisc: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellMiscRow>(
+    fetchSpellMiscBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellMiscRow>(
         queryClient,
         dataProvider,
         "spell_misc",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellReplacement: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellReplacementRow>(
+    fetchSpellReplacementBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellReplacementRow>(
         queryClient,
         dataProvider,
         "spell_replacement",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellShapeshift: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellShapeshiftRow>(
+    fetchSpellShapeshiftBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellShapeshiftRow>(
         queryClient,
         dataProvider,
         "spell_shapeshift",
         "SpellID",
-        spellId,
+        spellIds,
       ),
-    getSpellTargetRestrictions: (spellId) =>
-      getOneByFilter<Schemas.Dbc.SpellTargetRestrictionsRow>(
+    fetchSpellTargetRestrictionsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellTargetRestrictionsRow>(
         queryClient,
         dataProvider,
         "spell_target_restrictions",
         "SpellID",
-        spellId,
+        spellIds,
       ),
 
-    // Tables queried by SpellID (multiple rows)
-    getSpellEffects: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellEffectRow>(
-        queryClient,
-        dataProvider,
-        "spell_effect",
-        "SpellID",
-        spellId,
-      ),
-    getSpellLearnSpell: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellLearnSpellRow>(
-        queryClient,
-        dataProvider,
-        "spell_learn_spell",
-        "SpellID",
-        spellId,
-      ),
-    getSpellLevels: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellLevelsRow>(
-        queryClient,
-        dataProvider,
-        "spell_levels",
-        "SpellID",
-        spellId,
-      ),
-    getSpellPower: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellPowerRow>(
-        queryClient,
-        dataProvider,
-        "spell_power",
-        "SpellID",
-        spellId,
-      ),
-    getSpellTotems: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellTotemsRow>(
-        queryClient,
-        dataProvider,
-        "spell_totems",
-        "SpellID",
-        spellId,
-      ),
-    getSpellXDescriptionVariables: (spellId) =>
-      getListByFilter<Schemas.Dbc.SpellXDescriptionVariablesRow>(
-        queryClient,
-        dataProvider,
-        "spell_x_description_variables",
-        "SpellID",
-        spellId,
-      ),
-
-    // Tables queried by other foreign keys
-    getSpellEmpowerStages: (spellEmpowerId) =>
-      getListByFilter<Schemas.Dbc.SpellEmpowerStageRow>(
-        queryClient,
-        dataProvider,
-        "spell_empower_stage",
-        "SpellEmpowerID",
-        spellEmpowerId,
-      ),
-    getSpellProcsPerMinuteMods: (spellProcsPerMinuteId) =>
-      getListByFilter<Schemas.Dbc.SpellProcsPerMinuteModRow>(
-        queryClient,
-        dataProvider,
-        "spell_procs_per_minute_mod",
-        "SpellProcsPerMinuteID",
-        spellProcsPerMinuteId,
-      ),
-
-    // Item tables
-    getItemAppearance: (id) =>
-      getOne<Schemas.Dbc.ItemAppearanceRow>(
-        queryClient,
-        dataProvider,
-        "item_appearance",
-        id,
-      ),
-    getItemModifiedAppearance: (itemId) =>
-      getOneByFilter<Schemas.Dbc.ItemModifiedAppearanceRow>(
+    // By ItemID (FK, single result)
+    fetchItemModifiedAppearancesByItemIds: (itemIds) =>
+      fetchByFk<Schemas.Dbc.ItemModifiedAppearanceRow>(
         queryClient,
         dataProvider,
         "item_modified_appearance",
         "ItemID",
-        itemId,
+        itemIds,
       ),
-    getItemXItemEffects: (itemId) =>
-      getListByFilter<Schemas.Dbc.ItemXItemEffectRow>(
+
+    // By FK (array results)
+    fetchItemXItemEffectsByItemIds: (itemIds) =>
+      fetchByFk<Schemas.Dbc.ItemXItemEffectRow>(
         queryClient,
         dataProvider,
         "item_x_item_effect",
         "ItemID",
-        itemId,
+        itemIds,
       ),
-
-    // Complex queries
-    getExpectedStats: (level, expansion) =>
-      getList<Schemas.Dbc.ExpectedStatRow>(
+    fetchSpecializationSpellsBySpecIds: (specIds) =>
+      fetchByFk<Schemas.Dbc.SpecializationSpellsRow>(
         queryClient,
         dataProvider,
-        "expected_stat",
-        [{ field: "Lvl", operator: "eq", value: level }],
-      ).pipe(
-        Effect.map((data) =>
-          data.filter(
-            (row) => row.ExpansionID === expansion || row.ExpansionID === -2,
-          ),
-        ),
+        "specialization_spells",
+        "SpecID",
+        specIds,
       ),
-
-    getContentTuningXExpected: (contentTuningId, mythicPlusSeasonId) =>
-      getList<Schemas.Dbc.ContentTuningXExpectedRow>(
+    fetchSpellEffectsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellEffectRow>(
         queryClient,
         dataProvider,
-        "content_tuning_x_expected",
-        [{ field: "ContentTuningID", operator: "eq", value: contentTuningId }],
-      ).pipe(
-        Effect.map((data) =>
-          data.filter(
-            (row) =>
-              (row.MinMythicPlusSeasonID === 0 ||
-                row.MinMythicPlusSeasonID <= mythicPlusSeasonId) &&
-              (row.MaxMythicPlusSeasonID === 0 ||
-                row.MaxMythicPlusSeasonID > mythicPlusSeasonId),
-          ),
-        ),
+        "spell_effect",
+        "SpellID",
+        spellIds,
       ),
-
-    getDifficultyChain: (id) =>
+    fetchSpellEmpowerStagesByEmpowerIds: (empowerIds) =>
+      fetchByFk<Schemas.Dbc.SpellEmpowerStageRow>(
+        queryClient,
+        dataProvider,
+        "spell_empower_stage",
+        "SpellEmpowerID",
+        empowerIds,
+      ),
+    fetchSpellLearnSpellBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellLearnSpellRow>(
+        queryClient,
+        dataProvider,
+        "spell_learn_spell",
+        "SpellID",
+        spellIds,
+      ),
+    fetchSpellLevelsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellLevelsRow>(
+        queryClient,
+        dataProvider,
+        "spell_levels",
+        "SpellID",
+        spellIds,
+      ),
+    fetchSpellPowerBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellPowerRow>(
+        queryClient,
+        dataProvider,
+        "spell_power",
+        "SpellID",
+        spellIds,
+      ),
+    fetchSpellProcsPerMinuteModsByPpmIds: (ppmIds) =>
+      fetchByFk<Schemas.Dbc.SpellProcsPerMinuteModRow>(
+        queryClient,
+        dataProvider,
+        "spell_procs_per_minute_mod",
+        "SpellProcsPerMinuteID",
+        ppmIds,
+      ),
+    fetchSpellTotemsBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellTotemsRow>(
+        queryClient,
+        dataProvider,
+        "spell_totems",
+        "SpellID",
+        spellIds,
+      ),
+    fetchSpellXDescriptionVariablesBySpellIds: (spellIds) =>
+      fetchByFk<Schemas.Dbc.SpellXDescriptionVariablesRow>(
+        queryClient,
+        dataProvider,
+        "spell_x_description_variables",
+        "SpellID",
+        spellIds,
+      ),
+    fetchTraitNodesByTreeIds: (treeIds) =>
+      fetchByFk<Schemas.Dbc.TraitNodeRow>(
+        queryClient,
+        dataProvider,
+        "trait_node",
+        "TraitTreeID",
+        treeIds,
+      ),
+    fetchTraitNodeXEntriesByNodeIds: (nodeIds) =>
+      fetchByFk<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_x_trait_node_entry",
+        "TraitNodeID",
+        nodeIds,
+      ),
+    fetchTraitTreeLoadoutsBySpecIds: (specIds) =>
+      fetchByFk<Schemas.Dbc.TraitTreeLoadoutRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_loadout",
+        "ChrSpecializationID",
+        specIds,
+      ),
+    fetchTraitTreeLoadoutEntriesByLoadoutIds: (loadoutIds) =>
+      fetchByFk<Schemas.Dbc.TraitTreeLoadoutEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_loadout_entry",
+        "TraitTreeLoadoutID",
+        loadoutIds,
+      ),
+    fetchTraitEdgesByTreeIds: (treeIds) =>
       Effect.gen(function* () {
-        const chain: Schemas.Dbc.DifficultyRow[] = [];
-        let currentId = id;
-
-        while (currentId !== 0) {
-          const row = yield* getOne<Schemas.Dbc.DifficultyRow>(
-            queryClient,
-            dataProvider,
-            "difficulty",
-            currentId,
-          );
-
-          if (!row) {
-            break;
-          }
-
-          chain.push(row);
-          currentId = row.FallbackDifficultyID ?? 0;
+        if (treeIds.length === 0) {
+          return new Map<number, Schemas.Dbc.TraitEdgeRow[]>();
         }
 
-        return chain;
+        const nodes = yield* fetchByFk<Schemas.Dbc.TraitNodeRow>(
+          queryClient,
+          dataProvider,
+          "trait_node",
+          "TraitTreeID",
+          treeIds,
+        );
+
+        if (nodes.length === 0) {
+          return new Map<number, Schemas.Dbc.TraitEdgeRow[]>();
+        }
+
+        const nodeToTree = new Map<number, number>();
+        for (const node of nodes) {
+          nodeToTree.set(node.ID, node.TraitTreeID);
+        }
+
+        const nodeIds = nodes.map((n) => n.ID);
+        const edges = yield* fetchByFk<Schemas.Dbc.TraitEdgeRow>(
+          queryClient,
+          dataProvider,
+          "trait_edge",
+          "LeftTraitNodeID",
+          nodeIds,
+        );
+
+        const edgesByTree = new Map<number, Schemas.Dbc.TraitEdgeRow[]>();
+        for (const treeId of treeIds) {
+          edgesByTree.set(treeId, []);
+        }
+
+        for (const edge of edges) {
+          const treeId = nodeToTree.get(edge.LeftTraitNodeID);
+          
+          if (treeId !== undefined) {
+            edgesByTree.get(treeId)!.push(edge);
+          }
+        }
+
+        return edgesByTree;
       }),
   });
+
+export const RefineDbcService = (
+  queryClient: QueryClient,
+  dataProvider: DataProvider,
+): Layer.Layer<DbcService> => {
+  const batchFetcherLayer = createBatchFetcher(queryClient, dataProvider);
+  const resolversLayer = Layer.effect(DbcResolvers, makeDbcResolvers).pipe(
+    Layer.provide(batchFetcherLayer),
+  );
+
+  return Layer.effect(
+    DbcService,
+    Effect.gen(function* () {
+      const resolvers = yield* DbcResolvers;
+
+      return {
+        // By ID (batched)
+        getChrClass: (id) =>
+          Effect.request(new GetChrClass({ id }), resolvers.chrClassResolver),
+        getChrSpecialization: (id) =>
+          Effect.request(
+            new GetChrSpecialization({ id }),
+            resolvers.chrSpecializationResolver,
+          ),
+        getDifficulty: (id) =>
+          Effect.request(
+            new GetDifficulty({ id }),
+            resolvers.difficultyResolver,
+          ),
+        getExpectedStatMod: (id) =>
+          Effect.request(
+            new GetExpectedStatMod({ id }),
+            resolvers.expectedStatModResolver,
+          ),
+        getItem: (id) =>
+          Effect.request(new GetItem({ id }), resolvers.itemResolver),
+        getItemAppearance: (id) =>
+          Effect.request(
+            new GetItemAppearance({ id }),
+            resolvers.itemAppearanceResolver,
+          ),
+        getItemEffect: (id) =>
+          Effect.request(
+            new GetItemEffect({ id }),
+            resolvers.itemEffectResolver,
+          ),
+        getItemSparse: (id) =>
+          Effect.request(
+            new GetItemSparse({ id }),
+            resolvers.itemSparseResolver,
+          ),
+        getManifestInterfaceData: (id) =>
+          Effect.request(
+            new GetManifestInterfaceData({ id }),
+            resolvers.manifestInterfaceDataResolver,
+          ),
+        getSpell: (id) =>
+          Effect.request(new GetSpell({ id }), resolvers.spellResolver),
+        getSpellCastTimes: (id) =>
+          Effect.request(
+            new GetSpellCastTimes({ id }),
+            resolvers.spellCastTimesResolver,
+          ),
+        getSpellCategory: (id) =>
+          Effect.request(
+            new GetSpellCategory({ id }),
+            resolvers.spellCategoryResolver,
+          ),
+        getSpellDescriptionVariables: (id) =>
+          Effect.request(
+            new GetSpellDescriptionVariables({ id }),
+            resolvers.spellDescriptionVariablesResolver,
+          ),
+        getSpellDuration: (id) =>
+          Effect.request(
+            new GetSpellDuration({ id }),
+            resolvers.spellDurationResolver,
+          ),
+        getSpellName: (id) =>
+          Effect.request(new GetSpellName({ id }), resolvers.spellNameResolver),
+        getSpellProcsPerMinute: (id) =>
+          Effect.request(
+            new GetSpellProcsPerMinute({ id }),
+            resolvers.spellProcsPerMinuteResolver,
+          ),
+        getSpellRadius: (id) =>
+          Effect.request(
+            new GetSpellRadius({ id }),
+            resolvers.spellRadiusResolver,
+          ),
+        getSpellRange: (id) =>
+          Effect.request(
+            new GetSpellRange({ id }),
+            resolvers.spellRangeResolver,
+          ),
+        getSpellShapeshiftForm: (id) =>
+          Effect.request(
+            new GetSpellShapeshiftForm({ id }),
+            resolvers.spellShapeshiftFormResolver,
+          ),
+        getTraitDefinition: (id) =>
+          Effect.request(
+            new GetTraitDefinition({ id }),
+            resolvers.traitDefinitionResolver,
+          ),
+        getTraitNode: (id) =>
+          Effect.request(new GetTraitNode({ id }), resolvers.traitNodeResolver),
+        getTraitNodeEntry: (id) =>
+          Effect.request(
+            new GetTraitNodeEntry({ id }),
+            resolvers.traitNodeEntryResolver,
+          ),
+        getTraitSubTree: (id) =>
+          Effect.request(
+            new GetTraitSubTree({ id }),
+            resolvers.traitSubTreeResolver,
+          ),
+        getTraitTree: (id) =>
+          Effect.request(new GetTraitTree({ id }), resolvers.traitTreeResolver),
+
+        // By SpellID (FK, single result - batched)
+        getSpellAuraOptions: (spellId) =>
+          Effect.request(
+            new GetSpellAuraOptions({ spellId }),
+            resolvers.spellAuraOptionsResolver,
+          ),
+        getSpellAuraRestrictions: (spellId) =>
+          Effect.request(
+            new GetSpellAuraRestrictions({ spellId }),
+            resolvers.spellAuraRestrictionsResolver,
+          ),
+        getSpellCastingRequirements: (spellId) =>
+          Effect.request(
+            new GetSpellCastingRequirements({ spellId }),
+            resolvers.spellCastingRequirementsResolver,
+          ),
+        getSpellCategories: (spellId) =>
+          Effect.request(
+            new GetSpellCategories({ spellId }),
+            resolvers.spellCategoriesResolver,
+          ),
+        getSpellClassOptions: (spellId) =>
+          Effect.request(
+            new GetSpellClassOptions({ spellId }),
+            resolvers.spellClassOptionsResolver,
+          ),
+        getSpellCooldowns: (spellId) =>
+          Effect.request(
+            new GetSpellCooldowns({ spellId }),
+            resolvers.spellCooldownsResolver,
+          ),
+        getSpellEmpower: (spellId) =>
+          Effect.request(
+            new GetSpellEmpower({ spellId }),
+            resolvers.spellEmpowerResolver,
+          ),
+        getSpellInterrupts: (spellId) =>
+          Effect.request(
+            new GetSpellInterrupts({ spellId }),
+            resolvers.spellInterruptsResolver,
+          ),
+        getSpellMisc: (spellId) =>
+          Effect.request(
+            new GetSpellMisc({ spellId }),
+            resolvers.spellMiscResolver,
+          ),
+        getSpellReplacement: (spellId) =>
+          Effect.request(
+            new GetSpellReplacement({ spellId }),
+            resolvers.spellReplacementResolver,
+          ),
+        getSpellShapeshift: (spellId) =>
+          Effect.request(
+            new GetSpellShapeshift({ spellId }),
+            resolvers.spellShapeshiftResolver,
+          ),
+        getSpellTargetRestrictions: (spellId) =>
+          Effect.request(
+            new GetSpellTargetRestrictions({ spellId }),
+            resolvers.spellTargetRestrictionsResolver,
+          ),
+
+        // By ItemID (FK, single result - batched)
+        getItemModifiedAppearance: (itemId) =>
+          Effect.request(
+            new GetItemModifiedAppearance({ itemId }),
+            resolvers.itemModifiedAppearanceResolver,
+          ),
+
+        // By FK (array results - batched)
+        getItemXItemEffects: (itemId) =>
+          Effect.request(
+            new GetItemXItemEffects({ itemId }),
+            resolvers.itemXItemEffectsResolver,
+          ),
+        getSpecializationSpells: (specId) =>
+          Effect.request(
+            new GetSpecializationSpells({ specId }),
+            resolvers.specializationSpellsResolver,
+          ),
+        getSpellEffects: (spellId) =>
+          Effect.request(
+            new GetSpellEffects({ spellId }),
+            resolvers.spellEffectsResolver,
+          ),
+        getSpellEmpowerStages: (spellEmpowerId) =>
+          Effect.request(
+            new GetSpellEmpowerStages({ spellEmpowerId }),
+            resolvers.spellEmpowerStagesResolver,
+          ),
+        getSpellLearnSpell: (spellId) =>
+          Effect.request(
+            new GetSpellLearnSpell({ spellId }),
+            resolvers.spellLearnSpellResolver,
+          ),
+        getSpellLevels: (spellId) =>
+          Effect.request(
+            new GetSpellLevels({ spellId }),
+            resolvers.spellLevelsResolver,
+          ),
+        getSpellPower: (spellId) =>
+          Effect.request(
+            new GetSpellPower({ spellId }),
+            resolvers.spellPowerResolver,
+          ),
+        getSpellProcsPerMinuteMods: (spellProcsPerMinuteId) =>
+          Effect.request(
+            new GetSpellProcsPerMinuteMods({ spellProcsPerMinuteId }),
+            resolvers.spellProcsPerMinuteModsResolver,
+          ),
+        getSpellTotems: (spellId) =>
+          Effect.request(
+            new GetSpellTotems({ spellId }),
+            resolvers.spellTotemsResolver,
+          ),
+        getSpellXDescriptionVariables: (spellId) =>
+          Effect.request(
+            new GetSpellXDescriptionVariables({ spellId }),
+            resolvers.spellXDescriptionVariablesResolver,
+          ),
+        getTraitNodesForTree: (treeId) =>
+          Effect.request(
+            new GetTraitNodesForTree({ treeId }),
+            resolvers.traitNodesForTreeResolver,
+          ),
+        getTraitNodeXTraitNodeEntries: (nodeId) =>
+          Effect.request(
+            new GetTraitNodeXTraitNodeEntries({ nodeId }),
+            resolvers.traitNodeXEntriesResolver,
+          ),
+        getTraitEdgesForTree: (treeId) =>
+          Effect.request(
+            new GetTraitEdgesForTree({ treeId }),
+            resolvers.traitEdgesForTreeResolver,
+          ),
+        getTraitTreeLoadout: (specId) =>
+          Effect.request(
+            new GetTraitTreeLoadout({ specId }),
+            resolvers.traitTreeLoadoutResolver,
+          ),
+        getTraitTreeLoadoutEntries: (loadoutId) =>
+          Effect.request(
+            new GetTraitTreeLoadoutEntries({ loadoutId }),
+            resolvers.traitTreeLoadoutEntriesResolver,
+          ),
+
+        // Non-batchable (fetch all or complex queries)
+        getChrClasses: () =>
+          fetchAll<Schemas.Dbc.ChrClassesRow>(
+            queryClient,
+            dataProvider,
+            "chr_classes",
+          ),
+        getChrSpecializations: () =>
+          fetchAll<Schemas.Dbc.ChrSpecializationRow>(
+            queryClient,
+            dataProvider,
+            "chr_specialization",
+          ),
+        getExpectedStats: (level, expansion) =>
+          fetchWithFilters<Schemas.Dbc.ExpectedStatRow>(
+            queryClient,
+            dataProvider,
+            "expected_stat",
+            [{ field: "Lvl", operator: "eq", value: level }],
+          ).pipe(
+            Effect.map((data) =>
+              data.filter(
+                (row) =>
+                  row.ExpansionID === expansion || row.ExpansionID === -2,
+              ),
+            ),
+          ),
+        getContentTuningXExpected: (contentTuningId, mythicPlusSeasonId) =>
+          fetchWithFilters<Schemas.Dbc.ContentTuningXExpectedRow>(
+            queryClient,
+            dataProvider,
+            "content_tuning_x_expected",
+            [
+              {
+                field: "ContentTuningID",
+                operator: "eq",
+                value: contentTuningId,
+              },
+            ],
+          ).pipe(
+            Effect.map((data) =>
+              data.filter(
+                (row) =>
+                  (row.MinMythicPlusSeasonID === 0 ||
+                    row.MinMythicPlusSeasonID <= mythicPlusSeasonId) &&
+                  (row.MaxMythicPlusSeasonID === 0 ||
+                    row.MaxMythicPlusSeasonID > mythicPlusSeasonId),
+              ),
+            ),
+          ),
+        getDifficultyChain: (id) =>
+          Effect.gen(function* () {
+            const chain: Schemas.Dbc.DifficultyRow[] = [];
+            let currentId = id;
+
+            while (currentId !== 0) {
+              const row = yield* Effect.request(
+                new GetDifficulty({ id: currentId }),
+                resolvers.difficultyResolver,
+              );
+
+              if (!row) {
+                break;
+              }
+
+              chain.push(row);
+              currentId = row.FallbackDifficultyID ?? 0;
+            }
+
+            return chain;
+          }),
+      };
+    }),
+  ).pipe(Layer.provide(resolversLayer));
+};

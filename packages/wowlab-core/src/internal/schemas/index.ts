@@ -5,3 +5,4 @@ export * as Dbc from "./dbc/index.js";
 export * as Enums from "./Enums.js";
 export * as Item from "./Item.js";
 export * as Spell from "./Spell.js";
+export * as Talent from "./talent/index.js";
