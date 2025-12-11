@@ -29,29 +29,75 @@ export const transformSpell = (
       );
     }
 
-    const misc = Option.fromNullable(yield* dbc.getSpellMisc(spellId));
-    const effects = yield* dbc.getSpellEffects(spellId);
+    const [misc, effects, spellCategories] = yield* Effect.all(
+      [
+        dbc.getSpellMisc(spellId),
+        dbc.getSpellEffects(spellId),
+        dbc.getSpellCategories(spellId),
+      ],
+      { batching: true },
+    );
 
-    // Extract all properties using focused extractor functions
-    const range = yield* extractor.extractRange(misc);
-    const radius = yield* extractor.extractRadius(effects);
+    const miscOpt = Option.fromNullable(misc);
 
-    // ImplicitTarget is on Effect, so we can extract it.
+    const [
+      range,
+      radius,
+      cooldown,
+      _interrupts,
+      empower,
+      targetRestrictions,
+      castTime,
+      duration,
+      charges,
+      name,
+      descriptions,
+      power,
+      classOptions,
+      auraRestrictions,
+      levels,
+      learnSpells,
+      replacement,
+      shapeshift,
+      totems,
+      descriptionVariables,
+    ] = yield* Effect.all(
+      [
+        extractor.extractRange(miscOpt),
+        extractor.extractRadius(effects),
+        extractor.extractCooldown(spellId),
+        extractor.extractInterrupts(spellId),
+        extractor.extractEmpower(spellId),
+        extractor.extractTargetRestrictions(spellId),
+        extractor.extractCastTime(miscOpt),
+        extractor.extractDuration(miscOpt),
+        extractor.extractCharges(spellId),
+        extractor.extractName(spellId),
+        extractor.extractDescription(spellId),
+        extractor.extractPower(spellId),
+        extractor.extractClassOptions(spellId),
+        extractor.extractAuraRestrictions(spellId),
+        extractor.extractLevels(spellId),
+        extractor.extractLearnSpells(spellId),
+        extractor.extractReplacement(spellId),
+        extractor.extractShapeshift(spellId),
+        extractor.extractTotems(spellId),
+        extractor.extractDescriptionVariables(spellId),
+      ],
+      { batching: true },
+    );
+
     const targeting = effects.flatMap((e) =>
       [e.ImplicitTarget_0, e.ImplicitTarget_1].filter((t) => t !== 0),
     );
 
     const damage = pipe(
-      misc,
+      miscOpt,
       Option.map((m) => ({ schoolMask: m.SchoolMask })),
     );
-    const cooldown = yield* extractor.extractCooldown(spellId);
-    const _interrupts = yield* extractor.extractInterrupts(spellId);
-
-    const spellCategories = yield* dbc.getSpellCategories(spellId);
 
     const attributes = pipe(
-      misc,
+      miscOpt,
       Option.map((m) => [
         m.Attributes_0,
         m.Attributes_1,
@@ -73,58 +119,30 @@ export const transformSpell = (
     );
 
     const missile = pipe(
-      misc,
+      miscOpt,
       Option.map((m) => ({ speed: m.Speed })),
     );
-    const empower = yield* extractor.extractEmpower(spellId);
-
-    // Cone from SpellTargetRestrictions
-    const targetRestrictions =
-      yield* extractor.extractTargetRestrictions(spellId);
-
-    const castTime = yield* extractor.extractCastTime(misc);
-    const duration = yield* extractor.extractDuration(misc);
-    const charges = yield* extractor.extractCharges(spellId);
 
     const defense = pipe(
       Option.fromNullable(spellCategories),
       Option.map((c) => ({ defenseType: c.DefenseType })),
     );
+
     const scaling = extractor.extractScaling(effects);
+
     const dispel = pipe(
       Option.fromNullable(spellCategories),
       Option.map((c) => ({ dispelType: c.DispelType })),
     );
 
-    // Facing relies on SpellCastingRequirements (missing)
-    const _facing = Option.none();
-    /*
-    pipe(
-      first(cache.spellCastingRequirements.get(spellId)),
-      Option.map((r) => ({ facingFlags: r.FacingCasterFlags })),
-    );
-    */
-
     const triggers = effects
       .map((e) => e.EffectTriggerSpell)
       .filter((t) => t !== 0);
-    const manaCost = extractor.extractManaCost(effects);
-    const name = yield* extractor.extractName(spellId);
-    const descriptions = yield* extractor.extractDescription(spellId);
-    const power = yield* extractor.extractPower(spellId);
-    const classOptions = yield* extractor.extractClassOptions(spellId);
-    const auraRestrictions = yield* extractor.extractAuraRestrictions(spellId);
-    const levels = yield* extractor.extractLevels(spellId);
-    const learnSpells = yield* extractor.extractLearnSpells(spellId);
-    const replacement = yield* extractor.extractReplacement(spellId);
-    const shapeshift = yield* extractor.extractShapeshift(spellId);
-    const totems = yield* extractor.extractTotems(spellId);
-    const descriptionVariables =
-      yield* extractor.extractDescriptionVariables(spellId);
 
-    // Icon resolution
+    const manaCost = extractor.extractManaCost(effects);
+
     const iconFileDataId = pipe(
-      misc,
+      miscOpt,
       Option.map((m) => m.SpellIconFileDataID),
       Option.getOrElse(() => 0),
     );
@@ -142,7 +160,6 @@ export const transformSpell = (
       Option.getOrElse(() => "inv_misc_questionmark"),
     );
 
-    // Create and return the SpellDataFlat object
     return {
       // Core
       auraDescription: descriptions.auraDescription,
@@ -191,17 +208,11 @@ export const transformSpell = (
       effectBonusCoefficient: scaling.spellPower,
 
       // Interrupts
-      interruptAura0: 0, // Option.isSome(interrupts) ? interrupts.value.aura[0] : 0,
-      interruptAura1: 0, // Option.isSome(interrupts) ? interrupts.value.aura[1] : 0,
-      interruptChannel0: 0,
-      // Option.isSome(interrupts)
-      // ? interrupts.value.channel[0]
-      // : 0,
-      interruptChannel1: 0,
-      // Option.isSome(interrupts)
-      // ? interrupts.value.channel[1]
-      // : 0,
-      interruptFlags: 0, // Option.isSome(interrupts) ? interrupts.value.flags : 0,
+      interruptAura0: 0, // TODO
+      interruptAura1: 0, // TODO
+      interruptChannel0: 0, // TODO
+      interruptChannel1: 0, // TODO
+      interruptFlags: 0, // TODO
 
       // Duration
       duration: Option.isSome(duration) ? duration.value.duration : 0,
@@ -213,7 +224,7 @@ export const transformSpell = (
 
       // Mechanics
       dispelType: Option.isSome(dispel) ? dispel.value.dispelType : 0,
-      facingCasterFlags: 0, // Option.isSome(facing) ? facing.value.facingFlags : 0,
+      facingCasterFlags: 0,
       speed: Option.isSome(missile) ? missile.value.speed : 0,
       spellClassMask1: Option.isSome(classOptions)
         ? classOptions.value.spellClassMask1

@@ -7,7 +7,6 @@ import * as Option from "effect/Option";
 
 import { DbcService } from "../dbc/DbcService.js";
 
-// TODO Add actual extrators for items
 export const transformItem = (
   itemId: number,
 ): Effect.Effect<
@@ -18,7 +17,15 @@ export const transformItem = (
   Effect.gen(function* () {
     const dbc = yield* DbcService;
 
-    const item = yield* dbc.getItem(itemId);
+    const [item, sparse, effectLinks] = yield* Effect.all(
+      [
+        dbc.getItem(itemId),
+        dbc.getItemSparse(itemId),
+        dbc.getItemXItemEffects(itemId),
+      ],
+      { batching: true },
+    );
+
     if (!item) {
       return yield* Effect.fail(
         new Errors.ItemNotFound({
@@ -27,8 +34,6 @@ export const transformItem = (
         }),
       );
     }
-
-    const sparse = yield* dbc.getItemSparse(itemId);
 
     // Resolve File Name - first try Item.IconFileDataID, then fallback to appearance
     let iconFileDataId = item.IconFileDataID;
@@ -60,28 +65,21 @@ export const transformItem = (
       Option.getOrElse(() => "inv_misc_questionmark"),
     );
 
-    // Resolve Effects
-    const effectLinks = yield* dbc.getItemXItemEffects(itemId);
-    const effects: Array<{
-      categoryCooldown: number;
-      charges: number;
-      cooldown: number;
-      spellId: number;
-      triggerType: number;
-    }> = [];
+    const effectResults = yield* Effect.forEach(
+      effectLinks,
+      (link) => dbc.getItemEffect(link.ItemEffectID),
+      { batching: true },
+    );
 
-    for (const link of effectLinks) {
-      const effect = yield* dbc.getItemEffect(link.ItemEffectID);
-      if (effect) {
-        effects.push({
-          categoryCooldown: effect.CategoryCoolDownMSec,
-          charges: effect.Charges,
-          cooldown: effect.CoolDownMSec,
-          spellId: effect.SpellID,
-          triggerType: effect.TriggerType,
-        });
-      }
-    }
+    const effects = effectResults
+      .filter((e): e is NonNullable<typeof e> => e != null)
+      .map((effect) => ({
+        categoryCooldown: effect.CategoryCoolDownMSec,
+        charges: effect.Charges,
+        cooldown: effect.CoolDownMSec,
+        spellId: effect.SpellID,
+        triggerType: effect.TriggerType,
+      }));
 
     // Resolve Stats (Basic mapping from Sparse)
     const stats: { type: number; value: number }[] = [];

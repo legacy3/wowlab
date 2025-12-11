@@ -624,7 +624,7 @@ const createBatchFetcher = (
         for (const treeId of treeIds) {
           edgesByTree.set(treeId, []);
         }
-        
+
         for (const edge of edges) {
           const treeId = nodeToTree.get(edge.LeftTraitNodeID);
           if (treeId !== undefined) {

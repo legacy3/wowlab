@@ -75,35 +75,30 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const radiusResults: Array<{
-            max: number;
-            min: number;
-            radius: number;
-          }> = [];
+          // Collect all unique non-zero radius indices
+          const radiusIndices = [
+            ...new Set(
+              spellEffects.flatMap((effect) =>
+                [effect.EffectRadiusIndex_0, effect.EffectRadiusIndex_1].filter(
+                  (i) => i !== 0,
+                ),
+              ),
+            ),
+          ];
 
-          for (const effect of spellEffects) {
-            const radiusIndices = [
-              effect.EffectRadiusIndex_0,
-              effect.EffectRadiusIndex_1,
-            ];
+          const radii = yield* Effect.forEach(
+            radiusIndices,
+            (index) => dbcService.getSpellRadius(index),
+            { batching: true },
+          );
 
-            for (const radiusIndex of radiusIndices) {
-              if (radiusIndex !== 0) {
-                const spellRadius =
-                  yield* dbcService.getSpellRadius(radiusIndex);
-
-                if (spellRadius) {
-                  radiusResults.push({
-                    max: spellRadius.RadiusMax,
-                    min: spellRadius.RadiusMin,
-                    radius: spellRadius.Radius,
-                  });
-                }
-              }
-            }
-          }
-
-          return radiusResults;
+          return radii
+            .filter((r): r is NonNullable<typeof r> => r != null)
+            .map((spellRadius) => ({
+              max: spellRadius.RadiusMax,
+              min: spellRadius.RadiusMin,
+              radius: spellRadius.Radius,
+            }));
         });
 
       const extractCooldown = (
@@ -453,9 +448,15 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           const { contentTuningId, expansion, level, mythicPlusSeasonId } =
             config;
 
-          const expectedStats = yield* dbcService.getExpectedStats(
-            level,
-            expansion,
+          const [expectedStats, contentTuningExpecteds] = yield* Effect.all(
+            [
+              dbcService.getExpectedStats(level, expansion),
+              dbcService.getContentTuningXExpected(
+                contentTuningId,
+                mythicPlusSeasonId,
+              ),
+            ],
+            { batching: true },
           );
 
           const sortedExpectedStats = [...expectedStats].sort(
@@ -468,28 +469,20 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
           const expectedStat = sortedExpectedStats[0];
 
-          const contentTuningExpecteds =
-            yield* dbcService.getContentTuningXExpected(
-              contentTuningId,
-              mythicPlusSeasonId,
-            );
-
-          const expectedStatMods: Dbc.ExpectedStatModRow[] = [];
-
-          for (const tuningExpected of contentTuningExpecteds) {
-            const expectedStatMod = yield* dbcService.getExpectedStatMod(
-              tuningExpected.ExpectedStatModID,
-            );
-
-            if (expectedStatMod) {
-              expectedStatMods.push(expectedStatMod);
-            }
-          }
+          // Batch fetch all expected stat mods
+          const expectedStatMods = yield* Effect.forEach(
+            contentTuningExpecteds,
+            (tuningExpected) =>
+              dbcService.getExpectedStatMod(tuningExpected.ExpectedStatModID),
+            { batching: true },
+          );
 
           let damageMultiplier = expectedStat.CreatureSpellDamage;
 
           for (const statMod of expectedStatMods) {
-            damageMultiplier *= statMod.CreatureSpellDamageMod;
+            if (statMod) {
+              damageMultiplier *= statMod.CreatureSpellDamageMod;
+            }
           }
 
           const damageValue =
@@ -836,24 +829,25 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
       > =>
         Effect.gen(function* () {
           const specSpells = yield* dbcService.getSpecializationSpells(specId);
-          const results: Array<{ spellId: number; spellName: string }> = [];
 
-          for (const specSpell of specSpells) {
-            // TODO Some spells in specialization_spells don't have entries in spell_name?
-            const spellName = yield* extractName(specSpell.SpellID).pipe(
-              Effect.orElseSucceed(() => `Spell ${specSpell.SpellID}`),
-            );
+          const results = yield* Effect.forEach(
+            specSpells,
+            (specSpell) =>
+              extractName(specSpell.SpellID).pipe(
+                Effect.orElseSucceed(() => `Spell ${specSpell.SpellID}`),
+                Effect.map((spellName) => ({
+                  spellId: specSpell.SpellID,
+                  spellName,
+                })),
+              ),
+            { batching: true },
+          );
 
-            results.push({
-              spellId: specSpell.SpellID,
-              spellName,
-            });
-          }
-
-          return results.sort((a, b) => a.spellName.localeCompare(b.spellName));
+          return [...results].sort((a, b) =>
+            a.spellName.localeCompare(b.spellName),
+          );
         });
 
-      // TODO Not sure if this really belongs here, extractors getting kinda bloated
       const buildSpecCoverage = (
         supportedSpellIds: ReadonlySet<number>,
       ): Effect.Effect<
@@ -879,8 +873,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         Effect.gen(function* () {
           const progressService = yield* SpecCoverageProgressService;
 
-          const allClasses = yield* dbcService.getChrClasses();
-          const allSpecs = yield* dbcService.getChrSpecializations();
+          const [allClasses, allSpecs] = yield* Effect.all(
+            [dbcService.getChrClasses(), dbcService.getChrSpecializations()],
+            { batching: true },
+          );
 
           // Filter out non-playable classes (Adventurer=14, Traveler=15) and build class map
           const validClasses = allClasses.filter(
@@ -905,52 +901,44 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           }
 
           const totalSpecs = validSpecs.length;
-          let loadedSpecs = 0;
 
-          const classes: Array<{
-            id: number;
-            name: string;
-            color: string;
-            specs: Array<{
-              id: number;
-              name: string;
-              spells: Array<{ id: number; name: string; supported: boolean }>;
-            }>;
-          }> = [];
+          const allSpecSpellsResults = yield* Effect.forEach(
+            validSpecs,
+            (spec) => extractSpellsForSpec(spec.ID),
+            { batching: true },
+          );
 
-          for (const cls of validClasses) {
-            // TOOD Move this to some utility function
+          const specSpellsMap = new Map<
+            number,
+            Array<{ spellId: number; spellName: string }>
+          >();
+
+          for (let i = 0; i < validSpecs.length; i++) {
+            specSpellsMap.set(validSpecs[i].ID, allSpecSpellsResults[i]);
+          }
+
+          yield* progressService.publish({
+            className: "All",
+            loaded: totalSpecs,
+            specName: "All",
+            total: totalSpecs,
+          });
+
+          const classes = validClasses.map((cls) => {
             const r = cls.ClassColorR ?? 128;
             const g = cls.ClassColorG ?? 128;
             const b = cls.ClassColorB ?? 128;
             const color = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 
             const classSpecs = specsByClass.get(cls.ID) ?? [];
-
-            // Sort specs by OrderIndex
             classSpecs.sort(
               (a, b) => (a.OrderIndex ?? 0) - (b.OrderIndex ?? 0),
             );
 
-            const specs: Array<{
-              id: number;
-              name: string;
-              spells: Array<{ id: number; name: string; supported: boolean }>;
-            }> = [];
+            const specs = classSpecs.map((spec) => {
+              const spellsForSpec = specSpellsMap.get(spec.ID) ?? [];
 
-            for (const spec of classSpecs) {
-              const spellsForSpec = yield* extractSpellsForSpec(spec.ID);
-
-              loadedSpecs++;
-
-              yield* progressService.publish({
-                className: cls.Name_lang!,
-                loaded: loadedSpecs,
-                specName: spec.Name_lang!,
-                total: totalSpecs,
-              });
-
-              specs.push({
+              return {
                 id: spec.ID,
                 name: spec.Name_lang!,
                 spells: spellsForSpec.map((s) => ({
@@ -958,16 +946,16 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
                   name: s.spellName,
                   supported: supportedSpellIds.has(s.spellId),
                 })),
-              });
-            }
+              };
+            });
 
-            classes.push({
+            return {
               color,
               id: cls.ID,
               name: cls.Name_lang!,
               specs,
-            });
-          }
+            };
+          });
 
           // Sort classes by ID
           classes.sort((a, b) => a.id - b.id);

@@ -11,6 +11,7 @@ import { createAuthProvider } from "@/lib/refine/auth-provider";
 import { createAccessControlProvider } from "@/lib/refine/access-control";
 import { createPersister } from "@/lib/refine/persister";
 import { GAME_CONFIG } from "@/lib/config/game";
+import { PortalDbcBatchProvider } from "./portal-batch-provider";
 
 const DAY = 1000 * 60 * 60 * 24;
 
@@ -90,7 +91,7 @@ export function RefineProvider({ children }: RefineProviderProps) {
             },
           }}
         >
-          {children}
+          <PortalDbcBatchProvider>{children}</PortalDbcBatchProvider>
         </Refine>
       </Suspense>
     </PersistQueryClientProvider>

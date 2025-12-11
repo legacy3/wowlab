@@ -291,7 +291,7 @@ const createByIdResolver = <Row extends { readonly ID: number }>(
 
         const rows = yield* fetchByIds(ids);
         const rowMap = new Map<number, Row>();
-        
+
         for (const row of rows) {
           rowMap.set(row.ID, row);
         }
@@ -391,11 +391,11 @@ const createByFkArrayResolver = <
 
       const rows = yield* fetchByFks(fkValues);
       const rowsByFk = new Map<number, Row[]>();
-      
+
       for (const row of rows) {
         const fkValue = row[fkField] as number;
         const existing = rowsByFk.get(fkValue) ?? [];
-        
+
         existing.push(row);
         rowsByFk.set(fkValue, existing);
       }
