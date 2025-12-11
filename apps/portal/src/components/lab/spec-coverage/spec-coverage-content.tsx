@@ -98,9 +98,8 @@ export function SpecCoverageContent() {
                   Load Coverage Data
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Only use this if you actually need to check coverage. The data
-                  is dynamically generated for the current patch and takes
-                  around 60 seconds to load and process.
+                  Only use this if you actually need to check coverage. This is
+                  a large database request.
                 </p>
               </div>
 
