@@ -6,7 +6,7 @@ Query WoW spell and item data from any MCP-compatible tool.
 
 The MCP server gives AI assistants (Claude, Cursor, etc.) access to WoW's game data. Ask questions like "what's the cooldown of Fireball?" or "compare the damage of these two trinkets" and the assistant can look it up directly.
 
-**Not limited to WoWLab users.** Anyone can use this to query WoW data for theorycrafting, building tools, or exploring game mechanics. Please use it responsibly.
+**Not limited to WoW Lab users.** Anyone can use this to query WoW data for theorycrafting, building tools, or exploring game mechanics. Please use it responsibly.
 
 ## Install
 

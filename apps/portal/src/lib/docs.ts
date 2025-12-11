@@ -36,6 +36,11 @@ export const docsIndex: DocMeta[] = [
     title: "Spec Coverage",
     description: "Check which spells are supported for each spec",
   },
+  {
+    slug: "06-data-model",
+    title: "Data Model",
+    description: "How spell data is assembled at runtime",
+  },
 ];
 
 function flattenDocs(docs: DocMeta[], prefix = ""): DocMeta[] {

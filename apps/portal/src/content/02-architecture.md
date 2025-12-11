@@ -16,7 +16,7 @@ flowchart LR
 
 ## Combat log events
 
-WoWLab uses the same event types as [WoW's combat log](https://warcraft.wiki.gg/wiki/COMBAT_LOG_EVENT):
+WoW Lab uses the same event types as [WoW's combat log](https://warcraft.wiki.gg/wiki/COMBAT_LOG_EVENT):
 
 - `SPELL_CAST_SUCCESS`
 - `SPELL_AURA_APPLIED` / `SPELL_AURA_REMOVED`

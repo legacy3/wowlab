@@ -12,6 +12,7 @@ import Architecture from "@/content/02-architecture.md";
 import Contributing from "@/content/03-contributing.md";
 import Rotations from "@/content/04-rotations.md";
 import SpecCoverage from "@/content/05-spec-coverage.md";
+import DataModel from "@/content/06-data-model.md";
 
 const docs: Record<string, React.ComponentType> = {
   "00-overview": Overview,
@@ -20,6 +21,7 @@ const docs: Record<string, React.ComponentType> = {
   "03-contributing": Contributing,
   "04-rotations": Rotations,
   "05-spec-coverage": SpecCoverage,
+  "06-data-model": DataModel,
 };
 
 type Props = {

@@ -73,19 +73,32 @@ export default function AboutPage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Credits</h2>
           <p className="text-muted-foreground">
-            All spell, item, and game data comes from{" "}
+            WoW Lab stands on the shoulders of giants.{" "}
+            <Link href="https://www.simulationcraft.org" external>
+              SimulationCraft
+            </Link>{" "}
+            did all the heavy lifting decoding WoW&apos;s data and mechanics
+            over the years, and we reuse their{" "}
+            <Link
+              href="https://www.curseforge.com/wow/addons/simulationcraft"
+              external
+            >
+              addon
+            </Link>{" "}
+            for gear imports.{" "}
             <Link href="https://wago.tools" external>
               wago.tools
-            </Link>
-            . The entire simulation engine is built with{" "}
+            </Link>{" "}
+            provides the spell and item data. The simulation engine is built
+            with{" "}
             <Link href="https://effect.website" external>
               Effect
             </Link>
-            . Projects like this wouldn&apos;t be possible without them.
+            .
           </p>
           <p className="text-sm text-muted-foreground">
             Thanks to everyone in the WoW theorycrafting community who shares
-            knowledge and helps make tools like this better.
+            knowledge and helps make tools like this possible.
           </p>
         </section>
       </div>
