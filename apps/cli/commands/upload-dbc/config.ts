@@ -55,9 +55,14 @@ export const DBC_TABLES = {
   spellXDescriptionVariables: { file: "SpellXDescriptionVariables.csv", schema: Dbc.SpellXDescriptionVariablesRowSchema, tableName: "spell_x_description_variables" },
   talent: { file: "Talent.csv", schema: Dbc.TalentRowSchema, tableName: "talent" },
   traitDefinition: { file: "TraitDefinition.csv", schema: Dbc.TraitDefinitionRowSchema, tableName: "trait_definition" },
+  traitEdge: { file: "TraitEdge.csv", schema: Dbc.TraitEdgeRowSchema, tableName: "trait_edge" },
+  traitNode: { file: "TraitNode.csv", schema: Dbc.TraitNodeRowSchema, tableName: "trait_node" },
   traitNodeEntry: { file: "TraitNodeEntry.csv", schema: Dbc.TraitNodeEntryRowSchema, tableName: "trait_node_entry" },
   traitNodeXTraitNodeEntry: { file: "TraitNodeXTraitNodeEntry.csv", schema: Dbc.TraitNodeXTraitNodeEntryRowSchema, tableName: "trait_node_x_trait_node_entry" },
   traitSubTree: { file: "TraitSubTree.csv", schema: Dbc.TraitSubTreeRowSchema, tableName: "trait_sub_tree" },
+  traitTree: { file: "TraitTree.csv", schema: Dbc.TraitTreeRowSchema, tableName: "trait_tree" },
+  traitTreeLoadout: { file: "TraitTreeLoadout.csv", schema: Dbc.TraitTreeLoadoutRowSchema, tableName: "trait_tree_loadout" },
+  traitTreeLoadoutEntry: { file: "TraitTreeLoadoutEntry.csv", schema: Dbc.TraitTreeLoadoutEntryRowSchema, tableName: "trait_tree_loadout_entry" },
 } as const;
 
 export type DbcTableKey = keyof typeof DBC_TABLES;
