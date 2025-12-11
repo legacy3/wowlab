@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import type * as Layer from "effect/Layer";
+import type * as ManagedRuntime from "effect/ManagedRuntime";
 
 type PendingRequest<T> = {
   resolve: (value: T) => void;
@@ -10,18 +10,18 @@ type BatchResult<T> =
   | { _tag: "success"; id: number; value: T }
   | { _tag: "failure"; id: number; error: unknown };
 
-interface EntityBatcherOptions<T> {
+interface EntityBatcherOptions<T, R> {
   readonly type: string;
-  readonly transform: (id: number) => Effect.Effect<T, unknown, unknown>;
-  readonly createLayer: () => Layer.Layer<any, any, any>;
+  readonly transform: (id: number) => Effect.Effect<T, unknown, R>;
+  readonly runtime: ManagedRuntime.ManagedRuntime<R, unknown>;
 }
 
-export class EntityBatcher<T> {
+export class EntityBatcher<T, R> {
   private scheduled = false;
 
   private queue = new Map<number, PendingRequest<T>[]>();
 
-  constructor(private readonly options: EntityBatcherOptions<T>) {
+  constructor(private readonly options: EntityBatcherOptions<T, R>) {
     //
   }
 
@@ -104,10 +104,8 @@ export class EntityBatcher<T> {
           }),
         ),
       { batching: true, concurrency: "unbounded" },
-    ).pipe(Effect.provide(this.options.createLayer())) as Effect.Effect<
-      BatchResult<T>[]
-    >;
+    );
 
-    return Effect.runPromise(effect);
+    return this.options.runtime.runPromise(effect);
   }
 }

@@ -3,12 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import type * as Effect from "effect/Effect";
 
+import type { PortalDbcLayerContext } from "@/lib/services";
 import { usePortalDbcBatch } from "@/providers/portal-batch-provider";
 
 export function usePortalDbcEntity<T>(
   type: string,
   id: number | null | undefined,
-  transformFn: (id: number) => Effect.Effect<T, unknown, unknown>,
+  transformFn: (id: number) => Effect.Effect<T, unknown, PortalDbcLayerContext>,
 ) {
   const loadEntity = usePortalDbcBatch(type, transformFn);
 

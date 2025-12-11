@@ -5,17 +5,24 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
 } from "react";
 import { useDataProvider } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Effect from "effect/Effect";
+import * as ManagedRuntime from "effect/ManagedRuntime";
 
-import { createPortalDbcLayer } from "@/lib/services";
+import {
+  createPortalDbcLayer,
+  type PortalDbcLayerContext,
+} from "@/lib/services";
 import { EntityBatcher } from "@/lib/batching/entity-batcher";
 
-type TransformEffect<T> = (id: number) => Effect.Effect<T, unknown, unknown>;
+type TransformEffect<T> = (
+  id: number,
+) => Effect.Effect<T, unknown, PortalDbcLayerContext>;
 type BatchLoader<T> = (id: number) => Promise<T>;
 
 interface PortalDbcBatchContextValue {
@@ -30,29 +37,50 @@ export function PortalDbcBatchProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const dataProviderFactory = useDataProvider();
   const dataProvider = dataProviderFactory();
-  const batchersRef = useRef(new Map<string, EntityBatcher<unknown>>());
+  const batchersRef = useRef(
+    new Map<string, EntityBatcher<unknown, PortalDbcLayerContext>>(),
+  );
+
+  const runtimeRef = useRef<ManagedRuntime.ManagedRuntime<
+    PortalDbcLayerContext,
+    unknown
+  > | null>(null);
+
+  if (!runtimeRef.current) {
+    const layer = createPortalDbcLayer(queryClient, dataProvider);
+    runtimeRef.current = ManagedRuntime.make(layer);
+  }
+
+  useEffect(() => {
+    return () => {
+      runtimeRef.current?.dispose();
+    };
+  }, []);
 
   const getLoader = useCallback(
     <T,>(type: string, transform: TransformEffect<T>): BatchLoader<T> => {
       const existing = batchersRef.current.get(type) as
-        | EntityBatcher<T>
+        | EntityBatcher<T, PortalDbcLayerContext>
         | undefined;
 
       if (existing) {
         return (id: number) => existing.load(id);
       }
 
-      const batcher = new EntityBatcher<T>({
+      const batcher = new EntityBatcher<T, PortalDbcLayerContext>({
         type,
         transform,
-        createLayer: () => createPortalDbcLayer(queryClient, dataProvider),
+        runtime: runtimeRef.current!,
       });
 
-      batchersRef.current.set(type, batcher as EntityBatcher<unknown>);
+      batchersRef.current.set(
+        type,
+        batcher as EntityBatcher<unknown, PortalDbcLayerContext>,
+      );
 
       return (id: number) => batcher.load(id);
     },
-    [queryClient, dataProvider],
+    [],
   );
 
   const value = useMemo<PortalDbcBatchContextValue>(
