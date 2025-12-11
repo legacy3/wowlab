@@ -1,4 +1,9 @@
-import type { SimcProfile, SimcSlot, WowClass } from "@wowlab/parsers";
+import type {
+  SimcProfile,
+  SimcSlot,
+  SimcTalents,
+  WowClass,
+} from "@wowlab/parsers";
 import type {
   CharacterProfession,
   CharacterSummary,
@@ -9,6 +14,7 @@ export interface ParsedSimcData {
   character: CharacterSummary;
   gear: Record<EquipmentSlot, number | null>;
   professions: CharacterProfession[];
+  talents: SimcTalents;
 }
 
 const SLOT_MAP: Record<SimcSlot, EquipmentSlot> = {
@@ -101,5 +107,6 @@ export function simcProfileToPortalData(profile: SimcProfile): ParsedSimcData {
     character: characterSummary,
     gear,
     professions,
+    talents: profile.talents,
   };
 }

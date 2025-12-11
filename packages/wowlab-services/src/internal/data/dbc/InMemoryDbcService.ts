@@ -164,4 +164,29 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getSpellXDescriptionVariables: (spellId) =>
       Effect.succeed(cache.spellXDescriptionVariables.get(spellId) ?? []),
+
+    getTraitDefinition: (id) => Effect.succeed(cache.traitDefinition.get(id)),
+
+    getTraitEdgesForTree: (treeId) =>
+      Effect.succeed(cache.traitEdge.get(treeId) ?? []),
+
+    getTraitNode: (id) => Effect.succeed(cache.traitNode.get(id)),
+
+    getTraitNodeEntry: (id) => Effect.succeed(cache.traitNodeEntry.get(id)),
+
+    getTraitNodesForTree: (treeId) =>
+      Effect.succeed(cache.traitNodesByTree.get(treeId) ?? []),
+
+    getTraitNodeXTraitNodeEntries: (nodeId) =>
+      Effect.succeed(cache.traitNodeXTraitNodeEntry.get(nodeId) ?? []),
+
+    getTraitSubTree: (id) => Effect.succeed(cache.traitSubTree.get(id)),
+
+    getTraitTree: (id) => Effect.succeed(cache.traitTree.get(id)),
+
+    getTraitTreeLoadout: (specId) =>
+      Effect.succeed(cache.traitTreeLoadout.get(specId)),
+
+    getTraitTreeLoadoutEntries: (loadoutId) =>
+      Effect.succeed(cache.traitTreeLoadoutEntry.get(loadoutId) ?? []),
   } satisfies DbcServiceInterface);

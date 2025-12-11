@@ -49,6 +49,7 @@ import {
   EQUIPMENT_TRINKET_SLOTS,
   EQUIPMENT_WEAPON_SLOTS,
 } from "@/components/equipment";
+import { TalentTreePreview } from "@/components/talents";
 import {
   clearCharacterAtom,
   fightDurationAtom,
@@ -197,7 +198,7 @@ head=,id=212011,bonus_id=6652/10877...`}
     {} as Record<string, FightProfile[]>,
   );
 
-  const { character, professions, gear } = parsedData;
+  const { character, professions, gear, talents } = parsedData;
 
   // Character loaded: show full equipment preview
   return (
@@ -276,6 +277,11 @@ head=,id=212011,bonus_id=6652/10877...`}
           </div>
         </CardContent>
       </Card>
+
+      {/* Talent Tree Preview */}
+      {talents.encoded && (
+        <TalentTreePreview encodedTalents={talents.encoded} />
+      )}
 
       {/* Fight Profile Picker */}
       <div className="space-y-2">

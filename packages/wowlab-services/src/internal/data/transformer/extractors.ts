@@ -975,6 +975,70 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           return { classes };
         });
 
+      const extractTalentIcon = (
+        traitDefinition: Dbc.TraitDefinitionRow,
+      ): Effect.Effect<string, DbcError> =>
+        Effect.gen(function* () {
+          let iconFileDataId = traitDefinition.OverrideIcon;
+
+          if (iconFileDataId === 0 && traitDefinition.SpellID !== 0) {
+            const spellMisc = yield* dbcService.getSpellMisc(
+              traitDefinition.SpellID,
+            );
+
+            iconFileDataId = spellMisc?.SpellIconFileDataID ?? 0;
+          }
+
+          if (iconFileDataId === 0) {
+            return "inv_misc_questionmark";
+          }
+
+          const manifest =
+            yield* dbcService.getManifestInterfaceData(iconFileDataId);
+
+          if (!manifest) {
+            return "inv_misc_questionmark";
+          }
+
+          return manifest.FileName.toLowerCase().replace(".blp", "");
+        });
+
+      const extractTalentName = (
+        traitDefinition: Dbc.TraitDefinitionRow,
+      ): Effect.Effect<string, DbcError> =>
+        Effect.gen(function* () {
+          if (traitDefinition.OverrideName_lang) {
+            return traitDefinition.OverrideName_lang;
+          }
+
+          if (traitDefinition.SpellID === 0) {
+            return "Unknown Talent";
+          }
+
+          const spellName = yield* dbcService.getSpellName(
+            traitDefinition.SpellID,
+          );
+
+          return spellName?.Name_lang ?? `Spell ${traitDefinition.SpellID}`;
+        });
+
+      const extractTalentDescription = (
+        traitDefinition: Dbc.TraitDefinitionRow,
+      ): Effect.Effect<string, DbcError> =>
+        Effect.gen(function* () {
+          if (traitDefinition.OverrideDescription_lang) {
+            return traitDefinition.OverrideDescription_lang;
+          }
+
+          if (traitDefinition.SpellID === 0) {
+            return "";
+          }
+
+          const spell = yield* dbcService.getSpell(traitDefinition.SpellID);
+
+          return spell?.Description_lang ?? "";
+        });
+
       return {
         buildSpecCoverage,
         determineRefreshBehavior,
@@ -1001,6 +1065,9 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         extractScaling,
         extractShapeshift,
         extractSpellsForSpec,
+        extractTalentDescription,
+        extractTalentIcon,
+        extractTalentName,
         extractTargetRestrictions,
         extractTotems,
         getDamage,

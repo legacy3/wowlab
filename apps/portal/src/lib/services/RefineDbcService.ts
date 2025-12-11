@@ -513,4 +513,80 @@ export const RefineDbcService = (
 
         return chain;
       }),
+
+    getTraitDefinition: (id) =>
+      getOne<Schemas.Dbc.TraitDefinitionRow>(
+        queryClient,
+        dataProvider,
+        "trait_definition",
+        id,
+      ),
+    getTraitEdgesForTree: (treeId) =>
+      getListByFilter<Schemas.Dbc.TraitEdgeRow>(
+        queryClient,
+        dataProvider,
+        "trait_edge",
+        "LeftTraitNodeID",
+        treeId, // Note: This needs proper join logic - using raw query would be better
+      ),
+    getTraitNode: (id) =>
+      getOne<Schemas.Dbc.TraitNodeRow>(
+        queryClient,
+        dataProvider,
+        "trait_node",
+        id,
+      ),
+    getTraitNodeEntry: (id) =>
+      getOne<Schemas.Dbc.TraitNodeEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_entry",
+        id,
+      ),
+    getTraitNodesForTree: (treeId) =>
+      getListByFilter<Schemas.Dbc.TraitNodeRow>(
+        queryClient,
+        dataProvider,
+        "trait_node",
+        "TraitTreeID",
+        treeId,
+      ),
+    getTraitNodeXTraitNodeEntries: (nodeId) =>
+      getListByFilter<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_x_trait_node_entry",
+        "TraitNodeID",
+        nodeId,
+      ),
+    getTraitSubTree: (id) =>
+      getOne<Schemas.Dbc.TraitSubTreeRow>(
+        queryClient,
+        dataProvider,
+        "trait_sub_tree",
+        id,
+      ),
+    getTraitTree: (id) =>
+      getOne<Schemas.Dbc.TraitTreeRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree",
+        id,
+      ),
+    getTraitTreeLoadout: (specId) =>
+      getOneByFilter<Schemas.Dbc.TraitTreeLoadoutRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_loadout",
+        "ChrSpecializationID",
+        specId,
+      ),
+    getTraitTreeLoadoutEntries: (loadoutId) =>
+      getListByFilter<Schemas.Dbc.TraitTreeLoadoutEntryRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_loadout_entry",
+        "TraitTreeLoadoutID",
+        loadoutId,
+      ),
   });
