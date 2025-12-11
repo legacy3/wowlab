@@ -629,7 +629,6 @@ const SupabaseDbcServiceLive = (
         getSpellXDescriptionVariables: (spellId) =>
           spellXDescriptionVariablesCache.get(spellId),
 
-        // Trait System (Talents) - not cached, queried on demand
         getTraitDefinition: (id) =>
           query<Schemas.Dbc.TraitDefinitionRow | undefined>(
             supabase,

@@ -105,7 +105,6 @@ export interface RawDbcData {
   spellTargetRestrictions: Dbc.SpellTargetRestrictionsRow[];
   spellTotems: Dbc.SpellTotemsRow[];
   spellXDescriptionVariables: Dbc.SpellXDescriptionVariablesRow[];
-  // Trait System (Talents)
   traitDefinition: Dbc.TraitDefinitionRow[];
   traitEdge: Dbc.TraitEdgeRow[];
   traitNode: Dbc.TraitNodeRow[];
@@ -163,7 +162,6 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   spellTargetRestrictions: ImmutableMap(rawData.spellTargetRestrictions.map((row) => [row.SpellID, row])),
   spellTotems: groupBySpellId(rawData.spellTotems),
   spellXDescriptionVariables: groupBySpellId(rawData.spellXDescriptionVariables),
-  // Trait System (Talents)
   traitDefinition: ImmutableMap(rawData.traitDefinition.map((row) => [row.ID, row])),
   traitEdge: groupTraitEdgesByTreeId(rawData.traitEdge, rawData.traitNode),
   traitNode: ImmutableMap(rawData.traitNode.map((row) => [row.ID, row])),
@@ -243,10 +241,6 @@ const groupBySpellProcsPerMinuteId = <
   return ImmutableMap(grouped);
 };
 
-// -----------------------------------------------------------------------------
-// Trait System grouping helpers
-// -----------------------------------------------------------------------------
-
 const groupByTraitTreeId = <T extends { TraitTreeID: number }>(
   rows: T[],
 ): ImmutableMap<number, T[]> => {
@@ -300,6 +294,7 @@ const groupTraitEdgesByTreeId = (
   const grouped = new Map<number, Dbc.TraitEdgeRow[]>();
   edges.forEach((edge) => {
     const treeId = nodeToTree.get(edge.LeftTraitNodeID);
+    
     if (treeId !== undefined) {
       const existing = grouped.get(treeId) || [];
       grouped.set(treeId, [...existing, edge]);
