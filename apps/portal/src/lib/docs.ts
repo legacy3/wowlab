@@ -17,7 +17,7 @@ function group(slug: string, title: string, children: DocMeta[]): DocMeta {
 export const docsIndex: DocMeta[] = [
   page("00-overview", "Overview", "What WoWLab is and what you can do with it"),
   group("guides", "Guides", [
-    page("00-rotations", "Writing Rotations", "How to write rotation priority lists"),
+    page("00-writing-rotations", "Writing Rotations", "How to write rotation priority lists"),
     page("01-spec-coverage", "Spec Coverage", "Check which spells are supported for each spec"),
   ]),
   group("reference", "Reference", [
