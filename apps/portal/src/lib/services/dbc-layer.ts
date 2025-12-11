@@ -5,6 +5,12 @@ import * as Layer from "effect/Layer";
 import { ExtractorService } from "@wowlab/services/Data";
 import { RefineDbcService } from "./RefineDbcService";
 
+/**
+ * Creates the DBC layer for the portal using Refine's data provider.
+ *
+ * All queries support automatic batching when used with Effect.forEach({ batching: true }).
+ * Multiple requests are combined into single SQL queries with WHERE ID IN (...).
+ */
 export const createPortalDbcLayer = (
   queryClient: QueryClient,
   dataProvider: DataProvider,
