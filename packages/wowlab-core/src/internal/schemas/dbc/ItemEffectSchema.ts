@@ -9,7 +9,6 @@ export const ItemEffectRowSchema = Schema.Struct({
   CoolDownMSec: Schema.NumberFromString,
   ID: Schema.NumberFromString,
   LegacySlotIndex: Schema.NumberFromString,
-  PlayerConditionID: Schema.NumberFromString,
   SpellCategoryID: Schema.NumberFromString,
   SpellID: Branded.SpellIDSchema,
   TriggerType: Schema.NumberFromString,

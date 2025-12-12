@@ -7,7 +7,6 @@ export const SpellCategoriesRowSchema = Schema.Struct({
   ChargeCategory: Schema.NumberFromString,
   DefenseType: Schema.NumberFromString,
   DifficultyID: Schema.NumberFromString,
-  DiminishType: Schema.NumberFromString,
   DispelType: Schema.NumberFromString,
   ID: Schema.NumberFromString,
   Mechanic: Schema.NumberFromString,
