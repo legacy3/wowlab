@@ -2,6 +2,26 @@ import * as Schema from "effect/Schema";
 
 import * as Branded from "./Branded.js";
 
+export const KnowledgeSourceSchema = Schema.Union(
+  Schema.Struct({
+    source: Schema.Literal("talent"),
+    traitDefinitionId: Schema.Number,
+  }),
+  Schema.Struct({
+    source: Schema.Literal("spec"),
+    specId: Schema.Number,
+  }),
+  Schema.Struct({
+    source: Schema.Literal("class"),
+    classId: Schema.Number,
+  }),
+  Schema.Struct({
+    source: Schema.Literal("unknown"),
+  }),
+);
+
+export type KnowledgeSource = Schema.Schema.Type<typeof KnowledgeSourceSchema>;
+
 export const SpellDataFlatSchema = Schema.Struct({
   // Core
   auraDescription: Schema.String,
@@ -9,6 +29,8 @@ export const SpellDataFlatSchema = Schema.Struct({
   descriptionVariables: Schema.String,
   fileName: Schema.String,
   id: Branded.SpellIDSchema,
+  isPassive: Schema.Boolean,
+  knowledgeSource: KnowledgeSourceSchema,
   name: Schema.String,
 
   // Timing

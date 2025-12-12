@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -17,6 +17,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import { getCoverageColor, getCoverageTextColor } from "@/lib/utils/coverage";
 import {
   useSpecCoverage,
@@ -178,12 +184,54 @@ function SpellListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [hidePassives, setHidePassives] = useState(false);
+
+  const visibleSpells = useMemo(() => {
+    const spells = spec?.spells ?? [];
+    return hidePassives ? spells.filter((s) => !s.isPassive) : spells;
+  }, [spec, hidePassives]);
+
+  const groups = useMemo(() => {
+    const grouped = new Map<
+      "talent" | "spec" | "class" | "unknown",
+      SpecCoverageSpell[]
+    >();
+
+    for (const spell of visibleSpells) {
+      const source = spell.knowledgeSource.source;
+      const existing = grouped.get(source) ?? [];
+      
+      existing.push(spell);
+      grouped.set(source, existing);
+    }
+
+    const ordered: Array<{
+      key: "talent" | "spec" | "class" | "unknown";
+      label: string;
+      spells: SpecCoverageSpell[];
+    }> = [
+      { key: "talent", label: "Talent", spells: grouped.get("talent") ?? [] },
+      { key: "spec", label: "Spec", spells: grouped.get("spec") ?? [] },
+      { key: "class", label: "Class", spells: grouped.get("class") ?? [] },
+      {
+        key: "unknown",
+        label: "Unknown",
+        spells: grouped.get("unknown") ?? [],
+      },
+    ];
+
+    for (const group of ordered) {
+      group.spells.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return ordered;
+  }, [visibleSpells]);
+
   if (!spec) {
     return null;
   }
 
-  const supported = spec.spells.filter((s) => s.supported);
-  const missing = spec.spells.filter((s) => !s.supported);
+  const supportedCount = visibleSpells.filter((s) => s.supported).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -197,50 +245,83 @@ function SpellListDialog({
             {spec.specName} {spec.className}
           </DialogTitle>
           <DialogDescription>
-            {supported.length} of {spec.spells.length} spells supported (
-            {Math.round((supported.length / spec.spells.length) * 100)}%)
+            {supportedCount} of {visibleSpells.length} spells supported (
+            {visibleSpells.length > 0
+              ? Math.round((supportedCount / visibleSpells.length) * 100)
+              : 0}
+            %)
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
           <div className="space-y-4 pr-4">
-            {supported.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-emerald-500 flex items-center gap-1.5 mb-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Supported ({supported.length})
-                </h4>
-                <ul className="space-y-1">
-                  {supported.map((spell) => (
-                    <li
-                      key={spell.id}
-                      className="text-sm flex items-center gap-2"
-                    >
-                      <WowSpellLink spellId={spell.id} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs text-muted-foreground">Hide passives</div>
+              <Switch
+                checked={hidePassives}
+                onCheckedChange={setHidePassives}
+              />
+            </div>
 
-            {missing.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-rose-500 flex items-center gap-1.5 mb-2">
-                  <XCircle className="h-4 w-4" />
-                  Missing ({missing.length})
-                </h4>
-                <ul className="space-y-1">
-                  {missing.map((spell) => (
-                    <li
-                      key={spell.id}
-                      className="text-sm flex items-center gap-2 text-muted-foreground"
-                    >
-                      <WowSpellLink spellId={spell.id} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {groups
+              .filter((g) => g.spells.length > 0)
+              .map((group) => {
+                const groupSupported = group.spells.filter(
+                  (s) => s.supported,
+                ).length;
+
+                return (
+                  <Collapsible
+                    key={group.key}
+                    defaultOpen={group.key !== "unknown"}
+                    className="rounded-md border"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium">
+                            {group.label}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {groupSupported} supported • {group.spells.length}{" "}
+                            total
+                          </div>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent className="px-3 pb-3">
+                      <ul className="space-y-1 pt-1">
+                        {group.spells.map((spell) => (
+                          <li
+                            key={spell.id}
+                            className={cn(
+                              "text-sm flex items-center gap-2",
+                              !spell.supported && "text-muted-foreground",
+                            )}
+                          >
+                            {spell.supported ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-rose-500" />
+                            )}
+                            <WowSpellLink spellId={spell.id} />
+                            {!hidePassives && spell.isPassive && (
+                              <span className="ml-auto text-[11px] uppercase tracking-wide text-muted-foreground">
+                                Passive
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
           </div>
         </ScrollArea>
       </DialogContent>

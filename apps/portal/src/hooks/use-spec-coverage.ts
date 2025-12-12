@@ -106,7 +106,7 @@ export function useSpecCoverage(): UseSpecCoverageResult {
 
       setData(result);
 
-      const allDbcSpellIds = new Set(
+      const allDbcSpellIds = new Set<number>(
         result.classes.flatMap((c) =>
           c.specs.flatMap((s) => s.spells.map((spell) => spell.id)),
         ),

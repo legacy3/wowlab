@@ -1,12 +1,14 @@
 import * as Constants from "@wowlab/core/Constants";
 import { DbcError } from "@wowlab/core/Errors";
-import { Aura, Dbc, Enums } from "@wowlab/core/Schemas";
+import { Aura, Dbc, Enums, Spell } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
+import * as Ref from "effect/Ref";
 
 import { DbcService } from "../dbc/DbcService.js";
 import { SpecCoverageProgressService } from "../SpecCoverageProgress.js";
+import { transformSpellWith } from "./spell-impl.js";
 
 const first = <T>(array?: readonly T[]): Option.Option<T> =>
   array?.[0] ? Option.some(array[0]) : Option.none();
@@ -859,16 +861,16 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             specs: Array<{
               id: number;
               name: string;
-              spells: Array<{
-                id: number;
-                name: string;
-                supported: boolean;
-              }>;
+              spells: Array<
+                {
+                  supported: boolean;
+                } & Spell.SpellDataFlat
+              >;
             }>;
           }>;
         },
         DbcError,
-        SpecCoverageProgressService
+        SpecCoverageProgressService | ExtractorService
       > =>
         Effect.gen(function* () {
           const progressService = yield* SpecCoverageProgressService;
@@ -901,61 +903,185 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           }
 
           const totalSpecs = validSpecs.length;
+          const loadedCount = yield* Ref.make(0);
 
           const allSpecSpellsResults = yield* Effect.forEach(
             validSpecs,
-            (spec) => extractSpellsForSpec(spec.ID),
+            (spec) => dbcService.getSpecializationSpells(spec.ID),
             { batching: true },
           );
 
-          const specSpellsMap = new Map<
-            number,
-            Array<{ spellId: number; spellName: string }>
-          >();
-
+          const specSpellIdsMap = new Map<number, ReadonlyArray<number>>();
           for (let i = 0; i < validSpecs.length; i++) {
-            specSpellsMap.set(validSpecs[i].ID, allSpecSpellsResults[i]);
+            const ids = allSpecSpellsResults[i]
+              .map((row) => row.SpellID)
+              .filter((id) => id > 0);
+            specSpellIdsMap.set(validSpecs[i].ID, [...new Set(ids)]);
           }
 
           yield* progressService.publish({
             className: "All",
-            loaded: totalSpecs,
+            loaded: 0,
             specName: "All",
             total: totalSpecs,
           });
 
-          const classes = validClasses.map((cls) => {
-            const r = cls.ClassColorR ?? 128;
-            const g = cls.ClassColorG ?? 128;
-            const b = cls.ClassColorB ?? 128;
-            const color = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+          const buildTalentSpellIdToTraitDefinitionId = (
+            specId: number,
+          ): Effect.Effect<ReadonlyMap<number, number>, DbcError> =>
+            Effect.gen(function* () {
+              const loadout = yield* dbcService.getTraitTreeLoadout(specId);
+              if (!loadout) {
+                return new Map();
+              }
 
-            const classSpecs = specsByClass.get(cls.ID) ?? [];
-            classSpecs.sort(
-              (a, b) => (a.OrderIndex ?? 0) - (b.OrderIndex ?? 0),
-            );
+              const treeNodes = yield* dbcService.getTraitNodesForTree(
+                loadout.TraitTreeID,
+              );
 
-            const specs = classSpecs.map((spec) => {
-              const spellsForSpec = specSpellsMap.get(spec.ID) ?? [];
+              const allNodeXEntries = yield* Effect.forEach(
+                treeNodes,
+                (node) => dbcService.getTraitNodeXTraitNodeEntries(node.ID),
+                { batching: true },
+              );
 
-              return {
-                id: spec.ID,
-                name: spec.Name_lang!,
-                spells: spellsForSpec.map((s) => ({
-                  id: s.spellId,
-                  name: s.spellName,
-                  supported: supportedSpellIds.has(s.spellId),
-                })),
-              };
+              const allEntryIds = allNodeXEntries
+                .flat()
+                .map((x) => x.TraitNodeEntryID);
+
+              const allEntries = yield* Effect.forEach(
+                allEntryIds,
+                (entryId) => dbcService.getTraitNodeEntry(entryId),
+                { batching: true },
+              );
+
+              const definitionIds = [
+                ...new Set(
+                  allEntries
+                    .filter((e): e is NonNullable<typeof e> => e != null)
+                    .map((e) => e.TraitDefinitionID),
+                ),
+              ];
+
+              const definitions = yield* Effect.forEach(
+                definitionIds,
+                (defId) => dbcService.getTraitDefinition(defId),
+                { batching: true },
+              );
+
+              const map = new Map<number, number>();
+              for (const def of definitions) {
+                if (def && def.SpellID > 0) {
+                  map.set(def.SpellID, def.ID);
+                }
+              }
+
+              return map;
             });
 
-            return {
-              color,
-              id: cls.ID,
-              name: cls.Name_lang!,
-              specs,
-            };
-          });
+          const classes = yield* Effect.forEach(
+            validClasses,
+            (cls) =>
+              Effect.gen(function* () {
+                const r = cls.ClassColorR ?? 128;
+                const g = cls.ClassColorG ?? 128;
+                const b = cls.ClassColorB ?? 128;
+                const color = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+
+                const classSpecs = specsByClass.get(cls.ID) ?? [];
+                classSpecs.sort(
+                  (a, b) => (a.OrderIndex ?? 0) - (b.OrderIndex ?? 0),
+                );
+
+                const classSpellIds = (() => {
+                  const firstSpec = classSpecs[0];
+                  if (!firstSpec) {
+                    return new Set<number>();
+                  }
+
+                  const intersection = new Set<number>(
+                    specSpellIdsMap.get(firstSpec.ID) ?? [],
+                  );
+
+                  for (const spec of classSpecs.slice(1)) {
+                    const spellIds = new Set<number>(
+                      specSpellIdsMap.get(spec.ID) ?? [],
+                    );
+
+                    for (const id of intersection) {
+                      if (!spellIds.has(id)) {
+                        intersection.delete(id);
+                      }
+                    }
+                  }
+
+                  return intersection;
+                })();
+
+                const specs = yield* Effect.forEach(
+                  classSpecs,
+                  (spec) =>
+                    Effect.gen(function* () {
+                      const spellIdsForSpec =
+                        specSpellIdsMap.get(spec.ID) ?? [];
+
+                      const extractor = yield* ExtractorService;
+
+                      const talentSpellIdToTraitDefinitionId =
+                        yield* buildTalentSpellIdToTraitDefinitionId(spec.ID);
+
+                      const spellsResults = yield* Effect.forEach(
+                        spellIdsForSpec,
+                        (spellId) =>
+                          transformSpellWith(dbcService, extractor, spellId, {
+                            classId: cls.ID,
+                            classSpellIds,
+                            specId: spec.ID,
+                            talentSpellIdToTraitDefinitionId,
+                          }).pipe(
+                            Effect.map((spell) => ({
+                              ...spell,
+                              supported: supportedSpellIds.has(spellId),
+                            })),
+                            Effect.orElseSucceed(() => null),
+                          ),
+                        { batching: true },
+                      );
+
+                      const spells = spellsResults
+                        .filter((s): s is NonNullable<typeof s> => s != null)
+                        .sort((a, b) => a.name.localeCompare(b.name));
+
+                      const loaded = yield* Ref.updateAndGet(
+                        loadedCount,
+                        (n) => n + 1,
+                      );
+
+                      yield* progressService.publish({
+                        className: cls.Name_lang!,
+                        loaded,
+                        specName: spec.Name_lang!,
+                        total: totalSpecs,
+                      });
+
+                      return {
+                        id: spec.ID,
+                        name: spec.Name_lang!,
+                        spells,
+                      };
+                    }),
+                  { batching: true },
+                );
+
+                return {
+                  color,
+                  id: cls.ID,
+                  name: cls.Name_lang!,
+                  specs,
+                };
+              }),
+            { batching: true },
+          );
 
           // Sort classes by ID
           classes.sort((a, b) => a.id - b.id);

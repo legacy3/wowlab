@@ -1,10 +1,7 @@
 import type { HandlerInfo } from "@wowlab/specs/Shared";
+import type { Spell } from "@wowlab/core/Schemas";
 
-export interface SpecCoverageSpell {
-  id: number;
-  name: string;
-  supported: boolean;
-}
+export type SpecCoverageSpell = Spell.SpellDataFlat & { supported: boolean };
 
 export interface SpecCoverageSpec {
   id: number;

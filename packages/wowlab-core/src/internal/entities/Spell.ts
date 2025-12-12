@@ -22,6 +22,8 @@ const SpellInfoRecord = Record<SpellInfoProps>({
   descriptionVariables: "",
   fileName: "inv_misc_questionmark",
   id: Branded.SpellID(-1),
+  isPassive: false,
+  knowledgeSource: { source: "unknown" },
   name: "",
 
   // Timing
