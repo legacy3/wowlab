@@ -232,4 +232,12 @@ export default [
       ...baseTypeScriptRules,
     },
   },
+
+  // DBC schema files - preserve CSV column order
+  {
+    files: ["**/schemas/dbc/*Schema.ts"],
+    rules: {
+      "perfectionist/sort-objects": "off",
+    },
+  },
 ];

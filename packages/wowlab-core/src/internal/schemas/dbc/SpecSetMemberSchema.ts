@@ -1,8 +1,8 @@
 import * as Schema from "effect/Schema";
 
 export const SpecSetMemberRowSchema = Schema.Struct({
-  ChrSpecializationID: Schema.NumberFromString,
   ID: Schema.NumberFromString,
+  ChrSpecializationID: Schema.NumberFromString,
   SpecSet: Schema.NumberFromString,
 });
 

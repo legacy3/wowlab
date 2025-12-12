@@ -1,13 +1,13 @@
 import * as Schema from "effect/Schema";
 
 export const TraitDefinitionRowSchema = Schema.Struct({
-  ID: Schema.NumberFromString,
-  OverrideDescription_lang: Schema.NullOr(Schema.String),
-  OverrideIcon: Schema.NumberFromString,
   OverrideName_lang: Schema.NullOr(Schema.String),
-  OverridesSpellID: Schema.NumberFromString,
   OverrideSubtext_lang: Schema.NullOr(Schema.String),
+  OverrideDescription_lang: Schema.NullOr(Schema.String),
+  ID: Schema.NumberFromString,
   SpellID: Schema.NumberFromString,
+  OverrideIcon: Schema.NumberFromString,
+  OverridesSpellID: Schema.NumberFromString,
   VisibleSpellID: Schema.NumberFromString,
 });
 

@@ -1,10 +1,10 @@
 import * as Schema from "effect/Schema";
 
 export const SpellEmpowerStageRowSchema = Schema.Struct({
-  DurationMs: Schema.NumberFromString,
   ID: Schema.NumberFromString,
-  SpellEmpowerID: Schema.NumberFromString,
   Stage: Schema.NumberFromString,
+  DurationMs: Schema.NumberFromString,
+  SpellEmpowerID: Schema.NumberFromString,
 });
 
 export type SpellEmpowerStageRow = Schema.Schema.Type<
