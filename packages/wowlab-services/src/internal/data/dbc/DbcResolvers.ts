@@ -1,4 +1,5 @@
 import type * as Schemas from "@wowlab/core/Schemas";
+
 import { DbcError } from "@wowlab/core/Errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -80,73 +81,35 @@ export interface DbcBatchFetcherInterface {
   readonly fetchItemEffectsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemEffectRow>, DbcError>;
-  readonly fetchItemSparsesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSparseRow>, DbcError>;
+  // By ItemID (FK, single result)
+  readonly fetchItemModifiedAppearancesByItemIds: (
+    itemIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemModifiedAppearanceRow>,
+    DbcError
+  >;
   readonly fetchItemsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemRow>, DbcError>;
+  readonly fetchItemSparsesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSparseRow>, DbcError>;
+  // By FK (array results)
+  readonly fetchItemXItemEffectsByItemIds: (
+    itemIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
   readonly fetchManifestInterfaceDataByIds: (
     ids: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.ManifestInterfaceDataRow>,
     DbcError
   >;
-  readonly fetchSpellCastTimesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCastTimesRow>, DbcError>;
-  readonly fetchSpellCategoriesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCategoryRow>, DbcError>;
-  readonly fetchSpellDescriptionVariablesByIds: (
-    ids: readonly number[],
+  readonly fetchSpecializationSpellsBySpecIds: (
+    specIds: readonly number[],
   ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellDescriptionVariablesRow>,
+    ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
     DbcError
   >;
-  readonly fetchSpellDurationsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellDurationRow>, DbcError>;
-  readonly fetchSpellNamesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellNameRow>, DbcError>;
-  readonly fetchSpellProcsPerMinuteByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteRow>,
-    DbcError
-  >;
-  readonly fetchSpellRadiusByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRadiusRow>, DbcError>;
-  readonly fetchSpellRangesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRangeRow>, DbcError>;
-  readonly fetchSpellShapeshiftFormsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellShapeshiftFormRow>,
-    DbcError
-  >;
-  readonly fetchSpellsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRow>, DbcError>;
-  readonly fetchTraitDefinitionsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
-  readonly fetchTraitNodeEntriesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeEntryRow>, DbcError>;
-  readonly fetchTraitNodesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
-  readonly fetchTraitSubTreesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitSubTreeRow>, DbcError>;
-  readonly fetchTraitTreesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
-
   // By SpellID (FK, single result)
   readonly fetchSpellAuraOptionsBySpellIds: (
     spellIds: readonly number[],
@@ -163,6 +126,12 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.SpellCastingRequirementsRow>,
     DbcError
   >;
+  readonly fetchSpellCastTimesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCastTimesRow>, DbcError>;
+  readonly fetchSpellCategoriesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCategoryRow>, DbcError>;
   readonly fetchSpellCategoriesBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCategoriesRow>, DbcError>;
@@ -172,65 +141,82 @@ export interface DbcBatchFetcherInterface {
   readonly fetchSpellCooldownsBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCooldownsRow>, DbcError>;
-  readonly fetchSpellEmpowerBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerRow>, DbcError>;
-  readonly fetchSpellInterruptsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellInterruptsRow>, DbcError>;
-  readonly fetchSpellMiscBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellMiscRow>, DbcError>;
-  readonly fetchSpellReplacementBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellReplacementRow>, DbcError>;
-  readonly fetchSpellShapeshiftBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellShapeshiftRow>, DbcError>;
-  readonly fetchSpellTargetRestrictionsBySpellIds: (
-    spellIds: readonly number[],
+  readonly fetchSpellDescriptionVariablesByIds: (
+    ids: readonly number[],
   ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellTargetRestrictionsRow>,
+    ReadonlyArray<Schemas.Dbc.SpellDescriptionVariablesRow>,
     DbcError
   >;
-
-  // By ItemID (FK, single result)
-  readonly fetchItemModifiedAppearancesByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemModifiedAppearanceRow>,
-    DbcError
-  >;
-
-  // By FK (array results)
-  readonly fetchItemXItemEffectsByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
-  readonly fetchSpecializationSpellsBySpecIds: (
-    specIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
-    DbcError
-  >;
+  readonly fetchSpellDurationsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellDurationRow>, DbcError>;
   readonly fetchSpellEffectsBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEffectRow>, DbcError>;
+  readonly fetchSpellEmpowerBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerRow>, DbcError>;
+
   readonly fetchSpellEmpowerStagesByEmpowerIds: (
     empowerIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerStageRow>, DbcError>;
+  readonly fetchSpellInterruptsBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellInterruptsRow>, DbcError>;
   readonly fetchSpellLearnSpellBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLearnSpellRow>, DbcError>;
   readonly fetchSpellLevelsBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLevelsRow>, DbcError>;
+  readonly fetchSpellMiscBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellMiscRow>, DbcError>;
+  readonly fetchSpellNamesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellNameRow>, DbcError>;
   readonly fetchSpellPowerBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellPowerRow>, DbcError>;
+  readonly fetchSpellProcsPerMinuteByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteRow>,
+    DbcError
+  >;
   readonly fetchSpellProcsPerMinuteModsByPpmIds: (
     ppmIds: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteModRow>,
+    DbcError
+  >;
+  readonly fetchSpellRadiusByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRadiusRow>, DbcError>;
+  readonly fetchSpellRangesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRangeRow>, DbcError>;
+  readonly fetchSpellReplacementBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellReplacementRow>, DbcError>;
+
+  readonly fetchSpellsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRow>, DbcError>;
+
+  readonly fetchSpellShapeshiftBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellShapeshiftRow>, DbcError>;
+  readonly fetchSpellShapeshiftFormsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpellShapeshiftFormRow>,
+    DbcError
+  >;
+  readonly fetchSpellTargetRestrictionsBySpellIds: (
+    spellIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.SpellTargetRestrictionsRow>,
     DbcError
   >;
   readonly fetchSpellTotemsBySpellIds: (
@@ -242,12 +228,21 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
     DbcError
   >;
+  readonly fetchTraitDefinitionsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
   readonly fetchTraitEdgesByTreeIds: (
     treeIds: readonly number[],
   ) => Effect.Effect<
     ReadonlyMap<number, ReadonlyArray<Schemas.Dbc.TraitEdgeRow>>,
     DbcError
   >;
+  readonly fetchTraitNodeEntriesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeEntryRow>, DbcError>;
+  readonly fetchTraitNodesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
   readonly fetchTraitNodesByTreeIds: (
     treeIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
@@ -257,6 +252,9 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>,
     DbcError
   >;
+  readonly fetchTraitSubTreesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitSubTreeRow>, DbcError>;
   readonly fetchTraitTreeLoadoutEntriesByLoadoutIds: (
     loadoutIds: readonly number[],
   ) => Effect.Effect<
@@ -266,6 +264,9 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitTreeLoadoutsBySpecIds: (
     specIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutRow>, DbcError>;
+  readonly fetchTraitTreesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
 }
 
 export class DbcBatchFetcher extends Context.Tag(
@@ -455,21 +456,60 @@ export interface DbcResolversInterface {
     GetItemEffect,
     never
   >;
+  // By ItemID (FK, single result)
+  readonly itemModifiedAppearanceResolver: RequestResolver.RequestResolver<
+    GetItemModifiedAppearance,
+    never
+  >;
   readonly itemResolver: RequestResolver.RequestResolver<GetItem, never>;
   readonly itemSparseResolver: RequestResolver.RequestResolver<
     GetItemSparse,
+    never
+  >;
+  // By FK (array results)
+  readonly itemXItemEffectsResolver: RequestResolver.RequestResolver<
+    GetItemXItemEffects,
     never
   >;
   readonly manifestInterfaceDataResolver: RequestResolver.RequestResolver<
     GetManifestInterfaceData,
     never
   >;
+  readonly specializationSpellsResolver: RequestResolver.RequestResolver<
+    GetSpecializationSpells,
+    never
+  >;
+  // By SpellID (FK, single result)
+  readonly spellAuraOptionsResolver: RequestResolver.RequestResolver<
+    GetSpellAuraOptions,
+    never
+  >;
+  readonly spellAuraRestrictionsResolver: RequestResolver.RequestResolver<
+    GetSpellAuraRestrictions,
+    never
+  >;
+  readonly spellCastingRequirementsResolver: RequestResolver.RequestResolver<
+    GetSpellCastingRequirements,
+    never
+  >;
   readonly spellCastTimesResolver: RequestResolver.RequestResolver<
     GetSpellCastTimes,
     never
   >;
+  readonly spellCategoriesResolver: RequestResolver.RequestResolver<
+    GetSpellCategories,
+    never
+  >;
   readonly spellCategoryResolver: RequestResolver.RequestResolver<
     GetSpellCategory,
+    never
+  >;
+  readonly spellClassOptionsResolver: RequestResolver.RequestResolver<
+    GetSpellClassOptions,
+    never
+  >;
+  readonly spellCooldownsResolver: RequestResolver.RequestResolver<
+    GetSpellCooldowns,
     never
   >;
   readonly spellDescriptionVariablesResolver: RequestResolver.RequestResolver<
@@ -480,8 +520,45 @@ export interface DbcResolversInterface {
     GetSpellDuration,
     never
   >;
+  readonly spellEffectsResolver: RequestResolver.RequestResolver<
+    GetSpellEffects,
+    never
+  >;
+  readonly spellEmpowerResolver: RequestResolver.RequestResolver<
+    GetSpellEmpower,
+    never
+  >;
+
+  readonly spellEmpowerStagesResolver: RequestResolver.RequestResolver<
+    GetSpellEmpowerStages,
+    never
+  >;
+  readonly spellInterruptsResolver: RequestResolver.RequestResolver<
+    GetSpellInterrupts,
+    never
+  >;
+  readonly spellLearnSpellResolver: RequestResolver.RequestResolver<
+    GetSpellLearnSpell,
+    never
+  >;
+  readonly spellLevelsResolver: RequestResolver.RequestResolver<
+    GetSpellLevels,
+    never
+  >;
+  readonly spellMiscResolver: RequestResolver.RequestResolver<
+    GetSpellMisc,
+    never
+  >;
   readonly spellNameResolver: RequestResolver.RequestResolver<
     GetSpellName,
+    never
+  >;
+  readonly spellPowerResolver: RequestResolver.RequestResolver<
+    GetSpellPower,
+    never
+  >;
+  readonly spellProcsPerMinuteModsResolver: RequestResolver.RequestResolver<
+    GetSpellProcsPerMinuteMods,
     never
   >;
   readonly spellProcsPerMinuteResolver: RequestResolver.RequestResolver<
@@ -496,71 +573,15 @@ export interface DbcResolversInterface {
     GetSpellRange,
     never
   >;
-  readonly spellResolver: RequestResolver.RequestResolver<GetSpell, never>;
-  readonly spellShapeshiftFormResolver: RequestResolver.RequestResolver<
-    GetSpellShapeshiftForm,
-    never
-  >;
-  readonly traitDefinitionResolver: RequestResolver.RequestResolver<
-    GetTraitDefinition,
-    never
-  >;
-  readonly traitNodeEntryResolver: RequestResolver.RequestResolver<
-    GetTraitNodeEntry,
-    never
-  >;
-  readonly traitNodeResolver: RequestResolver.RequestResolver<
-    GetTraitNode,
-    never
-  >;
-  readonly traitSubTreeResolver: RequestResolver.RequestResolver<
-    GetTraitSubTree,
-    never
-  >;
-  readonly traitTreeResolver: RequestResolver.RequestResolver<
-    GetTraitTree,
+  readonly spellReplacementResolver: RequestResolver.RequestResolver<
+    GetSpellReplacement,
     never
   >;
 
-  // By SpellID (FK, single result)
-  readonly spellAuraOptionsResolver: RequestResolver.RequestResolver<
-    GetSpellAuraOptions,
-    never
-  >;
-  readonly spellAuraRestrictionsResolver: RequestResolver.RequestResolver<
-    GetSpellAuraRestrictions,
-    never
-  >;
-  readonly spellCastingRequirementsResolver: RequestResolver.RequestResolver<
-    GetSpellCastingRequirements,
-    never
-  >;
-  readonly spellCategoriesResolver: RequestResolver.RequestResolver<
-    GetSpellCategories,
-    never
-  >;
-  readonly spellClassOptionsResolver: RequestResolver.RequestResolver<
-    GetSpellClassOptions,
-    never
-  >;
-  readonly spellCooldownsResolver: RequestResolver.RequestResolver<
-    GetSpellCooldowns,
-    never
-  >;
-  readonly spellEmpowerResolver: RequestResolver.RequestResolver<
-    GetSpellEmpower,
-    never
-  >;
-  readonly spellInterruptsResolver: RequestResolver.RequestResolver<
-    GetSpellInterrupts,
-    never
-  >;
-  readonly spellMiscResolver: RequestResolver.RequestResolver<
-    GetSpellMisc,
-    never
-  >;
-  readonly spellReplacementResolver: RequestResolver.RequestResolver<
-    GetSpellReplacement,
+  readonly spellResolver: RequestResolver.RequestResolver<GetSpell, never>;
+
+  readonly spellShapeshiftFormResolver: RequestResolver.RequestResolver<
+    GetSpellShapeshiftForm,
     never
   >;
   readonly spellShapeshiftResolver: RequestResolver.RequestResolver<
@@ -571,46 +592,6 @@ export interface DbcResolversInterface {
     GetSpellTargetRestrictions,
     never
   >;
-
-  // By ItemID (FK, single result)
-  readonly itemModifiedAppearanceResolver: RequestResolver.RequestResolver<
-    GetItemModifiedAppearance,
-    never
-  >;
-
-  // By FK (array results)
-  readonly itemXItemEffectsResolver: RequestResolver.RequestResolver<
-    GetItemXItemEffects,
-    never
-  >;
-  readonly specializationSpellsResolver: RequestResolver.RequestResolver<
-    GetSpecializationSpells,
-    never
-  >;
-  readonly spellEffectsResolver: RequestResolver.RequestResolver<
-    GetSpellEffects,
-    never
-  >;
-  readonly spellEmpowerStagesResolver: RequestResolver.RequestResolver<
-    GetSpellEmpowerStages,
-    never
-  >;
-  readonly spellLearnSpellResolver: RequestResolver.RequestResolver<
-    GetSpellLearnSpell,
-    never
-  >;
-  readonly spellLevelsResolver: RequestResolver.RequestResolver<
-    GetSpellLevels,
-    never
-  >;
-  readonly spellPowerResolver: RequestResolver.RequestResolver<
-    GetSpellPower,
-    never
-  >;
-  readonly spellProcsPerMinuteModsResolver: RequestResolver.RequestResolver<
-    GetSpellProcsPerMinuteMods,
-    never
-  >;
   readonly spellTotemsResolver: RequestResolver.RequestResolver<
     GetSpellTotems,
     never
@@ -619,8 +600,20 @@ export interface DbcResolversInterface {
     GetSpellXDescriptionVariables,
     never
   >;
+  readonly traitDefinitionResolver: RequestResolver.RequestResolver<
+    GetTraitDefinition,
+    never
+  >;
   readonly traitEdgesForTreeResolver: RequestResolver.RequestResolver<
     GetTraitEdgesForTree,
+    never
+  >;
+  readonly traitNodeEntryResolver: RequestResolver.RequestResolver<
+    GetTraitNodeEntry,
+    never
+  >;
+  readonly traitNodeResolver: RequestResolver.RequestResolver<
+    GetTraitNode,
     never
   >;
   readonly traitNodesForTreeResolver: RequestResolver.RequestResolver<
@@ -631,12 +624,20 @@ export interface DbcResolversInterface {
     GetTraitNodeXTraitNodeEntries,
     never
   >;
+  readonly traitSubTreeResolver: RequestResolver.RequestResolver<
+    GetTraitSubTree,
+    never
+  >;
   readonly traitTreeLoadoutEntriesResolver: RequestResolver.RequestResolver<
     GetTraitTreeLoadoutEntries,
     never
   >;
   readonly traitTreeLoadoutResolver: RequestResolver.RequestResolver<
     GetTraitTreeLoadout,
+    never
+  >;
+  readonly traitTreeResolver: RequestResolver.RequestResolver<
+    GetTraitTree,
     never
   >;
 }

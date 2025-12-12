@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export function useJsonExport<TData, TPayload = unknown>({
   data,
@@ -8,6 +8,7 @@ export function useJsonExport<TData, TPayload = unknown>({
   filenameTag,
   patchVersion,
   buildPayload,
+  resetKey,
 }: {
   data: TData | null | undefined;
   filenamePrefix: string;
@@ -18,8 +19,13 @@ export function useJsonExport<TData, TPayload = unknown>({
     exportedAt: string;
     patchVersion: string;
   }) => TPayload;
+  resetKey?: string | number | null;
 }) {
   const exportedAtRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    exportedAtRef.current = null;
+  }, [resetKey]);
 
   const exportedAt = useMemo(() => {
     if (!data) {

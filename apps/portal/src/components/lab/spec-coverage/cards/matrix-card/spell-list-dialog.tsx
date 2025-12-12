@@ -2,25 +2,20 @@
 
 import { useMemo, useState } from "react";
 import {
-  Loader2,
   CheckCircle2,
-  XCircle,
   ChevronDown,
+  Download,
   Search,
+  XCircle,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -31,160 +26,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { getCoverageColor, getCoverageTextColor } from "@/lib/utils/coverage";
-import {
-  useSpecCoverage,
-  type SpecCoverageClass,
-  type SpecCoverageSpell,
-} from "@/hooks/use-spec-coverage";
-import { calculateCoverage, getCounts } from "@/lib/spec-coverage";
+import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { WowSpellLink } from "@/components/game";
 import { GithubSearchLink } from "@/components/shared/github-search-link";
+import { useJsonExport } from "@/hooks/use-json-export";
+import { GAME_CONFIG } from "@/lib/config/game";
 
-interface SelectedSpec {
-  className: string;
-  classColor: string;
-  specName: string;
-  spells: SpecCoverageSpell[];
-}
+import type { SpecCoverageSpell } from "@/hooks/use-spec-coverage";
+import type { SelectedSpec } from "./types";
 
-interface SpecCellProps {
-  spec: {
-    id: number;
-    name: string;
-    spells: SpecCoverageSpell[];
-  };
-  className: string;
-  classColor: string;
-  onSelect: (spec: SelectedSpec) => void;
-}
-
-function SpecCell({ spec, className, classColor, onSelect }: SpecCellProps) {
-  const coverage = calculateCoverage(spec.spells);
-  const counts = getCounts(spec.spells);
-
-  return (
-    <TooltipProvider>
-      <Tooltip delayDuration={100}>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() =>
-              onSelect({
-                className,
-                classColor,
-                specName: spec.name,
-                spells: spec.spells,
-              })
-            }
-            className={cn(
-              "flex h-8 w-full cursor-pointer items-center justify-center rounded-sm transition-all hover:scale-105 hover:brightness-110",
-              getCoverageColor(coverage),
-              "text-white font-medium text-xs",
-            )}
-          >
-            <span className="hidden sm:inline">{coverage}%</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="p-3">
-          <div className="space-y-2">
-            <div className="font-semibold">
-              {spec.name} {className}
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              <span className="opacity-70">Coverage</span>
-              <span className="font-semibold text-right">{coverage}%</span>
-              <span className="opacity-70">Supported</span>
-              <span className="font-medium text-right">{counts.supported}</span>
-              <span className="opacity-70">Missing</span>
-              <span className="font-medium text-right">
-                {counts.total - counts.supported}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground pt-1">
-              Click to view spells
-            </p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
-interface ClassRowProps {
-  cls: SpecCoverageClass;
-  maxSpecs: number;
-  onSelectSpec: (spec: SelectedSpec) => void;
-}
-
-function ClassRow({ cls, maxSpecs, onSelectSpec }: ClassRowProps) {
-  const allSpells = cls.specs.flatMap((s) => s.spells);
-  const classCoverage = calculateCoverage(allSpells);
-
-  return (
-    <div className="flex items-center gap-1.5">
-      {/* Class name column */}
-      <div className="flex w-28 shrink-0 items-center gap-1.5">
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: cls.color }}
-        />
-        <span className="truncate text-xs font-medium">{cls.name}</span>
-      </div>
-
-      {/* Class total */}
-      <div
-        className={cn(
-          "w-10 shrink-0 text-center text-xs font-semibold tabular-nums",
-          getCoverageTextColor(classCoverage),
-        )}
-      >
-        {classCoverage}%
-      </div>
-
-      {/* Spec cells */}
-      <div className="flex flex-1 gap-2">
-        {cls.specs.map((spec) => (
-          <div key={spec.id} className="flex-1 min-w-[40px] p-0.5">
-            <SpecCell
-              spec={spec}
-              className={cls.name}
-              classColor={cls.color}
-              onSelect={onSelectSpec}
-            />
-          </div>
-        ))}
-        {/* Empty cells for alignment */}
-        {Array.from({ length: maxSpecs - cls.specs.length }).map((_, i) => (
-          <div key={`empty-${i}`} className="flex-1 min-w-[40px] p-0.5" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Legend() {
-  const items = [
-    { color: "bg-rose-500", label: "0-30" },
-    { color: "bg-amber-500", label: "30-50" },
-    { color: "bg-amber-400", label: "50-70" },
-    { color: "bg-emerald-400", label: "70-90" },
-    { color: "bg-emerald-500", label: "90+" },
-  ];
-
-  return (
-    <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-wide opacity-70">
-      {items.map(({ color, label }) => (
-        <div key={label} className="flex items-center gap-1">
-          <span className={cn("h-3 w-3 rounded-sm", color)} />
-          <span>{label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SpellListDialog({
+export function SpellListDialog({
   spec,
   open,
   onOpenChange,
@@ -263,6 +115,35 @@ function SpellListDialog({
     return ordered;
   }, [visibleSpells]);
 
+  const exportData = useMemo(
+    () =>
+      spec
+        ? {
+            classColor: spec.classColor,
+            classId: spec.classId,
+            className: spec.className,
+            filters: {
+              hidePassives,
+              search,
+              status: statusFilter,
+            },
+            specId: spec.specId,
+            specName: spec.specName,
+            spells: spec.spells,
+            visibleSpellIds: visibleSpells.map((s) => s.id),
+          }
+        : null,
+    [spec, hidePassives, search, statusFilter, visibleSpells],
+  );
+
+  const { exportJson, downloadJson } = useJsonExport({
+    data: exportData,
+    filenamePrefix: "spec-coverage-spec",
+    filenameTag: spec ? String(spec.specId) : undefined,
+    patchVersion: GAME_CONFIG.patchVersion,
+    resetKey: spec ? spec.specId : null,
+  });
+
   if (!spec) {
     return null;
   }
@@ -273,12 +154,30 @@ function SpellListDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[calc(100vw-4rem)] md:max-w-[1200px] lg:max-w-[1400px] h-[90vh] grid-rows-[auto_1fr] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: spec.classColor }}
-            />
-            {spec.specName} {spec.className}
+          <DialogTitle className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="h-3 w-3 rounded-full shrink-0"
+                style={{ backgroundColor: spec.classColor }}
+              />
+              <span className="truncate">
+                {spec.specName} {spec.className}
+              </span>
+            </div>
+            {exportJson && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <CopyButton value={exportJson} />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  onClick={downloadJson}
+                  title="Download spec coverage JSON"
+                >
+                  <Download />
+                </Button>
+              </div>
+            )}
           </DialogTitle>
           <DialogDescription>
             {supportedCount} of {visibleSpells.length} spells supported (
@@ -365,7 +264,7 @@ function SpellListDialog({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="px-3 pb-3">
-                      <ul className="pt-1 columns-1 sm:columns-2 lg:columns-3 [column-gap:1.5rem]">
+                      <ul className="pt-1 columns-1 sm:columns-2 lg:columns-3 gap-x-6">
                         {group.spells.map((spell) => (
                           <li
                             key={spell.id}
@@ -409,71 +308,5 @@ function SpellListDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-}
-
-export function CoverageMatrix() {
-  const { data, loading, error } = useSpecCoverage();
-  const [selectedSpec, setSelectedSpec] = useState<SelectedSpec | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const maxSpecs = useMemo(() => {
-    if (!data) {
-      return 0;
-    }
-    return Math.max(...data.classes.map((cls) => cls.specs.length));
-  }, [data]);
-
-  const handleSelectSpec = (spec: SelectedSpec) => {
-    setSelectedSpec(spec);
-    setDialogOpen(true);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">
-          Loading coverage matrix...
-        </span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <p className="text-sm text-destructive">Error: {error}</p>;
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  return (
-    <>
-      <div className="space-y-3">
-        {/* Legend */}
-        <div className="flex justify-end">
-          <Legend />
-        </div>
-
-        {/* Rows */}
-        <div className="space-y-1">
-          {data.classes.map((cls) => (
-            <ClassRow
-              key={cls.id}
-              cls={cls}
-              maxSpecs={maxSpecs}
-              onSelectSpec={handleSelectSpec}
-            />
-          ))}
-        </div>
-      </div>
-
-      <SpellListDialog
-        spec={selectedSpec}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
-    </>
   );
 }

@@ -73,20 +73,20 @@ export const transformAura = (
     );
 
     return {
-      spellId: Branded.SpellID(spellId),
       baseDurationMs: Option.isSome(durationOpt)
         ? durationOpt.value.duration
         : 0,
-      maxDurationMs: Option.isSome(durationOpt) ? durationOpt.value.max : 0,
-      maxStacks: auraOptions?.CumulativeAura ? auraOptions.CumulativeAura : 1,
-      periodicType: periodicInfo.periodicType,
-      tickPeriodMs: periodicInfo.tickPeriodMs,
-      refreshBehavior,
       durationHasted: auraFlags.durationHasted,
       hastedTicks: auraFlags.hastedTicks,
+      maxDurationMs: Option.isSome(durationOpt) ? durationOpt.value.max : 0,
+      maxStacks: auraOptions?.CumulativeAura ? auraOptions.CumulativeAura : 1,
       pandemicRefresh: auraFlags.pandemicRefresh,
+      periodicType: periodicInfo.periodicType,
+      refreshBehavior,
       rollingPeriodic: auraFlags.rollingPeriodic,
+      spellId: Branded.SpellID(spellId),
       tickMayCrit: auraFlags.tickMayCrit,
       tickOnApplication: auraFlags.tickOnApplication,
+      tickPeriodMs: periodicInfo.tickPeriodMs,
     };
   });

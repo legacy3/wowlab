@@ -184,6 +184,7 @@ export function EventLogContent() {
     filenamePrefix: "event-log",
     filenameTag: jobId,
     patchVersion: GAME_CONFIG.patchVersion,
+    resetKey: jobId,
   });
 
   const categories: (EventCategory | "all")[] = [
@@ -261,7 +262,7 @@ export function EventLogContent() {
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow>
-                  <TableHead className="w-[80px]">Time</TableHead>
+                  <TableHead className="w-20">Time</TableHead>
                   <TableHead className="w-[100px]">Category</TableHead>
                   <TableHead className="w-[180px]">Event</TableHead>
                   <TableHead>Spell</TableHead>

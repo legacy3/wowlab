@@ -1,4 +1,5 @@
 import type * as Schemas from "@wowlab/core/Schemas";
+
 import { DbcError } from "@wowlab/core/Errors";
 import * as Request from "effect/Request";
 
@@ -49,10 +50,27 @@ export class GetItemEffect extends Request.TaggedClass("GetItemEffect")<
   { readonly id: number }
 > {}
 
+// By ItemID (FK, single result)
+export class GetItemModifiedAppearance extends Request.TaggedClass(
+  "GetItemModifiedAppearance",
+)<
+  Schemas.Dbc.ItemModifiedAppearanceRow | undefined,
+  DbcError,
+  { readonly itemId: number }
+> {}
+
 export class GetItemSparse extends Request.TaggedClass("GetItemSparse")<
   Schemas.Dbc.ItemSparseRow | undefined,
   DbcError,
   { readonly id: number }
+> {}
+
+export class GetItemXItemEffects extends Request.TaggedClass(
+  "GetItemXItemEffects",
+)<
+  ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>,
+  DbcError,
+  { readonly itemId: number }
 > {}
 
 export class GetManifestInterfaceData extends Request.TaggedClass(
@@ -63,109 +81,18 @@ export class GetManifestInterfaceData extends Request.TaggedClass(
   { readonly id: number }
 > {}
 
+export class GetSpecializationSpells extends Request.TaggedClass(
+  "GetSpecializationSpells",
+)<
+  ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
+  DbcError,
+  { readonly specId: number }
+> {}
+
 export class GetSpell extends Request.TaggedClass("GetSpell")<
   Schemas.Dbc.SpellRow | undefined,
   DbcError,
   { readonly id: number }
-> {}
-
-export class GetSpellCastTimes extends Request.TaggedClass("GetSpellCastTimes")<
-  Schemas.Dbc.SpellCastTimesRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellCategory extends Request.TaggedClass("GetSpellCategory")<
-  Schemas.Dbc.SpellCategoryRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellDescriptionVariables extends Request.TaggedClass(
-  "GetSpellDescriptionVariables",
-)<
-  Schemas.Dbc.SpellDescriptionVariablesRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellDuration extends Request.TaggedClass("GetSpellDuration")<
-  Schemas.Dbc.SpellDurationRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellName extends Request.TaggedClass("GetSpellName")<
-  Schemas.Dbc.SpellNameRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellProcsPerMinute extends Request.TaggedClass(
-  "GetSpellProcsPerMinute",
-)<
-  Schemas.Dbc.SpellProcsPerMinuteRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellRadius extends Request.TaggedClass("GetSpellRadius")<
-  Schemas.Dbc.SpellRadiusRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellRange extends Request.TaggedClass("GetSpellRange")<
-  Schemas.Dbc.SpellRangeRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetSpellShapeshiftForm extends Request.TaggedClass(
-  "GetSpellShapeshiftForm",
-)<
-  Schemas.Dbc.SpellShapeshiftFormRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetTraitDefinition extends Request.TaggedClass(
-  "GetTraitDefinition",
-)<
-  Schemas.Dbc.TraitDefinitionRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetTraitNode extends Request.TaggedClass("GetTraitNode")<
-  Schemas.Dbc.TraitNodeRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetTraitNodeEntry extends Request.TaggedClass("GetTraitNodeEntry")<
-  Schemas.Dbc.TraitNodeEntryRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetTraitSubTree extends Request.TaggedClass("GetTraitSubTree")<
-  Schemas.Dbc.TraitSubTreeRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-export class GetTraitTree extends Request.TaggedClass("GetTraitTree")<
-  Schemas.Dbc.TraitTreeRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
-// By SpellID (FK, single result)
-export class GetSpellMisc extends Request.TaggedClass("GetSpellMisc")<
-  Schemas.Dbc.SpellMiscRow | undefined,
-  DbcError,
-  { readonly spellId: number }
 > {}
 
 export class GetSpellAuraOptions extends Request.TaggedClass(
@@ -192,12 +119,24 @@ export class GetSpellCastingRequirements extends Request.TaggedClass(
   { readonly spellId: number }
 > {}
 
+export class GetSpellCastTimes extends Request.TaggedClass("GetSpellCastTimes")<
+  Schemas.Dbc.SpellCastTimesRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetSpellCategories extends Request.TaggedClass(
   "GetSpellCategories",
 )<
   Schemas.Dbc.SpellCategoriesRow | undefined,
   DbcError,
   { readonly spellId: number }
+> {}
+
+export class GetSpellCategory extends Request.TaggedClass("GetSpellCategory")<
+  Schemas.Dbc.SpellCategoryRow | undefined,
+  DbcError,
+  { readonly id: number }
 > {}
 
 export class GetSpellClassOptions extends Request.TaggedClass(
@@ -214,10 +153,38 @@ export class GetSpellCooldowns extends Request.TaggedClass("GetSpellCooldowns")<
   { readonly spellId: number }
 > {}
 
+export class GetSpellDescriptionVariables extends Request.TaggedClass(
+  "GetSpellDescriptionVariables",
+)<
+  Schemas.Dbc.SpellDescriptionVariablesRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetSpellDuration extends Request.TaggedClass("GetSpellDuration")<
+  Schemas.Dbc.SpellDurationRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetSpellEffects extends Request.TaggedClass("GetSpellEffects")<
+  ReadonlyArray<Schemas.Dbc.SpellEffectRow>,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
 export class GetSpellEmpower extends Request.TaggedClass("GetSpellEmpower")<
   Schemas.Dbc.SpellEmpowerRow | undefined,
   DbcError,
   { readonly spellId: number }
+> {}
+
+export class GetSpellEmpowerStages extends Request.TaggedClass(
+  "GetSpellEmpowerStages",
+)<
+  ReadonlyArray<Schemas.Dbc.SpellEmpowerStageRow>,
+  DbcError,
+  { readonly spellEmpowerId: number }
 > {}
 
 export class GetSpellInterrupts extends Request.TaggedClass(
@@ -226,6 +193,67 @@ export class GetSpellInterrupts extends Request.TaggedClass(
   Schemas.Dbc.SpellInterruptsRow | undefined,
   DbcError,
   { readonly spellId: number }
+> {}
+
+export class GetSpellLearnSpell extends Request.TaggedClass(
+  "GetSpellLearnSpell",
+)<
+  ReadonlyArray<Schemas.Dbc.SpellLearnSpellRow>,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
+export class GetSpellLevels extends Request.TaggedClass("GetSpellLevels")<
+  ReadonlyArray<Schemas.Dbc.SpellLevelsRow>,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
+// By SpellID (FK, single result)
+export class GetSpellMisc extends Request.TaggedClass("GetSpellMisc")<
+  Schemas.Dbc.SpellMiscRow | undefined,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
+export class GetSpellName extends Request.TaggedClass("GetSpellName")<
+  Schemas.Dbc.SpellNameRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetSpellPower extends Request.TaggedClass("GetSpellPower")<
+  ReadonlyArray<Schemas.Dbc.SpellPowerRow>,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
+export class GetSpellProcsPerMinute extends Request.TaggedClass(
+  "GetSpellProcsPerMinute",
+)<
+  Schemas.Dbc.SpellProcsPerMinuteRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetSpellProcsPerMinuteMods extends Request.TaggedClass(
+  "GetSpellProcsPerMinuteMods",
+)<
+  ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteModRow>,
+  DbcError,
+  { readonly spellProcsPerMinuteId: number }
+> {}
+
+export class GetSpellRadius extends Request.TaggedClass("GetSpellRadius")<
+  Schemas.Dbc.SpellRadiusRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetSpellRange extends Request.TaggedClass("GetSpellRange")<
+  Schemas.Dbc.SpellRangeRow | undefined,
+  DbcError,
+  { readonly id: number }
 > {}
 
 export class GetSpellReplacement extends Request.TaggedClass(
@@ -244,6 +272,14 @@ export class GetSpellShapeshift extends Request.TaggedClass(
   { readonly spellId: number }
 > {}
 
+export class GetSpellShapeshiftForm extends Request.TaggedClass(
+  "GetSpellShapeshiftForm",
+)<
+  Schemas.Dbc.SpellShapeshiftFormRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetSpellTargetRestrictions extends Request.TaggedClass(
   "GetSpellTargetRestrictions",
 )<
@@ -252,13 +288,26 @@ export class GetSpellTargetRestrictions extends Request.TaggedClass(
   { readonly spellId: number }
 > {}
 
-// By ItemID (FK, single result)
-export class GetItemModifiedAppearance extends Request.TaggedClass(
-  "GetItemModifiedAppearance",
-)<
-  Schemas.Dbc.ItemModifiedAppearanceRow | undefined,
+export class GetSpellTotems extends Request.TaggedClass("GetSpellTotems")<
+  ReadonlyArray<Schemas.Dbc.SpellTotemsRow>,
   DbcError,
-  { readonly itemId: number }
+  { readonly spellId: number }
+> {}
+
+export class GetSpellXDescriptionVariables extends Request.TaggedClass(
+  "GetSpellXDescriptionVariables",
+)<
+  ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
+  DbcError,
+  { readonly spellId: number }
+> {}
+
+export class GetTraitDefinition extends Request.TaggedClass(
+  "GetTraitDefinition",
+)<
+  Schemas.Dbc.TraitDefinitionRow | undefined,
+  DbcError,
+  { readonly id: number }
 > {}
 
 // By FK (array results)
@@ -268,6 +317,18 @@ export class GetTraitEdgesForTree extends Request.TaggedClass(
   ReadonlyArray<Schemas.Dbc.TraitEdgeRow>,
   DbcError,
   { readonly treeId: number }
+> {}
+
+export class GetTraitNode extends Request.TaggedClass("GetTraitNode")<
+  Schemas.Dbc.TraitNodeRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetTraitNodeEntry extends Request.TaggedClass("GetTraitNodeEntry")<
+  Schemas.Dbc.TraitNodeEntryRow | undefined,
+  DbcError,
+  { readonly id: number }
 > {}
 
 export class GetTraitNodesForTree extends Request.TaggedClass(
@@ -286,6 +347,18 @@ export class GetTraitNodeXTraitNodeEntries extends Request.TaggedClass(
   { readonly nodeId: number }
 > {}
 
+export class GetTraitSubTree extends Request.TaggedClass("GetTraitSubTree")<
+  Schemas.Dbc.TraitSubTreeRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetTraitTree extends Request.TaggedClass("GetTraitTree")<
+  Schemas.Dbc.TraitTreeRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetTraitTreeLoadout extends Request.TaggedClass(
   "GetTraitTreeLoadout",
 )<
@@ -300,76 +373,4 @@ export class GetTraitTreeLoadoutEntries extends Request.TaggedClass(
   ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
   DbcError,
   { readonly loadoutId: number }
-> {}
-
-export class GetItemXItemEffects extends Request.TaggedClass(
-  "GetItemXItemEffects",
-)<
-  ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>,
-  DbcError,
-  { readonly itemId: number }
-> {}
-
-export class GetSpecializationSpells extends Request.TaggedClass(
-  "GetSpecializationSpells",
-)<
-  ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
-  DbcError,
-  { readonly specId: number }
-> {}
-
-export class GetSpellEffects extends Request.TaggedClass("GetSpellEffects")<
-  ReadonlyArray<Schemas.Dbc.SpellEffectRow>,
-  DbcError,
-  { readonly spellId: number }
-> {}
-
-export class GetSpellEmpowerStages extends Request.TaggedClass(
-  "GetSpellEmpowerStages",
-)<
-  ReadonlyArray<Schemas.Dbc.SpellEmpowerStageRow>,
-  DbcError,
-  { readonly spellEmpowerId: number }
-> {}
-
-export class GetSpellLearnSpell extends Request.TaggedClass(
-  "GetSpellLearnSpell",
-)<
-  ReadonlyArray<Schemas.Dbc.SpellLearnSpellRow>,
-  DbcError,
-  { readonly spellId: number }
-> {}
-
-export class GetSpellLevels extends Request.TaggedClass("GetSpellLevels")<
-  ReadonlyArray<Schemas.Dbc.SpellLevelsRow>,
-  DbcError,
-  { readonly spellId: number }
-> {}
-
-export class GetSpellPower extends Request.TaggedClass("GetSpellPower")<
-  ReadonlyArray<Schemas.Dbc.SpellPowerRow>,
-  DbcError,
-  { readonly spellId: number }
-> {}
-
-export class GetSpellProcsPerMinuteMods extends Request.TaggedClass(
-  "GetSpellProcsPerMinuteMods",
-)<
-  ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteModRow>,
-  DbcError,
-  { readonly spellProcsPerMinuteId: number }
-> {}
-
-export class GetSpellTotems extends Request.TaggedClass("GetSpellTotems")<
-  ReadonlyArray<Schemas.Dbc.SpellTotemsRow>,
-  DbcError,
-  { readonly spellId: number }
-> {}
-
-export class GetSpellXDescriptionVariables extends Request.TaggedClass(
-  "GetSpellXDescriptionVariables",
-)<
-  ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
-  DbcError,
-  { readonly spellId: number }
 > {}

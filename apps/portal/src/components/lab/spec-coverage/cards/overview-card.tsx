@@ -21,6 +21,7 @@ export function OverviewCard() {
     data,
     filenamePrefix: "spec-coverage",
     patchVersion: GAME_CONFIG.patchVersion,
+    resetKey: GAME_CONFIG.patchVersion,
   });
 
   const classStats = useMemo(() => {

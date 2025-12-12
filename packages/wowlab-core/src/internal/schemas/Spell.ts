@@ -12,8 +12,8 @@ export const KnowledgeSourceSchema = Schema.Union(
     specId: Schema.Number,
   }),
   Schema.Struct({
-    source: Schema.Literal("class"),
     classId: Schema.Number,
+    source: Schema.Literal("class"),
   }),
   Schema.Struct({
     source: Schema.Literal("unknown"),

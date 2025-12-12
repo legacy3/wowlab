@@ -2,7 +2,7 @@
 
 import { Grid3X3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CoverageMatrix } from "../coverage-matrix";
+import { CoverageMatrix } from "./coverage-matrix";
 
 export function MatrixCard() {
   return (
