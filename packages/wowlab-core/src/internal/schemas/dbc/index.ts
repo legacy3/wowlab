@@ -1,5 +1,7 @@
 export * from "./ChrClassesSchema.js";
+export * from "./ChrClassRaceSexSchema.js";
 export * from "./ChrRaceRacialAbilitySchema.js";
+export * from "./ChrRacesSchema.js";
 export * from "./ChrSpecializationSchema.js";
 export * from "./ContentTuningXExpectedSchema.js";
 export * from "./DifficultySchema.js";

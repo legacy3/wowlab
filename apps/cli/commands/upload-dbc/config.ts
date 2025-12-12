@@ -9,7 +9,9 @@ export interface DbcTableMapping<T = unknown> extends TableConfig<T> {
 // prettier-ignore
 export const DBC_TABLES = {
   chrClasses: { file: "ChrClasses.csv", schema: Dbc.ChrClassesRowSchema, tableName: "chr_classes" },
+  chrClassRaceSex: { file: "ChrClassRaceSex.csv", schema: Dbc.ChrClassRaceSexRowSchema, tableName: "chr_class_race_sex" },
   chrRaceRacialAbility: { file: "ChrRaceRacialAbility.csv", schema: Dbc.ChrRaceRacialAbilityRowSchema, tableName: "chr_race_racial_ability" },
+  chrRaces: { file: "ChrRaces.csv", schema: Dbc.ChrRacesRowSchema, tableName: "chr_races" },
   chrSpecialization: { file: "ChrSpecialization.csv", schema: Dbc.ChrSpecializationRowSchema, tableName: "chr_specialization" },
   contentTuningXExpected: { file: "ContentTuningXExpected.csv", schema: Dbc.ContentTuningXExpectedRowSchema, tableName: "content_tuning_x_expected" },
   difficulty: { file: "Difficulty.csv", schema: Dbc.DifficultyRowSchema, tableName: "difficulty" },

@@ -8,6 +8,7 @@ import { supabaseClient } from "../../data/supabase.js";
 interface SpecCoverage {
   classId: number;
   className: string;
+  racialSpellCount: number;
   specId: number;
   specName: string;
   specSpellCount: number;
@@ -31,6 +32,42 @@ const query = async <T>(
   }
 
   return result.data as T;
+};
+
+const getRacialSpellIdsForClass = (
+  classId: number,
+  racePlayableBits: Map<number, number>, // raceId -> PlayableRaceBit
+  classRaces: Map<number, Set<number>>, // classId -> Set<raceId>
+  racialSpellsByMask: Array<{ RaceMask: number; Spell: number }>,
+): Set<number> => {
+  // Get races available for this class
+  const availableRaces = classRaces.get(classId);
+
+  if (!availableRaces || availableRaces.size === 0) {
+    // Class has no race restrictions in chr_class_race_sex - use all playable races
+    // This applies to most classes (Warrior, Mage, etc.)
+    return new Set(racialSpellsByMask.map((r) => r.Spell));
+  }
+
+  // Build a combined RaceMask for all available races
+  let combinedMask = BigInt(0);
+  for (const raceId of availableRaces) {
+    const bit = racePlayableBits.get(raceId);
+
+    if (bit !== undefined && bit >= 0) {
+      combinedMask |= BigInt(1) << BigInt(bit);
+    }
+  }
+
+  // Filter racial spells to those matching any of the available races
+  const spellIds = new Set<number>();
+  for (const r of racialSpellsByMask) {
+    if ((BigInt(r.RaceMask) & combinedMask) > 0) {
+      spellIds.add(r.Spell);
+    }
+  }
+
+  return spellIds;
 };
 
 const getTalentSpellIds = async (
@@ -248,7 +285,7 @@ const getTalentSpellIds = async (
 const getSpecCoverage = async (
   supabase: SupabaseClient,
 ): Promise<SpecCoverage[]> => {
-  console.log("Fetching classes and specs...");
+  console.log("Fetching classes, specs, and race data...");
 
   // Get all playable classes (exclude Adventurer=14, Traveler=15)
   const classes = await query<Array<{ ID: number; Name_lang: string }>>(
@@ -264,10 +301,46 @@ const getSpecCoverage = async (
     b.select("ID, ClassID, Name_lang").neq("Name_lang", "Initial"),
   );
 
-  console.log(`Found ${classes.length} classes, ${specs.length} specs\n`);
+  // Get all playable races with their PlayableRaceBit
+  const races = await query<Array<{ ID: number; PlayableRaceBit: number }>>(
+    supabase,
+    "chr_races",
+    (b) => b.select("ID, PlayableRaceBit").gte("PlayableRaceBit", 0),
+  );
+  const racePlayableBits = new Map(races.map((r) => [r.ID, r.PlayableRaceBit]));
+
+  // Get class-race restrictions (only has DH, DK, Evoker - others have no restrictions)
+  const classRaceRows = await query<Array<{ ClassID: number; RaceID: number }>>(
+    supabase,
+    "chr_class_race_sex",
+    (b) => b.select("ClassID, RaceID"),
+  );
+
+  const classRaces = new Map<number, Set<number>>();
+  for (const cr of classRaceRows) {
+    if (!classRaces.has(cr.ClassID)) {
+      classRaces.set(cr.ClassID, new Set());
+    }
+
+    classRaces.get(cr.ClassID)!.add(cr.RaceID);
+  }
+
+  // Get all racial spells with their RaceMask
+  const racialSpellsByMask = await query<
+    Array<{ RaceMask: number; Spell: number }>
+  >(supabase, "skill_line_ability", (b) =>
+    b.select("RaceMask, Spell").gt("RaceMask", 0).eq("ClassMask", 0),
+  );
+
+  console.log(
+    `Found ${classes.length} classes, ${specs.length} specs, ${races.length} races, ${racialSpellsByMask.length} racial spell entries\n`,
+  );
 
   const classMap = new Map(classes.map((c) => [c.ID, c.Name_lang]));
   const results: SpecCoverage[] = [];
+
+  // Cache racial spells per class to avoid recalculating
+  const racialSpellsCache = new Map<number, Set<number>>();
 
   for (const spec of specs) {
     const className = classMap.get(spec.ClassID);
@@ -276,6 +349,20 @@ const getSpecCoverage = async (
     }
 
     process.stdout.write(`  ${className} / ${spec.Name_lang}...`);
+
+    // Get racial spells for this class (cached)
+    let racialSpellIds = racialSpellsCache.get(spec.ClassID);
+
+    if (!racialSpellIds) {
+      racialSpellIds = getRacialSpellIdsForClass(
+        spec.ClassID,
+        racePlayableBits,
+        classRaces,
+        racialSpellsByMask,
+      );
+
+      racialSpellsCache.set(spec.ClassID, racialSpellIds);
+    }
 
     // Get specialization spells
     const specSpells = await query<Array<{ SpellID: number }>>(
@@ -288,12 +375,17 @@ const getSpecCoverage = async (
     // Get talent spells
     const talentSpellIds = await getTalentSpellIds(supabase, spec.ID);
 
-    // Combine unique spell IDs
-    const allSpellIds = new Set([...specSpellIds, ...talentSpellIds]);
+    // Combine unique spell IDs (spec + talent + racial)
+    const allSpellIds = new Set([
+      ...racialSpellIds,
+      ...specSpellIds,
+      ...talentSpellIds,
+    ]);
 
     results.push({
       classId: spec.ClassID,
       className,
+      racialSpellCount: racialSpellIds.size,
       specId: spec.ID,
       specName: spec.Name_lang,
       specSpellCount: specSpellIds.size,
@@ -341,7 +433,7 @@ export const specCoverageCommand = Command.make(
         }
 
         console.log(
-          `  ${r.specName.padEnd(15)} ${String(r.totalSpellCount).padStart(3)} spells (${r.specSpellCount} spec, ${r.talentSpellCount} talent)`,
+          `  ${r.specName.padEnd(15)} ${String(r.totalSpellCount).padStart(3)} spells (${r.specSpellCount} spec, ${r.talentSpellCount} talent, ${r.racialSpellCount} racial)`,
         );
       }
 
