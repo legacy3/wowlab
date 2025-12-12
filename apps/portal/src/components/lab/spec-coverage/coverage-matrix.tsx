@@ -289,7 +289,7 @@ function SpellListDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full min-h-0">
           <div className="space-y-4 pr-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-3">
