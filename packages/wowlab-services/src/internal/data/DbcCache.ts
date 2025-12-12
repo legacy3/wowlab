@@ -294,7 +294,7 @@ const groupTraitEdgesByTreeId = (
   const grouped = new Map<number, Dbc.TraitEdgeRow[]>();
   edges.forEach((edge) => {
     const treeId = nodeToTree.get(edge.LeftTraitNodeID);
-    
+
     if (treeId !== undefined) {
       const existing = grouped.get(treeId) || [];
       grouped.set(treeId, [...existing, edge]);

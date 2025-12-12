@@ -97,6 +97,21 @@ const FIGHT_PROFILES: FightProfile[] = [
   },
 ];
 
+const DEFAULT_SIMC_PLACEHOLDER = [
+  "Paste your SimulationCraft export here...",
+  "",
+  'shaman="Wellenwilli"',
+  "level=80",
+  "race=tauren",
+  "region=eu",
+  "server=blackmoore",
+  "spec=restoration",
+  "",
+  "talents=CgQAL+iDLHPJSLC...",
+  "",
+  "head=,id=212011,bonus_id=6652/10877...",
+].join("\n");
+
 function QuickSimContentInner() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [fightPickerOpen, setFightPickerOpen] = useState(false);
@@ -185,18 +200,7 @@ function QuickSimContentInner() {
         <Textarea
           value={simcInput}
           onChange={(e) => handleSimcChange(e.target.value)}
-          placeholder={`Paste your SimulationCraft export here...
- 
- shaman="Wellenwilli"
- level=80
- race=tauren
- region=eu
-server=blackmoore
-spec=restoration
-
-talents=CgQAL+iDLHPJSLC...
- 
- head=,id=212011,bonus_id=6652/10877...`}
+          placeholder={DEFAULT_SIMC_PLACEHOLDER}
           className="min-h-80 border-dashed border-2 font-mono text-sm focus:border-solid"
           autoFocus
         />
