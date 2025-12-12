@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAtomValue } from "jotai";
+import { Download } from "lucide-react";
 
 import {
   Table,
@@ -16,10 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
+import { Button } from "@/components/ui/button";
 import { WowSpellLink } from "@/components/game";
 import { jobsAtom } from "@/atoms/computing";
 import type { SimulationEvent } from "@/lib/simulation/types";
 import { isResourceSnapshot } from "@/lib/simulation/transformers";
+import { useJsonExport } from "@/hooks/use-json-export";
+import { GAME_CONFIG } from "@/lib/config/game";
 
 type EventCategory = "cast" | "damage" | "aura" | "resource" | "other";
 
@@ -174,10 +178,13 @@ export function EventLogContent() {
     });
   }, [displayEvents, filter, categoryFilter]);
 
-  // Export raw simulation events, not the display-transformed version
-  const exportJson = useMemo(() => {
-    return JSON.stringify(rawEvents, null, 2);
-  }, [rawEvents]);
+  const { exportJson, downloadJson } = useJsonExport({
+    buildPayload: ({ data }) => data,
+    data: rawEvents,
+    filenamePrefix: "event-log",
+    filenameTag: jobId,
+    patchVersion: GAME_CONFIG.patchVersion,
+  });
 
   const categories: (EventCategory | "all")[] = [
     "all",
@@ -206,7 +213,20 @@ export function EventLogContent() {
               <CardTitle className="text-lg">
                 Event Log ({filteredEvents.length.toLocaleString()} events)
               </CardTitle>
-              <CopyButton value={exportJson} />
+              {exportJson && (
+                <>
+                  <CopyButton value={exportJson} />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    onClick={downloadJson}
+                    title="Download event log JSON"
+                  >
+                    <Download />
+                  </Button>
+                </>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (

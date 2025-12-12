@@ -2,16 +2,22 @@
 
 import { useCallback, useMemo, useRef } from "react";
 
-export function useJsonExport<T>({
+export function useJsonExport<TData, TPayload = unknown>({
   data,
   filenamePrefix,
   filenameTag,
   patchVersion,
+  buildPayload,
 }: {
-  data: T | null | undefined;
+  data: TData | null | undefined;
   filenamePrefix: string;
   filenameTag?: string;
   patchVersion: string;
+  buildPayload?: (args: {
+    data: TData;
+    exportedAt: string;
+    patchVersion: string;
+  }) => TPayload;
 }) {
   const exportedAtRef = useRef<string | null>(null);
 
@@ -33,16 +39,16 @@ export function useJsonExport<T>({
       return null;
     }
 
-    return JSON.stringify(
-      {
+    const payload =
+      buildPayload?.({ data, exportedAt, patchVersion }) ??
+      ({
         data,
         exportedAt,
         patchVersion,
-      },
-      null,
-      2,
-    );
-  }, [data, exportedAt, patchVersion]);
+      } as unknown as TPayload);
+
+    return JSON.stringify(payload, null, 2);
+  }, [buildPayload, data, exportedAt, patchVersion]);
 
   const downloadJson = useCallback(() => {
     if (!exportJson) {
