@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  patchVersion: "11.0.2",
+  patchVersion: "11.2.5",
   expansionId: 10,
   expansionName: "The War Within",
   mythicPlusSeasonId: 13,
