@@ -914,8 +914,9 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           const specSpellIdsMap = new Map<number, ReadonlyArray<number>>();
           for (let i = 0; i < validSpecs.length; i++) {
             const ids = allSpecSpellsResults[i]
-              .map((row) => row.SpellID)
-              .filter((id) => id > 0);
+              .flatMap((row) => [row.SpellID, row.OverridesSpellID])
+              .filter((id): id is number => typeof id === "number" && id > 0);
+
             specSpellIdsMap.set(validSpecs[i].ID, [...new Set(ids)]);
           }
 
@@ -1022,13 +1023,19 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
                   classSpecs,
                   (spec) =>
                     Effect.gen(function* () {
-                      const spellIdsForSpec =
-                        specSpellIdsMap.get(spec.ID) ?? [];
-
                       const extractor = yield* ExtractorService;
 
                       const talentSpellIdToTraitDefinitionId =
                         yield* buildTalentSpellIdToTraitDefinitionId(spec.ID);
+
+                      const specSpellIds = specSpellIdsMap.get(spec.ID) ?? [];
+                      const talentSpellIds = [
+                        ...talentSpellIdToTraitDefinitionId.keys(),
+                      ];
+
+                      const spellIdsForSpec = [
+                        ...new Set([...specSpellIds, ...talentSpellIds]),
+                      ];
 
                       const spellsResults = yield* Effect.forEach(
                         spellIdsForSpec,

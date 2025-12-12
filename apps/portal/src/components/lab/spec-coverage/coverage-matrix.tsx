@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  Search,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -23,6 +29,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { getCoverageColor, getCoverageTextColor } from "@/lib/utils/coverage";
 import {
   useSpecCoverage,
@@ -31,6 +39,7 @@ import {
 } from "@/hooks/use-spec-coverage";
 import { calculateCoverage, getCounts } from "@/lib/spec-coverage";
 import { WowSpellLink } from "@/components/game";
+import { GithubSearchLink } from "@/components/shared/github-search-link";
 
 interface SelectedSpec {
   className: string;
@@ -185,11 +194,38 @@ function SpellListDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [hidePassives, setHidePassives] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "supported" | "missing"
+  >("all");
+  const [search, setSearch] = useState("");
+
+  const normalizedSearch = search.trim().toLowerCase();
 
   const visibleSpells = useMemo(() => {
     const spells = spec?.spells ?? [];
-    return hidePassives ? spells.filter((s) => !s.isPassive) : spells;
-  }, [spec, hidePassives]);
+
+    const passivesFiltered = hidePassives
+      ? spells.filter((s) => !s.isPassive)
+      : spells;
+
+    const statusFiltered =
+      statusFilter === "supported"
+        ? passivesFiltered.filter((s) => s.supported)
+        : statusFilter === "missing"
+          ? passivesFiltered.filter((s) => !s.supported)
+          : passivesFiltered;
+
+    if (!normalizedSearch) {
+      return statusFiltered;
+    }
+
+    return statusFiltered.filter((s) => {
+      const id = String(s.id);
+      const name = s.name.toLowerCase();
+      
+      return name.includes(normalizedSearch) || id.includes(normalizedSearch);
+    });
+  }, [spec, hidePassives, statusFilter, normalizedSearch]);
 
   const groups = useMemo(() => {
     const grouped = new Map<
@@ -200,7 +236,7 @@ function SpellListDialog({
     for (const spell of visibleSpells) {
       const source = spell.knowledgeSource.source;
       const existing = grouped.get(source) ?? [];
-      
+
       existing.push(spell);
       grouped.set(source, existing);
     }
@@ -235,7 +271,7 @@ function SpellListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[calc(100vw-4rem)] md:max-w-[1200px] lg:max-w-[1400px] h-[90vh] grid-rows-[auto_1fr] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span
@@ -253,14 +289,48 @@ function SpellListDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
+        <ScrollArea className="h-full">
           <div className="space-y-4 pr-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-xs text-muted-foreground">Hide passives</div>
-              <Switch
-                checked={hidePassives}
-                onCheckedChange={setHidePassives}
-              />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
+                <ToggleGroup
+                  type="single"
+                  value={statusFilter}
+                  onValueChange={(v) =>
+                    setStatusFilter(
+                      v === "supported" || v === "missing" || v === "all"
+                        ? v
+                        : "all",
+                    )
+                  }
+                  variant="outline"
+                  size="sm"
+                >
+                  <ToggleGroupItem value="all">All</ToggleGroupItem>
+                  <ToggleGroupItem value="supported">Supported</ToggleGroupItem>
+                  <ToggleGroupItem value="missing">Missing</ToggleGroupItem>
+                </ToggleGroup>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    Hide passives
+                  </span>
+                  <Switch
+                    checked={hidePassives}
+                    onCheckedChange={setHidePassives}
+                  />
+                </div>
+              </div>
+
+              <div className="relative w-full sm:max-w-sm">
+                <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Filter spells..."
+                  className="pl-9"
+                />
+              </div>
             </div>
 
             {groups
@@ -295,12 +365,12 @@ function SpellListDialog({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="px-3 pb-3">
-                      <ul className="space-y-1 pt-1">
+                      <ul className="pt-1 columns-1 sm:columns-2 lg:columns-3 [column-gap:1.5rem]">
                         {group.spells.map((spell) => (
                           <li
                             key={spell.id}
                             className={cn(
-                              "text-sm flex items-center gap-2",
+                              "break-inside-avoid mb-1 group grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-sm px-1.5 py-1 text-sm hover:bg-muted/30",
                               !spell.supported && "text-muted-foreground",
                             )}
                           >
@@ -309,12 +379,25 @@ function SpellListDialog({
                             ) : (
                               <XCircle className="h-4 w-4 text-rose-500" />
                             )}
-                            <WowSpellLink spellId={spell.id} />
-                            {!hidePassives && spell.isPassive && (
-                              <span className="ml-auto text-[11px] uppercase tracking-wide text-muted-foreground">
-                                Passive
+                            <div className="min-w-0">
+                              <WowSpellLink spellId={spell.id} />
+                            </div>
+                            <div className="flex items-center justify-end gap-2 tabular-nums">
+                              {!hidePassives && spell.isPassive && (
+                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  Passive
+                                </span>
+                              )}
+                              <span className="text-xs font-mono text-muted-foreground">
+                                {spell.id}
                               </span>
-                            )}
+                              <GithubSearchLink
+                                query={`"${spell.id}"`}
+                                label={String(spell.id)}
+                                mode="icon"
+                                className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                              />
+                            </div>
                           </li>
                         ))}
                       </ul>

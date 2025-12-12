@@ -1,23 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, Loader2, Code2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tree, type TreeNode } from "@/components/ui/tree";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   useSpecCoverage,
   type UntrackedSpell,
 } from "@/hooks/use-spec-coverage";
 import { WowSpellLink } from "@/components/game";
-import { env } from "@/lib/env";
+import { GithubSearchLink } from "@/components/shared/github-search-link";
 
 function spellsToTreeNodes(spells: UntrackedSpell[]): TreeNode[] {
   const classMap = new Map<string, Map<string, UntrackedSpell[]>>();
@@ -73,31 +67,16 @@ function spellsToTreeNodes(spells: UntrackedSpell[]): TreeNode[] {
 
 function SpellLeaf({ node }: { node: TreeNode }) {
   const spell = (node as TreeNode & { _spell: UntrackedSpell })._spell;
-  const searchUrl = `${env.GITHUB_REPO_URL}/search?q=${encodeURIComponent(`"${spell.handlerId}"`)}`;
 
   return (
     <div className="flex items-center justify-between gap-2 text-sm py-1">
       <div className="flex items-center gap-2 min-w-0">
         <WowSpellLink spellId={spell.spellId} />
       </div>
-      <TooltipProvider>
-        <Tooltip delayDuration={100}>
-          <TooltipTrigger asChild>
-            <a
-              href={searchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-muted-foreground font-mono shrink-0 hover:text-foreground transition-colors"
-            >
-              <Code2 className="h-3 w-3" />
-              {spell.handlerId}
-            </a>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>Search in GitHub</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <GithubSearchLink
+        query={`"${spell.handlerId}"`}
+        label={spell.handlerId}
+      />
     </div>
   );
 }
