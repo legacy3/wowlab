@@ -1,12 +1,9 @@
-import { Command, Options } from "@effect/cli";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { Command, Options } from "@effect/cli";
 import * as Effect from "effect/Effect";
 
 import { supabaseClient } from "../../data/supabase.js";
-
-// ============================================================================
-// Types
-// ============================================================================
 
 interface SpecCoverage {
   classId: number;
@@ -18,10 +15,6 @@ interface SpecCoverage {
   totalSpellCount: number;
 }
 
-// ============================================================================
-// Database Helpers
-// ============================================================================
-
 const CHUNK_SIZE = 500;
 
 const query = async <T>(
@@ -32,15 +25,13 @@ const query = async <T>(
   ) => PromiseLike<{ data: T | null; error: { message: string } | null }>,
 ): Promise<T> => {
   const result = await fn(supabase.schema("raw_dbc").from(table));
+
   if (result.error) {
     throw new Error(`Query error on ${table}: ${result.error.message}`);
   }
+
   return result.data as T;
 };
-
-// ============================================================================
-// Core Logic
-// ============================================================================
 
 const getTalentSpellIds = async (
   supabase: SupabaseClient,
@@ -53,7 +44,9 @@ const getTalentSpellIds = async (
     (b) => b.select("TraitTreeID").eq("ChrSpecializationID", specId),
   );
 
-  if (loadouts.length === 0) return new Set();
+  if (loadouts.length === 0) {
+    return new Set();
+  }
 
   // 2. Get trees and filter to main talent trees (TraitSystemID = 0)
   const treeIds = [...new Set(loadouts.map((l) => l.TraitTreeID))];
@@ -67,7 +60,9 @@ const getTalentSpellIds = async (
     .filter((t) => t.TraitSystemID === 0)
     .map((t) => t.ID);
 
-  if (validTreeIds.length === 0) return new Set();
+  if (validTreeIds.length === 0) {
+    return new Set();
+  }
 
   // 3. Get the SpecSets for this spec (used for filtering spec-specific talents)
   const specSetRows = await query<Array<{ SpecSet: number }>>(
@@ -103,12 +98,15 @@ const getTalentSpellIds = async (
     if (specConditions.length === 0) {
       // No spec conditions in this tree - all nodes available to all specs
       allNodeIds.push(...nodeIds);
+
       continue;
     }
 
     // 4c. Build map: groupId -> Set<SpecSetID> (which specs can access this group)
     const condIds = specConditions.map((c) => c.ID);
-    const condToSpecSet = new Map(specConditions.map((c) => [c.ID, c.SpecSetID]));
+    const condToSpecSet = new Map(
+      specConditions.map((c) => [c.ID, c.SpecSetID]),
+    );
     const groupSpecSets = new Map<number, Set<number>>();
 
     for (let i = 0; i < condIds.length; i += CHUNK_SIZE) {
@@ -121,10 +119,12 @@ const getTalentSpellIds = async (
 
       for (const gc of groupConds) {
         const specSetId = condToSpecSet.get(gc.TraitCondID);
+
         if (specSetId !== undefined) {
           if (!groupSpecSets.has(gc.TraitNodeGroupID)) {
             groupSpecSets.set(gc.TraitNodeGroupID, new Set());
           }
+
           groupSpecSets.get(gc.TraitNodeGroupID)!.add(specSetId);
         }
       }
@@ -145,6 +145,7 @@ const getTalentSpellIds = async (
         if (!nodeGroups.has(r.TraitNodeID)) {
           nodeGroups.set(r.TraitNodeID, []);
         }
+
         nodeGroups.get(r.TraitNodeID)!.push(r.TraitNodeGroupID);
       }
     }
@@ -155,17 +156,21 @@ const getTalentSpellIds = async (
 
       // Check if node is in any spec-restricted group
       let isExcluded = false;
+
       for (const groupId of groups) {
         const groupRestrictions = groupSpecSets.get(groupId);
+
         if (groupRestrictions && groupRestrictions.size > 0) {
           // This group has spec restrictions - check if we're allowed
           let specAllowed = false;
+
           for (const ss of specSets) {
             if (groupRestrictions.has(ss)) {
               specAllowed = true;
               break;
             }
           }
+
           if (!specAllowed) {
             // Node is in a spec-restricted group that doesn't include us
             isExcluded = true;
@@ -180,11 +185,14 @@ const getTalentSpellIds = async (
     }
   }
 
-  if (allNodeIds.length === 0) return new Set();
+  if (allNodeIds.length === 0) {
+    return new Set();
+  }
 
   // 5. Get node -> entry mappings (chunked)
   const uniqueNodeIds = [...new Set(allNodeIds)];
   const allEntryIds: number[] = [];
+
   for (let i = 0; i < uniqueNodeIds.length; i += CHUNK_SIZE) {
     const chunk = uniqueNodeIds.slice(i, i + CHUNK_SIZE);
     const rows = await query<Array<{ TraitNodeEntryID: number }>>(
@@ -192,14 +200,18 @@ const getTalentSpellIds = async (
       "trait_node_x_trait_node_entry",
       (b) => b.select("TraitNodeEntryID").in("TraitNodeID", chunk),
     );
+
     allEntryIds.push(...rows.map((r) => r.TraitNodeEntryID));
   }
 
-  if (allEntryIds.length === 0) return new Set();
+  if (allEntryIds.length === 0) {
+    return new Set();
+  }
 
   // 6. Get entry -> definition mappings (chunked)
   const uniqueEntryIds = [...new Set(allEntryIds)];
   const allDefinitionIds: number[] = [];
+
   for (let i = 0; i < uniqueEntryIds.length; i += CHUNK_SIZE) {
     const chunk = uniqueEntryIds.slice(i, i + CHUNK_SIZE);
     const rows = await query<Array<{ TraitDefinitionID: number }>>(
@@ -207,14 +219,18 @@ const getTalentSpellIds = async (
       "trait_node_entry",
       (b) => b.select("TraitDefinitionID").in("ID", chunk),
     );
+
     allDefinitionIds.push(...rows.map((r) => r.TraitDefinitionID));
   }
 
-  if (allDefinitionIds.length === 0) return new Set();
+  if (allDefinitionIds.length === 0) {
+    return new Set();
+  }
 
   // 7. Get definition -> spell mappings (chunked)
   const uniqueDefIds = [...new Set(allDefinitionIds)];
   const spellIds = new Set<number>();
+
   for (let i = 0; i < uniqueDefIds.length; i += CHUNK_SIZE) {
     const chunk = uniqueDefIds.slice(i, i + CHUNK_SIZE);
     const rows = await query<Array<{ SpellID: number }>>(
@@ -222,6 +238,7 @@ const getTalentSpellIds = async (
       "trait_definition",
       (b) => b.select("SpellID").in("ID", chunk).gt("SpellID", 0),
     );
+
     rows.forEach((r) => spellIds.add(r.SpellID));
   }
 
@@ -254,7 +271,9 @@ const getSpecCoverage = async (
 
   for (const spec of specs) {
     const className = classMap.get(spec.ClassID);
-    if (!className) continue;
+    if (!className) {
+      continue;
+    }
 
     process.stdout.write(`  ${className} / ${spec.Name_lang}...`);
 
@@ -288,10 +307,6 @@ const getSpecCoverage = async (
   return results;
 };
 
-// ============================================================================
-// CLI Command
-// ============================================================================
-
 const outputOption = Options.text("output").pipe(
   Options.withAlias("o"),
   Options.withDescription("Output file path (JSON)"),
@@ -318,11 +333,13 @@ export const specCoverageCommand = Command.make(
       // Print summary table
       console.log("\n=== Summary ===\n");
       let currentClass = "";
+
       for (const r of results) {
         if (r.className !== currentClass) {
           currentClass = r.className;
           console.log(`\n${currentClass}:`);
         }
+
         console.log(
           `  ${r.specName.padEnd(15)} ${String(r.totalSpellCount).padStart(3)} spells (${r.specSpellCount} spec, ${r.talentSpellCount} talent)`,
         );
@@ -333,10 +350,13 @@ export const specCoverageCommand = Command.make(
         yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
           try: async () => {
+            // TODO Use effect-fs here
             const fs = await import("node:fs/promises");
+
             await fs.writeFile(output.value, JSON.stringify(results, null, 2));
           },
         });
+
         console.log(`\nResults written to ${output.value}`);
       }
 
