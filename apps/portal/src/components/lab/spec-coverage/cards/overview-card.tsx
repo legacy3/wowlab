@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Wand2, Users, TrendingUp, Loader2 } from "lucide-react";
+import { Wand2, Users, TrendingUp, Loader2, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -9,11 +9,19 @@ import { GAME_CONFIG } from "@/lib/config/game";
 import { getCoverageTextColor } from "@/lib/utils/coverage";
 import { useSpecCoverage } from "@/hooks/use-spec-coverage";
 import { calculateCoverage, getOverallStats } from "@/lib/spec-coverage";
+import { CopyButton } from "@/components/ui/copy-button";
+import { Button } from "@/components/ui/button";
+import { useJsonExport } from "@/hooks/use-json-export";
 
 export function OverviewCard() {
   const { data, loading, error } = useSpecCoverage();
 
   const stats = useMemo(() => (data ? getOverallStats(data) : null), [data]);
+  const { exportJson, downloadJson } = useJsonExport({
+    data,
+    filenamePrefix: "spec-coverage",
+    patchVersion: GAME_CONFIG.patchVersion,
+  });
 
   const classStats = useMemo(() => {
     if (!data) {
@@ -89,9 +97,25 @@ export function OverviewCard() {
             <TrendingUp className="h-5 w-5" />
             Coverage Overview
           </CardTitle>
-          <Badge variant="outline" className="font-mono text-xs">
-            {GAME_CONFIG.patchVersion}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            {exportJson && (
+              <>
+                <CopyButton value={exportJson} />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  onClick={downloadJson}
+                  title="Download coverage JSON"
+                >
+                  <Download />
+                </Button>
+              </>
+            )}
+            <Badge variant="outline" className="font-mono text-xs">
+              {GAME_CONFIG.patchVersion}
+            </Badge>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {GAME_CONFIG.expansionName} - {GAME_CONFIG.seasonName}

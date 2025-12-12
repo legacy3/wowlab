@@ -222,7 +222,7 @@ function SpellListDialog({
     return statusFiltered.filter((s) => {
       const id = String(s.id);
       const name = s.name.toLowerCase();
-      
+
       return name.includes(normalizedSearch) || id.includes(normalizedSearch);
     });
   }, [spec, hidePassives, statusFilter, normalizedSearch]);
