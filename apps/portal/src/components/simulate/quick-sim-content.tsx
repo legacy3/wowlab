@@ -11,6 +11,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -57,6 +62,7 @@ import {
   iterationsAtom,
   parseErrorAtom,
   parsedCharacterAtom,
+  recentCharactersParsedAtom,
   setSimcInputAtom,
   simcInputAtom,
   targetTypeAtom,
@@ -102,6 +108,7 @@ function QuickSimContentInner() {
   const parsedData = useAtomValue(parsedCharacterAtom);
   const parseError = useAtomValue(parseErrorAtom);
   const isParsing = useAtomValue(isParsingAtom);
+  const recentCharacters = useAtomValue(recentCharactersParsedAtom);
 
   // Config atoms
   const [fightDuration, setFightDuration] = useAtom(fightDurationAtom);
@@ -135,21 +142,61 @@ function QuickSimContentInner() {
   if (!parsedData) {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
+        {recentCharacters.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {recentCharacters.map((entry, index) => {
+              const { simc, data } = entry;
+              const { character, professions } = data;
+              const tooltipText = [
+                character.class,
+                character.spec,
+                character.server,
+                character.region,
+                professions.length > 0
+                  ? professions.map((p) => `${p.name} ${p.rank}`).join(" • ")
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" • ");
+
+              return (
+                <Tooltip
+                  key={`${character.name}-${character.server}-chip-${index}`}
+                >
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 px-2 text-xs font-medium"
+                      onClick={() => handleSimcChange(simc)}
+                    >
+                      {character.name}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    {tooltipText}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
+
         <Textarea
           value={simcInput}
           onChange={(e) => handleSimcChange(e.target.value)}
           placeholder={`Paste your SimulationCraft export here...
-
-shaman="Wellenwilli"
-level=80
-race=tauren
-region=eu
+ 
+ shaman="Wellenwilli"
+ level=80
+ race=tauren
+ region=eu
 server=blackmoore
 spec=restoration
 
 talents=CgQAL+iDLHPJSLC...
-
-head=,id=212011,bonus_id=6652/10877...`}
+ 
+ head=,id=212011,bonus_id=6652/10877...`}
           className="min-h-80 border-dashed border-2 font-mono text-sm focus:border-solid"
           autoFocus
         />

@@ -1,17 +1,5 @@
 # CLAUDE.md
 
-## RULES (FOLLOW THESE OR STOP)
-
-1. **ASK CODEX FIRST** — For any non-trivial task, use `mcp__codex-cli__codex` with high reasoning. Implement what it says. No opinions.
-
-2. **STOP WHEN STUCK** — If you don't know the solution, say "I don't know" and stop. No guessing. No random attempts.
-
-3. **CHECK DOCS BEFORE EFFECT CHANGES** — Use Effect Docs MCP. Quote the docs. If docs don't explain it, stop and ask.
-
-4. **NO DESTRUCTIVE ACTIONS WITHOUT ASKING** — Don't delete files, drop columns, or remove code without explicit approval.
-
-5. **TALK BEFORE ACTING** — For anything complex, explain what you plan to do and wait for approval.
-
 ## COMMANDS
 
 ```

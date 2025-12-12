@@ -12,6 +12,10 @@ import {
   simcProfileToPortalData,
   type ParsedSimcData,
 } from "@/lib/simc-adapter";
+import {
+  MAX_RECENT_CHARACTERS,
+  recentCharacterSimcAtom,
+} from "./recent-characters";
 
 export type ParseError = SimcLexError | SimcParseError | SimcTransformError;
 
@@ -69,7 +73,7 @@ export const parseErrorAtom = atom((get) => {
   return state.status === "error" ? state.error : null;
 });
 
-export const setSimcInputAtom = atom(null, async (_get, set, input: string) => {
+export const setSimcInputAtom = atom(null, async (get, set, input: string) => {
   set(simcInputAtom, input);
 
   if (input.trim().length < 50) {
@@ -100,6 +104,15 @@ export const setSimcInputAtom = atom(null, async (_get, set, input: string) => {
       data: portalData,
       profile: result.right,
     });
+
+    const current = get(recentCharacterSimcAtom);
+    const trimmed = input.trim();
+    const withoutDupes = current.filter((simc) => simc.trim() !== trimmed);
+
+    set(
+      recentCharacterSimcAtom,
+      [trimmed, ...withoutDupes].slice(0, MAX_RECENT_CHARACTERS),
+    );
   }
 });
 
