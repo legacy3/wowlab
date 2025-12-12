@@ -69,18 +69,124 @@ const getTalentSpellIds = async (
 
   if (validTreeIds.length === 0) return new Set();
 
-  // 3. Get all nodes for valid trees
-  const nodes = await query<Array<{ ID: number }>>(supabase, "trait_node", (b) =>
-    b.select("ID").in("TraitTreeID", validTreeIds),
+  // 3. Get the SpecSets for this spec (used for filtering spec-specific talents)
+  const specSetRows = await query<Array<{ SpecSet: number }>>(
+    supabase,
+    "spec_set_member",
+    (b) => b.select("SpecSet").eq("ChrSpecializationID", specId),
   );
+  const specSets = new Set(specSetRows.map((r) => r.SpecSet));
 
-  if (nodes.length === 0) return new Set();
+  // 4. For each tree, get spec-filtered nodes
+  const allNodeIds: number[] = [];
 
-  // 4. Get node -> entry mappings (chunked)
-  const nodeIds = nodes.map((n) => n.ID);
+  for (const treeId of validTreeIds) {
+    // 4a. Get all nodes in this tree
+    const allTreeNodes = await query<Array<{ ID: number }>>(
+      supabase,
+      "trait_node",
+      (b) => b.select("ID").eq("TraitTreeID", treeId),
+    );
+    const nodeIds = allTreeNodes.map((n) => n.ID);
+
+    // 4b. Get spec visibility conditions for this tree (CondType=1, SpecSetID > 0)
+    const specConditions = await query<
+      Array<{ ID: number; SpecSetID: number }>
+    >(supabase, "trait_cond", (b) =>
+      b
+        .select("ID, SpecSetID")
+        .eq("TraitTreeID", treeId)
+        .eq("CondType", 1)
+        .gt("SpecSetID", 0),
+    );
+
+    if (specConditions.length === 0) {
+      // No spec conditions in this tree - all nodes available to all specs
+      allNodeIds.push(...nodeIds);
+      continue;
+    }
+
+    // 4c. Build map: groupId -> Set<SpecSetID> (which specs can access this group)
+    const condIds = specConditions.map((c) => c.ID);
+    const condToSpecSet = new Map(specConditions.map((c) => [c.ID, c.SpecSetID]));
+    const groupSpecSets = new Map<number, Set<number>>();
+
+    for (let i = 0; i < condIds.length; i += CHUNK_SIZE) {
+      const chunk = condIds.slice(i, i + CHUNK_SIZE);
+      const groupConds = await query<
+        Array<{ TraitNodeGroupID: number; TraitCondID: number }>
+      >(supabase, "trait_node_group_x_trait_cond", (b) =>
+        b.select("TraitNodeGroupID, TraitCondID").in("TraitCondID", chunk),
+      );
+
+      for (const gc of groupConds) {
+        const specSetId = condToSpecSet.get(gc.TraitCondID);
+        if (specSetId !== undefined) {
+          if (!groupSpecSets.has(gc.TraitNodeGroupID)) {
+            groupSpecSets.set(gc.TraitNodeGroupID, new Set());
+          }
+          groupSpecSets.get(gc.TraitNodeGroupID)!.add(specSetId);
+        }
+      }
+    }
+
+    // 4d. Get node -> groups mappings
+    const nodeGroups = new Map<number, number[]>();
+
+    for (let i = 0; i < nodeIds.length; i += CHUNK_SIZE) {
+      const chunk = nodeIds.slice(i, i + CHUNK_SIZE);
+      const rows = await query<
+        Array<{ TraitNodeID: number; TraitNodeGroupID: number }>
+      >(supabase, "trait_node_group_x_trait_node", (b) =>
+        b.select("TraitNodeID, TraitNodeGroupID").in("TraitNodeID", chunk),
+      );
+
+      for (const r of rows) {
+        if (!nodeGroups.has(r.TraitNodeID)) {
+          nodeGroups.set(r.TraitNodeID, []);
+        }
+        nodeGroups.get(r.TraitNodeID)!.push(r.TraitNodeGroupID);
+      }
+    }
+
+    // 4e. Filter nodes: exclude if in a spec-restricted group for OTHER specs
+    for (const nodeId of nodeIds) {
+      const groups = nodeGroups.get(nodeId) || [];
+
+      // Check if node is in any spec-restricted group
+      let isExcluded = false;
+      for (const groupId of groups) {
+        const groupRestrictions = groupSpecSets.get(groupId);
+        if (groupRestrictions && groupRestrictions.size > 0) {
+          // This group has spec restrictions - check if we're allowed
+          let specAllowed = false;
+          for (const ss of specSets) {
+            if (groupRestrictions.has(ss)) {
+              specAllowed = true;
+              break;
+            }
+          }
+          if (!specAllowed) {
+            // Node is in a spec-restricted group that doesn't include us
+            isExcluded = true;
+            break;
+          }
+        }
+      }
+
+      if (!isExcluded) {
+        allNodeIds.push(nodeId);
+      }
+    }
+  }
+
+  if (allNodeIds.length === 0) return new Set();
+
+  // 5. Get node -> entry mappings (chunked)
+  const uniqueNodeIds = [...new Set(allNodeIds)];
   const allEntryIds: number[] = [];
-  for (let i = 0; i < nodeIds.length; i += CHUNK_SIZE) {
-    const chunk = nodeIds.slice(i, i + CHUNK_SIZE);
+  for (let i = 0; i < uniqueNodeIds.length; i += CHUNK_SIZE) {
+    const chunk = uniqueNodeIds.slice(i, i + CHUNK_SIZE);
     const rows = await query<Array<{ TraitNodeEntryID: number }>>(
       supabase,
       "trait_node_x_trait_node_entry",
@@ -91,7 +197,7 @@ const getTalentSpellIds = async (
 
   if (allEntryIds.length === 0) return new Set();
 
-  // 5. Get entry -> definition mappings (chunked)
+  // 6. Get entry -> definition mappings (chunked)
   const uniqueEntryIds = [...new Set(allEntryIds)];
   const allDefinitionIds: number[] = [];
   for (let i = 0; i < uniqueEntryIds.length; i += CHUNK_SIZE) {
@@ -106,7 +212,7 @@ const getTalentSpellIds = async (
 
   if (allDefinitionIds.length === 0) return new Set();
 
-  // 6. Get definition -> spell mappings (chunked)
+  // 7. Get definition -> spell mappings (chunked)
   const uniqueDefIds = [...new Set(allDefinitionIds)];
   const spellIds = new Set<number>();
   for (let i = 0; i < uniqueDefIds.length; i += CHUNK_SIZE) {
