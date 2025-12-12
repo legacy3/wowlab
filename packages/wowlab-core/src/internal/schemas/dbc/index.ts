@@ -1,4 +1,5 @@
 export * from "./ChrClassesSchema.js";
+export * from "./ChrRaceRacialAbilitySchema.js";
 export * from "./ChrSpecializationSchema.js";
 export * from "./ContentTuningXExpectedSchema.js";
 export * from "./DifficultySchema.js";
@@ -11,6 +12,7 @@ export * from "./ItemSchema.js";
 export * from "./ItemSparseSchema.js";
 export * from "./ItemXItemEffectSchema.js";
 export * from "./ManifestInterfaceDataSchema.js";
+export * from "./SkillLineAbilitySchema.js";
 export * from "./SkillLineXTraitTreeSchema.js";
 export * from "./SpecializationSpellsSchema.js";
 export * from "./SpecSetMemberSchema.js";

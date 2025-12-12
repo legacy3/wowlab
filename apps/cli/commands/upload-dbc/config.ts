@@ -9,6 +9,7 @@ export interface DbcTableMapping<T = unknown> extends TableConfig<T> {
 // prettier-ignore
 export const DBC_TABLES = {
   chrClasses: { file: "ChrClasses.csv", schema: Dbc.ChrClassesRowSchema, tableName: "chr_classes" },
+  chrRaceRacialAbility: { file: "ChrRaceRacialAbility.csv", schema: Dbc.ChrRaceRacialAbilityRowSchema, tableName: "chr_race_racial_ability" },
   chrSpecialization: { file: "ChrSpecialization.csv", schema: Dbc.ChrSpecializationRowSchema, tableName: "chr_specialization" },
   contentTuningXExpected: { file: "ContentTuningXExpected.csv", schema: Dbc.ContentTuningXExpectedRowSchema, tableName: "content_tuning_x_expected" },
   difficulty: { file: "Difficulty.csv", schema: Dbc.DifficultyRowSchema, tableName: "difficulty" },
@@ -21,6 +22,7 @@ export const DBC_TABLES = {
   itemSparse: { file: "ItemSparse.csv", schema: Dbc.ItemSparseRowSchema, tableName: "item_sparse" },
   itemXItemEffect: { file: "ItemXItemEffect.csv", schema: Dbc.ItemXItemEffectRowSchema, tableName: "item_x_item_effect" },
   manifestInterfaceData: { file: "ManifestInterfaceData.csv", schema: Dbc.ManifestInterfaceDataRowSchema, tableName: "manifest_interface_data" },
+  skillLineAbility: { file: "SkillLineAbility.csv", schema: Dbc.SkillLineAbilityRowSchema, tableName: "skill_line_ability" },
   skillLineXTraitTree: { file: "SkillLineXTraitTree.csv", schema: Dbc.SkillLineXTraitTreeRowSchema, tableName: "skill_line_x_trait_tree" },
   specializationSpells: { file: "SpecializationSpells.csv", schema: Dbc.SpecializationSpellsRowSchema, tableName: "specialization_spells" },
   specSetMember: { file: "SpecSetMember.csv", schema: Dbc.SpecSetMemberRowSchema, tableName: "spec_set_member" },
