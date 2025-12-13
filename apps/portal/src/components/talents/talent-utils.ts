@@ -19,11 +19,11 @@ export function computeVisibleNodes(
   const includedIds = new Set<number>();
   const queue: number[] = [];
 
+  // Include ALL nodes - don't filter by orderIndex
+  // SimC iterates all nodes, baseline nodes have orderIndex = -1 but must still be included
   for (const n of nodes) {
-    if (n.orderIndex >= 0 || n.subTreeId > 0) {
-      includedIds.add(n.id);
-      queue.push(n.id);
-    }
+    includedIds.add(n.id);
+    queue.push(n.id);
   }
 
   let head = 0;

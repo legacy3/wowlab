@@ -73,20 +73,23 @@ export function decodeTalentLoadout(
         const purchased = reader.getBits(1) === 1;
         let partiallyRanked = false;
         let ranksPurchased: number | undefined;
+        let choiceNode = false;
+        let choiceIndex: number | undefined;
 
         if (purchased) {
+          // partiallyRanked and hasChoice bits are ONLY read when purchased
           partiallyRanked = reader.getBits(1) === 1;
 
           if (partiallyRanked) {
             ranksPurchased = reader.getBits(6);
           }
-        }
 
-        const choiceNode = reader.getBits(1) === 1;
-        let choiceIndex: number | undefined;
+          // hasChoice bit - MUST be inside purchased block per SimC
+          choiceNode = reader.getBits(1) === 1;
 
-        if (choiceNode) {
-          choiceIndex = reader.getBits(2);
+          if (choiceNode) {
+            choiceIndex = reader.getBits(2);
+          }
         }
 
         nodes.push({

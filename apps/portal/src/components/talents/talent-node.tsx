@@ -126,6 +126,7 @@ export const TalentNode = memo(function TalentNode({
 
   const isSelected = selection?.selected ?? false;
   const ranksPurchased = selection?.ranksPurchased ?? 0;
+  const choiceIndex = selection?.choiceIndex;
   const isChoiceNode = node.type === 2 && node.entries.length > 1;
 
   const size = isChoiceNode ? CHOICE_NODE_SIZE : NODE_SIZE;
@@ -170,6 +171,49 @@ export const TalentNode = memo(function TalentNode({
     const iconSize = size - NODE_BORDER * 2;
     const halfIconWidth = iconSize / 2;
 
+    // When selected with a choice, show only the selected entry as a single icon
+    const hasChoice = isSelected && choiceIndex !== undefined;
+    const selectedEntry = hasChoice
+      ? choiceIndex === 0
+        ? entry1
+        : entry2
+      : null;
+
+    // If a choice is made, render as single icon (like a normal node)
+    if (selectedEntry) {
+      return (
+        <KonvaGroup
+          x={x - halfSize}
+          y={y - halfSize}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <KonvaRect
+            width={size}
+            height={size}
+            fill="#1f2937"
+            cornerRadius={cornerRadius}
+            stroke={isHero ? COLOR_HERO_BORDER : "#eab308"}
+            strokeWidth={NODE_BORDER}
+            opacity={finalOpacity}
+          />
+          <SelectionRing size={size} cornerRadius={cornerRadius} />
+          <NodeIcon
+            iconName={selectedEntry.iconFileName || "inv_misc_questionmark"}
+            x={NODE_BORDER}
+            y={NODE_BORDER}
+            size={iconSize}
+            cornerRadius={Math.max(0, cornerRadius - NODE_BORDER)}
+            opacity={finalOpacity}
+          />
+          {isSearching && isSearchMatch && (
+            <SearchHighlight size={size} cornerRadius={cornerRadius} />
+          )}
+        </KonvaGroup>
+      );
+    }
+
+    // No choice made yet - show split view with both icons
     return (
       <KonvaGroup
         x={x - halfSize}
@@ -186,9 +230,6 @@ export const TalentNode = memo(function TalentNode({
           strokeWidth={NODE_BORDER}
           opacity={finalOpacity}
         />
-        {isSelected && (
-          <SelectionRing size={size} cornerRadius={cornerRadius} />
-        )}
 
         <KonvaGroup
           clipX={NODE_BORDER}

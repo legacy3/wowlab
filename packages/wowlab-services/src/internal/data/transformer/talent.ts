@@ -189,12 +189,10 @@ export const transformTalentTree = (
       }
     }
 
-    // 7. Filter nodes to only class/spec + available hero subtrees
-    const filteredNodes = treeNodes.filter(
-      (n) =>
-        n.TraitSubTreeID === 0 ||
-        availableSubTreeIds.includes(n.TraitSubTreeID),
-    );
+    // 7. Include ALL nodes - don't filter by hero subtree availability
+    // SimC includes nodes from ALL hero subtrees, the bitstream has bits for all of them
+    // The SELECTION node determines which hero tree is active
+    const filteredNodes = treeNodes;
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.ID));
 
     // 8. Filter edges to only include filtered nodes
@@ -303,10 +301,25 @@ export const transformTalentTree = (
 
     // 17. Assemble the nodes using the pre-fetched data
     const nodes: Talent.TalentNode[] = filteredNodes.map((node, nodeIndex) => {
-      // Sort by _Index to ensure correct entry order for choice nodes
-      const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort(
-        (a, b) => a._Index - b._Index,
-      );
+      // Sort entries to match SimC's sort_node_entries() logic:
+      // - If both have selection_index != -1: sort ascending by selection_index
+      // - Otherwise: sort descending by id_trait_node_entry (entry ID)
+      // The _Index field corresponds to selection_index in SimC's trait_data
+      const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort((a, b) => {
+        // _Index of -1 means "no selection index"
+        // In DBC, this might also be represented differently, but we treat
+        // any negative value as "no index"
+        const aHasIndex = a._Index >= 0;
+        const bHasIndex = b._Index >= 0;
+
+        if (aHasIndex && bHasIndex) {
+          // Both have valid indices - sort ascending by _Index
+          return a._Index - b._Index;
+        } else {
+          // Fallback: sort descending by entry ID (higher ID first)
+          return b.TraitNodeEntryID - a.TraitNodeEntryID;
+        }
+      });
       const entries: Talent.TalentNodeEntry[] = [];
       let maxRanks = 1;
 
@@ -407,10 +420,9 @@ export const applyDecodedTalents = (
 ): Talent.TalentTreeWithSelections => {
   const selections = new Map<number, Talent.DecodedTalentSelection>();
 
-  // Sort nodes by orderIndex
-  const orderedNodes = [...tree.nodes]
-    .filter((n) => n.orderIndex >= 0)
-    .sort((a, b) => a.orderIndex - b.orderIndex);
+  // Sort nodes by node ID ascending to match SimC's std::map iteration order
+  // SimC iterates tree_nodes (std::map<unsigned, ...>) which orders by id_node ascending
+  const orderedNodes = [...tree.nodes].sort((a, b) => a.id - b.id);
 
   // Map decoded nodes to tree nodes
   for (let i = 0; i < decoded.nodes.length && i < orderedNodes.length; i++) {
