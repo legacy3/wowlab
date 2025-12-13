@@ -8,29 +8,6 @@ import { ExtractorService } from "./extractors.js";
 const TARGET_HERO_X = 7500;
 const TARGET_HERO_Y = 1200;
 
-// TODO Not sure about this + move it
-const deriveSubTreeIconFileName = (
-  nodes: readonly Talent.TalentNode[],
-  subTreeId: number,
-): string => {
-  for (const node of nodes) {
-    if (node.subTreeId !== subTreeId) {
-      continue;
-    }
-
-    for (const entry of node.entries) {
-      const iconFileName = entry.iconFileName;
-      if (iconFileName && iconFileName !== "inv_misc_questionmark") {
-        return iconFileName;
-      }
-    }
-  }
-
-  const firstHeroNode = nodes.find((n) => n.subTreeId === subTreeId);
-
-  return firstHeroNode?.entries[0]?.iconFileName || "inv_misc_questionmark";
-};
-
 const calculateHeroTreeOffsets = (
   nodes: ReadonlyArray<{ PosX: number; PosY: number; TraitSubTreeID: number }>,
   subTreeIds: ReadonlyArray<number>,
