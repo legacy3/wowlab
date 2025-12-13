@@ -973,6 +973,39 @@ export const RefineDbcService = (
 
             return chain;
           }),
+
+        // TOOD Sort this properly
+        getSpecSetMembers: (specSetIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.SpecSetMemberRow>(
+            queryClient,
+            dataProvider,
+            "spec_set_member",
+            "SpecSet",
+            specSetIds,
+          ),
+        getTraitConds: (condIds: readonly number[]) =>
+          fetchByIds<Schemas.Dbc.TraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_cond",
+            condIds,
+          ),
+        getTraitNodeGroupXTraitConds: (groupIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_cond",
+            "TraitNodeGroupID",
+            groupIds,
+          ),
+        getTraitNodeGroupXTraitNodes: (nodeIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitNodeRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_node",
+            "TraitNodeID",
+            nodeIds,
+          ),
       };
     }),
   ).pipe(Layer.provide(resolversLayer));

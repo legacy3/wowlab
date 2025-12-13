@@ -81,6 +81,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpecializationSpells: (specId) =>
       Effect.succeed(cache.specializationSpells.get(specId) ?? []),
 
+    getSpecSetMembers: () => Effect.succeed([]), // TODO Implement these properly
+
     getSpell: (spellId) => Effect.succeed(cache.spell.get(spellId)),
 
     getSpellAuraOptions: (spellId) =>
@@ -165,6 +167,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getSpellXDescriptionVariables: (spellId) =>
       Effect.succeed(cache.spellXDescriptionVariables.get(spellId) ?? []),
 
+    getTraitConds: () => Effect.succeed([]), // TODO Implement these properly
+
     getTraitDefinition: (id) => Effect.succeed(cache.traitDefinition.get(id)),
 
     getTraitEdgesForTree: (treeId) =>
@@ -173,6 +177,10 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getTraitNode: (id) => Effect.succeed(cache.traitNode.get(id)),
 
     getTraitNodeEntry: (id) => Effect.succeed(cache.traitNodeEntry.get(id)),
+
+    getTraitNodeGroupXTraitConds: () => Effect.succeed([]), // TODO Implement these properly
+
+    getTraitNodeGroupXTraitNodes: () => Effect.succeed([]), // TODO Implement these properly
 
     getTraitNodesForTree: (treeId) =>
       Effect.succeed(cache.traitNodesByTree.get(treeId) ?? []),

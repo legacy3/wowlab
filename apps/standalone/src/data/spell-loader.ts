@@ -591,6 +591,12 @@ const SupabaseDbcServiceLive = (
             (builder) => builder.select("*").eq("SpecID", specId),
           ),
 
+        getSpecSetMembers: (specSetIds) =>
+          query<Schemas.Dbc.SpecSetMemberRow[]>(
+            supabase,
+            "spec_set_member",
+            (builder) => builder.select("*").in("SpecSet", [...specSetIds]),
+          ),
         getSpell: (spellId) => spellCache.get(spellId),
         getSpellAuraOptions: (spellId) => spellAuraOptionsCache.get(spellId),
         getSpellAuraRestrictions: (spellId) =>
@@ -626,9 +632,13 @@ const SupabaseDbcServiceLive = (
         getSpellTargetRestrictions: (spellId) =>
           spellTargetRestrictionsCache.get(spellId),
         getSpellTotems: (spellId) => spellTotemsCache.get(spellId),
+
         getSpellXDescriptionVariables: (spellId) =>
           spellXDescriptionVariablesCache.get(spellId),
-
+        getTraitConds: (condIds) =>
+          query<Schemas.Dbc.TraitCondRow[]>(supabase, "trait_cond", (builder) =>
+            builder.select("*").in("ID", [...condIds]),
+          ),
         getTraitDefinition: (id) =>
           query<Schemas.Dbc.TraitDefinitionRow | undefined>(
             supabase,
@@ -652,6 +662,19 @@ const SupabaseDbcServiceLive = (
             supabase,
             "trait_node_entry",
             (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitNodeGroupXTraitConds: (groupIds) =>
+          query<Schemas.Dbc.TraitNodeGroupXTraitCondRow[]>(
+            supabase,
+            "trait_node_group_x_trait_cond",
+            (builder) =>
+              builder.select("*").in("TraitNodeGroupID", [...groupIds]),
+          ),
+        getTraitNodeGroupXTraitNodes: (nodeIds) =>
+          query<Schemas.Dbc.TraitNodeGroupXTraitNodeRow[]>(
+            supabase,
+            "trait_node_group_x_trait_node",
+            (builder) => builder.select("*").in("TraitNodeID", [...nodeIds]),
           ),
         getTraitNodesForTree: (treeId) =>
           query<Schemas.Dbc.TraitNodeRow[]>(supabase, "trait_node", (builder) =>

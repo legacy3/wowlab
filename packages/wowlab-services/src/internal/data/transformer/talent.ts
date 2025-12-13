@@ -5,6 +5,33 @@ import * as Effect from "effect/Effect";
 import { DbcService } from "../dbc/DbcService.js";
 import { ExtractorService } from "./extractors.js";
 
+const TARGET_HERO_X = 7500;
+const TARGET_HERO_Y = 1200;
+
+const calculateHeroTreeOffsets = (
+  nodes: Array<{ PosX: number; PosY: number; TraitSubTreeID: number }>,
+  subTreeIds: number[],
+): Map<number, { offsetX: number; offsetY: number }> => {
+  const offsets = new Map<number, { offsetX: number; offsetY: number }>();
+
+  for (const subTreeId of subTreeIds) {
+    const heroNodes = nodes.filter((n) => n.TraitSubTreeID === subTreeId);
+    if (heroNodes.length === 0) {
+      continue;
+    }
+
+    const minX = Math.min(...heroNodes.map((n) => n.PosX));
+    const minY = Math.min(...heroNodes.map((n) => n.PosY));
+
+    offsets.set(subTreeId, {
+      offsetX: TARGET_HERO_X - minX,
+      offsetY: TARGET_HERO_Y - minY,
+    });
+  }
+
+  return offsets;
+};
+
 export const transformTalentTree = (
   specId: number,
 ): Effect.Effect<Talent.TalentTree, DbcError, DbcService | ExtractorService> =>
@@ -35,7 +62,14 @@ export const transformTalentTree = (
       );
     }
 
-    const loadoutEntries = yield* dbc.getTraitTreeLoadoutEntries(loadout.ID);
+    const loadoutEntriesUnsorted = yield* dbc.getTraitTreeLoadoutEntries(
+      loadout.ID,
+    );
+
+    // Sort by OrderIndex to ensure correct node order
+    const loadoutEntries = [...loadoutEntriesUnsorted].sort(
+      (a, b) => a.OrderIndex - b.OrderIndex,
+    );
 
     // 3. Build orderIndex map: nodeId -> orderIndex
     const orderIndexMap = new Map<number, number>();
@@ -44,7 +78,7 @@ export const transformTalentTree = (
     }
 
     // 4. Get all nodes and edges in parallel (batching enabled)
-    const [treeNodes, edges] = yield* Effect.all(
+    const [treeNodes, allEdges] = yield* Effect.all(
       [
         dbc.getTraitNodesForTree(loadout.TraitTreeID),
         dbc.getTraitEdgesForTree(loadout.TraitTreeID),
@@ -52,36 +86,148 @@ export const transformTalentTree = (
       { batching: true },
     );
 
-    // 5. Get unique subTreeIds for hero talents (batched)
-    const subTreeIds = [
+    // 5. Get unique subTreeIds for hero talents
+    const allSubTreeIds = [
       ...new Set(treeNodes.map((n) => n.TraitSubTreeID).filter((id) => id > 0)),
     ];
 
+    // 6. Filter hero subtrees to only those available for this spec
+    const heroNodeIds = treeNodes
+      .filter((n) => n.TraitSubTreeID > 0)
+      .map((n) => n.ID);
+
+    let availableSubTreeIds = allSubTreeIds;
+
+    if (heroNodeIds.length > 0) {
+      // Get node group memberships for hero nodes
+      const nodeGroupMemberships =
+        yield* dbc.getTraitNodeGroupXTraitNodes(heroNodeIds);
+
+      const heroNodeGroupIds = [
+        ...new Set(nodeGroupMemberships.map((m) => m.TraitNodeGroupID)),
+      ];
+
+      if (heroNodeGroupIds.length > 0) {
+        // Get conditions for those groups
+        const groupConditions =
+          yield* dbc.getTraitNodeGroupXTraitConds(heroNodeGroupIds);
+        const condIds = [
+          ...new Set(groupConditions.map((gc) => gc.TraitCondID)),
+        ];
+
+        if (condIds.length > 0) {
+          // Get the actual conditions
+          const conditions = yield* dbc.getTraitConds(condIds);
+          const conditionsWithSpecSet = conditions.filter(
+            (c) => c.SpecSetID > 0,
+          );
+          const specSetIds = [
+            ...new Set(conditionsWithSpecSet.map((c) => c.SpecSetID)),
+          ];
+
+          if (specSetIds.length > 0) {
+            // Get spec set members
+            const specSetMembers = yield* dbc.getSpecSetMembers(specSetIds);
+
+            // Build map of subTreeId -> allowed specIds
+            const subTreeSpecRestrictions = new Map<number, Set<number>>();
+
+            for (const membership of nodeGroupMemberships) {
+              const node = treeNodes.find(
+                (n) => n.ID === membership.TraitNodeID,
+              );
+
+              if (!node || node.TraitSubTreeID === 0) {
+                continue;
+              }
+
+              const groupConds = groupConditions.filter(
+                (gc) => gc.TraitNodeGroupID === membership.TraitNodeGroupID,
+              );
+
+              for (const gc of groupConds) {
+                const cond = conditionsWithSpecSet.find(
+                  (c) => c.ID === gc.TraitCondID,
+                );
+
+                if (!cond) {
+                  continue;
+                }
+
+                const allowedSpecs = specSetMembers
+                  .filter((ssm) => ssm.SpecSet === cond.SpecSetID)
+                  .map((ssm) => ssm.ChrSpecializationID);
+
+                const existing = subTreeSpecRestrictions.get(
+                  node.TraitSubTreeID,
+                );
+
+                if (!existing) {
+                  subTreeSpecRestrictions.set(
+                    node.TraitSubTreeID,
+                    new Set(allowedSpecs),
+                  );
+                } else {
+                  for (const s of allowedSpecs) {
+                    existing.add(s);
+                  }
+                }
+              }
+            }
+
+            // Filter to available subtrees
+            availableSubTreeIds = allSubTreeIds.filter((stId) => {
+              const restrictions = subTreeSpecRestrictions.get(stId);
+              if (!restrictions || restrictions.size === 0) {
+                return true;
+              }
+
+              return restrictions.has(specId);
+            });
+          }
+        }
+      }
+    }
+
+    // 7. Filter nodes to only class/spec + available hero subtrees
+    const filteredNodes = treeNodes.filter(
+      (n) =>
+        n.TraitSubTreeID === 0 ||
+        availableSubTreeIds.includes(n.TraitSubTreeID),
+    );
+    const filteredNodeIds = new Set(filteredNodes.map((n) => n.ID));
+
+    // 8. Filter edges to only include filtered nodes
+    const filteredEdges = allEdges.filter(
+      (e) =>
+        filteredNodeIds.has(e.LeftTraitNodeID) &&
+        filteredNodeIds.has(e.RightTraitNodeID),
+    );
+
+    // 9. Calculate hero tree offsets for available subtrees
+    const heroTreeOffsets = calculateHeroTreeOffsets(
+      filteredNodes,
+      availableSubTreeIds,
+    );
+
+    // 10. Get subtree data
     const subTreeResults = yield* Effect.forEach(
-      subTreeIds,
+      availableSubTreeIds,
       (subTreeId) => dbc.getTraitSubTree(subTreeId),
       { batching: true },
     );
 
-    const subTrees: Talent.TalentSubTree[] = subTreeResults
-      .filter((st): st is NonNullable<typeof st> => st != null)
-      .map((subTree) => ({
-        description: subTree.Description_lang ?? "",
-        id: subTree.ID,
-        name: subTree.Name_lang ?? "",
-      }));
-
-    // 6. Get all nodeXEntries for all nodes in one batched operation
+    // 11. Get all nodeXEntries for filtered nodes
     const allNodeXEntries = yield* Effect.forEach(
-      treeNodes,
+      filteredNodes,
       (node) => dbc.getTraitNodeXTraitNodeEntries(node.ID),
       { batching: true },
     );
 
-    // 7. Collect all entry IDs we need to fetch
+    // 12. Collect all entry IDs we need to fetch
     const allEntryIds = allNodeXEntries.flat().map((x) => x.TraitNodeEntryID);
 
-    // 8. Batch fetch all trait node entries
+    // 13. Batch fetch all trait node entries
     const allEntries = yield* Effect.forEach(
       allEntryIds,
       (entryId) => dbc.getTraitNodeEntry(entryId),
@@ -99,7 +245,7 @@ export const transformTalentTree = (
       }
     }
 
-    // 9. Collect all definition IDs we need
+    // 14. Collect all definition IDs we need
     const allDefinitionIds = [
       ...new Set(
         allEntries
@@ -108,7 +254,7 @@ export const transformTalentTree = (
       ),
     ];
 
-    // 10. Batch fetch all trait definitions
+    // 15. Batch fetch all trait definitions
     const allDefinitions = yield* Effect.forEach(
       allDefinitionIds,
       (defId) => dbc.getTraitDefinition(defId),
@@ -126,7 +272,7 @@ export const transformTalentTree = (
       }
     }
 
-    // 11. Extract names, descriptions, and icons for all definitions (batched)
+    // 16. Extract names, descriptions, and icons for all definitions (batched)
     const definitionsWithExtras = yield* Effect.forEach(
       [...definitionMap.values()],
       (definition) =>
@@ -155,9 +301,12 @@ export const transformTalentTree = (
       });
     }
 
-    // 12. Assemble the nodes using the pre-fetched data
-    const nodes: Talent.TalentNode[] = treeNodes.map((node, nodeIndex) => {
-      const nodeXEntries = allNodeXEntries[nodeIndex];
+    // 17. Assemble the nodes using the pre-fetched data
+    const nodes: Talent.TalentNode[] = filteredNodes.map((node, nodeIndex) => {
+      // Sort by _Index to ensure correct entry order for choice nodes
+      const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort(
+        (a, b) => a._Index - b._Index,
+      );
       const entries: Talent.TalentNodeEntry[] = [];
       let maxRanks = 1;
 
@@ -189,21 +338,49 @@ export const transformTalentTree = (
         });
       }
 
+      // Apply hero tree offset if this node belongs to a hero subtree
+      let posX = node.PosX;
+      let posY = node.PosY;
+
+      if (node.TraitSubTreeID > 0) {
+        const offset = heroTreeOffsets.get(node.TraitSubTreeID);
+        if (offset) {
+          posX += offset.offsetX;
+          posY += offset.offsetY;
+        }
+      }
+
       return {
         entries,
         id: node.ID,
         maxRanks,
         orderIndex: orderIndexMap.get(node.ID) ?? -1,
-        posX: node.PosX,
-        posY: node.PosY,
+        posX,
+        posY,
         subTreeId: node.TraitSubTreeID,
         type: node.Type,
       };
     });
 
+    // 18. Build subtrees with icons from first hero node
+    const subTrees: Talent.TalentSubTree[] = subTreeResults
+      .filter((st): st is NonNullable<typeof st> => st != null)
+      .map((subTree) => {
+        const firstHeroNode = nodes.find((n) => n.subTreeId === subTree.ID);
+        const iconFileName =
+          firstHeroNode?.entries[0]?.iconFileName || "inv_misc_questionmark";
+
+        return {
+          description: subTree.Description_lang ?? "",
+          iconFileName,
+          id: subTree.ID,
+          name: subTree.Name_lang ?? "",
+        };
+      });
+
     return {
       className: chrClass.Name_lang ?? "",
-      edges: edges.map((e) => ({
+      edges: filteredEdges.map((e) => ({
         fromNodeId: e.LeftTraitNodeID,
         id: e.ID,
         toNodeId: e.RightTraitNodeID,
