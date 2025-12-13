@@ -22,7 +22,7 @@ import {
   searchTalentNodes,
   deriveSelectedHeroId,
 } from "./talent-utils";
-import { useTalentLayout } from "./use-talent-layout";
+import { useTalentLayout } from "@/hooks/use-talent-layout";
 import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TalentTooltip } from "./talent-tooltip";

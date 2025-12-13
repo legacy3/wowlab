@@ -54,7 +54,7 @@ import {
   EQUIPMENT_TRINKET_SLOTS,
   EQUIPMENT_WEAPON_SLOTS,
 } from "@/components/equipment";
-import { TalentTreePreview } from "@/components/talents";
+import { TalentHoverLink } from "@/components/talents";
 import {
   clearCharacterAtom,
   fightDurationAtom,
@@ -260,6 +260,11 @@ function QuickSimContentInner() {
           <CharacterSummaryCard
             character={character}
             professions={professions}
+            rightContent={
+              talents.encoded ? (
+                <TalentHoverLink encodedTalents={talents.encoded} />
+              ) : null
+            }
           />
         </CardHeader>
         <CardContent>
@@ -328,11 +333,6 @@ function QuickSimContentInner() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Talent Tree Preview */}
-      {talents.encoded && (
-        <TalentTreePreview encodedTalents={talents.encoded} />
-      )}
 
       {/* Fight Profile Picker */}
       <div className="space-y-2">

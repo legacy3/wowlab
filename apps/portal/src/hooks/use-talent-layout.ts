@@ -4,8 +4,8 @@ import type {
   TalentTreeLayout,
   TalentNodePosition,
   TalentEdgePosition,
-} from "./types";
-import { PADDING } from "./constants";
+} from "@/components/talents/types";
+import { PADDING } from "@/components/talents/constants";
 
 interface UseTalentLayoutParams {
   nodes: readonly Talent.TalentNode[];
@@ -73,6 +73,7 @@ export function useTalentLayout({
 
       const fromNode = nodeMap.get(edge.fromNodeId);
       const toNode = nodeMap.get(edge.toNodeId);
+
       if (!fromNode || !toNode) {
         continue;
       }
