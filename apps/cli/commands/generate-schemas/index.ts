@@ -52,7 +52,7 @@ function generateSchemaCode(tableName: string, fields: string[]): string {
   const fieldLines = fields.map((field) => {
     const fieldType = getFieldType(tableName, field);
     const schemaCode = fieldTypeToSchemaCode(fieldType);
-    
+
     return `  ${field}: ${schemaCode},`;
   });
 

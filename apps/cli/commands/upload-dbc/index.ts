@@ -41,6 +41,43 @@ const fromOption = Options.choice("from", DBC_TABLE_KEYS).pipe(
   ),
 );
 
+const emptyOnlyOption = Options.boolean("empty").pipe(
+  Options.withDefault(false),
+  Options.withDescription(
+    "Only upload data to tables that currently have no rows.",
+  ),
+);
+
+const getTableRowCount = (
+  supabase: SupabaseClient,
+  tableName: string,
+): Effect.Effect<number, SupabaseError> =>
+  Effect.gen(function* () {
+    const { count, error } = yield* Effect.tryPromise({
+      catch: (cause) =>
+        new SupabaseError({
+          message: String(cause),
+          operation: `count ${tableName}`,
+        }),
+      try: () =>
+        supabase
+          .schema("raw_dbc")
+          .from(tableName)
+          .select("*", { count: "exact", head: true }),
+    });
+
+    if (error) {
+      return yield* Effect.fail(
+        new SupabaseError({
+          message: error.message,
+          operation: `count ${tableName}`,
+        }),
+      );
+    }
+
+    return count ?? 0;
+  });
+
 const truncateTable = (
   supabase: SupabaseClient,
   tableName: string,
@@ -156,6 +193,7 @@ const uploadDbcProgram = (
   tablesFilter: ReadonlyArray<DbcTableKey>,
   dryRun: boolean,
   fromTable: Option.Option<DbcTableKey>,
+  emptyOnly: boolean,
 ): Effect.Effect<
   number,
   MissingEnvironmentError | SupabaseError,
@@ -179,6 +217,34 @@ const uploadDbcProgram = (
       }
     }
 
+    // If --empty is specified, filter to only empty tables
+    if (emptyOnly) {
+      yield* Effect.logInfo("Checking for empty tables...");
+      const emptyTables: DbcTableKey[] = [];
+
+      for (const tableKey of tablesToUpload) {
+        const tableConfig = DBC_TABLES[tableKey];
+        const rowCount = yield* getTableRowCount(
+          supabase,
+          tableConfig.tableName,
+        );
+        if (rowCount === 0) {
+          emptyTables.push(tableKey);
+        } else {
+          yield* Effect.logInfo(
+            `Skipping ${tableConfig.tableName} (has ${rowCount} rows)`,
+          );
+        }
+      }
+
+      tablesToUpload = emptyTables;
+
+      if (tablesToUpload.length === 0) {
+        yield* Effect.logInfo("No empty tables to upload.");
+        return 0;
+      }
+    }
+
     const modeLabel = dryRun ? "[DRY RUN] " : "";
     yield* Effect.logInfo(
       `${modeLabel}Uploading ${tablesToUpload.length} tables to raw_dbc schema...`,
@@ -197,6 +263,12 @@ const uploadDbcProgram = (
 
 export const uploadDbcCommand = Command.make(
   "upload-dbc",
-  { dryRun: dryRunOption, from: fromOption, tables: tablesOption },
-  ({ dryRun, from, tables }) => uploadDbcProgram(tables, dryRun, from),
+  {
+    dryRun: dryRunOption,
+    emptyOnly: emptyOnlyOption,
+    from: fromOption,
+    tables: tablesOption,
+  },
+  ({ dryRun, emptyOnly, from, tables }) =>
+    uploadDbcProgram(tables, dryRun, from, emptyOnly),
 );
