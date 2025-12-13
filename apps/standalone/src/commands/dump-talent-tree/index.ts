@@ -1,5 +1,6 @@
-import { Args, Command } from "@effect/cli";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { Args, Command } from "@effect/cli";
 import * as Effect from "effect/Effect";
 
 import { supabaseClient } from "../../data/supabase.js";
@@ -22,81 +23,36 @@ const query = async <T>(
   return result.data as T;
 };
 
-interface ChrSpecialization {
-  ID: number;
-  ClassID: number;
-  Name_lang: string | null;
-}
-
 interface ChrClass {
   ID: number;
   Name_lang: string | null;
 }
 
-interface TraitTreeLoadout {
-  ID: number;
-  TraitTreeID: number;
-}
-
-interface TraitTreeLoadoutEntry {
-  SelectedTraitNodeID: number;
-  OrderIndex: number;
-}
-
-interface TraitNode {
-  ID: number;
-  TraitTreeID: number;
-  TraitSubTreeID: number;
-  PosX: number;
-  PosY: number;
-  Type: number;
-}
-
-interface TraitEdge {
-  ID: number;
-  LeftTraitNodeID: number;
-  RightTraitNodeID: number;
-  VisualStyle: number;
-}
-
-interface TraitSubTree {
+interface ChrSpecialization {
+  ClassID: number;
   ID: number;
   Name_lang: string | null;
-  Description_lang: string | null;
 }
 
-interface TraitNodeXTraitCond {
-  TraitNodeID: number;
-  TraitCondID: number;
-}
-
-interface TraitCond {
+interface ManifestInterfaceData {
+  FileName: string | null;
   ID: number;
-  SpecSetID: number;
 }
 
 interface SpecSetMember {
-  SpecSet: number;
   ChrSpecializationID: number;
+  SpecSet: number;
 }
 
-interface TraitNodeXTraitNodeEntry {
-  TraitNodeID: number;
-  TraitNodeEntryID: number;
-}
-
-interface TraitNodeEntry {
+interface Spell {
+  Description_lang: string | null;
   ID: number;
-  TraitDefinitionID: number;
-  MaxRanks: number;
 }
 
-interface TraitDefinition {
+interface SpellMisc {
   ID: number;
+  SpellIconFileDataID: number | null;
   SpellID: number;
-  OverrideName_lang: string | null;
-  OverrideDescription_lang: string | null;
-  OverrideIcon: number;
 }
 
 interface SpellName {
@@ -104,27 +60,14 @@ interface SpellName {
   Name_lang: string | null;
 }
 
-interface Spell {
-  ID: number;
-  Description_lang: string | null;
-}
-
-interface SpellMisc {
-  ID: number;
-  SpellID: number;
-  SpellIconFileDataID: number | null;
-}
-
-interface ManifestInterfaceData {
-  ID: number;
-  FileName: string | null;
-}
-
 interface TalentTree {
-  specId: number;
-  specName: string;
   className: string;
-  treeId: number;
+  edges: Array<{
+    id: number;
+    fromNodeId: number;
+    toNodeId: number;
+    visualStyle: number;
+  }>;
   nodes: Array<{
     id: number;
     posX: number;
@@ -142,17 +85,76 @@ interface TalentTree {
       spellId: number;
     }>;
   }>;
-  edges: Array<{
-    id: number;
-    fromNodeId: number;
-    toNodeId: number;
-    visualStyle: number;
-  }>;
+  specId: number;
+  specName: string;
   subTrees: Array<{
     id: number;
     name: string;
     description: string;
+    iconFileName: string;
   }>;
+  treeId: number;
+}
+
+interface TraitCond {
+  ID: number;
+  SpecSetID: number;
+}
+
+interface TraitDefinition {
+  ID: number;
+  OverrideDescription_lang: string | null;
+  OverrideIcon: number;
+  OverrideName_lang: string | null;
+  SpellID: number;
+}
+
+interface TraitEdge {
+  ID: number;
+  LeftTraitNodeID: number;
+  RightTraitNodeID: number;
+  VisualStyle: number;
+}
+
+interface TraitNode {
+  ID: number;
+  PosX: number;
+  PosY: number;
+  TraitSubTreeID: number;
+  TraitTreeID: number;
+  Type: number;
+}
+
+interface TraitNodeEntry {
+  ID: number;
+  MaxRanks: number;
+  TraitDefinitionID: number;
+}
+
+interface TraitNodeXTraitCond {
+  TraitCondID: number;
+  TraitNodeID: number;
+}
+
+interface TraitNodeXTraitNodeEntry {
+  TraitNodeEntryID: number;
+  TraitNodeID: number;
+}
+
+interface TraitSubTree {
+  Description_lang: string | null;
+  ID: number;
+  Name_lang: string | null;
+}
+
+interface TraitTreeLoadout {
+  ID: number;
+  TraitTreeID: number;
+}
+
+interface TraitTreeLoadoutEntry {
+  OrderIndex: number;
+  SelectedTraitNodeID: number;
 }
 
 const loadTalentTree = async (
@@ -272,7 +274,8 @@ const loadTalentTree = async (
     return restrictions.has(specId);
   });
 
-  const subTrees: TalentTree["subTrees"] = [];
+  const subTreeData: Array<{ id: number; name: string; description: string }> =
+    [];
   for (const subTreeId of availableSubTreeIds) {
     const subTree = await query<TraitSubTree | null>(
       supabase,
@@ -280,7 +283,7 @@ const loadTalentTree = async (
       (b) => b.select("*").eq("ID", subTreeId).maybeSingle(),
     );
     if (subTree) {
-      subTrees.push({
+      subTreeData.push({
         description: subTree.Description_lang ?? "",
         id: subTree.ID,
         name: subTree.Name_lang ?? "",
@@ -465,6 +468,19 @@ const loadTalentTree = async (
     };
   });
 
+  const subTrees: TalentTree["subTrees"] = subTreeData.map((st) => {
+    const firstHeroNode = nodes.find((n) => n.subTreeId === st.id);
+    const iconFileName =
+      firstHeroNode?.entries[0]?.iconFileName || "inv_misc_questionmark";
+
+    return {
+      description: st.description,
+      iconFileName,
+      id: st.id,
+      name: st.name,
+    };
+  });
+
   return {
     className: chrClass.Name_lang ?? "",
     edges: filteredEdges.map((e) => ({
@@ -511,19 +527,37 @@ const generateHtml = (
     .node img {
       width: 100%; height: 100%; object-fit: cover; border-radius: 6px;
     }
+    .node.choice { display: flex; padding: 0; }
+    .node.choice img {
+      width: 50%; height: 100%; border-radius: 0;
+    }
+    .node.choice img:first-child { border-radius: 4px 0 0 4px; }
+    .node.choice img:last-child { border-radius: 0 4px 4px 0; }
     .node:hover { transform: scale(1.3); border-color: #f1c40f; z-index: 100; }
-    .node.choice { border-color: #9b59b6; background: #2c1f3d; }
+    .node.choice { border-width: 3px; border-color: #9b59b6; background: #2c1f3d; }
     .node.hero { border-color: #e67e22; background: #3d2c1f; }
     .node.hidden { display: none; }
     .tooltip {
       display: none; position: fixed; background: #1e272e; border: 1px solid #636e72;
-      padding: 12px; border-radius: 8px; max-width: 320px; z-index: 1000;
+      padding: 12px; border-radius: 8px; max-width: 420px; z-index: 1000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
     .tooltip.visible { display: block; }
     .tooltip h3 { color: #f1c40f; margin-bottom: 8px; font-size: 14px; }
     .tooltip p { font-size: 12px; line-height: 1.4; color: #b2bec3; }
     .tooltip .meta { font-size: 11px; color: #636e72; margin-top: 8px; }
+    .tooltip .choice-container { display: flex; gap: 12px; }
+    .tooltip .choice-option {
+      flex: 1; padding: 8px; background: #2d3436; border-radius: 6px;
+      border: 1px solid #636e72;
+    }
+    .tooltip .choice-option .choice-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .tooltip .choice-option img { width: 32px; height: 32px; border-radius: 4px; }
+    .tooltip .choice-option h4 { color: #9b59b6; font-size: 13px; margin: 0; }
+    .tooltip .choice-option p { font-size: 11px; color: #b2bec3; margin: 0; }
+    .tooltip .choice-divider { color: #636e72; font-size: 11px; text-align: center; margin: 8px 0; }
     svg { position: absolute; top: 0; left: 0; pointer-events: none; }
     .edge { stroke: #636e72; stroke-width: 2; }
     .edge.hidden { display: none; }
@@ -533,17 +567,24 @@ const generateHtml = (
     .dot.normal { border-color: #636e72; background: #2d3436; }
     .dot.choice { border-color: #9b59b6; background: #2c1f3d; }
     .dot.hero { border-color: #e67e22; background: #3d2c1f; }
+    .hero-selector { display: flex; gap: 8px; align-items: center; }
+    .hero-btn {
+      display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+      background: #2d3436; border: 2px solid #636e72; border-radius: 6px;
+      color: #eee; cursor: pointer; transition: all 0.15s;
+    }
+    .hero-btn:hover { border-color: #e67e22; }
+    .hero-btn.active { border-color: #e67e22; background: #3d2c1f; }
+    .hero-btn img { width: 24px; height: 24px; border-radius: 4px; }
+    .hero-btn span { font-size: 13px; }
   </style>
 </head>
 <body>
   <header>
     <h1>${tree.className} - ${tree.specName}</h1>
-    <div class="controls">
-      <label>Hero Tree:</label>
-      <select id="heroSelect">
-        ${tree.subTrees.map((s, i) => `<option value="${s.id}"${i === 0 ? " selected" : ""}>${s.name}</option>`).join("")}
-        <option value="none">None</option>
-      </select>
+    <div class="hero-selector" id="heroSelector">
+      ${tree.subTrees.map((s, i) => `<button class="hero-btn${i === 0 ? " active" : ""}" data-subtree="${s.id}"><img src="${supabaseUrl}/functions/v1/icons/small/${s.iconFileName}.jpg" alt="${s.name}"><span>${s.name}</span></button>`).join("")}
+      <button class="hero-btn" data-subtree="none"><span>None</span></button>
     </div>
     <div class="legend">
       <span><div class="dot normal"></div> Normal</span>
@@ -560,8 +601,9 @@ const generateHtml = (
     const supabaseUrl = "${supabaseUrl}";
     const treeEl = document.getElementById("tree");
     const tooltip = document.getElementById("tooltip");
-    const heroSelect = document.getElementById("heroSelect");
-    const getIconUrl = (iconName) => supabaseUrl + "/functions/v1/icons/medium/" + iconName + ".jpg";
+    const heroSelector = document.getElementById("heroSelector");
+    const heroBtns = heroSelector.querySelectorAll(".hero-btn");
+    const getIconUrl = (iconName, size = "medium") => supabaseUrl + "/functions/v1/icons/" + size + "/" + iconName + ".jpg";
 
     const nodes = data.nodes.filter(n => n.orderIndex >= 0 || n.subTreeId > 0);
 
@@ -614,18 +656,42 @@ const generateHtml = (
         + (node.subTreeId > 0 ? " hero" : "");
       el.style.left = toX(node.posX) + "px";
       el.style.top = toY(node.posY) + "px";
-      const iconName = node.entries[0]?.iconFileName || "inv_misc_questionmark";
-      const img = document.createElement("img");
-      img.src = getIconUrl(iconName);
-      img.alt = node.entries[0]?.name || "?";
-      el.appendChild(img);
+      const isChoice = node.type === 2 && node.entries.length > 1;
+      if (isChoice) {
+        for (const entry of node.entries.slice(0, 2)) {
+          const img = document.createElement("img");
+          img.src = getIconUrl(entry.iconFileName || "inv_misc_questionmark");
+          img.alt = entry.name || "?";
+          el.appendChild(img);
+        }
+      } else {
+        const img = document.createElement("img");
+        img.src = getIconUrl(node.entries[0]?.iconFileName || "inv_misc_questionmark");
+        img.alt = node.entries[0]?.name || "?";
+        el.appendChild(img);
+      }
       el.dataset.subTreeId = node.subTreeId;
       el.addEventListener("mouseenter", e => {
-        const names = node.entries.map(e => e.name).filter(Boolean).join(" / ") || "(empty)";
-        const desc = node.entries[0]?.description || "";
         const subTree = data.subTrees.find(s => s.id === node.subTreeId);
         const heroLabel = subTree ? " [" + subTree.name + "]" : "";
-        tooltip.innerHTML = \`<h3>\${names}\${heroLabel}</h3><p>\${desc}</p><div class="meta">ID: \${node.id} | Ranks: \${node.maxRanks} | Order: \${node.orderIndex}</div>\`;
+        const isChoice = node.type === 2 && node.entries.length > 1;
+
+        if (isChoice) {
+          const choiceHtml = node.entries.map(entry => \`
+            <div class="choice-option">
+              <div class="choice-header">
+                <img src="\${getIconUrl(entry.iconFileName, "small")}" alt="\${entry.name}">
+                <h4>\${entry.name}</h4>
+              </div>
+              <p>\${entry.description || ""}</p>
+            </div>
+          \`).join("");
+          tooltip.innerHTML = \`<h3>Choice Node\${heroLabel}</h3><div class="choice-container">\${choiceHtml}</div><div class="meta">ID: \${node.id} | Order: \${node.orderIndex}</div>\`;
+        } else {
+          const name = node.entries[0]?.name || "(empty)";
+          const desc = node.entries[0]?.description || "";
+          tooltip.innerHTML = \`<h3>\${name}\${heroLabel}</h3><p>\${desc}</p><div class="meta">ID: \${node.id} | Ranks: \${node.maxRanks} | Order: \${node.orderIndex}</div>\`;
+        }
         tooltip.classList.add("visible");
       });
       el.addEventListener("mousemove", e => {
@@ -637,13 +703,13 @@ const generateHtml = (
       nodeEls.push({ el, node });
     }
 
+    let selectedHeroId = data.subTrees[0]?.id ?? -1;
+
     function updateVisibility() {
-      const heroVal = heroSelect.value;
-      const selectedId = heroVal === "none" ? -1 : parseInt(heroVal);
       for (const { el, node } of nodeEls) {
         let visible = true;
         if (node.subTreeId > 0) {
-          visible = selectedId > 0 && node.subTreeId === selectedId;
+          visible = selectedHeroId > 0 && node.subTreeId === selectedHeroId;
         }
         el.classList.toggle("hidden", !visible);
       }
@@ -652,22 +718,31 @@ const generateHtml = (
         const toSub = parseInt(line.dataset.toSub);
         let visible = true;
         if (fromSub > 0 || toSub > 0) {
-          if (selectedId < 0) {
+          if (selectedHeroId < 0) {
             visible = false;
           } else {
-            if (fromSub > 0 && fromSub !== selectedId) {
+            if (fromSub > 0 && fromSub !== selectedHeroId) {
               visible = false;
             }
-            if (toSub > 0 && toSub !== selectedId) {
+            if (toSub > 0 && toSub !== selectedHeroId) {
               visible = false;
             }
           }
         }
         line.classList.toggle("hidden", !visible);
       }
+      heroBtns.forEach(btn => {
+        const btnId = btn.dataset.subtree === "none" ? -1 : parseInt(btn.dataset.subtree);
+        btn.classList.toggle("active", btnId === selectedHeroId);
+      });
     }
 
-    heroSelect.addEventListener("change", updateVisibility);
+    heroBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedHeroId = btn.dataset.subtree === "none" ? -1 : parseInt(btn.dataset.subtree);
+        updateVisibility();
+      });
+    });
     updateVisibility();
   </script>
 </body>
