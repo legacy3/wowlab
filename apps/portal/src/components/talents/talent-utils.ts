@@ -1,9 +1,5 @@
 import type { Talent } from "@wowlab/core/Schemas";
 
-/**
- * Computes visible nodes using BFS traversal.
- * Includes nodes with orderIndex >= 0, hero nodes, and their connected descendants.
- */
 export function computeVisibleNodes(
   nodes: readonly Talent.TalentNode[],
   edges: readonly Talent.TalentEdge[],
@@ -30,7 +26,6 @@ export function computeVisibleNodes(
     }
   }
 
-  // BFS with O(1) dequeue using index pointer
   let head = 0;
   while (head < queue.length) {
     const nodeId = queue[head++];
@@ -52,15 +47,14 @@ export function computeVisibleNodes(
   return nodes.filter((n) => includedIds.has(n.id));
 }
 
-/**
- * Filters visible nodes by hero tree selection.
- */
 export function filterByHeroTree(
   nodes: readonly Talent.TalentNode[],
   selectedHeroId: number | null,
 ): Talent.TalentNode[] {
   return nodes.filter((n) => {
-    if (n.subTreeId === 0) return true;
+    if (n.subTreeId === 0) {
+      return true;
+    }
     return selectedHeroId !== null && n.subTreeId === selectedHeroId;
   });
 }
@@ -73,10 +67,6 @@ export interface TalentLayout {
 
 const NODE_OFFSET = 20;
 
-/**
- * Computes scale and offset for positioning talent nodes.
- * Uses single-pass bounds calculation.
- */
 export function computeTalentLayout(
   nodes: readonly Talent.TalentNode[],
   width: number,
@@ -112,9 +102,6 @@ export function computeTalentLayout(
   };
 }
 
-/**
- * Finds nodes matching a search query.
- */
 export function searchTalentNodes(
   nodes: readonly Talent.TalentNode[],
   query: string,
@@ -139,18 +126,15 @@ export function searchTalentNodes(
   return matches;
 }
 
-/**
- * Derives the selected hero tree from selections data.
- * Returns the subTreeId that has any selected nodes, or first available.
- */
 export function deriveSelectedHeroId(
   subTrees: readonly Talent.TalentSubTree[],
   nodes: readonly Talent.TalentNode[],
   selections?: Map<number, Talent.DecodedTalentSelection>,
 ): number | null {
-  if (subTrees.length === 0) return null;
+  if (subTrees.length === 0) {
+    return null;
+  }
 
-  // If we have selections, find which hero tree has selected nodes
   if (selections) {
     for (const node of nodes) {
       if (node.subTreeId > 0) {
@@ -162,6 +146,5 @@ export function deriveSelectedHeroId(
     }
   }
 
-  // Default to first hero tree
   return subTrees[0]?.id ?? null;
 }

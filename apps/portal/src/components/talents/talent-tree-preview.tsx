@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   decodeTalentLoadout,
   type DecodedTalentLoadout,
@@ -13,28 +14,30 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTalentTreeWithSelections } from "@/hooks/use-talent-tree";
 import { useZenMode } from "@/hooks/use-zen-mode";
-import { TalentTree } from "./talent-tree";
+
+function TalentTreePreviewSkeleton() {
+  return <Skeleton className="h-[600px] w-full" />;
+}
+
+// Dynamic import for Konva-based TalentTree (client-side only)
+const TalentTree = dynamic(
+  () => import("./talent-tree").then((mod) => mod.TalentTree),
+  { ssr: false, loading: () => <TalentTreePreviewSkeleton /> },
+);
 
 interface TalentTreePreviewProps {
   encodedTalents: string;
   className?: string;
 }
 
-// Fixed dimensions for card view
 const CARD_WIDTH = 600;
 const CARD_HEIGHT = 700;
-
-function TalentTreePreviewSkeleton() {
-  return <Skeleton className="h-[600px] w-full" />;
-}
 
 export function TalentTreePreview({
   encodedTalents,
   className,
 }: TalentTreePreviewProps) {
   const { isZen, enterZen, exitZen } = useZenMode();
-
-  // Only track window size in zen mode to avoid unnecessary re-renders
   const windowSize = useWindowSize();
 
   const decoded = useMemo((): DecodedTalentLoadout | null => {
@@ -49,7 +52,6 @@ export function TalentTreePreview({
     error,
   } = useTalentTreeWithSelections(decoded?.specId ?? null, decoded);
 
-  // Compute dimensions - only use windowSize when in zen mode
   const width = isZen
     ? Math.max(400, Math.min(windowSize.width - 80, 1200))
     : CARD_WIDTH;
@@ -57,7 +59,6 @@ export function TalentTreePreview({
     ? Math.max(300, Math.min(windowSize.height - 120, 900))
     : CARD_HEIGHT;
 
-  // Error/loading states
   if (!decoded) {
     return (
       <Card className={className}>
@@ -95,7 +96,6 @@ export function TalentTreePreview({
     );
   }
 
-  // Zen mode: fullscreen overlay
   if (isZen) {
     return (
       <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center">
@@ -113,7 +113,6 @@ export function TalentTreePreview({
     );
   }
 
-  // Normal mode: card view
   return (
     <Card className={className}>
       <CardHeader className="pb-2 flex flex-row items-center justify-between">

@@ -1,23 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { Stage, Layer, Group } from "react-konva";
+import Konva from "konva";
+import { useThrottledCallback } from "@react-hookz/web";
 import type { Talent } from "@wowlab/core/Schemas";
 import { RotateCcw } from "lucide-react";
-import { TalentNode } from "./talent-node";
-import { TalentEdge } from "./talent-edge";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GameIcon } from "@/components/game";
 import { cn } from "@/lib/utils";
+import { useResizeObserver } from "@/hooks/canvas";
+import { preloadIcons } from "./icon-utils";
 import {
   computeVisibleNodes,
   filterByHeroTree,
-  computeTalentLayout,
   searchTalentNodes,
   deriveSelectedHeroId,
 } from "./talent-utils";
-import { usePanZoom } from "@/hooks/use-pan-zoom";
+import { useTalentLayout } from "./use-talent-layout";
+import { TalentNode } from "./talent-node";
+import { TalentEdge } from "./talent-edge";
+import { TalentTooltip } from "./talent-tooltip";
+import type { TooltipState } from "./types";
+import { MIN_SCALE, MAX_SCALE } from "./constants";
 
 interface TalentTreeProps {
   tree: Talent.TalentTree | Talent.TalentTreeWithSelections;
@@ -31,30 +37,77 @@ function hasSelections(
   return "selections" in tree;
 }
 
+const EdgesLayer = memo(function EdgesLayer({
+  edges,
+}: {
+  edges: ReturnType<typeof useTalentLayout>["edges"];
+}) {
+  return (
+    <>
+      {edges.map((edge) => (
+        <TalentEdge key={edge.id} edge={edge} />
+      ))}
+    </>
+  );
+});
+
+const NodesLayer = memo(function NodesLayer({
+  nodes,
+  searchMatches,
+  isSearching,
+  onHover,
+}: {
+  nodes: ReturnType<typeof useTalentLayout>["nodes"];
+  searchMatches: Set<number>;
+  isSearching: boolean;
+  onHover: (state: TooltipState | null) => void;
+}) {
+  return (
+    <>
+      {nodes.map((nodePos) => (
+        <TalentNode
+          key={nodePos.id}
+          nodePos={nodePos}
+          isSearchMatch={searchMatches.has(nodePos.id)}
+          isSearching={isSearching}
+          onHover={onHover}
+        />
+      ))}
+    </>
+  );
+});
+
 export function TalentTree({
   tree,
-  width = 500,
-  height = 600,
+  width: propWidth,
+  height: propHeight,
 }: TalentTreeProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+
   const selections = hasSelections(tree) ? tree.selections : undefined;
 
-  // Pan/zoom state
-  const {
-    state: panZoom,
-    handlers: panZoomHandlers,
-    reset: resetPanZoom,
-  } = usePanZoom({
-    minScale: 0.5,
-    maxScale: 3,
-  });
+  const [panZoom, setPanZoom] = useState({ x: 0, y: 0, scale: 1 });
+  const isDragging = useRef(false);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
 
-  // Compute visible nodes (stable across hero toggles)
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const throttledSetTooltip = useThrottledCallback(
+    setTooltip,
+    [setTooltip],
+    16,
+  );
+
+  const { width: containerWidth, height: containerHeight } =
+    useResizeObserver(containerRef);
+  const width = propWidth || containerWidth || 500;
+  const height = propHeight || containerHeight || 600;
+
   const visibleNodes = useMemo(
     () => computeVisibleNodes(tree.nodes, tree.edges),
     [tree.nodes, tree.edges],
   );
 
-  // Derive initial hero selection from selections data
   const initialHeroId = useMemo(
     () => deriveSelectedHeroId(tree.subTrees, visibleNodes, selections),
     [tree.subTrees, visibleNodes, selections],
@@ -65,190 +118,271 @@ export function TalentTree({
   );
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Reset hero selection, search, and pan/zoom when tree changes
   useEffect(() => {
     setSelectedHeroId(initialHeroId);
     setSearchQuery("");
-    resetPanZoom();
-  }, [initialHeroId, resetPanZoom]);
+    setPanZoom({ x: 0, y: 0, scale: 1 });
+  }, [initialHeroId]);
 
-  // Filter by hero selection for display
+  useEffect(() => {
+    const iconNames = visibleNodes.flatMap((node) =>
+      node.entries.map((e) => e.iconFileName).filter(Boolean),
+    );
+    preloadIcons([...new Set(iconNames)], "medium");
+  }, [visibleNodes]);
+
   const displayNodes = useMemo(
     () => filterByHeroTree(visibleNodes, selectedHeroId),
     [visibleNodes, selectedHeroId],
   );
 
-  // Use VISIBLE nodes for stable layout (not display nodes)
-  const { scale, offsetX, offsetY } = useMemo(
-    () => computeTalentLayout(visibleNodes, width, height),
-    [visibleNodes, width, height],
-  );
-
-  // Search ALL visible nodes so hero talents are always searchable
   const searchMatches = useMemo(
     () => searchTalentNodes(visibleNodes, searchQuery),
     [visibleNodes, searchQuery],
   );
   const isSearching = searchQuery.trim().length > 0;
 
-  // Node lookup map for edges
-  const nodeMap = useMemo(
-    () => new Map(displayNodes.map((n) => [n.id, n])),
-    [displayNodes],
-  );
+  const layout = useTalentLayout({
+    nodes: displayNodes,
+    edges: tree.edges,
+    selections,
+    width,
+    height,
+  });
 
   const isPanned = panZoom.x !== 0 || panZoom.y !== 0 || panZoom.scale !== 1;
 
+  const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    const pointer = stage?.getPointerPosition();
+    if (!pointer) {
+      return;
+    }
+
+    const scaleBy = 1.1;
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    setPanZoom((prev) => {
+      const newScale = Math.min(
+        MAX_SCALE,
+        Math.max(
+          MIN_SCALE,
+          direction > 0 ? prev.scale * scaleBy : prev.scale / scaleBy,
+        ),
+      );
+      const scaleRatio = newScale / prev.scale;
+      return {
+        x: pointer.x - (pointer.x - prev.x) * scaleRatio,
+        y: pointer.y - (pointer.y - prev.y) * scaleRatio,
+        scale: newScale,
+      };
+    });
+  }, []);
+
+  const handleMouseDown = useCallback(
+    (e: Konva.KonvaEventObject<MouseEvent>) => {
+      if (e.evt.button !== 0) {
+        return;
+      }
+      const stage = stageRef.current;
+      if (!stage) {
+        return;
+      }
+      const target = e.target;
+      if (target !== stage && target.listening()) {
+        return;
+      }
+      isDragging.current = true;
+      lastPos.current = stage.getPointerPosition();
+    },
+    [],
+  );
+
+  const handleMouseMove = useCallback(() => {
+    if (!isDragging.current) {
+      return;
+    }
+    const stage = stageRef.current;
+    if (!stage) {
+      return;
+    }
+    const pos = stage.getPointerPosition();
+    if (!pos || !lastPos.current) {
+      return;
+    }
+
+    const dx = pos.x - lastPos.current.x;
+    const dy = pos.y - lastPos.current.y;
+    lastPos.current = pos;
+    setPanZoom((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    lastPos.current = null;
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length !== 1) {
+        return;
+      }
+      const stage = stageRef.current;
+      if (!stage) {
+        return;
+      }
+      const target = e.target;
+      if (target !== stage && target.listening()) {
+        return;
+      }
+      isDragging.current = true;
+      lastPos.current = stage.getPointerPosition();
+    },
+    [],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (!isDragging.current || e.evt.touches.length !== 1) {
+        return;
+      }
+      const stage = stageRef.current;
+      if (!stage) {
+        return;
+      }
+      const pos = stage.getPointerPosition();
+      if (!pos || !lastPos.current) {
+        return;
+      }
+
+      const dx = pos.x - lastPos.current.x;
+      const dy = pos.y - lastPos.current.y;
+      lastPos.current = pos;
+      setPanZoom((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+    },
+    [],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    lastPos.current = null;
+  }, []);
+
+  const resetPanZoom = useCallback(() => {
+    setPanZoom({ x: 0, y: 0, scale: 1 });
+  }, []);
+
+  const handleTooltip = useCallback(
+    (state: TooltipState | null) => {
+      throttledSetTooltip(state);
+    },
+    [throttledSetTooltip],
+  );
+
   return (
-    <TooltipProvider delayDuration={100}>
-      <div className="flex flex-col gap-2">
-        {/* Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium">
-            {tree.className} — {tree.specName}
-          </span>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium">
+          {tree.className} — {tree.specName}
+        </span>
 
-          {/* Hero selector */}
-          {tree.subTrees.length > 0 && (
-            <div className="flex gap-1">
-              {tree.subTrees.map((subTree) => (
-                <Button
-                  key={subTree.id}
-                  variant={
-                    selectedHeroId === subTree.id ? "default" : "outline"
-                  }
-                  size="sm"
-                  className={cn(
-                    "h-7 px-2 gap-1.5",
-                    selectedHeroId === subTree.id &&
-                      "bg-orange-600 hover:bg-orange-700",
-                  )}
-                  onClick={() => setSelectedHeroId(subTree.id)}
-                >
-                  <GameIcon
-                    iconName={subTree.iconFileName}
-                    size="small"
-                    alt={subTree.name}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-xs">{subTree.name}</span>
-                </Button>
-              ))}
+        {tree.subTrees.length > 0 && (
+          <div className="flex gap-1">
+            {tree.subTrees.map((subTree) => (
               <Button
-                variant={selectedHeroId === null ? "default" : "outline"}
+                key={subTree.id}
+                variant={selectedHeroId === subTree.id ? "default" : "outline"}
                 size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setSelectedHeroId(null)}
+                className={cn(
+                  "h-7 px-2 gap-1.5",
+                  selectedHeroId === subTree.id &&
+                    "bg-orange-600 hover:bg-orange-700",
+                )}
+                onClick={() => setSelectedHeroId(subTree.id)}
               >
-                Hide Hero
+                <GameIcon
+                  iconName={subTree.iconFileName}
+                  size="small"
+                  alt={subTree.name}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-xs">{subTree.name}</span>
               </Button>
-            </div>
-          )}
-
-          {/* Search */}
-          <Input
-            placeholder="Search talents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-7 w-36 text-xs"
-          />
-
-          {/* Reset pan/zoom */}
-          {isPanned && (
+            ))}
             <Button
-              variant="ghost"
+              variant={selectedHeroId === null ? "default" : "outline"}
               size="sm"
-              className="h-7 px-2"
-              onClick={resetPanZoom}
-              title="Reset view"
+              className="h-7 px-2 text-xs"
+              onClick={() => setSelectedHeroId(null)}
             >
-              <RotateCcw className="h-3 w-3" />
+              Hide Hero
             </Button>
-          )}
-
-          {/* Stats */}
-          <span className="text-xs text-muted-foreground ml-auto">
-            {displayNodes.length} talents
-            {panZoom.scale !== 1 && ` · ${Math.round(panZoom.scale * 100)}%`}
-          </span>
-        </div>
-
-        {/* Tree container */}
-        <div
-          className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
-          style={{ width, height }}
-          {...panZoomHandlers}
-        >
-          {/* Transform wrapper for pan/zoom */}
-          <div
-            style={{
-              transform: `translate(${panZoom.x}px, ${panZoom.y}px) scale(${panZoom.scale})`,
-              transformOrigin: "0 0",
-              width,
-              height,
-              position: "relative",
-            }}
-          >
-            {/* Edges (SVG layer) */}
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              style={{ width, height }}
-            >
-              {tree.edges.map((edge) => {
-                const fromNode = nodeMap.get(edge.fromNodeId);
-                const toNode = nodeMap.get(edge.toNodeId);
-                if (!fromNode || !toNode) return null;
-
-                const fromSelection = selections?.get(edge.fromNodeId);
-                const toSelection = selections?.get(edge.toNodeId);
-
-                return (
-                  <TalentEdge
-                    key={edge.id}
-                    fromNode={fromNode}
-                    toNode={toNode}
-                    fromSelected={fromSelection?.selected}
-                    toSelected={toSelection?.selected}
-                    scale={scale}
-                    offsetX={offsetX}
-                    offsetY={offsetY}
-                  />
-                );
-              })}
-            </svg>
-
-            {/* Nodes */}
-            {displayNodes.map((node) => {
-              const selection = selections?.get(node.id);
-              const x = node.posX * scale + offsetX;
-              const y = node.posY * scale + offsetY;
-              const isMatch = searchMatches.has(node.id);
-
-              return (
-                <div
-                  key={node.id}
-                  className={cn(
-                    "absolute",
-                    isSearching && !isMatch && "opacity-30",
-                    isSearching && isMatch && "ring-2 ring-blue-500 rounded-lg",
-                  )}
-                  style={{
-                    left: x,
-                    top: y,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  <TalentNode
-                    node={node}
-                    selection={selection}
-                    isHero={node.subTreeId > 0}
-                  />
-                </div>
-              );
-            })}
           </div>
-        </div>
+        )}
+
+        <Input
+          placeholder="Search talents..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-7 w-36 text-xs"
+        />
+
+        {isPanned && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={resetPanZoom}
+            title="Reset view"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </Button>
+        )}
+
+        <span className="text-xs text-muted-foreground ml-auto">
+          {displayNodes.length} talents
+          {panZoom.scale !== 1 && ` · ${Math.round(panZoom.scale * 100)}%`}
+        </span>
       </div>
-    </TooltipProvider>
+
+      <div
+        ref={containerRef}
+        className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
+        style={{ width, height }}
+      >
+        <Stage
+          ref={stageRef}
+          width={width}
+          height={height}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <Layer>
+            <Group
+              x={panZoom.x}
+              y={panZoom.y}
+              scaleX={panZoom.scale}
+              scaleY={panZoom.scale}
+            >
+              <EdgesLayer edges={layout.edges} />
+              <NodesLayer
+                nodes={layout.nodes}
+                searchMatches={searchMatches}
+                isSearching={isSearching}
+                onHover={handleTooltip}
+              />
+            </Group>
+          </Layer>
+        </Stage>
+        <TalentTooltip tooltip={tooltip} containerWidth={width} />
+      </div>
+    </div>
   );
 }

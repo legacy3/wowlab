@@ -1,197 +1,309 @@
 "use client";
 
-import type { Talent } from "@wowlab/core/Schemas";
-import { cn } from "@/lib/utils";
-import { GameIcon } from "@/components/game";
+import { memo } from "react";
+import { Group, Rect, Text, Circle, Image as KonvaImage } from "react-konva";
+import type Konva from "konva";
+import useImage from "use-image";
+import type { TalentNodePosition, TooltipState } from "./types";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  NODE_SIZE,
+  CHOICE_NODE_SIZE,
+  NODE_BORDER,
+  NODE_CORNER_RADIUS,
+  CHOICE_CORNER_RADIUS,
+  HERO_CORNER_RADIUS,
+  COLOR_SELECTED_RING,
+  COLOR_HERO_BORDER,
+  COLOR_CHOICE_BORDER,
+  COLOR_DEFAULT_BORDER,
+  COLOR_RANK_BG,
+  COLOR_RANK_SELECTED,
+  COLOR_RANK_DEFAULT,
+} from "./constants";
+import { getIconUrl } from "./icon-utils";
+
+const SelectionRing = memo(function SelectionRing({
+  size,
+  cornerRadius,
+}: {
+  size: number;
+  cornerRadius: number;
+}) {
+  return (
+    <Rect
+      x={-3}
+      y={-3}
+      width={size + 6}
+      height={size + 6}
+      stroke={COLOR_SELECTED_RING}
+      strokeWidth={2}
+      cornerRadius={cornerRadius + 2}
+      listening={false}
+      perfectDrawEnabled={false}
+    />
+  );
+});
+
+const SearchHighlight = memo(function SearchHighlight({
+  size,
+  cornerRadius,
+}: {
+  size: number;
+  cornerRadius: number;
+}) {
+  return (
+    <Rect
+      x={-4}
+      y={-4}
+      width={size + 8}
+      height={size + 8}
+      stroke="#3b82f6"
+      strokeWidth={2}
+      cornerRadius={cornerRadius + 3}
+      listening={false}
+      perfectDrawEnabled={false}
+    />
+  );
+});
 
 interface TalentNodeProps {
-  node: Talent.TalentNode;
-  selection?: Talent.DecodedTalentSelection;
-  isHero?: boolean;
+  nodePos: TalentNodePosition;
+  isSearchMatch: boolean;
+  isSearching: boolean;
+  onHover: (state: TooltipState | null) => void;
 }
 
-const NODE_SIZE = 40;
-const CHOICE_NODE_SIZE = 44;
+const NodeIcon = memo(function NodeIcon({
+  iconName,
+  x,
+  y,
+  size,
+  cornerRadius,
+  opacity,
+}: {
+  iconName: string;
+  x: number;
+  y: number;
+  size: number;
+  cornerRadius: number;
+  opacity: number;
+}) {
+  const [image] = useImage(getIconUrl(iconName), "anonymous");
 
-export function TalentNode({
-  node,
-  selection,
-  isHero = false,
+  if (!image) {
+    return (
+      <Rect
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        fill="#374151"
+        cornerRadius={cornerRadius}
+        opacity={opacity}
+        listening={false}
+        perfectDrawEnabled={false}
+      />
+    );
+  }
+
+  return (
+    <KonvaImage
+      x={x}
+      y={y}
+      width={size}
+      height={size}
+      image={image}
+      cornerRadius={cornerRadius}
+      opacity={opacity}
+      listening={false}
+      perfectDrawEnabled={false}
+    />
+  );
+});
+
+export const TalentNode = memo(function TalentNode({
+  nodePos,
+  isSearchMatch,
+  isSearching,
+  onHover,
 }: TalentNodeProps) {
+  const { x, y, node, selection, isHero } = nodePos;
+
   const isSelected = selection?.selected ?? false;
   const ranksPurchased = selection?.ranksPurchased ?? 0;
   const isChoiceNode = node.type === 2 && node.entries.length > 1;
 
   const size = isChoiceNode ? CHOICE_NODE_SIZE : NODE_SIZE;
+  const halfSize = size / 2;
 
-  // Choice node: show both icons side by side
-  if (isChoiceNode) {
-    const entry1 = node.entries[0];
-    const entry2 = node.entries[1];
+  const cornerRadius = isChoiceNode
+    ? CHOICE_CORNER_RADIUS
+    : isHero
+      ? HERO_CORNER_RADIUS
+      : NODE_CORNER_RADIUS;
+
+  const borderColor = isChoiceNode
+    ? COLOR_CHOICE_BORDER
+    : isHero
+      ? COLOR_HERO_BORDER
+      : COLOR_DEFAULT_BORDER;
+
+  const baseOpacity = isSelected ? 1 : 0.5;
+  const searchOpacity = isSearching && !isSearchMatch ? 0.3 : 1;
+  const finalOpacity = baseOpacity * searchOpacity;
+
+  const entry1 = node.entries[0];
+  const entry2 = node.entries[1];
+
+  const handleMouseEnter = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    const stage = e.target.getStage();
+    if (!stage) {
+      return;
+    }
+    const pos = stage.getPointerPosition();
+    if (!pos) {
+      return;
+    }
+    onHover({ x: pos.x, y: pos.y, node, selection });
+  };
+
+  const handleMouseLeave = () => {
+    onHover(null);
+  };
+
+  if (isChoiceNode && entry2) {
+    const iconSize = size - NODE_BORDER * 2;
+    const halfIconWidth = iconSize / 2;
 
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              "relative flex items-center justify-center overflow-hidden cursor-pointer",
-              "transition-all duration-200 rounded-md hover:scale-110 hover:z-50",
-              "border-2 border-purple-600",
-              "bg-gradient-to-b from-purple-900/50 to-purple-950/50",
-              isSelected
-                ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background"
-                : "opacity-50 grayscale",
-            )}
-            style={{ width: size, height: size }}
-          >
-            <div className="flex w-full h-full">
-              <GameIcon
-                iconName={entry1?.iconFileName || "inv_misc_questionmark"}
-                size="medium"
-                alt={entry1?.name || "?"}
-                className="w-1/2 h-full object-cover rounded-l"
-              />
-              <GameIcon
-                iconName={entry2?.iconFileName || "inv_misc_questionmark"}
-                size="medium"
-                alt={entry2?.name || "?"}
-                className="w-1/2 h-full object-cover rounded-r"
-              />
-            </div>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          className="max-w-sm bg-gray-900/95 border-gray-700 p-4"
+      <Group
+        x={x - halfSize}
+        y={y - halfSize}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <Rect
+          width={size}
+          height={size}
+          fill="#1e1b4b"
+          cornerRadius={cornerRadius}
+          stroke={borderColor}
+          strokeWidth={NODE_BORDER}
+          opacity={finalOpacity}
+          perfectDrawEnabled={false}
+        />
+        {isSelected && (
+          <SelectionRing size={size} cornerRadius={cornerRadius} />
+        )}
+
+        <Group
+          clipX={NODE_BORDER}
+          clipY={NODE_BORDER}
+          clipWidth={halfIconWidth}
+          clipHeight={iconSize}
         >
-          <div className="space-y-3">
-            <div className="text-xs text-purple-400 font-medium">
-              Choice Talent
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {node.entries.slice(0, 2).map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-2 bg-black/30 rounded-lg border border-gray-700"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <GameIcon
-                      iconName={entry.iconFileName}
-                      size="small"
-                      alt={entry.name}
-                      className="rounded"
-                    />
-                    <span className="text-sm font-medium text-purple-300">
-                      {entry.name}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {entry.description || "No description"}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="text-[10px] text-gray-500 pt-2 border-t border-gray-700 flex gap-3">
-              <span>ID {node.id}</span>
-              <span>Order {node.orderIndex}</span>
-            </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
+          <NodeIcon
+            iconName={entry1?.iconFileName || "inv_misc_questionmark"}
+            x={NODE_BORDER}
+            y={NODE_BORDER}
+            size={iconSize}
+            cornerRadius={0}
+            opacity={finalOpacity}
+          />
+        </Group>
+
+        <Group
+          clipX={NODE_BORDER + halfIconWidth}
+          clipY={NODE_BORDER}
+          clipWidth={halfIconWidth}
+          clipHeight={iconSize}
+        >
+          <NodeIcon
+            iconName={entry2.iconFileName || "inv_misc_questionmark"}
+            x={NODE_BORDER}
+            y={NODE_BORDER}
+            size={iconSize}
+            cornerRadius={0}
+            opacity={finalOpacity}
+          />
+        </Group>
+
+        <Rect
+          x={size / 2 - 0.5}
+          y={NODE_BORDER}
+          width={1}
+          height={iconSize}
+          fill="#4b5563"
+          opacity={0.5}
+          listening={false}
+          perfectDrawEnabled={false}
+        />
+        {isSearching && isSearchMatch && (
+          <SearchHighlight size={size} cornerRadius={cornerRadius} />
+        )}
+      </Group>
     );
   }
 
-  // Regular single-entry node
-  const entry = node.entries[0];
-  if (!entry) {
-    return null;
-  }
+  const iconSize = size - NODE_BORDER * 2;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div
-          className={cn(
-            "relative flex items-center justify-center cursor-pointer",
-            "transition-all duration-200 hover:scale-110 hover:z-50",
-            isHero ? "rounded-md" : "rounded-full",
-            isHero && "border-2 border-orange-600",
-            isSelected
-              ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background"
-              : "opacity-50 grayscale",
-          )}
-          style={{ width: size, height: size }}
-        >
-          <GameIcon
-            iconName={entry.iconFileName}
-            size="medium"
-            alt={entry.name}
-            className={cn(
-              "border-2",
-              isHero ? "rounded" : "rounded-full",
-              isSelected
-                ? isHero
-                  ? "border-orange-500"
-                  : "border-yellow-500"
-                : "border-gray-600",
-            )}
+    <Group
+      x={x - halfSize}
+      y={y - halfSize}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Rect
+        width={size}
+        height={size}
+        fill="#1f2937"
+        cornerRadius={cornerRadius}
+        stroke={
+          isSelected ? (isHero ? COLOR_HERO_BORDER : "#eab308") : borderColor
+        }
+        strokeWidth={NODE_BORDER}
+        opacity={finalOpacity}
+        perfectDrawEnabled={false}
+      />
+      {isSelected && <SelectionRing size={size} cornerRadius={cornerRadius} />}
+      <NodeIcon
+        iconName={entry1?.iconFileName || "inv_misc_questionmark"}
+        x={NODE_BORDER}
+        y={NODE_BORDER}
+        size={iconSize}
+        cornerRadius={Math.max(0, cornerRadius - NODE_BORDER)}
+        opacity={finalOpacity}
+      />
+      {node.maxRanks > 1 && (
+        <Group x={size - 10} y={size - 8}>
+          <Circle
+            radius={8}
+            fill={COLOR_RANK_BG}
+            stroke="#27272a"
+            strokeWidth={1}
+            listening={false}
+            perfectDrawEnabled={false}
           />
-
-          {/* Rank indicator for multi-rank talents */}
-          {node.maxRanks > 1 && (
-            <div
-              className={cn(
-                "absolute -bottom-1 -right-1 bg-background border border-border rounded-full px-1 text-[10px] font-bold",
-                isSelected ? "text-green-400" : "text-gray-500",
-              )}
-            >
-              {isSelected ? ranksPurchased : node.maxRanks}
-            </div>
-          )}
-        </div>
-      </TooltipTrigger>
-      <TooltipContent
-        side="right"
-        className="max-w-xs bg-gray-900/95 border-gray-700 p-4"
-      >
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <GameIcon
-              iconName={entry.iconFileName}
-              size="small"
-              alt={entry.name}
-              className="rounded"
-            />
-            <div>
-              <h4
-                className={cn(
-                  "font-medium",
-                  isHero ? "text-orange-400" : "text-yellow-400",
-                )}
-              >
-                {entry.name}
-              </h4>
-              <div className="text-[10px] text-gray-500">
-                {isHero ? "Hero Talent" : "Talent"}
-                {node.maxRanks > 1 && ` · ${node.maxRanks} Ranks`}
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-gray-300 leading-relaxed">
-            {entry.description || "No description available."}
-          </p>
-          <div className="text-[10px] text-gray-500 pt-2 border-t border-gray-700 flex gap-3">
-            <span>ID {node.id}</span>
-            <span>Spell {entry.spellId || "N/A"}</span>
-            <span>Order {node.orderIndex}</span>
-          </div>
-        </div>
-      </TooltipContent>
-    </Tooltip>
+          <Text
+            x={-8}
+            y={-6}
+            width={16}
+            height={12}
+            text={isSelected ? String(ranksPurchased) : String(node.maxRanks)}
+            fontSize={10}
+            fontStyle="bold"
+            fill={isSelected ? COLOR_RANK_SELECTED : COLOR_RANK_DEFAULT}
+            align="center"
+            verticalAlign="middle"
+            listening={false}
+            perfectDrawEnabled={false}
+          />
+        </Group>
+      )}
+      {isSearching && isSearchMatch && (
+        <SearchHighlight size={size} cornerRadius={cornerRadius} />
+      )}
+    </Group>
   );
-}
+});
