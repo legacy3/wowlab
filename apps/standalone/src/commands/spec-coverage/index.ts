@@ -8,6 +8,7 @@ import { supabaseClient } from "../../data/supabase.js";
 interface SpecCoverage {
   classId: number;
   className: string;
+  pvpTalentSpellCount: number;
   racialSpellCount: number;
   specId: number;
   specName: string;
@@ -68,6 +69,20 @@ const getRacialSpellIdsForClass = (
   }
 
   return spellIds;
+};
+
+const getPvpTalentSpellIds = async (
+  supabase: SupabaseClient,
+  specId: number,
+): Promise<Set<number>> => {
+  // Get PvP/legacy talents from the talent table
+  const talents = await query<Array<{ SpellID: number }>>(
+    supabase,
+    "talent",
+    (b) => b.select("SpellID").eq("SpecID", specId).gt("SpellID", 0),
+  );
+
+  return new Set(talents.map((t) => t.SpellID));
 };
 
 const getTalentSpellIds = async (
@@ -375,8 +390,12 @@ const getSpecCoverage = async (
     // Get talent spells
     const talentSpellIds = await getTalentSpellIds(supabase, spec.ID);
 
-    // Combine unique spell IDs (spec + talent + racial)
+    // Get PvP talent spells
+    const pvpTalentSpellIds = await getPvpTalentSpellIds(supabase, spec.ID);
+
+    // Combine unique spell IDs (spec + talent + pvp talent + racial)
     const allSpellIds = new Set([
+      ...pvpTalentSpellIds,
       ...racialSpellIds,
       ...specSpellIds,
       ...talentSpellIds,
@@ -385,6 +404,7 @@ const getSpecCoverage = async (
     results.push({
       classId: spec.ClassID,
       className,
+      pvpTalentSpellCount: pvpTalentSpellIds.size,
       racialSpellCount: racialSpellIds.size,
       specId: spec.ID,
       specName: spec.Name_lang,
@@ -433,7 +453,7 @@ export const specCoverageCommand = Command.make(
         }
 
         console.log(
-          `  ${r.specName.padEnd(15)} ${String(r.totalSpellCount).padStart(3)} spells (${r.specSpellCount} spec, ${r.talentSpellCount} talent, ${r.racialSpellCount} racial)`,
+          `  ${r.specName.padEnd(15)} ${String(r.totalSpellCount).padStart(3)} spells (${r.specSpellCount} spec, ${r.talentSpellCount} talent, ${r.pvpTalentSpellCount} pvp, ${r.racialSpellCount} racial)`,
         );
       }
 
