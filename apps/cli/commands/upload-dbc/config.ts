@@ -106,6 +106,7 @@ export const DBC_TABLES = {
   traitTree: { file: "TraitTree.csv", schema: Dbc.TraitTreeRowSchema, tableName: "trait_tree" },
   traitTreeLoadout: { file: "TraitTreeLoadout.csv", schema: Dbc.TraitTreeLoadoutRowSchema, tableName: "trait_tree_loadout" },
   traitTreeLoadoutEntry: { file: "TraitTreeLoadoutEntry.csv", schema: Dbc.TraitTreeLoadoutEntryRowSchema, tableName: "trait_tree_loadout_entry" },
+  uiTextureAtlasElement: { file: "UiTextureAtlasElement.csv", schema: Dbc.UiTextureAtlasElementRowSchema, tableName: "ui_texture_atlas_element" },
 } as const;
 
 export type DbcTableKey = keyof typeof DBC_TABLES;

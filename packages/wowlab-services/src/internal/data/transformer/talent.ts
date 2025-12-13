@@ -8,9 +8,32 @@ import { ExtractorService } from "./extractors.js";
 const TARGET_HERO_X = 7500;
 const TARGET_HERO_Y = 1200;
 
+// TODO Not sure about this + move it
+const deriveSubTreeIconFileName = (
+  nodes: readonly Talent.TalentNode[],
+  subTreeId: number,
+): string => {
+  for (const node of nodes) {
+    if (node.subTreeId !== subTreeId) {
+      continue;
+    }
+
+    for (const entry of node.entries) {
+      const iconFileName = entry.iconFileName;
+      if (iconFileName && iconFileName !== "inv_misc_questionmark") {
+        return iconFileName;
+      }
+    }
+  }
+
+  const firstHeroNode = nodes.find((n) => n.subTreeId === subTreeId);
+
+  return firstHeroNode?.entries[0]?.iconFileName || "inv_misc_questionmark";
+};
+
 const calculateHeroTreeOffsets = (
-  nodes: Array<{ PosX: number; PosY: number; TraitSubTreeID: number }>,
-  subTreeIds: number[],
+  nodes: ReadonlyArray<{ PosX: number; PosY: number; TraitSubTreeID: number }>,
+  subTreeIds: ReadonlyArray<number>,
 ): Map<number, { offsetX: number; offsetY: number }> => {
   const offsets = new Map<number, { offsetX: number; offsetY: number }>();
 
@@ -215,6 +238,29 @@ export const transformTalentTree = (
       { batching: true },
     );
 
+    // TODO Again not sure about this
+    const uiTextureAtlasElementNameById = new Map<number, string>();
+    const uiTextureAtlasElementIds = [
+      ...new Set(
+        subTreeResults
+          .filter((st): st is NonNullable<typeof st> => st != null)
+          .map((st) => st.UiTextureAtlasElementID)
+          .filter((id) => id > 0),
+      ),
+    ];
+
+    const uiTextureAtlasElements = yield* Effect.forEach(
+      uiTextureAtlasElementIds,
+      (id) => dbc.getUiTextureAtlasElement(id),
+      { batching: true },
+    );
+
+    for (const element of uiTextureAtlasElements) {
+      if (element) {
+        uiTextureAtlasElementNameById.set(element.ID, element.Name);
+      }
+    }
+
     // 11. Get all nodeXEntries for filtered nodes
     const allNodeXEntries = yield* Effect.forEach(
       filteredNodes,
@@ -375,13 +421,14 @@ export const transformTalentTree = (
       };
     });
 
-    // 18. Build subtrees with icons from first hero node
+    // 18. Build subtrees with icons derived from their nodes
     const subTrees: Talent.TalentSubTree[] = subTreeResults
       .filter((st): st is NonNullable<typeof st> => st != null)
       .map((subTree) => {
-        const firstHeroNode = nodes.find((n) => n.subTreeId === subTree.ID);
+        // TODO Imo just derive should work or a proper lookup, but the fallback shouldnt be needed
         const iconFileName =
-          firstHeroNode?.entries[0]?.iconFileName || "inv_misc_questionmark";
+          uiTextureAtlasElementNameById.get(subTree.UiTextureAtlasElementID) ??
+          deriveSubTreeIconFileName(nodes, subTree.ID);
 
         return {
           description: subTree.Description_lang ?? "",

@@ -59,6 +59,7 @@ import {
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetUiTextureAtlasElement,
   makeDbcResolvers,
 } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
@@ -364,6 +365,13 @@ const createBatchFetcher = (
         queryClient,
         dataProvider,
         "trait_tree",
+        ids,
+      ),
+    fetchUiTextureAtlasElementsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.UiTextureAtlasElementRow>(
+        queryClient,
+        dataProvider,
+        "ui_texture_atlas_element",
         ids,
       ),
 
@@ -900,6 +908,11 @@ export const RefineDbcService = (
           Effect.request(
             new GetTraitTreeLoadoutEntries({ loadoutId }),
             resolvers.traitTreeLoadoutEntriesResolver,
+          ),
+        getUiTextureAtlasElement: (id) =>
+          Effect.request(
+            new GetUiTextureAtlasElement({ id }),
+            resolvers.uiTextureAtlasElementResolver,
           ),
 
         // Non-batchable (fetch all or complex queries)

@@ -122,9 +122,14 @@ export function decodeTalents(
     try: () => {
       const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
       const padded = normalized + "===".slice((normalized.length + 3) % 4);
-      const buffer = Buffer.from(padded, "base64"); // TODO Web compatibility?
+      const binary = globalThis.atob(padded);
+      const bytes = new Uint8Array(binary.length);
 
-      return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      return bytes;
     },
   });
 }

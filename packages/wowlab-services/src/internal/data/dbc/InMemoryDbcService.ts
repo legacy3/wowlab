@@ -197,4 +197,7 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitTreeLoadoutEntries: (loadoutId) =>
       Effect.succeed(cache.traitTreeLoadoutEntry.get(loadoutId) ?? []),
+
+    getUiTextureAtlasElement: (id) =>
+      Effect.succeed(cache.uiTextureAtlasElement.get(id)),
   } satisfies DbcServiceInterface);

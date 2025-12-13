@@ -96,3 +96,4 @@ export * from "./TraitSubTreeSchema.js";
 export * from "./TraitTreeLoadoutEntrySchema.js";
 export * from "./TraitTreeLoadoutSchema.js";
 export * from "./TraitTreeSchema.js";
+export * from "./UiTextureAtlasElementSchema.js";

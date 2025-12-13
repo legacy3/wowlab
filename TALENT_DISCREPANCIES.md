@@ -48,6 +48,20 @@ This filters out hero subtree nodes that aren't "available" to the spec. But Sim
 
 **Status:** FIXED - removed hero subtree filter, now includes all nodes
 
+### 1c. SPEC TREE SHOWING WRONG SPEC'S TALENTS
+
+**Symptom:** BM Hunter shows Marksman talents, Resto Shaman shows Elemental talents in the spec tree.
+
+**Status:** INVESTIGATING - The icons come from TraitNodeEntry -> TraitDefinition -> SpellID. Need to verify if the entry/definition data is correct for the spec's tree.
+
+### 1d. HERO TREE ICONS NOT LOADING
+
+**Symptom:** Hero tree selector at top shows "? ? ?" instead of icons.
+
+**Location:** `talent.ts` lines 382-384 - tries to find firstHeroNode and use its entry's icon.
+
+**Status:** INVESTIGATING - Either hero nodes not found in `nodes` array, or entries are empty.
+
 ### 2. Layout Structure
 - **Reference**: 3 separate panels - "Hunter" (class), "Hero" (Dark Ranger), "Beast Mastery" (spec)
 - **wowlab**: 2 combined areas - class tree left, hero tree right

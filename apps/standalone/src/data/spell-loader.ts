@@ -708,17 +708,23 @@ const SupabaseDbcServiceLive = (
                 .eq("ChrSpecializationID", specId)
                 .maybeSingle(),
           ),
-        getTraitTreeLoadoutEntries: (loadoutId) =>
-          query<Schemas.Dbc.TraitTreeLoadoutEntryRow[]>(
-            supabase,
-            "trait_tree_loadout_entry",
-            (builder) =>
-              builder
-                .select("*")
-                .eq("TraitTreeLoadoutID", loadoutId)
-                .order("OrderIndex"),
-          ),
-      });
+	        getTraitTreeLoadoutEntries: (loadoutId) =>
+	          query<Schemas.Dbc.TraitTreeLoadoutEntryRow[]>(
+	            supabase,
+	            "trait_tree_loadout_entry",
+	            (builder) =>
+	              builder
+	                .select("*")
+	                .eq("TraitTreeLoadoutID", loadoutId)
+	                .order("OrderIndex"),
+	          ),
+	        getUiTextureAtlasElement: (id) =>
+	          query<Schemas.Dbc.UiTextureAtlasElementRow | undefined>(
+	            supabase,
+	            "ui_texture_atlas_element",
+	            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+	          ),
+	      });
     }),
   );
 

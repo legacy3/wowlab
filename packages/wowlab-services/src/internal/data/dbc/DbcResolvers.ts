@@ -59,6 +59,7 @@ import {
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetUiTextureAtlasElement,
 } from "./DbcRequests.js";
 
 export interface DbcBatchFetcherInterface {
@@ -267,6 +268,13 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitTreesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
+
+  readonly fetchUiTextureAtlasElementsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.UiTextureAtlasElementRow>,
+    DbcError
+  >;
 }
 
 export class DbcBatchFetcher extends Context.Tag(
@@ -640,6 +648,11 @@ export interface DbcResolversInterface {
     GetTraitTree,
     never
   >;
+
+  readonly uiTextureAtlasElementResolver: RequestResolver.RequestResolver<
+    GetUiTextureAtlasElement,
+    never
+  >;
 }
 
 export class DbcResolvers extends Context.Tag("@wowlab/services/DbcResolvers")<
@@ -788,6 +801,10 @@ export const makeDbcResolvers = Effect.gen(function* () {
     traitTreeResolver: createByIdResolver<Schemas.Dbc.TraitTreeRow>(
       fetcher.fetchTraitTreesByIds,
     ),
+    uiTextureAtlasElementResolver:
+      createByIdResolver<Schemas.Dbc.UiTextureAtlasElementRow>(
+        fetcher.fetchUiTextureAtlasElementsByIds,
+      ),
 
     // By SpellID (FK, single result)
     spellAuraOptionsResolver: createByFkSingleResolver<

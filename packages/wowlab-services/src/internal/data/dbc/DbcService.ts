@@ -292,6 +292,13 @@ export interface DbcServiceInterface {
     ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
     DbcError
   >;
+
+  readonly getUiTextureAtlasElement: (
+    id: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.UiTextureAtlasElementRow | undefined,
+    DbcError
+  >;
 }
 
 export class DbcService extends Context.Tag("@wowlab/services/DbcService")<
