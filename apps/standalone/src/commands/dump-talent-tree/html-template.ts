@@ -499,6 +499,80 @@ svg { position: absolute; top: 0; left: 0; pointer-events: none; }
   color: var(--accent-green);
 }
 
+/* Search input */
+.search-input {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  width: 160px;
+  transition: all 0.15s;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  background: var(--bg-elevated);
+}
+
+/* Talent string input */
+.talent-string-input {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 11px;
+  width: 280px;
+  transition: all 0.15s;
+}
+
+.talent-string-input::placeholder {
+  color: var(--text-muted);
+  font-family: inherit;
+}
+
+.talent-string-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  background: var(--bg-elevated);
+}
+
+/* Search highlight */
+.node.search-match {
+  box-shadow: 0 0 0 3px var(--accent-blue), 0 0 20px var(--accent-blue);
+  z-index: 50;
+}
+
+.node.search-dim {
+  opacity: 0.3;
+}
+
+/* Path highlight */
+.node.path-highlight {
+  box-shadow: 0 0 0 3px var(--accent-green), 0 0 16px rgba(34,197,94,0.5);
+  z-index: 50;
+}
+
+.node.path-selected {
+  box-shadow: 0 0 0 3px var(--accent-gold), 0 0 20px var(--glow-gold);
+  z-index: 60;
+}
+
+.edge.path-highlight {
+  stroke: var(--accent-green);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px var(--accent-green));
+}
+
 /* Tree section labels */
 .tree-section {
   position: absolute;
@@ -619,6 +693,8 @@ for (const edge of data.edges) {
     }
     line.dataset.fromSub = from.subTreeId;
     line.dataset.toSub = to.subTreeId;
+    line.dataset.fromNode = edge.fromNodeId;
+    line.dataset.toNode = edge.toNodeId;
     svg.appendChild(line);
     edgeEls.push(line);
   }
@@ -778,6 +854,122 @@ grayToggle.addEventListener("click", () => {
     el.classList.toggle("inactive", grayedOut);
   }
 });
+
+// Search functionality
+const searchInput = document.getElementById("searchInput");
+let searchTimeout;
+
+searchInput.addEventListener("input", (e) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const query = e.target.value.toLowerCase().trim();
+
+    for (const { el, node } of nodeEls) {
+      el.classList.remove("search-match", "search-dim");
+
+      if (!query) continue;
+
+      const names = node.entries.map(e => (e.name || "").toLowerCase());
+      const matches = names.some(n => n.includes(query));
+
+      if (matches) {
+        el.classList.add("search-match");
+      } else {
+        el.classList.add("search-dim");
+      }
+    }
+  }, 150);
+});
+
+// Path highlighting - build reverse edge map (child -> parents)
+const edgesTo = new Map();
+for (const edge of data.edges) {
+  if (!edgesTo.has(edge.toNodeId)) {
+    edgesTo.set(edge.toNodeId, []);
+  }
+  edgesTo.get(edge.toNodeId).push(edge.fromNodeId);
+}
+
+let selectedPathNode = null;
+
+function clearPathHighlight() {
+  for (const { el } of nodeEls) {
+    el.classList.remove("path-highlight", "path-selected");
+  }
+  for (const line of edgeEls) {
+    line.classList.remove("path-highlight");
+  }
+}
+
+function highlightPath(nodeId) {
+  clearPathHighlight();
+
+  const pathNodes = new Set();
+  const pathEdges = new Set();
+  const queue = [nodeId];
+
+  // BFS backwards to find all parent nodes
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (pathNodes.has(currentId)) continue;
+    pathNodes.add(currentId);
+
+    const parents = edgesTo.get(currentId) || [];
+    for (const parentId of parents) {
+      if (nodeSet.has(parentId)) {
+        pathEdges.add(parentId + "-" + currentId);
+        queue.push(parentId);
+      }
+    }
+  }
+
+  // Highlight nodes
+  for (const { el, node } of nodeEls) {
+    if (node.id === nodeId) {
+      el.classList.add("path-selected");
+    } else if (pathNodes.has(node.id)) {
+      el.classList.add("path-highlight");
+    }
+  }
+
+  // Highlight edges
+  for (const line of edgeEls) {
+    const fromId = parseInt(line.dataset.fromNode);
+    const toId = parseInt(line.dataset.toNode);
+    if (pathEdges.has(fromId + "-" + toId)) {
+      line.classList.add("path-highlight");
+    }
+  }
+}
+
+// Add click handler for path highlighting
+for (const { el, node } of nodeEls) {
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (selectedPathNode === node.id) {
+      selectedPathNode = null;
+      clearPathHighlight();
+    } else {
+      selectedPathNode = node.id;
+      highlightPath(node.id);
+    }
+  });
+}
+
+// Click outside to clear
+document.addEventListener("click", () => {
+  if (selectedPathNode) {
+    selectedPathNode = null;
+    clearPathHighlight();
+  }
+});
+
+// Talent string input (placeholder for later)
+const talentStringInput = document.getElementById("talentStringInput");
+talentStringInput.addEventListener("input", (e) => {
+  // TODO: Parse talent string and activate nodes
+  console.log("Talent string:", e.target.value);
+});
 `.trim();
 
 const generateHeroButtons = (
@@ -812,6 +1004,8 @@ export const generateHtml = (tree: TalentTree, supabaseUrl: string): string =>
     <div class="hero-selector" id="heroSelector">
       ${generateHeroButtons(tree.subTrees, supabaseUrl)}
     </div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search talents...">
+    <input type="text" class="talent-string-input" id="talentStringInput" placeholder="Paste talent string...">
     <button class="toggle-btn active" id="grayToggle">Show All</button>
     <div class="stats">${tree.nodes.length} talents</div>
     <div class="legend">
