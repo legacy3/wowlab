@@ -1,9 +1,14 @@
 "use client";
 
 import { memo } from "react";
-import { Group, Rect, Text, Circle, Image as KonvaImage } from "react-konva";
 import type Konva from "konva";
-import useImage from "use-image";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaText,
+  KonvaCircle,
+  KonvaImage,
+} from "@/components/konva";
 import type { TalentNodePosition, TooltipState } from "./types";
 import {
   NODE_SIZE,
@@ -20,7 +25,6 @@ import {
   COLOR_RANK_SELECTED,
   COLOR_RANK_DEFAULT,
 } from "./constants";
-import { getIconUrl } from "./icon-utils";
 
 const SelectionRing = memo(function SelectionRing({
   size,
@@ -30,7 +34,7 @@ const SelectionRing = memo(function SelectionRing({
   cornerRadius: number;
 }) {
   return (
-    <Rect
+    <KonvaRect
       x={-3}
       y={-3}
       width={size + 6}
@@ -39,7 +43,6 @@ const SelectionRing = memo(function SelectionRing({
       strokeWidth={2}
       cornerRadius={cornerRadius + 2}
       listening={false}
-      perfectDrawEnabled={false}
     />
   );
 });
@@ -52,7 +55,7 @@ const SearchHighlight = memo(function SearchHighlight({
   cornerRadius: number;
 }) {
   return (
-    <Rect
+    <KonvaRect
       x={-4}
       y={-4}
       width={size + 8}
@@ -61,7 +64,6 @@ const SearchHighlight = memo(function SearchHighlight({
       strokeWidth={2}
       cornerRadius={cornerRadius + 3}
       listening={false}
-      perfectDrawEnabled={false}
     />
   );
 });
@@ -88,35 +90,28 @@ const NodeIcon = memo(function NodeIcon({
   cornerRadius: number;
   opacity: number;
 }) {
-  const [image] = useImage(getIconUrl(iconName), "anonymous");
-
-  if (!image) {
-    return (
-      <Rect
-        x={x}
-        y={y}
-        width={size}
-        height={size}
-        fill="#374151"
-        cornerRadius={cornerRadius}
-        opacity={opacity}
-        listening={false}
-        perfectDrawEnabled={false}
-      />
-    );
-  }
-
   return (
     <KonvaImage
+      iconName={iconName}
       x={x}
       y={y}
       width={size}
       height={size}
-      image={image}
       cornerRadius={cornerRadius}
       opacity={opacity}
       listening={false}
-      perfectDrawEnabled={false}
+      fallback={
+        <KonvaRect
+          x={x}
+          y={y}
+          width={size}
+          height={size}
+          fill="#374151"
+          cornerRadius={cornerRadius}
+          opacity={opacity}
+          listening={false}
+        />
+      }
     />
   );
 });
@@ -176,13 +171,13 @@ export const TalentNode = memo(function TalentNode({
     const halfIconWidth = iconSize / 2;
 
     return (
-      <Group
+      <KonvaGroup
         x={x - halfSize}
         y={y - halfSize}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <Rect
+        <KonvaRect
           width={size}
           height={size}
           fill="#1e1b4b"
@@ -190,13 +185,12 @@ export const TalentNode = memo(function TalentNode({
           stroke={borderColor}
           strokeWidth={NODE_BORDER}
           opacity={finalOpacity}
-          perfectDrawEnabled={false}
         />
         {isSelected && (
           <SelectionRing size={size} cornerRadius={cornerRadius} />
         )}
 
-        <Group
+        <KonvaGroup
           clipX={NODE_BORDER}
           clipY={NODE_BORDER}
           clipWidth={halfIconWidth}
@@ -210,9 +204,9 @@ export const TalentNode = memo(function TalentNode({
             cornerRadius={0}
             opacity={finalOpacity}
           />
-        </Group>
+        </KonvaGroup>
 
-        <Group
+        <KonvaGroup
           clipX={NODE_BORDER + halfIconWidth}
           clipY={NODE_BORDER}
           clipWidth={halfIconWidth}
@@ -226,9 +220,9 @@ export const TalentNode = memo(function TalentNode({
             cornerRadius={0}
             opacity={finalOpacity}
           />
-        </Group>
+        </KonvaGroup>
 
-        <Rect
+        <KonvaRect
           x={size / 2 - 0.5}
           y={NODE_BORDER}
           width={1}
@@ -236,25 +230,24 @@ export const TalentNode = memo(function TalentNode({
           fill="#4b5563"
           opacity={0.5}
           listening={false}
-          perfectDrawEnabled={false}
         />
         {isSearching && isSearchMatch && (
           <SearchHighlight size={size} cornerRadius={cornerRadius} />
         )}
-      </Group>
+      </KonvaGroup>
     );
   }
 
   const iconSize = size - NODE_BORDER * 2;
 
   return (
-    <Group
+    <KonvaGroup
       x={x - halfSize}
       y={y - halfSize}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Rect
+      <KonvaRect
         width={size}
         height={size}
         fill="#1f2937"
@@ -264,7 +257,6 @@ export const TalentNode = memo(function TalentNode({
         }
         strokeWidth={NODE_BORDER}
         opacity={finalOpacity}
-        perfectDrawEnabled={false}
       />
       {isSelected && <SelectionRing size={size} cornerRadius={cornerRadius} />}
       <NodeIcon
@@ -276,16 +268,15 @@ export const TalentNode = memo(function TalentNode({
         opacity={finalOpacity}
       />
       {node.maxRanks > 1 && (
-        <Group x={size - 10} y={size - 8}>
-          <Circle
+        <KonvaGroup x={size - 10} y={size - 8}>
+          <KonvaCircle
             radius={8}
             fill={COLOR_RANK_BG}
             stroke="#27272a"
             strokeWidth={1}
             listening={false}
-            perfectDrawEnabled={false}
           />
-          <Text
+          <KonvaText
             x={-8}
             y={-6}
             width={16}
@@ -297,13 +288,12 @@ export const TalentNode = memo(function TalentNode({
             align="center"
             verticalAlign="middle"
             listening={false}
-            perfectDrawEnabled={false}
           />
-        </Group>
+        </KonvaGroup>
       )}
       {isSearching && isSearchMatch && (
         <SearchHighlight size={size} cornerRadius={cornerRadius} />
       )}
-    </Group>
+    </KonvaGroup>
   );
 });

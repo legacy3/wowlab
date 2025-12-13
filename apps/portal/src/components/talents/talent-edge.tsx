@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Line } from "react-konva";
+import { KonvaLine } from "@/components/konva";
 import type { TalentEdgePosition } from "./types";
 import {
   EDGE_WIDTH_ACTIVE,
@@ -37,13 +37,12 @@ export const TalentEdge = memo(function TalentEdge({ edge }: TalentEdgeProps) {
   const opacity = isActive ? 1 : isUnlocked ? 0.8 : 0.5;
 
   return (
-    <Line
+    <KonvaLine
       points={[fromX, fromY, toX, toY]}
       stroke={stroke}
       strokeWidth={strokeWidth}
       opacity={opacity}
       listening={false}
-      perfectDrawEnabled={false}
     />
   );
 });

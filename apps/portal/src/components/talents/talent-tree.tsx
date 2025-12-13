@@ -1,17 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
-import { Stage, Layer, Group } from "react-konva";
-import Konva from "konva";
+import type Konva from "konva";
 import { useThrottledCallback } from "@react-hookz/web";
 import type { Talent } from "@wowlab/core/Schemas";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GameIcon } from "@/components/game";
+import {
+  KonvaStage,
+  KonvaLayer,
+  KonvaGroup,
+  preloadIcons,
+} from "@/components/konva";
 import { cn } from "@/lib/utils";
 import { useResizeObserver } from "@/hooks/canvas";
-import { preloadIcons } from "./icon-utils";
 import {
   computeVisibleNodes,
   filterByHeroTree,
@@ -351,7 +355,7 @@ export function TalentTree({
         className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
         style={{ width, height }}
       >
-        <Stage
+        <KonvaStage
           ref={stageRef}
           width={width}
           height={height}
@@ -364,8 +368,8 @@ export function TalentTree({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <Layer>
-            <Group
+          <KonvaLayer>
+            <KonvaGroup
               x={panZoom.x}
               y={panZoom.y}
               scaleX={panZoom.scale}
@@ -378,9 +382,9 @@ export function TalentTree({
                 isSearching={isSearching}
                 onHover={handleTooltip}
               />
-            </Group>
-          </Layer>
-        </Stage>
+            </KonvaGroup>
+          </KonvaLayer>
+        </KonvaStage>
         <TalentTooltip tooltip={tooltip} containerWidth={width} />
       </div>
     </div>
