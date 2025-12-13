@@ -109,6 +109,12 @@ interface Spell {
   Description_lang: string | null;
 }
 
+interface SpellMisc {
+  ID: number;
+  SpellID: number;
+  SpellIconFileDataID: number | null;
+}
+
 interface ManifestInterfaceData {
   ID: number;
   FileName: string | null;
@@ -321,20 +327,27 @@ const loadTalentTree = async (
   const spellIds = [
     ...new Set(allDefinitions.map((d) => d.SpellID).filter((id) => id > 0)),
   ];
-  const [allSpellNames, allSpells] = await Promise.all([
+  const [allSpellNames, allSpells, allSpellMisc] = await Promise.all([
     query<SpellName[]>(supabase, "spell_name", (b) =>
       b.select("*").in("ID", spellIds),
     ),
     query<Spell[]>(supabase, "spell", (b) => b.select("*").in("ID", spellIds)),
+    query<SpellMisc[]>(supabase, "spell_misc", (b) =>
+      b.select("*").in("SpellID", spellIds),
+    ),
   ]);
   const spellNameMap = new Map(allSpellNames.map((s) => [s.ID, s]));
   const spellMap = new Map(allSpells.map((s) => [s.ID, s]));
+  const spellMiscMap = new Map(allSpellMisc.map((m) => [m.SpellID, m]));
 
-  const iconIds = [
-    ...new Set(
-      allDefinitions.map((d) => d.OverrideIcon).filter((id) => id > 0),
-    ),
-  ];
+  const overrideIconIds = allDefinitions
+    .map((d) => d.OverrideIcon)
+    .filter((id) => id > 0);
+  const spellIconIds = allSpellMisc
+    .map((m) => m.SpellIconFileDataID)
+    .filter((id): id is number => id !== null && id > 0);
+  const iconIds = [...new Set([...overrideIconIds, ...spellIconIds])];
+
   const allIcons =
     iconIds.length > 0
       ? await query<ManifestInterfaceData[]>(
@@ -401,10 +414,20 @@ const loadTalentTree = async (
         description = spellMap.get(definition.SpellID)?.Description_lang ?? "";
       }
 
-      const iconFileName =
-        definition.OverrideIcon > 0
-          ? (iconMap.get(definition.OverrideIcon)?.FileName ?? "")
-          : "";
+      let iconFileDataId = definition.OverrideIcon;
+      if (iconFileDataId === 0 && definition.SpellID > 0) {
+        iconFileDataId =
+          spellMiscMap.get(definition.SpellID)?.SpellIconFileDataID ?? 0;
+      }
+
+      let iconFileName = "inv_misc_questionmark";
+      if (iconFileDataId > 0) {
+        const manifest = iconMap.get(iconFileDataId);
+
+        if (manifest?.FileName) {
+          iconFileName = manifest.FileName.toLowerCase().replace(".blp", "");
+        }
+      }
 
       if (entries.length === 0) {
         maxRanks = entry.MaxRanks;
@@ -458,7 +481,10 @@ const loadTalentTree = async (
   };
 };
 
-const generateHtml = (tree: TalentTree): string => `<!DOCTYPE html>
+const generateHtml = (
+  tree: TalentTree,
+  supabaseUrl: string,
+): string => `<!DOCTYPE html>
 <html>
 <head>
   <title>${tree.className} - ${tree.specName} Talent Tree</title>
@@ -480,8 +506,10 @@ const generateHtml = (tree: TalentTree): string => `<!DOCTYPE html>
       position: absolute; width: 48px; height: 48px; border-radius: 8px;
       background: #2d3436; border: 2px solid #636e72; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 9px; text-align: center; overflow: hidden; padding: 2px;
-      transition: transform 0.1s, border-color 0.1s;
+      overflow: hidden; transition: transform 0.1s, border-color 0.1s;
+    }
+    .node img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 6px;
     }
     .node:hover { transform: scale(1.3); border-color: #f1c40f; z-index: 100; }
     .node.choice { border-color: #9b59b6; background: #2c1f3d; }
@@ -529,9 +557,11 @@ const generateHtml = (tree: TalentTree): string => `<!DOCTYPE html>
   <div class="tooltip" id="tooltip"></div>
   <script>
     const data = ${JSON.stringify(tree)};
+    const supabaseUrl = "${supabaseUrl}";
     const treeEl = document.getElementById("tree");
     const tooltip = document.getElementById("tooltip");
     const heroSelect = document.getElementById("heroSelect");
+    const getIconUrl = (iconName) => supabaseUrl + "/functions/v1/icons/medium/" + iconName + ".jpg";
 
     const nodes = data.nodes.filter(n => n.orderIndex >= 0 || n.subTreeId > 0);
 
@@ -584,7 +614,11 @@ const generateHtml = (tree: TalentTree): string => `<!DOCTYPE html>
         + (node.subTreeId > 0 ? " hero" : "");
       el.style.left = toX(node.posX) + "px";
       el.style.top = toY(node.posY) + "px";
-      el.textContent = node.entries[0]?.name?.slice(0, 8) || "?";
+      const iconName = node.entries[0]?.iconFileName || "inv_misc_questionmark";
+      const img = document.createElement("img");
+      img.src = getIconUrl(iconName);
+      img.alt = node.entries[0]?.name || "?";
+      el.appendChild(img);
       el.dataset.subTreeId = node.subTreeId;
       el.addEventListener("mouseenter", e => {
         const names = node.entries.map(e => e.name).filter(Boolean).join(" / ") || "(empty)";
@@ -658,7 +692,8 @@ export const dumpTalentTreeCommand = Command.make(
         `Loaded: ${tree.className} - ${tree.specName} (${tree.nodes.length} nodes)`,
       );
 
-      const html = generateHtml(tree);
+      const supabaseUrl = process.env.SUPABASE_URL ?? "";
+      const html = generateHtml(tree, supabaseUrl);
       const outputPath = `/tmp/talent-tree-${specId}.html`;
 
       const fs = yield* Effect.promise(() => import("node:fs/promises"));
