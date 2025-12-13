@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Text, Line } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaText,
+  KonvaLine,
+} from "@/components/konva";
 
 interface Phase {
   id: string;
@@ -39,7 +44,7 @@ export const PhasesTrack = memo(function PhasesTrack({
   }, [phases, visibleRange.start, visibleRange.end]);
 
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {visiblePhases.map((phase) => {
         const startX = Math.max(0, timeToX(phase.start));
         const endX = Math.min(innerWidth, timeToX(phase.end));
@@ -49,9 +54,9 @@ export const PhasesTrack = memo(function PhasesTrack({
         }
 
         return (
-          <Group key={phase.id}>
+          <KonvaGroup key={phase.id}>
             {/* Phase rectangle */}
-            <Rect
+            <KonvaRect
               x={startX}
               y={2}
               width={width}
@@ -60,11 +65,10 @@ export const PhasesTrack = memo(function PhasesTrack({
               opacity={0.2}
               cornerRadius={2}
               listening={false}
-              perfectDrawEnabled={false}
             />
             {/* Phase label */}
             {width > 50 && (
-              <Text
+              <KonvaText
                 x={startX}
                 y={height / 2 - 5}
                 width={width}
@@ -74,22 +78,20 @@ export const PhasesTrack = memo(function PhasesTrack({
                 fontStyle="bold"
                 fill={phase.color}
                 listening={false}
-                perfectDrawEnabled={false}
               />
             )}
             {/* Phase boundary line */}
-            <Line
+            <KonvaLine
               points={[startX, 0, startX, totalHeight - y]}
               stroke={phase.color}
               strokeWidth={1}
               opacity={0.5}
               dash={[4, 2]}
               listening={false}
-              perfectDrawEnabled={false}
             />
-          </Group>
+          </KonvaGroup>
         );
       })}
-    </Group>
+    </KonvaGroup>
   );
 });

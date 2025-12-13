@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Group, Text } from "react-konva";
+import { KonvaGroup, KonvaText } from "@/components/konva";
 import type { TrackId } from "@/atoms/timeline";
 import { TRACK_CONFIGS } from "@/hooks/timeline";
 
@@ -23,7 +23,7 @@ export const TrackLabels = memo(function TrackLabels({
   onToggleTrack,
 }: TrackLabelsProps) {
   return (
-    <Group>
+    <KonvaGroup>
       {TRACK_CONFIGS.map((track) => {
         const layout = tracks[track.id];
         if (!layout.visible && !track.collapsible) {
@@ -35,7 +35,7 @@ export const TrackLabels = memo(function TrackLabels({
           : layout.y + layout.height / 2;
 
         return (
-          <Group
+          <KonvaGroup
             key={track.id}
             x={8}
             y={labelY}
@@ -43,24 +43,22 @@ export const TrackLabels = memo(function TrackLabels({
             onTap={() => track.collapsible && onToggleTrack(track.id)}
           >
             {track.collapsible && (
-              <Text
+              <KonvaText
                 text={expandedTracks.has(track.id) ? "\u25BC" : "\u25B6"}
                 fontSize={10}
                 fill="#888"
-                perfectDrawEnabled={false}
               />
             )}
-            <Text
+            <KonvaText
               text={track.label}
               x={track.collapsible ? 14 : 0}
               fontSize={11}
               fontStyle="500"
               fill="#ddd"
-              perfectDrawEnabled={false}
             />
-          </Group>
+          </KonvaGroup>
         );
       })}
-    </Group>
+    </KonvaGroup>
   );
 });

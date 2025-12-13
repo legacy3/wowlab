@@ -3,8 +3,13 @@
 import { useCallback, useRef, useState, memo } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { useThrottledCallback } from "@react-hookz/web";
-import { Stage, Layer, Text, Group } from "react-konva";
-import Konva from "konva";
+import type Konva from "konva";
+import {
+  KonvaStage,
+  KonvaLayer,
+  KonvaText,
+  KonvaGroup,
+} from "@/components/konva";
 import {
   ZoomIn,
   ZoomOut,
@@ -413,7 +418,7 @@ export function Timeline() {
           zenMode ? "flex-1 min-h-0" : "min-h-[500px]",
         )}
       >
-        <Stage
+        <KonvaStage
           ref={stageRef}
           width={containerWidth || 800}
           height={stageHeight}
@@ -426,15 +431,15 @@ export function Timeline() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <Layer y={MARGIN.top} listening={false}>
+          <KonvaLayer y={MARGIN.top} listening={false}>
             <TrackLabels
               tracks={tracks}
               expandedTracks={expandedTracks}
               onToggleTrack={toggleTrack}
             />
-          </Layer>
+          </KonvaLayer>
 
-          <Layer x={MARGIN.left} y={MARGIN.top}>
+          <KonvaLayer x={MARGIN.left} y={MARGIN.top}>
             {tracks.phases.visible && (
               <PhasesTrack
                 phases={combatData.phases}
@@ -447,7 +452,7 @@ export function Timeline() {
               />
             )}
 
-            <Group
+            <KonvaGroup
               clipX={0}
               clipY={tracks.phases.visible ? tracks.phases.height : 0}
               clipWidth={innerWidth}
@@ -533,10 +538,10 @@ export function Timeline() {
                 bounds={bounds}
                 visibleRange={visibleRange}
               />
-            </Group>
+            </KonvaGroup>
 
             {showFps && (
-              <Text
+              <KonvaText
                 ref={fpsTextRef}
                 x={innerWidth - 60}
                 y={-MARGIN.top + 8}
@@ -546,8 +551,8 @@ export function Timeline() {
                 fill="#888"
               />
             )}
-          </Layer>
-        </Stage>
+          </KonvaLayer>
+        </KonvaStage>
         <TimelineTooltip tooltip={tooltip} />
       </div>
 

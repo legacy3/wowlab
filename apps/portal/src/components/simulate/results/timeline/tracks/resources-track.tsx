@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Line, Rect, Text } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaLine,
+  KonvaRect,
+  KonvaText,
+} from "@/components/konva";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 
 interface ResourcePoint {
@@ -155,7 +160,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
   }, [processedResources, zoomLevel, timeToX, focusToY]);
 
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {/* Critical zone highlights (red tint below threshold) */}
       {criticalZonePoints.length > 0 &&
         Array.from({ length: criticalZonePoints.length / 2 }).map((_, i) => {
@@ -164,7 +169,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
           const criticalY = focusToY(resourceCriticalThreshold);
 
           return (
-            <Rect
+            <KonvaRect
               key={`critical-${i}`}
               x={startX}
               y={criticalY}
@@ -173,7 +178,6 @@ export const ResourcesTrack = memo(function ResourcesTrack({
               fill="#EF4444"
               opacity={0.15}
               listening={false}
-              perfectDrawEnabled={false}
             />
           );
         })}
@@ -188,7 +192,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
         const colors = ["#1a1a2e", "#16213e", "#0f3460"];
 
         return (
-          <Rect
+          <KonvaRect
             key={`zone-${threshold}`}
             x={0}
             y={topY}
@@ -197,32 +201,29 @@ export const ResourcesTrack = memo(function ResourcesTrack({
             fill={colors[i % colors.length]}
             opacity={0.3}
             listening={false}
-            perfectDrawEnabled={false}
           />
         );
       })}
 
       {/* Area fill with gradient effect */}
       {areaPoints.length > 0 && (
-        <Line
+        <KonvaLine
           points={areaPoints}
           fill="#3B82F6"
           opacity={0.2}
           closed
           listening={false}
-          perfectDrawEnabled={false}
         />
       )}
 
       {/* Focus line */}
       {linePoints.length > 0 && (
-        <Line
+        <KonvaLine
           points={linePoints}
           stroke="#3B82F6"
           strokeWidth={2}
           tension={zoomLevel === "aggregate" ? 0.4 : 0.2}
           listening={false}
-          perfectDrawEnabled={false}
         />
       )}
 
@@ -232,18 +233,17 @@ export const ResourcesTrack = memo(function ResourcesTrack({
         const isCritical = threshold === resourceCriticalThreshold;
 
         return (
-          <Group key={threshold}>
-            <Line
+          <KonvaGroup key={threshold}>
+            <KonvaLine
               points={[0, ty, innerWidth, ty]}
               stroke={isCritical ? "#EF4444" : "#444"}
               strokeWidth={1}
               opacity={isCritical ? 0.5 : 0.3}
               dash={[2, 4]}
               listening={false}
-              perfectDrawEnabled={false}
             />
             {/* Threshold label - positioned inside track with safe margin */}
-            <Text
+            <KonvaText
               x={innerWidth - 35}
               y={ty - 6}
               text={String(threshold)}
@@ -251,22 +251,20 @@ export const ResourcesTrack = memo(function ResourcesTrack({
               fill={isCritical ? "#EF4444" : "#666"}
               opacity={0.7}
               listening={false}
-              perfectDrawEnabled={false}
             />
-          </Group>
+          </KonvaGroup>
         );
       })}
 
       {/* Max focus line */}
-      <Line
+      <KonvaLine
         points={[0, focusToY(maxFocus), innerWidth, focusToY(maxFocus)]}
         stroke="#444"
         strokeWidth={1}
         opacity={0.2}
         listening={false}
-        perfectDrawEnabled={false}
       />
-      <Text
+      <KonvaText
         x={innerWidth - 35}
         y={focusToY(maxFocus) + 2}
         text={String(maxFocus)}
@@ -274,22 +272,20 @@ export const ResourcesTrack = memo(function ResourcesTrack({
         fill="#666"
         opacity={0.5}
         listening={false}
-        perfectDrawEnabled={false}
       />
 
       {/* Gain/loss arrows for fine zoom */}
       {gainLossMarkers.map((marker, i) => (
-        <Group key={i} x={marker.x} y={marker.y}>
+        <KonvaGroup key={i} x={marker.x} y={marker.y}>
           {/* Arrow indicator */}
-          <Line
+          <KonvaLine
             points={marker.isGain ? [-3, 6, 0, 0, 3, 6] : [-3, -6, 0, 0, 3, -6]}
             stroke={marker.isGain ? "#22C55E" : "#EF4444"}
             strokeWidth={1.5}
             opacity={0.7}
             listening={false}
-            perfectDrawEnabled={false}
           />
-        </Group>
+        </KonvaGroup>
       ))}
 
       {/* Critical threshold glow effect when line crosses it */}
@@ -316,9 +312,9 @@ export const ResourcesTrack = memo(function ResourcesTrack({
           const crossY = focusToY(resourceCriticalThreshold);
 
           return (
-            <Group key={`cross-${i}`} x={x} y={crossY}>
+            <KonvaGroup key={`cross-${i}`} x={x} y={crossY}>
               {/* Glow effect */}
-              <Rect
+              <KonvaRect
                 x={-4}
                 y={-4}
                 width={8}
@@ -327,11 +323,10 @@ export const ResourcesTrack = memo(function ResourcesTrack({
                 cornerRadius={4}
                 opacity={0.4}
                 listening={false}
-                perfectDrawEnabled={false}
               />
-            </Group>
+            </KonvaGroup>
           );
         })}
-    </Group>
+    </KonvaGroup>
   );
 });

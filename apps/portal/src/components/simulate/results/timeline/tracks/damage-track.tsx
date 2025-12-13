@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Circle, Line } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaCircle,
+  KonvaLine,
+} from "@/components/konva";
 import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel, type ZoomLevel } from "@/hooks/timeline";
@@ -162,46 +167,43 @@ export const DamageTrack = memo(function DamageTrack({
   // Render aggregate view (DPS area chart only)
   if (zoomLevel === "aggregate") {
     return (
-      <Group y={y}>
+      <KonvaGroup y={y}>
         {/* DPS area fill */}
         {dpsAreaPoints.area.length > 0 && (
-          <Line
+          <KonvaLine
             points={dpsAreaPoints.area}
             fill="#3B82F6"
             opacity={0.25}
             closed
             listening={false}
-            perfectDrawEnabled={false}
           />
         )}
         {/* DPS line */}
         {dpsAreaPoints.line.length > 0 && (
-          <Line
+          <KonvaLine
             points={dpsAreaPoints.line}
             stroke="#3B82F6"
             strokeWidth={2}
             tension={0.3}
             listening={false}
-            perfectDrawEnabled={false}
           />
         )}
-      </Group>
+      </KonvaGroup>
     );
   }
 
   // Render coarse view (stacked histogram bars)
   if (zoomLevel === "coarse") {
     return (
-      <Group y={y}>
+      <KonvaGroup y={y}>
         {/* Background DPS area (subtle) */}
         {dpsAreaPoints.area.length > 0 && (
-          <Line
+          <KonvaLine
             points={dpsAreaPoints.area}
             fill="#3B82F6"
             opacity={0.1}
             closed
             listening={false}
-            perfectDrawEnabled={false}
           />
         )}
 
@@ -244,11 +246,11 @@ export const DamageTrack = memo(function DamageTrack({
                 : 0.2;
 
           return (
-            <Group
+            <KonvaGroup
               key={bucket.timestamp}
               x={x}
               opacity={opacity}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: Konva.KonvaEventObject<MouseEvent>) => {
                 const spells = Array.from(bucket.spellBreakdown.entries())
                   .map(([id, data]) => {
                     const spell = getSpell(id);
@@ -273,46 +275,43 @@ export const DamageTrack = memo(function DamageTrack({
               onMouseLeave={hideTooltip}
             >
               {spellBars.map((bar, i) => (
-                <Rect
+                <KonvaRect
                   key={i}
                   y={bar.y}
                   width={width}
                   height={Math.max(1, bar.h)}
                   fill={bar.color}
                   cornerRadius={1}
-                  perfectDrawEnabled={false}
                 />
               ))}
               {/* Crit indicator - clamped to stay within track */}
               {bucket.hasCrit && (
-                <Circle
+                <KonvaCircle
                   x={width / 2}
                   y={Math.max(5, currentY - 4)}
                   radius={3}
                   fill="#FFD700"
                   listening={false}
-                  perfectDrawEnabled={false}
                 />
               )}
-            </Group>
+            </KonvaGroup>
           );
         })}
-      </Group>
+      </KonvaGroup>
     );
   }
 
   // Render fine/medium view (lollipop markers)
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {/* Background DPS area (very subtle) */}
       {dpsAreaPoints.area.length > 0 && (
-        <Line
+        <KonvaLine
           points={dpsAreaPoints.area}
           fill="#3B82F6"
           opacity={0.08}
           closed
           listening={false}
-          perfectDrawEnabled={false}
         />
       )}
 
@@ -331,11 +330,11 @@ export const DamageTrack = memo(function DamageTrack({
           const opacity = getSpellOpacity(selectedSpell, dmg.spellId, 1, 0.15);
 
           return (
-            <Group
+            <KonvaGroup
               key={dmg.id}
               x={dx}
               opacity={opacity}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: Konva.KonvaEventObject<MouseEvent>) => {
                 const tooltip = buildSpellTooltip(dmg.spellId, dmg.timestamp, {
                   damage: dmg.amount,
                   isCrit: dmg.isCrit,
@@ -349,17 +348,16 @@ export const DamageTrack = memo(function DamageTrack({
               onMouseLeave={hideTooltip}
             >
               {/* Stem */}
-              <Rect
+              <KonvaRect
                 x={-damageStemWidth / 2}
                 y={dy}
                 width={damageStemWidth}
                 height={Math.max(0, stemHeight)}
                 fill={spell?.color ?? "#888"}
                 cornerRadius={1}
-                perfectDrawEnabled={false}
               />
               {/* Marker dot */}
-              <Circle
+              <KonvaCircle
                 x={0}
                 y={dy}
                 radius={dmg.isCrit ? damageCritRadius : damageMarkerRadius}
@@ -367,12 +365,11 @@ export const DamageTrack = memo(function DamageTrack({
                 stroke={dmg.isCrit ? "#FFA500" : undefined}
                 strokeWidth={dmg.isCrit ? 1 : 0}
                 listening={false}
-                perfectDrawEnabled={false}
               />
-            </Group>
+            </KonvaGroup>
           );
         }),
       )}
-    </Group>
+    </KonvaGroup>
   );
 });

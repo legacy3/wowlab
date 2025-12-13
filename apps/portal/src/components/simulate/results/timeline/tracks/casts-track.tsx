@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Text, Line } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaText,
+  KonvaLine,
+} from "@/components/konva";
 import type Konva from "konva";
 import { getSpell, type CastEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
@@ -254,9 +259,9 @@ export const CastsTrack = memo(function CastsTrack({
   // Render density heatmap for aggregate zoom
   if (zoomLevel === "aggregate" && densityBuckets) {
     return (
-      <Group y={y}>
+      <KonvaGroup y={y}>
         {densityBuckets.map((bucket, i) => (
-          <Rect
+          <KonvaRect
             key={i}
             x={bucket.x}
             y={castHeight * castLaneCount - bucket.height}
@@ -266,10 +271,9 @@ export const CastsTrack = memo(function CastsTrack({
             opacity={0.6}
             cornerRadius={1}
             listening={false}
-            perfectDrawEnabled={false}
           />
         ))}
-      </Group>
+      </KonvaGroup>
     );
   }
 
@@ -277,10 +281,10 @@ export const CastsTrack = memo(function CastsTrack({
     castHeight * castLaneCount + castLaneGap * (castLaneCount - 1);
 
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {/* Lane separator lines (subtle) */}
       {Array.from({ length: castLaneCount - 1 }).map((_, i) => (
-        <Line
+        <KonvaLine
           key={`lane-sep-${i}`}
           points={[
             0,
@@ -293,7 +297,6 @@ export const CastsTrack = memo(function CastsTrack({
           opacity={0.3}
           dash={[2, 4]}
           listening={false}
-          perfectDrawEnabled={false}
         />
       ))}
 
@@ -332,7 +335,7 @@ export const CastsTrack = memo(function CastsTrack({
         const isChanneled = cast.duration > 0;
 
         return (
-          <Group
+          <KonvaGroup
             key={cast.id}
             x={cx}
             y={cy}
@@ -347,7 +350,7 @@ export const CastsTrack = memo(function CastsTrack({
                 selectedSpell === cast.spellId ? null : cast.spellId,
               )
             }
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: Konva.KonvaEventObject<MouseEvent>) => {
               onSpellHover(cast.spellId);
 
               const tooltip = buildSpellTooltip(cast.spellId, cast.timestamp, {
@@ -365,34 +368,32 @@ export const CastsTrack = memo(function CastsTrack({
             }}
           >
             {/* Capsule background */}
-            <Rect
+            <KonvaRect
               width={width}
               height={castHeight}
               fill={spell?.color ?? "#888"}
               cornerRadius={castCornerRadius}
               stroke={highlighted ? "#fff" : undefined}
               strokeWidth={highlighted ? 2 : 0}
-              perfectDrawEnabled={false}
             />
 
             {/* Channeled pattern (stripes) */}
             {isChanneled && width > 30 && (
               <>
                 {Array.from({ length: Math.floor(width / 8) }).map((_, i) => (
-                  <Line
+                  <KonvaLine
                     key={i}
                     points={[8 + i * 8, 0, 8 + i * 8, castHeight]}
                     stroke="#fff"
                     strokeWidth={1}
                     opacity={0.2}
                     listening={false}
-                    perfectDrawEnabled={false}
                   />
                 ))}
               </>
             )}
 
-            <Text
+            <KonvaText
               text={label.text}
               x={4}
               width={width - 8}
@@ -403,25 +404,23 @@ export const CastsTrack = memo(function CastsTrack({
               fontStyle="bold"
               fill="#fff"
               listening={false}
-              perfectDrawEnabled={false}
             />
-          </Group>
+          </KonvaGroup>
         );
       })}
 
       {/* Overflow badges (+N) */}
       {overflowBadges.map((badge, i) => (
-        <Group key={`overflow-${i}`} x={badge.x} y={trackHeight + 2}>
-          <Rect
+        <KonvaGroup key={`overflow-${i}`} x={badge.x} y={trackHeight + 2}>
+          <KonvaRect
             x={-10}
             y={0}
             width={20}
             height={14}
             fill="#EF4444"
             cornerRadius={7}
-            perfectDrawEnabled={false}
           />
-          <Text
+          <KonvaText
             text={`+${badge.count}`}
             x={-10}
             y={0}
@@ -433,10 +432,9 @@ export const CastsTrack = memo(function CastsTrack({
             fontStyle="bold"
             fill="#fff"
             listening={false}
-            perfectDrawEnabled={false}
           />
-        </Group>
+        </KonvaGroup>
       ))}
-    </Group>
+    </KonvaGroup>
   );
 });
