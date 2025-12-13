@@ -609,10 +609,11 @@ for (const edge of data.edges) {
 
 const includedIds = new Set();
 const queue = [];
-// Include ALL nodes - don't filter by orderIndex
 for (const n of data.nodes) {
-  includedIds.add(n.id);
-  queue.push(n.id);
+  if (n.orderIndex >= 0 || n.subTreeId > 0) {
+    includedIds.add(n.id);
+    queue.push(n.id);
+  }
 }
 
 while (queue.length > 0) {
