@@ -353,7 +353,7 @@ export function TalentTree({
       <div
         ref={containerRef}
         className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
-        style={{ width, height }}
+        style={{ width: propWidth ?? "100%", height }}
       >
         <KonvaStage
           ref={stageRef}

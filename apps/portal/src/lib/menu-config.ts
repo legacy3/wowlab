@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Calculator,
   CheckSquare,
   FlaskConical,
   GitFork,
@@ -63,6 +64,7 @@ export const menuConfig: MenuGroup[] = [
   group("Lab", [
     item("Data Inspector", "/lab/data-inspector", Table),
     item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
+    item("Talent Calculator", "/lab/talent-calculator", Calculator),
   ]),
   group("About", [
     item("About", "/about", FlaskConical),
