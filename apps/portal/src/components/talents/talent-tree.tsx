@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Talent } from "@wowlab/core/Schemas";
+import { RotateCcw } from "lucide-react";
 import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,16 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GameIcon } from "@/components/game";
 import { cn } from "@/lib/utils";
+import {
+  computeVisibleNodes,
+  filterByHeroTree,
+  computeTalentLayout,
+  searchTalentNodes,
+  deriveSelectedHeroId,
+} from "./talent-utils";
+import { usePanZoom } from "@/hooks/use-pan-zoom";
 
 interface TalentTreeProps {
   tree: Talent.TalentTree | Talent.TalentTreeWithSelections;
   width?: number;
   height?: number;
 }
-
-// Scale factor to convert game coordinates (0-9000) to pixels
-const SCALE_FACTOR = 0.05;
-const NODE_OFFSET = 20; // Offset to center nodes
 
 function hasSelections(
   tree: Talent.TalentTree | Talent.TalentTreeWithSelections,
@@ -32,113 +37,67 @@ export function TalentTree({
   height = 600,
 }: TalentTreeProps) {
   const selections = hasSelections(tree) ? tree.selections : undefined;
+
+  // Pan/zoom state
+  const {
+    state: panZoom,
+    handlers: panZoomHandlers,
+    reset: resetPanZoom,
+  } = usePanZoom({
+    minScale: 0.5,
+    maxScale: 3,
+  });
+
+  // Compute visible nodes (stable across hero toggles)
+  const visibleNodes = useMemo(
+    () => computeVisibleNodes(tree.nodes, tree.edges),
+    [tree.nodes, tree.edges],
+  );
+
+  // Derive initial hero selection from selections data
+  const initialHeroId = useMemo(
+    () => deriveSelectedHeroId(tree.subTrees, visibleNodes, selections),
+    [tree.subTrees, visibleNodes, selections],
+  );
+
   const [selectedHeroId, setSelectedHeroId] = useState<number | null>(
-    tree.subTrees[0]?.id ?? null,
+    initialHeroId,
   );
   const [searchQuery, setSearchQuery] = useState("");
 
-  const visibleNodes = useMemo(() => {
-    const allNodeMap = new Map(tree.nodes.map((n) => [n.id, n]));
+  // Reset hero selection, search, and pan/zoom when tree changes
+  useEffect(() => {
+    setSelectedHeroId(initialHeroId);
+    setSearchQuery("");
+    resetPanZoom();
+  }, [initialHeroId, resetPanZoom]);
 
-    // Build edge map: fromNodeId -> [toNodeIds]
-    const edgesFrom = new Map<number, number[]>();
-    for (const edge of tree.edges) {
-      if (!edgesFrom.has(edge.fromNodeId)) {
-        edgesFrom.set(edge.fromNodeId, []);
-      }
+  // Filter by hero selection for display
+  const displayNodes = useMemo(
+    () => filterByHeroTree(visibleNodes, selectedHeroId),
+    [visibleNodes, selectedHeroId],
+  );
 
-      edgesFrom.get(edge.fromNodeId)!.push(edge.toNodeId);
-    }
+  // Use VISIBLE nodes for stable layout (not display nodes)
+  const { scale, offsetX, offsetY } = useMemo(
+    () => computeTalentLayout(visibleNodes, width, height),
+    [visibleNodes, width, height],
+  );
 
-    // Start with nodes that have orderIndex >= 0 or are hero nodes
-    const includedIds = new Set<number>();
-    const queue: number[] = [];
+  // Search ALL visible nodes so hero talents are always searchable
+  const searchMatches = useMemo(
+    () => searchTalentNodes(visibleNodes, searchQuery),
+    [visibleNodes, searchQuery],
+  );
+  const isSearching = searchQuery.trim().length > 0;
 
-    for (const n of tree.nodes) {
-      if (n.orderIndex >= 0 || n.subTreeId > 0) {
-        includedIds.add(n.id);
-        queue.push(n.id);
-      }
-    }
-
-    // BFS to include connected nodes (non-hero only)
-    while (queue.length > 0) {
-      const nodeId = queue.shift()!;
-      const targets = edgesFrom.get(nodeId) || [];
-
-      for (const targetId of targets) {
-        if (!includedIds.has(targetId)) {
-          const targetNode = allNodeMap.get(targetId);
-
-          if (targetNode && targetNode.subTreeId === 0) {
-            includedIds.add(targetId);
-            queue.push(targetId);
-          }
-        }
-      }
-    }
-
-    return tree.nodes.filter((n) => includedIds.has(n.id));
-  }, [tree.nodes, tree.edges]);
-
-  // Filter by selected hero tree
-  const displayNodes = useMemo(() => {
-    return visibleNodes.filter((n) => {
-      // Show all non-hero nodes
-      if (n.subTreeId === 0) {
-        return true;
-      }
-
-      // Show hero nodes only if their subtree is selected
-      return selectedHeroId !== null && n.subTreeId === selectedHeroId;
-    });
-  }, [visibleNodes, selectedHeroId]);
-
-  // Search filtering
-  const searchMatches = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return new Set<number>();
-    }
-
-    const query = searchQuery.toLowerCase();
-
-    return new Set(
-      displayNodes
-        .filter((n) =>
-          n.entries.some((e) => e.name.toLowerCase().includes(query)),
-        )
-        .map((n) => n.id),
-    );
-  }, [displayNodes, searchQuery]);
-
-  const { scale, offsetX, offsetY } = useMemo(() => {
-    if (displayNodes.length === 0) {
-      return { scale: SCALE_FACTOR, offsetX: 0, offsetY: 0 };
-    }
-
-    const minX = Math.min(...displayNodes.map((n) => n.posX));
-    const maxX = Math.max(...displayNodes.map((n) => n.posX));
-    const minY = Math.min(...displayNodes.map((n) => n.posY));
-    const maxY = Math.max(...displayNodes.map((n) => n.posY));
-
-    const rangeX = maxX - minX || 1;
-    const rangeY = maxY - minY || 1;
-
-    const scaleX = (width - NODE_OFFSET * 2) / rangeX;
-    const scaleY = (height - NODE_OFFSET * 2) / rangeY;
-    const scale = Math.min(scaleX, scaleY);
-
-    return {
-      scale,
-      offsetX: NODE_OFFSET - minX * scale,
-      offsetY: NODE_OFFSET - minY * scale,
-    };
-  }, [displayNodes, width, height]);
-
+  // Node lookup map for edges
   const nodeMap = useMemo(
     () => new Map(displayNodes.map((n) => [n.id, n])),
     [displayNodes],
   );
+
+  const isPanned = panZoom.x !== 0 || panZoom.y !== 0 || panZoom.scale !== 1;
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -194,76 +153,100 @@ export function TalentTree({
             className="h-7 w-36 text-xs"
           />
 
+          {/* Reset pan/zoom */}
+          {isPanned && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
+              onClick={resetPanZoom}
+              title="Reset view"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </Button>
+          )}
+
           {/* Stats */}
           <span className="text-xs text-muted-foreground ml-auto">
             {displayNodes.length} talents
+            {panZoom.scale !== 1 && ` · ${Math.round(panZoom.scale * 100)}%`}
           </span>
         </div>
 
         {/* Tree container */}
         <div
-          className="relative bg-background/50 rounded-lg border overflow-hidden"
+          className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
           style={{ width, height }}
+          {...panZoomHandlers}
         >
-          {/* Edges (SVG layer) */}
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            style={{ width, height }}
+          {/* Transform wrapper for pan/zoom */}
+          <div
+            style={{
+              transform: `translate(${panZoom.x}px, ${panZoom.y}px) scale(${panZoom.scale})`,
+              transformOrigin: "0 0",
+              width,
+              height,
+              position: "relative",
+            }}
           >
-            {tree.edges.map((edge) => {
-              const fromNode = nodeMap.get(edge.fromNodeId);
-              const toNode = nodeMap.get(edge.toNodeId);
-              if (!fromNode || !toNode) return null;
+            {/* Edges (SVG layer) */}
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              style={{ width, height }}
+            >
+              {tree.edges.map((edge) => {
+                const fromNode = nodeMap.get(edge.fromNodeId);
+                const toNode = nodeMap.get(edge.toNodeId);
+                if (!fromNode || !toNode) return null;
 
-              const fromSelection = selections?.get(edge.fromNodeId);
-              const toSelection = selections?.get(edge.toNodeId);
+                const fromSelection = selections?.get(edge.fromNodeId);
+                const toSelection = selections?.get(edge.toNodeId);
+
+                return (
+                  <TalentEdge
+                    key={edge.id}
+                    fromNode={fromNode}
+                    toNode={toNode}
+                    fromSelected={fromSelection?.selected}
+                    toSelected={toSelection?.selected}
+                    scale={scale}
+                    offsetX={offsetX}
+                    offsetY={offsetY}
+                  />
+                );
+              })}
+            </svg>
+
+            {/* Nodes */}
+            {displayNodes.map((node) => {
+              const selection = selections?.get(node.id);
+              const x = node.posX * scale + offsetX;
+              const y = node.posY * scale + offsetY;
+              const isMatch = searchMatches.has(node.id);
 
               return (
-                <TalentEdge
-                  key={edge.id}
-                  edge={edge}
-                  fromNode={fromNode}
-                  toNode={toNode}
-                  fromSelected={fromSelection?.selected}
-                  toSelected={toSelection?.selected}
-                  scale={scale}
-                  offsetX={offsetX}
-                  offsetY={offsetY}
-                />
+                <div
+                  key={node.id}
+                  className={cn(
+                    "absolute",
+                    isSearching && !isMatch && "opacity-30",
+                    isSearching && isMatch && "ring-2 ring-blue-500 rounded-lg",
+                  )}
+                  style={{
+                    left: x,
+                    top: y,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <TalentNode
+                    node={node}
+                    selection={selection}
+                    isHero={node.subTreeId > 0}
+                  />
+                </div>
               );
             })}
-          </svg>
-
-          {/* Nodes */}
-          {displayNodes.map((node) => {
-            const selection = selections?.get(node.id);
-            const x = node.posX * scale + offsetX;
-            const y = node.posY * scale + offsetY;
-            const isSearching = searchQuery.trim().length > 0;
-            const isMatch = searchMatches.has(node.id);
-
-            return (
-              <div
-                key={node.id}
-                className={cn(
-                  "absolute",
-                  isSearching && !isMatch && "opacity-30",
-                  isSearching && isMatch && "ring-2 ring-blue-500 rounded-lg",
-                )}
-                style={{
-                  left: x,
-                  top: y,
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                <TalentNode
-                  node={node}
-                  selection={selection}
-                  isHero={node.subTreeId > 0}
-                />
-              </div>
-            );
-          })}
+          </div>
         </div>
       </div>
     </TooltipProvider>

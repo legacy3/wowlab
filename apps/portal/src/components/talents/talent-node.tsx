@@ -12,24 +12,24 @@ import {
 interface TalentNodeProps {
   node: Talent.TalentNode;
   selection?: Talent.DecodedTalentSelection;
-  scale?: number;
   isHero?: boolean;
 }
+
+const NODE_SIZE = 40;
+const CHOICE_NODE_SIZE = 44;
 
 export function TalentNode({
   node,
   selection,
-  scale = 1,
   isHero = false,
 }: TalentNodeProps) {
   const isSelected = selection?.selected ?? false;
   const ranksPurchased = selection?.ranksPurchased ?? 0;
   const isChoiceNode = node.type === 2 && node.entries.length > 1;
 
-  const size = isChoiceNode ? 44 : 40;
-  const scaledSize = size * scale;
+  const size = isChoiceNode ? CHOICE_NODE_SIZE : NODE_SIZE;
 
-  // For choice nodes, show both icons side by side
+  // Choice node: show both icons side by side
   if (isChoiceNode) {
     const entry1 = node.entries[0];
     const entry2 = node.entries[1];
@@ -47,10 +47,7 @@ export function TalentNode({
                 ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background"
                 : "opacity-50 grayscale",
             )}
-            style={{
-              width: scaledSize,
-              height: scaledSize,
-            }}
+            style={{ width: size, height: size }}
           >
             <div className="flex w-full h-full">
               <GameIcon
@@ -77,7 +74,7 @@ export function TalentNode({
               Choice Talent
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {node.entries.slice(0, 2).map((entry, i) => (
+              {node.entries.slice(0, 2).map((entry) => (
                 <div
                   key={entry.id}
                   className="p-2 bg-black/30 rounded-lg border border-gray-700"
@@ -128,10 +125,7 @@ export function TalentNode({
               ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background"
               : "opacity-50 grayscale",
           )}
-          style={{
-            width: scaledSize,
-            height: scaledSize,
-          }}
+          style={{ width: size, height: size }}
         >
           <GameIcon
             iconName={entry.iconFileName}
