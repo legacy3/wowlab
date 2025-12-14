@@ -2,6 +2,25 @@
 
 import type { TooltipState } from "./types";
 import { GameIcon } from "@/components/game";
+import { useSpellDescription } from "@/hooks/use-spell-description";
+
+function SpellDescription({
+  spellId,
+  fallback,
+}: {
+  spellId: number | null | undefined;
+  fallback: string | null | undefined;
+}) {
+  const { data, isLoading } = useSpellDescription(
+    spellId && spellId > 0 ? spellId : null,
+  );
+
+  if (isLoading && !data) {
+    return <span>Loading description...</span>;
+  }
+
+  return <span>{data?.text ?? fallback ?? "No description available."}</span>;
+}
 
 interface TalentTooltipProps {
   tooltip: TooltipState | null;
@@ -41,23 +60,26 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
                   key={entry.id}
                   className="p-2 bg-black/30 rounded-lg border border-gray-700"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <GameIcon
-                      iconName={entry.iconFileName}
-                      size="small"
-                      alt={entry.name}
-                      className="rounded"
-                    />
-                    <span className="text-sm font-medium text-purple-300">
-                      {entry.name}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {entry.description || "No description"}
-                  </p>
-                </div>
-              ))}
+              <div className="flex items-center gap-2 mb-2">
+                <GameIcon
+                  iconName={entry.iconFileName}
+                  size="small"
+                  alt={entry.name}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium text-purple-300">
+                  {entry.name}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                <SpellDescription
+                  spellId={entry.spellId ?? null}
+                  fallback={entry.description}
+                />
+              </p>
             </div>
+          ))}
+        </div>
             <div className="text-[10px] text-gray-500 pt-2 border-t border-gray-700 flex gap-3">
               <span>ID {node.id}</span>
               <span>Order {node.orderIndex}</span>
@@ -103,7 +125,10 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
             </div>
           </div>
           <p className="text-xs text-gray-300 leading-relaxed">
-            {entry.description || "No description available."}
+            <SpellDescription
+              spellId={entry.spellId ?? null}
+              fallback={entry.description}
+            />
           </p>
           <div className="text-[10px] text-gray-500 pt-2 border-t border-gray-700 flex gap-3">
             <span>ID {node.id}</span>

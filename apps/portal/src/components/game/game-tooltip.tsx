@@ -4,6 +4,7 @@ import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import { cn } from "@/lib/utils";
 import { GameIcon } from "./game-icon";
+import { useSpellDescription } from "@/hooks/use-spell-description";
 
 // WoW Item Quality Colors
 const QUALITY_COLORS = {
@@ -62,8 +63,12 @@ export interface ItemTooltipData {
   iconName?: string;
 }
 
-// Mock spell data structure
 export interface SpellTooltipData {
+  /**
+   * Optional spell ID — when provided we fetch the rendered description via `useSpellDescription`.
+   * Falls back to the provided description when absent or while loading.
+   */
+  id?: number;
   name: string;
   rank?: string;
   castTime: string;
@@ -279,7 +284,11 @@ export function ItemTooltipContent({ item }: { item: ItemTooltipData }) {
 
 // Spell Tooltip Content Component
 export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
+  const { data: renderedDescription, isLoading } = useSpellDescription(
+    spell.id ?? null,
+  );
   const schoolColor = spell.school ? SCHOOL_COLORS[spell.school] : "#ffffff";
+  const description = renderedDescription?.text ?? spell.description;
 
   return (
     <div className="flex flex-col gap-1.5 text-sm">
@@ -313,11 +322,8 @@ export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
       )}
 
       {/* Description */}
-      <p
-        className="text-xs leading-relaxed"
-        style={{ color: spell.school ? schoolColor : "#ffd100" }}
-      >
-        {spell.description}
+      <p className="text-xs leading-relaxed" style={{ color: spell.school ? schoolColor : "#ffd100" }}>
+        {isLoading && !renderedDescription ? "Loading description..." : description}
       </p>
     </div>
   );

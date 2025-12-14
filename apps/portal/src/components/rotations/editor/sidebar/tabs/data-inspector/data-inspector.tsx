@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDataInspector } from "@/hooks/use-data-inspector";
+import { useSpellDescription } from "@/hooks/use-spell-description";
 import type { DataType } from "@/atoms/data-inspector";
 import type { Spell } from "@wowlab/core/Schemas";
 
@@ -30,6 +31,10 @@ export function DataInspector() {
   const [search, setSearch] = useState("");
   const { id, setId, type, setType, loading, error, data, query } =
     useDataInspector();
+  const {
+    data: spellDescription,
+    isLoading: spellDescriptionLoading,
+  } = useSpellDescription(type === "spell" && id > 0 ? id : null);
 
   const handleSearch = () => {
     const asNumber = parseInt(search, 10);
@@ -141,10 +146,16 @@ export function DataInspector() {
                   </div>
                 </div>
 
-                {data.description && (
+                {(spellDescription || data.description || spellDescriptionLoading) && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Description</p>
-                    <p className="text-xs">{data.description}</p>
+                    <p className="text-xs">
+                      {spellDescriptionLoading && !spellDescription
+                        ? "Loading description..."
+                        : spellDescription?.text ??
+                          data.description ??
+                          "No description available."}
+                    </p>
                   </div>
                 )}
               </>
