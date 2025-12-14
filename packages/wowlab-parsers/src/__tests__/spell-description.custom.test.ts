@@ -47,7 +47,7 @@ describe("spell description custom expectations", () => {
       expect(errors).toHaveLength(0);
       expect(text).toBe(expected);
 
-      console.log(`Testing ${expected} got ${text}`);
+      console.log(`Testing "${input}"; Expecting "${expected}"; Got "${text}"`);
     },
   );
 });

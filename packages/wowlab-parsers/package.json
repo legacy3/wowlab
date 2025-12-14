@@ -14,6 +14,7 @@
   "scripts": {
     "build": "vite build && tsc-alias -p tsconfig.json",
     "test": "vitest run",
+    "test:ui": "vitest --ui --open",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -24,6 +25,7 @@
     "effect": "^3.19.4"
   },
   "devDependencies": {
+    "@vitest/ui": "^3.2.4",
     "tsc-alias": "^1.8.16",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^3.2.4"
