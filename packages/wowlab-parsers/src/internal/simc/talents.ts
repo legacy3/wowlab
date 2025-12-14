@@ -1,9 +1,5 @@
 import { Effect } from "effect";
 
-// -----------------------------------------------------------------------------
-// Types
-// -----------------------------------------------------------------------------
-
 export interface DecodedTalentLoadout {
   nodes: DecodedTalentNode[];
   specId: number;
@@ -25,10 +21,6 @@ type BitReader = {
   readonly hasBits: (count: number) => boolean;
 };
 
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
 const BASE64_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_URL_CHARS =
@@ -40,7 +32,7 @@ for (let i = 0; i < BASE64_CHARS.length; i++) {
   CHAR_MAP[BASE64_URL_CHARS[i]] = i;
 }
 
-// Taken from parse_traits_hash <(o_o)>
+// ported from simc parse_traits_hash
 export function decodeTalentLoadout(
   talentString: string,
 ): Effect.Effect<DecodedTalentLoadout, Error> {
@@ -77,14 +69,11 @@ export function decodeTalentLoadout(
         let choiceIndex: number | undefined;
 
         if (purchased) {
-          // partiallyRanked and hasChoice bits are ONLY read when purchased
+          // these bits only present when purchased
           partiallyRanked = reader.getBits(1) === 1;
-
           if (partiallyRanked) {
             ranksPurchased = reader.getBits(6);
           }
-
-          // hasChoice bit - MUST be inside purchased block per SimC
           choiceNode = reader.getBits(1) === 1;
 
           if (choiceNode) {
@@ -112,7 +101,6 @@ export function decodeTalentLoadout(
   });
 }
 
-// Taken from parse_traits_hash <(o_o)>
 export function decodeTalents(
   encoded: string,
 ): Effect.Effect<Uint8Array, Error> {

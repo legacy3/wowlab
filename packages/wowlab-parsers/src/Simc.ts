@@ -13,10 +13,6 @@ import {
 export * from "./internal/simc";
 export * from "./internal/simc/types";
 
-// -----------------------------------------------------------------------------
-// Errors
-// -----------------------------------------------------------------------------
-
 export interface SimcParser {
   readonly parse: (
     input: string,
@@ -48,10 +44,6 @@ export class SimcParseError extends Data.TaggedError("SimcParseError")<{
   }>;
 }> {}
 
-// -----------------------------------------------------------------------------
-// Service Interface
-// -----------------------------------------------------------------------------
-
 export class SimcTransformError extends Data.TaggedError("SimcTransformError")<{
   readonly message: string;
 }> {}
@@ -60,17 +52,11 @@ export const SimcParserTag = Context.GenericTag<SimcParser>(
   "@wowlab/parsers/SimcParser",
 );
 
-// -----------------------------------------------------------------------------
-// Live Implementation
-// -----------------------------------------------------------------------------
-
 const make = Effect.succeed(
   SimcParserTag.of({
     parse: (input: string) =>
       Effect.gen(function* () {
-        // Step 1: Tokenize
         const lexResult = tokenize(input);
-
         if (lexResult.errors.length > 0) {
           return yield* Effect.fail(
             new SimcLexError({
@@ -84,9 +70,7 @@ const make = Effect.succeed(
           );
         }
 
-        // Step 2: Parse
         const parseResult = parse(input, lexResult);
-
         if (parseResult.errors.length > 0) {
           return yield* Effect.fail(
             new SimcParseError({
@@ -106,7 +90,6 @@ const make = Effect.succeed(
           );
         }
 
-        // Step 3: Transform CST to typed output
         try {
           const visitorResult = simcVisitor.visit(parseResult.cst);
           const savedLoadouts = parseSavedLoadoutsFromInput(input);

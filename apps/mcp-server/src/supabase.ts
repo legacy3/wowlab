@@ -919,15 +919,15 @@ export const SupabaseDbcServiceLive = (
             "trait_node_group_x_trait_node",
             (builder) => builder.select("*").in("TraitNodeID", [...nodeIds]),
           ),
+        getTraitNodesForTree: (treeId) =>
+          query<Schemas.Dbc.TraitNodeRow[]>(supabase, "trait_node", (builder) =>
+            builder.select("*").eq("TraitTreeID", treeId),
+          ),
         getTraitNodeXTraitConds: (nodeIds) =>
           query<Schemas.Dbc.TraitNodeXTraitCondRow[]>(
             supabase,
             "trait_node_x_trait_cond",
             (builder) => builder.select("*").in("TraitNodeID", [...nodeIds]),
-          ),
-        getTraitNodesForTree: (treeId) =>
-          query<Schemas.Dbc.TraitNodeRow[]>(supabase, "trait_node", (builder) =>
-            builder.select("*").eq("TraitTreeID", treeId),
           ),
         getTraitNodeXTraitNodeEntries: (nodeId) =>
           query<Schemas.Dbc.TraitNodeXTraitNodeEntryRow[]>(
