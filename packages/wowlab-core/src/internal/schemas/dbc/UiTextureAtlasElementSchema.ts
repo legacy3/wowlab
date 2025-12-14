@@ -8,4 +8,3 @@ export const UiTextureAtlasElementRowSchema = Schema.Struct({
 export type UiTextureAtlasElementRow = Schema.Schema.Type<
   typeof UiTextureAtlasElementRowSchema
 >;
-

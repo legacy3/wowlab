@@ -1019,6 +1019,14 @@ export const RefineDbcService = (
             "TraitNodeID",
             nodeIds,
           ),
+        getTraitNodeXTraitConds: (nodeIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeXTraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_x_trait_cond",
+            "TraitNodeID",
+            nodeIds,
+          ),
       };
     }),
   ).pipe(Layer.provide(resolversLayer));

@@ -185,6 +185,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getTraitNodesForTree: (treeId) =>
       Effect.succeed(cache.traitNodesByTree.get(treeId) ?? []),
 
+    getTraitNodeXTraitConds: () => Effect.succeed([]), // TODO Implement these properly
+
     getTraitNodeXTraitNodeEntries: (nodeId) =>
       Effect.succeed(cache.traitNodeXTraitNodeEntry.get(nodeId) ?? []),
 

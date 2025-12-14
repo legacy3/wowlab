@@ -676,6 +676,12 @@ const SupabaseDbcServiceLive = (
             "trait_node_group_x_trait_node",
             (builder) => builder.select("*").in("TraitNodeID", [...nodeIds]),
           ),
+        getTraitNodeXTraitConds: (nodeIds) =>
+          query<Schemas.Dbc.TraitNodeXTraitCondRow[]>(
+            supabase,
+            "trait_node_x_trait_cond",
+            (builder) => builder.select("*").in("TraitNodeID", [...nodeIds]),
+          ),
         getTraitNodesForTree: (treeId) =>
           query<Schemas.Dbc.TraitNodeRow[]>(supabase, "trait_node", (builder) =>
             builder.select("*").eq("TraitTreeID", treeId),
@@ -708,23 +714,23 @@ const SupabaseDbcServiceLive = (
                 .eq("ChrSpecializationID", specId)
                 .maybeSingle(),
           ),
-	        getTraitTreeLoadoutEntries: (loadoutId) =>
-	          query<Schemas.Dbc.TraitTreeLoadoutEntryRow[]>(
-	            supabase,
-	            "trait_tree_loadout_entry",
-	            (builder) =>
-	              builder
-	                .select("*")
-	                .eq("TraitTreeLoadoutID", loadoutId)
-	                .order("OrderIndex"),
-	          ),
-	        getUiTextureAtlasElement: (id) =>
-	          query<Schemas.Dbc.UiTextureAtlasElementRow | undefined>(
-	            supabase,
-	            "ui_texture_atlas_element",
-	            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
-	          ),
-	      });
+        getTraitTreeLoadoutEntries: (loadoutId) =>
+          query<Schemas.Dbc.TraitTreeLoadoutEntryRow[]>(
+            supabase,
+            "trait_tree_loadout_entry",
+            (builder) =>
+              builder
+                .select("*")
+                .eq("TraitTreeLoadoutID", loadoutId)
+                .order("OrderIndex"),
+          ),
+        getUiTextureAtlasElement: (id) =>
+          query<Schemas.Dbc.UiTextureAtlasElementRow | undefined>(
+            supabase,
+            "ui_texture_atlas_element",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+      });
     }),
   );
 

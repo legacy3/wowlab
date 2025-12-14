@@ -267,6 +267,13 @@ export interface DbcServiceInterface {
     treeId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
 
+  readonly getTraitNodeXTraitConds: (
+    nodeIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeXTraitCondRow>,
+    DbcError
+  >;
+
   readonly getTraitNodeXTraitNodeEntries: (
     nodeId: number,
   ) => Effect.Effect<
