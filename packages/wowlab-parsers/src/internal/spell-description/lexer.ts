@@ -13,6 +13,31 @@ export const CustomVariable = createToken({
   pattern: /\$<[a-zA-Z][a-zA-Z0-9]*>/,
 });
 
+export const EffectVariable = createToken({
+  name: "EffectVariable",
+  pattern: /\$(?:s|m|M|o|t|a|A|e|w|x|bc|q)[1-9]/,
+});
+
+export const SpellLevelVariable = createToken({
+  name: "SpellLevelVariable",
+  pattern: /\$(?:d[1-3]?|n|u|h|r|i|p\d?|z|c\d)/,
+});
+
+export const PlayerVariable = createToken({
+  name: "PlayerVariable",
+  pattern: /\$(?:SP|sp|AP|ap|RAP|MHP|mhp|SPS|PL|pl|INT)/,
+});
+
+export const EnchantVariable = createToken({
+  name: "EnchantVariable",
+  pattern: /\$(?:ec1|ecix|ecd)/,
+});
+
+export const MiscVariable = createToken({
+  name: "MiscVariable",
+  pattern: /\$(?:maxcast|pctD|W2?|B|ctrmax\d+)/,
+});
+
 export const AtVariable = createToken({
   name: "AtVariable",
   pattern: /\$@[a-zA-Z]+\d*/,
@@ -99,6 +124,31 @@ export const ExprDecimalFormat = createToken({
 export const ExprCustomVar = createToken({
   name: "ExprCustomVar",
   pattern: /\$<[a-zA-Z][a-zA-Z0-9]*>/,
+});
+
+export const ExprEffectVar = createToken({
+  name: "ExprEffectVar",
+  pattern: /\$(?:s|m|M|o|t|a|A|e|w|x|bc|q)[1-9]/,
+});
+
+export const ExprSpellLevelVar = createToken({
+  name: "ExprSpellLevelVar",
+  pattern: /\$(?:d[1-3]?|n|u|h|r|i|p\d?|z|c\d)/,
+});
+
+export const ExprPlayerVar = createToken({
+  name: "ExprPlayerVar",
+  pattern: /\$(?:SP|sp|AP|ap|RAP|MHP|mhp|SPS|PL|pl|INT)/,
+});
+
+export const ExprEnchantVar = createToken({
+  name: "ExprEnchantVar",
+  pattern: /\$(?:ec1|ecix|ecd)/,
+});
+
+export const ExprMiscVar = createToken({
+  name: "ExprMiscVar",
+  pattern: /\$(?:maxcast|pctD|W2?|B|ctrmax\d+)/,
 });
 
 export const ExprAtVar = createToken({
@@ -277,6 +327,11 @@ export const BranchText = createToken({
 const defaultModeTokens = [
   ExpressionBlockStart,
   CustomVariable,
+  EffectVariable,
+  SpellLevelVariable,
+  PlayerVariable,
+  EnchantVariable,
+  MiscVariable,
   AtVariable,
   ConditionalStart,
   Pluralization,
@@ -296,6 +351,11 @@ const expressionModeTokens = [
   ExpressionBlockEnd,
   ExprDecimalFormat,
   ExprCustomVar,
+  ExprEffectVar,
+  ExprSpellLevelVar,
+  ExprPlayerVar,
+  ExprEnchantVar,
+  ExprMiscVar,
   ExprAtVar,
   ExprCrossSpellRef,
   ExprDollarFunc, // before ExprSimpleVar
@@ -325,6 +385,11 @@ const condBranchModeTokens = [
   BranchLBracket,
   BranchExprBlockStart,
   BranchCustomVar,
+  EffectVariable,
+  SpellLevelVariable,
+  PlayerVariable,
+  EnchantVariable,
+  MiscVariable,
   BranchAtVar,
   BranchConditionalStart,
   BranchPluralization,

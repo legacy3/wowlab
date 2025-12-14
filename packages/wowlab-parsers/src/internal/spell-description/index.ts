@@ -1,5 +1,6 @@
 export { SpellDescriptionLexer, tokenize } from "./lexer";
 export { parse, spellDescriptionParser } from "./parser";
+export { visitSpellDescription } from "./visitor";
 export type {
   AtVariableNode,
   AuraConditionNode,

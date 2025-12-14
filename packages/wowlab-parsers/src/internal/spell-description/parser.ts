@@ -1,3 +1,5 @@
+/* eslint-disable perfectionist/sort-classes */
+
 import { CstParser } from "chevrotain";
 
 import {
@@ -27,28 +29,38 @@ import {
   CrossSpellRef,
   CustomVariable,
   Dollar,
+  EffectVariable,
+  EnchantVariable,
   ExprAtVar,
   ExprComma,
   ExprCrossSpellRef,
   ExprCustomVar,
   ExprDollarFunc,
+  ExprEffectVar,
+  ExprEnchantVar,
   ExpressionBlockEnd,
   ExpressionBlockStart,
   ExprIdentifier,
   ExprLParen,
   ExprMinus,
+  ExprMiscVar,
   ExprNumber,
+  ExprPlayerVar,
   ExprPlus,
   ExprRParen,
   ExprSimpleVar,
   ExprSlash,
+  ExprSpellLevelVar,
   ExprStar,
   Gender,
   LBracket,
+  MiscVariable,
   Pipe,
+  PlayerVariable,
   Pluralization,
   RBracket,
   SimpleVariable,
+  SpellLevelVariable,
   Text,
 } from "./lexer";
 
@@ -83,7 +95,6 @@ class SpellDescriptionParser extends CstParser {
     this.MANY(() => {
       this.OR([
         {
-          // chained: ?a123[text]
           ALT: () => {
             this.CONSUME(ChainCondQuestion);
             this.SUBRULE2(this.conditionPredicate);
@@ -112,6 +123,11 @@ class SpellDescriptionParser extends CstParser {
       { ALT: () => this.CONSUME(Pluralization) },
       { ALT: () => this.CONSUME(Gender) },
       { ALT: () => this.CONSUME(CrossSpellRef) },
+      { ALT: () => this.CONSUME(EffectVariable) },
+      { ALT: () => this.CONSUME(SpellLevelVariable) },
+      { ALT: () => this.CONSUME(PlayerVariable) },
+      { ALT: () => this.CONSUME(EnchantVariable) },
+      { ALT: () => this.CONSUME(MiscVariable) },
       { ALT: () => this.CONSUME(SimpleVariable) },
       { ALT: () => this.CONSUME(Dollar) },
       { ALT: () => this.CONSUME(ColorCode) },
@@ -151,6 +167,11 @@ class SpellDescriptionParser extends CstParser {
       { ALT: () => this.SUBRULE(this.dollarFunctionCall) },
       { ALT: () => this.SUBRULE(this.functionCall) },
       { ALT: () => this.CONSUME(ExprCustomVar) },
+      { ALT: () => this.CONSUME(ExprEffectVar) },
+      { ALT: () => this.CONSUME(ExprSpellLevelVar) },
+      { ALT: () => this.CONSUME(ExprPlayerVar) },
+      { ALT: () => this.CONSUME(ExprEnchantVar) },
+      { ALT: () => this.CONSUME(ExprMiscVar) },
       { ALT: () => this.CONSUME(ExprAtVar) },
       { ALT: () => this.CONSUME(ExprCrossSpellRef) },
       { ALT: () => this.CONSUME(ExprSimpleVar) },
@@ -173,6 +194,11 @@ class SpellDescriptionParser extends CstParser {
       { ALT: () => this.CONSUME(BranchPluralization) },
       { ALT: () => this.CONSUME(BranchGender) },
       { ALT: () => this.CONSUME(BranchCrossSpellRef) },
+      { ALT: () => this.CONSUME(EffectVariable) },
+      { ALT: () => this.CONSUME(SpellLevelVariable) },
+      { ALT: () => this.CONSUME(PlayerVariable) },
+      { ALT: () => this.CONSUME(EnchantVariable) },
+      { ALT: () => this.CONSUME(MiscVariable) },
       { ALT: () => this.CONSUME(BranchSimpleVar) },
       { ALT: () => this.CONSUME(BranchColorCode) },
       { ALT: () => this.CONSUME(BranchPipe) },

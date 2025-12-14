@@ -3,6 +3,7 @@ export {
   SpellDescriptionLexer,
   spellDescriptionParser,
   tokenize,
+  visitSpellDescription,
 } from "./internal/spell-description";
 
 export type {
