@@ -27,7 +27,7 @@ const { effectValue, spellLevelSeconds } = DEFAULT_RENDER_MOCKS;
 { id: 172, input: "Causing $s3 Shadow damage and $?a196103[$146739s1 ... $146739t1 sec.][an additional $146739o1 ... $146739d.]", expected: "Causing 1 Shadow damage and $?a196103[1 ... 1 sec.][an additional 1 ... 1.]" }
 { id: 348, input: "$s1 Fire damage ... $157736o1 ... $157736d.", expected: "1 Fire damage ... 1 ... 1." }
 { id: 355, input: "Increases threat by $s2% for $d.", expected: "Increases threat by 1% for 15." }
-{ id: 370, input: "Purges ... removing $m1 ...$?(s147762&s51530)[...][ ]", expected: "Purges ... removing 1 ...$?s147762s51530[...][ ]", allowErrors: true }
+{ id: 370, input: "Purges ... removing $m1 ...$?(s147762&s51530)[...][ ]", expected: "Purges ... removing 1 ...$?s147762s51530[...][ ]" }
 { id: 379, input: "$@spelldesc974", expected: "<@spelldesc974>" }
 { id: 184, input: "Inflicts Fire damage every $t1 sec. Lasts $d.", expected: "Inflicts Fire damage every 1 sec. Lasts 15." }
 */
