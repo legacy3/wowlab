@@ -2,7 +2,7 @@ import * as Schema from "effect/Schema";
 
 export const TraitTreeXTraitCurrencyRowSchema = Schema.Struct({
   ID: Schema.NumberFromString,
-  Index: Schema.NumberFromString,
+  _Index: Schema.NumberFromString,
   TraitTreeID: Schema.NumberFromString,
   TraitCurrencyID: Schema.NumberFromString,
 });
