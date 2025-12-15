@@ -32,6 +32,11 @@ for (let i = 0; i < BASE64_CHARS.length; i++) {
   CHAR_MAP[BASE64_URL_CHARS[i]] = i;
 }
 
+type BitWriter = {
+  readonly pushBits: (value: number, count: number) => void;
+  readonly finish: () => string;
+};
+
 // ported from simc parse_traits_hash
 export function decodeTalentLoadout(
   talentString: string,
@@ -101,10 +106,34 @@ export function decodeTalentLoadout(
   });
 }
 
-type BitWriter = {
-  readonly pushBits: (value: number, count: number) => void;
-  readonly finish: () => string;
-};
+export function decodeTalents(
+  encoded: string,
+): Effect.Effect<Uint8Array, Error> {
+  return Effect.try({
+    catch: (error) =>
+      error instanceof Error ? error : new Error(String(error)),
+    try: () => {
+      const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized + "===".slice((normalized.length + 3) % 4);
+      const binary = globalThis.atob(padded);
+      const bytes = new Uint8Array(binary.length);
+
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      return bytes;
+    },
+  });
+}
+
+export function decodeTalentsToBits(
+  encoded: string,
+): Effect.Effect<string, Error> {
+  return Effect.map(decodeTalents(encoded), (bytes) =>
+    Array.from(bytes, (b) => b.toString(2).padStart(8, "0")).join(""),
+  );
+}
 
 export function encodeTalentLoadout(loadout: {
   version: number;
@@ -157,35 +186,6 @@ export function encodeTalentLoadout(loadout: {
   }
 
   return writer.finish();
-}
-
-export function decodeTalents(
-  encoded: string,
-): Effect.Effect<Uint8Array, Error> {
-  return Effect.try({
-    catch: (error) =>
-      error instanceof Error ? error : new Error(String(error)),
-    try: () => {
-      const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
-      const padded = normalized + "===".slice((normalized.length + 3) % 4);
-      const binary = globalThis.atob(padded);
-      const bytes = new Uint8Array(binary.length);
-
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-
-      return bytes;
-    },
-  });
-}
-
-export function decodeTalentsToBits(
-  encoded: string,
-): Effect.Effect<string, Error> {
-  return Effect.map(decodeTalents(encoded), (bytes) =>
-    Array.from(bytes, (b) => b.toString(2).padStart(8, "0")).join(""),
-  );
 }
 
 function makeBitReader(talentString: string): BitReader {
@@ -248,5 +248,5 @@ function makeBitWriter(): BitWriter {
     return out;
   };
 
-  return { pushBits, finish };
+  return { finish, pushBits };
 }

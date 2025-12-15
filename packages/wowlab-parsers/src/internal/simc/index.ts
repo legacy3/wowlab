@@ -2,9 +2,9 @@ export { SimcLexer, tokenize } from "./lexer";
 export { parse, simcParser } from "./parser";
 export {
   decodeTalentLoadout,
-  encodeTalentLoadout,
   decodeTalents,
   decodeTalentsToBits,
+  encodeTalentLoadout,
 } from "./talents";
 export {
   parseSavedLoadoutsFromInput,

@@ -1,8 +1,8 @@
 export {
   decodeTalentLoadout,
-  encodeTalentLoadout,
   decodeTalents,
   decodeTalentsToBits,
+  encodeTalentLoadout,
   type DecodedTalentLoadout,
   type DecodedTalentNode,
 } from "./internal/simc";
