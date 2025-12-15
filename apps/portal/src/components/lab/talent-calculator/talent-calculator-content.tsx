@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useMemo, useCallback } from "react";
+import { Suspense, useMemo, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
-import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
+import { useQueryState, parseAsString } from "nuqs";
 import dynamic from "next/dynamic";
 import {
   decodeTalentLoadout,
+  encodeTalentLoadout,
   type DecodedTalentLoadout,
 } from "@wowlab/parsers";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CopyButton } from "@/components/ui/copy-button";
 import { SpecPicker } from "@/components/ui/spec-picker";
-import { useTalentTreeWithSelections } from "@/hooks/use-talent-tree";
+import { useTalentTree } from "@/hooks/use-talent-tree";
+import { applyDecodedTalents } from "@wowlab/services/Data";
+import type { Talent } from "@wowlab/core/Schemas";
 
 function TalentCalculatorSkeleton() {
   return (
@@ -60,14 +63,6 @@ function TalentCalculatorInner() {
     }),
   );
 
-  const [manualSpecId, setManualSpecId] = useQueryState(
-    "spec",
-    parseAsInteger.withOptions({
-      shallow: true,
-      history: "push",
-    }),
-  );
-
   const decoded = useMemo((): DecodedTalentLoadout | null => {
     if (!talents) {
       return null;
@@ -82,26 +77,43 @@ function TalentCalculatorInner() {
 
     return null;
   }, [talents]);
-  const effectiveSpecId = decoded?.specId ?? manualSpecId ?? null;
+  const effectiveSpecId = decoded?.specId ?? null;
 
-  const {
-    data: treeWithSelections,
-    tree,
-    isLoading,
-    error,
-  } = useTalentTreeWithSelections(effectiveSpecId, decoded);
-  const activeTree = treeWithSelections ?? tree;
+  const { data: tree, isLoading, error } = useTalentTree(effectiveSpecId);
+
+  const treeDrivenTalentsRef = useRef<string | null>(null);
+  const initialSelectionsKey = useMemo(() => {
+    if (!talents) {
+      return null;
+    }
+    return talents === treeDrivenTalentsRef.current ? null : talents;
+  }, [talents]);
+
+  const initialSelections = useMemo(() => {
+    if (!tree || !decoded) {
+      return new Map<number, Talent.DecodedTalentSelection>();
+    }
+    return applyDecodedTalents(tree, decoded).selections;
+  }, [decoded, tree]);
 
   const handleSpecSelect = useCallback(
     (specId: number) => {
-      setManualSpecId(specId);
+      treeDrivenTalentsRef.current = null;
+      const zeroHash = new Uint8Array(16);
+      const next = encodeTalentLoadout({
+        version: 1,
+        specId,
+        treeHash: zeroHash,
+        nodes: [],
+      });
+      setTalents(next);
     },
-    [setManualSpecId],
+    [setTalents],
   );
 
   let content: ReactNode;
 
-  if (!talents && !manualSpecId) {
+  if (!talents) {
     content = (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-8">
         <div className="flex flex-col items-center gap-4 w-full max-w-md">
@@ -115,7 +127,10 @@ function TalentCalculatorInner() {
             <Input
               placeholder="Paste a talent string..."
               value={talents}
-              onChange={(e) => setTalents(e.target.value.trim() || null)}
+              onChange={(e) => {
+                treeDrivenTalentsRef.current = null;
+                setTalents(e.target.value.trim() || null);
+              }}
               className="flex-1 font-mono text-sm"
             />
           </div>
@@ -138,13 +153,6 @@ function TalentCalculatorInner() {
         </div>
       </div>
     );
-  } else if (!decoded && !manualSpecId) {
-    content = (
-      <TalentStateMessage
-        title="Paste a talent string to get started"
-        description="You can also share builds with the ?talents= query parameter."
-      />
-    );
   } else if (talents && !decoded) {
     content = (
       <TalentStateMessage title="Unable to decode the provided talent string" />
@@ -155,10 +163,56 @@ function TalentCalculatorInner() {
     );
   } else if (error) {
     content = <TalentStateMessage title="Failed to load the talent tree" />;
-  } else if (activeTree) {
+  } else if (tree) {
     content = (
       <TalentTree
-        tree={activeTree}
+        tree={tree}
+        initialSelections={initialSelections}
+        initialSelectionsKey={initialSelectionsKey}
+        onSelectionsChange={(selections) => {
+          if (!decoded) {
+            return;
+          }
+
+          const orderedNodes = [...tree.nodes].sort((a, b) => a.id - b.id);
+
+          let lastIndex = -1;
+          for (let i = 0; i < orderedNodes.length; i++) {
+            if (selections.has(orderedNodes[i]!.id)) {
+              lastIndex = i;
+            }
+          }
+
+          const nodes =
+            lastIndex >= 0
+              ? orderedNodes.slice(0, lastIndex + 1).map((node) => {
+                  const sel = selections.get(node.id);
+                  const selected = !!sel?.selected;
+                  const ranksPurchased = sel?.ranksPurchased ?? 0;
+                  const isChoiceNode = node.type === 2 && node.entries.length > 1;
+                  return {
+                    selected,
+                    purchased: selected && ranksPurchased > 0,
+                    partiallyRanked: selected && node.maxRanks > 1 && ranksPurchased < node.maxRanks,
+                    ranksPurchased,
+                    choiceNode: selected && isChoiceNode,
+                    choiceIndex: sel?.choiceIndex,
+                  };
+                })
+              : [];
+
+          const next = encodeTalentLoadout({
+            version: decoded.version,
+            specId: decoded.specId,
+            treeHash: decoded.treeHash,
+            nodes,
+          });
+
+          if (next !== talents) {
+            treeDrivenTalentsRef.current = next;
+            setTalents(next);
+          }
+        }}
         height={Math.max(700, window.innerHeight - 256)}
       />
     );
@@ -168,7 +222,7 @@ function TalentCalculatorInner() {
     );
   }
 
-  const showTalentInput = talents || manualSpecId || decoded;
+  const showTalentInput = talents || decoded;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -177,7 +231,10 @@ function TalentCalculatorInner() {
           <Input
             placeholder="Paste a talent string..."
             value={talents}
-            onChange={(e) => setTalents(e.target.value.trim() || null)}
+            onChange={(e) => {
+              treeDrivenTalentsRef.current = null;
+              setTalents(e.target.value.trim() || null);
+            }}
             className="flex-1 font-mono text-sm"
           />
           {talents && <CopyButton value={talents} />}

@@ -1,5 +1,6 @@
 export {
   decodeTalentLoadout,
+  encodeTalentLoadout,
   decodeTalents,
   decodeTalentsToBits,
   type DecodedTalentLoadout,

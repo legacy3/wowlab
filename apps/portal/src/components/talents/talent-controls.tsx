@@ -74,8 +74,7 @@ export const TalentControls = memo(function TalentControls({
 
       <div className="flex items-center gap-1 ml-auto">
         <span className="text-xs text-muted-foreground">
-          {displayNodeCount} talents
-          {selectedNodeCount > 0 && ` · ${selectedNodeCount} selected`}
+          {selectedNodeCount}/{displayNodeCount} talents selected
           {scale !== 1 && ` · ${Math.round(scale * 100)}%`}
         </span>
 

@@ -32,6 +32,11 @@ import { MIN_SCALE, MAX_SCALE } from "./constants";
 
 interface TalentTreeProps {
   tree: Talent.TalentTree | Talent.TalentTreeWithSelections;
+  initialSelections?: Map<number, Talent.DecodedTalentSelection>;
+  initialSelectionsKey?: string | number | null;
+  onSelectionsChange?: (
+    selections: Map<number, Talent.DecodedTalentSelection>,
+  ) => void;
   width?: number;
   height?: number;
 }
@@ -108,6 +113,9 @@ const NodesLayer = memo(function NodesLayer({
 
 export function TalentTree({
   tree,
+  initialSelections: initialSelectionsProp,
+  initialSelectionsKey,
+  onSelectionsChange,
   width: propWidth,
   height: propHeight,
 }: TalentTreeProps) {
@@ -116,18 +124,19 @@ export function TalentTree({
 
   const propSelections = hasSelections(tree) ? tree.selections : undefined;
   const initialSelections = useMemo(() => {
-    if (!propSelections) {
+    const source = initialSelectionsProp ?? propSelections;
+    if (!source) {
       return new Map<number, Talent.DecodedTalentSelection>();
     }
 
     const next = new Map<number, Talent.DecodedTalentSelection>();
-    for (const [nodeId, sel] of propSelections) {
+    for (const [nodeId, sel] of source) {
       if (sel.selected) {
         next.set(nodeId, sel);
       }
     }
     return next;
-  }, [propSelections, tree.treeId]);
+  }, [initialSelectionsProp, propSelections]);
 
   const [selections, setSelections] =
     useState<Map<number, Talent.DecodedTalentSelection>>(initialSelections);
@@ -135,7 +144,8 @@ export function TalentTree({
 
   useEffect(() => {
     selectionsRef.current = selections;
-  }, [selections]);
+    onSelectionsChange?.(selections);
+  }, [onSelectionsChange, selections]);
 
   const [panZoom, setPanZoom] = useState({ x: 0, y: 0, scale: 1 });
   const isDragging = useRef(false);
@@ -189,12 +199,15 @@ export function TalentTree({
   const hoverChainLastNodeId = useRef<number | null>(null);
 
   useEffect(() => {
+    if (initialSelectionsKey == null) {
+      return;
+    }
     setSelections(initialSelections);
     setSelectedHeroId(initialHeroId);
     setSearchQuery("");
     setPanZoom({ x: 0, y: 0, scale: 1 });
     hoverChainLastNodeId.current = null;
-  }, [initialHeroId, initialSelections]);
+  }, [initialHeroId, initialSelections, initialSelectionsKey]);
 
   useEffect(() => {
     const iconNames = visibleNodes.flatMap((node) =>
