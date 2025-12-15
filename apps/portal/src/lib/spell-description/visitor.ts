@@ -532,11 +532,15 @@ class SpellDescriptionEvalVisitor extends BaseVisitor {
   }
 
   conditionalBranch(ctx: Record<string, unknown>): string {
-    return getNodes(ctx, "branchContent").map((n) => this.visitAsString(n)).join("");
+    return getNodes(ctx, "branchContent")
+      .map((n) => this.visitAsString(n))
+      .join("");
   }
 
   nestedBrackets(ctx: Record<string, unknown>): string {
-    return getNodes(ctx, "branchContent").map((n) => this.visitAsString(n)).join("");
+    return getNodes(ctx, "branchContent")
+      .map((n) => this.visitAsString(n))
+      .join("");
   }
 
   branchContent(ctx: Record<string, unknown>): string {
@@ -606,7 +610,7 @@ class SpellDescriptionEvalVisitor extends BaseVisitor {
       const resolved = this.resolveSpellLevelVariable(spellLevelVar);
       if (typeof resolved === "number") {
         this.lastNumber = resolved;
-        
+
         return formatNumber(resolved);
       }
 
@@ -910,7 +914,7 @@ class SpellDescriptionEvalVisitor extends BaseVisitor {
 
       case "SPS":
         return this.env.player.spellPower;
-        
+
       default:
         return 0;
     }

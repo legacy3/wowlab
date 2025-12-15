@@ -34,7 +34,7 @@ const { effectValue, spellLevelSeconds } = DEFAULT_RENDER_MOCKS;
 
 // prettier-ignore
 const TEST_CASES: Case[] = [
-  { id: 99999, input: "Deals $s1 damage for $d sec.", expected: `Deals ${effectValue} damage for ${spellLevelSeconds} sec.` },
+  { expected: `Deals ${effectValue} damage for ${spellLevelSeconds} sec.`, id: 99999, input: "Deals $s1 damage for $d sec." },
 ];
 
 describe("spell description custom expectations", () => {

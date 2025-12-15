@@ -60,26 +60,26 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
                   key={entry.id}
                   className="p-2 bg-black/30 rounded-lg border border-gray-700"
                 >
-              <div className="flex items-center gap-2 mb-2">
-                <GameIcon
-                  iconName={entry.iconFileName}
-                  size="small"
-                  alt={entry.name}
-                  className="rounded"
-                />
-                <span className="text-sm font-medium text-purple-300">
-                  {entry.name}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                <SpellDescription
-                  spellId={entry.spellId ?? null}
-                  fallback={entry.description}
-                />
-              </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <GameIcon
+                      iconName={entry.iconFileName}
+                      size="small"
+                      alt={entry.name}
+                      className="rounded"
+                    />
+                    <span className="text-sm font-medium text-purple-300">
+                      {entry.name}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    <SpellDescription
+                      spellId={entry.spellId ?? null}
+                      fallback={entry.description}
+                    />
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
             <div className="text-[10px] text-gray-500 pt-2 border-t border-gray-700 flex gap-3">
               <span>ID {node.id}</span>
               <span>Order {node.orderIndex}</span>

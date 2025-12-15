@@ -1,14 +1,15 @@
-import { visitSpellDescription } from "../internal/spell-description";
 import type { SpellDescriptionNode } from "../internal/spell-description";
+
+import { visitSpellDescription } from "../internal/spell-description";
 
 // Exported defaults so tests can reference the mock substitution values.
 export const DEFAULT_RENDER_MOCKS = {
+  crossRefValue: 1,
   effectValue: 1,
-  spellLevelSeconds: 15,
-  playerValue: 100,
   enchantValue: 0,
   miscValue: 0,
-  crossRefValue: 1,
+  playerValue: 100,
+  spellLevelSeconds: 15,
 };
 
 export function renderDescriptionWithMocks(
@@ -18,7 +19,7 @@ export function renderDescriptionWithMocks(
   const parsed = visitSpellDescription(raw);
   const text = renderNodes(parsed.ast.nodes);
 
-  return { text, errors: parsed.errors, lexErrors: parsed.lexErrors };
+  return { errors: parsed.errors, lexErrors: parsed.lexErrors, text };
 }
 
 function renderNodes(nodes: ReadonlyArray<SpellDescriptionNode>): string {
@@ -32,25 +33,30 @@ function renderNodes(nodes: ReadonlyArray<SpellDescriptionNode>): string {
   return nodes
     .map((node) => {
       switch (node.type) {
-        case "text":
-          return node.value;
+        case "atVariable":
+          return `<@${node.varType}${node.spellId ?? ""}>`;
 
-        case "effectVariable":
-          return setNumber(DEFAULT_RENDER_MOCKS.effectValue);
-
-        case "spellLevelVariable":
-          return setNumber(DEFAULT_RENDER_MOCKS.spellLevelSeconds);
-
-        case "playerVariable":
-          return setNumber(DEFAULT_RENDER_MOCKS.playerValue);
-
-        case "enchantVariable":
-          return setNumber(DEFAULT_RENDER_MOCKS.enchantValue);
-        case "miscVariable":
-          return setNumber(DEFAULT_RENDER_MOCKS.miscValue);
+        case "colorCode":
+          return "";
 
         case "crossSpellReference":
           return setNumber(DEFAULT_RENDER_MOCKS.crossRefValue);
+
+        case "customVariable":
+          return `<${node.varName}>`;
+
+        case "effectVariable":
+          return setNumber(DEFAULT_RENDER_MOCKS.effectValue);
+        case "enchantVariable":
+          return setNumber(DEFAULT_RENDER_MOCKS.enchantValue);
+
+        case "gender":
+          return node.male;
+
+        case "miscVariable":
+          return setNumber(DEFAULT_RENDER_MOCKS.miscValue);
+        case "playerVariable":
+          return setNumber(DEFAULT_RENDER_MOCKS.playerValue);
 
         case "pluralization": {
           const word = lastNumber === 1 ? node.singular : node.plural;
@@ -59,17 +65,12 @@ function renderNodes(nodes: ReadonlyArray<SpellDescriptionNode>): string {
             ? word.replace(/^./, (c) => c.toUpperCase())
             : word;
         }
-        case "gender":
-          return node.male;
 
-        case "atVariable":
-          return `<@${node.varType}${node.spellId ?? ""}>`;
+        case "spellLevelVariable":
+          return setNumber(DEFAULT_RENDER_MOCKS.spellLevelSeconds);
 
-        case "customVariable":
-          return `<${node.varName}>`;
-
-        case "colorCode":
-          return "";
+        case "text":
+          return node.value;
 
         default:
           return "";

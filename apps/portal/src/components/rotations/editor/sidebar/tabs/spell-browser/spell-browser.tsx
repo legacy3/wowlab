@@ -120,7 +120,7 @@ function SpellCard({ spell, onInsert }: SpellCardProps) {
       <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
         {isLoading && !description
           ? "Loading description..."
-          : description?.text ?? spell.description}
+          : (description?.text ?? spell.description)}
       </p>
     </div>
   );

@@ -322,8 +322,13 @@ export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
       )}
 
       {/* Description */}
-      <p className="text-xs leading-relaxed" style={{ color: spell.school ? schoolColor : "#ffd100" }}>
-        {isLoading && !renderedDescription ? "Loading description..." : description}
+      <p
+        className="text-xs leading-relaxed"
+        style={{ color: spell.school ? schoolColor : "#ffd100" }}
+      >
+        {isLoading && !renderedDescription
+          ? "Loading description..."
+          : description}
       </p>
     </div>
   );

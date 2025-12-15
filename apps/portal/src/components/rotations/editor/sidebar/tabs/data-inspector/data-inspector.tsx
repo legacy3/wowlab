@@ -31,10 +31,8 @@ export function DataInspector() {
   const [search, setSearch] = useState("");
   const { id, setId, type, setType, loading, error, data, query } =
     useDataInspector();
-  const {
-    data: spellDescription,
-    isLoading: spellDescriptionLoading,
-  } = useSpellDescription(type === "spell" && id > 0 ? id : null);
+  const { data: spellDescription, isLoading: spellDescriptionLoading } =
+    useSpellDescription(type === "spell" && id > 0 ? id : null);
 
   const handleSearch = () => {
     const asNumber = parseInt(search, 10);
@@ -146,15 +144,17 @@ export function DataInspector() {
                   </div>
                 </div>
 
-                {(spellDescription || data.description || spellDescriptionLoading) && (
+                {(spellDescription ||
+                  data.description ||
+                  spellDescriptionLoading) && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Description</p>
                     <p className="text-xs">
                       {spellDescriptionLoading && !spellDescription
                         ? "Loading description..."
-                        : spellDescription?.text ??
+                        : (spellDescription?.text ??
                           data.description ??
-                          "No description available."}
+                          "No description available.")}
                     </p>
                   </div>
                 )}
