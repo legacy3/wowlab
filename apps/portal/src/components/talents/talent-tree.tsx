@@ -4,10 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import type Konva from "konva";
 import { useThrottledCallback } from "@react-hookz/web";
 import type { Talent } from "@wowlab/core/Schemas";
-import { RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { GameIcon } from "@/components/game";
 import {
   KonvaStage,
   KonvaLayer,
@@ -15,7 +11,8 @@ import {
   preloadIcons,
 } from "@/components/konva";
 import { cn } from "@/lib/utils";
-import { useResizeObserver } from "@/hooks/canvas";
+import { useResizeObserver, useExport } from "@/hooks/canvas";
+import { useZenMode } from "@/hooks/use-zen-mode";
 import {
   computeVisibleNodes,
   filterByHeroTree,
@@ -26,6 +23,7 @@ import { useTalentLayout } from "@/hooks/use-talent-layout";
 import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TalentTooltip } from "./talent-tooltip";
+import { TalentControls } from "./talent-controls";
 import type { TooltipState } from "./types";
 import { MIN_SCALE, MAX_SCALE } from "./constants";
 
@@ -102,10 +100,15 @@ export function TalentTree({
     16,
   );
 
+  const { isZen: zenMode, toggleZen: toggleZenMode } = useZenMode();
+
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
   const width = propWidth || containerWidth || 500;
   const height = propHeight || containerHeight || 600;
+
+  const contentHeight = height;
+  const { exportPNG, exportPDF } = useExport({ stageRef, contentHeight });
 
   const visibleNodes = useMemo(
     () => computeVisibleNodes(tree.nodes, tree.edges),
@@ -277,6 +280,20 @@ export function TalentTree({
     setPanZoom({ x: 0, y: 0, scale: 1 });
   }, []);
 
+  const handleZoomIn = useCallback(() => {
+    setPanZoom((prev) => ({
+      ...prev,
+      scale: Math.min(MAX_SCALE, prev.scale * 1.2),
+    }));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setPanZoom((prev) => ({
+      ...prev,
+      scale: Math.max(MIN_SCALE, prev.scale / 1.2),
+    }));
+  }, []);
+
   const handleTooltip = useCallback(
     (state: TooltipState | null) => {
       throttledSetTooltip(state);
@@ -285,75 +302,36 @@ export function TalentTree({
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-medium">
-          {tree.className} — {tree.specName}
-        </span>
-
-        {tree.subTrees.length > 0 && (
-          <div className="flex gap-1">
-            {tree.subTrees.map((subTree) => (
-              <Button
-                key={subTree.id}
-                variant={selectedHeroId === subTree.id ? "default" : "outline"}
-                size="sm"
-                className={cn(
-                  "h-7 px-2 gap-1.5",
-                  selectedHeroId === subTree.id &&
-                    "bg-orange-600 hover:bg-orange-700",
-                )}
-                onClick={() => setSelectedHeroId(subTree.id)}
-              >
-                <GameIcon
-                  iconName={subTree.iconFileName}
-                  size="small"
-                  alt={subTree.name}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-xs">{subTree.name}</span>
-              </Button>
-            ))}
-            <Button
-              variant={selectedHeroId === null ? "default" : "outline"}
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={() => setSelectedHeroId(null)}
-            >
-              Hide Hero
-            </Button>
-          </div>
-        )}
-
-        <Input
-          placeholder="Search talents..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-7 w-36 text-xs"
-        />
-
-        {isPanned && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2"
-            onClick={resetPanZoom}
-            title="Reset view"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </Button>
-        )}
-
-        <span className="text-xs text-muted-foreground ml-auto">
-          {displayNodes.length} talents
-          {panZoom.scale !== 1 && ` · ${Math.round(panZoom.scale * 100)}%`}
-        </span>
-      </div>
+    <div
+      className={cn(
+        "flex flex-col gap-2",
+        zenMode &&
+          "fixed inset-0 z-50 bg-background p-4 overflow-auto animate-in fade-in duration-200",
+      )}
+    >
+      <TalentControls
+        tree={tree}
+        searchQuery={searchQuery}
+        scale={panZoom.scale}
+        displayNodeCount={displayNodes.length}
+        isPanned={isPanned}
+        zenMode={zenMode}
+        onSearchChange={setSearchQuery}
+        onResetView={resetPanZoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onToggleZen={toggleZenMode}
+        onExportPNG={exportPNG}
+        onExportPDF={exportPDF}
+      />
 
       <div
         ref={containerRef}
-        className="relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none"
-        style={{ width: propWidth ?? "100%", height }}
+        className={cn(
+          "relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none",
+          zenMode ? "flex-1 min-h-0" : "w-full",
+        )}
+        style={zenMode ? { width: "100%" } : { height }}
       >
         <KonvaStage
           ref={stageRef}

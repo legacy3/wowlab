@@ -41,7 +41,7 @@ function TalentStateMessage({
   description?: ReactNode;
 }) {
   return (
-    <div className="flex h-[700px] w-full items-center justify-center text-center text-muted-foreground">
+    <div className="flex h-[calc(100vh-16rem)] min-h-[700px] w-full items-center justify-center text-center text-muted-foreground">
       <div className="space-y-1">
         <p className="text-sm font-medium">{title}</p>
         {description ? <p className="text-xs">{description}</p> : null}
@@ -148,13 +148,22 @@ function TalentCalculatorInner() {
       <TalentStateMessage title="Unable to decode the provided talent string" />
     );
   } else if (isLoading) {
-    content = <Skeleton className="h-[700px] w-full" />;
+    content = (
+      <Skeleton className="h-[calc(100vh-16rem)] min-h-[700px] w-full" />
+    );
   } else if (error) {
     content = <TalentStateMessage title="Failed to load the talent tree" />;
   } else if (treeWithSelections) {
-    content = <TalentTree tree={treeWithSelections} height={700} />;
+    content = (
+      <TalentTree
+        tree={treeWithSelections}
+        height={Math.max(700, window.innerHeight - 256)}
+      />
+    );
   } else {
-    content = <Skeleton className="h-[700px] w-full" />;
+    content = (
+      <Skeleton className="h-[calc(100vh-16rem)] min-h-[700px] w-full" />
+    );
   }
 
   const showTalentInput = talents || manualSpecId || decoded;
