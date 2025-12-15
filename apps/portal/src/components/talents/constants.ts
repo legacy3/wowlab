@@ -17,6 +17,8 @@ export const MIN_SCALE = 0.3;
 export const MAX_SCALE = 3;
 
 export const COLOR_SELECTED_RING = "#facc15";
+export const COLOR_PATH_HIGHLIGHT = "#22c55e";
+export const COLOR_PATH_TARGET = "#f59e0b";
 export const COLOR_HERO_BORDER = "#ea580c";
 export const COLOR_CHOICE_BORDER = "#9333ea";
 export const COLOR_DEFAULT_BORDER = "#4b5563";

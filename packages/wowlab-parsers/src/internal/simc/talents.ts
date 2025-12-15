@@ -32,6 +32,11 @@ for (let i = 0; i < BASE64_CHARS.length; i++) {
   CHAR_MAP[BASE64_URL_CHARS[i]] = i;
 }
 
+type BitWriter = {
+  readonly pushBits: (value: number, count: number) => void;
+  readonly finish: () => string;
+};
+
 // ported from simc parse_traits_hash
 export function decodeTalentLoadout(
   talentString: string,
@@ -130,6 +135,59 @@ export function decodeTalentsToBits(
   );
 }
 
+export function encodeTalentLoadout(loadout: {
+  version: number;
+  specId: number;
+  treeHash: Uint8Array; // 16 bytes
+  nodes: Array<{
+    selected: boolean;
+    purchased?: boolean;
+    ranksPurchased?: number;
+    partiallyRanked?: boolean;
+    choiceNode?: boolean;
+    choiceIndex?: number;
+  }>;
+}): string {
+  const writer = makeBitWriter();
+
+  writer.pushBits(loadout.version & 0xff, 8);
+  writer.pushBits(loadout.specId & 0xffff, 16);
+
+  const hash = loadout.treeHash;
+  for (let i = 0; i < 16; i++) {
+    writer.pushBits(hash[i] ?? 0, 8);
+  }
+
+  for (const node of loadout.nodes) {
+    writer.pushBits(node.selected ? 1 : 0, 1);
+
+    if (!node.selected) {
+      continue;
+    }
+
+    const purchased = node.purchased ?? false;
+    writer.pushBits(purchased ? 1 : 0, 1);
+
+    if (!purchased) {
+      continue;
+    }
+
+    const partiallyRanked = node.partiallyRanked ?? false;
+    writer.pushBits(partiallyRanked ? 1 : 0, 1);
+    if (partiallyRanked) {
+      writer.pushBits((node.ranksPurchased ?? 0) & 0x3f, 6);
+    }
+
+    const choiceNode = node.choiceNode ?? false;
+    writer.pushBits(choiceNode ? 1 : 0, 1);
+    if (choiceNode) {
+      writer.pushBits((node.choiceIndex ?? 0) & 0x3, 2);
+    }
+  }
+
+  return writer.finish();
+}
+
 function makeBitReader(talentString: string): BitReader {
   let head = 0;
   let current = CHAR_MAP[talentString[0]] ?? 0;
@@ -159,4 +217,36 @@ function makeBitReader(talentString: string): BitReader {
   const hasBits = (count: number) => head + count <= totalBits;
 
   return { getBits, hasBits };
+}
+
+function makeBitWriter(): BitWriter {
+  let head = 0;
+  let current = 0;
+  let out = "";
+
+  const flush = () => {
+    out += BASE64_URL_CHARS[current] ?? "A";
+    current = 0;
+    head = 0;
+  };
+
+  const pushBits = (value: number, count: number) => {
+    for (let i = 0; i < count; i++) {
+      const bit = (value >> i) & 1;
+      current |= bit << head;
+      head++;
+      if (head === 6) {
+        flush();
+      }
+    }
+  };
+
+  const finish = () => {
+    if (head > 0) {
+      flush();
+    }
+    return out;
+  };
+
+  return { finish, pushBits };
 }

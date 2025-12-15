@@ -18,6 +18,8 @@ import {
   CHOICE_CORNER_RADIUS,
   HERO_CORNER_RADIUS,
   COLOR_SELECTED_RING,
+  COLOR_PATH_HIGHLIGHT,
+  COLOR_PATH_TARGET,
   COLOR_HERO_BORDER,
   COLOR_CHOICE_BORDER,
   COLOR_DEFAULT_BORDER,
@@ -68,11 +70,65 @@ const SearchHighlight = memo(function SearchHighlight({
   );
 });
 
+const PathHighlight = memo(function PathHighlight({
+  size,
+  cornerRadius,
+}: {
+  size: number;
+  cornerRadius: number;
+}) {
+  return (
+    <KonvaRect
+      x={-5}
+      y={-5}
+      width={size + 10}
+      height={size + 10}
+      stroke={COLOR_PATH_HIGHLIGHT}
+      strokeWidth={2}
+      cornerRadius={cornerRadius + 4}
+      shadowColor={COLOR_PATH_HIGHLIGHT}
+      shadowBlur={8}
+      shadowOpacity={0.35}
+      listening={false}
+    />
+  );
+});
+
+const PathTarget = memo(function PathTarget({
+  size,
+  cornerRadius,
+}: {
+  size: number;
+  cornerRadius: number;
+}) {
+  return (
+    <KonvaRect
+      x={-6}
+      y={-6}
+      width={size + 12}
+      height={size + 12}
+      stroke={COLOR_PATH_TARGET}
+      strokeWidth={2}
+      cornerRadius={cornerRadius + 5}
+      shadowColor={COLOR_PATH_TARGET}
+      shadowBlur={10}
+      shadowOpacity={0.4}
+      listening={false}
+    />
+  );
+});
+
 interface TalentNodeProps {
   nodePos: TalentNodePosition;
   isSearchMatch: boolean;
   isSearching: boolean;
+  isPathHighlight?: boolean;
+  isPathTarget?: boolean;
   onHover: (state: TooltipState | null) => void;
+  onNodeHoverChange?: (nodeId: number | null) => void;
+  onNodeClick?: (nodeId: number) => void;
+  onPaintStart?: (nodeId: number) => void;
+  onPaintEnter?: (nodeId: number) => void;
 }
 
 const NodeIcon = memo(function NodeIcon({
@@ -120,7 +176,13 @@ export const TalentNode = memo(function TalentNode({
   nodePos,
   isSearchMatch,
   isSearching,
+  isPathHighlight = false,
+  isPathTarget = false,
   onHover,
+  onNodeHoverChange,
+  onNodeClick,
+  onPaintStart,
+  onPaintEnter,
 }: TalentNodeProps) {
   const { x, y, node, selection, isHero } = nodePos;
 
@@ -161,10 +223,34 @@ export const TalentNode = memo(function TalentNode({
       return;
     }
     onHover({ x: pos.x, y: pos.y, node, selection });
+    onNodeHoverChange?.(node.id);
+    onPaintEnter?.(node.id);
   };
 
   const handleMouseLeave = () => {
     onHover(null);
+    onNodeHoverChange?.(null);
+  };
+
+  const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.evt.button !== 0) {
+      return;
+    }
+    if (!isSelected) {
+      return;
+    }
+    onPaintStart?.(node.id);
+  };
+
+  const handleTouchStart = () => {
+    if (!isSelected) {
+      return;
+    }
+    onPaintStart?.(node.id);
+  };
+
+  const handleClick = () => {
+    onNodeClick?.(node.id);
   };
 
   if (isChoiceNode && entry2) {
@@ -187,6 +273,9 @@ export const TalentNode = memo(function TalentNode({
           y={y - halfSize}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onClick={handleClick}
         >
           <KonvaRect
             width={size}
@@ -209,6 +298,11 @@ export const TalentNode = memo(function TalentNode({
           {isSearching && isSearchMatch && (
             <SearchHighlight size={size} cornerRadius={cornerRadius} />
           )}
+          {isPathTarget ? (
+            <PathTarget size={size} cornerRadius={cornerRadius} />
+          ) : isPathHighlight ? (
+            <PathHighlight size={size} cornerRadius={cornerRadius} />
+          ) : null}
         </KonvaGroup>
       );
     }
@@ -220,6 +314,9 @@ export const TalentNode = memo(function TalentNode({
         y={y - halfSize}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onClick={handleClick}
       >
         <KonvaRect
           width={size}
@@ -275,6 +372,11 @@ export const TalentNode = memo(function TalentNode({
         {isSearching && isSearchMatch && (
           <SearchHighlight size={size} cornerRadius={cornerRadius} />
         )}
+        {isPathTarget ? (
+          <PathTarget size={size} cornerRadius={cornerRadius} />
+        ) : isPathHighlight ? (
+          <PathHighlight size={size} cornerRadius={cornerRadius} />
+        ) : null}
       </KonvaGroup>
     );
   }
@@ -287,6 +389,9 @@ export const TalentNode = memo(function TalentNode({
       y={y - halfSize}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onClick={handleClick}
     >
       <KonvaRect
         width={size}
@@ -335,6 +440,11 @@ export const TalentNode = memo(function TalentNode({
       {isSearching && isSearchMatch && (
         <SearchHighlight size={size} cornerRadius={cornerRadius} />
       )}
+      {isPathTarget ? (
+        <PathTarget size={size} cornerRadius={cornerRadius} />
+      ) : isPathHighlight ? (
+        <PathHighlight size={size} cornerRadius={cornerRadius} />
+      ) : null}
     </KonvaGroup>
   );
 });

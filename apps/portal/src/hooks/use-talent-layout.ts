@@ -91,6 +91,8 @@ export function useTalentLayout({
 
       edgePositions.push({
         id: edge.id,
+        fromNodeId: edge.fromNodeId,
+        toNodeId: edge.toNodeId,
         fromX: fromNode.posX * scale + offsetX,
         fromY: fromNode.posY * scale + offsetY,
         toX: toNode.posX * scale + offsetX,

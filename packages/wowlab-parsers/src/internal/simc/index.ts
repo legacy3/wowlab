@@ -4,6 +4,7 @@ export {
   decodeTalentLoadout,
   decodeTalents,
   decodeTalentsToBits,
+  encodeTalentLoadout,
 } from "./talents";
 export {
   parseSavedLoadoutsFromInput,

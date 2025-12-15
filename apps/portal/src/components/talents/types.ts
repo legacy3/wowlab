@@ -11,6 +11,8 @@ export interface TalentNodePosition {
 
 export interface TalentEdgePosition {
   id: number;
+  fromNodeId: number;
+  toNodeId: number;
   fromX: number;
   fromY: number;
   toX: number;
