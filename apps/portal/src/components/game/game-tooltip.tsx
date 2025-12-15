@@ -64,11 +64,7 @@ export interface ItemTooltipData {
 }
 
 export interface SpellTooltipData {
-  /**
-   * Optional spell ID — when provided we fetch the rendered description via `useSpellDescription`.
-   * Falls back to the provided description when absent or while loading.
-   */
-  id?: number;
+  id?: number; // TODO Remove this crappy fallback
   name: string;
   rank?: string;
   castTime: string;
@@ -80,7 +76,6 @@ export interface SpellTooltipData {
   iconName?: string;
 }
 
-// Tooltip wrapper component
 function GameTooltipRoot({
   children,
   openDelay = 200,
