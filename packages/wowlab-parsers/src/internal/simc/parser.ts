@@ -13,12 +13,7 @@ import {
   UnquotedValue,
 } from "./lexer";
 
-// -----------------------------------------------------------------------------
-// Parser Definition
-// -----------------------------------------------------------------------------
-
 class SimcParser extends CstParser {
-  // A value can be a quoted string, complex value, integer, or identifier
   private value = this.RULE("value", () => {
     this.OR([
       { ALT: () => this.CONSUME(QuotedString) },
@@ -29,7 +24,6 @@ class SimcParser extends CstParser {
     ]);
   });
 
-  // Simple assignment: identifier=value
   private assignment = this.RULE("assignment", () => {
     this.OR([
       {
@@ -40,15 +34,13 @@ class SimcParser extends CstParser {
         },
       },
       {
-        ALT: () => {
-          // Fallback: single ComplexValue token containing key=value
-          this.CONSUME(ComplexValue, { LABEL: "assignmentToken" });
-        },
+        // fallback: complexvalue already contains key=value
+        ALT: () => this.CONSUME(ComplexValue, { LABEL: "assignmentToken" }),
       },
     ]);
   });
 
-  // Slash-separated list: value/value/value (for bonus_id, gem_id)
+  // bonus_id, gem_id use slash-separated lists
   private slashSeparatedList = this.RULE("slashSeparatedList", () => {
     this.SUBRULE(this.value, { LABEL: "values" });
     this.AT_LEAST_ONE(() => {
@@ -57,7 +49,6 @@ class SimcParser extends CstParser {
     });
   });
 
-  // Key-value pair within equipment line
   private keyValuePair = this.RULE("keyValuePair", () => {
     this.OR([
       {
@@ -71,15 +62,13 @@ class SimcParser extends CstParser {
         },
       },
       {
-        ALT: () => {
-          // Fallback: a single ComplexValue token that already contains key=value
-          this.CONSUME(ComplexValue, { LABEL: "kvToken" });
-        },
+        // complex value already contains key=value
+        ALT: () => this.CONSUME(ComplexValue, { LABEL: "kvToken" }),
       },
     ]);
   });
 
-  // Equipment line: identifier=,keyValue,keyValue,...
+  // slot=,key=val,key=val,...
   private equipmentLine = this.RULE("equipmentLine", () => {
     this.CONSUME(Identifier, { LABEL: "slot" });
     this.CONSUME(Equals);
@@ -91,20 +80,14 @@ class SimcParser extends CstParser {
     });
   });
 
-  // A line is either an equipment line or a simple assignment
   private line = this.RULE("line", () => {
     this.OR([
-      // Equipment line: slot=,key=val,key=val
       { ALT: () => this.SUBRULE(this.equipmentLine) },
-      // Simple assignment: key=value
       { ALT: () => this.SUBRULE(this.assignment) },
     ]);
-
-    // Consume optional trailing newline
     this.OPTION(() => this.CONSUME(Newline));
   });
 
-  // Entry point: a profile is a sequence of lines
   public profile = this.RULE("profile", () => {
     this.MANY(() => {
       this.OR([

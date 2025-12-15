@@ -4,9 +4,9 @@ import * as Branded from "../Branded.js";
 
 export const SpellLearnSpellRowSchema = Schema.Struct({
   ID: Schema.NumberFromString,
+  SpellID: Branded.SpellIDSchema,
   LearnSpellID: Schema.NumberFromString,
   OverridesSpellID: Schema.NumberFromString,
-  SpellID: Branded.SpellIDSchema,
 });
 
 export type SpellLearnSpellRow = Schema.Schema.Type<

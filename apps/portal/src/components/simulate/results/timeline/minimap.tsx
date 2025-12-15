@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Layer, Group, Rect } from "react-konva";
+import {
+  KonvaStage,
+  KonvaLayer,
+  KonvaGroup,
+  KonvaRect,
+} from "@/components/konva";
 import type { CastEvent } from "@/atoms/timeline";
 import { TRACK_METRICS } from "@/hooks/timeline";
 
@@ -161,14 +166,14 @@ export const Minimap = memo(function Minimap({
         touchAction: "none",
       }}
     >
-      <Stage
+      <KonvaStage
         width={innerWidth + MARGIN.left + MARGIN.right}
         height={MINIMAP_HEIGHT}
       >
-        <Layer>
-          <Group x={MARGIN.left} y={5}>
+        <KonvaLayer>
+          <KonvaGroup x={MARGIN.left} y={5}>
             {/* Background */}
-            <Rect
+            <KonvaRect
               width={innerWidth}
               height={MINIMAP_HEIGHT - 10}
               fill="#222"
@@ -177,7 +182,7 @@ export const Minimap = memo(function Minimap({
             />
             {/* Phases */}
             {phases.map((phase) => (
-              <Rect
+              <KonvaRect
                 key={phase.id}
                 x={timeToX(phase.start)}
                 width={timeToX(phase.end) - timeToX(phase.start)}
@@ -190,7 +195,7 @@ export const Minimap = memo(function Minimap({
             {/* Cast density */}
             {densityBars.map((bar, i) =>
               bar.height > 0 ? (
-                <Rect
+                <KonvaRect
                   key={i}
                   x={bar.x}
                   y={MINIMAP_HEIGHT - 10 - bar.height}
@@ -203,7 +208,7 @@ export const Minimap = memo(function Minimap({
               ) : null,
             )}
             {/* Brush/selection */}
-            <Rect
+            <KonvaRect
               x={brushX}
               width={Math.max(4, brushWidth)}
               height={MINIMAP_HEIGHT - 10}
@@ -212,9 +217,9 @@ export const Minimap = memo(function Minimap({
               stroke="#3B82F6"
               strokeWidth={1}
             />
-          </Group>
-        </Layer>
-      </Stage>
+          </KonvaGroup>
+        </KonvaLayer>
+      </KonvaStage>
     </div>
   );
 });

@@ -59,6 +59,7 @@ import {
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetUiTextureAtlasElement,
   makeDbcResolvers,
 } from "@wowlab/services/Data";
 import * as Effect from "effect/Effect";
@@ -364,6 +365,13 @@ const createBatchFetcher = (
         queryClient,
         dataProvider,
         "trait_tree",
+        ids,
+      ),
+    fetchUiTextureAtlasElementsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.UiTextureAtlasElementRow>(
+        queryClient,
+        dataProvider,
+        "ui_texture_atlas_element",
         ids,
       ),
 
@@ -901,6 +909,11 @@ export const RefineDbcService = (
             new GetTraitTreeLoadoutEntries({ loadoutId }),
             resolvers.traitTreeLoadoutEntriesResolver,
           ),
+        getUiTextureAtlasElement: (id) =>
+          Effect.request(
+            new GetUiTextureAtlasElement({ id }),
+            resolvers.uiTextureAtlasElementResolver,
+          ),
 
         // Non-batchable (fetch all or complex queries)
         getChrClasses: () =>
@@ -973,6 +986,47 @@ export const RefineDbcService = (
 
             return chain;
           }),
+
+        // TOOD Sort this properly
+        getSpecSetMembers: (specSetIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.SpecSetMemberRow>(
+            queryClient,
+            dataProvider,
+            "spec_set_member",
+            "SpecSet",
+            specSetIds,
+          ),
+        getTraitConds: (condIds: readonly number[]) =>
+          fetchByIds<Schemas.Dbc.TraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_cond",
+            condIds,
+          ),
+        getTraitNodeGroupXTraitConds: (groupIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_cond",
+            "TraitNodeGroupID",
+            groupIds,
+          ),
+        getTraitNodeGroupXTraitNodes: (nodeIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitNodeRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_node",
+            "TraitNodeID",
+            nodeIds,
+          ),
+        getTraitNodeXTraitConds: (nodeIds: readonly number[]) =>
+          fetchByFk<Schemas.Dbc.TraitNodeXTraitCondRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_x_trait_cond",
+            "TraitNodeID",
+            nodeIds,
+          ),
       };
     }),
   ).pipe(Layer.provide(resolversLayer));

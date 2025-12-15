@@ -1,8 +1,8 @@
 import * as Schema from "effect/Schema";
 
 export const SpellDurationRowSchema = Schema.Struct({
-  Duration: Schema.NumberFromString,
   ID: Schema.NumberFromString,
+  Duration: Schema.NumberFromString,
   MaxDuration: Schema.NumberFromString,
 });
 

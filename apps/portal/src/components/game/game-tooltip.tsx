@@ -4,6 +4,7 @@ import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import { cn } from "@/lib/utils";
 import { GameIcon } from "./game-icon";
+import { useSpellDescription } from "@/hooks/use-spell-description";
 
 // WoW Item Quality Colors
 const QUALITY_COLORS = {
@@ -62,8 +63,8 @@ export interface ItemTooltipData {
   iconName?: string;
 }
 
-// Mock spell data structure
 export interface SpellTooltipData {
+  id?: number; // TODO Remove this crappy fallback
   name: string;
   rank?: string;
   castTime: string;
@@ -75,7 +76,6 @@ export interface SpellTooltipData {
   iconName?: string;
 }
 
-// Tooltip wrapper component
 function GameTooltipRoot({
   children,
   openDelay = 200,
@@ -279,7 +279,11 @@ export function ItemTooltipContent({ item }: { item: ItemTooltipData }) {
 
 // Spell Tooltip Content Component
 export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
+  const { data: renderedDescription, isLoading } = useSpellDescription(
+    spell.id ?? null,
+  );
   const schoolColor = spell.school ? SCHOOL_COLORS[spell.school] : "#ffffff";
+  const description = renderedDescription?.text ?? spell.description;
 
   return (
     <div className="flex flex-col gap-1.5 text-sm">
@@ -317,7 +321,9 @@ export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
         className="text-xs leading-relaxed"
         style={{ color: spell.school ? schoolColor : "#ffd100" }}
       >
-        {spell.description}
+        {isLoading && !renderedDescription
+          ? "Loading description..."
+          : description}
       </p>
     </div>
   );

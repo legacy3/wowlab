@@ -92,6 +92,7 @@
     "slugify": "^1.6.6",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
+    "use-image": "^1.1.4",
     "vaul": "^1.1.2",
     "zod": "^4.1.13"
   },

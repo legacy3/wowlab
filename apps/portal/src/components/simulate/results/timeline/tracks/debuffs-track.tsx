@@ -1,7 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Text, Line } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaText,
+  KonvaLine,
+} from "@/components/konva";
 import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
@@ -180,14 +185,14 @@ export const DebuffsTrack = memo(function DebuffsTrack({
     );
 
     return (
-      <Group y={y}>
+      <KonvaGroup y={y}>
         {Array.from(buckets.entries()).map(([timestamp, data]) => {
           const x = timeToX(timestamp);
           const width = timeToX(timestamp + bucketSize) - x;
           const height = (data.count / maxCount) * totalHeight;
 
           return (
-            <Rect
+            <KonvaRect
               key={timestamp}
               x={x}
               y={totalHeight - height}
@@ -197,16 +202,15 @@ export const DebuffsTrack = memo(function DebuffsTrack({
               opacity={0.5}
               cornerRadius={1}
               listening={false}
-              perfectDrawEnabled={false}
             />
           );
         })}
-      </Group>
+      </KonvaGroup>
     );
   }
 
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {/* Target category labels removed - handled by TrackLabels component */}
 
       {/* Debuff bars */}
@@ -229,12 +233,12 @@ export const DebuffsTrack = memo(function DebuffsTrack({
         const showLabel = shouldShowLabel(width);
 
         return (
-          <Group
+          <KonvaGroup
             key={debuff.id}
             x={startX}
             y={dy}
             opacity={opacity}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: Konva.KonvaEventObject<MouseEvent>) => {
               if (showTooltip) {
                 const tooltip = buildSpellTooltip(
                   debuff.spellId,
@@ -254,46 +258,43 @@ export const DebuffsTrack = memo(function DebuffsTrack({
             onMouseLeave={() => hideTooltip?.()}
           >
             {/* Main bar with dashed border and diagonal pattern */}
-            <Rect
+            <KonvaRect
               width={width}
               height={debuffHeight}
               fill={spell?.color ?? "#888"}
               opacity={0.4}
               cornerRadius={debuffCornerRadius}
-              perfectDrawEnabled={false}
             />
             {/* Dashed border */}
-            <Rect
+            <KonvaRect
               width={width}
               height={debuffHeight}
               stroke={spell?.color ?? "#888"}
               strokeWidth={1.5}
               cornerRadius={debuffCornerRadius}
               dash={[...debuffDash]}
-              perfectDrawEnabled={false}
             />
 
             {/* Diagonal stripes pattern */}
             {width > 20 && (
-              <Group clipWidth={width} clipHeight={debuffHeight}>
+              <KonvaGroup clipWidth={width} clipHeight={debuffHeight}>
                 {Array.from({ length: Math.ceil(width / 6) + 2 }).map(
                   (_, i) => (
-                    <Line
+                    <KonvaLine
                       key={i}
                       points={[i * 6 - debuffHeight, debuffHeight, i * 6, 0]}
                       stroke={spell?.color ?? "#888"}
                       strokeWidth={1}
                       opacity={0.3}
                       listening={false}
-                      perfectDrawEnabled={false}
                     />
                   ),
                 )}
-              </Group>
+              </KonvaGroup>
             )}
 
             {showLabel && (
-              <Text
+              <KonvaText
                 text={label.text}
                 x={4}
                 y={debuffHeight / 2 - 4}
@@ -301,13 +302,12 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                 fontStyle={label.showFullName ? undefined : "bold"}
                 fill="#fff"
                 listening={false}
-                perfectDrawEnabled={false}
               />
             )}
 
             {/* Stack indicator */}
             {debuff.stacks && debuff.stacks > 1 && width > 25 && (
-              <Text
+              <KonvaText
                 text={String(debuff.stacks)}
                 x={width - 12}
                 y={debuffHeight / 2 - 4}
@@ -315,12 +315,11 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                 fontStyle="bold"
                 fill="#fff"
                 listening={false}
-                perfectDrawEnabled={false}
               />
             )}
-          </Group>
+          </KonvaGroup>
         );
       })}
-    </Group>
+    </KonvaGroup>
   );
 });

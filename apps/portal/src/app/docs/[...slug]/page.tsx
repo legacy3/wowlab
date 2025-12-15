@@ -4,13 +4,13 @@ import { getDocMeta, getAllDocSlugs } from "@/lib/docs";
 import { DocNav } from "@/components/docs/doc-nav";
 import { DocSidebar } from "@/components/docs/doc-sidebar";
 
-import Overview from "@/content/00-overview.md";
-import WritingRotations from "@/content/guides/00-writing-rotations.md";
-import SpecCoverage from "@/content/guides/01-spec-coverage.md";
-import Architecture from "@/content/reference/00-architecture.md";
-import DataModel from "@/content/reference/01-data-model.md";
-import McpServer from "@/content/reference/02-mcp-server.md";
-import Contributing from "@/content/development/00-contributing.md";
+import Overview from "@/content/docs/00-overview.md";
+import WritingRotations from "@/content/docs/guides/00-writing-rotations.md";
+import SpecCoverage from "@/content/docs/guides/01-spec-coverage.md";
+import Architecture from "@/content/docs/reference/00-architecture.md";
+import DataModel from "@/content/docs/reference/01-data-model.md";
+import McpServer from "@/content/docs/reference/02-mcp-server.md";
+import Contributing from "@/content/docs/development/00-contributing.md";
 
 const docs: Record<string, React.ComponentType> = {
   "00-overview": Overview,

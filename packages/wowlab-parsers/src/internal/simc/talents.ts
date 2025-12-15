@@ -1,9 +1,5 @@
 import { Effect } from "effect";
 
-// -----------------------------------------------------------------------------
-// Types
-// -----------------------------------------------------------------------------
-
 export interface DecodedTalentLoadout {
   nodes: DecodedTalentNode[];
   specId: number;
@@ -25,10 +21,6 @@ type BitReader = {
   readonly hasBits: (count: number) => boolean;
 };
 
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
 const BASE64_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_URL_CHARS =
@@ -40,7 +32,7 @@ for (let i = 0; i < BASE64_CHARS.length; i++) {
   CHAR_MAP[BASE64_URL_CHARS[i]] = i;
 }
 
-// Taken from parse_traits_hash <(o_o)>
+// ported from simc parse_traits_hash
 export function decodeTalentLoadout(
   talentString: string,
 ): Effect.Effect<DecodedTalentLoadout, Error> {
@@ -73,20 +65,20 @@ export function decodeTalentLoadout(
         const purchased = reader.getBits(1) === 1;
         let partiallyRanked = false;
         let ranksPurchased: number | undefined;
+        let choiceNode = false;
+        let choiceIndex: number | undefined;
 
         if (purchased) {
+          // these bits only present when purchased
           partiallyRanked = reader.getBits(1) === 1;
-
           if (partiallyRanked) {
             ranksPurchased = reader.getBits(6);
           }
-        }
+          choiceNode = reader.getBits(1) === 1;
 
-        const choiceNode = reader.getBits(1) === 1;
-        let choiceIndex: number | undefined;
-
-        if (choiceNode) {
-          choiceIndex = reader.getBits(2);
+          if (choiceNode) {
+            choiceIndex = reader.getBits(2);
+          }
         }
 
         nodes.push({
@@ -109,7 +101,6 @@ export function decodeTalentLoadout(
   });
 }
 
-// Taken from parse_traits_hash <(o_o)>
 export function decodeTalents(
   encoded: string,
 ): Effect.Effect<Uint8Array, Error> {
@@ -119,9 +110,14 @@ export function decodeTalents(
     try: () => {
       const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
       const padded = normalized + "===".slice((normalized.length + 3) % 4);
-      const buffer = Buffer.from(padded, "base64"); // TODO Web compatibility?
+      const binary = globalThis.atob(padded);
+      const bytes = new Uint8Array(binary.length);
 
-      return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      return bytes;
     },
   });
 }

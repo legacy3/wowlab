@@ -12,6 +12,7 @@ import {
   generateCastSnippet,
   type Spell,
 } from "./spell-browser.data";
+import { useSpellDescription } from "@/hooks/use-spell-description";
 
 interface SpellBrowserProps {
   onInsert: (snippet: string) => void;
@@ -66,6 +67,8 @@ interface SpellCardProps {
 }
 
 function SpellCard({ spell, onInsert }: SpellCardProps) {
+  const { data: description, isLoading } = useSpellDescription(spell.id);
+
   return (
     <div className="group rounded-md border bg-card p-2 hover:bg-accent/50 transition-colors">
       <div className="flex items-start justify-between gap-2">
@@ -115,7 +118,9 @@ function SpellCard({ spell, onInsert }: SpellCardProps) {
         </div>
       </div>
       <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
-        {spell.description}
+        {isLoading && !description
+          ? "Loading description..."
+          : (description?.text ?? spell.description)}
       </p>
     </div>
   );

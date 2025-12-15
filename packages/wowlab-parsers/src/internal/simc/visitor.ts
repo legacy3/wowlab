@@ -13,10 +13,6 @@ import type {
 
 import { simcParser } from "./parser";
 
-// -----------------------------------------------------------------------------
-// CST Visitor
-// -----------------------------------------------------------------------------
-
 const BaseSimcVisitor = simcParser.getBaseCstVisitorConstructor();
 
 const WOW_CLASSES = new Set<string>([
@@ -93,11 +89,9 @@ class SimcCstVisitor extends BaseSimcVisitor {
       return;
     }
 
-    // Check if this is the class definition (first assignment with class name as key)
+    // class definition uses class name as key (e.g. warrior="Charname")
     if (WOW_CLASSES.has(key)) {
       inherited.wowClass = key as WowClass;
-
-      // Remove quotes from character name
       inherited.characterName = value.replace(/^"|"$/g, "");
     } else {
       inherited.assignments.set(key, value);
@@ -256,10 +250,6 @@ class SimcCstVisitor extends BaseSimcVisitor {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Helper Functions
-// -----------------------------------------------------------------------------
-
 export function parseSavedLoadoutsFromInput(input: string): SimcSavedLoadout[] {
   const loadouts: SimcSavedLoadout[] = [];
   let pendingName: string | undefined;
@@ -270,14 +260,12 @@ export function parseSavedLoadoutsFromInput(input: string): SimcSavedLoadout[] {
       continue;
     }
 
-    // Example: "# Saved Loadout: RAID AOE"
     const nameMatch = line.match(/^#\\s*Saved\\s+Loadout:\\s*(.+)$/i);
     if (nameMatch) {
       pendingName = nameMatch[1].trim();
       continue;
     }
 
-    // Example: "# talents=C0PA..."
     const talentMatch = line.match(/^#\\s*talents\\s*=\\s*(\\S+)/i);
     if (talentMatch && pendingName) {
       loadouts.push({ encoded: talentMatch[1], name: pendingName });
@@ -335,6 +323,7 @@ function parseOptionalNumber(
   return isNaN(num) ? undefined : num;
 }
 
+// format: "alchemy=27/jewelcrafting=100"
 function parseProfessions(
   profStr: string | undefined,
 ): readonly SimcProfession[] {
@@ -342,7 +331,6 @@ function parseProfessions(
     return [];
   }
 
-  // Format: "alchemy=27/jewelcrafting=100"
   const parts = profStr.split("/");
   const professions: SimcProfession[] = [];
 
@@ -360,10 +348,6 @@ function parseProfessions(
 
   return professions;
 }
-
-// -----------------------------------------------------------------------------
-// Export
-// -----------------------------------------------------------------------------
 
 export const simcVisitor = new SimcCstVisitor();
 

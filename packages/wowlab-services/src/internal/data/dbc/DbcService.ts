@@ -87,6 +87,10 @@ export interface DbcServiceInterface {
     DbcError
   >;
 
+  readonly getSpecSetMembers: (
+    specSetIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpecSetMemberRow>, DbcError>;
+
   readonly getSpell: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellRow | undefined, DbcError>;
@@ -225,6 +229,10 @@ export interface DbcServiceInterface {
     DbcError
   >;
 
+  readonly getTraitConds: (
+    condIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCondRow>, DbcError>;
+
   readonly getTraitDefinition: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
@@ -241,9 +249,30 @@ export interface DbcServiceInterface {
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitNodeEntryRow | undefined, DbcError>;
 
+  readonly getTraitNodeGroupXTraitConds: (
+    groupIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCondRow>,
+    DbcError
+  >;
+
+  readonly getTraitNodeGroupXTraitNodes: (
+    nodeIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitNodeRow>,
+    DbcError
+  >;
+
   readonly getTraitNodesForTree: (
     treeId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
+
+  readonly getTraitNodeXTraitConds: (
+    nodeIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeXTraitCondRow>,
+    DbcError
+  >;
 
   readonly getTraitNodeXTraitNodeEntries: (
     nodeId: number,
@@ -268,6 +297,13 @@ export interface DbcServiceInterface {
     loadoutId: number,
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
+    DbcError
+  >;
+
+  readonly getUiTextureAtlasElement: (
+    id: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.UiTextureAtlasElementRow | undefined,
     DbcError
   >;
 }

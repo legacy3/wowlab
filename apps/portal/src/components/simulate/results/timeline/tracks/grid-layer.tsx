@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Rect, Line } from "react-konva";
+import { KonvaRect, KonvaLine } from "@/components/konva";
 import { TRACK_METRICS } from "@/hooks/timeline";
 import { generateTicks, filterVisibleTicks } from "../utils";
 
@@ -35,7 +35,7 @@ export const GridLayer = memo(function GridLayer({
   return (
     <>
       {/* Background */}
-      <Rect
+      <KonvaRect
         x={0}
         y={0}
         width={innerWidth}
@@ -43,7 +43,6 @@ export const GridLayer = memo(function GridLayer({
         fill="#1a1a1a"
         cornerRadius={TRACK_METRICS.cornerRadius}
         listening={false}
-        perfectDrawEnabled={false}
       />
       {/* Grid lines */}
       {visibleTicks.map((tick, i) => {
@@ -51,7 +50,7 @@ export const GridLayer = memo(function GridLayer({
         const isMajor = Math.round(tick) % 10 === 0;
 
         return (
-          <Line
+          <KonvaLine
             key={`grid-${tick}-${i}`}
             points={[x, 0, x, totalHeight]}
             stroke="#333"
@@ -59,7 +58,6 @@ export const GridLayer = memo(function GridLayer({
             opacity={isMajor ? 0.4 : 0.15}
             dash={isMajor ? undefined : [2, 2]}
             listening={false}
-            perfectDrawEnabled={false}
           />
         );
       })}

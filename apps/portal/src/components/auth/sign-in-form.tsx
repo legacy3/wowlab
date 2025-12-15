@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Link } from "@/components/ui/link";
 import { getAuthCallbackUrl } from "@/lib/auth-config";
 import { Github, MessageCircle, Sparkles } from "lucide-react";
 
@@ -96,7 +97,9 @@ export function SignInForm() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to our{" "}
+            <Link href="/about?tab=terms-of-service">Terms of Service</Link> and{" "}
+            <Link href="/about?tab=privacy-policy">Privacy Policy</Link>
           </p>
         </CardContent>
       </Card>

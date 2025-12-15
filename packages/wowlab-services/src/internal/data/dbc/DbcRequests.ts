@@ -374,3 +374,11 @@ export class GetTraitTreeLoadoutEntries extends Request.TaggedClass(
   DbcError,
   { readonly loadoutId: number }
 > {}
+
+export class GetUiTextureAtlasElement extends Request.TaggedClass(
+  "GetUiTextureAtlasElement",
+)<
+  Schemas.Dbc.UiTextureAtlasElementRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}

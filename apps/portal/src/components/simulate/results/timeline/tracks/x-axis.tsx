@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Line, Text } from "react-konva";
+import { KonvaGroup, KonvaLine, KonvaText } from "@/components/konva";
 import { TRACK_METRICS } from "@/hooks/timeline";
 import { formatTime, generateTicks, filterVisibleTicks } from "../utils";
 
@@ -33,26 +33,24 @@ export const XAxis = memo(function XAxis({
   );
 
   return (
-    <Group y={totalHeight}>
-      <Line
+    <KonvaGroup y={totalHeight}>
+      <KonvaLine
         points={[0, 0, innerWidth, 0]}
         stroke="#444"
         strokeWidth={1}
         listening={false}
-        perfectDrawEnabled={false}
       />
       {visibleTicks.map((tick, i) => {
         const x = timeToX(tick);
         return (
-          <Group key={`tick-${tick}-${i}`} x={x}>
-            <Line
+          <KonvaGroup key={`tick-${tick}-${i}`} x={x}>
+            <KonvaLine
               points={[0, 0, 0, 6]}
               stroke="#444"
               strokeWidth={1}
               listening={false}
-              perfectDrawEnabled={false}
             />
-            <Text
+            <KonvaText
               text={formatTime(tick)}
               x={-20}
               y={10}
@@ -61,11 +59,10 @@ export const XAxis = memo(function XAxis({
               fontSize={11}
               fill="#888"
               listening={false}
-              perfectDrawEnabled={false}
             />
-          </Group>
+          </KonvaGroup>
         );
       })}
-    </Group>
+    </KonvaGroup>
   );
 });

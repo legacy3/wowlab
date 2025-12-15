@@ -38,6 +38,7 @@ export type TalentEdge = Schema.Schema.Type<typeof TalentEdgeSchema>;
 // TalentSubTree - Hero talent tree info
 export const TalentSubTreeSchema = Schema.Struct({
   description: Schema.String,
+  iconFileName: Schema.String,
   id: Schema.Number,
   name: Schema.String,
 });

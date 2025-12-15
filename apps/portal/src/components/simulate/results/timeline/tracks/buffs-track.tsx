@@ -1,7 +1,13 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Group, Rect, Text, Circle, Line } from "react-konva";
+import {
+  KonvaGroup,
+  KonvaRect,
+  KonvaText,
+  KonvaCircle,
+  KonvaLine,
+} from "@/components/konva";
 import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
@@ -171,7 +177,7 @@ export const BuffsTrack = memo(function BuffsTrack({
   // Render envelope view for aggregate zoom
   if (zoomLevel === "aggregate") {
     return (
-      <Group y={y}>
+      <KonvaGroup y={y}>
         {visibleBuffs.map(
           ({ buff, category, categoryIndex, laneIndex, refreshMarks }) => {
             const startX = timeToX(buff.start);
@@ -200,47 +206,44 @@ export const BuffsTrack = memo(function BuffsTrack({
             const uptimeRatio = visibleDuration / rangeDuration;
 
             return (
-              <Group key={buff.id} x={startX} y={by} opacity={opacity}>
+              <KonvaGroup key={buff.id} x={startX} y={by} opacity={opacity}>
                 {/* Start marker */}
-                <Rect
+                <KonvaRect
                   x={0}
                   y={0}
                   width={3}
                   height={buffHeight}
                   fill={spell?.color ?? "#888"}
                   cornerRadius={1}
-                  perfectDrawEnabled={false}
                 />
                 {/* Connecting line */}
-                <Line
+                <KonvaLine
                   points={[3, buffHeight / 2, width - 3, buffHeight / 2]}
                   stroke={spell?.color ?? "#888"}
                   strokeWidth={1}
                   opacity={Math.max(0.3, uptimeRatio)}
                   dash={[4, 4]}
                   listening={false}
-                  perfectDrawEnabled={false}
                 />
                 {/* End marker */}
-                <Rect
+                <KonvaRect
                   x={width - 3}
                   y={0}
                   width={3}
                   height={buffHeight}
                   fill={spell?.color ?? "#888"}
                   cornerRadius={1}
-                  perfectDrawEnabled={false}
                 />
-              </Group>
+              </KonvaGroup>
             );
           },
         )}
-      </Group>
+      </KonvaGroup>
     );
   }
 
   return (
-    <Group y={y}>
+    <KonvaGroup y={y}>
       {/* Buff bars */}
       {visibleBuffs.map(
         ({ buff, category, categoryIndex, laneIndex, refreshMarks }) => {
@@ -268,12 +271,12 @@ export const BuffsTrack = memo(function BuffsTrack({
           const showLabel = shouldShowLabel(width);
 
           return (
-            <Group
+            <KonvaGroup
               key={buff.id}
               x={startX}
               y={by}
               opacity={opacity}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: Konva.KonvaEventObject<MouseEvent>) => {
                 const tooltip = buildSpellTooltip(buff.spellId, buff.start, {
                   duration: { start: buff.start, end: buff.end },
                   stacks: buff.stacks,
@@ -287,12 +290,11 @@ export const BuffsTrack = memo(function BuffsTrack({
               onMouseLeave={hideTooltip}
             >
               {/* Main bar */}
-              <Rect
+              <KonvaRect
                 width={width}
                 height={buffHeight}
                 fill={spell?.color ?? "#888"}
                 cornerRadius={buffCornerRadius}
-                perfectDrawEnabled={false}
               />
 
               {/* Refresh marks */}
@@ -303,20 +305,19 @@ export const BuffsTrack = memo(function BuffsTrack({
                 }
 
                 return (
-                  <Line
+                  <KonvaLine
                     key={i}
                     points={[markX, 2, markX, buffHeight - 2]}
                     stroke="#fff"
                     strokeWidth={1}
                     opacity={0.4}
                     listening={false}
-                    perfectDrawEnabled={false}
                   />
                 );
               })}
 
               {showLabel && (
-                <Text
+                <KonvaText
                   text={label.text}
                   x={4}
                   y={buffHeight / 2 - 5}
@@ -324,23 +325,21 @@ export const BuffsTrack = memo(function BuffsTrack({
                   fontStyle={label.showFullName ? "500" : "bold"}
                   fill="#fff"
                   listening={false}
-                  perfectDrawEnabled={false}
                 />
               )}
 
               {/* Stack badge (at right edge, inside bar) */}
               {buff.stacks && buff.stacks > 1 && (
-                <Group x={width - 14} y={buffHeight / 2 - 6}>
-                  <Circle
+                <KonvaGroup x={width - 14} y={buffHeight / 2 - 6}>
+                  <KonvaCircle
                     x={6}
                     y={6}
                     radius={6}
                     fill="#000"
                     opacity={0.6}
                     listening={false}
-                    perfectDrawEnabled={false}
                   />
-                  <Text
+                  <KonvaText
                     text={String(buff.stacks)}
                     x={0}
                     y={2}
@@ -350,14 +349,13 @@ export const BuffsTrack = memo(function BuffsTrack({
                     fontStyle="bold"
                     fill="#fff"
                     listening={false}
-                    perfectDrawEnabled={false}
                   />
-                </Group>
+                </KonvaGroup>
               )}
-            </Group>
+            </KonvaGroup>
           );
         },
       )}
-    </Group>
+    </KonvaGroup>
   );
 });

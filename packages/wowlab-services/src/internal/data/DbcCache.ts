@@ -57,6 +57,7 @@ export interface DbcCache {
   traitTree: ImmutableMap<number, Dbc.TraitTreeRow>;
   traitTreeLoadout: ImmutableMap<number, Dbc.TraitTreeLoadoutRow>; // keyed by ChrSpecializationID
   traitTreeLoadoutEntry: ImmutableMap<number, Dbc.TraitTreeLoadoutEntryRow[]>; // keyed by TraitTreeLoadoutID
+  uiTextureAtlasElement: ImmutableMap<number, Dbc.UiTextureAtlasElementRow>;
 }
 
 // prettier-ignore
@@ -114,6 +115,7 @@ export interface RawDbcData {
   traitTree: Dbc.TraitTreeRow[];
   traitTreeLoadout: Dbc.TraitTreeLoadoutRow[];
   traitTreeLoadoutEntry: Dbc.TraitTreeLoadoutEntryRow[];
+  uiTextureAtlasElement: Dbc.UiTextureAtlasElementRow[];
 }
 
 // prettier-ignore
@@ -172,6 +174,7 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   traitTree: ImmutableMap(rawData.traitTree.map((row) => [row.ID, row])),
   traitTreeLoadout: ImmutableMap(rawData.traitTreeLoadout.map((row) => [row.ChrSpecializationID, row])),
   traitTreeLoadoutEntry: groupByTraitTreeLoadoutId(rawData.traitTreeLoadoutEntry),
+  uiTextureAtlasElement: ImmutableMap(rawData.uiTextureAtlasElement.map((row) => [row.ID, row])),
 });
 
 const groupBySpellId = <T extends { SpellID: number }>(
