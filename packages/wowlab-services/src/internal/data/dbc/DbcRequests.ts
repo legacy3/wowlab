@@ -302,14 +302,6 @@ export class GetSpellXDescriptionVariables extends Request.TaggedClass(
   { readonly spellId: number }
 > {}
 
-export class GetTraitDefinition extends Request.TaggedClass(
-  "GetTraitDefinition",
-)<
-  Schemas.Dbc.TraitDefinitionRow | undefined,
-  DbcError,
-  { readonly id: number }
-> {}
-
 export class GetTraitCost extends Request.TaggedClass("GetTraitCost")<
   Schemas.Dbc.TraitCostRow | undefined,
   DbcError,
@@ -318,6 +310,14 @@ export class GetTraitCost extends Request.TaggedClass("GetTraitCost")<
 
 export class GetTraitCurrency extends Request.TaggedClass("GetTraitCurrency")<
   Schemas.Dbc.TraitCurrencyRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetTraitDefinition extends Request.TaggedClass(
+  "GetTraitDefinition",
+)<
+  Schemas.Dbc.TraitDefinitionRow | undefined,
   DbcError,
   { readonly id: number }
 > {}
@@ -343,6 +343,14 @@ export class GetTraitNodeEntry extends Request.TaggedClass("GetTraitNodeEntry")<
   { readonly id: number }
 > {}
 
+export class GetTraitNodeGroupXTraitCosts extends Request.TaggedClass(
+  "GetTraitNodeGroupXTraitCosts",
+)<
+  ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
+  DbcError,
+  { readonly groupId: number }
+> {}
+
 export class GetTraitNodesForTree extends Request.TaggedClass(
   "GetTraitNodesForTree",
 )<
@@ -357,14 +365,6 @@ export class GetTraitNodeXTraitNodeEntries extends Request.TaggedClass(
   ReadonlyArray<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>,
   DbcError,
   { readonly nodeId: number }
-> {}
-
-export class GetTraitNodeGroupXTraitCosts extends Request.TaggedClass(
-  "GetTraitNodeGroupXTraitCosts",
-)<
-  ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
-  DbcError,
-  { readonly groupId: number }
 > {}
 
 export class GetTraitSubTree extends Request.TaggedClass("GetTraitSubTree")<

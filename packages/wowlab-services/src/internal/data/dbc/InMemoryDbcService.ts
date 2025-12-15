@@ -169,11 +169,11 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitConds: () => Effect.succeed([]), // TODO Implement these properly
 
-    getTraitDefinition: (id) => Effect.succeed(cache.traitDefinition.get(id)),
-
     getTraitCost: (id) => Effect.succeed(undefined), // TODO Implement these properly
 
     getTraitCurrency: (id) => Effect.succeed(undefined), // TODO Implement these properly
+
+    getTraitDefinition: (id) => Effect.succeed(cache.traitDefinition.get(id)),
 
     getTraitEdgesForTree: (treeId) =>
       Effect.succeed(cache.traitEdge.get(treeId) ?? []),

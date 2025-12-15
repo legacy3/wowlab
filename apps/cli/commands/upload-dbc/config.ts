@@ -99,15 +99,15 @@ export const DBC_TABLES = {
   traitNodeEntry: { file: "TraitNodeEntry.csv", schema: Dbc.TraitNodeEntryRowSchema, tableName: "trait_node_entry" },
   traitNodeGroup: { file: "TraitNodeGroup.csv", schema: Dbc.TraitNodeGroupRowSchema, tableName: "trait_node_group" },
   traitNodeGroupXTraitCond: { file: "TraitNodeGroupXTraitCond.csv", schema: Dbc.TraitNodeGroupXTraitCondRowSchema, tableName: "trait_node_group_x_trait_cond" },
+  traitNodeGroupXTraitCost: { file: "TraitNodeGroupXTraitCost.csv", schema: Dbc.TraitNodeGroupXTraitCostRowSchema, tableName: "trait_node_group_x_trait_cost" },
   traitNodeGroupXTraitNode: { file: "TraitNodeGroupXTraitNode.csv", schema: Dbc.TraitNodeGroupXTraitNodeRowSchema, tableName: "trait_node_group_x_trait_node" },
   traitNodeXTraitCond: { file: "TraitNodeXTraitCond.csv", schema: Dbc.TraitNodeXTraitCondRowSchema, tableName: "trait_node_x_trait_cond" },
   traitNodeXTraitNodeEntry: { file: "TraitNodeXTraitNodeEntry.csv", schema: Dbc.TraitNodeXTraitNodeEntryRowSchema, tableName: "trait_node_x_trait_node_entry" },
   traitSubTree: { file: "TraitSubTree.csv", schema: Dbc.TraitSubTreeRowSchema, tableName: "trait_sub_tree" },
   traitTree: { file: "TraitTree.csv", schema: Dbc.TraitTreeRowSchema, tableName: "trait_tree" },
-  traitTreeXTraitCurrency: { file: "TraitTreeXTraitCurrency.csv", schema: Dbc.TraitTreeXTraitCurrencyRowSchema, tableName: "trait_tree_x_trait_currency" },
   traitTreeLoadout: { file: "TraitTreeLoadout.csv", schema: Dbc.TraitTreeLoadoutRowSchema, tableName: "trait_tree_loadout" },
   traitTreeLoadoutEntry: { file: "TraitTreeLoadoutEntry.csv", schema: Dbc.TraitTreeLoadoutEntryRowSchema, tableName: "trait_tree_loadout_entry" },
-  traitNodeGroupXTraitCost: { file: "TraitNodeGroupXTraitCost.csv", schema: Dbc.TraitNodeGroupXTraitCostRowSchema, tableName: "trait_node_group_x_trait_cost" },
+  traitTreeXTraitCurrency: { file: "TraitTreeXTraitCurrency.csv", schema: Dbc.TraitTreeXTraitCurrencyRowSchema, tableName: "trait_tree_x_trait_currency" },
   uiTextureAtlasElement: { file: "UiTextureAtlasElement.csv", schema: Dbc.UiTextureAtlasElementRowSchema, tableName: "ui_texture_atlas_element" },
 } as const;
 

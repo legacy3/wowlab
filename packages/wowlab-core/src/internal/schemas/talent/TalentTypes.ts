@@ -20,8 +20,8 @@ export const TalentNodeSchema = Schema.Struct({
   posX: Schema.Number,
   posY: Schema.Number,
   subTreeId: Schema.Number, // 0 = class/spec, >0 = hero tree
-  type: Schema.Number, // 0 = normal, 2 = choice
   treeIndex: Schema.optional(Schema.Number), // 1=class,2=spec,3=hero,4=selection
+  type: Schema.Number, // 0 = normal, 2 = choice
 });
 
 export type TalentNode = Schema.Schema.Type<typeof TalentNodeSchema>;

@@ -49,9 +49,9 @@ import {
   GetSpellTargetRestrictions,
   GetSpellTotems,
   GetSpellXDescriptionVariables,
-  GetTraitDefinition,
   GetTraitCost,
   GetTraitCurrency,
+  GetTraitDefinition,
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
@@ -233,15 +233,15 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
     DbcError
   >;
-  readonly fetchTraitDefinitionsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
   readonly fetchTraitCostsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCostRow>, DbcError>;
   readonly fetchTraitCurrenciesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCurrencyRow>, DbcError>;
+  readonly fetchTraitDefinitionsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
   readonly fetchTraitEdgesByTreeIds: (
     treeIds: readonly number[],
   ) => Effect.Effect<
@@ -281,15 +281,15 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitTreeLoadoutsBySpecIds: (
     specIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutRow>, DbcError>;
+  readonly fetchTraitTreesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
   readonly fetchTraitTreeXTraitCurrenciesByTreeIds: (
     treeIds: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
     DbcError
   >;
-  readonly fetchTraitTreesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
 
   readonly fetchUiTextureAtlasElementsByIds: (
     ids: readonly number[],
@@ -630,6 +630,14 @@ export interface DbcResolversInterface {
     GetSpellXDescriptionVariables,
     never
   >;
+  readonly traitCostResolver: RequestResolver.RequestResolver<
+    GetTraitCost,
+    never
+  >;
+  readonly traitCurrencyResolver: RequestResolver.RequestResolver<
+    GetTraitCurrency,
+    never
+  >;
   readonly traitDefinitionResolver: RequestResolver.RequestResolver<
     GetTraitDefinition,
     never
@@ -644,11 +652,6 @@ export interface DbcResolversInterface {
   >;
   readonly traitNodeGroupXTraitCostResolver: RequestResolver.RequestResolver<
     GetTraitNodeGroupXTraitCosts,
-    never
-  >;
-  readonly traitCostResolver: RequestResolver.RequestResolver<GetTraitCost, never>;
-  readonly traitCurrencyResolver: RequestResolver.RequestResolver<
-    GetTraitCurrency,
     never
   >;
   readonly traitNodeResolver: RequestResolver.RequestResolver<
@@ -849,14 +852,14 @@ export const makeDbcResolvers = Effect.gen(function* () {
       createByIdResolver<Schemas.Dbc.SpellShapeshiftFormRow>(
         fetcher.fetchSpellShapeshiftFormsByIds,
       ),
+    traitCostResolver,
+    traitCurrencyResolver,
     traitDefinitionResolver: createByIdResolver<Schemas.Dbc.TraitDefinitionRow>(
       fetcher.fetchTraitDefinitionsByIds,
     ),
     traitNodeEntryResolver: createByIdResolver<Schemas.Dbc.TraitNodeEntryRow>(
       fetcher.fetchTraitNodeEntriesByIds,
     ),
-    traitCostResolver,
-    traitCurrencyResolver,
     traitNodeResolver: createByIdResolver<Schemas.Dbc.TraitNodeRow>(
       fetcher.fetchTraitNodesByIds,
     ),
@@ -1017,9 +1020,9 @@ export const makeDbcResolvers = Effect.gen(function* () {
       (r) => r.spellId,
     ),
     traitEdgesForTreeResolver,
+    traitNodeGroupXTraitCostResolver,
     traitNodesForTreeResolver,
     traitNodeXEntriesResolver,
-    traitNodeGroupXTraitCostResolver,
     traitTreeLoadoutEntriesResolver,
     traitTreeLoadoutResolver,
   } satisfies DbcResolversInterface;

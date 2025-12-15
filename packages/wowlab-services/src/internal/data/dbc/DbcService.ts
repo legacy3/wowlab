@@ -233,10 +233,6 @@ export interface DbcServiceInterface {
     condIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCondRow>, DbcError>;
 
-  readonly getTraitDefinition: (
-    id: number,
-  ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
-
   readonly getTraitCost: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitCostRow | undefined, DbcError>;
@@ -244,6 +240,10 @@ export interface DbcServiceInterface {
   readonly getTraitCurrency: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitCurrencyRow | undefined, DbcError>;
+
+  readonly getTraitDefinition: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
 
   readonly getTraitEdgesForTree: (
     treeId: number,
