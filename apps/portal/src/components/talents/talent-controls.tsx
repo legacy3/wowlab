@@ -1,7 +1,15 @@
 "use client";
 
 import { memo } from "react";
-import { Download, Expand, X, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import {
+  Download,
+  Expand,
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,10 +26,12 @@ interface TalentControlsProps {
   searchQuery: string;
   scale: number;
   displayNodeCount: number;
+  selectedNodeCount: number;
   isPanned: boolean;
   zenMode: boolean;
   onSearchChange: (query: string) => void;
   onResetView: () => void;
+  onResetSelections: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onToggleZen: () => void;
@@ -34,10 +44,12 @@ export const TalentControls = memo(function TalentControls({
   searchQuery,
   scale,
   displayNodeCount,
+  selectedNodeCount,
   isPanned,
   zenMode,
   onSearchChange,
   onResetView,
+  onResetSelections,
   onZoomIn,
   onZoomOut,
   onToggleZen,
@@ -63,10 +75,22 @@ export const TalentControls = memo(function TalentControls({
       <div className="flex items-center gap-1 ml-auto">
         <span className="text-xs text-muted-foreground">
           {displayNodeCount} talents
+          {selectedNodeCount > 0 && ` · ${selectedNodeCount} selected`}
           {scale !== 1 && ` · ${Math.round(scale * 100)}%`}
         </span>
 
         <div className="w-px h-4 bg-border mx-1" />
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onResetSelections}
+          title="Reset selected nodes"
+          disabled={selectedNodeCount === 0}
+        >
+          <RotateCcw className="h-3 w-3" />
+        </Button>
 
         <Button
           variant="outline"

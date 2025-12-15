@@ -18,6 +18,9 @@ import {
   filterByHeroTree,
   searchTalentNodes,
   deriveSelectedHeroId,
+  buildTalentEdgeIndex,
+  collectTalentDependentIds,
+  collectTalentPrerequisiteIds,
 } from "./talent-utils";
 import { useTalentLayout } from "@/hooks/use-talent-layout";
 import { TalentNode } from "./talent-node";
@@ -41,13 +44,19 @@ function hasSelections(
 
 const EdgesLayer = memo(function EdgesLayer({
   edges,
+  pathEdgeIds,
 }: {
   edges: ReturnType<typeof useTalentLayout>["edges"];
+  pathEdgeIds: Set<number>;
 }) {
   return (
     <>
       {edges.map((edge) => (
-        <TalentEdge key={edge.id} edge={edge} />
+        <TalentEdge
+          key={edge.id}
+          edge={edge}
+          isPathHighlight={pathEdgeIds.has(edge.id)}
+        />
       ))}
     </>
   );
@@ -57,11 +66,23 @@ const NodesLayer = memo(function NodesLayer({
   nodes,
   searchMatches,
   isSearching,
+  pathMissingNodeIds,
+  pathTargetNodeId,
+  onNodeClick,
+  onNodeHoverChange,
+  onPaintStart,
+  onPaintEnter,
   onHover,
 }: {
   nodes: ReturnType<typeof useTalentLayout>["nodes"];
   searchMatches: Set<number>;
   isSearching: boolean;
+  pathMissingNodeIds: Set<number>;
+  pathTargetNodeId: number | null;
+  onNodeClick: (nodeId: number) => void;
+  onNodeHoverChange: (nodeId: number | null) => void;
+  onPaintStart: (nodeId: number) => void;
+  onPaintEnter: (nodeId: number) => void;
   onHover: (state: TooltipState | null) => void;
 }) {
   return (
@@ -72,6 +93,12 @@ const NodesLayer = memo(function NodesLayer({
           nodePos={nodePos}
           isSearchMatch={searchMatches.has(nodePos.id)}
           isSearching={isSearching}
+          isPathHighlight={pathMissingNodeIds.has(nodePos.id)}
+          isPathTarget={pathTargetNodeId === nodePos.id}
+          onNodeClick={onNodeClick}
+          onNodeHoverChange={onNodeHoverChange}
+          onPaintStart={onPaintStart}
+          onPaintEnter={onPaintEnter}
           onHover={onHover}
         />
       ))}
@@ -87,7 +114,28 @@ export function TalentTree({
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  const selections = hasSelections(tree) ? tree.selections : undefined;
+  const propSelections = hasSelections(tree) ? tree.selections : undefined;
+  const initialSelections = useMemo(() => {
+    if (!propSelections) {
+      return new Map<number, Talent.DecodedTalentSelection>();
+    }
+
+    const next = new Map<number, Talent.DecodedTalentSelection>();
+    for (const [nodeId, sel] of propSelections) {
+      if (sel.selected) {
+        next.set(nodeId, sel);
+      }
+    }
+    return next;
+  }, [propSelections, tree.treeId]);
+
+  const [selections, setSelections] =
+    useState<Map<number, Talent.DecodedTalentSelection>>(initialSelections);
+  const selectionsRef = useRef(selections);
+
+  useEffect(() => {
+    selectionsRef.current = selections;
+  }, [selections]);
 
   const [panZoom, setPanZoom] = useState({ x: 0, y: 0, scale: 1 });
   const isDragging = useRef(false);
@@ -115,21 +163,38 @@ export function TalentTree({
     [tree.nodes, tree.edges],
   );
 
-  const initialHeroId = useMemo(
-    () => deriveSelectedHeroId(tree.subTrees, visibleNodes, selections),
-    [tree.subTrees, visibleNodes, selections],
+  const edgeIndex = useMemo(
+    () => buildTalentEdgeIndex(tree.edges),
+    [tree.edges],
   );
+  const nodeById = useMemo(
+    () => new Map(visibleNodes.map((n) => [n.id, n])),
+    [visibleNodes],
+  );
+
+  const initialHeroId = useMemo(() => {
+    return deriveSelectedHeroId(tree.subTrees, visibleNodes, initialSelections);
+  }, [tree.subTrees, visibleNodes, initialSelections]);
 
   const [selectedHeroId, setSelectedHeroId] = useState<number | null>(
     initialHeroId,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null);
+
+  const paint = useRef<{ active: boolean; lastNodeId: number | null }>({
+    active: false,
+    lastNodeId: null,
+  });
+  const hoverChainLastNodeId = useRef<number | null>(null);
 
   useEffect(() => {
+    setSelections(initialSelections);
     setSelectedHeroId(initialHeroId);
     setSearchQuery("");
     setPanZoom({ x: 0, y: 0, scale: 1 });
-  }, [initialHeroId]);
+    hoverChainLastNodeId.current = null;
+  }, [initialHeroId, initialSelections]);
 
   useEffect(() => {
     const iconNames = visibleNodes.flatMap((node) =>
@@ -141,6 +206,10 @@ export function TalentTree({
   const displayNodes = useMemo(
     () => filterByHeroTree(visibleNodes, selectedHeroId),
     [visibleNodes, selectedHeroId],
+  );
+  const displayNodeIds = useMemo(
+    () => new Set(displayNodes.map((n) => n.id)),
+    [displayNodes],
   );
 
   const searchMatches = useMemo(
@@ -158,6 +227,265 @@ export function TalentTree({
   });
 
   const isPanned = panZoom.x !== 0 || panZoom.y !== 0 || panZoom.scale !== 1;
+  const selectedNodeCount = selections.size;
+
+  const resetSelections = useCallback(() => {
+    paint.current.active = false;
+    paint.current.lastNodeId = null;
+    hoverChainLastNodeId.current = null;
+    setSelections(new Map());
+  }, []);
+
+  const makeDefaultSelection = useCallback(
+    (nodeId: number): Talent.DecodedTalentSelection | null => {
+      const node = nodeById.get(nodeId);
+      if (!node) {
+        return null;
+      }
+
+      const isChoiceNode = node.type === 2 && node.entries.length > 1;
+      return {
+        nodeId,
+        selected: true,
+        ranksPurchased: Math.min(1, node.maxRanks),
+        choiceIndex: isChoiceNode ? 0 : undefined,
+      };
+    },
+    [nodeById],
+  );
+
+  const ensureSelectedWithPrereqs = useCallback(
+    (nodeId: number, next: Map<number, Talent.DecodedTalentSelection>) => {
+      const required = collectTalentPrerequisiteIds(
+        nodeId,
+        edgeIndex.parentsByNodeId,
+      );
+
+      for (const requiredId of required) {
+        if (next.has(requiredId)) {
+          continue;
+        }
+
+        const sel = makeDefaultSelection(requiredId);
+        if (sel) {
+          next.set(requiredId, sel);
+        }
+      }
+    },
+    [edgeIndex.parentsByNodeId, makeDefaultSelection],
+  );
+
+  const toggleNode = useCallback(
+    (nodeId: number) => {
+      setSelections((prev) => {
+        const node = nodeById.get(nodeId);
+        if (!node) {
+          return prev;
+        }
+
+        const next = new Map(prev);
+        const current = next.get(nodeId);
+        const isSelected = !!current;
+        const isChoiceNode = node.type === 2 && node.entries.length > 1;
+
+        if (!isSelected) {
+          ensureSelectedWithPrereqs(nodeId, next);
+          const sel = makeDefaultSelection(nodeId);
+          if (sel) {
+            next.set(nodeId, sel);
+          }
+
+          if (node.subTreeId > 0) {
+            setSelectedHeroId(node.subTreeId);
+          }
+
+          hoverChainLastNodeId.current = nodeId;
+          return next;
+        }
+
+        if (isChoiceNode) {
+          const choiceIndex = current?.choiceIndex ?? 0;
+          if (choiceIndex === 0) {
+            next.set(nodeId, { ...current, choiceIndex: 1 });
+            hoverChainLastNodeId.current = nodeId;
+            return next;
+          }
+
+          const dependents = collectTalentDependentIds(
+            nodeId,
+            edgeIndex.childrenByNodeId,
+          );
+          for (const dependentId of dependents) {
+            next.delete(dependentId);
+          }
+          hoverChainLastNodeId.current = null;
+          return next;
+        }
+
+        if (node.maxRanks > 1) {
+          const currentRanks = current?.ranksPurchased ?? 0;
+          if (currentRanks < node.maxRanks) {
+            next.set(nodeId, { ...current, ranksPurchased: currentRanks + 1 });
+            hoverChainLastNodeId.current = nodeId;
+            return next;
+          }
+
+          const dependents = collectTalentDependentIds(
+            nodeId,
+            edgeIndex.childrenByNodeId,
+          );
+          for (const dependentId of dependents) {
+            next.delete(dependentId);
+          }
+          hoverChainLastNodeId.current = null;
+          return next;
+        }
+
+        const dependents = collectTalentDependentIds(
+          nodeId,
+          edgeIndex.childrenByNodeId,
+        );
+        for (const dependentId of dependents) {
+          next.delete(dependentId);
+        }
+        hoverChainLastNodeId.current = null;
+        return next;
+      });
+    },
+    [
+      edgeIndex.childrenByNodeId,
+      ensureSelectedWithPrereqs,
+      makeDefaultSelection,
+      nodeById,
+    ],
+  );
+
+  const startPaint = useCallback((nodeId: number) => {
+    paint.current.active = true;
+    paint.current.lastNodeId = nodeId;
+  }, []);
+
+  const stopPaint = useCallback(() => {
+    paint.current.active = false;
+    paint.current.lastNodeId = null;
+  }, []);
+
+  useEffect(() => {
+    const handleUp = () => stopPaint();
+    window.addEventListener("mouseup", handleUp);
+    window.addEventListener("touchend", handleUp);
+    window.addEventListener("touchcancel", handleUp);
+    return () => {
+      window.removeEventListener("mouseup", handleUp);
+      window.removeEventListener("touchend", handleUp);
+      window.removeEventListener("touchcancel", handleUp);
+    };
+  }, [stopPaint]);
+
+  const paintEnter = useCallback(
+    (nodeId: number) => {
+      const lastNodeId = paint.current.active
+        ? paint.current.lastNodeId
+        : hoverChainLastNodeId.current;
+      if (lastNodeId == null || lastNodeId === nodeId) {
+        return;
+      }
+
+      const neighbors = edgeIndex.neighborsByNodeId.get(lastNodeId);
+      if (!neighbors?.has(nodeId)) {
+        return;
+      }
+
+      if (selectionsRef.current.has(nodeId)) {
+        if (paint.current.active) {
+          paint.current.lastNodeId = nodeId;
+        }
+        hoverChainLastNodeId.current = nodeId;
+        return;
+      }
+
+      setSelections((prev) => {
+        const next = new Map(prev);
+        ensureSelectedWithPrereqs(nodeId, next);
+
+        const sel = makeDefaultSelection(nodeId);
+        if (sel) {
+          next.set(nodeId, sel);
+        }
+
+        return next;
+      });
+
+      if (paint.current.active) {
+        paint.current.lastNodeId = nodeId;
+      }
+      hoverChainLastNodeId.current = nodeId;
+    },
+    [
+      edgeIndex.neighborsByNodeId,
+      ensureSelectedWithPrereqs,
+      makeDefaultSelection,
+    ],
+  );
+
+  const { pathMissingNodeIds, pathEdgeIds, pathTargetNodeId } = useMemo(() => {
+    if (!hoveredNodeId) {
+      return {
+        pathMissingNodeIds: new Set<number>(),
+        pathEdgeIds: new Set<number>(),
+        pathTargetNodeId: null as number | null,
+      };
+    }
+
+    if (selections.has(hoveredNodeId)) {
+      return {
+        pathMissingNodeIds: new Set<number>(),
+        pathEdgeIds: new Set<number>(),
+        pathTargetNodeId: null as number | null,
+      };
+    }
+
+    const prereqs = collectTalentPrerequisiteIds(
+      hoveredNodeId,
+      edgeIndex.parentsByNodeId,
+    );
+
+    const missing = new Set<number>();
+    for (const id of prereqs) {
+      if (!displayNodeIds.has(id)) {
+        continue;
+      }
+      if (id !== hoveredNodeId && !selections.has(id)) {
+        missing.add(id);
+      }
+    }
+
+    const edgeIds = new Set<number>();
+    for (const childId of prereqs) {
+      if (!displayNodeIds.has(childId)) {
+        continue;
+      }
+      const parents = edgeIndex.parentsByNodeId.get(childId);
+      if (!parents) {
+        continue;
+      }
+      for (const parentId of parents) {
+        if (!displayNodeIds.has(parentId) || !prereqs.has(parentId)) {
+          continue;
+        }
+        const edgeId = edgeIndex.edgeIdByPair.get(`${parentId}-${childId}`);
+        if (edgeId != null) {
+          edgeIds.add(edgeId);
+        }
+      }
+    }
+
+    return {
+      pathMissingNodeIds: missing,
+      pathEdgeIds: edgeIds,
+      pathTargetNodeId: hoveredNodeId,
+    };
+  }, [displayNodeIds, edgeIndex, hoveredNodeId, selections]);
 
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -228,7 +556,8 @@ export function TalentTree({
   const handleMouseUp = useCallback(() => {
     isDragging.current = false;
     lastPos.current = null;
-  }, []);
+    stopPaint();
+  }, [stopPaint]);
 
   const handleTouchStart = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
@@ -274,7 +603,8 @@ export function TalentTree({
   const handleTouchEnd = useCallback(() => {
     isDragging.current = false;
     lastPos.current = null;
-  }, []);
+    stopPaint();
+  }, [stopPaint]);
 
   const resetPanZoom = useCallback(() => {
     setPanZoom({ x: 0, y: 0, scale: 1 });
@@ -301,6 +631,13 @@ export function TalentTree({
     [throttledSetTooltip],
   );
 
+  const handleNodeHoverChange = useCallback((nodeId: number | null) => {
+    setHoveredNodeId(nodeId);
+    if (nodeId != null && selectionsRef.current.has(nodeId)) {
+      hoverChainLastNodeId.current = nodeId;
+    }
+  }, []);
+
   return (
     <div
       className={cn(
@@ -314,10 +651,12 @@ export function TalentTree({
         searchQuery={searchQuery}
         scale={panZoom.scale}
         displayNodeCount={displayNodes.length}
+        selectedNodeCount={selectedNodeCount}
         isPanned={isPanned}
         zenMode={zenMode}
         onSearchChange={setSearchQuery}
         onResetView={resetPanZoom}
+        onResetSelections={resetSelections}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onToggleZen={toggleZenMode}
@@ -353,11 +692,17 @@ export function TalentTree({
               scaleX={panZoom.scale}
               scaleY={panZoom.scale}
             >
-              <EdgesLayer edges={layout.edges} />
+              <EdgesLayer edges={layout.edges} pathEdgeIds={pathEdgeIds} />
               <NodesLayer
                 nodes={layout.nodes}
                 searchMatches={searchMatches}
                 isSearching={isSearching}
+                pathMissingNodeIds={pathMissingNodeIds}
+                pathTargetNodeId={pathTargetNodeId}
+                onNodeClick={toggleNode}
+                onNodeHoverChange={handleNodeHoverChange}
+                onPaintStart={startPaint}
+                onPaintEnter={paintEnter}
                 onHover={handleTooltip}
               />
             </KonvaGroup>

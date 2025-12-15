@@ -148,3 +148,90 @@ export function deriveSelectedHeroId(
 
   return subTrees[0]?.id ?? null;
 }
+
+export type TalentEdgeIndex = {
+  parentsByNodeId: Map<number, Set<number>>;
+  childrenByNodeId: Map<number, Set<number>>;
+  neighborsByNodeId: Map<number, Set<number>>;
+  edgeIdByPair: Map<string, number>;
+};
+
+export function buildTalentEdgeIndex(
+  edges: readonly Talent.TalentEdge[],
+): TalentEdgeIndex {
+  const parentsByNodeId = new Map<number, Set<number>>();
+  const childrenByNodeId = new Map<number, Set<number>>();
+  const neighborsByNodeId = new Map<number, Set<number>>();
+  const edgeIdByPair = new Map<string, number>();
+
+  const add = (map: Map<number, Set<number>>, key: number, val: number) => {
+    const existing = map.get(key);
+    if (existing) {
+      existing.add(val);
+    } else {
+      map.set(key, new Set([val]));
+    }
+  };
+
+  for (const edge of edges) {
+    add(childrenByNodeId, edge.fromNodeId, edge.toNodeId);
+    add(parentsByNodeId, edge.toNodeId, edge.fromNodeId);
+    add(neighborsByNodeId, edge.fromNodeId, edge.toNodeId);
+    add(neighborsByNodeId, edge.toNodeId, edge.fromNodeId);
+    edgeIdByPair.set(`${edge.fromNodeId}-${edge.toNodeId}`, edge.id);
+  }
+
+  return { parentsByNodeId, childrenByNodeId, neighborsByNodeId, edgeIdByPair };
+}
+
+export function collectTalentPrerequisiteIds(
+  nodeId: number,
+  parentsByNodeId: Map<number, Set<number>>,
+): Set<number> {
+  const visited = new Set<number>();
+  const queue: number[] = [nodeId];
+
+  for (let i = 0; i < queue.length; i++) {
+    const current = queue[i]!;
+    if (visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    const parents = parentsByNodeId.get(current);
+    if (!parents) {
+      continue;
+    }
+    for (const parentId of parents) {
+      queue.push(parentId);
+    }
+  }
+
+  return visited;
+}
+
+export function collectTalentDependentIds(
+  nodeId: number,
+  childrenByNodeId: Map<number, Set<number>>,
+): Set<number> {
+  const visited = new Set<number>();
+  const queue: number[] = [nodeId];
+
+  for (let i = 0; i < queue.length; i++) {
+    const current = queue[i]!;
+    if (visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    const children = childrenByNodeId.get(current);
+    if (!children) {
+      continue;
+    }
+    for (const childId of children) {
+      queue.push(childId);
+    }
+  }
+
+  return visited;
+}

@@ -86,9 +86,11 @@ function TalentCalculatorInner() {
 
   const {
     data: treeWithSelections,
+    tree,
     isLoading,
     error,
   } = useTalentTreeWithSelections(effectiveSpecId, decoded);
+  const activeTree = treeWithSelections ?? tree;
 
   const handleSpecSelect = useCallback(
     (specId: number) => {
@@ -153,10 +155,10 @@ function TalentCalculatorInner() {
     );
   } else if (error) {
     content = <TalentStateMessage title="Failed to load the talent tree" />;
-  } else if (treeWithSelections) {
+  } else if (activeTree) {
     content = (
       <TalentTree
-        tree={treeWithSelections}
+        tree={activeTree}
         height={Math.max(700, window.innerHeight - 256)}
       />
     );
