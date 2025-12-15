@@ -6,6 +6,9 @@ import type { TalentSubTree, TalentTree } from "./types.js";
 
 interface TemplateData {
   iconBaseUrl: string;
+  nodeChoices: Map<number, number> | null;
+  nodeRanks: Map<number, number> | null;
+  selectedNodeIds: Set<number> | null;
   tree: TalentTree;
 }
 
@@ -321,10 +324,58 @@ svg { position: absolute; top: 0; left: 0; pointer-events: none; }
 }
 
 .node.search-dim { opacity: 0.3; }
+
+/* Loadout selection states */
+.node.selected {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.node.selected .node-ranks {
+  color: var(--accent-gold);
+}
+
+.node.unselected {
+  opacity: 0.35;
+  filter: grayscale(0.5);
+}
+
+.node.unselected:hover {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+}
+
+.edge.selected {
+  stroke: var(--accent-green);
+  stroke-width: 3;
+}
+
+.edge.unselected {
+  stroke: #2a2a3a;
+  opacity: 0.4;
+}
+
+.loadout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid var(--accent-green);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--accent-green);
+  font-weight: 500;
+}
 `;
 
 const renderScript = (data: TemplateData): string => {
-  const { iconBaseUrl, tree } = data;
+  const { iconBaseUrl, nodeChoices, nodeRanks, selectedNodeIds, tree } = data;
+
+  // Convert loadout data to arrays for JSON serialization
+  const selectedNodes = selectedNodeIds ? [...selectedNodeIds] : null;
+  const choices = nodeChoices ? [...nodeChoices.entries()] : null;
+  const ranks = nodeRanks ? [...nodeRanks.entries()] : null;
 
   return `
 const treeData = ${JSON.stringify({
@@ -354,6 +405,12 @@ const treeData = ${JSON.stringify({
       nodeIds: s.nodeIds,
     })),
   })};
+
+// Loadout data
+const loadoutSelectedNodes = ${selectedNodes ? JSON.stringify(selectedNodes) : "null"};
+const loadoutChoices = ${choices ? `new Map(${JSON.stringify(choices)})` : "null"};
+const loadoutRanks = ${ranks ? `new Map(${JSON.stringify(ranks)})` : "null"};
+const hasLoadout = loadoutSelectedNodes !== null;
 
 const iconBaseUrl = "${iconBaseUrl}";
 
@@ -396,6 +453,9 @@ svg.setAttribute("height", height);
 const nodeMap = new Map(nodes.map(n => [n.id, n]));
 const edgeEls = [];
 
+// Pre-compute loadout set for edge rendering
+const loadoutNodeSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
+
 for (const edge of treeData.edges) {
   const from = nodeMap.get(edge.sourceNodeId);
   const to = nodeMap.get(edge.targetNodeId);
@@ -414,6 +474,17 @@ for (const edge of treeData.edges) {
     line.classList.add("hero-edge");
   }
 
+  // Add loadout selection styling to edges
+  if (hasLoadout && loadoutNodeSet) {
+    const fromSelected = loadoutNodeSet.has(from.id);
+    const toSelected = loadoutNodeSet.has(to.id);
+    if (fromSelected && toSelected) {
+      line.classList.add("selected");
+    } else {
+      line.classList.add("unselected");
+    }
+  }
+
   line.dataset.fromSub = from.subTreeId || 0;
   line.dataset.toSub = to.subTreeId || 0;
   svg.appendChild(line);
@@ -424,25 +495,46 @@ treeEl.appendChild(svg);
 
 // Render nodes
 const nodeEls = [];
+const loadoutSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
 
 for (const node of nodes) {
   const el = document.createElement("div");
   const isChoice = node.type === 2 && node.entries.length > 1;
   const isHero = node.subTreeId && node.subTreeId > 0;
+  const isSelected = loadoutSet?.has(node.id) ?? false;
+  const choiceIndex = loadoutChoices?.get(node.id) ?? null;
+  const purchasedRanks = loadoutRanks?.get(node.id) ?? null;
 
-  el.className = "node" + (isChoice ? " choice" : "") + (isHero ? " hero" : "");
+  // Build class list
+  let className = "node";
+  if (isChoice) className += " choice";
+  if (isHero) className += " hero";
+  if (hasLoadout) {
+    className += isSelected ? " selected" : " unselected";
+  }
+  el.className = className;
   el.style.left = toX(node.pixelX) + "px";
   el.style.top = toY(node.pixelY) + "px";
   el.dataset.subTreeId = node.subTreeId || 0;
+  el.dataset.nodeId = node.id;
 
   if (isChoice && node.entries.length >= 2) {
-    for (const entry of node.entries.slice(0, 2)) {
+    // For choice nodes with loadout, only show selected choice or dim unselected
+    const entriesToShow = node.entries.slice(0, 2);
+    entriesToShow.forEach((entry, idx) => {
       const img = document.createElement("img");
       img.src = getIconUrl(entry.iconFileName);
       img.alt = entry.name || "?";
       img.loading = "lazy";
+      // If we have loadout data and this is selected, highlight the chosen entry
+      if (hasLoadout && isSelected && choiceIndex !== null) {
+        img.style.opacity = (idx === choiceIndex) ? "1" : "0.3";
+        if (idx === choiceIndex) {
+          img.style.boxShadow = "0 0 8px var(--accent-green)";
+        }
+      }
       el.appendChild(img);
-    }
+    });
   } else if (node.entries.length > 0) {
     const img = document.createElement("img");
     img.src = getIconUrl(node.entries[0].iconFileName);
@@ -450,12 +542,16 @@ for (const node of nodes) {
     img.loading = "lazy";
     el.appendChild(img);
 
-    // Rank indicator
+    // Rank indicator - show purchased/max if loadout, otherwise just max
     const maxRanks = Math.max(...node.entries.map(e => e.maxRanks));
     if (maxRanks > 1) {
       const ranks = document.createElement("div");
       ranks.className = "node-ranks";
-      ranks.textContent = maxRanks;
+      if (hasLoadout && isSelected && purchasedRanks !== null) {
+        ranks.textContent = purchasedRanks + "/" + maxRanks;
+      } else {
+        ranks.textContent = maxRanks;
+      }
       el.appendChild(ranks);
     }
   }
@@ -574,11 +670,24 @@ const renderHeroButtons = (
   );
 };
 
-export const generateHtml = (tree: TalentTree, supabaseUrl: string): string => {
+export const generateHtml = (
+  tree: TalentTree,
+  supabaseUrl: string,
+  selectedNodeIds: Set<number> | null = null,
+  nodeChoices: Map<number, number> | null = null,
+  nodeRanks: Map<number, number> | null = null,
+): string => {
   const data: TemplateData = {
     iconBaseUrl: supabaseUrl,
+    nodeChoices,
+    nodeRanks,
+    selectedNodeIds,
     tree,
   };
+
+  const loadoutBadge = selectedNodeIds
+    ? `<div class="loadout-badge">✓ Loadout: ${selectedNodeIds.size} talents selected</div>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -591,6 +700,7 @@ export const generateHtml = (tree: TalentTree, supabaseUrl: string): string => {
 <body>
   <header>
     <h1>${escapeHtml(tree.className)} — ${escapeHtml(tree.specName)}</h1>
+    ${loadoutBadge}
     <div class="hero-selector">
       ${renderHeroButtons(tree.subTrees, supabaseUrl)}
     </div>

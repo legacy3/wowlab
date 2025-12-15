@@ -1,7 +1,5 @@
 /**
  * Dump Talent Tree Command
- *
- * Exports talent tree data following Blizzard's data structure.
  */
 
 import { Command, Options } from "@effect/cli";
@@ -11,13 +9,26 @@ import type { TalentTree } from "./types.js";
 
 import { supabaseClient } from "../../data/supabase.js";
 import { generateHtml } from "./html-template.js";
-import { getAllSpecs, getClasses, loadTalentTree } from "./loader.js";
+import { applyLoadoutToTree, parseLoadoutString } from "./loadout.js";
+import {
+  GetAllClasses,
+  GetAllSpecializations,
+  GetNodeInfo,
+  GetTraitTreeForSpec,
+  GetTreeNodes,
+  LoadTalentTree,
+} from "./wow-api.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "https://api.wowlab.gg";
 
-const specOption = Options.integer("spec").pipe(
-  Options.withAlias("s"),
-  Options.withDescription("Specialization ID to dump (omit for all specs)"),
+const htmlOption = Options.text("html").pipe(
+  Options.withDescription("Output HTML viewer file path"),
+  Options.optional,
+);
+
+const loadoutOption = Options.text("loadout").pipe(
+  Options.withAlias("l"),
+  Options.withDescription("Talent loadout export string to overlay"),
   Options.optional,
 );
 
@@ -33,8 +44,9 @@ const prettyOption = Options.boolean("pretty").pipe(
   Options.withDefault(false),
 );
 
-const htmlOption = Options.text("html").pipe(
-  Options.withDescription("Output HTML viewer file path"),
+const specOption = Options.integer("spec").pipe(
+  Options.withAlias("s"),
+  Options.withDescription("Specialization ID to dump (omit for all specs)"),
   Options.optional,
 );
 
@@ -42,53 +54,50 @@ export const dumpTalentTreeCommand = Command.make(
   "dump-talent-tree",
   {
     html: htmlOption,
+    loadout: loadoutOption,
     output: outputOption,
     pretty: prettyOption,
     spec: specOption,
   },
-  ({ html, output, pretty, spec }) =>
+  ({ html, loadout, output, pretty, spec }) =>
     Effect.gen(function* () {
       yield* Effect.log("Starting talent tree dump...");
 
       const results: TalentTree[] = [];
 
       if (spec._tag === "Some") {
-        // Dump single spec
         const specId = spec.value;
-
         yield* Effect.log(`Loading spec ${specId}...`);
 
-        // Get spec info
         const allSpecs = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
-          try: () => getAllSpecs(supabaseClient),
+          try: () => GetAllSpecializations(supabaseClient),
         });
 
-        const specInfo = allSpecs.find((s) => s.specId === specId);
-
+        const specInfo = allSpecs.find((s) => s.specID === specId);
         if (!specInfo) {
           yield* Effect.fail(new Error(`Spec ${specId} not found`));
-
           return;
         }
 
-        // Get class name
-        const classes = yield* Effect.tryPromise({
+        const allClasses = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
-          try: () => getClasses(supabaseClient),
+          try: () => GetAllClasses(supabaseClient),
         });
 
-        const className = classes.get(specInfo.classId) ?? "Unknown";
+        const classInfo = allClasses.find(
+          (c) => c.classID === specInfo.classID,
+        );
+        const className = classInfo?.name ?? "Unknown";
 
-        // Load tree
         const tree = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
           try: () =>
-            loadTalentTree(
+            LoadTalentTree(
               supabaseClient,
               specId,
-              specInfo.specName,
-              specInfo.classId,
+              specInfo.name,
+              specInfo.classID,
               className,
             ),
         });
@@ -96,69 +105,60 @@ export const dumpTalentTreeCommand = Command.make(
         if (tree) {
           results.push(tree);
           yield* Effect.log(
-            `Loaded ${className} ${specInfo.specName}: ${tree.nodes.length} nodes, ${tree.edges.length} edges`,
+            `Loaded ${className} ${specInfo.name}: ${tree.nodes.length} nodes`,
           );
-        } else {
-          yield* Effect.log(`No talent tree found for spec ${specId}`);
         }
       } else {
-        // Dump all specs
         yield* Effect.log("Loading all specs...");
 
         const allSpecs = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
-          try: () => getAllSpecs(supabaseClient),
+          try: () => GetAllSpecializations(supabaseClient),
         });
 
-        const classes = yield* Effect.tryPromise({
+        const allClasses = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),
-          try: () => getClasses(supabaseClient),
+          try: () => GetAllClasses(supabaseClient),
         });
 
-        // Sort by class ID, then spec name
+        const classMap = new Map(allClasses.map((c) => [c.classID, c.name]));
+
         allSpecs.sort((a, b) => {
-          if (a.classId !== b.classId) return a.classId - b.classId;
-
-          return a.specName.localeCompare(b.specName);
+          if (a.classID !== b.classID) return a.classID - b.classID;
+          return a.name.localeCompare(b.name);
         });
-
-        yield* Effect.log(`Found ${allSpecs.length} specs`);
 
         for (const specInfo of allSpecs) {
-          const className = classes.get(specInfo.classId) ?? "Unknown";
-
-          process.stdout.write(`  ${className} / ${specInfo.specName}...`);
+          const className = classMap.get(specInfo.classID) ?? "Unknown";
+          process.stdout.write(`  ${className} / ${specInfo.name}...`);
 
           const tree = yield* Effect.tryPromise({
             catch: (e) => new Error(String(e)),
             try: () =>
-              loadTalentTree(
+              LoadTalentTree(
                 supabaseClient,
-                specInfo.specId,
-                specInfo.specName,
-                specInfo.classId,
+                specInfo.specID,
+                specInfo.name,
+                specInfo.classID,
                 className,
               ),
           });
 
           if (tree) {
             results.push(tree);
-            console.log(
-              ` ${tree.nodes.length} nodes, ${tree.edges.length} edges`,
-            );
+            console.log(` ${tree.nodes.length} nodes`);
           } else {
             console.log(" no tree");
           }
         }
       }
 
-      // Output results
       if (results.length === 0) {
         yield* Effect.log("No talent trees found");
-
         return;
       }
 
+      // JSON output
       const jsonOutput = pretty
         ? JSON.stringify(results, null, 2)
         : JSON.stringify(results);
@@ -168,33 +168,118 @@ export const dumpTalentTreeCommand = Command.make(
           catch: (e) => new Error(String(e)),
           try: async () => {
             const fs = await import("node:fs/promises");
-
             await fs.writeFile(output.value, jsonOutput);
           },
         });
-
         yield* Effect.log(`JSON written to ${output.value}`);
       } else if (html._tag === "None") {
         console.log(jsonOutput);
       }
 
-      // Generate HTML if requested
+      // HTML output
       if (html._tag === "Some") {
+        let selectedNodeIds: Set<number> | null = null;
+        let nodeChoices: Map<number, number> | null = null;
+        let nodeRanks: Map<number, number> | null = null;
+
+        // Parse loadout if provided
+        if (loadout._tag === "Some" && results.length === 1) {
+          const tree = results[0];
+
+          try {
+            // Get tree ID using exact WoW API
+            const treeID = yield* Effect.tryPromise({
+              catch: (e) => new Error(String(e)),
+              try: () => GetTraitTreeForSpec(supabaseClient, tree.specId),
+            });
+
+            if (!treeID) {
+              throw new Error(`No tree found for spec ${tree.specId}`);
+            }
+
+            // C_Traits.GetTreeNodes - ALL nodes, sorted ascending
+            const allNodeIds = yield* Effect.tryPromise({
+              catch: (e) => new Error(String(e)),
+              try: () => GetTreeNodes(supabaseClient, treeID),
+            });
+
+            yield* Effect.log(
+              `Tree ${treeID} has ${allNodeIds.length} total nodes`,
+            );
+
+            // Parse the loadout string
+            const parsed = parseLoadoutString(loadout.value, allNodeIds);
+
+            yield* Effect.log(
+              `Loadout: version=${parsed.header.version}, specId=${parsed.header.specId}`,
+            );
+            yield* Effect.log(
+              `Selected nodes in loadout: ${parsed.selectedNodes.size}`,
+            );
+
+            // Verify spec matches
+            if (parsed.header.specId !== tree.specId) {
+              yield* Effect.log(
+                `Warning: Loadout spec ${parsed.header.specId} != tree spec ${tree.specId}`,
+              );
+            }
+
+            // Get maxRanks for each node using exact WoW API
+            const nodeMaxRanks = new Map<number, number>();
+            for (const nodeId of parsed.selectedNodes.keys()) {
+              const nodeInfo = yield* Effect.tryPromise({
+                catch: (e) => new Error(String(e)),
+                try: () => GetNodeInfo(supabaseClient, nodeId),
+              });
+              if (nodeInfo) {
+                nodeMaxRanks.set(nodeId, nodeInfo.maxRanks);
+              }
+            }
+
+            // Apply loadout
+            const applied = applyLoadoutToTree(
+              parsed.selectedNodes,
+              nodeMaxRanks,
+            );
+
+            selectedNodeIds = new Set(applied.keys());
+            nodeChoices = new Map();
+            nodeRanks = new Map();
+
+            for (const [nodeId, state] of applied) {
+              if (state.choiceEntryIndex !== null) {
+                nodeChoices.set(nodeId, state.choiceEntryIndex);
+              }
+              nodeRanks.set(nodeId, state.ranks);
+            }
+
+            yield* Effect.log(
+              `Applied loadout: ${selectedNodeIds.size} talents selected`,
+            );
+          } catch (e) {
+            yield* Effect.log(`Warning: Failed to parse loadout: ${e}`);
+          }
+        }
+
         if (results.length === 1) {
-          const htmlContent = generateHtml(results[0], SUPABASE_URL);
+          const htmlContent = generateHtml(
+            results[0],
+            SUPABASE_URL,
+            selectedNodeIds,
+            nodeChoices,
+            nodeRanks,
+          );
 
           yield* Effect.tryPromise({
             catch: (e) => new Error(String(e)),
             try: async () => {
               const fs = await import("node:fs/promises");
-
               await fs.writeFile(html.value, htmlContent);
             },
           });
 
-          yield* Effect.log(`HTML viewer written to ${html.value}`);
+          yield* Effect.log(`HTML written to ${html.value}`);
         } else {
-          // Generate multiple HTML files
           for (const tree of results) {
             const filename = html.value.replace(
               /\.html$/,
@@ -206,12 +291,11 @@ export const dumpTalentTreeCommand = Command.make(
               catch: (e) => new Error(String(e)),
               try: async () => {
                 const fs = await import("node:fs/promises");
-
                 await fs.writeFile(filename, htmlContent);
               },
             });
 
-            yield* Effect.log(`HTML viewer written to ${filename}`);
+            yield* Effect.log(`HTML written to ${filename}`);
           }
         }
       }
