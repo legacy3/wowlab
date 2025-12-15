@@ -87,6 +87,252 @@ export async function getTreeIdForSpec(
 }
 
 /**
+ * Get available sub-tree IDs for a spec.
+ * This finds the SubTreeSelection node visible to the spec and returns the sub-tree IDs from its entries.
+ *
+ * Data flow (verified from DB):
+ * - SubTreeSelection nodes (Type=3) have visibility conditions via trait_node_x_trait_cond
+ * - Each condition references a SpecSetID which maps to specs via spec_set_member
+ * - For Mage tree 658:
+ *   - Node 99828 → SpecSet 22 → Frost (64) → SubTrees 41, 40
+ *   - Node 99829 → SpecSet 23 → Fire (63) → SubTrees 41, 39
+ *   - Node 99830 → SpecSet 21 → Arcane (62) → SubTrees 40, 39
+ */
+async function getAvailableSubTreeIds(
+  supabase: SupabaseClient,
+  treeId: number,
+  specId: number,
+): Promise<number[]> {
+  // Use raw SQL to find SubTreeSelection nodes visible to this spec
+  // Supabase nested selects don't work without FK relationships
+  const { data: nodeResult, error: nodeError } = await supabase.rpc(
+    "get_visible_subtree_selection_nodes",
+    { p_tree_id: treeId, p_spec_id: specId },
+  );
+
+  // Fallback if RPC doesn't exist - use direct SQL
+  let subTreeSelectionNodeIds: number[] = [];
+
+  if (nodeError || !nodeResult) {
+    // Manual join approach
+    const { data: nodes } = await supabase
+      .schema("raw_dbc")
+      .from("trait_node")
+      .select("ID")
+      .eq("TraitTreeID", treeId)
+      .eq("Type", 3);
+
+    if (!nodes || nodes.length === 0) {
+      return [];
+    }
+
+    const allNodeIds = nodes.map((n: { ID: number }) => n.ID);
+
+    // Get conditions linked to these nodes
+    const { data: nodeConds } = await supabase
+      .schema("raw_dbc")
+      .from("trait_node_x_trait_cond")
+      .select("TraitNodeID, TraitCondID")
+      .in("TraitNodeID", allNodeIds);
+
+    if (!nodeConds || nodeConds.length === 0) {
+      return [];
+    }
+
+    const condIds = [
+      ...new Set(
+        nodeConds.map((nc: { TraitCondID: number }) => nc.TraitCondID),
+      ),
+    ];
+
+    // Get visibility conditions for this tree
+    const { data: conds } = await supabase
+      .schema("raw_dbc")
+      .from("trait_cond")
+      .select("ID, SpecSetID")
+      .eq("TraitTreeID", treeId)
+      .eq("CondType", 1)
+      .in("ID", condIds);
+
+    if (!conds || conds.length === 0) {
+      return [];
+    }
+
+    // Get spec sets that contain our spec
+    const specSetIds = [
+      ...new Set(conds.map((c: { SpecSetID: number }) => c.SpecSetID)),
+    ];
+    const { data: specSets } = await supabase
+      .schema("raw_dbc")
+      .from("spec_set_member")
+      .select("SpecSet")
+      .eq("ChrSpecializationID", specId)
+      .in("SpecSet", specSetIds);
+
+    if (!specSets || specSets.length === 0) {
+      return [];
+    }
+
+    const validSpecSets = new Set(
+      specSets.map((s: { SpecSet: number }) => s.SpecSet),
+    );
+    const validCondIds = new Set(
+      conds
+        .filter((c: { SpecSetID: number }) => validSpecSets.has(c.SpecSetID))
+        .map((c: { ID: number }) => c.ID),
+    );
+
+    subTreeSelectionNodeIds = nodeConds
+      .filter((nc: { TraitCondID: number }) => validCondIds.has(nc.TraitCondID))
+      .map((nc: { TraitNodeID: number }) => nc.TraitNodeID);
+  } else {
+    subTreeSelectionNodeIds = nodeResult.map(
+      (r: { node_id: number }) => r.node_id,
+    );
+  }
+
+  if (subTreeSelectionNodeIds.length === 0) {
+    return [];
+  }
+
+  // Get entries from these nodes
+  const nodeEntries = await query<
+    Array<{ TraitNodeID: number; TraitNodeEntryID: number }>
+  >(supabase, "trait_node_x_trait_node_entry", (b) =>
+    b
+      .select("TraitNodeID, TraitNodeEntryID")
+      .in("TraitNodeID", subTreeSelectionNodeIds),
+  );
+
+  const entryIds = nodeEntries.map((ne) => ne.TraitNodeEntryID);
+
+  if (entryIds.length === 0) {
+    return [];
+  }
+
+  // Get the sub-tree IDs from these entries
+  const entries = await query<
+    Array<{ ID: number; TraitSubTreeID: number | null }>
+  >(supabase, "trait_node_entry", (b) =>
+    b.select("ID, TraitSubTreeID").in("ID", entryIds),
+  );
+
+  return entries
+    .map((e) => e.TraitSubTreeID)
+    .filter((id): id is number => id !== null && id > 0);
+}
+
+/**
+ * Get node IDs that should be hidden for a spec based on node group visibility conditions.
+ *
+ * Spec-specific talents are filtered via node groups:
+ * - trait_node → trait_node_group_x_trait_node → trait_node_group
+ * - trait_node_group → trait_node_group_x_trait_cond → trait_cond (CondType=1, SpecSetID)
+ * - If SpecSetID doesn't contain our spec, the node is hidden
+ *
+ * For example, Aimed Shot (node 103982) is in group 8352 with SpecSetID=14 → Marksmanship only
+ */
+async function getHiddenNodeIdsForSpec(
+  supabase: SupabaseClient,
+  treeId: number,
+  specId: number,
+): Promise<Set<number>> {
+  const hiddenNodeIds = new Set<number>();
+
+  // 1. Get all node groups for this tree with visibility conditions (CondType=1)
+  const { data: groupConds } = await supabase
+    .schema("raw_dbc")
+    .from("trait_node_group_x_trait_cond")
+    .select("TraitNodeGroupID, TraitCondID");
+
+  if (!groupConds || groupConds.length === 0) {
+    return hiddenNodeIds;
+  }
+
+  const allCondIds = [
+    ...new Set(groupConds.map((gc: { TraitCondID: number }) => gc.TraitCondID)),
+  ];
+
+  // 2. Get visibility conditions (CondType=1) for this tree
+  const { data: conds } = await supabase
+    .schema("raw_dbc")
+    .from("trait_cond")
+    .select("ID, SpecSetID")
+    .eq("TraitTreeID", treeId)
+    .eq("CondType", 1)
+    .in("ID", allCondIds);
+
+  if (!conds || conds.length === 0) {
+    return hiddenNodeIds;
+  }
+
+  // 3. Get spec sets that contain our spec
+  const specSetIds = [
+    ...new Set(
+      conds
+        .map((c: { SpecSetID: number }) => c.SpecSetID)
+        .filter((id: number) => id > 0),
+    ),
+  ];
+
+  if (specSetIds.length === 0) {
+    return hiddenNodeIds;
+  }
+
+  const { data: specSets } = await supabase
+    .schema("raw_dbc")
+    .from("spec_set_member")
+    .select("SpecSet")
+    .eq("ChrSpecializationID", specId)
+    .in("SpecSet", specSetIds);
+
+  const validSpecSets = new Set(
+    (specSets ?? []).map((s: { SpecSet: number }) => s.SpecSet),
+  );
+
+  // 4. Find conditions that have a SpecSetID that does NOT contain our spec
+  // These are visibility conditions that hide nodes from our spec
+  const hidingCondIds = new Set(
+    conds
+      .filter(
+        (c: { ID: number; SpecSetID: number }) =>
+          c.SpecSetID > 0 && !validSpecSets.has(c.SpecSetID),
+      )
+      .map((c: { ID: number }) => c.ID),
+  );
+
+  if (hidingCondIds.size === 0) {
+    return hiddenNodeIds;
+  }
+
+  // 5. Find node groups that use these hiding conditions
+  const hidingGroupIds = new Set(
+    groupConds
+      .filter((gc: { TraitCondID: number }) => hidingCondIds.has(gc.TraitCondID))
+      .map((gc: { TraitNodeGroupID: number }) => gc.TraitNodeGroupID),
+  );
+
+  if (hidingGroupIds.size === 0) {
+    return hiddenNodeIds;
+  }
+
+  // 6. Get all nodes in these hiding groups
+  const { data: nodeGroupMappings } = await supabase
+    .schema("raw_dbc")
+    .from("trait_node_group_x_trait_node")
+    .select("TraitNodeGroupID, TraitNodeID")
+    .in("TraitNodeGroupID", [...hidingGroupIds]);
+
+  if (nodeGroupMappings) {
+    for (const mapping of nodeGroupMappings) {
+      hiddenNodeIds.add(mapping.TraitNodeID);
+    }
+  }
+
+  return hiddenNodeIds;
+}
+
+/**
  * Load a complete talent tree for a specialization.
  */
 export async function loadTalentTree(
@@ -105,12 +351,27 @@ export async function loadTalentTree(
 
   console.log(`  Loading tree ${treeId}...`);
 
-  // 2. Load raw data
-  const [rawNodes, rawSubTrees, rawGateConds] = await Promise.all([
+  // 2. Load raw data (including available sub-tree IDs and hidden nodes for this spec)
+  const [
+    rawNodes,
+    rawSubTreesUnfiltered,
+    rawGateConds,
+    availableSubTreeIds,
+    hiddenNodeIds,
+  ] = await Promise.all([
     loadNodes(supabase, treeId),
     loadSubTrees(supabase, treeId),
     loadGates(supabase, treeId),
+    getAvailableSubTreeIds(supabase, treeId, specId),
+    getHiddenNodeIdsForSpec(supabase, treeId, specId),
   ]);
+
+  // Filter sub-trees to only those available for this spec
+  // If no SubTreeSelection node found (e.g., class doesn't have hero talents), keep all
+  const rawSubTrees =
+    availableSubTreeIds.length > 0
+      ? rawSubTreesUnfiltered.filter((st) => availableSubTreeIds.includes(st.ID))
+      : rawSubTreesUnfiltered;
 
   const nodeIds = rawNodes.map((n) => n.ID);
 
@@ -188,10 +449,28 @@ export async function loadTalentTree(
     edgeMap.get(edge.LeftTraitNodeID)!.push(talentEdge);
   }
 
-  // 11. Build nodes
+  // 11. Build nodes (filtering out nodes from unavailable sub-trees and hidden spec nodes)
+  const availableSubTreeIdSet = new Set(availableSubTreeIds);
   const nodes: TalentNode[] = [];
 
   for (const rawNode of rawNodes) {
+    // Skip nodes that belong to a sub-tree not available for this spec
+    if (
+      rawNode.TraitSubTreeID > 0 &&
+      availableSubTreeIds.length > 0 &&
+      !availableSubTreeIdSet.has(rawNode.TraitSubTreeID)
+    ) {
+      continue;
+    }
+
+    // Skip nodes that are hidden for this spec via node group visibility conditions
+    // BUT don't filter nodes that are part of an available sub-tree (hero talents)
+    const isInAvailableSubTree =
+      rawNode.TraitSubTreeID > 0 && availableSubTreeIdSet.has(rawNode.TraitSubTreeID);
+    if (!isInAvailableSubTree && hiddenNodeIds.has(rawNode.ID)) {
+      continue;
+    }
+
     const entryIds = nodeEntryMappings.get(rawNode.ID) ?? [];
     const nodeEntries = processEntries(
       entryIds,
@@ -200,7 +479,18 @@ export async function loadTalentTree(
       spellInfo,
       iconFilenames,
     );
-    const nodeEdges = edgeMap.get(rawNode.ID) ?? [];
+    // Filter edges to only include those to nodes that will be in the output
+    const nodeEdges = (edgeMap.get(rawNode.ID) ?? []).filter((edge) => {
+      // Check if target node is hidden for this spec
+      if (hiddenNodeIds.has(edge.targetNodeId)) return false;
+
+      // Check if target node is included (not filtered out due to sub-tree)
+      const targetNode = rawNodes.find((n) => n.ID === edge.targetNodeId);
+      if (!targetNode) return true;
+      if (targetNode.TraitSubTreeID <= 0) return true;
+      if (availableSubTreeIds.length === 0) return true;
+      return availableSubTreeIdSet.has(targetNode.TraitSubTreeID);
+    });
     const pixelPos = calculatePixelPosition(rawNode.PosX, rawNode.PosY);
 
     nodes.push({
@@ -218,13 +508,20 @@ export async function loadTalentTree(
     });
   }
 
-  // 10. Build all edges list
-  const allEdges: TalentEdge[] = rawEdges.map((e) => ({
-    sourceNodeId: e.LeftTraitNodeID,
-    targetNodeId: e.RightTraitNodeID,
-    type: e.Type as TraitEdgeType,
-    visualStyle: e.VisualStyle as TraitEdgeVisualStyle,
-  }));
+  // 10. Build all edges list (filtering out edges to/from unavailable sub-tree nodes)
+  const includedNodeIds = new Set(nodes.map((n) => n.id));
+  const allEdges: TalentEdge[] = rawEdges
+    .filter(
+      (e) =>
+        includedNodeIds.has(e.LeftTraitNodeID) &&
+        includedNodeIds.has(e.RightTraitNodeID),
+    )
+    .map((e) => ({
+      sourceNodeId: e.LeftTraitNodeID,
+      targetNodeId: e.RightTraitNodeID,
+      type: e.Type as TraitEdgeType,
+      visualStyle: e.VisualStyle as TraitEdgeVisualStyle,
+    }));
 
   // 11. Build gates
   const gates: TalentGate[] = [];
