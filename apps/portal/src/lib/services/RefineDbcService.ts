@@ -50,6 +50,8 @@ import {
   GetSpellTotems,
   GetSpellXDescriptionVariables,
   GetTraitDefinition,
+  GetTraitCost,
+  GetTraitCurrency,
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
@@ -346,6 +348,20 @@ const createBatchFetcher = (
         queryClient,
         dataProvider,
         "trait_node_entry",
+        ids,
+      ),
+    fetchTraitCostsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitCostRow>(
+        queryClient,
+        dataProvider,
+        "trait_cost",
+        ids,
+      ),
+    fetchTraitCurrenciesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitCurrencyRow>(
+        queryClient,
+        dataProvider,
+        "trait_currency",
         ids,
       ),
     fetchTraitNodeGroupXTraitCostsByGroupIds: (groupIds) =>
@@ -773,6 +789,13 @@ export const RefineDbcService = (
           Effect.request(
             new GetTraitNodeEntry({ id }),
             resolvers.traitNodeEntryResolver,
+          ),
+        getTraitCost: (id) =>
+          Effect.request(new GetTraitCost({ id }), resolvers.traitCostResolver),
+        getTraitCurrency: (id) =>
+          Effect.request(
+            new GetTraitCurrency({ id }),
+            resolvers.traitCurrencyResolver,
           ),
         getTraitSubTree: (id) =>
           Effect.request(

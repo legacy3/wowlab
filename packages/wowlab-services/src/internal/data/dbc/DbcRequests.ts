@@ -310,6 +310,18 @@ export class GetTraitDefinition extends Request.TaggedClass(
   { readonly id: number }
 > {}
 
+export class GetTraitCost extends Request.TaggedClass("GetTraitCost")<
+  Schemas.Dbc.TraitCostRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetTraitCurrency extends Request.TaggedClass("GetTraitCurrency")<
+  Schemas.Dbc.TraitCurrencyRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 // By FK (array results)
 export class GetTraitEdgesForTree extends Request.TaggedClass(
   "GetTraitEdgesForTree",

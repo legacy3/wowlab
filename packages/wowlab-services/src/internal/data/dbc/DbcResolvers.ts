@@ -50,6 +50,8 @@ import {
   GetSpellTotems,
   GetSpellXDescriptionVariables,
   GetTraitDefinition,
+  GetTraitCost,
+  GetTraitCurrency,
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
@@ -234,6 +236,12 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitDefinitionsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
+  readonly fetchTraitCostsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCostRow>, DbcError>;
+  readonly fetchTraitCurrenciesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCurrencyRow>, DbcError>;
   readonly fetchTraitEdgesByTreeIds: (
     treeIds: readonly number[],
   ) => Effect.Effect<
@@ -638,6 +646,11 @@ export interface DbcResolversInterface {
     GetTraitNodeGroupXTraitCosts,
     never
   >;
+  readonly traitCostResolver: RequestResolver.RequestResolver<GetTraitCost, never>;
+  readonly traitCurrencyResolver: RequestResolver.RequestResolver<
+    GetTraitCurrency,
+    never
+  >;
   readonly traitNodeResolver: RequestResolver.RequestResolver<
     GetTraitNode,
     never
@@ -716,6 +729,14 @@ export const makeDbcResolvers = Effect.gen(function* () {
     "TraitNodeGroupID",
     (r) => r.groupId,
   );
+
+  const traitCostResolver = createByIdResolver<Schemas.Dbc.TraitCostRow>(
+    fetcher.fetchTraitCostsByIds,
+  );
+  const traitCurrencyResolver =
+    createByIdResolver<Schemas.Dbc.TraitCurrencyRow>(
+      fetcher.fetchTraitCurrenciesByIds,
+    );
 
   const traitEdgesForTreeResolver = RequestResolver.makeBatched(
     (requests: ReadonlyArray<GetTraitEdgesForTree>) =>
@@ -834,6 +855,8 @@ export const makeDbcResolvers = Effect.gen(function* () {
     traitNodeEntryResolver: createByIdResolver<Schemas.Dbc.TraitNodeEntryRow>(
       fetcher.fetchTraitNodeEntriesByIds,
     ),
+    traitCostResolver,
+    traitCurrencyResolver,
     traitNodeResolver: createByIdResolver<Schemas.Dbc.TraitNodeRow>(
       fetcher.fetchTraitNodesByIds,
     ),

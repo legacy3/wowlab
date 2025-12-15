@@ -237,6 +237,14 @@ export interface DbcServiceInterface {
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
 
+  readonly getTraitCost: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitCostRow | undefined, DbcError>;
+
+  readonly getTraitCurrency: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitCurrencyRow | undefined, DbcError>;
+
   readonly getTraitEdgesForTree: (
     treeId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitEdgeRow>, DbcError>;

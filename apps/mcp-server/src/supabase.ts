@@ -984,6 +984,18 @@ export const SupabaseDbcServiceLive = (
             (builder) =>
               builder.select("*").eq("TraitTreeID", treeId).order("Index"),
           ),
+        getTraitCost: (id) =>
+          query<Schemas.Dbc.TraitCostRow | undefined>(
+            supabase,
+            "trait_cost",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getTraitCurrency: (id) =>
+          query<Schemas.Dbc.TraitCurrencyRow | undefined>(
+            supabase,
+            "trait_currency",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
         getUiTextureAtlasElement: (id) =>
           query<Schemas.Dbc.UiTextureAtlasElementRow | undefined>(
             supabase,
