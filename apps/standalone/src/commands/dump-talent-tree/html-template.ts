@@ -384,7 +384,9 @@ treeEl.style.width = width + "px";
 treeEl.style.height = height + "px";
 
 const toX = x => (x - minX) + padding;
-const toY = y => (y - minY) + padding;
+// Y is inverted: Blizzard uses Y-up (negative pixelY = top), HTML uses Y-down (top=0)
+// So we flip by using (maxY - y) instead of (y - minY)
+const toY = y => (maxY - y) + padding;
 
 // Create SVG for edges
 const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
