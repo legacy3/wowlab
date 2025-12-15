@@ -347,6 +347,14 @@ export class GetTraitNodeXTraitNodeEntries extends Request.TaggedClass(
   { readonly nodeId: number }
 > {}
 
+export class GetTraitNodeGroupXTraitCosts extends Request.TaggedClass(
+  "GetTraitNodeGroupXTraitCosts",
+)<
+  ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
+  DbcError,
+  { readonly groupId: number }
+> {}
+
 export class GetTraitSubTree extends Request.TaggedClass("GetTraitSubTree")<
   Schemas.Dbc.TraitSubTreeRow | undefined,
   DbcError,
@@ -373,6 +381,14 @@ export class GetTraitTreeLoadoutEntries extends Request.TaggedClass(
   ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
   DbcError,
   { readonly loadoutId: number }
+> {}
+
+export class GetTraitTreeXTraitCurrencies extends Request.TaggedClass(
+  "GetTraitTreeXTraitCurrencies",
+)<
+  ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
+  DbcError,
+  { readonly treeId: number }
 > {}
 
 export class GetUiTextureAtlasElement extends Request.TaggedClass(

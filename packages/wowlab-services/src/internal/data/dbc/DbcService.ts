@@ -255,6 +255,12 @@ export interface DbcServiceInterface {
     ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCondRow>,
     DbcError
   >;
+  readonly getTraitNodeGroupXTraitCosts: (
+    groupIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
+    DbcError
+  >;
 
   readonly getTraitNodeGroupXTraitNodes: (
     nodeIds: readonly number[],
@@ -297,6 +303,12 @@ export interface DbcServiceInterface {
     loadoutId: number,
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
+    DbcError
+  >;
+  readonly getTraitTreeXTraitCurrencies: (
+    treeId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
     DbcError
   >;
 

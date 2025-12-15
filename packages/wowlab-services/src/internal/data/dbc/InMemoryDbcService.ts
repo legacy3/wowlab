@@ -180,6 +180,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitNodeGroupXTraitConds: () => Effect.succeed([]), // TODO Implement these properly
 
+    getTraitNodeGroupXTraitCosts: () => Effect.succeed([]), // TODO Implement these properly
+
     getTraitNodeGroupXTraitNodes: () => Effect.succeed([]), // TODO Implement these properly
 
     getTraitNodesForTree: (treeId) =>
@@ -199,6 +201,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitTreeLoadoutEntries: (loadoutId) =>
       Effect.succeed(cache.traitTreeLoadoutEntry.get(loadoutId) ?? []),
+
+    getTraitTreeXTraitCurrencies: () => Effect.succeed([]), // TODO Implement these properly
 
     getUiTextureAtlasElement: (id) =>
       Effect.succeed(cache.uiTextureAtlasElement.get(id)),

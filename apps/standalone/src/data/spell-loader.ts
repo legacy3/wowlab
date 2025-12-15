@@ -692,6 +692,16 @@ const SupabaseDbcServiceLive = (
             "trait_node_x_trait_node_entry",
             (builder) => builder.select("*").eq("TraitNodeID", nodeId),
           ),
+        getTraitNodeGroupXTraitCosts: (groupIds) =>
+          query<Schemas.Dbc.TraitNodeGroupXTraitCostRow[]>(
+            supabase,
+            "trait_node_group_x_trait_cost",
+            (builder) =>
+              builder
+                .select("*")
+                .in("TraitNodeGroupID", [...groupIds])
+                .order("ID"),
+          ),
         getTraitSubTree: (id) =>
           query<Schemas.Dbc.TraitSubTreeRow | undefined>(
             supabase,
@@ -723,6 +733,13 @@ const SupabaseDbcServiceLive = (
                 .select("*")
                 .eq("TraitTreeLoadoutID", loadoutId)
                 .order("OrderIndex"),
+          ),
+        getTraitTreeXTraitCurrencies: (treeId) =>
+          query<Schemas.Dbc.TraitTreeXTraitCurrencyRow[]>(
+            supabase,
+            "trait_tree_x_trait_currency",
+            (builder) =>
+              builder.select("*").eq("TraitTreeID", treeId).order("Index"),
           ),
         getUiTextureAtlasElement: (id) =>
           query<Schemas.Dbc.UiTextureAtlasElementRow | undefined>(

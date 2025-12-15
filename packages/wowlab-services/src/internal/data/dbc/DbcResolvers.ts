@@ -53,12 +53,14 @@ import {
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
+  GetTraitNodeGroupXTraitCosts,
   GetTraitNodesForTree,
   GetTraitNodeXTraitNodeEntries,
   GetTraitSubTree,
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetTraitTreeXTraitCurrencies,
   GetUiTextureAtlasElement,
 } from "./DbcRequests.js";
 
@@ -241,6 +243,12 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitNodeEntriesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeEntryRow>, DbcError>;
+  readonly fetchTraitNodeGroupXTraitCostsByGroupIds: (
+    groupIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
+    DbcError
+  >;
   readonly fetchTraitNodesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
@@ -265,6 +273,12 @@ export interface DbcBatchFetcherInterface {
   readonly fetchTraitTreeLoadoutsBySpecIds: (
     specIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutRow>, DbcError>;
+  readonly fetchTraitTreeXTraitCurrenciesByTreeIds: (
+    treeIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
+    DbcError
+  >;
   readonly fetchTraitTreesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
@@ -620,6 +634,10 @@ export interface DbcResolversInterface {
     GetTraitNodeEntry,
     never
   >;
+  readonly traitNodeGroupXTraitCostResolver: RequestResolver.RequestResolver<
+    GetTraitNodeGroupXTraitCosts,
+    never
+  >;
   readonly traitNodeResolver: RequestResolver.RequestResolver<
     GetTraitNode,
     never
@@ -648,6 +666,10 @@ export interface DbcResolversInterface {
     GetTraitTree,
     never
   >;
+  readonly traitTreeXTraitCurrencyResolver: RequestResolver.RequestResolver<
+    GetTraitTreeXTraitCurrencies,
+    never
+  >;
 
   readonly uiTextureAtlasElementResolver: RequestResolver.RequestResolver<
     GetUiTextureAtlasElement,
@@ -674,6 +696,26 @@ export const makeDbcResolvers = Effect.gen(function* () {
     "TraitTreeID",
     GetTraitNodesForTree
   >(fetcher.fetchTraitNodesByTreeIds, "TraitTreeID", (r) => r.treeId);
+
+  const traitTreeXTraitCurrencyResolver = createByFkArrayResolver<
+    Schemas.Dbc.TraitTreeXTraitCurrencyRow,
+    "TraitTreeID",
+    GetTraitTreeXTraitCurrencies
+  >(
+    fetcher.fetchTraitTreeXTraitCurrenciesByTreeIds,
+    "TraitTreeID",
+    (r) => r.treeId,
+  );
+
+  const traitNodeGroupXTraitCostResolver = createByFkArrayResolver<
+    Schemas.Dbc.TraitNodeGroupXTraitCostRow,
+    "TraitNodeGroupID",
+    GetTraitNodeGroupXTraitCosts
+  >(
+    fetcher.fetchTraitNodeGroupXTraitCostsByGroupIds,
+    "TraitNodeGroupID",
+    (r) => r.groupId,
+  );
 
   const traitEdgesForTreeResolver = RequestResolver.makeBatched(
     (requests: ReadonlyArray<GetTraitEdgesForTree>) =>
@@ -801,6 +843,7 @@ export const makeDbcResolvers = Effect.gen(function* () {
     traitTreeResolver: createByIdResolver<Schemas.Dbc.TraitTreeRow>(
       fetcher.fetchTraitTreesByIds,
     ),
+    traitTreeXTraitCurrencyResolver,
     uiTextureAtlasElementResolver:
       createByIdResolver<Schemas.Dbc.UiTextureAtlasElementRow>(
         fetcher.fetchUiTextureAtlasElementsByIds,
@@ -953,6 +996,7 @@ export const makeDbcResolvers = Effect.gen(function* () {
     traitEdgesForTreeResolver,
     traitNodesForTreeResolver,
     traitNodeXEntriesResolver,
+    traitNodeGroupXTraitCostResolver,
     traitTreeLoadoutEntriesResolver,
     traitTreeLoadoutResolver,
   } satisfies DbcResolversInterface;

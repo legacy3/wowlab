@@ -104,8 +104,10 @@ export const DBC_TABLES = {
   traitNodeXTraitNodeEntry: { file: "TraitNodeXTraitNodeEntry.csv", schema: Dbc.TraitNodeXTraitNodeEntryRowSchema, tableName: "trait_node_x_trait_node_entry" },
   traitSubTree: { file: "TraitSubTree.csv", schema: Dbc.TraitSubTreeRowSchema, tableName: "trait_sub_tree" },
   traitTree: { file: "TraitTree.csv", schema: Dbc.TraitTreeRowSchema, tableName: "trait_tree" },
+  traitTreeXTraitCurrency: { file: "TraitTreeXTraitCurrency.csv", schema: Dbc.TraitTreeXTraitCurrencyRowSchema, tableName: "trait_tree_x_trait_currency" },
   traitTreeLoadout: { file: "TraitTreeLoadout.csv", schema: Dbc.TraitTreeLoadoutRowSchema, tableName: "trait_tree_loadout" },
   traitTreeLoadoutEntry: { file: "TraitTreeLoadoutEntry.csv", schema: Dbc.TraitTreeLoadoutEntryRowSchema, tableName: "trait_tree_loadout_entry" },
+  traitNodeGroupXTraitCost: { file: "TraitNodeGroupXTraitCost.csv", schema: Dbc.TraitNodeGroupXTraitCostRowSchema, tableName: "trait_node_group_x_trait_cost" },
   uiTextureAtlasElement: { file: "UiTextureAtlasElement.csv", schema: Dbc.UiTextureAtlasElementRowSchema, tableName: "ui_texture_atlas_element" },
 } as const;
 

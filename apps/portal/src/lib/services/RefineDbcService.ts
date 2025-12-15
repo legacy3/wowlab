@@ -53,12 +53,14 @@ import {
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
+  GetTraitNodeGroupXTraitCosts,
   GetTraitNodesForTree,
   GetTraitNodeXTraitNodeEntries,
   GetTraitSubTree,
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetTraitTreeXTraitCurrencies,
   GetUiTextureAtlasElement,
   makeDbcResolvers,
 } from "@wowlab/services/Data";
@@ -346,6 +348,14 @@ const createBatchFetcher = (
         "trait_node_entry",
         ids,
       ),
+    fetchTraitNodeGroupXTraitCostsByGroupIds: (groupIds) =>
+      fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCostRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_group_x_trait_cost",
+        "TraitNodeGroupID",
+        groupIds,
+      ),
     fetchTraitNodesByIds: (ids) =>
       fetchByIds<Schemas.Dbc.TraitNodeRow>(
         queryClient,
@@ -587,6 +597,14 @@ const createBatchFetcher = (
         "trait_tree_loadout",
         "ChrSpecializationID",
         specIds,
+      ),
+    fetchTraitTreeXTraitCurrenciesByTreeIds: (treeIds) =>
+      fetchByFk<Schemas.Dbc.TraitTreeXTraitCurrencyRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_x_trait_currency",
+        "TraitTreeID",
+        treeIds,
       ),
     fetchTraitTreeLoadoutEntriesByLoadoutIds: (loadoutIds) =>
       fetchByFk<Schemas.Dbc.TraitTreeLoadoutEntryRow>(
@@ -894,6 +912,14 @@ export const RefineDbcService = (
             new GetTraitNodeXTraitNodeEntries({ nodeId }),
             resolvers.traitNodeXEntriesResolver,
           ),
+        getTraitNodeGroupXTraitCosts: (groupIds) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCostRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_cost",
+            "TraitNodeGroupID",
+            groupIds,
+          ),
         getTraitEdgesForTree: (treeId) =>
           Effect.request(
             new GetTraitEdgesForTree({ treeId }),
@@ -908,6 +934,11 @@ export const RefineDbcService = (
           Effect.request(
             new GetTraitTreeLoadoutEntries({ loadoutId }),
             resolvers.traitTreeLoadoutEntriesResolver,
+          ),
+        getTraitTreeXTraitCurrencies: (treeId) =>
+          Effect.request(
+            new GetTraitTreeXTraitCurrencies({ treeId }),
+            resolvers.traitTreeXTraitCurrencyResolver,
           ),
         getUiTextureAtlasElement: (id) =>
           Effect.request(
