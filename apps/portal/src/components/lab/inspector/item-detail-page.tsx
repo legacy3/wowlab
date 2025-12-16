@@ -2,6 +2,12 @@
 
 import { GameIcon } from "@/components/game/game-icon";
 import { QUALITY_COLORS } from "@/components/game/game-tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +17,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CodeBlock } from "@/components/ui/code-block";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -25,19 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  Gem,
-  Shield,
-  Sparkles,
-  Swords,
-} from "lucide-react";
+import { ArrowLeft, Gem, Shield, Sparkles, Swords, Zap } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 // =============================================================================
 // MOCK DATA
@@ -437,7 +436,10 @@ function ItemHeaderCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
               >
                 {item.name}
               </h1>
-              <Badge variant="outline">Item #{item.id}</Badge>
+              <div className="flex items-center gap-1">
+                <Badge variant="outline">Item #{item.id}</Badge>
+                <CopyButton value={item.id.toString()} />
+              </div>
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -752,7 +754,15 @@ function SocketsCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">No sockets.</p>
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Gem className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Sockets</EmptyTitle>
+              <EmptyDescription>This item has no gem sockets.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
 
         {item.recommendedGems.length > 0 && (
@@ -794,9 +804,17 @@ function SetBonusesCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
         {item.setInfo ? (
           <div>Set info here</div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            Not part of a tier set.
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Sparkles className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Set Bonus</EmptyTitle>
+              <EmptyDescription>
+                This item is not part of a tier set.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
 
         {item.relatedSets.length > 0 && (
@@ -992,7 +1010,14 @@ function CraftingCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
         {item.craftingInfo ? (
           <div>Crafting info here</div>
         ) : (
-          <p className="text-muted-foreground text-sm">Not a crafted item.</p>
+          <Empty className="py-4 border-0">
+            <EmptyHeader>
+              <EmptyTitle className="text-base">Not Craftable</EmptyTitle>
+              <EmptyDescription>
+                This item cannot be crafted by players.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
 
         {item.similarCraftedItems.length > 0 && (
@@ -1023,16 +1048,6 @@ function CraftingCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
 }
 
 function RawDataCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
-  const [openSections, setOpenSections] = useState<string[]>([]);
-
-  const toggleSection = (section: string) => {
-    setOpenSections((prev) =>
-      prev.includes(section)
-        ? prev.filter((s) => s !== section)
-        : [...prev, section],
-    );
-  };
-
   const sections = [
     { key: "item", label: "Item.csv row", data: item.rawData.item },
     {
@@ -1053,28 +1068,23 @@ function RawDataCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
         <CardTitle>Raw Data Inspector</CardTitle>
         <CardDescription>Collapsible sections for raw CSV data</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {sections.map((section) => (
-          <Collapsible
-            key={section.key}
-            open={openSections.includes(section.key)}
-            onOpenChange={() => toggleSection(section.key)}
-          >
-            <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
-              {openSections.includes(section.key) ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              {section.label}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
-                {JSON.stringify(section.data, null, 2)}
-              </pre>
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
+      <CardContent>
+        <Accordion type="multiple" className="w-full">
+          {sections.map((section) => (
+            <AccordionItem key={section.key} value={section.key}>
+              <AccordionTrigger className="text-sm">
+                {section.label}
+              </AccordionTrigger>
+              <AccordionContent>
+                <CodeBlock
+                  code={JSON.stringify(section.data, null, 2)}
+                  language="json"
+                  maxHeight="max-h-64"
+                />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </CardContent>
     </Card>
   );
@@ -1085,14 +1095,6 @@ function SimulationIntegrationCard({
 }: {
   item: typeof MOCK_ITEM_CLOTH_VEST;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(item.simcString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -1113,24 +1115,47 @@ function SimulationIntegrationCard({
 
         <div className="space-y-2">
           <p className="text-sm font-medium">SimC Item String:</p>
-          <div className="relative">
-            <pre className="overflow-x-auto rounded-md bg-muted p-3 pr-12 text-xs">
-              {item.simcString}
-            </pre>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-2 h-8 w-8 p-0"
-              onClick={handleCopy}
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <CodeBlock code={item.simcString} language="text" showCopy={true} />
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ItemEffectsCard({ item }: { item: typeof MOCK_ITEM_CLOTH_VEST }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Zap className="h-5 w-5" />
+          Item Effects
+        </CardTitle>
+        <CardDescription>
+          On-equip and on-use effects triggered by this item
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {item.effects.length > 0 ? (
+          <div className="space-y-3">
+            {item.effects.map((effect, i) => (
+              <div key={i} className="rounded-lg border bg-muted/30 p-3">
+                <p className="text-sm text-green-500">{effect}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Zap className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Item Effects</EmptyTitle>
+              <EmptyDescription>
+                This item has no special on-equip or on-use effects.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
       </CardContent>
     </Card>
   );
@@ -1151,6 +1176,16 @@ export function ItemDetailPage({ itemId }: ItemDetailPageProps) {
 
   return (
     <div className="space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/lab/inspector/search">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Inspector
+          </Link>
+        </Button>
+      </div>
+
       {/* Header */}
       <ItemHeaderCard item={item} />
 
@@ -1171,6 +1206,9 @@ export function ItemDetailPage({ itemId }: ItemDetailPageProps) {
         <SocketsCard item={item} />
         <SetBonusesCard item={item} />
       </div>
+
+      {/* Item Effects */}
+      <ItemEffectsCard item={item} />
 
       {/* Armor & Spec Usability */}
       <div className="grid gap-6 md:grid-cols-2">

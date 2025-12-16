@@ -1,7 +1,15 @@
 "use client";
 
 import { GameIcon } from "@/components/game/game-icon";
+import { SCHOOL_COLORS } from "@/components/game/game-tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,11 +17,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CodeBlock } from "@/components/ui/code-block";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -25,12 +37,12 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
-  ChevronDown,
-  ChevronRight,
+  ArrowLeft,
   Clock,
   Crosshair,
   Gauge,
   Shield,
+  Sparkles,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -398,9 +410,17 @@ function ProcMechanicsCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
         {spell.procData ? (
           <div>Proc data here</div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No proc behavior - this is a directly cast spell
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Zap className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Proc Behavior</EmptyTitle>
+              <EmptyDescription>
+                This is a directly cast spell with no proc mechanics.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
 
         {spell.triggersSpells.length > 0 && (
@@ -651,9 +671,19 @@ function AuraRestrictionsCard({
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No aura restrictions for this spell.
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Shield className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">
+                No Aura Restrictions
+              </EmptyTitle>
+              <EmptyDescription>
+                This spell has no aura requirements.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -692,9 +722,14 @@ function ShapeshiftCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No shapeshift requirements. Usable in any form.
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Requirements</EmptyTitle>
+              <EmptyDescription>
+                Usable in any shapeshift form.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -720,9 +755,14 @@ function LabelsCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No labels assigned to this spell.
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyHeader>
+              <EmptyTitle className="text-base">No Labels</EmptyTitle>
+              <EmptyDescription>
+                No labels assigned to this spell.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -827,9 +867,17 @@ function EmpowerCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
         {spell.empowerData ? (
           <div>Empower data here</div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            Not an empowered spell.
-          </p>
+          <Empty className="py-4 border-0">
+            <EmptyMedia variant="icon">
+              <Sparkles className="h-5 w-5" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base">Not Empowered</EmptyTitle>
+              <EmptyDescription>
+                This is not an empowered spell (Evoker mechanic).
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </CardContent>
     </Card>
@@ -837,16 +885,6 @@ function EmpowerCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
 }
 
 function RawDataCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
-  const [openSections, setOpenSections] = useState<string[]>([]);
-
-  const toggleSection = (section: string) => {
-    setOpenSections((prev) =>
-      prev.includes(section)
-        ? prev.filter((s) => s !== section)
-        : [...prev, section],
-    );
-  };
-
   const sections = [
     { key: "spell", label: "Spell.csv row", data: spell.rawData.spell },
     {
@@ -867,28 +905,23 @@ function RawDataCard({ spell }: { spell: typeof MOCK_SPELL_AIMED_SHOT }) {
         <CardTitle>Raw Data Inspector</CardTitle>
         <CardDescription>Collapsible sections for raw CSV data</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {sections.map((section) => (
-          <Collapsible
-            key={section.key}
-            open={openSections.includes(section.key)}
-            onOpenChange={() => toggleSection(section.key)}
-          >
-            <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
-              {openSections.includes(section.key) ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              {section.label}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
-                {JSON.stringify(section.data, null, 2)}
-              </pre>
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
+      <CardContent>
+        <Accordion type="multiple" className="w-full">
+          {sections.map((section) => (
+            <AccordionItem key={section.key} value={section.key}>
+              <AccordionTrigger className="text-sm">
+                {section.label}
+              </AccordionTrigger>
+              <AccordionContent>
+                <CodeBlock
+                  code={JSON.stringify(section.data, null, 2)}
+                  language="json"
+                  maxHeight="max-h-64"
+                />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </CardContent>
     </Card>
   );
@@ -976,20 +1009,45 @@ export function SpellDetailPage({ spellId }: SpellDetailPageProps) {
   // For now, we use mock data
   const spell = MOCK_SPELL_AIMED_SHOT;
 
+  const schoolKey = spell.school.toLowerCase() as keyof typeof SCHOOL_COLORS;
+  const schoolColor = SCHOOL_COLORS[schoolKey] ?? "#ffffff";
+
   return (
     <div className="space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/lab/inspector/search">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Inspector
+          </Link>
+        </Button>
+      </div>
+
       {/* Header */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <div className="shrink-0 overflow-hidden rounded-lg border-2 border-border">
+            <div
+              className="shrink-0 overflow-hidden rounded-lg border-2"
+              style={{ borderColor: schoolColor }}
+            >
               <GameIcon iconName={spell.iconName} size="large" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold">{spell.name}</h1>
-                <Badge variant="outline">Spell #{spell.id}</Badge>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline">Spell #{spell.id}</Badge>
+                  <CopyButton value={spell.id.toString()} />
+                </div>
                 {spell.isPassive && <Badge variant="secondary">Passive</Badge>}
+                <Badge
+                  variant="outline"
+                  style={{ borderColor: schoolColor, color: schoolColor }}
+                >
+                  {spell.school}
+                </Badge>
               </div>
               <p className="mt-2 text-muted-foreground">{spell.description}</p>
             </div>
