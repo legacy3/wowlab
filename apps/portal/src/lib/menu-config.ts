@@ -51,20 +51,23 @@ export const menuConfig: MenuGroup[] = [
   group("Simulate", [
     item("Simulate", "/simulate", Play),
   ]),
+  group("Plan", [
+    item("Talents", "/talents", Calculator),
+  ]),
   group("Optimize", [
     item("Optimize", "/optimize", Sparkles),
   ]),
   group("Discover", [
     item("Rankings", "/rankings", Trophy),
-    item("Rotations", "/rotations", Swords),
   ]),
-  group("Create", [
-    item("Editor", "/rotations/editor", PencilRuler),
+  group("Rotations", [
+    item("Browse", "/rotations", Swords),
+    item("Create", "/rotations/editor", PencilRuler),
   ]),
   group("Lab", [
+    item("Overview", "/lab", FlaskConical),
     item("Data Inspector", "/lab/data-inspector", Table),
     item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
-    item("Talent Calculator", "/lab/talent-calculator", Calculator),
   ]),
   group("About", [
     item("About", "/about", FlaskConical),

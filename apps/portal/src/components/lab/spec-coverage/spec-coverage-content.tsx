@@ -10,10 +10,7 @@ import {
   DraggableDashboard,
   type DashboardConfig,
 } from "@/components/ui/draggable-dashboard";
-import {
-  specCoverageOrderAtom,
-  type SpecCoverageCardId,
-} from "@/atoms/spec-coverage";
+import { specCoverageOrderAtom, type SpecCoverageCardId } from "@/atoms/lab";
 import { useSpecCoverage } from "@/hooks/use-spec-coverage";
 import { OverviewCard, MatrixCard, UntrackedCard } from "./cards";
 

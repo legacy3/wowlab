@@ -1,5 +1,5 @@
 import { DbcError, DbcQueryError } from "@wowlab/core/Errors";
-import { Talent } from "@wowlab/core/Schemas";
+import { Dbc, Talent } from "@wowlab/core/Schemas";
 import * as Effect from "effect/Effect";
 
 import { DbcService } from "../dbc/DbcService.js";
@@ -50,6 +50,8 @@ const calculateHeroTreeOffsets = (
   return offsets;
 };
 
+const toSet = <T>(arr: Iterable<T>) => new Set(arr);
+
 export const transformTalentTree = (
   specId: number,
 ): Effect.Effect<Talent.TalentTree, DbcError, DbcService | ExtractorService> =>
@@ -95,11 +97,12 @@ export const transformTalentTree = (
       orderIndexMap.set(entry.SelectedTraitNodeID, entry.OrderIndex);
     }
 
-    // 4. Get all nodes and edges in parallel (batching enabled)
-    const [treeNodes, allEdges] = yield* Effect.all(
+    // 4. Get all nodes, edges, currencies (batching enabled)
+    const [treeNodes, allEdges, treeCurrencies] = yield* Effect.all(
       [
         dbc.getTraitNodesForTree(loadout.TraitTreeID),
         dbc.getTraitEdgesForTree(loadout.TraitTreeID),
+        dbc.getTraitTreeXTraitCurrencies(loadout.TraitTreeID),
       ],
       { batching: true },
     );
@@ -207,11 +210,13 @@ export const transformTalentTree = (
       }
     }
 
-    // 7. Include ALL nodes - don't filter by hero subtree availability
-    // SimC includes nodes from ALL hero subtrees, the bitstream has bits for all of them
-    // The SELECTION node determines which hero tree is active
-    const filteredNodes = treeNodes;
-    const filteredNodeIds = new Set(filteredNodes.map((n) => n.ID));
+    // 7. Include only hero subtrees that are available, everything else unchanged
+    const filteredNodes = treeNodes.filter(
+      (n) =>
+        n.TraitSubTreeID === 0 ||
+        availableSubTreeIds.includes(n.TraitSubTreeID),
+    );
+    const filteredNodeIds = toSet(filteredNodes.map((n) => n.ID));
 
     // 8. Filter edges to only include filtered nodes
     const filteredEdges = allEdges.filter(
@@ -256,62 +261,83 @@ export const transformTalentTree = (
       }
     }
 
-    // 11. Get all nodeXEntries for filtered nodes
+    // 11. Node group memberships (for currency/spec gating)
+    const nodeGroupMemberships = yield* dbc.getTraitNodeGroupXTraitNodes(
+      filteredNodes.map((n) => n.ID),
+    );
+    const groupIds = [
+      ...new Set(nodeGroupMemberships.map((m) => m.TraitNodeGroupID)),
+    ];
+
+    // 12. Costs and currencies
+    const groupCosts =
+      groupIds.length > 0
+        ? yield* dbc.getTraitNodeGroupXTraitCosts(groupIds)
+        : [];
+    const costIds = [...new Set(groupCosts.map((gc) => gc.TraitCostID))];
+    const costs =
+      costIds.length > 0
+        ? yield* Effect.forEach(costIds, (id) => dbc.getTraitCost(id), {
+            batching: true,
+          })
+        : [];
+    const costMap = new Map<number, Dbc.TraitCostRow>();
+    for (const c of costs) {
+      if (c) costMap.set(c.ID, c);
+    }
+
+    const currencyIds = [
+      ...new Set([
+        ...costs.filter(Boolean).map((c) => c!.TraitCurrencyID),
+        ...treeCurrencies.map((c) => c.TraitCurrencyID),
+      ]),
+    ];
+    const currencies =
+      currencyIds.length > 0
+        ? yield* Effect.forEach(currencyIds, (id) => dbc.getTraitCurrency(id), {
+            batching: true,
+          })
+        : [];
+    const currencyMap = new Map<number, Dbc.TraitCurrencyRow>();
+    for (const cur of currencies) {
+      if (cur) currencyMap.set(cur.ID, cur);
+    }
+
+    // 13. NodeXEntries and definitions
     const allNodeXEntries = yield* Effect.forEach(
       filteredNodes,
       (node) => dbc.getTraitNodeXTraitNodeEntries(node.ID),
       { batching: true },
     );
 
-    // 12. Collect all entry IDs we need to fetch
     const allEntryIds = allNodeXEntries.flat().map((x) => x.TraitNodeEntryID);
-
-    // 13. Batch fetch all trait node entries
     const allEntries = yield* Effect.forEach(
       allEntryIds,
       (entryId) => dbc.getTraitNodeEntry(entryId),
       { batching: true },
     );
-
-    // Create a map for quick lookup
-    const entryMap = new Map<
-      number,
-      NonNullable<(typeof allEntries)[number]>
-    >();
+    const entryMap = new Map<number, Dbc.TraitNodeEntryRow>();
     for (const entry of allEntries) {
-      if (entry) {
-        entryMap.set(entry.ID, entry);
-      }
+      if (entry) entryMap.set(entry.ID, entry);
     }
 
-    // 14. Collect all definition IDs we need
     const allDefinitionIds = [
       ...new Set(
         allEntries
-          .filter((e): e is NonNullable<typeof e> => e != null)
+          .filter((e): e is Dbc.TraitNodeEntryRow => e != null)
           .map((e) => e.TraitDefinitionID),
       ),
     ];
-
-    // 15. Batch fetch all trait definitions
     const allDefinitions = yield* Effect.forEach(
       allDefinitionIds,
       (defId) => dbc.getTraitDefinition(defId),
       { batching: true },
     );
-
-    // Create a map for quick lookup
-    const definitionMap = new Map<
-      number,
-      NonNullable<(typeof allDefinitions)[number]>
-    >();
+    const definitionMap = new Map<number, Dbc.TraitDefinitionRow>();
     for (const def of allDefinitions) {
-      if (def) {
-        definitionMap.set(def.ID, def);
-      }
+      if (def) definitionMap.set(def.ID, def);
     }
 
-    // 16. Extract names, descriptions, and icons for all definitions (batched)
     const definitionsWithExtras = yield* Effect.forEach(
       [...definitionMap.values()],
       (definition) =>
@@ -326,8 +352,6 @@ export const transformTalentTree = (
         ),
       { batching: true },
     );
-
-    // Create a map for quick lookup
     const extractedMap = new Map<
       number,
       { name: string; description: string; iconFileName: string }
@@ -340,81 +364,186 @@ export const transformTalentTree = (
       });
     }
 
+    // 14. Spec gating and starters for all nodes (including hero)
+    const nodeConds =
+      filteredNodes.length > 0
+        ? yield* dbc.getTraitNodeXTraitConds(filteredNodes.map((n) => n.ID))
+        : [];
+    const groupConds =
+      groupIds.length > 0
+        ? yield* dbc.getTraitNodeGroupXTraitConds(groupIds)
+        : [];
+    const condIds = [
+      ...new Set([
+        ...groupConds.map((c) => c.TraitCondID),
+        ...nodeConds.map((c) => c.TraitCondID),
+      ]),
+    ];
+    const conds = condIds.length > 0 ? yield* dbc.getTraitConds(condIds) : [];
+    const condById = new Map<number, Dbc.TraitCondRow>();
+    for (const c of conds) condById.set(c.ID, c);
+
+    const specSetIds = [
+      ...new Set(conds.filter((c) => c.SpecSetID > 0).map((c) => c.SpecSetID)),
+    ];
+    const specSetMembers =
+      specSetIds.length > 0 ? yield* dbc.getSpecSetMembers(specSetIds) : [];
+    const specSetMap = new Map<number, Set<number>>();
+    for (const m of specSetMembers) {
+      const set = specSetMap.get(m.SpecSet) ?? new Set<number>();
+      set.add(m.ChrSpecializationID);
+      specSetMap.set(m.SpecSet, set);
+    }
+
+    const nodeSpecInfo = new Map<
+      number,
+      { allowed: Set<number> | null; starter: Set<number> }
+    >();
+    for (const node of filteredNodes) {
+      const condIdsForNode: number[] = [];
+      condIdsForNode.push(
+        ...nodeConds
+          .filter((c) => c.TraitNodeID === node.ID)
+          .map((c) => c.TraitCondID),
+      );
+      const groupId = nodeGroupMemberships.find(
+        (m) => m.TraitNodeID === node.ID,
+      )?.TraitNodeGroupID;
+      if (groupId) {
+        condIdsForNode.push(
+          ...groupConds
+            .filter((c) => c.TraitNodeGroupID === groupId)
+            .map((c) => c.TraitCondID),
+        );
+      }
+
+      let allowed: Set<number> | null = null;
+      const starter = new Set<number>();
+
+      for (const cid of condIdsForNode) {
+        const cond = condById.get(cid);
+        if (!cond) continue;
+        if (cond.SpecSetID > 0) {
+          const specsAllowed = specSetMap.get(cond.SpecSetID);
+          if (specsAllowed) {
+            allowed = allowed
+              ? new Set([...allowed, ...specsAllowed])
+              : new Set(specsAllowed);
+          }
+        }
+        if (cond.CondType === 2 && cond.SpecSetID > 0) {
+          specSetMap.get(cond.SpecSetID)?.forEach((s) => starter.add(s));
+        }
+      }
+
+      nodeSpecInfo.set(node.ID, { allowed, starter });
+    }
+
     // 17. Assemble the nodes using the pre-fetched data
-    const nodes: Talent.TalentNode[] = filteredNodes.map((node, nodeIndex) => {
-      // Sort entries to match SimC's sort_node_entries() logic:
-      // - If both have selection_index != -1: sort ascending by selection_index
-      // - Otherwise: sort descending by id_trait_node_entry (entry ID)
-      // The _Index field corresponds to selection_index in SimC's trait_data
-      const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort((a, b) => {
-        // _Index of -1 means "no selection index"
-        // In DBC, this might also be represented differently, but we treat
-        // any negative value as "no index"
-        const aHasIndex = a._Index >= 0;
-        const bHasIndex = b._Index >= 0;
-
-        if (aHasIndex && bHasIndex) {
-          // Both have valid indices - sort ascending by _Index
-          return a._Index - b._Index;
-        } else {
-          // Fallback: sort descending by entry ID (higher ID first)
-          return b.TraitNodeEntryID - a.TraitNodeEntryID;
+    const nodes: Talent.TalentNode[] = filteredNodes
+      .map((node, nodeIndex) => {
+        const specInfo = nodeSpecInfo.get(node.ID);
+        if (specInfo?.allowed && !specInfo.allowed.has(specId)) {
+          return null;
         }
-      });
-      const entries: Talent.TalentNodeEntry[] = [];
-      let maxRanks = 1;
+        // Sort entries to match SimC's sort_node_entries() logic:
+        // - If both have selection_index != -1: sort ascending by selection_index
+        // - Otherwise: sort descending by id_trait_node_entry (entry ID)
+        // The _Index field corresponds to selection_index in SimC's trait_data
+        const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort((a, b) => {
+          // _Index of -1 means "no selection index"
+          // In DBC, this might also be represented differently, but we treat
+          // any negative value as "no index"
+          const aHasIndex = a._Index >= 0;
+          const bHasIndex = b._Index >= 0;
 
-      for (const nodeXEntry of nodeXEntries) {
-        const entry = entryMap.get(nodeXEntry.TraitNodeEntryID);
-        if (!entry) {
-          continue;
-        }
-
-        const definition = definitionMap.get(entry.TraitDefinitionID);
-        if (!definition) continue;
-
-        const extracted = extractedMap.get(definition.ID);
-        if (!extracted) {
-          continue;
-        }
-
-        if (entries.length === 0) {
-          maxRanks = entry.MaxRanks;
-        }
-
-        entries.push({
-          definitionId: definition.ID,
-          description: extracted.description,
-          iconFileName: extracted.iconFileName,
-          id: entry.ID,
-          name: extracted.name,
-          spellId: definition.SpellID,
+          if (aHasIndex && bHasIndex) {
+            // Both have valid indices - sort ascending by _Index
+            return a._Index - b._Index;
+          } else {
+            // Fallback: sort descending by entry ID (higher ID first)
+            return b.TraitNodeEntryID - a.TraitNodeEntryID;
+          }
         });
-      }
+        const entries: Talent.TalentNodeEntry[] = [];
+        let maxRanks = 1;
 
-      // Apply hero tree offset if this node belongs to a hero subtree
-      let posX = node.PosX;
-      let posY = node.PosY;
+        for (const nodeXEntry of nodeXEntries) {
+          const entry = entryMap.get(nodeXEntry.TraitNodeEntryID);
+          if (!entry) {
+            continue;
+          }
 
-      if (node.TraitSubTreeID > 0) {
-        const offset = heroTreeOffsets.get(node.TraitSubTreeID);
-        if (offset) {
-          posX += offset.offsetX;
-          posY += offset.offsetY;
+          const definition = definitionMap.get(entry.TraitDefinitionID);
+          if (!definition) continue;
+
+          const extracted = extractedMap.get(definition.ID);
+          if (!extracted) {
+            continue;
+          }
+
+          if (entries.length === 0) {
+            maxRanks = entry.MaxRanks;
+          }
+
+          entries.push({
+            definitionId: definition.ID,
+            description: extracted.description,
+            iconFileName: extracted.iconFileName,
+            id: entry.ID,
+            name: extracted.name,
+            spellId: definition.SpellID,
+          });
         }
-      }
 
-      return {
-        entries,
-        id: node.ID,
-        maxRanks,
-        orderIndex: orderIndexMap.get(node.ID) ?? -1,
-        posX,
-        posY,
-        subTreeId: node.TraitSubTreeID,
-        type: node.Type,
-      };
-    });
+        // Apply hero tree offset if this node belongs to a hero subtree
+        let posX = node.PosX;
+        let posY = node.PosY;
+
+        if (node.TraitSubTreeID > 0) {
+          const offset = heroTreeOffsets.get(node.TraitSubTreeID);
+          if (offset) {
+            posX += offset.offsetX;
+            posY += offset.offsetY;
+          }
+        }
+
+        // Determine treeIndex from currency flags
+        let treeIndex = node.TraitSubTreeID > 0 ? 3 : 2;
+        const groupId = nodeGroupMemberships.find(
+          (m) => m.TraitNodeID === node.ID,
+        )?.TraitNodeGroupID;
+        const groupCostId = groupCosts.find(
+          (gc) => gc.TraitNodeGroupID === groupId,
+        )?.TraitCostID;
+        const cost = groupCostId ? costMap.get(groupCostId) : undefined;
+        const currency = cost
+          ? currencyMap.get(cost.TraitCurrencyID)
+          : undefined;
+        const fallbackCurrency =
+          treeCurrencies.find((c) => c._Index === 0) ?? treeCurrencies[0];
+        const fallbackCurrencyRow = fallbackCurrency
+          ? currencyMap.get(fallbackCurrency.TraitCurrencyID)
+          : undefined;
+        const flags = currency?.Flags ?? fallbackCurrencyRow?.Flags ?? 0;
+        if (node.TraitSubTreeID === 0) {
+          if (flags & 0x8) treeIndex = 2;
+          else if (flags & 0x4) treeIndex = 1;
+        }
+
+        return {
+          entries,
+          id: node.ID,
+          maxRanks,
+          orderIndex: orderIndexMap.get(node.ID) ?? -1,
+          posX,
+          posY,
+          subTreeId: node.TraitSubTreeID,
+          treeIndex,
+          type: node.Type,
+        };
+      })
+      .filter((n): n is Talent.TalentNode => n !== null);
 
     // 18. Build subtrees with icons derived from their nodes
     const subTrees: Talent.TalentSubTree[] = subTreeResults

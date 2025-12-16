@@ -1,40 +1,96 @@
+/**
+ * Talent Tree Output Types
+ *
+ * These are the processed types used for HTML rendering.
+ */
+
+import type {
+  TraitEdgeType,
+  TraitEdgeVisualStyle,
+  TraitNodeEntryType,
+  TraitNodeType,
+} from "./wow-api.js";
+
+// Re-export enums for convenience
+export {
+  TraitEdgeType,
+  TraitEdgeVisualStyle,
+  TraitNodeEntryType,
+  TraitNodeType,
+};
+
+/**
+ * Edge connecting two nodes.
+ */
 export interface TalentEdge {
-  fromNodeId: number;
-  id: number;
-  toNodeId: number;
-  visualStyle: number;
+  sourceNodeId: number;
+  targetNodeId: number;
+  type: TraitEdgeType;
+  visualStyle: TraitEdgeVisualStyle;
 }
 
-export interface TalentNode {
-  entries: TalentNodeEntry[];
+/**
+ * A single entry within a talent node.
+ */
+export interface TalentEntry {
+  definitionId: number | null;
+  description: string | null;
+  iconFileName: string | null;
   id: number;
   maxRanks: number;
-  orderIndex: number;
-  posX: number;
-  posY: number;
-  subTreeId: number;
-  type: number;
+  name: string | null;
+  spellId: number | null;
+  subTreeId: number | null;
+  type: TraitNodeEntryType;
 }
 
-export interface TalentNodeEntry {
-  definitionId: number;
-  description: string;
-  iconFileName: string;
+/**
+ * A gate that blocks access to nodes.
+ */
+export interface TalentGate {
+  conditionId: number;
+  spentAmountRequired: number;
+  topLeftNodeId: number;
+}
+
+/**
+ * A talent node in the tree.
+ */
+export interface TalentNode {
+  entries: TalentEntry[];
+  flags: number;
   id: number;
-  name: string;
-  spellId: number;
+  pixelX: number;
+  pixelY: number;
+  subTreeId: number | null;
+  type: TraitNodeType;
 }
 
+/**
+ * A hero talent sub-tree.
+ */
 export interface TalentSubTree {
-  description: string;
-  iconFileName: string;
+  description: string | null;
+  iconFileName: string | null;
   id: number;
-  name: string;
+  name: string | null;
+  nodeIds: number[];
 }
 
+/**
+ * Complete talent tree for a specialization.
+ */
 export interface TalentTree {
+  bounds: {
+    maxX: number;
+    maxY: number;
+    minX: number;
+    minY: number;
+  };
+  classId: number;
   className: string;
   edges: TalentEdge[];
+  gates: TalentGate[];
   nodes: TalentNode[];
   specId: number;
   specName: string;

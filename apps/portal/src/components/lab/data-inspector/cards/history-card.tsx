@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, Package, Sparkles, Wand2 } from "lucide-react";
-import type { DataType } from "@/atoms/data-inspector";
+import type { DataType } from "@/atoms/lab";
 import { useDataInspector } from "@/hooks/use-data-inspector";
 
 export function HistoryCard() {

@@ -169,6 +169,10 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitConds: () => Effect.succeed([]), // TODO Implement these properly
 
+    getTraitCost: (id) => Effect.succeed(undefined), // TODO Implement these properly
+
+    getTraitCurrency: (id) => Effect.succeed(undefined), // TODO Implement these properly
+
     getTraitDefinition: (id) => Effect.succeed(cache.traitDefinition.get(id)),
 
     getTraitEdgesForTree: (treeId) =>
@@ -179,6 +183,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
     getTraitNodeEntry: (id) => Effect.succeed(cache.traitNodeEntry.get(id)),
 
     getTraitNodeGroupXTraitConds: () => Effect.succeed([]), // TODO Implement these properly
+
+    getTraitNodeGroupXTraitCosts: () => Effect.succeed([]), // TODO Implement these properly
 
     getTraitNodeGroupXTraitNodes: () => Effect.succeed([]), // TODO Implement these properly
 
@@ -199,6 +205,8 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getTraitTreeLoadoutEntries: (loadoutId) =>
       Effect.succeed(cache.traitTreeLoadoutEntry.get(loadoutId) ?? []),
+
+    getTraitTreeXTraitCurrencies: () => Effect.succeed([]), // TODO Implement these properly
 
     getUiTextureAtlasElement: (id) =>
       Effect.succeed(cache.uiTextureAtlasElement.get(id)),

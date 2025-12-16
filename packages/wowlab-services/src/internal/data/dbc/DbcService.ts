@@ -233,6 +233,14 @@ export interface DbcServiceInterface {
     condIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCondRow>, DbcError>;
 
+  readonly getTraitCost: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitCostRow | undefined, DbcError>;
+
+  readonly getTraitCurrency: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.TraitCurrencyRow | undefined, DbcError>;
+
   readonly getTraitDefinition: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
@@ -253,6 +261,12 @@ export interface DbcServiceInterface {
     groupIds: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCondRow>,
+    DbcError
+  >;
+  readonly getTraitNodeGroupXTraitCosts: (
+    groupIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
     DbcError
   >;
 
@@ -297,6 +311,12 @@ export interface DbcServiceInterface {
     loadoutId: number,
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
+    DbcError
+  >;
+  readonly getTraitTreeXTraitCurrencies: (
+    treeId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
     DbcError
   >;
 

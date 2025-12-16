@@ -162,6 +162,6 @@ export const detailedDataAtom = atom<DetailedDataPoint[]>(
 export type ChartId = "dps" | "resource" | "ability" | "cooldown" | "detailed";
 
 export const chartsOrderAtom = createPersistedOrderAtom<ChartId>(
-  "charts-order",
+  "charts-order-v2",
   ["dps", "resource", "ability", "cooldown", "detailed"],
 );

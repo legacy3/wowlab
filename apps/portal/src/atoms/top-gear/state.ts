@@ -8,6 +8,6 @@ export type TopGearCardId =
   | "upgrade-path";
 
 export const topGearCardOrderAtom = createPersistedOrderAtom<TopGearCardId>(
-  "top-gear-card-order",
+  "top-gear-card-order-v2",
   ["current-gear", "optimization-status", "upgrade-path"],
 );

@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-import { createPersistedOrderAtom } from "./utils";
+import { createPersistedOrderAtom } from "../utils";
 import type {
   SpecCoverageData,
   SpecCoverageProgress,
@@ -10,7 +10,7 @@ import type {
 export type SpecCoverageCardId = "overview" | "matrix" | "untracked";
 
 export const specCoverageOrderAtom =
-  createPersistedOrderAtom<SpecCoverageCardId>("spec-coverage-order-v5", [
+  createPersistedOrderAtom<SpecCoverageCardId>("spec-coverage-order-v6", [
     "overview",
     "matrix",
     "untracked",

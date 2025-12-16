@@ -50,15 +50,19 @@ import {
   GetSpellTotems,
   GetSpellXDescriptionVariables,
   GetTraitDefinition,
+  GetTraitCost,
+  GetTraitCurrency,
   GetTraitEdgesForTree,
   GetTraitNode,
   GetTraitNodeEntry,
+  GetTraitNodeGroupXTraitCosts,
   GetTraitNodesForTree,
   GetTraitNodeXTraitNodeEntries,
   GetTraitSubTree,
   GetTraitTree,
   GetTraitTreeLoadout,
   GetTraitTreeLoadoutEntries,
+  GetTraitTreeXTraitCurrencies,
   GetUiTextureAtlasElement,
   makeDbcResolvers,
 } from "@wowlab/services/Data";
@@ -346,6 +350,28 @@ const createBatchFetcher = (
         "trait_node_entry",
         ids,
       ),
+    fetchTraitCostsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitCostRow>(
+        queryClient,
+        dataProvider,
+        "trait_cost",
+        ids,
+      ),
+    fetchTraitCurrenciesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.TraitCurrencyRow>(
+        queryClient,
+        dataProvider,
+        "trait_currency",
+        ids,
+      ),
+    fetchTraitNodeGroupXTraitCostsByGroupIds: (groupIds) =>
+      fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCostRow>(
+        queryClient,
+        dataProvider,
+        "trait_node_group_x_trait_cost",
+        "TraitNodeGroupID",
+        groupIds,
+      ),
     fetchTraitNodesByIds: (ids) =>
       fetchByIds<Schemas.Dbc.TraitNodeRow>(
         queryClient,
@@ -588,6 +614,14 @@ const createBatchFetcher = (
         "ChrSpecializationID",
         specIds,
       ),
+    fetchTraitTreeXTraitCurrenciesByTreeIds: (treeIds) =>
+      fetchByFk<Schemas.Dbc.TraitTreeXTraitCurrencyRow>(
+        queryClient,
+        dataProvider,
+        "trait_tree_x_trait_currency",
+        "TraitTreeID",
+        treeIds,
+      ),
     fetchTraitTreeLoadoutEntriesByLoadoutIds: (loadoutIds) =>
       fetchByFk<Schemas.Dbc.TraitTreeLoadoutEntryRow>(
         queryClient,
@@ -756,6 +790,13 @@ export const RefineDbcService = (
             new GetTraitNodeEntry({ id }),
             resolvers.traitNodeEntryResolver,
           ),
+        getTraitCost: (id) =>
+          Effect.request(new GetTraitCost({ id }), resolvers.traitCostResolver),
+        getTraitCurrency: (id) =>
+          Effect.request(
+            new GetTraitCurrency({ id }),
+            resolvers.traitCurrencyResolver,
+          ),
         getTraitSubTree: (id) =>
           Effect.request(
             new GetTraitSubTree({ id }),
@@ -894,6 +935,14 @@ export const RefineDbcService = (
             new GetTraitNodeXTraitNodeEntries({ nodeId }),
             resolvers.traitNodeXEntriesResolver,
           ),
+        getTraitNodeGroupXTraitCosts: (groupIds) =>
+          fetchByFk<Schemas.Dbc.TraitNodeGroupXTraitCostRow>(
+            queryClient,
+            dataProvider,
+            "trait_node_group_x_trait_cost",
+            "TraitNodeGroupID",
+            groupIds,
+          ),
         getTraitEdgesForTree: (treeId) =>
           Effect.request(
             new GetTraitEdgesForTree({ treeId }),
@@ -908,6 +957,11 @@ export const RefineDbcService = (
           Effect.request(
             new GetTraitTreeLoadoutEntries({ loadoutId }),
             resolvers.traitTreeLoadoutEntriesResolver,
+          ),
+        getTraitTreeXTraitCurrencies: (treeId) =>
+          Effect.request(
+            new GetTraitTreeXTraitCurrencies({ treeId }),
+            resolvers.traitTreeXTraitCurrencyResolver,
           ),
         getUiTextureAtlasElement: (id) =>
           Effect.request(

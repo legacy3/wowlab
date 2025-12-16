@@ -7,6 +7,6 @@ export type EditorCardId =
   | "validation";
 
 export const editorCardOrderAtom = createPersistedOrderAtom<EditorCardId>(
-  "editor-card-order",
+  "editor-card-order-v2",
   ["rotation-script", "templates", "syntax-reference", "validation"],
 );

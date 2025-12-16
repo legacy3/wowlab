@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import Link from "next/link";
+import { Link } from "@/components/ui/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -487,7 +487,7 @@ function QuickSimContentInner() {
             {resultId && (
               <Link
                 href={`/simulate/results/${resultId}`}
-                className="text-sm text-primary underline hover:no-underline"
+                className="text-sm underline hover:no-underline"
               >
                 View full results
               </Link>
