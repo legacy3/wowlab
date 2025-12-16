@@ -14,29 +14,30 @@ Based on analysis of `third_party/wowlab-data/data/tables/`, we have access to *
 
 The existing schema (`packages/wowlab-core/src/internal/schemas/Spell.ts`) already includes:
 
-| Category | Fields |
-|----------|--------|
-| **Core** | `id`, `name`, `description`, `auraDescription`, `descriptionVariables`, `fileName`, `isPassive`, `knowledgeSource` |
-| **Timing** | `castTime`, `recoveryTime`, `startRecoveryTime` |
-| **Resources** | `manaCost`, `powerCost`, `powerCostPct`, `powerType` |
-| **Charges** | `maxCharges`, `chargeRecoveryTime` |
-| **Range** | `rangeMin0/1`, `rangeMax0/1` |
-| **Geometry** | `coneDegrees`, `radiusMin`, `radiusMax` |
-| **Damage/Defense** | `schoolMask`, `defenseType` |
-| **Scaling** | `bonusCoefficientFromAP`, `effectBonusCoefficient` |
-| **Interrupts** | `interruptFlags`, `interruptAura0/1`, `interruptChannel0/1` |
-| **Duration** | `duration`, `maxDuration` |
-| **Empower** | `canEmpower`, `empowerStages` |
-| **Mechanics** | `dispelType`, `facingCasterFlags`, `speed`, `spellClassSet`, `spellClassMask1-4` |
-| **Levels** | `baseLevel`, `spellLevel`, `maxLevel`, `maxPassiveAuraLevel` |
-| **Aura Restrictions** | `casterAuraState/Spell`, `targetAuraState/Spell`, `excludeCaster/TargetAuraState/Spell` |
-| **Shapeshift** | `shapeshiftMask0/1`, `shapeshiftExclude0/1`, `stanceBarOrder` |
-| **Totems** | `totem0/1`, `requiredTotemCategory0/1` |
-| **Arrays** | `attributes[]`, `effectTriggerSpell[]`, `implicitTarget[]`, `learnSpells[]` |
+| Category              | Fields                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Core**              | `id`, `name`, `description`, `auraDescription`, `descriptionVariables`, `fileName`, `isPassive`, `knowledgeSource` |
+| **Timing**            | `castTime`, `recoveryTime`, `startRecoveryTime`                                                                    |
+| **Resources**         | `manaCost`, `powerCost`, `powerCostPct`, `powerType`                                                               |
+| **Charges**           | `maxCharges`, `chargeRecoveryTime`                                                                                 |
+| **Range**             | `rangeMin0/1`, `rangeMax0/1`                                                                                       |
+| **Geometry**          | `coneDegrees`, `radiusMin`, `radiusMax`                                                                            |
+| **Damage/Defense**    | `schoolMask`, `defenseType`                                                                                        |
+| **Scaling**           | `bonusCoefficientFromAP`, `effectBonusCoefficient`                                                                 |
+| **Interrupts**        | `interruptFlags`, `interruptAura0/1`, `interruptChannel0/1`                                                        |
+| **Duration**          | `duration`, `maxDuration`                                                                                          |
+| **Empower**           | `canEmpower`, `empowerStages`                                                                                      |
+| **Mechanics**         | `dispelType`, `facingCasterFlags`, `speed`, `spellClassSet`, `spellClassMask1-4`                                   |
+| **Levels**            | `baseLevel`, `spellLevel`, `maxLevel`, `maxPassiveAuraLevel`                                                       |
+| **Aura Restrictions** | `casterAuraState/Spell`, `targetAuraState/Spell`, `excludeCaster/TargetAuraState/Spell`                            |
+| **Shapeshift**        | `shapeshiftMask0/1`, `shapeshiftExclude0/1`, `stanceBarOrder`                                                      |
+| **Totems**            | `totem0/1`, `requiredTotemCategory0/1`                                                                             |
+| **Arrays**            | `attributes[]`, `effectTriggerSpell[]`, `implicitTarget[]`, `learnSpells[]`                                        |
 
 ### Additional Data Available from CSV Tables
 
 #### SpellEffect.csv (Critical for Simulations)
+
 ```
 ID, EffectAura, DifficultyID, EffectIndex, Effect, EffectAmplitude, EffectAttributes,
 EffectAuraPeriod, EffectBonusCoefficient, EffectChainAmplitude, EffectChainTargets,
@@ -48,12 +49,14 @@ EffectSpellClassMask_0-3, ImplicitTarget_0/1, SpellID
 ```
 
 #### SpellAuraOptions.csv
+
 ```
 ID, DifficultyID, CumulativeAura, ProcCategoryRecovery, ProcChance, ProcCharges,
 SpellProcsPerMinuteID, ProcTypeMask_0/1, SpellID
 ```
 
 #### SpellProcsPerMinute.csv + SpellProcsPerMinuteMod.csv
+
 ```
 // Base RPPM
 ID, BaseProcRate, Flags
@@ -63,32 +66,38 @@ ID, Type, Param, Coeff, SpellProcsPerMinuteID
 ```
 
 #### SpellCooldowns.csv
+
 ```
 ID, DifficultyID, CategoryRecoveryTime, RecoveryTime, StartRecoveryTime, AuraSpellID, SpellID
 ```
 
 #### SpellCategories.csv
+
 ```
 ID, DifficultyID, Category, DefenseType, DiminishType, DispelType, Mechanic,
 PreventionType, StartRecoveryCategory, ChargeCategory, SpellID
 ```
 
 #### SpellDiminish.csv (PvP/DR mechanics)
+
 ```
 ID, Name_lang, Duration, Multiplier, ImmunityStacks, MaxStacks
 ```
 
 #### SpellLabel.csv (For targeting spell modifications)
+
 ```
 ID, LabelID, SpellID
 ```
 
 #### SpellScaling.csv
+
 ```
 ID, SpellID, MinScalingLevel, MaxScalingLevel
 ```
 
 #### SpellItemEnchantment.csv
+
 ```
 ID, Name_lang, Duration, EffectArg_0-2, Flags, EffectScalingPoints_0-2,
 IconFileDataID, ItemLevelMin, ItemLevelMax, EffectPointsMin_0-2, ItemVisual,
@@ -97,6 +106,7 @@ ScalingClass, ScalingClassRestricted, MinLevel, MaxLevel
 ```
 
 #### SpellReplacement.csv
+
 ```
 ID, ReplacementSpellID, SpellID
 ```
@@ -290,18 +300,19 @@ ID, ReplacementSpellID, SpellID
 
 The existing schema (`packages/wowlab-core/src/internal/schemas/Item.ts`) includes:
 
-| Category | Fields |
-|----------|--------|
-| **Core** | `id`, `name`, `description`, `fileName` |
-| **Classification** | `classId`, `subclassId`, `inventoryType`, `quality` |
-| **Stats** | `itemLevel`, `stats[]` (type, value), `speed` |
-| **Requirements** | `requiredLevel` |
-| **Economy** | `buyPrice`, `sellPrice`, `stackable`, `maxCount`, `binding` |
-| **Effects** | `effects[]` (spellId, triggerType, charges, cooldown, categoryCooldown) |
+| Category           | Fields                                                                  |
+| ------------------ | ----------------------------------------------------------------------- |
+| **Core**           | `id`, `name`, `description`, `fileName`                                 |
+| **Classification** | `classId`, `subclassId`, `inventoryType`, `quality`                     |
+| **Stats**          | `itemLevel`, `stats[]` (type, value), `speed`                           |
+| **Requirements**   | `requiredLevel`                                                         |
+| **Economy**        | `buyPrice`, `sellPrice`, `stackable`, `maxCount`, `binding`             |
+| **Effects**        | `effects[]` (spellId, triggerType, charges, cooldown, categoryCooldown) |
 
 ### Additional Data Available from CSV Tables
 
 #### ItemSparse.csv (Primary item data)
+
 ```
 ID, AllowableRace, Description_lang, Display_lang, ExpansionID, DmgVariance,
 LimitCategory, DurationInInventory, QualityModifier, BagFamily, StartQuestID,
@@ -318,6 +329,7 @@ ContainerSlots, RequiredPVPMedal, RequiredPVPRank, OverallQualityID
 ```
 
 #### ItemBonus.csv (Bonus ID system - CRITICAL for M+/Raid gear)
+
 ```
 ID, Value_0-3, ParentItemBonusListID, Type, OrderIndex
 
@@ -337,11 +349,13 @@ Type values:
 ```
 
 #### ItemBonusList.csv
+
 ```
 ID, Flags
 ```
 
 #### ItemBonusTreeNode.csv (How bonus IDs are selected)
+
 ```
 ID, ItemContext, ChildItemBonusTreeID, ChildItemBonusListID,
 ChildItemLevelSelectorID, ChildItemBonusListGroupID, IblGroupPointsModSetID,
@@ -350,17 +364,20 @@ Flags, ParentItemBonusTreeID
 ```
 
 #### ItemBonusListLevelDelta.csv
+
 ```
 ItemLevelDelta, ID
 ```
 
 #### ItemEffect.csv
+
 ```
 ID, LegacySlotIndex, TriggerType, Charges, CoolDownMSec, CategoryCoolDownMSec,
 SpellCategoryID, SpellID, ChrSpecializationID, PlayerConditionID
 ```
 
 #### ItemSet.csv + ItemSetSpell.csv
+
 ```
 // Set definition
 ID, Name_lang, SetFlags, RequiredSkill, RequiredSkillRank, ItemID_0-16
@@ -370,6 +387,7 @@ ID, ChrSpecID, SpellID, TraitSubTreeID, Threshold, ItemSetID
 ```
 
 #### ItemClass.csv + ItemSubClass.csv
+
 ```
 // Class
 ID, ClassName_lang, ClassID, PriceModifier, Flags
@@ -381,11 +399,13 @@ WeaponSwingSize, PostrequisiteProficiency
 ```
 
 #### GemProperties.csv
+
 ```
 ID, Enchant_ID, Type
 ```
 
 #### SpellItemEnchantment.csv (For gems and enchants)
+
 ```
 ID, Name_lang, Duration, EffectArg_0-2, Flags, EffectScalingPoints_0-2,
 EffectPointsMin_0-2, ItemVisual, Effect_0-2, ScalingClass, ItemLevel,
@@ -393,22 +413,26 @@ MinLevel, MaxLevel
 ```
 
 #### ItemDamageOneHand.csv / ItemDamageTwoHand.csv
+
 ```
 ID, ItemLevel, Quality_0-6
 ```
 
 #### ItemArmorQuality.csv / ItemArmorTotal.csv
+
 ```
 ID, Qualitymod_0-6
 ID, ItemLevel, Cloth, Leather, Mail, Plate
 ```
 
 #### RandPropPoints.csv (Secondary stat allocation)
+
 ```
 ID, DamageReplaceStatF, DamageSecondaryF, EpicF_0-4, SuperiorF_0-4, GoodF_0-4, ...
 ```
 
 #### ExpectedStat.csv (Expected stats per level)
+
 ```
 ID, ExpansionID, CreatureHealth, PlayerHealth, CreatureAutoAttackDps,
 CreatureArmor, PlayerMana, PlayerPrimaryStat, PlayerSecondaryStat,
@@ -416,11 +440,13 @@ ArmorConstant, CreatureSpellDamage, ContentSetID, Lvl
 ```
 
 #### CurvePoint.csv (For scaling curves)
+
 ```
 Pos_0, Pos_1, PosPreSquish_0, PosPreSquish_1, ID, CurveID, OrderIndex
 ```
 
 #### ItemBonusSeason.csv + ItemBonusSeasonUpgradeCost.csv
+
 ```
 // Season
 ID, SeasonID
@@ -739,6 +765,7 @@ FragmentItemID, FragmentsEarnedTrackingCurrencyID
 ### New Data to Expose
 
 #### For Spells
+
 1. **SpellEffect rows** - All effects with coefficients, targets, mechanics
 2. **SpellAuraOptions** - Proc data, RPPM, stacking
 3. **SpellLabel** - For understanding talent interactions
@@ -746,6 +773,7 @@ FragmentItemID, FragmentsEarnedTrackingCurrencyID
 5. **SpellProcsPerMinute + Mods** - RPPM mechanics
 
 #### For Items
+
 1. **Full ItemBonus decomposition** - Parse all bonus IDs with meanings
 2. **ItemBonusTreeNode** - Show upgrade paths
 3. **ItemBonusSeason** - Current season upgrade costs
@@ -776,6 +804,7 @@ FragmentItemID, FragmentsEarnedTrackingCurrencyID
 This document outlines comprehensive detail views that expose simulation-relevant data:
 
 **Spells:**
+
 - All 16 attribute flags decoded
 - Complete spell effect breakdown with coefficients
 - RPPM mechanics and proc information
@@ -784,6 +813,7 @@ This document outlines comprehensive detail views that expose simulation-relevan
 - Related spell chains (replacements, triggers)
 
 **Items:**
+
 - Full bonus ID decomposition with type meanings
 - Upgrade path visualization
 - Stat budget breakdown with percentages

@@ -1,18 +1,18 @@
 import { PageLayout } from "@/components/page";
-import { DataInspectorContent } from "@/components/lab/data-inspector";
+import { InspectorSearchContent } from "@/components/lab/inspector/search";
 
-export default function DataInspectorPage() {
+export default function InspectorSearchPage() {
   return (
     <PageLayout
       title="Data Inspector"
       description="Query and inspect spell or item data by ID"
       breadcrumbs={[
         { label: "Home", href: "/" },
-        { label: "Lab" },
-        { label: "Data Inspector" },
+        { label: "Lab", href: "/lab" },
+        { label: "Inspector" },
       ]}
     >
-      <DataInspectorContent />
+      <InspectorSearchContent />
     </PageLayout>
   );
 }

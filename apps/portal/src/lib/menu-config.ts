@@ -66,7 +66,7 @@ export const menuConfig: MenuGroup[] = [
   ]),
   group("Lab", [
     item("Overview", "/lab", FlaskConical),
-    item("Data Inspector", "/lab/data-inspector", Table),
+    item("Data Inspector", "/lab/inspector/search", Table),
     item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
   ]),
   group("About", [
