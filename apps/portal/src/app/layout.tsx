@@ -21,6 +21,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WoW Lab",
   description: "WoW rotation simulation toolkit for optimal DPS analysis",
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+    other: [
+      { rel: "icon", url: "/icon-192.png", sizes: "192x192" },
+      { rel: "icon", url: "/icon-512.png", sizes: "512x512" },
+    ],
+  },
 };
 
 export default function RootLayout({

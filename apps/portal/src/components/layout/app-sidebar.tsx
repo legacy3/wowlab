@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Zap } from "lucide-react";
 
 import {
   Sidebar,
@@ -29,9 +29,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Zap className="size-4" />
-                </div>
+                <Image
+                  src="/logo.svg"
+                  alt="WoW Lab"
+                  width={32}
+                  height={32}
+                  className="size-8"
+                />
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-bold">WoW Lab</span>
                   <span className="text-xs text-sidebar-foreground/70">

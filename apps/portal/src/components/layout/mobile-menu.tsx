@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, Zap } from "lucide-react";
+import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,9 +38,13 @@ export function MobileMenu() {
               className="flex items-center gap-2"
               onClick={() => setOpen(false)}
             >
-              <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <Zap className="size-4" />
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="WoW Lab"
+                width={32}
+                height={32}
+                className="size-8"
+              />
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-bold">WoW Lab</span>
                 <span className="text-xs text-muted-foreground">
