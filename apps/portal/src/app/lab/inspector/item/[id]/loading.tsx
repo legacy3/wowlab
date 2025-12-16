@@ -1,5 +1,5 @@
 import { PageLayout } from "@/components/page/page-layout";
-import { ItemDetailSkeleton } from "@/components/lab/inspector/item-detail-page";
+import { ItemDetailSkeleton } from "@/components/lab/inspector/item";
 
 export default function ItemInspectorLoading() {
   return (

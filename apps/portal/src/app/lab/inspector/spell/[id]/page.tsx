@@ -1,5 +1,5 @@
 import { PageLayout } from "@/components/page/page-layout";
-import { SpellDetailPage } from "@/components/lab/inspector/spell-detail-page";
+import { SpellDetailPage } from "@/components/lab/inspector/spell";
 
 interface SpellInspectorPageProps {
   params: Promise<{ id: string }>;

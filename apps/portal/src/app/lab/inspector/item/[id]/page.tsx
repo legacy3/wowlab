@@ -1,5 +1,5 @@
 import { PageLayout } from "@/components/page/page-layout";
-import { ItemDetailPage } from "@/components/lab/inspector/item-detail-page";
+import { ItemDetailPage } from "@/components/lab/inspector/item";
 
 interface ItemInspectorPageProps {
   params: Promise<{ id: string }>;

@@ -1,5 +1,5 @@
 import { PageLayout } from "@/components/page/page-layout";
-import { SpellDetailSkeleton } from "@/components/lab/inspector/spell-detail-page";
+import { SpellDetailSkeleton } from "@/components/lab/inspector/spell";
 
 export default function SpellInspectorLoading() {
   return (
