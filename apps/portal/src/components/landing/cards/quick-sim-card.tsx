@@ -23,7 +23,7 @@ export function QuickSimCard() {
 
   const handleGo = async () => {
     if (!input.trim()) {
-       return;
+      return;
     }
 
     setLoading(true);

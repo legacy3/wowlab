@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Search,
-  ExternalLink,
-  Loader2,
-  Wand2,
-  Package,
-  Sparkles,
-} from "lucide-react";
+import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
+import { Link } from "@/components/ui/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -161,15 +155,13 @@ export function DataInspector() {
               </>
             )}
 
-            <a
+            <Link
               href={`https://www.wowhead.com/${type}=${id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary hover:underline"
+              external
+              className="text-xs"
             >
               View on Wowhead
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            </Link>
           </div>
         </ScrollArea>
       )}
