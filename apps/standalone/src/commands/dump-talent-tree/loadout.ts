@@ -114,80 +114,6 @@ class ImportDataStream {
 // Private Helpers
 // =============================================================================
 
-function parseHeader(stream: ImportDataStream): LoadoutHeader | null {
-  const headerBitWidth =
-    BIT_WIDTH_VERSION + BIT_WIDTH_SPEC_ID + BIT_WIDTH_TREE_HASH;
-
-  if (stream.getNumberOfBits() < headerBitWidth) {
-    return null;
-  }
-
-  const version = stream.extractValue(BIT_WIDTH_VERSION);
-  const specId = stream.extractValue(BIT_WIDTH_SPEC_ID);
-
-  const treeHash: number[] = [];
-  for (let i = 0; i < 16; i++) {
-    treeHash.push(stream.extractValue(8));
-  }
-
-  return { specId, treeHash, version };
-}
-
-function parseNodeInfo(stream: ImportDataStream): LoadoutNodeInfo {
-  const isNodeSelected = stream.extractValue(1) === 1;
-
-  if (!isNodeSelected) {
-    return {
-      choiceEntryIndex: 0,
-      isChoiceNode: false,
-      isNodeGranted: false,
-      isNodeSelected: false,
-      isPartiallyRanked: false,
-      ranksPurchased: 0,
-    };
-  }
-
-  const isNodePurchased = stream.extractValue(1) === 1;
-
-  if (!isNodePurchased) {
-    return {
-      choiceEntryIndex: 0,
-      isChoiceNode: false,
-      isNodeGranted: true,
-      isNodeSelected: true,
-      isPartiallyRanked: false,
-      ranksPurchased: 0,
-    };
-  }
-
-  const isPartiallyRanked = stream.extractValue(1) === 1;
-  let ranksPurchased = 0;
-
-  if (isPartiallyRanked) {
-    ranksPurchased = stream.extractValue(BIT_WIDTH_RANKS_PURCHASED);
-  }
-
-  const isChoiceNode = stream.extractValue(1) === 1;
-  let choiceEntryIndex = 0;
-
-  if (isChoiceNode) {
-    choiceEntryIndex = stream.extractValue(BIT_WIDTH_CHOICE_INDEX);
-  }
-
-  return {
-    choiceEntryIndex,
-    isChoiceNode,
-    isNodeGranted: false,
-    isNodeSelected: true,
-    isPartiallyRanked,
-    ranksPurchased,
-  };
-}
-
-// =============================================================================
-// Public API
-// =============================================================================
-
 /**
  * Apply parsed loadout to get final talent states.
  *
@@ -257,4 +183,78 @@ export function parseLoadoutString(
   }
 
   return { header, selectedNodes };
+}
+
+// =============================================================================
+// Public API
+// =============================================================================
+
+function parseHeader(stream: ImportDataStream): LoadoutHeader | null {
+  const headerBitWidth =
+    BIT_WIDTH_VERSION + BIT_WIDTH_SPEC_ID + BIT_WIDTH_TREE_HASH;
+
+  if (stream.getNumberOfBits() < headerBitWidth) {
+    return null;
+  }
+
+  const version = stream.extractValue(BIT_WIDTH_VERSION);
+  const specId = stream.extractValue(BIT_WIDTH_SPEC_ID);
+
+  const treeHash: number[] = [];
+  for (let i = 0; i < 16; i++) {
+    treeHash.push(stream.extractValue(8));
+  }
+
+  return { specId, treeHash, version };
+}
+
+function parseNodeInfo(stream: ImportDataStream): LoadoutNodeInfo {
+  const isNodeSelected = stream.extractValue(1) === 1;
+
+  if (!isNodeSelected) {
+    return {
+      choiceEntryIndex: 0,
+      isChoiceNode: false,
+      isNodeGranted: false,
+      isNodeSelected: false,
+      isPartiallyRanked: false,
+      ranksPurchased: 0,
+    };
+  }
+
+  const isNodePurchased = stream.extractValue(1) === 1;
+
+  if (!isNodePurchased) {
+    return {
+      choiceEntryIndex: 0,
+      isChoiceNode: false,
+      isNodeGranted: true,
+      isNodeSelected: true,
+      isPartiallyRanked: false,
+      ranksPurchased: 0,
+    };
+  }
+
+  const isPartiallyRanked = stream.extractValue(1) === 1;
+  let ranksPurchased = 0;
+
+  if (isPartiallyRanked) {
+    ranksPurchased = stream.extractValue(BIT_WIDTH_RANKS_PURCHASED);
+  }
+
+  const isChoiceNode = stream.extractValue(1) === 1;
+  let choiceEntryIndex = 0;
+
+  if (isChoiceNode) {
+    choiceEntryIndex = stream.extractValue(BIT_WIDTH_CHOICE_INDEX);
+  }
+
+  return {
+    choiceEntryIndex,
+    isChoiceNode,
+    isNodeGranted: false,
+    isNodeSelected: true,
+    isPartiallyRanked,
+    ranksPurchased,
+  };
 }

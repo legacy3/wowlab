@@ -254,7 +254,7 @@ export function TalentHoverLink({
     decoded,
   );
 
-  const calculatorUrl = `/lab/talent-calculator?talents=${encodeURIComponent(encodedTalents)}`;
+  const calculatorUrl = `/talents?talents=${encodeURIComponent(encodedTalents)}`;
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>

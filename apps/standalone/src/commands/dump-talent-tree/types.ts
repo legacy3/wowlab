@@ -45,6 +45,15 @@ export interface TalentEntry {
 }
 
 /**
+ * A gate that blocks access to nodes.
+ */
+export interface TalentGate {
+  conditionId: number;
+  spentAmountRequired: number;
+  topLeftNodeId: number;
+}
+
+/**
  * A talent node in the tree.
  */
 export interface TalentNode {
@@ -55,15 +64,6 @@ export interface TalentNode {
   pixelY: number;
   subTreeId: number | null;
   type: TraitNodeType;
-}
-
-/**
- * A gate that blocks access to nodes.
- */
-export interface TalentGate {
-  conditionId: number;
-  spentAmountRequired: number;
-  topLeftNodeId: number;
 }
 
 /**

@@ -2,11 +2,10 @@
 
 import { useAtom } from "jotai";
 import {
-  PlayCircle,
+  Calculator,
   TrendingUp,
   Trophy,
   BookOpen,
-  Code2,
   FlaskConical,
 } from "lucide-react";
 import {
@@ -18,13 +17,13 @@ import { LandingCard } from "./cards/landing-card";
 import { RecentCard } from "./cards/recent-card";
 import { QuickSimCard } from "./cards/quick-sim-card";
 
-const SimulateCard = () => (
+const TalentsCard = () => (
   <LandingCard
-    href="/simulate"
-    icon={PlayCircle}
-    title="Simulate"
-    description="Run DPS simulations"
-    content="Import your character and test rotation performance."
+    href="/talents"
+    icon={Calculator}
+    title="Talents"
+    description="Build talents"
+    content="Interactive talent tree builder with import/export."
   />
 );
 
@@ -58,34 +57,23 @@ const RotationsCard = () => (
   />
 );
 
-const EditorCard = () => (
-  <LandingCard
-    href="/rotations/editor"
-    icon={Code2}
-    title="Editor"
-    description="Create rotations"
-    content="Build and test your own custom rotation scripts."
-  />
-);
-
 const LabCard = () => (
   <LandingCard
     href="/lab"
     icon={FlaskConical}
     title="Lab"
     description="Experimental tools"
-    content="Data inspection, talent calculator, and more."
+    content="Data inspection, spec coverage, and more."
   />
 );
 
 const components: DashboardConfig<LandingCardId> = {
   recent: { Component: RecentCard, className: "sm:col-span-2" },
   "quick-sim": { Component: QuickSimCard, className: "sm:col-span-2" },
-  simulate: { Component: SimulateCard },
+  talents: { Component: TalentsCard },
   optimize: { Component: OptimizeCard },
   rankings: { Component: RankingsCard },
   rotations: { Component: RotationsCard },
-  editor: { Component: EditorCard, className: "sm:col-span-2" },
   lab: { Component: LabCard, className: "sm:col-span-2" },
 };
 
