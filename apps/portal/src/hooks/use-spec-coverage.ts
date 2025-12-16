@@ -30,7 +30,7 @@ import {
   specCoverageErrorAtom,
   specCoverageProgressAtom,
   untrackedSpellsAtom,
-} from "@/atoms/spec-coverage";
+} from "@/atoms/lab";
 
 // Re-export types for convenience
 export type { SpecCoverageData, SpecCoverageProgress, UntrackedSpell };

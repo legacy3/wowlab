@@ -1,7 +1,7 @@
 import type { Aura, Item, Spell } from "@wowlab/core/Schemas";
 import { atom } from "jotai";
 
-import { createPersistedOrderAtom } from "./utils";
+import { createPersistedOrderAtom } from "../utils";
 
 export type DataType = "spell" | "item" | "aura";
 
@@ -19,7 +19,7 @@ export type TransformedData =
 export type DataInspectorCardId = "controls" | "history" | "transformed";
 
 export const dataInspectorOrderAtom =
-  createPersistedOrderAtom<DataInspectorCardId>("data-inspector-order-v2", [
+  createPersistedOrderAtom<DataInspectorCardId>("data-inspector-order-v3", [
     "controls",
     "history",
     "transformed",

@@ -21,7 +21,7 @@ import {
   type DataType,
   type HistoryEntry,
   type TransformedData,
-} from "@/atoms/data-inspector";
+} from "@/atoms/lab";
 
 function appendHistoryEntry(
   prev: HistoryEntry[],

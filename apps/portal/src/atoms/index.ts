@@ -2,9 +2,10 @@ export * from "./editor";
 export * from "./timeline";
 export * from "./charts";
 export * from "./computing";
-export * from "./data-inspector";
-export * from "./user"; // settings-ui.ts only
-export * from "./dps-rankings"; // UI filters + DB fetch
+export * from "./lab";
+export * from "./landing";
+export * from "./user";
+export * from "./dps-rankings";
 export * from "./drop-optimizer";
 export * from "./top-gear";
-export * from "./sim"; // config.ts only, not results
+export * from "./sim";

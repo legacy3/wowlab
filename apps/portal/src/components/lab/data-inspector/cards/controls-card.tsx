@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
-import type { DataType } from "@/atoms/data-inspector";
+import type { DataType } from "@/atoms/lab";
 import { useDataInspector } from "@/hooks/use-data-inspector";
 
 const DATA_TYPE_LABELS: Record<DataType, string> = {

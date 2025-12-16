@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDataInspector } from "@/hooks/use-data-inspector";
 import { useSpellDescription } from "@/hooks/use-spell-description";
-import type { DataType } from "@/atoms/data-inspector";
+import type { DataType } from "@/atoms/lab";
 import type { Spell } from "@wowlab/core/Schemas";
 
 function isSpellData(data: unknown): data is Spell.SpellDataFlat {
