@@ -2,57 +2,318 @@
 
 Prioritized list of fixes with implementation notes.
 
+## Core Principle
+
+**COMPONENT PATH = URL PATH**
+
+- URL `/talents` → components in `components/talents/`
+- URL `/lab/data-inspector` → components in `components/lab/data-inspector/`
+- URL `/rotations/editor` → components in `components/rotations/editor/`
+
+No redirects. No obsolete files. Delete old locations entirely.
+
+---
+
 ## Priority 1: Critical (Do First)
 
-### R1.1: Move Talent Calculator to Primary Navigation
+### R1.1: Move Talent Calculator to `/talents`
 
 **Violation**: IA-001
-**Effort**: Low
+**Effort**: Medium
 **Impact**: High
 
-**What to do**:
+**Files to MOVE** (from `components/lab/talent-calculator/` → `components/talents/`):
 
-1. Update `menu-config.ts` to move Talent Calculator to new group or after Simulate
-2. Consider renaming route from `/lab/talent-calculator` to `/talents`
-3. Update any hardcoded links
+| From | To |
+|------|-----|
+| `components/lab/talent-calculator/talent-calculator-content.tsx` | `components/talents/talent-calculator-content.tsx` |
+| `components/lab/talent-calculator/talent-calculator-skeleton.tsx` | `components/talents/talent-calculator-skeleton.tsx` |
+| `components/lab/talent-calculator/talent-start-screen.tsx` | `components/talents/talent-start-screen.tsx` |
+| `components/lab/talent-calculator/talent-state-message.tsx` | `components/talents/talent-state-message.tsx` |
+| `components/lab/talent-calculator/talent-string-bar.tsx` | `components/talents/talent-string-bar.tsx` |
+| `components/lab/talent-calculator/talent-encoding.ts` | `components/talents/talent-encoding.ts` |
 
-**Implementation**:
+**Files to CREATE**:
+
+| File | Content |
+|------|---------|
+| `app/talents/page.tsx` | New page importing from `@/components/talents` |
+| `app/talents/loading.tsx` | Skeleton using `TalentCalculatorSkeleton` |
+
+**Files to DELETE**:
+
+| File | Reason |
+|------|--------|
+| `app/lab/talent-calculator/page.tsx` | Route moved to `/talents` |
+| `app/lab/talent-calculator/loading.tsx` | Route moved to `/talents` |
+| `components/lab/talent-calculator/` (entire folder) | Components moved to `components/talents/` |
+| `components/lab/overview/cards/talent-calculator-card.tsx` | No longer in Lab |
+
+**Files to UPDATE**:
+
+| File | Change |
+|------|--------|
+| `components/talents/index.ts` | Add exports for moved components |
+| `components/talents/talent-hover-link.tsx:257` | Change `/lab/talent-calculator` → `/talents` |
+| `components/lab/overview/cards/index.ts` | Remove `talent-calculator-card` export |
+| `components/lab/overview/lab-content.tsx` | Remove `TalentCalculatorCard` usage |
+| `lib/menu-config.ts` | Move Talent Calculator to new "Talents" group, remove from Lab |
+
+**New page implementation**:
 
 ```tsx
-// menu-config.ts - Option A: New "Plan" group
-group("Plan", [
-  item("Talents", "/talents", Calculator),
-]),
+// app/talents/page.tsx
+import { PageLayout } from "@/components/page";
+import { TalentCalculatorContent } from "@/components/talents";
 
-// Or Option B: Ungrouped item after Simulate
-// Requires menu-config refactor to support ungrouped items
-```
-
-**Redirect** (if changing URL):
-
-```tsx
-// app/lab/talent-calculator/page.tsx
-import { redirect } from "next/navigation";
-export default function () {
-  redirect("/talents");
+export default function TalentsPage() {
+  return (
+    <PageLayout
+      title="Talent Calculator"
+      description="View and share talent builds using talent strings"
+      breadcrumbs={[
+        { label: "Home", href: "/" },
+        { label: "Talents" },
+      ]}
+    >
+      <TalentCalculatorContent />
+    </PageLayout>
+  );
 }
 ```
 
 ---
 
-### R1.2: Add CTAs to Simulation Results Page
+### R1.2: Restructure Navigation
+
+**Violation**: IA-002, IA-004, IA-005
+**Effort**: Low
+**Impact**: High
+
+**File**: `lib/menu-config.ts`
+
+**Current structure**:
+```
+Simulate → Optimize → Discover (Rankings, Rotations) → Create (Editor) → Lab (Data Inspector, Spec Coverage, Talent Calculator) → About
+```
+
+**Target structure**:
+```
+Simulate → Plan (Talents) → Optimize → Discover (Rankings) → Rotations (Browse, Create) → Lab (Overview, Data Inspector, Spec Coverage) → About
+```
+
+**Implementation**:
+
+```tsx
+// menu-config.ts
+export const menuConfig: MenuGroup[] = [
+  group("Simulate", [
+    item("Simulate", "/simulate", Play),
+  ]),
+  group("Plan", [
+    item("Talents", "/talents", Calculator),
+  ]),
+  group("Optimize", [
+    item("Optimize", "/optimize", Sparkles),
+  ]),
+  group("Discover", [
+    item("Rankings", "/rankings", Trophy),
+  ]),
+  group("Rotations", [
+    item("Browse", "/rotations", Swords),
+    item("Create", "/rotations/editor", PencilRuler),
+  ]),
+  group("Lab", [
+    item("Overview", "/lab", FlaskConical),
+    item("Data Inspector", "/lab/data-inspector", Table),
+    item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
+  ]),
+  group("About", [
+    item("About", "/about", FlaskConical),
+    item("Changelog", "/changelog", History),
+    item("Docs", "/docs", BookOpen),
+    link("GitHub", env.GITHUB_REPO_URL, GitFork),
+  ]),
+];
+```
+
+---
+
+### R1.3: Simplify Landing Page
+
+**Violation**: Landing page overload
+**Effort**: Medium
+**Impact**: Medium
+
+**Files to UPDATE**:
+
+| File | Change |
+|------|--------|
+| `atoms/landing/state.ts` | Change `LandingCardId` type and default order |
+| `components/landing/landing-content.tsx` | Remove `simulate` and `editor` cards, add `talents` card |
+
+**Current cards**: `recent`, `quick-sim`, `simulate`, `optimize`, `rankings`, `rotations`, `editor`, `lab`
+
+**Target cards**: `recent`, `quick-sim`, `talents`, `optimize`, `rankings`, `rotations`, `lab`
+
+**Changes**:
+- REMOVE `simulate` (duplicate of `quick-sim`)
+- REMOVE `editor` (access via Rotations nav)
+- ADD `talents` card linking to `/talents`
+
+**Implementation**:
+
+```tsx
+// atoms/landing/state.ts
+export type LandingCardId =
+  | "recent"
+  | "quick-sim"
+  | "talents"
+  | "optimize"
+  | "rankings"
+  | "rotations"
+  | "lab";
+
+export const landingOrderAtom = createPersistedOrderAtom<LandingCardId>(
+  "landing-order-v6", // bump version
+  [
+    "recent",
+    "quick-sim",
+    "talents",
+    "optimize",
+    "rankings",
+    "rotations",
+    "lab",
+  ],
+);
+```
+
+```tsx
+// components/landing/landing-content.tsx
+// Add TalentsCard, remove SimulateCard and EditorCard
+
+const TalentsCard = () => (
+  <LandingCard
+    href="/talents"
+    icon={Calculator}
+    title="Talents"
+    description="Build talents"
+    content="Interactive talent tree builder with import/export."
+  />
+);
+
+const components: DashboardConfig<LandingCardId> = {
+  recent: { Component: RecentCard, className: "sm:col-span-2" },
+  "quick-sim": { Component: QuickSimCard, className: "sm:col-span-2" },
+  talents: { Component: TalentsCard },
+  optimize: { Component: OptimizeCard },
+  rankings: { Component: RankingsCard },
+  rotations: { Component: RotationsCard },
+  lab: { Component: LabCard, className: "sm:col-span-2" },
+};
+```
+
+---
+
+### R1.4: Hide Incomplete Account Features
+
+**Violation**: FC-001, FC-002
+**Effort**: Low
+**Impact**: Medium
+
+**File**: `components/account/account-tabs.tsx`
+
+**Current tabs**: Rotations, Characters, History
+
+**Target tabs**: Rotations only
+
+**Implementation**:
+
+```tsx
+// account-tabs.tsx
+export function AccountTabs({ user, rotations }: Props) {
+  return (
+    <div className="space-y-6">
+      <ProfileHeader user={user} rotationCount={rotations.length} />
+
+      <UrlTabs
+        defaultTab="rotations"
+        tabs={[
+          {
+            value: "rotations",
+            label: "Rotations",
+            content: <RotationsTab rotations={rotations} />,
+          },
+        ]}
+      />
+    </div>
+  );
+}
+```
+
+**Also DELETE**:
+- `CharactersTab` function
+- `HistoryTab` function
+- `mockHistory` constant
+
+---
+
+### R1.5: Fix Sign-In Page Layout
+
+**Violation**: DC-001
+**Effort**: Low
+**Impact**: Medium
+
+**File**: `app/auth/sign-in/page.tsx`
+
+**Current**: Raw div wrapper without PageLayout
+**Target**: Use PageLayout for consistency
+
+**Implementation**:
+
+```tsx
+// app/auth/sign-in/page.tsx
+import { PageLayout } from "@/components/page";
+import { SignIn } from "@/components/auth/sign-in-content";
+
+export default function SignInPage() {
+  return (
+    <PageLayout
+      title="Sign In"
+      description="Sign in to your account"
+      breadcrumbs={[{ label: "Sign In" }]}
+    >
+      <div className="mx-auto max-w-md py-12">
+        <SignIn />
+      </div>
+    </PageLayout>
+  );
+}
+```
+
+---
+
+## Priority 2: Important (Do Soon)
+
+### R2.1: Add CTAs to Simulation Results Page
 
 **Violation**: UF-001
 **Effort**: Medium
 **Impact**: High
 
-**What to do**:
-Add a "What's Next?" section at the bottom of the results page with clear CTAs.
+**File to CREATE**: `components/simulate/results/next-steps.tsx`
+
+**File to UPDATE**: Add NextSteps to results tabs or page
 
 **Implementation**:
 
 ```tsx
-// New component: components/simulate/results/next-steps.tsx
+// components/simulate/results/next-steps.tsx
+import Link from "next/link";
+import { Sparkles, TrendingUp, BookOpen } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
 export function NextSteps() {
   return (
     <Card>
@@ -84,224 +345,29 @@ export function NextSteps() {
 }
 ```
 
-Add to results tabs or as a standalone section after tabs.
-
 ---
 
-### R1.3: Nest Editor Under Rotations
-
-**Violation**: IA-002, IA-004
-**Effort**: Low
-**Impact**: Medium
-
-**What to do**:
-Restructure navigation so Editor is part of Rotations group.
-
-**Implementation**:
-
-```tsx
-// menu-config.ts
-group("Rotations", [
-  item("Browse", "/rotations", Library),
-  item("Create", "/rotations/editor", PencilRuler),
-]),
-```
-
-Remove the "Create" group entirely.
-
----
-
-### R1.4: Add "Test Rotation" to Rotation Detail Page
+### R2.2: Add "Test Rotation" to Rotation Detail Page
 
 **Violation**: UF-002
 **Effort**: Medium
 **Impact**: High
 
-**What to do**:
-Add button to load rotation into simulation context.
-
-**Implementation**:
-
-```tsx
-// In rotation-detail-page.tsx
-<Button
-  variant="default"
-  size="sm"
-  onClick={() => {
-    // Store rotation in Jotai atom
-    setActiveRotation(rotation);
-    router.push("/simulate");
-  }}
->
-  <Play className="mr-2 h-4 w-4" />
-  Test with My Character
-</Button>
-```
-
-Requires:
-
-1. New atom to hold "active rotation for simulation"
-2. Simulate page to check for and use this rotation
-3. Clear the atom after simulation runs
+**Files to UPDATE**:
+- `components/rotations/rotation-detail-page.tsx` - Add test button
+- `atoms/sim/` - Add atom for active rotation
 
 ---
 
-## Priority 2: Important (Do Soon)
-
-### R2.1: Simplify Landing Page
-
-**Violation**: Landing page overload
-**Effort**: Medium
-**Impact**: Medium
-
-**What to do**:
-Reduce to 4 primary cards, collapse others into "More Tools" section.
-
-**Implementation**:
-
-```tsx
-// landing-content.tsx
-const primaryCards: LandingCardId[] = [
-  "quick-sim",
-  "recent",
-  "optimize",
-  "rankings",
-];
-
-const secondaryCards: LandingCardId[] = [
-  "rotations",
-  "talents", // After moving from Lab
-  "lab",
-];
-
-// Render primary cards in main grid
-// Render secondary in collapsible "More Tools" section
-```
-
----
-
-### R2.2: Hide or Mark Incomplete Features
-
-**Violation**: FC-001, FC-002
-**Effort**: Low
-**Impact**: Medium
-
-**What to do**:
-Either hide Characters/History tabs or add clear "Coming Soon" indicators.
-
-**Option A: Hide**:
-
-```tsx
-// account-tabs.tsx
-<UrlTabs
-  defaultTab="rotations"
-  tabs={[
-    { value: "rotations", label: "Rotations", content: <RotationsTab /> },
-    // Remove Characters and History tabs
-  ]}
-/>
-```
-
-**Option B: Mark Coming Soon**:
-
-```tsx
-{
-  value: "characters",
-  label: (
-    <span className="flex items-center gap-2">
-      Characters
-      <Badge variant="outline" className="text-xs">Soon</Badge>
-    </span>
-  ),
-  content: <ComingSoonPlaceholder feature="Characters" />,
-}
-```
-
----
-
-### R2.3: Fix Sign-In Page Layout
-
-**Violation**: DC-001
-**Effort**: Low
-**Impact**: Medium
-
-**What to do**:
-Use PageLayout or consistent AuthLayout.
-
-**Implementation**:
-
-```tsx
-// auth/sign-in/page.tsx
-import { PageLayout } from "@/components/page";
-
-export default function SignInPage() {
-  return (
-    <PageLayout
-      title="Sign In"
-      description="Sign in to your account"
-      breadcrumbs={[{ label: "Sign In" }]}
-    >
-      <div className="mx-auto max-w-md py-12">
-        <SignIn />
-      </div>
-    </PageLayout>
-  );
-}
-```
-
----
-
-### R2.4: Add Lab Overview Link to Navigation
-
-**Violation**: IA-005
-**Effort**: Low
-**Impact**: Low
-
-**What to do**:
-Add link to Lab hub page in Lab navigation group.
-
-**Implementation**:
-
-```tsx
-// menu-config.ts
-group("Lab", [
-  item("Overview", "/lab", FlaskConical),
-  item("Data Inspector", "/lab/data-inspector", Table),
-  item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
-]),
-```
-
----
-
-### R2.5: Connect Rankings to Tools
+### R2.3: Connect Rankings to Tools
 
 **Violation**: UF-004
 **Effort**: Medium
 **Impact**: Medium
 
-**What to do**:
-Add inline links from Rankings tabs to relevant tools.
-
-**Implementation in Top Talents tab**:
-
-```tsx
-// When displaying a talent build
-<Button variant="ghost" size="sm" asChild>
-  <Link href={`/talents?talents=${encodedTalents}`}>
-    <ExternalLink className="mr-1 h-3 w-3" />
-    Open in Calculator
-  </Link>
-</Button>
-```
-
-**Implementation in Top Sims tab**:
-
-```tsx
-// When displaying a rotation
-<Button variant="ghost" size="sm" asChild>
-  <Link href={`/rotations/${rotationId}`}>View Rotation</Link>
-</Button>
-```
+**Files to UPDATE**:
+- `components/rankings/top-talents-tab.tsx` - Add "Open in Calculator" links to `/talents?talents=...`
+- `components/rankings/top-sims-tab.tsx` - Add "View Rotation" links
 
 ---
 
@@ -309,153 +375,81 @@ Add inline links from Rankings tabs to relevant tools.
 
 ### R3.1: Standardize Container Widths
 
-**Violation**: DC-002
-**Effort**: Low
-**Impact**: Low
+**File**: `app/page.tsx`
 
-**What to do**:
-Update landing page to use same max-width as other pages.
-
-```tsx
-// page.tsx (landing)
-<main className="container mx-auto max-w-7xl space-y-6 px-4 py-6">
-```
-
-Or use PageLayout if appropriate for landing.
+Change `max-w-5xl` to `max-w-7xl` to match other pages.
 
 ---
 
 ### R3.2: Add Path from Simulate to Optimize
 
-**Violation**: UF-003
-**Effort**: Medium
-**Impact**: Medium
-
-**What to do**:
-Pass character context when navigating from Simulate to Optimize.
-
-**Implementation**:
-Character data is already in Jotai atoms. Optimize page needs to:
-
-1. Check if `parsedCharacterAtom` has data
-2. Use it to populate Top Gear starting point
-3. Show "Using character: {name}" indicator
+Pass character context via Jotai atoms when navigating.
 
 ---
 
 ### R3.3: Wire Up Editor Test Button
 
-**Violation**: FC-003
-**Effort**: High
-**Impact**: Medium
+**File**: `components/rotations/editor/rotation-editor.tsx`
 
-**What to do**:
-Connect the Test button to actually run a simulation with the current script.
-
-This requires:
-
-1. Saving script to temporary state
-2. Running simulation engine with script
-3. Displaying results inline or navigating to results
+Connect test button to simulation engine.
 
 ---
 
 ### R3.4: Progressive Auth Indication
 
-**Violation**: PD-002
-**Effort**: Low
-**Impact**: Low
+**File**: `components/layout/app-sidebar.tsx`
 
-**What to do**:
-Indicate auth requirement before user clicks Editor.
-
-**Implementation**:
-
-```tsx
-// In app-sidebar.tsx, when rendering Editor item
-const isAuthenticated = useIsAuthenticated();
-
-<SidebarMenuButton
-  asChild
-  isActive={isActive}
-  tooltip={isAuthenticated ? item.label : `${item.label} (Sign in required)`}
-  className={!isAuthenticated ? "opacity-60" : ""}
->
-```
-
-Or add a small lock icon to the nav item.
+Show lock icon or tooltip on Editor link when not authenticated.
 
 ---
 
 ### R3.5: Improve Breadcrumb Links
 
-**Violation**: Breadcrumb issues (see nav architecture doc)
-**Effort**: Low
-**Impact**: Low
-
-**What to do**:
-
-1. Make Lab breadcrumb clickable
-2. Show rotation names instead of "View"
-3. Standardize About/Changelog breadcrumbs
+- Make Lab breadcrumb clickable (add href to `/lab`)
+- Show rotation names instead of "View"
 
 ---
 
-## Implementation Roadmap
+## Complete File Change Summary
 
-### Phase 1: Quick Wins (1-2 days)
+### CREATE
 
-- [ ] R1.1: Move Talent Calculator
-- [ ] R1.3: Nest Editor under Rotations
-- [ ] R2.2: Hide incomplete features
-- [ ] R2.4: Add Lab overview link
+| File | Purpose |
+|------|---------|
+| `app/talents/page.tsx` | Talent calculator page |
+| `app/talents/loading.tsx` | Talent calculator loading skeleton |
+| `components/simulate/results/next-steps.tsx` | Results page CTAs |
 
-### Phase 2: User Flow (3-5 days)
+### MOVE
 
-- [ ] R1.2: Add CTAs to Results page
-- [ ] R1.4: Add "Test Rotation" button
-- [ ] R2.5: Connect Rankings to tools
+| From | To |
+|------|-----|
+| `components/lab/talent-calculator/talent-calculator-content.tsx` | `components/talents/talent-calculator-content.tsx` |
+| `components/lab/talent-calculator/talent-calculator-skeleton.tsx` | `components/talents/talent-calculator-skeleton.tsx` |
+| `components/lab/talent-calculator/talent-start-screen.tsx` | `components/talents/talent-start-screen.tsx` |
+| `components/lab/talent-calculator/talent-state-message.tsx` | `components/talents/talent-state-message.tsx` |
+| `components/lab/talent-calculator/talent-string-bar.tsx` | `components/talents/talent-string-bar.tsx` |
+| `components/lab/talent-calculator/talent-encoding.ts` | `components/talents/talent-encoding.ts` |
 
-### Phase 3: Polish (2-3 days)
+### DELETE
 
-- [ ] R2.1: Simplify Landing page
-- [ ] R2.3: Fix Sign-in layout
-- [ ] R3.1: Standardize container widths
-- [ ] R3.4: Progressive auth indication
-- [ ] R3.5: Improve breadcrumbs
+| File | Reason |
+|------|--------|
+| `app/lab/talent-calculator/page.tsx` | Route moved |
+| `app/lab/talent-calculator/loading.tsx` | Route moved |
+| `components/lab/talent-calculator/index.ts` | Folder deleted |
+| `components/lab/overview/cards/talent-calculator-card.tsx` | Not in Lab anymore |
 
-### Phase 4: Advanced (ongoing)
+### UPDATE
 
-- [ ] R3.2: Simulate to Optimize path
-- [ ] R3.3: Wire up Editor test
-- [ ] Implement actual Characters feature
-- [ ] Implement actual History feature
-
-## Success Metrics
-
-After implementing these changes, measure:
-
-1. **Navigation efficiency**: Clicks to complete common tasks
-2. **Feature discovery**: % of users who find Talent Calculator
-3. **Engagement depth**: Users who go from Simulate → another feature
-4. **Rotation adoption**: Conversions from Detail → Fork/Test
-5. **User retention**: Return visits after first simulation
-
-## Code Locations for Changes
-
-| Recommendation | Primary Files                                                 |
-| -------------- | ------------------------------------------------------------- |
-| R1.1           | `lib/menu-config.ts`, `app/lab/talent-calculator/page.tsx`    |
-| R1.2           | `components/simulate/results/` (new file)                     |
-| R1.3           | `lib/menu-config.ts`                                          |
-| R1.4           | `components/rotations/rotation-detail-page.tsx`, `atoms/sim/` |
-| R2.1           | `components/landing/landing-content.tsx`, `atoms/landing.ts`  |
-| R2.2           | `components/account/account-tabs.tsx`                         |
-| R2.3           | `app/auth/sign-in/page.tsx`                                   |
-| R2.4           | `lib/menu-config.ts`                                          |
-| R2.5           | `components/rankings/` (multiple files)                       |
-| R3.1           | `app/page.tsx`                                                |
-| R3.2           | `components/optimize/`, `atoms/sim/`                          |
-| R3.3           | `components/rotations/editor/rotation-editor.tsx`             |
-| R3.4           | `components/layout/app-sidebar.tsx`                           |
-| R3.5           | Multiple page.tsx files                                       |
+| File | Change |
+|------|--------|
+| `lib/menu-config.ts` | New nav structure |
+| `atoms/landing/state.ts` | New card IDs |
+| `components/landing/landing-content.tsx` | New cards |
+| `components/talents/index.ts` | Export moved components |
+| `components/talents/talent-hover-link.tsx` | Update link to `/talents` |
+| `components/lab/overview/cards/index.ts` | Remove talent calculator export |
+| `components/lab/overview/lab-content.tsx` | Remove TalentCalculatorCard |
+| `components/account/account-tabs.tsx` | Remove Characters/History tabs |
+| `app/auth/sign-in/page.tsx` | Use PageLayout |
