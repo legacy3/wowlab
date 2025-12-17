@@ -218,7 +218,7 @@ function EmailDisplay({ email }: { email?: string }) {
 
 export function ProfileSettingsCard() {
   const router = useRouter();
-  const { data: identity } = useGetIdentity<{
+  const { data: identity, refetch } = useGetIdentity<{
     id: string;
     handle: string;
     email?: string;
@@ -244,6 +244,7 @@ export function ProfileSettingsCard() {
 
   const handleEditSuccess = () => {
     setIsEditing(false);
+    refetch();
     router.refresh();
   };
 
