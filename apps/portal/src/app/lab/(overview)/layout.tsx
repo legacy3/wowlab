@@ -1,14 +1,17 @@
 import { PageLayout } from "@/components/page";
-import { LabContent } from "@/components/lab/overview";
 
-export default function LabPage() {
+export default function LabOverviewLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Lab"
       description="Experimental tools and data exploration"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Lab" }]}
     >
-      <LabContent />
+      {children}
     </PageLayout>
   );
 }

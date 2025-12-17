@@ -3,7 +3,7 @@ import { LandingContent } from "@/components/landing";
 
 export default function Home() {
   return (
-    <main className="container mx-auto max-w-5xl space-y-6 px-4 py-6">
+    <>
       <header className="space-y-1">
         <div className="flex items-center gap-3">
           <Image
@@ -21,6 +21,6 @@ export default function Home() {
       </header>
 
       <LandingContent />
-    </main>
+    </>
   );
 }

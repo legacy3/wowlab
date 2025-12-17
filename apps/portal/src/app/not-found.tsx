@@ -1,35 +1,39 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { HeaderBackground } from "@/components/page";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
+  const router = useRouter();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="mx-auto max-w-md space-y-6 text-center">
-        <div className="space-y-2">
-          <h1 className="text-6xl font-bold tracking-tighter">404</h1>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Page not found
-          </h2>
-          <p className="text-muted-foreground">
-            The page you&apos;re looking for doesn&apos;t exist or has been
-            moved.
-          </p>
+    <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl border bg-card">
+      <HeaderBackground size={900} />
+
+      <div className="relative z-10 flex max-w-xl flex-col items-center gap-5 px-8 py-16 text-center">
+        <div className="text-8xl font-extrabold tracking-tighter sm:text-9xl">
+          404
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button asChild>
-            <Link href="/">
-              <Home className="mr-2 h-4 w-4" />
-              Go Home
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Go Back
-          </Button>
-        </div>
+        <p className="text-lg text-muted-foreground">
+          That page doesn’t exist (or it moved).
+        </p>
+
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Go Back
+        </Button>
       </div>
     </div>
   );

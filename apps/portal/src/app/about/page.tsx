@@ -1,4 +1,3 @@
-import { PageLayout } from "@/components/page";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import { DocArticle } from "@/components/docs";
 
@@ -8,44 +7,38 @@ import * as MdPrivacy from "@/content/about/privacy-policy.md";
 
 export default function AboutPage() {
   return (
-    <PageLayout
-      title="About"
-      description="What is WoW Lab and how does it work"
-      breadcrumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
-    >
-      <UrlTabs
-        paramName="tab"
-        defaultTab="about"
-        tabs={[
-          {
-            value: "about",
-            label: MdOverview.meta.title,
-            content: (
-              <DocArticle meta={MdOverview.meta}>
-                <MdOverview.default />
-              </DocArticle>
-            ),
-          },
-          {
-            value: "terms-of-service",
-            label: MdTerms.meta.title,
-            content: (
-              <DocArticle meta={MdTerms.meta}>
-                <MdTerms.default />
-              </DocArticle>
-            ),
-          },
-          {
-            value: "privacy-policy",
-            label: MdPrivacy.meta.title,
-            content: (
-              <DocArticle meta={MdPrivacy.meta}>
-                <MdPrivacy.default />
-              </DocArticle>
-            ),
-          },
-        ]}
-      />
-    </PageLayout>
+    <UrlTabs
+      paramName="tab"
+      defaultTab="about"
+      tabs={[
+        {
+          value: "about",
+          label: MdOverview.meta.title,
+          content: (
+            <DocArticle meta={MdOverview.meta}>
+              <MdOverview.default />
+            </DocArticle>
+          ),
+        },
+        {
+          value: "terms-of-service",
+          label: MdTerms.meta.title,
+          content: (
+            <DocArticle meta={MdTerms.meta}>
+              <MdTerms.default />
+            </DocArticle>
+          ),
+        },
+        {
+          value: "privacy-policy",
+          label: MdPrivacy.meta.title,
+          content: (
+            <DocArticle meta={MdPrivacy.meta}>
+              <MdPrivacy.default />
+            </DocArticle>
+          ),
+        },
+      ]}
+    />
   );
 }

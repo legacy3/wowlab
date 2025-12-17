@@ -1,14 +1,17 @@
 import { PageLayout } from "@/components/page";
-import { RotationsBrowse } from "@/components/rotations/rotations-content";
 
-export default function RotationsPage() {
+export default function RotationsBrowseLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Browse Rotations"
       description="Explore community-created rotation simulations"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Rotations" }]}
     >
-      <RotationsBrowse />
+      {children}
     </PageLayout>
   );
 }

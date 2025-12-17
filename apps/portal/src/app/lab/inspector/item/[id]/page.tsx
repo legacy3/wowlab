@@ -1,4 +1,3 @@
-import { PageLayout } from "@/components/page/page-layout";
 import { ItemDetailPage } from "@/components/lab/inspector/item";
 
 interface ItemInspectorPageProps {
@@ -10,17 +9,5 @@ export default async function ItemInspectorPage({
 }: ItemInspectorPageProps) {
   const { id } = await params;
 
-  return (
-    <PageLayout
-      title="Item Inspector"
-      breadcrumbs={[
-        { label: "Home", href: "/" },
-        { label: "Lab", href: "/lab" },
-        { label: "Inspector", href: "/lab/inspector/search" },
-        { label: `Item #${id}` },
-      ]}
-    >
-      <ItemDetailPage itemId={id} />
-    </PageLayout>
-  );
+  return <ItemDetailPage itemId={id} />;
 }

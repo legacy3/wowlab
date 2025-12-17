@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { useGetIdentity, useIsAuthenticated, useList } from "@refinedev/core";
-import { PageLayout } from "@/components/page";
 import { AccountTabs } from "@/components/account/account-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -48,14 +47,7 @@ export default function AccountPage() {
   });
 
   if (authLoading || identityLoading || rotationsLoading) {
-    return (
-      <PageLayout
-        title="Account"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Account" }]}
-      >
-        <AccountSkeleton />
-      </PageLayout>
-    );
+    return <AccountSkeleton />;
   }
 
   if (!auth?.authenticated || !identity) {
@@ -64,12 +56,5 @@ export default function AccountPage() {
 
   const rotations = rotationsResult?.data ?? [];
 
-  return (
-    <PageLayout
-      title="Account"
-      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Account" }]}
-    >
-      <AccountTabs user={identity} rotations={rotations} />
-    </PageLayout>
-  );
+  return <AccountTabs user={identity} rotations={rotations} />;
 }

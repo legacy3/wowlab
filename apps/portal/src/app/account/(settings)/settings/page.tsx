@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { useIsAuthenticated } from "@refinedev/core";
-import { PageLayout } from "@/components/page";
 import { SettingsOverview } from "@/components/account/settings-overview";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -28,36 +27,12 @@ export default function SettingsPage() {
   const { data: auth, isLoading } = useIsAuthenticated();
 
   if (isLoading) {
-    return (
-      <PageLayout
-        title="Settings"
-        description="Manage your account settings and preferences"
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Account", href: "/account" },
-          { label: "Settings" },
-        ]}
-      >
-        <SettingsSkeleton />
-      </PageLayout>
-    );
+    return <SettingsSkeleton />;
   }
 
   if (!auth?.authenticated) {
     redirect("/auth/sign-in");
   }
 
-  return (
-    <PageLayout
-      title="Settings"
-      description="Manage your account settings and preferences"
-      breadcrumbs={[
-        { label: "Home", href: "/" },
-        { label: "Account", href: "/account" },
-        { label: "Settings" },
-      ]}
-    >
-      <SettingsOverview />
-    </PageLayout>
-  );
+  return <SettingsOverview />;
 }

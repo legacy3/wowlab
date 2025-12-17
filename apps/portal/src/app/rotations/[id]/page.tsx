@@ -1,4 +1,3 @@
-import { PageLayout } from "@/components/page";
 import { RotationDetail } from "@/components/rotations/rotation-detail-page";
 import { notFound } from "next/navigation";
 
@@ -18,16 +17,5 @@ export default async function RotationPage({ params }: RotationPageProps) {
     notFound();
   }
 
-  return (
-    <PageLayout
-      title="Rotation"
-      breadcrumbs={[
-        { label: "Home", href: "/" },
-        { label: "Rotations", href: "/rotations" },
-        { label: "View" },
-      ]}
-    >
-      <RotationDetail rotationId={id} />
-    </PageLayout>
-  );
+  return <RotationDetail rotationId={id} />;
 }

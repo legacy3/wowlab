@@ -1,14 +1,17 @@
 import { PageLayout } from "@/components/page";
-import { QuickSimContent } from "@/components/simulate/quick-sim-content";
 
-export default function SimulatePage() {
+export default function SimulateLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Simulate"
       description="Configure your character and run a simulation"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Simulate" }]}
     >
-      <QuickSimContent />
+      {children}
     </PageLayout>
   );
 }
