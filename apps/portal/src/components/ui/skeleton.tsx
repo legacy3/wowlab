@@ -10,4 +10,153 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { Skeleton };
+/** Skeleton for a line of text */
+function TextSkeleton({
+  width = "full",
+  className,
+}: {
+  width?: "full" | "3/4" | "2/3" | "1/2" | "1/3" | "1/4";
+  className?: string;
+}) {
+  const widthClass = {
+    full: "w-full",
+    "3/4": "w-3/4",
+    "2/3": "w-2/3",
+    "1/2": "w-1/2",
+    "1/3": "w-1/3",
+    "1/4": "w-1/4",
+  }[width];
+
+  return <Skeleton className={cn("h-4", widthClass, className)} />;
+}
+
+/** Skeleton for tab list (UrlTabs) */
+function TabsSkeleton({
+  tabCount = 3,
+  className,
+}: {
+  tabCount?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px]",
+        className,
+      )}
+    >
+      {Array.from({ length: tabCount }).map((_, i) => (
+        <Skeleton key={i} className="h-7 w-24 rounded-md" />
+      ))}
+    </div>
+  );
+}
+
+/** Skeleton for prose/markdown content */
+function ProseSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("max-w-3xl space-y-4", className)}>
+      <Skeleton className="h-8 w-2/3" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-4/5" />
+      <Skeleton className="h-6 w-1/2 mt-6" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+    </div>
+  );
+}
+
+/** Skeleton for a tree structure (like DocTree) */
+function TreeSkeleton({
+  itemCount = 5,
+  className,
+}: {
+  itemCount?: number;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      {Array.from({ length: itemCount }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2 py-1.5 px-2">
+          <Skeleton className="h-4 w-4 shrink-0" />
+          <Skeleton
+            className="h-4"
+            style={{ width: `${Math.max(30, 80 - i * 10)}%` }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Skeleton for a search input with filter button */
+function SearchBarSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        className,
+      )}
+    >
+      <Skeleton className="h-10 flex-1 max-w-md" />
+      <Skeleton className="h-9 w-24" />
+    </div>
+  );
+}
+
+/** Skeleton for a grid of cards */
+function CardGridSkeleton({
+  count = 3,
+  columns = 3,
+  cardHeight = "h-48",
+  className,
+}: {
+  count?: number;
+  columns?: 2 | 3 | 4;
+  cardHeight?: string;
+  className?: string;
+}) {
+  const gridClass = {
+    2: "md:grid-cols-2",
+    3: "md:grid-cols-2 lg:grid-cols-3",
+    4: "md:grid-cols-2 lg:grid-cols-4",
+  }[columns];
+
+  return (
+    <div className={cn("grid gap-3", gridClass, className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} className={cardHeight} />
+      ))}
+    </div>
+  );
+}
+
+/** Skeleton for user profile header */
+function ProfileHeaderSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-6 rounded-lg border bg-card p-6",
+        className,
+      )}
+    >
+      <Skeleton className="h-24 w-24 rounded-full" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </div>
+  );
+}
+
+export {
+  Skeleton,
+  TextSkeleton,
+  TabsSkeleton,
+  ProseSkeleton,
+  TreeSkeleton,
+  SearchBarSkeleton,
+  CardGridSkeleton,
+  ProfileHeaderSkeleton,
+};

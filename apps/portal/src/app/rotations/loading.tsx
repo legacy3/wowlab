@@ -1,18 +1,27 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLayout } from "@/components/page";
+import {
+  Skeleton,
+  SearchBarSkeleton,
+  CardGridSkeleton,
+} from "@/components/ui/skeleton";
 
 export default function RotationsLoading() {
   return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="space-y-3">
-          <Skeleton className="h-6 w-32" />
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((j) => (
-              <Skeleton key={j} className="h-48" />
-            ))}
+    <PageLayout
+      title="Browse Rotations"
+      description="Explore community-created rotation simulations"
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Rotations" }]}
+    >
+      <div className="space-y-4">
+        <SearchBarSkeleton />
+        <Skeleton className="h-4 w-48" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="h-6 w-32" />
+            <CardGridSkeleton count={3} columns={3} cardHeight="h-48" />
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </PageLayout>
   );
 }
