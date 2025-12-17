@@ -10,7 +10,6 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-/** Skeleton for a line of text */
 function TextSkeleton({
   width = "full",
   className,
@@ -30,7 +29,6 @@ function TextSkeleton({
   return <Skeleton className={cn("h-4", widthClass, className)} />;
 }
 
-/** Skeleton for tab list (UrlTabs) */
 function TabsSkeleton({
   tabCount = 3,
   className,
@@ -52,7 +50,6 @@ function TabsSkeleton({
   );
 }
 
-/** Skeleton for prose/markdown content */
 function ProseSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("max-w-3xl space-y-4", className)}>
@@ -67,7 +64,6 @@ function ProseSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** Skeleton for a tree structure (like DocTree) */
 function TreeSkeleton({
   itemCount = 5,
   className,
@@ -90,7 +86,6 @@ function TreeSkeleton({
   );
 }
 
-/** Skeleton for a search input with filter button */
 function SearchBarSkeleton({ className }: { className?: string }) {
   return (
     <div
@@ -105,7 +100,6 @@ function SearchBarSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** Skeleton for a grid of cards */
 function CardGridSkeleton({
   count = 3,
   columns = 3,
@@ -132,7 +126,6 @@ function CardGridSkeleton({
   );
 }
 
-/** Skeleton for user profile header */
 function ProfileHeaderSkeleton({ className }: { className?: string }) {
   return (
     <div
