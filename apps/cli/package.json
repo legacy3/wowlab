@@ -35,8 +35,7 @@
     "immutable": "^5.1.4",
     "json-bigint": "^1.0.0",
     "stream-json": "^1.9.1",
-    "tsx": "^4.20.6",
-    "yaml": "^2.8.2"
+    "tsx": "^4.20.6"
   },
   "devDependencies": {
     "@types/json-bigint": "^1.0.4",

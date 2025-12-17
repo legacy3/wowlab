@@ -440,7 +440,7 @@ export const transformTalentTree = (
     }
 
     // 17. Assemble the nodes using the pre-fetched data
-    const nodes: Talent.TalentNode[] = filteredNodes
+    const nodes = filteredNodes
       .map((node, nodeIndex) => {
         const specInfo = nodeSpecInfo.get(node.ID);
         if (specInfo?.allowed && !specInfo.allowed.has(specId)) {
@@ -543,7 +543,7 @@ export const transformTalentTree = (
           type: node.Type,
         };
       })
-      .filter((n): n is Talent.TalentNode => n !== null);
+      .filter((n): n is NonNullable<typeof n> => n !== null);
 
     // 18. Build subtrees with icons derived from their nodes
     const subTrees: Talent.TalentSubTree[] = subTreeResults

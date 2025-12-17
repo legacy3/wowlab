@@ -4,7 +4,6 @@ import {
   CheckSquare,
   FlaskConical,
   GitFork,
-  History,
   type LucideIcon,
   PencilRuler,
   Play,
@@ -71,7 +70,6 @@ export const menuConfig: MenuGroup[] = [
   ]),
   group("About", [
     item("About", "/about", FlaskConical),
-    item("Changelog", "/changelog", History),
     item("Docs", "/docs", BookOpen),
     link("GitHub", env.GITHUB_REPO_URL, GitFork),
   ]),

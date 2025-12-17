@@ -14,30 +14,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      changelog: {
-        Row: {
-          changes: Json;
-          createdAt: string;
-          id: string;
-          updatedAt: string;
-          version: string;
-        };
-        Insert: {
-          changes: Json;
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-          version: string;
-        };
-        Update: {
-          changes?: Json;
-          createdAt?: string;
-          id?: string;
-          updatedAt?: string;
-          version?: string;
-        };
-        Relationships: [];
-      };
       fight_profiles: {
         Row: {
           category: string;
