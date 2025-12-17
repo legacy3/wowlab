@@ -137,7 +137,6 @@ export type Database = {
         Row: {
           avatarUrl: string | null;
           createdAt: string;
-          email: string;
           handle: string;
           id: string;
           updatedAt: string;
@@ -145,7 +144,6 @@ export type Database = {
         Insert: {
           avatarUrl?: string | null;
           createdAt?: string;
-          email: string;
           handle: string;
           id: string;
           updatedAt?: string;
@@ -153,7 +151,6 @@ export type Database = {
         Update: {
           avatarUrl?: string | null;
           createdAt?: string;
-          email?: string;
           handle?: string;
           id?: string;
           updatedAt?: string;

@@ -55,13 +55,13 @@ export function createAuthProvider(): AuthProvider {
 
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("handle, avatarUrl, email")
+        .select("handle, avatarUrl")
         .eq("id", user.id)
         .single();
 
       return {
         id: user.id,
-        email: user.email ?? profile?.email,
+        email: user.email,
         handle: profile?.handle,
         avatarUrl: profile?.avatarUrl,
       };
