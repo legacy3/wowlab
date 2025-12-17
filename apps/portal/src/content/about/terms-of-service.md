@@ -1,6 +1,11 @@
+---
+title: Terms of Service
+updatedAt: 2025-12-14
+---
+
 ## Using WoW Lab
 
-WoW Lab is a free, community-run simulator for World of Warcraft. It’s for personal, non-commercial use. We are not affiliated with Blizzard Entertainment.
+WoW Lab is a free, community-run simulator for World of Warcraft. It's for personal, non-commercial use. We are not affiliated with Blizzard Entertainment.
 
 ## No warranties
 
@@ -12,20 +17,18 @@ Sign-in uses third-party OAuth providers like [Discord](https://discord.com) or 
 
 ## Content you share
 
-You’re responsible for rotations or other material you publish. You let us host and display it inside the service.
+You're responsible for rotations or other material you publish. You let us host and display it inside the service.
 
 ## Acceptable use
 
-- Don’t attack, scrape, or overload the service.
-- Don’t try to bypass security or abuse authentication.
-- Don’t upload illegal or malicious content.
+- Don't attack, scrape, or overload the service.
+- Don't try to bypass security or abuse authentication.
+- Don't upload illegal or malicious content.
 
 ## Liability
 
-This is a free service without liability. If it’s unavailable, inaccurate, or causes loss, you use it at your own risk and we’re not responsible.
+This is a free service without liability. If it's unavailable, inaccurate, or causes loss, you use it at your own risk and we're not responsible.
 
 ## Changes
 
-We may update these terms. When changes are material, we’ll update the date and, when reasonable, call out the changes in the app.
-
-_Last updated: December 14, 2025_
+We may update these terms. When changes are material, we'll update the date and, when reasonable, call out the changes in the app.

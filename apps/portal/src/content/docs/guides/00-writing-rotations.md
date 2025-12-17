@@ -1,3 +1,9 @@
+---
+title: Writing Rotations
+description: How to write rotation priority lists
+updatedAt: 2025-12-17
+---
+
 # Writing Rotations
 
 Rotations are priority lists written in JavaScript. All you write is the spell priority. The framework handles everything else.

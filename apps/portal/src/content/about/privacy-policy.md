@@ -1,3 +1,8 @@
+---
+title: Privacy Policy
+updatedAt: 2025-12-14
+---
+
 ## What we collect
 
 | Data                           | Source                                                                                     | Why                                          |
@@ -21,6 +26,4 @@ Delete your account any time in [account settings](/account/settings). This is i
 
 ## Cookies and local storage
 
-Supabase auth uses cookies to keep you signed in. We also keep small client-side caches to speed up loading; see the caching notes in the [Data Model docs](/docs/reference/01-data-model) for more detail on what’s stored locally.
-
-_Last updated: December 14, 2025_
+Supabase auth uses cookies to keep you signed in. We also keep small client-side caches to speed up loading; see the caching notes in the [Data Model docs](/docs/reference/01-data-model) for more detail on what's stored locally.

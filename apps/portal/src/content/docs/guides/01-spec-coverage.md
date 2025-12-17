@@ -1,3 +1,9 @@
+---
+title: Spec Coverage
+description: Check which spells are supported for each spec
+updatedAt: 2025-12-17
+---
+
 # Spec Coverage
 
 The [spec coverage tool](/lab/spec-coverage) shows which spells are currently supported by the simulator.

@@ -1,3 +1,9 @@
+---
+title: Contributing
+description: Dev setup for working on WoWLab
+updatedAt: 2025-12-17
+---
+
 # Contributing
 
 Want to hack on WoW Lab? Here is how to get set up.
@@ -36,4 +42,4 @@ We lean on [Effect-TS](https://effect.website/) for effectful code in the core p
 
 ## Editing docs
 
-Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs.ts`.
+Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs/` (the relevant `section.*` module).

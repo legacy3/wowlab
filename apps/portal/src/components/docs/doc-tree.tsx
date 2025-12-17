@@ -4,38 +4,40 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { Tree, type TreeNode } from "@/components/ui/tree";
 import { cn } from "@/lib/utils";
-import type { DocMeta } from "@/lib/docs";
+import type { DocEntry } from "@/lib/docs";
 
 type DocTreeProps = {
-  items: DocMeta[];
+  items: DocEntry[];
   basePath?: string;
   activeSlug?: string;
 };
 
 function extractNumber(slug: string): string | null {
-  const match = slug.match(/^(\d+)-/);
+  const lastSegment = slug.split("/").pop() ?? slug;
+  const match = lastSegment.match(/^(\d+)-/);
   return match ? String(parseInt(match[1], 10) + 1) : null;
 }
 
-function docMetaToTreeNodes(items: DocMeta[], basePath: string): TreeNode[] {
+function docEntryToTreeNodes(items: DocEntry[], basePath: string): TreeNode[] {
   return items.map((item) => {
     const hasChildren = item.children && item.children.length > 0;
-    const href = `${basePath}/${item.slug}`;
 
     if (hasChildren) {
       return {
-        id: href,
+        id: `group:${item.slug}`,
         label: <span className="font-medium text-sm">{item.title}</span>,
-        children: docMetaToTreeNodes(item.children!, href),
+        children: docEntryToTreeNodes(item.children!, basePath),
       };
     }
+
+    const href = `${basePath}/${item.slug}`;
 
     return {
       id: href,
       label: null,
       _href: href,
       _item: item,
-    } as TreeNode & { _href: string; _item: DocMeta };
+    } as TreeNode & { _href: string; _item: DocEntry };
   });
 }
 
@@ -58,11 +60,11 @@ export function DocTree({
   basePath = "/docs",
   activeSlug,
 }: DocTreeProps) {
-  const nodes = docMetaToTreeNodes(items, basePath);
+  const nodes = docEntryToTreeNodes(items, basePath);
   const activeHref = activeSlug ? `${basePath}/${activeSlug}` : null;
 
   const renderLeaf = (node: TreeNode) => {
-    const extended = node as TreeNode & { _href: string; _item: DocMeta };
+    const extended = node as TreeNode & { _href: string; _item: DocEntry };
     const isActive = extended._href === activeHref;
 
     return (
