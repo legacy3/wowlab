@@ -15,6 +15,7 @@ type DocTreeProps = {
 function extractNumber(slug: string): string | null {
   const lastSegment = slug.split("/").pop() ?? slug;
   const match = lastSegment.match(/^(\d+)-/);
+
   return match ? String(parseInt(match[1], 10) + 1) : null;
 }
 
