@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { Tree, type TreeNode } from "@/components/ui/tree";
 import { cn } from "@/lib/utils";
-import type { DocEntry } from "@/lib/docs";
+import type { DocEntry } from "@/lib/docs/types";
 
 type DocTreeProps = {
   items: DocEntry[];

@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: What WoWLab is and what you can do with it
+description: What WoW Lab is and what you can do with it
 updatedAt: 2025-12-17
 ---
 

@@ -4,7 +4,8 @@ import { overview } from "./section.overview";
 import { reference } from "./section.reference";
 
 import type { Doc, DocEntry } from "./types";
-export type { Doc, DocEntry, DocMeta } from "./types";
+import type { NavItem } from "@/lib/content/types";
+import { createNavItem } from "@/lib/content";
 
 function mergeDocs(parts: Array<Record<string, Doc>>): Record<string, Doc> {
   const merged: Record<string, Doc> = {};
@@ -54,11 +55,11 @@ export function getDoc(slug: string): Doc | undefined {
   return docs[slug];
 }
 
-export function getNavMeta(slug: string) {
+export function getNavMeta(slug: string): NavItem {
   const doc = docs[slug];
   if (!doc) {
     return null;
   }
 
-  return { slug, title: doc.meta.title, href: `/docs/${slug}` };
+  return createNavItem(slug, doc.meta.title, "/docs");
 }

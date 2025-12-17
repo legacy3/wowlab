@@ -1,17 +1,17 @@
-import type { ComponentType } from "react";
+import type {
+  ContentItem,
+  ContentEntry,
+  ContentMeta,
+} from "@/lib/content/types";
 
-export interface DocMeta {
+export interface DocMeta extends ContentMeta {
   title: string;
   description?: string;
   updatedAt?: string;
 }
 
-export type Doc = {
-  default: ComponentType;
-  meta: DocMeta;
-};
+export type Doc = ContentItem<DocMeta>;
 
-export type DocEntry = DocMeta & {
-  slug: string;
+export type DocEntry = ContentEntry<DocMeta> & {
   children?: DocEntry[];
 };

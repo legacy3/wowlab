@@ -3,6 +3,8 @@ title: Terms of Service
 updatedAt: 2025-12-14
 ---
 
+# Terms of Service
+
 ## Using WoW Lab
 
 WoW Lab is a free, community-run simulator for World of Warcraft. It's for personal, non-commercial use. We are not affiliated with Blizzard Entertainment.

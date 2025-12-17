@@ -1,5 +1,6 @@
-import { DocArticle } from "@/components/docs";
-import { DocNav } from "@/components/docs/doc-nav";
+import { ContentArticle } from "@/components/content/content-article";
+import { ContentNav } from "@/components/content/content-nav";
+import { DocUpdatedAt } from "@/components/docs/doc-updated-at";
 import { DocSidebar } from "@/components/docs/doc-sidebar";
 import { docSlugs } from "@/lib/docs";
 import { getDocPageData } from "./doc-data";
@@ -20,13 +21,13 @@ export default async function DocPage({ params }: Props) {
     <div className="flex gap-8">
       <DocSidebar currentSlug={fullSlug} />
 
-      <DocArticle
-        className="flex-1 min-w-0"
-        meta={meta}
-        footer={<DocNav prev={prev} next={next} />}
+      <ContentArticle
+        className="flex-1 min-w-0 max-w-3xl"
+        afterContent={<DocUpdatedAt date={meta.updatedAt} />}
+        footer={<ContentNav prev={prev} next={next} />}
       >
         <Content />
-      </DocArticle>
+      </ContentArticle>
     </div>
   );
 }

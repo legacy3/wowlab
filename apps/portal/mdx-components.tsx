@@ -1,31 +1,24 @@
 import type { MDXComponents } from "mdx/types";
+import { MdH2, MdH3, MdH4 } from "@/components/docs/md-heading";
+import { MdParagraph, MdBlockquote } from "@/components/docs/md-text";
+import { MdUl, MdOl, MdLi } from "@/components/docs/md-list";
+import { MdLink } from "@/components/docs/md-link";
 import {
-  MdH1,
-  MdH2,
-  MdH3,
-  MdH4,
-  MdParagraph,
-  MdBlockquote,
-  MdUl,
-  MdOl,
-  MdLi,
-  MdLink,
   MdTable,
   MdThead,
   MdTbody,
   MdTr,
   MdTh,
   MdTd,
-  MdPre,
-  MdCode,
-} from "@/components/docs";
+} from "@/components/docs/md-table";
+import { MdPre, MdCode } from "@/components/docs/md-code";
 
 // prettier-ignore
 const components: MDXComponents = {
-  h1: ({ children }) => <MdH1>{children}</MdH1>,
-  h2: ({ children }) => <MdH2>{children}</MdH2>,
-  h3: ({ children }) => <MdH3>{children}</MdH3>,
-  h4: ({ children }) => <MdH4>{children}</MdH4>,
+  h1: () => null, // Title shown in PageLayout, skip h1 from markdown
+  h2: ({ id, children }) => <MdH2 id={id}>{children}</MdH2>,
+  h3: ({ id, children }) => <MdH3 id={id}>{children}</MdH3>,
+  h4: ({ id, children }) => <MdH4 id={id}>{children}</MdH4>,
   p: ({ children }) => <MdParagraph>{children}</MdParagraph>,
   blockquote: ({ children }) => <MdBlockquote>{children}</MdBlockquote>,
   ul: ({ children }) => <MdUl>{children}</MdUl>,

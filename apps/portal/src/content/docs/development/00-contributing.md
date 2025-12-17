@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: Dev setup for working on WoWLab
+description: Dev setup for working on WoW Lab
 updatedAt: 2025-12-17
 ---
 
@@ -43,3 +43,7 @@ We lean on [Effect-TS](https://effect.website/) for effectful code in the core p
 ## Editing docs
 
 Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs/` (the relevant `section.*` module).
+
+## Questions
+
+Got stuck or have ideas? Reach out on [Discord](/discord) or open an issue on [GitHub](https://github.com/legacy3/wowlab/issues).

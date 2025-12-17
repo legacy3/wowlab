@@ -1,5 +1,5 @@
 import { UrlTabs } from "@/components/ui/url-tabs";
-import { DocArticle } from "@/components/docs";
+import { ContentArticle } from "@/components/content/content-article";
 
 import * as MdOverview from "@/content/about/overview.md";
 import * as MdTerms from "@/content/about/terms-of-service.md";
@@ -15,27 +15,27 @@ export default function AboutPage() {
           value: "about",
           label: MdOverview.meta.title,
           content: (
-            <DocArticle meta={MdOverview.meta}>
+            <ContentArticle>
               <MdOverview.default />
-            </DocArticle>
+            </ContentArticle>
           ),
         },
         {
           value: "terms-of-service",
           label: MdTerms.meta.title,
           content: (
-            <DocArticle meta={MdTerms.meta}>
+            <ContentArticle>
               <MdTerms.default />
-            </DocArticle>
+            </ContentArticle>
           ),
         },
         {
           value: "privacy-policy",
           label: MdPrivacy.meta.title,
           content: (
-            <DocArticle meta={MdPrivacy.meta}>
+            <ContentArticle>
               <MdPrivacy.default />
-            </DocArticle>
+            </ContentArticle>
           ),
         },
       ]}

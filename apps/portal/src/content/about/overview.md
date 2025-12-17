@@ -3,6 +3,8 @@ title: Overview
 description: What is WoW Lab and how does it work
 ---
 
+# Overview
+
 ## What it is
 
 WoW Lab is a free, open-source World of Warcraft simulation toolkit. It lets you test rotations, compare gear, and theorycraft without waiting in queues. The entire simulation runs in your browser so you can iterate quickly.

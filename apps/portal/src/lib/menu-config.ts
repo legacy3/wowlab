@@ -1,10 +1,10 @@
+import type { ComponentType, SVGProps } from "react";
 import {
   BookOpen,
   Calculator,
   CheckSquare,
   FlaskConical,
-  GitFork,
-  type LucideIcon,
+  Newspaper,
   PencilRuler,
   Play,
   Sparkles,
@@ -14,11 +14,14 @@ import {
 } from "lucide-react";
 
 import { env } from "./env";
+import { DiscordIcon, GitHubIcon } from "./icons";
+
+type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 
 export type MenuItem = {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: Icon;
   external?: boolean;
 };
 
@@ -27,13 +30,13 @@ export type MenuGroup = {
   items: MenuItem[];
 };
 
-const item = (label: string, href: string, icon: LucideIcon): MenuItem => ({
+const item = (label: string, href: string, icon: Icon): MenuItem => ({
   label,
   href,
   icon,
 });
 
-const link = (label: string, href: string, icon: LucideIcon): MenuItem => ({
+const link = (label: string, href: string, icon: Icon): MenuItem => ({
   label,
   href,
   icon,
@@ -70,7 +73,9 @@ export const menuConfig: MenuGroup[] = [
   ]),
   group("About", [
     item("About", "/about", FlaskConical),
+    item("Blog", "/blog", Newspaper),
     item("Docs", "/docs", BookOpen),
-    link("GitHub", env.GITHUB_REPO_URL, GitFork),
+    link("Discord", "/discord", DiscordIcon),
+    link("GitHub", env.GITHUB_REPO_URL, GitHubIcon),
   ]),
 ];

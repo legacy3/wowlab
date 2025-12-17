@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/discord",
+        destination: "https://discord.gg/bWWYBAvF3W",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX({
@@ -15,8 +24,14 @@ const withMDX = createMDX({
       "remark-gfm",
       "remark-frontmatter",
       ["remark-mdx-frontmatter", { name: "meta" }],
+      "remark-reading-time",
+      "remark-reading-time/mdx",
     ],
-    rehypePlugins: [],
+    rehypePlugins: [
+      "rehype-slug",
+      "@stefanprobst/rehype-extract-toc",
+      "@stefanprobst/rehype-extract-toc/mdx",
+    ],
   },
 });
 

@@ -3,6 +3,8 @@ title: Privacy Policy
 updatedAt: 2025-12-14
 ---
 
+# Privacy Policy
+
 ## What we collect
 
 | Data                           | Source                                                                                     | Why                                          |

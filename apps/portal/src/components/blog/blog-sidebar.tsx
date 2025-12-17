@@ -1,0 +1,218 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { format, parseISO } from "date-fns";
+import { CalendarIcon, Clock, Link2, Linkedin, Twitter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { BlogEntry } from "@/lib/blog/types";
+import type { TocEntry } from "@/lib/content/types";
+
+type Heading = {
+  id: string;
+  text: string;
+  level: number;
+};
+
+type BlogSidebarProps = {
+  entry: BlogEntry;
+};
+
+function flattenToc(entries: TocEntry[], result: Heading[] = []): Heading[] {
+  for (const entry of entries) {
+    if (entry.id && entry.depth >= 2) {
+      result.push({
+        id: entry.id,
+        text: entry.value,
+        level: entry.depth,
+      });
+    }
+    if (entry.children) {
+      flattenToc(entry.children, result);
+    }
+  }
+  return result;
+}
+
+function useActiveHeading(headingIds: string[]) {
+  const [activeId, setActiveId] = useState<string>("");
+
+  useEffect(() => {
+    if (headingIds.length === 0) {
+      return;
+    }
+
+    const elements = headingIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+
+    if (elements.length === 0) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+          }
+        }
+      },
+      { rootMargin: "-80px 0px -80% 0px" },
+    );
+
+    for (const el of elements) {
+      observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, [headingIds]);
+
+  return activeId;
+}
+
+function ArticleMeta({ entry }: { entry: BlogEntry }) {
+  const formattedDate = format(parseISO(entry.publishedAt), "d MMM yyyy");
+  const readingMinutes = entry.readingTime?.minutes ?? 0;
+
+  return (
+    <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <CalendarIcon className="h-3.5 w-3.5" />
+        <span>{formattedDate}</span>
+      </div>
+      {readingMinutes > 0 && (
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5" />
+          <span>{readingMinutes} min read</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TableOfContents({
+  headings,
+  activeId,
+}: {
+  headings: Heading[];
+  activeId: string;
+}) {
+  if (headings.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        On this page
+      </h3>
+      <nav className="space-y-1.5">
+        {headings.map((heading) => (
+          <a
+            key={heading.id}
+            href={`#${heading.id}`}
+            className={cn(
+              "block text-[13px] leading-snug transition-colors",
+              heading.level === 3 && "pl-3 border-l border-border/50",
+              activeId === heading.id
+                ? "text-primary font-medium"
+                : "text-muted-foreground/70 hover:text-muted-foreground",
+            )}
+          >
+            {heading.text}
+          </a>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+function ShareButtons({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/blog/${slug}`
+      : "";
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`;
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+
+  return (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Share
+      </h3>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-muted/30"
+          asChild
+        >
+          <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
+            <Twitter className="h-4 w-4" />
+          </a>
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-muted/30"
+          asChild
+        >
+          <a href={linkedinUrl} target="_blank" rel="noopener noreferrer">
+            <Linkedin className="h-4 w-4" />
+          </a>
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-muted/30"
+          onClick={handleCopy}
+        >
+          <Link2 className={cn("h-4 w-4", copied && "text-green-500")} />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function BlogSidebar({ entry }: BlogSidebarProps) {
+  const headings = flattenToc(entry.tableOfContents ?? []);
+  const headingIds = headings.map((h) => h.id);
+  const activeId = useActiveHeading(headingIds);
+
+  return (
+    <aside className="hidden lg:block w-56 shrink-0">
+      <div className="sticky top-24 space-y-6">
+        <ArticleMeta entry={entry} />
+
+        {entry.tags && entry.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {entry.tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="capitalize text-xs bg-muted/50"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        <TableOfContents headings={headings} activeId={activeId} />
+
+        <ShareButtons slug={entry.slug} />
+      </div>
+    </aside>
+  );
+}
