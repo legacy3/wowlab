@@ -1041,7 +1041,7 @@ export const RefineDbcService = (
             return chain;
           }),
 
-        // TOOD Sort this properly
+        // TODO Sort this properly
         getSpecSetMembers: (specSetIds: readonly number[]) =>
           fetchByFk<Schemas.Dbc.SpecSetMemberRow>(
             queryClient,
