@@ -1,58 +1,40 @@
 import { notFound } from "next/navigation";
 import { PageLayout } from "@/components/page";
-import { getDocMeta, getAllDocSlugs } from "@/lib/docs";
+import { DocArticle } from "@/components/docs";
 import { DocNav } from "@/components/docs/doc-nav";
 import { DocSidebar } from "@/components/docs/doc-sidebar";
-
-import Overview from "@/content/docs/00-overview.md";
-import WritingRotations from "@/content/docs/guides/00-writing-rotations.md";
-import SpecCoverage from "@/content/docs/guides/01-spec-coverage.md";
-import Architecture from "@/content/docs/reference/00-architecture.md";
-import DataModel from "@/content/docs/reference/01-data-model.md";
-import McpServer from "@/content/docs/reference/02-mcp-server.md";
-import Contributing from "@/content/docs/development/00-contributing.md";
-
-const docs: Record<string, React.ComponentType> = {
-  "00-overview": Overview,
-  "guides/00-writing-rotations": WritingRotations,
-  "guides/01-spec-coverage": SpecCoverage,
-  "reference/00-architecture": Architecture,
-  "reference/01-data-model": DataModel,
-  "reference/02-mcp-server": McpServer,
-  "development/00-contributing": Contributing,
-};
+import { docSlugs, getDoc, getNavMeta } from "@/lib/docs";
 
 type Props = {
   params: Promise<{ slug: string[] }>;
 };
 
 export function generateStaticParams() {
-  return getAllDocSlugs().map((slug) => ({ slug: slug.split("/") }));
+  return docSlugs.map((slug) => ({ slug: slug.split("/") }));
 }
 
 export default async function DocPage({ params }: Props) {
   const { slug } = await params;
   const fullSlug = slug.join("/");
-  const meta = getDocMeta(fullSlug);
-  const Content = docs[fullSlug];
+  const doc = getDoc(fullSlug);
 
-  if (!meta || !Content) {
+  if (!doc) {
     notFound();
   }
 
-  const allSlugs = getAllDocSlugs();
-  const currentIndex = allSlugs.indexOf(fullSlug);
-  const prevSlug = currentIndex > 0 ? allSlugs[currentIndex - 1] : null;
-  const nextSlug =
-    currentIndex < allSlugs.length - 1 ? allSlugs[currentIndex + 1] : null;
+  const { default: Content, meta } = doc;
 
-  const prev = prevSlug ? (getDocMeta(prevSlug) ?? null) : null;
-  const next = nextSlug ? (getDocMeta(nextSlug) ?? null) : null;
+  const currentIndex = docSlugs.indexOf(fullSlug);
+  const prev = currentIndex > 0 ? getNavMeta(docSlugs[currentIndex - 1]) : null;
+  const next =
+    currentIndex < docSlugs.length - 1
+      ? getNavMeta(docSlugs[currentIndex + 1])
+      : null;
 
   return (
     <PageLayout
       title={meta.title}
-      description="Technical documentation"
+      description={meta.description ?? "Technical documentation"}
       breadcrumbs={[
         { label: "Docs", href: "/docs" },
         { label: meta.title, href: `/docs/${fullSlug}` },
@@ -61,13 +43,13 @@ export default async function DocPage({ params }: Props) {
       <div className="flex gap-8">
         <DocSidebar currentSlug={fullSlug} />
 
-        <article className="flex-1 min-w-0 max-w-3xl">
-          <div className="prose prose-invert">
-            <Content />
-          </div>
-
-          <DocNav prev={prev} next={next} />
-        </article>
+        <DocArticle
+          className="flex-1 min-w-0"
+          meta={meta}
+          footer={<DocNav prev={prev} next={next} />}
+        >
+          <Content />
+        </DocArticle>
       </div>
     </PageLayout>
   );

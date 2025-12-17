@@ -1,3 +1,9 @@
+---
+title: Overview
+description: What WoWLab is and what you can do with it
+updatedAt: 2025-12-17
+---
+
 # WoW Lab
 
 WoW Lab is a combat simulation platform for World of Warcraft. You can run sims, write rotation scripts, and query game data in one place.

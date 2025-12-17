@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useList } from "@refinedev/core";
 import { RotationsList } from "./rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SearchBarSkeleton,
+  CardGridSkeleton,
+} from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,15 +24,13 @@ import type { Rotation } from "@/lib/supabase/types";
 
 function RotationsBrowseSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <SearchBarSkeleton />
+      <Skeleton className="h-4 w-48" />
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-3">
           <Skeleton className="h-6 w-32" />
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((j) => (
-              <Skeleton key={j} className="h-48" />
-            ))}
-          </div>
+          <CardGridSkeleton count={3} columns={3} cardHeight="h-48" />
         </div>
       ))}
     </div>

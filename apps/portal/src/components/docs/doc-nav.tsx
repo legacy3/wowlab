@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useKeyboardEvent } from "@react-hookz/web";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { DocMeta } from "@/lib/docs";
+import type { DocEntry } from "@/lib/docs";
 
 type DocNavProps = {
-  prev: DocMeta | null;
-  next: DocMeta | null;
+  prev: DocEntry | null;
+  next: DocEntry | null;
 };
 
 export function DocNav({ prev, next }: DocNavProps) {

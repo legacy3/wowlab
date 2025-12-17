@@ -12,7 +12,7 @@ import {
 
 export function DataInspectorCard() {
   return (
-    <Link href="/lab/data-inspector" className="block h-full">
+    <Link href="/lab/inspector/search" className="block h-full">
       <Card className="h-full transition-colors hover:border-primary/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

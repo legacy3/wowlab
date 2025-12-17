@@ -6,3 +6,5 @@ export { MdTable, MdThead, MdTbody, MdTr, MdTh, MdTd } from "./md-table";
 export { MdInlineCode, MdPre, MdCode } from "./md-code";
 export { MdImage } from "./md-image";
 export { MdMermaid } from "./md-mermaid";
+export { DocArticle } from "./doc-article";
+export { DocUpdatedAt } from "./doc-updated-at";

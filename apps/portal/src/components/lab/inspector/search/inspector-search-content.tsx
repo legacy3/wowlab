@@ -14,7 +14,7 @@ const components: DashboardConfig<DataInspectorCardId> = {
   transformed: { Component: TransformedCard, className: "md:col-span-2" },
 };
 
-export function DataInspectorContent() {
+export function InspectorSearchContent() {
   const [order, setOrder] = useAtom(dataInspectorOrderAtom);
 
   return (

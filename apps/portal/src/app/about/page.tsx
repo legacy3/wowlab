@@ -1,8 +1,10 @@
 import { PageLayout } from "@/components/page";
 import { UrlTabs } from "@/components/ui/url-tabs";
-import AboutContent from "@/content/about/overview.md";
-import TermsContent from "@/content/about/terms-of-service.md";
-import PrivacyContent from "@/content/about/privacy-policy.md";
+import { DocArticle } from "@/components/docs";
+
+import * as MdAbout from "@/content/about/overview.md";
+import * as MdTerms from "@/content/about/terms-of-service.md";
+import * as MdPrivacy from "@/content/about/privacy-policy.md";
 
 export default function AboutPage() {
   return (
@@ -17,29 +19,29 @@ export default function AboutPage() {
         tabs={[
           {
             value: "about",
-            label: "Overview",
+            label: MdAbout.meta.title,
             content: (
-              <article className="prose prose-invert max-w-3xl">
-                <AboutContent />
-              </article>
+              <DocArticle meta={MdAbout.meta}>
+                <MdAbout.default />
+              </DocArticle>
             ),
           },
           {
             value: "terms-of-service",
-            label: "Terms of Service",
+            label: MdTerms.meta.title,
             content: (
-              <article className="prose prose-invert max-w-3xl">
-                <TermsContent />
-              </article>
+              <DocArticle meta={MdTerms.meta}>
+                <MdTerms.default />
+              </DocArticle>
             ),
           },
           {
             value: "privacy-policy",
-            label: "Privacy Policy",
+            label: MdPrivacy.meta.title,
             content: (
-              <article className="prose prose-invert max-w-3xl">
-                <PrivacyContent />
-              </article>
+              <DocArticle meta={MdPrivacy.meta}>
+                <MdPrivacy.default />
+              </DocArticle>
             ),
           },
         ]}

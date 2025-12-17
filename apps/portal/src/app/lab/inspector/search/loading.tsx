@@ -2,15 +2,15 @@ import { PageLayout } from "@/components/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-export default function DataInspectorLoading() {
+export default function InspectorSearchLoading() {
   return (
     <PageLayout
       title="Data Inspector"
       description="Query and inspect spell or item data by ID"
       breadcrumbs={[
         { label: "Home", href: "/" },
-        { label: "Lab" },
-        { label: "Data Inspector" },
+        { label: "Lab", href: "/lab" },
+        { label: "Inspector" },
       ]}
     >
       <div className="grid gap-4 lg:grid-cols-[300px_1fr]">

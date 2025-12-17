@@ -34,7 +34,7 @@ export function GameIcon({
       alt={alt || iconName}
       width={width || dimension}
       height={height || dimension}
-      className={cn("rounded", className)}
+      className={cn("rounded bg-accent", className)}
       unoptimized
     />
   );

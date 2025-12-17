@@ -1,3 +1,9 @@
+---
+title: Architecture
+description: How the simulation engine works internally
+updatedAt: 2025-12-17
+---
+
 # Architecture
 
 How the simulation works under the hood.

@@ -1,3 +1,9 @@
+---
+title: Data Model
+description: How spell data is assembled at runtime
+updatedAt: 2025-12-17
+---
+
 # Data Model
 
 WoW Lab builds spell and item data the moment you ask for it instead of lugging around pre-built databases. Think of it as a kitchen stocked with raw ingredients rather than trays of pre-cooked meals.

@@ -1,3 +1,9 @@
+---
+title: MCP Server
+description: Query WoW spell/item data with AI tools
+updatedAt: 2025-12-17
+---
+
 # MCP Server
 
 Query WoW spell and item data from any MCP-compatible tool.

@@ -1,72 +1,31 @@
-import { PageLayout } from "@/components/page";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-export default function DashboardLoading() {
+export default function HomeLoading() {
   return (
-    <PageLayout
-      title="Dashboard"
-      description="Welcome to WoW Lab - Your WoW rotation simulation toolkit"
-      breadcrumbs={[{ label: "Dashboard" }]}
-    >
-      <div className="space-y-6">
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-12 mb-1" />
-                <Skeleton className="h-3 w-32" />
-              </CardContent>
-            </Card>
-          ))}
-        </section>
+    <main className="container mx-auto max-w-5xl space-y-6 px-4 py-6">
+      {/* Header */}
+      <header className="space-y-1">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-10 rounded-lg" />
+          <Skeleton className="h-8 w-32" />
+        </div>
+        <Skeleton className="h-5 w-72" />
+      </header>
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-4 w-56" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-        </section>
-
-        <section>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+      {/* Dashboard grid - matches LandingContent layout */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Recent card - spans 2 cols */}
+        <Skeleton className="h-48 sm:col-span-2" />
+        {/* Quick sim card - spans 2 cols */}
+        <Skeleton className="h-48 sm:col-span-2" />
+        {/* Feature cards */}
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+        <Skeleton className="h-32" />
+        {/* Lab card - spans 2 cols */}
+        <Skeleton className="h-32 sm:col-span-2" />
       </div>
-    </PageLayout>
+    </main>
   );
 }
