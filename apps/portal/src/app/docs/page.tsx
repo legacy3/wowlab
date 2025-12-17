@@ -7,7 +7,7 @@ export default function DocsPage() {
     <PageLayout
       title="Documentation"
       description="Technical documentation for WoW Lab"
-      breadcrumbs={[{ label: "Docs", href: "/docs" }]}
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Docs" }]}
     >
       <div className="max-w-xl">
         {docsIndex.length === 0 ? (

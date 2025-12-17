@@ -6,7 +6,7 @@ export default function SignInPage() {
     <PageLayout
       title="Sign In"
       description="Sign in to your account"
-      breadcrumbs={[{ label: "Sign In" }]}
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Sign In" }]}
     >
       <div className="mx-auto max-w-md py-12">
         <SignIn />

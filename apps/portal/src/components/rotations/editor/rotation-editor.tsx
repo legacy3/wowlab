@@ -1,12 +1,8 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import Link from "next/link";
 import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { LogIn } from "lucide-react";
 import { useRotation, useRotationMutations } from "@/hooks/rotations";
 import type {
   UserIdentity,
@@ -167,30 +163,9 @@ function RotationEditorInner({
     }
   };
 
-  // Auth loading
-  if (authLoading || identityLoading) {
+  // Auth loading (server already verified user is logged in)
+  if (authLoading || identityLoading || !identity) {
     return <RotationEditorSkeleton />;
-  }
-
-  // Not authenticated
-  if (!auth?.authenticated || !identity) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <LogIn className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <p className="text-lg font-semibold mb-2">Sign in required</p>
-          <p className="text-sm text-muted-foreground mb-6">
-            Please sign in to create or edit rotations
-          </p>
-          <Button asChild>
-            <Link href="/auth/sign-in">
-              <LogIn className="mr-2 h-4 w-4" />
-              Sign In
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
   }
 
   // Loading existing rotation

@@ -6,7 +6,7 @@ export default function AboutLoading() {
     <PageLayout
       title="About"
       description="What is WoW Lab and how does it work"
-      breadcrumbs={[{ label: "About", href: "/about" }]}
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
     >
       <div className="flex flex-col gap-4">
         <TabsSkeleton tabCount={3} />

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Link } from "@/components/ui/link";
 import { getAuthCallbackUrl } from "@/lib/auth-config";
-import { Github, MessageCircle, Sparkles } from "lucide-react";
+import { Github, MessageCircle } from "lucide-react";
 
 export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
@@ -40,18 +40,6 @@ export function SignInForm() {
 
   return (
     <div className="w-full max-w-md space-y-6">
-      <div className="flex flex-col space-y-2 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <Sparkles className="h-6 w-6 text-primary" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome to WoW Lab
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          World of Warcraft rotation simulation toolkit
-        </p>
-      </div>
-
       <Card className="border-2">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-xl">Sign in to continue</CardTitle>

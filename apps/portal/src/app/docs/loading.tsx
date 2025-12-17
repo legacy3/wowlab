@@ -6,7 +6,7 @@ export default function DocsLoading() {
     <PageLayout
       title="Documentation"
       description="Technical documentation for WoW Lab"
-      breadcrumbs={[{ label: "Docs", href: "/docs" }]}
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Docs" }]}
     >
       <div className="max-w-xl">
         <TreeSkeleton itemCount={6} />

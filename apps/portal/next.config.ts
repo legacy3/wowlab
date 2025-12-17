@@ -3,6 +3,9 @@ import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  experimental: {
+    authInterrupts: true,
+  },
 };
 
 const withMDX = createMDX({

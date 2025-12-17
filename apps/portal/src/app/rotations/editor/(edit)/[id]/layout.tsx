@@ -1,13 +1,10 @@
 import { PageLayout } from "@/components/page";
-import { RotationEditor } from "@/components/rotations/editor";
 
-type Props = {
-  params: Promise<{ id: string }>;
-};
-
-export default async function EditRotationPage({ params }: Props) {
-  const { id } = await params;
-
+export default function EditRotationLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Edit Rotation"
@@ -18,7 +15,7 @@ export default async function EditRotationPage({ params }: Props) {
         { label: "Edit" },
       ]}
     >
-      <RotationEditor rotationId={id} />
+      {children}
     </PageLayout>
   );
 }

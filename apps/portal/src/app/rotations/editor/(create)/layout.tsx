@@ -1,13 +1,10 @@
 import { PageLayout } from "@/components/page";
-import { RotationEditor } from "@/components/rotations/editor";
 
-type Props = {
-  searchParams: Promise<{ fork?: string }>;
-};
-
-export default async function RotationEditorPage({ searchParams }: Props) {
-  const { fork } = await searchParams;
-
+export default function CreateRotationLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="New Rotation"
@@ -18,7 +15,7 @@ export default async function RotationEditorPage({ searchParams }: Props) {
         { label: "New" },
       ]}
     >
-      <RotationEditor forkSourceId={fork} />
+      {children}
     </PageLayout>
   );
 }
