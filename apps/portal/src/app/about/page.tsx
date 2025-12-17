@@ -2,7 +2,7 @@ import { PageLayout } from "@/components/page";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import { DocArticle } from "@/components/docs";
 
-import * as MdAbout from "@/content/about/overview.md";
+import * as MdOverview from "@/content/about/overview.md";
 import * as MdTerms from "@/content/about/terms-of-service.md";
 import * as MdPrivacy from "@/content/about/privacy-policy.md";
 
@@ -19,10 +19,10 @@ export default function AboutPage() {
         tabs={[
           {
             value: "about",
-            label: MdAbout.meta.title,
+            label: MdOverview.meta.title,
             content: (
-              <DocArticle meta={MdAbout.meta}>
-                <MdAbout.default />
+              <DocArticle meta={MdOverview.meta}>
+                <MdOverview.default />
               </DocArticle>
             ),
           },
