@@ -21,19 +21,22 @@ export default function NotFound() {
           That page doesn’t exist (or it moved).
         </p>
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (window.history.length > 1) {
-              router.back();
-            } else {
-              router.push("/");
-            }
-          }}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Go Back
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/");
+              }
+            }}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go Back
+          </Button>
+          <Button onClick={() => router.push("/")}>Go Home</Button>
+        </div>
       </div>
     </div>
   );
