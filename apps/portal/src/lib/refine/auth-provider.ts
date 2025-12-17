@@ -2,11 +2,13 @@ import type { AuthProvider } from "@refinedev/core";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/auth-config";
 
+export type OAuthProvider = "discord" | "github" | "google" | "twitch";
+
 export function createAuthProvider(): AuthProvider {
   const supabase = createClient();
 
   return {
-    login: async ({ provider }: { provider: "discord" | "github" }) => {
+    login: async ({ provider }: { provider: OAuthProvider }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: getAuthCallbackUrl() },
