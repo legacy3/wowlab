@@ -158,11 +158,8 @@ export function SignInForm() {
         </CardContent>
       </Card>
 
-      <p className="px-8 text-center text-sm text-muted-foreground">
-        First time here?{" "}
-        <span className="font-medium">
-          Create an account by signing in with your preferred provider
-        </span>
+      <p className="text-center text-xs text-muted-foreground/60">
+        New here? Signing in creates an account automatically.
       </p>
     </div>
   );
