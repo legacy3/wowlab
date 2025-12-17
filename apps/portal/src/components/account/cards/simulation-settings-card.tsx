@@ -17,6 +17,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useUserSettings } from "@/hooks/use-user-settings";
@@ -121,6 +128,22 @@ export function SimulationSettingsCard() {
           </Field>
 
           <Field>
+            <FieldLabel>Game Version</FieldLabel>
+            <Select defaultValue="live" disabled>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="live">Live</SelectItem>
+                <SelectItem value="ptr">PTR</SelectItem>
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              Select the WoW version for simulation data
+            </FieldDescription>
+          </Field>
+
+          <Field>
             <FieldLabel>Interface Configuration</FieldLabel>
             <Button
               variant="outline"
@@ -171,6 +194,11 @@ function SimulationSettingsCardSkeleton() {
                 <Skeleton className="h-6 w-16" />
               </div>
             </div>
+          </Field>
+
+          <Field>
+            <FieldLabel>Game Version</FieldLabel>
+            <Skeleton className="h-10 w-48" />
           </Field>
 
           <Field>

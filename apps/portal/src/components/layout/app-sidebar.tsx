@@ -18,6 +18,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { menuConfig } from "@/lib/menu-config";
+import { version } from "../../../package.json";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
@@ -39,7 +40,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-bold">WoW Lab</span>
                   <span className="text-xs text-sidebar-foreground/70">
-                    Simulator Toolkit
+                    Toolkit v{version}
                   </span>
                 </div>
               </Link>
