@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/card";
 import { Link } from "@/components/ui/link";
 import { getAuthCallbackUrl } from "@/lib/auth-config";
-import { Github, MessageCircle } from "lucide-react";
+import { Github, Loader2, MessageCircle } from "lucide-react";
 
 export function SignInForm() {
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<"discord" | "github" | null>(null);
+  const [loading, setLoading] = useState(false);
   const { mutate: login } = useLogin<{
     provider: "discord" | "github";
     redirectTo: string;
@@ -25,7 +25,7 @@ export function SignInForm() {
 
   const handleOAuthSignIn = async (provider: "discord" | "github") => {
     setError(null);
-    setLoading(provider);
+    setLoading(true);
 
     try {
       login({
@@ -34,9 +34,24 @@ export function SignInForm() {
       });
     } catch {
       setError("An unexpected error occurred");
-      setLoading(null);
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-md">
+        <Card className="border-2">
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Signing you in...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -55,7 +70,6 @@ export function SignInForm() {
               type="button"
               variant="outline"
               onClick={() => handleOAuthSignIn("discord")}
-              disabled={loading !== null}
               className="w-full h-11"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
@@ -65,7 +79,6 @@ export function SignInForm() {
               type="button"
               variant="outline"
               onClick={() => handleOAuthSignIn("github")}
-              disabled={loading !== null}
               className="w-full h-11"
             >
               <Github className="mr-2 h-5 w-5" />
