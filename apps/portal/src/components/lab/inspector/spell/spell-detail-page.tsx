@@ -44,12 +44,29 @@ export function SpellDetailSkeleton() {
 
       {/* Grid Skeleton */}
       <div className="grid gap-4 md:grid-cols-2">
+        {/* header */}
         <Skeleton className="h-32 md:col-span-2" />
+        {/* quick-stats */}
         <Skeleton className="h-32 md:col-span-2" />
+        {/* effects / proc-mechanics */}
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
+        {/* scaling / attributes */}
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
+        {/* spell-class / aura-restrictions */}
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
+        {/* shapeshift / labels */}
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+        {/* empower */}
+        <Skeleton className="h-48" />
+        {/* related-spells */}
+        <Skeleton className="h-64 md:col-span-2" />
+        {/* raw-data / simulation-notes */}
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
       </div>
     </div>
   );

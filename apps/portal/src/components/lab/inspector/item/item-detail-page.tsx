@@ -44,13 +44,30 @@ export function ItemDetailSkeleton() {
 
       {/* Grid Skeleton */}
       <div className="grid gap-4 md:grid-cols-2">
+        {/* header */}
         <Skeleton className="h-32 md:col-span-2" />
+        {/* classification / stat-breakdown */}
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
+        {/* bonus-ids / upgrade-path */}
         <Skeleton className="h-64 md:col-span-2" />
         <Skeleton className="h-64 md:col-span-2" />
+        {/* sockets / set-bonuses */}
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
+        {/* item-effects */}
+        <Skeleton className="h-64 md:col-span-2" />
+        {/* armor-calculation / spec-usability */}
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+        {/* drop-sources */}
+        <Skeleton className="h-64 md:col-span-2" />
+        {/* item-flags / crafting */}
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+        {/* raw-data / simulation */}
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
       </div>
     </div>
   );

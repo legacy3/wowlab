@@ -8,7 +8,7 @@ export default function SpecCoverageLoading() {
       description="Track implementation status of spells, items, and abilities across all specs."
       breadcrumbs={[
         { label: "Home", href: "/" },
-        { label: "Lab", href: "/lab/data-inspector" },
+        { label: "Lab" },
         { label: "Spec Coverage" },
       ]}
     >

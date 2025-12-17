@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, TabsSkeleton } from "@/components/ui/skeleton";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import { SpecRankingsTab } from "./spec-rankings-tab";
 import { MostWantedItemsTab } from "./most-wanted-items-tab";
@@ -12,11 +12,10 @@ import { TopTalentCombinationsTab } from "./top-talents-tab";
 function DpsRankingsSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-32" />
-        ))}
-      </div>
+      <TabsSkeleton
+        tabCount={4}
+        className="w-full max-w-xl justify-start overflow-x-auto"
+      />
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">

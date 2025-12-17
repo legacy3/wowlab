@@ -31,9 +31,9 @@ interface RotationEditorProps {
 function RotationEditorSkeleton() {
   return (
     <div className="flex flex-col h-[600px] rounded-lg border overflow-hidden">
-      <Skeleton className="h-12 w-full" />
-      <Skeleton className="flex-1" />
-      <Skeleton className="h-14 w-full" />
+      <Skeleton className="h-12 w-full rounded-none" />
+      <Skeleton className="flex-1 rounded-none" />
+      <Skeleton className="h-14 w-full rounded-none" />
     </div>
   );
 }
