@@ -1,28 +1,16 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useIsAuthenticated } from "@refinedev/core";
+import { Suspense } from "react";
 import { SignInForm } from "./sign-in-form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function SignInInner() {
-  const router = useRouter();
-  const { data: authData } = useIsAuthenticated();
-  const isAuthenticated = authData?.authenticated;
+interface SignInProps {
+  redirectTo?: string;
+}
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, router]);
-
-  if (isAuthenticated) {
-    return null;
-  }
-
-  return <SignInForm />;
+function SignInInner({ redirectTo }: SignInProps) {
+  return <SignInForm redirectTo={redirectTo} />;
 }
 
 function SignInSkeleton() {
@@ -52,10 +40,10 @@ function SignInSkeleton() {
   );
 }
 
-export function SignIn() {
+export function SignIn({ redirectTo }: SignInProps) {
   return (
     <Suspense fallback={<SignInSkeleton />}>
-      <SignInInner />
+      <SignInInner redirectTo={redirectTo} />
     </Suspense>
   );
 }

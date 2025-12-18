@@ -12,17 +12,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "@/components/ui/link";
-import { getAuthCallbackUrl } from "@/lib/auth-config";
 import type { OAuthProvider } from "@/lib/refine/auth-provider";
 import { Loader2 } from "lucide-react";
 import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
 
-export function SignInForm() {
+interface SignInFormProps {
+  redirectTo?: string;
+}
+
+export function SignInForm({ redirectTo }: SignInFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { mutate: login } = useLogin<{
     provider: OAuthProvider;
-    redirectTo: string;
+    redirectTo?: string;
   }>();
 
   const handleOAuthSignIn = async (provider: OAuthProvider) => {
@@ -32,7 +35,7 @@ export function SignInForm() {
     try {
       login({
         provider,
-        redirectTo: getAuthCallbackUrl(),
+        redirectTo,
       });
     } catch {
       setError("An unexpected error occurred");
