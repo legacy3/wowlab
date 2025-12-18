@@ -66,10 +66,10 @@ export const transformItem = (
     const [item, sparse, effectLinks, journalEncounterItems] =
       yield* Effect.all(
         [
-          dbc.getItem(itemId),
-          dbc.getItemSparse(itemId),
-          dbc.getItemXItemEffects(itemId),
-          dbc.getJournalEncounterItemsByItemId(itemId),
+          dbc.getById("item", itemId),
+          dbc.getById("item_sparse", itemId),
+          dbc.getManyByFk("item_x_item_effect", "ItemID", itemId),
+          dbc.getManyByFk("journal_encounter_item", "ItemID", itemId),
         ],
         { batching: true },
       );
@@ -87,10 +87,15 @@ export const transformItem = (
     let iconFileDataId = item.IconFileDataID;
 
     if (iconFileDataId === 0) {
-      const modifiedAppearance = yield* dbc.getItemModifiedAppearance(itemId);
+      const modifiedAppearance = yield* dbc.getOneByFk(
+        "item_modified_appearance",
+        "ItemID",
+        itemId,
+      );
 
       if (modifiedAppearance) {
-        const appearance = yield* dbc.getItemAppearance(
+        const appearance = yield* dbc.getById(
+          "item_appearance",
           modifiedAppearance.ItemAppearanceID,
         );
 
@@ -103,7 +108,7 @@ export const transformItem = (
     const iconRow =
       iconFileDataId > 0
         ? Option.fromNullable(
-            yield* dbc.getManifestInterfaceData(iconFileDataId),
+            yield* dbc.getById("manifest_interface_data", iconFileDataId),
           )
         : Option.none();
 
@@ -115,7 +120,7 @@ export const transformItem = (
 
     const effectResults = yield* Effect.forEach(
       effectLinks,
-      (link) => dbc.getItemEffect(link.ItemEffectID),
+      (link) => dbc.getById("item_effect", link.ItemEffectID),
       { batching: true },
     );
 
@@ -146,7 +151,10 @@ export const transformItem = (
 
     // Resolve Classification
     const [itemClass, itemSubClass] = yield* Effect.all(
-      [dbc.getItemClass(item.ClassID), dbc.getItemSubClass(item.SubclassID)],
+      [
+        dbc.getById("item_class", item.ClassID),
+        dbc.getById("item_sub_class", item.SubclassID),
+      ],
       { batching: true },
     );
 
@@ -190,7 +198,10 @@ export const transformItem = (
 
     if (itemSetId > 0) {
       const [itemSet, setSpells] = yield* Effect.all(
-        [dbc.getItemSet(itemSetId), dbc.getItemSetSpells(itemSetId)],
+        [
+          dbc.getById("item_set", itemSetId),
+          dbc.getManyByFk("item_set_spell", "ItemSetID", itemSetId),
+        ],
         { batching: true },
       );
 
@@ -232,7 +243,7 @@ export const transformItem = (
       ];
       const encounters = yield* Effect.forEach(
         encounterIds,
-        (id) => dbc.getJournalEncounter(id),
+        (id) => dbc.getById("journal_encounter", id),
         { batching: true },
       );
 
@@ -245,7 +256,7 @@ export const transformItem = (
       ];
       const instances = yield* Effect.forEach(
         instanceIds,
-        (id) => dbc.getJournalInstance(id),
+        (id) => dbc.getById("journal_instance", id),
         { batching: true },
       );
 

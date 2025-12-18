@@ -1,6 +1,8 @@
 import * as Constants from "@wowlab/core/Constants";
 import { DbcError } from "@wowlab/core/Errors";
 import { Aura, Dbc, Enums, Spell } from "@wowlab/core/Schemas";
+import * as Cache from "effect/Cache";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
@@ -33,6 +35,76 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
     effect: Effect.gen(function* () {
       const dbcService = yield* DbcService;
 
+      const expectedStatsIndexCache = yield* Cache.make({
+        capacity: 1,
+        lookup: (_key: 0) =>
+          dbcService.getAll("expected_stat").pipe(
+            Effect.map((rows) => {
+              const byLevel = new Map<number, Dbc.ExpectedStatRow[]>();
+
+              for (const row of rows) {
+                const existing = byLevel.get(row.Lvl) ?? [];
+                existing.push(row);
+                byLevel.set(row.Lvl, existing);
+              }
+
+              return byLevel;
+            }),
+          ),
+        timeToLive: Duration.minutes(5),
+      });
+
+      const contentTuningXExpectedIndexCache = yield* Cache.make({
+        capacity: 1,
+        lookup: (_key: 0) =>
+          dbcService.getAll("content_tuning_x_expected").pipe(
+            Effect.map((rows) => {
+              const byContentTuningId = new Map<
+                number,
+                Dbc.ContentTuningXExpectedRow[]
+              >();
+
+              for (const row of rows) {
+                const existing =
+                  byContentTuningId.get(row.ContentTuningID) ?? [];
+                existing.push(row);
+                byContentTuningId.set(row.ContentTuningID, existing);
+              }
+
+              return byContentTuningId;
+            }),
+          ),
+        timeToLive: Duration.minutes(5),
+      });
+
+      const getExpectedStats = (level: number, expansion: number) =>
+        expectedStatsIndexCache.get(0).pipe(
+          Effect.map((byLevel) => byLevel.get(level) ?? []),
+          Effect.map((rows) =>
+            rows.filter(
+              (stat) =>
+                stat.ExpansionID === expansion || stat.ExpansionID === -2,
+            ),
+          ),
+        );
+
+      const getContentTuningXExpected = (
+        contentTuningId: number,
+        mythicPlusSeasonId: number,
+      ) =>
+        contentTuningXExpectedIndexCache.get(0).pipe(
+          Effect.map((byId) => byId.get(contentTuningId) ?? []),
+          Effect.map((rows) =>
+            rows.filter(
+              (x) =>
+                (x.MinMythicPlusSeasonID === 0 ||
+                  mythicPlusSeasonId >= x.MinMythicPlusSeasonID) &&
+                (x.MaxMythicPlusSeasonID === 0 ||
+                  mythicPlusSeasonId < x.MaxMythicPlusSeasonID),
+            ),
+          ),
+        );
+
       const extractRange = (
         spellMisc: Option.Option<Dbc.SpellMiscRow>,
       ): Effect.Effect<
@@ -48,7 +120,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             onNone: () => Effect.succeed(Option.none()),
             onSome: (misc) =>
               Effect.gen(function* () {
-                const spellRange = yield* dbcService.getSpellRange(
+                const spellRange = yield* dbcService.getById(
+                  "spell_range",
                   misc.RangeIndex,
                 );
 
@@ -90,7 +163,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
           const radii = yield* Effect.forEach(
             radiusIndices,
-            (index) => dbcService.getSpellRadius(index),
+            (index) => dbcService.getById("spell_radius", index),
             { batching: true },
           );
 
@@ -110,7 +183,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spellCooldowns = yield* dbcService.getSpellCooldowns(spellId);
+          const spellCooldowns = yield* dbcService.getOneByFk(
+            "spell_cooldowns",
+            "SpellID",
+            spellId,
+          );
 
           if (!spellCooldowns) {
             return Option.none();
@@ -134,7 +211,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spellInterrupts = yield* dbcService.getSpellInterrupts(spellId);
+          const spellInterrupts = yield* dbcService.getOneByFk(
+            "spell_interrupts",
+            "SpellID",
+            spellId,
+          );
 
           if (!spellInterrupts) {
             return Option.none();
@@ -163,13 +244,19 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spellEmpower = yield* dbcService.getSpellEmpower(spellId);
+          const spellEmpower = yield* dbcService.getOneByFk(
+            "spell_empower",
+            "SpellID",
+            spellId,
+          );
 
           if (!spellEmpower) {
             return Option.some({ canEmpower: false, stages: [] });
           }
 
-          const empowerStages = yield* dbcService.getSpellEmpowerStages(
+          const empowerStages = yield* dbcService.getManyByFk(
+            "spell_empower_stage",
+            "SpellEmpowerID",
             spellEmpower.ID,
           );
 
@@ -202,7 +289,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
               }
 
               return Effect.gen(function* () {
-                const castTimes = yield* dbcService.getSpellCastTimes(
+                const castTimes = yield* dbcService.getById(
+                  "spell_cast_times",
                   misc.CastingTimeIndex,
                 );
 
@@ -235,7 +323,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
               }
 
               return Effect.gen(function* () {
-                const spellDuration = yield* dbcService.getSpellDuration(
+                const spellDuration = yield* dbcService.getById(
+                  "spell_duration",
                   misc.DurationIndex,
                 );
 
@@ -259,13 +348,18 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spellCategories = yield* dbcService.getSpellCategories(spellId);
+          const spellCategories = yield* dbcService.getOneByFk(
+            "spell_categories",
+            "SpellID",
+            spellId,
+          );
 
           if (!spellCategories || spellCategories.ChargeCategory === 0) {
             return Option.none();
           }
 
-          const spellCategory = yield* dbcService.getSpellCategory(
+          const spellCategory = yield* dbcService.getById(
+            "spell_category",
             spellCategories.ChargeCategory,
           );
 
@@ -281,7 +375,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
       const extractName = (spellId: number): Effect.Effect<string, DbcError> =>
         Effect.gen(function* () {
-          const spellName = yield* dbcService.getSpellName(spellId);
+          const spellName = yield* dbcService.getById("spell_name", spellId);
 
           return pipe(
             Option.fromNullable(spellName),
@@ -297,7 +391,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spell = yield* dbcService.getSpell(spellId);
+          const spell = yield* dbcService.getById("spell", spellId);
 
           return pipe(
             Option.fromNullable(spell),
@@ -320,7 +414,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const spellPowers = yield* dbcService.getSpellPower(spellId);
+          const spellPowers = yield* dbcService.getManyByFk(
+            "spell_power",
+            "SpellID",
+            spellId,
+          );
           const firstPower = first(spellPowers);
 
           if (Option.isNone(firstPower)) {
@@ -347,7 +445,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const classOptions = yield* dbcService.getSpellClassOptions(spellId);
+          const classOptions = yield* dbcService.getOneByFk(
+            "spell_class_options",
+            "SpellID",
+            spellId,
+          );
 
           if (!classOptions) {
             return Option.none();
@@ -378,7 +480,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             return matchingEffects;
           }
 
-          const difficultyRow = yield* dbcService.getDifficulty(difficultyId);
+          const difficultyRow = yield* dbcService.getById(
+            "difficulty",
+            difficultyId,
+          );
 
           if (!difficultyRow) {
             return spellEffects.filter(
@@ -452,11 +557,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
           const [expectedStats, contentTuningExpecteds] = yield* Effect.all(
             [
-              dbcService.getExpectedStats(level, expansion),
-              dbcService.getContentTuningXExpected(
-                contentTuningId,
-                mythicPlusSeasonId,
-              ),
+              getExpectedStats(level, expansion),
+              getContentTuningXExpected(contentTuningId, mythicPlusSeasonId),
             ],
             { batching: true },
           );
@@ -475,7 +577,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           const expectedStatMods = yield* Effect.forEach(
             contentTuningExpecteds,
             (tuningExpected) =>
-              dbcService.getExpectedStatMod(tuningExpected.ExpectedStatModID),
+              dbcService.getById(
+                "expected_stat_mod",
+                tuningExpected.ExpectedStatModID,
+              ),
             { batching: true },
           );
 
@@ -538,8 +643,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const restrictions =
-            yield* dbcService.getSpellTargetRestrictions(spellId);
+          const restrictions = yield* dbcService.getOneByFk(
+            "spell_target_restrictions",
+            "SpellID",
+            spellId,
+          );
 
           if (!restrictions) {
             return Option.none();
@@ -571,8 +679,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const restrictions =
-            yield* dbcService.getSpellAuraRestrictions(spellId);
+          const restrictions = yield* dbcService.getOneByFk(
+            "spell_aura_restrictions",
+            "SpellID",
+            spellId,
+          );
 
           if (!restrictions) {
             return Option.none();
@@ -602,7 +713,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const levels = yield* dbcService.getSpellLevels(spellId);
+          const levels = yield* dbcService.getManyByFk(
+            "spell_levels",
+            "SpellID",
+            spellId,
+          );
 
           // TODO Take the first level entry for now (usually difficulty 0)
           const level = first(levels);
@@ -629,7 +744,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const learnSpells = yield* dbcService.getSpellLearnSpell(spellId);
+          const learnSpells = yield* dbcService.getManyByFk(
+            "spell_learn_spell",
+            "SpellID",
+            spellId,
+          );
 
           return learnSpells.map((ls) => ({
             learnSpellId: ls.LearnSpellID,
@@ -644,7 +763,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const replacement = yield* dbcService.getSpellReplacement(spellId);
+          const replacement = yield* dbcService.getOneByFk(
+            "spell_replacement",
+            "SpellID",
+            spellId,
+          );
 
           if (!replacement) {
             return Option.none();
@@ -666,7 +789,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const shapeshift = yield* dbcService.getSpellShapeshift(spellId);
+          const shapeshift = yield* dbcService.getOneByFk(
+            "spell_shapeshift",
+            "SpellID",
+            spellId,
+          );
 
           if (!shapeshift) {
             return Option.none();
@@ -695,7 +822,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const totemsData = yield* dbcService.getSpellTotems(spellId);
+          const totemsData = yield* dbcService.getManyByFk(
+            "spell_totems",
+            "SpellID",
+            spellId,
+          );
 
           const totem = first(totemsData);
 
@@ -719,8 +850,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         spellId: number,
       ): Effect.Effect<Option.Option<string>, DbcError> =>
         Effect.gen(function* () {
-          const xDescVars =
-            yield* dbcService.getSpellXDescriptionVariables(spellId);
+          const xDescVars = yield* dbcService.getManyByFk(
+            "spell_x_description_variables",
+            "SpellID",
+            spellId,
+          );
 
           const firstXDescVar = first(xDescVars);
 
@@ -728,7 +862,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             return Option.none();
           }
 
-          const descVars = yield* dbcService.getSpellDescriptionVariables(
+          const descVars = yield* dbcService.getById(
+            "spell_description_variables",
             firstXDescVar.value.SpellDescriptionVariablesID,
           );
 
@@ -830,7 +965,11 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
         DbcError
       > =>
         Effect.gen(function* () {
-          const specSpells = yield* dbcService.getSpecializationSpells(specId);
+          const specSpells = yield* dbcService.getManyByFk(
+            "specialization_spells",
+            "SpecID",
+            specId,
+          );
 
           const results = yield* Effect.forEach(
             specSpells,
@@ -876,7 +1015,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           const progressService = yield* SpecCoverageProgressService;
 
           const [allClasses, allSpecs] = yield* Effect.all(
-            [dbcService.getChrClasses(), dbcService.getChrSpecializations()],
+            [
+              dbcService.getAll("chr_classes"),
+              dbcService.getAll("chr_specialization"),
+            ],
             { batching: true },
           );
 
@@ -907,7 +1049,12 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
           const allSpecSpellsResults = yield* Effect.forEach(
             validSpecs,
-            (spec) => dbcService.getSpecializationSpells(spec.ID),
+            (spec) =>
+              dbcService.getManyByFk(
+                "specialization_spells",
+                "SpecID",
+                spec.ID,
+              ),
             { batching: true },
           );
 
@@ -931,18 +1078,29 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             specId: number,
           ): Effect.Effect<ReadonlyMap<number, number>, DbcError> =>
             Effect.gen(function* () {
-              const loadout = yield* dbcService.getTraitTreeLoadout(specId);
+              const loadout = yield* dbcService.getOneByFk(
+                "trait_tree_loadout",
+                "ChrSpecializationID",
+                specId,
+              );
               if (!loadout) {
                 return new Map();
               }
 
-              const treeNodes = yield* dbcService.getTraitNodesForTree(
+              const treeNodes = yield* dbcService.getManyByFk(
+                "trait_node",
+                "TraitTreeID",
                 loadout.TraitTreeID,
               );
 
               const allNodeXEntries = yield* Effect.forEach(
                 treeNodes,
-                (node) => dbcService.getTraitNodeXTraitNodeEntries(node.ID),
+                (node) =>
+                  dbcService.getManyByFk(
+                    "trait_node_x_trait_node_entry",
+                    "TraitNodeID",
+                    node.ID,
+                  ),
                 { batching: true },
               );
 
@@ -952,7 +1110,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
               const allEntries = yield* Effect.forEach(
                 allEntryIds,
-                (entryId) => dbcService.getTraitNodeEntry(entryId),
+                (entryId) => dbcService.getById("trait_node_entry", entryId),
                 { batching: true },
               );
 
@@ -966,7 +1124,7 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
 
               const definitions = yield* Effect.forEach(
                 definitionIds,
-                (defId) => dbcService.getTraitDefinition(defId),
+                (defId) => dbcService.getById("trait_definition", defId),
                 { batching: true },
               );
 
@@ -1103,7 +1261,9 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
           let iconFileDataId = traitDefinition.OverrideIcon;
 
           if (iconFileDataId === 0 && traitDefinition.SpellID !== 0) {
-            const spellMisc = yield* dbcService.getSpellMisc(
+            const spellMisc = yield* dbcService.getOneByFk(
+              "spell_misc",
+              "SpellID",
               traitDefinition.SpellID,
             );
 
@@ -1114,8 +1274,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             return "inv_misc_questionmark";
           }
 
-          const manifest =
-            yield* dbcService.getManifestInterfaceData(iconFileDataId);
+          const manifest = yield* dbcService.getById(
+            "manifest_interface_data",
+            iconFileDataId,
+          );
 
           if (!manifest) {
             return "inv_misc_questionmark";
@@ -1136,7 +1298,8 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             return "Unknown Talent";
           }
 
-          const spellName = yield* dbcService.getSpellName(
+          const spellName = yield* dbcService.getById(
+            "spell_name",
             traitDefinition.SpellID,
           );
 
@@ -1155,7 +1318,10 @@ export class ExtractorService extends Effect.Service<ExtractorService>()(
             return "";
           }
 
-          const spell = yield* dbcService.getSpell(traitDefinition.SpellID);
+          const spell = yield* dbcService.getById(
+            "spell",
+            traitDefinition.SpellID,
+          );
 
           return spell?.Description_lang ?? "";
         });

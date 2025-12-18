@@ -60,14 +60,14 @@ export const transformTalentTree = (
     const extractor = yield* ExtractorService;
 
     // 1. Get spec info
-    const spec = yield* dbc.getChrSpecialization(specId);
+    const spec = yield* dbc.getById("chr_specialization", specId);
     if (!spec) {
       return yield* Effect.fail(
         new DbcQueryError({ message: `Spec ${specId} not found` }),
       );
     }
 
-    const chrClass = yield* dbc.getChrClass(spec.ClassID!);
+    const chrClass = yield* dbc.getById("chr_classes", spec.ClassID!);
     if (!chrClass) {
       return yield* Effect.fail(
         new DbcQueryError({ message: `Class ${spec.ClassID} not found` }),
@@ -75,14 +75,20 @@ export const transformTalentTree = (
     }
 
     // 2. Get loadout for ordering
-    const loadout = yield* dbc.getTraitTreeLoadout(specId);
+    const loadout = yield* dbc.getOneByFk(
+      "trait_tree_loadout",
+      "ChrSpecializationID",
+      specId,
+    );
     if (!loadout) {
       return yield* Effect.fail(
         new DbcQueryError({ message: `Loadout for spec ${specId} not found` }),
       );
     }
 
-    const loadoutEntriesUnsorted = yield* dbc.getTraitTreeLoadoutEntries(
+    const loadoutEntriesUnsorted = yield* dbc.getManyByFk(
+      "trait_tree_loadout_entry",
+      "TraitTreeLoadoutID",
       loadout.ID,
     );
 
@@ -97,15 +103,33 @@ export const transformTalentTree = (
       orderIndexMap.set(entry.SelectedTraitNodeID, entry.OrderIndex);
     }
 
-    // 4. Get all nodes, edges, currencies (batching enabled)
-    const [treeNodes, allEdges, treeCurrencies] = yield* Effect.all(
+    // 4. Get all nodes + currencies, then edges (edges need node IDs)
+    const [treeNodes, treeCurrencies] = yield* Effect.all(
       [
-        dbc.getTraitNodesForTree(loadout.TraitTreeID),
-        dbc.getTraitEdgesForTree(loadout.TraitTreeID),
-        dbc.getTraitTreeXTraitCurrencies(loadout.TraitTreeID),
+        dbc.getManyByFk("trait_node", "TraitTreeID", loadout.TraitTreeID),
+        dbc.getManyByFk(
+          "trait_tree_x_trait_currency",
+          "TraitTreeID",
+          loadout.TraitTreeID,
+        ),
       ],
       { batching: true },
     );
+
+    const nodeIds = treeNodes.map((n) => n.ID);
+    const nodeIdSet = new Set(nodeIds);
+
+    const allEdges = yield* dbc
+      .getManyByFkValues("trait_edge", "LeftTraitNodeID", nodeIds)
+      .pipe(
+        Effect.map((edges) =>
+          edges.filter(
+            (e) =>
+              nodeIdSet.has(e.LeftTraitNodeID) &&
+              nodeIdSet.has(e.RightTraitNodeID),
+          ),
+        ),
+      );
 
     // 5. Get unique subTreeIds for hero talents
     const allSubTreeIds = [
@@ -121,8 +145,11 @@ export const transformTalentTree = (
 
     if (heroNodeIds.length > 0) {
       // Get node group memberships for hero nodes
-      const nodeGroupMemberships =
-        yield* dbc.getTraitNodeGroupXTraitNodes(heroNodeIds);
+      const nodeGroupMemberships = yield* dbc.getManyByFkValues(
+        "trait_node_group_x_trait_node",
+        "TraitNodeID",
+        heroNodeIds,
+      );
 
       const heroNodeGroupIds = [
         ...new Set(nodeGroupMemberships.map((m) => m.TraitNodeGroupID)),
@@ -130,15 +157,18 @@ export const transformTalentTree = (
 
       if (heroNodeGroupIds.length > 0) {
         // Get conditions for those groups
-        const groupConditions =
-          yield* dbc.getTraitNodeGroupXTraitConds(heroNodeGroupIds);
+        const groupConditions = yield* dbc.getManyByFkValues(
+          "trait_node_group_x_trait_cond",
+          "TraitNodeGroupID",
+          heroNodeGroupIds,
+        );
         const condIds = [
           ...new Set(groupConditions.map((gc) => gc.TraitCondID)),
         ];
 
         if (condIds.length > 0) {
           // Get the actual conditions
-          const conditions = yield* dbc.getTraitConds(condIds);
+          const conditions = yield* dbc.getManyByIds("trait_cond", condIds);
           const conditionsWithSpecSet = conditions.filter(
             (c) => c.SpecSetID > 0,
           );
@@ -148,7 +178,11 @@ export const transformTalentTree = (
 
           if (specSetIds.length > 0) {
             // Get spec set members
-            const specSetMembers = yield* dbc.getSpecSetMembers(specSetIds);
+            const specSetMembers = yield* dbc.getManyByFkValues(
+              "spec_set_member",
+              "SpecSet",
+              specSetIds,
+            );
 
             // Build map of subTreeId -> allowed specIds
             const subTreeSpecRestrictions = new Map<number, Set<number>>();
@@ -234,7 +268,7 @@ export const transformTalentTree = (
     // 10. Get subtree data
     const subTreeResults = yield* Effect.forEach(
       availableSubTreeIds,
-      (subTreeId) => dbc.getTraitSubTree(subTreeId),
+      (subTreeId) => dbc.getById("trait_sub_tree", subTreeId),
       { batching: true },
     );
 
@@ -251,7 +285,7 @@ export const transformTalentTree = (
 
     const uiTextureAtlasElements = yield* Effect.forEach(
       uiTextureAtlasElementIds,
-      (id) => dbc.getUiTextureAtlasElement(id),
+      (id) => dbc.getById("ui_texture_atlas_element", id),
       { batching: true },
     );
 
@@ -262,7 +296,9 @@ export const transformTalentTree = (
     }
 
     // 11. Node group memberships (for currency/spec gating)
-    const nodeGroupMemberships = yield* dbc.getTraitNodeGroupXTraitNodes(
+    const nodeGroupMemberships = yield* dbc.getManyByFkValues(
+      "trait_node_group_x_trait_node",
+      "TraitNodeID",
       filteredNodes.map((n) => n.ID),
     );
     const groupIds = [
@@ -272,15 +308,15 @@ export const transformTalentTree = (
     // 12. Costs and currencies
     const groupCosts =
       groupIds.length > 0
-        ? yield* dbc.getTraitNodeGroupXTraitCosts(groupIds)
+        ? yield* dbc.getManyByFkValues(
+            "trait_node_group_x_trait_cost",
+            "TraitNodeGroupID",
+            groupIds,
+          )
         : [];
     const costIds = [...new Set(groupCosts.map((gc) => gc.TraitCostID))];
     const costs =
-      costIds.length > 0
-        ? yield* Effect.forEach(costIds, (id) => dbc.getTraitCost(id), {
-            batching: true,
-          })
-        : [];
+      costIds.length > 0 ? yield* dbc.getManyByIds("trait_cost", costIds) : [];
     const costMap = new Map<number, Dbc.TraitCostRow>();
     for (const c of costs) {
       if (c) costMap.set(c.ID, c);
@@ -294,9 +330,7 @@ export const transformTalentTree = (
     ];
     const currencies =
       currencyIds.length > 0
-        ? yield* Effect.forEach(currencyIds, (id) => dbc.getTraitCurrency(id), {
-            batching: true,
-          })
+        ? yield* dbc.getManyByIds("trait_currency", currencyIds)
         : [];
     const currencyMap = new Map<number, Dbc.TraitCurrencyRow>();
     for (const cur of currencies) {
@@ -304,18 +338,27 @@ export const transformTalentTree = (
     }
 
     // 13. NodeXEntries and definitions
-    const allNodeXEntries = yield* Effect.forEach(
-      filteredNodes,
-      (node) => dbc.getTraitNodeXTraitNodeEntries(node.ID),
-      { batching: true },
+    const allNodeXEntries = yield* dbc.getManyByFkValues(
+      "trait_node_x_trait_node_entry",
+      "TraitNodeID",
+      filteredNodes.map((n) => n.ID),
     );
 
-    const allEntryIds = allNodeXEntries.flat().map((x) => x.TraitNodeEntryID);
-    const allEntries = yield* Effect.forEach(
-      allEntryIds,
-      (entryId) => dbc.getTraitNodeEntry(entryId),
-      { batching: true },
-    );
+    const nodeXEntriesByNodeId = new Map<
+      number,
+      Dbc.TraitNodeXTraitNodeEntryRow[]
+    >();
+    for (const x of allNodeXEntries) {
+      const existing = nodeXEntriesByNodeId.get(x.TraitNodeID) ?? [];
+      existing.push(x);
+      nodeXEntriesByNodeId.set(x.TraitNodeID, existing);
+    }
+
+    const allEntryIds = allNodeXEntries.map((x) => x.TraitNodeEntryID);
+    const allEntries =
+      allEntryIds.length > 0
+        ? yield* dbc.getManyByIds("trait_node_entry", allEntryIds)
+        : [];
     const entryMap = new Map<number, Dbc.TraitNodeEntryRow>();
     for (const entry of allEntries) {
       if (entry) entryMap.set(entry.ID, entry);
@@ -328,11 +371,10 @@ export const transformTalentTree = (
           .map((e) => e.TraitDefinitionID),
       ),
     ];
-    const allDefinitions = yield* Effect.forEach(
-      allDefinitionIds,
-      (defId) => dbc.getTraitDefinition(defId),
-      { batching: true },
-    );
+    const allDefinitions =
+      allDefinitionIds.length > 0
+        ? yield* dbc.getManyByIds("trait_definition", allDefinitionIds)
+        : [];
     const definitionMap = new Map<number, Dbc.TraitDefinitionRow>();
     for (const def of allDefinitions) {
       if (def) definitionMap.set(def.ID, def);
@@ -367,11 +409,19 @@ export const transformTalentTree = (
     // 14. Spec gating and starters for all nodes (including hero)
     const nodeConds =
       filteredNodes.length > 0
-        ? yield* dbc.getTraitNodeXTraitConds(filteredNodes.map((n) => n.ID))
+        ? yield* dbc.getManyByFkValues(
+            "trait_node_x_trait_cond",
+            "TraitNodeID",
+            filteredNodes.map((n) => n.ID),
+          )
         : [];
     const groupConds =
       groupIds.length > 0
-        ? yield* dbc.getTraitNodeGroupXTraitConds(groupIds)
+        ? yield* dbc.getManyByFkValues(
+            "trait_node_group_x_trait_cond",
+            "TraitNodeGroupID",
+            groupIds,
+          )
         : [];
     const condIds = [
       ...new Set([
@@ -379,7 +429,8 @@ export const transformTalentTree = (
         ...nodeConds.map((c) => c.TraitCondID),
       ]),
     ];
-    const conds = condIds.length > 0 ? yield* dbc.getTraitConds(condIds) : [];
+    const conds =
+      condIds.length > 0 ? yield* dbc.getManyByIds("trait_cond", condIds) : [];
     const condById = new Map<number, Dbc.TraitCondRow>();
     for (const c of conds) condById.set(c.ID, c);
 
@@ -387,7 +438,9 @@ export const transformTalentTree = (
       ...new Set(conds.filter((c) => c.SpecSetID > 0).map((c) => c.SpecSetID)),
     ];
     const specSetMembers =
-      specSetIds.length > 0 ? yield* dbc.getSpecSetMembers(specSetIds) : [];
+      specSetIds.length > 0
+        ? yield* dbc.getManyByFkValues("spec_set_member", "SpecSet", specSetIds)
+        : [];
     const specSetMap = new Map<number, Set<number>>();
     for (const m of specSetMembers) {
       const set = specSetMap.get(m.SpecSet) ?? new Set<number>();
@@ -441,7 +494,7 @@ export const transformTalentTree = (
 
     // 17. Assemble the nodes using the pre-fetched data
     const nodes = filteredNodes
-      .map((node, nodeIndex) => {
+      .map((node) => {
         const specInfo = nodeSpecInfo.get(node.ID);
         if (specInfo?.allowed && !specInfo.allowed.has(specId)) {
           return null;
@@ -450,7 +503,9 @@ export const transformTalentTree = (
         // - If both have selection_index != -1: sort ascending by selection_index
         // - Otherwise: sort descending by id_trait_node_entry (entry ID)
         // The _Index field corresponds to selection_index in SimC's trait_data
-        const nodeXEntries = [...allNodeXEntries[nodeIndex]].sort((a, b) => {
+        const nodeXEntries = [
+          ...(nodeXEntriesByNodeId.get(node.ID) ?? []),
+        ].sort((a, b) => {
           // _Index of -1 means "no selection index"
           // In DBC, this might also be represented differently, but we treat
           // any negative value as "no index"

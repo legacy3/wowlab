@@ -1,4 +1,4 @@
-import type * as Schemas from "@wowlab/core/Schemas";
+import type { DbcRow, DbcTableName } from "@wowlab/core/DbcTableRegistry";
 
 import { DbcError } from "@wowlab/core/Errors";
 import * as Context from "effect/Context";
@@ -6,1232 +6,206 @@ import * as Effect from "effect/Effect";
 import * as Request from "effect/Request";
 import * as RequestResolver from "effect/RequestResolver";
 
-import {
-  GetChrClass,
-  GetChrSpecialization,
-  GetDifficulty,
-  GetExpectedStatMod,
-  GetItem,
-  GetItemAppearance,
-  GetItemBonusListGroup,
-  GetItemBonusListGroupEntries,
-  GetItemBonusSeason,
-  GetItemBonusSeasonUpgradeCosts,
-  GetItemClass,
-  GetItemEffect,
-  GetItemModifiedAppearance,
-  GetItemNameDescription,
-  GetItemSet,
-  GetItemSetSpells,
-  GetItemSparse,
-  GetItemSubClass,
-  GetItemXBonusTrees,
-  GetItemXItemEffects,
-  GetJournalEncounter,
-  GetJournalEncounterItems,
-  GetJournalEncounterItemsByItemId,
-  GetJournalInstance,
-  GetManifestInterfaceData,
-  GetModifiedCraftingReagentItem,
-  GetSpecializationSpells,
-  GetSpell,
-  GetSpellAuraOptions,
-  GetSpellAuraRestrictions,
-  GetSpellCastingRequirements,
-  GetSpellCastTimes,
-  GetSpellCategories,
-  GetSpellCategory,
-  GetSpellClassOptions,
-  GetSpellCooldowns,
-  GetSpellDescriptionVariables,
-  GetSpellDuration,
-  GetSpellEffects,
-  GetSpellEmpower,
-  GetSpellEmpowerStages,
-  GetSpellInterrupts,
-  GetSpellLearnSpell,
-  GetSpellLevels,
-  GetSpellMisc,
-  GetSpellName,
-  GetSpellPower,
-  GetSpellProcsPerMinute,
-  GetSpellProcsPerMinuteMods,
-  GetSpellRadius,
-  GetSpellRange,
-  GetSpellReplacement,
-  GetSpellShapeshift,
-  GetSpellShapeshiftForm,
-  GetSpellTargetRestrictions,
-  GetSpellTotems,
-  GetSpellXDescriptionVariables,
-  GetTraitCost,
-  GetTraitCurrency,
-  GetTraitDefinition,
-  GetTraitEdgesForTree,
-  GetTraitNode,
-  GetTraitNodeEntry,
-  GetTraitNodeGroupXTraitCosts,
-  GetTraitNodesForTree,
-  GetTraitNodeXTraitNodeEntries,
-  GetTraitSubTree,
-  GetTraitTree,
-  GetTraitTreeLoadout,
-  GetTraitTreeLoadoutEntries,
-  GetTraitTreeXTraitCurrencies,
-  GetUiTextureAtlasElement,
-} from "./DbcRequests.js";
+import { GetDbcById, GetDbcManyByFk, GetDbcOneByFk } from "./DbcRequests.js";
 
 export interface DbcBatchFetcherInterface {
-  // By ID
-  readonly fetchChrClassesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ChrClassesRow>, DbcError>;
-  readonly fetchChrSpecializationsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ChrSpecializationRow>, DbcError>;
-  readonly fetchDifficultiesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.DifficultyRow>, DbcError>;
-  readonly fetchExpectedStatModsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ExpectedStatModRow>, DbcError>;
-  readonly fetchItemAppearancesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemAppearanceRow>, DbcError>;
-  readonly fetchItemBonusListGroupEntriesByGroupIds: (
-    groupIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemBonusListGroupEntryRow>,
-    DbcError
-  >;
-  readonly fetchItemBonusListGroupsByIds: (
+  readonly fetchByIds: <Table extends DbcTableName>(
+    table: Table,
     ids: readonly number[],
   ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemBonusListGroupRow>,
+    ReadonlyArray<DbcRow<Table> & { readonly ID: number }>,
     DbcError
   >;
-  readonly fetchItemBonusSeasonsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemBonusSeasonRow>, DbcError>;
-  readonly fetchItemBonusSeasonUpgradeCostsBySeasonIds: (
-    seasonIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow>,
-    DbcError
-  >;
-  readonly fetchItemClassesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemClassRow>, DbcError>;
-  readonly fetchItemEffectsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemEffectRow>, DbcError>;
-  // By ItemID (FK, single result)
-  readonly fetchItemModifiedAppearancesByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemModifiedAppearanceRow>,
-    DbcError
-  >;
-  readonly fetchItemNameDescriptionsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ItemNameDescriptionRow>,
-    DbcError
-  >;
-  readonly fetchItemsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemRow>, DbcError>;
-  readonly fetchItemSetsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetRow>, DbcError>;
-  readonly fetchItemSetSpellsBySetIds: (
-    setIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetSpellRow>, DbcError>;
-  readonly fetchItemSparsesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSparseRow>, DbcError>;
-  readonly fetchItemSubClassesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSubClassRow>, DbcError>;
-  readonly fetchItemXBonusTreesByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXBonusTreeRow>, DbcError>;
-  // By FK (array results)
-  readonly fetchItemXItemEffectsByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
-  readonly fetchJournalEncounterItemsByEncounterIds: (
-    encounterIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
-    DbcError
-  >;
-  readonly fetchJournalEncounterItemsByItemIds: (
-    itemIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
-    DbcError
-  >;
-  readonly fetchJournalEncountersByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.JournalEncounterRow>, DbcError>;
-  readonly fetchJournalInstancesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.JournalInstanceRow>, DbcError>;
-  readonly fetchManifestInterfaceDataByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ManifestInterfaceDataRow>,
-    DbcError
-  >;
-  readonly fetchModifiedCraftingReagentItemsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.ModifiedCraftingReagentItemRow>,
-    DbcError
-  >;
-  readonly fetchSpecializationSpellsBySpecIds: (
-    specIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpecializationSpellsRow>,
-    DbcError
-  >;
-  // By SpellID (FK, single result)
-  readonly fetchSpellAuraOptionsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellAuraOptionsRow>, DbcError>;
-  readonly fetchSpellAuraRestrictionsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellAuraRestrictionsRow>,
-    DbcError
-  >;
-  readonly fetchSpellCastingRequirementsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellCastingRequirementsRow>,
-    DbcError
-  >;
-  readonly fetchSpellCastTimesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCastTimesRow>, DbcError>;
-  readonly fetchSpellCategoriesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCategoryRow>, DbcError>;
-  readonly fetchSpellCategoriesBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCategoriesRow>, DbcError>;
-  readonly fetchSpellClassOptionsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellClassOptionsRow>, DbcError>;
-  readonly fetchSpellCooldownsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellCooldownsRow>, DbcError>;
-  readonly fetchSpellDescriptionVariablesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellDescriptionVariablesRow>,
-    DbcError
-  >;
-  readonly fetchSpellDurationsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellDurationRow>, DbcError>;
-  readonly fetchSpellEffectsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEffectRow>, DbcError>;
-  readonly fetchSpellEmpowerBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerRow>, DbcError>;
 
-  readonly fetchSpellEmpowerStagesByEmpowerIds: (
-    empowerIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellEmpowerStageRow>, DbcError>;
-  readonly fetchSpellInterruptsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellInterruptsRow>, DbcError>;
-  readonly fetchSpellLearnSpellBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLearnSpellRow>, DbcError>;
-  readonly fetchSpellLevelsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellLevelsRow>, DbcError>;
-  readonly fetchSpellMiscBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellMiscRow>, DbcError>;
-  readonly fetchSpellNamesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellNameRow>, DbcError>;
-  readonly fetchSpellPowerBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellPowerRow>, DbcError>;
-  readonly fetchSpellProcsPerMinuteByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteRow>,
-    DbcError
-  >;
-  readonly fetchSpellProcsPerMinuteModsByPpmIds: (
-    ppmIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellProcsPerMinuteModRow>,
-    DbcError
-  >;
-  readonly fetchSpellRadiusByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRadiusRow>, DbcError>;
-  readonly fetchSpellRangesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRangeRow>, DbcError>;
-  readonly fetchSpellReplacementBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellReplacementRow>, DbcError>;
-  readonly fetchSpellsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRow>, DbcError>;
-  readonly fetchSpellShapeshiftBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellShapeshiftRow>, DbcError>;
-  readonly fetchSpellShapeshiftFormsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellShapeshiftFormRow>,
-    DbcError
-  >;
-  readonly fetchSpellTargetRestrictionsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellTargetRestrictionsRow>,
-    DbcError
-  >;
-  readonly fetchSpellTotemsBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellTotemsRow>, DbcError>;
-  readonly fetchSpellXDescriptionVariablesBySpellIds: (
-    spellIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.SpellXDescriptionVariablesRow>,
-    DbcError
-  >;
-  readonly fetchTraitCostsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCostRow>, DbcError>;
-  readonly fetchTraitCurrenciesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitCurrencyRow>, DbcError>;
-  readonly fetchTraitDefinitionsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitDefinitionRow>, DbcError>;
-  readonly fetchTraitEdgesByTreeIds: (
-    treeIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyMap<number, ReadonlyArray<Schemas.Dbc.TraitEdgeRow>>,
-    DbcError
-  >;
-  readonly fetchTraitNodeEntriesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeEntryRow>, DbcError>;
-  readonly fetchTraitNodeGroupXTraitCostsByGroupIds: (
-    groupIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCostRow>,
-    DbcError
-  >;
-  readonly fetchTraitNodesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
-  readonly fetchTraitNodesByTreeIds: (
-    treeIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitNodeRow>, DbcError>;
-  readonly fetchTraitNodeXEntriesByNodeIds: (
-    nodeIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.TraitNodeXTraitNodeEntryRow>,
-    DbcError
-  >;
-  readonly fetchTraitSubTreesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitSubTreeRow>, DbcError>;
-  readonly fetchTraitTreeLoadoutEntriesByLoadoutIds: (
-    loadoutIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
-    DbcError
-  >;
-  readonly fetchTraitTreeLoadoutsBySpecIds: (
-    specIds: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutRow>, DbcError>;
-  readonly fetchTraitTreesByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitTreeRow>, DbcError>;
-  readonly fetchTraitTreeXTraitCurrenciesByTreeIds: (
-    treeIds: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
-    DbcError
-  >;
-  readonly fetchUiTextureAtlasElementsByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<Schemas.Dbc.UiTextureAtlasElementRow>,
-    DbcError
-  >;
+  readonly fetchByFks: <
+    Table extends DbcTableName,
+    FK extends keyof DbcRow<Table> & string,
+  >(
+    table: Table,
+    fkField: FK,
+    fkValues: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
+
+  readonly fetchAll: <Table extends DbcTableName>(
+    table: Table,
+  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
 }
 
 export class DbcBatchFetcher extends Context.Tag(
   "@wowlab/services/DbcBatchFetcher",
 )<DbcBatchFetcher, DbcBatchFetcherInterface>() {}
 
-const createByIdResolver = <Row extends { readonly ID: number }>(
-  fetchByIds: (
-    ids: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Row>, DbcError>,
-) =>
-  RequestResolver.makeBatched(
-    (
-      requests: ReadonlyArray<
-        { readonly id: number } & Request.Request<Row | undefined, DbcError>
-      >,
-    ) =>
-      Effect.gen(function* () {
-        const ids = [...new Set(requests.map((r) => r.id))];
-        if (ids.length === 0) {
-          return;
-        }
-
-        const rows = yield* fetchByIds(ids);
-        const rowMap = new Map<number, Row>();
-
-        for (const row of rows) {
-          rowMap.set(row.ID, row);
-        }
-
-        for (const req of requests) {
-          yield* Request.completeEffect(
-            req,
-            Effect.succeed(rowMap.get(req.id)),
-          );
-        }
-      }).pipe(
-        Effect.catchAll((error) =>
-          Effect.forEach(
-            requests,
-            (req) => Request.completeEffect(req, Effect.fail(error)),
-            { discard: true },
-          ),
-        ),
-      ),
-  );
-
-const createByFkSingleResolver = <
-  Row,
-  FK extends keyof Row & string,
-  Req extends Request.Request<Row | undefined, DbcError>,
->(
-  fetchByFks: (
-    fkValues: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Row>, DbcError>,
-  fkField: FK,
-  getFkValue: (req: Req) => number,
-): RequestResolver.RequestResolver<Req, never> =>
-  RequestResolver.makeBatched((requests: ReadonlyArray<Req>) =>
-    Effect.gen(function* () {
-      const fkValues = [...new Set(requests.map(getFkValue))];
-      if (fkValues.length === 0) {
-        return;
-      }
-
-      const rows = yield* fetchByFks(fkValues);
-      const rowByFk = new Map<number, Row>();
-
-      for (const row of rows) {
-        const fkValue = row[fkField] as number;
-
-        if (!rowByFk.has(fkValue)) {
-          rowByFk.set(fkValue, row);
-        }
-      }
-
-      for (const req of requests) {
-        yield* Request.completeEffect(
-          req,
-          Effect.succeed(rowByFk.get(getFkValue(req))) as Effect.Effect<
-            Request.Request.Success<Req>,
-            never,
-            never
-          >,
-        );
-      }
-    }).pipe(
-      Effect.catchAll((error) =>
-        Effect.forEach(
-          requests,
-          (req) =>
-            Request.completeEffect(
-              req,
-              Effect.fail(error) as Effect.Effect<
-                never,
-                Request.Request.Error<Req>,
-                never
-              >,
-            ),
-          { discard: true },
-        ),
-      ),
-    ),
-  );
-
-const createByFkArrayResolver = <
-  Row,
-  FK extends keyof Row & string,
-  Req extends Request.Request<ReadonlyArray<Row>, DbcError>,
->(
-  fetchByFks: (
-    fkValues: readonly number[],
-  ) => Effect.Effect<ReadonlyArray<Row>, DbcError>,
-  fkField: FK,
-  getFkValue: (req: Req) => number,
-): RequestResolver.RequestResolver<Req, never> =>
-  RequestResolver.makeBatched((requests: ReadonlyArray<Req>) =>
-    Effect.gen(function* () {
-      const fkValues = [...new Set(requests.map(getFkValue))];
-      if (fkValues.length === 0) {
-        return;
-      }
-
-      const rows = yield* fetchByFks(fkValues);
-      const rowsByFk = new Map<number, Row[]>();
-
-      for (const row of rows) {
-        const fkValue = row[fkField] as number;
-        const existing = rowsByFk.get(fkValue) ?? [];
-
-        existing.push(row);
-        rowsByFk.set(fkValue, existing);
-      }
-
-      for (const req of requests) {
-        yield* Request.completeEffect(
-          req,
-          Effect.succeed(rowsByFk.get(getFkValue(req)) ?? []) as Effect.Effect<
-            Request.Request.Success<Req>,
-            never,
-            never
-          >,
-        );
-      }
-    }).pipe(
-      Effect.catchAll((error) =>
-        Effect.forEach(
-          requests,
-          (req) =>
-            Request.completeEffect(
-              req,
-              Effect.fail(error) as Effect.Effect<
-                never,
-                Request.Request.Error<Req>,
-                never
-              >,
-            ),
-          { discard: true },
-        ),
-      ),
-    ),
-  );
-
-export interface DbcResolversInterface {
-  // By ID
-  readonly chrClassResolver: RequestResolver.RequestResolver<
-    GetChrClass,
-    never
-  >;
-  readonly chrSpecializationResolver: RequestResolver.RequestResolver<
-    GetChrSpecialization,
-    never
-  >;
-  readonly difficultyResolver: RequestResolver.RequestResolver<
-    GetDifficulty,
-    never
-  >;
-  readonly expectedStatModResolver: RequestResolver.RequestResolver<
-    GetExpectedStatMod,
-    never
-  >;
-  readonly itemAppearanceResolver: RequestResolver.RequestResolver<
-    GetItemAppearance,
-    never
-  >;
-  readonly itemBonusListGroupEntriesResolver: RequestResolver.RequestResolver<
-    GetItemBonusListGroupEntries,
-    never
-  >;
-  readonly itemBonusListGroupResolver: RequestResolver.RequestResolver<
-    GetItemBonusListGroup,
-    never
-  >;
-  readonly itemBonusSeasonResolver: RequestResolver.RequestResolver<
-    GetItemBonusSeason,
-    never
-  >;
-  readonly itemBonusSeasonUpgradeCostsResolver: RequestResolver.RequestResolver<
-    GetItemBonusSeasonUpgradeCosts,
-    never
-  >;
-  readonly itemClassResolver: RequestResolver.RequestResolver<
-    GetItemClass,
-    never
-  >;
-  readonly itemEffectResolver: RequestResolver.RequestResolver<
-    GetItemEffect,
-    never
-  >;
-  // By ItemID (FK, single result)
-  readonly itemModifiedAppearanceResolver: RequestResolver.RequestResolver<
-    GetItemModifiedAppearance,
-    never
-  >;
-  readonly itemNameDescriptionResolver: RequestResolver.RequestResolver<
-    GetItemNameDescription,
-    never
-  >;
-  readonly itemResolver: RequestResolver.RequestResolver<GetItem, never>;
-  readonly itemSetResolver: RequestResolver.RequestResolver<GetItemSet, never>;
-  readonly itemSetSpellsResolver: RequestResolver.RequestResolver<
-    GetItemSetSpells,
-    never
-  >;
-  readonly itemSparseResolver: RequestResolver.RequestResolver<
-    GetItemSparse,
-    never
-  >;
-  readonly itemSubClassResolver: RequestResolver.RequestResolver<
-    GetItemSubClass,
-    never
-  >;
-  readonly itemXBonusTreesResolver: RequestResolver.RequestResolver<
-    GetItemXBonusTrees,
-    never
-  >;
-  // By FK (array results)
-  readonly itemXItemEffectsResolver: RequestResolver.RequestResolver<
-    GetItemXItemEffects,
-    never
-  >;
-  readonly journalEncounterItemsResolver: RequestResolver.RequestResolver<
-    GetJournalEncounterItems,
-    never
-  >;
-  readonly journalEncounterItemsByItemIdResolver: RequestResolver.RequestResolver<
-    GetJournalEncounterItemsByItemId,
-    never
-  >;
-  readonly journalEncounterResolver: RequestResolver.RequestResolver<
-    GetJournalEncounter,
-    never
-  >;
-  readonly journalInstanceResolver: RequestResolver.RequestResolver<
-    GetJournalInstance,
-    never
-  >;
-  readonly manifestInterfaceDataResolver: RequestResolver.RequestResolver<
-    GetManifestInterfaceData,
-    never
-  >;
-  readonly modifiedCraftingReagentItemResolver: RequestResolver.RequestResolver<
-    GetModifiedCraftingReagentItem,
-    never
-  >;
-
-  readonly specializationSpellsResolver: RequestResolver.RequestResolver<
-    GetSpecializationSpells,
-    never
-  >;
-  // By SpellID (FK, single result)
-  readonly spellAuraOptionsResolver: RequestResolver.RequestResolver<
-    GetSpellAuraOptions,
-    never
-  >;
-  readonly spellAuraRestrictionsResolver: RequestResolver.RequestResolver<
-    GetSpellAuraRestrictions,
-    never
-  >;
-  readonly spellCastingRequirementsResolver: RequestResolver.RequestResolver<
-    GetSpellCastingRequirements,
-    never
-  >;
-  readonly spellCastTimesResolver: RequestResolver.RequestResolver<
-    GetSpellCastTimes,
-    never
-  >;
-  readonly spellCategoriesResolver: RequestResolver.RequestResolver<
-    GetSpellCategories,
-    never
-  >;
-  readonly spellCategoryResolver: RequestResolver.RequestResolver<
-    GetSpellCategory,
-    never
-  >;
-  readonly spellClassOptionsResolver: RequestResolver.RequestResolver<
-    GetSpellClassOptions,
-    never
-  >;
-  readonly spellCooldownsResolver: RequestResolver.RequestResolver<
-    GetSpellCooldowns,
-    never
-  >;
-  readonly spellDescriptionVariablesResolver: RequestResolver.RequestResolver<
-    GetSpellDescriptionVariables,
-    never
-  >;
-  readonly spellDurationResolver: RequestResolver.RequestResolver<
-    GetSpellDuration,
-    never
-  >;
-  readonly spellEffectsResolver: RequestResolver.RequestResolver<
-    GetSpellEffects,
-    never
-  >;
-  readonly spellEmpowerResolver: RequestResolver.RequestResolver<
-    GetSpellEmpower,
-    never
-  >;
-
-  readonly spellEmpowerStagesResolver: RequestResolver.RequestResolver<
-    GetSpellEmpowerStages,
-    never
-  >;
-  readonly spellInterruptsResolver: RequestResolver.RequestResolver<
-    GetSpellInterrupts,
-    never
-  >;
-  readonly spellLearnSpellResolver: RequestResolver.RequestResolver<
-    GetSpellLearnSpell,
-    never
-  >;
-  readonly spellLevelsResolver: RequestResolver.RequestResolver<
-    GetSpellLevels,
-    never
-  >;
-  readonly spellMiscResolver: RequestResolver.RequestResolver<
-    GetSpellMisc,
-    never
-  >;
-  readonly spellNameResolver: RequestResolver.RequestResolver<
-    GetSpellName,
-    never
-  >;
-  readonly spellPowerResolver: RequestResolver.RequestResolver<
-    GetSpellPower,
-    never
-  >;
-  readonly spellProcsPerMinuteModsResolver: RequestResolver.RequestResolver<
-    GetSpellProcsPerMinuteMods,
-    never
-  >;
-  readonly spellProcsPerMinuteResolver: RequestResolver.RequestResolver<
-    GetSpellProcsPerMinute,
-    never
-  >;
-  readonly spellRadiusResolver: RequestResolver.RequestResolver<
-    GetSpellRadius,
-    never
-  >;
-  readonly spellRangeResolver: RequestResolver.RequestResolver<
-    GetSpellRange,
-    never
-  >;
-  readonly spellReplacementResolver: RequestResolver.RequestResolver<
-    GetSpellReplacement,
-    never
-  >;
-  readonly spellResolver: RequestResolver.RequestResolver<GetSpell, never>;
-  readonly spellShapeshiftFormResolver: RequestResolver.RequestResolver<
-    GetSpellShapeshiftForm,
-    never
-  >;
-  readonly spellShapeshiftResolver: RequestResolver.RequestResolver<
-    GetSpellShapeshift,
-    never
-  >;
-  readonly spellTargetRestrictionsResolver: RequestResolver.RequestResolver<
-    GetSpellTargetRestrictions,
-    never
-  >;
-  readonly spellTotemsResolver: RequestResolver.RequestResolver<
-    GetSpellTotems,
-    never
-  >;
-  readonly spellXDescriptionVariablesResolver: RequestResolver.RequestResolver<
-    GetSpellXDescriptionVariables,
-    never
-  >;
-  readonly traitCostResolver: RequestResolver.RequestResolver<
-    GetTraitCost,
-    never
-  >;
-  readonly traitCurrencyResolver: RequestResolver.RequestResolver<
-    GetTraitCurrency,
-    never
-  >;
-  readonly traitDefinitionResolver: RequestResolver.RequestResolver<
-    GetTraitDefinition,
-    never
-  >;
-  readonly traitEdgesForTreeResolver: RequestResolver.RequestResolver<
-    GetTraitEdgesForTree,
-    never
-  >;
-  readonly traitNodeEntryResolver: RequestResolver.RequestResolver<
-    GetTraitNodeEntry,
-    never
-  >;
-  readonly traitNodeGroupXTraitCostResolver: RequestResolver.RequestResolver<
-    GetTraitNodeGroupXTraitCosts,
-    never
-  >;
-  readonly traitNodeResolver: RequestResolver.RequestResolver<
-    GetTraitNode,
-    never
-  >;
-  readonly traitNodesForTreeResolver: RequestResolver.RequestResolver<
-    GetTraitNodesForTree,
-    never
-  >;
-  readonly traitNodeXEntriesResolver: RequestResolver.RequestResolver<
-    GetTraitNodeXTraitNodeEntries,
-    never
-  >;
-  readonly traitSubTreeResolver: RequestResolver.RequestResolver<
-    GetTraitSubTree,
-    never
-  >;
-  readonly traitTreeLoadoutEntriesResolver: RequestResolver.RequestResolver<
-    GetTraitTreeLoadoutEntries,
-    never
-  >;
-  readonly traitTreeLoadoutResolver: RequestResolver.RequestResolver<
-    GetTraitTreeLoadout,
-    never
-  >;
-  readonly traitTreeResolver: RequestResolver.RequestResolver<
-    GetTraitTree,
-    never
-  >;
-  readonly traitTreeXTraitCurrencyResolver: RequestResolver.RequestResolver<
-    GetTraitTreeXTraitCurrencies,
-    never
-  >;
-  readonly uiTextureAtlasElementResolver: RequestResolver.RequestResolver<
-    GetUiTextureAtlasElement,
+export interface DbcRequestResolvers {
+  readonly byId: RequestResolver.RequestResolver<GetDbcById<any>, never>;
+  readonly oneByFk: RequestResolver.RequestResolver<GetDbcOneByFk<any>, never>;
+  readonly manyByFk: RequestResolver.RequestResolver<
+    GetDbcManyByFk<any>,
     never
   >;
 }
 
-export class DbcResolvers extends Context.Tag("@wowlab/services/DbcResolvers")<
-  DbcResolvers,
-  DbcResolversInterface
->() {}
-
-export const makeDbcResolvers = Effect.gen(function* () {
-  const fetcher = yield* DbcBatchFetcher;
-
-  const traitNodeXEntriesResolver = createByFkArrayResolver<
-    Schemas.Dbc.TraitNodeXTraitNodeEntryRow,
-    "TraitNodeID",
-    GetTraitNodeXTraitNodeEntries
-  >(fetcher.fetchTraitNodeXEntriesByNodeIds, "TraitNodeID", (r) => r.nodeId);
-
-  const traitNodesForTreeResolver = createByFkArrayResolver<
-    Schemas.Dbc.TraitNodeRow,
-    "TraitTreeID",
-    GetTraitNodesForTree
-  >(fetcher.fetchTraitNodesByTreeIds, "TraitTreeID", (r) => r.treeId);
-
-  const traitTreeXTraitCurrencyResolver = createByFkArrayResolver<
-    Schemas.Dbc.TraitTreeXTraitCurrencyRow,
-    "TraitTreeID",
-    GetTraitTreeXTraitCurrencies
-  >(
-    fetcher.fetchTraitTreeXTraitCurrenciesByTreeIds,
-    "TraitTreeID",
-    (r) => r.treeId,
+const completeAllFailed = <Req extends Request.Request<any, any>>(
+  requests: ReadonlyArray<Req>,
+  error: Request.Request.Error<Req>,
+) =>
+  Effect.forEach(
+    requests,
+    (req) =>
+      Request.completeEffect(
+        req,
+        Effect.fail<Request.Request.Error<Req>>(error),
+      ),
+    { discard: true },
   );
 
-  const traitNodeGroupXTraitCostResolver = createByFkArrayResolver<
-    Schemas.Dbc.TraitNodeGroupXTraitCostRow,
-    "TraitNodeGroupID",
-    GetTraitNodeGroupXTraitCosts
-  >(
-    fetcher.fetchTraitNodeGroupXTraitCostsByGroupIds,
-    "TraitNodeGroupID",
-    (r) => r.groupId,
-  );
-
-  const traitCostResolver = createByIdResolver<Schemas.Dbc.TraitCostRow>(
-    fetcher.fetchTraitCostsByIds,
-  );
-  const traitCurrencyResolver =
-    createByIdResolver<Schemas.Dbc.TraitCurrencyRow>(
-      fetcher.fetchTraitCurrenciesByIds,
-    );
-
-  const traitEdgesForTreeResolver = RequestResolver.makeBatched(
-    (requests: ReadonlyArray<GetTraitEdgesForTree>) =>
+export const makeDbcRequestResolvers = (
+  fetcher: DbcBatchFetcherInterface,
+): DbcRequestResolvers => {
+  const byId = RequestResolver.makeBatched(
+    (requests: ReadonlyArray<GetDbcById<any>>) =>
       Effect.gen(function* () {
-        const treeIds = [...new Set(requests.map((r) => r.treeId))];
-        if (treeIds.length === 0) {
-          return;
-        }
-
-        const edgesByTree = yield* fetcher.fetchTraitEdgesByTreeIds(treeIds);
+        const byTable = new Map<DbcTableName, GetDbcById[]>();
 
         for (const req of requests) {
-          yield* Request.completeEffect(
-            req,
-            Effect.succeed(edgesByTree.get(req.treeId) ?? []),
-          );
+          const list = byTable.get(req.table) ?? [];
+          list.push(req);
+          byTable.set(req.table, list);
         }
-      }).pipe(
-        Effect.catchAll((error) =>
-          Effect.forEach(
-            requests,
-            (req) => Request.completeEffect(req, Effect.fail(error)),
-            { discard: true },
-          ),
-        ),
-      ),
+
+        yield* Effect.forEach(
+          Array.from(byTable.entries()),
+          ([table, tableRequests]) =>
+            Effect.gen(function* () {
+              const ids = [...new Set(tableRequests.map((r) => r.id))];
+              if (ids.length === 0) {
+                return;
+              }
+
+              const rows = yield* fetcher.fetchByIds(table, ids);
+              const rowById = new Map<
+                number,
+                DbcRow<typeof table> & { readonly ID: number }
+              >();
+
+              for (const row of rows) {
+                rowById.set(row.ID, row);
+              }
+
+              for (const req of tableRequests) {
+                yield* Request.completeEffect(
+                  req,
+                  Effect.succeed(rowById.get(req.id)),
+                );
+              }
+            }).pipe(
+              Effect.catchAll((error) =>
+                completeAllFailed(tableRequests, error),
+              ),
+            ),
+          { concurrency: "unbounded", discard: true },
+        );
+      }).pipe(Effect.catchAll((error) => completeAllFailed(requests, error))),
   );
 
-  const traitTreeLoadoutResolver = createByFkSingleResolver<
-    Schemas.Dbc.TraitTreeLoadoutRow,
-    "ChrSpecializationID",
-    GetTraitTreeLoadout
-  >(
-    fetcher.fetchTraitTreeLoadoutsBySpecIds,
-    "ChrSpecializationID",
-    (r) => r.specId,
+  const oneByFk = RequestResolver.makeBatched(
+    (requests: ReadonlyArray<GetDbcOneByFk<any>>) =>
+      Effect.gen(function* () {
+        const byKey = new Map<string, GetDbcOneByFk[]>();
+
+        for (const req of requests) {
+          const key = `${req.table}::${req.fkField}`;
+          const list = byKey.get(key) ?? [];
+          list.push(req);
+          byKey.set(key, list);
+        }
+
+        yield* Effect.forEach(
+          Array.from(byKey.entries()),
+          ([_key, group]) =>
+            Effect.gen(function* () {
+              const table = group[0]!.table;
+              const fkField = group[0]!.fkField;
+
+              const fkValues = [...new Set(group.map((r) => r.fkValue))];
+              if (fkValues.length === 0) {
+                return;
+              }
+
+              const rows = yield* fetcher.fetchByFks(table, fkField, fkValues);
+              const rowByFk = new Map<number, DbcRow<typeof table>>();
+
+              for (const row of rows) {
+                const fk = row[fkField];
+                if (typeof fk === "number" && !rowByFk.has(fk)) {
+                  rowByFk.set(fk, row);
+                }
+              }
+
+              for (const req of group) {
+                yield* Request.completeEffect(
+                  req,
+                  Effect.succeed(rowByFk.get(req.fkValue)),
+                );
+              }
+            }).pipe(
+              Effect.catchAll((error) => completeAllFailed(group, error)),
+            ),
+          { concurrency: "unbounded", discard: true },
+        );
+      }).pipe(Effect.catchAll((error) => completeAllFailed(requests, error))),
   );
 
-  const traitTreeLoadoutEntriesResolver = createByFkArrayResolver<
-    Schemas.Dbc.TraitTreeLoadoutEntryRow,
-    "TraitTreeLoadoutID",
-    GetTraitTreeLoadoutEntries
-  >(
-    fetcher.fetchTraitTreeLoadoutEntriesByLoadoutIds,
-    "TraitTreeLoadoutID",
-    (r) => r.loadoutId,
+  const manyByFk = RequestResolver.makeBatched(
+    (requests: ReadonlyArray<GetDbcManyByFk<any>>) =>
+      Effect.gen(function* () {
+        const byKey = new Map<string, GetDbcManyByFk[]>();
+
+        for (const req of requests) {
+          const key = `${req.table}::${req.fkField}`;
+          const list = byKey.get(key) ?? [];
+          list.push(req);
+          byKey.set(key, list);
+        }
+
+        yield* Effect.forEach(
+          Array.from(byKey.entries()),
+          ([_key, group]) =>
+            Effect.gen(function* () {
+              const table = group[0]!.table;
+              const fkField = group[0]!.fkField;
+
+              const fkValues = [...new Set(group.map((r) => r.fkValue))];
+              if (fkValues.length === 0) {
+                return;
+              }
+
+              const rows = yield* fetcher.fetchByFks(table, fkField, fkValues);
+              const rowsByFk = new Map<number, Array<DbcRow<typeof table>>>();
+
+              for (const row of rows) {
+                const fk = row[fkField];
+                if (typeof fk !== "number") {
+                  continue;
+                }
+
+                const existing = rowsByFk.get(fk) ?? [];
+                existing.push(row);
+                rowsByFk.set(fk, existing);
+              }
+
+              for (const req of group) {
+                yield* Request.completeEffect(
+                  req,
+                  Effect.succeed(rowsByFk.get(req.fkValue) ?? []),
+                );
+              }
+            }).pipe(
+              Effect.catchAll((error) => completeAllFailed(group, error)),
+            ),
+          { concurrency: "unbounded", discard: true },
+        );
+      }).pipe(Effect.catchAll((error) => completeAllFailed(requests, error))),
   );
 
-  return {
-    // By ID
-    chrClassResolver: createByIdResolver<Schemas.Dbc.ChrClassesRow>(
-      fetcher.fetchChrClassesByIds,
-    ),
-    chrSpecializationResolver:
-      createByIdResolver<Schemas.Dbc.ChrSpecializationRow>(
-        fetcher.fetchChrSpecializationsByIds,
-      ),
-    difficultyResolver: createByIdResolver<Schemas.Dbc.DifficultyRow>(
-      fetcher.fetchDifficultiesByIds,
-    ),
-    expectedStatModResolver: createByIdResolver<Schemas.Dbc.ExpectedStatModRow>(
-      fetcher.fetchExpectedStatModsByIds,
-    ),
-    itemAppearanceResolver: createByIdResolver<Schemas.Dbc.ItemAppearanceRow>(
-      fetcher.fetchItemAppearancesByIds,
-    ),
-    itemEffectResolver: createByIdResolver<Schemas.Dbc.ItemEffectRow>(
-      fetcher.fetchItemEffectsByIds,
-    ),
-    itemResolver: createByIdResolver<Schemas.Dbc.ItemRow>(
-      fetcher.fetchItemsByIds,
-    ),
-    itemSparseResolver: createByIdResolver<Schemas.Dbc.ItemSparseRow>(
-      fetcher.fetchItemSparsesByIds,
-    ),
-    manifestInterfaceDataResolver:
-      createByIdResolver<Schemas.Dbc.ManifestInterfaceDataRow>(
-        fetcher.fetchManifestInterfaceDataByIds,
-      ),
-    spellCastTimesResolver: createByIdResolver<Schemas.Dbc.SpellCastTimesRow>(
-      fetcher.fetchSpellCastTimesByIds,
-    ),
-    spellCategoryResolver: createByIdResolver<Schemas.Dbc.SpellCategoryRow>(
-      fetcher.fetchSpellCategoriesByIds,
-    ),
-    spellDescriptionVariablesResolver:
-      createByIdResolver<Schemas.Dbc.SpellDescriptionVariablesRow>(
-        fetcher.fetchSpellDescriptionVariablesByIds,
-      ),
-    spellDurationResolver: createByIdResolver<Schemas.Dbc.SpellDurationRow>(
-      fetcher.fetchSpellDurationsByIds,
-    ),
-    spellNameResolver: createByIdResolver<Schemas.Dbc.SpellNameRow>(
-      fetcher.fetchSpellNamesByIds,
-    ),
-    spellProcsPerMinuteResolver:
-      createByIdResolver<Schemas.Dbc.SpellProcsPerMinuteRow>(
-        fetcher.fetchSpellProcsPerMinuteByIds,
-      ),
-    spellRadiusResolver: createByIdResolver<Schemas.Dbc.SpellRadiusRow>(
-      fetcher.fetchSpellRadiusByIds,
-    ),
-    spellRangeResolver: createByIdResolver<Schemas.Dbc.SpellRangeRow>(
-      fetcher.fetchSpellRangesByIds,
-    ),
-    spellResolver: createByIdResolver<Schemas.Dbc.SpellRow>(
-      fetcher.fetchSpellsByIds,
-    ),
-    spellShapeshiftFormResolver:
-      createByIdResolver<Schemas.Dbc.SpellShapeshiftFormRow>(
-        fetcher.fetchSpellShapeshiftFormsByIds,
-      ),
-    traitCostResolver,
-    traitCurrencyResolver,
-    traitDefinitionResolver: createByIdResolver<Schemas.Dbc.TraitDefinitionRow>(
-      fetcher.fetchTraitDefinitionsByIds,
-    ),
-    traitNodeEntryResolver: createByIdResolver<Schemas.Dbc.TraitNodeEntryRow>(
-      fetcher.fetchTraitNodeEntriesByIds,
-    ),
-    traitNodeResolver: createByIdResolver<Schemas.Dbc.TraitNodeRow>(
-      fetcher.fetchTraitNodesByIds,
-    ),
-    traitSubTreeResolver: createByIdResolver<Schemas.Dbc.TraitSubTreeRow>(
-      fetcher.fetchTraitSubTreesByIds,
-    ),
-    traitTreeResolver: createByIdResolver<Schemas.Dbc.TraitTreeRow>(
-      fetcher.fetchTraitTreesByIds,
-    ),
-    traitTreeXTraitCurrencyResolver,
-    uiTextureAtlasElementResolver:
-      createByIdResolver<Schemas.Dbc.UiTextureAtlasElementRow>(
-        fetcher.fetchUiTextureAtlasElementsByIds,
-      ),
-
-    // By SpellID (FK, single result)
-    spellAuraOptionsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellAuraOptionsRow,
-      "SpellID",
-      GetSpellAuraOptions
-    >(fetcher.fetchSpellAuraOptionsBySpellIds, "SpellID", (r) => r.spellId),
-    spellAuraRestrictionsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellAuraRestrictionsRow,
-      "SpellID",
-      GetSpellAuraRestrictions
-    >(
-      fetcher.fetchSpellAuraRestrictionsBySpellIds,
-      "SpellID",
-      (r) => r.spellId,
-    ),
-    spellCastingRequirementsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellCastingRequirementsRow,
-      "SpellID",
-      GetSpellCastingRequirements
-    >(
-      fetcher.fetchSpellCastingRequirementsBySpellIds,
-      "SpellID",
-      (r) => r.spellId,
-    ),
-    spellCategoriesResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellCategoriesRow,
-      "SpellID",
-      GetSpellCategories
-    >(fetcher.fetchSpellCategoriesBySpellIds, "SpellID", (r) => r.spellId),
-    spellClassOptionsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellClassOptionsRow,
-      "SpellID",
-      GetSpellClassOptions
-    >(fetcher.fetchSpellClassOptionsBySpellIds, "SpellID", (r) => r.spellId),
-    spellCooldownsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellCooldownsRow,
-      "SpellID",
-      GetSpellCooldowns
-    >(fetcher.fetchSpellCooldownsBySpellIds, "SpellID", (r) => r.spellId),
-    spellEmpowerResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellEmpowerRow,
-      "SpellID",
-      GetSpellEmpower
-    >(fetcher.fetchSpellEmpowerBySpellIds, "SpellID", (r) => r.spellId),
-    spellInterruptsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellInterruptsRow,
-      "SpellID",
-      GetSpellInterrupts
-    >(fetcher.fetchSpellInterruptsBySpellIds, "SpellID", (r) => r.spellId),
-    spellMiscResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellMiscRow,
-      "SpellID",
-      GetSpellMisc
-    >(fetcher.fetchSpellMiscBySpellIds, "SpellID", (r) => r.spellId),
-    spellReplacementResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellReplacementRow,
-      "SpellID",
-      GetSpellReplacement
-    >(fetcher.fetchSpellReplacementBySpellIds, "SpellID", (r) => r.spellId),
-    spellShapeshiftResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellShapeshiftRow,
-      "SpellID",
-      GetSpellShapeshift
-    >(fetcher.fetchSpellShapeshiftBySpellIds, "SpellID", (r) => r.spellId),
-    spellTargetRestrictionsResolver: createByFkSingleResolver<
-      Schemas.Dbc.SpellTargetRestrictionsRow,
-      "SpellID",
-      GetSpellTargetRestrictions
-    >(
-      fetcher.fetchSpellTargetRestrictionsBySpellIds,
-      "SpellID",
-      (r) => r.spellId,
-    ),
-
-    // By ItemID (FK, single result)
-    itemModifiedAppearanceResolver: createByFkSingleResolver<
-      Schemas.Dbc.ItemModifiedAppearanceRow,
-      "ItemID",
-      GetItemModifiedAppearance
-    >(fetcher.fetchItemModifiedAppearancesByItemIds, "ItemID", (r) => r.itemId),
-
-    // By FK (array results)
-    itemBonusListGroupEntriesResolver: createByFkArrayResolver<
-      Schemas.Dbc.ItemBonusListGroupEntryRow,
-      "ItemBonusListGroupID",
-      GetItemBonusListGroupEntries
-    >(
-      fetcher.fetchItemBonusListGroupEntriesByGroupIds,
-      "ItemBonusListGroupID",
-      (r) => r.groupId,
-    ),
-    itemBonusListGroupResolver:
-      createByIdResolver<Schemas.Dbc.ItemBonusListGroupRow>(
-        fetcher.fetchItemBonusListGroupsByIds,
-      ),
-    itemBonusSeasonResolver: createByIdResolver<Schemas.Dbc.ItemBonusSeasonRow>(
-      fetcher.fetchItemBonusSeasonsByIds,
-    ),
-    itemBonusSeasonUpgradeCostsResolver: createByFkArrayResolver<
-      Schemas.Dbc.ItemBonusSeasonUpgradeCostRow,
-      "ItemBonusSeasonID",
-      GetItemBonusSeasonUpgradeCosts
-    >(
-      fetcher.fetchItemBonusSeasonUpgradeCostsBySeasonIds,
-      "ItemBonusSeasonID",
-      (r) => r.seasonId,
-    ),
-    itemClassResolver: createByIdResolver<Schemas.Dbc.ItemClassRow>(
-      fetcher.fetchItemClassesByIds,
-    ),
-    itemNameDescriptionResolver:
-      createByIdResolver<Schemas.Dbc.ItemNameDescriptionRow>(
-        fetcher.fetchItemNameDescriptionsByIds,
-      ),
-    itemSetResolver: createByIdResolver<Schemas.Dbc.ItemSetRow>(
-      fetcher.fetchItemSetsByIds,
-    ),
-    itemSetSpellsResolver: createByFkArrayResolver<
-      Schemas.Dbc.ItemSetSpellRow,
-      "ItemSetID",
-      GetItemSetSpells
-    >(fetcher.fetchItemSetSpellsBySetIds, "ItemSetID", (r) => r.setId),
-    itemSubClassResolver: createByIdResolver<Schemas.Dbc.ItemSubClassRow>(
-      fetcher.fetchItemSubClassesByIds,
-    ),
-    itemXBonusTreesResolver: createByFkArrayResolver<
-      Schemas.Dbc.ItemXBonusTreeRow,
-      "ItemID",
-      GetItemXBonusTrees
-    >(fetcher.fetchItemXBonusTreesByItemIds, "ItemID", (r) => r.itemId),
-    itemXItemEffectsResolver: createByFkArrayResolver<
-      Schemas.Dbc.ItemXItemEffectRow,
-      "ItemID",
-      GetItemXItemEffects
-    >(fetcher.fetchItemXItemEffectsByItemIds, "ItemID", (r) => r.itemId),
-    specializationSpellsResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpecializationSpellsRow,
-      "SpecID",
-      GetSpecializationSpells
-    >(fetcher.fetchSpecializationSpellsBySpecIds, "SpecID", (r) => r.specId),
-    spellEffectsResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellEffectRow,
-      "SpellID",
-      GetSpellEffects
-    >(fetcher.fetchSpellEffectsBySpellIds, "SpellID", (r) => r.spellId),
-    spellEmpowerStagesResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellEmpowerStageRow,
-      "SpellEmpowerID",
-      GetSpellEmpowerStages
-    >(
-      fetcher.fetchSpellEmpowerStagesByEmpowerIds,
-      "SpellEmpowerID",
-      (r) => r.spellEmpowerId,
-    ),
-    spellLearnSpellResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellLearnSpellRow,
-      "SpellID",
-      GetSpellLearnSpell
-    >(fetcher.fetchSpellLearnSpellBySpellIds, "SpellID", (r) => r.spellId),
-    spellLevelsResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellLevelsRow,
-      "SpellID",
-      GetSpellLevels
-    >(fetcher.fetchSpellLevelsBySpellIds, "SpellID", (r) => r.spellId),
-    spellPowerResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellPowerRow,
-      "SpellID",
-      GetSpellPower
-    >(fetcher.fetchSpellPowerBySpellIds, "SpellID", (r) => r.spellId),
-    spellProcsPerMinuteModsResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellProcsPerMinuteModRow,
-      "SpellProcsPerMinuteID",
-      GetSpellProcsPerMinuteMods
-    >(
-      fetcher.fetchSpellProcsPerMinuteModsByPpmIds,
-      "SpellProcsPerMinuteID",
-      (r) => r.spellProcsPerMinuteId,
-    ),
-    spellTotemsResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellTotemsRow,
-      "SpellID",
-      GetSpellTotems
-    >(fetcher.fetchSpellTotemsBySpellIds, "SpellID", (r) => r.spellId),
-    spellXDescriptionVariablesResolver: createByFkArrayResolver<
-      Schemas.Dbc.SpellXDescriptionVariablesRow,
-      "SpellID",
-      GetSpellXDescriptionVariables
-    >(
-      fetcher.fetchSpellXDescriptionVariablesBySpellIds,
-      "SpellID",
-      (r) => r.spellId,
-    ),
-    traitEdgesForTreeResolver,
-    traitNodeGroupXTraitCostResolver,
-    traitNodesForTreeResolver,
-    traitNodeXEntriesResolver,
-    traitTreeLoadoutEntriesResolver,
-    traitTreeLoadoutResolver,
-
-    // Journal tables
-    journalEncounterItemsResolver: createByFkArrayResolver<
-      Schemas.Dbc.JournalEncounterItemRow,
-      "JournalEncounterID",
-      GetJournalEncounterItems
-    >(
-      fetcher.fetchJournalEncounterItemsByEncounterIds,
-      "JournalEncounterID",
-      (r) => r.encounterId,
-    ),
-    journalEncounterItemsByItemIdResolver: createByFkArrayResolver<
-      Schemas.Dbc.JournalEncounterItemRow,
-      "ItemID",
-      GetJournalEncounterItemsByItemId
-    >(fetcher.fetchJournalEncounterItemsByItemIds, "ItemID", (r) => r.itemId),
-    journalEncounterResolver:
-      createByIdResolver<Schemas.Dbc.JournalEncounterRow>(
-        fetcher.fetchJournalEncountersByIds,
-      ),
-    journalInstanceResolver: createByIdResolver<Schemas.Dbc.JournalInstanceRow>(
-      fetcher.fetchJournalInstancesByIds,
-    ),
-    modifiedCraftingReagentItemResolver:
-      createByIdResolver<Schemas.Dbc.ModifiedCraftingReagentItemRow>(
-        fetcher.fetchModifiedCraftingReagentItemsByIds,
-      ),
-  } satisfies DbcResolversInterface;
-});
+  return { byId, manyByFk, oneByFk };
+};

@@ -22,7 +22,7 @@ export const transformSpellWith = (
   knowledgeContext?: SpellKnowledgeContext,
 ): Effect.Effect<Spell.SpellDataFlat, Errors.SpellInfoNotFound | DbcError> =>
   Effect.gen(function* () {
-    const nameRow = yield* dbc.getSpellName(spellId);
+    const nameRow = yield* dbc.getById("spell_name", spellId);
     if (!nameRow) {
       return yield* Effect.fail(
         new Errors.SpellInfoNotFound({
@@ -34,9 +34,9 @@ export const transformSpellWith = (
 
     const [misc, effects, spellCategories] = yield* Effect.all(
       [
-        dbc.getSpellMisc(spellId),
-        dbc.getSpellEffects(spellId),
-        dbc.getSpellCategories(spellId),
+        dbc.getOneByFk("spell_misc", "SpellID", spellId),
+        dbc.getManyByFk("spell_effect", "SpellID", spellId),
+        dbc.getOneByFk("spell_categories", "SpellID", spellId),
       ],
       { batching: true },
     );
@@ -153,7 +153,7 @@ export const transformSpellWith = (
     const iconRow =
       iconFileDataId > 0
         ? Option.fromNullable(
-            yield* dbc.getManifestInterfaceData(iconFileDataId),
+            yield* dbc.getById("manifest_interface_data", iconFileDataId),
           )
         : Option.none();
 

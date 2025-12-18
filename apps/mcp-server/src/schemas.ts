@@ -1,90 +1,20 @@
 import * as Schema from "effect/Schema";
 
-export const AllowedTableSchema = Schema.Literal(
-  "spell",
-  "spell_name",
-  "spell_misc",
-  "spell_effect",
-  "spell_power",
-  "spell_cooldowns",
-  "spell_categories",
-  "spell_category",
-  "spell_class_options",
-  "spell_cast_times",
-  "spell_casting_requirements",
-  "spell_duration",
-  "spell_range",
-  "spell_radius",
-  "spell_interrupts",
-  "spell_empower",
-  "spell_empower_stage",
-  "spell_aura_options",
-  "spell_target_restrictions",
-  "spell_procs_per_minute",
-  "spell_procs_per_minute_mod",
-  "item",
-  "item_sparse",
-  "item_effect",
-  "item_x_item_effect",
-  "manifest_interface_data",
-  "difficulty",
-  "expected_stat",
-  "expected_stat_mod",
-  "content_tuning_x_expected",
-  "spell_aura_restrictions",
-  "spell_description_variables",
-  "spell_learn_spell",
-  "spell_levels",
-  "spell_replacement",
-  "spell_shapeshift",
-  "spell_shapeshift_form",
-  "spell_totems",
-  "spell_x_description_variables",
+import {
+  DBC_TABLE_NAMES,
+  isValidDbcTable,
+  type DbcTableName,
+} from "@wowlab/core/DbcTableRegistry";
+
+export type AllowedTable = DbcTableName;
+
+export const ALLOWED_TABLES = DBC_TABLE_NAMES;
+
+export const AllowedTableSchema = Schema.String.pipe(
+  Schema.filter(isValidDbcTable, {
+    message: () => "Table does not exist",
+  }),
 );
-
-export type AllowedTable = Schema.Schema.Type<typeof AllowedTableSchema>;
-
-export const ALLOWED_TABLES = [
-  "spell",
-  "spell_name",
-  "spell_misc",
-  "spell_effect",
-  "spell_power",
-  "spell_cooldowns",
-  "spell_categories",
-  "spell_category",
-  "spell_class_options",
-  "spell_cast_times",
-  "spell_casting_requirements",
-  "spell_duration",
-  "spell_range",
-  "spell_radius",
-  "spell_interrupts",
-  "spell_empower",
-  "spell_empower_stage",
-  "spell_aura_options",
-  "spell_target_restrictions",
-  "spell_procs_per_minute",
-  "spell_procs_per_minute_mod",
-  "item",
-  "item_sparse",
-  "item_effect",
-  "item_x_item_effect",
-  "manifest_interface_data",
-  "difficulty",
-  "expected_stat",
-  "expected_stat_mod",
-  "content_tuning_x_expected",
-  "spell_aura_restrictions",
-  "spell_description_variables",
-  "spell_learn_spell",
-  "spell_levels",
-  "spell_replacement",
-  "spell_shapeshift",
-  "spell_shapeshift_form",
-  "spell_totems",
-  "spell_x_description_variables",
-] as const;
 
 export const AllowedFunctionSchema = Schema.Literal(
   "getDamage",
