@@ -1,3 +1,5 @@
+"use client";
+
 import { useCreate, useUpdate, useDelete } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";

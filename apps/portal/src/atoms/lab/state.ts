@@ -1,3 +1,5 @@
+"use client";
+
 import { createPersistedOrderAtom } from "../utils";
 
 export type LabCardId = "data-inspector" | "spec-coverage" | "table-coverage";

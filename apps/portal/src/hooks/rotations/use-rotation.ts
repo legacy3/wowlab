@@ -1,3 +1,5 @@
+"use client";
+
 import { useOne } from "@refinedev/core";
 import type { Rotation } from "@/lib/supabase/types";
 

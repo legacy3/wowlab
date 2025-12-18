@@ -1,3 +1,5 @@
+"use client";
+
 import { atomWithStorage } from "jotai/utils";
 
 export function createPersistedOrderAtom<T extends string>(

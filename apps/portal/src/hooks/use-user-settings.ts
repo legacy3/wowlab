@@ -1,3 +1,5 @@
+"use client";
+
 import { useOne, useUpdate, useGetIdentity } from "@refinedev/core";
 import type { Database } from "@/lib/supabase/database.types";
 

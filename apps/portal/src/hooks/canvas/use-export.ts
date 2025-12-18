@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, type RefObject } from "react";
 import type Konva from "konva";
 import { jsPDF } from "jspdf";

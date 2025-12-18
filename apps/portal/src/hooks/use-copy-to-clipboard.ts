@@ -1,3 +1,5 @@
+"use client";
+
 import { useTimeoutEffect } from "@react-hookz/web";
 import { useState } from "react";
 import { toast } from "sonner";

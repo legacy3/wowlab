@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import type { TimelineBounds } from "@/atoms/timeline";
 import type { ZoomState } from "@/hooks/canvas";

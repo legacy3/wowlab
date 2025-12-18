@@ -1,3 +1,5 @@
+"use client";
+
 import type { MostWantedItem } from "@/lib/supabase/types";
 import { useSupabaseView } from "./use-supabase-view";
 
