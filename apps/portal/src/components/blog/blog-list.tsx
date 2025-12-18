@@ -1,57 +1,26 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Search, ChevronDown, Calendar, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { BlogEntry } from "@/lib/blog/types";
 
 type BlogListProps = {
   posts: BlogEntry[];
   tags: string[];
 };
-
-function TagFilter({
-  tags,
-  activeTag,
-  onTagChange,
-}: {
-  tags: string[];
-  activeTag: string | null;
-  onTagChange: (tag: string | null) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      <button
-        onClick={() => onTagChange(null)}
-        className={cn(
-          "px-2.5 py-1 text-xs rounded-md transition-colors",
-          activeTag === null
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground hover:text-foreground",
-        )}
-      >
-        All
-      </button>
-      {tags.map((tag) => (
-        <button
-          key={tag}
-          onClick={() => onTagChange(tag)}
-          className={cn(
-            "px-2.5 py-1 text-xs rounded-md transition-colors capitalize",
-            activeTag === tag
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {tag}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function BlogListItem({ post }: { post: BlogEntry }) {
   const formattedDate = format(parseISO(post.publishedAt), "d MMM yyyy");
@@ -60,25 +29,30 @@ function BlogListItem({ post }: { post: BlogEntry }) {
     <article>
       <Link
         href={`/blog/${post.slug}`}
-        className="group flex items-center gap-3 py-3 border-t border-border/50 hover:bg-muted/20 transition-colors -mx-2 px-2 rounded"
+        className="group flex items-center gap-3 py-3 border-b border-border/50 hover:bg-muted/30 transition-colors px-4 -mx-4"
       >
-        <h3 className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-          {post.title}
-        </h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+            {post.title}
+          </h3>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {post.description}
+          </p>
+        </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {post.tags?.slice(0, 2).map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              className="capitalize text-xs hidden sm:inline-flex"
+              className="capitalize text-xs hidden md:inline-flex"
             >
               {tag}
             </Badge>
           ))}
           <time
             dateTime={post.publishedAt}
-            className="text-xs text-muted-foreground whitespace-nowrap w-20 text-right"
+            className="text-xs text-muted-foreground whitespace-nowrap tabular-nums"
           >
             {formattedDate}
           </time>
@@ -89,13 +63,13 @@ function BlogListItem({ post }: { post: BlogEntry }) {
 }
 
 export function BlogList({ posts, tags }: BlogListProps) {
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const filteredPosts = useMemo(() => {
-    // TODO Improve this with an actual fuzzy-search algorithm
     return posts.filter((post) => {
-      const matchesTag = activeTag === null || post.tags?.includes(activeTag);
+      const matchesTag = activeTag === "all" || post.tags?.includes(activeTag);
       const matchesSearch =
         search === "" ||
         post.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -105,35 +79,108 @@ export function BlogList({ posts, tags }: BlogListProps) {
     });
   }, [posts, activeTag, search]);
 
+  const rowVirtualizer = useVirtualizer({
+    count: filteredPosts.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: useCallback(() => 64, []), // py-3 (24px) + title (18px) + desc (16px) + border
+    overscan: 10,
+  });
+
+  const shouldVirtualize = filteredPosts.length > 20;
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <TagFilter
-          tags={tags}
-          activeTag={activeTag}
-          onTagChange={setActiveTag}
-        />
-        <Input
-          type="search"
-          placeholder="Search blog"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-48 h-8 text-sm"
-        />
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[180px] max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 h-9">
+              <Tag className="h-3.5 w-3.5" />
+              {activeTag === "all" ? "All tags" : activeTag}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup
+              value={activeTag}
+              onValueChange={setActiveTag}
+            >
+              <DropdownMenuRadioItem value="all">
+                All tags
+              </DropdownMenuRadioItem>
+              {tags.map((tag) => (
+                <DropdownMenuRadioItem
+                  key={tag}
+                  value={tag}
+                  className="capitalize"
+                >
+                  {tag}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1.5">
+          <Calendar className="h-3.5 w-3.5" />
+          {filteredPosts.length} posts
+        </span>
       </div>
 
+      {/* Posts List */}
       {filteredPosts.length === 0 ? (
-        <p className="text-muted-foreground py-6 text-center text-sm">
+        <p className="text-muted-foreground py-12 text-center text-sm">
           No posts found.
         </p>
+      ) : shouldVirtualize ? (
+        <div ref={parentRef} className="h-[500px] overflow-auto -mx-4 px-4">
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const post = filteredPosts[virtualRow.index];
+              if (!post) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={post.slug}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <BlogListItem post={post} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : (
         <div>
           {filteredPosts.map((post) => (
             <BlogListItem key={post.slug} post={post} />
           ))}
-          <p className="text-muted-foreground/50 text-center text-xs py-4">
-            {filteredPosts.length} posts
-          </p>
         </div>
       )}
     </div>

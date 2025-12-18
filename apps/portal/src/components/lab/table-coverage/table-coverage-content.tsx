@@ -1,13 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search, Database, Table2, Check, X } from "lucide-react";
+import { useMemo, useState, useRef, useCallback } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Search, Database, Check, X, ChevronDown } from "lucide-react";
 import { snakeCase } from "change-case";
 import { DBC_TABLE_NAMES } from "@wowlab/core/DbcTableRegistry";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // Generated via: pnpm cli list-tables --format ts
@@ -1035,92 +1044,119 @@ const ALL_DBC_TABLES = [
   "ZoneStory",
 ] as const;
 
-type TableGroup = {
+type FilterMode = "all" | "supported" | "unsupported";
+
+type TableEntry = {
   name: string;
-  tables: Array<{ name: string; supported: boolean }>;
-  supportedCount: number;
+  snakeName: string;
+  supported: boolean;
+  prefix: string;
 };
 
-function groupTables(supportedSet: Set<string>): TableGroup[] {
-  const groups: Record<string, TableGroup["tables"]> = {};
+// Pre-compute all table data once
+const TABLE_DATA: TableEntry[] = ALL_DBC_TABLES.map((name) => {
+  const snakeName = snakeCase(name);
+  return {
+    name,
+    snakeName,
+    supported: false, // Will be updated
+    prefix: snakeName.split("_")[0] ?? "other",
+  };
+});
 
-  for (const table of ALL_DBC_TABLES) {
-    const snakeName = snakeCase(table);
-    const prefix = snakeName.split("_")[0] ?? "other";
-    const supported = supportedSet.has(snakeName);
+const PREFIXES = [...new Set(TABLE_DATA.map((t) => t.prefix))].sort();
 
-    if (!groups[prefix]) {
-      groups[prefix] = [];
-    }
+function useTableData(supportedSet: Set<string>) {
+  return useMemo(() => {
+    const tables = TABLE_DATA.map((t) => ({
+      ...t,
+      supported: supportedSet.has(t.snakeName),
+    }));
 
-    groups[prefix].push({ name: table, supported });
-  }
+    const totalSupported = tables.filter((t) => t.supported).length;
+    const coveragePercent = (totalSupported / tables.length) * 100;
 
-  return Object.entries(groups)
-    .map(([name, tables]) => ({
-      name,
-      tables: tables.sort((a, b) => a.name.localeCompare(b.name)),
-      supportedCount: tables.filter((t) => t.supported).length,
-    }))
-    .sort((a, b) => b.tables.length - a.tables.length);
+    return { tables, totalSupported, coveragePercent };
+  }, [supportedSet]);
+}
+
+function TableRow({ table }: { table: TableEntry }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 px-4 py-2 border-b border-border/50",
+        !table.supported && "opacity-50",
+      )}
+    >
+      {table.supported ? (
+        <Check className="h-4 w-4 text-green-500 shrink-0" />
+      ) : (
+        <X className="h-4 w-4 text-muted-foreground shrink-0" />
+      )}
+      <code className="text-sm flex-1">{table.name}</code>
+      <Badge variant="outline" className="text-xs font-normal">
+        {table.prefix}
+      </Badge>
+    </div>
+  );
 }
 
 export function TableCoverageContent() {
   const [search, setSearch] = useState("");
-  const [showOnlySupported, setShowOnlySupported] = useState(false);
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [selectedPrefix, setSelectedPrefix] = useState<string>("all");
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const supportedSet = useMemo(
     () => new Set(DBC_TABLE_NAMES as readonly string[]),
     [],
   );
 
-  const groups = useMemo(() => groupTables(supportedSet), [supportedSet]);
+  const { tables, totalSupported, coveragePercent } =
+    useTableData(supportedSet);
 
-  const totalSupported = useMemo(
-    () => ALL_DBC_TABLES.filter((t) => supportedSet.has(snakeCase(t))).length,
-    [supportedSet],
-  );
+  const filteredTables = useMemo(() => {
+    let result = tables;
 
-  const coveragePercent = (totalSupported / ALL_DBC_TABLES.length) * 100;
-
-  const filteredGroups = useMemo(() => {
-    let result = groups;
-
+    // Filter by search
     if (search.trim()) {
       const query = search.toLowerCase();
-      result = result
-        .map((group) => ({
-          ...group,
-          tables: group.tables.filter((t) =>
-            t.name.toLowerCase().includes(query),
-          ),
-          supportedCount: group.tables.filter(
-            (t) => t.supported && t.name.toLowerCase().includes(query),
-          ).length,
-        }))
-        .filter((group) => group.tables.length > 0);
+      result = result.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.snakeName.includes(query.replace(/ /g, "_")),
+      );
     }
 
-    if (showOnlySupported) {
-      result = result
-        .map((group) => ({
-          ...group,
-          tables: group.tables.filter((t) => t.supported),
-        }))
-        .filter((group) => group.tables.length > 0);
+    // Filter by support status
+    if (filterMode === "supported") {
+      result = result.filter((t) => t.supported);
+    } else if (filterMode === "unsupported") {
+      result = result.filter((t) => !t.supported);
+    }
+
+    // Filter by prefix
+    if (selectedPrefix !== "all") {
+      result = result.filter((t) => t.prefix === selectedPrefix);
     }
 
     return result;
-  }, [groups, search, showOnlySupported]);
+  }, [tables, search, filterMode, selectedPrefix]);
 
-  const filteredTotal = filteredGroups.reduce(
-    (sum, g) => sum + g.tables.length,
-    0,
-  );
+  const rowVirtualizer = useVirtualizer({
+    count: filteredTables.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: useCallback(() => 44, []),
+    overscan: 20,
+  });
+
+  const filteredSupportedCount = filteredTables.filter(
+    (t) => t.supported,
+  ).length;
 
   return (
-    <div className="space-y-6">
-      {/* Stats */}
+    <div className="space-y-4">
+      {/* Stats Card */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
@@ -1139,8 +1175,8 @@ export function TableCoverageContent() {
       </Card>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search tables..."
@@ -1149,70 +1185,103 @@ export function TableCoverageContent() {
             className="pl-9"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showOnlySupported}
-            onChange={(e) => setShowOnlySupported(e.target.checked)}
-            className="rounded"
-          />
-          Supported only
-        </label>
-        <span className="text-sm text-muted-foreground">
-          {filteredTotal} tables
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              {filterMode === "all"
+                ? "All"
+                : filterMode === "supported"
+                  ? "Supported"
+                  : "Unsupported"}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuRadioGroup
+              value={filterMode}
+              onValueChange={(v) => setFilterMode(v as FilterMode)}
+            >
+              <DropdownMenuRadioItem value="all">All</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="supported">
+                Supported
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="unsupported">
+                Unsupported
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              {selectedPrefix === "all"
+                ? "All prefixes"
+                : `${selectedPrefix}_*`}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="max-h-[300px] overflow-y-auto">
+            <DropdownMenuRadioGroup
+              value={selectedPrefix}
+              onValueChange={setSelectedPrefix}
+            >
+              <DropdownMenuRadioItem value="all">
+                All prefixes
+              </DropdownMenuRadioItem>
+              {PREFIXES.map((prefix) => (
+                <DropdownMenuRadioItem key={prefix} value={prefix}>
+                  {prefix}_*
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <span className="text-sm text-muted-foreground ml-auto">
+          {filteredSupportedCount}/{filteredTables.length} supported
         </span>
       </div>
 
-      {/* Groups */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredGroups.map((group) => (
-          <Card key={group.name}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span className="flex items-center gap-2">
-                  <Table2 className="h-4 w-4 text-muted-foreground" />
-                  {group.name}_*
-                </span>
-                <Badge
-                  variant={
-                    group.supportedCount === group.tables.length
-                      ? "default"
-                      : group.supportedCount > 0
-                        ? "secondary"
-                        : "outline"
-                  }
+      {/* Virtualized Table List */}
+      <Card>
+        <div ref={parentRef} className="h-[600px] overflow-auto">
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const table = filteredTables[virtualRow.index];
+              if (!table) {
+                return null;
+              }
+              return (
+                <div
+                  key={table.name}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
                 >
-                  {group.supportedCount}/{group.tables.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-0.5 text-sm max-h-64 overflow-y-auto">
-                {group.tables.map((table) => (
-                  <li
-                    key={table.name}
-                    className={cn(
-                      "flex items-center gap-2 py-1 border-b border-border/50 last:border-0",
-                      !table.supported && "opacity-50",
-                    )}
-                  >
-                    {table.supported ? (
-                      <Check className="h-3 w-3 text-green-500 shrink-0" />
-                    ) : (
-                      <X className="h-3 w-3 text-muted-foreground shrink-0" />
-                    )}
-                    <code className="text-xs truncate">{table.name}</code>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <TableRow table={table} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
 
-      {filteredGroups.length === 0 && (
+      {filteredTables.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          No tables match &quot;{search}&quot;
+          No tables match your filters
         </div>
       )}
     </div>
