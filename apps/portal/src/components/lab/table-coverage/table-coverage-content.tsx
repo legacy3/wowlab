@@ -19,10 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
-import {
-  TableFieldsDialog,
-  type SelectedTable,
-} from "./table-fields-dialog";
+import { TableFieldsDialog, type SelectedTable } from "./table-fields-dialog";
 
 // Generated via: pnpm cli list-tables --format ts
 const ALL_DBC_TABLES = [
@@ -1261,7 +1258,7 @@ export function TableCoverageContent() {
         </DropdownMenu>
 
         <span className="text-sm text-muted-foreground ml-auto">
-          {filteredSupportedCount}/{filteredTables.length} supported
+          {filteredSupportedCount}/{ALL_DBC_TABLES.length} supported
         </span>
       </div>
 
