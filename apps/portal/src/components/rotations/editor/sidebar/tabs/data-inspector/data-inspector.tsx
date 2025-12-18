@@ -155,10 +155,7 @@ export function DataInspector() {
               </>
             )}
 
-            <Link
-              href={`/lab/inspector/${type}/${id}`}
-              className="text-xs"
-            >
+            <Link href={`/lab/inspector/${type}/${id}`} className="text-xs">
               View in Inspector
             </Link>
           </div>
