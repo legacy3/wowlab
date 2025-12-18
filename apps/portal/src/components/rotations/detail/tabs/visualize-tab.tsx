@@ -11,21 +11,13 @@ import { PlaybackControls } from "../../visualizer/playback-controls";
 import { StatePanel } from "../../visualizer/state-panel";
 import { usePlayback } from "../../visualizer/use-playback";
 import { MOCK_PRIORITY_LIST, MOCK_PLAYBACK } from "../../visualizer/mock-data";
+import { calculateCanvasHeight } from "../../visualizer/constants";
 
 interface VisualizeTabProps {
   rotation: Rotation;
 }
 
-// Calculate height based on content
-const ROW_HEIGHT = 52;
-const ROW_GAP = 6;
-const HEADER_HEIGHT = 36;
-const PADDING = 12;
-const CANVAS_HEIGHT =
-  MOCK_PRIORITY_LIST.length * (ROW_HEIGHT + ROW_GAP) -
-  ROW_GAP +
-  HEADER_HEIGHT +
-  PADDING * 2;
+const CANVAS_HEIGHT = calculateCanvasHeight(MOCK_PRIORITY_LIST.length);
 
 export const VisualizeTab = memo(function VisualizeTab({
   rotation,
@@ -53,11 +45,11 @@ export const VisualizeTab = memo(function VisualizeTab({
   return (
     <div className="space-y-4">
       {/* Main layout */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
         {/* Priority list canvas */}
         <div
           ref={containerRef}
-          className="rounded-lg border bg-[#09090b] overflow-auto"
+          className="rounded-lg border border-border/60 bg-[#09090b] overflow-auto"
           style={{ maxHeight: 600 }}
         >
           {containerWidth > 0 && (

@@ -37,9 +37,9 @@ export const PlaybackControls = memo(function PlaybackControls({
   onSpeedChange,
 }: PlaybackControlsProps) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+    <div className="flex items-center gap-4 px-4 py-3 rounded-lg border bg-card">
       {/* Transport controls */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <Button
           variant="ghost"
           size="icon"
@@ -60,7 +60,7 @@ export const PlaybackControls = memo(function PlaybackControls({
         <Button
           variant="secondary"
           size="icon"
-          className="h-9 w-9"
+          className="h-10 w-10"
           onClick={onPlayPause}
         >
           {isPlaying ? (
@@ -89,7 +89,7 @@ export const PlaybackControls = memo(function PlaybackControls({
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 flex items-center gap-3">
+      <div className="flex-1 flex items-center gap-4">
         <Slider
           value={[currentFrame]}
           min={0}
@@ -98,19 +98,19 @@ export const PlaybackControls = memo(function PlaybackControls({
           onValueChange={([value]) => onFrameChange(value)}
           className="flex-1"
         />
-        <span className="text-xs text-muted-foreground tabular-nums w-14 text-right">
+        <span className="text-xs text-muted-foreground font-mono tabular-nums min-w-[3.5rem] text-right">
           {currentFrame + 1}/{totalFrames}
         </span>
       </div>
 
       {/* Speed */}
-      <div className="flex items-center border-l pl-3 gap-1">
+      <div className="flex items-center border-l border-border/50 pl-4 gap-1">
         {[0.5, 1, 2].map((speed) => (
           <Button
             key={speed}
             variant={playbackSpeed === speed ? "secondary" : "ghost"}
             size="sm"
-            className="h-7 w-9 text-xs"
+            className="h-7 px-2.5 text-xs font-mono"
             onClick={() => onSpeedChange(speed)}
           >
             {speed}x

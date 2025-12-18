@@ -9,14 +9,38 @@ import {
   KonvaImage,
 } from "@/components/konva";
 import type { PriorityEntry, PlaybackFrame, DecisionStep } from "./mock-data";
-
-const METRICS = {
-  rowHeight: 52,
-  rowGap: 6,
-  iconSize: 32,
-  padding: 12,
-  headerHeight: 36,
-};
+import {
+  ROW_HEIGHT,
+  HEADER_HEIGHT,
+  PADDING,
+  BADGE_SIZE,
+  BADGE_CORNER_RADIUS,
+  ICON_SIZE,
+  ICON_CORNER_RADIUS,
+  CHEVRON_SIZE,
+  CHEVRON_STROKE_WIDTH,
+  NAME_FONT_SIZE,
+  CONDITION_FONT_SIZE,
+  STATUS_FONT_SIZE,
+  BADGE_FONT_SIZE,
+  HEADER_FONT_SIZE,
+  ROW_CORNER_RADIUS,
+  COLOR_BG_DEFAULT,
+  COLOR_BG_CAST,
+  COLOR_BORDER_DEFAULT,
+  COLOR_BORDER_CAST,
+  COLOR_TEXT_NAME,
+  COLOR_TEXT_NAME_CAST,
+  COLOR_TEXT_CONDITION,
+  COLOR_TEXT_STATUS,
+  COLOR_TEXT_CAST,
+  COLOR_HEADER,
+  OPACITY_CAST,
+  OPACITY_SKIPPED,
+  OPACITY_DEFAULT,
+  getRowLayout,
+  getRowY,
+} from "./constants";
 
 interface SpellIconProps {
   iconName: string;
@@ -40,7 +64,7 @@ const SpellIcon = memo(function SpellIcon({
       y={y}
       width={size}
       height={size}
-      cornerRadius={4}
+      cornerRadius={ICON_CORNER_RADIUS}
       listening={false}
       fallback={
         <KonvaRect
@@ -49,7 +73,7 @@ const SpellIcon = memo(function SpellIcon({
           width={size}
           height={size}
           fill={fallbackColor}
-          cornerRadius={4}
+          cornerRadius={ICON_CORNER_RADIUS}
           listening={false}
         />
       }
@@ -72,12 +96,10 @@ const PriorityRow = memo(function PriorityRow({
   decision,
   isCast,
 }: PriorityRowProps) {
-  const { rowHeight, iconSize, padding } = METRICS;
-
   const isSkipped = decision?.result === "skipped";
 
-  const bgColor = isCast ? "#22c55e15" : "#18181b";
-  const borderColor = isCast ? "#22c55e" : "#27272a";
+  const bgColor = isCast ? COLOR_BG_CAST : COLOR_BG_DEFAULT;
+  const borderColor = isCast ? COLOR_BORDER_CAST : COLOR_BORDER_DEFAULT;
 
   const statusText = decision
     ? isCast
@@ -85,36 +107,45 @@ const PriorityRow = memo(function PriorityRow({
       : decision.reason.replace("Failed: ", "")
     : "";
 
+  // Get layout positions from constants
+  const layout = getRowLayout(width);
+
+  const opacity = isCast
+    ? OPACITY_CAST
+    : isSkipped
+      ? OPACITY_SKIPPED
+      : OPACITY_DEFAULT;
+
   return (
-    <KonvaGroup y={y} opacity={isCast ? 1 : isSkipped ? 0.5 : 0.7}>
+    <KonvaGroup y={y} opacity={opacity}>
       {/* Row background */}
       <KonvaRect
         x={0}
         y={0}
-        width={width}
-        height={rowHeight}
+        width={layout.contentWidth}
+        height={ROW_HEIGHT}
         fill={bgColor}
         stroke={borderColor}
         strokeWidth={isCast ? 2 : 1}
-        cornerRadius={6}
+        cornerRadius={ROW_CORNER_RADIUS}
       />
 
       {/* Priority badge */}
       <KonvaRect
-        x={padding}
-        y={(rowHeight - 20) / 2}
-        width={20}
-        height={20}
+        x={layout.badgeX}
+        y={layout.badgeY}
+        width={BADGE_SIZE}
+        height={BADGE_SIZE}
         fill={entry.spell.color}
-        cornerRadius={4}
+        cornerRadius={BADGE_CORNER_RADIUS}
       />
       <KonvaText
-        x={padding}
-        y={(rowHeight - 20) / 2}
-        width={20}
-        height={20}
+        x={layout.badgeX}
+        y={layout.badgeY}
+        width={BADGE_SIZE}
+        height={BADGE_SIZE}
         text={String(entry.priority)}
-        fontSize={11}
+        fontSize={BADGE_FONT_SIZE}
         fontStyle="bold"
         fill="#fff"
         align="center"
@@ -124,57 +155,64 @@ const PriorityRow = memo(function PriorityRow({
       {/* Spell icon */}
       <SpellIcon
         iconName={entry.spell.icon}
-        x={padding + 28}
-        y={(rowHeight - iconSize) / 2}
-        size={iconSize}
+        x={layout.iconX}
+        y={layout.iconY}
+        size={ICON_SIZE}
         fallbackColor={entry.spell.color}
       />
 
-      {/* Spell name + conditions */}
+      {/* Spell name */}
       <KonvaText
-        x={padding + 28 + iconSize + 10}
-        y={10}
+        x={layout.textX}
+        y={layout.nameY}
+        width={layout.textMaxWidth}
         text={entry.spell.name}
-        fontSize={13}
+        fontSize={NAME_FONT_SIZE}
         fontStyle="bold"
-        fill="#e4e4e7"
-      />
-      <KonvaText
-        x={padding + 28 + iconSize + 10}
-        y={28}
-        text={entry.conditions.map((c) => c.description).join(" · ")}
-        fontSize={11}
-        fill="#71717a"
+        fill={isCast ? COLOR_TEXT_NAME_CAST : COLOR_TEXT_NAME}
+        ellipsis
       />
 
-      {/* Status */}
+      {/* Conditions */}
+      <KonvaText
+        x={layout.textX}
+        y={layout.conditionY}
+        width={layout.textMaxWidth}
+        text={entry.conditions.map((c) => c.description).join(" · ")}
+        fontSize={CONDITION_FONT_SIZE}
+        fill={COLOR_TEXT_CONDITION}
+        ellipsis
+      />
+
+      {/* Status text */}
       {decision && (
         <KonvaText
-          x={width - 100 - padding}
+          x={layout.statusX}
           y={0}
-          width={100}
-          height={rowHeight}
+          width={layout.statusWidth}
+          height={ROW_HEIGHT}
           text={statusText}
-          fontSize={11}
-          fill={isCast ? "#22c55e" : "#52525b"}
+          fontSize={STATUS_FONT_SIZE}
+          fontStyle={isCast ? "bold" : "normal"}
+          fill={isCast ? COLOR_TEXT_CAST : COLOR_TEXT_STATUS}
           align="right"
           verticalAlign="middle"
         />
       )}
 
-      {/* Cast indicator */}
+      {/* Cast indicator arrow (chevron) */}
       {isCast && (
         <KonvaLine
           points={[
-            width - padding - 6,
-            rowHeight / 2 - 5,
-            width - padding,
-            rowHeight / 2,
-            width - padding - 6,
-            rowHeight / 2 + 5,
+            layout.chevronX,
+            layout.chevronY - CHEVRON_SIZE / 2,
+            layout.chevronX + CHEVRON_SIZE / 2,
+            layout.chevronY,
+            layout.chevronX,
+            layout.chevronY + CHEVRON_SIZE / 2,
           ]}
-          stroke="#22c55e"
-          strokeWidth={2}
+          stroke={COLOR_BORDER_CAST}
+          strokeWidth={CHEVRON_STROKE_WIDTH}
           lineCap="round"
           lineJoin="round"
         />
@@ -196,8 +234,6 @@ export const PriorityListView = memo(function PriorityListView({
   width,
   height: _height,
 }: PriorityListViewProps) {
-  const { rowHeight, rowGap, padding, headerHeight } = METRICS;
-
   const decisionMap = useMemo(() => {
     const map = new Map<number, DecisionStep>();
     if (currentFrame) {
@@ -208,26 +244,26 @@ export const PriorityListView = memo(function PriorityListView({
     return map;
   }, [currentFrame]);
 
-  const contentWidth = width - padding * 2;
+  const contentWidth = width - PADDING * 2;
 
   return (
-    <KonvaGroup>
+    <KonvaGroup x={PADDING}>
       {/* Header */}
       <KonvaText
-        x={padding}
-        y={padding}
+        x={0}
+        y={PADDING}
         text={
           currentFrame
             ? `GCD @ ${currentFrame.time.toFixed(1)}s`
             : "Priority List"
         }
-        fontSize={13}
+        fontSize={HEADER_FONT_SIZE}
         fontStyle="bold"
-        fill="#a1a1aa"
+        fill={COLOR_HEADER}
       />
 
       {/* Rows */}
-      <KonvaGroup y={headerHeight}>
+      <KonvaGroup y={HEADER_HEIGHT}>
         {priorityList.map((entry, index) => {
           const decision = decisionMap.get(entry.spell.id);
           const isCast = currentFrame?.castSpellId === entry.spell.id;
@@ -236,7 +272,7 @@ export const PriorityListView = memo(function PriorityListView({
             <PriorityRow
               key={entry.spell.id}
               entry={entry}
-              y={index * (rowHeight + rowGap)}
+              y={getRowY(index)}
               width={contentWidth}
               decision={decision}
               isCast={isCast}

@@ -24,17 +24,18 @@ function ResourceBar({
   color: string;
 }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className="flex items-center gap-1.5 text-muted-foreground">
-          <Icon className="h-3 w-3" />
+        <span className="flex items-center gap-2 text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" />
           {label}
         </span>
-        <span className="font-mono tabular-nums">
-          {Math.round(current)}/{max}
+        <span className="font-mono tabular-nums text-foreground">
+          {Math.round(current)}
+          <span className="text-muted-foreground">/{max}</span>
         </span>
       </div>
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-150"
           style={{ width: `${(current / max) * 100}%`, backgroundColor: color }}
@@ -54,15 +55,17 @@ function CooldownItem({
   const isReady = remaining <= 0;
 
   return (
-    <div className="flex items-center gap-2 py-1">
+    <div className="flex items-center gap-2.5 py-1.5">
       <GameIcon
         iconName={spell.icon}
         size="small"
         className="w-5 h-5 shrink-0"
       />
-      <span className="text-xs truncate flex-1">{spell.name}</span>
+      <span className="text-xs truncate flex-1 text-muted-foreground">
+        {spell.name}
+      </span>
       <span
-        className={`text-xs tabular-nums ${isReady ? "text-green-500" : "text-muted-foreground"}`}
+        className={`text-xs font-mono tabular-nums font-medium ${isReady ? "text-green-500" : "text-muted-foreground"}`}
       >
         {isReady ? "Ready" : `${remaining.toFixed(1)}s`}
       </span>
@@ -85,9 +88,9 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
   const barbedCharges = state.charges.get(217200) ?? 0;
 
   return (
-    <div className="rounded-lg border bg-card p-3 space-y-3 text-sm">
+    <div className="rounded-lg border bg-card p-4 space-y-4 text-sm">
       {/* Resources */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <ResourceBar
           label="Focus"
           icon={Zap}
@@ -106,19 +109,21 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
 
       {/* Barbed Shot Charges */}
       {barbedShot && (
-        <div className="flex items-center gap-2 py-1 border-t pt-3">
+        <div className="flex items-center gap-2.5 py-2 border-t pt-4">
           <GameIcon
             iconName={barbedShot.icon}
             size="small"
             className="w-5 h-5"
           />
-          <span className="text-xs flex-1">{barbedShot.name}</span>
-          <div className="flex gap-1">
+          <span className="text-xs flex-1 text-muted-foreground">
+            {barbedShot.name}
+          </span>
+          <div className="flex gap-1.5">
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className={`w-2.5 h-2.5 rounded-full ${
-                  i < barbedCharges ? "bg-amber-500" : "bg-muted"
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                  i < barbedCharges ? "bg-amber-500" : "bg-muted/60"
                 }`}
               />
             ))}
@@ -127,21 +132,25 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
       )}
 
       {/* Cooldowns */}
-      <div className="border-t pt-3 space-y-0.5">
-        <span className="text-xs text-muted-foreground">Cooldowns</span>
-        {spellsWithCooldowns.map((spell) => (
-          <CooldownItem
-            key={spell.id}
-            spell={spell}
-            remaining={state.cooldowns.get(spell.id) ?? 0}
-          />
-        ))}
+      <div className="border-t pt-4 space-y-1">
+        <span className="text-xs font-medium text-muted-foreground">
+          Cooldowns
+        </span>
+        <div className="space-y-0">
+          {spellsWithCooldowns.map((spell) => (
+            <CooldownItem
+              key={spell.id}
+              spell={spell}
+              remaining={state.cooldowns.get(spell.id) ?? 0}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Current cast */}
       {frame.castSpellId && (
-        <div className="border-t pt-3">
-          <div className="flex items-center gap-2 p-2 rounded bg-green-500/10 border border-green-500/30">
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-green-500/10 border border-green-500/20">
             <GameIcon
               iconName={
                 MOCK_SPELLS.find((s) => s.id === frame.castSpellId)?.icon ??
@@ -150,7 +159,7 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
               size="small"
               className="w-6 h-6"
             />
-            <span className="text-xs font-medium">
+            <span className="text-sm font-medium text-green-400">
               {MOCK_SPELLS.find((s) => s.id === frame.castSpellId)?.name}
             </span>
           </div>
