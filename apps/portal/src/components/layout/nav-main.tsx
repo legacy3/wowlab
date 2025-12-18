@@ -10,6 +10,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -18,6 +24,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { NavItem } from "@/lib/menu-config";
 
@@ -27,6 +34,8 @@ interface NavMainProps {
 
 export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
+  const { state, isMobile } = useSidebar();
+  const isCollapsed = state === "collapsed" && !isMobile;
 
   return (
     <SidebarGroup>
@@ -36,6 +45,44 @@ export function NavMain({ items }: NavMainProps) {
           const Icon = item.icon;
           const isGroupActive = pathname.startsWith(item.href);
 
+          // When collapsed, show dropdown on hover/click
+          if (isCollapsed) {
+            return (
+              <DropdownMenu key={item.label}>
+                <SidebarMenuItem>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      tooltip={item.label}
+                      isActive={isGroupActive}
+                    >
+                      <Icon className="size-4" />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side="right"
+                    align="start"
+                    className="min-w-48 rounded-lg"
+                  >
+                    {item.items.map((subItem) => (
+                      <DropdownMenuItem asChild key={subItem.href}>
+                        <Link
+                          href={subItem.href}
+                          className={
+                            pathname === subItem.href ? "bg-accent" : ""
+                          }
+                        >
+                          {subItem.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </SidebarMenuItem>
+              </DropdownMenu>
+            );
+          }
+
+          // When expanded, show collapsible
           return (
             <Collapsible
               key={item.label}
