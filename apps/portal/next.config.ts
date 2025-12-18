@@ -9,8 +9,18 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: "/discord",
+        source: "/go/discord",
         destination: "https://discord.gg/bWWYBAvF3W",
+        permanent: false,
+      },
+      {
+        source: "/go/github/:path*",
+        destination: "https://github.com/legacy3/wowlab/:path*",
+        permanent: false,
+      },
+      {
+        source: "/go/github",
+        destination: "https://github.com/legacy3/wowlab",
         permanent: false,
       },
     ];

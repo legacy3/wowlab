@@ -99,6 +99,6 @@ export const navSecondary: MenuItem[] = [
 // Social links (icons only in footer)
 // prettier-ignore
 export const navSocial: MenuItem[] = [
-  link("Discord", "/discord", DiscordIcon),
-  link("GitHub", env.GITHUB_REPO_URL, GitHubIcon),
+  link("Discord", env.DISCORD_URL, DiscordIcon),
+  link("GitHub", env.GITHUB_URL, GitHubIcon),
 ];

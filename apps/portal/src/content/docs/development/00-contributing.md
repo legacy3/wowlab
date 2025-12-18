@@ -25,7 +25,7 @@ pnpm install
 
 ## Environment
 
-Copy [apps/portal/.env.example](https://github.com/legacy3/wowlab/blob/main/apps/portal/.env.example) to `.env.local`.
+Copy [apps/portal/.env.example](/go/github/blob/main/apps/portal/.env.example) to `.env.local`.
 
 ## Commands
 
@@ -46,4 +46,4 @@ Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs/` (
 
 ## Questions
 
-Got stuck or have ideas? Reach out on [Discord](/discord) or open an issue on [GitHub](https://github.com/legacy3/wowlab/issues).
+Got stuck or have ideas? Reach out on [Discord](/go/discord) or open an issue on [GitHub](/go/github/issues).

@@ -47,4 +47,4 @@ Just ask your AI assistant what you want to know. It will figure out which tools
 ## Links
 
 - [npm](https://www.npmjs.com/package/@wowlab/mcp-server)
-- [Source](https://github.com/legacy3/wowlab/tree/main/apps/mcp-server)
+- [Source](/go/github/tree/main/apps/mcp-server)

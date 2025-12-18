@@ -15,7 +15,7 @@ export function GithubSearchLink({
   className?: string;
   mode?: "text" | "icon";
 }) {
-  const href = `${env.GITHUB_REPO_URL}/search?q=${encodeURIComponent(query)}`;
+  const href = `${env.GITHUB_URL}/search?q=${encodeURIComponent(query)}`;
 
   return (
     <a

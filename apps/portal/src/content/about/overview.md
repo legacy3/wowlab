@@ -15,7 +15,7 @@ When you hit simulate, the engine runs locally in your browser. It processes com
 
 ## Open source
 
-Everything is on [GitHub](https://github.com/legacy3/wowlab). You can inspect how calculations work, report bugs, or contribute. WoW Lab is free and aims to stay that way; because sims run on your machine, hosting costs stay minimal.
+Everything is on [GitHub](/go/github). You can inspect how calculations work, report bugs, or contribute. WoW Lab is free and aims to stay that way; because sims run on your machine, hosting costs stay minimal.
 
 ## Credits
 
@@ -23,4 +23,4 @@ WoW Lab stands on the shoulders of giants: [SimulationCraft](https://www.simulat
 
 ## Questions or feedback
 
-Open an issue on our [GitHub repo](https://github.com/legacy3/wowlab/issues).
+Open an issue on our [GitHub repo](/go/github/issues).

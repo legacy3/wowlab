@@ -11,8 +11,10 @@ export function MdLink({ href, children, className }: MdLinkProps) {
     return <span className={className}>{children}</span>;
   }
 
+  const isExternal = href.startsWith("http") || href.startsWith("/go/");
+
   return (
-    <Link href={href} external={href.startsWith("http")} className={className}>
+    <Link href={href} external={isExternal} className={className}>
       {children}
     </Link>
   );
