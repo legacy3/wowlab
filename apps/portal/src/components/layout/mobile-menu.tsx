@@ -20,7 +20,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { navMain, navSecondary } from "@/lib/menu-config";
+import { navMain, navSecondary, navSocial } from "@/lib/menu-config";
 import { cn } from "@/lib/utils";
 
 export function MobileMenu() {
@@ -115,23 +115,9 @@ export function MobileMenu() {
               <nav className="flex flex-col space-y-1">
                 {navSecondary.map((item) => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.href;
-
-                  if (item.external) {
-                    return (
-                      <a
-                        key={item.href}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                      >
-                        <Icon className="size-4" />
-                        <span>{item.label}</span>
-                      </a>
-                    );
-                  }
+                  const isActive =
+                    pathname === item.href ||
+                    pathname.startsWith(item.href + "/");
 
                   return (
                     <Link
@@ -151,6 +137,26 @@ export function MobileMenu() {
                   );
                 })}
               </nav>
+            </div>
+
+            {/* Social links */}
+            <div className="flex items-center justify-center gap-2 pt-4">
+              {navSocial.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                    title={item.label}
+                  >
+                    <Icon className="size-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </ScrollArea>

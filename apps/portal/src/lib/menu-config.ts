@@ -2,15 +2,10 @@ import type { ComponentType, SVGProps } from "react";
 import {
   BookOpen,
   Calculator,
-  CheckSquare,
   FlaskConical,
   Newspaper,
-  PencilRuler,
   Play,
-  Sparkles,
   Swords,
-  Table,
-  Trophy,
 } from "lucide-react";
 
 import { env } from "./env";
@@ -59,7 +54,12 @@ const sub = (label: string, href: string): SubItem => ({
   href,
 });
 
-const nav = (label: string, href: string, icon: Icon, items: SubItem[]): NavItem => ({
+const nav = (
+  label: string,
+  href: string,
+  icon: Icon,
+  items: SubItem[],
+): NavItem => ({
   label,
   href,
   icon,
@@ -94,6 +94,11 @@ export const navSecondary: MenuItem[] = [
   item("About", "/about", LogoIcon),
   item("Blog", "/blog", Newspaper),
   item("Docs", "/docs", BookOpen),
+];
+
+// Social links (icons only in footer)
+// prettier-ignore
+export const navSocial: MenuItem[] = [
   link("Discord", "/discord", DiscordIcon),
   link("GitHub", env.GITHUB_REPO_URL, GitHubIcon),
 ];

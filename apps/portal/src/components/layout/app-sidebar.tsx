@@ -7,6 +7,7 @@ import Image from "next/image";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
 import { NavSecondary } from "./nav-secondary";
-import { navMain, navSecondary } from "@/lib/menu-config";
+import { navMain, navSecondary, navSocial } from "@/lib/menu-config";
 import { version } from "../../../package.json";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -48,6 +49,25 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMain} />
         <NavSecondary items={navSecondary} />
       </SidebarContent>
+      <SidebarFooter>
+        <div className="flex items-center justify-center gap-1">
+          {navSocial.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex size-8 items-center justify-center rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                title={item.label}
+              >
+                <Icon className="size-4" />
+              </a>
+            );
+          })}
+        </div>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

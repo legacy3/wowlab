@@ -17,7 +17,10 @@ interface NavSecondaryProps {
   label?: string;
 }
 
-export function NavSecondary({ items, label = "Resources" }: NavSecondaryProps) {
+export function NavSecondary({
+  items,
+  label = "Resources",
+}: NavSecondaryProps) {
   const pathname = usePathname();
 
   return (
@@ -26,11 +29,16 @@ export function NavSecondary({ items, label = "Resources" }: NavSecondaryProps) 
       <SidebarMenu>
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
 
           return (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive}
+                tooltip={item.label}
+              >
                 {item.external ? (
                   <a href={item.href} target="_blank" rel="noopener noreferrer">
                     <Icon className="size-4" />
