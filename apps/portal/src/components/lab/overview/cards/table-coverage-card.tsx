@@ -19,9 +19,7 @@ export function TableCoverageCard() {
             <Database className="h-5 w-5 text-primary" />
             Table Coverage
           </CardTitle>
-          <CardDescription>
-            DBC table implementation status
-          </CardDescription>
+          <CardDescription>DBC table implementation status</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">

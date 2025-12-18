@@ -6,7 +6,11 @@ import {
   type DashboardConfig,
 } from "@/components/ui/draggable-dashboard";
 import { labOrderAtom, type LabCardId } from "@/atoms/lab";
-import { DataInspectorCard, SpecCoverageCard, TableCoverageCard } from "./cards";
+import {
+  DataInspectorCard,
+  SpecCoverageCard,
+  TableCoverageCard,
+} from "./cards";
 
 const components: DashboardConfig<LabCardId> = {
   "data-inspector": { Component: DataInspectorCard },

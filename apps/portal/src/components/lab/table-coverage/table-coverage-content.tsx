@@ -2,13 +2,16 @@
 
 import { useMemo, useState, useRef, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Search, Database, Check, X, ChevronDown } from "lucide-react";
+import { Search, Check, X, ChevronDown, Download } from "lucide-react";
 import { snakeCase } from "change-case";
 import { DBC_TABLE_NAMES } from "@wowlab/core/DbcTableRegistry";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { CopyButton } from "@/components/ui/copy-button";
+import { useJsonExport } from "@/hooks/use-json-export";
+import { GAME_CONFIG } from "@/lib/config/game";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1129,6 +1132,34 @@ export function TableCoverageContent() {
   const { tables, totalSupported, coveragePercent } =
     useTableData(supportedSet);
 
+  const exportData = useMemo(
+    () => ({
+      total: ALL_DBC_TABLES.length,
+      supported: totalSupported,
+      unsupported: ALL_DBC_TABLES.length - totalSupported,
+      coveragePercent: Math.round(coveragePercent * 100) / 100,
+      tables: tables.map((t) => ({
+        name: t.name,
+        snakeName: t.snakeName,
+        supported: t.supported,
+        prefix: t.prefix,
+      })),
+      supportedTables: tables
+        .filter((t) => t.supported)
+        .map((t) => t.snakeName),
+      unsupportedTables: tables
+        .filter((t) => !t.supported)
+        .map((t) => t.snakeName),
+    }),
+    [tables, totalSupported, coveragePercent],
+  );
+
+  const { exportJson, downloadJson } = useJsonExport({
+    data: exportData,
+    filenamePrefix: "dbc-table-coverage",
+    patchVersion: GAME_CONFIG.patchVersion,
+  });
+
   const preFilteredTables = useMemo(() => {
     let result = tables;
 
@@ -1182,7 +1213,20 @@ export function TableCoverageContent() {
                 tables supported ({coveragePercent.toFixed(1)}%)
               </p>
             </div>
-            <Database className="h-10 w-10 text-muted-foreground" />
+            {exportJson && (
+              <div className="flex items-center gap-1">
+                <CopyButton value={exportJson} />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  onClick={downloadJson}
+                  title="Download coverage JSON"
+                >
+                  <Download />
+                </Button>
+              </div>
+            )}
           </div>
           <Progress value={coveragePercent} className="h-2" />
         </CardContent>
