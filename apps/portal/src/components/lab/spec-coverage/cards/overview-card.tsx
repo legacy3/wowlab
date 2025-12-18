@@ -21,6 +21,7 @@ export function OverviewCard() {
     data,
     filenamePrefix: "spec-coverage",
     patchVersion: GAME_CONFIG.patchVersion,
+    label: "Spec Coverage",
     resetKey: GAME_CONFIG.patchVersion,
   });
 
@@ -101,7 +102,7 @@ export function OverviewCard() {
           <div className="flex items-center gap-1.5">
             {exportJson && (
               <>
-                <CopyButton value={exportJson} />
+                <CopyButton value={exportJson} label="Spec Coverage" />
                 <Button
                   variant="ghost"
                   size="icon-sm"

@@ -1158,6 +1158,7 @@ export function TableCoverageContent() {
     data: exportData,
     filenamePrefix: "dbc-table-coverage",
     patchVersion: GAME_CONFIG.patchVersion,
+    label: "Table Coverage",
   });
 
   const preFilteredTables = useMemo(() => {
@@ -1215,7 +1216,7 @@ export function TableCoverageContent() {
             </div>
             {exportJson && (
               <div className="flex items-center gap-1">
-                <CopyButton value={exportJson} />
+                <CopyButton value={exportJson} label="Table Coverage" />
                 <Button
                   variant="ghost"
                   size="icon-sm"

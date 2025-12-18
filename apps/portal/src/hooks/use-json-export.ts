@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 
 export function useJsonExport<TData, TPayload = unknown>({
   data,
   filenamePrefix,
   filenameTag,
   patchVersion,
+  label,
   buildPayload,
   resetKey,
 }: {
@@ -14,6 +16,7 @@ export function useJsonExport<TData, TPayload = unknown>({
   filenamePrefix: string;
   filenameTag?: string;
   patchVersion: string;
+  label: string;
   buildPayload?: (args: {
     data: TData;
     exportedAt: string;
@@ -74,7 +77,8 @@ export function useJsonExport<TData, TPayload = unknown>({
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
-  }, [exportJson, filenamePrefix, filenameTag, patchVersion]);
+    toast.success(`Downloaded ${label}`);
+  }, [exportJson, filenamePrefix, filenameTag, patchVersion, label]);
 
   return { downloadJson, exportJson };
 }

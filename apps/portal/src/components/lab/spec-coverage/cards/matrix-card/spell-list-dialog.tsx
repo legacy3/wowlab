@@ -138,6 +138,7 @@ export function SpellListDialog({
     filenamePrefix: "spec-coverage-spec",
     filenameTag: spec ? String(spec.specId) : undefined,
     patchVersion: GAME_CONFIG.patchVersion,
+    label: "Spell List",
     resetKey: spec ? spec.specId : null,
   });
 
@@ -161,7 +162,7 @@ export function SpellListDialog({
                 </div>
                 {exportJson && (
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <CopyButton value={exportJson} />
+                    <CopyButton value={exportJson} label="Spell List" />
                     <Button
                       variant="ghost"
                       size="icon-sm"
