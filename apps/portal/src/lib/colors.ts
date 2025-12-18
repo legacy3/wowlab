@@ -1,8 +1,6 @@
-/**
- * Shared color palette based on Tailwind colors.
- * Use these for Konva canvas and anywhere else needing raw hex values.
- */
 import colors from "tailwindcss/colors";
+
+// TODO Remove hardcoded colors to support theming
 
 // Semantic
 export const success = colors.green[500];
