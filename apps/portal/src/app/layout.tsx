@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
+import { env } from "@/lib/env";
 
 import { ThemeProvider, JotaiProvider, RefineProvider } from "@/providers";
 import { SiteShell } from "@/components/layout";
@@ -19,6 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.APP_URL),
   title: "WoW Lab",
   description: "WoW rotation simulation toolkit for optimal DPS analysis",
   icons: {

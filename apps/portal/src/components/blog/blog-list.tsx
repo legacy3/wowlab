@@ -57,29 +57,34 @@ function BlogListItem({ post }: { post: BlogEntry }) {
   const formattedDate = format(parseISO(post.publishedAt), "d MMM yyyy");
 
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex items-center gap-3 py-3 border-t border-border/50 hover:bg-muted/20 transition-colors -mx-2 px-2 rounded"
-    >
-      <h3 className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-        {post.title}
-      </h3>
+    <article>
+      <Link
+        href={`/blog/${post.slug}`}
+        className="group flex items-center gap-3 py-3 border-t border-border/50 hover:bg-muted/20 transition-colors -mx-2 px-2 rounded"
+      >
+        <h3 className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+          {post.title}
+        </h3>
 
-      <div className="flex items-center gap-3 shrink-0">
-        {post.tags?.slice(0, 2).map((tag) => (
-          <Badge
-            key={tag}
-            variant="outline"
-            className="capitalize text-xs hidden sm:inline-flex"
+        <div className="flex items-center gap-3 shrink-0">
+          {post.tags?.slice(0, 2).map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="capitalize text-xs hidden sm:inline-flex"
+            >
+              {tag}
+            </Badge>
+          ))}
+          <time
+            dateTime={post.publishedAt}
+            className="text-xs text-muted-foreground whitespace-nowrap w-20 text-right"
           >
-            {tag}
-          </Badge>
-        ))}
-        <time className="text-xs text-muted-foreground whitespace-nowrap w-20 text-right">
-          {formattedDate}
-        </time>
-      </div>
-    </Link>
+            {formattedDate}
+          </time>
+        </div>
+      </Link>
+    </article>
   );
 }
 

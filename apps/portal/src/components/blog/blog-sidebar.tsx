@@ -75,17 +75,17 @@ function useActiveHeading(headingIds: string[]) {
 
 function ArticleMeta({ entry }: { entry: BlogEntry }) {
   const formattedDate = format(parseISO(entry.publishedAt), "d MMM yyyy");
-  const readingMinutes = entry.readingTime?.minutes ?? 0;
+  const readingMinutes = Math.max(1, Math.round(entry.readingTime?.minutes ?? 0));
 
   return (
     <div className="flex flex-col gap-2 text-sm text-muted-foreground">
       <div className="flex items-center gap-2">
-        <CalendarIcon className="h-3.5 w-3.5" />
-        <span>{formattedDate}</span>
+        <CalendarIcon className="h-3.5 w-3.5" aria-hidden="true" />
+        <time dateTime={entry.publishedAt}>{formattedDate}</time>
       </div>
       {readingMinutes > 0 && (
         <div className="flex items-center gap-2">
-          <Clock className="h-3.5 w-3.5" />
+          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{readingMinutes} min read</span>
         </div>
       )}
@@ -109,7 +109,7 @@ function TableOfContents({
       <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         On this page
       </h3>
-      <nav className="space-y-1.5">
+      <nav className="space-y-1.5" aria-label="Table of contents">
         {headings.map((heading) => (
           <a
             key={heading.id}
