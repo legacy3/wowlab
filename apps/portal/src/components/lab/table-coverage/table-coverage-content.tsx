@@ -1159,10 +1159,6 @@ export function TableCoverageContent() {
     overscan: 20,
   });
 
-  const filteredSupportedCount = filteredTables.filter(
-    (t) => t.supported,
-  ).length;
-
   const handleTableClick = (table: TableEntry) => {
     setSelectedTable({
       name: table.name,
@@ -1258,7 +1254,8 @@ export function TableCoverageContent() {
         </DropdownMenu>
 
         <span className="text-sm text-muted-foreground ml-auto">
-          {filteredSupportedCount}/{ALL_DBC_TABLES.length} supported
+          {totalSupported}/{ALL_DBC_TABLES.length} supported (
+          {filteredTables.length} shown)
         </span>
       </div>
 
