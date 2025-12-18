@@ -1,6 +1,8 @@
-import * as AST from "effect/SchemaAST";
-import { Dbc } from "./Schemas.js";
 import type * as Schema from "effect/Schema";
+
+import * as AST from "effect/SchemaAST";
+
+import { Dbc } from "./Schemas.js";
 
 export interface DbcTableMapping<T = unknown> {
   readonly file: string;
@@ -126,17 +128,17 @@ export const DBC_TABLES = {
   uiTextureAtlasElement: { file: "UiTextureAtlasElement.csv", schema: Dbc.UiTextureAtlasElementRowSchema, tableName: "ui_texture_atlas_element" },
 } as const;
 
-export type DbcTableKey = keyof typeof DBC_TABLES;
+export type DbcRow<T extends DbcTableName> = Schema.Schema.Type<
+  DbcTableEntryFor<T>["schema"]
+>;
 export type DbcTableEntry = (typeof DBC_TABLES)[DbcTableKey];
-export type DbcTableName = DbcTableEntry["tableName"];
 export type DbcTableEntryFor<T extends DbcTableName> = Extract<
   DbcTableEntry,
   { readonly tableName: T }
 >;
+export type DbcTableKey = keyof typeof DBC_TABLES;
 
-export type DbcRow<T extends DbcTableName> = Schema.Schema.Type<
-  DbcTableEntryFor<T>["schema"]
->;
+export type DbcTableName = DbcTableEntry["tableName"];
 
 export const DBC_TABLE_KEYS = Object.keys(DBC_TABLES) as DbcTableKey[];
 export const DBC_TABLE_NAMES = Object.values(DBC_TABLES).map(
@@ -161,8 +163,33 @@ export const getDbcTableEntry = (
 // TODO Verify this against effect docs
 export interface DbcFieldInfo {
   name: string;
-  type: string;
   optional: boolean;
+  type: string;
+}
+
+// TODO Verify this against effect docs
+export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
+  const entry = getDbcTableEntry(tableName);
+  if (!entry) {
+    return null;
+  }
+
+  const ast = entry.schema.ast;
+  if (!AST.isTypeLiteral(ast)) {
+    return null;
+  }
+
+  const fields: DbcFieldInfo[] = [];
+
+  for (const prop of ast.propertySignatures) {
+    fields.push({
+      name: String(prop.name),
+      optional: prop.isOptional,
+      type: getTypeString(prop.type),
+    });
+  }
+
+  return fields;
 }
 
 // TODO Verify this against effect docs
@@ -228,29 +255,4 @@ function getTypeString(ast: AST.AST): string {
   }
 
   return "unknown";
-}
-
-// TODO Verify this against effect docs
-export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
-  const entry = getDbcTableEntry(tableName);
-  if (!entry) {
-    return null;
-  }
-
-  const ast = entry.schema.ast;
-  if (!AST.isTypeLiteral(ast)) {
-    return null;
-  }
-
-  const fields: DbcFieldInfo[] = [];
-
-  for (const prop of ast.propertySignatures) {
-    fields.push({
-      name: String(prop.name),
-      type: getTypeString(prop.type),
-      optional: prop.isOptional,
-    });
-  }
-
-  return fields;
 }

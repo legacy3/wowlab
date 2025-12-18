@@ -9,13 +9,9 @@ import * as RequestResolver from "effect/RequestResolver";
 import { GetDbcById, GetDbcManyByFk, GetDbcOneByFk } from "./DbcRequests.js";
 
 export interface DbcBatchFetcherInterface {
-  readonly fetchByIds: <Table extends DbcTableName>(
+  readonly fetchAll: <Table extends DbcTableName>(
     table: Table,
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<DbcRow<Table> & { readonly ID: number }>,
-    DbcError
-  >;
+  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
 
   readonly fetchByFks: <
     Table extends DbcTableName,
@@ -26,23 +22,27 @@ export interface DbcBatchFetcherInterface {
     fkValues: readonly number[],
   ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
 
-  readonly fetchAll: <Table extends DbcTableName>(
+  readonly fetchByIds: <Table extends DbcTableName>(
     table: Table,
-  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<{ readonly ID: number } & DbcRow<Table>>,
+    DbcError
+  >;
+}
+
+export interface DbcRequestResolvers {
+  readonly byId: RequestResolver.RequestResolver<GetDbcById<any>, never>;
+  readonly manyByFk: RequestResolver.RequestResolver<
+    GetDbcManyByFk<any>,
+    never
+  >;
+  readonly oneByFk: RequestResolver.RequestResolver<GetDbcOneByFk<any>, never>;
 }
 
 export class DbcBatchFetcher extends Context.Tag(
   "@wowlab/services/DbcBatchFetcher",
 )<DbcBatchFetcher, DbcBatchFetcherInterface>() {}
-
-export interface DbcRequestResolvers {
-  readonly byId: RequestResolver.RequestResolver<GetDbcById<any>, never>;
-  readonly oneByFk: RequestResolver.RequestResolver<GetDbcOneByFk<any>, never>;
-  readonly manyByFk: RequestResolver.RequestResolver<
-    GetDbcManyByFk<any>,
-    never
-  >;
-}
 
 const completeAllFailed = <Req extends Request.Request<any, any>>(
   requests: ReadonlyArray<Req>,
@@ -84,7 +84,7 @@ export const makeDbcRequestResolvers = (
               const rows = yield* fetcher.fetchByIds(table, ids);
               const rowById = new Map<
                 number,
-                DbcRow<typeof table> & { readonly ID: number }
+                { readonly ID: number } & DbcRow<typeof table>
               >();
 
               for (const row of rows) {

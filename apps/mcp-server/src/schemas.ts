@@ -1,10 +1,9 @@
-import * as Schema from "effect/Schema";
-
 import {
   DBC_TABLE_NAMES,
   isValidDbcTable,
   type DbcTableName,
 } from "@wowlab/core/DbcTableRegistry";
+import * as Schema from "effect/Schema";
 
 export type AllowedTable = DbcTableName;
 

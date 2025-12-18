@@ -1,6 +1,6 @@
 import {
-  DBC_TABLES,
   DBC_TABLE_KEYS,
+  DBC_TABLES,
   type DbcTableKey,
   type DbcTableMapping,
 } from "@wowlab/core/DbcTableRegistry";
@@ -15,5 +15,5 @@ export const DBC_DATA_DIR = path.join(
   "../../../../third_party/wowlab-data/data/tables",
 );
 
-export { DBC_TABLES, DBC_TABLE_KEYS };
+export { DBC_TABLE_KEYS, DBC_TABLES };
 export type { DbcTableKey, DbcTableMapping };

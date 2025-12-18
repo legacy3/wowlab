@@ -11,10 +11,10 @@ export class GetDbcById<
   { readonly table: Table; readonly id: number }
 > {}
 
-export class GetDbcOneByFk<
+export class GetDbcManyByFk<
   Table extends DbcTableName = DbcTableName,
-> extends Request.TaggedClass("GetDbcOneByFk")<
-  DbcRow<Table> | undefined,
+> extends Request.TaggedClass("GetDbcManyByFk")<
+  ReadonlyArray<DbcRow<Table>>,
   DbcError,
   {
     readonly table: Table;
@@ -23,10 +23,10 @@ export class GetDbcOneByFk<
   }
 > {}
 
-export class GetDbcManyByFk<
+export class GetDbcOneByFk<
   Table extends DbcTableName = DbcTableName,
-> extends Request.TaggedClass("GetDbcManyByFk")<
-  ReadonlyArray<DbcRow<Table>>,
+> extends Request.TaggedClass("GetDbcOneByFk")<
+  DbcRow<Table> | undefined,
   DbcError,
   {
     readonly table: Table;

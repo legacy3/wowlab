@@ -9,26 +9,13 @@ import { GetDbcById, GetDbcManyByFk, GetDbcOneByFk } from "./DbcRequests.js";
 import { DbcBatchFetcher, makeDbcRequestResolvers } from "./DbcResolvers.js";
 
 export interface DbcServiceInterface {
+  readonly getAll: <Table extends DbcTableName>(
+    table: Table,
+  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
+
   readonly getById: <Table extends DbcTableName>(
     table: Table,
     id: number,
-  ) => Effect.Effect<DbcRow<Table> | undefined, DbcError>;
-
-  readonly getManyByIds: <Table extends DbcTableName>(
-    table: Table,
-    ids: readonly number[],
-  ) => Effect.Effect<
-    ReadonlyArray<DbcRow<Table> & { readonly ID: number }>,
-    DbcError
-  >;
-
-  readonly getOneByFk: <
-    Table extends DbcTableName,
-    FK extends keyof DbcRow<Table> & string,
-  >(
-    table: Table,
-    fkField: FK,
-    fkValue: number,
   ) => Effect.Effect<DbcRow<Table> | undefined, DbcError>;
 
   readonly getManyByFk: <
@@ -49,9 +36,22 @@ export interface DbcServiceInterface {
     fkValues: readonly number[],
   ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
 
-  readonly getAll: <Table extends DbcTableName>(
+  readonly getManyByIds: <Table extends DbcTableName>(
     table: Table,
-  ) => Effect.Effect<ReadonlyArray<DbcRow<Table>>, DbcError>;
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<{ readonly ID: number } & DbcRow<Table>>,
+    DbcError
+  >;
+
+  readonly getOneByFk: <
+    Table extends DbcTableName,
+    FK extends keyof DbcRow<Table> & string,
+  >(
+    table: Table,
+    fkField: FK,
+    fkValue: number,
+  ) => Effect.Effect<DbcRow<Table> | undefined, DbcError>;
 }
 
 export class DbcService extends Context.Tag("@wowlab/services/DbcService")<

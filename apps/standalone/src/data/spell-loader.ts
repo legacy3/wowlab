@@ -77,7 +77,7 @@ const SupabaseDbcBatchFetcherLive = (
         return Effect.succeed([]);
       }
 
-      return query<Array<DbcRow<Table> & { ID: number }>>(
+      return query<Array<{ ID: number } & DbcRow<Table>>>(
         supabase,
         table,
         (builder) => builder.select("*").in("ID", [...ids]),
@@ -101,8 +101,8 @@ export const loadSpells = (
   const FullLayer = Layer.merge(DbcLayer, ExtractorLayer);
 
   return Effect.forEach(spellIds, (spellId) => transformSpell(spellId), {
-    concurrency: 10,
     batching: true,
+    concurrency: 10,
   }).pipe(Effect.provide(FullLayer), Effect.orDie);
 };
 
@@ -122,8 +122,8 @@ export const loadAuras = (
     spellIds,
     (spellId) => Effect.either(transformAura(spellId)),
     {
-      concurrency: 10,
       batching: true,
+      concurrency: 10,
     },
   ).pipe(
     Effect.map((results) =>

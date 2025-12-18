@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { SecretField } from "@/components/ui/secret-field";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -202,13 +203,7 @@ function EmailDisplay({ email }: { email?: string }) {
   return (
     <Field>
       <FieldLabel htmlFor="email">Email</FieldLabel>
-      <Input
-        id="email"
-        type="email"
-        value={email ?? ""}
-        disabled
-        className="opacity-60"
-      />
+      <SecretField value={email ?? ""} hiddenLength={32} />
       <FieldDescription>
         Email is managed by your authentication provider
       </FieldDescription>

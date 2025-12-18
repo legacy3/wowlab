@@ -284,7 +284,7 @@ export const SupabaseDbcBatchFetcherLive = (
         return Effect.succeed([]);
       }
 
-      return query<Array<DbcRow<Table> & { ID: number }>>(
+      return query<Array<{ ID: number } & DbcRow<Table>>>(
         supabase,
         table,
         (builder) => builder.select("*").in("ID", [...ids]),
@@ -319,4 +319,4 @@ export const SupabaseDbcServiceLayer = Layer.unwrapEffect(
   }),
 );
 
-export { type SupabaseClient, type Schemas };
+export { type Schemas, type SupabaseClient };

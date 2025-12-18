@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/account/user-avatar";
+import { UserHandle } from "@/components/ui/user-handle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Settings, LogOut, FileCode, History } from "lucide-react";
 import type { UserIdentity } from "@/lib/supabase/types";
@@ -34,26 +35,19 @@ function UserMenuInner() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        <button className="relative flex h-9 w-9 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           <UserAvatar user={identity} className="h-9 w-9" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              @{identity.handle ?? "user"}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {identity.email}
-            </p>
-          </div>
+        <DropdownMenuLabel
+          className="flex cursor-pointer items-center rounded-sm py-1.5 transition-colors hover:bg-accent hover:text-accent-foreground"
+          onClick={() => router.push("/account")}
+        >
+          <User className="mr-2 h-4 w-4" />
+          <UserHandle handle={identity.handle ?? "user"} linkTo={false} />
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/account")}>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push("/account?tab=rotations")}>
           <FileCode className="mr-2 h-4 w-4" />
           <span>My Rotations</span>

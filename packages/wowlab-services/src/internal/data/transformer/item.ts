@@ -11,6 +11,7 @@ import { DbcService } from "../dbc/DbcService.js";
 const EXPANSION_NAMES: Record<number, string> = {
   0: "Classic",
   1: "The Burning Crusade",
+  10: "The War Within",
   2: "Wrath of the Lich King",
   3: "Cataclysm",
   4: "Mists of Pandaria",
@@ -19,20 +20,11 @@ const EXPANSION_NAMES: Record<number, string> = {
   7: "Battle for Azeroth",
   8: "Shadowlands",
   9: "Dragonflight",
-  10: "The War Within",
 };
 
 const INVENTORY_TYPE_NAMES: Record<number, string> = {
   0: "Non-equippable",
   1: "Head",
-  2: "Neck",
-  3: "Shoulder",
-  4: "Shirt",
-  5: "Chest",
-  6: "Waist",
-  7: "Legs",
-  8: "Feet",
-  9: "Wrist",
   10: "Hands",
   11: "Finger",
   12: "Trinket",
@@ -43,6 +35,7 @@ const INVENTORY_TYPE_NAMES: Record<number, string> = {
   17: "Two-Hand",
   18: "Bag",
   19: "Tabard",
+  2: "Neck",
   20: "Robe",
   21: "Main Hand",
   22: "Off Hand",
@@ -51,6 +44,13 @@ const INVENTORY_TYPE_NAMES: Record<number, string> = {
   25: "Thrown",
   26: "Ranged Right",
   28: "Relic",
+  3: "Shoulder",
+  4: "Shirt",
+  5: "Chest",
+  6: "Waist",
+  7: "Legs",
+  8: "Feet",
+  9: "Wrist",
 };
 
 export const transformItem = (
@@ -162,12 +162,12 @@ export const transformItem = (
     const classification: Item.ItemDataFlat["classification"] = {
       classId: item.ClassID,
       className: itemClass?.ClassName_lang || "Unknown",
-      subclassId: item.SubclassID,
-      subclassName: itemSubClass?.DisplayName_lang || "Unknown",
-      inventoryType: item.InventoryType,
-      inventoryTypeName: INVENTORY_TYPE_NAMES[item.InventoryType] || "Unknown",
       expansionId,
       expansionName: EXPANSION_NAMES[expansionId] || "Unknown",
+      inventoryType: item.InventoryType,
+      inventoryTypeName: INVENTORY_TYPE_NAMES[item.InventoryType] || "Unknown",
+      subclassId: item.SubclassID,
+      subclassName: itemSubClass?.DisplayName_lang || "Unknown",
     };
 
     // Resolve Sockets
@@ -217,14 +217,14 @@ export const transformItem = (
         }
 
         setInfo = {
-          setId: itemSetId,
-          setName: itemSet.Name_lang || "Unknown Set",
-          itemIds,
           bonuses: setSpells.map((spell) => ({
+            specId: spell.ChrSpecID,
             spellId: spell.SpellID,
             threshold: spell.Threshold,
-            specId: spell.ChrSpecID,
           })),
+          itemIds,
+          setId: itemSetId,
+          setName: itemSet.Name_lang || "Unknown Set",
         };
       }
     }
@@ -273,11 +273,11 @@ export const transformItem = (
         if (encounter) {
           const instance = instanceMap.get(encounter.JournalInstanceID);
           dropSources.push({
+            difficultyMask: encounterItem.DifficultyMask,
             encounterId: encounter.ID,
             encounterName: encounter.Name_lang || "Unknown",
             instanceId: instance?.ID || 0,
             instanceName: instance?.Name_lang || "Unknown",
-            difficultyMask: encounterItem.DifficultyMask,
           });
         }
       }
@@ -285,33 +285,33 @@ export const transformItem = (
 
     return {
       // Basic info
-      id: itemId,
-      name: sparse?.Display_lang || "",
-      description: sparse?.Description_lang || "",
-      fileName,
-      quality: sparse?.OverallQualityID || 0,
-      itemLevel: sparse?.ItemLevel || 0,
-      requiredLevel: sparse?.RequiredLevel || 0,
       binding: sparse?.Bonding || 0,
       buyPrice: sparse?.BuyPrice || 0,
-      sellPrice: sparse?.SellPrice || 0,
+      description: sparse?.Description_lang || "",
+      fileName,
+      id: itemId,
+      itemLevel: sparse?.ItemLevel || 0,
       maxCount: sparse?.MaxCount || 0,
-      stackable: sparse?.Stackable || 1,
+      name: sparse?.Display_lang || "",
+      quality: sparse?.OverallQualityID || 0,
+      requiredLevel: sparse?.RequiredLevel || 0,
+      sellPrice: sparse?.SellPrice || 0,
       speed: sparse?.ItemDelay || 0,
+      stackable: sparse?.Stackable || 1,
 
       // Classification
       classId: item.ClassID,
-      subclassId: item.SubclassID,
-      inventoryType: item.InventoryType,
       classification,
+      inventoryType: item.InventoryType,
+      subclassId: item.SubclassID,
 
       // Stats & Effects
-      stats,
       effects,
+      stats,
 
       // Sockets
-      sockets,
       socketBonusEnchantId: sparse?.Socket_match_enchantment_ID || 0,
+      sockets,
 
       // Flags
       flags,
@@ -329,8 +329,8 @@ export const transformItem = (
       dropSources,
 
       // Gem/Crafting
+      dmgVariance: sparse?.DmgVariance || 0,
       gemProperties: sparse?.Gem_properties || 0,
       modifiedCraftingReagentItemId: sparse?.ModifiedCraftingReagentItemID || 0,
-      dmgVariance: sparse?.DmgVariance || 0,
     };
   });
