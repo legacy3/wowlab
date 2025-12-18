@@ -135,7 +135,7 @@ export async function createArticleOgImage({
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "60px 80px",
+          padding: "48px 64px",
           position: "relative",
         }}
       >
@@ -154,14 +154,14 @@ export async function createArticleOgImage({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "16px",
-            marginBottom: "auto",
+            gap: "14px",
+            marginBottom: "40px",
           }}
         >
-          <img src={logoSrc} width={48} height={48} />
+          <img src={logoSrc} width={40} height={40} />
           <div
             style={{
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: 600,
               color: "#22c55e",
             }}
@@ -170,7 +170,7 @@ export async function createArticleOgImage({
           </div>
           <div
             style={{
-              fontSize: 28,
+              fontSize: 24,
               color: "#3f3f46",
             }}
           >
@@ -178,7 +178,7 @@ export async function createArticleOgImage({
           </div>
           <div
             style={{
-              fontSize: 28,
+              fontSize: 24,
               color: "#71717a",
             }}
           >
@@ -190,15 +190,16 @@ export async function createArticleOgImage({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "20px",
+            gap: "24px",
+            flex: 1,
+            justifyContent: "center",
           }}
         >
           <div
             style={{
-              fontSize: 56,
+              fontSize: 72,
               fontWeight: 700,
               lineHeight: 1.1,
-              maxWidth: "900px",
             }}
           >
             {title}
@@ -206,10 +207,9 @@ export async function createArticleOgImage({
 
           <div
             style={{
-              fontSize: 26,
+              fontSize: 32,
               color: "#a1a1aa",
-              lineHeight: 1.4,
-              maxWidth: "800px",
+              lineHeight: 1.3,
             }}
           >
             {description}
@@ -221,8 +221,7 @@ export async function createArticleOgImage({
             style={{
               display: "flex",
               alignItems: "center",
-              marginTop: "auto",
-              fontSize: 22,
+              fontSize: 24,
               color: "#52525b",
             }}
           >
