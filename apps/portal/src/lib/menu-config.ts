@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { env } from "./env";
-import { DiscordIcon, GitHubIcon } from "./icons";
+import { DiscordIcon, GitHubIcon, LogoIcon } from "./icons";
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -72,7 +72,7 @@ export const menuConfig: MenuGroup[] = [
     item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
   ]),
   group("About", [
-    item("About", "/about", FlaskConical),
+    item("About", "/about", LogoIcon),
     item("Blog", "/blog", Newspaper),
     item("Docs", "/docs", BookOpen),
     link("Discord", "/discord", DiscordIcon),

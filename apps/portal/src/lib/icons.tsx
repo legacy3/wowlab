@@ -33,3 +33,24 @@ export function TwitchIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function LogoIcon(props: IconProps) {
+  return (
+    <svg viewBox="100 48 312 408" fill="none" {...props}>
+      <path
+        d="M208 80H304V160L384 384C392 416 368 432 336 432H176C144 432 120 416 128 384L208 160V80Z"
+        stroke="currentColor"
+        strokeWidth="24"
+      />
+      <path
+        d="M176 80H336"
+        stroke="currentColor"
+        strokeWidth="32"
+        strokeLinecap="round"
+      />
+      <circle cx="208" cy="320" r="40" fill="currentColor" />
+      <circle cx="288" cy="304" r="32" fill="currentColor" />
+      <circle cx="240" cy="368" r="24" fill="currentColor" />
+    </svg>
+  );
+}
