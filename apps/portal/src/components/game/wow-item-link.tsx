@@ -8,7 +8,7 @@ export function WowItemLink({ itemId }: { itemId: number }) {
 
   return (
     <WowLink
-      href={`https://www.wowhead.com/item=${itemId}`}
+      href={`/lab/inspector/item/${itemId}`}
       name={item?.name}
       fallback={`Item ${itemId}`}
       isLoading={isLoading}
