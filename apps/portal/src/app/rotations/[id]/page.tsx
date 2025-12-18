@@ -1,4 +1,4 @@
-import { RotationDetail } from "@/components/rotations/rotation-detail-page";
+import { RotationDetail } from "@/components/rotations/detail";
 import { notFound } from "next/navigation";
 
 interface RotationPageProps {
@@ -13,6 +13,7 @@ export default async function RotationPage({ params }: RotationPageProps) {
   // Validate UUID format
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   if (!uuidRegex.test(id)) {
     notFound();
   }

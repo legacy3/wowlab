@@ -75,7 +75,10 @@ function useActiveHeading(headingIds: string[]) {
 
 function ArticleMeta({ entry }: { entry: BlogEntry }) {
   const formattedDate = format(parseISO(entry.publishedAt), "d MMM yyyy");
-  const readingMinutes = Math.max(1, Math.round(entry.readingTime?.minutes ?? 0));
+  const readingMinutes = Math.max(
+    1,
+    Math.round(entry.readingTime?.minutes ?? 0),
+  );
 
   return (
     <div className="flex flex-col gap-2 text-sm text-muted-foreground">
