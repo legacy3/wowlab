@@ -65,18 +65,51 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getItemAppearance: (id) => Effect.succeed(cache.itemAppearance.get(id)),
 
+    getItemBonusListGroup: (id) =>
+      Effect.succeed(cache.itemBonusListGroup.get(id)),
+
+    getItemBonusListGroupEntries: (groupId) =>
+      Effect.succeed(cache.itemBonusListGroupEntry.get(groupId) ?? []),
+
+    getItemBonusSeason: (id) => Effect.succeed(cache.itemBonusSeason.get(id)),
+
+    getItemBonusSeasonUpgradeCosts: (seasonId) =>
+      Effect.succeed(cache.itemBonusSeasonUpgradeCost.get(seasonId) ?? []),
+
+    getItemClass: (id) => Effect.succeed(cache.itemClass.get(id)),
+
     getItemEffect: (id) => Effect.succeed(cache.itemEffect.get(id)),
 
     getItemModifiedAppearance: (itemId) =>
       Effect.succeed(cache.itemModifiedAppearance.get(itemId)),
 
+    getItemNameDescription: (id) =>
+      Effect.succeed(cache.itemNameDescription.get(id)),
+
+    getItemSet: (id) => Effect.succeed(cache.itemSet.get(id)),
+
     getItemSparse: (itemId) => Effect.succeed(cache.itemSparse.get(itemId)),
+
+    getItemSubClass: (id) => Effect.succeed(cache.itemSubClass.get(id)),
+
+    getItemXBonusTrees: (itemId) =>
+      Effect.succeed(cache.itemXBonusTree.get(itemId) ?? []),
 
     getItemXItemEffects: (itemId) =>
       Effect.succeed(cache.itemXItemEffect.get(itemId) ?? []),
 
+    getJournalEncounter: (id) => Effect.succeed(cache.journalEncounter.get(id)),
+
+    getJournalEncounterItems: (encounterId) =>
+      Effect.succeed(cache.journalEncounterItem.get(encounterId) ?? []),
+
+    getJournalInstance: (id) => Effect.succeed(cache.journalInstance.get(id)),
+
     getManifestInterfaceData: (id) =>
       Effect.succeed(cache.manifestInterfaceData.get(id)),
+
+    getModifiedCraftingReagentItem: (id) =>
+      Effect.succeed(cache.modifiedCraftingReagentItem.get(id)),
 
     getSpecializationSpells: (specId) =>
       Effect.succeed(cache.specializationSpells.get(specId) ?? []),

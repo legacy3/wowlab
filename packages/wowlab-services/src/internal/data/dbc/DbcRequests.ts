@@ -44,6 +44,44 @@ export class GetItemAppearance extends Request.TaggedClass("GetItemAppearance")<
   { readonly id: number }
 > {}
 
+export class GetItemBonusListGroup extends Request.TaggedClass(
+  "GetItemBonusListGroup",
+)<
+  Schemas.Dbc.ItemBonusListGroupRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetItemBonusListGroupEntries extends Request.TaggedClass(
+  "GetItemBonusListGroupEntries",
+)<
+  ReadonlyArray<Schemas.Dbc.ItemBonusListGroupEntryRow>,
+  DbcError,
+  { readonly groupId: number }
+> {}
+
+export class GetItemBonusSeason extends Request.TaggedClass(
+  "GetItemBonusSeason",
+)<
+  Schemas.Dbc.ItemBonusSeasonRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetItemBonusSeasonUpgradeCosts extends Request.TaggedClass(
+  "GetItemBonusSeasonUpgradeCosts",
+)<
+  ReadonlyArray<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow>,
+  DbcError,
+  { readonly seasonId: number }
+> {}
+
+export class GetItemClass extends Request.TaggedClass("GetItemClass")<
+  Schemas.Dbc.ItemClassRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetItemEffect extends Request.TaggedClass("GetItemEffect")<
   Schemas.Dbc.ItemEffectRow | undefined,
   DbcError,
@@ -59,10 +97,38 @@ export class GetItemModifiedAppearance extends Request.TaggedClass(
   { readonly itemId: number }
 > {}
 
+export class GetItemNameDescription extends Request.TaggedClass(
+  "GetItemNameDescription",
+)<
+  Schemas.Dbc.ItemNameDescriptionRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetItemSet extends Request.TaggedClass("GetItemSet")<
+  Schemas.Dbc.ItemSetRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetItemSparse extends Request.TaggedClass("GetItemSparse")<
   Schemas.Dbc.ItemSparseRow | undefined,
   DbcError,
   { readonly id: number }
+> {}
+
+export class GetItemSubClass extends Request.TaggedClass("GetItemSubClass")<
+  Schemas.Dbc.ItemSubClassRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetItemXBonusTrees extends Request.TaggedClass(
+  "GetItemXBonusTrees",
+)<
+  ReadonlyArray<Schemas.Dbc.ItemXBonusTreeRow>,
+  DbcError,
+  { readonly itemId: number }
 > {}
 
 export class GetItemXItemEffects extends Request.TaggedClass(
@@ -73,10 +139,42 @@ export class GetItemXItemEffects extends Request.TaggedClass(
   { readonly itemId: number }
 > {}
 
+export class GetJournalEncounter extends Request.TaggedClass(
+  "GetJournalEncounter",
+)<
+  Schemas.Dbc.JournalEncounterRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetJournalEncounterItems extends Request.TaggedClass(
+  "GetJournalEncounterItems",
+)<
+  ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+  DbcError,
+  { readonly encounterId: number }
+> {}
+
+export class GetJournalInstance extends Request.TaggedClass(
+  "GetJournalInstance",
+)<
+  Schemas.Dbc.JournalInstanceRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
 export class GetManifestInterfaceData extends Request.TaggedClass(
   "GetManifestInterfaceData",
 )<
   Schemas.Dbc.ManifestInterfaceDataRow | undefined,
+  DbcError,
+  { readonly id: number }
+> {}
+
+export class GetModifiedCraftingReagentItem extends Request.TaggedClass(
+  "GetModifiedCraftingReagentItem",
+)<
+  Schemas.Dbc.ModifiedCraftingReagentItemRow | undefined,
   DbcError,
   { readonly id: number }
 > {}

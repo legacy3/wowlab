@@ -578,19 +578,99 @@ const SupabaseDbcServiceLive = (
 
         getItem: (itemId) => itemCache.get(itemId),
         getItemAppearance: (id) => itemAppearanceCache.get(id),
+        getItemBonusListGroup: (id) =>
+          query<Schemas.Dbc.ItemBonusListGroupRow | undefined>(
+            supabase,
+            "item_bonus_list_group",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getItemBonusListGroupEntries: (groupId) =>
+          query<Schemas.Dbc.ItemBonusListGroupEntryRow[]>(
+            supabase,
+            "item_bonus_list_group_entry",
+            (builder) =>
+              builder.select("*").eq("ItemBonusListGroupID", groupId),
+          ),
+        getItemBonusSeason: (id) =>
+          query<Schemas.Dbc.ItemBonusSeasonRow | undefined>(
+            supabase,
+            "item_bonus_season",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getItemBonusSeasonUpgradeCosts: (seasonId) =>
+          query<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow[]>(
+            supabase,
+            "item_bonus_season_upgrade_cost",
+            (builder) => builder.select("*").eq("ItemBonusSeasonID", seasonId),
+          ),
+        getItemClass: (id) =>
+          query<Schemas.Dbc.ItemClassRow | undefined>(
+            supabase,
+            "item_class",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
         getItemEffect: (id) => itemEffectCache.get(id),
+
         getItemModifiedAppearance: (itemId) =>
           itemModifiedAppearanceCache.get(itemId),
+        getItemNameDescription: (id) =>
+          query<Schemas.Dbc.ItemNameDescriptionRow | undefined>(
+            supabase,
+            "item_name_description",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getItemSet: (id) =>
+          query<Schemas.Dbc.ItemSetRow | undefined>(
+            supabase,
+            "item_set",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
         getItemSparse: (itemId) => itemSparseCache.get(itemId),
+        getItemSubClass: (id) =>
+          query<Schemas.Dbc.ItemSubClassRow | undefined>(
+            supabase,
+            "item_sub_class",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getItemXBonusTrees: (itemId) =>
+          query<Schemas.Dbc.ItemXBonusTreeRow[]>(
+            supabase,
+            "item_x_bonus_tree",
+            (builder) => builder.select("*").eq("ItemID", itemId),
+          ),
         getItemXItemEffects: (itemId) => itemXItemEffectsCache.get(itemId),
+        getJournalEncounter: (id) =>
+          query<Schemas.Dbc.JournalEncounterRow | undefined>(
+            supabase,
+            "journal_encounter",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
+        getJournalEncounterItems: (encounterId) =>
+          query<Schemas.Dbc.JournalEncounterItemRow[]>(
+            supabase,
+            "journal_encounter_item",
+            (builder) =>
+              builder.select("*").eq("JournalEncounterID", encounterId),
+          ),
+        getJournalInstance: (id) =>
+          query<Schemas.Dbc.JournalInstanceRow | undefined>(
+            supabase,
+            "journal_instance",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
         getManifestInterfaceData: (id) => manifestInterfaceDataCache.get(id),
+        getModifiedCraftingReagentItem: (id) =>
+          query<Schemas.Dbc.ModifiedCraftingReagentItemRow | undefined>(
+            supabase,
+            "modified_crafting_reagent_item",
+            (builder) => builder.select("*").eq("ID", id).maybeSingle(),
+          ),
         getSpecializationSpells: (specId) =>
           query<Schemas.Dbc.SpecializationSpellsRow[]>(
             supabase,
             "specialization_spells",
             (builder) => builder.select("*").eq("SpecID", specId),
           ),
-
         getSpecSetMembers: (specSetIds) =>
           query<Schemas.Dbc.SpecSetMemberRow[]>(
             supabase,
@@ -617,6 +697,7 @@ const SupabaseDbcServiceLive = (
           spellEmpowerStagesCache.get(spellEmpowerId),
         getSpellInterrupts: (spellId) => spellInterruptsCache.get(spellId),
         getSpellLearnSpell: (spellId) => spellLearnSpellCache.get(spellId),
+
         getSpellLevels: (spellId) => spellLevelsCache.get(spellId),
         getSpellMisc: (spellId) => spellMiscCache.get(spellId),
         getSpellName: (spellId) => spellNameCache.get(spellId),
@@ -632,7 +713,6 @@ const SupabaseDbcServiceLive = (
         getSpellTargetRestrictions: (spellId) =>
           spellTargetRestrictionsCache.get(spellId),
         getSpellTotems: (spellId) => spellTotemsCache.get(spellId),
-
         getSpellXDescriptionVariables: (spellId) =>
           spellXDescriptionVariablesCache.get(spellId),
         getTraitConds: (condIds) =>

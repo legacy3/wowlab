@@ -55,6 +55,31 @@ export interface DbcServiceInterface {
     id: number,
   ) => Effect.Effect<Schemas.Dbc.ItemAppearanceRow | undefined, DbcError>;
 
+  readonly getItemBonusListGroup: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemBonusListGroupRow | undefined, DbcError>;
+
+  readonly getItemBonusListGroupEntries: (
+    groupId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemBonusListGroupEntryRow>,
+    DbcError
+  >;
+
+  readonly getItemBonusSeason: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemBonusSeasonRow | undefined, DbcError>;
+
+  readonly getItemBonusSeasonUpgradeCosts: (
+    seasonId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow>,
+    DbcError
+  >;
+
+  readonly getItemClass: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemClassRow | undefined, DbcError>;
   readonly getItemEffect: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.ItemEffectRow | undefined, DbcError>;
@@ -66,13 +91,44 @@ export interface DbcServiceInterface {
     DbcError
   >;
 
+  readonly getItemNameDescription: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemNameDescriptionRow | undefined, DbcError>;
+
+  readonly getItemSet: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemSetRow | undefined, DbcError>;
+
   readonly getItemSparse: (
     itemId: number,
   ) => Effect.Effect<Schemas.Dbc.ItemSparseRow | undefined, DbcError>;
 
+  readonly getItemSubClass: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.ItemSubClassRow | undefined, DbcError>;
+
+  readonly getItemXBonusTrees: (
+    itemId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXBonusTreeRow>, DbcError>;
+
   readonly getItemXItemEffects: (
     itemId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
+
+  readonly getJournalEncounter: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.JournalEncounterRow | undefined, DbcError>;
+
+  readonly getJournalEncounterItems: (
+    encounterId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+    DbcError
+  >;
+
+  readonly getJournalInstance: (
+    id: number,
+  ) => Effect.Effect<Schemas.Dbc.JournalInstanceRow | undefined, DbcError>;
 
   readonly getManifestInterfaceData: (
     id: number,
@@ -80,6 +136,14 @@ export interface DbcServiceInterface {
     Schemas.Dbc.ManifestInterfaceDataRow | undefined,
     DbcError
   >;
+
+  readonly getModifiedCraftingReagentItem: (
+    id: number,
+  ) => Effect.Effect<
+    Schemas.Dbc.ModifiedCraftingReagentItemRow | undefined,
+    DbcError
+  >;
+
   readonly getSpecializationSpells: (
     specId: number,
   ) => Effect.Effect<
@@ -202,7 +266,6 @@ export interface DbcServiceInterface {
   readonly getSpellReplacement: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellReplacementRow | undefined, DbcError>;
-
   readonly getSpellShapeshift: (
     spellId: number,
   ) => Effect.Effect<Schemas.Dbc.SpellShapeshiftRow | undefined, DbcError>;
@@ -244,7 +307,6 @@ export interface DbcServiceInterface {
   readonly getTraitDefinition: (
     id: number,
   ) => Effect.Effect<Schemas.Dbc.TraitDefinitionRow | undefined, DbcError>;
-
   readonly getTraitEdgesForTree: (
     treeId: number,
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.TraitEdgeRow>, DbcError>;
@@ -263,6 +325,7 @@ export interface DbcServiceInterface {
     ReadonlyArray<Schemas.Dbc.TraitNodeGroupXTraitCondRow>,
     DbcError
   >;
+
   readonly getTraitNodeGroupXTraitCosts: (
     groupIds: readonly number[],
   ) => Effect.Effect<
@@ -313,6 +376,7 @@ export interface DbcServiceInterface {
     ReadonlyArray<Schemas.Dbc.TraitTreeLoadoutEntryRow>,
     DbcError
   >;
+
   readonly getTraitTreeXTraitCurrencies: (
     treeId: number,
   ) => Effect.Effect<

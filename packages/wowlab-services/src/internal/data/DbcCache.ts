@@ -11,11 +11,24 @@ export interface DbcCache {
   expectedStatMod: ImmutableMap<number, Dbc.ExpectedStatModRow>;
   item: ImmutableMap<number, Dbc.ItemRow>;
   itemAppearance: ImmutableMap<number, Dbc.ItemAppearanceRow>;
+  itemBonusListGroup: ImmutableMap<number, Dbc.ItemBonusListGroupRow>;
+  itemBonusListGroupEntry: ImmutableMap<number, Dbc.ItemBonusListGroupEntryRow[]>;
+  itemBonusSeason: ImmutableMap<number, Dbc.ItemBonusSeasonRow>;
+  itemBonusSeasonUpgradeCost: ImmutableMap<number, Dbc.ItemBonusSeasonUpgradeCostRow[]>;
+  itemClass: ImmutableMap<number, Dbc.ItemClassRow>;
   itemEffect: ImmutableMap<number, Dbc.ItemEffectRow>;
   itemModifiedAppearance: ImmutableMap<number, Dbc.ItemModifiedAppearanceRow>;
+  itemNameDescription: ImmutableMap<number, Dbc.ItemNameDescriptionRow>;
+  itemSet: ImmutableMap<number, Dbc.ItemSetRow>;
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
+  itemSubClass: ImmutableMap<number, Dbc.ItemSubClassRow>;
+  itemXBonusTree: ImmutableMap<number, Dbc.ItemXBonusTreeRow[]>;
   itemXItemEffect: ImmutableMap<number, Dbc.ItemXItemEffectRow[]>;
+  journalEncounter: ImmutableMap<number, Dbc.JournalEncounterRow>;
+  journalEncounterItem: ImmutableMap<number, Dbc.JournalEncounterItemRow[]>;
+  journalInstance: ImmutableMap<number, Dbc.JournalInstanceRow>;
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
+  modifiedCraftingReagentItem: ImmutableMap<number, Dbc.ModifiedCraftingReagentItemRow>;
   specializationSpells: ImmutableMap<number, Dbc.SpecializationSpellsRow[]>;
   spell: ImmutableMap<number, Dbc.SpellRow>;
   spellAuraOptions: ImmutableMap<number, Dbc.SpellAuraOptionsRow>;
@@ -70,11 +83,24 @@ export interface RawDbcData {
   expectedStatMod: Dbc.ExpectedStatModRow[];
   item: Dbc.ItemRow[];
   itemAppearance: Dbc.ItemAppearanceRow[];
+  itemBonusListGroup: Dbc.ItemBonusListGroupRow[];
+  itemBonusListGroupEntry: Dbc.ItemBonusListGroupEntryRow[];
+  itemBonusSeason: Dbc.ItemBonusSeasonRow[];
+  itemBonusSeasonUpgradeCost: Dbc.ItemBonusSeasonUpgradeCostRow[];
+  itemClass: Dbc.ItemClassRow[];
   itemEffect: Dbc.ItemEffectRow[];
   itemModifiedAppearance: Dbc.ItemModifiedAppearanceRow[];
+  itemNameDescription: Dbc.ItemNameDescriptionRow[];
+  itemSet: Dbc.ItemSetRow[];
   itemSparse: Dbc.ItemSparseRow[];
+  itemSubClass: Dbc.ItemSubClassRow[];
+  itemXBonusTree: Dbc.ItemXBonusTreeRow[];
   itemXItemEffect: Dbc.ItemXItemEffectRow[];
+  journalEncounter: Dbc.JournalEncounterRow[];
+  journalEncounterItem: Dbc.JournalEncounterItemRow[];
+  journalInstance: Dbc.JournalInstanceRow[];
   manifestInterfaceData: Dbc.ManifestInterfaceDataRow[];
+  modifiedCraftingReagentItem: Dbc.ModifiedCraftingReagentItemRow[];
   specializationSpells: Dbc.SpecializationSpellsRow[];
   spell: Dbc.SpellRow[];
   spellAuraOptions: Dbc.SpellAuraOptionsRow[];
@@ -128,11 +154,24 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   expectedStatMod: ImmutableMap(rawData.expectedStatMod.map((row) => [row.ID, row])),
   item: ImmutableMap(rawData.item.map((row) => [row.ID, row])),
   itemAppearance: ImmutableMap(rawData.itemAppearance.map((row) => [row.ID, row])),
+  itemBonusListGroup: ImmutableMap(rawData.itemBonusListGroup.map((row) => [row.ID, row])),
+  itemBonusListGroupEntry: groupByItemBonusListGroupId(rawData.itemBonusListGroupEntry),
+  itemBonusSeason: ImmutableMap(rawData.itemBonusSeason.map((row) => [row.ID, row])),
+  itemBonusSeasonUpgradeCost: groupByItemBonusSeasonId(rawData.itemBonusSeasonUpgradeCost),
+  itemClass: ImmutableMap(rawData.itemClass.map((row) => [row.ID, row])),
   itemEffect: ImmutableMap(rawData.itemEffect.map((row) => [row.ID, row])),
   itemModifiedAppearance: ImmutableMap(rawData.itemModifiedAppearance.map((row) => [row.ItemID, row])),
+  itemNameDescription: ImmutableMap(rawData.itemNameDescription.map((row) => [row.ID, row])),
+  itemSet: ImmutableMap(rawData.itemSet.map((row) => [row.ID, row])),
   itemSparse: ImmutableMap(rawData.itemSparse.map((row) => [row.ID, row])),
+  itemSubClass: ImmutableMap(rawData.itemSubClass.map((row) => [row.ID, row])),
+  itemXBonusTree: groupByItemId(rawData.itemXBonusTree),
   itemXItemEffect: groupByItemId(rawData.itemXItemEffect),
+  journalEncounter: ImmutableMap(rawData.journalEncounter.map((row) => [row.ID, row])),
+  journalEncounterItem: groupByJournalEncounterId(rawData.journalEncounterItem),
+  journalInstance: ImmutableMap(rawData.journalInstance.map((row) => [row.ID, row])),
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),
+  modifiedCraftingReagentItem: ImmutableMap(rawData.modifiedCraftingReagentItem.map((row) => [row.ID, row])),
   specializationSpells: groupBySpecId(rawData.specializationSpells),
   spell: ImmutableMap(rawData.spell.map((row) => [row.ID, row])),
   spellAuraOptions: ImmutableMap(rawData.spellAuraOptions.map((row) => [row.SpellID, row])),
@@ -302,6 +341,47 @@ const groupTraitEdgesByTreeId = (
       const existing = grouped.get(treeId) || [];
       grouped.set(treeId, [...existing, edge]);
     }
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByItemBonusListGroupId = <
+  T extends { ItemBonusListGroupID: number },
+>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.ItemBonusListGroupID) || [];
+    grouped.set(row.ItemBonusListGroupID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByItemBonusSeasonId = <T extends { ItemBonusSeasonID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.ItemBonusSeasonID) || [];
+    grouped.set(row.ItemBonusSeasonID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByJournalEncounterId = <T extends { JournalEncounterID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.JournalEncounterID) || [];
+    grouped.set(row.JournalEncounterID, [...existing, row]);
   });
 
   return ImmutableMap(grouped);

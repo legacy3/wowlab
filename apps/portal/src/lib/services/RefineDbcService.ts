@@ -13,11 +13,24 @@ import {
   GetExpectedStatMod,
   GetItem,
   GetItemAppearance,
+  GetItemBonusListGroup,
+  GetItemBonusListGroupEntries,
+  GetItemBonusSeason,
+  GetItemBonusSeasonUpgradeCosts,
+  GetItemClass,
   GetItemEffect,
   GetItemModifiedAppearance,
+  GetItemNameDescription,
+  GetItemSet,
   GetItemSparse,
+  GetItemSubClass,
+  GetItemXBonusTrees,
   GetItemXItemEffects,
+  GetJournalEncounter,
+  GetJournalEncounterItems,
+  GetJournalInstance,
   GetManifestInterfaceData,
+  GetModifiedCraftingReagentItem,
   GetSpecializationSpells,
   GetSpell,
   GetSpellAuraOptions,
@@ -677,6 +690,101 @@ const createBatchFetcher = (
 
         return edgesByTree;
       }),
+    fetchItemBonusListGroupsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemBonusListGroupRow>(
+        queryClient,
+        dataProvider,
+        "item_bonus_list_group",
+        ids,
+      ),
+    fetchItemBonusListGroupEntriesByGroupIds: (groupIds) =>
+      fetchByFk<Schemas.Dbc.ItemBonusListGroupEntryRow>(
+        queryClient,
+        dataProvider,
+        "item_bonus_list_group_entry",
+        "ItemBonusListGroupID",
+        groupIds,
+      ),
+    fetchItemBonusSeasonsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemBonusSeasonRow>(
+        queryClient,
+        dataProvider,
+        "item_bonus_season",
+        ids,
+      ),
+    fetchItemBonusSeasonUpgradeCostsBySeasonIds: (seasonIds) =>
+      fetchByFk<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow>(
+        queryClient,
+        dataProvider,
+        "item_bonus_season_upgrade_cost",
+        "ItemBonusSeasonID",
+        seasonIds,
+      ),
+    fetchItemClassesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemClassRow>(
+        queryClient,
+        dataProvider,
+        "item_class",
+        ids,
+      ),
+    fetchItemNameDescriptionsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemNameDescriptionRow>(
+        queryClient,
+        dataProvider,
+        "item_name_description",
+        ids,
+      ),
+    fetchItemSetsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemSetRow>(
+        queryClient,
+        dataProvider,
+        "item_set",
+        ids,
+      ),
+    fetchItemSubClassesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ItemSubClassRow>(
+        queryClient,
+        dataProvider,
+        "item_sub_class",
+        ids,
+      ),
+    fetchItemXBonusTreesByItemIds: (itemIds) =>
+      fetchByFk<Schemas.Dbc.ItemXBonusTreeRow>(
+        queryClient,
+        dataProvider,
+        "item_x_bonus_tree",
+        "ItemID",
+        itemIds,
+      ),
+    fetchJournalEncountersByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.JournalEncounterRow>(
+        queryClient,
+        dataProvider,
+        "journal_encounter",
+        ids,
+      ),
+    fetchJournalEncounterItemsByEncounterIds: (encounterIds) =>
+      fetchByFk<Schemas.Dbc.JournalEncounterItemRow>(
+        queryClient,
+        dataProvider,
+        "journal_encounter_item",
+        "JournalEncounterID",
+        encounterIds,
+      ),
+    fetchJournalInstancesByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.JournalInstanceRow>(
+        queryClient,
+        dataProvider,
+        "journal_instance",
+        ids,
+      ),
+    fetchModifiedCraftingReagentItemsByIds: (ids) =>
+      fetchByIds<Schemas.Dbc.ModifiedCraftingReagentItemRow>(
+        queryClient,
+        dataProvider,
+        "modified_crafting_reagent_item",
+        ids,
+      ),
   });
 
 export const RefineDbcService = (
@@ -1080,6 +1188,65 @@ export const RefineDbcService = (
             "trait_node_x_trait_cond",
             "TraitNodeID",
             nodeIds,
+          ),
+        getItemBonusListGroup: (id) =>
+          Effect.request(
+            new GetItemBonusListGroup({ id }),
+            resolvers.itemBonusListGroupResolver,
+          ),
+        getItemBonusListGroupEntries: (groupId) =>
+          Effect.request(
+            new GetItemBonusListGroupEntries({ groupId }),
+            resolvers.itemBonusListGroupEntriesResolver,
+          ),
+        getItemBonusSeason: (id) =>
+          Effect.request(
+            new GetItemBonusSeason({ id }),
+            resolvers.itemBonusSeasonResolver,
+          ),
+        getItemBonusSeasonUpgradeCosts: (seasonId) =>
+          Effect.request(
+            new GetItemBonusSeasonUpgradeCosts({ seasonId }),
+            resolvers.itemBonusSeasonUpgradeCostsResolver,
+          ),
+        getItemClass: (id) =>
+          Effect.request(new GetItemClass({ id }), resolvers.itemClassResolver),
+        getItemNameDescription: (id) =>
+          Effect.request(
+            new GetItemNameDescription({ id }),
+            resolvers.itemNameDescriptionResolver,
+          ),
+        getItemSet: (id) =>
+          Effect.request(new GetItemSet({ id }), resolvers.itemSetResolver),
+        getItemSubClass: (id) =>
+          Effect.request(
+            new GetItemSubClass({ id }),
+            resolvers.itemSubClassResolver,
+          ),
+        getItemXBonusTrees: (itemId) =>
+          Effect.request(
+            new GetItemXBonusTrees({ itemId }),
+            resolvers.itemXBonusTreesResolver,
+          ),
+        getJournalEncounter: (id) =>
+          Effect.request(
+            new GetJournalEncounter({ id }),
+            resolvers.journalEncounterResolver,
+          ),
+        getJournalEncounterItems: (encounterId) =>
+          Effect.request(
+            new GetJournalEncounterItems({ encounterId }),
+            resolvers.journalEncounterItemsResolver,
+          ),
+        getJournalInstance: (id) =>
+          Effect.request(
+            new GetJournalInstance({ id }),
+            resolvers.journalInstanceResolver,
+          ),
+        getModifiedCraftingReagentItem: (id) =>
+          Effect.request(
+            new GetModifiedCraftingReagentItem({ id }),
+            resolvers.modifiedCraftingReagentItemResolver,
           ),
       };
     }),

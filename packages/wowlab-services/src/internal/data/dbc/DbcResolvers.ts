@@ -13,11 +13,24 @@ import {
   GetExpectedStatMod,
   GetItem,
   GetItemAppearance,
+  GetItemBonusListGroup,
+  GetItemBonusListGroupEntries,
+  GetItemBonusSeason,
+  GetItemBonusSeasonUpgradeCosts,
+  GetItemClass,
   GetItemEffect,
   GetItemModifiedAppearance,
+  GetItemNameDescription,
+  GetItemSet,
   GetItemSparse,
+  GetItemSubClass,
+  GetItemXBonusTrees,
   GetItemXItemEffects,
+  GetJournalEncounter,
+  GetJournalEncounterItems,
+  GetJournalInstance,
   GetManifestInterfaceData,
+  GetModifiedCraftingReagentItem,
   GetSpecializationSpells,
   GetSpell,
   GetSpellAuraOptions,
@@ -83,6 +96,30 @@ export interface DbcBatchFetcherInterface {
   readonly fetchItemAppearancesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemAppearanceRow>, DbcError>;
+  readonly fetchItemBonusListGroupEntriesByGroupIds: (
+    groupIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemBonusListGroupEntryRow>,
+    DbcError
+  >;
+  readonly fetchItemBonusListGroupsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemBonusListGroupRow>,
+    DbcError
+  >;
+  readonly fetchItemBonusSeasonsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemBonusSeasonRow>, DbcError>;
+  readonly fetchItemBonusSeasonUpgradeCostsBySeasonIds: (
+    seasonIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemBonusSeasonUpgradeCostRow>,
+    DbcError
+  >;
+  readonly fetchItemClassesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemClassRow>, DbcError>;
   readonly fetchItemEffectsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemEffectRow>, DbcError>;
@@ -93,20 +130,53 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.ItemModifiedAppearanceRow>,
     DbcError
   >;
+  readonly fetchItemNameDescriptionsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ItemNameDescriptionRow>,
+    DbcError
+  >;
   readonly fetchItemsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemRow>, DbcError>;
+  readonly fetchItemSetsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetRow>, DbcError>;
   readonly fetchItemSparsesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSparseRow>, DbcError>;
+  readonly fetchItemSubClassesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSubClassRow>, DbcError>;
+  readonly fetchItemXBonusTreesByItemIds: (
+    itemIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXBonusTreeRow>, DbcError>;
   // By FK (array results)
   readonly fetchItemXItemEffectsByItemIds: (
     itemIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
+  readonly fetchJournalEncounterItemsByEncounterIds: (
+    encounterIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+    DbcError
+  >;
+  readonly fetchJournalEncountersByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.JournalEncounterRow>, DbcError>;
+  readonly fetchJournalInstancesByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.JournalInstanceRow>, DbcError>;
   readonly fetchManifestInterfaceDataByIds: (
     ids: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.ManifestInterfaceDataRow>,
+    DbcError
+  >;
+  readonly fetchModifiedCraftingReagentItemsByIds: (
+    ids: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.ModifiedCraftingReagentItemRow>,
     DbcError
   >;
   readonly fetchSpecializationSpellsBySpecIds: (
@@ -204,11 +274,9 @@ export interface DbcBatchFetcherInterface {
   readonly fetchSpellReplacementBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellReplacementRow>, DbcError>;
-
   readonly fetchSpellsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellRow>, DbcError>;
-
   readonly fetchSpellShapeshiftBySpellIds: (
     spellIds: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.SpellShapeshiftRow>, DbcError>;
@@ -290,7 +358,6 @@ export interface DbcBatchFetcherInterface {
     ReadonlyArray<Schemas.Dbc.TraitTreeXTraitCurrencyRow>,
     DbcError
   >;
-
   readonly fetchUiTextureAtlasElementsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<
@@ -482,6 +549,26 @@ export interface DbcResolversInterface {
     GetItemAppearance,
     never
   >;
+  readonly itemBonusListGroupEntriesResolver: RequestResolver.RequestResolver<
+    GetItemBonusListGroupEntries,
+    never
+  >;
+  readonly itemBonusListGroupResolver: RequestResolver.RequestResolver<
+    GetItemBonusListGroup,
+    never
+  >;
+  readonly itemBonusSeasonResolver: RequestResolver.RequestResolver<
+    GetItemBonusSeason,
+    never
+  >;
+  readonly itemBonusSeasonUpgradeCostsResolver: RequestResolver.RequestResolver<
+    GetItemBonusSeasonUpgradeCosts,
+    never
+  >;
+  readonly itemClassResolver: RequestResolver.RequestResolver<
+    GetItemClass,
+    never
+  >;
   readonly itemEffectResolver: RequestResolver.RequestResolver<
     GetItemEffect,
     never
@@ -491,9 +578,22 @@ export interface DbcResolversInterface {
     GetItemModifiedAppearance,
     never
   >;
+  readonly itemNameDescriptionResolver: RequestResolver.RequestResolver<
+    GetItemNameDescription,
+    never
+  >;
   readonly itemResolver: RequestResolver.RequestResolver<GetItem, never>;
+  readonly itemSetResolver: RequestResolver.RequestResolver<GetItemSet, never>;
   readonly itemSparseResolver: RequestResolver.RequestResolver<
     GetItemSparse,
+    never
+  >;
+  readonly itemSubClassResolver: RequestResolver.RequestResolver<
+    GetItemSubClass,
+    never
+  >;
+  readonly itemXBonusTreesResolver: RequestResolver.RequestResolver<
+    GetItemXBonusTrees,
     never
   >;
   // By FK (array results)
@@ -501,10 +601,27 @@ export interface DbcResolversInterface {
     GetItemXItemEffects,
     never
   >;
+  readonly journalEncounterItemsResolver: RequestResolver.RequestResolver<
+    GetJournalEncounterItems,
+    never
+  >;
+  readonly journalEncounterResolver: RequestResolver.RequestResolver<
+    GetJournalEncounter,
+    never
+  >;
+  readonly journalInstanceResolver: RequestResolver.RequestResolver<
+    GetJournalInstance,
+    never
+  >;
   readonly manifestInterfaceDataResolver: RequestResolver.RequestResolver<
     GetManifestInterfaceData,
     never
   >;
+  readonly modifiedCraftingReagentItemResolver: RequestResolver.RequestResolver<
+    GetModifiedCraftingReagentItem,
+    never
+  >;
+
   readonly specializationSpellsResolver: RequestResolver.RequestResolver<
     GetSpecializationSpells,
     never
@@ -607,9 +724,7 @@ export interface DbcResolversInterface {
     GetSpellReplacement,
     never
   >;
-
   readonly spellResolver: RequestResolver.RequestResolver<GetSpell, never>;
-
   readonly spellShapeshiftFormResolver: RequestResolver.RequestResolver<
     GetSpellShapeshiftForm,
     never
@@ -686,7 +801,6 @@ export interface DbcResolversInterface {
     GetTraitTreeXTraitCurrencies,
     never
   >;
-
   readonly uiTextureAtlasElementResolver: RequestResolver.RequestResolver<
     GetUiTextureAtlasElement,
     never
@@ -957,6 +1071,49 @@ export const makeDbcResolvers = Effect.gen(function* () {
     >(fetcher.fetchItemModifiedAppearancesByItemIds, "ItemID", (r) => r.itemId),
 
     // By FK (array results)
+    itemBonusListGroupEntriesResolver: createByFkArrayResolver<
+      Schemas.Dbc.ItemBonusListGroupEntryRow,
+      "ItemBonusListGroupID",
+      GetItemBonusListGroupEntries
+    >(
+      fetcher.fetchItemBonusListGroupEntriesByGroupIds,
+      "ItemBonusListGroupID",
+      (r) => r.groupId,
+    ),
+    itemBonusListGroupResolver:
+      createByIdResolver<Schemas.Dbc.ItemBonusListGroupRow>(
+        fetcher.fetchItemBonusListGroupsByIds,
+      ),
+    itemBonusSeasonResolver: createByIdResolver<Schemas.Dbc.ItemBonusSeasonRow>(
+      fetcher.fetchItemBonusSeasonsByIds,
+    ),
+    itemBonusSeasonUpgradeCostsResolver: createByFkArrayResolver<
+      Schemas.Dbc.ItemBonusSeasonUpgradeCostRow,
+      "ItemBonusSeasonID",
+      GetItemBonusSeasonUpgradeCosts
+    >(
+      fetcher.fetchItemBonusSeasonUpgradeCostsBySeasonIds,
+      "ItemBonusSeasonID",
+      (r) => r.seasonId,
+    ),
+    itemClassResolver: createByIdResolver<Schemas.Dbc.ItemClassRow>(
+      fetcher.fetchItemClassesByIds,
+    ),
+    itemNameDescriptionResolver:
+      createByIdResolver<Schemas.Dbc.ItemNameDescriptionRow>(
+        fetcher.fetchItemNameDescriptionsByIds,
+      ),
+    itemSetResolver: createByIdResolver<Schemas.Dbc.ItemSetRow>(
+      fetcher.fetchItemSetsByIds,
+    ),
+    itemSubClassResolver: createByIdResolver<Schemas.Dbc.ItemSubClassRow>(
+      fetcher.fetchItemSubClassesByIds,
+    ),
+    itemXBonusTreesResolver: createByFkArrayResolver<
+      Schemas.Dbc.ItemXBonusTreeRow,
+      "ItemID",
+      GetItemXBonusTrees
+    >(fetcher.fetchItemXBonusTreesByItemIds, "ItemID", (r) => r.itemId),
     itemXItemEffectsResolver: createByFkArrayResolver<
       Schemas.Dbc.ItemXItemEffectRow,
       "ItemID",
@@ -1025,5 +1182,27 @@ export const makeDbcResolvers = Effect.gen(function* () {
     traitNodeXEntriesResolver,
     traitTreeLoadoutEntriesResolver,
     traitTreeLoadoutResolver,
+
+    // Journal tables
+    journalEncounterItemsResolver: createByFkArrayResolver<
+      Schemas.Dbc.JournalEncounterItemRow,
+      "JournalEncounterID",
+      GetJournalEncounterItems
+    >(
+      fetcher.fetchJournalEncounterItemsByEncounterIds,
+      "JournalEncounterID",
+      (r) => r.encounterId,
+    ),
+    journalEncounterResolver:
+      createByIdResolver<Schemas.Dbc.JournalEncounterRow>(
+        fetcher.fetchJournalEncountersByIds,
+      ),
+    journalInstanceResolver: createByIdResolver<Schemas.Dbc.JournalInstanceRow>(
+      fetcher.fetchJournalInstancesByIds,
+    ),
+    modifiedCraftingReagentItemResolver:
+      createByIdResolver<Schemas.Dbc.ModifiedCraftingReagentItemRow>(
+        fetcher.fetchModifiedCraftingReagentItemsByIds,
+      ),
   } satisfies DbcResolversInterface;
 });
