@@ -69,10 +69,10 @@ export const TABLE_FIELD_OVERRIDES: Record<
   SpellEffect: {
     SpellID: "Branded.SpellIDSchema",
   },
-  SpellEquippedItems: {
+  SpellEmpower: {
     SpellID: "Branded.SpellIDSchema",
   },
-  SpellEmpower: {
+  SpellEquippedItems: {
     SpellID: "Branded.SpellIDSchema",
   },
   SpellInterrupts: {
