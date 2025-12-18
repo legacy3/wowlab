@@ -5,8 +5,6 @@ import type {
 } from "@/lib/content/types";
 
 export interface DocMeta extends ContentMeta {
-  title: string;
-  description?: string;
   updatedAt?: string;
 }
 

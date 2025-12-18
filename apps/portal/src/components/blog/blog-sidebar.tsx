@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { CalendarIcon, Clock, Link2, Linkedin, Twitter } from "lucide-react";
+import { CalendarIcon, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BlogEntry } from "@/lib/blog/types";
 import type { TocEntry } from "@/lib/content/types";
@@ -28,10 +27,12 @@ function flattenToc(entries: TocEntry[], result: Heading[] = []): Heading[] {
         level: entry.depth,
       });
     }
+
     if (entry.children) {
       flattenToc(entry.children, result);
     }
   }
+
   return result;
 }
 
@@ -129,62 +130,6 @@ function TableOfContents({
   );
 }
 
-function ShareButtons({ slug }: { slug: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const url =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/blog/${slug}`
-      : "";
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`;
-  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-
-  return (
-    <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        Share
-      </h3>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 bg-muted/30"
-          asChild
-        >
-          <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
-            <Twitter className="h-4 w-4" />
-          </a>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 bg-muted/30"
-          asChild
-        >
-          <a href={linkedinUrl} target="_blank" rel="noopener noreferrer">
-            <Linkedin className="h-4 w-4" />
-          </a>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 bg-muted/30"
-          onClick={handleCopy}
-        >
-          <Link2 className={cn("h-4 w-4", copied && "text-green-500")} />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 export function BlogSidebar({ entry }: BlogSidebarProps) {
   const headings = flattenToc(entry.tableOfContents ?? []);
   const headingIds = headings.map((h) => h.id);
@@ -210,8 +155,6 @@ export function BlogSidebar({ entry }: BlogSidebarProps) {
         )}
 
         <TableOfContents headings={headings} activeId={activeId} />
-
-        <ShareButtons slug={entry.slug} />
       </div>
     </aside>
   );
