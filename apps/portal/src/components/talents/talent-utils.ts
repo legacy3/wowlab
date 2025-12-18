@@ -1,3 +1,4 @@
+import Fuse from "fuse.js";
 import type { Talent } from "@wowlab/core/Schemas";
 
 export function computeVisibleNodes(
@@ -102,6 +103,11 @@ export function computeTalentLayout(
   };
 }
 
+type FlattenedEntry = {
+  nodeId: number;
+  name: string;
+};
+
 export function searchTalentNodes(
   nodes: readonly Talent.TalentNode[],
   query: string,
@@ -111,19 +117,21 @@ export function searchTalentNodes(
     return new Set<number>();
   }
 
-  const lowerQuery = trimmed.toLowerCase();
-  const matches = new Set<number>();
-
+  const flatEntries: FlattenedEntry[] = [];
   for (const node of nodes) {
     for (const entry of node.entries) {
-      if (entry.name.toLowerCase().includes(lowerQuery)) {
-        matches.add(node.id);
-        break;
-      }
+      flatEntries.push({ nodeId: node.id, name: entry.name });
     }
   }
 
-  return matches;
+  const fuse = new Fuse(flatEntries, {
+    keys: ["name"],
+    threshold: 0.3,
+    ignoreLocation: true,
+  });
+
+  const results = fuse.search(trimmed);
+  return new Set(results.map((r) => r.item.nodeId));
 }
 
 export function deriveSelectedHeroId(

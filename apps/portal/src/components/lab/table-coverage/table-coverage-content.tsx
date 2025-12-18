@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 
 // Generated via: pnpm cli list-tables --format ts
 const ALL_DBC_TABLES = [
@@ -1115,33 +1116,28 @@ export function TableCoverageContent() {
   const { tables, totalSupported, coveragePercent } =
     useTableData(supportedSet);
 
-  const filteredTables = useMemo(() => {
+  const preFilteredTables = useMemo(() => {
     let result = tables;
 
-    // Filter by search
-    if (search.trim()) {
-      const query = search.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.name.toLowerCase().includes(query) ||
-          t.snakeName.includes(query.replace(/ /g, "_")),
-      );
-    }
-
-    // Filter by support status
     if (filterMode === "supported") {
       result = result.filter((t) => t.supported);
     } else if (filterMode === "unsupported") {
       result = result.filter((t) => !t.supported);
     }
 
-    // Filter by prefix
     if (selectedPrefix !== "all") {
       result = result.filter((t) => t.prefix === selectedPrefix);
     }
 
     return result;
-  }, [tables, search, filterMode, selectedPrefix]);
+  }, [tables, filterMode, selectedPrefix]);
+
+  const { results: filteredTables } = useFuzzySearch({
+    items: preFilteredTables,
+    query: search,
+    keys: ["name", "snakeName"],
+    threshold: 0.3,
+  });
 
   const rowVirtualizer = useVirtualizer({
     count: filteredTables.length,

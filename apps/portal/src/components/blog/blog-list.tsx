@@ -15,6 +15,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import type { BlogEntry } from "@/lib/blog/types";
 
 type BlogListProps = {
@@ -67,17 +68,20 @@ export function BlogList({ posts, tags }: BlogListProps) {
   const [search, setSearch] = useState("");
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      const matchesTag = activeTag === "all" || post.tags?.includes(activeTag);
-      const matchesSearch =
-        search === "" ||
-        post.title.toLowerCase().includes(search.toLowerCase()) ||
-        post.description.toLowerCase().includes(search.toLowerCase());
+  const tagFilteredPosts = useMemo(() => {
+    if (activeTag === "all") {
+      return posts;
+    }
 
-      return matchesTag && matchesSearch;
-    });
-  }, [posts, activeTag, search]);
+    return posts.filter((post) => post.tags?.includes(activeTag));
+  }, [posts, activeTag]);
+
+  const { results: filteredPosts } = useFuzzySearch({
+    items: tagFilteredPosts,
+    query: search,
+    keys: ["title", "description"],
+    threshold: 0.4,
+  });
 
   const rowVirtualizer = useVirtualizer({
     count: filteredPosts.length,

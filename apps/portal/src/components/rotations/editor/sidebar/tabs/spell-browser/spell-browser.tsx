@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Search, Plus, Clock, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   type Spell,
 } from "./spell-browser.data";
 import { useSpellDescription } from "@/hooks/use-spell-description";
+import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 
 interface SpellBrowserProps {
   onInsert: (snippet: string) => void;
@@ -21,17 +22,12 @@ interface SpellBrowserProps {
 export function SpellBrowser({ onInsert }: SpellBrowserProps) {
   const [search, setSearch] = useState("");
 
-  const filteredSpells = useMemo(() => {
-    if (!search) {
-      return MOCK_SPELLS;
-    }
-    const lower = search.toLowerCase();
-    return MOCK_SPELLS.filter(
-      (spell) =>
-        spell.name.toLowerCase().includes(lower) ||
-        spell.id.toString().includes(lower),
-    );
-  }, [search]);
+  const { results: filteredSpells } = useFuzzySearch({
+    items: MOCK_SPELLS,
+    query: search,
+    keys: ["name", "id"],
+    threshold: 0.3,
+  });
 
   return (
     <div className="flex flex-col h-full">
