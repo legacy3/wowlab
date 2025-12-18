@@ -22,12 +22,14 @@ import {
   GetItemModifiedAppearance,
   GetItemNameDescription,
   GetItemSet,
+  GetItemSetSpells,
   GetItemSparse,
   GetItemSubClass,
   GetItemXBonusTrees,
   GetItemXItemEffects,
   GetJournalEncounter,
   GetJournalEncounterItems,
+  GetJournalEncounterItemsByItemId,
   GetJournalInstance,
   GetManifestInterfaceData,
   GetModifiedCraftingReagentItem,
@@ -142,6 +144,9 @@ export interface DbcBatchFetcherInterface {
   readonly fetchItemSetsByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetRow>, DbcError>;
+  readonly fetchItemSetSpellsBySetIds: (
+    setIds: readonly number[],
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetSpellRow>, DbcError>;
   readonly fetchItemSparsesByIds: (
     ids: readonly number[],
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSparseRow>, DbcError>;
@@ -157,6 +162,12 @@ export interface DbcBatchFetcherInterface {
   ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemXItemEffectRow>, DbcError>;
   readonly fetchJournalEncounterItemsByEncounterIds: (
     encounterIds: readonly number[],
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+    DbcError
+  >;
+  readonly fetchJournalEncounterItemsByItemIds: (
+    itemIds: readonly number[],
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
     DbcError
@@ -584,6 +595,10 @@ export interface DbcResolversInterface {
   >;
   readonly itemResolver: RequestResolver.RequestResolver<GetItem, never>;
   readonly itemSetResolver: RequestResolver.RequestResolver<GetItemSet, never>;
+  readonly itemSetSpellsResolver: RequestResolver.RequestResolver<
+    GetItemSetSpells,
+    never
+  >;
   readonly itemSparseResolver: RequestResolver.RequestResolver<
     GetItemSparse,
     never
@@ -603,6 +618,10 @@ export interface DbcResolversInterface {
   >;
   readonly journalEncounterItemsResolver: RequestResolver.RequestResolver<
     GetJournalEncounterItems,
+    never
+  >;
+  readonly journalEncounterItemsByItemIdResolver: RequestResolver.RequestResolver<
+    GetJournalEncounterItemsByItemId,
     never
   >;
   readonly journalEncounterResolver: RequestResolver.RequestResolver<
@@ -1106,6 +1125,11 @@ export const makeDbcResolvers = Effect.gen(function* () {
     itemSetResolver: createByIdResolver<Schemas.Dbc.ItemSetRow>(
       fetcher.fetchItemSetsByIds,
     ),
+    itemSetSpellsResolver: createByFkArrayResolver<
+      Schemas.Dbc.ItemSetSpellRow,
+      "ItemSetID",
+      GetItemSetSpells
+    >(fetcher.fetchItemSetSpellsBySetIds, "ItemSetID", (r) => r.setId),
     itemSubClassResolver: createByIdResolver<Schemas.Dbc.ItemSubClassRow>(
       fetcher.fetchItemSubClassesByIds,
     ),
@@ -1193,6 +1217,11 @@ export const makeDbcResolvers = Effect.gen(function* () {
       "JournalEncounterID",
       (r) => r.encounterId,
     ),
+    journalEncounterItemsByItemIdResolver: createByFkArrayResolver<
+      Schemas.Dbc.JournalEncounterItemRow,
+      "ItemID",
+      GetJournalEncounterItemsByItemId
+    >(fetcher.fetchJournalEncounterItemsByItemIds, "ItemID", (r) => r.itemId),
     journalEncounterResolver:
       createByIdResolver<Schemas.Dbc.JournalEncounterRow>(
         fetcher.fetchJournalEncountersByIds,

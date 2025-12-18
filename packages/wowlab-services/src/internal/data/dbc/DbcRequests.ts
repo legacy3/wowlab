@@ -111,6 +111,12 @@ export class GetItemSet extends Request.TaggedClass("GetItemSet")<
   { readonly id: number }
 > {}
 
+export class GetItemSetSpells extends Request.TaggedClass("GetItemSetSpells")<
+  ReadonlyArray<Schemas.Dbc.ItemSetSpellRow>,
+  DbcError,
+  { readonly setId: number }
+> {}
+
 export class GetItemSparse extends Request.TaggedClass("GetItemSparse")<
   Schemas.Dbc.ItemSparseRow | undefined,
   DbcError,
@@ -153,6 +159,14 @@ export class GetJournalEncounterItems extends Request.TaggedClass(
   ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
   DbcError,
   { readonly encounterId: number }
+> {}
+
+export class GetJournalEncounterItemsByItemId extends Request.TaggedClass(
+  "GetJournalEncounterItemsByItemId",
+)<
+  ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+  DbcError,
+  { readonly itemId: number }
 > {}
 
 export class GetJournalInstance extends Request.TaggedClass(

@@ -625,6 +625,12 @@ const SupabaseDbcServiceLive = (
             "item_set",
             (builder) => builder.select("*").eq("ID", id).maybeSingle(),
           ),
+        getItemSetSpells: (setId) =>
+          query<Schemas.Dbc.ItemSetSpellRow[]>(
+            supabase,
+            "item_set_spell",
+            (builder) => builder.select("*").eq("ItemSetID", setId),
+          ),
         getItemSparse: (itemId) => itemSparseCache.get(itemId),
         getItemSubClass: (id) =>
           query<Schemas.Dbc.ItemSubClassRow | undefined>(
@@ -651,6 +657,12 @@ const SupabaseDbcServiceLive = (
             "journal_encounter_item",
             (builder) =>
               builder.select("*").eq("JournalEncounterID", encounterId),
+          ),
+        getJournalEncounterItemsByItemId: (itemId) =>
+          query<Schemas.Dbc.JournalEncounterItemRow[]>(
+            supabase,
+            "journal_encounter_item",
+            (builder) => builder.select("*").eq("ItemID", itemId),
           ),
         getJournalInstance: (id) =>
           query<Schemas.Dbc.JournalInstanceRow | undefined>(

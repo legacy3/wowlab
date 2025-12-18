@@ -22,12 +22,14 @@ import {
   GetItemModifiedAppearance,
   GetItemNameDescription,
   GetItemSet,
+  GetItemSetSpells,
   GetItemSparse,
   GetItemSubClass,
   GetItemXBonusTrees,
   GetItemXItemEffects,
   GetJournalEncounter,
   GetJournalEncounterItems,
+  GetJournalEncounterItemsByItemId,
   GetJournalInstance,
   GetManifestInterfaceData,
   GetModifiedCraftingReagentItem,
@@ -741,6 +743,14 @@ const createBatchFetcher = (
         "item_set",
         ids,
       ),
+    fetchItemSetSpellsBySetIds: (setIds) =>
+      fetchByFk<Schemas.Dbc.ItemSetSpellRow>(
+        queryClient,
+        dataProvider,
+        "item_set_spell",
+        "ItemSetID",
+        setIds,
+      ),
     fetchItemSubClassesByIds: (ids) =>
       fetchByIds<Schemas.Dbc.ItemSubClassRow>(
         queryClient,
@@ -770,6 +780,14 @@ const createBatchFetcher = (
         "journal_encounter_item",
         "JournalEncounterID",
         encounterIds,
+      ),
+    fetchJournalEncounterItemsByItemIds: (itemIds) =>
+      fetchByFk<Schemas.Dbc.JournalEncounterItemRow>(
+        queryClient,
+        dataProvider,
+        "journal_encounter_item",
+        "ItemID",
+        itemIds,
       ),
     fetchJournalInstancesByIds: (ids) =>
       fetchByIds<Schemas.Dbc.JournalInstanceRow>(
@@ -1218,6 +1236,11 @@ export const RefineDbcService = (
           ),
         getItemSet: (id) =>
           Effect.request(new GetItemSet({ id }), resolvers.itemSetResolver),
+        getItemSetSpells: (setId) =>
+          Effect.request(
+            new GetItemSetSpells({ setId }),
+            resolvers.itemSetSpellsResolver,
+          ),
         getItemSubClass: (id) =>
           Effect.request(
             new GetItemSubClass({ id }),
@@ -1237,6 +1260,11 @@ export const RefineDbcService = (
           Effect.request(
             new GetJournalEncounterItems({ encounterId }),
             resolvers.journalEncounterItemsResolver,
+          ),
+        getJournalEncounterItemsByItemId: (itemId) =>
+          Effect.request(
+            new GetJournalEncounterItemsByItemId({ itemId }),
+            resolvers.journalEncounterItemsByItemIdResolver,
           ),
         getJournalInstance: (id) =>
           Effect.request(

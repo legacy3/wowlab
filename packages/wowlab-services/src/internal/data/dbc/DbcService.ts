@@ -99,6 +99,10 @@ export interface DbcServiceInterface {
     id: number,
   ) => Effect.Effect<Schemas.Dbc.ItemSetRow | undefined, DbcError>;
 
+  readonly getItemSetSpells: (
+    setId: number,
+  ) => Effect.Effect<ReadonlyArray<Schemas.Dbc.ItemSetSpellRow>, DbcError>;
+
   readonly getItemSparse: (
     itemId: number,
   ) => Effect.Effect<Schemas.Dbc.ItemSparseRow | undefined, DbcError>;
@@ -121,6 +125,13 @@ export interface DbcServiceInterface {
 
   readonly getJournalEncounterItems: (
     encounterId: number,
+  ) => Effect.Effect<
+    ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
+    DbcError
+  >;
+
+  readonly getJournalEncounterItemsByItemId: (
+    itemId: number,
   ) => Effect.Effect<
     ReadonlyArray<Schemas.Dbc.JournalEncounterItemRow>,
     DbcError

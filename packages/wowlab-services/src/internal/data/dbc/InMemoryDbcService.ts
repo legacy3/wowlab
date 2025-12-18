@@ -88,6 +88,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getItemSet: (id) => Effect.succeed(cache.itemSet.get(id)),
 
+    getItemSetSpells: (setId) =>
+      Effect.succeed(cache.itemSetSpell.get(setId) ?? []),
+
     getItemSparse: (itemId) => Effect.succeed(cache.itemSparse.get(itemId)),
 
     getItemSubClass: (id) => Effect.succeed(cache.itemSubClass.get(id)),
@@ -102,6 +105,9 @@ export const InMemoryDbcService = (cache: DbcCache): Layer.Layer<DbcService> =>
 
     getJournalEncounterItems: (encounterId) =>
       Effect.succeed(cache.journalEncounterItem.get(encounterId) ?? []),
+
+    getJournalEncounterItemsByItemId: (itemId) =>
+      Effect.succeed(cache.journalEncounterItemByItemId.get(itemId) ?? []),
 
     getJournalInstance: (id) => Effect.succeed(cache.journalInstance.get(id)),
 

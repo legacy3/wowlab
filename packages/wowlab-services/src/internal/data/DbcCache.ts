@@ -20,12 +20,14 @@ export interface DbcCache {
   itemModifiedAppearance: ImmutableMap<number, Dbc.ItemModifiedAppearanceRow>;
   itemNameDescription: ImmutableMap<number, Dbc.ItemNameDescriptionRow>;
   itemSet: ImmutableMap<number, Dbc.ItemSetRow>;
+  itemSetSpell: ImmutableMap<number, Dbc.ItemSetSpellRow[]>;
   itemSparse: ImmutableMap<number, Dbc.ItemSparseRow>;
   itemSubClass: ImmutableMap<number, Dbc.ItemSubClassRow>;
   itemXBonusTree: ImmutableMap<number, Dbc.ItemXBonusTreeRow[]>;
   itemXItemEffect: ImmutableMap<number, Dbc.ItemXItemEffectRow[]>;
   journalEncounter: ImmutableMap<number, Dbc.JournalEncounterRow>;
   journalEncounterItem: ImmutableMap<number, Dbc.JournalEncounterItemRow[]>;
+  journalEncounterItemByItemId: ImmutableMap<number, Dbc.JournalEncounterItemRow[]>;
   journalInstance: ImmutableMap<number, Dbc.JournalInstanceRow>;
   manifestInterfaceData: ImmutableMap<number, Dbc.ManifestInterfaceDataRow>;
   modifiedCraftingReagentItem: ImmutableMap<number, Dbc.ModifiedCraftingReagentItemRow>;
@@ -92,6 +94,7 @@ export interface RawDbcData {
   itemModifiedAppearance: Dbc.ItemModifiedAppearanceRow[];
   itemNameDescription: Dbc.ItemNameDescriptionRow[];
   itemSet: Dbc.ItemSetRow[];
+  itemSetSpell: Dbc.ItemSetSpellRow[];
   itemSparse: Dbc.ItemSparseRow[];
   itemSubClass: Dbc.ItemSubClassRow[];
   itemXBonusTree: Dbc.ItemXBonusTreeRow[];
@@ -163,12 +166,14 @@ export const createCache = (rawData: RawDbcData): DbcCache => ({
   itemModifiedAppearance: ImmutableMap(rawData.itemModifiedAppearance.map((row) => [row.ItemID, row])),
   itemNameDescription: ImmutableMap(rawData.itemNameDescription.map((row) => [row.ID, row])),
   itemSet: ImmutableMap(rawData.itemSet.map((row) => [row.ID, row])),
+  itemSetSpell: groupByItemSetId(rawData.itemSetSpell),
   itemSparse: ImmutableMap(rawData.itemSparse.map((row) => [row.ID, row])),
   itemSubClass: ImmutableMap(rawData.itemSubClass.map((row) => [row.ID, row])),
   itemXBonusTree: groupByItemId(rawData.itemXBonusTree),
   itemXItemEffect: groupByItemId(rawData.itemXItemEffect),
   journalEncounter: ImmutableMap(rawData.journalEncounter.map((row) => [row.ID, row])),
   journalEncounterItem: groupByJournalEncounterId(rawData.journalEncounterItem),
+  journalEncounterItemByItemId: groupByItemId(rawData.journalEncounterItem),
   journalInstance: ImmutableMap(rawData.journalInstance.map((row) => [row.ID, row])),
   manifestInterfaceData: ImmutableMap(rawData.manifestInterfaceData.map((row) => [row.ID, row])),
   modifiedCraftingReagentItem: ImmutableMap(rawData.modifiedCraftingReagentItem.map((row) => [row.ID, row])),
@@ -382,6 +387,19 @@ const groupByJournalEncounterId = <T extends { JournalEncounterID: number }>(
   rows.forEach((row) => {
     const existing = grouped.get(row.JournalEncounterID) || [];
     grouped.set(row.JournalEncounterID, [...existing, row]);
+  });
+
+  return ImmutableMap(grouped);
+};
+
+const groupByItemSetId = <T extends { ItemSetID: number }>(
+  rows: T[],
+): ImmutableMap<number, T[]> => {
+  const grouped = new Map<number, T[]>();
+
+  rows.forEach((row) => {
+    const existing = grouped.get(row.ItemSetID) || [];
+    grouped.set(row.ItemSetID, [...existing, row]);
   });
 
   return ImmutableMap(grouped);
