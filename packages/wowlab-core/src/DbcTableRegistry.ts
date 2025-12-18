@@ -1,12 +1,15 @@
 import type * as Schema from "effect/Schema";
 
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Option from "effect/Option";
 import * as AST from "effect/SchemaAST";
 
 import { Dbc } from "./Schemas.js";
 
 export interface DbcTableMapping<T = unknown> {
   readonly file: string;
-  readonly schema: Schema.Schema<T, any>;
+  readonly schema: Schema.Schema<T, unknown>;
   readonly tableName: string;
 }
 
@@ -153,21 +156,23 @@ export const isValidDbcTable = (table: string): table is DbcTableName =>
 export const getDbcTableEntry = (
   tableName: string,
 ): DbcTableEntry | undefined => {
-  if (!isValidDbcTable(tableName)) return undefined;
+  if (!isValidDbcTable(tableName)) {
+    return undefined;
+  }
+
   const entry = Object.values(DBC_TABLES).find(
     (t) => t.tableName === tableName,
   );
+
   return entry;
 };
 
-// TODO Verify this against effect docs
 export interface DbcFieldInfo {
   name: string;
   optional: boolean;
   type: string;
 }
 
-// TODO Verify this against effect docs
 export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
   const entry = getDbcTableEntry(tableName);
   if (!entry) {
@@ -192,67 +197,36 @@ export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
   return fields;
 }
 
-// TODO Verify this against effect docs
-function getTypeString(ast: AST.AST): string {
-  if (AST.isStringKeyword(ast)) {
-    return "string";
-  }
+const getTypeString = (rawAst: AST.AST): string => {
+  const ast = AST.typeAST(rawAst);
 
-  if (AST.isNumberKeyword(ast)) {
-    return "number";
-  }
-
-  if (AST.isBooleanKeyword(ast)) {
-    return "boolean";
-  }
-
-  if (AST.isLiteral(ast)) {
-    if (ast.literal === null) {
-      return "null";
-    }
-
-    return `"${String(ast.literal)}"`;
-  }
-
-  if (AST.isUndefinedKeyword(ast)) {
-    return "undefined";
-  }
-
-  if (AST.isUnion(ast)) {
-    const types = ast.types.map(getTypeString);
-
-    if (types.length === 2 && types.includes("null")) {
-      const other = types.find((t) => t !== "null");
-      return `${other} | null`;
-    }
-
-    return types.join(" | ");
-  }
-
-  if (AST.isTupleType(ast)) {
-    return `[${ast.elements.map((e) => getTypeString(e.type)).join(", ")}]`;
-  }
-
-  if (AST.isTypeLiteral(ast)) {
-    return "object";
-  }
-
-  if (AST.isTransformation(ast)) {
-    return getTypeString(ast.to);
-  }
-
-  if (AST.isRefinement(ast)) {
-    return getTypeString(ast.from);
-  }
-
-  if (AST.isSuspend(ast)) {
-    return getTypeString(ast.f());
-  }
-
-  const annotations = ast.annotations;
-  if (annotations[AST.IdentifierAnnotationId]) {
-    return String(annotations[AST.IdentifierAnnotationId]);
-  }
-
-  return "unknown";
-}
+  return pipe(
+    Match.value(ast),
+    Match.when(AST.isStringKeyword, () => "string"),
+    Match.when(AST.isNumberKeyword, () => "number"),
+    Match.when(AST.isBooleanKeyword, () => "boolean"),
+    Match.when(AST.isUndefinedKeyword, () => "undefined"),
+    Match.when(AST.isLiteral, (a) =>
+      a.literal === null ? "null" : `"${String(a.literal)}"`,
+    ),
+    Match.when(AST.isUnion, (a) => {
+      const types = a.types.map(getTypeString);
+      if (types.length === 2 && types.includes("null")) {
+        return `${types.find((t) => t !== "null")} | null`;
+      }
+      
+      return types.join(" | ");
+    }),
+    Match.when(
+      AST.isTupleType,
+      (a) => `[${a.elements.map((e) => getTypeString(e.type)).join(", ")}]`,
+    ),
+    Match.when(AST.isTypeLiteral, () => "object"),
+    Match.orElse((a) =>
+      pipe(
+        AST.getIdentifierAnnotation(a),
+        Option.getOrElse(() => "unknown"),
+      ),
+    ),
+  );
+};
