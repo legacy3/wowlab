@@ -1,3 +1,4 @@
+import * as AST from "effect/SchemaAST";
 import { Dbc } from "./Schemas.js";
 import type * as Schema from "effect/Schema";
 
@@ -156,3 +157,100 @@ export const getDbcTableEntry = (
   );
   return entry;
 };
+
+// TODO Verify this against effect docs
+export interface DbcFieldInfo {
+  name: string;
+  type: string;
+  optional: boolean;
+}
+
+// TODO Verify this against effect docs
+function getTypeString(ast: AST.AST): string {
+  if (AST.isStringKeyword(ast)) {
+    return "string";
+  }
+
+  if (AST.isNumberKeyword(ast)) {
+    return "number";
+  }
+
+  if (AST.isBooleanKeyword(ast)) {
+    return "boolean";
+  }
+
+  if (AST.isLiteral(ast)) {
+    if (ast.literal === null) {
+      return "null";
+    }
+
+    return `"${String(ast.literal)}"`;
+  }
+
+  if (AST.isUndefinedKeyword(ast)) {
+    return "undefined";
+  }
+
+  if (AST.isUnion(ast)) {
+    const types = ast.types.map(getTypeString);
+
+    if (types.length === 2 && types.includes("null")) {
+      const other = types.find((t) => t !== "null");
+      return `${other} | null`;
+    }
+
+    return types.join(" | ");
+  }
+
+  if (AST.isTupleType(ast)) {
+    return `[${ast.elements.map((e) => getTypeString(e.type)).join(", ")}]`;
+  }
+
+  if (AST.isTypeLiteral(ast)) {
+    return "object";
+  }
+
+  if (AST.isTransformation(ast)) {
+    return getTypeString(ast.to);
+  }
+
+  if (AST.isRefinement(ast)) {
+    return getTypeString(ast.from);
+  }
+
+  if (AST.isSuspend(ast)) {
+    return getTypeString(ast.f());
+  }
+
+  const annotations = ast.annotations;
+  if (annotations[AST.IdentifierAnnotationId]) {
+    return String(annotations[AST.IdentifierAnnotationId]);
+  }
+
+  return "unknown";
+}
+
+// TODO Verify this against effect docs
+export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
+  const entry = getDbcTableEntry(tableName);
+  if (!entry) {
+    return null;
+  }
+
+  const ast = entry.schema.ast;
+  if (!AST.isTypeLiteral(ast)) {
+    return null;
+  }
+
+  const fields: DbcFieldInfo[] = [];
+
+  for (const prop of ast.propertySignatures) {
+    fields.push({
+      name: String(prop.name),
+      type: getTypeString(prop.type),
+      optional: prop.isOptional,
+    });
+  }
+
+  return fields;
+}

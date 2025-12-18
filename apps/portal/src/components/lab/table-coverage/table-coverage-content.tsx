@@ -19,6 +19,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
+import {
+  TableFieldsDialog,
+  type SelectedTable,
+} from "./table-fields-dialog";
 
 // Generated via: pnpm cli list-tables --format ts
 const ALL_DBC_TABLES = [
@@ -1081,11 +1085,19 @@ function useTableData(supportedSet: Set<string>) {
   }, [supportedSet]);
 }
 
-function TableRow({ table }: { table: TableEntry }) {
+function TableRow({
+  table,
+  onClick,
+}: {
+  table: TableEntry;
+  onClick: () => void;
+}) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        "flex items-center gap-3 px-4 py-2 border-b border-border/50",
+        "flex items-center gap-3 px-4 py-2 border-b border-border/50 w-full text-left hover:bg-muted/50 transition-colors cursor-pointer",
         !table.supported && "opacity-50",
       )}
     >
@@ -1098,7 +1110,7 @@ function TableRow({ table }: { table: TableEntry }) {
       <Badge variant="outline" className="text-xs font-normal">
         {table.prefix}
       </Badge>
-    </div>
+    </button>
   );
 }
 
@@ -1106,6 +1118,10 @@ export function TableCoverageContent() {
   const [search, setSearch] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [selectedPrefix, setSelectedPrefix] = useState<string>("all");
+  const [selectedTable, setSelectedTable] = useState<SelectedTable | null>(
+    null,
+  );
+  const [dialogOpen, setDialogOpen] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const supportedSet = useMemo(
@@ -1149,6 +1165,15 @@ export function TableCoverageContent() {
   const filteredSupportedCount = filteredTables.filter(
     (t) => t.supported,
   ).length;
+
+  const handleTableClick = (table: TableEntry) => {
+    setSelectedTable({
+      name: table.name,
+      snakeName: table.snakeName,
+      supported: table.supported,
+    });
+    setDialogOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -1267,7 +1292,10 @@ export function TableCoverageContent() {
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <TableRow table={table} />
+                  <TableRow
+                    table={table}
+                    onClick={() => handleTableClick(table)}
+                  />
                 </div>
               );
             })}
@@ -1280,6 +1308,12 @@ export function TableCoverageContent() {
           No tables match your filters
         </div>
       )}
+
+      <TableFieldsDialog
+        table={selectedTable}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }
