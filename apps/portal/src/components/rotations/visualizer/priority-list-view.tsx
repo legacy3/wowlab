@@ -35,6 +35,7 @@ import {
   COLOR_TEXT_STATUS,
   COLOR_TEXT_CAST,
   COLOR_HEADER,
+  COLOR_BADGE_TEXT,
   OPACITY_CAST,
   OPACITY_SKIPPED,
   OPACITY_DEFAULT,
@@ -147,7 +148,7 @@ const PriorityRow = memo(function PriorityRow({
         text={String(entry.priority)}
         fontSize={BADGE_FONT_SIZE}
         fontStyle="bold"
-        fill="#fff"
+        fill={COLOR_BADGE_TEXT}
         align="center"
         verticalAlign="middle"
       />

@@ -1,3 +1,5 @@
+import * as colors from "@/lib/colors";
+
 // Row dimensions
 export const ROW_HEIGHT = 56;
 export const ROW_GAP = 8;
@@ -34,16 +36,17 @@ export const HEADER_FONT_SIZE = 14;
 export const ROW_CORNER_RADIUS = 8;
 
 // Colors
-export const COLOR_BG_DEFAULT = "#0c0c0d";
-export const COLOR_BG_CAST = "#22c55e12";
-export const COLOR_BORDER_DEFAULT = "#1f1f23";
-export const COLOR_BORDER_CAST = "#22c55e";
-export const COLOR_TEXT_NAME = "#a1a1aa";
-export const COLOR_TEXT_NAME_CAST = "#f4f4f5";
-export const COLOR_TEXT_CONDITION = "#52525b";
-export const COLOR_TEXT_STATUS = "#3f3f46";
-export const COLOR_TEXT_CAST = "#22c55e";
-export const COLOR_HEADER = "#71717a";
+export const COLOR_BG_DEFAULT = colors.bgCard;
+export const COLOR_BG_CAST = colors.bgActive;
+export const COLOR_BORDER_DEFAULT = colors.borderDefault;
+export const COLOR_BORDER_CAST = colors.success;
+export const COLOR_TEXT_NAME = colors.textMuted;
+export const COLOR_TEXT_NAME_CAST = colors.textBright;
+export const COLOR_TEXT_CONDITION = colors.textDim;
+export const COLOR_TEXT_STATUS = colors.textDisabled;
+export const COLOR_TEXT_CAST = colors.success;
+export const COLOR_HEADER = colors.textSubtle;
+export const COLOR_BADGE_TEXT = colors.white;
 
 // Opacity
 export const OPACITY_CAST = 1;

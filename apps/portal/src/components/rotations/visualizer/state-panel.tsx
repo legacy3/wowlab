@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { Zap, Heart } from "lucide-react";
 import { GameIcon } from "@/components/game";
+import * as colors from "@/lib/colors";
 import type { PlaybackFrame, SpellInfo } from "./mock-data";
 import { MOCK_SPELLS } from "./mock-data";
 
@@ -96,14 +97,14 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
           icon={Zap}
           current={state.focus}
           max={state.maxFocus}
-          color="#f59e0b"
+          color={colors.warning}
         />
         <ResourceBar
           label="Target"
           icon={Heart}
           current={state.targetHealth}
           max={100}
-          color="#ef4444"
+          color={colors.error}
         />
       </div>
 
