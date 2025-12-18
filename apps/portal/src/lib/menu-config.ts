@@ -18,6 +18,7 @@ import { DiscordIcon, GitHubIcon, LogoIcon } from "./icons";
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 
+// Flat menu item (no subitems)
 export type MenuItem = {
   label: string;
   href: string;
@@ -25,11 +26,21 @@ export type MenuItem = {
   external?: boolean;
 };
 
-export type MenuGroup = {
+// Collapsible nav item with subitems
+export type NavItem = {
   label: string;
-  items: MenuItem[];
+  href: string;
+  icon: Icon;
+  isActive?: boolean;
+  items: SubItem[];
 };
 
+type SubItem = {
+  label: string;
+  href: string;
+};
+
+// Factory functions
 const item = (label: string, href: string, icon: Icon): MenuItem => ({
   label,
   href,
@@ -43,39 +54,46 @@ const link = (label: string, href: string, icon: Icon): MenuItem => ({
   external: true,
 });
 
-const group = (label: string, items: MenuItem[]): MenuGroup => ({
+const sub = (label: string, href: string): SubItem => ({
   label,
+  href,
+});
+
+const nav = (label: string, href: string, icon: Icon, items: SubItem[]): NavItem => ({
+  label,
+  href,
+  icon,
   items,
 });
 
+// Main collapsible navigation items
 // prettier-ignore
-export const menuConfig: MenuGroup[] = [
-  group("Simulate", [
-    item("Simulate", "/simulate", Play),
+export const navMain: NavItem[] = [
+  nav("Simulate", "/simulate", Play, [
+    sub("Quick Sim", "/simulate"),
+    sub("Optimize", "/optimize"),
+    sub("Rankings", "/rankings"),
   ]),
-  group("Plan", [
-    item("Talents", "/talents", Calculator),
+  nav("Plan", "/talents", Calculator, [
+    sub("Talents", "/talents"),
   ]),
-  group("Optimize", [
-    item("Optimize", "/optimize", Sparkles),
+  nav("Rotations", "/rotations", Swords, [
+    sub("Browse", "/rotations"),
+    sub("Create", "/rotations/editor"),
   ]),
-  group("Discover", [
-    item("Rankings", "/rankings", Trophy),
+  nav("Lab", "/lab", FlaskConical, [
+    sub("Overview", "/lab"),
+    sub("Data Inspector", "/lab/inspector/search"),
+    sub("Spec Coverage", "/lab/spec-coverage"),
   ]),
-  group("Rotations", [
-    item("Browse", "/rotations", Swords),
-    item("Create", "/rotations/editor", PencilRuler),
-  ]),
-  group("Lab", [
-    item("Overview", "/lab", FlaskConical),
-    item("Data Inspector", "/lab/inspector/search", Table),
-    item("Spec Coverage", "/lab/spec-coverage", CheckSquare),
-  ]),
-  group("About", [
-    item("About", "/about", LogoIcon),
-    item("Blog", "/blog", Newspaper),
-    item("Docs", "/docs", BookOpen),
-    link("Discord", "/discord", DiscordIcon),
-    link("GitHub", env.GITHUB_REPO_URL, GitHubIcon),
-  ]),
+];
+
+// Secondary flat navigation (docs, resources, etc.)
+// prettier-ignore
+export const navSecondary: MenuItem[] = [
+  item("About", "/about", LogoIcon),
+  item("Blog", "/blog", Newspaper),
+  item("Docs", "/docs", BookOpen),
+  link("Discord", "/discord", DiscordIcon),
+  link("GitHub", env.GITHUB_REPO_URL, GitHubIcon),
 ];

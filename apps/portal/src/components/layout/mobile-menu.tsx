@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { menuConfig } from "@/lib/menu-config";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { navMain, navSecondary } from "@/lib/menu-config";
 import { cn } from "@/lib/utils";
 
 export function MobileMenu() {
@@ -55,37 +60,98 @@ export function MobileMenu() {
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-8rem)]">
-          <div className="flex flex-col space-y-6 px-4 pb-4">
-            {menuConfig.map((group) => (
-              <div key={group.label} className="space-y-2">
-                <h4 className="px-2 text-sm font-semibold text-muted-foreground">
-                  {group.label}
-                </h4>
-                <nav className="flex flex-col space-y-1">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
+          <div className="flex flex-col space-y-2 px-4 pb-4">
+            {/* Main navigation with collapsible sections */}
+            {navMain.map((group) => {
+              const Icon = group.icon;
+              const isGroupActive = pathname.startsWith(group.href);
 
+              return (
+                <Collapsible
+                  key={group.label}
+                  defaultOpen={isGroupActive}
+                  className="group/collapsible"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary/50">
+                    <Icon className="size-4" />
+                    <span className="flex-1 text-left">{group.label}</span>
+                    <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <nav className="ml-4 flex flex-col space-y-1 border-l pl-4 pt-1">
+                      {group.items.map((item) => {
+                        const isActive = pathname === item.href;
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                              "rounded-lg px-3 py-2 text-sm transition-colors",
+                              isActive
+                                ? "bg-secondary text-secondary-foreground"
+                                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                            )}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </nav>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+
+            {/* Separator */}
+            <div className="my-2 border-t" />
+
+            {/* Secondary navigation (flat) */}
+            <div className="space-y-1">
+              <h4 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Resources
+              </h4>
+              <nav className="flex flex-col space-y-1">
+                {navSecondary.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+
+                  if (item.external) {
                     return (
-                      <Link
+                      <a
                         key={item.href}
                         href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         onClick={() => setOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                          isActive
-                            ? "bg-secondary text-secondary-foreground"
-                            : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                        )}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
                       >
                         <Icon className="size-4" />
                         <span>{item.label}</span>
-                      </Link>
+                      </a>
                     );
-                  })}
-                </nav>
-              </div>
-            ))}
+                  }
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                        isActive
+                          ? "bg-secondary text-secondary-foreground"
+                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="size-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
           </div>
         </ScrollArea>
       </SheetContent>
