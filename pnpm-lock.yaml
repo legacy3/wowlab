@@ -313,6 +313,9 @@ importers:
       '@wowlab/specs':
         specifier: workspace:*
         version: link:../../packages/wowlab-specs
+      change-case:
+        specifier: ^5.4.4
+        version: 5.4.4
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, Database, Table2, Check, X } from "lucide-react";
+import { snakeCase } from "change-case";
 import { DBC_TABLE_NAMES } from "@wowlab/core/DbcTableRegistry";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1034,13 +1035,6 @@ const ALL_DBC_TABLES = [
   "ZoneStory",
 ] as const;
 
-function toSnakeCase(str: string): string {
-  return str
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
-    .toLowerCase();
-}
-
 type TableGroup = {
   name: string;
   tables: Array<{ name: string; supported: boolean }>;
@@ -1051,7 +1045,7 @@ function groupTables(supportedSet: Set<string>): TableGroup[] {
   const groups: Record<string, TableGroup["tables"]> = {};
 
   for (const table of ALL_DBC_TABLES) {
-    const snakeName = toSnakeCase(table);
+    const snakeName = snakeCase(table);
     const prefix = snakeName.split("_")[0] ?? "other";
     const supported = supportedSet.has(snakeName);
 
@@ -1083,7 +1077,7 @@ export function TableCoverageContent() {
   const groups = useMemo(() => groupTables(supportedSet), [supportedSet]);
 
   const totalSupported = useMemo(
-    () => ALL_DBC_TABLES.filter((t) => supportedSet.has(toSnakeCase(t))).length,
+    () => ALL_DBC_TABLES.filter((t) => supportedSet.has(snakeCase(t))).length,
     [supportedSet],
   );
 

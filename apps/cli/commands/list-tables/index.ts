@@ -1,5 +1,6 @@
 import { Command, Options } from "@effect/cli";
 import { DBC_TABLE_NAMES } from "@wowlab/core/DbcTableRegistry";
+import { snakeCase } from "change-case";
 import * as Effect from "effect/Effect";
 import * as fs from "node:fs";
 
@@ -18,9 +19,9 @@ const listTablesProgram = (format: "json" | "ts" | "plain") =>
       .map((f) => f.replace(".csv", ""))
       .sort();
 
-    const supported = new Set(DBC_TABLE_NAMES);
+    const supported: Set<string> = new Set(DBC_TABLE_NAMES);
     const supportedCount = allTables.filter((t) =>
-      supported.has(toSnakeCase(t)),
+      supported.has(snakeCase(t)),
     ).length;
 
     if (format === "json") {
@@ -29,7 +30,7 @@ const listTablesProgram = (format: "json" | "ts" | "plain") =>
         supported: supportedCount,
         tables: allTables.map((t) => ({
           name: t,
-          supported: supported.has(toSnakeCase(t)),
+          supported: supported.has(snakeCase(t)),
         })),
         total: allTables.length,
       };
@@ -49,20 +50,11 @@ const listTablesProgram = (format: "json" | "ts" | "plain") =>
         `Coverage: ${((supportedCount / allTables.length) * 100).toFixed(1)}%\n`,
       );
       for (const t of allTables) {
-        // @ts-ignore TODO Fix this
-        const mark = supported.has(toSnakeCase(t)) ? "Y" : "N";
+        const mark = supported.has(snakeCase(t)) ? "Y" : "N";
         console.log(`[${mark}] ${t}`);
       }
     }
   });
-
-// TODO use cbange-case from npm
-function toSnakeCase(str: string): string {
-  return str
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
-    .toLowerCase();
-}
 
 export const listTablesCommand = Command.make(
   "list-tables",
