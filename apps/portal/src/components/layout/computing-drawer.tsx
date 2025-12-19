@@ -3,14 +3,7 @@
 import { useAtom, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import Link from "next/link";
-import {
-  Cpu,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  X,
-  ExternalLink,
-} from "lucide-react";
+import { Cpu, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +26,13 @@ import {
 // Drawer open state - can be controlled from anywhere
 export const computingDrawerOpenAtom = atom(false);
 
-function JobCard({ job }: { job: SimulationJob }) {
+function JobCard({
+  job,
+  onClose,
+}: {
+  job: SimulationJob;
+  onClose: () => void;
+}) {
   const cancelJob = useSetAtom(cancelJobAtom);
 
   const statusIcon = {
@@ -90,11 +89,14 @@ function JobCard({ job }: { job: SimulationJob }) {
       )}
 
       {job.status === "completed" && job.result && (
-        <Button variant="outline" size="sm" className="w-full" asChild>
-          <Link href={`/simulate/results/${job.id}`}>
-            View Results
-            <ExternalLink className="ml-2 h-3 w-3" />
-          </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          asChild
+          onClick={onClose}
+        >
+          <Link href={`/simulate/results/${job.id}`}>View Results</Link>
         </Button>
       )}
     </div>
@@ -136,7 +138,11 @@ export function ComputingDrawer() {
               </h3>
               <div className="space-y-3">
                 {activeJobs.map((job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onClose={() => setOpen(false)}
+                  />
                 ))}
               </div>
             </div>
@@ -150,7 +156,11 @@ export function ComputingDrawer() {
               </h3>
               <div className="space-y-3">
                 {completedJobs.slice(0, 5).map((job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onClose={() => setOpen(false)}
+                  />
                 ))}
               </div>
             </div>

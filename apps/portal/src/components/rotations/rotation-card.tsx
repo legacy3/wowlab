@@ -19,7 +19,7 @@ interface RotationCardProps {
 export function RotationCard({ rotation }: RotationCardProps) {
   return (
     <Link href={`/rotations/${rotation.id}`}>
-      <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full">
+      <Card className="hover:border-primary/50 cursor-pointer h-full">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">

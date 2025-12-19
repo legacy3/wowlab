@@ -28,7 +28,11 @@ export function CopyButton({ className, value, label }: CopyButtonProps) {
       )}
       onClick={handleCopy}
     >
-      {state.copied ? <Check className="text-success" /> : <Copy />}
+      {state.copied ? (
+        <Check className="text-green-500 animate-in zoom-in-50 duration-200" />
+      ) : (
+        <Copy />
+      )}
     </Button>
   );
 }

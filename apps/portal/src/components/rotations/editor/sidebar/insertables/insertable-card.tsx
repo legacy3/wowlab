@@ -54,7 +54,7 @@ export function InsertableCard({
             onClick={() => copy(snippet)}
           >
             {copied ? (
-              <Check className="h-3 w-3 text-green-500" />
+              <Check className="h-3 w-3 text-green-500 animate-in zoom-in-50 duration-200" />
             ) : (
               <Copy className="h-3 w-3" />
             )}

@@ -128,7 +128,7 @@ export const queryTable = (
         errorMsg.includes("does not exist") || errorMsg.includes("column")
           ? " (Note: column names are case-sensitive, use get_schema to check exact names)"
           : "";
-          
+
       return yield* Effect.fail(
         new DbcQueryError({
           message: `Query error on ${table}: ${errorMsg}${hint}`,

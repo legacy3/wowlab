@@ -27,7 +27,7 @@ export function LandingCard({
 }: LandingCardProps) {
   return (
     <Link href={href} className="block h-full">
-      <Card className="h-full transition-colors hover:border-primary/50">
+      <Card className="h-full hover:border-primary/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />
