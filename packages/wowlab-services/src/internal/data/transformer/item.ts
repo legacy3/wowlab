@@ -150,12 +150,19 @@ export const transformItem = (
     }
 
     // Resolve Classification
-    const [itemClass, itemSubClass] = yield* Effect.all(
+    // Note: item_class.ID != item_class.ClassID, so we must lookup by ClassID field
+    // Similarly, item_sub_class requires matching both ClassID and SubClassID
+    const [itemClasses, itemSubClasses] = yield* Effect.all(
       [
-        dbc.getById("item_class", item.ClassID),
-        dbc.getById("item_sub_class", item.SubclassID),
+        dbc.getManyByFk("item_class", "ClassID", item.ClassID),
+        dbc.getManyByFk("item_sub_class", "ClassID", item.ClassID),
       ],
       { batching: true },
+    );
+
+    const itemClass = itemClasses[0];
+    const itemSubClass = itemSubClasses.find(
+      (sc) => sc.SubClassID === item.SubclassID,
     );
 
     const expansionId = sparse?.ExpansionID ?? 0;

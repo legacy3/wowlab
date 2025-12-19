@@ -123,9 +123,15 @@ export const queryTable = (
     });
 
     if (result.error) {
+      const errorMsg = result.error.message;
+      const hint =
+        errorMsg.includes("does not exist") || errorMsg.includes("column")
+          ? " (Note: column names are case-sensitive, use get_schema to check exact names)"
+          : "";
+          
       return yield* Effect.fail(
         new DbcQueryError({
-          message: `Query error on ${table}: ${result.error.message}`,
+          message: `Query error on ${table}: ${errorMsg}${hint}`,
         }),
       );
     }
@@ -139,7 +145,8 @@ export const searchSpells = (
   limit: number = 10,
 ) =>
   Effect.gen(function* () {
-    const result = yield* Effect.tryPromise({
+    // First search spell_name for matching names
+    const nameResult = yield* Effect.tryPromise({
       catch: (cause) =>
         new DbcQueryError({
           cause,
@@ -154,17 +161,50 @@ export const searchSpells = (
           .limit(limit),
     });
 
-    if (result.error) {
+    if (nameResult.error) {
       return yield* Effect.fail(
         new DbcQueryError({
-          message: `Search error: ${result.error.message}`,
+          message: `Search error: ${nameResult.error.message}`,
         }),
       );
     }
 
-    return (result.data ?? []).map(
+    const spellIds = (nameResult.data ?? []).map(
+      (row: { ID: number }) => row.ID,
+    );
+
+    if (spellIds.length === 0) {
+      return [];
+    }
+
+    // Fetch descriptions from spell table
+    const descResult = yield* Effect.tryPromise({
+      catch: (cause) =>
+        new DbcQueryError({
+          cause,
+          message: `Failed to fetch spell descriptions`,
+        }),
+      try: () =>
+        supabase
+          .schema("raw_dbc")
+          .from("spell")
+          .select("ID, Description_lang")
+          .in("ID", spellIds),
+    });
+
+    const descMap = new Map<number, string>();
+    if (!descResult.error && descResult.data) {
+      for (const row of descResult.data as Array<{
+        ID: number;
+        Description_lang: string;
+      }>) {
+        descMap.set(row.ID, row.Description_lang || "");
+      }
+    }
+
+    return (nameResult.data ?? []).map(
       (row: { ID: number; Name_lang: string }) => ({
-        description: "",
+        description: descMap.get(row.ID) || "",
         id: row.ID,
         name: row.Name_lang || "",
       }),
