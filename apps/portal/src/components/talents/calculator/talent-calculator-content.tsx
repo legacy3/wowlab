@@ -157,6 +157,7 @@ function TalentCalculatorInner() {
       {showTalentInput && (
         <TalentStringBar
           talents={talents}
+          specId={effectiveSpecId}
           onTalentStringChange={handleTalentStringChange}
         />
       )}

@@ -16,7 +16,7 @@ function SpellDescription({
   );
 
   if (isLoading && !data) {
-    return <span>Loading description...</span>;
+    return <span>Loading description ...</span>;
   }
 
   return <span>{data?.text ?? fallback ?? "No description available."}</span>;
