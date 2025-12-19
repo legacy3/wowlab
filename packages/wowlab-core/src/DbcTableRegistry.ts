@@ -214,7 +214,7 @@ const getTypeString = (rawAst: AST.AST): string => {
       if (types.length === 2 && types.includes("null")) {
         return `${types.find((t) => t !== "null")} | null`;
       }
-      
+
       return types.join(" | ");
     }),
     Match.when(

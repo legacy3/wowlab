@@ -53,29 +53,7 @@ export function RotationsBrowse() {
     pagination: { pageSize: 50 },
   });
 
-  if (isLoading) {
-    return <RotationsBrowseSkeleton />;
-  }
-
-  if (isError) {
-    return <div>Error loading rotations</div>;
-  }
-
   const rotations = result?.data ?? [];
-
-  if (rotations.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Library className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">No rotations yet</p>
-          <p className="text-sm text-muted-foreground">
-            Check back soon for community rotations
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const classFilteredRotations = useMemo(() => {
     if (classFilter === "all") {
@@ -91,6 +69,28 @@ export function RotationsBrowse() {
     keys: ["name", "spec", "description"],
     threshold: 0.4,
   });
+
+  if (isLoading) {
+    return <RotationsBrowseSkeleton />;
+  }
+
+  if (isError) {
+    return <div>Error loading rotations</div>;
+  }
+
+  if (rotations.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <Library className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">No rotations yet</p>
+          <p className="text-sm text-muted-foreground">
+            Check back soon for community rotations
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const activeFilterCount = classFilter !== "all" ? 1 : 0;
 
