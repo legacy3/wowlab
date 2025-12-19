@@ -9,14 +9,18 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as path from "node:path";
 
-import { DBC_DATA_DIR } from "../shared/dbc-config.js";
+import {
+  DBC_DATA_DIR,
+  DBC_TABLE_KEYS,
+  DBC_TABLES,
+  type DbcTableKey,
+} from "../shared/dbc-config.js";
 import {
   createSupabaseClient,
   insertInBatches,
   MissingEnvironmentError,
   SupabaseError,
 } from "../shared/supabase.js";
-import { DBC_TABLE_KEYS, DBC_TABLES, type DbcTableKey } from "./config.js";
 
 const BATCH_SIZE = 1000;
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMediaQuery } from "@react-hookz/web";
 
 const MOBILE_BREAKPOINT = 768;

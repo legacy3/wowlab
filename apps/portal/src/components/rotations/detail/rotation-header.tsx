@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/account/user-avatar";
+import { UserHandle } from "@/components/ui/user-handle";
 import { SpecLabel } from "@/components/ui/spec-label";
 import type { Rotation, Profile } from "@/lib/supabase/types";
 
@@ -62,12 +63,7 @@ export const RotationHeader = memo(function RotationHeader({
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link
-              href={`/users/${author?.handle ?? "unknown"}`}
-              className="hover:text-foreground transition-colors"
-            >
-              @{author?.handle ?? "unknown"}
-            </Link>
+            <UserHandle handle={author?.handle ?? "unknown"} size="sm" />
             <span>·</span>
             <SpecLabel specId={253} size="sm" showChevron showIcon />
           </div>

@@ -4,6 +4,7 @@ import type {
   SimcTalents,
   WowClass,
 } from "@wowlab/parsers";
+import { capitalCase } from "change-case";
 import type {
   CharacterProfession,
   CharacterSummary,
@@ -52,13 +53,6 @@ const CLASS_NAMES: Record<WowClass, string> = {
   warrior: "Warrior",
 };
 
-function toTitleCase(str: string): string {
-  return str
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
-
 export function simcProfileToPortalData(profile: SimcProfile): ParsedSimcData {
   const { character, equipment } = profile;
 
@@ -66,10 +60,10 @@ export function simcProfileToPortalData(profile: SimcProfile): ParsedSimcData {
     class: CLASS_NAMES[character.wowClass],
     level: character.level,
     name: character.name,
-    race: toTitleCase(character.race),
+    race: capitalCase(character.race),
     region: character.region?.toUpperCase() ?? "Unknown",
     server: character.server ?? "Unknown",
-    spec: character.spec ? toTitleCase(character.spec) : undefined,
+    spec: character.spec ? capitalCase(character.spec) : undefined,
   };
 
   const professions: CharacterProfession[] = character.professions.map((p) => ({

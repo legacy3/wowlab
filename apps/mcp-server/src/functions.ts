@@ -298,6 +298,34 @@ type HandlerEffect = Effect.Effect<
   DbcService | ExtractorService
 >;
 
+const numberArg = (
+  args: HandlerArgs,
+  key: string,
+  options?: { defaultValue?: number; required?: boolean },
+): Effect.Effect<number, Error> =>
+  Effect.sync(() => {
+    const raw = args[key];
+
+    if (raw === undefined || raw === null) {
+      if (options?.required) {
+        throw new Error(`Missing required arg '${key}'`);
+      }
+
+      if (options?.defaultValue != null) {
+        return options.defaultValue;
+      }
+
+      throw new Error(`Missing arg '${key}'`);
+    }
+
+    const value = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(value)) {
+      throw new Error(`Arg '${key}' must be a finite number`);
+    }
+
+    return value;
+  });
+
 export const FUNCTION_HANDLERS: Record<
   AllowedFunction,
   (args: HandlerArgs) => HandlerEffect
@@ -305,9 +333,8 @@ export const FUNCTION_HANDLERS: Record<
   extractAuraRestrictions: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractAuraRestrictions(
-        args.spellId as number,
-      );
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractAuraRestrictions(spellId);
       return Option.getOrNull(result);
     }),
 
@@ -315,8 +342,9 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
       const misc = Option.fromNullable(
-        yield* dbc.getSpellMisc(args.spellId as number),
+        yield* dbc.getOneByFk("spell_misc", "SpellID", spellId),
       );
       const result = yield* extractor.extractCastTime(misc);
       return Option.getOrNull(result);
@@ -325,38 +353,39 @@ export const FUNCTION_HANDLERS: Record<
   extractCharges: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractCharges(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractCharges(spellId);
       return Option.getOrNull(result);
     }),
 
   extractClassOptions: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractClassOptions(
-        args.spellId as number,
-      );
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractClassOptions(spellId);
       return Option.getOrNull(result);
     }),
 
   extractCooldown: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractCooldown(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractCooldown(spellId);
       return Option.getOrNull(result);
     }),
 
   extractDescription: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      return yield* extractor.extractDescription(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      return yield* extractor.extractDescription(spellId);
     }),
 
   extractDescriptionVariables: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractDescriptionVariables(
-        args.spellId as number,
-      );
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractDescriptionVariables(spellId);
       return Option.getOrNull(result);
     }),
 
@@ -364,8 +393,9 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
       const misc = Option.fromNullable(
-        yield* dbc.getSpellMisc(args.spellId as number),
+        yield* dbc.getOneByFk("spell_misc", "SpellID", spellId),
       );
       const result = yield* extractor.extractDuration(misc);
       return Option.getOrNull(result);
@@ -374,7 +404,8 @@ export const FUNCTION_HANDLERS: Record<
   extractEmpower: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractEmpower(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractEmpower(spellId);
       return Option.getOrElse(result, () => ({
         canEmpower: false,
         stages: [],
@@ -384,33 +415,38 @@ export const FUNCTION_HANDLERS: Record<
   extractInterrupts: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractInterrupts(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractInterrupts(spellId);
       return Option.getOrNull(result);
     }),
 
   extractLearnSpells: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      return yield* extractor.extractLearnSpells(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      return yield* extractor.extractLearnSpells(spellId);
     }),
 
   extractLevels: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractLevels(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractLevels(spellId);
       return Option.getOrNull(result);
     }),
 
   extractName: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      return yield* extractor.extractName(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      return yield* extractor.extractName(spellId);
     }),
 
   extractPower: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractPower(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractPower(spellId);
       return Option.getOrNull(result);
     }),
 
@@ -418,7 +454,12 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const effects = yield* dbc.getSpellEffects(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       return yield* extractor.extractRadius(effects);
     }),
 
@@ -426,8 +467,9 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
       const misc = Option.fromNullable(
-        yield* dbc.getSpellMisc(args.spellId as number),
+        yield* dbc.getOneByFk("spell_misc", "SpellID", spellId),
       );
       const result = yield* extractor.extractRange(misc);
       return Option.getOrNull(result);
@@ -436,9 +478,8 @@ export const FUNCTION_HANDLERS: Record<
   extractReplacement: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractReplacement(
-        args.spellId as number,
-      );
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractReplacement(spellId);
       return Option.getOrNull(result);
     }),
 
@@ -446,23 +487,28 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const effects = yield* dbc.getSpellEffects(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       return extractor.extractScaling(effects);
     }),
 
   extractShapeshift: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractShapeshift(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractShapeshift(spellId);
       return Option.getOrNull(result);
     }),
 
   extractTargetRestrictions: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractTargetRestrictions(
-        args.spellId as number,
-      );
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractTargetRestrictions(spellId);
 
       return Option.getOrNull(result);
     }),
@@ -470,7 +516,8 @@ export const FUNCTION_HANDLERS: Record<
   extractTotems: (args) =>
     Effect.gen(function* () {
       const extractor = yield* ExtractorService;
-      const result = yield* extractor.extractTotems(args.spellId as number);
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const result = yield* extractor.extractTotems(spellId);
       return Option.getOrNull(result);
     }),
 
@@ -478,10 +525,16 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const spellId = args.spellId as number;
-      const effectIndex = (args.effectIndex as number) ?? 0;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const effectIndex = yield* numberArg(args, "effectIndex", {
+        defaultValue: 0,
+      });
 
-      const effects = yield* dbc.getSpellEffects(spellId);
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       const effect = effects[effectIndex];
 
       if (!effect) {
@@ -489,10 +542,14 @@ export const FUNCTION_HANDLERS: Record<
       }
 
       const config = {
-        contentTuningId: (args.contentTuningId as number) ?? 1279,
-        expansion: (args.expansion as number) ?? 10,
-        level: (args.level as number) ?? 80,
-        mythicPlusSeasonId: (args.mythicPlusSeasonId as number) ?? 103,
+        contentTuningId: yield* numberArg(args, "contentTuningId", {
+          defaultValue: 1279,
+        }),
+        expansion: yield* numberArg(args, "expansion", { defaultValue: 10 }),
+        level: yield* numberArg(args, "level", { defaultValue: 80 }),
+        mythicPlusSeasonId: yield* numberArg(args, "mythicPlusSeasonId", {
+          defaultValue: 103,
+        }),
       };
 
       return yield* extractor.getDamage(effect, config);
@@ -502,11 +559,19 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const spellId = args.spellId as number;
-      const effectType = (args.effectType as number) ?? 2;
-      const difficultyId = (args.difficultyId as number) ?? 0;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const effectType = yield* numberArg(args, "effectType", {
+        defaultValue: 2,
+      });
+      const difficultyId = yield* numberArg(args, "difficultyId", {
+        defaultValue: 0,
+      });
 
-      const effects = yield* dbc.getSpellEffects(spellId);
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       return yield* extractor.getEffectsForDifficulty(
         effects,
         effectType,
@@ -518,10 +583,16 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const spellId = args.spellId as number;
-      const difficultyId = (args.difficultyId as number) ?? 0;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const difficultyId = yield* numberArg(args, "difficultyId", {
+        defaultValue: 0,
+      });
 
-      const effects = yield* dbc.getSpellEffects(spellId);
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       return yield* extractor.getVarianceForDifficulty(effects, difficultyId);
     }),
 
@@ -529,10 +600,16 @@ export const FUNCTION_HANDLERS: Record<
     Effect.gen(function* () {
       const dbc = yield* DbcService;
       const extractor = yield* ExtractorService;
-      const spellId = args.spellId as number;
-      const difficultyId = (args.difficultyId as number) ?? 0;
+      const spellId = yield* numberArg(args, "spellId", { required: true });
+      const difficultyId = yield* numberArg(args, "difficultyId", {
+        defaultValue: 0,
+      });
 
-      const effects = yield* dbc.getSpellEffects(spellId);
+      const effects = yield* dbc.getManyByFk(
+        "spell_effect",
+        "SpellID",
+        spellId,
+      );
       return yield* extractor.hasAoeDamageEffect(effects, difficultyId);
     }),
 };

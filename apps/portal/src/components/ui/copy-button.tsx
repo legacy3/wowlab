@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 interface CopyButtonProps {
   className?: string;
   value: string;
+  label: string;
 }
 
-export function CopyButton({ className, value }: CopyButtonProps) {
-  const [state, copyToClipboard] = useCopyToClipboard();
+export function CopyButton({ className, value, label }: CopyButtonProps) {
+  const [state, copyToClipboard] = useCopyToClipboard(label);
 
   const handleCopy = () => {
     copyToClipboard(value);

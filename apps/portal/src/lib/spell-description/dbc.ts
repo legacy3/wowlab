@@ -91,26 +91,26 @@ export function loadSpellDbcData(
       xDescVars,
     ] = yield* Effect.all(
       [
-        dbc.getSpell(spellId),
-        dbc.getSpellName(spellId),
-        dbc.getSpellEffects(spellId),
-        dbc.getSpellMisc(spellId),
-        dbc.getSpellAuraOptions(spellId),
-        dbc.getSpellTargetRestrictions(spellId),
-        dbc.getSpellPower(spellId),
-        dbc.getSpellXDescriptionVariables(spellId),
+        dbc.getById("spell", spellId),
+        dbc.getById("spell_name", spellId),
+        dbc.getManyByFk("spell_effect", "SpellID", spellId),
+        dbc.getOneByFk("spell_misc", "SpellID", spellId),
+        dbc.getOneByFk("spell_aura_options", "SpellID", spellId),
+        dbc.getOneByFk("spell_target_restrictions", "SpellID", spellId),
+        dbc.getManyByFk("spell_power", "SpellID", spellId),
+        dbc.getManyByFk("spell_x_description_variables", "SpellID", spellId),
       ],
       { batching: true },
     );
 
     const duration =
       misc && misc.DurationIndex !== 0
-        ? yield* dbc.getSpellDuration(misc.DurationIndex)
+        ? yield* dbc.getById("spell_duration", misc.DurationIndex)
         : undefined;
 
     const range =
       misc && misc.RangeIndex !== 0
-        ? yield* dbc.getSpellRange(misc.RangeIndex)
+        ? yield* dbc.getById("spell_range", misc.RangeIndex)
         : undefined;
 
     const radiusIndices = Array.from(
@@ -121,7 +121,7 @@ export function loadSpellDbcData(
 
     const radiusRows = yield* Effect.forEach(
       radiusIndices,
-      (id) => dbc.getSpellRadius(id),
+      (id) => dbc.getById("spell_radius", id),
       { batching: true, concurrency: "unbounded" },
     );
 
@@ -137,7 +137,8 @@ export function loadSpellDbcData(
     const firstX = xDescVars.find((x) => x.SpellDescriptionVariablesID != null);
     const varsRow =
       firstX && firstX.SpellDescriptionVariablesID != null
-        ? yield* dbc.getSpellDescriptionVariables(
+        ? yield* dbc.getById(
+            "spell_description_variables",
             firstX.SpellDescriptionVariablesID,
           )
         : undefined;

@@ -20,7 +20,7 @@ export function TalentStringBar({
         onChange={(e) => onTalentStringChange(e.target.value.trim() || null)}
         className="flex-1 font-mono text-sm"
       />
-      {talents && <CopyButton value={talents} />}
+      {talents && <CopyButton value={talents} label="Talent String" />}
       <Button
         variant="outline"
         size="icon"

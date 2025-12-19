@@ -3,6 +3,7 @@ import { generateSchemasCommand } from "./generate-schemas/index.js";
 import { generateSpellsCommand } from "./generate-spells/index.js";
 import { helloWorldCommand } from "./hello-world/index.js";
 import { killCommand } from "./kill/index.js";
+import { listTablesCommand } from "./list-tables/index.js";
 import { uploadDbcCommand } from "./upload-dbc/index.js";
 
 export const commands = [
@@ -11,5 +12,6 @@ export const commands = [
   generateSpellsCommand,
   helloWorldCommand,
   killCommand,
+  listTablesCommand,
   uploadDbcCommand,
 ] as const;

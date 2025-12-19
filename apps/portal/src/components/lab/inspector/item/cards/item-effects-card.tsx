@@ -15,10 +15,28 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Zap } from "lucide-react";
+import Link from "next/link";
 import { useItemData } from "../item-context";
 
 export function ItemEffectsCard() {
   const item = useItemData();
+
+  // Parse spell references from effect strings like "Spell #12345"
+  const parseEffect = (effect: string) => {
+    const spellMatch = effect.match(/Spell #(\d+)/);
+    if (spellMatch) {
+      const spellId = spellMatch[1];
+      return (
+        <Link
+          href={`/lab/inspector/spell/${spellId}`}
+          className="text-green-500 underline decoration-dotted underline-offset-2 transition-colors hover:text-green-400"
+        >
+          {effect}
+        </Link>
+      );
+    }
+    return <span className="text-green-500">{effect}</span>;
+  };
 
   return (
     <Card className="h-full">
@@ -36,7 +54,7 @@ export function ItemEffectsCard() {
           <div className="space-y-3">
             {item.effects.map((effect, i) => (
               <div key={i} className="rounded-lg border bg-muted/30 p-3">
-                <p className="text-sm text-green-500">{effect}</p>
+                <p className="text-sm">{parseEffect(effect)}</p>
               </div>
             ))}
           </div>

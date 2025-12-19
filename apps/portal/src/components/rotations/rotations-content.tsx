@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useList } from "@refinedev/core";
 import { RotationsList } from "./rotations-list";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Library, Search, X } from "lucide-react";
+import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import type { Rotation } from "@/lib/supabase/types";
 
 function RotationsBrowseSkeleton() {
@@ -76,17 +77,19 @@ export function RotationsBrowse() {
     );
   }
 
-  const filteredRotations = rotations.filter((rotation) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      rotation.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rotation.spec.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rotation.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const classFilteredRotations = useMemo(() => {
+    if (classFilter === "all") {
+      return rotations;
+    }
 
-    const matchesClass =
-      classFilter === "all" || rotation.class === classFilter;
+    return rotations.filter((r) => r.class === classFilter);
+  }, [rotations, classFilter]);
 
-    return matchesSearch && matchesClass;
+  const { results: filteredRotations } = useFuzzySearch({
+    items: classFilteredRotations,
+    query: searchQuery,
+    keys: ["name", "spec", "description"],
+    threshold: 0.4,
   });
 
   const activeFilterCount = classFilter !== "all" ? 1 : 0;

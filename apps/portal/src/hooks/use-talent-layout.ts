@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import type { Talent } from "@wowlab/core/Schemas";
 import type {

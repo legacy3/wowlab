@@ -1,3 +1,5 @@
+import { constantCase } from "change-case";
+
 export interface Spell {
   id: number;
   name: string;
@@ -83,20 +85,13 @@ export const MOCK_SPELLS: Spell[] = [
   },
 ];
 
-export function toConstantCase(name: string): string {
-  return name
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "_")
-    .replace(/_+/g, "_");
-}
-
 export function generateSpellIdSnippet(spell: Spell): string {
-  const constName = toConstantCase(spell.name);
+  const constName = constantCase(spell.name);
   return `${constName}: ${spell.id},`;
 }
 
 export function generateCastSnippet(spell: Spell): string {
-  const constName = toConstantCase(spell.name);
+  const constName = constantCase(spell.name);
   const varName = spell.name.toLowerCase().replace(/\s+/g, "");
 
   if (spell.gcd) {

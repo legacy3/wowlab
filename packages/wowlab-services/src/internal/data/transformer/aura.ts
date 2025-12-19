@@ -19,7 +19,7 @@ export const transformAura = (
     const dbc = yield* DbcService;
     const extractor = yield* ExtractorService;
 
-    const nameRow = yield* dbc.getSpellName(spellId);
+    const nameRow = yield* dbc.getById("spell_name", spellId);
     if (!nameRow) {
       return yield* Effect.fail(
         new Errors.SpellInfoNotFound({
@@ -31,9 +31,9 @@ export const transformAura = (
 
     const [misc, effects, auraOptions] = yield* Effect.all(
       [
-        dbc.getSpellMisc(spellId),
-        dbc.getSpellEffects(spellId),
-        dbc.getSpellAuraOptions(spellId),
+        dbc.getOneByFk("spell_misc", "SpellID", spellId),
+        dbc.getManyByFk("spell_effect", "SpellID", spellId),
+        dbc.getOneByFk("spell_aura_options", "SpellID", spellId),
       ],
       { batching: true },
     );

@@ -23,9 +23,24 @@ export const TABLE_FIELD_OVERRIDES: Record<
   ItemEffect: {
     SpellID: "Branded.SpellIDSchema",
   },
+  ItemSetSpell: {
+    SpellID: "Branded.SpellIDSchema",
+  },
   ManifestInterfaceData: {
     FileName: "string",
     FilePath: "string",
+  },
+  OverrideSpellData: {
+    Spells_0: "Branded.SpellIDSchema",
+    Spells_1: "Branded.SpellIDSchema",
+    Spells_2: "Branded.SpellIDSchema",
+    Spells_3: "Branded.SpellIDSchema",
+    Spells_4: "Branded.SpellIDSchema",
+    Spells_5: "Branded.SpellIDSchema",
+    Spells_6: "Branded.SpellIDSchema",
+    Spells_7: "Branded.SpellIDSchema",
+    Spells_8: "Branded.SpellIDSchema",
+    Spells_9: "Branded.SpellIDSchema",
   },
   Spell: {
     ID: "Branded.SpellIDSchema",
@@ -57,7 +72,13 @@ export const TABLE_FIELD_OVERRIDES: Record<
   SpellEmpower: {
     SpellID: "Branded.SpellIDSchema",
   },
+  SpellEquippedItems: {
+    SpellID: "Branded.SpellIDSchema",
+  },
   SpellInterrupts: {
+    SpellID: "Branded.SpellIDSchema",
+  },
+  SpellLabel: {
     SpellID: "Branded.SpellIDSchema",
   },
   SpellLearnSpell: {
@@ -80,6 +101,9 @@ export const TABLE_FIELD_OVERRIDES: Record<
   SpellReplacement: {
     SpellID: "Branded.SpellIDSchema",
   },
+  SpellScaling: {
+    SpellID: "Branded.SpellIDSchema",
+  },
   SpellShapeshift: {
     SpellID: "Branded.SpellIDSchema",
   },
@@ -94,6 +118,9 @@ export const TABLE_FIELD_OVERRIDES: Record<
   },
   SpellXDescriptionVariables: {
     SpellID: "Branded.SpellIDSchema",
+  },
+  UiTextureAtlasElement: {
+    Name: "string",
   },
 };
 

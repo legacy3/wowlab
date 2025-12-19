@@ -1,5 +1,8 @@
+"use client";
+
 import { useTimeoutEffect } from "@react-hookz/web";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export interface CopyToClipboardState {
   readonly copied: boolean;
@@ -7,10 +10,9 @@ export interface CopyToClipboardState {
   readonly value?: string;
 }
 
-export function useCopyToClipboard(): [
-  CopyToClipboardState,
-  (value: string) => void,
-] {
+export function useCopyToClipboard(
+  label: string,
+): [CopyToClipboardState, (value: string) => void] {
   const [state, setState] = useState<CopyToClipboardState>({
     copied: false,
     error: null,
@@ -39,6 +41,9 @@ export function useCopyToClipboard(): [
           error: null,
           value,
         });
+
+        toast.success(`Copied ${label} to clipboard`);
+
         reset();
       },
       (error) => {
@@ -47,6 +52,8 @@ export function useCopyToClipboard(): [
           error,
           value: undefined,
         });
+
+        toast.error("Failed to copy to clipboard");
       },
     );
   };

@@ -1,3 +1,5 @@
+"use client";
+
 import type { TopSimRow } from "@/lib/supabase/types";
 import { useSupabaseView } from "./use-supabase-view";
 

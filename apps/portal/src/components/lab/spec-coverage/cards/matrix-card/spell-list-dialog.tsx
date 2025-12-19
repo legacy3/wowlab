@@ -31,6 +31,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { WowSpellLink } from "@/components/game";
 import { GithubSearchLink } from "@/components/shared/github-search-link";
 import { useJsonExport } from "@/hooks/use-json-export";
+import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { GAME_CONFIG } from "@/lib/config/game";
 
 import type { SpecCoverageSpell } from "@/hooks/use-spec-coverage";
@@ -51,9 +52,7 @@ export function SpellListDialog({
   >("all");
   const [search, setSearch] = useState("");
 
-  const normalizedSearch = search.trim().toLowerCase();
-
-  const visibleSpells = useMemo(() => {
+  const preFilteredSpells = useMemo(() => {
     const spells = spec?.spells ?? [];
 
     const passivesFiltered = hidePassives
@@ -67,17 +66,15 @@ export function SpellListDialog({
           ? passivesFiltered.filter((s) => !s.supported)
           : passivesFiltered;
 
-    if (!normalizedSearch) {
-      return statusFiltered;
-    }
+    return statusFiltered;
+  }, [spec, hidePassives, statusFilter]);
 
-    return statusFiltered.filter((s) => {
-      const id = String(s.id);
-      const name = s.name.toLowerCase();
-
-      return name.includes(normalizedSearch) || id.includes(normalizedSearch);
-    });
-  }, [spec, hidePassives, statusFilter, normalizedSearch]);
+  const { results: visibleSpells } = useFuzzySearch({
+    items: preFilteredSpells,
+    query: search,
+    keys: ["name", "id"],
+    threshold: 0.3,
+  });
 
   const groups = useMemo(() => {
     const grouped = new Map<
@@ -141,6 +138,7 @@ export function SpellListDialog({
     filenamePrefix: "spec-coverage-spec",
     filenameTag: spec ? String(spec.specId) : undefined,
     patchVersion: GAME_CONFIG.patchVersion,
+    label: "Spell List",
     resetKey: spec ? spec.specId : null,
   });
 
@@ -164,7 +162,7 @@ export function SpellListDialog({
                 </div>
                 {exportJson && (
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <CopyButton value={exportJson} />
+                    <CopyButton value={exportJson} label="Spell List" />
                     <Button
                       variant="ghost"
                       size="icon-sm"

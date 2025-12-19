@@ -155,12 +155,8 @@ export function DataInspector() {
               </>
             )}
 
-            <Link
-              href={`https://www.wowhead.com/${type}=${id}`}
-              external
-              className="text-xs"
-            >
-              View on Wowhead
+            <Link href={`/lab/inspector/${type}/${id}`} className="text-xs">
+              View in Inspector
             </Link>
           </div>
         </ScrollArea>

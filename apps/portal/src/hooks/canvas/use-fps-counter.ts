@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useSyncExternalStore, type RefObject } from "react";
 import Konva from "konva";
 

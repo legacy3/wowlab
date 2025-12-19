@@ -30,7 +30,7 @@ export const SourceTab = memo(function SourceTab({ rotation }: SourceTabProps) {
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{lineCount} lines</span>
         <div className="flex items-center gap-1">
-          <CopyButton value={rotation.script} />
+          <CopyButton value={rotation.script} label="Source" />
           <Button variant="ghost" size="icon-sm" onClick={handleDownload}>
             <Download className="h-4 w-4" />
           </Button>

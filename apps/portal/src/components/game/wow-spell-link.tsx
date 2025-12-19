@@ -8,7 +8,7 @@ export function WowSpellLink({ spellId }: { spellId: number }) {
 
   return (
     <WowLink
-      href={`https://www.wowhead.com/spell=${spellId}`}
+      href={`/lab/inspector/spell/${spellId}`}
       name={spell?.name}
       fallback={`Spell ${spellId}`}
       isLoading={isLoading}

@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { UserAvatar } from "@/components/account/user-avatar";
+import { UserHandle } from "@/components/ui/user-handle";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Profile } from "@/lib/supabase/types";
@@ -61,7 +62,9 @@ function UserProfileInner({ userId }: UserProfileProps) {
           />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <CardTitle>@{user.handle}</CardTitle>
+              <CardTitle>
+                <UserHandle handle={user.handle} linkTo={false} />
+              </CardTitle>
               {isOwnProfile && <Badge variant="secondary">You</Badge>}
             </div>
             <CardDescription>

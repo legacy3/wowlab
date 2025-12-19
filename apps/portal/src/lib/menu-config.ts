@@ -85,6 +85,7 @@ export const navMain: NavItem[] = [
     sub("Overview", "/lab"),
     sub("Data Inspector", "/lab/inspector/search"),
     sub("Spec Coverage", "/lab/spec-coverage"),
+    sub("Table Coverage", "/lab/table-coverage"),
   ]),
 ];
 

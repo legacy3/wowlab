@@ -1,8 +1,15 @@
-import { Dbc } from "@wowlab/core/Schemas";
+import type * as Schema from "effect/Schema";
 
-import type { TableConfig } from "../shared/loader.js";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Option from "effect/Option";
+import * as AST from "effect/SchemaAST";
 
-export interface DbcTableMapping<T = unknown> extends TableConfig<T> {
+import { Dbc } from "./Schemas.js";
+
+export interface DbcTableMapping<T = unknown> {
+  readonly file: string;
+  readonly schema: Schema.Schema<T, unknown>;
   readonly tableName: string;
 }
 
@@ -32,18 +39,31 @@ export const DBC_TABLES = {
   itemArmorTotal: { file: "ItemArmorTotal.csv", schema: Dbc.ItemArmorTotalRowSchema, tableName: "item_armor_total" },
   itemBonus: { file: "ItemBonus.csv", schema: Dbc.ItemBonusRowSchema, tableName: "item_bonus" },
   itemBonusList: { file: "ItemBonusList.csv", schema: Dbc.ItemBonusListRowSchema, tableName: "item_bonus_list" },
+  itemBonusListGroup: { file: "ItemBonusListGroup.csv", schema: Dbc.ItemBonusListGroupRowSchema, tableName: "item_bonus_list_group" },
+  itemBonusListGroupEntry: { file: "ItemBonusListGroupEntry.csv", schema: Dbc.ItemBonusListGroupEntryRowSchema, tableName: "item_bonus_list_group_entry" },
+  itemBonusSeason: { file: "ItemBonusSeason.csv", schema: Dbc.ItemBonusSeasonRowSchema, tableName: "item_bonus_season" },
+  itemBonusSeasonUpgradeCost: { file: "ItemBonusSeasonUpgradeCost.csv", schema: Dbc.ItemBonusSeasonUpgradeCostRowSchema, tableName: "item_bonus_season_upgrade_cost" },
   itemBonusTree: { file: "ItemBonusTree.csv", schema: Dbc.ItemBonusTreeRowSchema, tableName: "item_bonus_tree" },
   itemBonusTreeNode: { file: "ItemBonusTreeNode.csv", schema: Dbc.ItemBonusTreeNodeRowSchema, tableName: "item_bonus_tree_node" },
+  itemClass: { file: "ItemClass.csv", schema: Dbc.ItemClassRowSchema, tableName: "item_class" },
   itemDamageOneHand: { file: "ItemDamageOneHand.csv", schema: Dbc.ItemDamageOneHandRowSchema, tableName: "item_damage_one_hand" },
   itemDamageOneHandCaster: { file: "ItemDamageOneHandCaster.csv", schema: Dbc.ItemDamageOneHandCasterRowSchema, tableName: "item_damage_one_hand_caster" },
   itemDamageTwoHand: { file: "ItemDamageTwoHand.csv", schema: Dbc.ItemDamageTwoHandRowSchema, tableName: "item_damage_two_hand" },
   itemDamageTwoHandCaster: { file: "ItemDamageTwoHandCaster.csv", schema: Dbc.ItemDamageTwoHandCasterRowSchema, tableName: "item_damage_two_hand_caster" },
   itemEffect: { file: "ItemEffect.csv", schema: Dbc.ItemEffectRowSchema, tableName: "item_effect" },
   itemModifiedAppearance: { file: "ItemModifiedAppearance.csv", schema: Dbc.ItemModifiedAppearanceRowSchema, tableName: "item_modified_appearance" },
+  itemNameDescription: { file: "ItemNameDescription.csv", schema: Dbc.ItemNameDescriptionRowSchema, tableName: "item_name_description" },
+  itemSet: { file: "ItemSet.csv", schema: Dbc.ItemSetRowSchema, tableName: "item_set" },
   itemSetSpell: { file: "ItemSetSpell.csv", schema: Dbc.ItemSetSpellRowSchema, tableName: "item_set_spell" },
   itemSparse: { file: "ItemSparse.csv", schema: Dbc.ItemSparseRowSchema, tableName: "item_sparse" },
+  itemSubClass: { file: "ItemSubClass.csv", schema: Dbc.ItemSubClassRowSchema, tableName: "item_sub_class" },
+  itemXBonusTree: { file: "ItemXBonusTree.csv", schema: Dbc.ItemXBonusTreeRowSchema, tableName: "item_x_bonus_tree" },
   itemXItemEffect: { file: "ItemXItemEffect.csv", schema: Dbc.ItemXItemEffectRowSchema, tableName: "item_x_item_effect" },
+  journalEncounter: { file: "JournalEncounter.csv", schema: Dbc.JournalEncounterRowSchema, tableName: "journal_encounter" },
+  journalEncounterItem: { file: "JournalEncounterItem.csv", schema: Dbc.JournalEncounterItemRowSchema, tableName: "journal_encounter_item" },
+  journalInstance: { file: "JournalInstance.csv", schema: Dbc.JournalInstanceRowSchema, tableName: "journal_instance" },
   manifestInterfaceData: { file: "ManifestInterfaceData.csv", schema: Dbc.ManifestInterfaceDataRowSchema, tableName: "manifest_interface_data" },
+  modifiedCraftingReagentItem: { file: "ModifiedCraftingReagentItem.csv", schema: Dbc.ModifiedCraftingReagentItemRowSchema, tableName: "modified_crafting_reagent_item" },
   modifierTree: { file: "ModifierTree.csv", schema: Dbc.ModifierTreeRowSchema, tableName: "modifier_tree" },
   overrideSpellData: { file: "OverrideSpellData.csv", schema: Dbc.OverrideSpellDataRowSchema, tableName: "override_spell_data" },
   pvpScalingEffect: { file: "PvpScalingEffect.csv", schema: Dbc.PvpScalingEffectRowSchema, tableName: "pvp_scaling_effect" },
@@ -111,6 +131,102 @@ export const DBC_TABLES = {
   uiTextureAtlasElement: { file: "UiTextureAtlasElement.csv", schema: Dbc.UiTextureAtlasElementRowSchema, tableName: "ui_texture_atlas_element" },
 } as const;
 
+export type DbcRow<T extends DbcTableName> = Schema.Schema.Type<
+  DbcTableEntryFor<T>["schema"]
+>;
+export type DbcTableEntry = (typeof DBC_TABLES)[DbcTableKey];
+export type DbcTableEntryFor<T extends DbcTableName> = Extract<
+  DbcTableEntry,
+  { readonly tableName: T }
+>;
 export type DbcTableKey = keyof typeof DBC_TABLES;
 
+export type DbcTableName = DbcTableEntry["tableName"];
+
 export const DBC_TABLE_KEYS = Object.keys(DBC_TABLES) as DbcTableKey[];
+export const DBC_TABLE_NAMES = Object.values(DBC_TABLES).map(
+  (t) => t.tableName,
+) as DbcTableName[];
+
+const tableNameSet = new Set<string>(DBC_TABLE_NAMES);
+
+export const isValidDbcTable = (table: string): table is DbcTableName =>
+  tableNameSet.has(table);
+
+export const getDbcTableEntry = (
+  tableName: string,
+): DbcTableEntry | undefined => {
+  if (!isValidDbcTable(tableName)) {
+    return undefined;
+  }
+
+  const entry = Object.values(DBC_TABLES).find(
+    (t) => t.tableName === tableName,
+  );
+
+  return entry;
+};
+
+export interface DbcFieldInfo {
+  name: string;
+  optional: boolean;
+  type: string;
+}
+
+export function getDbcTableFields(tableName: string): DbcFieldInfo[] | null {
+  const entry = getDbcTableEntry(tableName);
+  if (!entry) {
+    return null;
+  }
+
+  const ast = entry.schema.ast;
+  if (!AST.isTypeLiteral(ast)) {
+    return null;
+  }
+
+  const fields: DbcFieldInfo[] = [];
+
+  for (const prop of ast.propertySignatures) {
+    fields.push({
+      name: String(prop.name),
+      optional: prop.isOptional,
+      type: getTypeString(prop.type),
+    });
+  }
+
+  return fields;
+}
+
+const getTypeString = (rawAst: AST.AST): string => {
+  const ast = AST.typeAST(rawAst);
+
+  return pipe(
+    Match.value(ast),
+    Match.when(AST.isStringKeyword, () => "string"),
+    Match.when(AST.isNumberKeyword, () => "number"),
+    Match.when(AST.isBooleanKeyword, () => "boolean"),
+    Match.when(AST.isUndefinedKeyword, () => "undefined"),
+    Match.when(AST.isLiteral, (a) =>
+      a.literal === null ? "null" : `"${String(a.literal)}"`,
+    ),
+    Match.when(AST.isUnion, (a) => {
+      const types = a.types.map(getTypeString);
+      if (types.length === 2 && types.includes("null")) {
+        return `${types.find((t) => t !== "null")} | null`;
+      }
+      
+      return types.join(" | ");
+    }),
+    Match.when(
+      AST.isTupleType,
+      (a) => `[${a.elements.map((e) => getTypeString(e.type)).join(", ")}]`,
+    ),
+    Match.when(AST.isTypeLiteral, () => "object"),
+    Match.orElse((a) =>
+      pipe(
+        AST.getIdentifierAnnotation(a),
+        Option.getOrElse(() => "unknown"),
+      ),
+    ),
+  );
+};

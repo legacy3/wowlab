@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/account/user-avatar";
+import { UserHandle } from "@/components/ui/user-handle";
 import { Code2, GitFork, Star } from "lucide-react";
 import type { UserIdentity } from "@/lib/supabase/types";
 
@@ -20,14 +21,14 @@ export function ProfileHeader({ user, rotationCount = 0 }: ProfileHeaderProps) {
           />
 
           <div className="flex-1 space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold">@{user.handle ?? "user"}</h1>
-              {user.email && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {user.email}
-                </p>
-              )}
-            </div>
+            <h1>
+              <UserHandle
+                handle={user.handle ?? "user"}
+                linkTo={false}
+                size="3xl"
+                className="font-bold"
+              />
+            </h1>
 
             <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2">

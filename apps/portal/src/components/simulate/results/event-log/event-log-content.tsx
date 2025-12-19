@@ -184,6 +184,7 @@ export function EventLogContent() {
     filenamePrefix: "event-log",
     filenameTag: jobId,
     patchVersion: GAME_CONFIG.patchVersion,
+    label: "Event Log",
     resetKey: jobId,
   });
 
@@ -216,7 +217,7 @@ export function EventLogContent() {
               </CardTitle>
               {exportJson && (
                 <>
-                  <CopyButton value={exportJson} />
+                  <CopyButton value={exportJson} label="Event Log" />
                   <Button
                     variant="ghost"
                     size="icon-sm"
