@@ -26,7 +26,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import type { NavItem } from "@/lib/menu-config";
+import { navSecondary, type NavItem } from "@/lib/menu-config";
 
 interface NavMainProps {
   items: NavItem[];
@@ -36,7 +36,12 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const { state, isMobile } = useSidebar();
   const isCollapsed = state === "collapsed" && !isMobile;
+
   const hasActiveGroup = items.some((item) => pathname.startsWith(item.href));
+  const isOnSecondaryPage = navSecondary.some((item) =>
+    pathname.startsWith(item.href),
+  );
+  const shouldOpenFirstAsFallback = !hasActiveGroup && !isOnSecondaryPage;
 
   return (
     <SidebarGroup>
@@ -88,7 +93,9 @@ export function NavMain({ items }: NavMainProps) {
             <Collapsible
               key={item.label}
               asChild
-              defaultOpen={isGroupActive || (!hasActiveGroup && index === 0)}
+              defaultOpen={
+                isGroupActive || (shouldOpenFirstAsFallback && index === 0)
+              }
               className="group/collapsible"
             >
               <SidebarMenuItem>
