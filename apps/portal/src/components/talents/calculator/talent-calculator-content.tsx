@@ -22,10 +22,27 @@ import {
   encodeSelectionsToTalentString,
 } from "./talent-encoding";
 
+function TalentTreeLoading() {
+  return (
+    <div className="relative h-[700px] w-full rounded-lg border bg-background/50 overflow-hidden">
+      {/* Skeleton background */}
+      <Skeleton className="absolute inset-0 rounded-lg" />
+
+      {/* Spinner overlay */}
+      <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="h-8 w-8 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+          <span className="text-sm">Loading talent tree ...</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TalentTree = dynamic(
   () =>
     import("@/components/talents/talent-tree").then((mod) => mod.TalentTree),
-  { ssr: false, loading: () => <Skeleton className="h-[700px] w-full" /> },
+  { ssr: false, loading: TalentTreeLoading },
 );
 
 function TalentCalculatorInner() {
@@ -102,9 +119,7 @@ function TalentCalculatorInner() {
       <TalentStateMessage title="Unable to decode the provided talent string" />
     );
   } else if (isLoading) {
-    content = (
-      <Skeleton className="h-[calc(100vh-16rem)] min-h-[700px] w-full" />
-    );
+    content = <TalentTreeLoading />;
   } else if (error) {
     content = <TalentStateMessage title="Failed to load the talent tree" />;
   } else if (tree) {
@@ -132,9 +147,7 @@ function TalentCalculatorInner() {
       />
     );
   } else {
-    content = (
-      <Skeleton className="h-[calc(100vh-16rem)] min-h-[700px] w-full" />
-    );
+    content = <TalentTreeLoading />;
   }
 
   const showTalentInput = talents || decoded;
