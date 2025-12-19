@@ -16,64 +16,64 @@ export const ItemEffectSchema = Schema.Struct({
 export const ItemClassificationSchema = Schema.Struct({
   classId: Schema.Number,
   className: Schema.String,
-  subclassId: Schema.Number,
-  subclassName: Schema.String,
-  inventoryType: Schema.Number,
-  inventoryTypeName: Schema.String,
   expansionId: Schema.Number,
   expansionName: Schema.String,
+  inventoryType: Schema.Number,
+  inventoryTypeName: Schema.String,
+  subclassId: Schema.Number,
+  subclassName: Schema.String,
 });
 
 export const ItemDropSourceSchema = Schema.Struct({
+  difficultyMask: Schema.Number,
   encounterId: Schema.Number,
   encounterName: Schema.String,
   instanceId: Schema.Number,
   instanceName: Schema.String,
-  difficultyMask: Schema.Number,
 });
 
 export const ItemSetSpellInfoSchema = Schema.Struct({
+  specId: Schema.Number,
   spellId: Schema.Number,
   threshold: Schema.Number,
-  specId: Schema.Number,
 });
 
 export const ItemSetInfoSchema = Schema.Struct({
+  bonuses: Schema.Array(ItemSetSpellInfoSchema),
+  itemIds: Schema.Array(Schema.Number),
   setId: Schema.Number,
   setName: Schema.String,
-  itemIds: Schema.Array(Schema.Number),
-  bonuses: Schema.Array(ItemSetSpellInfoSchema),
 });
 
 export const ItemDataFlatSchema = Schema.Struct({
   // Basic info
-  id: Schema.Number,
-  name: Schema.String,
-  description: Schema.String,
-  fileName: Schema.String,
-  quality: Schema.Number,
-  itemLevel: Schema.Number,
-  requiredLevel: Schema.Number,
   binding: Schema.Number,
   buyPrice: Schema.Number,
-  sellPrice: Schema.Number,
+  description: Schema.String,
+  fileName: Schema.String,
+  id: Schema.Number,
+  itemLevel: Schema.Number,
   maxCount: Schema.Number,
-  stackable: Schema.Number,
+  name: Schema.String,
+  quality: Schema.Number,
+  requiredLevel: Schema.Number,
+  sellPrice: Schema.Number,
   speed: Schema.Number,
+  stackable: Schema.Number,
 
   // Classification
   classId: Schema.Number,
-  subclassId: Schema.Number,
-  inventoryType: Schema.Number,
   classification: Schema.NullOr(ItemClassificationSchema),
+  inventoryType: Schema.Number,
+  subclassId: Schema.Number,
 
   // Stats & Effects
-  stats: Schema.Array(ItemStatSchema),
   effects: Schema.Array(ItemEffectSchema),
+  stats: Schema.Array(ItemStatSchema),
 
   // Sockets
-  sockets: Schema.Array(Schema.Number), // SocketType_0-2 values
   socketBonusEnchantId: Schema.Number,
+  sockets: Schema.Array(Schema.Number), // SocketType_0-2 values
 
   // Flags (5 flag fields)
   flags: Schema.Array(Schema.Number),
@@ -91,9 +91,9 @@ export const ItemDataFlatSchema = Schema.Struct({
   dropSources: Schema.Array(ItemDropSourceSchema),
 
   // Gem/Crafting
+  dmgVariance: Schema.Number,
   gemProperties: Schema.Number,
   modifiedCraftingReagentItemId: Schema.Number,
-  dmgVariance: Schema.Number,
 });
 
 export type ItemDataFlat = Schema.Schema.Type<typeof ItemDataFlatSchema>;

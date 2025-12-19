@@ -21,7 +21,10 @@ export function TalentStartScreen({
             Paste a talent loadout string to view and edit
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full">
+        <div
+          className="flex items-center gap-2 w-full"
+          data-tour="talent-import-input"
+        >
           <Input
             placeholder="Paste a talent string..."
             value={talents}
@@ -39,7 +42,7 @@ export function TalentStartScreen({
         <div className="flex-1 border-t" />
       </div>
 
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-4" data-tour="spec-picker">
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">Start from Scratch</h3>
           <p className="text-sm text-muted-foreground">
