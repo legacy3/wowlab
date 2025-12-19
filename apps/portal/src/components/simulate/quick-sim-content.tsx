@@ -68,6 +68,7 @@ import {
   targetTypeAtom,
   type TargetType,
 } from "@/atoms/sim";
+import { SimulateIntroTour } from "@/components/tours";
 
 interface FightProfile {
   id: TargetType;
@@ -158,7 +159,10 @@ function QuickSimContentInner() {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
         {recentCharacters.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div
+            className="flex items-center gap-2 overflow-x-auto pb-1"
+            data-tour="recent-characters"
+          >
             {recentCharacters.map((entry, index) => {
               const { simc, data } = entry;
               const { character, professions } = data;
@@ -203,6 +207,7 @@ function QuickSimContentInner() {
           placeholder={DEFAULT_SIMC_PLACEHOLDER}
           className="min-h-80 border-dashed border-2 font-mono text-sm focus:border-solid"
           autoFocus
+          data-tour="simc-input"
         />
 
         {/* Parsing indicator */}
@@ -231,6 +236,8 @@ function QuickSimContentInner() {
             </CardContent>
           </Card>
         )}
+
+        <SimulateIntroTour show={!parsedData && !isParsing} />
       </div>
     );
   }
@@ -335,7 +342,7 @@ function QuickSimContentInner() {
       </Card>
 
       {/* Fight Profile Picker */}
-      <div className="space-y-2">
+      <div className="space-y-2" data-tour="fight-profile">
         <Label className="text-sm font-medium">Fight Profile</Label>
         <Popover open={fightPickerOpen} onOpenChange={setFightPickerOpen}>
           <PopoverTrigger asChild>
@@ -452,6 +459,7 @@ function QuickSimContentInner() {
         onClick={handleRunSim}
         disabled={isRunning}
         className="w-full"
+        data-tour="run-simulation"
       >
         {isRunning ? (
           <>

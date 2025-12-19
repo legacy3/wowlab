@@ -11,6 +11,7 @@ import {
   SpecCoverageCard,
   TableCoverageCard,
 } from "./cards";
+import { LabOverviewTour } from "@/components/tours";
 
 const components: DashboardConfig<LabCardId> = {
   "data-inspector": { Component: DataInspectorCard },
@@ -22,11 +23,14 @@ export function LabContent() {
   const [order, setOrder] = useAtom(labOrderAtom);
 
   return (
-    <DraggableDashboard
-      items={order}
-      onReorder={setOrder}
-      components={components}
-      gridClassName="grid gap-4 sm:grid-cols-2"
-    />
+    <>
+      <DraggableDashboard
+        items={order}
+        onReorder={setOrder}
+        components={components}
+        gridClassName="grid gap-4 sm:grid-cols-2"
+      />
+      <LabOverviewTour show />
+    </>
   );
 }

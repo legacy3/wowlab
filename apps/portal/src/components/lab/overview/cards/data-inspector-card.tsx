@@ -13,7 +13,10 @@ import {
 export function DataInspectorCard() {
   return (
     <Link href="/lab/inspector/search" className="block h-full">
-      <Card className="h-full transition-colors hover:border-primary/50">
+      <Card
+        className="h-full transition-colors hover:border-primary/50"
+        data-tour="data-inspector"
+      >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Table className="h-5 w-5 text-primary" />

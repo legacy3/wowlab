@@ -13,7 +13,10 @@ import {
 export function SpecCoverageCard() {
   return (
     <Link href="/lab/spec-coverage" className="block h-full">
-      <Card className="h-full transition-colors hover:border-primary/50">
+      <Card
+        className="h-full transition-colors hover:border-primary/50"
+        data-tour="spec-coverage"
+      >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5 text-primary" />

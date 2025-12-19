@@ -37,7 +37,7 @@ export function TourRunner({ tour, run, onComplete }: TourRunnerProps) {
         if (!completedTours.includes(tour.id)) {
           setCompletedTours((prev) => [...prev, tour.id]);
         }
-        
+
         onComplete?.();
       }
     },

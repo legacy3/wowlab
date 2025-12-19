@@ -12,6 +12,7 @@ import {
   TopGearOptimizationStatusCard,
   TopGearUpgradePathCard,
 } from "./cards";
+import { OptimizeIntroTour } from "@/components/tours";
 
 const components: DashboardConfig<TopGearCardId> = {
   "current-gear": {
@@ -30,11 +31,14 @@ export function TopGearDashboard() {
   const [order, setOrder] = useAtom(topGearCardOrderAtom);
 
   return (
-    <DraggableDashboard
-      items={order}
-      onReorder={setOrder}
-      components={components}
-      gridClassName="grid gap-4 md:auto-rows-min md:grid-cols-2"
-    />
+    <>
+      <DraggableDashboard
+        items={order}
+        onReorder={setOrder}
+        components={components}
+        gridClassName="grid gap-4 md:auto-rows-min md:grid-cols-2"
+      />
+      <OptimizeIntroTour show />
+    </>
   );
 }
