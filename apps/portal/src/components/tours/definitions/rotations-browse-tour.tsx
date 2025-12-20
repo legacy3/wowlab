@@ -6,15 +6,15 @@ import { TourRunner, type TourConfig } from "../tour-provider";
 const steps: Step[] = [
   {
     target: '[data-tour="rotations-search"]',
-    content: "Search rotations by name or description.",
-    title: "Search",
+    content: "Search by name or description.",
+    title: "Search rotations",
     placement: "bottom",
     disableBeacon: true,
   },
   {
     target: '[data-tour="rotations-filters"]',
-    content: "Narrow down by class.",
-    title: "Filters",
+    content: "Filter the list by class.",
+    title: "Filter by class",
     placement: "bottom",
   },
 ];

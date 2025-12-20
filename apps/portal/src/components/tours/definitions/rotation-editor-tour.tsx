@@ -6,30 +6,23 @@ import { TourRunner, type TourConfig } from "../tour-provider";
 const steps: Step[] = [
   {
     target: '[data-tour="rotation-editor-code"]',
-    title: "Write Your Rotation",
+    title: "Write a priority list",
     content:
-      "This is your rotation script. Use TypeScript + Effect helpers to model priority, cooldowns, and decision making.",
-    placement: "left",
+      "Write a spell priority list in JavaScript. The sim handles GCDs, cooldowns, and timing.",
+    placement: "right",
     disableBeacon: true,
   },
   {
     target: '[data-tour="rotation-editor-sidebar"]',
-    title: "Sidebar Tools",
+    title: "Use the sidebar",
     content:
-      "Browse spells, copy snippets, and insert API helpers directly into your script.",
+      "Browse spells, copy snippets, and insert helpers into your script.",
     placement: "left",
   },
   {
     target: '[data-tour="rotation-editor-save"]',
-    title: "Save",
-    content: "Create your rotation (or save changes) at any time.",
-    placement: "top",
-  },
-  {
-    target: '[data-tour="rotation-editor-test"]',
-    title: "Test",
-    content:
-      "Run a quick test to validate your script and catch errors before publishing.",
+    title: "Save your work",
+    content: "Create the rotation, or save changes as you iterate.",
     placement: "top",
   },
   {
@@ -44,6 +37,12 @@ const steps: Step[] = [
     title: "Zen Mode",
     content: "Go fullscreen while you write (press ESC to exit).",
     placement: "bottom",
+  },
+  {
+    target: '[data-tour="rotation-editor-test"]',
+    title: "Test (WIP)",
+    content: "The test runner isn't wired up yet.",
+    placement: "top",
   },
 ];
 

@@ -6,34 +6,33 @@ import { TourRunner, type TourConfig } from "../tour-provider";
 const steps: Step[] = [
   {
     target: '[data-tour="rankings-tabs"]',
-    title: "Explore Rankings",
-    content:
-      "Switch between spec rankings, top talents, most wanted items, and top sims.",
+    title: "Explore rankings",
+    content: "Use tabs to switch between rankings views.",
     placement: "bottom",
     disableBeacon: true,
   },
   {
     target: '[data-tour="rankings-tier"]',
-    title: "Raid Tier",
-    content: "Pick the tier you want to compare.",
+    title: "Raid tier",
+    content: "Pick the raid tier you want to compare.",
     placement: "bottom",
   },
   {
     target: '[data-tour="rankings-fight-length"]',
-    title: "Fight Length",
-    content: "Filter rankings by encounter length.",
+    title: "Fight length",
+    content: "Filter by encounter length.",
     placement: "bottom",
   },
   {
     target: '[data-tour="rankings-time-window"]',
-    title: "Time Window",
+    title: "Time window",
     content: "Choose how recent the data should be.",
     placement: "bottom",
   },
   {
     target: '[data-tour="rankings-results"]',
     title: "Results",
-    content: "Use the table to spot top performers and trends.",
+    content: "Use the table to compare specs at a glance.",
     placement: "top",
   },
 ];

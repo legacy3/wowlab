@@ -237,7 +237,10 @@ function QuickSimContentInner() {
           </Card>
         )}
 
-        <SimulateIntroTour show={!parsedData && !isParsing} />
+        <SimulateIntroTour
+          show={!parsedData && !isParsing}
+          hasRecentCharacters={recentCharacters.length > 0}
+        />
       </div>
     );
   }

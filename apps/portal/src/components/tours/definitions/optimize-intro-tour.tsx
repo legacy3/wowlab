@@ -5,22 +5,23 @@ import { TourRunner, type TourConfig } from "../tour-provider";
 
 const steps: Step[] = [
   {
-    target: '[data-tour="current-gear"]',
-    content: "Your equipped items and how much DPS each contributes.",
-    title: "Current Gear",
+    target: '[data-tour="optimization-status"]',
+    content:
+      "Optimization runs aren't wired up yet. This page is a preview of the planned dashboard.",
+    title: "Optimize (WIP)",
     placement: "bottom",
     disableBeacon: true,
   },
   {
-    target: '[data-tour="start-optimization"]',
-    content: "Kick off an optimization run to search for your best setup.",
-    title: "Start Optimization",
+    target: '[data-tour="current-gear"]',
+    content: "This card will show your equipped items and their contribution.",
+    title: "Current gear",
     placement: "bottom",
   },
   {
     target: '[data-tour="upgrade-path"]',
-    content: "Prioritized list of upgrades with the biggest DPS gains first.",
-    title: "Upgrade Path",
+    content: "This list will rank upgrades by estimated DPS gain.",
+    title: "Upgrade path",
     placement: "top",
   },
 ];

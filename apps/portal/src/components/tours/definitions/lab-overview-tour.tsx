@@ -13,8 +13,9 @@ const steps: Step[] = [
   },
   {
     target: '[data-tour="spec-coverage"]',
-    content: "Check which specs are implemented in the simulator.",
-    title: "Spec Coverage",
+    content:
+      "Check what each spec supports before you spend time simming or writing rotations.",
+    title: "Spec coverage",
     placement: "bottom",
   },
 ];
