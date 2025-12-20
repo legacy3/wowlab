@@ -55,7 +55,8 @@ export function TourRunner({ tour, run, onComplete }: TourRunnerProps) {
       run={run}
       continuous
       disableOverlayClose
-      disableScrolling
+      scrollToFirstStep
+      spotlightClicks
       spotlightPadding={8}
       callback={handleCallback}
       tooltipComponent={TourTooltip}

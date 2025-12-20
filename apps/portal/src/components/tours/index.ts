@@ -6,4 +6,6 @@ export {
   RotationsBrowseTour,
   LabOverviewTour,
   OptimizeIntroTour,
+  RotationEditorTour,
+  RankingsIntroTour,
 } from "./definitions";

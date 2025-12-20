@@ -18,6 +18,7 @@ type UrlTabsProps<T extends string> = {
   paramName?: string;
   className?: string;
   listClassName?: string;
+  listDataTour?: string;
   contentClassName?: string;
 };
 
@@ -27,6 +28,7 @@ function UrlTabsInner<T extends string>({
   paramName = "tab",
   className,
   listClassName,
+  listDataTour,
   contentClassName,
 }: UrlTabsProps<T>) {
   const tabValues = tabs.map((t) => t.value) as [T, ...T[]];
@@ -45,6 +47,7 @@ function UrlTabsInner<T extends string>({
       className={cn("flex flex-col gap-4", className)}
     >
       <TabsPrimitive.List
+        data-tour={listDataTour}
         className={cn(
           "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
           listClassName,

@@ -12,6 +12,12 @@ const steps: Step[] = [
     disableBeacon: true,
   },
   {
+    target: '[data-tour="start-optimization"]',
+    content: "Kick off an optimization run to search for your best setup.",
+    title: "Start Optimization",
+    placement: "bottom",
+  },
+  {
     target: '[data-tour="upgrade-path"]',
     content: "Prioritized list of upgrades with the biggest DPS gains first.",
     title: "Upgrade Path",

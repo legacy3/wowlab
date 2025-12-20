@@ -32,6 +32,7 @@ import { useZenMode } from "@/hooks/use-zen-mode";
 import { SettingsPanel, type SettingsValues } from "./settings-panel";
 import { EditorSidebar } from "./sidebar";
 import type { Rotation } from "@/lib/supabase/types";
+import { RotationEditorTour } from "@/components/tours";
 
 interface EditorViewProps {
   rotation: Rotation;
@@ -148,6 +149,7 @@ export function EditorView({
             size="sm"
             onClick={() => setShowSidebar(!showSidebar)}
             title={showSidebar ? "Hide sidebar" : "Show sidebar"}
+            data-tour="rotation-editor-sidebar-toggle"
           >
             <PanelRight className="h-4 w-4" />
           </Button>
@@ -157,13 +159,18 @@ export function EditorView({
             size="sm"
             onClick={toggleZen}
             title={isZen ? "Exit zen mode (ESC)" : "Zen mode"}
+            data-tour="rotation-editor-zen"
           >
             {isZen ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
           </Button>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                data-tour="rotation-editor-settings"
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -188,7 +195,10 @@ export function EditorView({
       {/* Editor + Sidebar */}
       <div className="flex-1 min-h-0 flex">
         {/* Editor */}
-        <div className="flex-1 min-w-0 relative">
+        <div
+          className="flex-1 min-w-0 relative"
+          data-tour="rotation-editor-code"
+        >
           {!editorReady && <EditorSkeleton />}
           <div
             className={cn(
@@ -209,7 +219,11 @@ export function EditorView({
         </div>
 
         {/* Sidebar */}
-        {showSidebar && <EditorSidebar onInsert={handleInsert} />}
+        {showSidebar && (
+          <div data-tour="rotation-editor-sidebar">
+            <EditorSidebar onInsert={handleInsert} />
+          </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -219,6 +233,7 @@ export function EditorView({
           size="sm"
           onClick={onSave}
           disabled={isDisabled}
+          data-tour="rotation-editor-save"
         >
           {isSaving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -227,7 +242,12 @@ export function EditorView({
           )}
           {isDraft ? "Create" : "Save"}
         </Button>
-        <Button size="sm" onClick={onTest} disabled={isDisabled}>
+        <Button
+          size="sm"
+          onClick={onTest}
+          disabled={isDisabled}
+          data-tour="rotation-editor-test"
+        >
           {isTesting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -236,6 +256,8 @@ export function EditorView({
           Test
         </Button>
       </div>
+
+      <RotationEditorTour show />
     </div>
   );
 }
