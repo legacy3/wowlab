@@ -5,6 +5,7 @@
 import type { TalentSubTree, TalentTree } from "./types.js";
 
 interface TemplateData {
+  activeHeroTreeId: number | null;
   iconBaseUrl: string;
   nodeChoices: Map<number, number> | null;
   nodeRanks: Map<number, number> | null;
@@ -596,8 +597,9 @@ for (const node of nodes) {
   nodeEls.push({ el, node });
 }
 
-// Hero tree selector
-let selectedHeroId = treeData.subTrees[0]?.id ?? 0;
+// Hero tree selector - use loadout's active tree if available
+const loadoutActiveHeroTreeId = ${data.activeHeroTreeId !== null ? data.activeHeroTreeId : "null"};
+let selectedHeroId = loadoutActiveHeroTreeId ?? treeData.subTrees[0]?.id ?? 0;
 
 function updateVisibility() {
   for (const { el, node } of nodeEls) {
@@ -670,6 +672,26 @@ const renderHeroButtons = (
   );
 };
 
+/**
+ * Determine which hero tree is active based on the first selected hero node.
+ * In the game, selecting a hero tree requires allocating a point to a node in that tree.
+ */
+const detectActiveHeroTree = (
+  tree: TalentTree,
+  selectedNodeIds: Set<number> | null,
+): number | null => {
+  if (!selectedNodeIds) return null;
+
+  // Find the first selected hero node (by node ID order, which matches the loadout order)
+  for (const node of tree.nodes) {
+    if (node.subTreeId && node.subTreeId > 0 && selectedNodeIds.has(node.id)) {
+      return node.subTreeId;
+    }
+  }
+
+  return null;
+};
+
 export const generateHtml = (
   tree: TalentTree,
   supabaseUrl: string,
@@ -677,7 +699,10 @@ export const generateHtml = (
   nodeChoices: Map<number, number> | null = null,
   nodeRanks: Map<number, number> | null = null,
 ): string => {
+  const activeHeroTreeId = detectActiveHeroTree(tree, selectedNodeIds);
+
   const data: TemplateData = {
+    activeHeroTreeId,
     iconBaseUrl: supabaseUrl,
     nodeChoices,
     nodeRanks,
