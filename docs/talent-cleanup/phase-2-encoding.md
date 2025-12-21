@@ -17,7 +17,7 @@ From `apps/portal/src/components/talents/calculator/talent-encoding.ts`:
 |----------|--------------|--------|
 | `createHeaderOnlyTalentString` | Calls `encodeTalentLoadout` with empty nodes | **Inline or keep** — trivial wrapper |
 | `deriveInitialSelectionsFromDecoded` | Calls `applyDecodedTalents(...).selections` | **Delete** — use `applyDecodedTalents` directly |
-| `encodeSelectionsToTalentString` | Maps selections to nodes array, calls `encodeTalentLoadout` | **Move** — has real logic |
+| `encodeSelectionsToTalentString` | Maps selections to nodes array, calls `encodeTalentLoadout` | **Move** — rename to `encodeSelectionsToLoadoutString` |
 
 ## Function to Move
 
@@ -33,10 +33,18 @@ Move to: `packages/wowlab-parsers/src/internal/simc/talents.ts`
 
 **Rename to:** `encodeSelectionsToLoadoutString` (clearer name)
 
-**Signature:**
+**Signature (minimal fields required):**
 ```ts
 export function encodeSelectionsToLoadoutString(params: {
-  tree: { allNodeIds: number[]; nodes: Array<{ id: number; type: number; entries: unknown[]; maxRanks: number }> };
+  tree: {
+    allNodeIds: number[];
+    nodes: Array<{
+      id: number;
+      type: number;
+      maxRanks: number;
+      entries: Array<{ id: number }>;
+    }>;
+  };
   decoded: DecodedTalentLoadout;
   selections: Map<number, { selected?: boolean; ranksPurchased?: number; choiceIndex?: number }>;
 }): string

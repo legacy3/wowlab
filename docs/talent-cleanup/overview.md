@@ -53,7 +53,7 @@ No new package; use existing ones:
 
 ## Phased Plan (overview)
 1) Move domain logic to `wowlab-services` (integrate with existing transformer).
-2) Move encoding helper to `wowlab-parsers` (only `encodeSelectionsToTalentString`).
+2) Move encoding helper to `wowlab-parsers` (only `encodeSelectionsToLoadoutString`).
 3) Add view‑model builder in `wowlab-services`.
 4) Split `TalentTree` into controller + renderer.
 5) Add calculator controller for URL sync + encoding.

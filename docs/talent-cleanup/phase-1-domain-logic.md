@@ -29,6 +29,12 @@ interface TalentPointsSpent {
   hero: number;
 }
 
+interface TalentPointLimits {
+  class: number;
+  spec: number;
+  hero: number;
+}
+
 interface TalentEdgeIndex {
   parentsByNodeId: Map<number, Set<number>>;
   childrenByNodeId: Map<number, Set<number>>;
@@ -56,6 +62,10 @@ interface TalentEdgeIndex {
 - `wouldExceedPointLimit` → `selection.ts`
 - `wouldExceedPointLimitWithPrereqs` → `selection.ts`
 
+**Step 4b: Point limit source (services-owned)**
+- Add `getTalentPointLimits(tree)` → `selection.ts`
+  - Reads limits from the tree/header if present, otherwise falls back to constants in services.
+
 **Step 5: Visibility/filtering (graph helpers)**
 - `computeVisibleNodes` → `graph.ts`
 - `filterByHeroTree` → `graph.ts`
@@ -79,6 +89,6 @@ interface TalentEdgeIndex {
 ## Exit Criteria
 - [ ] `talent-utils.ts` exports only `searchTalentNodes`
 - [ ] All point/limit/traversal functions available from `@wowlab/services/Talents`
-- [ ] Types `TalentPointsSpent` and `TalentEdgeIndex` exported from services
+- [ ] Types `TalentPointsSpent`, `TalentPointLimits`, and `TalentEdgeIndex` exported from services
 - [ ] No domain logic duplicated between portal and services
 - [ ] Existing `transformTalentTree` and `applyDecodedTalents` unchanged

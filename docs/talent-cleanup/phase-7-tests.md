@@ -280,31 +280,38 @@ describe("filterByHeroTree", () => {
 });
 ```
 
-### Layout Tests (`layout.test.ts`)
+### Layout Tests (`view-model.test.ts`)
 ```ts
-describe("computeTalentLayout", () => {
+describe("buildTalentViewModel layout", () => {
   it("returns default scale for empty nodes", () => {
-    const layout = computeTalentLayout([], 500, 600);
-    expect(layout.scale).toBeGreaterThan(0);
+    const tree = { nodes: [], edges: [], allNodeIds: [] };
+    const viewModel = buildTalentViewModel(tree as TalentTree, new Map(), {
+      width: 500,
+      height: 600,
+    });
+
+    expect(viewModel.layout.scale).toBeGreaterThan(0);
   });
 
   it("scales to fit within bounds", () => {
-    const nodes = [
-      { posX: 0, posY: 0 },
-      { posX: 1000, posY: 2000 },
-    ];
-    const layout = computeTalentLayout(nodes, 500, 600);
+    const tree = {
+      nodes: [
+        { id: 1, posX: 0, posY: 0, subTreeId: 0, type: 0, maxRanks: 1, entries: [] },
+        { id: 2, posX: 1000, posY: 2000, subTreeId: 0, type: 0, maxRanks: 1, entries: [] },
+      ],
+      edges: [],
+      allNodeIds: [1, 2],
+    };
+    const viewModel = buildTalentViewModel(tree as TalentTree, new Map(), {
+      width: 500,
+      height: 600,
+    });
 
-    // With padding, all transformed positions should be within [0, width] and [0, height]
-    const x1 = nodes[0].posX * layout.scale + layout.offsetX;
-    const x2 = nodes[1].posX * layout.scale + layout.offsetX;
-    const y1 = nodes[0].posY * layout.scale + layout.offsetY;
-    const y2 = nodes[1].posY * layout.scale + layout.offsetY;
-
-    expect(x1).toBeGreaterThanOrEqual(0);
-    expect(x2).toBeLessThanOrEqual(500);
-    expect(y1).toBeGreaterThanOrEqual(0);
-    expect(y2).toBeLessThanOrEqual(600);
+    const [n1, n2] = viewModel.nodes;
+    expect(n1.x).toBeGreaterThanOrEqual(0);
+    expect(n2.x).toBeLessThanOrEqual(500);
+    expect(n1.y).toBeGreaterThanOrEqual(0);
+    expect(n2.y).toBeLessThanOrEqual(600);
   });
 });
 ```
@@ -317,5 +324,5 @@ describe("computeTalentLayout", () => {
 - [ ] Prerequisite traversal tests cover: linear chain, diamond, root node
 - [ ] Point limit tests cover: within limit, at limit, over limit, per-tree-type
 - [ ] Visibility tests cover: main nodes, hero filtering
-- [ ] Layout tests cover: empty, single node, bounds checking
+- [ ] Layout tests cover: empty, single node, bounds checking (via `buildTalentViewModel`)
 - [ ] CI runs tests on every PR

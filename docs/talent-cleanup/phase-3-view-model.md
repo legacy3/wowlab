@@ -94,13 +94,19 @@ export function buildTalentViewModel(
 
 ### Implementation Notes
 1. Call `computeVisibleNodes` to filter nodes
-2. Call `filterByHeroTree` with selectedHeroId
-3. Call `buildTalentEdgeIndex` for edge lookup
-4. Calculate layout scale/offset (consolidate from both existing implementations)
-5. Map nodes to positions with selection state
-6. Map edges to positions with connection state
-7. Call `calculatePointsSpent` for totals
-8. Return complete view model
+2. If `options.selectedHeroId` is `null`/`undefined`, call `deriveSelectedHeroId(selections)`
+3. Call `filterByHeroTree` with the resolved `selectedHeroId`
+4. Call `buildTalentEdgeIndex` for edge lookup
+5. Calculate layout scale/offset (consolidate from both existing implementations)
+6. Map nodes to positions with selection state
+7. Map edges to positions with connection state
+8. Call `calculatePointsSpent` for totals
+9. Call `getTalentPointLimits(tree)` for limits
+10. Return complete view model
+
+## View Model Boundary Note
+The view model is the **only** schema boundary the UI consumes. It may contain fields that originate from schema
+(e.g. `type`, `subTreeId`), but UI components must only depend on the view model contract, not raw schemas.
 
 ## Portal Hook
 Add `apps/portal/src/hooks/use-talent-view-model.ts`:
