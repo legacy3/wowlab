@@ -90,7 +90,12 @@ export function wouldExceedPointLimitWithPrereqs(
   currentSpent: TalentPointsSpent,
   limits: Talent.TalentPointLimits,
 ): "class" | "spec" | "hero" | null {
-  const cost = calculateSelectionCost(nodeId, nodeById, selections, parentsByNodeId);
+  const cost = calculateSelectionCost(
+    nodeId,
+    nodeById,
+    selections,
+    parentsByNodeId,
+  );
 
   if (currentSpent.class + cost.class > limits.class) {
     return "class";

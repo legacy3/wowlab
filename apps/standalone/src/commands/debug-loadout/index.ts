@@ -64,7 +64,9 @@ export const debugLoadoutCommand = Command.make(
       yield* Effect.log(`Spec ID in loadout: ${specId}`);
 
       if (specId !== spec) {
-        yield* Effect.log(`WARNING: Spec mismatch! Loadout is for ${specId}, not ${spec}`);
+        yield* Effect.log(
+          `WARNING: Spec mismatch! Loadout is for ${specId}, not ${spec}`,
+        );
       }
 
       // Skip tree hash
@@ -79,7 +81,7 @@ export const debugLoadoutCommand = Command.make(
           .schema("raw_dbc")
           .from("trait_tree_loadout")
           .select("TraitTreeID")
-          .eq("ChrSpecializationID", spec)
+          .eq("ChrSpecializationID", spec),
       );
 
       if (!loadouts || loadouts.length === 0) {
@@ -94,7 +96,7 @@ export const debugLoadoutCommand = Command.make(
           .schema("raw_dbc")
           .from("trait_tree")
           .select("ID, TraitSystemID")
-          .in("ID", treeIDs)
+          .in("ID", treeIDs),
       );
 
       const mainTree = (trees as any[])?.find((t) => t.TraitSystemID === 0);
@@ -113,7 +115,7 @@ export const debugLoadoutCommand = Command.make(
           .from("trait_node")
           .select("ID")
           .eq("TraitTreeID", mainTree.ID)
-          .order("ID", { ascending: true })
+          .order("ID", { ascending: true }),
       );
 
       const nodeIds = (allNodes as any[])?.map((n) => n.ID) ?? [];
@@ -184,11 +186,11 @@ export const debugLoadoutCommand = Command.make(
           .schema("raw_dbc")
           .from("trait_node")
           .select("ID, TraitSubTreeID, Type")
-          .in("ID", selectedIds)
+          .in("ID", selectedIds),
       );
 
       const nodeDetailMap = new Map(
-        (nodeDetails as any[])?.map((n) => [n.ID, n]) ?? []
+        (nodeDetails as any[])?.map((n) => [n.ID, n]) ?? [],
       );
 
       // Get subtree names
@@ -196,7 +198,7 @@ export const debugLoadoutCommand = Command.make(
         ...new Set(
           (nodeDetails as any[])
             ?.filter((n) => n.TraitSubTreeID > 0)
-            .map((n) => n.TraitSubTreeID) ?? []
+            .map((n) => n.TraitSubTreeID) ?? [],
         ),
       ];
 
@@ -205,11 +207,11 @@ export const debugLoadoutCommand = Command.make(
           .schema("raw_dbc")
           .from("trait_sub_tree")
           .select("ID, Name_lang")
-          .in("ID", subTreeIds)
+          .in("ID", subTreeIds),
       );
 
       const subTreeNames = new Map(
-        (subTrees as any[])?.map((s) => [s.ID, s.Name_lang]) ?? []
+        (subTrees as any[])?.map((s) => [s.ID, s.Name_lang]) ?? [],
       );
 
       yield* Effect.log(`\n=== Selected Nodes ===`);
@@ -231,11 +233,19 @@ export const debugLoadoutCommand = Command.make(
         yield* Effect.log(`\n${group}: ${nodes.length} nodes`);
         for (const n of nodes.slice(0, 10)) {
           const detail = nodeDetailMap.get(n.nodeId);
-          const type = detail?.Type === 2 ? "choice" : detail?.Type === 3 ? "subtree-sel" : "normal";
+          const type =
+            detail?.Type === 2
+              ? "choice"
+              : detail?.Type === 3
+                ? "subtree-sel"
+                : "normal";
           const choice = n.isChoice ? ` choice=${n.choiceIndex}` : "";
-          const partial = n.partialRank !== undefined ? ` ranks=${n.partialRank}` : "";
+          const partial =
+            n.partialRank !== undefined ? ` ranks=${n.partialRank}` : "";
           const grant = n.granted ? " (granted)" : "";
-          yield* Effect.log(`  Node ${n.nodeId} [idx=${n.index}] type=${type}${choice}${partial}${grant}`);
+          yield* Effect.log(
+            `  Node ${n.nodeId} [idx=${n.index}] type=${type}${choice}${partial}${grant}`,
+          );
         }
         if (nodes.length > 10) {
           yield* Effect.log(`  ... and ${nodes.length - 10} more`);

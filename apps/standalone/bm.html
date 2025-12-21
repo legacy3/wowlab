@@ -1,622 +1,2911 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hunter Beast Mastery - Talent Tree</title>
-  <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a24;
-  --bg-elevated: #22222e;
-  --border-subtle: rgba(255,255,255,0.08);
-  --border-medium: rgba(255,255,255,0.15);
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b0;
-  --text-muted: #606070;
-  --accent-gold: #ffd700;
-  --accent-purple: #a855f7;
-  --accent-orange: #f97316;
-  --accent-blue: #3b82f6;
-  --accent-green: #22c55e;
-  --node-size: 52px;
-}
-
-body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
-  min-height: 100vh;
-}
-
-header {
-  position: sticky;
-  top: 0;
-  z-index: 500;
-  padding: 14px 24px;
-  background: rgba(10,10,15,0.95);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-header h1 {
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.container {
-  position: relative;
-  width: 100%;
-  height: calc(100vh - 57px);
-  overflow: auto;
-}
-
-.tree {
-  position: relative;
-  margin: 32px;
-}
-
-.node {
-  position: absolute;
-  width: var(--node-size);
-  height: var(--node-size);
-  background: linear-gradient(180deg, #2a2a38 0%, #1e1e28 100%);
-  border: 2px solid #3d3d4d;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
-
-.node img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.node:hover {
-  transform: scale(1.15);
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 20px rgba(255,215,0,0.5);
-  z-index: 100;
-}
-
-.node.choice {
-  border-color: #7c3aed;
-  background: linear-gradient(180deg, #2e2448 0%, #1e1830 100%);
-}
-
-.node.choice:hover {
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 20px rgba(168,85,247,0.5);
-}
-
-.node.choice img {
-  width: 50%;
-  height: 100%;
-  border-radius: 4px;
-}
-
-.node.hero {
-  border-color: #ea580c;
-  background: linear-gradient(180deg, #3d2818 0%, #2a1c10 100%);
-}
-
-.node.hero:hover {
-  border-color: var(--accent-orange);
-  box-shadow: 0 0 20px rgba(249,115,22,0.5);
-}
-
-.node.hidden { display: none; }
-
-.node-ranks {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  background: rgba(0,0,0,0.75);
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--accent-green);
-}
-
-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
-
-.edge {
-  stroke: #3a3a4a;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-}
-
-.edge.hero-edge {
-  stroke: rgba(249,115,22,0.4);
-  stroke-dasharray: 6 4;
-}
-
-.edge.hidden { display: none; }
-
-.tooltip {
-  display: none;
-  position: fixed;
-  background: rgba(16,16,24,0.98);
-  border: 1px solid var(--border-medium);
-  padding: 16px;
-  border-radius: 12px;
-  max-width: 400px;
-  min-width: 280px;
-  z-index: 1000;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-}
-
-.tooltip.visible { display: block; }
-
-.tooltip-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.tooltip-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-}
-
-.tooltip h3 {
-  color: var(--accent-gold);
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 2px 0;
-}
-
-.tooltip .subtitle {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.tooltip p {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-secondary);
-}
-
-.tooltip .meta {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-subtle);
-  font-family: monospace;
-}
-
-.hero-selector {
-  display: flex;
-  gap: 8px;
-}
-
-.hero-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  background: var(--bg-tertiary);
-  border: 1.5px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 500;
-  transition: all 0.15s;
-}
-
-.hero-btn:hover {
-  background: var(--bg-elevated);
-  border-color: #ea580c;
-}
-
-.hero-btn.active {
-  background: rgba(249,115,22,0.12);
-  border-color: var(--accent-orange);
-  color: var(--accent-orange);
-}
-
-.hero-btn img {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-}
-
-.search-input {
-  padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border: 1.5px solid var(--border-subtle);
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 12px;
-  width: 160px;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent-blue);
-}
-
-.stats {
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 5px 12px;
-  background: var(--bg-tertiary);
-  border-radius: 6px;
-  font-family: monospace;
-  margin-left: auto;
-}
-
-.legend {
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.legend span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend .dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 2px solid;
-}
-
-.dot.normal { border-color: #3d3d4d; background: #2a2a38; }
-.dot.choice { border-color: #7c3aed; background: #2e2448; }
-.dot.hero { border-color: #ea580c; background: #3d2818; }
-
-.node.search-match {
-  box-shadow: 0 0 0 3px var(--accent-blue), 0 0 20px var(--accent-blue);
-}
-
-.node.search-dim { opacity: 0.3; }
-
-/* Loadout selection states */
-.node.selected {
-  border-color: var(--accent-green);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-}
-
-.node.selected .node-ranks {
-  color: var(--accent-gold);
-}
-
-.node.unselected {
-  opacity: 0.35;
-  filter: grayscale(0.5);
-}
-
-.node.unselected:hover {
-  opacity: 0.7;
-  filter: grayscale(0.3);
-}
-
-.edge.selected {
-  stroke: var(--accent-green);
-  stroke-width: 3;
-}
-
-.edge.unselected {
-  stroke: #2a2a3a;
-  opacity: 0.4;
-}
-
-.loadout-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid var(--accent-green);
-  border-radius: 6px;
-  font-size: 11px;
-  color: var(--accent-green);
-  font-weight: 500;
-}
-</style>
-</head>
-<body>
-  <header>
-    <h1>Hunter — Beast Mastery</h1>
-    <div class="loadout-badge">✓ Loadout: 71 talents selected</div>
-    <div class="hero-selector">
-      <button class="hero-btn active" data-subtree="43"><img src="https://api.wowlab.gg/functions/v1/icons/small/talents-heroclass-hunter-packleader.jpg" alt="Pack Leader"><span>Pack Leader</span></button><button class="hero-btn" data-subtree="44"><img src="https://api.wowlab.gg/functions/v1/icons/small/talents-heroclass-hunter-darkranger.jpg" alt="Dark Ranger"><span>Dark Ranger</span></button><button class="hero-btn" data-subtree="none"><span>Hide Hero</span></button>
-    </div>
-    <input type="text" class="search-input" id="searchInput" placeholder="Search talents...">
-    <div class="stats">112 nodes · 175 edges</div>
-    <div class="legend">
-      <span><div class="dot normal"></div> Talent</span>
-      <span><div class="dot choice"></div> Choice</span>
-      <span><div class="dot hero"></div> Hero</span>
-    </div>
-  </header>
-  <div class="container">
-    <div class="tree" id="tree"></div>
-  </div>
-  <div class="tooltip" id="tooltip"></div>
-  <script>
-const treeData = {"bounds":{"maxX":1440,"maxY":-120,"minX":240,"minY":-690},"edges":[{"sourceNodeId":79837,"targetNodeId":102391},{"sourceNodeId":79837,"targetNodeId":102395},{"sourceNodeId":79837,"targetNodeId":102390},{"sourceNodeId":94957,"targetNodeId":94993},{"sourceNodeId":94959,"targetNodeId":94983},{"sourceNodeId":94960,"targetNodeId":94982},{"sourceNodeId":94961,"targetNodeId":94986},{"sourceNodeId":94962,"targetNodeId":94988},{"sourceNodeId":94967,"targetNodeId":94966},{"sourceNodeId":94968,"targetNodeId":94959},{"sourceNodeId":94969,"targetNodeId":94966},{"sourceNodeId":94972,"targetNodeId":94969},{"sourceNodeId":94974,"targetNodeId":94960},{"sourceNodeId":94979,"targetNodeId":94966},{"sourceNodeId":94982,"targetNodeId":94993},{"sourceNodeId":94983,"targetNodeId":94993},{"sourceNodeId":94984,"targetNodeId":94967},{"sourceNodeId":94985,"targetNodeId":94972},{"sourceNodeId":94986,"targetNodeId":94957},{"sourceNodeId":94987,"targetNodeId":94961},{"sourceNodeId":94987,"targetNodeId":94974},{"sourceNodeId":94987,"targetNodeId":94968},{"sourceNodeId":94988,"targetNodeId":94979},{"sourceNodeId":94991,"targetNodeId":94985},{"sourceNodeId":94991,"targetNodeId":94992},{"sourceNodeId":94991,"targetNodeId":94962},{"sourceNodeId":94992,"targetNodeId":94984},{"sourceNodeId":102292,"targetNodeId":102395},{"sourceNodeId":102292,"targetNodeId":102391},{"sourceNodeId":102292,"targetNodeId":102390},{"sourceNodeId":102336,"targetNodeId":102339},{"sourceNodeId":102337,"targetNodeId":102367},{"sourceNodeId":102338,"targetNodeId":102348},{"sourceNodeId":102338,"targetNodeId":102376},{"sourceNodeId":102340,"targetNodeId":102370},{"sourceNodeId":102340,"targetNodeId":102373},{"sourceNodeId":102340,"targetNodeId":102372},{"sourceNodeId":102341,"targetNodeId":102348},{"sourceNodeId":102341,"targetNodeId":102359},{"sourceNodeId":102341,"targetNodeId":102355},{"sourceNodeId":102342,"targetNodeId":102371},{"sourceNodeId":102343,"targetNodeId":102369},{"sourceNodeId":102344,"targetNodeId":102347},{"sourceNodeId":102345,"targetNodeId":102369},{"sourceNodeId":102346,"targetNodeId":102377},{"sourceNodeId":102346,"targetNodeId":102361},{"sourceNodeId":102346,"targetNodeId":102354},{"sourceNodeId":102347,"targetNodeId":102353},{"sourceNodeId":102347,"targetNodeId":102356},{"sourceNodeId":102347,"targetNodeId":102362},{"sourceNodeId":102348,"targetNodeId":102340},{"sourceNodeId":102348,"targetNodeId":102358},{"sourceNodeId":102350,"targetNodeId":102371},{"sourceNodeId":102351,"targetNodeId":102357},{"sourceNodeId":102353,"targetNodeId":102372},{"sourceNodeId":102354,"targetNodeId":102374},{"sourceNodeId":102354,"targetNodeId":102351},{"sourceNodeId":102355,"targetNodeId":102340},{"sourceNodeId":102356,"targetNodeId":102364},{"sourceNodeId":102357,"targetNodeId":102368},{"sourceNodeId":102357,"targetNodeId":102344},{"sourceNodeId":102358,"targetNodeId":102370},{"sourceNodeId":102359,"targetNodeId":102340},{"sourceNodeId":102359,"targetNodeId":102353},{"sourceNodeId":102360,"targetNodeId":102376},{"sourceNodeId":102361,"targetNodeId":102363},{"sourceNodeId":102362,"targetNodeId":102372},{"sourceNodeId":102362,"targetNodeId":102364},{"sourceNodeId":102363,"targetNodeId":102341},{"sourceNodeId":102363,"targetNodeId":102338},{"sourceNodeId":102363,"targetNodeId":102368},{"sourceNodeId":102364,"targetNodeId":102336},{"sourceNodeId":102365,"targetNodeId":102370},{"sourceNodeId":102365,"targetNodeId":102367},{"sourceNodeId":102367,"targetNodeId":107286},{"sourceNodeId":102368,"targetNodeId":102359},{"sourceNodeId":102368,"targetNodeId":102347},{"sourceNodeId":102369,"targetNodeId":102338},{"sourceNodeId":102369,"targetNodeId":102360},{"sourceNodeId":102373,"targetNodeId":102342},{"sourceNodeId":102373,"targetNodeId":102375},{"sourceNodeId":102373,"targetNodeId":102350},{"sourceNodeId":102374,"targetNodeId":102357},{"sourceNodeId":102375,"targetNodeId":102371},{"sourceNodeId":102376,"targetNodeId":102358},{"sourceNodeId":102376,"targetNodeId":102365},{"sourceNodeId":102376,"targetNodeId":102337},{"sourceNodeId":102377,"targetNodeId":102345},{"sourceNodeId":102377,"targetNodeId":102343},{"sourceNodeId":102378,"targetNodeId":102410},{"sourceNodeId":102380,"targetNodeId":102402},{"sourceNodeId":102380,"targetNodeId":79837},{"sourceNodeId":102380,"targetNodeId":102415},{"sourceNodeId":102380,"targetNodeId":102419},{"sourceNodeId":102380,"targetNodeId":102292},{"sourceNodeId":102381,"targetNodeId":102393},{"sourceNodeId":102381,"targetNodeId":102383},{"sourceNodeId":102382,"targetNodeId":102386},{"sourceNodeId":102383,"targetNodeId":102422},{"sourceNodeId":102383,"targetNodeId":102424},{"sourceNodeId":102384,"targetNodeId":102389},{"sourceNodeId":102384,"targetNodeId":102739},{"sourceNodeId":102385,"targetNodeId":102387},{"sourceNodeId":102386,"targetNodeId":102417},{"sourceNodeId":102386,"targetNodeId":102409},{"sourceNodeId":102386,"targetNodeId":102408},{"sourceNodeId":102388,"targetNodeId":102426},{"sourceNodeId":102388,"targetNodeId":102416},{"sourceNodeId":102388,"targetNodeId":102384},{"sourceNodeId":102390,"targetNodeId":102420},{"sourceNodeId":102391,"targetNodeId":102420},{"sourceNodeId":102391,"targetNodeId":102397},{"sourceNodeId":102392,"targetNodeId":102388},{"sourceNodeId":102393,"targetNodeId":102292},{"sourceNodeId":102393,"targetNodeId":79837},{"sourceNodeId":102393,"targetNodeId":102402},{"sourceNodeId":102393,"targetNodeId":102403},{"sourceNodeId":102393,"targetNodeId":102422},{"sourceNodeId":102394,"targetNodeId":102404},{"sourceNodeId":102395,"targetNodeId":102386},{"sourceNodeId":102395,"targetNodeId":102420},{"sourceNodeId":102396,"targetNodeId":102404},{"sourceNodeId":102396,"targetNodeId":102388},{"sourceNodeId":102397,"targetNodeId":102396},{"sourceNodeId":102397,"targetNodeId":102394},{"sourceNodeId":102397,"targetNodeId":102421},{"sourceNodeId":102400,"targetNodeId":102389},{"sourceNodeId":102401,"targetNodeId":102381},{"sourceNodeId":102402,"targetNodeId":102391},{"sourceNodeId":102402,"targetNodeId":102395},{"sourceNodeId":102402,"targetNodeId":102390},{"sourceNodeId":102403,"targetNodeId":102391},{"sourceNodeId":102404,"targetNodeId":102405},{"sourceNodeId":102404,"targetNodeId":102384},{"sourceNodeId":102404,"targetNodeId":102400},{"sourceNodeId":102405,"targetNodeId":102389},{"sourceNodeId":102406,"targetNodeId":102397},{"sourceNodeId":102406,"targetNodeId":102397},{"sourceNodeId":102407,"targetNodeId":102419},{"sourceNodeId":102407,"targetNodeId":102382},{"sourceNodeId":102408,"targetNodeId":102425},{"sourceNodeId":102408,"targetNodeId":102414},{"sourceNodeId":102409,"targetNodeId":102414},{"sourceNodeId":102409,"targetNodeId":102388},{"sourceNodeId":102410,"targetNodeId":102407},{"sourceNodeId":102410,"targetNodeId":102380},{"sourceNodeId":102411,"targetNodeId":102423},{"sourceNodeId":102412,"targetNodeId":102386},{"sourceNodeId":102413,"targetNodeId":102400},{"sourceNodeId":102414,"targetNodeId":102416},{"sourceNodeId":102414,"targetNodeId":102385},{"sourceNodeId":102414,"targetNodeId":102418},{"sourceNodeId":102415,"targetNodeId":102395},{"sourceNodeId":102416,"targetNodeId":102387},{"sourceNodeId":102416,"targetNodeId":102739},{"sourceNodeId":102417,"targetNodeId":102414},{"sourceNodeId":102418,"targetNodeId":102387},{"sourceNodeId":102419,"targetNodeId":102382},{"sourceNodeId":102419,"targetNodeId":102395},{"sourceNodeId":102419,"targetNodeId":102412},{"sourceNodeId":102420,"targetNodeId":102396},{"sourceNodeId":102420,"targetNodeId":102392},{"sourceNodeId":102420,"targetNodeId":102409},{"sourceNodeId":102421,"targetNodeId":102404},{"sourceNodeId":102421,"targetNodeId":102413},{"sourceNodeId":102422,"targetNodeId":102424},{"sourceNodeId":102422,"targetNodeId":102391},{"sourceNodeId":102422,"targetNodeId":102406},{"sourceNodeId":102423,"targetNodeId":102393},{"sourceNodeId":102423,"targetNodeId":102380},{"sourceNodeId":102424,"targetNodeId":102397},{"sourceNodeId":102424,"targetNodeId":102397},{"sourceNodeId":102425,"targetNodeId":102418},{"sourceNodeId":102426,"targetNodeId":102739},{"sourceNodeId":107286,"targetNodeId":107285}],"nodes":[{"entries":[{"description":"","iconFileName":"ability_hunter_negate","maxRanks":1,"name":"Muzzle","spellId":187707}],"id":79837,"pixelX":420,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"achievement_leader_sylvanas","maxRanks":1,"name":"Banshee's Mark","spellId":467902}],"id":94957,"pixelX":750,"pixelY":-300,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"spell_warlock_demonsoul","maxRanks":1,"name":"Smoke Screen","spellId":430709}],"id":94959,"pixelX":810,"pixelY":-239.8,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"inv_belt_44c","maxRanks":1,"name":"Dark Chains","spellId":430712},{"description":"","iconFileName":"ability_throw","maxRanks":1,"name":"Shadow Dagger","spellId":467741}],"id":94960,"pixelX":870,"pixelY":-239.8,"subTreeId":44,"type":2},{"entries":[{"description":"","iconFileName":"inv_quiver_1h_mawraid_d_01","maxRanks":1,"name":"Bleak Arrows","spellId":467749}],"id":94961,"pixelX":750,"pixelY":-179.8,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_pathfinding2","maxRanks":1,"name":"Better Together","spellId":472357}],"id":94962,"pixelX":870,"pixelY":-479.7,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"buff_epichunter","maxRanks":1,"name":"Lead From the Front","spellId":472741}],"id":94966,"pixelX":810,"pixelY":-659.9,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"inv_babyturtle2","maxRanks":1,"name":"Shell Cover","spellId":472707}],"id":94967,"pixelX":810,"pixelY":-600,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"spell_shadow_animatedead","maxRanks":1,"name":"The Bell Tolls","spellId":467644}],"id":94968,"pixelX":810,"pixelY":-180,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_goforthethroat","maxRanks":1,"name":"No Mercy","spellId":472660}],"id":94969,"pixelX":750,"pixelY":-600,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"spell_druid_bearhug","maxRanks":1,"name":"Ursine Fury","spellId":472476},{"description":"","iconFileName":"spell_nature_nullifypoison","maxRanks":1,"name":"Envenomed Fangs","spellId":472524}],"id":94972,"pixelX":750,"pixelY":-540,"subTreeId":43,"type":2},{"entries":[{"description":"","iconFileName":"inv_misc_powder_tin","maxRanks":1,"name":"Bleak Powder","spellId":467911}],"id":94974,"pixelX":870,"pixelY":-180,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"ability_heroicleap","maxRanks":1,"name":"Slicked Shoes","spellId":472719},{"description":"","iconFileName":"inv_misc_rope_01","maxRanks":1,"name":"Horsehair Tether","spellId":472729}],"id":94979,"pixelX":870,"pixelY":-600,"subTreeId":43,"type":2},{"entries":[{"description":"","iconFileName":"spell_deathknight_strangulate","maxRanks":1,"name":"Umbral Reach","spellId":1235397}],"id":94982,"pixelX":870,"pixelY":-300,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"inv_darkhoundmount_draka_blue","maxRanks":1,"name":"Shadow Hounds","spellId":430707},{"description":"","iconFileName":"ability_warlock_soulsiphon","maxRanks":1,"name":"Soul Drinker","spellId":469638}],"id":94983,"pixelX":810,"pixelY":-300,"subTreeId":44,"type":2},{"entries":[{"description":"","iconFileName":"spell_druid_feralchargecat","maxRanks":1,"name":"Fury of the Wyvern","spellId":472550}],"id":94984,"pixelX":810,"pixelY":-540,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"spell_hunter_lonewolf","maxRanks":1,"name":"Pack Mentality","spellId":472358}],"id":94985,"pixelX":750,"pixelY":-479.7,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"spell_holy_painsupression","maxRanks":1,"name":"Phantom Pain","spellId":467941},{"description":"","iconFileName":"inv_10_tailoring_craftingoptionalreagent_enhancedspellthread_color4","maxRanks":1,"name":"Ebon Bowstring","spellId":467897}],"id":94986,"pixelX":750,"pixelY":-239.8,"subTreeId":44,"type":2},{"entries":[{"description":"","iconFileName":"inv_ability_darkrangerhunter_blackarrow","maxRanks":1,"name":"Black Arrow","spellId":466932}],"id":94987,"pixelX":810,"pixelY":-120,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_boarshead","maxRanks":1,"name":"Hogstrider","spellId":472639}],"id":94988,"pixelX":870,"pixelY":-540,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"inv_ability_packleaderhunter_vicioushunt","maxRanks":1,"name":"Howl of the Pack Leader","spellId":471876}],"id":94991,"pixelX":810,"pixelY":-420,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_horn_01","maxRanks":1,"name":"Dire Summons","spellId":472352}],"id":94992,"pixelX":810,"pixelY":-479.7,"subTreeId":43,"type":0},{"entries":[{"description":"","iconFileName":"spell_shadow_painspike","maxRanks":1,"name":"Withering Fire","spellId":466990}],"id":94993,"pixelX":810,"pixelY":-359.7,"subTreeId":44,"type":0},{"entries":[{"description":"","iconFileName":"inv_ammo_arrow_03","maxRanks":1,"name":"Counter Shot","spellId":147362}],"id":102292,"pixelX":420,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_callofthewild","maxRanks":1,"name":"Call of the Wild","spellId":359844}],"id":102336,"pixelX":1140,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_physical_taunt","maxRanks":1,"name":"Dire Cleave","spellId":1217524}],"id":102337,"pixelX":1440,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_hunter_adaptation","maxRanks":1,"name":"Training Expert","spellId":378209}],"id":102338,"pixelX":1320,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_beastwithin","maxRanks":1,"name":"Wild Instincts","spellId":378442},{"description":"","iconFileName":"ability_racial_cannibalize","maxRanks":1,"name":"Bloody Frenzy","spellId":407412}],"id":102339,"pixelX":1140,"pixelY":-690,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_druid_ferociousbite","maxRanks":1,"name":"Bestial Wrath","spellId":19574}],"id":102340,"pixelX":1260.1,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_sickem","maxRanks":1,"name":"Beast Cleave","spellId":115939}],"id":102341,"pixelX":1259.9,"pixelY":-389.9,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_shadow_lifedrain","maxRanks":2,"name":"Scent of Blood","spellId":193532}],"id":102342,"pixelX":1260,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_barbedshot","maxRanks":1,"name":"War Orders","spellId":393933}],"id":102343,"pixelX":1320,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_quiver_1h_hunter_c_01_green","maxRanks":1,"name":"Snakeskin Quiver","spellId":468695},{"description":"","iconFileName":"ability_hunter_cobrastrikes","maxRanks":1,"name":"Cobra Senses","spellId":378244}],"id":102344,"pixelX":1080,"pixelY":-390,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_hunter_thrillofthehunt","maxRanks":1,"name":"Thrill of the Hunt","spellId":257944}],"id":102345,"pixelX":1380,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_killcommand","maxRanks":1,"name":"Kill Command","spellId":34026}],"id":102346,"pixelX":1260.1,"pixelY":-150.1,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"warrior_talent_icon_thunderstruck","maxRanks":1,"name":"Stomp","spellId":199530}],"id":102347,"pixelX":1140,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_masterscall","maxRanks":1,"name":"Wild Call","spellId":185789}],"id":102348,"pixelX":1320,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_druid_rake","maxRanks":1,"name":"Brutal Companion","spellId":386870}],"id":102350,"pixelX":1320,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_deathwing_assualtaspects","maxRanks":1,"name":"Aspect of the Beast","spellId":191384}],"id":102351,"pixelX":1200,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_scales_stonygreen","maxRanks":1,"name":"Barbed Scales","spellId":469880}],"id":102353,"pixelX":1200.1,"pixelY":-510.1,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_cobrashot","maxRanks":1,"name":"Cobra Shot","spellId":193455}],"id":102354,"pixelX":1200,"pixelY":-210,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_druid_bloodythrash","maxRanks":1,"name":"Kill Cleave","spellId":378207}],"id":102355,"pixelX":1259.9,"pixelY":-449.9,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_nature_protectionformnature","maxRanks":1,"name":"Savagery","spellId":424557}],"id":102356,"pixelX":1080,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_goforthethroat","maxRanks":1,"name":"Go for the Throat","spellId":459550}],"id":102357,"pixelX":1140,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_thornnecklace","maxRanks":1,"name":"Poisoned Barbs","spellId":1217535}],"id":102358,"pixelX":1320,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_leatherworking_70_petleash","maxRanks":1,"name":"Master Handler","spellId":424558}],"id":102359,"pixelX":1200,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_assassinate","maxRanks":1,"name":"Hunter's Prey","spellId":378210}],"id":102360,"pixelX":1440,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_bestialdiscipline","maxRanks":1,"name":"Animal Companion","spellId":267116},{"description":"","iconFileName":"ability_hunter_separationanxiety","maxRanks":1,"name":"Solitary Companion","spellId":474746}],"id":102361,"pixelX":1260,"pixelY":-210,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_druid_primaltenacity","maxRanks":1,"name":"Bloodshed","spellId":321530}],"id":102362,"pixelX":1140,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_upgrademoonglaive","maxRanks":1,"name":"Multi-Shot","spellId":2643}],"id":102363,"pixelX":1260,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_killcommand","maxRanks":2,"name":"Killer Instinct","spellId":273887}],"id":102364,"pixelX":1140,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_ferociousinspiration","maxRanks":1,"name":"Dire Command","spellId":378743}],"id":102365,"pixelX":1380,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_huntervswild","maxRanks":2,"name":"Dire Frenzy","spellId":385810}],"id":102367,"pixelX":1380,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_druid_savagery","maxRanks":1,"name":"Alpha Predator","spellId":269737}],"id":102368,"pixelX":1200,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_druid_disembowel","maxRanks":1,"name":"Laceration","spellId":459552}],"id":102369,"pixelX":1380,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv__blacksmithing_hoofplate","maxRanks":1,"name":"Thundering Hooves","spellId":459693}],"id":102370,"pixelX":1320,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_monsterfang_02","maxRanks":1,"name":"Piercing Fangs","spellId":392053}],"id":102371,"pixelX":1260,"pixelY":-690,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_nature_poisoncleansingtotem","maxRanks":1,"name":"Serpentine Rhythm","spellId":468701}],"id":102372,"pixelX":1200,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_druid_ferociousbite","maxRanks":1,"name":"Barbed Wrath","spellId":231548}],"id":102373,"pixelX":1260,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_invigeration","maxRanks":1,"name":"Pack Tactics","spellId":321014}],"id":102374,"pixelX":1140,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_snaketrap","maxRanks":1,"name":"Killer Cobra","spellId":199532}],"id":102375,"pixelX":1200,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_longevity","maxRanks":1,"name":"Dire Beast","spellId":120679}],"id":102376,"pixelX":1380,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_barbedshot","maxRanks":1,"name":"Barbed Shot","spellId":217200}],"id":102377,"pixelX":1320,"pixelY":-210,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_assassinate2","maxRanks":1,"name":"Kill Shot","spellId":53351}],"id":102378,"pixelX":540,"pixelY":-150,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_nature_drowsy","maxRanks":1,"name":"Tranquilizing Shot","spellId":19801}],"id":102380,"pixelX":480,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_druid_galewinds","maxRanks":1,"name":"Rejuvenating Wind","spellId":385539}],"id":102381,"pixelX":300,"pixelY":-210,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_druid_cower","maxRanks":1,"name":"Scare Beast","spellId":1513}],"id":102382,"pixelX":600,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_mendpet","maxRanks":1,"name":"Wilderness Medicine","spellId":343242}],"id":102383,"pixelX":240,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_spear_01","maxRanks":1,"name":"Serrated Tips","spellId":459502}],"id":102384,"pixelX":360,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_ambush","maxRanks":1,"name":"Ghillie Suit","spellId":459466}],"id":102385,"pixelX":540,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_shaman_bindelemental","maxRanks":1,"name":"Binding Shot","spellId":109248}],"id":102386,"pixelX":540,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_potentvenom","maxRanks":1,"name":"Unnatural Causes","spellId":459527}],"id":102387,"pixelX":540,"pixelY":-690,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_steelweaponchain","maxRanks":1,"name":"Binding Shackles","spellId":321468}],"id":102388,"pixelX":420,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_potion_29","maxRanks":1,"name":"Emergency Salve","spellId":459517}],"id":102389,"pixelX":300,"pixelY":-690,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_quiver_03","maxRanks":1,"name":"Specialized Arsenal","spellId":459542}],"id":102390,"pixelX":420,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_huntervswild","maxRanks":1,"name":"Lone Survivor","spellId":388039}],"id":102391,"pixelX":360,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_ore_blackrock_nugget","maxRanks":1,"name":"Blackrock Munitions","spellId":462036}],"id":102392,"pixelX":420,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_yorsahj_bloodboil_black","maxRanks":1,"name":"Tar Trap","spellId":187698}],"id":102393,"pixelX":360,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_nature_shamanrage","maxRanks":1,"name":"Territorial Instincts","spellId":459507}],"id":102394,"pixelX":300,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"hunter_pvp_vipersting","maxRanks":1,"name":"Disruptive Rounds","spellId":343244}],"id":102395,"pixelX":480,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_10_engineering2_pvpflaregun_color1","maxRanks":2,"name":"Trigger Finger","spellId":459534}],"id":102396,"pixelX":360,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_devour","maxRanks":1,"name":"Intimidation","spellId":19577}],"id":102397,"pixelX":300,"pixelY":-450,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_aspectmastery","maxRanks":1,"name":"Trailblazer","spellId":199921}],"id":102400,"pixelX":240,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_onewithnature","maxRanks":1,"name":"Natural Mending","spellId":270581}],"id":102401,"pixelX":300,"pixelY":-150,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_ammo_arrow_03","maxRanks":1,"name":"Counter Shot","spellId":147362}],"id":102402,"pixelX":420,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_ensnare","maxRanks":1,"name":"Entrapment","spellId":393344}],"id":102403,"pixelX":360,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_displacement","maxRanks":1,"name":"Pathfinding","spellId":378002}],"id":102404,"pixelX":300,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_fervor","maxRanks":1,"name":"Roar of Sacrifice","spellId":53480}],"id":102405,"pixelX":300,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_rogue_plunderarmor","maxRanks":1,"name":"Padded Armor","spellId":459450}],"id":102406,"pixelX":300,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_frost_stun","maxRanks":1,"name":"Concussive Shot","spellId":5116}],"id":102407,"pixelX":600,"pixelY":-270,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_gear_08","maxRanks":1,"name":"Scrappy","spellId":459533}],"id":102408,"pixelX":600,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_silenthunter","maxRanks":2,"name":"Keen Eyesight","spellId":378004}],"id":102409,"pixelX":480,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_runningshot","maxRanks":1,"name":"Deathblow","spellId":343248}],"id":102410,"pixelX":540,"pixelY":-210,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_posthaste","maxRanks":1,"name":"Posthaste","spellId":109215}],"id":102411,"pixelX":420,"pixelY":-150,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_seal","maxRanks":1,"name":"No Hard Feelings","spellId":459546}],"id":102412,"pixelX":540,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_wildquiver","maxRanks":1,"name":"Quick Load","spellId":378771}],"id":102413,"pixelX":240,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_camouflage","maxRanks":1,"name":"Camouflage","spellId":199483}],"id":102414,"pixelX":540,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_mount_kodo_03","maxRanks":1,"name":"Kodo Tranquilizer","spellId":459983},{"description":"","iconFileName":"ability_hunter_pet_devilsaur","maxRanks":1,"name":"Devilsaur Tranquilizer","spellId":459991}],"id":102415,"pixelX":480,"pixelY":-330,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_hunter_aspectoftheviper","maxRanks":1,"name":"Born To Be Wild","spellId":266921}],"id":102416,"pixelX":480,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"inv_misc_food_legion_goooil_pool","maxRanks":1,"name":"Tar-Coated Bindings","spellId":459460}],"id":102417,"pixelX":540,"pixelY":-510,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_traplauncher","maxRanks":1,"name":"Improved Traps","spellId":343247}],"id":102418,"pixelX":600,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_misdirection","maxRanks":1,"name":"Misdirection","spellId":34477}],"id":102419,"pixelX":540,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_hunter_explosiveshot","maxRanks":1,"name":"Explosive Shot","spellId":212431},{"description":"","iconFileName":"ability_druid_skinteeth","maxRanks":1,"name":"Harmonize","spellId":1245926}],"id":102420,"pixelX":420,"pixelY":-450,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_hunter_burstingshot","maxRanks":1,"name":"Bursting Shot","spellId":186387},{"description":"","iconFileName":"ability_golemstormbolt","maxRanks":1,"name":"Scatter Shot","spellId":213691}],"id":102421,"pixelX":240,"pixelY":-510,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"spell_nature_spiritarmor","maxRanks":1,"name":"Survival of the Fittest","spellId":264735}],"id":102422,"pixelX":300,"pixelY":-330,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"rogue_burstofspeed","maxRanks":1,"name":"Hunter's Avoidance","spellId":384799}],"id":102423,"pixelX":420,"pixelY":-210,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_rogue_sprint","maxRanks":1,"name":"Scout's Instincts","spellId":459455}],"id":102424,"pixelX":240,"pixelY":-390,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"achievment_raid_houroftwilight","maxRanks":1,"name":"Kindling Flare","spellId":459506}],"id":102425,"pixelX":600,"pixelY":-570,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"ability_karoz_leap","maxRanks":1,"name":"Moment of Opportunity","spellId":459488}],"id":102426,"pixelX":420,"pixelY":-630,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_fire_selfdestruct","maxRanks":1,"name":"High Explosive Trap","spellId":236776},{"description":"","iconFileName":"6bf_explosive_shard","maxRanks":1,"name":"Implosive Trap","spellId":462031}],"id":102739,"pixelX":420,"pixelY":-690,"subTreeId":null,"type":2},{"entries":[{"description":"","iconFileName":"ability_hunter_huntingparty","maxRanks":1,"name":"Wildspeaker","spellId":1232739}],"id":107285,"pixelX":1380,"pixelY":-690,"subTreeId":null,"type":0},{"entries":[{"description":"","iconFileName":"spell_hunter_lonewolf","maxRanks":1,"name":"Huntmaster's Call","spellId":459730}],"id":107286,"pixelX":1380,"pixelY":-630,"subTreeId":null,"type":0}],"subTrees":[{"iconFileName":"talents-heroclass-hunter-packleader","id":43,"name":"Pack Leader","nodeIds":[94962,94966,94967,94969,94972,94979,94984,94985,94988,94991,94992]},{"iconFileName":"talents-heroclass-hunter-darkranger","id":44,"name":"Dark Ranger","nodeIds":[94957,94959,94960,94961,94968,94974,94982,94983,94986,94987,94993]}]};
-
-// Loadout data
-const loadoutSelectedNodes = [94957,94959,94960,94961,94968,94974,94982,94983,94986,94987,94991,94993,99832,102292,102336,102337,102339,102340,102343,102344,102345,102346,102347,102353,102354,102356,102357,102359,102360,102361,102362,102364,102365,102367,102368,102369,102373,102374,102376,102377,102378,102380,102381,102383,102384,102386,102387,102388,102390,102391,102392,102395,102396,102397,102401,102406,102408,102409,102410,102411,102416,102417,102419,102420,102421,102422,102423,102426,102739,107285,107286];
-const loadoutChoices = new Map([[94960,1],[94983,1],[94986,1],[99832,0],[102339,1],[102344,0],[102361,0],[102420,1],[102421,0],[102739,1]]);
-const loadoutRanks = new Map([[94957,1],[94959,1],[94960,1],[94961,1],[94968,1],[94974,1],[94982,1],[94983,1],[94986,1],[94987,1],[94991,1],[94993,1],[99832,1],[102292,1],[102336,1],[102337,1],[102339,1],[102340,1],[102343,1],[102344,1],[102345,1],[102346,1],[102347,1],[102353,1],[102354,1],[102356,1],[102357,1],[102359,1],[102360,1],[102361,1],[102362,1],[102364,2],[102365,1],[102367,2],[102368,1],[102369,1],[102373,1],[102374,1],[102376,1],[102377,1],[102378,1],[102380,1],[102381,1],[102383,1],[102384,1],[102386,1],[102387,1],[102388,1],[102390,1],[102391,1],[102392,1],[102395,1],[102396,2],[102397,1],[102401,1],[102406,1],[102408,1],[102409,2],[102410,1],[102411,1],[102416,1],[102417,1],[102419,1],[102420,1],[102421,1],[102422,1],[102423,1],[102426,1],[102739,1],[107285,1],[107286,1]]);
-const hasLoadout = loadoutSelectedNodes !== null;
-
-const iconBaseUrl = "https://api.wowlab.gg";
-
-const getIconUrl = (iconFileName, size = "large") => {
-  const filename = iconFileName || "inv_misc_questionmark";
-  return iconBaseUrl + "/functions/v1/icons/" + size + "/" + filename + ".jpg";
-};
-
-const treeEl = document.getElementById("tree");
-const tooltip = document.getElementById("tooltip");
-const searchInput = document.getElementById("searchInput");
-
-// Calculate dimensions
-const nodes = treeData.nodes;
-const padding = 60;
-const nodeSize = 52;
-const nodeCenter = nodeSize / 2;
-
-const minX = Math.min(...nodes.map(n => n.pixelX));
-const maxX = Math.max(...nodes.map(n => n.pixelX));
-const minY = Math.min(...nodes.map(n => n.pixelY));
-const maxY = Math.max(...nodes.map(n => n.pixelY));
-
-const width = (maxX - minX) + padding * 2 + nodeSize;
-const height = (maxY - minY) + padding * 2 + nodeSize;
-
-treeEl.style.width = width + "px";
-treeEl.style.height = height + "px";
-
-const toX = x => (x - minX) + padding;
-// Y is inverted: Blizzard uses Y-up (negative pixelY = top), HTML uses Y-down (top=0)
-// So we flip by using (maxY - y) instead of (y - minY)
-const toY = y => (maxY - y) + padding;
-
-// Create SVG for edges
-const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svg.setAttribute("width", width);
-svg.setAttribute("height", height);
-
-const nodeMap = new Map(nodes.map(n => [n.id, n]));
-const edgeEls = [];
-
-// Pre-compute loadout set for edge rendering
-const loadoutNodeSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
-
-for (const edge of treeData.edges) {
-  const from = nodeMap.get(edge.sourceNodeId);
-  const to = nodeMap.get(edge.targetNodeId);
-  if (!from || !to) continue;
-
-  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  line.setAttribute("x1", toX(from.pixelX) + nodeCenter);
-  line.setAttribute("y1", toY(from.pixelY) + nodeCenter);
-  line.setAttribute("x2", toX(to.pixelX) + nodeCenter);
-  line.setAttribute("y2", toY(to.pixelY) + nodeCenter);
-  line.classList.add("edge");
-
-  const fromHero = from.subTreeId && from.subTreeId > 0;
-  const toHero = to.subTreeId && to.subTreeId > 0;
-  if (fromHero || toHero) {
-    line.classList.add("hero-edge");
-  }
-
-  // Add loadout selection styling to edges
-  if (hasLoadout && loadoutNodeSet) {
-    const fromSelected = loadoutNodeSet.has(from.id);
-    const toSelected = loadoutNodeSet.has(to.id);
-    if (fromSelected && toSelected) {
-      line.classList.add("selected");
-    } else {
-      line.classList.add("unselected");
-    }
-  }
-
-  line.dataset.fromSub = from.subTreeId || 0;
-  line.dataset.toSub = to.subTreeId || 0;
-  svg.appendChild(line);
-  edgeEls.push(line);
-}
-
-treeEl.appendChild(svg);
-
-// Render nodes
-const nodeEls = [];
-const loadoutSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
-
-for (const node of nodes) {
-  const el = document.createElement("div");
-  const isChoice = node.type === 2 && node.entries.length > 1;
-  const isHero = node.subTreeId && node.subTreeId > 0;
-  const isSelected = loadoutSet?.has(node.id) ?? false;
-  const choiceIndex = loadoutChoices?.get(node.id) ?? null;
-  const purchasedRanks = loadoutRanks?.get(node.id) ?? null;
-
-  // Build class list
-  let className = "node";
-  if (isChoice) className += " choice";
-  if (isHero) className += " hero";
-  if (hasLoadout) {
-    className += isSelected ? " selected" : " unselected";
-  }
-  el.className = className;
-  el.style.left = toX(node.pixelX) + "px";
-  el.style.top = toY(node.pixelY) + "px";
-  el.dataset.subTreeId = node.subTreeId || 0;
-  el.dataset.nodeId = node.id;
-
-  if (isChoice && node.entries.length >= 2) {
-    // If loadout has a choice selected, show only that icon full-size
-    // Otherwise show both icons side by side
-    if (hasLoadout && isSelected && choiceIndex !== null && node.entries[choiceIndex]) {
-      const entry = node.entries[choiceIndex];
-      const img = document.createElement("img");
-      img.src = getIconUrl(entry.iconFileName);
-      img.alt = entry.name || "?";
-      img.loading = "lazy";
-      img.style.width = "100%";
-      img.style.height = "100%";
-      el.appendChild(img);
-    } else {
-      // No loadout or not selected - show both options
-      const entriesToShow = node.entries.slice(0, 2);
-      entriesToShow.forEach((entry) => {
-        const img = document.createElement("img");
-        img.src = getIconUrl(entry.iconFileName);
-        img.alt = entry.name || "?";
-        img.loading = "lazy";
-        el.appendChild(img);
-      });
-    }
-  } else if (node.entries.length > 0) {
-    const img = document.createElement("img");
-    img.src = getIconUrl(node.entries[0].iconFileName);
-    img.alt = node.entries[0].name || "?";
-    img.loading = "lazy";
-    el.appendChild(img);
-
-    // Rank indicator - show purchased/max if loadout, otherwise just max
-    const maxRanks = Math.max(...node.entries.map(e => e.maxRanks));
-    if (maxRanks > 1) {
-      const ranks = document.createElement("div");
-      ranks.className = "node-ranks";
-      if (hasLoadout && isSelected && purchasedRanks !== null) {
-        ranks.textContent = purchasedRanks + "/" + maxRanks;
-      } else {
-        ranks.textContent = maxRanks;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hunter Beast Mastery - Talent Tree</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-      el.appendChild(ranks);
-    }
-  }
 
-  // Tooltip handlers
-  el.addEventListener("mouseenter", () => {
-    const subTree = treeData.subTrees.find(s => s.id === node.subTreeId);
-    const heroLabel = subTree ? ' <span style="color:var(--accent-orange)">[' + subTree.name + ']</span>' : "";
-    const isChoice = node.type === 2 && node.entries.length > 1;
+      :root {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #12121a;
+        --bg-tertiary: #1a1a24;
+        --bg-elevated: #22222e;
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-medium: rgba(255, 255, 255, 0.15);
+        --text-primary: #f0f0f5;
+        --text-secondary: #a0a0b0;
+        --text-muted: #606070;
+        --accent-gold: #ffd700;
+        --accent-purple: #a855f7;
+        --accent-orange: #f97316;
+        --accent-blue: #3b82f6;
+        --accent-green: #22c55e;
+        --node-size: 52px;
+      }
 
-    if (isChoice) {
-      const selectedIdx = loadoutChoices?.get(node.id) ?? null;
-      tooltip.innerHTML = '<div class="tooltip-header"><div><h3>Choose One' + heroLabel + '</h3><div class="subtitle">Choice Talent</div></div></div>' +
-        node.entries.map((e, idx) => {
-          const isChosen = selectedIdx === idx;
-          const borderStyle = isChosen ? 'border:2px solid var(--accent-green);' : '';
-          const labelHtml = isChosen ? ' <span style="color:var(--accent-green);font-size:11px">(Selected)</span>' : '';
-          return '<div style="display:flex;gap:10px;align-items:start;margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;' + borderStyle + '">' +
-          '<img src="' + getIconUrl(e.iconFileName, "small") + '" style="width:32px;height:32px;border-radius:6px">' +
-          '<div><strong style="color:var(--accent-purple)">' + (e.name || "Unknown") + '</strong>' + labelHtml +
-          '<p style="margin-top:4px">' + (e.description || "No description.") + '</p></div></div>';
-        }).join("") +
-        '<div class="meta"><span>Node ' + node.id + '</span></div>';
-    } else {
-      const entry = node.entries[0] || {};
-      const maxRanks = Math.max(...node.entries.map(e => e.maxRanks));
-      tooltip.innerHTML =
-        '<div class="tooltip-header">' +
-        '<img class="tooltip-icon" src="' + getIconUrl(entry.iconFileName, "small") + '">' +
-        '<div><h3>' + (entry.name || "Unknown") + heroLabel + '</h3>' +
-        '<div class="subtitle">' + (node.subTreeId > 0 ? "Hero Talent" : "Talent") + (maxRanks > 1 ? " · " + maxRanks + " Ranks" : "") + '</div></div></div>' +
-        '<p>' + (entry.description || "No description.") + '</p>' +
-        '<div class="meta"><span>Node ' + node.id + '</span><span>Spell ' + (entry.spellId || "N/A") + '</span></div>';
-    }
-    tooltip.classList.add("visible");
-  });
+      body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: "Inter", system-ui, sans-serif;
+        min-height: 100vh;
+      }
 
-  el.addEventListener("mousemove", e => {
-    tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 420) + "px";
-    tooltip.style.top = Math.min(e.clientY + 16, window.innerHeight - 300) + "px";
-  });
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        padding: 14px 24px;
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
 
-  el.addEventListener("mouseleave", () => tooltip.classList.remove("visible"));
+      header h1 {
+        font-size: 17px;
+        font-weight: 600;
+      }
 
-  treeEl.appendChild(el);
-  nodeEls.push({ el, node });
-}
+      .container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 57px);
+        overflow: auto;
+      }
 
-// Hero tree selector - use loadout's active tree if available
-const loadoutActiveHeroTreeId = 44;
-let selectedHeroId = loadoutActiveHeroTreeId ?? treeData.subTrees[0]?.id ?? 0;
+      .tree {
+        position: relative;
+        margin: 32px;
+      }
 
-function updateVisibility() {
-  for (const { el, node } of nodeEls) {
-    const isHero = node.subTreeId && node.subTreeId > 0;
-    const visible = !isHero || node.subTreeId === selectedHeroId;
-    el.classList.toggle("hidden", !visible);
-  }
+      .node {
+        position: absolute;
+        width: var(--node-size);
+        height: var(--node-size);
+        background: linear-gradient(180deg, #2a2a38 0%, #1e1e28 100%);
+        border: 2px solid #3d3d4d;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: all 0.15s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      }
 
-  for (const line of edgeEls) {
-    const fromSub = parseInt(line.dataset.fromSub);
-    const toSub = parseInt(line.dataset.toSub);
-    const isHeroEdge = fromSub > 0 || toSub > 0;
-    let visible = true;
-    if (isHeroEdge) {
-      visible = (fromSub === 0 || fromSub === selectedHeroId) && (toSub === 0 || toSub === selectedHeroId);
-    }
-    line.classList.toggle("hidden", !visible);
-  }
+      .node img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+      }
 
-  document.querySelectorAll(".hero-btn").forEach(btn => {
-    const id = btn.dataset.subtree === "none" ? 0 : parseInt(btn.dataset.subtree);
-    btn.classList.toggle("active", id === selectedHeroId);
-  });
-}
+      .node:hover {
+        transform: scale(1.15);
+        border-color: var(--accent-gold);
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        z-index: 100;
+      }
 
-document.querySelectorAll(".hero-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedHeroId = btn.dataset.subtree === "none" ? 0 : parseInt(btn.dataset.subtree);
-    updateVisibility();
-  });
-});
+      .node.choice {
+        border-color: #7c3aed;
+        background: linear-gradient(180deg, #2e2448 0%, #1e1830 100%);
+      }
 
-updateVisibility();
+      .node.choice:hover {
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+      }
 
-// Search
-let searchTimeout;
-searchInput.addEventListener("input", e => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    const query = e.target.value.toLowerCase().trim();
-    for (const { el, node } of nodeEls) {
-      el.classList.remove("search-match", "search-dim");
-      if (!query) continue;
-      const matches = node.entries.some(e => (e.name || "").toLowerCase().includes(query));
-      el.classList.add(matches ? "search-match" : "search-dim");
-    }
-  }, 150);
-});
-</script>
-</body>
+      .node.choice img {
+        width: 50%;
+        height: 100%;
+        border-radius: 4px;
+      }
+
+      .node.hero {
+        border-color: #ea580c;
+        background: linear-gradient(180deg, #3d2818 0%, #2a1c10 100%);
+      }
+
+      .node.hero:hover {
+        border-color: var(--accent-orange);
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+      }
+
+      .node.hidden {
+        display: none;
+      }
+
+      .node-ranks {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        background: rgba(0, 0, 0, 0.75);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--accent-green);
+      }
+
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      }
+
+      .edge {
+        stroke: #3a3a4a;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+
+      .edge.hero-edge {
+        stroke: rgba(249, 115, 22, 0.4);
+        stroke-dasharray: 6 4;
+      }
+
+      .edge.hidden {
+        display: none;
+      }
+
+      .tooltip {
+        display: none;
+        position: fixed;
+        background: rgba(16, 16, 24, 0.98);
+        border: 1px solid var(--border-medium);
+        padding: 16px;
+        border-radius: 12px;
+        max-width: 400px;
+        min-width: 280px;
+        z-index: 1000;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .tooltip.visible {
+        display: block;
+      }
+
+      .tooltip-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .tooltip-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+      }
+
+      .tooltip h3 {
+        color: var(--accent-gold);
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+      }
+
+      .tooltip .subtitle {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+
+      .tooltip p {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+      }
+
+      .tooltip .meta {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-subtle);
+        font-family: monospace;
+      }
+
+      .hero-selector {
+        display: flex;
+        gap: 8px;
+      }
+
+      .hero-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 14px;
+        background: var(--bg-tertiary);
+        border: 1.5px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 12.5px;
+        font-weight: 500;
+        transition: all 0.15s;
+      }
+
+      .hero-btn:hover {
+        background: var(--bg-elevated);
+        border-color: #ea580c;
+      }
+
+      .hero-btn.active {
+        background: rgba(249, 115, 22, 0.12);
+        border-color: var(--accent-orange);
+        color: var(--accent-orange);
+      }
+
+      .hero-btn img {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+      }
+
+      .search-input {
+        padding: 6px 12px;
+        background: var(--bg-tertiary);
+        border: 1.5px solid var(--border-subtle);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 12px;
+        width: 160px;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+      }
+
+      .stats {
+        font-size: 11px;
+        color: var(--text-muted);
+        padding: 5px 12px;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        font-family: monospace;
+        margin-left: auto;
+      }
+
+      .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 2px solid;
+      }
+
+      .dot.normal {
+        border-color: #3d3d4d;
+        background: #2a2a38;
+      }
+      .dot.choice {
+        border-color: #7c3aed;
+        background: #2e2448;
+      }
+      .dot.hero {
+        border-color: #ea580c;
+        background: #3d2818;
+      }
+
+      .node.search-match {
+        box-shadow:
+          0 0 0 3px var(--accent-blue),
+          0 0 20px var(--accent-blue);
+      }
+
+      .node.search-dim {
+        opacity: 0.3;
+      }
+
+      /* Loadout selection states */
+      .node.selected {
+        border-color: var(--accent-green);
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+      }
+
+      .node.selected .node-ranks {
+        color: var(--accent-gold);
+      }
+
+      .node.unselected {
+        opacity: 0.35;
+        filter: grayscale(0.5);
+      }
+
+      .node.unselected:hover {
+        opacity: 0.7;
+        filter: grayscale(0.3);
+      }
+
+      .edge.selected {
+        stroke: var(--accent-green);
+        stroke-width: 3;
+      }
+
+      .edge.unselected {
+        stroke: #2a2a3a;
+        opacity: 0.4;
+      }
+
+      .loadout-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid var(--accent-green);
+        border-radius: 6px;
+        font-size: 11px;
+        color: var(--accent-green);
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Hunter — Beast Mastery</h1>
+      <div class="loadout-badge">✓ Loadout: 71 talents selected</div>
+      <div class="hero-selector">
+        <button class="hero-btn active" data-subtree="43">
+          <img
+            src="https://api.wowlab.gg/functions/v1/icons/small/talents-heroclass-hunter-packleader.jpg"
+            alt="Pack Leader"
+          /><span>Pack Leader</span></button
+        ><button class="hero-btn" data-subtree="44">
+          <img
+            src="https://api.wowlab.gg/functions/v1/icons/small/talents-heroclass-hunter-darkranger.jpg"
+            alt="Dark Ranger"
+          /><span>Dark Ranger</span></button
+        ><button class="hero-btn" data-subtree="none">
+          <span>Hide Hero</span>
+        </button>
+      </div>
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="Search talents..."
+      />
+      <div class="stats">112 nodes · 175 edges</div>
+      <div class="legend">
+        <span
+          ><div class="dot normal"></div>
+          Talent</span
+        >
+        <span
+          ><div class="dot choice"></div>
+          Choice</span
+        >
+        <span
+          ><div class="dot hero"></div>
+          Hero</span
+        >
+      </div>
+    </header>
+    <div class="container">
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+    <script>
+      const treeData = {
+        bounds: { maxX: 1440, maxY: -120, minX: 240, minY: -690 },
+        edges: [
+          { sourceNodeId: 79837, targetNodeId: 102391 },
+          { sourceNodeId: 79837, targetNodeId: 102395 },
+          { sourceNodeId: 79837, targetNodeId: 102390 },
+          { sourceNodeId: 94957, targetNodeId: 94993 },
+          { sourceNodeId: 94959, targetNodeId: 94983 },
+          { sourceNodeId: 94960, targetNodeId: 94982 },
+          { sourceNodeId: 94961, targetNodeId: 94986 },
+          { sourceNodeId: 94962, targetNodeId: 94988 },
+          { sourceNodeId: 94967, targetNodeId: 94966 },
+          { sourceNodeId: 94968, targetNodeId: 94959 },
+          { sourceNodeId: 94969, targetNodeId: 94966 },
+          { sourceNodeId: 94972, targetNodeId: 94969 },
+          { sourceNodeId: 94974, targetNodeId: 94960 },
+          { sourceNodeId: 94979, targetNodeId: 94966 },
+          { sourceNodeId: 94982, targetNodeId: 94993 },
+          { sourceNodeId: 94983, targetNodeId: 94993 },
+          { sourceNodeId: 94984, targetNodeId: 94967 },
+          { sourceNodeId: 94985, targetNodeId: 94972 },
+          { sourceNodeId: 94986, targetNodeId: 94957 },
+          { sourceNodeId: 94987, targetNodeId: 94961 },
+          { sourceNodeId: 94987, targetNodeId: 94974 },
+          { sourceNodeId: 94987, targetNodeId: 94968 },
+          { sourceNodeId: 94988, targetNodeId: 94979 },
+          { sourceNodeId: 94991, targetNodeId: 94985 },
+          { sourceNodeId: 94991, targetNodeId: 94992 },
+          { sourceNodeId: 94991, targetNodeId: 94962 },
+          { sourceNodeId: 94992, targetNodeId: 94984 },
+          { sourceNodeId: 102292, targetNodeId: 102395 },
+          { sourceNodeId: 102292, targetNodeId: 102391 },
+          { sourceNodeId: 102292, targetNodeId: 102390 },
+          { sourceNodeId: 102336, targetNodeId: 102339 },
+          { sourceNodeId: 102337, targetNodeId: 102367 },
+          { sourceNodeId: 102338, targetNodeId: 102348 },
+          { sourceNodeId: 102338, targetNodeId: 102376 },
+          { sourceNodeId: 102340, targetNodeId: 102370 },
+          { sourceNodeId: 102340, targetNodeId: 102373 },
+          { sourceNodeId: 102340, targetNodeId: 102372 },
+          { sourceNodeId: 102341, targetNodeId: 102348 },
+          { sourceNodeId: 102341, targetNodeId: 102359 },
+          { sourceNodeId: 102341, targetNodeId: 102355 },
+          { sourceNodeId: 102342, targetNodeId: 102371 },
+          { sourceNodeId: 102343, targetNodeId: 102369 },
+          { sourceNodeId: 102344, targetNodeId: 102347 },
+          { sourceNodeId: 102345, targetNodeId: 102369 },
+          { sourceNodeId: 102346, targetNodeId: 102377 },
+          { sourceNodeId: 102346, targetNodeId: 102361 },
+          { sourceNodeId: 102346, targetNodeId: 102354 },
+          { sourceNodeId: 102347, targetNodeId: 102353 },
+          { sourceNodeId: 102347, targetNodeId: 102356 },
+          { sourceNodeId: 102347, targetNodeId: 102362 },
+          { sourceNodeId: 102348, targetNodeId: 102340 },
+          { sourceNodeId: 102348, targetNodeId: 102358 },
+          { sourceNodeId: 102350, targetNodeId: 102371 },
+          { sourceNodeId: 102351, targetNodeId: 102357 },
+          { sourceNodeId: 102353, targetNodeId: 102372 },
+          { sourceNodeId: 102354, targetNodeId: 102374 },
+          { sourceNodeId: 102354, targetNodeId: 102351 },
+          { sourceNodeId: 102355, targetNodeId: 102340 },
+          { sourceNodeId: 102356, targetNodeId: 102364 },
+          { sourceNodeId: 102357, targetNodeId: 102368 },
+          { sourceNodeId: 102357, targetNodeId: 102344 },
+          { sourceNodeId: 102358, targetNodeId: 102370 },
+          { sourceNodeId: 102359, targetNodeId: 102340 },
+          { sourceNodeId: 102359, targetNodeId: 102353 },
+          { sourceNodeId: 102360, targetNodeId: 102376 },
+          { sourceNodeId: 102361, targetNodeId: 102363 },
+          { sourceNodeId: 102362, targetNodeId: 102372 },
+          { sourceNodeId: 102362, targetNodeId: 102364 },
+          { sourceNodeId: 102363, targetNodeId: 102341 },
+          { sourceNodeId: 102363, targetNodeId: 102338 },
+          { sourceNodeId: 102363, targetNodeId: 102368 },
+          { sourceNodeId: 102364, targetNodeId: 102336 },
+          { sourceNodeId: 102365, targetNodeId: 102370 },
+          { sourceNodeId: 102365, targetNodeId: 102367 },
+          { sourceNodeId: 102367, targetNodeId: 107286 },
+          { sourceNodeId: 102368, targetNodeId: 102359 },
+          { sourceNodeId: 102368, targetNodeId: 102347 },
+          { sourceNodeId: 102369, targetNodeId: 102338 },
+          { sourceNodeId: 102369, targetNodeId: 102360 },
+          { sourceNodeId: 102373, targetNodeId: 102342 },
+          { sourceNodeId: 102373, targetNodeId: 102375 },
+          { sourceNodeId: 102373, targetNodeId: 102350 },
+          { sourceNodeId: 102374, targetNodeId: 102357 },
+          { sourceNodeId: 102375, targetNodeId: 102371 },
+          { sourceNodeId: 102376, targetNodeId: 102358 },
+          { sourceNodeId: 102376, targetNodeId: 102365 },
+          { sourceNodeId: 102376, targetNodeId: 102337 },
+          { sourceNodeId: 102377, targetNodeId: 102345 },
+          { sourceNodeId: 102377, targetNodeId: 102343 },
+          { sourceNodeId: 102378, targetNodeId: 102410 },
+          { sourceNodeId: 102380, targetNodeId: 102402 },
+          { sourceNodeId: 102380, targetNodeId: 79837 },
+          { sourceNodeId: 102380, targetNodeId: 102415 },
+          { sourceNodeId: 102380, targetNodeId: 102419 },
+          { sourceNodeId: 102380, targetNodeId: 102292 },
+          { sourceNodeId: 102381, targetNodeId: 102393 },
+          { sourceNodeId: 102381, targetNodeId: 102383 },
+          { sourceNodeId: 102382, targetNodeId: 102386 },
+          { sourceNodeId: 102383, targetNodeId: 102422 },
+          { sourceNodeId: 102383, targetNodeId: 102424 },
+          { sourceNodeId: 102384, targetNodeId: 102389 },
+          { sourceNodeId: 102384, targetNodeId: 102739 },
+          { sourceNodeId: 102385, targetNodeId: 102387 },
+          { sourceNodeId: 102386, targetNodeId: 102417 },
+          { sourceNodeId: 102386, targetNodeId: 102409 },
+          { sourceNodeId: 102386, targetNodeId: 102408 },
+          { sourceNodeId: 102388, targetNodeId: 102426 },
+          { sourceNodeId: 102388, targetNodeId: 102416 },
+          { sourceNodeId: 102388, targetNodeId: 102384 },
+          { sourceNodeId: 102390, targetNodeId: 102420 },
+          { sourceNodeId: 102391, targetNodeId: 102420 },
+          { sourceNodeId: 102391, targetNodeId: 102397 },
+          { sourceNodeId: 102392, targetNodeId: 102388 },
+          { sourceNodeId: 102393, targetNodeId: 102292 },
+          { sourceNodeId: 102393, targetNodeId: 79837 },
+          { sourceNodeId: 102393, targetNodeId: 102402 },
+          { sourceNodeId: 102393, targetNodeId: 102403 },
+          { sourceNodeId: 102393, targetNodeId: 102422 },
+          { sourceNodeId: 102394, targetNodeId: 102404 },
+          { sourceNodeId: 102395, targetNodeId: 102386 },
+          { sourceNodeId: 102395, targetNodeId: 102420 },
+          { sourceNodeId: 102396, targetNodeId: 102404 },
+          { sourceNodeId: 102396, targetNodeId: 102388 },
+          { sourceNodeId: 102397, targetNodeId: 102396 },
+          { sourceNodeId: 102397, targetNodeId: 102394 },
+          { sourceNodeId: 102397, targetNodeId: 102421 },
+          { sourceNodeId: 102400, targetNodeId: 102389 },
+          { sourceNodeId: 102401, targetNodeId: 102381 },
+          { sourceNodeId: 102402, targetNodeId: 102391 },
+          { sourceNodeId: 102402, targetNodeId: 102395 },
+          { sourceNodeId: 102402, targetNodeId: 102390 },
+          { sourceNodeId: 102403, targetNodeId: 102391 },
+          { sourceNodeId: 102404, targetNodeId: 102405 },
+          { sourceNodeId: 102404, targetNodeId: 102384 },
+          { sourceNodeId: 102404, targetNodeId: 102400 },
+          { sourceNodeId: 102405, targetNodeId: 102389 },
+          { sourceNodeId: 102406, targetNodeId: 102397 },
+          { sourceNodeId: 102406, targetNodeId: 102397 },
+          { sourceNodeId: 102407, targetNodeId: 102419 },
+          { sourceNodeId: 102407, targetNodeId: 102382 },
+          { sourceNodeId: 102408, targetNodeId: 102425 },
+          { sourceNodeId: 102408, targetNodeId: 102414 },
+          { sourceNodeId: 102409, targetNodeId: 102414 },
+          { sourceNodeId: 102409, targetNodeId: 102388 },
+          { sourceNodeId: 102410, targetNodeId: 102407 },
+          { sourceNodeId: 102410, targetNodeId: 102380 },
+          { sourceNodeId: 102411, targetNodeId: 102423 },
+          { sourceNodeId: 102412, targetNodeId: 102386 },
+          { sourceNodeId: 102413, targetNodeId: 102400 },
+          { sourceNodeId: 102414, targetNodeId: 102416 },
+          { sourceNodeId: 102414, targetNodeId: 102385 },
+          { sourceNodeId: 102414, targetNodeId: 102418 },
+          { sourceNodeId: 102415, targetNodeId: 102395 },
+          { sourceNodeId: 102416, targetNodeId: 102387 },
+          { sourceNodeId: 102416, targetNodeId: 102739 },
+          { sourceNodeId: 102417, targetNodeId: 102414 },
+          { sourceNodeId: 102418, targetNodeId: 102387 },
+          { sourceNodeId: 102419, targetNodeId: 102382 },
+          { sourceNodeId: 102419, targetNodeId: 102395 },
+          { sourceNodeId: 102419, targetNodeId: 102412 },
+          { sourceNodeId: 102420, targetNodeId: 102396 },
+          { sourceNodeId: 102420, targetNodeId: 102392 },
+          { sourceNodeId: 102420, targetNodeId: 102409 },
+          { sourceNodeId: 102421, targetNodeId: 102404 },
+          { sourceNodeId: 102421, targetNodeId: 102413 },
+          { sourceNodeId: 102422, targetNodeId: 102424 },
+          { sourceNodeId: 102422, targetNodeId: 102391 },
+          { sourceNodeId: 102422, targetNodeId: 102406 },
+          { sourceNodeId: 102423, targetNodeId: 102393 },
+          { sourceNodeId: 102423, targetNodeId: 102380 },
+          { sourceNodeId: 102424, targetNodeId: 102397 },
+          { sourceNodeId: 102424, targetNodeId: 102397 },
+          { sourceNodeId: 102425, targetNodeId: 102418 },
+          { sourceNodeId: 102426, targetNodeId: 102739 },
+          { sourceNodeId: 107286, targetNodeId: 107285 },
+        ],
+        nodes: [
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_negate",
+                maxRanks: 1,
+                name: "Muzzle",
+                spellId: 187707,
+              },
+            ],
+            id: 79837,
+            pixelX: 420,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "achievement_leader_sylvanas",
+                maxRanks: 1,
+                name: "Banshee's Mark",
+                spellId: 467902,
+              },
+            ],
+            id: 94957,
+            pixelX: 750,
+            pixelY: -300,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_warlock_demonsoul",
+                maxRanks: 1,
+                name: "Smoke Screen",
+                spellId: 430709,
+              },
+            ],
+            id: 94959,
+            pixelX: 810,
+            pixelY: -239.8,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_belt_44c",
+                maxRanks: 1,
+                name: "Dark Chains",
+                spellId: 430712,
+              },
+              {
+                description: "",
+                iconFileName: "ability_throw",
+                maxRanks: 1,
+                name: "Shadow Dagger",
+                spellId: 467741,
+              },
+            ],
+            id: 94960,
+            pixelX: 870,
+            pixelY: -239.8,
+            subTreeId: 44,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_quiver_1h_mawraid_d_01",
+                maxRanks: 1,
+                name: "Bleak Arrows",
+                spellId: 467749,
+              },
+            ],
+            id: 94961,
+            pixelX: 750,
+            pixelY: -179.8,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_pathfinding2",
+                maxRanks: 1,
+                name: "Better Together",
+                spellId: 472357,
+              },
+            ],
+            id: 94962,
+            pixelX: 870,
+            pixelY: -479.7,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "buff_epichunter",
+                maxRanks: 1,
+                name: "Lead From the Front",
+                spellId: 472741,
+              },
+            ],
+            id: 94966,
+            pixelX: 810,
+            pixelY: -659.9,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_babyturtle2",
+                maxRanks: 1,
+                name: "Shell Cover",
+                spellId: 472707,
+              },
+            ],
+            id: 94967,
+            pixelX: 810,
+            pixelY: -600,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_shadow_animatedead",
+                maxRanks: 1,
+                name: "The Bell Tolls",
+                spellId: 467644,
+              },
+            ],
+            id: 94968,
+            pixelX: 810,
+            pixelY: -180,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_goforthethroat",
+                maxRanks: 1,
+                name: "No Mercy",
+                spellId: 472660,
+              },
+            ],
+            id: 94969,
+            pixelX: 750,
+            pixelY: -600,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_druid_bearhug",
+                maxRanks: 1,
+                name: "Ursine Fury",
+                spellId: 472476,
+              },
+              {
+                description: "",
+                iconFileName: "spell_nature_nullifypoison",
+                maxRanks: 1,
+                name: "Envenomed Fangs",
+                spellId: 472524,
+              },
+            ],
+            id: 94972,
+            pixelX: 750,
+            pixelY: -540,
+            subTreeId: 43,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_powder_tin",
+                maxRanks: 1,
+                name: "Bleak Powder",
+                spellId: 467911,
+              },
+            ],
+            id: 94974,
+            pixelX: 870,
+            pixelY: -180,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_heroicleap",
+                maxRanks: 1,
+                name: "Slicked Shoes",
+                spellId: 472719,
+              },
+              {
+                description: "",
+                iconFileName: "inv_misc_rope_01",
+                maxRanks: 1,
+                name: "Horsehair Tether",
+                spellId: 472729,
+              },
+            ],
+            id: 94979,
+            pixelX: 870,
+            pixelY: -600,
+            subTreeId: 43,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_deathknight_strangulate",
+                maxRanks: 1,
+                name: "Umbral Reach",
+                spellId: 1235397,
+              },
+            ],
+            id: 94982,
+            pixelX: 870,
+            pixelY: -300,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_darkhoundmount_draka_blue",
+                maxRanks: 1,
+                name: "Shadow Hounds",
+                spellId: 430707,
+              },
+              {
+                description: "",
+                iconFileName: "ability_warlock_soulsiphon",
+                maxRanks: 1,
+                name: "Soul Drinker",
+                spellId: 469638,
+              },
+            ],
+            id: 94983,
+            pixelX: 810,
+            pixelY: -300,
+            subTreeId: 44,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_druid_feralchargecat",
+                maxRanks: 1,
+                name: "Fury of the Wyvern",
+                spellId: 472550,
+              },
+            ],
+            id: 94984,
+            pixelX: 810,
+            pixelY: -540,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_hunter_lonewolf",
+                maxRanks: 1,
+                name: "Pack Mentality",
+                spellId: 472358,
+              },
+            ],
+            id: 94985,
+            pixelX: 750,
+            pixelY: -479.7,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_holy_painsupression",
+                maxRanks: 1,
+                name: "Phantom Pain",
+                spellId: 467941,
+              },
+              {
+                description: "",
+                iconFileName:
+                  "inv_10_tailoring_craftingoptionalreagent_enhancedspellthread_color4",
+                maxRanks: 1,
+                name: "Ebon Bowstring",
+                spellId: 467897,
+              },
+            ],
+            id: 94986,
+            pixelX: 750,
+            pixelY: -239.8,
+            subTreeId: 44,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_ability_darkrangerhunter_blackarrow",
+                maxRanks: 1,
+                name: "Black Arrow",
+                spellId: 466932,
+              },
+            ],
+            id: 94987,
+            pixelX: 810,
+            pixelY: -120,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_boarshead",
+                maxRanks: 1,
+                name: "Hogstrider",
+                spellId: 472639,
+              },
+            ],
+            id: 94988,
+            pixelX: 870,
+            pixelY: -540,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_ability_packleaderhunter_vicioushunt",
+                maxRanks: 1,
+                name: "Howl of the Pack Leader",
+                spellId: 471876,
+              },
+            ],
+            id: 94991,
+            pixelX: 810,
+            pixelY: -420,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_horn_01",
+                maxRanks: 1,
+                name: "Dire Summons",
+                spellId: 472352,
+              },
+            ],
+            id: 94992,
+            pixelX: 810,
+            pixelY: -479.7,
+            subTreeId: 43,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_shadow_painspike",
+                maxRanks: 1,
+                name: "Withering Fire",
+                spellId: 466990,
+              },
+            ],
+            id: 94993,
+            pixelX: 810,
+            pixelY: -359.7,
+            subTreeId: 44,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_ammo_arrow_03",
+                maxRanks: 1,
+                name: "Counter Shot",
+                spellId: 147362,
+              },
+            ],
+            id: 102292,
+            pixelX: 420,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_callofthewild",
+                maxRanks: 1,
+                name: "Call of the Wild",
+                spellId: 359844,
+              },
+            ],
+            id: 102336,
+            pixelX: 1140,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_physical_taunt",
+                maxRanks: 1,
+                name: "Dire Cleave",
+                spellId: 1217524,
+              },
+            ],
+            id: 102337,
+            pixelX: 1440,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_hunter_adaptation",
+                maxRanks: 1,
+                name: "Training Expert",
+                spellId: 378209,
+              },
+            ],
+            id: 102338,
+            pixelX: 1320,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_beastwithin",
+                maxRanks: 1,
+                name: "Wild Instincts",
+                spellId: 378442,
+              },
+              {
+                description: "",
+                iconFileName: "ability_racial_cannibalize",
+                maxRanks: 1,
+                name: "Bloody Frenzy",
+                spellId: 407412,
+              },
+            ],
+            id: 102339,
+            pixelX: 1140,
+            pixelY: -690,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_ferociousbite",
+                maxRanks: 1,
+                name: "Bestial Wrath",
+                spellId: 19574,
+              },
+            ],
+            id: 102340,
+            pixelX: 1260.1,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_sickem",
+                maxRanks: 1,
+                name: "Beast Cleave",
+                spellId: 115939,
+              },
+            ],
+            id: 102341,
+            pixelX: 1259.9,
+            pixelY: -389.9,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_shadow_lifedrain",
+                maxRanks: 2,
+                name: "Scent of Blood",
+                spellId: 193532,
+              },
+            ],
+            id: 102342,
+            pixelX: 1260,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_barbedshot",
+                maxRanks: 1,
+                name: "War Orders",
+                spellId: 393933,
+              },
+            ],
+            id: 102343,
+            pixelX: 1320,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_quiver_1h_hunter_c_01_green",
+                maxRanks: 1,
+                name: "Snakeskin Quiver",
+                spellId: 468695,
+              },
+              {
+                description: "",
+                iconFileName: "ability_hunter_cobrastrikes",
+                maxRanks: 1,
+                name: "Cobra Senses",
+                spellId: 378244,
+              },
+            ],
+            id: 102344,
+            pixelX: 1080,
+            pixelY: -390,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_thrillofthehunt",
+                maxRanks: 1,
+                name: "Thrill of the Hunt",
+                spellId: 257944,
+              },
+            ],
+            id: 102345,
+            pixelX: 1380,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_killcommand",
+                maxRanks: 1,
+                name: "Kill Command",
+                spellId: 34026,
+              },
+            ],
+            id: 102346,
+            pixelX: 1260.1,
+            pixelY: -150.1,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "warrior_talent_icon_thunderstruck",
+                maxRanks: 1,
+                name: "Stomp",
+                spellId: 199530,
+              },
+            ],
+            id: 102347,
+            pixelX: 1140,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_masterscall",
+                maxRanks: 1,
+                name: "Wild Call",
+                spellId: 185789,
+              },
+            ],
+            id: 102348,
+            pixelX: 1320,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_rake",
+                maxRanks: 1,
+                name: "Brutal Companion",
+                spellId: 386870,
+              },
+            ],
+            id: 102350,
+            pixelX: 1320,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_deathwing_assualtaspects",
+                maxRanks: 1,
+                name: "Aspect of the Beast",
+                spellId: 191384,
+              },
+            ],
+            id: 102351,
+            pixelX: 1200,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_scales_stonygreen",
+                maxRanks: 1,
+                name: "Barbed Scales",
+                spellId: 469880,
+              },
+            ],
+            id: 102353,
+            pixelX: 1200.1,
+            pixelY: -510.1,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_cobrashot",
+                maxRanks: 1,
+                name: "Cobra Shot",
+                spellId: 193455,
+              },
+            ],
+            id: 102354,
+            pixelX: 1200,
+            pixelY: -210,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_druid_bloodythrash",
+                maxRanks: 1,
+                name: "Kill Cleave",
+                spellId: 378207,
+              },
+            ],
+            id: 102355,
+            pixelX: 1259.9,
+            pixelY: -449.9,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_nature_protectionformnature",
+                maxRanks: 1,
+                name: "Savagery",
+                spellId: 424557,
+              },
+            ],
+            id: 102356,
+            pixelX: 1080,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_goforthethroat",
+                maxRanks: 1,
+                name: "Go for the Throat",
+                spellId: 459550,
+              },
+            ],
+            id: 102357,
+            pixelX: 1140,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_thornnecklace",
+                maxRanks: 1,
+                name: "Poisoned Barbs",
+                spellId: 1217535,
+              },
+            ],
+            id: 102358,
+            pixelX: 1320,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_leatherworking_70_petleash",
+                maxRanks: 1,
+                name: "Master Handler",
+                spellId: 424558,
+              },
+            ],
+            id: 102359,
+            pixelX: 1200,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_assassinate",
+                maxRanks: 1,
+                name: "Hunter's Prey",
+                spellId: 378210,
+              },
+            ],
+            id: 102360,
+            pixelX: 1440,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_bestialdiscipline",
+                maxRanks: 1,
+                name: "Animal Companion",
+                spellId: 267116,
+              },
+              {
+                description: "",
+                iconFileName: "ability_hunter_separationanxiety",
+                maxRanks: 1,
+                name: "Solitary Companion",
+                spellId: 474746,
+              },
+            ],
+            id: 102361,
+            pixelX: 1260,
+            pixelY: -210,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_primaltenacity",
+                maxRanks: 1,
+                name: "Bloodshed",
+                spellId: 321530,
+              },
+            ],
+            id: 102362,
+            pixelX: 1140,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_upgrademoonglaive",
+                maxRanks: 1,
+                name: "Multi-Shot",
+                spellId: 2643,
+              },
+            ],
+            id: 102363,
+            pixelX: 1260,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_killcommand",
+                maxRanks: 2,
+                name: "Killer Instinct",
+                spellId: 273887,
+              },
+            ],
+            id: 102364,
+            pixelX: 1140,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_ferociousinspiration",
+                maxRanks: 1,
+                name: "Dire Command",
+                spellId: 378743,
+              },
+            ],
+            id: 102365,
+            pixelX: 1380,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_huntervswild",
+                maxRanks: 2,
+                name: "Dire Frenzy",
+                spellId: 385810,
+              },
+            ],
+            id: 102367,
+            pixelX: 1380,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_druid_savagery",
+                maxRanks: 1,
+                name: "Alpha Predator",
+                spellId: 269737,
+              },
+            ],
+            id: 102368,
+            pixelX: 1200,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_disembowel",
+                maxRanks: 1,
+                name: "Laceration",
+                spellId: 459552,
+              },
+            ],
+            id: 102369,
+            pixelX: 1380,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv__blacksmithing_hoofplate",
+                maxRanks: 1,
+                name: "Thundering Hooves",
+                spellId: 459693,
+              },
+            ],
+            id: 102370,
+            pixelX: 1320,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_monsterfang_02",
+                maxRanks: 1,
+                name: "Piercing Fangs",
+                spellId: 392053,
+              },
+            ],
+            id: 102371,
+            pixelX: 1260,
+            pixelY: -690,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_nature_poisoncleansingtotem",
+                maxRanks: 1,
+                name: "Serpentine Rhythm",
+                spellId: 468701,
+              },
+            ],
+            id: 102372,
+            pixelX: 1200,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_ferociousbite",
+                maxRanks: 1,
+                name: "Barbed Wrath",
+                spellId: 231548,
+              },
+            ],
+            id: 102373,
+            pixelX: 1260,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_invigeration",
+                maxRanks: 1,
+                name: "Pack Tactics",
+                spellId: 321014,
+              },
+            ],
+            id: 102374,
+            pixelX: 1140,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_snaketrap",
+                maxRanks: 1,
+                name: "Killer Cobra",
+                spellId: 199532,
+              },
+            ],
+            id: 102375,
+            pixelX: 1200,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_longevity",
+                maxRanks: 1,
+                name: "Dire Beast",
+                spellId: 120679,
+              },
+            ],
+            id: 102376,
+            pixelX: 1380,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_barbedshot",
+                maxRanks: 1,
+                name: "Barbed Shot",
+                spellId: 217200,
+              },
+            ],
+            id: 102377,
+            pixelX: 1320,
+            pixelY: -210,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_assassinate2",
+                maxRanks: 1,
+                name: "Kill Shot",
+                spellId: 53351,
+              },
+            ],
+            id: 102378,
+            pixelX: 540,
+            pixelY: -150,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_nature_drowsy",
+                maxRanks: 1,
+                name: "Tranquilizing Shot",
+                spellId: 19801,
+              },
+            ],
+            id: 102380,
+            pixelX: 480,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_galewinds",
+                maxRanks: 1,
+                name: "Rejuvenating Wind",
+                spellId: 385539,
+              },
+            ],
+            id: 102381,
+            pixelX: 300,
+            pixelY: -210,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_druid_cower",
+                maxRanks: 1,
+                name: "Scare Beast",
+                spellId: 1513,
+              },
+            ],
+            id: 102382,
+            pixelX: 600,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_mendpet",
+                maxRanks: 1,
+                name: "Wilderness Medicine",
+                spellId: 343242,
+              },
+            ],
+            id: 102383,
+            pixelX: 240,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_spear_01",
+                maxRanks: 1,
+                name: "Serrated Tips",
+                spellId: 459502,
+              },
+            ],
+            id: 102384,
+            pixelX: 360,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_ambush",
+                maxRanks: 1,
+                name: "Ghillie Suit",
+                spellId: 459466,
+              },
+            ],
+            id: 102385,
+            pixelX: 540,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_shaman_bindelemental",
+                maxRanks: 1,
+                name: "Binding Shot",
+                spellId: 109248,
+              },
+            ],
+            id: 102386,
+            pixelX: 540,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_potentvenom",
+                maxRanks: 1,
+                name: "Unnatural Causes",
+                spellId: 459527,
+              },
+            ],
+            id: 102387,
+            pixelX: 540,
+            pixelY: -690,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_steelweaponchain",
+                maxRanks: 1,
+                name: "Binding Shackles",
+                spellId: 321468,
+              },
+            ],
+            id: 102388,
+            pixelX: 420,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_potion_29",
+                maxRanks: 1,
+                name: "Emergency Salve",
+                spellId: 459517,
+              },
+            ],
+            id: 102389,
+            pixelX: 300,
+            pixelY: -690,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_quiver_03",
+                maxRanks: 1,
+                name: "Specialized Arsenal",
+                spellId: 459542,
+              },
+            ],
+            id: 102390,
+            pixelX: 420,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_huntervswild",
+                maxRanks: 1,
+                name: "Lone Survivor",
+                spellId: 388039,
+              },
+            ],
+            id: 102391,
+            pixelX: 360,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_ore_blackrock_nugget",
+                maxRanks: 1,
+                name: "Blackrock Munitions",
+                spellId: 462036,
+              },
+            ],
+            id: 102392,
+            pixelX: 420,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_yorsahj_bloodboil_black",
+                maxRanks: 1,
+                name: "Tar Trap",
+                spellId: 187698,
+              },
+            ],
+            id: 102393,
+            pixelX: 360,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_nature_shamanrage",
+                maxRanks: 1,
+                name: "Territorial Instincts",
+                spellId: 459507,
+              },
+            ],
+            id: 102394,
+            pixelX: 300,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "hunter_pvp_vipersting",
+                maxRanks: 1,
+                name: "Disruptive Rounds",
+                spellId: 343244,
+              },
+            ],
+            id: 102395,
+            pixelX: 480,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_10_engineering2_pvpflaregun_color1",
+                maxRanks: 2,
+                name: "Trigger Finger",
+                spellId: 459534,
+              },
+            ],
+            id: 102396,
+            pixelX: 360,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_devour",
+                maxRanks: 1,
+                name: "Intimidation",
+                spellId: 19577,
+              },
+            ],
+            id: 102397,
+            pixelX: 300,
+            pixelY: -450,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_aspectmastery",
+                maxRanks: 1,
+                name: "Trailblazer",
+                spellId: 199921,
+              },
+            ],
+            id: 102400,
+            pixelX: 240,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_onewithnature",
+                maxRanks: 1,
+                name: "Natural Mending",
+                spellId: 270581,
+              },
+            ],
+            id: 102401,
+            pixelX: 300,
+            pixelY: -150,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_ammo_arrow_03",
+                maxRanks: 1,
+                name: "Counter Shot",
+                spellId: 147362,
+              },
+            ],
+            id: 102402,
+            pixelX: 420,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_ensnare",
+                maxRanks: 1,
+                name: "Entrapment",
+                spellId: 393344,
+              },
+            ],
+            id: 102403,
+            pixelX: 360,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_displacement",
+                maxRanks: 1,
+                name: "Pathfinding",
+                spellId: 378002,
+              },
+            ],
+            id: 102404,
+            pixelX: 300,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_fervor",
+                maxRanks: 1,
+                name: "Roar of Sacrifice",
+                spellId: 53480,
+              },
+            ],
+            id: 102405,
+            pixelX: 300,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_rogue_plunderarmor",
+                maxRanks: 1,
+                name: "Padded Armor",
+                spellId: 459450,
+              },
+            ],
+            id: 102406,
+            pixelX: 300,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_frost_stun",
+                maxRanks: 1,
+                name: "Concussive Shot",
+                spellId: 5116,
+              },
+            ],
+            id: 102407,
+            pixelX: 600,
+            pixelY: -270,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_gear_08",
+                maxRanks: 1,
+                name: "Scrappy",
+                spellId: 459533,
+              },
+            ],
+            id: 102408,
+            pixelX: 600,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_silenthunter",
+                maxRanks: 2,
+                name: "Keen Eyesight",
+                spellId: 378004,
+              },
+            ],
+            id: 102409,
+            pixelX: 480,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_runningshot",
+                maxRanks: 1,
+                name: "Deathblow",
+                spellId: 343248,
+              },
+            ],
+            id: 102410,
+            pixelX: 540,
+            pixelY: -210,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_posthaste",
+                maxRanks: 1,
+                name: "Posthaste",
+                spellId: 109215,
+              },
+            ],
+            id: 102411,
+            pixelX: 420,
+            pixelY: -150,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_seal",
+                maxRanks: 1,
+                name: "No Hard Feelings",
+                spellId: 459546,
+              },
+            ],
+            id: 102412,
+            pixelX: 540,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_wildquiver",
+                maxRanks: 1,
+                name: "Quick Load",
+                spellId: 378771,
+              },
+            ],
+            id: 102413,
+            pixelX: 240,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_camouflage",
+                maxRanks: 1,
+                name: "Camouflage",
+                spellId: 199483,
+              },
+            ],
+            id: 102414,
+            pixelX: 540,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_mount_kodo_03",
+                maxRanks: 1,
+                name: "Kodo Tranquilizer",
+                spellId: 459983,
+              },
+              {
+                description: "",
+                iconFileName: "ability_hunter_pet_devilsaur",
+                maxRanks: 1,
+                name: "Devilsaur Tranquilizer",
+                spellId: 459991,
+              },
+            ],
+            id: 102415,
+            pixelX: 480,
+            pixelY: -330,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_aspectoftheviper",
+                maxRanks: 1,
+                name: "Born To Be Wild",
+                spellId: 266921,
+              },
+            ],
+            id: 102416,
+            pixelX: 480,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "inv_misc_food_legion_goooil_pool",
+                maxRanks: 1,
+                name: "Tar-Coated Bindings",
+                spellId: 459460,
+              },
+            ],
+            id: 102417,
+            pixelX: 540,
+            pixelY: -510,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_traplauncher",
+                maxRanks: 1,
+                name: "Improved Traps",
+                spellId: 343247,
+              },
+            ],
+            id: 102418,
+            pixelX: 600,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_misdirection",
+                maxRanks: 1,
+                name: "Misdirection",
+                spellId: 34477,
+              },
+            ],
+            id: 102419,
+            pixelX: 540,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_explosiveshot",
+                maxRanks: 1,
+                name: "Explosive Shot",
+                spellId: 212431,
+              },
+              {
+                description: "",
+                iconFileName: "ability_druid_skinteeth",
+                maxRanks: 1,
+                name: "Harmonize",
+                spellId: 1245926,
+              },
+            ],
+            id: 102420,
+            pixelX: 420,
+            pixelY: -450,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_burstingshot",
+                maxRanks: 1,
+                name: "Bursting Shot",
+                spellId: 186387,
+              },
+              {
+                description: "",
+                iconFileName: "ability_golemstormbolt",
+                maxRanks: 1,
+                name: "Scatter Shot",
+                spellId: 213691,
+              },
+            ],
+            id: 102421,
+            pixelX: 240,
+            pixelY: -510,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_nature_spiritarmor",
+                maxRanks: 1,
+                name: "Survival of the Fittest",
+                spellId: 264735,
+              },
+            ],
+            id: 102422,
+            pixelX: 300,
+            pixelY: -330,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "rogue_burstofspeed",
+                maxRanks: 1,
+                name: "Hunter's Avoidance",
+                spellId: 384799,
+              },
+            ],
+            id: 102423,
+            pixelX: 420,
+            pixelY: -210,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_rogue_sprint",
+                maxRanks: 1,
+                name: "Scout's Instincts",
+                spellId: 459455,
+              },
+            ],
+            id: 102424,
+            pixelX: 240,
+            pixelY: -390,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "achievment_raid_houroftwilight",
+                maxRanks: 1,
+                name: "Kindling Flare",
+                spellId: 459506,
+              },
+            ],
+            id: 102425,
+            pixelX: 600,
+            pixelY: -570,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_karoz_leap",
+                maxRanks: 1,
+                name: "Moment of Opportunity",
+                spellId: 459488,
+              },
+            ],
+            id: 102426,
+            pixelX: 420,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_fire_selfdestruct",
+                maxRanks: 1,
+                name: "High Explosive Trap",
+                spellId: 236776,
+              },
+              {
+                description: "",
+                iconFileName: "6bf_explosive_shard",
+                maxRanks: 1,
+                name: "Implosive Trap",
+                spellId: 462031,
+              },
+            ],
+            id: 102739,
+            pixelX: 420,
+            pixelY: -690,
+            subTreeId: null,
+            type: 2,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "ability_hunter_huntingparty",
+                maxRanks: 1,
+                name: "Wildspeaker",
+                spellId: 1232739,
+              },
+            ],
+            id: 107285,
+            pixelX: 1380,
+            pixelY: -690,
+            subTreeId: null,
+            type: 0,
+          },
+          {
+            entries: [
+              {
+                description: "",
+                iconFileName: "spell_hunter_lonewolf",
+                maxRanks: 1,
+                name: "Huntmaster's Call",
+                spellId: 459730,
+              },
+            ],
+            id: 107286,
+            pixelX: 1380,
+            pixelY: -630,
+            subTreeId: null,
+            type: 0,
+          },
+        ],
+        subTrees: [
+          {
+            iconFileName: "talents-heroclass-hunter-packleader",
+            id: 43,
+            name: "Pack Leader",
+            nodeIds: [
+              94962, 94966, 94967, 94969, 94972, 94979, 94984, 94985, 94988,
+              94991, 94992,
+            ],
+          },
+          {
+            iconFileName: "talents-heroclass-hunter-darkranger",
+            id: 44,
+            name: "Dark Ranger",
+            nodeIds: [
+              94957, 94959, 94960, 94961, 94968, 94974, 94982, 94983, 94986,
+              94987, 94993,
+            ],
+          },
+        ],
+      };
+
+      // Loadout data
+      const loadoutSelectedNodes = [
+        94957, 94959, 94960, 94961, 94968, 94974, 94982, 94983, 94986, 94987,
+        94991, 94993, 99832, 102292, 102336, 102337, 102339, 102340, 102343,
+        102344, 102345, 102346, 102347, 102353, 102354, 102356, 102357, 102359,
+        102360, 102361, 102362, 102364, 102365, 102367, 102368, 102369, 102373,
+        102374, 102376, 102377, 102378, 102380, 102381, 102383, 102384, 102386,
+        102387, 102388, 102390, 102391, 102392, 102395, 102396, 102397, 102401,
+        102406, 102408, 102409, 102410, 102411, 102416, 102417, 102419, 102420,
+        102421, 102422, 102423, 102426, 102739, 107285, 107286,
+      ];
+      const loadoutChoices = new Map([
+        [94960, 1],
+        [94983, 1],
+        [94986, 1],
+        [99832, 0],
+        [102339, 1],
+        [102344, 0],
+        [102361, 0],
+        [102420, 1],
+        [102421, 0],
+        [102739, 1],
+      ]);
+      const loadoutRanks = new Map([
+        [94957, 1],
+        [94959, 1],
+        [94960, 1],
+        [94961, 1],
+        [94968, 1],
+        [94974, 1],
+        [94982, 1],
+        [94983, 1],
+        [94986, 1],
+        [94987, 1],
+        [94991, 1],
+        [94993, 1],
+        [99832, 1],
+        [102292, 1],
+        [102336, 1],
+        [102337, 1],
+        [102339, 1],
+        [102340, 1],
+        [102343, 1],
+        [102344, 1],
+        [102345, 1],
+        [102346, 1],
+        [102347, 1],
+        [102353, 1],
+        [102354, 1],
+        [102356, 1],
+        [102357, 1],
+        [102359, 1],
+        [102360, 1],
+        [102361, 1],
+        [102362, 1],
+        [102364, 2],
+        [102365, 1],
+        [102367, 2],
+        [102368, 1],
+        [102369, 1],
+        [102373, 1],
+        [102374, 1],
+        [102376, 1],
+        [102377, 1],
+        [102378, 1],
+        [102380, 1],
+        [102381, 1],
+        [102383, 1],
+        [102384, 1],
+        [102386, 1],
+        [102387, 1],
+        [102388, 1],
+        [102390, 1],
+        [102391, 1],
+        [102392, 1],
+        [102395, 1],
+        [102396, 2],
+        [102397, 1],
+        [102401, 1],
+        [102406, 1],
+        [102408, 1],
+        [102409, 2],
+        [102410, 1],
+        [102411, 1],
+        [102416, 1],
+        [102417, 1],
+        [102419, 1],
+        [102420, 1],
+        [102421, 1],
+        [102422, 1],
+        [102423, 1],
+        [102426, 1],
+        [102739, 1],
+        [107285, 1],
+        [107286, 1],
+      ]);
+      const hasLoadout = loadoutSelectedNodes !== null;
+
+      const iconBaseUrl = "https://api.wowlab.gg";
+
+      const getIconUrl = (iconFileName, size = "large") => {
+        const filename = iconFileName || "inv_misc_questionmark";
+        return (
+          iconBaseUrl + "/functions/v1/icons/" + size + "/" + filename + ".jpg"
+        );
+      };
+
+      const treeEl = document.getElementById("tree");
+      const tooltip = document.getElementById("tooltip");
+      const searchInput = document.getElementById("searchInput");
+
+      // Calculate dimensions
+      const nodes = treeData.nodes;
+      const padding = 60;
+      const nodeSize = 52;
+      const nodeCenter = nodeSize / 2;
+
+      const minX = Math.min(...nodes.map((n) => n.pixelX));
+      const maxX = Math.max(...nodes.map((n) => n.pixelX));
+      const minY = Math.min(...nodes.map((n) => n.pixelY));
+      const maxY = Math.max(...nodes.map((n) => n.pixelY));
+
+      const width = maxX - minX + padding * 2 + nodeSize;
+      const height = maxY - minY + padding * 2 + nodeSize;
+
+      treeEl.style.width = width + "px";
+      treeEl.style.height = height + "px";
+
+      const toX = (x) => x - minX + padding;
+      // Y is inverted: Blizzard uses Y-up (negative pixelY = top), HTML uses Y-down (top=0)
+      // So we flip by using (maxY - y) instead of (y - minY)
+      const toY = (y) => maxY - y + padding;
+
+      // Create SVG for edges
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+
+      const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+      const edgeEls = [];
+
+      // Pre-compute loadout set for edge rendering
+      const loadoutNodeSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
+
+      for (const edge of treeData.edges) {
+        const from = nodeMap.get(edge.sourceNodeId);
+        const to = nodeMap.get(edge.targetNodeId);
+        if (!from || !to) continue;
+
+        const line = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "line",
+        );
+        line.setAttribute("x1", toX(from.pixelX) + nodeCenter);
+        line.setAttribute("y1", toY(from.pixelY) + nodeCenter);
+        line.setAttribute("x2", toX(to.pixelX) + nodeCenter);
+        line.setAttribute("y2", toY(to.pixelY) + nodeCenter);
+        line.classList.add("edge");
+
+        const fromHero = from.subTreeId && from.subTreeId > 0;
+        const toHero = to.subTreeId && to.subTreeId > 0;
+        if (fromHero || toHero) {
+          line.classList.add("hero-edge");
+        }
+
+        // Add loadout selection styling to edges
+        if (hasLoadout && loadoutNodeSet) {
+          const fromSelected = loadoutNodeSet.has(from.id);
+          const toSelected = loadoutNodeSet.has(to.id);
+          if (fromSelected && toSelected) {
+            line.classList.add("selected");
+          } else {
+            line.classList.add("unselected");
+          }
+        }
+
+        line.dataset.fromSub = from.subTreeId || 0;
+        line.dataset.toSub = to.subTreeId || 0;
+        svg.appendChild(line);
+        edgeEls.push(line);
+      }
+
+      treeEl.appendChild(svg);
+
+      // Render nodes
+      const nodeEls = [];
+      const loadoutSet = hasLoadout ? new Set(loadoutSelectedNodes) : null;
+
+      for (const node of nodes) {
+        const el = document.createElement("div");
+        const isChoice = node.type === 2 && node.entries.length > 1;
+        const isHero = node.subTreeId && node.subTreeId > 0;
+        const isSelected = loadoutSet?.has(node.id) ?? false;
+        const choiceIndex = loadoutChoices?.get(node.id) ?? null;
+        const purchasedRanks = loadoutRanks?.get(node.id) ?? null;
+
+        // Build class list
+        let className = "node";
+        if (isChoice) className += " choice";
+        if (isHero) className += " hero";
+        if (hasLoadout) {
+          className += isSelected ? " selected" : " unselected";
+        }
+        el.className = className;
+        el.style.left = toX(node.pixelX) + "px";
+        el.style.top = toY(node.pixelY) + "px";
+        el.dataset.subTreeId = node.subTreeId || 0;
+        el.dataset.nodeId = node.id;
+
+        if (isChoice && node.entries.length >= 2) {
+          // If loadout has a choice selected, show only that icon full-size
+          // Otherwise show both icons side by side
+          if (
+            hasLoadout &&
+            isSelected &&
+            choiceIndex !== null &&
+            node.entries[choiceIndex]
+          ) {
+            const entry = node.entries[choiceIndex];
+            const img = document.createElement("img");
+            img.src = getIconUrl(entry.iconFileName);
+            img.alt = entry.name || "?";
+            img.loading = "lazy";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            el.appendChild(img);
+          } else {
+            // No loadout or not selected - show both options
+            const entriesToShow = node.entries.slice(0, 2);
+            entriesToShow.forEach((entry) => {
+              const img = document.createElement("img");
+              img.src = getIconUrl(entry.iconFileName);
+              img.alt = entry.name || "?";
+              img.loading = "lazy";
+              el.appendChild(img);
+            });
+          }
+        } else if (node.entries.length > 0) {
+          const img = document.createElement("img");
+          img.src = getIconUrl(node.entries[0].iconFileName);
+          img.alt = node.entries[0].name || "?";
+          img.loading = "lazy";
+          el.appendChild(img);
+
+          // Rank indicator - show purchased/max if loadout, otherwise just max
+          const maxRanks = Math.max(...node.entries.map((e) => e.maxRanks));
+          if (maxRanks > 1) {
+            const ranks = document.createElement("div");
+            ranks.className = "node-ranks";
+            if (hasLoadout && isSelected && purchasedRanks !== null) {
+              ranks.textContent = purchasedRanks + "/" + maxRanks;
+            } else {
+              ranks.textContent = maxRanks;
+            }
+            el.appendChild(ranks);
+          }
+        }
+
+        // Tooltip handlers
+        el.addEventListener("mouseenter", () => {
+          const subTree = treeData.subTrees.find(
+            (s) => s.id === node.subTreeId,
+          );
+          const heroLabel = subTree
+            ? ' <span style="color:var(--accent-orange)">[' +
+              subTree.name +
+              "]</span>"
+            : "";
+          const isChoice = node.type === 2 && node.entries.length > 1;
+
+          if (isChoice) {
+            const selectedIdx = loadoutChoices?.get(node.id) ?? null;
+            tooltip.innerHTML =
+              '<div class="tooltip-header"><div><h3>Choose One' +
+              heroLabel +
+              '</h3><div class="subtitle">Choice Talent</div></div></div>' +
+              node.entries
+                .map((e, idx) => {
+                  const isChosen = selectedIdx === idx;
+                  const borderStyle = isChosen
+                    ? "border:2px solid var(--accent-green);"
+                    : "";
+                  const labelHtml = isChosen
+                    ? ' <span style="color:var(--accent-green);font-size:11px">(Selected)</span>'
+                    : "";
+                  return (
+                    '<div style="display:flex;gap:10px;align-items:start;margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;' +
+                    borderStyle +
+                    '">' +
+                    '<img src="' +
+                    getIconUrl(e.iconFileName, "small") +
+                    '" style="width:32px;height:32px;border-radius:6px">' +
+                    '<div><strong style="color:var(--accent-purple)">' +
+                    (e.name || "Unknown") +
+                    "</strong>" +
+                    labelHtml +
+                    '<p style="margin-top:4px">' +
+                    (e.description || "No description.") +
+                    "</p></div></div>"
+                  );
+                })
+                .join("") +
+              '<div class="meta"><span>Node ' +
+              node.id +
+              "</span></div>";
+          } else {
+            const entry = node.entries[0] || {};
+            const maxRanks = Math.max(...node.entries.map((e) => e.maxRanks));
+            tooltip.innerHTML =
+              '<div class="tooltip-header">' +
+              '<img class="tooltip-icon" src="' +
+              getIconUrl(entry.iconFileName, "small") +
+              '">' +
+              "<div><h3>" +
+              (entry.name || "Unknown") +
+              heroLabel +
+              "</h3>" +
+              '<div class="subtitle">' +
+              (node.subTreeId > 0 ? "Hero Talent" : "Talent") +
+              (maxRanks > 1 ? " · " + maxRanks + " Ranks" : "") +
+              "</div></div></div>" +
+              "<p>" +
+              (entry.description || "No description.") +
+              "</p>" +
+              '<div class="meta"><span>Node ' +
+              node.id +
+              "</span><span>Spell " +
+              (entry.spellId || "N/A") +
+              "</span></div>";
+          }
+          tooltip.classList.add("visible");
+        });
+
+        el.addEventListener("mousemove", (e) => {
+          tooltip.style.left =
+            Math.min(e.clientX + 16, window.innerWidth - 420) + "px";
+          tooltip.style.top =
+            Math.min(e.clientY + 16, window.innerHeight - 300) + "px";
+        });
+
+        el.addEventListener("mouseleave", () =>
+          tooltip.classList.remove("visible"),
+        );
+
+        treeEl.appendChild(el);
+        nodeEls.push({ el, node });
+      }
+
+      // Hero tree selector - use loadout's active tree if available
+      const loadoutActiveHeroTreeId = 44;
+      let selectedHeroId =
+        loadoutActiveHeroTreeId ?? treeData.subTrees[0]?.id ?? 0;
+
+      function updateVisibility() {
+        for (const { el, node } of nodeEls) {
+          const isHero = node.subTreeId && node.subTreeId > 0;
+          const visible = !isHero || node.subTreeId === selectedHeroId;
+          el.classList.toggle("hidden", !visible);
+        }
+
+        for (const line of edgeEls) {
+          const fromSub = parseInt(line.dataset.fromSub);
+          const toSub = parseInt(line.dataset.toSub);
+          const isHeroEdge = fromSub > 0 || toSub > 0;
+          let visible = true;
+          if (isHeroEdge) {
+            visible =
+              (fromSub === 0 || fromSub === selectedHeroId) &&
+              (toSub === 0 || toSub === selectedHeroId);
+          }
+          line.classList.toggle("hidden", !visible);
+        }
+
+        document.querySelectorAll(".hero-btn").forEach((btn) => {
+          const id =
+            btn.dataset.subtree === "none" ? 0 : parseInt(btn.dataset.subtree);
+          btn.classList.toggle("active", id === selectedHeroId);
+        });
+      }
+
+      document.querySelectorAll(".hero-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedHeroId =
+            btn.dataset.subtree === "none" ? 0 : parseInt(btn.dataset.subtree);
+          updateVisibility();
+        });
+      });
+
+      updateVisibility();
+
+      // Search
+      let searchTimeout;
+      searchInput.addEventListener("input", (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const query = e.target.value.toLowerCase().trim();
+          for (const { el, node } of nodeEls) {
+            el.classList.remove("search-match", "search-dim");
+            if (!query) continue;
+            const matches = node.entries.some((e) =>
+              (e.name || "").toLowerCase().includes(query),
+            );
+            el.classList.add(matches ? "search-match" : "search-dim");
+          }
+        }, 150);
+      });
+    </script>
+  </body>
 </html>

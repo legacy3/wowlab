@@ -53,7 +53,9 @@ export const TalentPointLimitsSchema = Schema.Struct({
   hero: Schema.Number, // treeIndex 3
 });
 
-export type TalentPointLimits = Schema.Schema.Type<typeof TalentPointLimitsSchema>;
+export type TalentPointLimits = Schema.Schema.Type<
+  typeof TalentPointLimitsSchema
+>;
 
 // TalentTree - Complete tree structure
 export const TalentTreeSchema = Schema.Struct({
