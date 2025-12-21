@@ -3,16 +3,131 @@
 ## Goal
 UI consumes a normalized **view model** instead of raw schema objects.
 
+## Consolidates Duplicate Code
+Currently layout logic exists in two places:
+- `talent-utils.ts:computeTalentLayout()` — returns scale/offset only
+- `use-talent-layout.ts` — full position calculation with node/edge positions
+
+The view model builder replaces both with a single, complete implementation.
+
 ## Add in `wowlab-services`
-Create `packages/wowlab-services/src/talents/view-model.ts`:
-- `buildTalentViewModel(tree, selections, options)`
-  - Inputs: tree, selections, width/height, search query, hero selection
-  - Output: nodes/edges with positions + render state + totals
+Create `packages/wowlab-services/src/internal/talents/view-model.ts`
+
+### View Model Types
+```ts
+export interface TalentNodePosition {
+  id: number;
+  x: number;
+  y: number;
+  node: {
+    id: number;
+    type: number;
+    maxRanks: number;
+    subTreeId: number;
+    entries: Array<{
+      id: number;
+      name: string;
+      description: string;
+      iconFileName: string;
+      spellId: number;
+    }>;
+  };
+  selection?: {
+    selected: boolean;
+    ranksPurchased: number;
+    choiceIndex?: number;
+  };
+  isHero: boolean;
+}
+
+export interface TalentEdgePosition {
+  id: number;
+  fromNodeId: number;
+  toNodeId: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  fromSelected: boolean;
+  toSelected: boolean;
+}
+
+export interface TalentViewModel {
+  // Positioned elements for rendering
+  nodes: TalentNodePosition[];
+  edges: TalentEdgePosition[];
+
+  // Point totals and limits
+  pointsSpent: TalentPointsSpent;  // { class, spec, hero }
+  pointLimits: TalentPointLimits;  // { class, spec, hero }
+
+  // Hero tree state
+  selectedHeroId: number | null;
+  availableHeroTrees: Array<{ id: number; name: string; iconFileName: string }>;
+
+  // Layout metadata
+  layout: {
+    scale: number;
+    offsetX: number;
+    offsetY: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface BuildTalentViewModelOptions {
+  width: number;
+  height: number;
+  selectedHeroId?: number | null;
+  padding?: number;  // default: 20
+}
+```
+
+### Builder Function
+```ts
+export function buildTalentViewModel(
+  tree: TalentTree,
+  selections: Map<number, DecodedTalentSelection>,
+  options: BuildTalentViewModelOptions
+): TalentViewModel
+```
+
+### Implementation Notes
+1. Call `computeVisibleNodes` to filter nodes
+2. Call `filterByHeroTree` with selectedHeroId
+3. Call `buildTalentEdgeIndex` for edge lookup
+4. Calculate layout scale/offset (consolidate from both existing implementations)
+5. Map nodes to positions with selection state
+6. Map edges to positions with connection state
+7. Call `calculatePointsSpent` for totals
+8. Return complete view model
 
 ## Portal Hook
 Add `apps/portal/src/hooks/use-talent-view-model.ts`:
-- Thin wrapper calling `buildTalentViewModel` in `useMemo`.
+```ts
+import { useMemo } from "react";
+import { buildTalentViewModel, type TalentViewModel } from "@wowlab/services/Talents";
+
+export function useTalentViewModel(
+  tree: TalentTree | null,
+  selections: Map<number, DecodedTalentSelection>,
+  options: { width: number; height: number; selectedHeroId?: number | null }
+): TalentViewModel | null {
+  return useMemo(() => {
+    if (!tree) return null;
+    return buildTalentViewModel(tree, selections, options);
+  }, [tree, selections, options.width, options.height, options.selectedHeroId]);
+}
+```
+
+## Delete After Migration
+- `apps/portal/src/hooks/use-talent-layout.ts` — replaced by `useTalentViewModel`
+- `computeTalentLayout` in services — absorbed into `buildTalentViewModel`
 
 ## Exit Criteria
-- UI components can render using the view model alone.
-- Renderer no longer needs direct access to schema details.
+- [ ] `TalentViewModel` type exported from `@wowlab/services/Talents`
+- [ ] `buildTalentViewModel` function exported from `@wowlab/services/Talents`
+- [ ] `useTalentViewModel` hook in portal
+- [ ] `use-talent-layout.ts` deleted
+- [ ] UI components receive `TalentViewModel`, not raw `TalentTree`
+- [ ] No direct imports from `@wowlab/core/Schemas` in rendering components

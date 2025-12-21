@@ -30,9 +30,15 @@ This section documents the underlying issues that made the current talent code h
 - Encoding rules, prerequisites, and point limits are untested.
 - Confidence requires manual inspection every time.
 
+## 8) Duplicate layout logic
+- `computeTalentLayout` in `talent-utils.ts` returns only scale/offset.
+- `useTalentLayout` hook in portal does similar math but returns full positions.
+- Both need to stay in sync manually — easy to diverge.
+
 ## End Result (what changes)
 - Domain rules become shared and reusable.
 - UI becomes a pure renderer fed by a view model.
 - Preview and main tree share one pipeline.
 - Controller hooks own synchronization logic.
+- Layout logic consolidated in view model builder.
 - Core rules get targeted tests.
