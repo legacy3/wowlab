@@ -627,6 +627,48 @@ export const transformTalentTree = (
     // This includes nodes that are filtered from display (e.g., SubTreeSelection type 3)
     const allNodeIds = [...treeNodes].sort((a, b) => a.ID - b.ID).map((n) => n.ID);
 
+    // Get currency sources to calculate point limits
+    const currencySources = yield* dbc.getManyByFkValues(
+      "traitCurrencySource",
+      "TraitCurrencyID",
+      currencyIds,
+    );
+
+    // Sum amounts per currency to get total available points
+    const currencyTotals = new Map<number, number>();
+    for (const source of currencySources) {
+      const current = currencyTotals.get(source.TraitCurrencyID) ?? 0;
+      currencyTotals.set(source.TraitCurrencyID, current + source.Amount);
+    }
+
+    // Determine point limits per tree type from currency flags
+    // Flags: 0x4 = class, 0x8 = spec, 0x0 = hero
+    let classLimit = 0;
+    let specLimit = 0;
+    let heroLimit = 0;
+
+    for (const treeCurrency of treeCurrencies) {
+      const currency = currencyMap.get(treeCurrency.TraitCurrencyID);
+      const total = currencyTotals.get(treeCurrency.TraitCurrencyID) ?? 0;
+
+      if (!currency) continue;
+
+      if (currency.Flags & 0x4) {
+        classLimit += total;
+      } else if (currency.Flags & 0x8) {
+        specLimit += total;
+      } else if (currency.Flags === 0) {
+        // Hero currencies have flags 0, take max of any hero currency
+        heroLimit = Math.max(heroLimit, total);
+      }
+    }
+
+    const pointLimits = {
+      class: classLimit,
+      spec: specLimit,
+      hero: heroLimit,
+    };
+
     return {
       allNodeIds,
       className: chrClass.Name_lang ?? "",
@@ -637,6 +679,7 @@ export const transformTalentTree = (
         visualStyle: e.VisualStyle,
       })),
       nodes,
+      pointLimits,
       specId,
       specName: spec.Name_lang ?? "",
       subTrees,

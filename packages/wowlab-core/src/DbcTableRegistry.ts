@@ -112,6 +112,7 @@ export const DBC_TABLES = {
   traitCond: { file: "TraitCond.csv", schema: Dbc.TraitCondRowSchema, tableName: "trait_cond" },
   traitCost: { file: "TraitCost.csv", schema: Dbc.TraitCostRowSchema, tableName: "trait_cost" },
   traitCurrency: { file: "TraitCurrency.csv", schema: Dbc.TraitCurrencyRowSchema, tableName: "trait_currency" },
+  traitCurrencySource: { file: "TraitCurrencySource.csv", schema: Dbc.TraitCurrencySourceRowSchema, tableName: "trait_currency_source" },
   traitDefinition: { file: "TraitDefinition.csv", schema: Dbc.TraitDefinitionRowSchema, tableName: "trait_definition" },
   traitDefinitionEffectPoints: { file: "TraitDefinitionEffectPoints.csv", schema: Dbc.TraitDefinitionEffectPointsRowSchema, tableName: "trait_definition_effect_points" },
   traitEdge: { file: "TraitEdge.csv", schema: Dbc.TraitEdgeRowSchema, tableName: "trait_edge" },

@@ -21,6 +21,9 @@ import {
   buildTalentEdgeIndex,
   collectTalentDependentIds,
   collectTalentPrerequisiteIds,
+  calculatePointsSpent,
+  wouldExceedPointLimit,
+  type TalentPointsSpent,
 } from "./talent-utils";
 import { useTalentLayout } from "@/hooks/use-talent-layout";
 import { TalentNode } from "./talent-node";
@@ -242,6 +245,16 @@ export function TalentTree({
   const isPanned = panZoom.x !== 0 || panZoom.y !== 0 || panZoom.scale !== 1;
   const selectedNodeCount = selections.size;
 
+  // Calculate points spent per tree type
+  const pointsSpent = useMemo(
+    () => calculatePointsSpent(visibleNodes, selections),
+    [visibleNodes, selections],
+  );
+  const pointsSpentRef = useRef(pointsSpent);
+  useEffect(() => {
+    pointsSpentRef.current = pointsSpent;
+  }, [pointsSpent]);
+
   const resetSelections = useCallback(() => {
     paint.current.active = false;
     paint.current.lastNodeId = null;
@@ -302,6 +315,15 @@ export function TalentTree({
         const isChoiceNode = node.type === 2 && node.entries.length > 1;
 
         if (!isSelected) {
+          // Check point limit before selecting
+          const currentSpent = pointsSpentRef.current;
+          if (
+            tree.pointLimits &&
+            wouldExceedPointLimit(node, 1, currentSpent, tree.pointLimits)
+          ) {
+            return prev; // Don't select if it would exceed limit
+          }
+
           ensureSelectedWithPrereqs(nodeId, next);
           const sel = makeDefaultSelection(nodeId);
           if (sel) {
@@ -338,6 +360,14 @@ export function TalentTree({
         if (node.maxRanks > 1) {
           const currentRanks = current?.ranksPurchased ?? 0;
           if (currentRanks < node.maxRanks) {
+            // Check point limit before adding rank
+            const currentSpent = pointsSpentRef.current;
+            if (
+              tree.pointLimits &&
+              wouldExceedPointLimit(node, 1, currentSpent, tree.pointLimits)
+            ) {
+              return prev; // Don't add rank if it would exceed limit
+            }
             next.set(nodeId, { ...current, ranksPurchased: currentRanks + 1 });
             hoverChainLastNodeId.current = nodeId;
             return next;
@@ -370,6 +400,7 @@ export function TalentTree({
       ensureSelectedWithPrereqs,
       makeDefaultSelection,
       nodeById,
+      tree.pointLimits,
     ],
   );
 
@@ -417,6 +448,16 @@ export function TalentTree({
         return;
       }
 
+      // Check point limit before selecting
+      const node = nodeById.get(nodeId);
+      if (
+        node &&
+        tree.pointLimits &&
+        wouldExceedPointLimit(node, 1, pointsSpentRef.current, tree.pointLimits)
+      ) {
+        return; // Don't select if it would exceed limit
+      }
+
       setSelections((prev) => {
         const next = new Map(prev);
         ensureSelectedWithPrereqs(nodeId, next);
@@ -438,6 +479,8 @@ export function TalentTree({
       edgeIndex.neighborsByNodeId,
       ensureSelectedWithPrereqs,
       makeDefaultSelection,
+      nodeById,
+      tree.pointLimits,
     ],
   );
 
@@ -665,6 +708,7 @@ export function TalentTree({
         scale={panZoom.scale}
         displayNodeCount={displayNodes.length}
         selectedNodeCount={selectedNodeCount}
+        pointsSpent={pointsSpent}
         isPanned={isPanned}
         zenMode={zenMode}
         onSearchChange={setSearchQuery}

@@ -1,6 +1,72 @@
 import Fuse from "fuse.js";
 import type { Talent } from "@wowlab/core/Schemas";
 
+export interface TalentPointsSpent {
+  class: number;
+  spec: number;
+  hero: number;
+}
+
+/**
+ * Calculate points spent per tree type from current selections.
+ * Each rank purchased counts as 1 point.
+ */
+export function calculatePointsSpent(
+  nodes: readonly Talent.TalentNode[],
+  selections: Map<number, Talent.DecodedTalentSelection>,
+): TalentPointsSpent {
+  const spent: TalentPointsSpent = { class: 0, spec: 0, hero: 0 };
+
+  for (const node of nodes) {
+    const selection = selections.get(node.id);
+    if (!selection?.selected) {
+      continue;
+    }
+
+    const ranks = selection.ranksPurchased ?? 1;
+    const treeIndex = node.treeIndex ?? 2;
+
+    if (treeIndex === 1) {
+      spent.class += ranks;
+    } else if (treeIndex === 2) {
+      spent.spec += ranks;
+    } else if (treeIndex === 3) {
+      spent.hero += ranks;
+    }
+  }
+
+  return spent;
+}
+
+/**
+ * Check if selecting a node (or adding ranks) would exceed point limits.
+ * Returns the tree type that would be exceeded, or null if within limits.
+ */
+export function wouldExceedPointLimit(
+  node: Talent.TalentNode,
+  ranksToAdd: number,
+  currentSpent: TalentPointsSpent,
+  limits: Talent.TalentPointLimits,
+): "class" | "spec" | "hero" | null {
+  const treeIndex = node.treeIndex ?? 2;
+
+  if (treeIndex === 1) {
+    if (currentSpent.class + ranksToAdd > limits.class) {
+      return "class";
+    }
+  } else if (treeIndex === 2) {
+    if (currentSpent.spec + ranksToAdd > limits.spec) {
+      return "spec";
+    }
+  } else if (treeIndex === 3) {
+    if (currentSpent.hero + ranksToAdd > limits.hero) {
+      return "hero";
+    }
+  }
+
+  return null;
+}
+
 export function computeVisibleNodes(
   nodes: readonly Talent.TalentNode[],
   edges: readonly Talent.TalentEdge[],

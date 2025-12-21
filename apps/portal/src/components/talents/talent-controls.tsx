@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
 import type { Talent } from "@wowlab/core/Schemas";
+import type { TalentPointsSpent } from "./talent-utils";
 
 interface TalentControlsProps {
   tree: Talent.TalentTree | Talent.TalentTreeWithSelections;
@@ -27,6 +28,7 @@ interface TalentControlsProps {
   scale: number;
   displayNodeCount: number;
   selectedNodeCount: number;
+  pointsSpent: TalentPointsSpent;
   isPanned: boolean;
   zenMode: boolean;
   onSearchChange: (query: string) => void;
@@ -45,6 +47,7 @@ export const TalentControls = memo(function TalentControls({
   scale,
   displayNodeCount,
   selectedNodeCount,
+  pointsSpent,
   isPanned,
   zenMode,
   onSearchChange,
@@ -56,6 +59,8 @@ export const TalentControls = memo(function TalentControls({
   onExportPNG,
   onExportPDF,
 }: TalentControlsProps) {
+  const { pointLimits } = tree;
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <SpecLabel specId={tree.specId} size="sm" showIcon />
@@ -72,9 +77,35 @@ export const TalentControls = memo(function TalentControls({
         className="h-7 w-36 text-xs"
       />
 
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span
+          className={
+            pointsSpent.class >= pointLimits.class ? "text-amber-500" : ""
+          }
+        >
+          Class: {pointsSpent.class}/{pointLimits.class}
+        </span>
+        <span className="opacity-40">·</span>
+        <span
+          className={
+            pointsSpent.spec >= pointLimits.spec ? "text-amber-500" : ""
+          }
+        >
+          Spec: {pointsSpent.spec}/{pointLimits.spec}
+        </span>
+        <span className="opacity-40">·</span>
+        <span
+          className={
+            pointsSpent.hero >= pointLimits.hero ? "text-amber-500" : ""
+          }
+        >
+          Hero: {pointsSpent.hero}/{pointLimits.hero}
+        </span>
+      </div>
+
       <div className="flex items-center gap-1 ml-auto">
         <span className="text-xs text-muted-foreground">
-          {selectedNodeCount}/{displayNodeCount} talents selected
+          {selectedNodeCount}/{displayNodeCount} nodes
           {scale !== 1 && ` · ${Math.round(scale * 100)}%`}
         </span>
 
