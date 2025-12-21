@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { KonvaLine } from "@/components/konva";
-import type { TalentEdgePosition } from "./types";
+import type { TalentEdgePosition } from "@wowlab/services/Talents";
 import {
   EDGE_WIDTH_ACTIVE,
   EDGE_WIDTH_UNLOCKED,

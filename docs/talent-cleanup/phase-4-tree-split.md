@@ -1,10 +1,13 @@
 # Phase 4 — Split `TalentTree` into Controller + Renderer
 
 ## Goal
+
 Make rendering pure and stateful logic explicit.
 
 ## Current State
+
 `talent-tree.tsx` (788 lines) handles everything:
+
 - Selection state management
 - Pan/zoom state
 - Tooltip/hover state
@@ -14,6 +17,7 @@ Make rendering pure and stateful logic explicit.
 - Konva rendering
 
 **Already separate files (keep as-is):**
+
 - `talent-node.tsx` — Konva node renderer
 - `talent-edge.tsx` — Konva edge renderer
 - `talent-tooltip.tsx` — tooltip UI
@@ -25,12 +29,15 @@ Make rendering pure and stateful logic explicit.
 
 **1. `talent-tree-controller.tsx`**
 Owns all stateful logic:
+
 ```ts
 interface TalentTreeControllerProps {
   tree: TalentTree;
   initialSelections?: Map<number, DecodedTalentSelection>;
   initialSelectionsKey?: string | number | null;
-  onSelectionsChange?: (selections: Map<number, DecodedTalentSelection>) => void;
+  onSelectionsChange?: (
+    selections: Map<number, DecodedTalentSelection>,
+  ) => void;
   width?: number;
   height?: number;
 }
@@ -54,6 +61,7 @@ interface TalentTreeControllerProps {
 
 **2. `talent-tree-renderer.tsx`**
 Pure rendering, no useState for data:
+
 ```ts
 interface TalentTreeRendererProps {
   viewModel: TalentViewModel;
@@ -90,7 +98,9 @@ interface TalentTreeRendererProps {
 ```
 
 ## File Structure
+
 Keep existing structure, just split the main file:
+
 ```
 apps/portal/src/components/talents/
   talent-tree-controller.tsx   ← NEW (from talent-tree.tsx)
@@ -106,6 +116,7 @@ apps/portal/src/components/talents/
 ```
 
 **Alternative:** Move to subfolder if preferred:
+
 ```
 apps/portal/src/components/talents/tree/
   controller.tsx
@@ -114,9 +125,11 @@ apps/portal/src/components/talents/tree/
 ```
 
 ## Memoized Layers (keep pattern)
+
 The existing `EdgesLayer` and `NodesLayer` memo wrappers are good — keep them in the renderer.
 
 ## Exit Criteria
+
 - [ ] `TalentTreeController` owns all `useState` calls for data state
 - [ ] `TalentTreeRenderer` has no `useState` except DOM-related refs
 - [ ] Renderer receives `TalentViewModel` (from Phase 3)

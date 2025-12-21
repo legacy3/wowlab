@@ -1,9 +1,11 @@
 # Phase 7 — Core Tests
 
 ## Goal
+
 Lock down the rules to stop regressions.
 
 ## Test Location
+
 - `packages/wowlab-parsers/src/__tests__/talents.test.ts`
 - `packages/wowlab-services/src/internal/talents/__tests__/`
 
@@ -12,10 +14,16 @@ Lock down the rules to stop regressions.
 ## Parsers Tests (`wowlab-parsers`)
 
 ### Encoding/Decoding Roundtrip
+
 ```ts
 describe("talent loadout encoding", () => {
   it("roundtrips empty loadout", () => {
-    const input = { version: 1, specId: 62, treeHash: new Uint8Array(16), nodes: [] };
+    const input = {
+      version: 1,
+      specId: 62,
+      treeHash: new Uint8Array(16),
+      nodes: [],
+    };
     const encoded = encodeTalentLoadout(input);
     const decoded = Effect.runSync(decodeTalentLoadout(encoded));
     expect(decoded.specId).toBe(62);
@@ -30,7 +38,12 @@ describe("talent loadout encoding", () => {
       nodes: [
         { selected: true, purchased: true, ranksPurchased: 1 },
         { selected: false },
-        { selected: true, purchased: true, partiallyRanked: true, ranksPurchased: 2 },
+        {
+          selected: true,
+          purchased: true,
+          partiallyRanked: true,
+          ranksPurchased: 2,
+        },
       ],
     };
     const encoded = encodeTalentLoadout(input);
@@ -45,7 +58,9 @@ describe("talent loadout encoding", () => {
       version: 1,
       specId: 102,
       treeHash: new Uint8Array(16),
-      nodes: [{ selected: true, purchased: true, choiceNode: true, choiceIndex: 1 }],
+      nodes: [
+        { selected: true, purchased: true, choiceNode: true, choiceIndex: 1 },
+      ],
     };
     const encoded = encodeTalentLoadout(input);
     const decoded = Effect.runSync(decodeTalentLoadout(encoded));
@@ -54,13 +69,16 @@ describe("talent loadout encoding", () => {
   });
 
   it("handles invalid characters gracefully", () => {
-    const result = Effect.runSync(Effect.either(decodeTalentLoadout("invalid!@#$")));
+    const result = Effect.runSync(
+      Effect.either(decodeTalentLoadout("invalid!@#$")),
+    );
     expect(result._tag).toBe("Left");
   });
 });
 ```
 
 ### Selection Encoding
+
 ```ts
 describe("encodeSelectionsToLoadoutString", () => {
   it("encodes selections matching allNodeIds order", () => {
@@ -82,6 +100,7 @@ describe("encodeSelectionsToLoadoutString", () => {
 ## Services Tests (`wowlab-services`)
 
 ### Graph Tests (`graph.test.ts`)
+
 ```ts
 describe("buildTalentEdgeIndex", () => {
   it("builds parent/child relationships from edges", () => {
@@ -126,9 +145,9 @@ describe("collectTalentPrerequisiteIds", () => {
     //    \ /
     //     D
     const parents = new Map([
-      [101, new Set([100])],  // B <- A
-      [102, new Set([100])],  // C <- A
-      [103, new Set([101, 102])],  // D <- B, C
+      [101, new Set([100])], // B <- A
+      [102, new Set([100])], // C <- A
+      [103, new Set([101, 102])], // D <- B, C
     ]);
 
     const prereqs = collectTalentPrerequisiteIds(103, parents);
@@ -156,13 +175,14 @@ describe("collectTalentDependentIds", () => {
 ```
 
 ### Selection Tests (`selection.test.ts`)
+
 ```ts
 describe("calculatePointsSpent", () => {
   it("sums points by tree type", () => {
     const nodes = [
-      { id: 1, treeIndex: 1, maxRanks: 1 },  // class
-      { id: 2, treeIndex: 2, maxRanks: 2 },  // spec
-      { id: 3, treeIndex: 3, maxRanks: 1 },  // hero
+      { id: 1, treeIndex: 1, maxRanks: 1 }, // class
+      { id: 2, treeIndex: 2, maxRanks: 2 }, // spec
+      { id: 3, treeIndex: 3, maxRanks: 1 }, // hero
     ];
     const selections = new Map([
       [1, { selected: true, ranksPurchased: 1 }],
@@ -220,35 +240,41 @@ describe("wouldExceedPointLimitWithPrereqs", () => {
       [102, { id: 102, treeIndex: 2 }],
       [103, { id: 103, treeIndex: 2 }],
     ]);
-    const parents = new Map([
-      [103, new Set([101, 102])],
-    ]);
+    const parents = new Map([[103, new Set([101, 102])]]);
     const selections = new Map(); // nothing selected
     const spent = { class: 0, spec: 28, hero: 0 };
     const limits = { class: 31, spec: 30, hero: 10 };
 
     // 28 + 3 = 31 > 30, should exceed
     expect(
-      wouldExceedPointLimitWithPrereqs(103, nodeById, selections, parents, spent, limits)
+      wouldExceedPointLimitWithPrereqs(
+        103,
+        nodeById,
+        selections,
+        parents,
+        spent,
+        limits,
+      ),
     ).toBe("spec");
   });
 });
 ```
 
 ### Visibility Tests (`graph.test.ts`)
+
 ```ts
 describe("computeVisibleNodes", () => {
   it("includes all nodes with subTreeId 0", () => {
     const nodes = [
       { id: 1, subTreeId: 0 },
       { id: 2, subTreeId: 0 },
-      { id: 3, subTreeId: 1 },  // hero node
+      { id: 3, subTreeId: 1 }, // hero node
     ];
     const edges = [];
 
     const visible = computeVisibleNodes(nodes, edges);
-    expect(visible.map(n => n.id)).toContain(1);
-    expect(visible.map(n => n.id)).toContain(2);
+    expect(visible.map((n) => n.id)).toContain(1);
+    expect(visible.map((n) => n.id)).toContain(2);
   });
 });
 
@@ -274,13 +300,14 @@ describe("filterByHeroTree", () => {
 
     const filtered = filterByHeroTree(nodes, 1);
     expect(filtered).toHaveLength(2);
-    expect(filtered.map(n => n.id)).toContain(1);
-    expect(filtered.map(n => n.id)).toContain(2);
+    expect(filtered.map((n) => n.id)).toContain(1);
+    expect(filtered.map((n) => n.id)).toContain(2);
   });
 });
 ```
 
 ### Layout Tests (`view-model.test.ts`)
+
 ```ts
 describe("buildTalentViewModel layout", () => {
   it("returns default scale for empty nodes", () => {
@@ -296,8 +323,24 @@ describe("buildTalentViewModel layout", () => {
   it("scales to fit within bounds", () => {
     const tree = {
       nodes: [
-        { id: 1, posX: 0, posY: 0, subTreeId: 0, type: 0, maxRanks: 1, entries: [] },
-        { id: 2, posX: 1000, posY: 2000, subTreeId: 0, type: 0, maxRanks: 1, entries: [] },
+        {
+          id: 1,
+          posX: 0,
+          posY: 0,
+          subTreeId: 0,
+          type: 0,
+          maxRanks: 1,
+          entries: [],
+        },
+        {
+          id: 2,
+          posX: 1000,
+          posY: 2000,
+          subTreeId: 0,
+          type: 0,
+          maxRanks: 1,
+          entries: [],
+        },
       ],
       edges: [],
       allNodeIds: [1, 2],
@@ -319,6 +362,7 @@ describe("buildTalentViewModel layout", () => {
 ---
 
 ## Exit Criteria
+
 - [ ] All test files created and passing
 - [ ] Roundtrip encoding tests cover: empty, single node, multi-rank, choice nodes
 - [ ] Prerequisite traversal tests cover: linear chain, diamond, root node

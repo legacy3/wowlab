@@ -9,7 +9,8 @@ import {
   KonvaCircle,
   KonvaImage,
 } from "@/components/konva";
-import type { TalentNodePosition, TooltipState } from "./types";
+import type { TalentNodePosition } from "@wowlab/services/Talents";
+import type { TooltipState } from "./types";
 import {
   NODE_SIZE,
   CHOICE_NODE_SIZE,

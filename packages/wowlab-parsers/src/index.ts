@@ -2,6 +2,7 @@ export {
   decodeTalentLoadout,
   decodeTalents,
   decodeTalentsToBits,
+  encodeSelectionsToLoadoutString,
   encodeTalentLoadout,
   type DecodedTalentLoadout,
   type DecodedTalentNode,

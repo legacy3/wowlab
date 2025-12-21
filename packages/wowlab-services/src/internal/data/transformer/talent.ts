@@ -694,8 +694,8 @@ export const transformTalentTree = (
 
     const pointLimits = {
       class: classLimit,
-      spec: specLimit,
       hero: heroLimit,
+      spec: specLimit,
     };
 
     return {

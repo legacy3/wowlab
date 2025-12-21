@@ -1,19 +1,24 @@
 # Phase 3 — Shared View Model Builder
 
 ## Goal
+
 UI consumes a normalized **view model** instead of raw schema objects.
 
 ## Consolidates Duplicate Code
+
 Currently layout logic exists in two places:
+
 - `talent-utils.ts:computeTalentLayout()` — returns scale/offset only
 - `use-talent-layout.ts` — full position calculation with node/edge positions
 
 The view model builder replaces both with a single, complete implementation.
 
 ## Add in `wowlab-services`
+
 Create `packages/wowlab-services/src/internal/talents/view-model.ts`
 
 ### View Model Types
+
 ```ts
 export interface TalentNodePosition {
   id: number;
@@ -58,8 +63,8 @@ export interface TalentViewModel {
   edges: TalentEdgePosition[];
 
   // Point totals and limits
-  pointsSpent: TalentPointsSpent;  // { class, spec, hero }
-  pointLimits: TalentPointLimits;  // { class, spec, hero }
+  pointsSpent: TalentPointsSpent; // { class, spec, hero }
+  pointLimits: TalentPointLimits; // { class, spec, hero }
 
   // Hero tree state
   selectedHeroId: number | null;
@@ -79,22 +84,24 @@ export interface BuildTalentViewModelOptions {
   width: number;
   height: number;
   selectedHeroId?: number | null;
-  padding?: number;  // default: 20
+  padding?: number; // default: 20
 }
 ```
 
 ### Builder Function
+
 ```ts
 export function buildTalentViewModel(
   tree: TalentTree,
   selections: Map<number, DecodedTalentSelection>,
-  options: BuildTalentViewModelOptions
-): TalentViewModel
+  options: BuildTalentViewModelOptions,
+): TalentViewModel;
 ```
 
 ### Implementation Notes
+
 1. Call `computeVisibleNodes` to filter nodes
-2. If `options.selectedHeroId` is `null`/`undefined`, call `deriveSelectedHeroId(selections)`
+2. If `options.selectedHeroId` is `undefined`, call `deriveSelectedHeroId(tree.subTrees, visibleNodes, selections)`
 3. Call `filterByHeroTree` with the resolved `selectedHeroId`
 4. Call `buildTalentEdgeIndex` for edge lookup
 5. Calculate layout scale/offset (consolidate from both existing implementations)
@@ -105,19 +112,25 @@ export function buildTalentViewModel(
 10. Return complete view model
 
 ## View Model Boundary Note
+
 The view model is the **only** schema boundary the UI consumes. It may contain fields that originate from schema
 (e.g. `type`, `subTreeId`), but UI components must only depend on the view model contract, not raw schemas.
 
 ## Portal Hook
+
 Add `apps/portal/src/hooks/use-talent-view-model.ts`:
+
 ```ts
 import { useMemo } from "react";
-import { buildTalentViewModel, type TalentViewModel } from "@wowlab/services/Talents";
+import {
+  buildTalentViewModel,
+  type TalentViewModel,
+} from "@wowlab/services/Talents";
 
 export function useTalentViewModel(
   tree: TalentTree | null,
   selections: Map<number, DecodedTalentSelection>,
-  options: { width: number; height: number; selectedHeroId?: number | null }
+  options: { width: number; height: number; selectedHeroId?: number | null },
 ): TalentViewModel | null {
   return useMemo(() => {
     if (!tree) return null;
@@ -127,10 +140,12 @@ export function useTalentViewModel(
 ```
 
 ## Delete After Migration
+
 - `apps/portal/src/hooks/use-talent-layout.ts` — replaced by `useTalentViewModel`
 - `computeTalentLayout` in services — absorbed into `buildTalentViewModel`
 
 ## Exit Criteria
+
 - [ ] `TalentViewModel` type exported from `@wowlab/services/Talents`
 - [ ] `buildTalentViewModel` function exported from `@wowlab/services/Talents`
 - [ ] `useTalentViewModel` hook in portal

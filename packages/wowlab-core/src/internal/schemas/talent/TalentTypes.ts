@@ -49,8 +49,8 @@ export type TalentSubTree = Schema.Schema.Type<typeof TalentSubTreeSchema>;
 // Point limits per tree type
 export const TalentPointLimitsSchema = Schema.Struct({
   class: Schema.Number, // treeIndex 1
-  spec: Schema.Number, // treeIndex 2
   hero: Schema.Number, // treeIndex 3
+  spec: Schema.Number, // treeIndex 2
 });
 
 export type TalentPointLimits = Schema.Schema.Type<

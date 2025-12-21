@@ -19,11 +19,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
-import type { Talent } from "@wowlab/core/Schemas";
-import type { TalentPointsSpent } from "./talent-utils";
+import type {
+  TalentPointLimits,
+  TalentPointsSpent,
+} from "@wowlab/services/Talents";
 
 interface TalentControlsProps {
-  tree: Talent.TalentTree | Talent.TalentTreeWithSelections;
+  specId: number;
+  pointLimits: TalentPointLimits;
   searchQuery: string;
   scale: number;
   displayNodeCount: number;
@@ -42,7 +45,8 @@ interface TalentControlsProps {
 }
 
 export const TalentControls = memo(function TalentControls({
-  tree,
+  specId,
+  pointLimits,
   searchQuery,
   scale,
   displayNodeCount,
@@ -59,11 +63,9 @@ export const TalentControls = memo(function TalentControls({
   onExportPNG,
   onExportPDF,
 }: TalentControlsProps) {
-  const { pointLimits } = tree;
-
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <SpecLabel specId={tree.specId} size="sm" showIcon />
+      <SpecLabel specId={specId} size="sm" showIcon />
       {zenMode && (
         <span className="text-xs text-muted-foreground ml-2 opacity-60">
           (ESC to exit)

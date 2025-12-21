@@ -126,13 +126,13 @@ export const debugLoadoutCommand = Command.make(
 
       // Now parse the loadout content
       interface ParsedNode {
-        nodeId: number;
-        index: number;
-        purchased: boolean;
-        granted: boolean;
-        partialRank?: number;
-        isChoice: boolean;
         choiceIndex?: number;
+        granted: boolean;
+        index: number;
+        isChoice: boolean;
+        nodeId: number;
+        partialRank?: number;
+        purchased: boolean;
       }
 
       const selectedNodes: ParsedNode[] = [];
@@ -161,13 +161,13 @@ export const debugLoadoutCommand = Command.make(
           }
 
           selectedNodes.push({
-            nodeId: nodeIds[nodeIndex],
-            index: nodeIndex,
-            purchased: isPurchased,
-            granted: !isPurchased,
-            partialRank,
-            isChoice,
             choiceIndex,
+            granted: !isPurchased,
+            index: nodeIndex,
+            isChoice,
+            nodeId: nodeIds[nodeIndex],
+            partialRank,
+            purchased: isPurchased,
           });
         }
 
