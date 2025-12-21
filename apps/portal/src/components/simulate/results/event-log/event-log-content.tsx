@@ -217,7 +217,11 @@ export function EventLogContent() {
               </CardTitle>
               {exportJson && (
                 <>
-                  <CopyButton value={exportJson} label="Event Log" />
+                  <CopyButton
+                    value={exportJson}
+                    label="event log"
+                    title="Copy event log"
+                  />
                   <Button
                     variant="ghost"
                     size="icon-sm"

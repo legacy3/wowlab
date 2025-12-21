@@ -102,7 +102,11 @@ export function OverviewCard() {
           <div className="flex items-center gap-1.5">
             {exportJson && (
               <>
-                <CopyButton value={exportJson} label="Spec Coverage" />
+                <CopyButton
+                  value={exportJson}
+                  label="spec coverage"
+                  title="Copy spec coverage"
+                />
                 <Button
                   variant="ghost"
                   size="icon-sm"

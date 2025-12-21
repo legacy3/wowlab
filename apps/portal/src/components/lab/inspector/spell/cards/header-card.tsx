@@ -28,7 +28,11 @@ export function HeaderCard() {
               <h1 className="text-2xl font-bold">{spell.name}</h1>
               <div className="flex items-center gap-1">
                 <Badge variant="outline">Spell #{spell.id}</Badge>
-                <CopyButton value={spell.id.toString()} label="Spell ID" />
+                <CopyButton
+                  value={spell.id.toString()}
+                  label="spell ID"
+                  title="Copy spell ID"
+                />
               </div>
               {spell.isPassive && <Badge variant="secondary">Passive</Badge>}
               <Badge

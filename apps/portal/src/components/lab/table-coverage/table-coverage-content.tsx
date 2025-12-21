@@ -1216,7 +1216,11 @@ export function TableCoverageContent() {
             </div>
             {exportJson && (
               <div className="flex items-center gap-1">
-                <CopyButton value={exportJson} label="Table Coverage" />
+                <CopyButton
+                  value={exportJson}
+                  label="table coverage"
+                  title="Copy table coverage"
+                />
                 <Button
                   variant="ghost"
                   size="icon-sm"
