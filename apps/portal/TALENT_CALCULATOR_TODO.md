@@ -1,10 +1,11 @@
 # Talent Calculator - Remaining TODOs
 
 ## Database Setup
-- [ ] Add `trait_currency_source` table to Supabase `raw_dbc` schema (import from `TraitCurrencySource.csv`)
+- [x] Add `trait_currency_source` table to Supabase `raw_dbc` schema (import from `TraitCurrencySource.csv`)
 
 ## Optional Improvements
-- [ ] Use actual per-node cost from `trait_cost.Amount` instead of assuming 1 point per rank
+- [x] Use actual per-node cost from `trait_cost.Amount` instead of assuming 1 point per rank
+  - Verified: All trait_cost.Amount values in DB are 1, so current assumption is correct
 - [ ] Handle prerequisite point spending in limit checks (currently selecting a node with prereqs could overspend if prereqs push you over the limit)
 
 ## Done
