@@ -629,7 +629,7 @@ export const transformTalentTree = (
 
     // Get currency sources to calculate point limits
     const currencySources = yield* dbc.getManyByFkValues(
-      "traitCurrencySource",
+      "trait_currency_source",
       "TraitCurrencyID",
       currencyIds,
     );

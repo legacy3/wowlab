@@ -6,7 +6,7 @@
 ## Optional Improvements
 - [x] Use actual per-node cost from `trait_cost.Amount` instead of assuming 1 point per rank
   - Verified: All trait_cost.Amount values in DB are 1, so current assumption is correct
-- [ ] Handle prerequisite point spending in limit checks (currently selecting a node with prereqs could overspend if prereqs push you over the limit)
+- [x] Handle prerequisite point spending in limit checks (currently selecting a node with prereqs could overspend if prereqs push you over the limit)
 
 ## Done
 - [x] Filter SubTreeSelection nodes (type 3) from rendering
