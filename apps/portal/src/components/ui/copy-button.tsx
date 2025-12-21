@@ -1,4 +1,7 @@
-import { Check, Copy } from "lucide-react";
+"use client";
+
+import { Check, Copy, Loader2, type LucideIcon } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
@@ -6,15 +9,37 @@ import { cn } from "@/lib/utils";
 
 interface CopyButtonProps {
   className?: string;
-  value: string;
+  value: string | (() => Promise<string>);
   label: string;
+  title: string;
+  icon?: LucideIcon;
+  disabled?: boolean;
 }
 
-export function CopyButton({ className, value, label }: CopyButtonProps) {
+export function CopyButton({
+  className,
+  value,
+  label,
+  title,
+  icon: Icon = Copy,
+  disabled,
+}: CopyButtonProps) {
+  const [loading, setLoading] = useState(false);
   const [state, copyToClipboard] = useCopyToClipboard(label);
 
-  const handleCopy = () => {
-    copyToClipboard(value);
+  const handleCopy = async () => {
+    if (typeof value === "string") {
+      copyToClipboard(value);
+    } else {
+      setLoading(true);
+
+      try {
+        const resolved = await value();
+        copyToClipboard(resolved);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (
@@ -27,11 +52,15 @@ export function CopyButton({ className, value, label }: CopyButtonProps) {
         className,
       )}
       onClick={handleCopy}
+      disabled={disabled || loading}
+      title={title}
     >
-      {state.copied ? (
+      {loading ? (
+        <Loader2 className="animate-spin" />
+      ) : state.copied ? (
         <Check className="text-green-500 animate-in zoom-in-50 duration-200" />
       ) : (
-        <Copy />
+        <Icon />
       )}
     </Button>
   );

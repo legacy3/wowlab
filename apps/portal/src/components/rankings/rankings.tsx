@@ -8,6 +8,7 @@ import { SpecRankingsTab } from "./spec-rankings-tab";
 import { MostWantedItemsTab } from "./most-wanted-items-tab";
 import { TopSimsTab } from "./top-sims-tab";
 import { TopTalentCombinationsTab } from "./top-talents-tab";
+import { RankingsIntroTour } from "@/components/tours";
 
 function DpsRankingsSkeleton() {
   return (
@@ -48,32 +49,36 @@ function DpsRankingsSkeleton() {
 
 function DpsRankingsInner() {
   return (
-    <UrlTabs
-      defaultTab="spec"
-      tabs={[
-        {
-          value: "spec",
-          label: "Spec Rankings",
-          content: <SpecRankingsTab />,
-        },
-        {
-          value: "talents",
-          label: "Top Talents",
-          content: <TopTalentCombinationsTab />,
-        },
-        {
-          value: "items",
-          label: "Most Wanted Items",
-          content: <MostWantedItemsTab />,
-        },
-        {
-          value: "sims",
-          label: "Top Sims",
-          content: <TopSimsTab />,
-        },
-      ]}
-      listClassName="w-full max-w-xl justify-start overflow-x-auto"
-    />
+    <>
+      <UrlTabs
+        defaultTab="spec"
+        tabs={[
+          {
+            value: "spec",
+            label: "Spec Rankings",
+            content: <SpecRankingsTab />,
+          },
+          {
+            value: "talents",
+            label: "Top Talents",
+            content: <TopTalentCombinationsTab />,
+          },
+          {
+            value: "items",
+            label: "Most Wanted Items",
+            content: <MostWantedItemsTab />,
+          },
+          {
+            value: "sims",
+            label: "Top Sims",
+            content: <TopSimsTab />,
+          },
+        ]}
+        listClassName="w-full max-w-xl justify-start overflow-x-auto"
+        listDataTour="rankings-tabs"
+      />
+      <RankingsIntroTour show />
+    </>
   );
 }
 

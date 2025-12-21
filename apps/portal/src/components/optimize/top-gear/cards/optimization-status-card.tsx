@@ -14,7 +14,7 @@ import { TrendingUp, Sparkles } from "lucide-react";
 
 export function TopGearOptimizationStatusCard() {
   return (
-    <Card className="h-full">
+    <Card className="h-full" data-tour="optimization-status">
       <CardHeader>
         <CardTitle>Optimization Status</CardTitle>
         <CardDescription>
@@ -47,7 +47,7 @@ export function TopGearOptimizationStatusCard() {
           </div>
         </div>
 
-        <Button className="w-full">
+        <Button className="w-full" data-tour="start-optimization">
           <Sparkles className="mr-2 h-4 w-4" />
           Start Optimization
         </Button>

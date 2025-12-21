@@ -31,7 +31,11 @@ export function HeaderCard() {
               </h1>
               <div className="flex items-center gap-1">
                 <Badge variant="outline">Item #{item.id}</Badge>
-                <CopyButton value={item.id.toString()} label="Item ID" />
+                <CopyButton
+                  value={item.id.toString()}
+                  label="item ID"
+                  title="Copy item ID"
+                />
               </div>
             </div>
 

@@ -162,7 +162,11 @@ export function SpellListDialog({
                 </div>
                 {exportJson && (
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <CopyButton value={exportJson} label="Spell List" />
+                    <CopyButton
+                      value={exportJson}
+                      label="spell list"
+                      title="Copy spell list"
+                    />
                     <Button
                       variant="ghost"
                       size="icon-sm"

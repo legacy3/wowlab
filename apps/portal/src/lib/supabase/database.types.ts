@@ -109,6 +109,24 @@ export type Database = {
           },
         ];
       };
+      short_urls: {
+        Row: {
+          createdAt: string | null;
+          slug: string;
+          targetUrl: string;
+        };
+        Insert: {
+          createdAt?: string | null;
+          slug: string;
+          targetUrl: string;
+        };
+        Update: {
+          createdAt?: string | null;
+          slug?: string;
+          targetUrl?: string;
+        };
+        Relationships: [];
+      };
       user_profiles: {
         Row: {
           avatarUrl: string | null;
@@ -217,6 +235,10 @@ export type Database = {
     Functions: {
       generate_default_handle: { Args: { user_id: string }; Returns: string };
       generate_random_seed: { Args: never; Returns: string };
+      get_or_create_short_url: {
+        Args: { p_target_url: string; p_user_id?: string };
+        Returns: string;
+      };
     };
     Enums: {
       [_ in never]: never;

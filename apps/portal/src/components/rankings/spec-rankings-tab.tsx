@@ -57,7 +57,7 @@ export function SpecRankingsTab() {
         description="Snapshot of aggregated public simulations across all realms."
       >
         <Select value={tier} onValueChange={setTier}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px]" data-tour="rankings-tier">
             <SelectValue placeholder="Raid tier" />
           </SelectTrigger>
           <SelectContent>
@@ -69,7 +69,10 @@ export function SpecRankingsTab() {
           </SelectContent>
         </Select>
         <Select value={fightLength} onValueChange={setFightLength}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger
+            className="w-[180px]"
+            data-tour="rankings-fight-length"
+          >
             <SelectValue placeholder="Fight length" />
           </SelectTrigger>
           <SelectContent>
@@ -81,7 +84,7 @@ export function SpecRankingsTab() {
           </SelectContent>
         </Select>
         <Select value={timeWindow} onValueChange={setTimeWindow}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" data-tour="rankings-time-window">
             <SelectValue placeholder="Time window" />
           </SelectTrigger>
           <SelectContent>
@@ -94,87 +97,89 @@ export function SpecRankingsTab() {
         </Select>
       </TabHeader>
 
-      <RankingsCard
-        header={{
-          title: specHeaderMeta.tier,
-          description: `${specHeaderMeta.fight} • ${specHeaderMeta.window}`,
-        }}
-        footer="Rankings aggregate approved public simulations from the last 30 days. Data refreshes every hour."
-        totalCount={60}
-        pageCount={6}
-        pageSize={10}
-      >
-        {specRankings.length === 0 ? (
-          <EmptyState
-            icon={<BarChart3 className="h-6 w-6 text-muted-foreground" />}
-            title="No rankings yet"
-            description={
-              <>
-                Rankings will appear here once simulation data is available.
-                <br />
-                Upload your first rotation simulation to get started.
-              </>
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-14 text-center">#</TableHead>
-                  <TableHead>Spec</TableHead>
-                  <TableHead className="text-right">DPS</TableHead>
-                  <TableHead className="w-32 text-right">Change</TableHead>
-                  <TableHead className="w-32 text-right">Parses</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {specRankings.map((ranking, index) => (
-                  <TableRow
-                    key={`${ranking.class}-${ranking.spec}`}
-                    className={cn(
-                      index < 3 &&
-                        "bg-primary/5 hover:bg-primary/10 dark:bg-primary/10/50",
-                    )}
-                  >
-                    <TableCell className="text-center font-semibold">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{
-                            backgroundColor:
-                              CLASS_COLORS[ranking.class as WowClass],
-                          }}
-                        />
-                        <div>
-                          <p className="font-medium">
-                            {ranking.spec} {ranking.class}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {specHeaderMeta.window} • Median of top parses
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {Math.round(ranking.avgDps).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <TrendPill direction="flat" value={0} />
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {ranking.simCount.toLocaleString()}
-                    </TableCell>
+      <div data-tour="rankings-results">
+        <RankingsCard
+          header={{
+            title: specHeaderMeta.tier,
+            description: `${specHeaderMeta.fight} • ${specHeaderMeta.window}`,
+          }}
+          footer="Rankings aggregate approved public simulations from the last 30 days. Data refreshes every hour."
+          totalCount={60}
+          pageCount={6}
+          pageSize={10}
+        >
+          {specRankings.length === 0 ? (
+            <EmptyState
+              icon={<BarChart3 className="h-6 w-6 text-muted-foreground" />}
+              title="No rankings yet"
+              description={
+                <>
+                  Rankings will appear here once simulation data is available.
+                  <br />
+                  Upload your first rotation simulation to get started.
+                </>
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-14 text-center">#</TableHead>
+                    <TableHead>Spec</TableHead>
+                    <TableHead className="text-right">DPS</TableHead>
+                    <TableHead className="w-32 text-right">Change</TableHead>
+                    <TableHead className="w-32 text-right">Parses</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </RankingsCard>
+                </TableHeader>
+                <TableBody>
+                  {specRankings.map((ranking, index) => (
+                    <TableRow
+                      key={`${ranking.class}-${ranking.spec}`}
+                      className={cn(
+                        index < 3 &&
+                          "bg-primary/5 hover:bg-primary/10 dark:bg-primary/10/50",
+                      )}
+                    >
+                      <TableCell className="text-center font-semibold">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{
+                              backgroundColor:
+                                CLASS_COLORS[ranking.class as WowClass],
+                            }}
+                          />
+                          <div>
+                            <p className="font-medium">
+                              {ranking.spec} {ranking.class}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {specHeaderMeta.window} • Median of top parses
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {Math.round(ranking.avgDps).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        <TrendPill direction="flat" value={0} />
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {ranking.simCount.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </RankingsCard>
+      </div>
     </div>
   );
 }

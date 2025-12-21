@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CopyButton } from "@/components/ui/copy-button";
+import { ShareButton } from "@/components/ui/share-button";
 import { TalentPresetPicker } from "./talent-preset-picker";
 
 export function TalentStringBar({
@@ -23,7 +24,18 @@ export function TalentStringBar({
         onChange={(e) => onTalentStringChange(e.target.value.trim() || null)}
         className="flex-1 font-mono text-sm"
       />
-      {talents && <CopyButton value={talents} label="Talent String" />}
+      {talents && (
+        <>
+          <CopyButton
+            value={talents}
+            label="talent string"
+            title="Copy talent string"
+          />
+          <ShareButton
+            path={`/talents?talents=${encodeURIComponent(talents)}`}
+          />
+        </>
+      )}
       <TalentPresetPicker
         currentSpecId={specId}
         onPresetSelect={onTalentStringChange}

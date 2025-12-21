@@ -21,6 +21,7 @@ import {
   deriveInitialSelectionsFromDecoded,
   encodeSelectionsToTalentString,
 } from "./talent-encoding";
+import { TalentsImportTour } from "@/components/tours";
 
 function TalentTreeLoading() {
   return (
@@ -151,6 +152,7 @@ function TalentCalculatorInner() {
   }
 
   const showTalentInput = talents || decoded;
+  const isStartScreen = !talents;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -162,6 +164,7 @@ function TalentCalculatorInner() {
         />
       )}
       {content}
+      <TalentsImportTour isStartScreen={isStartScreen} />
     </div>
   );
 }

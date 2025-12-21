@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Filter, Library, Search, X } from "lucide-react";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import type { Rotation } from "@/lib/supabase/types";
+import { RotationsBrowseTour } from "@/components/tours";
 
 function RotationsBrowseSkeleton() {
   return (
@@ -97,7 +98,7 @@ export function RotationsBrowse() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-md" data-tour="rotations-search">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search rotations..."
@@ -111,6 +112,7 @@ export function RotationsBrowse() {
           variant="outline"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
+          data-tour="rotations-filters"
         >
           <Filter className="mr-2 h-4 w-4" />
           Filters
@@ -173,6 +175,8 @@ export function RotationsBrowse() {
       </div>
 
       <RotationsList rotations={filteredRotations} groupByClass={true} />
+
+      <RotationsBrowseTour show={rotations.length > 0} />
     </div>
   );
 }
