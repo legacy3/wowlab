@@ -137,13 +137,13 @@ export function decodeTalentsToBits(
 
 export function encodeSelectionsToLoadoutString(params: {
   tree: {
-    allNodeIds: number[];
-    nodes: Array<{
+    allNodeIds: readonly number[];
+    nodes: readonly {
       id: number;
       type: number;
       maxRanks: number;
-      entries: Array<{ id: number }>;
-    }>;
+      entries: readonly { id: number }[];
+    }[];
   };
   decoded: DecodedTalentLoadout;
   selections: Map<

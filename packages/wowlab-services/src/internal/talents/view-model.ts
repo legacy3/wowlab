@@ -43,6 +43,7 @@ export interface TalentNodeData {
   id: number;
   maxRanks: number;
   orderIndex: number;
+  subTreeId: number;
   type: number;
 }
 
@@ -146,6 +147,7 @@ export function buildTalentViewModel(
       id: node.id,
       maxRanks: node.maxRanks,
       orderIndex: node.orderIndex,
+      subTreeId: node.subTreeId,
       type: node.type,
     },
     selection: selections.get(node.id),

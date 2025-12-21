@@ -36,7 +36,7 @@ type TalentTreeWithSelections = NonNullable<
 const TREE_WIDTH = 420;
 const TREE_HEIGHT = 300;
 
-function getPointCount(nodes: readonly TalentViewModel["nodes"]) {
+function getPointCount(nodes: TalentViewModel["nodes"]) {
   return nodes.reduce((sum, node) => {
     return (
       sum +

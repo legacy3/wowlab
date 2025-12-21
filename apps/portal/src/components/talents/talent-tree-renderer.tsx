@@ -97,8 +97,8 @@ interface TalentTreeRendererProps {
   onTouchStart: (e: Konva.KonvaEventObject<TouchEvent>) => void;
   onTouchMove: (e: Konva.KonvaEventObject<TouchEvent>) => void;
   onTouchEnd: () => void;
-  stageRef: RefObject<Konva.Stage>;
-  containerRef: RefObject<HTMLDivElement>;
+  stageRef: RefObject<Konva.Stage | null>;
+  containerRef: RefObject<HTMLDivElement | null>;
   width: number;
   height: number;
   zenMode: boolean;
