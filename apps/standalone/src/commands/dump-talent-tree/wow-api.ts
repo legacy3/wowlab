@@ -1006,6 +1006,12 @@ export async function LoadTalentTree(
       });
     }
 
+    // Skip SubTreeSelection nodes (type 3) - they're handled by the hero tree selector UI
+    // These have null entries and would render as empty boxes
+    if (nodeInfo.type === TraitNodeType.SubTreeSelection) {
+      continue;
+    }
+
     // Convert position (Blizzard uses 10x scale, Y is inverted)
     const pixelX = nodeInfo.posX / 10;
     const pixelY = -nodeInfo.posY / 10;
