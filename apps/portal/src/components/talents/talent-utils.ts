@@ -39,6 +39,73 @@ export function calculatePointsSpent(
 }
 
 /**
+ * Calculate points that would be spent by selecting a node including all unselected prerequisites.
+ * Returns points per tree type.
+ */
+export function calculateSelectionCost(
+  nodeId: number,
+  nodeById: Map<number, Talent.TalentNode>,
+  selections: Map<number, Talent.DecodedTalentSelection>,
+  parentsByNodeId: Map<number, Set<number>>,
+): TalentPointsSpent {
+  const cost: TalentPointsSpent = { class: 0, spec: 0, hero: 0 };
+
+  // Get all prerequisites including the node itself
+  const required = collectTalentPrerequisiteIds(nodeId, parentsByNodeId);
+
+  for (const requiredId of required) {
+    // Skip if already selected
+    if (selections.has(requiredId)) {
+      continue;
+    }
+
+    const node = nodeById.get(requiredId);
+    if (!node) {
+      continue;
+    }
+
+    // Each unselected node costs 1 point (minimum rank)
+    const treeIndex = node.treeIndex ?? 2;
+    if (treeIndex === 1) {
+      cost.class += 1;
+    } else if (treeIndex === 2) {
+      cost.spec += 1;
+    } else if (treeIndex === 3) {
+      cost.hero += 1;
+    }
+  }
+
+  return cost;
+}
+
+/**
+ * Check if selecting a node (including prerequisites) would exceed point limits.
+ * Returns the tree type that would be exceeded, or null if within limits.
+ */
+export function wouldExceedPointLimitWithPrereqs(
+  nodeId: number,
+  nodeById: Map<number, Talent.TalentNode>,
+  selections: Map<number, Talent.DecodedTalentSelection>,
+  parentsByNodeId: Map<number, Set<number>>,
+  currentSpent: TalentPointsSpent,
+  limits: Talent.TalentPointLimits,
+): "class" | "spec" | "hero" | null {
+  const cost = calculateSelectionCost(nodeId, nodeById, selections, parentsByNodeId);
+
+  if (currentSpent.class + cost.class > limits.class) {
+    return "class";
+  }
+  if (currentSpent.spec + cost.spec > limits.spec) {
+    return "spec";
+  }
+  if (currentSpent.hero + cost.hero > limits.hero) {
+    return "hero";
+  }
+
+  return null;
+}
+
+/**
  * Check if selecting a node (or adding ranks) would exceed point limits.
  * Returns the tree type that would be exceeded, or null if within limits.
  */

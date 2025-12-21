@@ -23,6 +23,7 @@ import {
   collectTalentPrerequisiteIds,
   calculatePointsSpent,
   wouldExceedPointLimit,
+  wouldExceedPointLimitWithPrereqs,
   type TalentPointsSpent,
 } from "./talent-utils";
 import { useTalentLayout } from "@/hooks/use-talent-layout";
@@ -315,11 +316,18 @@ export function TalentTree({
         const isChoiceNode = node.type === 2 && node.entries.length > 1;
 
         if (!isSelected) {
-          // Check point limit before selecting
+          // Check point limit before selecting (including prereq costs)
           const currentSpent = pointsSpentRef.current;
           if (
             tree.pointLimits &&
-            wouldExceedPointLimit(node, 1, currentSpent, tree.pointLimits)
+            wouldExceedPointLimitWithPrereqs(
+              nodeId,
+              nodeById,
+              prev,
+              edgeIndex.parentsByNodeId,
+              currentSpent,
+              tree.pointLimits,
+            )
           ) {
             return prev; // Don't select if it would exceed limit
           }
@@ -397,6 +405,7 @@ export function TalentTree({
     },
     [
       edgeIndex.childrenByNodeId,
+      edgeIndex.parentsByNodeId,
       ensureSelectedWithPrereqs,
       makeDefaultSelection,
       nodeById,
@@ -448,12 +457,17 @@ export function TalentTree({
         return;
       }
 
-      // Check point limit before selecting
-      const node = nodeById.get(nodeId);
+      // Check point limit before selecting (including prereq costs)
       if (
-        node &&
         tree.pointLimits &&
-        wouldExceedPointLimit(node, 1, pointsSpentRef.current, tree.pointLimits)
+        wouldExceedPointLimitWithPrereqs(
+          nodeId,
+          nodeById,
+          selectionsRef.current,
+          edgeIndex.parentsByNodeId,
+          pointsSpentRef.current,
+          tree.pointLimits,
+        )
       ) {
         return; // Don't select if it would exceed limit
       }
@@ -477,6 +491,7 @@ export function TalentTree({
     },
     [
       edgeIndex.neighborsByNodeId,
+      edgeIndex.parentsByNodeId,
       ensureSelectedWithPrereqs,
       makeDefaultSelection,
       nodeById,
