@@ -28,28 +28,37 @@ export function encodeSelectionsToTalentString(params: {
   selections: Map<number, Talent.DecodedTalentSelection>;
 }): string {
   const { tree, decoded, selections } = params;
-  const orderedNodes = [...tree.nodes].sort((a, b) => a.id - b.id);
+
+  // Build a map from node ID to node data for lookups
+  const nodeById = new Map(tree.nodes.map((n) => [n.id, n]));
+
+  // Use allNodeIds which contains ALL node IDs in sorted order (including filtered nodes like type 3)
+  // This matches the order expected by the loadout string encoding
+  const allNodeIds = tree.allNodeIds;
 
   let lastIndex = -1;
-  for (let i = 0; i < orderedNodes.length; i++) {
-    if (selections.has(orderedNodes[i]!.id)) {
+  for (let i = 0; i < allNodeIds.length; i++) {
+    if (selections.has(allNodeIds[i]!)) {
       lastIndex = i;
     }
   }
 
   const nodes =
     lastIndex >= 0
-      ? orderedNodes.slice(0, lastIndex + 1).map((node) => {
-          const sel = selections.get(node.id);
+      ? allNodeIds.slice(0, lastIndex + 1).map((nodeId) => {
+          const node = nodeById.get(nodeId);
+          const sel = selections.get(nodeId);
           const selected = !!sel?.selected;
           const ranksPurchased = sel?.ranksPurchased ?? 0;
-          const isChoiceNode = node.type === 2 && node.entries.length > 1;
+          const isChoiceNode =
+            node && node.type === 2 && node.entries.length > 1;
+          const maxRanks = node?.maxRanks ?? 1;
 
           return {
             selected,
             purchased: selected && ranksPurchased > 0,
             partiallyRanked:
-              selected && node.maxRanks > 1 && ranksPurchased < node.maxRanks,
+              selected && maxRanks > 1 && ranksPurchased < maxRanks,
             ranksPurchased,
             choiceNode: selected && isChoiceNode,
             choiceIndex: sel?.choiceIndex,

@@ -48,6 +48,9 @@ export type TalentSubTree = Schema.Schema.Type<typeof TalentSubTreeSchema>;
 
 // TalentTree - Complete tree structure
 export const TalentTreeSchema = Schema.Struct({
+  // All node IDs in the raw tree (sorted by ID), used for loadout string parsing.
+  // This includes nodes that are filtered from display (e.g., SubTreeSelection type 3).
+  allNodeIds: Schema.Array(Schema.Number),
   className: Schema.String,
   edges: Schema.Array(TalentEdgeSchema),
   nodes: Schema.Array(TalentNodeSchema),

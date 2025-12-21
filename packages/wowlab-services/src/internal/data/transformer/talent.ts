@@ -495,6 +495,12 @@ export const transformTalentTree = (
     // 17. Assemble the nodes using the pre-fetched data
     const nodes = filteredNodes
       .map((node) => {
+        // Skip SubTreeSelection nodes (type 3) - they're handled by the hero tree selector UI
+        // These have null entries and would render as empty boxes
+        if (node.Type === 3) {
+          return null;
+        }
+
         const specInfo = nodeSpecInfo.get(node.ID);
         if (specInfo?.allowed && !specInfo.allowed.has(specId)) {
           return null;
@@ -617,7 +623,12 @@ export const transformTalentTree = (
         };
       });
 
+    // All node IDs sorted by ID (for loadout string parsing)
+    // This includes nodes that are filtered from display (e.g., SubTreeSelection type 3)
+    const allNodeIds = [...treeNodes].sort((a, b) => a.ID - b.ID).map((n) => n.ID);
+
     return {
+      allNodeIds,
       className: chrClass.Name_lang ?? "",
       edges: filteredEdges.map((e) => ({
         fromNodeId: e.LeftTraitNodeID,
@@ -646,23 +657,30 @@ export const applyDecodedTalents = (
 ): Talent.TalentTreeWithSelections => {
   const selections = new Map<number, Talent.DecodedTalentSelection>();
 
-  // Sort nodes by node ID ascending to match SimC's std::map iteration order
-  // SimC iterates tree_nodes (std::map<unsigned, ...>) which orders by id_node ascending
-  const orderedNodes = [...tree.nodes].sort((a, b) => a.id - b.id);
+  // Build a map from node ID to the actual node (for looking up maxRanks)
+  const nodeById = new Map(tree.nodes.map((n) => [n.id, n]));
 
-  // Map decoded nodes to tree nodes
-  for (let i = 0; i < decoded.nodes.length && i < orderedNodes.length; i++) {
+  // Use allNodeIds which contains ALL node IDs in sorted order (including filtered nodes like type 3)
+  // This matches the order used by the loadout string encoding
+  const allNodeIds = tree.allNodeIds;
+
+  // Map decoded nodes to tree nodes using allNodeIds for correct positioning
+  for (let i = 0; i < decoded.nodes.length && i < allNodeIds.length; i++) {
     const decodedNode = decoded.nodes[i];
-    const treeNode = orderedNodes[i];
+    const nodeId = allNodeIds[i];
+    const treeNode = nodeById.get(nodeId);
 
-    selections.set(treeNode.id, {
-      choiceIndex: decodedNode.choiceIndex,
-      nodeId: treeNode.id,
-      ranksPurchased:
-        decodedNode.ranksPurchased ??
-        (decodedNode.purchased ? treeNode.maxRanks : 0),
-      selected: decodedNode.selected,
-    });
+    // Only create selections for nodes that exist in the filtered tree
+    if (treeNode) {
+      selections.set(nodeId, {
+        choiceIndex: decodedNode.choiceIndex,
+        nodeId,
+        ranksPurchased:
+          decodedNode.ranksPurchased ??
+          (decodedNode.purchased ? treeNode.maxRanks : 0),
+        selected: decodedNode.selected,
+      });
+    }
   }
 
   return {
