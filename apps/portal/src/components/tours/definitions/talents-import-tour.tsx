@@ -24,10 +24,6 @@ const tour: TourConfig = {
   steps,
 };
 
-/**
- * Tour for the talents start screen, shown on first visit.
- * Only runs when the start screen is visible (no talents loaded).
- */
 export function TalentsImportTour({
   isStartScreen,
 }: {
