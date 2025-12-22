@@ -7,6 +7,7 @@ import type {
   CircleAnnotation as CircleAnnotationType,
   AnnotationComponentProps,
 } from "./types";
+import { ANNOTATION_ANCHOR_STROKE } from "./constants";
 
 const STROKE_WIDTH = 3;
 const HIT_STROKE_WIDTH = 24;
@@ -79,7 +80,7 @@ export const CircleAnnotation = memo(function CircleAnnotation({
             y={anchor.y}
             radius={ANCHOR_RADIUS}
             fill={color}
-            stroke="#fff"
+            stroke={ANNOTATION_ANCHOR_STROKE}
             strokeWidth={2}
             draggable
             onDragMove={handleAnchorDrag}

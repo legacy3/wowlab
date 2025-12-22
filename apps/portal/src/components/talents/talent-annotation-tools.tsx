@@ -8,37 +8,41 @@ import {
   Circle,
   Hash,
   Trash2,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TalentLayerPanel } from "./talent-layer-panel";
 import type { AnnotationTool } from "@/atoms";
+import { gold, success, primary, error, warning, white } from "@/lib/colors";
 
-const COLORS = [
-  "#facc15",
-  "#22c55e",
-  "#3b82f6",
-  "#ef4444",
-  "#a855f7",
-  "#ffffff",
-];
+const COLORS = [gold, success, primary, error, warning, white];
 
 interface TalentAnnotationToolsProps {
   activeTool: AnnotationTool;
   activeColor: string;
   hasAnnotations: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
   onToolChange: (tool: AnnotationTool) => void;
   onColorChange: (color: string) => void;
   onClear: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export const TalentAnnotationTools = memo(function TalentAnnotationTools({
   activeTool,
   activeColor,
   hasAnnotations,
+  canUndo,
+  canRedo,
   onToolChange,
   onColorChange,
   onClear,
+  onUndo,
+  onRedo,
 }: TalentAnnotationToolsProps) {
   const tools: { id: AnnotationTool; icon: React.ReactNode; label: string }[] =
     [
@@ -96,6 +100,9 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
               )}
               style={{ backgroundColor: color }}
               onClick={() => onColorChange(color)}
+              aria-label={`Annotation color ${color}`}
+              title={`Color ${color}`}
+              type="button"
             />
           ))}
         </div>
@@ -103,12 +110,44 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
 
       <TalentLayerPanel />
 
+      <div className="flex items-center border rounded-md p-0.5 bg-background/80">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onUndo}
+          title="Undo"
+          disabled={!canUndo}
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onRedo}
+          title="Redo"
+          disabled={!canRedo}
+        >
+          <Redo2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
       {hasAnnotations && (
         <Button
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-destructive hover:text-destructive"
-          onClick={onClear}
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Clear all annotations? You can undo with Ctrl/Cmd+Z.",
+              )
+            ) {
+              return;
+            }
+            onClear();
+          }}
           title="Clear all annotations"
         >
           <Trash2 className="h-3.5 w-3.5" />

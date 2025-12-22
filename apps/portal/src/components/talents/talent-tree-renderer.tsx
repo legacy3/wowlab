@@ -17,10 +17,14 @@ import { TalentTooltip } from "./talent-tooltip";
 import { TalentLegend } from "./talent-legend";
 import type { TooltipState } from "./types";
 import type { TalentViewModel } from "@wowlab/services/Talents";
+import type { AnnotationTool } from "@/atoms";
+import {
+  GRID_COLOR,
+  COLOR_HERE_ARROW,
+  COLOR_HERE_ARROW_GLOW,
+} from "./constants";
 
 const GRID_SIZE = 50;
-const GRID_COLOR = "hsl(240 5% 26% / 0.15)";
-
 const BackgroundGrid = memo(function BackgroundGrid({
   width,
   height,
@@ -101,7 +105,7 @@ const HereArrow = memo(function HereArrow({
       {/* Glow/outline layer */}
       <KonvaLine
         points={[fromX, fromY, toX, toY]}
-        stroke="#60a5fa"
+        stroke={COLOR_HERE_ARROW_GLOW}
         strokeWidth={12}
         lineCap="round"
         opacity={0.3}
@@ -109,7 +113,7 @@ const HereArrow = memo(function HereArrow({
       {/* Main arrow line */}
       <KonvaLine
         points={[fromX, fromY, toX, toY]}
-        stroke="#fff"
+        stroke={COLOR_HERE_ARROW}
         strokeWidth={6}
         lineCap="round"
       />
@@ -123,7 +127,7 @@ const HereArrow = memo(function HereArrow({
           toX - headLen * Math.cos(angle + Math.PI / 5),
           toY - headLen * Math.sin(angle + Math.PI / 5),
         ]}
-        stroke="#60a5fa"
+        stroke={COLOR_HERE_ARROW_GLOW}
         strokeWidth={12}
         lineCap="round"
         lineJoin="round"
@@ -139,7 +143,7 @@ const HereArrow = memo(function HereArrow({
           toX - headLen * Math.cos(angle + Math.PI / 5),
           toY - headLen * Math.sin(angle + Math.PI / 5),
         ]}
-        stroke="#fff"
+        stroke={COLOR_HERE_ARROW}
         strokeWidth={6}
         lineCap="round"
         lineJoin="round"
@@ -190,7 +194,10 @@ const NodesLayer = memo(function NodesLayer({
   pathTargetNodeId: number | null;
   blockedNodeId: number | null;
   focusedNodeId: number | null;
-  onNodeClick: (nodeId: number) => void;
+  onNodeClick: (
+    nodeId: number,
+    event?: Konva.KonvaEventObject<MouseEvent>,
+  ) => void;
   onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
   onPaintStart: (nodeId: number) => void;
@@ -225,6 +232,8 @@ interface TalentTreeRendererProps {
   viewModel: TalentViewModel;
   panZoom: { x: number; y: number; scale: number };
   tooltip: TooltipState | null;
+  tooltipPinned: boolean;
+  onTooltipClose: () => void;
   searchMatches: Set<number>;
   isSearching: boolean;
   pathHighlight: {
@@ -238,7 +247,11 @@ interface TalentTreeRendererProps {
   annotations: Annotation[];
   selectedAnnotationId: string | null;
   editingTextId: string | null;
-  onNodeClick: (nodeId: number) => void;
+  annotationTool: AnnotationTool;
+  onNodeClick: (
+    nodeId: number,
+    event?: Konva.KonvaEventObject<MouseEvent>,
+  ) => void;
   onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
   onPaintStart: (nodeId: number) => void;
@@ -270,6 +283,8 @@ export function TalentTreeRenderer({
   viewModel,
   panZoom,
   tooltip,
+  tooltipPinned,
+  onTooltipClose,
   searchMatches,
   isSearching,
   pathHighlight,
@@ -279,6 +294,7 @@ export function TalentTreeRenderer({
   annotations,
   selectedAnnotationId,
   editingTextId,
+  annotationTool,
   onNodeClick,
   onNodeRightClick,
   onNodeHoverChange,
@@ -309,11 +325,19 @@ export function TalentTreeRenderer({
     },
     [onAnnotationChange],
   );
+  const cursorClass =
+    annotationTool && annotationTool !== "select"
+      ? annotationTool === "text"
+        ? "cursor-text"
+        : "cursor-crosshair"
+      : "cursor-grab";
+
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative rounded-lg border overflow-hidden cursor-grab select-none bg-background/50",
+        "relative rounded-lg border overflow-hidden select-none bg-background/50",
+        cursorClass,
         zenMode ? "flex-1 min-h-0" : "w-full",
       )}
       style={zenMode ? { width: "100%" } : { height }}
@@ -391,7 +415,13 @@ export function TalentTreeRenderer({
           </KonvaGroup>
         </KonvaLayer>
       </KonvaStage>
-      <TalentTooltip tooltip={tooltip} containerWidth={width} />
+      <TalentTooltip
+        tooltip={tooltip}
+        containerWidth={width}
+        containerHeight={height}
+        pinned={tooltipPinned}
+        onClose={onTooltipClose}
+      />
     </div>
   );
 }

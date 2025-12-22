@@ -27,7 +27,7 @@ export const TalentEdge = memo(function TalentEdge({
   const isUnlocked = fromSelected && !toSelected;
 
   const stroke = isPathHighlight
-    ? "#22c55e"
+    ? EDGE_COLOR_UNLOCKED
     : isActive
       ? EDGE_COLOR_ACTIVE
       : isUnlocked
@@ -50,7 +50,7 @@ export const TalentEdge = memo(function TalentEdge({
       stroke={stroke}
       strokeWidth={strokeWidth}
       opacity={opacity}
-      shadowColor={isPathHighlight ? "#22c55e" : undefined}
+      shadowColor={isPathHighlight ? EDGE_COLOR_UNLOCKED : undefined}
       shadowBlur={isPathHighlight ? 6 : 0}
       shadowOpacity={isPathHighlight ? 0.5 : 0}
       listening={false}

@@ -115,12 +115,20 @@ export const TalentLegend = memo(function TalentLegend() {
                       <Kbd className="text-[10px] h-4">Drag</Kbd>
                     </div>
                     <div className="flex justify-between items-center">
+                      <span>Pan (override)</span>
+                      <Kbd className="text-[10px] h-4">Space + drag</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
                       <span>Zoom</span>
                       <Kbd className="text-[10px] h-4">Scroll</Kbd>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Paint</span>
                       <Kbd className="text-[10px] h-4">Drag nodes</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Pin tooltip</span>
+                      <Kbd className="text-[10px] h-4">Shift + click</Kbd>
                     </div>
                   </div>
                 </div>
@@ -134,6 +142,10 @@ export const TalentLegend = memo(function TalentLegend() {
                     <div className="flex justify-between items-center">
                       <span>Tooltip</span>
                       <Kbd className="text-[10px] h-4">Long press</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Deselect</span>
+                      <Kbd className="text-[10px] h-4">Two-finger tap</Kbd>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Zoom</span>
@@ -174,6 +186,14 @@ export const TalentLegend = memo(function TalentLegend() {
                   <div className="flex justify-between items-center">
                     <span>Delete selected</span>
                     <Kbd className="text-[10px] h-4">Del</Kbd>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span>Undo</span>
+                    <Kbd className="text-[10px] h-4">Ctrl/Cmd+Z</Kbd>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span>Redo</span>
+                    <Kbd className="text-[10px] h-4">Ctrl/Cmd+Shift+Z</Kbd>
                   </div>
                 </div>
               </div>

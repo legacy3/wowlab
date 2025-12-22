@@ -29,6 +29,13 @@ import {
   COLOR_RANK_DEFAULT,
   COLOR_BLOCKED,
   COLOR_KEYBOARD_FOCUS,
+  COLOR_SEARCH_HIGHLIGHT,
+  COLOR_NODE_BG,
+  COLOR_NODE_BG_CHOICE,
+  COLOR_NODE_BG_FALLBACK,
+  COLOR_NODE_DIVIDER,
+  COLOR_NODE_SELECTED_BORDER,
+  COLOR_RANK_STROKE,
 } from "./constants";
 import { useLongPress } from "@/hooks/use-long-press";
 
@@ -66,7 +73,7 @@ const SearchHighlight = memo(function SearchHighlight({
       y={-4}
       width={size + 8}
       height={size + 8}
-      stroke="#3b82f6"
+      stroke={COLOR_SEARCH_HIGHLIGHT}
       strokeWidth={2}
       cornerRadius={cornerRadius + 3}
       listening={false}
@@ -178,7 +185,10 @@ interface TalentNodeProps {
   isFocused?: boolean;
   onHover: (state: TooltipState | null) => void;
   onNodeHoverChange?: (nodeId: number | null) => void;
-  onNodeClick?: (nodeId: number) => void;
+  onNodeClick?: (
+    nodeId: number,
+    event?: Konva.KonvaEventObject<MouseEvent>,
+  ) => void;
   onNodeRightClick?: (nodeId: number) => void;
   onPaintStart?: (nodeId: number) => void;
   onPaintEnter?: (nodeId: number) => void;
@@ -215,7 +225,7 @@ const NodeIcon = memo(function NodeIcon({
           y={y}
           width={size}
           height={size}
-          fill="#374151"
+          fill={COLOR_NODE_BG_FALLBACK}
           cornerRadius={cornerRadius}
           opacity={opacity}
           listening={false}
@@ -315,7 +325,12 @@ export const TalentNode = memo(function TalentNode({
     onNodeRightClick?.(node.id);
   };
 
-  const handleTouchStart = () => {
+  const handleTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    if (e.evt.touches.length === 2) {
+      onNodeRightClick?.(node.id);
+      return;
+    }
+
     longPress.onTouchStart();
 
     if (!isSelected) {
@@ -329,12 +344,15 @@ export const TalentNode = memo(function TalentNode({
     longPress.onTouchEnd();
   };
 
-  const handleTouchMove = () => {
+  const handleTouchMove = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    if (e.evt.touches.length === 2) {
+      return;
+    }
     longPress.onTouchMove();
   };
 
-  const handleClick = () => {
-    onNodeClick?.(node.id);
+  const handleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    onNodeClick?.(node.id, e);
   };
 
   if (isChoiceNode && entry2) {
@@ -367,9 +385,9 @@ export const TalentNode = memo(function TalentNode({
           <KonvaRect
             width={size}
             height={size}
-            fill="#1f2937"
+            fill={COLOR_NODE_BG}
             cornerRadius={cornerRadius}
-            stroke={isHero ? COLOR_HERO_BORDER : "#eab308"}
+            stroke={isHero ? COLOR_HERO_BORDER : COLOR_NODE_SELECTED_BORDER}
             strokeWidth={NODE_BORDER}
             opacity={finalOpacity}
           />
@@ -417,7 +435,7 @@ export const TalentNode = memo(function TalentNode({
         <KonvaRect
           width={size}
           height={size}
-          fill="#1e1b4b"
+          fill={COLOR_NODE_BG_CHOICE}
           cornerRadius={cornerRadius}
           stroke={borderColor}
           strokeWidth={NODE_BORDER}
@@ -461,7 +479,7 @@ export const TalentNode = memo(function TalentNode({
           y={NODE_BORDER}
           width={1}
           height={iconSize}
-          fill="#4b5563"
+          fill={COLOR_NODE_DIVIDER}
           opacity={0.5}
           listening={false}
         />
@@ -501,10 +519,14 @@ export const TalentNode = memo(function TalentNode({
       <KonvaRect
         width={size}
         height={size}
-        fill="#1f2937"
+        fill={COLOR_NODE_BG}
         cornerRadius={cornerRadius}
         stroke={
-          isSelected ? (isHero ? COLOR_HERO_BORDER : "#eab308") : borderColor
+          isSelected
+            ? isHero
+              ? COLOR_HERO_BORDER
+              : COLOR_NODE_SELECTED_BORDER
+            : borderColor
         }
         strokeWidth={NODE_BORDER}
         opacity={finalOpacity}
@@ -523,7 +545,7 @@ export const TalentNode = memo(function TalentNode({
           <KonvaCircle
             radius={8}
             fill={COLOR_RANK_BG}
-            stroke="#27272a"
+            stroke={COLOR_RANK_STROKE}
             strokeWidth={1}
             listening={false}
           />

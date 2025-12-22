@@ -8,6 +8,14 @@ import {
   KonvaText,
 } from "@/components/konva";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
+import {
+  TIMELINE_ERROR,
+  TIMELINE_PRIMARY,
+  TIMELINE_GRID_LINE,
+  TIMELINE_TEXT_DIM,
+  TIMELINE_SUCCESS,
+  TIMELINE_RESOURCE_BGS,
+} from "../colors";
 
 interface ResourcePoint {
   timestamp: number;
@@ -175,7 +183,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
               y={criticalY}
               width={endX - startX}
               height={height - 5 - criticalY}
-              fill="#EF4444"
+              fill={TIMELINE_ERROR}
               opacity={0.15}
               listening={false}
             />
@@ -189,7 +197,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
         const bottomY = focusToY(prevThreshold);
 
         // Alternate subtle background colors for zones
-        const colors = ["#1a1a2e", "#16213e", "#0f3460"];
+        const colors = TIMELINE_RESOURCE_BGS;
 
         return (
           <KonvaRect
@@ -209,7 +217,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
       {areaPoints.length > 0 && (
         <KonvaLine
           points={areaPoints}
-          fill="#3B82F6"
+          fill={TIMELINE_PRIMARY}
           opacity={0.2}
           closed
           listening={false}
@@ -220,7 +228,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
       {linePoints.length > 0 && (
         <KonvaLine
           points={linePoints}
-          stroke="#3B82F6"
+          stroke={TIMELINE_PRIMARY}
           strokeWidth={2}
           tension={zoomLevel === "aggregate" ? 0.4 : 0.2}
           listening={false}
@@ -236,7 +244,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
           <KonvaGroup key={threshold}>
             <KonvaLine
               points={[0, ty, innerWidth, ty]}
-              stroke={isCritical ? "#EF4444" : "#444"}
+              stroke={isCritical ? TIMELINE_ERROR : TIMELINE_GRID_LINE}
               strokeWidth={1}
               opacity={isCritical ? 0.5 : 0.3}
               dash={[2, 4]}
@@ -248,7 +256,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
               y={ty - 6}
               text={String(threshold)}
               fontSize={9}
-              fill={isCritical ? "#EF4444" : "#666"}
+              fill={isCritical ? TIMELINE_ERROR : TIMELINE_TEXT_DIM}
               opacity={0.7}
               listening={false}
             />
@@ -259,7 +267,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
       {/* Max focus line */}
       <KonvaLine
         points={[0, focusToY(maxFocus), innerWidth, focusToY(maxFocus)]}
-        stroke="#444"
+        stroke={TIMELINE_GRID_LINE}
         strokeWidth={1}
         opacity={0.2}
         listening={false}
@@ -269,7 +277,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
         y={focusToY(maxFocus) + 2}
         text={String(maxFocus)}
         fontSize={9}
-        fill="#666"
+        fill={TIMELINE_TEXT_DIM}
         opacity={0.5}
         listening={false}
       />
@@ -280,7 +288,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
           {/* Arrow indicator */}
           <KonvaLine
             points={marker.isGain ? [-3, 6, 0, 0, 3, 6] : [-3, -6, 0, 0, 3, -6]}
-            stroke={marker.isGain ? "#22C55E" : "#EF4444"}
+            stroke={marker.isGain ? TIMELINE_SUCCESS : TIMELINE_ERROR}
             strokeWidth={1.5}
             opacity={0.7}
             listening={false}
@@ -319,7 +327,7 @@ export const ResourcesTrack = memo(function ResourcesTrack({
                 y={-4}
                 width={8}
                 height={8}
-                fill="#EF4444"
+                fill={TIMELINE_ERROR}
                 cornerRadius={4}
                 opacity={0.4}
                 listening={false}

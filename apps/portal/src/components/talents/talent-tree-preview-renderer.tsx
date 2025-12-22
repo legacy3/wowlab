@@ -2,6 +2,14 @@
 
 import type { TalentViewModel } from "@wowlab/services/Talents";
 import { cn } from "@/lib/utils";
+import {
+  PREVIEW_BG,
+  PREVIEW_EDGE,
+  PREVIEW_EDGE_ACTIVE,
+  PREVIEW_NODE,
+  PREVIEW_NODE_ACTIVE,
+  PREVIEW_NODE_ACTIVE_STROKE,
+} from "./constants";
 
 interface TalentTreePreviewRendererProps {
   viewModel: TalentViewModel;
@@ -20,7 +28,7 @@ export function TalentTreePreviewRenderer({
       viewBox={`0 0 ${width} ${height}`}
       className={cn("w-full h-auto rounded-lg", className)}
       style={{
-        background: "linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)",
+        background: PREVIEW_BG,
       }}
     >
       {viewModel.edges
@@ -32,7 +40,7 @@ export function TalentTreePreviewRenderer({
             y1={edge.fromY}
             x2={edge.toX}
             y2={edge.toY}
-            stroke="#6366f1"
+            stroke={PREVIEW_EDGE}
             strokeWidth={1}
             opacity={0.2}
           />
@@ -47,7 +55,7 @@ export function TalentTreePreviewRenderer({
             y1={edge.fromY}
             x2={edge.toX}
             y2={edge.toY}
-            stroke="#fbbf24"
+            stroke={PREVIEW_EDGE_ACTIVE}
             strokeWidth={4}
             strokeLinecap="round"
           />
@@ -67,7 +75,7 @@ export function TalentTreePreviewRenderer({
             cx={nodePos.x}
             cy={nodePos.y}
             r={3}
-            fill="#6366f1"
+            fill={PREVIEW_NODE}
             opacity={0.3}
           />
         ))}
@@ -86,8 +94,8 @@ export function TalentTreePreviewRenderer({
               cx={nodePos.x}
               cy={nodePos.y}
               r={isChoice ? 10 : 7}
-              fill="#fbbf24"
-              stroke="#f59e0b"
+              fill={PREVIEW_NODE_ACTIVE}
+              stroke={PREVIEW_NODE_ACTIVE_STROKE}
               strokeWidth={2}
             />
           );

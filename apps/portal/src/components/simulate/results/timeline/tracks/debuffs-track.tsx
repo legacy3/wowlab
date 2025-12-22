@@ -11,6 +11,7 @@ import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import { TIMELINE_ERROR, TIMELINE_TEXT_MUTED, TIMELINE_WHITE } from "../colors";
 import { getSpellLabel, shouldShowLabel } from "../utils";
 
 type TargetCategory = "boss" | "adds";
@@ -198,7 +199,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
               y={totalHeight - height}
               width={Math.max(2, width - 1)}
               height={height}
-              fill="#EF4444"
+              fill={TIMELINE_ERROR}
               opacity={0.5}
               cornerRadius={1}
               listening={false}
@@ -261,7 +262,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
             <KonvaRect
               width={width}
               height={debuffHeight}
-              fill={spell?.color ?? "#888"}
+              fill={spell?.color ?? TIMELINE_TEXT_MUTED}
               opacity={0.4}
               cornerRadius={debuffCornerRadius}
             />
@@ -269,7 +270,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
             <KonvaRect
               width={width}
               height={debuffHeight}
-              stroke={spell?.color ?? "#888"}
+              stroke={spell?.color ?? TIMELINE_TEXT_MUTED}
               strokeWidth={1.5}
               cornerRadius={debuffCornerRadius}
               dash={[...debuffDash]}
@@ -283,7 +284,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                     <KonvaLine
                       key={i}
                       points={[i * 6 - debuffHeight, debuffHeight, i * 6, 0]}
-                      stroke={spell?.color ?? "#888"}
+                      stroke={spell?.color ?? TIMELINE_TEXT_MUTED}
                       strokeWidth={1}
                       opacity={0.3}
                       listening={false}
@@ -300,7 +301,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                 y={debuffHeight / 2 - 4}
                 fontSize={label.fontSize}
                 fontStyle={label.showFullName ? undefined : "bold"}
-                fill="#fff"
+                fill={TIMELINE_WHITE}
                 listening={false}
               />
             )}
@@ -313,7 +314,7 @@ export const DebuffsTrack = memo(function DebuffsTrack({
                 y={debuffHeight / 2 - 4}
                 fontSize={8}
                 fontStyle="bold"
-                fill="#fff"
+                fill={TIMELINE_WHITE}
                 listening={false}
               />
             )}

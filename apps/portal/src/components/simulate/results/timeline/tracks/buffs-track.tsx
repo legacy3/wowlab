@@ -12,6 +12,7 @@ import type Konva from "konva";
 import { getSpell, type BuffEvent } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import { TIMELINE_TEXT_MUTED, TIMELINE_WHITE, TIMELINE_BLACK } from "../colors";
 import { getSpellLabel, shouldShowLabel } from "../utils";
 
 type BuffCategory = "self" | "pet" | "external";
@@ -213,13 +214,13 @@ export const BuffsTrack = memo(function BuffsTrack({
                   y={0}
                   width={3}
                   height={buffHeight}
-                  fill={spell?.color ?? "#888"}
+                  fill={spell?.color ?? TIMELINE_TEXT_MUTED}
                   cornerRadius={1}
                 />
                 {/* Connecting line */}
                 <KonvaLine
                   points={[3, buffHeight / 2, width - 3, buffHeight / 2]}
-                  stroke={spell?.color ?? "#888"}
+                  stroke={spell?.color ?? TIMELINE_TEXT_MUTED}
                   strokeWidth={1}
                   opacity={Math.max(0.3, uptimeRatio)}
                   dash={[4, 4]}
@@ -231,7 +232,7 @@ export const BuffsTrack = memo(function BuffsTrack({
                   y={0}
                   width={3}
                   height={buffHeight}
-                  fill={spell?.color ?? "#888"}
+                  fill={spell?.color ?? TIMELINE_TEXT_MUTED}
                   cornerRadius={1}
                 />
               </KonvaGroup>
@@ -293,7 +294,7 @@ export const BuffsTrack = memo(function BuffsTrack({
               <KonvaRect
                 width={width}
                 height={buffHeight}
-                fill={spell?.color ?? "#888"}
+                fill={spell?.color ?? TIMELINE_TEXT_MUTED}
                 cornerRadius={buffCornerRadius}
               />
 
@@ -308,7 +309,7 @@ export const BuffsTrack = memo(function BuffsTrack({
                   <KonvaLine
                     key={i}
                     points={[markX, 2, markX, buffHeight - 2]}
-                    stroke="#fff"
+                    stroke={TIMELINE_WHITE}
                     strokeWidth={1}
                     opacity={0.4}
                     listening={false}
@@ -323,7 +324,7 @@ export const BuffsTrack = memo(function BuffsTrack({
                   y={buffHeight / 2 - 5}
                   fontSize={label.fontSize}
                   fontStyle={label.showFullName ? "500" : "bold"}
-                  fill="#fff"
+                  fill={TIMELINE_WHITE}
                   listening={false}
                 />
               )}
@@ -335,7 +336,7 @@ export const BuffsTrack = memo(function BuffsTrack({
                     x={6}
                     y={6}
                     radius={6}
-                    fill="#000"
+                    fill={TIMELINE_BLACK}
                     opacity={0.6}
                     listening={false}
                   />
@@ -347,7 +348,7 @@ export const BuffsTrack = memo(function BuffsTrack({
                     align="center"
                     fontSize={8}
                     fontStyle="bold"
-                    fill="#fff"
+                    fill={TIMELINE_WHITE}
                     listening={false}
                   />
                 </KonvaGroup>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useTimeoutEffect } from "@react-hookz/web";
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,19 @@ function TalentCalculatorInner() {
     onTalentStringChange,
     onSelectionsChange,
   } = useTalentCalculatorController();
+  const [showDecodeError, setShowDecodeError] = useState(false);
+
+  const shouldShowDecodeError = Boolean(talents && !decoded);
+  const [, resetDecodeTimer] = useTimeoutEffect(
+    () => {
+      setShowDecodeError(shouldShowDecodeError);
+    },
+    shouldShowDecodeError ? 500 : 0,
+  );
+
+  useEffect(() => {
+    resetDecodeTimer();
+  }, [decoded, resetDecodeTimer, talents]);
 
   let content: ReactNode;
 
@@ -59,7 +73,7 @@ function TalentCalculatorInner() {
         onSpecSelect={onSpecSelect}
       />
     );
-  } else if (talents && !decoded) {
+  } else if (talents && !decoded && showDecodeError) {
     content = (
       <TalentStateMessage title="Unable to decode the provided talent string" />
     );

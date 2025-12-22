@@ -9,6 +9,7 @@ import {
 } from "@/components/konva";
 import type { CastEvent } from "@/atoms/timeline";
 import { TRACK_METRICS } from "@/hooks/timeline";
+import { TIMELINE_MINIMAP_BG, TIMELINE_PRIMARY } from "./colors";
 
 const { margin: MARGIN, minimapHeight: MINIMAP_HEIGHT } = TRACK_METRICS;
 
@@ -176,7 +177,7 @@ export const Minimap = memo(function Minimap({
             <KonvaRect
               width={innerWidth}
               height={MINIMAP_HEIGHT - 10}
-              fill="#222"
+              fill={TIMELINE_MINIMAP_BG}
               cornerRadius={2}
               listening={false}
             />
@@ -201,7 +202,7 @@ export const Minimap = memo(function Minimap({
                   y={MINIMAP_HEIGHT - 10 - bar.height}
                   width={Math.max(1, bar.width)}
                   height={bar.height}
-                  fill="#3B82F6"
+                  fill={TIMELINE_PRIMARY}
                   opacity={0.4}
                   listening={false}
                 />
@@ -212,9 +213,9 @@ export const Minimap = memo(function Minimap({
               x={brushX}
               width={Math.max(4, brushWidth)}
               height={MINIMAP_HEIGHT - 10}
-              fill="#3B82F6"
+              fill={TIMELINE_PRIMARY}
               opacity={0.25}
-              stroke="#3B82F6"
+              stroke={TIMELINE_PRIMARY}
               strokeWidth={1}
             />
           </KonvaGroup>

@@ -16,6 +16,13 @@ import {
   buildSpellTooltip,
 } from "../timeline-context";
 import { getSpellLabel } from "../utils";
+import {
+  TIMELINE_BORDER,
+  TIMELINE_ERROR,
+  TIMELINE_PRIMARY,
+  TIMELINE_TEXT_MUTED,
+  TIMELINE_WHITE,
+} from "../colors";
 
 interface CastsTrackProps {
   casts: CastEvent[];
@@ -267,7 +274,7 @@ export const CastsTrack = memo(function CastsTrack({
             y={castHeight * castLaneCount - bucket.height}
             width={Math.max(2, bucket.width - 1)}
             height={bucket.height}
-            fill="#3B82F6"
+            fill={TIMELINE_PRIMARY}
             opacity={0.6}
             cornerRadius={1}
             listening={false}
@@ -292,7 +299,7 @@ export const CastsTrack = memo(function CastsTrack({
             innerWidth,
             (i + 1) * (castHeight + castLaneGap) - castLaneGap / 2,
           ]}
-          stroke="#333"
+          stroke={TIMELINE_BORDER}
           strokeWidth={1}
           opacity={0.3}
           dash={[2, 4]}
@@ -371,9 +378,9 @@ export const CastsTrack = memo(function CastsTrack({
             <KonvaRect
               width={width}
               height={castHeight}
-              fill={spell?.color ?? "#888"}
+              fill={spell?.color ?? TIMELINE_TEXT_MUTED}
               cornerRadius={castCornerRadius}
-              stroke={highlighted ? "#fff" : undefined}
+              stroke={highlighted ? TIMELINE_WHITE : undefined}
               strokeWidth={highlighted ? 2 : 0}
             />
 
@@ -384,7 +391,7 @@ export const CastsTrack = memo(function CastsTrack({
                   <KonvaLine
                     key={i}
                     points={[8 + i * 8, 0, 8 + i * 8, castHeight]}
-                    stroke="#fff"
+                    stroke={TIMELINE_WHITE}
                     strokeWidth={1}
                     opacity={0.2}
                     listening={false}
@@ -402,7 +409,7 @@ export const CastsTrack = memo(function CastsTrack({
               verticalAlign="middle"
               fontSize={label.fontSize}
               fontStyle="bold"
-              fill="#fff"
+              fill={TIMELINE_WHITE}
               listening={false}
             />
           </KonvaGroup>
@@ -417,7 +424,7 @@ export const CastsTrack = memo(function CastsTrack({
             y={0}
             width={20}
             height={14}
-            fill="#EF4444"
+            fill={TIMELINE_ERROR}
             cornerRadius={7}
           />
           <KonvaText
@@ -430,7 +437,7 @@ export const CastsTrack = memo(function CastsTrack({
             verticalAlign="middle"
             fontSize={8}
             fontStyle="bold"
-            fill="#fff"
+            fill={TIMELINE_WHITE}
             listening={false}
           />
         </KonvaGroup>

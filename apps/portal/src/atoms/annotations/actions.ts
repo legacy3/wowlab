@@ -8,6 +8,8 @@ import type {
 import {
   annotationsAtom,
   annotationLayersAtom,
+  annotationHistoryAtom,
+  annotationHistoryIndexAtom,
   activeAnnotationColorAtom,
   activeAnnotationLayerIdAtom,
   activeAnnotationToolAtom,
@@ -29,11 +31,21 @@ export type AnnotationInput =
 
 export const addAnnotationAtom = atom(
   null,
-  (get, set, input: AnnotationInput & { autoSelect?: boolean }) => {
+  (
+    get,
+    set,
+    input: AnnotationInput & { autoSelect?: boolean; saveHistory?: boolean },
+  ) => {
     const id = crypto.randomUUID();
     const color = get(activeAnnotationColorAtom);
     const layerId = get(activeAnnotationLayerIdAtom);
-    const { autoSelect = true, ...annotationData } = input;
+    const layers = get(annotationLayersAtom);
+    const activeLayer = layers.find((layer) => layer.id === layerId);
+
+    if (!activeLayer || activeLayer.locked || !activeLayer.visible) {
+      return "";
+    }
+    const { autoSelect = true, saveHistory = true, ...annotationData } = input;
 
     const newAnnotation = {
       ...annotationData,
@@ -49,7 +61,9 @@ export const addAnnotationAtom = atom(
       set(activeAnnotationToolAtom, "select");
     }
 
-    set(saveToHistoryAtom);
+    if (saveHistory) {
+      set(saveToHistoryAtom);
+    }
 
     return id;
   },
@@ -66,6 +80,15 @@ export const updateAnnotationAtom = atom(
       saveHistory = true,
     }: { id: string; updates: Partial<Annotation>; saveHistory?: boolean },
   ) => {
+    const annotations = get(annotationsAtom);
+    const layers = get(annotationLayersAtom);
+    const current = annotations.find((a) => a.id === id);
+    const layer = layers.find((l) => l.id === current?.layerId);
+
+    if (!current || layer?.locked || layer?.visible === false) {
+      return;
+    }
+
     set(annotationsAtom, (prev) =>
       prev.map((a) => (a.id === id ? ({ ...a, ...updates } as Annotation) : a)),
     );
@@ -77,6 +100,15 @@ export const updateAnnotationAtom = atom(
 );
 
 export const deleteAnnotationAtom = atom(null, (get, set, id: string) => {
+  const annotations = get(annotationsAtom);
+  const layers = get(annotationLayersAtom);
+  const current = annotations.find((a) => a.id === id);
+  const layer = layers.find((l) => l.id === current?.layerId);
+
+  if (!current || layer?.locked) {
+    return;
+  }
+
   set(annotationsAtom, (prev) => prev.filter((a) => a.id !== id));
 
   const selectedId = get(selectedAnnotationIdAtom);
@@ -95,6 +127,17 @@ export const deleteAnnotationAtom = atom(null, (get, set, id: string) => {
 export const selectAnnotationAtom = atom(
   null,
   (get, set, id: string | null) => {
+    if (id) {
+      const annotations = get(annotationsAtom);
+      const layers = get(annotationLayersAtom);
+      const selected = annotations.find((a) => a.id === id);
+      const layer = layers.find((l) => l.id === selected?.layerId);
+
+      if (!selected || layer?.visible === false) {
+        return;
+      }
+    }
+
     set(selectedAnnotationIdAtom, id);
     const editingId = get(editingTextIdAtom);
 
@@ -104,7 +147,16 @@ export const selectAnnotationAtom = atom(
   },
 );
 
-export const startEditingTextAtom = atom(null, (_, set, id: string) => {
+export const startEditingTextAtom = atom(null, (get, set, id: string) => {
+  const annotations = get(annotationsAtom);
+  const layers = get(annotationLayersAtom);
+  const selected = annotations.find((a) => a.id === id);
+  const layer = layers.find((l) => l.id === selected?.layerId);
+
+  if (!selected || layer?.locked || layer?.visible === false) {
+    return;
+  }
+
   set(editingTextIdAtom, id);
   set(selectedAnnotationIdAtom, id);
 });
@@ -136,6 +188,12 @@ export const addLayerAtom = atom(null, (get, set, name?: string) => {
 
 export const deleteLayerAtom = atom(null, (get, set, id: string) => {
   const layers = get(annotationLayersAtom);
+  const target = layers.find((layer) => layer.id === id);
+
+  if (target?.locked) {
+    return;
+  }
+
   if (layers.length <= 1) {
     return;
   }
@@ -171,10 +229,48 @@ export const renameLayerAtom = atom(
   },
 );
 
-export const toggleLayerVisibilityAtom = atom(null, (_, set, id: string) => {
-  set(annotationLayersAtom, (prev) =>
-    prev.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
-  );
+export const toggleLayerVisibilityAtom = atom(null, (get, set, id: string) => {
+  const activeLayerId = get(activeAnnotationLayerIdAtom);
+  const selectedId = get(selectedAnnotationIdAtom);
+  const annotations = get(annotationsAtom);
+  const selected = annotations.find((a) => a.id === selectedId);
+
+  let nextLayers: AnnotationLayer[] = [];
+  let didHideActive = false;
+  let didHideSelected = false;
+
+  set(annotationLayersAtom, (prev) => {
+    nextLayers = prev.map((l) => {
+      if (l.id !== id) {
+        return l;
+      }
+
+      const next = { ...l, visible: !l.visible };
+      if (l.id === activeLayerId && !next.visible) {
+        didHideActive = true;
+      }
+
+      if (selected && selected.layerId === l.id && !next.visible) {
+        didHideSelected = true;
+      }
+
+      return next;
+    });
+
+    return nextLayers;
+  });
+
+  if (didHideActive) {
+    const nextActive =
+      nextLayers.find((layer) => layer.visible)?.id ?? "default";
+
+    set(activeAnnotationLayerIdAtom, nextActive);
+  }
+
+  if (didHideActive || didHideSelected) {
+    set(selectedAnnotationIdAtom, null);
+    set(editingTextIdAtom, null);
+  }
 });
 
 export const toggleLayerLockAtom = atom(null, (_, set, id: string) => {
@@ -183,7 +279,38 @@ export const toggleLayerLockAtom = atom(null, (_, set, id: string) => {
   );
 });
 
+export const showAllLayersAtom = atom(null, (get, set) => {
+  const layers = get(annotationLayersAtom);
+  if (layers.every((layer) => layer.visible)) {
+    return;
+  }
+
+  set(annotationLayersAtom, (prev) =>
+    prev.map((layer) => ({ ...layer, visible: true })),
+  );
+});
+
+export const hideAllLayersAtom = atom(null, (get, set) => {
+  const layers = get(annotationLayersAtom);
+  if (layers.every((layer) => !layer.visible)) {
+    return;
+  }
+
+  set(annotationLayersAtom, (prev) =>
+    prev.map((layer) => ({ ...layer, visible: false })),
+  );
+  set(selectedAnnotationIdAtom, null);
+  set(editingTextIdAtom, null);
+});
+
 export const clearLayerAtom = atom(null, (get, set, layerId: string) => {
+  const layers = get(annotationLayersAtom);
+  const target = layers.find((layer) => layer.id === layerId);
+
+  if (target?.locked) {
+    return;
+  }
+
   set(annotationsAtom, (prev) => prev.filter((a) => a.layerId !== layerId));
 
   const selectedId = get(selectedAnnotationIdAtom);
@@ -195,4 +322,20 @@ export const clearLayerAtom = atom(null, (get, set, layerId: string) => {
   }
 
   set(saveToHistoryAtom);
+});
+
+export const resetAnnotationsAtom = atom(null, (_, set) => {
+  const defaultLayers: AnnotationLayer[] = [
+    { id: "default", name: "Layer 1", visible: true, locked: false },
+  ];
+
+  set(annotationsAtom, []);
+  set(annotationLayersAtom, defaultLayers);
+  set(activeAnnotationLayerIdAtom, "default");
+  set(activeAnnotationToolAtom, null);
+  set(activeAnnotationColorAtom, "#facc15");
+  set(selectedAnnotationIdAtom, null);
+  set(editingTextIdAtom, null);
+  set(annotationHistoryAtom, [{ annotations: [], layers: defaultLayers }]);
+  set(annotationHistoryIndexAtom, 0);
 });

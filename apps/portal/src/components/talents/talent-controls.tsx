@@ -39,17 +39,23 @@ interface TalentControlsProps {
   annotationTool: AnnotationTool;
   annotationColor: string;
   hasAnnotations: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
   onSearchChange: (query: string) => void;
   onResetView: () => void;
   onResetSelections: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onToggleZen: () => void;
-  onExportPNG: () => void;
-  onExportPDF: () => void;
+  onExportPNGViewport: () => void;
+  onExportPDFViewport: () => void;
+  onExportPNGFull: () => void;
+  onExportPDFFull: () => void;
   onAnnotationToolChange: (tool: AnnotationTool) => void;
   onAnnotationColorChange: (color: string) => void;
   onAnnotationsClear: () => void;
+  onAnnotationsUndo: () => void;
+  onAnnotationsRedo: () => void;
 }
 
 export const TalentControls = memo(function TalentControls({
@@ -65,17 +71,23 @@ export const TalentControls = memo(function TalentControls({
   annotationTool,
   annotationColor,
   hasAnnotations,
+  canUndo,
+  canRedo,
   onSearchChange,
   onResetView,
   onResetSelections,
   onZoomIn,
   onZoomOut,
   onToggleZen,
-  onExportPNG,
-  onExportPDF,
+  onExportPNGViewport,
+  onExportPDFViewport,
+  onExportPNGFull,
+  onExportPDFFull,
   onAnnotationToolChange,
   onAnnotationColorChange,
   onAnnotationsClear,
+  onAnnotationsUndo,
+  onAnnotationsRedo,
 }: TalentControlsProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -123,9 +135,13 @@ export const TalentControls = memo(function TalentControls({
         activeTool={annotationTool}
         activeColor={annotationColor}
         hasAnnotations={hasAnnotations}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onToolChange={onAnnotationToolChange}
         onColorChange={onAnnotationColorChange}
         onClear={onAnnotationsClear}
+        onUndo={onAnnotationsUndo}
+        onRedo={onAnnotationsRedo}
       />
 
       <div className="flex items-center gap-1 ml-auto">
@@ -205,11 +221,17 @@ export const TalentControls = memo(function TalentControls({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onExportPNG}>
-              Download PNG
+            <DropdownMenuItem onClick={onExportPNGViewport}>
+              Download PNG (viewport)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDF}>
-              Download PDF
+            <DropdownMenuItem onClick={onExportPDFViewport}>
+              Download PDF (viewport)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportPNGFull}>
+              Download PNG (full)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportPDFFull}>
+              Download PDF (full)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

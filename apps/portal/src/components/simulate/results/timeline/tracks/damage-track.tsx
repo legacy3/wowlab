@@ -11,6 +11,12 @@ import type Konva from "konva";
 import { getSpell } from "@/atoms/timeline";
 import { TRACK_METRICS, getZoomLevel, type ZoomLevel } from "@/hooks/timeline";
 import { getSpellOpacity, buildSpellTooltip } from "../timeline-context";
+import {
+  TIMELINE_PRIMARY,
+  TIMELINE_TEXT_MUTED,
+  TIMELINE_GOLD,
+  TIMELINE_WARNING,
+} from "../colors";
 import { formatDamage } from "../utils";
 
 interface DamageEvent {
@@ -172,7 +178,7 @@ export const DamageTrack = memo(function DamageTrack({
         {dpsAreaPoints.area.length > 0 && (
           <KonvaLine
             points={dpsAreaPoints.area}
-            fill="#3B82F6"
+            fill={TIMELINE_PRIMARY}
             opacity={0.25}
             closed
             listening={false}
@@ -182,7 +188,7 @@ export const DamageTrack = memo(function DamageTrack({
         {dpsAreaPoints.line.length > 0 && (
           <KonvaLine
             points={dpsAreaPoints.line}
-            stroke="#3B82F6"
+            stroke={TIMELINE_PRIMARY}
             strokeWidth={2}
             tension={0.3}
             listening={false}
@@ -200,7 +206,7 @@ export const DamageTrack = memo(function DamageTrack({
         {dpsAreaPoints.area.length > 0 && (
           <KonvaLine
             points={dpsAreaPoints.area}
-            fill="#3B82F6"
+            fill={TIMELINE_PRIMARY}
             opacity={0.1}
             closed
             listening={false}
@@ -232,7 +238,7 @@ export const DamageTrack = memo(function DamageTrack({
               spellId,
               y: currentY - barHeight,
               h: barHeight,
-              color: spell?.color ?? "#888",
+              color: spell?.color ?? TIMELINE_TEXT_MUTED,
             });
 
             currentY -= barHeight;
@@ -290,7 +296,7 @@ export const DamageTrack = memo(function DamageTrack({
                   x={width / 2}
                   y={Math.max(5, currentY - 4)}
                   radius={3}
-                  fill="#FFD700"
+                  fill={TIMELINE_GOLD}
                   listening={false}
                 />
               )}
@@ -308,7 +314,7 @@ export const DamageTrack = memo(function DamageTrack({
       {dpsAreaPoints.area.length > 0 && (
         <KonvaLine
           points={dpsAreaPoints.area}
-          fill="#3B82F6"
+          fill={TIMELINE_PRIMARY}
           opacity={0.08}
           closed
           listening={false}
@@ -353,7 +359,7 @@ export const DamageTrack = memo(function DamageTrack({
                 y={dy}
                 width={damageStemWidth}
                 height={Math.max(0, stemHeight)}
-                fill={spell?.color ?? "#888"}
+                fill={spell?.color ?? TIMELINE_TEXT_MUTED}
                 cornerRadius={1}
               />
               {/* Marker dot */}
@@ -361,8 +367,12 @@ export const DamageTrack = memo(function DamageTrack({
                 x={0}
                 y={dy}
                 radius={dmg.isCrit ? damageCritRadius : damageMarkerRadius}
-                fill={dmg.isCrit ? "#FFD700" : (spell?.color ?? "#888")}
-                stroke={dmg.isCrit ? "#FFA500" : undefined}
+                fill={
+                  dmg.isCrit
+                    ? TIMELINE_GOLD
+                    : (spell?.color ?? TIMELINE_TEXT_MUTED)
+                }
+                stroke={dmg.isCrit ? TIMELINE_WARNING : undefined}
                 strokeWidth={dmg.isCrit ? 1 : 0}
                 listening={false}
               />

@@ -1,6 +1,7 @@
 "use client";
 
 import type { TooltipState } from "./types";
+import { X } from "lucide-react";
 import { GameIcon } from "@/components/game";
 import { useSpellDescription } from "@/hooks/use-spell-description";
 
@@ -25,9 +26,18 @@ function SpellDescription({
 interface TalentTooltipProps {
   tooltip: TooltipState | null;
   containerWidth: number;
+  containerHeight: number;
+  pinned?: boolean;
+  onClose?: () => void;
 }
 
-export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
+export function TalentTooltip({
+  tooltip,
+  containerWidth,
+  containerHeight,
+  pinned = false,
+  onClose,
+}: TalentTooltipProps) {
   if (!tooltip) {
     return null;
   }
@@ -41,15 +51,29 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
   const tooltipWidth = isChoiceNode ? 320 : 280;
   const tooltipX =
     x + tooltipWidth > containerWidth ? x - tooltipWidth - 10 : x + 15;
-  const tooltipY = Math.max(10, y - 20);
+  const estimatedHeight = isChoiceNode ? 240 : 200;
+  const tooltipY = Math.min(
+    Math.max(10, y - 20),
+    Math.max(10, containerHeight - estimatedHeight - 10),
+  );
 
   if (isChoiceNode) {
     return (
       <div
-        className="absolute z-50 pointer-events-none"
+        className={`absolute z-50 ${pinned ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ left: tooltipX, top: tooltipY }}
       >
-        <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-4 shadow-xl max-w-sm">
+        <div className="relative bg-gray-900/95 border border-gray-700 rounded-lg p-4 shadow-xl max-w-sm">
+          {pinned && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-200"
+              title="Close"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
           <div className="space-y-3">
             <div className="text-xs text-purple-400 font-medium">
               Choice Talent
@@ -71,7 +95,7 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
                       {entry.name}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
+                  <p className="text-xs text-gray-400 leading-relaxed select-text">
                     <SpellDescription
                       spellId={entry.spellId ?? null}
                       fallback={entry.description}
@@ -97,10 +121,20 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
 
   return (
     <div
-      className="absolute z-50 pointer-events-none"
+      className={`absolute z-50 ${pinned ? "pointer-events-auto" : "pointer-events-none"}`}
       style={{ left: tooltipX, top: tooltipY }}
     >
-      <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-4 shadow-xl max-w-xs">
+      <div className="relative bg-gray-900/95 border border-gray-700 rounded-lg p-4 shadow-xl max-w-xs">
+        {pinned && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-200"
+            title="Close"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <GameIcon
@@ -124,7 +158,7 @@ export function TalentTooltip({ tooltip, containerWidth }: TalentTooltipProps) {
               </div>
             </div>
           </div>
-          <p className="text-xs text-gray-300 leading-relaxed">
+          <p className="text-xs text-gray-300 leading-relaxed select-text">
             <SpellDescription
               spellId={entry.spellId ?? null}
               fallback={entry.description}

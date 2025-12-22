@@ -13,6 +13,8 @@ import { usePinchZoom } from "@/hooks/use-pinch-zoom";
 import { useTalentKeyboard } from "@/hooks/use-talent-keyboard";
 import {
   visibleAnnotationsAtom,
+  annotationLayersAtom,
+  activeAnnotationLayerIdAtom,
   activeAnnotationToolAtom,
   activeAnnotationColorAtom,
   selectedAnnotationIdAtom,
@@ -29,12 +31,14 @@ import {
   selectAnnotationAtom,
   startEditingTextAtom,
   stopEditingTextAtom,
+  saveToHistoryAtom,
+  resetAnnotationsAtom,
 } from "@/atoms";
 import { searchTalentNodes } from "./talent-utils";
 import { TalentControls } from "./talent-controls";
 import { TalentTreeRenderer } from "./talent-tree-renderer";
 import type { TooltipState } from "./types";
-import { MIN_SCALE, MAX_SCALE } from "./constants";
+import { MIN_SCALE, MAX_SCALE, NODE_SIZE, CHOICE_NODE_SIZE } from "./constants";
 import {
   buildTalentEdgeIndex,
   calculatePointsSpent,
@@ -109,6 +113,7 @@ export function TalentTree({
   const lastPos = useRef<{ x: number; y: number } | null>(null);
 
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [pinnedTooltip, setPinnedTooltip] = useState<TooltipState | null>(null);
   const throttledSetTooltip = useThrottledCallback(
     setTooltip,
     [setTooltip],
@@ -119,13 +124,13 @@ export function TalentTree({
 
   // Annotation state from Jotai atoms
   const annotations = useAtomValue(visibleAnnotationsAtom);
+  const layers = useAtomValue(annotationLayersAtom);
+  const activeLayerId = useAtomValue(activeAnnotationLayerIdAtom);
   const [annotationTool, setAnnotationTool] = useAtom(activeAnnotationToolAtom);
   const [annotationColor, setAnnotationColor] = useAtom(
     activeAnnotationColorAtom,
   );
-  const [selectedAnnotationId, setSelectedAnnotationId] = useAtom(
-    selectedAnnotationIdAtom,
-  );
+  const selectedAnnotationId = useAtomValue(selectedAnnotationIdAtom);
   const editingTextId = useAtomValue(editingTextIdAtom);
   const nextNumber = useAtomValue(nextAnnotationNumberAtom);
   const canUndo = useAtomValue(canUndoAtom);
@@ -139,6 +144,8 @@ export function TalentTree({
   const selectAnnotation = useSetAtom(selectAnnotationAtom);
   const startEditingText = useSetAtom(startEditingTextAtom);
   const stopEditingText = useSetAtom(stopEditingTextAtom);
+  const saveAnnotationHistory = useSetAtom(saveToHistoryAtom);
+  const resetAnnotations = useSetAtom(resetAnnotationsAtom);
 
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
@@ -146,7 +153,11 @@ export function TalentTree({
   const height = propHeight || containerHeight || 600;
 
   const contentHeight = height;
-  const { exportPNG, exportPDF } = useExport({ stageRef, contentHeight });
+  const { exportPNG, exportPDF } = useExport({
+    stageRef,
+    contentHeight,
+    filenamePrefix: "talents",
+  });
 
   const visibleNodes = useMemo(
     () => computeVisibleNodes(tree.nodes, tree.edges),
@@ -178,6 +189,7 @@ export function TalentTree({
     null,
   );
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [panOverride, setPanOverride] = useState(false);
 
   const paint = useRef<{ active: boolean; lastNodeId: number | null }>({
     active: false,
@@ -200,7 +212,14 @@ export function TalentTree({
     setSearchQuery("");
     setPanZoom({ x: 0, y: 0, scale: 1 });
     hoverChainLastNodeId.current = null;
-  }, [initialHeroId, initialSelections, initialSelectionsKey]);
+    setPinnedTooltip(null);
+    resetAnnotations();
+  }, [
+    initialHeroId,
+    initialSelections,
+    initialSelectionsKey,
+    resetAnnotations,
+  ]);
 
   useEffect(() => {
     const iconNames = visibleNodes.flatMap((node) =>
@@ -217,6 +236,10 @@ export function TalentTree({
 
   const displayNodeIds = useMemo(
     () => new Set(viewModel?.nodes.map((node) => node.id) ?? []),
+    [viewModel?.nodes],
+  );
+  const nodePosById = useMemo(
+    () => new Map(viewModel?.nodes.map((node) => [node.id, node]) ?? []),
     [viewModel?.nodes],
   );
 
@@ -244,6 +267,130 @@ export function TalentTree({
     hoverChainLastNodeId.current = null;
     setSelections(new Map());
   }, []);
+
+  const exportBounds = useMemo(() => {
+    if (!viewModel) {
+      return null;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const nodePos of viewModel.nodes) {
+      const isChoiceNode =
+        nodePos.node.type === 2 && nodePos.node.entries.length > 1;
+      const size = isChoiceNode ? CHOICE_NODE_SIZE : NODE_SIZE;
+      const half = size / 2;
+      minX = Math.min(minX, nodePos.x - half);
+      minY = Math.min(minY, nodePos.y - half);
+      maxX = Math.max(maxX, nodePos.x + half);
+      maxY = Math.max(maxY, nodePos.y + half);
+    }
+
+    for (const annotation of annotations) {
+      switch (annotation.type) {
+        case "arrow": {
+          const xs = [annotation.x1, annotation.x2];
+          const ys = [annotation.y1, annotation.y2];
+          if (annotation.cx !== undefined) xs.push(annotation.cx);
+          if (annotation.cy !== undefined) ys.push(annotation.cy);
+          minX = Math.min(minX, ...xs);
+          minY = Math.min(minY, ...ys);
+          maxX = Math.max(maxX, ...xs);
+          maxY = Math.max(maxY, ...ys);
+          break;
+        }
+        case "circle": {
+          minX = Math.min(minX, annotation.x - annotation.radius);
+          minY = Math.min(minY, annotation.y - annotation.radius);
+          maxX = Math.max(maxX, annotation.x + annotation.radius);
+          maxY = Math.max(maxY, annotation.y + annotation.radius);
+          break;
+        }
+        case "number": {
+          const badge = 14;
+          minX = Math.min(minX, annotation.x - badge);
+          minY = Math.min(minY, annotation.y - badge);
+          maxX = Math.max(maxX, annotation.x + badge);
+          maxY = Math.max(maxY, annotation.y + badge);
+          break;
+        }
+        case "text": {
+          const fontSize = annotation.fontSize ?? 16;
+          const textHeight = Math.max(fontSize, annotation.height ?? fontSize);
+          minX = Math.min(minX, annotation.x - 6);
+          minY = Math.min(minY, annotation.y - 6);
+          maxX = Math.max(maxX, annotation.x + annotation.width + 6);
+          maxY = Math.max(maxY, annotation.y + textHeight + 6);
+          break;
+        }
+      }
+    }
+
+    if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+      return null;
+    }
+
+    const padding = 60;
+    return {
+      x: minX - padding,
+      y: minY - padding,
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2,
+    };
+  }, [annotations, viewModel]);
+
+  const fitPanZoomToBounds = useCallback(
+    (bounds: { x: number; y: number; width: number; height: number }) => {
+      const padding = 20;
+      const scale = Math.min(
+        MAX_SCALE,
+        Math.max(
+          MIN_SCALE,
+          Math.min(
+            (width - padding * 2) / bounds.width,
+            (height - padding * 2) / bounds.height,
+          ),
+        ),
+      );
+
+      return {
+        scale,
+        x: -bounds.x * scale + (width - bounds.width * scale) / 2,
+        y: -bounds.y * scale + (height - bounds.height * scale) / 2,
+      };
+    },
+    [height, width],
+  );
+
+  const exportWithFit = useCallback(
+    async (exportFn: () => void) => {
+      if (!exportBounds) {
+        exportFn();
+        return;
+      }
+
+      const previous = panZoom;
+      setPanZoom(fitPanZoomToBounds(exportBounds));
+
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      exportFn();
+      setPanZoom(previous);
+    },
+    [exportBounds, fitPanZoomToBounds, panZoom],
+  );
+
+  const handleExportPNG = useCallback(() => {
+    void exportWithFit(exportPNG);
+  }, [exportPNG, exportWithFit]);
+
+  const handleExportPDF = useCallback(() => {
+    void exportWithFit(exportPDF);
+  }, [exportPDF, exportWithFit]);
 
   const showBlockedFeedback = useCallback((nodeId: number) => {
     setBlockedNodeId(nodeId);
@@ -491,6 +638,39 @@ export function TalentTree({
     };
   }, [stopPaint]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isInput) {
+        return;
+      }
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        setPanOverride(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        setPanOverride(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
   const paintEnter = useCallback(
     (nodeId: number) => {
       const lastNodeId = paint.current.active
@@ -662,8 +842,19 @@ export function TalentTree({
       const target = e.target;
       const pointer = stage.getPointerPosition();
 
+      if (panOverride && pointer) {
+        isDragging.current = true;
+        lastPos.current = pointer;
+        return;
+      }
+
       // Handle annotation tools
       if (annotationTool && annotationTool !== "select" && pointer) {
+        const activeLayer = layers.find((layer) => layer.id === activeLayerId);
+        if (!activeLayer || activeLayer.locked || !activeLayer.visible) {
+          return;
+        }
+
         const canvasPos = screenToCanvas(pointer.x, pointer.y);
 
         if (annotationTool === "arrow" || annotationTool === "circle") {
@@ -683,7 +874,9 @@ export function TalentTree({
             content: "Text",
           });
           // Start editing immediately so user can type
-          startEditingText(id);
+          if (id) {
+            startEditingText(id);
+          }
         } else if (annotationTool === "number") {
           addAnnotation({
             type: "number",
@@ -699,10 +892,22 @@ export function TalentTree({
       if (target !== stage && target.listening()) {
         return;
       }
+      if (target === stage && pinnedTooltip) {
+        setPinnedTooltip(null);
+      }
       isDragging.current = true;
       lastPos.current = pointer;
     },
-    [addAnnotation, annotationTool, nextNumber, screenToCanvas],
+    [
+      addAnnotation,
+      annotationTool,
+      nextNumber,
+      screenToCanvas,
+      activeLayerId,
+      layers,
+      panOverride,
+      pinnedTooltip,
+    ],
   );
 
   const handleMouseMove = useCallback(() => {
@@ -736,9 +941,12 @@ export function TalentTree({
             x2: canvasPos.x,
             y2: canvasPos.y,
             autoSelect: false, // Don't switch to select yet - wait for mouse up
+            saveHistory: false,
           });
 
-          annotationDraw.current.tempId = id;
+          if (id) {
+            annotationDraw.current.tempId = id;
+          }
         }
       } else if (annotationTool === "circle") {
         const radius = Math.sqrt(
@@ -758,9 +966,12 @@ export function TalentTree({
             y: startY,
             radius,
             autoSelect: false, // Don't switch to select yet - wait for mouse up
+            saveHistory: false,
           });
 
-          annotationDraw.current.tempId = id;
+          if (id) {
+            annotationDraw.current.tempId = id;
+          }
         }
       }
 
@@ -783,6 +994,7 @@ export function TalentTree({
 
     // If we were drawing an annotation, switch to select tool now
     if (annotationDraw.current.active && annotationDraw.current.tempId) {
+      saveAnnotationHistory();
       setAnnotationTool("select");
     }
 
@@ -794,7 +1006,7 @@ export function TalentTree({
     };
 
     stopPaint();
-  }, [setAnnotationTool, stopPaint]);
+  }, [saveAnnotationHistory, setAnnotationTool, stopPaint]);
 
   const handlePinchZoom = useCallback(
     (newScale: number, centerX: number, centerY: number) => {
@@ -896,9 +1108,12 @@ export function TalentTree({
 
   const handleTooltip = useCallback(
     (state: TooltipState | null) => {
+      if (pinnedTooltip) {
+        return;
+      }
       throttledSetTooltip(state);
     },
-    [throttledSetTooltip],
+    [pinnedTooltip, throttledSetTooltip],
   );
 
   const handleNodeHoverChange = useCallback((nodeId: number | null) => {
@@ -908,6 +1123,29 @@ export function TalentTree({
       hoverChainLastNodeId.current = nodeId;
     }
   }, []);
+
+  const handleNodeClick = useCallback(
+    (nodeId: number, event?: Konva.KonvaEventObject<MouseEvent>): void => {
+      toggleNode(nodeId);
+
+      if (!event?.evt.shiftKey) {
+        return;
+      }
+
+      const nodePos = nodePosById.get(nodeId);
+      if (!nodePos) {
+        return;
+      }
+
+      setPinnedTooltip({
+        x: nodePos.x * panZoom.scale + panZoom.x,
+        y: nodePos.y * panZoom.scale + panZoom.y,
+        node: nodePos.node,
+        selection: selectionsRef.current.get(nodeId),
+      });
+    },
+    [nodePosById, panZoom, toggleNode],
+  );
 
   const handleKeyboardFocusChange = useCallback(
     (nodeId: number | null) => {
@@ -940,6 +1178,11 @@ export function TalentTree({
         target.tagName === "TEXTAREA" ||
         target.isContentEditable;
 
+      if (e.key === "Escape" && pinnedTooltip) {
+        setPinnedTooltip(null);
+        return;
+      }
+
       // Undo/Redo work even when not focused on annotation
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         if (isInput) return;
@@ -966,7 +1209,7 @@ export function TalentTree({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deleteAnnotation, redo, selectedAnnotationId, undo]);
+  }, [deleteAnnotation, pinnedTooltip, redo, selectedAnnotationId, undo]);
 
   if (!viewModel) {
     return null;
@@ -993,23 +1236,31 @@ export function TalentTree({
         annotationTool={annotationTool}
         annotationColor={annotationColor}
         hasAnnotations={annotations.length > 0}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onSearchChange={setSearchQuery}
         onResetView={resetPanZoom}
         onResetSelections={resetSelections}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onToggleZen={toggleZenMode}
-        onExportPNG={exportPNG}
-        onExportPDF={exportPDF}
+        onExportPNGViewport={exportPNG}
+        onExportPDFViewport={exportPDF}
+        onExportPNGFull={handleExportPNG}
+        onExportPDFFull={handleExportPDF}
         onAnnotationToolChange={setAnnotationTool}
         onAnnotationColorChange={setAnnotationColor}
         onAnnotationsClear={clearAnnotations}
+        onAnnotationsUndo={undo}
+        onAnnotationsRedo={redo}
       />
 
       <TalentTreeRenderer
         viewModel={viewModel}
         panZoom={panZoom}
-        tooltip={tooltip}
+        tooltip={pinnedTooltip ?? tooltip}
+        tooltipPinned={Boolean(pinnedTooltip)}
+        onTooltipClose={() => setPinnedTooltip(null)}
         searchMatches={searchMatches}
         isSearching={isSearching}
         pathHighlight={pathHighlight}
@@ -1019,7 +1270,8 @@ export function TalentTree({
         annotations={annotations}
         selectedAnnotationId={selectedAnnotationId}
         editingTextId={editingTextId}
-        onNodeClick={toggleNode}
+        annotationTool={annotationTool}
+        onNodeClick={handleNodeClick}
         onNodeRightClick={decrementNode}
         onNodeHoverChange={handleNodeHoverChange}
         onPaintStart={startPaint}

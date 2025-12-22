@@ -3,6 +3,7 @@
 import { memo, useCallback, useMemo } from "react";
 import type Konva from "konva";
 import { KonvaGroup, KonvaLine, KonvaCircle } from "../base";
+import { ANNOTATION_ANCHOR_STROKE } from "./constants";
 import type {
   ArrowAnnotation as ArrowAnnotationType,
   AnnotationComponentProps,
@@ -95,6 +96,26 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
     [onChange],
   );
 
+  const handleGroupDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      const pos = e.target.position();
+      if (pos.x === 0 && pos.y === 0) {
+        return;
+      }
+
+      onChange({
+        x1: x1 + pos.x,
+        y1: y1 + pos.y,
+        x2: x2 + pos.x,
+        y2: y2 + pos.y,
+        ...(isCurved ? { cx: (cx ?? 0) + pos.x, cy: (cy ?? 0) + pos.y } : {}),
+      });
+
+      e.target.position({ x: 0, y: 0 });
+    },
+    [cx, cy, isCurved, onChange, x1, x2, y1, y2],
+  );
+
   // Double-click on line to add/remove curve
   const handleDoubleClick = useCallback(() => {
     if (isCurved) {
@@ -107,7 +128,7 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
   }, [isCurved, defaultCx, defaultCy, onChange]);
 
   return (
-    <KonvaGroup>
+    <KonvaGroup draggable onDragEnd={handleGroupDragEnd}>
       {/* Main line/curve */}
       <KonvaLine
         points={linePoints}
@@ -140,7 +161,7 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
             y={y1}
             radius={ANCHOR_RADIUS}
             fill={color}
-            stroke="#fff"
+            stroke={ANNOTATION_ANCHOR_STROKE}
             strokeWidth={2}
             draggable
             onDragMove={handleStartDrag}
@@ -152,7 +173,7 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
             y={y2}
             radius={ANCHOR_RADIUS}
             fill={color}
-            stroke="#fff"
+            stroke={ANNOTATION_ANCHOR_STROKE}
             strokeWidth={2}
             draggable
             onDragMove={handleEndDrag}

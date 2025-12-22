@@ -8,6 +8,7 @@ import type {
   TextAnnotation as TextAnnotationType,
   AnnotationComponentProps,
 } from "./types";
+import { ANNOTATION_TEXT_BG } from "./constants";
 
 const DEFAULT_FONT_SIZE = 16;
 const PADDING = 6;
@@ -30,6 +31,7 @@ export const TextAnnotation = memo(function TextAnnotation({
     width,
     content,
     color,
+    height,
     fontSize = DEFAULT_FONT_SIZE,
   } = annotation;
   const groupRef = useRef<Konva.Group>(null);
@@ -37,6 +39,9 @@ export const TextAnnotation = memo(function TextAnnotation({
 
   // Local editing state - only used during active editing
   const [editingContent, setEditingContent] = useState(content);
+  const [editingHeight, setEditingHeight] = useState(
+    Math.max(fontSize, height ?? fontSize),
+  );
   const prevIsEditingRef = useRef(isEditing);
 
   // Reset content and focus when editing starts (from any source)
@@ -47,9 +52,12 @@ export const TextAnnotation = memo(function TextAnnotation({
     if (isEditing && !wasEditing) {
       // Just started editing - reset to current content
       setEditingContent(content);
+      setEditingHeight(Math.max(fontSize, height ?? fontSize));
       // Focus after state update
       requestAnimationFrame(() => {
         if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
           textareaRef.current.focus();
           textareaRef.current.select();
         }
@@ -60,8 +68,9 @@ export const TextAnnotation = memo(function TextAnnotation({
   }, [isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate text dimensions
-  const textHeight = fontSize + PADDING * 2;
+  const textHeight = Math.max(fontSize, height ?? fontSize);
   const textWidth = Math.max(MIN_WIDTH, width);
+  const backgroundHeight = textHeight + PADDING * 2;
 
   // Handle double-click to start editing
   const handleDoubleClick = useCallback(() => {
@@ -81,25 +90,42 @@ export const TextAnnotation = memo(function TextAnnotation({
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setEditingContent(e.target.value);
+      const el = e.target;
+      el.style.height = "auto";
+      const nextHeight = Math.max(fontSize, el.scrollHeight);
+      setEditingHeight(nextHeight);
     },
-    [],
+    [fontSize],
   );
 
   // Handle textarea blur (save changes)
   const handleBlur = useCallback(() => {
-    if (editingContent !== content) {
-      onChange({ content: editingContent });
+    if (editingContent !== content || editingHeight !== textHeight) {
+      onChange({
+        content: editingContent,
+        height: editingHeight,
+      });
     }
     onStopEdit?.();
-  }, [editingContent, content, onChange, onStopEdit]);
+  }, [
+    content,
+    editingContent,
+    editingHeight,
+    onChange,
+    onStopEdit,
+    textHeight,
+  ]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        if (editingContent !== content) {
-          onChange({ content: editingContent });
+        if (editingContent !== content || editingHeight !== textHeight) {
+          onChange({
+            content: editingContent,
+            height: editingHeight,
+          });
         }
         onStopEdit?.();
       } else if (e.key === "Escape") {
@@ -131,8 +157,8 @@ export const TextAnnotation = memo(function TextAnnotation({
         x={-PADDING}
         y={-PADDING}
         width={textWidth + PADDING * 2}
-        height={textHeight}
-        fill="rgba(0,0,0,0.75)"
+        height={backgroundHeight}
+        fill={ANNOTATION_TEXT_BG}
         cornerRadius={4}
         stroke={isSelected ? color : "transparent"}
         strokeWidth={2}
@@ -146,6 +172,9 @@ export const TextAnnotation = memo(function TextAnnotation({
           fontStyle="bold"
           fill={color}
           width={textWidth}
+          height={textHeight}
+          lineHeight={1.2}
+          wrap="word"
         />
       )}
 
@@ -168,7 +197,7 @@ export const TextAnnotation = memo(function TextAnnotation({
             onKeyDown={handleKeyDown}
             style={{
               width: `${textWidth}px`,
-              minHeight: `${fontSize + 4}px`,
+              height: `${isEditing ? editingHeight : textHeight}px`,
               padding: "0",
               margin: "0",
               border: "none",
@@ -181,6 +210,7 @@ export const TextAnnotation = memo(function TextAnnotation({
               resize: "none",
               overflow: "hidden",
               lineHeight: "1.2",
+              whiteSpace: "pre-wrap",
             }}
           />
         </Html>

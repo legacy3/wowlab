@@ -4,6 +4,7 @@ import { memo } from "react";
 import { KonvaGroup, KonvaText } from "@/components/konva";
 import type { TrackId } from "@/atoms/timeline";
 import { TRACK_CONFIGS } from "@/hooks/timeline";
+import { TIMELINE_TEXT_MUTED, TIMELINE_TEXT_DEFAULT } from "../colors";
 
 interface TrackLayout {
   y: number;
@@ -46,7 +47,7 @@ export const TrackLabels = memo(function TrackLabels({
               <KonvaText
                 text={expandedTracks.has(track.id) ? "\u25BC" : "\u25B6"}
                 fontSize={10}
-                fill="#888"
+                fill={TIMELINE_TEXT_MUTED}
               />
             )}
             <KonvaText
@@ -54,7 +55,7 @@ export const TrackLabels = memo(function TrackLabels({
               x={track.collapsible ? 14 : 0}
               fontSize={11}
               fontStyle="500"
-              fill="#ddd"
+              fill={TIMELINE_TEXT_DEFAULT}
             />
           </KonvaGroup>
         );

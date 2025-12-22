@@ -62,6 +62,7 @@ import { useZenMode } from "@/hooks/use-zen-mode";
 import { type TooltipState } from "./timeline-context";
 import { TimelineTooltip } from "./timeline-tooltip";
 import { TimelineSettings } from "./timeline-settings";
+import { TIMELINE_TEXT_MUTED } from "./colors";
 import { Minimap } from "./minimap";
 import {
   GridLayer,
@@ -387,6 +388,7 @@ export function Timeline() {
   const { exportPNG, exportPDF } = useExport({
     stageRef,
     contentHeight: totalHeight + MARGIN.top + MARGIN.bottom,
+    filenamePrefix: "timeline",
   });
 
   return (
@@ -548,7 +550,7 @@ export function Timeline() {
                 text={`FPS: ${fps}`}
                 fontSize={12}
                 fontFamily="monospace"
-                fill="#888"
+                fill={TIMELINE_TEXT_MUTED}
               />
             )}
           </KonvaLayer>

@@ -28,6 +28,9 @@ import {
   toggleLayerVisibilityAtom,
   toggleLayerLockAtom,
   clearLayerAtom,
+  renameLayerAtom,
+  showAllLayersAtom,
+  hideAllLayersAtom,
 } from "@/atoms";
 
 export const TalentLayerPanel = memo(function TalentLayerPanel() {
@@ -41,6 +44,12 @@ export const TalentLayerPanel = memo(function TalentLayerPanel() {
   const toggleVisibility = useSetAtom(toggleLayerVisibilityAtom);
   const toggleLock = useSetAtom(toggleLayerLockAtom);
   const clearLayer = useSetAtom(clearLayerAtom);
+  const renameLayer = useSetAtom(renameLayerAtom);
+  const showAllLayers = useSetAtom(showAllLayersAtom);
+  const hideAllLayers = useSetAtom(hideAllLayersAtom);
+
+  const hasLayers = layers.length > 0;
+  const allVisible = hasLayers && layers.every((layer) => layer.visible);
 
   // Count annotations per layer
   const countByLayer = (layerId: string) =>
@@ -67,15 +76,31 @@ export const TalentLayerPanel = memo(function TalentLayerPanel() {
           <span className="text-xs font-medium text-muted-foreground">
             Layers
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={() => addLayer()}
-            title="Add layer"
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => (allVisible ? hideAllLayers() : showAllLayers())}
+              title={allVisible ? "Hide all layers" : "Show all layers"}
+              disabled={!hasLayers}
+            >
+              {allVisible ? (
+                <EyeOff className="h-3 w-3" />
+              ) : (
+                <Eye className="h-3 w-3" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => addLayer()}
+              title="Add layer"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-0.5">
@@ -99,7 +124,19 @@ export const TalentLayerPanel = memo(function TalentLayerPanel() {
                 </div>
 
                 {/* Layer name and count */}
-                <span className="flex-1 truncate text-xs">
+                <span
+                  className="flex-1 truncate text-xs"
+                  title="Double click to rename"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    const nextName = window.prompt("Rename layer", layer.name);
+                    const trimmed = nextName?.trim();
+                    if (!trimmed) {
+                      return;
+                    }
+                    renameLayer({ id: layer.id, name: trimmed });
+                  }}
+                >
                   {layer.name}
                   {count > 0 && (
                     <span className="text-muted-foreground ml-1">
@@ -152,9 +189,17 @@ export const TalentLayerPanel = memo(function TalentLayerPanel() {
                     className="h-5 w-5 text-destructive hover:text-destructive"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (
+                        !window.confirm(
+                          `Delete "${layer.name}"? This will remove ${count} annotation${count === 1 ? "" : "s"}.`,
+                        )
+                      ) {
+                        return;
+                      }
                       deleteLayer(layer.id);
                     }}
                     title="Delete layer"
+                    disabled={layer.locked}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -168,9 +213,17 @@ export const TalentLayerPanel = memo(function TalentLayerPanel() {
                     className="h-5 w-5"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (
+                        !window.confirm(
+                          `Clear "${layer.name}"? This will remove ${count} annotation${count === 1 ? "" : "s"}.`,
+                        )
+                      ) {
+                        return;
+                      }
                       clearLayer(layer.id);
                     }}
                     title="Clear layer"
+                    disabled={layer.locked}
                   >
                     <Trash2 className="h-3 w-3 opacity-50" />
                   </Button>
