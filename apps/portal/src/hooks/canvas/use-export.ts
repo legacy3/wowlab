@@ -39,6 +39,7 @@ interface UseExportReturn {
 export function useExport({
   stageRef,
   contentHeight,
+  filenamePrefix,
 }: UseExportOptions): UseExportReturn {
   const getExportDataURL = useCallback(
     (height: number) => {
