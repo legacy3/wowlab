@@ -88,10 +88,21 @@ const computeLayout = (
   let maxY = -Infinity;
 
   for (const node of nodes) {
-    if (node.posX < minX) minX = node.posX;
-    if (node.posX > maxX) maxX = node.posX;
-    if (node.posY < minY) minY = node.posY;
-    if (node.posY > maxY) maxY = node.posY;
+    if (node.posX < minX) {
+      minX = node.posX;
+    }
+
+    if (node.posX > maxX) {
+      maxX = node.posX;
+    }
+
+    if (node.posY < minY) {
+      minY = node.posY;
+    }
+    
+    if (node.posY > maxY) {
+      maxY = node.posY;
+    }
   }
 
   const rangeX = maxX - minX || 1;
