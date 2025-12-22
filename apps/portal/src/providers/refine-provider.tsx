@@ -14,12 +14,13 @@ import { GAME_CONFIG } from "@/lib/config/game";
 import { PortalDbcBatchProvider } from "./portal-batch-provider";
 
 const DAY = 1000 * 60 * 60 * 24;
+const MAX_SAFE_TIMEOUT = 24 * DAY;
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 60 * DAY,
-      staleTime: 30 * DAY,
+      gcTime: Infinity,
+      staleTime: Infinity,
       refetchOnWindowFocus: false,
       retry: 3,
     },
@@ -42,7 +43,7 @@ export function RefineProvider({ children }: RefineProviderProps) {
       client={queryClient}
       persistOptions={{
         persister,
-        maxAge: 60 * DAY,
+        maxAge: MAX_SAFE_TIMEOUT,
         buster: GAME_CONFIG.patchVersion,
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
