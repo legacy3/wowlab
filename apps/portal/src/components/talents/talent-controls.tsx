@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
+import { TalentAnnotationTools } from "./talent-annotation-tools";
+import type { AnnotationTool } from "@/hooks/use-annotations";
 import type {
   TalentPointLimits,
   TalentPointsSpent,
@@ -34,6 +36,9 @@ interface TalentControlsProps {
   pointsSpent: TalentPointsSpent;
   isPanned: boolean;
   zenMode: boolean;
+  annotationTool: AnnotationTool;
+  annotationColor: string;
+  hasAnnotations: boolean;
   onSearchChange: (query: string) => void;
   onResetView: () => void;
   onResetSelections: () => void;
@@ -42,6 +47,9 @@ interface TalentControlsProps {
   onToggleZen: () => void;
   onExportPNG: () => void;
   onExportPDF: () => void;
+  onAnnotationToolChange: (tool: AnnotationTool) => void;
+  onAnnotationColorChange: (color: string) => void;
+  onAnnotationsClear: () => void;
 }
 
 export const TalentControls = memo(function TalentControls({
@@ -54,6 +62,9 @@ export const TalentControls = memo(function TalentControls({
   pointsSpent,
   isPanned,
   zenMode,
+  annotationTool,
+  annotationColor,
+  hasAnnotations,
   onSearchChange,
   onResetView,
   onResetSelections,
@@ -62,6 +73,9 @@ export const TalentControls = memo(function TalentControls({
   onToggleZen,
   onExportPNG,
   onExportPDF,
+  onAnnotationToolChange,
+  onAnnotationColorChange,
+  onAnnotationsClear,
 }: TalentControlsProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -104,6 +118,15 @@ export const TalentControls = memo(function TalentControls({
           Hero: {pointsSpent.hero}/{pointLimits.hero}
         </span>
       </div>
+
+      <TalentAnnotationTools
+        activeTool={annotationTool}
+        activeColor={annotationColor}
+        hasAnnotations={hasAnnotations}
+        onToolChange={onAnnotationToolChange}
+        onColorChange={onAnnotationColorChange}
+        onClear={onAnnotationsClear}
+      />
 
       <div className="flex items-center gap-1 ml-auto">
         <span className="text-xs text-muted-foreground">

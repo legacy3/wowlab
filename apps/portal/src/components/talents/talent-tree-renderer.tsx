@@ -13,8 +13,10 @@ import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TalentTooltip } from "./talent-tooltip";
 import { TalentLegend } from "./talent-legend";
+import { TalentAnnotations } from "./talent-annotations";
 import type { TooltipState } from "./types";
 import type { TalentViewModel } from "@wowlab/services/Talents";
+import type { Annotation } from "@/hooks/use-annotations";
 
 const GRID_SIZE = 50;
 const GRID_COLOR = "hsl(240 5% 26% / 0.15)";
@@ -77,6 +79,72 @@ const BackgroundGrid = memo(function BackgroundGrid({
       {verticalLines}
       {horizontalLines}
     </>
+  );
+});
+
+const HereArrow = memo(function HereArrow({
+  fromX,
+  fromY,
+  toX,
+  toY,
+}: {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}) {
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const headLen = 20;
+
+  return (
+    <KonvaGroup listening={false}>
+      {/* Glow/outline layer */}
+      <KonvaLine
+        points={[fromX, fromY, toX, toY]}
+        stroke="#60a5fa"
+        strokeWidth={12}
+        lineCap="round"
+        opacity={0.3}
+      />
+      {/* Main arrow line */}
+      <KonvaLine
+        points={[fromX, fromY, toX, toY]}
+        stroke="#fff"
+        strokeWidth={6}
+        lineCap="round"
+      />
+      {/* Arrowhead glow */}
+      <KonvaLine
+        points={[
+          toX - headLen * Math.cos(angle - Math.PI / 5),
+          toY - headLen * Math.sin(angle - Math.PI / 5),
+          toX,
+          toY,
+          toX - headLen * Math.cos(angle + Math.PI / 5),
+          toY - headLen * Math.sin(angle + Math.PI / 5),
+        ]}
+        stroke="#60a5fa"
+        strokeWidth={12}
+        lineCap="round"
+        lineJoin="round"
+        opacity={0.3}
+      />
+      {/* Arrowhead */}
+      <KonvaLine
+        points={[
+          toX - headLen * Math.cos(angle - Math.PI / 5),
+          toY - headLen * Math.sin(angle - Math.PI / 5),
+          toX,
+          toY,
+          toX - headLen * Math.cos(angle + Math.PI / 5),
+          toY - headLen * Math.sin(angle + Math.PI / 5),
+        ]}
+        stroke="#fff"
+        strokeWidth={6}
+        lineCap="round"
+        lineJoin="round"
+      />
+    </KonvaGroup>
   );
 });
 
@@ -166,12 +234,16 @@ interface TalentTreeRendererProps {
   };
   blockedNodeId: number | null;
   focusedNodeId: number | null;
+  hereArrow: { x: number; y: number } | null;
+  annotations: Annotation[];
+  selectedAnnotationId: string | null;
   onNodeClick: (nodeId: number) => void;
   onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
   onPaintStart: (nodeId: number) => void;
   onPaintEnter: (nodeId: number) => void;
   onTooltipChange: (state: TooltipState | null) => void;
+  onAnnotationSelect: (id: string | null) => void;
   onWheel: (e: Konva.KonvaEventObject<WheelEvent>) => void;
   onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseMove: () => void;
@@ -195,12 +267,16 @@ export function TalentTreeRenderer({
   pathHighlight,
   blockedNodeId,
   focusedNodeId,
+  hereArrow,
+  annotations,
+  selectedAnnotationId,
   onNodeClick,
   onNodeRightClick,
   onNodeHoverChange,
   onPaintStart,
   onPaintEnter,
   onTooltipChange,
+  onAnnotationSelect,
   onWheel,
   onMouseDown,
   onMouseMove,
@@ -264,6 +340,31 @@ export function TalentTreeRenderer({
               onPaintEnter={onPaintEnter}
               onHover={onTooltipChange}
             />
+            <TalentAnnotations
+              annotations={annotations}
+              selectedId={selectedAnnotationId}
+              onSelect={onAnnotationSelect}
+            />
+            {hereArrow &&
+              focusedNodeId !== null &&
+              (() => {
+                const focusedNode = viewModel.nodes.find(
+                  (n) => n.id === focusedNodeId,
+                );
+
+                if (!focusedNode) {
+                  return null;
+                }
+
+                return (
+                  <HereArrow
+                    fromX={hereArrow.x}
+                    fromY={hereArrow.y}
+                    toX={focusedNode.x}
+                    toY={focusedNode.y}
+                  />
+                );
+              })()}
           </KonvaGroup>
         </KonvaLayer>
       </KonvaStage>
