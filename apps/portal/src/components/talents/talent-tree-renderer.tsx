@@ -2,13 +2,84 @@
 
 import { memo, type RefObject } from "react";
 import type Konva from "konva";
-import { KonvaStage, KonvaLayer, KonvaGroup } from "@/components/konva";
+import {
+  KonvaStage,
+  KonvaLayer,
+  KonvaGroup,
+  KonvaLine,
+  KonvaRect,
+} from "@/components/konva";
 import { cn } from "@/lib/utils";
 import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TalentTooltip } from "./talent-tooltip";
+import { TalentLegend } from "./talent-legend";
 import type { TooltipState } from "./types";
 import type { TalentViewModel } from "@wowlab/services/Talents";
+
+const GRID_SIZE = 50;
+const GRID_COLOR = "hsl(240 5% 26% / 0.15)";
+
+const BackgroundGrid = memo(function BackgroundGrid({
+  width,
+  height,
+  panZoom,
+}: {
+  width: number;
+  height: number;
+  panZoom: { x: number; y: number; scale: number };
+}) {
+  const { x: panX, y: panY, scale } = panZoom;
+
+  // Visible bounds in world coordinates
+  const left = -panX / scale - GRID_SIZE;
+  const top = -panY / scale - GRID_SIZE;
+  const right = left + width / scale + GRID_SIZE * 3;
+  const bottom = top + height / scale + GRID_SIZE * 3;
+
+  // Snap to grid
+  const gridLeft = Math.floor(left / GRID_SIZE) * GRID_SIZE;
+  const gridTop = Math.floor(top / GRID_SIZE) * GRID_SIZE;
+
+  const verticalLines = Array.from(
+    { length: Math.ceil((right - gridLeft) / GRID_SIZE) + 1 },
+    (_, i) => {
+      const x = gridLeft + i * GRID_SIZE;
+      return (
+        <KonvaLine
+          key={`v${x}`}
+          points={[x, gridTop, x, bottom]}
+          stroke={GRID_COLOR}
+          strokeWidth={1 / scale}
+          listening={false}
+        />
+      );
+    },
+  );
+
+  const horizontalLines = Array.from(
+    { length: Math.ceil((bottom - gridTop) / GRID_SIZE) + 1 },
+    (_, i) => {
+      const y = gridTop + i * GRID_SIZE;
+      return (
+        <KonvaLine
+          key={`h${y}`}
+          points={[gridLeft, y, right, y]}
+          stroke={GRID_COLOR}
+          strokeWidth={1 / scale}
+          listening={false}
+        />
+      );
+    },
+  );
+
+  return (
+    <>
+      {verticalLines}
+      {horizontalLines}
+    </>
+  );
+});
 
 const EdgesLayer = memo(function EdgesLayer({
   edges,
@@ -148,11 +219,12 @@ export function TalentTreeRenderer({
     <div
       ref={containerRef}
       className={cn(
-        "relative bg-background/50 rounded-lg border overflow-hidden cursor-grab select-none",
+        "relative rounded-lg border overflow-hidden cursor-grab select-none bg-background/50",
         zenMode ? "flex-1 min-h-0" : "w-full",
       )}
       style={zenMode ? { width: "100%" } : { height }}
     >
+      <TalentLegend />
       <KonvaStage
         ref={stageRef}
         width={width}
@@ -173,6 +245,7 @@ export function TalentTreeRenderer({
             scaleX={panZoom.scale}
             scaleY={panZoom.scale}
           >
+            <BackgroundGrid width={width} height={height} panZoom={panZoom} />
             <EdgesLayer
               edges={viewModel.edges}
               pathEdgeIds={pathHighlight.edgeIds}
