@@ -1,3 +1,4 @@
+export * from "./annotations";
 export * from "./editor";
 export * from "./timeline";
 export * from "./charts";

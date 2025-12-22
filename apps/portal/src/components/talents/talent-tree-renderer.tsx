@@ -1,22 +1,22 @@
 "use client";
 
-import { memo, type RefObject } from "react";
+import { memo, useCallback, type RefObject } from "react";
 import type Konva from "konva";
 import {
   KonvaStage,
   KonvaLayer,
   KonvaGroup,
   KonvaLine,
+  AnnotationLayerRenderer,
+  type Annotation,
 } from "@/components/konva";
 import { cn } from "@/lib/utils";
 import { TalentNode } from "./talent-node";
 import { TalentEdge } from "./talent-edge";
 import { TalentTooltip } from "./talent-tooltip";
 import { TalentLegend } from "./talent-legend";
-import { TalentAnnotations } from "./talent-annotations";
 import type { TooltipState } from "./types";
 import type { TalentViewModel } from "@wowlab/services/Talents";
-import type { Annotation } from "@/hooks/use-annotations";
 
 const GRID_SIZE = 50;
 const GRID_COLOR = "hsl(240 5% 26% / 0.15)";
@@ -237,6 +237,7 @@ interface TalentTreeRendererProps {
   hereArrow: { x: number; y: number } | null;
   annotations: Annotation[];
   selectedAnnotationId: string | null;
+  editingTextId: string | null;
   onNodeClick: (nodeId: number) => void;
   onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
@@ -244,6 +245,13 @@ interface TalentTreeRendererProps {
   onPaintEnter: (nodeId: number) => void;
   onTooltipChange: (state: TooltipState | null) => void;
   onAnnotationSelect: (id: string | null) => void;
+  onAnnotationChange: (args: {
+    id: string;
+    updates: Partial<Annotation>;
+    saveHistory?: boolean;
+  }) => void;
+  onStartEditText: (id: string) => void;
+  onStopEditText: () => void;
   onWheel: (e: Konva.KonvaEventObject<WheelEvent>) => void;
   onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseMove: () => void;
@@ -270,6 +278,7 @@ export function TalentTreeRenderer({
   hereArrow,
   annotations,
   selectedAnnotationId,
+  editingTextId,
   onNodeClick,
   onNodeRightClick,
   onNodeHoverChange,
@@ -277,6 +286,9 @@ export function TalentTreeRenderer({
   onPaintEnter,
   onTooltipChange,
   onAnnotationSelect,
+  onAnnotationChange,
+  onStartEditText,
+  onStopEditText,
   onWheel,
   onMouseDown,
   onMouseMove,
@@ -290,6 +302,13 @@ export function TalentTreeRenderer({
   height,
   zenMode,
 }: TalentTreeRendererProps) {
+  // Wrapper for annotation onChange that adapts to the component's expected signature
+  const handleAnnotationChange = useCallback(
+    (id: string, updates: Partial<Annotation>) => {
+      onAnnotationChange({ id, updates });
+    },
+    [onAnnotationChange],
+  );
   return (
     <div
       ref={containerRef}
@@ -340,10 +359,14 @@ export function TalentTreeRenderer({
               onPaintEnter={onPaintEnter}
               onHover={onTooltipChange}
             />
-            <TalentAnnotations
+            <AnnotationLayerRenderer
               annotations={annotations}
               selectedId={selectedAnnotationId}
+              editingTextId={editingTextId}
               onSelect={onAnnotationSelect}
+              onChange={handleAnnotationChange}
+              onStartEditText={onStartEditText}
+              onStopEditText={onStopEditText}
             />
             {hereArrow &&
               focusedNodeId !== null &&

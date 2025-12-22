@@ -88,6 +88,7 @@
     "react-hook-form": "^7.68.0",
     "react-joyride": "^2.9.3",
     "react-konva": "^19.2.1",
+    "react-konva-utils": "^2.0.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.6",
     "react-syntax-highlighter": "^16.1.0",

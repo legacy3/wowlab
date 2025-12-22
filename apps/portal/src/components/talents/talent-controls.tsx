@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
 import { TalentAnnotationTools } from "./talent-annotation-tools";
-import type { AnnotationTool } from "@/hooks/use-annotations";
+import type { AnnotationTool } from "@/atoms";
 import type {
   TalentPointLimits,
   TalentPointsSpent,

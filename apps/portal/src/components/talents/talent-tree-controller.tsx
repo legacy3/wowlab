@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import type Konva from "konva";
 import { useThrottledCallback } from "@react-hookz/web";
 import { preloadIcons } from "@/components/konva";
@@ -10,7 +11,25 @@ import { useZenMode } from "@/hooks/use-zen-mode";
 import { useTalentViewModel } from "@/hooks/use-talent-view-model";
 import { usePinchZoom } from "@/hooks/use-pinch-zoom";
 import { useTalentKeyboard } from "@/hooks/use-talent-keyboard";
-import { useAnnotations } from "@/hooks/use-annotations";
+import {
+  visibleAnnotationsAtom,
+  activeAnnotationToolAtom,
+  activeAnnotationColorAtom,
+  selectedAnnotationIdAtom,
+  editingTextIdAtom,
+  nextAnnotationNumberAtom,
+  canUndoAtom,
+  canRedoAtom,
+  undoAnnotationAtom,
+  redoAnnotationAtom,
+  clearAnnotationsAtom,
+  addAnnotationAtom,
+  updateAnnotationAtom,
+  deleteAnnotationAtom,
+  selectAnnotationAtom,
+  startEditingTextAtom,
+  stopEditingTextAtom,
+} from "@/atoms";
 import { searchTalentNodes } from "./talent-utils";
 import { TalentControls } from "./talent-controls";
 import { TalentTreeRenderer } from "./talent-tree-renderer";
@@ -98,20 +117,28 @@ export function TalentTree({
 
   const { isZen: zenMode, toggleZen: toggleZenMode } = useZenMode();
 
-  const {
-    annotations,
-    activeTool: annotationTool,
-    activeColor: annotationColor,
-    selectedId: selectedAnnotationId,
-    nextNumber,
-    setActiveTool: setAnnotationTool,
-    setActiveColor: setAnnotationColor,
-    addAnnotation,
-    updateAnnotation,
-    deleteAnnotation,
-    selectAnnotation,
-    clearAnnotations,
-  } = useAnnotations();
+  // Annotation state from Jotai atoms
+  const annotations = useAtomValue(visibleAnnotationsAtom);
+  const [annotationTool, setAnnotationTool] = useAtom(activeAnnotationToolAtom);
+  const [annotationColor, setAnnotationColor] = useAtom(
+    activeAnnotationColorAtom,
+  );
+  const [selectedAnnotationId, setSelectedAnnotationId] = useAtom(
+    selectedAnnotationIdAtom,
+  );
+  const editingTextId = useAtomValue(editingTextIdAtom);
+  const nextNumber = useAtomValue(nextAnnotationNumberAtom);
+  const canUndo = useAtomValue(canUndoAtom);
+  const canRedo = useAtomValue(canRedoAtom);
+  const undo = useSetAtom(undoAnnotationAtom);
+  const redo = useSetAtom(redoAnnotationAtom);
+  const clearAnnotations = useSetAtom(clearAnnotationsAtom);
+  const addAnnotation = useSetAtom(addAnnotationAtom);
+  const updateAnnotation = useSetAtom(updateAnnotationAtom);
+  const deleteAnnotation = useSetAtom(deleteAnnotationAtom);
+  const selectAnnotation = useSetAtom(selectAnnotationAtom);
+  const startEditingText = useSetAtom(startEditingTextAtom);
+  const stopEditingText = useSetAtom(stopEditingTextAtom);
 
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
@@ -647,15 +674,16 @@ export function TalentTree({
             tempId: null,
           };
         } else if (annotationTool === "text") {
-          const text = prompt("Enter annotation text:");
-          if (text) {
-            addAnnotation({
-              type: "text",
-              x: canvasPos.x,
-              y: canvasPos.y,
-              content: text,
-            });
-          }
+          // Add text annotation at click position and start editing
+          const id = addAnnotation({
+            type: "text",
+            x: canvasPos.x,
+            y: canvasPos.y,
+            width: 100,
+            content: "Text",
+          });
+          // Start editing immediately so user can type
+          startEditingText(id);
         } else if (annotationTool === "number") {
           addAnnotation({
             type: "number",
@@ -695,18 +723,19 @@ export function TalentTree({
 
       if (annotationTool === "arrow") {
         if (tempId) {
-          updateAnnotation(tempId, {
-            points: [startX, startY, canvasPos.x, canvasPos.y] as [
-              number,
-              number,
-              number,
-              number,
-            ],
+          updateAnnotation({
+            id: tempId,
+            updates: { x2: canvasPos.x, y2: canvasPos.y },
+            saveHistory: false,
           });
         } else {
           const id = addAnnotation({
             type: "arrow",
-            points: [startX, startY, canvasPos.x, canvasPos.y],
+            x1: startX,
+            y1: startY,
+            x2: canvasPos.x,
+            y2: canvasPos.y,
+            autoSelect: false, // Don't switch to select yet - wait for mouse up
           });
 
           annotationDraw.current.tempId = id;
@@ -717,13 +746,18 @@ export function TalentTree({
         );
 
         if (tempId) {
-          updateAnnotation(tempId, { radius });
+          updateAnnotation({
+            id: tempId,
+            updates: { radius },
+            saveHistory: false,
+          });
         } else {
           const id = addAnnotation({
             type: "circle",
             x: startX,
             y: startY,
             radius,
+            autoSelect: false, // Don't switch to select yet - wait for mouse up
           });
 
           annotationDraw.current.tempId = id;
@@ -746,6 +780,12 @@ export function TalentTree({
   const handleMouseUp = useCallback(() => {
     isDragging.current = false;
     lastPos.current = null;
+
+    // If we were drawing an annotation, switch to select tool now
+    if (annotationDraw.current.active && annotationDraw.current.tempId) {
+      setAnnotationTool("select");
+    }
+
     annotationDraw.current = {
       active: false,
       startX: 0,
@@ -754,7 +794,7 @@ export function TalentTree({
     };
 
     stopPaint();
-  }, [stopPaint]);
+  }, [setAnnotationTool, stopPaint]);
 
   const handlePinchZoom = useCallback(
     (newScale: number, centerX: number, centerY: number) => {
@@ -891,20 +931,29 @@ export function TalentTree({
     onDeselect: decrementNode,
   });
 
-  // Delete selected annotation on Delete/Backspace
+  // Keyboard shortcuts for annotations: Delete, Undo (Cmd+Z), Redo (Cmd+Shift+Z)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedAnnotationId) {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      // Undo/Redo work even when not focused on annotation
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        if (isInput) return;
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
         return;
       }
 
-      const target = e.target as HTMLElement;
-
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
+      // Delete requires selected annotation
+      if (!selectedAnnotationId || isInput) {
         return;
       }
 
@@ -917,7 +966,7 @@ export function TalentTree({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deleteAnnotation, selectedAnnotationId]);
+  }, [deleteAnnotation, redo, selectedAnnotationId, undo]);
 
   if (!viewModel) {
     return null;
@@ -969,6 +1018,7 @@ export function TalentTree({
         hereArrow={hereArrow}
         annotations={annotations}
         selectedAnnotationId={selectedAnnotationId}
+        editingTextId={editingTextId}
         onNodeClick={toggleNode}
         onNodeRightClick={decrementNode}
         onNodeHoverChange={handleNodeHoverChange}
@@ -976,6 +1026,9 @@ export function TalentTree({
         onPaintEnter={paintEnter}
         onTooltipChange={handleTooltip}
         onAnnotationSelect={selectAnnotation}
+        onAnnotationChange={updateAnnotation}
+        onStartEditText={startEditingText}
+        onStopEditText={stopEditingText}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

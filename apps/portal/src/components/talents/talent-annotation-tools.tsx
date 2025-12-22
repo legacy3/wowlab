@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { AnnotationTool } from "@/hooks/use-annotations";
+import { TalentLayerPanel } from "./talent-layer-panel";
+import type { AnnotationTool } from "@/atoms";
 
 const COLORS = [
   "#facc15",
@@ -99,6 +100,8 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
           ))}
         </div>
       )}
+
+      <TalentLayerPanel />
 
       {hasAnnotations && (
         <Button

@@ -1,9 +1,18 @@
-export { KonvaStage } from "./konva-stage";
-export { KonvaLayer } from "./konva-layer";
-export { KonvaGroup } from "./konva-group";
-export { KonvaRect } from "./konva-rect";
-export { KonvaCircle } from "./konva-circle";
-export { KonvaLine } from "./konva-line";
-export { KonvaText } from "./konva-text";
-export { KonvaImage } from "./konva-image";
+// Base Konva wrappers
+export {
+  KonvaStage,
+  KonvaLayer,
+  KonvaGroup,
+  KonvaRect,
+  KonvaCircle,
+  KonvaLine,
+  KonvaText,
+  KonvaImage,
+  KonvaTransformer,
+} from "./base";
+
+// Icons
 export { getIconUrl, preloadIcons } from "./icons";
+
+// Annotations
+export * from "./annotations";
