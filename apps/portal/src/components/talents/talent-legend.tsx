@@ -9,10 +9,6 @@ import {
   Mouse,
   Smartphone,
   Pencil,
-  MoveRight,
-  Type,
-  Circle,
-  Hash,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
@@ -157,43 +153,51 @@ export const TalentLegend = memo(function TalentLegend() {
             )}
 
             {activeTab === "annotate" && (
-              <div className="space-y-2 text-muted-foreground/80">
-                <div className="flex items-start gap-2">
-                  <MoveRight className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>Arrow</strong> — Click + drag
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Circle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>Circle</strong> — Click + drag
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Type className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>Text</strong> — Click to place
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Hash className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>Number</strong> — Click to place
-                  </span>
-                </div>
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span>Delete selected</span>
-                    <Kbd className="text-[10px] h-4">Del</Kbd>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-muted-foreground font-medium mb-1.5">
+                    Tools
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span>Undo</span>
-                    <Kbd className="text-[10px] h-4">Ctrl/Cmd+Z</Kbd>
+                  <div className="space-y-1 text-muted-foreground/80">
+                    <div className="flex justify-between items-center">
+                      <span>Select</span>
+                      <Kbd className="text-[10px] h-4">V</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Arrow</span>
+                      <Kbd className="text-[10px] h-4">A</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Text</span>
+                      <Kbd className="text-[10px] h-4">T</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Circle</span>
+                      <Kbd className="text-[10px] h-4">C</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Number</span>
+                      <Kbd className="text-[10px] h-4">N</Kbd>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span>Redo</span>
-                    <Kbd className="text-[10px] h-4">Ctrl/Cmd+Shift+Z</Kbd>
+                </div>
+                <div className="border-t pt-2">
+                  <div className="text-muted-foreground font-medium mb-1.5">
+                    Actions
+                  </div>
+                  <div className="space-y-1 text-muted-foreground/80">
+                    <div className="flex justify-between items-center">
+                      <span>Delete</span>
+                      <Kbd className="text-[10px] h-4">Del</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Undo</span>
+                      <Kbd className="text-[10px] h-4">⌘Z</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Redo</span>
+                      <Kbd className="text-[10px] h-4">⌘⇧Z</Kbd>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -9,6 +9,8 @@ import {
   ZoomOut,
   Maximize2,
   RotateCcw,
+  Image,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +18,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
@@ -58,6 +63,23 @@ interface TalentControlsProps {
   onAnnotationsRedo: () => void;
 }
 
+function PointsDisplay({
+  label,
+  spent,
+  limit,
+}: {
+  label: string;
+  spent: number;
+  limit: number;
+}) {
+  const isCapped = spent >= limit;
+  return (
+    <span className={isCapped ? "text-amber-500" : ""}>
+      {label}: {spent}/{limit}
+    </span>
+  );
+}
+
 export const TalentControls = memo(function TalentControls({
   specId,
   pointLimits,
@@ -90,47 +112,41 @@ export const TalentControls = memo(function TalentControls({
   onAnnotationsRedo,
 }: TalentControlsProps) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <SpecLabel specId={specId} size="sm" showIcon />
-      {zenMode && (
-        <span className="text-xs text-muted-foreground ml-2 opacity-60">
-          (ESC to exit)
-        </span>
-      )}
-
-      <Input
-        placeholder="Search talents..."
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="h-7 w-36 text-xs"
-      />
-
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span
-          className={
-            pointsSpent.class >= pointLimits.class ? "text-amber-500" : ""
-          }
-        >
-          Class: {pointsSpent.class}/{pointLimits.class}
-        </span>
-        <span className="opacity-40">·</span>
-        <span
-          className={
-            pointsSpent.spec >= pointLimits.spec ? "text-amber-500" : ""
-          }
-        >
-          Spec: {pointsSpent.spec}/{pointLimits.spec}
-        </span>
-        <span className="opacity-40">·</span>
-        <span
-          className={
-            pointsSpent.hero >= pointLimits.hero ? "text-amber-500" : ""
-          }
-        >
-          Hero: {pointsSpent.hero}/{pointLimits.hero}
-        </span>
+    <div className="flex items-center gap-1.5 text-xs">
+      {/* Left: Spec + Points */}
+      <div className="flex items-center gap-2 shrink-0">
+        <SpecLabel specId={specId} size="sm" showIcon showChevron={false} />
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-1 text-muted-foreground tabular-nums">
+          <PointsDisplay
+            label="C"
+            spent={pointsSpent.class}
+            limit={pointLimits.class}
+          />
+          <span className="opacity-40">·</span>
+          <PointsDisplay
+            label="S"
+            spent={pointsSpent.spec}
+            limit={pointLimits.spec}
+          />
+          <span className="opacity-40">·</span>
+          <PointsDisplay
+            label="H"
+            spent={pointsSpent.hero}
+            limit={pointLimits.hero}
+          />
+        </div>
       </div>
 
+      {/* Center: Search */}
+      <Input
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="h-6 w-28 text-xs mx-1"
+      />
+
+      {/* Annotation Tools */}
       <TalentAnnotationTools
         activeTool={annotationTool}
         activeColor={annotationColor}
@@ -144,29 +160,29 @@ export const TalentControls = memo(function TalentControls({
         onRedo={onAnnotationsRedo}
       />
 
-      <div className="flex items-center gap-1 ml-auto">
-        <span className="text-xs text-muted-foreground">
-          {selectedNodeCount}/{displayNodeCount} nodes
-          {scale !== 1 && ` · ${Math.round(scale * 100)}%`}
-        </span>
-
-        <div className="w-px h-4 bg-border mx-1" />
+      {/* Right: Actions */}
+      <div className="flex items-center gap-0.5 ml-auto">
+        {scale !== 1 && (
+          <span className="text-muted-foreground tabular-nums px-1">
+            {Math.round(scale * 100)}%
+          </span>
+        )}
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onResetSelections}
-          title="Reset selected nodes"
+          title="Reset talents"
           disabled={selectedNodeCount === 0}
         >
           <RotateCcw className="h-3 w-3" />
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onZoomOut}
           title="Zoom out"
           disabled={scale <= 0.5}
@@ -176,9 +192,9 @@ export const TalentControls = memo(function TalentControls({
 
         {isPanned && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={onResetView}
             title="Reset view"
           >
@@ -187,9 +203,9 @@ export const TalentControls = memo(function TalentControls({
         )}
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onZoomIn}
           title="Zoom in"
           disabled={scale >= 3}
@@ -197,14 +213,12 @@ export const TalentControls = memo(function TalentControls({
           <ZoomIn className="h-3 w-3" />
         </Button>
 
-        <div className="w-px h-4 bg-border mx-1" />
-
         <Button
-          variant={zenMode ? "secondary" : "outline"}
+          variant={zenMode ? "secondary" : "ghost"}
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onToggleZen}
-          title={zenMode ? "Exit zen mode (ESC)" : "Zen mode"}
+          title={zenMode ? "Exit fullscreen (ESC)" : "Fullscreen"}
         >
           {zenMode ? <X className="h-3 w-3" /> : <Expand className="h-3 w-3" />}
         </Button>
@@ -212,27 +226,49 @@ export const TalentControls = memo(function TalentControls({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="h-7 w-7"
-              title="Download"
+              className="h-6 w-6"
+              title="Export"
             >
               <Download className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onExportPNGViewport}>
-              Download PNG (viewport)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDFViewport}>
-              Download PDF (viewport)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPNGFull}>
-              Download PNG (full)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDFFull}>
-              Download PDF (full)
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="text-xs">
+                <Image className="h-3 w-3 mr-2" />
+                PNG
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem
+                  onClick={onExportPNGViewport}
+                  className="text-xs"
+                >
+                  Viewport
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onExportPNGFull} className="text-xs">
+                  Full tree
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="text-xs">
+                <FileText className="h-3 w-3 mr-2" />
+                PDF
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem
+                  onClick={onExportPDFViewport}
+                  className="text-xs"
+                >
+                  Viewport
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onExportPDFFull} className="text-xs">
+                  Full tree
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

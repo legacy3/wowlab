@@ -31,11 +31,7 @@ export type AnnotationInput =
 
 export const addAnnotationAtom = atom(
   null,
-  (
-    get,
-    set,
-    input: AnnotationInput & { autoSelect?: boolean; saveHistory?: boolean },
-  ) => {
+  (get, set, input: AnnotationInput & { saveHistory?: boolean }) => {
     const id = crypto.randomUUID();
     const color = get(activeAnnotationColorAtom);
     const layerId = get(activeAnnotationLayerIdAtom);
@@ -45,7 +41,7 @@ export const addAnnotationAtom = atom(
     if (!activeLayer || activeLayer.locked || !activeLayer.visible) {
       return "";
     }
-    const { autoSelect = true, saveHistory = true, ...annotationData } = input;
+    const { saveHistory = true, ...annotationData } = input;
 
     const newAnnotation = {
       ...annotationData,
@@ -56,10 +52,6 @@ export const addAnnotationAtom = atom(
 
     set(annotationsAtom, (prev) => [...prev, newAnnotation]);
     set(selectedAnnotationIdAtom, id);
-
-    if (autoSelect) {
-      set(activeAnnotationToolAtom, "select");
-    }
 
     if (saveHistory) {
       set(saveToHistoryAtom);

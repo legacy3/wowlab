@@ -48,33 +48,33 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
     [
       {
         id: "select",
-        icon: <MousePointer2 className="h-3.5 w-3.5" />,
+        icon: <MousePointer2 className="h-3 w-3" />,
         label: "Select",
       },
       {
         id: "arrow",
-        icon: <MoveRight className="h-3.5 w-3.5" />,
+        icon: <MoveRight className="h-3 w-3" />,
         label: "Arrow",
       },
-      { id: "text", icon: <Type className="h-3.5 w-3.5" />, label: "Text" },
+      { id: "text", icon: <Type className="h-3 w-3" />, label: "Text" },
       {
         id: "circle",
-        icon: <Circle className="h-3.5 w-3.5" />,
+        icon: <Circle className="h-3 w-3" />,
         label: "Circle",
       },
-      { id: "number", icon: <Hash className="h-3.5 w-3.5" />, label: "Number" },
+      { id: "number", icon: <Hash className="h-3 w-3" />, label: "Number" },
     ];
 
   return (
-    <div className="flex items-center gap-1">
-      <div className="flex items-center border rounded-md p-0.5 bg-background/80">
+    <div className="flex items-center gap-0.5">
+      <div className="flex items-center border rounded p-px bg-background/80">
         {tools.map((tool) => (
           <Button
             key={tool.id}
             variant="ghost"
             size="icon"
             className={cn(
-              "h-7 w-7",
+              "h-6 w-6",
               activeTool === tool.id && "bg-accent text-accent-foreground",
             )}
             onClick={() =>
@@ -88,20 +88,19 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
       </div>
 
       {activeTool && activeTool !== "select" && (
-        <div className="flex items-center gap-0.5 border rounded-md p-0.5 bg-background/80">
+        <div className="flex items-center gap-px border rounded p-px bg-background/80">
           {COLORS.map((color) => (
             <button
               key={color}
               className={cn(
-                "h-5 w-5 rounded-sm border-2 transition-transform",
+                "h-4 w-4 rounded-sm border transition-transform",
                 activeColor === color
                   ? "border-foreground scale-110"
                   : "border-transparent hover:scale-105",
               )}
               style={{ backgroundColor: color }}
               onClick={() => onColorChange(color)}
-              aria-label={`Annotation color ${color}`}
-              title={`Color ${color}`}
+              aria-label={`Color ${color}`}
               type="button"
             />
           ))}
@@ -110,26 +109,26 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
 
       <TalentLayerPanel />
 
-      <div className="flex items-center border rounded-md p-0.5 bg-background/80">
+      <div className="flex items-center border rounded p-px bg-background/80">
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onUndo}
           title="Undo"
           disabled={!canUndo}
         >
-          <Undo2 className="h-3.5 w-3.5" />
+          <Undo2 className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-6 w-6"
           onClick={onRedo}
           title="Redo"
           disabled={!canRedo}
         >
-          <Redo2 className="h-3.5 w-3.5" />
+          <Redo2 className="h-3 w-3" />
         </Button>
       </div>
 
@@ -137,7 +136,7 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="h-6 w-6 text-destructive hover:text-destructive"
           onClick={() => {
             if (
               !window.confirm(
@@ -148,9 +147,9 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
             }
             onClear();
           }}
-          title="Clear all annotations"
+          title="Clear annotations"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       )}
     </div>

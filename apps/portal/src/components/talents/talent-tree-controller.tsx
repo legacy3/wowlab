@@ -842,13 +842,20 @@ export function TalentTree({
       const target = e.target;
       const pointer = stage.getPointerPosition();
 
+      // Space + drag = pan override
       if (panOverride && pointer) {
         isDragging.current = true;
         lastPos.current = pointer;
         return;
       }
 
-      // Handle annotation tools
+      // If clicked on an existing shape (not the stage), let that shape handle it
+      // This allows dragging annotations even when a drawing tool is selected
+      if (target !== stage && target.listening()) {
+        return;
+      }
+
+      // Clicked on empty space - handle annotation tools
       if (annotationTool && annotationTool !== "select" && pointer) {
         const activeLayer = layers.find((layer) => layer.id === activeLayerId);
         if (!activeLayer || activeLayer.locked || !activeLayer.visible) {
@@ -865,15 +872,12 @@ export function TalentTree({
             tempId: null,
           };
         } else if (annotationTool === "text") {
-          // Add text annotation at click position and start editing
           const id = addAnnotation({
             type: "text",
             x: canvasPos.x,
             y: canvasPos.y,
-            width: 100,
-            content: "Text",
+            content: "",
           });
-          // Start editing immediately so user can type
           if (id) {
             startEditingText(id);
           }
@@ -889,9 +893,7 @@ export function TalentTree({
         return;
       }
 
-      if (target !== stage && target.listening()) {
-        return;
-      }
+      // Clicked on empty space with no tool or select tool - start panning
       if (target === stage && pinnedTooltip) {
         setPinnedTooltip(null);
       }
@@ -907,6 +909,7 @@ export function TalentTree({
       layers,
       panOverride,
       pinnedTooltip,
+      startEditingText,
     ],
   );
 
@@ -940,10 +943,8 @@ export function TalentTree({
             y1: startY,
             x2: canvasPos.x,
             y2: canvasPos.y,
-            autoSelect: false, // Don't switch to select yet - wait for mouse up
             saveHistory: false,
           });
-
           if (id) {
             annotationDraw.current.tempId = id;
           }
@@ -952,7 +953,6 @@ export function TalentTree({
         const radius = Math.sqrt(
           Math.pow(canvasPos.x - startX, 2) + Math.pow(canvasPos.y - startY, 2),
         );
-
         if (tempId) {
           updateAnnotation({
             id: tempId,
@@ -965,10 +965,8 @@ export function TalentTree({
             x: startX,
             y: startY,
             radius,
-            autoSelect: false, // Don't switch to select yet - wait for mouse up
             saveHistory: false,
           });
-
           if (id) {
             annotationDraw.current.tempId = id;
           }
@@ -992,10 +990,9 @@ export function TalentTree({
     isDragging.current = false;
     lastPos.current = null;
 
-    // If we were drawing an annotation, switch to select tool now
     if (annotationDraw.current.active && annotationDraw.current.tempId) {
       saveAnnotationHistory();
-      setAnnotationTool("select");
+      selectAnnotation(annotationDraw.current.tempId);
     }
 
     annotationDraw.current = {
@@ -1006,7 +1003,7 @@ export function TalentTree({
     };
 
     stopPaint();
-  }, [saveAnnotationHistory, setAnnotationTool, stopPaint]);
+  }, [saveAnnotationHistory, selectAnnotation, stopPaint]);
 
   const handlePinchZoom = useCallback(
     (newScale: number, centerX: number, centerY: number) => {
@@ -1169,7 +1166,7 @@ export function TalentTree({
     onDeselect: decrementNode,
   });
 
-  // Keyboard shortcuts for annotations: Delete, Undo (Cmd+Z), Redo (Cmd+Shift+Z)
+  // Keyboard shortcuts for annotations
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -1195,8 +1192,40 @@ export function TalentTree({
         return;
       }
 
+      if (isInput) {
+        return;
+      }
+
+      // Annotation tool shortcuts
+      switch (e.key.toLowerCase()) {
+        case "v":
+          e.preventDefault();
+          setAnnotationTool(annotationTool === "select" ? null : "select");
+          break;
+
+        case "a":
+          e.preventDefault();
+          setAnnotationTool(annotationTool === "arrow" ? null : "arrow");
+          break;
+
+        case "t":
+          e.preventDefault();
+          setAnnotationTool(annotationTool === "text" ? null : "text");
+          break;
+
+        case "c":
+          e.preventDefault();
+          setAnnotationTool(annotationTool === "circle" ? null : "circle");
+          break;
+
+        case "n":
+          e.preventDefault();
+          setAnnotationTool(annotationTool === "number" ? null : "number");
+          break;
+      }
+
       // Delete requires selected annotation
-      if (!selectedAnnotationId || isInput) {
+      if (!selectedAnnotationId) {
         return;
       }
 
@@ -1209,7 +1238,15 @@ export function TalentTree({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deleteAnnotation, pinnedTooltip, redo, selectedAnnotationId, undo]);
+  }, [
+    annotationTool,
+    deleteAnnotation,
+    pinnedTooltip,
+    redo,
+    selectedAnnotationId,
+    setAnnotationTool,
+    undo,
+  ]);
 
   if (!viewModel) {
     return null;
