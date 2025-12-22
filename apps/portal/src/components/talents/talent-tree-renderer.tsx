@@ -7,7 +7,6 @@ import {
   KonvaLayer,
   KonvaGroup,
   KonvaLine,
-  KonvaRect,
 } from "@/components/konva";
 import { cn } from "@/lib/utils";
 import { TalentNode } from "./talent-node";
@@ -31,13 +30,11 @@ const BackgroundGrid = memo(function BackgroundGrid({
 }) {
   const { x: panX, y: panY, scale } = panZoom;
 
-  // Visible bounds in world coordinates
   const left = -panX / scale - GRID_SIZE;
   const top = -panY / scale - GRID_SIZE;
   const right = left + width / scale + GRID_SIZE * 3;
   const bottom = top + height / scale + GRID_SIZE * 3;
 
-  // Snap to grid
   const gridLeft = Math.floor(left / GRID_SIZE) * GRID_SIZE;
   const gridTop = Math.floor(top / GRID_SIZE) * GRID_SIZE;
 
@@ -45,6 +42,7 @@ const BackgroundGrid = memo(function BackgroundGrid({
     { length: Math.ceil((right - gridLeft) / GRID_SIZE) + 1 },
     (_, i) => {
       const x = gridLeft + i * GRID_SIZE;
+
       return (
         <KonvaLine
           key={`v${x}`}
@@ -61,6 +59,7 @@ const BackgroundGrid = memo(function BackgroundGrid({
     { length: Math.ceil((bottom - gridTop) / GRID_SIZE) + 1 },
     (_, i) => {
       const y = gridTop + i * GRID_SIZE;
+
       return (
         <KonvaLine
           key={`h${y}`}
