@@ -16,7 +16,7 @@ import {
   annotationLayersAtom,
   activeAnnotationLayerIdAtom,
   activeAnnotationToolAtom,
-  activeAnnotationColorAtom,
+  annotationStyleDefaultsAtom,
   selectedAnnotationIdAtom,
   editingTextIdAtom,
   nextAnnotationNumberAtom,
@@ -33,12 +33,15 @@ import {
   stopEditingTextAtom,
   saveToHistoryAtom,
   resetAnnotationsAtom,
+  type AnnotationStyleUpdate,
 } from "@/atoms";
+import type { Annotation } from "@/components/konva";
 import { searchTalentNodes } from "./talent-utils";
 import { TalentControls } from "./talent-controls";
 import { TalentTreeRenderer } from "./talent-tree-renderer";
 import type { TooltipState } from "./types";
 import { MIN_SCALE, MAX_SCALE, NODE_SIZE, CHOICE_NODE_SIZE } from "./constants";
+import { TEXT_DEFAULT_WIDTH } from "@/components/konva/annotations/constants";
 import {
   buildTalentEdgeIndex,
   calculatePointsSpent,
@@ -127,8 +130,8 @@ export function TalentTree({
   const layers = useAtomValue(annotationLayersAtom);
   const activeLayerId = useAtomValue(activeAnnotationLayerIdAtom);
   const [annotationTool, setAnnotationTool] = useAtom(activeAnnotationToolAtom);
-  const [annotationColor, setAnnotationColor] = useAtom(
-    activeAnnotationColorAtom,
+  const [annotationStyleDefaults, setAnnotationStyleDefaults] = useAtom(
+    annotationStyleDefaultsAtom,
   );
   const selectedAnnotationId = useAtomValue(selectedAnnotationIdAtom);
   const editingTextId = useAtomValue(editingTextIdAtom);
@@ -146,6 +149,15 @@ export function TalentTree({
   const stopEditingText = useSetAtom(stopEditingTextAtom);
   const saveAnnotationHistory = useSetAtom(saveToHistoryAtom);
   const resetAnnotations = useSetAtom(resetAnnotationsAtom);
+  const selectedAnnotation = useMemo(
+    () =>
+      selectedAnnotationId
+        ? (annotations.find(
+            (annotation) => annotation.id === selectedAnnotationId,
+          ) ?? null)
+        : null,
+    [annotations, selectedAnnotationId],
+  );
 
   const { width: containerWidth, height: containerHeight } =
     useResizeObserver(containerRef);
@@ -396,6 +408,112 @@ export function TalentTree({
     setBlockedNodeId(nodeId);
     setTimeout(() => setBlockedNodeId(null), 400);
   }, []);
+
+  const handleAnnotationStyleChange = useCallback(
+    (updates: AnnotationStyleUpdate) => {
+      setAnnotationStyleDefaults((prev) => {
+        const next = { ...prev, ...updates };
+        if (updates.color && prev.fill) {
+          next.fill = updates.color;
+        }
+        return next;
+      });
+
+      if (!selectedAnnotationId) {
+        return;
+      }
+
+      const selected = selectedAnnotation;
+      if (!selected) {
+        return;
+      }
+
+      const annotationUpdates: Partial<Annotation> & {
+        fill?: string | null;
+        headLength?: number;
+        headWidth?: number;
+        size?: number;
+        fontSize?: number;
+        fontWeight?: number;
+        align?: "left" | "center" | "right";
+        backgroundColor?: string | null;
+      } = {};
+
+      if (updates.color) {
+        annotationUpdates.color = updates.color;
+        if ("fill" in selected && selected.fill) {
+          annotationUpdates.fill = updates.color;
+        }
+      }
+      if (updates.strokeWidth !== undefined) {
+        annotationUpdates.strokeWidth = updates.strokeWidth;
+      }
+      if (updates.opacity !== undefined) {
+        annotationUpdates.opacity = updates.opacity;
+      }
+      if ("dash" in updates) {
+        annotationUpdates.dash = updates.dash ?? null;
+      }
+
+      if (selected.type === "arrow") {
+        if (updates.arrowHeadLength !== undefined) {
+          annotationUpdates.headLength = updates.arrowHeadLength;
+        }
+        if (updates.arrowHeadWidth !== undefined) {
+          annotationUpdates.headWidth = updates.arrowHeadWidth;
+        }
+      }
+
+      if (selected.type === "circle") {
+        if ("fill" in updates) {
+          annotationUpdates.fill = updates.fill ?? null;
+        }
+      }
+
+      if (selected.type === "number") {
+        if ("fill" in updates) {
+          annotationUpdates.fill = updates.fill ?? null;
+        }
+        if (updates.numberSize !== undefined) {
+          annotationUpdates.size = updates.numberSize;
+        }
+        if (updates.numberFontSize !== undefined) {
+          annotationUpdates.fontSize = updates.numberFontSize;
+        }
+      }
+
+      if (selected.type === "text") {
+        if (updates.fontSize !== undefined) {
+          annotationUpdates.fontSize = updates.fontSize;
+        }
+
+        if (updates.fontWeight !== undefined) {
+          annotationUpdates.fontWeight = updates.fontWeight;
+        }
+
+        if (updates.textAlign !== undefined) {
+          annotationUpdates.align = updates.textAlign;
+        }
+        
+        if ("textBackground" in updates) {
+          annotationUpdates.backgroundColor = updates.textBackground ?? null;
+        }
+      }
+
+      if (Object.keys(annotationUpdates).length > 0) {
+        updateAnnotation({
+          id: selectedAnnotationId,
+          updates: annotationUpdates,
+        });
+      }
+    },
+    [
+      selectedAnnotation,
+      selectedAnnotationId,
+      setAnnotationStyleDefaults,
+      updateAnnotation,
+    ],
+  );
 
   const makeDefaultSelection = useCallback(
     (nodeId: number): TalentSelection | null => {
@@ -876,6 +994,7 @@ export function TalentTree({
             type: "text",
             x: canvasPos.x,
             y: canvasPos.y,
+            width: TEXT_DEFAULT_WIDTH,
             content: "",
           });
           if (id) {
@@ -1271,7 +1390,8 @@ export function TalentTree({
         isPanned={isPanned}
         zenMode={zenMode}
         annotationTool={annotationTool}
-        annotationColor={annotationColor}
+        annotationStyle={annotationStyleDefaults}
+        selectedAnnotation={selectedAnnotation}
         hasAnnotations={annotations.length > 0}
         canUndo={canUndo}
         canRedo={canRedo}
@@ -1286,7 +1406,7 @@ export function TalentTree({
         onExportPNGFull={handleExportPNG}
         onExportPDFFull={handleExportPDF}
         onAnnotationToolChange={setAnnotationTool}
-        onAnnotationColorChange={setAnnotationColor}
+        onAnnotationStyleChange={handleAnnotationStyleChange}
         onAnnotationsClear={clearAnnotations}
         onAnnotationsUndo={undo}
         onAnnotationsRedo={redo}

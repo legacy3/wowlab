@@ -9,11 +9,14 @@ import type {
 } from "./types";
 import {
   ANNOTATION_BADGE_STROKE,
+  ANNOTATION_DEFAULT_OPACITY,
+  ANNOTATION_DEFAULT_STROKE_WIDTH,
+  ANNOTATION_HALO,
+  NUMBER_DEFAULT_FONT_SIZE,
+  NUMBER_DEFAULT_SIZE,
   ANNOTATION_TEXT_DARK,
   ANNOTATION_TEXT_LIGHT,
 } from "./constants";
-
-const BADGE_SIZE = 28;
 
 type Props = AnnotationComponentProps<NumberAnnotationType>;
 
@@ -38,14 +41,24 @@ export const NumberAnnotation = memo(function NumberAnnotation({
   onSelect,
   onChange,
 }: Props) {
-  const { x, y, value, color } = annotation;
-  const textColor = getReadableTextColor(color);
+  const {
+    x,
+    y,
+    value,
+    color,
+    size = NUMBER_DEFAULT_SIZE,
+    fontSize = NUMBER_DEFAULT_FONT_SIZE,
+    strokeWidth = ANNOTATION_DEFAULT_STROKE_WIDTH,
+    opacity = ANNOTATION_DEFAULT_OPACITY,
+    fill,
+  } = annotation;
+  const textColor = getReadableTextColor(fill ?? color);
 
   // Handle drag
   const handleDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       const pos = e.target.position();
-      onChange({ x: pos.x, y: pos.y });
+      onChange({ x: pos.x, y: pos.y }, { saveHistory: true });
     },
     [onChange],
   );
@@ -58,25 +71,35 @@ export const NumberAnnotation = memo(function NumberAnnotation({
       onDragEnd={handleDragEnd}
       onClick={onSelect}
       onTap={onSelect}
+      opacity={opacity}
     >
+      {/* Halo */}
+      <KonvaCircle
+        radius={size / 2 + 4}
+        fill={ANNOTATION_HALO}
+        opacity={0.3}
+        listening={false}
+      />
+
       {/* Background circle */}
       <KonvaCircle
-        radius={BADGE_SIZE / 2}
-        fill={color}
+        radius={size / 2}
+        fill={fill ?? color}
         stroke={isSelected ? ANNOTATION_TEXT_LIGHT : ANNOTATION_BADGE_STROKE}
-        strokeWidth={isSelected ? 3 : 2}
+        strokeWidth={isSelected ? strokeWidth + 1 : strokeWidth}
       />
 
       {/* Number text */}
       <KonvaText
-        x={-BADGE_SIZE / 2}
-        y={-8}
-        width={BADGE_SIZE}
+        x={-size / 2}
+        y={-fontSize / 2}
+        width={size}
         text={String(value)}
-        fontSize={16}
+        fontSize={fontSize}
         fontStyle="bold"
         fill={textColor}
         align="center"
+        verticalAlign="middle"
       />
     </KonvaGroup>
   );

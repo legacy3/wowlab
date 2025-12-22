@@ -6,6 +6,18 @@ import type {
   AnnotationLayer,
   AnnotationType,
 } from "@/components/konva/annotations";
+import { gold } from "@/lib/colors";
+import {
+  ANNOTATION_DEFAULT_OPACITY,
+  ANNOTATION_DEFAULT_STROKE_WIDTH,
+  ARROW_DEFAULT_HEAD_LENGTH,
+  ARROW_DEFAULT_HEAD_WIDTH,
+  NUMBER_DEFAULT_FONT_SIZE,
+  NUMBER_DEFAULT_SIZE,
+  TEXT_DEFAULT_FONT_SIZE,
+  TEXT_DEFAULT_FONT_WEIGHT,
+  ANNOTATION_TEXT_BG,
+} from "@/components/konva/annotations/constants";
 
 // === Tool Types ===
 
@@ -19,8 +31,44 @@ export const annotationLayersAtom = atom<AnnotationLayer[]>([
   { id: "default", name: "Layer 1", visible: true, locked: false },
 ]);
 
+export interface AnnotationStyleDefaults {
+  color: string;
+  strokeWidth: number;
+  opacity: number;
+  dash: number[] | null;
+  fill: string | null;
+  textBackground: string | null;
+  fontSize: number;
+  fontWeight: number;
+  textAlign: "left" | "center" | "right";
+  numberSize: number;
+  numberFontSize: number;
+  arrowHeadLength: number;
+  arrowHeadWidth: number;
+}
+
+export type AnnotationStyleUpdate = Partial<AnnotationStyleDefaults>;
+
 export const activeAnnotationToolAtom = atom<AnnotationTool>(null);
-export const activeAnnotationColorAtom = atom<string>("#facc15");
+export const DEFAULT_ANNOTATION_STYLE_DEFAULTS: AnnotationStyleDefaults = {
+  color: gold,
+  strokeWidth: ANNOTATION_DEFAULT_STROKE_WIDTH,
+  opacity: ANNOTATION_DEFAULT_OPACITY,
+  dash: null,
+  fill: null,
+  textBackground: ANNOTATION_TEXT_BG,
+  fontSize: TEXT_DEFAULT_FONT_SIZE,
+  fontWeight: TEXT_DEFAULT_FONT_WEIGHT,
+  textAlign: "left",
+  numberSize: NUMBER_DEFAULT_SIZE,
+  numberFontSize: NUMBER_DEFAULT_FONT_SIZE,
+  arrowHeadLength: ARROW_DEFAULT_HEAD_LENGTH,
+  arrowHeadWidth: ARROW_DEFAULT_HEAD_WIDTH,
+};
+
+export const annotationStyleDefaultsAtom = atom<AnnotationStyleDefaults>(
+  DEFAULT_ANNOTATION_STYLE_DEFAULTS,
+);
 export const activeAnnotationLayerIdAtom = atom<string>("default");
 export const selectedAnnotationIdAtom = atom<string | null>(null);
 export const editingTextIdAtom = atom<string | null>(null);

@@ -3,16 +3,24 @@
 import { memo, useCallback, useMemo } from "react";
 import type Konva from "konva";
 import { KonvaGroup, KonvaLine, KonvaCircle } from "../base";
-import { ANNOTATION_ANCHOR_STROKE } from "./constants";
+import {
+  ANNOTATION_ANCHOR_STROKE,
+  ANNOTATION_HANDLE_BG,
+  ANNOTATION_HANDLE_RADIUS,
+  ANNOTATION_HANDLE_STROKE_WIDTH,
+  ANNOTATION_HALO,
+  ANNOTATION_DEFAULT_STROKE_WIDTH,
+  ANNOTATION_DEFAULT_OPACITY,
+  ARROW_DEFAULT_HEAD_LENGTH,
+  ARROW_DEFAULT_HEAD_WIDTH,
+  normalizeDash,
+} from "./constants";
 import type {
   ArrowAnnotation as ArrowAnnotationType,
   AnnotationComponentProps,
 } from "./types";
 
-const ANCHOR_RADIUS = 8;
-const STROKE_WIDTH = 3;
-const HIT_STROKE_WIDTH = 24;
-const ARROW_HEAD_LENGTH = 12;
+const HIT_STROKE_WIDTH = 26;
 
 type Props = AnnotationComponentProps<ArrowAnnotationType>;
 
@@ -22,7 +30,20 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
   onSelect,
   onChange,
 }: Props) {
-  const { x1, y1, x2, y2, cx, cy, color } = annotation;
+  const {
+    x1,
+    y1,
+    x2,
+    y2,
+    cx,
+    cy,
+    color,
+    strokeWidth = ANNOTATION_DEFAULT_STROKE_WIDTH,
+    opacity = ANNOTATION_DEFAULT_OPACITY,
+    dash,
+    headLength = ARROW_DEFAULT_HEAD_LENGTH,
+    headWidth = ARROW_DEFAULT_HEAD_WIDTH,
+  } = annotation;
 
   // Calculate if this is a curved arrow
   const isCurved = cx !== undefined && cy !== undefined;
@@ -49,23 +70,26 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
   // Calculate arrow head angle based on end direction
   const arrowHeadAngle = useMemo(() => {
     if (isCurved) {
-      // For curves, use direction from control point to end
       return Math.atan2(y2 - cy!, x2 - cx!);
     }
     return Math.atan2(y2 - y1, x2 - x1);
   }, [x1, y1, x2, y2, cx, cy, isCurved]);
 
-  // Arrow head points
   const arrowHeadPoints = useMemo(() => {
+    const sin = Math.sin(arrowHeadAngle);
+    const cos = Math.cos(arrowHeadAngle);
+    const baseX = x2 - headLength * cos;
+    const baseY = y2 - headLength * sin;
+
     return [
-      x2 - ARROW_HEAD_LENGTH * Math.cos(arrowHeadAngle - Math.PI / 6),
-      y2 - ARROW_HEAD_LENGTH * Math.sin(arrowHeadAngle - Math.PI / 6),
       x2,
       y2,
-      x2 - ARROW_HEAD_LENGTH * Math.cos(arrowHeadAngle + Math.PI / 6),
-      y2 - ARROW_HEAD_LENGTH * Math.sin(arrowHeadAngle + Math.PI / 6),
+      baseX + headWidth * sin,
+      baseY - headWidth * cos,
+      baseX - headWidth * sin,
+      baseY + headWidth * cos,
     ];
-  }, [x2, y2, arrowHeadAngle]);
+  }, [arrowHeadAngle, headLength, headWidth, x2, y2]);
 
   // Default control point position (middle of line)
   const defaultCx = (x1 + x2) / 2;
@@ -73,27 +97,57 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
 
   // Drag handlers for anchors
   const handleStartDrag = useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
       const pos = e.target.position();
-      onChange({ x1: pos.x, y1: pos.y });
+      onChange({ x1: pos.x, y1: pos.y }, { saveHistory });
     },
     [onChange],
+  );
+
+  const handleStartDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleStartDrag(e, false),
+    [handleStartDrag],
+  );
+
+  const handleStartDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleStartDrag(e, true),
+    [handleStartDrag],
   );
 
   const handleEndDrag = useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
       const pos = e.target.position();
-      onChange({ x2: pos.x, y2: pos.y });
+      onChange({ x2: pos.x, y2: pos.y }, { saveHistory });
     },
     [onChange],
   );
 
+  const handleEndDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleEndDrag(e, false),
+    [handleEndDrag],
+  );
+
+  const handleEndDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleEndDrag(e, true),
+    [handleEndDrag],
+  );
+
   const handleControlDrag = useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
       const pos = e.target.position();
-      onChange({ cx: pos.x, cy: pos.y });
+      onChange({ cx: pos.x, cy: pos.y }, { saveHistory });
     },
     [onChange],
+  );
+
+  const handleControlDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleControlDrag(e, false),
+    [handleControlDrag],
+  );
+
+  const handleControlDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleControlDrag(e, true),
+    [handleControlDrag],
   );
 
   const handleGroupDragEnd = useCallback(
@@ -128,12 +182,21 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
   }, [isCurved, defaultCx, defaultCy, onChange]);
 
   return (
-    <KonvaGroup draggable onDragEnd={handleGroupDragEnd}>
+    <KonvaGroup draggable onDragEnd={handleGroupDragEnd} opacity={opacity}>
       {/* Main line/curve */}
       <KonvaLine
         points={linePoints}
+        stroke={ANNOTATION_HALO}
+        strokeWidth={strokeWidth + 6}
+        lineCap="round"
+        lineJoin="round"
+        listening={false}
+        opacity={0.4}
+      />
+      <KonvaLine
+        points={linePoints}
         stroke={color}
-        strokeWidth={STROKE_WIDTH}
+        strokeWidth={strokeWidth}
         lineCap="round"
         lineJoin="round"
         hitStrokeWidth={HIT_STROKE_WIDTH}
@@ -141,13 +204,26 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
         onTap={onSelect}
         onDblClick={handleDoubleClick}
         onDblTap={handleDoubleClick}
+        dash={normalizeDash(dash)}
       />
 
       {/* Arrow head */}
       <KonvaLine
         points={arrowHeadPoints}
+        closed
+        fill={color}
+        stroke={ANNOTATION_HALO}
+        strokeWidth={strokeWidth + 4}
+        lineJoin="round"
+        opacity={0.4}
+        listening={false}
+      />
+      <KonvaLine
+        points={arrowHeadPoints}
+        closed
+        fill={color}
         stroke={color}
-        strokeWidth={STROKE_WIDTH}
+        strokeWidth={Math.max(1, strokeWidth - 1)}
         lineCap="round"
         lineJoin="round"
       />
@@ -159,38 +235,47 @@ export const ArrowAnnotation = memo(function ArrowAnnotation({
           <KonvaCircle
             x={x1}
             y={y1}
-            radius={ANCHOR_RADIUS}
-            fill={color}
-            stroke={ANNOTATION_ANCHOR_STROKE}
-            strokeWidth={2}
+            radius={ANNOTATION_HANDLE_RADIUS}
+            fill={ANNOTATION_HANDLE_BG}
+            stroke={color}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
+            shadowColor={ANNOTATION_ANCHOR_STROKE}
+            shadowBlur={6}
+            shadowOpacity={0.35}
             draggable
-            onDragMove={handleStartDrag}
+            onDragMove={handleStartDragMove}
+            onDragEnd={handleStartDragEnd}
           />
 
           {/* End anchor */}
           <KonvaCircle
             x={x2}
             y={y2}
-            radius={ANCHOR_RADIUS}
-            fill={color}
-            stroke={ANNOTATION_ANCHOR_STROKE}
-            strokeWidth={2}
+            radius={ANNOTATION_HANDLE_RADIUS}
+            fill={ANNOTATION_HANDLE_BG}
+            stroke={color}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
+            shadowColor={ANNOTATION_ANCHOR_STROKE}
+            shadowBlur={6}
+            shadowOpacity={0.35}
             draggable
-            onDragMove={handleEndDrag}
+            onDragMove={handleEndDragMove}
+            onDragEnd={handleEndDragEnd}
           />
 
           {/* Control point anchor (for curves) */}
           <KonvaCircle
             x={isCurved ? cx : defaultCx}
             y={isCurved ? cy : defaultCy}
-            radius={ANCHOR_RADIUS - 1}
-            fill={isCurved ? color : "transparent"}
+            radius={ANNOTATION_HANDLE_RADIUS - 1}
+            fill={isCurved ? ANNOTATION_HANDLE_BG : "transparent"}
             stroke={color}
-            strokeWidth={2}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
             dash={isCurved ? undefined : [3, 3]}
             opacity={isCurved ? 1 : 0.5}
             draggable
-            onDragMove={handleControlDrag}
+            onDragMove={handleControlDragMove}
+            onDragEnd={handleControlDragEnd}
           />
 
           {/* Guide lines to control point when curved */}

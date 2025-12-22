@@ -198,6 +198,14 @@ export const TalentLegend = memo(function TalentLegend() {
                       <span>Redo</span>
                       <Kbd className="text-[10px] h-4">⌘⇧Z</Kbd>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span>Curve arrow</span>
+                      <Kbd className="text-[10px] h-4">Double click</Kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Resize</span>
+                      <Kbd className="text-[10px] h-4">Drag handles</Kbd>
+                    </div>
                   </div>
                 </div>
               </div>

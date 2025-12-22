@@ -25,7 +25,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { SpecLabel } from "@/components/ui/spec-label";
 import { TalentAnnotationTools } from "./talent-annotation-tools";
-import type { AnnotationTool } from "@/atoms";
+import type { AnnotationTool, AnnotationStyleDefaults } from "@/atoms";
+import type { Annotation } from "@/components/konva";
 import type {
   TalentPointLimits,
   TalentPointsSpent,
@@ -42,7 +43,8 @@ interface TalentControlsProps {
   isPanned: boolean;
   zenMode: boolean;
   annotationTool: AnnotationTool;
-  annotationColor: string;
+  annotationStyle: AnnotationStyleDefaults;
+  selectedAnnotation: Annotation | null;
   hasAnnotations: boolean;
   canUndo: boolean;
   canRedo: boolean;
@@ -57,7 +59,7 @@ interface TalentControlsProps {
   onExportPNGFull: () => void;
   onExportPDFFull: () => void;
   onAnnotationToolChange: (tool: AnnotationTool) => void;
-  onAnnotationColorChange: (color: string) => void;
+  onAnnotationStyleChange: (updates: Partial<AnnotationStyleDefaults>) => void;
   onAnnotationsClear: () => void;
   onAnnotationsUndo: () => void;
   onAnnotationsRedo: () => void;
@@ -91,7 +93,8 @@ export const TalentControls = memo(function TalentControls({
   isPanned,
   zenMode,
   annotationTool,
-  annotationColor,
+  annotationStyle,
+  selectedAnnotation,
   hasAnnotations,
   canUndo,
   canRedo,
@@ -106,7 +109,7 @@ export const TalentControls = memo(function TalentControls({
   onExportPNGFull,
   onExportPDFFull,
   onAnnotationToolChange,
-  onAnnotationColorChange,
+  onAnnotationStyleChange,
   onAnnotationsClear,
   onAnnotationsUndo,
   onAnnotationsRedo,
@@ -149,12 +152,13 @@ export const TalentControls = memo(function TalentControls({
       {/* Annotation Tools */}
       <TalentAnnotationTools
         activeTool={annotationTool}
-        activeColor={annotationColor}
+        activeStyle={annotationStyle}
+        selectedAnnotation={selectedAnnotation}
         hasAnnotations={hasAnnotations}
         canUndo={canUndo}
         canRedo={canRedo}
         onToolChange={onAnnotationToolChange}
-        onColorChange={onAnnotationColorChange}
+        onStyleChange={onAnnotationStyleChange}
         onClear={onAnnotationsClear}
         onUndo={onAnnotationsUndo}
         onRedo={onAnnotationsRedo}

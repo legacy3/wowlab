@@ -7,12 +7,19 @@ import type {
   CircleAnnotation as CircleAnnotationType,
   AnnotationComponentProps,
 } from "./types";
-import { ANNOTATION_ANCHOR_STROKE } from "./constants";
+import {
+  ANNOTATION_ANCHOR_STROKE,
+  ANNOTATION_HANDLE_BG,
+  ANNOTATION_HANDLE_RADIUS,
+  ANNOTATION_HANDLE_STROKE_WIDTH,
+  ANNOTATION_HALO,
+  ANNOTATION_DEFAULT_OPACITY,
+  ANNOTATION_DEFAULT_STROKE_WIDTH,
+  CIRCLE_MIN_RADIUS,
+  normalizeDash,
+} from "./constants";
 
-const STROKE_WIDTH = 3;
-const HIT_STROKE_WIDTH = 24;
-const ANCHOR_RADIUS = 8;
-const MIN_RADIUS = 10;
+const HIT_STROKE_WIDTH = 26;
 
 type Props = AnnotationComponentProps<CircleAnnotationType>;
 
@@ -22,7 +29,17 @@ export const CircleAnnotation = memo(function CircleAnnotation({
   onSelect,
   onChange,
 }: Props) {
-  const { x, y, radius, color } = annotation;
+  const {
+    x,
+    y,
+    radius,
+    color,
+    strokeWidth = ANNOTATION_DEFAULT_STROKE_WIDTH,
+    opacity = ANNOTATION_DEFAULT_OPACITY,
+    dash,
+    fill,
+    fillOpacity,
+  } = annotation;
 
   // Calculate anchor positions (N, E, S, W)
   const anchors = useMemo(
@@ -39,33 +56,57 @@ export const CircleAnnotation = memo(function CircleAnnotation({
   const handleDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       const pos = e.target.position();
-      onChange({ x: pos.x, y: pos.y });
+      onChange({ x: pos.x, y: pos.y }, { saveHistory: true });
     },
     [onChange],
   );
 
   // Handle resize via anchor drag
   const handleAnchorDrag = useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
       const anchorPos = e.target.position();
-      // Calculate new radius based on distance from center
       const newRadius = Math.max(
-        MIN_RADIUS,
+        CIRCLE_MIN_RADIUS,
         Math.sqrt(anchorPos.x * anchorPos.x + anchorPos.y * anchorPos.y),
       );
-      onChange({ radius: newRadius });
+      onChange({ radius: newRadius }, { saveHistory });
     },
     [onChange],
   );
 
+  const handleAnchorDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleAnchorDrag(e, false),
+    [handleAnchorDrag],
+  );
+
+  const handleAnchorDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleAnchorDrag(e, true),
+    [handleAnchorDrag],
+  );
+
   return (
-    <KonvaGroup x={x} y={y} draggable onDragEnd={handleDragEnd}>
+    <KonvaGroup
+      x={x}
+      y={y}
+      draggable
+      onDragEnd={handleDragEnd}
+      opacity={opacity}
+    >
       {/* Main circle */}
       <KonvaCircle
         radius={radius}
+        stroke={ANNOTATION_HALO}
+        strokeWidth={strokeWidth + 6}
+        opacity={0.35}
+        listening={false}
+      />
+      <KonvaCircle
+        radius={radius}
+        fill={fill ?? undefined}
+        fillOpacity={fill ? (fillOpacity ?? 0.2) : undefined}
         stroke={color}
-        strokeWidth={isSelected ? STROKE_WIDTH + 1 : STROKE_WIDTH}
-        dash={[8, 4]}
+        strokeWidth={isSelected ? strokeWidth + 1 : strokeWidth}
+        dash={normalizeDash(dash)}
         hitStrokeWidth={HIT_STROKE_WIDTH}
         onClick={onSelect}
         onTap={onSelect}
@@ -78,12 +119,16 @@ export const CircleAnnotation = memo(function CircleAnnotation({
             key={anchor.id}
             x={anchor.x}
             y={anchor.y}
-            radius={ANCHOR_RADIUS}
-            fill={color}
-            stroke={ANNOTATION_ANCHOR_STROKE}
-            strokeWidth={2}
+            radius={ANNOTATION_HANDLE_RADIUS}
+            fill={ANNOTATION_HANDLE_BG}
+            stroke={color}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
+            shadowColor={ANNOTATION_ANCHOR_STROKE}
+            shadowBlur={6}
+            shadowOpacity={0.35}
             draggable
-            onDragMove={handleAnchorDrag}
+            onDragMove={handleAnchorDragMove}
+            onDragEnd={handleAnchorDragEnd}
           />
         ))}
     </KonvaGroup>

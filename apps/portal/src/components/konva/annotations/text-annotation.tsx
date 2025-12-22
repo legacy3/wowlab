@@ -3,16 +3,25 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Html } from "react-konva-utils";
-import { KonvaGroup, KonvaRect, KonvaText } from "../base";
+import { KonvaGroup, KonvaRect, KonvaText, KonvaCircle } from "../base";
 import type {
   TextAnnotation as TextAnnotationType,
   AnnotationComponentProps,
 } from "./types";
-import { ANNOTATION_TEXT_BG } from "./constants";
-
-const DEFAULT_FONT_SIZE = 16;
-const PADDING = 6;
-const MIN_WIDTH = 50;
+import {
+  ANNOTATION_ANCHOR_STROKE,
+  ANNOTATION_HANDLE_BG,
+  ANNOTATION_HANDLE_RADIUS,
+  ANNOTATION_HANDLE_STROKE_WIDTH,
+  ANNOTATION_HALO,
+  ANNOTATION_DEFAULT_OPACITY,
+  TEXT_DEFAULT_FONT_SIZE,
+  TEXT_DEFAULT_FONT_WEIGHT,
+  TEXT_DEFAULT_PADDING,
+  TEXT_MIN_WIDTH,
+  TEXT_DEFAULT_RADIUS,
+  TEXT_PLACEHOLDER,
+} from "./constants";
 
 type Props = AnnotationComponentProps<TextAnnotationType>;
 
@@ -32,7 +41,15 @@ export const TextAnnotation = memo(function TextAnnotation({
     content,
     color,
     height,
-    fontSize = DEFAULT_FONT_SIZE,
+    fontSize = TEXT_DEFAULT_FONT_SIZE,
+    fontWeight = TEXT_DEFAULT_FONT_WEIGHT,
+    fontFamily,
+    align = "left",
+    padding = TEXT_DEFAULT_PADDING,
+    backgroundColor,
+    borderRadius = TEXT_DEFAULT_RADIUS,
+    opacity = ANNOTATION_DEFAULT_OPACITY,
+    strokeWidth = 2,
   } = annotation;
   const groupRef = useRef<Konva.Group>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,8 +86,9 @@ export const TextAnnotation = memo(function TextAnnotation({
 
   // Calculate text dimensions
   const textHeight = Math.max(fontSize, height ?? fontSize);
-  const textWidth = Math.max(MIN_WIDTH, width);
-  const backgroundHeight = textHeight + PADDING * 2;
+  const textWidth = Math.max(TEXT_MIN_WIDTH, width);
+  const backgroundHeight = textHeight + padding * 2;
+  const backgroundWidth = textWidth + padding * 2;
 
   // Handle double-click to start editing
   const handleDoubleClick = useCallback(() => {
@@ -81,7 +99,7 @@ export const TextAnnotation = memo(function TextAnnotation({
   const handleDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       const pos = e.target.position();
-      onChange({ x: pos.x, y: pos.y });
+      onChange({ x: pos.x, y: pos.y }, { saveHistory: true });
     },
     [onChange],
   );
@@ -139,6 +157,55 @@ export const TextAnnotation = memo(function TextAnnotation({
   );
 
   const displayContent = isEditing ? editingContent : content;
+  const showPlaceholder = !isEditing && content.trim().length === 0;
+
+  const handleLeftResize = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
+      const pos = e.target.position();
+      const rightEdge = textWidth + padding;
+      const nextLeft = Math.min(pos.x, rightEdge - TEXT_MIN_WIDTH);
+      const nextWidth = rightEdge - nextLeft - padding;
+      const nextX = x + nextLeft + padding;
+
+      onChange({ x: nextX, width: nextWidth }, { saveHistory });
+      if (saveHistory) {
+        e.target.position({ x: -padding, y: 0 });
+      }
+    },
+    [onChange, padding, textWidth, x],
+  );
+
+  const handleLeftResizeMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleLeftResize(e, false),
+    [handleLeftResize],
+  );
+
+  const handleLeftResizeEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleLeftResize(e, true),
+    [handleLeftResize],
+  );
+
+  const handleRightResize = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>, saveHistory = false) => {
+      const pos = e.target.position();
+      const nextWidth = Math.max(TEXT_MIN_WIDTH, pos.x - padding);
+      onChange({ width: nextWidth }, { saveHistory });
+      if (saveHistory) {
+        e.target.position({ x: textWidth + padding, y: 0 });
+      }
+    },
+    [onChange, padding, textWidth],
+  );
+
+  const handleRightResizeMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleRightResize(e, false),
+    [handleRightResize],
+  );
+
+  const handleRightResizeEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => handleRightResize(e, true),
+    [handleRightResize],
+  );
 
   return (
     <KonvaGroup
@@ -151,30 +218,45 @@ export const TextAnnotation = memo(function TextAnnotation({
       onTap={onSelect}
       onDblClick={handleDoubleClick}
       onDblTap={handleDoubleClick}
+      opacity={opacity}
     >
+      {/* Halo */}
+      <KonvaRect
+        x={-padding}
+        y={-padding}
+        width={backgroundWidth}
+        height={backgroundHeight}
+        fill={ANNOTATION_HALO}
+        opacity={0.35}
+        cornerRadius={borderRadius + 2}
+        listening={false}
+      />
+
       {/* Background */}
       <KonvaRect
-        x={-PADDING}
-        y={-PADDING}
-        width={textWidth + PADDING * 2}
+        x={-padding}
+        y={-padding}
+        width={backgroundWidth}
         height={backgroundHeight}
-        fill={ANNOTATION_TEXT_BG}
-        cornerRadius={4}
+        fill={backgroundColor ?? "transparent"}
+        cornerRadius={borderRadius}
         stroke={isSelected ? color : "transparent"}
-        strokeWidth={2}
+        strokeWidth={strokeWidth}
       />
 
       {/* Text display (hidden when editing) */}
       {!isEditing && (
         <KonvaText
-          text={content}
+          text={showPlaceholder ? TEXT_PLACEHOLDER : content}
           fontSize={fontSize}
-          fontStyle="bold"
-          fill={color}
+          fontStyle={fontWeight >= 600 ? "bold" : "normal"}
+          fontFamily={fontFamily}
+          fill={showPlaceholder ? "rgba(255,255,255,0.45)" : color}
           width={textWidth}
           height={textHeight}
-          lineHeight={1.2}
+          lineHeight={1.25}
           wrap="word"
+          align={align}
         />
       )}
 
@@ -204,16 +286,51 @@ export const TextAnnotation = memo(function TextAnnotation({
               background: "transparent",
               color: color,
               fontSize: `${fontSize}px`,
-              fontWeight: "bold",
-              fontFamily: "inherit",
+              fontWeight: `${fontWeight}`,
+              fontFamily: fontFamily ?? "inherit",
               outline: "none",
               resize: "none",
               overflow: "hidden",
-              lineHeight: "1.2",
+              lineHeight: "1.25",
               whiteSpace: "pre-wrap",
+              textAlign: align,
             }}
           />
         </Html>
+      )}
+
+      {/* Resize handles */}
+      {isSelected && !isEditing && (
+        <>
+          <KonvaCircle
+            x={-padding}
+            y={0}
+            radius={ANNOTATION_HANDLE_RADIUS}
+            fill={ANNOTATION_HANDLE_BG}
+            stroke={color}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
+            shadowColor={ANNOTATION_ANCHOR_STROKE}
+            shadowBlur={6}
+            shadowOpacity={0.35}
+            draggable
+            onDragMove={handleLeftResizeMove}
+            onDragEnd={handleLeftResizeEnd}
+          />
+          <KonvaCircle
+            x={textWidth + padding}
+            y={0}
+            radius={ANNOTATION_HANDLE_RADIUS}
+            fill={ANNOTATION_HANDLE_BG}
+            stroke={color}
+            strokeWidth={ANNOTATION_HANDLE_STROKE_WIDTH}
+            shadowColor={ANNOTATION_ANCHOR_STROKE}
+            shadowBlur={6}
+            shadowOpacity={0.35}
+            draggable
+            onDragMove={handleRightResizeMove}
+            onDragEnd={handleRightResizeEnd}
+          />
+        </>
       )}
     </KonvaGroup>
   );

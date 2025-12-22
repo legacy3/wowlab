@@ -5,17 +5,19 @@ import type {
   Annotation,
   AnnotationLayer,
 } from "@/components/konva/annotations";
+import { TEXT_DEFAULT_WIDTH } from "@/components/konva/annotations/constants";
 import {
   annotationsAtom,
   annotationLayersAtom,
   annotationHistoryAtom,
   annotationHistoryIndexAtom,
-  activeAnnotationColorAtom,
+  annotationStyleDefaultsAtom,
   activeAnnotationLayerIdAtom,
   activeAnnotationToolAtom,
   selectedAnnotationIdAtom,
   editingTextIdAtom,
   saveToHistoryAtom,
+  DEFAULT_ANNOTATION_STYLE_DEFAULTS,
 } from "./state";
 
 type AnnotationInputBase<T extends Annotation["type"]> = Omit<
@@ -33,7 +35,7 @@ export const addAnnotationAtom = atom(
   null,
   (get, set, input: AnnotationInput & { saveHistory?: boolean }) => {
     const id = crypto.randomUUID();
-    const color = get(activeAnnotationColorAtom);
+    const styleDefaults = get(annotationStyleDefaultsAtom);
     const layerId = get(activeAnnotationLayerIdAtom);
     const layers = get(annotationLayersAtom);
     const activeLayer = layers.find((layer) => layer.id === layerId);
@@ -43,10 +45,47 @@ export const addAnnotationAtom = atom(
     }
     const { saveHistory = true, ...annotationData } = input;
 
+    const baseStyle = {
+      color: styleDefaults.color,
+      strokeWidth: styleDefaults.strokeWidth,
+      opacity: styleDefaults.opacity,
+      dash: styleDefaults.dash ?? null,
+    };
+
     const newAnnotation = {
       ...annotationData,
+      ...baseStyle,
+      ...(annotationData.type === "arrow"
+        ? {
+            headLength: styleDefaults.arrowHeadLength,
+            headWidth: styleDefaults.arrowHeadWidth,
+          }
+        : {}),
+      ...(annotationData.type === "circle"
+        ? {
+            fill: styleDefaults.fill ?? null,
+          }
+        : {}),
+      ...(annotationData.type === "text"
+        ? {
+            fontSize: styleDefaults.fontSize,
+            fontWeight: styleDefaults.fontWeight,
+            align: styleDefaults.textAlign,
+            backgroundColor: styleDefaults.textBackground ?? null,
+            width:
+              "width" in annotationData && annotationData.width
+                ? annotationData.width
+                : TEXT_DEFAULT_WIDTH,
+          }
+        : {}),
+      ...(annotationData.type === "number"
+        ? {
+            size: styleDefaults.numberSize,
+            fontSize: styleDefaults.numberFontSize,
+            fill: styleDefaults.fill ?? null,
+          }
+        : {}),
       id,
-      color,
       layerId,
     } as Annotation;
 
@@ -325,9 +364,9 @@ export const resetAnnotationsAtom = atom(null, (_, set) => {
   set(annotationLayersAtom, defaultLayers);
   set(activeAnnotationLayerIdAtom, "default");
   set(activeAnnotationToolAtom, null);
-  set(activeAnnotationColorAtom, "#facc15");
   set(selectedAnnotationIdAtom, null);
   set(editingTextIdAtom, null);
   set(annotationHistoryAtom, [{ annotations: [], layers: defaultLayers }]);
   set(annotationHistoryIndexAtom, 0);
+  set(annotationStyleDefaultsAtom, { ...DEFAULT_ANNOTATION_STYLE_DEFAULTS });
 });

@@ -320,8 +320,12 @@ export function TalentTreeRenderer({
 }: TalentTreeRendererProps) {
   // Wrapper for annotation onChange that adapts to the component's expected signature
   const handleAnnotationChange = useCallback(
-    (id: string, updates: Partial<Annotation>) => {
-      onAnnotationChange({ id, updates });
+    (
+      id: string,
+      updates: Partial<Annotation>,
+      options?: { saveHistory?: boolean },
+    ) => {
+      onAnnotationChange({ id, updates, saveHistory: options?.saveHistory });
     },
     [onAnnotationChange],
   );

@@ -9,6 +9,9 @@ export interface BaseAnnotation {
   type: AnnotationType;
   color: string;
   layerId: string;
+  strokeWidth?: number;
+  opacity?: number;
+  dash?: number[] | null;
 }
 
 // === Arrow Annotation ===
@@ -21,6 +24,8 @@ export interface ArrowAnnotation extends BaseAnnotation {
   y1: number;
   x2: number;
   y2: number;
+  headLength?: number;
+  headWidth?: number;
   // Optional control point for curved arrows (quadratic bezier)
   // When undefined, renders as straight line
   cx?: number;
@@ -37,6 +42,12 @@ export interface TextAnnotation extends BaseAnnotation {
   height?: number;
   content: string;
   fontSize?: number;
+  fontWeight?: number;
+  fontFamily?: string;
+  align?: "left" | "center" | "right";
+  padding?: number;
+  backgroundColor?: string | null;
+  borderRadius?: number;
 }
 
 // === Circle Annotation ===
@@ -46,6 +57,8 @@ export interface CircleAnnotation extends BaseAnnotation {
   x: number;
   y: number;
   radius: number;
+  fill?: string | null;
+  fillOpacity?: number;
 }
 
 // === Number Annotation ===
@@ -55,6 +68,9 @@ export interface NumberAnnotation extends BaseAnnotation {
   x: number;
   y: number;
   value: number;
+  size?: number;
+  fontSize?: number;
+  fill?: string | null;
 }
 
 // === Union Type ===
@@ -72,7 +88,7 @@ export interface AnnotationComponentProps<T extends Annotation> {
   isSelected: boolean;
   isEditing?: boolean;
   onSelect: () => void;
-  onChange: (updates: Partial<T>) => void;
+  onChange: (updates: Partial<T>, options?: { saveHistory?: boolean }) => void;
   onDelete?: () => void;
   onStartEdit?: () => void;
   onStopEdit?: () => void;

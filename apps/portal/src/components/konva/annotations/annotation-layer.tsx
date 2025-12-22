@@ -12,7 +12,11 @@ interface AnnotationLayerProps {
   selectedId: string | null;
   editingTextId: string | null;
   onSelect: (id: string | null) => void;
-  onChange: (id: string, updates: Partial<Annotation>) => void;
+  onChange: (
+    id: string,
+    updates: Partial<Annotation>,
+    options?: { saveHistory?: boolean },
+  ) => void;
   onStartEditText?: (id: string) => void;
   onStopEditText?: () => void;
 }
@@ -32,7 +36,9 @@ export const AnnotationLayerRenderer = memo(function AnnotationLayerRenderer({
   );
 
   const handleChange = useCallback(
-    (id: string) => (updates: Partial<Annotation>) => onChange(id, updates),
+    (id: string) =>
+      (updates: Partial<Annotation>, options?: { saveHistory?: boolean }) =>
+        onChange(id, updates, options),
     [onChange],
   );
 
