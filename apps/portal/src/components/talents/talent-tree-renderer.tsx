@@ -36,7 +36,10 @@ const NodesLayer = memo(function NodesLayer({
   isSearching,
   pathMissingNodeIds,
   pathTargetNodeId,
+  blockedNodeId,
+  focusedNodeId,
   onNodeClick,
+  onNodeRightClick,
   onNodeHoverChange,
   onPaintStart,
   onPaintEnter,
@@ -47,7 +50,10 @@ const NodesLayer = memo(function NodesLayer({
   isSearching: boolean;
   pathMissingNodeIds: Set<number>;
   pathTargetNodeId: number | null;
+  blockedNodeId: number | null;
+  focusedNodeId: number | null;
   onNodeClick: (nodeId: number) => void;
+  onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
   onPaintStart: (nodeId: number) => void;
   onPaintEnter: (nodeId: number) => void;
@@ -63,7 +69,10 @@ const NodesLayer = memo(function NodesLayer({
           isSearching={isSearching}
           isPathHighlight={pathMissingNodeIds.has(nodePos.id)}
           isPathTarget={pathTargetNodeId === nodePos.id}
+          isBlocked={blockedNodeId === nodePos.id}
+          isFocused={focusedNodeId === nodePos.id}
           onNodeClick={onNodeClick}
+          onNodeRightClick={onNodeRightClick}
           onNodeHoverChange={onNodeHoverChange}
           onPaintStart={onPaintStart}
           onPaintEnter={onPaintEnter}
@@ -85,7 +94,10 @@ interface TalentTreeRendererProps {
     edgeIds: Set<number>;
     targetNodeId: number | null;
   };
+  blockedNodeId: number | null;
+  focusedNodeId: number | null;
   onNodeClick: (nodeId: number) => void;
+  onNodeRightClick: (nodeId: number) => void;
   onNodeHoverChange: (nodeId: number | null) => void;
   onPaintStart: (nodeId: number) => void;
   onPaintEnter: (nodeId: number) => void;
@@ -111,7 +123,10 @@ export function TalentTreeRenderer({
   searchMatches,
   isSearching,
   pathHighlight,
+  blockedNodeId,
+  focusedNodeId,
   onNodeClick,
+  onNodeRightClick,
   onNodeHoverChange,
   onPaintStart,
   onPaintEnter,
@@ -168,7 +183,10 @@ export function TalentTreeRenderer({
               isSearching={isSearching}
               pathMissingNodeIds={pathHighlight.nodeIds}
               pathTargetNodeId={pathHighlight.targetNodeId}
+              blockedNodeId={blockedNodeId}
+              focusedNodeId={focusedNodeId}
               onNodeClick={onNodeClick}
+              onNodeRightClick={onNodeRightClick}
               onNodeHoverChange={onNodeHoverChange}
               onPaintStart={onPaintStart}
               onPaintEnter={onPaintEnter}

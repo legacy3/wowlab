@@ -25,3 +25,5 @@ export const COLOR_DEFAULT_BORDER = "#4b5563";
 export const COLOR_RANK_BG = "#18181b";
 export const COLOR_RANK_SELECTED = "#22c55e";
 export const COLOR_RANK_DEFAULT = "#6b7280";
+export const COLOR_BLOCKED = "#ef4444";
+export const COLOR_KEYBOARD_FOCUS = "#60a5fa";

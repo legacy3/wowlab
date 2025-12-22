@@ -162,7 +162,7 @@ describe("encodeSelectionsToLoadoutString", () => {
       tree,
     });
     const decoded = Effect.runSync(decodeTalentLoadout(encoded));
-    
+
     expect(decoded.nodes[0]?.partiallyRanked).toBe(true);
     expect(decoded.nodes[0]?.ranksPurchased).toBe(1);
   });

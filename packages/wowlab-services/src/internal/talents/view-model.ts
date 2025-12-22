@@ -99,7 +99,7 @@ const computeLayout = (
     if (node.posY < minY) {
       minY = node.posY;
     }
-    
+
     if (node.posY > maxY) {
       maxY = node.posY;
     }

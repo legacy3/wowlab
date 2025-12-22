@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { useResizeObserver, useExport } from "@/hooks/canvas";
 import { useZenMode } from "@/hooks/use-zen-mode";
 import { useTalentViewModel } from "@/hooks/use-talent-view-model";
+import { usePinchZoom } from "@/hooks/use-pinch-zoom";
+import { useTalentKeyboard } from "@/hooks/use-talent-keyboard";
 import { searchTalentNodes } from "./talent-utils";
 import { TalentControls } from "./talent-controls";
 import { TalentTreeRenderer } from "./talent-tree-renderer";
@@ -127,6 +129,8 @@ export function TalentTree({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null);
+  const [blockedNodeId, setBlockedNodeId] = useState<number | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<number | null>(null);
 
   const paint = useRef<{ active: boolean; lastNodeId: number | null }>({
     active: false,
@@ -188,6 +192,11 @@ export function TalentTree({
     setSelections(new Map());
   }, []);
 
+  const showBlockedFeedback = useCallback((nodeId: number) => {
+    setBlockedNodeId(nodeId);
+    setTimeout(() => setBlockedNodeId(null), 400);
+  }, []);
+
   const makeDefaultSelection = useCallback(
     (nodeId: number): TalentSelection | null => {
       const node = nodeById.get(nodeId);
@@ -229,32 +238,51 @@ export function TalentTree({
 
   const toggleNode = useCallback(
     (nodeId: number) => {
-      setSelections((prev) => {
-        const node = nodeById.get(nodeId);
-        if (!node) {
-          return prev;
+      const node = nodeById.get(nodeId);
+      if (!node) {
+        return;
+      }
+
+      const current = selectionsRef.current.get(nodeId);
+      const isSelected = !!current;
+      const isChoiceNode = node.type === 2 && node.entries.length > 1;
+
+      // Check if selecting would exceed point limits
+      if (!isSelected) {
+        if (
+          wouldExceedPointLimitWithPrereqs(
+            nodeId,
+            nodeById,
+            selectionsRef.current,
+            edgeIndex.parentsByNodeId,
+            pointsSpentRef.current,
+            pointLimits,
+          )
+        ) {
+          showBlockedFeedback(nodeId);
+          return;
         }
+      }
 
-        const next = new Map(prev);
-        const current = next.get(nodeId);
-        const isSelected = !!current;
-        const isChoiceNode = node.type === 2 && node.entries.length > 1;
-
-        if (!isSelected) {
-          const currentSpent = pointsSpentRef.current;
+      // Check if incrementing rank would exceed point limits
+      if (isSelected && !isChoiceNode && node.maxRanks > 1) {
+        const currentRanks = current?.ranksPurchased ?? 0;
+        if (currentRanks < node.maxRanks) {
           if (
-            wouldExceedPointLimitWithPrereqs(
-              nodeId,
-              nodeById,
-              prev,
-              edgeIndex.parentsByNodeId,
-              currentSpent,
-              pointLimits,
-            )
+            wouldExceedPointLimit(node, 1, pointsSpentRef.current, pointLimits)
           ) {
-            return prev;
+            showBlockedFeedback(nodeId);
+            return;
           }
+        }
+      }
 
+      setSelections((prev) => {
+        const next = new Map(prev);
+        const prevCurrent = next.get(nodeId);
+        const prevIsSelected = !!prevCurrent;
+
+        if (!prevIsSelected) {
           ensureSelectedWithPrereqs(nodeId, next);
           const selection = makeDefaultSelection(nodeId);
           if (selection) {
@@ -270,9 +298,9 @@ export function TalentTree({
         }
 
         if (isChoiceNode) {
-          const choiceIndex = current?.choiceIndex ?? 0;
+          const choiceIndex = prevCurrent?.choiceIndex ?? 0;
           if (choiceIndex === 0) {
-            next.set(nodeId, { ...current, choiceIndex: 1 });
+            next.set(nodeId, { ...prevCurrent, choiceIndex: 1 });
             hoverChainLastNodeId.current = nodeId;
             return next;
           }
@@ -289,13 +317,12 @@ export function TalentTree({
         }
 
         if (node.maxRanks > 1) {
-          const currentRanks = current?.ranksPurchased ?? 0;
+          const currentRanks = prevCurrent?.ranksPurchased ?? 0;
           if (currentRanks < node.maxRanks) {
-            const currentSpent = pointsSpentRef.current;
-            if (wouldExceedPointLimit(node, 1, currentSpent, pointLimits)) {
-              return prev;
-            }
-            next.set(nodeId, { ...current, ranksPurchased: currentRanks + 1 });
+            next.set(nodeId, {
+              ...prevCurrent,
+              ranksPurchased: currentRanks + 1,
+            });
             hoverChainLastNodeId.current = nodeId;
             return next;
           }
@@ -329,7 +356,64 @@ export function TalentTree({
       makeDefaultSelection,
       nodeById,
       pointLimits,
+      showBlockedFeedback,
     ],
+  );
+
+  const decrementNode = useCallback(
+    (nodeId: number) => {
+      const node = nodeById.get(nodeId);
+      if (!node) {
+        return;
+      }
+
+      const current = selectionsRef.current.get(nodeId);
+      if (!current) {
+        return;
+      }
+
+      setSelections((prev) => {
+        const next = new Map(prev);
+        const prevCurrent = next.get(nodeId);
+
+        if (!prevCurrent) {
+          return prev;
+        }
+
+        const isChoiceNode = node.type === 2 && node.entries.length > 1;
+
+        // For multi-rank nodes, decrement rank
+        if (!isChoiceNode && node.maxRanks > 1) {
+          const currentRanks = prevCurrent.ranksPurchased ?? 0;
+
+          if (currentRanks > 1) {
+            next.set(nodeId, {
+              ...prevCurrent,
+              ranksPurchased: currentRanks - 1,
+            });
+
+            return next;
+          }
+        }
+
+        // Deselect node and dependents
+        next.delete(nodeId);
+
+        const dependents = collectTalentDependentIds(
+          nodeId,
+          edgeIndex.childrenByNodeId,
+        );
+
+        for (const dependentId of dependents) {
+          next.delete(dependentId);
+        }
+
+        hoverChainLastNodeId.current = null;
+
+        return next;
+      });
+    },
+    [edgeIndex.childrenByNodeId, nodeById],
   );
 
   const startPaint = useCallback((nodeId: number) => {
@@ -547,8 +631,34 @@ export function TalentTree({
     stopPaint();
   }, [stopPaint]);
 
+  const handlePinchZoom = useCallback(
+    (newScale: number, centerX: number, centerY: number) => {
+      setPanZoom((prev) => {
+        const scaleRatio = newScale / prev.scale;
+        return {
+          x: centerX - (centerX - prev.x) * scaleRatio,
+          y: centerY - (centerY - prev.y) * scaleRatio,
+          scale: newScale,
+        };
+      });
+    },
+    [],
+  );
+
+  const pinchZoom = usePinchZoom(panZoom.scale, {
+    minScale: MIN_SCALE,
+    maxScale: MAX_SCALE,
+    onZoom: handlePinchZoom,
+  });
+
   const handleTouchStart = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length === 2) {
+        pinchZoom.onTouchStart(e.evt);
+        isDragging.current = false;
+
+        return;
+      }
       if (e.evt.touches.length !== 1) {
         return;
       }
@@ -563,11 +673,15 @@ export function TalentTree({
       isDragging.current = true;
       lastPos.current = stage.getPointerPosition();
     },
-    [],
+    [pinchZoom],
   );
 
   const handleTouchMove = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length === 2) {
+        pinchZoom.onTouchMove(e.evt);
+        return;
+      }
       if (!isDragging.current || e.evt.touches.length !== 1) {
         return;
       }
@@ -585,14 +699,17 @@ export function TalentTree({
       lastPos.current = pos;
       setPanZoom((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
     },
-    [],
+    [pinchZoom],
   );
 
   const handleTouchEnd = useCallback(() => {
+    pinchZoom.onTouchEnd();
+
     isDragging.current = false;
     lastPos.current = null;
+
     stopPaint();
-  }, [stopPaint]);
+  }, [pinchZoom, stopPaint]);
 
   const resetPanZoom = useCallback(() => {
     setPanZoom({ x: 0, y: 0, scale: 1 });
@@ -621,10 +738,20 @@ export function TalentTree({
 
   const handleNodeHoverChange = useCallback((nodeId: number | null) => {
     setHoveredNodeId(nodeId);
+
     if (nodeId != null && selectionsRef.current.has(nodeId)) {
       hoverChainLastNodeId.current = nodeId;
     }
   }, []);
+
+  useTalentKeyboard({
+    nodes: viewModel?.nodes ?? [],
+    focusedNodeId,
+    enabled: !zenMode || focusedNodeId !== null,
+    onFocusChange: setFocusedNodeId,
+    onSelect: toggleNode,
+    onDeselect: decrementNode,
+  });
 
   if (!viewModel) {
     return null;
@@ -665,7 +792,10 @@ export function TalentTree({
         searchMatches={searchMatches}
         isSearching={isSearching}
         pathHighlight={pathHighlight}
+        blockedNodeId={blockedNodeId}
+        focusedNodeId={focusedNodeId}
         onNodeClick={toggleNode}
+        onNodeRightClick={decrementNode}
         onNodeHoverChange={handleNodeHoverChange}
         onPaintStart={startPaint}
         onPaintEnter={paintEnter}
