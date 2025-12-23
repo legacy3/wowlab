@@ -40,12 +40,12 @@ export function ItemEffectsCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Zap className="h-4 w-4 shrink-0" />
           Item Effects
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           On-equip and on-use effects triggered by this item
         </CardDescription>
       </CardHeader>

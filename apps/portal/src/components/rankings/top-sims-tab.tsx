@@ -52,28 +52,34 @@ export function TopSimsTab() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Rotation</TableHead>
-                  <TableHead className="hidden md:table-cell">Spec</TableHead>
-                  <TableHead className="hidden lg:table-cell">Author</TableHead>
-                  <TableHead className="text-right">DPS</TableHead>
-                  <TableHead className="hidden md:table-cell text-right">
+              <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-medium">#</TableHead>
+                  <TableHead className="font-medium">Rotation</TableHead>
+                  <TableHead className="hidden md:table-cell font-medium">
+                    Spec
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell font-medium">
+                    Author
+                  </TableHead>
+                  <TableHead className="text-right font-medium">DPS</TableHead>
+                  <TableHead className="hidden md:table-cell text-right font-medium">
                     Scenario
                   </TableHead>
-                  <TableHead className="hidden md:table-cell text-right">
+                  <TableHead className="hidden md:table-cell text-right font-medium">
                     Date
                   </TableHead>
-                  <TableHead className="w-24 text-right">Report</TableHead>
+                  <TableHead className="w-24 text-right font-medium">
+                    Report
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topSims.map((sim, index) => (
                   <TableRow key={sim.id}>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground tabular-nums">
                       {index + 1}
                     </TableCell>
                     <TableCell>

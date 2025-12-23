@@ -15,8 +15,10 @@ import { TrendingUp, Sparkles } from "lucide-react";
 export function TopGearOptimizationStatusCard() {
   return (
     <Card className="h-full" data-tour="optimization-status">
-      <CardHeader>
-        <CardTitle>Optimization Status</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Optimization Status
+        </CardTitle>
         <CardDescription>
           Progress finding the best gear combination
         </CardDescription>
@@ -25,20 +27,20 @@ export function TopGearOptimizationStatusCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span>Simulations Complete</span>
-            <span className="font-medium">847 / 2,496</span>
+            <span className="font-medium tabular-nums">847 / 2,496</span>
           </div>
           <Progress value={34} />
         </div>
 
         <div className="space-y-4 rounded-lg border p-4">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <TrendingUp className="h-5 w-5 shrink-0 text-primary" />
             <h3 className="font-semibold">Best Found</h3>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">DPS</span>
-              <span className="text-2xl font-bold">2,984</span>
+              <span className="text-2xl font-bold tabular-nums">2,984</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Improvement</span>

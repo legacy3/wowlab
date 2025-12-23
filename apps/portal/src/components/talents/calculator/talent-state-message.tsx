@@ -11,7 +11,7 @@ export function TalentStateMessage({
 }) {
   return (
     <div className="flex h-[calc(100vh-16rem)] min-h-[700px] w-full items-center justify-center text-center text-muted-foreground">
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <p className="text-sm font-medium">{title}</p>
         {description ? <p className="text-xs">{description}</p> : null}
       </div>

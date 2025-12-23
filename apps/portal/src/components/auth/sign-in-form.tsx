@@ -63,8 +63,8 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
   return (
     <div className="w-full max-w-md space-y-6">
       <Card className="border-2">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-xl">Sign in to continue</CardTitle>
+        <CardHeader className="space-y-1.5 text-center">
+          <CardTitle className="text-2xl">Sign in to continue</CardTitle>
           <CardDescription>
             Choose your preferred authentication method
           </CardDescription>

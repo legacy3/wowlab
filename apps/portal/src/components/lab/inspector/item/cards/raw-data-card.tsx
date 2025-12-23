@@ -35,9 +35,13 @@ export function RawDataCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Raw Data Inspector</CardTitle>
-        <CardDescription>Collapsible sections for raw CSV data</CardDescription>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Raw Data Inspector
+        </CardTitle>
+        <CardDescription className="text-xs">
+          Collapsible sections for raw CSV data
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="multiple" className="w-full">

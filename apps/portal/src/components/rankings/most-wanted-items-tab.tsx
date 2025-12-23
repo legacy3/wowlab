@@ -40,13 +40,21 @@ export function MostWantedItemsTab() {
       >
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14 text-center">#</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead className="hidden md:table-cell">Slot</TableHead>
-                <TableHead className="hidden md:table-cell">Classes</TableHead>
-                <TableHead className="text-right">Avg DPS Gain</TableHead>
+            <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-14 text-center font-medium">
+                  #
+                </TableHead>
+                <TableHead className="font-medium">Item</TableHead>
+                <TableHead className="hidden font-medium md:table-cell">
+                  Slot
+                </TableHead>
+                <TableHead className="hidden font-medium md:table-cell">
+                  Classes
+                </TableHead>
+                <TableHead className="text-right font-medium">
+                  Avg DPS Gain
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

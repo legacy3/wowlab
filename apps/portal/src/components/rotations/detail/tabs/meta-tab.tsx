@@ -36,17 +36,19 @@ export const MetaTab = memo(function MetaTab({
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-lg border p-4 text-center">
           <BarChart3 className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-2xl font-bold">—</p>
+          <p className="text-2xl font-bold tabular-nums">—</p>
           <p className="text-xs text-muted-foreground">Simulations</p>
         </div>
         <div className="rounded-lg border p-4 text-center">
           <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-2xl font-bold">{formatInt(forks.length)}</p>
+          <p className="text-2xl font-bold tabular-nums">
+            {formatInt(forks.length)}
+          </p>
           <p className="text-xs text-muted-foreground">Forks</p>
         </div>
         <div className="rounded-lg border p-4 text-center">
           <Star className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-2xl font-bold">—</p>
+          <p className="text-2xl font-bold tabular-nums">—</p>
           <p className="text-xs text-muted-foreground">Stars</p>
         </div>
       </div>

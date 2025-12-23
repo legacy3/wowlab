@@ -24,36 +24,40 @@ export function DropSourcesCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <MapPin className="h-4 w-4 shrink-0" />
           Drop Sources
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         {item.dropSources.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Instance</TableHead>
-                <TableHead>Encounter</TableHead>
-                <TableHead>Base iLvl</TableHead>
-                <TableHead>Drop Chance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {item.dropSources.map((source, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{source.source}</TableCell>
-                  <TableCell>{source.difficulty}</TableCell>
-                  <TableCell>{source.baseItemLevel}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {source.dropChance}
-                  </TableCell>
+          <div className="rounded-lg border overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-medium">Instance</TableHead>
+                  <TableHead className="font-medium">Encounter</TableHead>
+                  <TableHead className="font-medium">Base iLvl</TableHead>
+                  <TableHead className="font-medium">Drop Chance</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {item.dropSources.map((source, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">
+                      {source.source}
+                    </TableCell>
+                    <TableCell>{source.difficulty}</TableCell>
+                    <TableCell>{source.baseItemLevel}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {source.dropChance}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
           <Empty className="border-0 py-4">
             <EmptyMedia variant="icon">

@@ -14,9 +14,9 @@ export function TableCoverageCard() {
   return (
     <Link href="/lab/table-coverage" className="block h-full">
       <Card className="h-full transition-colors hover:border-primary/50">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-primary" />
+            <Database className="h-5 w-5 shrink-0 text-primary" />
             Table Coverage
           </CardTitle>
           <CardDescription>DBC table implementation status</CardDescription>

@@ -16,8 +16,10 @@ export function ScalingCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Scaling & Difficulty</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Scaling & Difficulty
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -37,32 +39,36 @@ export function ScalingCard() {
 
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Difficulty Overrides</h4>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Difficulty</TableHead>
-                <TableHead>Changes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {spell.difficultyOverrides.map((d) => (
-                <TableRow key={d.difficultyId}>
-                  <TableCell>
-                    {d.difficulty} ({d.difficultyId})
-                  </TableCell>
-                  <TableCell>
-                    {d.changes ? (
-                      <span className="text-yellow-500">
-                        PvP Multiplier: {d.changes.pvpMultiplier}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">Base values</span>
-                    )}
-                  </TableCell>
+          <div className="rounded-lg border overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-medium">Difficulty</TableHead>
+                  <TableHead className="font-medium">Changes</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {spell.difficultyOverrides.map((d) => (
+                  <TableRow key={d.difficultyId}>
+                    <TableCell>
+                      {d.difficulty} ({d.difficultyId})
+                    </TableCell>
+                    <TableCell>
+                      {d.changes ? (
+                        <span className="text-yellow-500">
+                          PvP Multiplier: {d.changes.pvpMultiplier}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          Base values
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>

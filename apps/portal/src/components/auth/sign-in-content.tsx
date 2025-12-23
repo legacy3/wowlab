@@ -23,7 +23,7 @@ function SignInSkeleton() {
       </div>
 
       <Card className="border-2">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1.5">
           <Skeleton className="h-6 w-48 mx-auto" />
           <Skeleton className="h-4 w-64 mx-auto" />
         </CardHeader>

@@ -58,21 +58,25 @@ export function HeaderCard() {
               <span>{item.classification.subclassName} Armor</span>
             </div>
 
-            <div className="mt-4 space-y-1">
+            <div className="mt-4 space-y-1.5">
               <p className="text-sm">
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground tabular-nums">
                   {formatInt(item.armor)}
                 </span>{" "}
                 Armor
               </p>
               {item.primaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm">
-                  +{formatInt(stat.value)} {stat.name}
+                  <span className="tabular-nums">+{formatInt(stat.value)}</span>{" "}
+                  {stat.name}
                 </p>
               ))}
               {item.secondaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm text-green-500">
-                  +{formatInt(stat.rating)} {stat.name}
+                  <span className="tabular-nums">
+                    +{formatInt(stat.rating)}
+                  </span>{" "}
+                  {stat.name}
                 </p>
               ))}
               {item.sockets.map((socket, i) => (
@@ -81,7 +85,10 @@ export function HeaderCard() {
                 </p>
               ))}
               <p className="text-sm text-muted-foreground">
-                Requires Level {formatInt(item.requiredLevel)}
+                Requires Level{" "}
+                <span className="tabular-nums">
+                  {formatInt(item.requiredLevel)}
+                </span>
               </p>
               {item.description && (
                 <p className="mt-2 text-sm italic text-yellow-500">

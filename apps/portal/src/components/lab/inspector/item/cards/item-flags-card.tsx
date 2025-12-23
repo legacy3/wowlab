@@ -9,10 +9,10 @@ export function ItemFlagsCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Item Flags</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Item Flags</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="space-y-2 pt-4 text-sm">
         {item.flags.map((flag) => (
           <div key={flag.index} className="flex items-center gap-2">
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">

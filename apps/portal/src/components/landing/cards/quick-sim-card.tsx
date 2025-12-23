@@ -33,9 +33,9 @@ export function QuickSimCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <PlayCircle className="h-5 w-5 text-primary" />
+          <PlayCircle className="h-5 w-5 shrink-0 text-primary" />
           Quick Sim
         </CardTitle>
         <CardDescription>Paste SimC export and go</CardDescription>

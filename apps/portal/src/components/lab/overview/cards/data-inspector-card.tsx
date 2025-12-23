@@ -17,9 +17,9 @@ export function DataInspectorCard() {
         className="h-full transition-colors hover:border-primary/50"
         data-tour="data-inspector"
       >
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Table className="h-5 w-5 text-primary" />
+            <Table className="h-5 w-5 shrink-0 text-primary" />
             Data Inspector
           </CardTitle>
           <CardDescription>Query and inspect game data by ID</CardDescription>

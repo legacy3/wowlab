@@ -15,10 +15,12 @@ export function AttributesCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Spell Attributes (Flags)</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Spell Attributes (Flags)
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3 pt-4">
         {displayedAttributes.map((attr) => (
           <div key={attr.index} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
