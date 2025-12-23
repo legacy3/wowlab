@@ -48,7 +48,8 @@ yarn-error.log*
 apps/playground/public/data/
 apps/gamedata-server/data/
 .pnpm-store/
-.claude/
+.claude/*
+!.claude/skills/
 *.tgz
 coverage/
 .mcp.json

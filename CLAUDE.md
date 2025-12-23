@@ -1,33 +1,22 @@
-# CLAUDE.md
+# wowlab
 
-## COMMANDS
+## Commands
 
-```
-pnpm build    # always use this
-pnpm dev
-pnpm test
-pnpm lint
+```bash
+pnpm build        # Build all (always use this)
+pnpm dev          # Dev mode
+pnpm test         # Run tests
+pnpm lint         # Lint
+pnpm cli <cmd>    # CLI tools
 ```
 
 Never use `pnpm --filter` or `pnpm typecheck`.
 
-## PROJECT STRUCTURE
+## MCP Servers
 
-- `packages/*` — Effect-TS simulation library
-- `apps/portal/` — Next.js 16, shadcn/ui, Jotai
-- `apps/cli/` — CLI tools
-- `apps/mcp-server/` — WoW data MCP server
+Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
 
-## CODE STYLE
+## More Context
 
-**Effect-TS:** Effect.gen, pipe, Services with Layers, Data.TaggedError. No async/await, no type casts.
-
-**Next.js:** Server components for pages, client components for interactivity. PageLayout wrapper. Suspense with skeletons.
-
-**Jotai:** `useAtom()` only. Async atoms wrapped in Suspense. Domain folders in `atoms/`.
-
-**Naming:** `Feature` → `FeatureInner` → `FeatureSkeleton`
-
-## MCP SERVERS
-
-Use these for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
+- Each package/app has its own `CLAUDE.md` (loads on-demand)
+- Skills in `.claude/skills/` for code patterns
