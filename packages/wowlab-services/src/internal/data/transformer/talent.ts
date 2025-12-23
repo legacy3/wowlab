@@ -680,7 +680,9 @@ export const transformTalentTree = (
       const currency = currencyMap.get(treeCurrency.TraitCurrencyID);
       const total = currencyTotals.get(treeCurrency.TraitCurrencyID) ?? 0;
 
-      if (!currency) continue;
+      if (!currency) {
+        continue;
+      }
 
       if (currency.Flags & 0x4) {
         classLimit += total;

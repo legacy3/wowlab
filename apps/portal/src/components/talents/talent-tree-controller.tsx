@@ -306,36 +306,52 @@ export function TalentTree({
         case "arrow": {
           const xs = [annotation.x1, annotation.x2];
           const ys = [annotation.y1, annotation.y2];
-          if (annotation.cx !== undefined) xs.push(annotation.cx);
-          if (annotation.cy !== undefined) ys.push(annotation.cy);
+
+          if (annotation.cx !== undefined) {
+            xs.push(annotation.cx);
+          }
+
+          if (annotation.cy !== undefined) {
+            ys.push(annotation.cy);
+          }
+
           minX = Math.min(minX, ...xs);
           minY = Math.min(minY, ...ys);
           maxX = Math.max(maxX, ...xs);
           maxY = Math.max(maxY, ...ys);
+
           break;
         }
+
         case "circle": {
           minX = Math.min(minX, annotation.x - annotation.radius);
           minY = Math.min(minY, annotation.y - annotation.radius);
           maxX = Math.max(maxX, annotation.x + annotation.radius);
           maxY = Math.max(maxY, annotation.y + annotation.radius);
+
           break;
         }
+
         case "number": {
           const badge = 14;
+
           minX = Math.min(minX, annotation.x - badge);
           minY = Math.min(minY, annotation.y - badge);
           maxX = Math.max(maxX, annotation.x + badge);
           maxY = Math.max(maxY, annotation.y + badge);
+
           break;
         }
+
         case "text": {
           const fontSize = annotation.fontSize ?? 16;
           const textHeight = Math.max(fontSize, annotation.height ?? fontSize);
+
           minX = Math.min(minX, annotation.x - 6);
           minY = Math.min(minY, annotation.y - 6);
           maxX = Math.max(maxX, annotation.x + annotation.width + 6);
           maxY = Math.max(maxY, annotation.y + textHeight + 6);
+
           break;
         }
       }
@@ -413,9 +429,11 @@ export function TalentTree({
     (updates: AnnotationStyleUpdate) => {
       setAnnotationStyleDefaults((prev) => {
         const next = { ...prev, ...updates };
+
         if (updates.color && prev.fill) {
           next.fill = updates.color;
         }
+
         return next;
       });
 
@@ -445,12 +463,15 @@ export function TalentTree({
           annotationUpdates.fill = updates.color;
         }
       }
+
       if (updates.strokeWidth !== undefined) {
         annotationUpdates.strokeWidth = updates.strokeWidth;
       }
+
       if (updates.opacity !== undefined) {
         annotationUpdates.opacity = updates.opacity;
       }
+
       if ("dash" in updates) {
         annotationUpdates.dash = updates.dash ?? null;
       }
@@ -459,6 +480,7 @@ export function TalentTree({
         if (updates.arrowHeadLength !== undefined) {
           annotationUpdates.headLength = updates.arrowHeadLength;
         }
+
         if (updates.arrowHeadWidth !== undefined) {
           annotationUpdates.headWidth = updates.arrowHeadWidth;
         }
@@ -474,9 +496,11 @@ export function TalentTree({
         if ("fill" in updates) {
           annotationUpdates.fill = updates.fill ?? null;
         }
+
         if (updates.numberSize !== undefined) {
           annotationUpdates.size = updates.numberSize;
         }
+
         if (updates.numberFontSize !== undefined) {
           annotationUpdates.fontSize = updates.numberFontSize;
         }
@@ -494,7 +518,7 @@ export function TalentTree({
         if (updates.textAlign !== undefined) {
           annotationUpdates.align = updates.textAlign;
         }
-        
+
         if ("textBackground" in updates) {
           annotationUpdates.backgroundColor = updates.textBackground ?? null;
         }
@@ -523,6 +547,7 @@ export function TalentTree({
       }
 
       const isChoiceNode = node.type === 2 && node.entries.length > 1;
+
       return {
         nodeId,
         selected: true,
@@ -585,13 +610,13 @@ export function TalentTree({
       // Check if incrementing rank would exceed point limits
       if (isSelected && !isChoiceNode && node.maxRanks > 1) {
         const currentRanks = current?.ranksPurchased ?? 0;
-        if (currentRanks < node.maxRanks) {
-          if (
-            wouldExceedPointLimit(node, 1, pointsSpentRef.current, pointLimits)
-          ) {
-            showBlockedFeedback(nodeId);
-            return;
-          }
+
+        if (
+          currentRanks < node.maxRanks &&
+          wouldExceedPointLimit(node, 1, pointsSpentRef.current, pointLimits)
+        ) {
+          showBlockedFeedback(nodeId);
+          return;
         }
       }
 
@@ -602,6 +627,7 @@ export function TalentTree({
 
         if (!prevIsSelected) {
           ensureSelectedWithPrereqs(nodeId, next);
+
           const selection = makeDefaultSelection(nodeId);
           if (selection) {
             next.set(nodeId, selection);
@@ -612,14 +638,17 @@ export function TalentTree({
           }
 
           hoverChainLastNodeId.current = nodeId;
+
           return next;
         }
 
         if (isChoiceNode) {
           const choiceIndex = prevCurrent?.choiceIndex ?? 0;
+
           if (choiceIndex === 0) {
             next.set(nodeId, { ...prevCurrent, choiceIndex: 1 });
             hoverChainLastNodeId.current = nodeId;
+
             return next;
           }
 
@@ -627,21 +656,27 @@ export function TalentTree({
             nodeId,
             edgeIndex.childrenByNodeId,
           );
+
           for (const dependentId of dependents) {
             next.delete(dependentId);
           }
+
           hoverChainLastNodeId.current = null;
+
           return next;
         }
 
         if (node.maxRanks > 1) {
           const currentRanks = prevCurrent?.ranksPurchased ?? 0;
+
           if (currentRanks < node.maxRanks) {
             next.set(nodeId, {
               ...prevCurrent,
               ranksPurchased: currentRanks + 1,
             });
+
             hoverChainLastNodeId.current = nodeId;
+
             return next;
           }
 
@@ -649,10 +684,13 @@ export function TalentTree({
             nodeId,
             edgeIndex.childrenByNodeId,
           );
+
           for (const dependentId of dependents) {
             next.delete(dependentId);
           }
+
           hoverChainLastNodeId.current = null;
+
           return next;
         }
 
@@ -660,10 +698,13 @@ export function TalentTree({
           nodeId,
           edgeIndex.childrenByNodeId,
         );
+
         for (const dependentId of dependents) {
           next.delete(dependentId);
         }
+
         hoverChainLastNodeId.current = null;
+
         return next;
       });
     },
@@ -746,9 +787,11 @@ export function TalentTree({
 
   useEffect(() => {
     const handleUp = () => stopPaint();
+
     window.addEventListener("mouseup", handleUp);
     window.addEventListener("touchend", handleUp);
     window.addEventListener("touchcancel", handleUp);
+
     return () => {
       window.removeEventListener("mouseup", handleUp);
       window.removeEventListener("touchend", handleUp);
@@ -794,6 +837,7 @@ export function TalentTree({
       const lastNodeId = paint.current.active
         ? paint.current.lastNodeId
         : hoverChainLastNodeId.current;
+
       if (lastNodeId == null || lastNodeId === nodeId) {
         return;
       }
@@ -807,7 +851,9 @@ export function TalentTree({
         if (paint.current.active) {
           paint.current.lastNodeId = nodeId;
         }
+
         hoverChainLastNodeId.current = nodeId;
+
         return;
       }
 
@@ -839,6 +885,7 @@ export function TalentTree({
       if (paint.current.active) {
         paint.current.lastNodeId = nodeId;
       }
+
       hoverChainLastNodeId.current = nodeId;
     },
     [
@@ -878,6 +925,7 @@ export function TalentTree({
       if (!displayNodeIds.has(id)) {
         continue;
       }
+
       if (id !== hoveredNodeId && !selections.has(id)) {
         missing.add(id);
       }
@@ -888,15 +936,19 @@ export function TalentTree({
       if (!displayNodeIds.has(childId)) {
         continue;
       }
+
       const parents = edgeIndex.parentsByNodeId.get(childId);
       if (!parents) {
         continue;
       }
+
       for (const parentId of parents) {
         if (!displayNodeIds.has(parentId) || !prereqs.has(parentId)) {
           continue;
         }
+
         const edgeId = edgeIndex.edgeIdByPair.get(`${parentId}-${childId}`);
+
         if (edgeId != null) {
           edgeIds.add(edgeId);
         }
@@ -912,8 +964,10 @@ export function TalentTree({
 
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
+
     const stage = stageRef.current;
     const pointer = stage?.getPointerPosition();
+
     if (!pointer) {
       return;
     }
@@ -929,7 +983,9 @@ export function TalentTree({
           direction > 0 ? prev.scale * scaleBy : prev.scale / scaleBy,
         ),
       );
+
       const scaleRatio = newScale / prev.scale;
+
       return {
         x: pointer.x - (pointer.x - prev.x) * scaleRatio,
         y: pointer.y - (pointer.y - prev.y) * scaleRatio,
@@ -953,10 +1009,12 @@ export function TalentTree({
       if (e.evt.button !== 0) {
         return;
       }
+
       const stage = stageRef.current;
       if (!stage) {
         return;
       }
+
       const target = e.target;
       const pointer = stage.getPointerPosition();
 
@@ -964,6 +1022,7 @@ export function TalentTree({
       if (panOverride && pointer) {
         isDragging.current = true;
         lastPos.current = pointer;
+
         return;
       }
 
@@ -997,6 +1056,7 @@ export function TalentTree({
             width: TEXT_DEFAULT_WIDTH,
             content: "",
           });
+
           if (id) {
             startEditingText(id);
           }
@@ -1016,6 +1076,7 @@ export function TalentTree({
       if (target === stage && pinnedTooltip) {
         setPinnedTooltip(null);
       }
+
       isDragging.current = true;
       lastPos.current = pointer;
     },
@@ -1037,6 +1098,7 @@ export function TalentTree({
     if (!stage) {
       return;
     }
+
     const pos = stage.getPointerPosition();
     if (!pos) {
       return;
@@ -1064,6 +1126,7 @@ export function TalentTree({
             y2: canvasPos.y,
             saveHistory: false,
           });
+
           if (id) {
             annotationDraw.current.tempId = id;
           }
@@ -1072,6 +1135,7 @@ export function TalentTree({
         const radius = Math.sqrt(
           Math.pow(canvasPos.x - startX, 2) + Math.pow(canvasPos.y - startY, 2),
         );
+
         if (tempId) {
           updateAnnotation({
             id: tempId,
@@ -1086,6 +1150,7 @@ export function TalentTree({
             radius,
             saveHistory: false,
           });
+
           if (id) {
             annotationDraw.current.tempId = id;
           }
@@ -1101,7 +1166,9 @@ export function TalentTree({
 
     const dx = pos.x - lastPos.current.x;
     const dy = pos.y - lastPos.current.y;
+
     lastPos.current = pos;
+
     setPanZoom((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
   }, [addAnnotation, annotationTool, screenToCanvas, updateAnnotation]);
 
@@ -1128,6 +1195,7 @@ export function TalentTree({
     (newScale: number, centerX: number, centerY: number) => {
       setPanZoom((prev) => {
         const scaleRatio = newScale / prev.scale;
+
         return {
           x: centerX - (centerX - prev.x) * scaleRatio,
           y: centerY - (centerY - prev.y) * scaleRatio,
@@ -1152,17 +1220,21 @@ export function TalentTree({
 
         return;
       }
+
       if (e.evt.touches.length !== 1) {
         return;
       }
+
       const stage = stageRef.current;
       if (!stage) {
         return;
       }
+
       const target = e.target;
       if (target !== stage && target.listening()) {
         return;
       }
+
       isDragging.current = true;
       lastPos.current = stage.getPointerPosition();
     },
@@ -1175,13 +1247,16 @@ export function TalentTree({
         pinchZoom.onTouchMove(e.evt);
         return;
       }
+
       if (!isDragging.current || e.evt.touches.length !== 1) {
         return;
       }
+
       const stage = stageRef.current;
       if (!stage) {
         return;
       }
+
       const pos = stage.getPointerPosition();
       if (!pos || !lastPos.current) {
         return;
@@ -1189,7 +1264,9 @@ export function TalentTree({
 
       const dx = pos.x - lastPos.current.x;
       const dy = pos.y - lastPos.current.y;
+
       lastPos.current = pos;
+
       setPanZoom((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
     },
     [pinchZoom],
@@ -1301,13 +1378,18 @@ export function TalentTree({
 
       // Undo/Redo work even when not focused on annotation
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
-        if (isInput) return;
+        if (isInput) {
+          return;
+        }
+
         e.preventDefault();
+
         if (e.shiftKey) {
           redo();
         } else {
           undo();
         }
+
         return;
       }
 

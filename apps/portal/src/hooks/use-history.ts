@@ -17,9 +17,14 @@ interface UseHistoryReturn<T> {
 
 function defaultIsEqual<T>(a: T, b: T): boolean {
   if (a instanceof Map && b instanceof Map) {
-    if (a.size !== b.size) return false;
+    if (a.size !== b.size) {
+      return false;
+    }
+    
     for (const [key, value] of a) {
-      if (!b.has(key) || b.get(key) !== value) return false;
+      if (!b.has(key) || b.get(key) !== value) {
+        return false;
+      }
     }
 
     return true;

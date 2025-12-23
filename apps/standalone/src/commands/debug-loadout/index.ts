@@ -225,7 +225,9 @@ export const debugLoadoutCommand = Command.make(
         const subTreeName = subTreeId ? subTreeNames.get(subTreeId) : null;
         const key = subTreeName ?? "Class/Spec";
 
-        if (!bySubtree[key]) bySubtree[key] = [];
+        if (!bySubtree[key]) {
+          bySubtree[key] = [];
+        }
         bySubtree[key].push(node);
       }
 

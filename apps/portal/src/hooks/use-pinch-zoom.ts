@@ -68,7 +68,9 @@ export function usePinchZoom(
 
   const onTouchMove = useCallback(
     (e: TouchEvent) => {
-      if (!pinchRef.current.active || e.touches.length !== 2) return;
+      if (!pinchRef.current.active || e.touches.length !== 2) {
+        return;
+      }
 
       const distance = getDistance(e.touches);
       const center = getCenter(e.touches);

@@ -690,7 +690,9 @@ const detectActiveHeroTree = (
   tree: TalentTree,
   selectedNodeIds: Set<number> | null,
 ): number | null => {
-  if (!selectedNodeIds) return null;
+  if (!selectedNodeIds) {
+    return null;
+  }
 
   // Find the first selected hero node (by node ID order, which matches the loadout order)
   for (const node of tree.nodes) {

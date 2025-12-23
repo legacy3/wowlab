@@ -32,7 +32,9 @@ function findClosestNode(
     }
   });
 
-  if (candidates.length === 0) return null;
+  if (candidates.length === 0) {
+    return null;
+  }
 
   return candidates.reduce((closest, node) => {
     const closestDist = Math.hypot(
@@ -52,8 +54,12 @@ function findClosestNode(
         ? Math.abs(closest.x - current.x) < Math.abs(closest.y - current.y)
         : Math.abs(closest.y - current.y) < Math.abs(closest.x - current.x);
 
-    if (isPrimaryAxis && !closestIsPrimary) return node;
-    if (!isPrimaryAxis && closestIsPrimary) return closest;
+    if (isPrimaryAxis && !closestIsPrimary) {
+      return node;
+    }
+    if (!isPrimaryAxis && closestIsPrimary) {
+      return closest;
+    }
 
     return nodeDist < closestDist ? node : closest;
   });

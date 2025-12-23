@@ -144,8 +144,15 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
 
   const dashValue: DashOption = useMemo(() => {
     const dash = effectiveStyle.dash ?? [];
-    if (dash.length === 0) return "solid";
-    if (dash[0] <= 3) return "dotted";
+
+    if (dash.length === 0) {
+      return "solid";
+    }
+
+    if (dash[0] <= 3) {
+      return "dotted";
+    }
+
     return "dashed";
   }, [effectiveStyle.dash]);
 
@@ -259,7 +266,10 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
                     type="single"
                     value={dashValue}
                     onValueChange={(value) => {
-                      if (!value) return;
+                      if (!value) {
+                        return;
+                      }
+
                       onStyleChange({
                         dash: DASH_PATTERNS[value as DashOption],
                       });
@@ -365,7 +375,7 @@ export const TalentAnnotationTools = memo(function TalentAnnotationTools({
                         if (!value) {
                           return;
                         }
-                        
+
                         onStyleChange({
                           textAlign: value as "left" | "center" | "right",
                         });
