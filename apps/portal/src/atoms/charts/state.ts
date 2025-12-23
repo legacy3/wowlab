@@ -3,8 +3,16 @@
 import { atom } from "jotai";
 
 import { createPersistedOrderAtom } from "../utils";
+import { combatDataAtom } from "../timeline";
+import {
+  transformToDpsChartData,
+  transformToResourceChartData,
+  transformToAbilityChartData,
+  transformToCooldownChartData,
+  transformToDetailedChartData,
+} from "./transformers";
 
-// Mock data generators for simulation analytics
+// Chart data types
 
 export interface DpsDataPoint {
   time: number;
@@ -38,20 +46,18 @@ export interface DetailedDataPoint {
   dps: number;
 }
 
-// Generate mock DPS data (simulating a rotation over 300 seconds)
-function generateDpsData(): DpsDataPoint[] {
+// Fallback mock data generators (used when no simulation data is available)
+
+function generateMockDpsData(): DpsDataPoint[] {
   const data: DpsDataPoint[] = [];
   const baseDps = 800;
 
   for (let i = 0; i <= 300; i += 5) {
-    // Simulate cooldown spikes every ~60 seconds
     const cooldownBonus =
       Math.floor(i / 60) !== Math.floor((i - 5) / 60) ? 400 : 0;
-    // Add some variance
     const variance = Math.random() * 200 - 100;
     const currentDps = baseDps + cooldownBonus + variance;
 
-    // Running average (smoothed)
     const runningAvg =
       data.length > 0
         ? data[data.length - 1].running_avg * 0.8 + currentDps * 0.2
@@ -67,16 +73,13 @@ function generateDpsData(): DpsDataPoint[] {
   return data;
 }
 
-// Generate mock resource (mana) data
-function generateResourceData(): ResourceDataPoint[] {
+function generateMockResourceData(): ResourceDataPoint[] {
   const data: ResourceDataPoint[] = [];
   let mana = 10000;
   let totalSpent = 0;
 
   for (let i = 0; i <= 300; i += 5) {
-    // Mana regeneration
     const regen = 50;
-    // Mana spending (spiky with ability usage)
     const spent =
       Math.random() > 0.7
         ? Math.floor(Math.random() * 500)
@@ -95,34 +98,31 @@ function generateResourceData(): ResourceDataPoint[] {
   return data;
 }
 
-// Generate mock ability usage data
-function generateAbilityData(): AbilityUsageDataPoint[] {
+function generateMockAbilityData(): AbilityUsageDataPoint[] {
   return [
-    { ability: "Fireball", casts: 45, damage: 125000, fill: "var(--chart-1)" },
-    { ability: "Pyroblast", casts: 12, damage: 89000, fill: "var(--chart-2)" },
-    { ability: "Fire Blast", casts: 38, damage: 67000, fill: "var(--chart-3)" },
-    { ability: "Scorch", casts: 28, damage: 42000, fill: "var(--chart-4)" },
-    { ability: "Combustion", casts: 5, damage: 35000, fill: "var(--chart-5)" },
+    { ability: "Kill Command", casts: 45, damage: 125000, fill: "var(--chart-1)" },
+    { ability: "Cobra Shot", casts: 38, damage: 89000, fill: "var(--chart-2)" },
+    { ability: "Barbed Shot", casts: 28, damage: 67000, fill: "var(--chart-3)" },
+    { ability: "Barrage", casts: 12, damage: 42000, fill: "var(--chart-4)" },
+    { ability: "Kill Shot", casts: 5, damage: 35000, fill: "var(--chart-5)" },
   ];
 }
 
-// Generate mock cooldown events
-function generateCooldownData(): CooldownEvent[] {
+function generateMockCooldownData(): CooldownEvent[] {
   return [
-    { time: 0, ability: "Combustion", duration: 10 },
-    { time: 60, ability: "Combustion", duration: 10 },
-    { time: 120, ability: "Combustion", duration: 10 },
-    { time: 180, ability: "Combustion", duration: 10 },
-    { time: 240, ability: "Combustion", duration: 10 },
-    { time: 30, ability: "Icy Veins", duration: 20 },
-    { time: 150, ability: "Icy Veins", duration: 20 },
-    { time: 90, ability: "Presence of Mind", duration: 15 },
-    { time: 210, ability: "Presence of Mind", duration: 15 },
+    { time: 0, ability: "Bestial Wrath", duration: 15 },
+    { time: 90, ability: "Bestial Wrath", duration: 15 },
+    { time: 180, ability: "Bestial Wrath", duration: 15 },
+    { time: 270, ability: "Bestial Wrath", duration: 15 },
+    { time: 0, ability: "Call of the Wild", duration: 20 },
+    { time: 120, ability: "Call of the Wild", duration: 20 },
+    { time: 240, ability: "Call of the Wild", duration: 20 },
+    { time: 45, ability: "Bloodshed", duration: 12 },
+    { time: 90, ability: "Bloodshed", duration: 12 },
   ];
 }
 
-// Generate detailed breakdown data
-function generateDetailedData(): DetailedDataPoint[] {
+function generateMockDetailedData(): DetailedDataPoint[] {
   const data: DetailedDataPoint[] = [];
   let cumulativeDamage = 0;
 
@@ -143,22 +143,67 @@ function generateDetailedData(): DetailedDataPoint[] {
   return data;
 }
 
-// Atoms for chart data
-export const dpsDataAtom = atom<DpsDataPoint[]>(generateDpsData());
+// Derived atoms that read from combatData with fallback to mock data
 
-export const resourceDataAtom = atom<ResourceDataPoint[]>(
-  generateResourceData(),
-);
+export const dpsDataAtom = atom<DpsDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-export const abilityDataAtom = atom<AbilityUsageDataPoint[]>(
-  generateAbilityData(),
-);
+  // If we have damage data, transform it
+  if (combatData && combatData.damage.length > 0) {
+    return transformToDpsChartData(combatData);
+  }
 
-export const cooldownDataAtom = atom<CooldownEvent[]>(generateCooldownData());
+  // Fallback to mock data
+  return generateMockDpsData();
+});
 
-export const detailedDataAtom = atom<DetailedDataPoint[]>(
-  generateDetailedData(),
-);
+export const resourceDataAtom = atom<ResourceDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
+
+  // If we have resource data, transform it
+  if (combatData && combatData.resources.length > 0) {
+    return transformToResourceChartData(combatData);
+  }
+
+  // Fallback to mock data
+  return generateMockResourceData();
+});
+
+export const abilityDataAtom = atom<AbilityUsageDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
+
+  // If we have cast data, transform it
+  if (combatData && combatData.casts.length > 0) {
+    return transformToAbilityChartData(combatData);
+  }
+
+  // Fallback to mock data
+  return generateMockAbilityData();
+});
+
+export const cooldownDataAtom = atom<CooldownEvent[]>((get) => {
+  const combatData = get(combatDataAtom);
+
+  // If we have buff data, transform it
+  if (combatData && combatData.buffs.length > 0) {
+    return transformToCooldownChartData(combatData);
+  }
+
+  // Fallback to mock data
+  return generateMockCooldownData();
+});
+
+export const detailedDataAtom = atom<DetailedDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
+
+  // If we have damage data, transform it
+  if (combatData && combatData.damage.length > 0) {
+    return transformToDetailedChartData(combatData);
+  }
+
+  // Fallback to mock data
+  return generateMockDetailedData();
+});
 
 // Chart order management
 export type ChartId = "dps" | "resource" | "ability" | "cooldown" | "detailed";

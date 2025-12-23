@@ -1,64 +1,96 @@
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CharacterSummaryCard } from "@/components/equipment";
-import { ResultsEquipment } from "@/components/simulate/results-equipment";
-// TODO(refine-migration): These atoms were deleted - need to implement with Refine
-// import { characterAtom, professionsAtom, itemCombosAtom } from "@/atoms/sim";
+"use client";
+
+import { useAtomValue } from "jotai";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { abilityDataAtom } from "@/atoms/charts/state";
 
 const intl = {
-  number: new Intl.NumberFormat("en-US"),
+  number: new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }),
 };
 
+function formatDamage(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}M`;
+  }
+
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}K`;
+  }
+  
+  return intl.number.format(value);
+}
+
 export function CharacterEquipmentCard() {
-  // TODO(refine-migration): Replace with Refine hooks
-  // const [character] = useAtom(characterAtom);
-  // const [professions] = useAtom(professionsAtom);
-  // const [itemCombos] = useAtom(itemCombosAtom);
+  const abilityData = useAtomValue(abilityDataAtom);
 
-  // Temporary placeholder data until Refine migration
-  const character = {
-    name: "",
-    race: "",
-    class: "",
-    level: 80,
-    region: "",
-    server: "",
-  };
-  const professions: { name: string; rank: number }[] = [];
-  const itemCombos: { dps: number; gain: number }[] = [];
+  if (abilityData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Ability Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+            Run a simulation to see ability breakdown
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const topCombo = itemCombos[0] ?? null;
-  const baselineDps =
-    topCombo !== null ? Math.max(topCombo.dps - topCombo.gain, 0) : null;
+  // Calculate totals for percentages
+  const totalDamage = abilityData.reduce((sum, a) => sum + a.damage, 0);
+  const totalCasts = abilityData.reduce((sum, a) => sum + a.casts, 0);
+
+  // Sort by damage descending
+  const sortedAbilities = [...abilityData].sort((a, b) => b.damage - a.damage);
 
   return (
     <Card>
       <CardHeader>
-        <CharacterSummaryCard
-          character={character}
-          professions={professions}
-          rightContent={
-            topCombo ? (
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-semibold uppercase text-muted-foreground">
-                  Best DPS
-                </span>
-                <span className="text-sm font-bold text-primary">
-                  {intl.number.format(topCombo.dps)}
-                </span>
-                {baselineDps !== null ? (
-                  <span className="text-[10px] text-muted-foreground">
-                    +{intl.number.format(topCombo.gain)} vs baseline
-                  </span>
-                ) : null}
-              </div>
-            ) : undefined
-          }
-        />
+        <CardTitle className="text-sm">Ability Breakdown</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {intl.number.format(totalCasts)} total casts |{" "}
+          {formatDamage(totalDamage)} total damage
+        </p>
       </CardHeader>
       <CardContent>
-        <ResultsEquipment />
+        <div className="space-y-4">
+          {sortedAbilities.slice(0, 8).map((ability, idx) => {
+            const damagePercent =
+              totalDamage > 0 ? (ability.damage / totalDamage) * 100 : 0;
+
+            return (
+              <div key={ability.ability} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        backgroundColor: `hsl(var(--chart-${(idx % 5) + 1}))`,
+                      }}
+                    />
+                    <span className="font-medium">{ability.ability}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({ability.casts} casts)
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-medium">
+                      {formatDamage(ability.damage)}
+                    </span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {damagePercent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <Progress value={damagePercent} className="h-1.5" />
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

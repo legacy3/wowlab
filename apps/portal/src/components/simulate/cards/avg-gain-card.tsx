@@ -1,60 +1,51 @@
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
+"use client";
+
+import { useAtomValue } from "jotai";
+
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// TODO(refine-migration): itemCombosAtom deleted - implement with Refine
-// import { itemCombosAtom } from "@/atoms/sim";
+import { simDurationAtom } from "@/atoms/simulation/results";
 
-const intl = {
-  number: new Intl.NumberFormat("en-US"),
-  percent: new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-  }),
-};
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
 
-function formatPercent(value: number) {
-  return `${intl.percent.format(value)}%`;
+  if (mins > 0) {
+    return `${mins}m ${secs}s`;
+  }
+  
+  return `${secs}s`;
 }
 
 export function AvgGainCard() {
-  // TODO(refine-migration): Replace with Refine hooks
-  // const [itemCombos] = useAtom(itemCombosAtom);
-  const itemCombos: { gain: number; gainPercent: number }[] = [];
+  const duration = useAtomValue(simDurationAtom);
 
-  const averageGain =
-    itemCombos.length > 0
-      ? itemCombos.reduce((total, combo) => total + combo.gain, 0) /
-        itemCombos.length
-      : null;
-  const averageGainPercent =
-    itemCombos.length > 0
-      ? itemCombos.reduce((total, combo) => total + combo.gainPercent, 0) /
-        itemCombos.length
-      : null;
-
-  if (averageGain === null) {
-    return null;
+  if (duration === null) {
+    return (
+      <Card className="border-muted-foreground/25 bg-muted/5">
+        <CardHeader className="space-y-1">
+          <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Duration
+          </CardDescription>
+          <CardTitle className="text-xl text-muted-foreground">--</CardTitle>
+          <p className="text-xs text-muted-foreground">Run a simulation</p>
+        </CardHeader>
+      </Card>
+    );
   }
 
   return (
-    <Card className="border-green-500/25 bg-green-500/5">
+    <Card>
       <CardHeader className="space-y-1">
         <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Avg Gain
+          Duration
         </CardDescription>
-        <CardTitle className="text-xl">
-          +{intl.number.format(Math.round(averageGain))} DPS
-        </CardTitle>
-        {averageGainPercent !== null ? (
-          <p className="text-xs text-muted-foreground">
-            ~{formatPercent(averageGainPercent)} average
-          </p>
-        ) : null}
+        <CardTitle className="text-xl">{formatDuration(duration)}</CardTitle>
+        <p className="text-xs text-muted-foreground">Encounter length</p>
       </CardHeader>
     </Card>
   );
