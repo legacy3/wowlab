@@ -16,10 +16,10 @@ const compactFormatter = new Intl.NumberFormat("en", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
-const durationOptions = {
+const durationOptions: humanizeDuration.Options = {
   largest: 2,
   round: true,
-  units: ["d", "h", "m", "s"] as const,
+  units: ["d", "h", "m", "s"],
 };
 
 function toDate(input: DateInput): Date {
