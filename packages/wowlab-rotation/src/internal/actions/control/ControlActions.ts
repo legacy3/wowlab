@@ -1,6 +1,5 @@
-import * as Effect from "effect/Effect";
-
 import * as State from "@wowlab/services/State";
+import * as Effect from "effect/Effect";
 
 export class ControlActions extends Effect.Service<ControlActions>()(
   "ControlActions",
