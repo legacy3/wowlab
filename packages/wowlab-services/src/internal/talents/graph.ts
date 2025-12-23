@@ -39,52 +39,14 @@ export function collectTalentDependentIds(
   nodeId: number,
   childrenByNodeId: Map<number, Set<number>>,
 ): Set<number> {
-  const visited = new Set<number>();
-  const queue: number[] = [nodeId];
-
-  for (let i = 0; i < queue.length; i++) {
-    const current = queue[i]!;
-    if (visited.has(current)) {
-      continue;
-    }
-    visited.add(current);
-
-    const children = childrenByNodeId.get(current);
-    if (!children) {
-      continue;
-    }
-    for (const childId of children) {
-      queue.push(childId);
-    }
-  }
-
-  return visited;
+  return collectTransitiveIds(nodeId, childrenByNodeId);
 }
 
 export function collectTalentPrerequisiteIds(
   nodeId: number,
   parentsByNodeId: Map<number, Set<number>>,
 ): Set<number> {
-  const visited = new Set<number>();
-  const queue: number[] = [nodeId];
-
-  for (let i = 0; i < queue.length; i++) {
-    const current = queue[i]!;
-    if (visited.has(current)) {
-      continue;
-    }
-    visited.add(current);
-
-    const parents = parentsByNodeId.get(current);
-    if (!parents) {
-      continue;
-    }
-    for (const parentId of parents) {
-      queue.push(parentId);
-    }
-  }
-
-  return visited;
+  return collectTransitiveIds(nodeId, parentsByNodeId);
 }
 
 export function computeVisibleNodes(
@@ -167,4 +129,30 @@ export function filterByHeroTree(
     }
     return selectedHeroId !== null && node.subTreeId === selectedHeroId;
   });
+}
+
+function collectTransitiveIds(
+  nodeId: number,
+  adjacencyMap: Map<number, Set<number>>,
+): Set<number> {
+  const visited = new Set<number>();
+  const queue: number[] = [nodeId];
+
+  for (let i = 0; i < queue.length; i++) {
+    const current = queue[i]!;
+    if (visited.has(current)) {
+      continue;
+    }
+
+    visited.add(current);
+
+    const neighbors = adjacencyMap.get(current);
+    if (neighbors) {
+      for (const neighborId of neighbors) {
+        queue.push(neighborId);
+      }
+    }
+  }
+
+  return visited;
 }

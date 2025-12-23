@@ -21,6 +21,8 @@ export interface TalentSelection {
   selected?: boolean;
 }
 
+export type TreeType = "class" | "spec" | "hero";
+
 /**
  * Calculate points spent per tree type from current selections.
  * Each rank purchased counts as 1 point.
@@ -38,15 +40,7 @@ export function calculatePointsSpent(
     }
 
     const ranks = selection.ranksPurchased ?? 1;
-    const treeIndex = node.treeIndex ?? 2;
-
-    if (treeIndex === 1) {
-      spent.class += ranks;
-    } else if (treeIndex === 2) {
-      spent.spec += ranks;
-    } else if (treeIndex === 3) {
-      spent.hero += ranks;
-    }
+    addToSpent(spent, node.treeIndex ?? 2, ranks);
   }
 
   return spent;
@@ -68,7 +62,6 @@ export function calculateSelectionCost(
   const required = collectTalentPrerequisiteIds(nodeId, parentsByNodeId);
 
   for (const requiredId of required) {
-    // Skip if already selected
     if (selections.has(requiredId)) {
       continue;
     }
@@ -78,15 +71,7 @@ export function calculateSelectionCost(
       continue;
     }
 
-    // Each unselected node costs 1 point (minimum rank)
-    const treeIndex = node.treeIndex ?? 2;
-    if (treeIndex === 1) {
-      cost.class += 1;
-    } else if (treeIndex === 2) {
-      cost.spec += 1;
-    } else if (treeIndex === 3) {
-      cost.hero += 1;
-    }
+    addToSpent(cost, node.treeIndex ?? 2, 1);
   }
 
   return cost;
@@ -107,21 +92,11 @@ export function wouldExceedPointLimit(
   ranksToAdd: number,
   currentSpent: TalentPointsSpent,
   limits: TalentPointLimits,
-): "class" | "spec" | "hero" | null {
-  const treeIndex = node.treeIndex ?? 2;
+): TreeType | null {
+  const type = getTreeType(node.treeIndex ?? 2);
 
-  if (treeIndex === 1) {
-    if (currentSpent.class + ranksToAdd > limits.class) {
-      return "class";
-    }
-  } else if (treeIndex === 2) {
-    if (currentSpent.spec + ranksToAdd > limits.spec) {
-      return "spec";
-    }
-  } else if (treeIndex === 3) {
-    if (currentSpent.hero + ranksToAdd > limits.hero) {
-      return "hero";
-    }
+  if (currentSpent[type] + ranksToAdd > limits[type]) {
+    return type;
   }
 
   return null;
@@ -138,7 +113,7 @@ export function wouldExceedPointLimitWithPrereqs(
   parentsByNodeId: Map<number, Set<number>>,
   currentSpent: TalentPointsSpent,
   limits: TalentPointLimits,
-): "class" | "spec" | "hero" | null {
+): TreeType | null {
   const cost = calculateSelectionCost(
     nodeId,
     nodeById,
@@ -146,15 +121,35 @@ export function wouldExceedPointLimitWithPrereqs(
     parentsByNodeId,
   );
 
-  if (currentSpent.class + cost.class > limits.class) {
-    return "class";
-  }
-  if (currentSpent.spec + cost.spec > limits.spec) {
-    return "spec";
-  }
-  if (currentSpent.hero + cost.hero > limits.hero) {
-    return "hero";
+  const types: TreeType[] = ["class", "spec", "hero"];
+
+  for (const type of types) {
+    if (currentSpent[type] + cost[type] > limits[type]) {
+      return type;
+    }
   }
 
   return null;
+}
+
+function addToSpent(
+  spent: TalentPointsSpent,
+  treeIndex: number,
+  amount: number,
+): void {
+  const type = getTreeType(treeIndex);
+
+  spent[type] += amount;
+}
+
+function getTreeType(treeIndex: number): TreeType {
+  if (treeIndex === 1) {
+    return "class";
+  }
+
+  if (treeIndex === 3) {
+    return "hero";
+  }
+
+  return "spec";
 }

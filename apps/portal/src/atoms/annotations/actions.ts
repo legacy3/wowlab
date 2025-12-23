@@ -31,6 +31,22 @@ export type AnnotationInput =
   | ({ type: "circle" } & AnnotationInputBase<"circle">)
   | ({ type: "number" } & AnnotationInputBase<"number">);
 
+interface AnnotationLookup {
+  annotation: Annotation | undefined;
+  layer: AnnotationLayer | undefined;
+}
+
+function getAnnotationWithLayer(
+  id: string,
+  annotations: Annotation[],
+  layers: AnnotationLayer[],
+): AnnotationLookup {
+  const annotation = annotations.find((a) => a.id === id);
+  const layer = layers.find((l) => l.id === annotation?.layerId);
+
+  return { annotation, layer };
+}
+
 export const addAnnotationAtom = atom(
   null,
   (get, set, input: AnnotationInput & { saveHistory?: boolean }) => {
@@ -111,12 +127,13 @@ export const updateAnnotationAtom = atom(
       saveHistory = true,
     }: { id: string; updates: Partial<Annotation>; saveHistory?: boolean },
   ) => {
-    const annotations = get(annotationsAtom);
-    const layers = get(annotationLayersAtom);
-    const current = annotations.find((a) => a.id === id);
-    const layer = layers.find((l) => l.id === current?.layerId);
+    const { annotation, layer } = getAnnotationWithLayer(
+      id,
+      get(annotationsAtom),
+      get(annotationLayersAtom),
+    );
 
-    if (!current || layer?.locked || layer?.visible === false) {
+    if (!annotation || layer?.locked || layer?.visible === false) {
       return;
     }
 
@@ -131,24 +148,23 @@ export const updateAnnotationAtom = atom(
 );
 
 export const deleteAnnotationAtom = atom(null, (get, set, id: string) => {
-  const annotations = get(annotationsAtom);
-  const layers = get(annotationLayersAtom);
-  const current = annotations.find((a) => a.id === id);
-  const layer = layers.find((l) => l.id === current?.layerId);
+  const { annotation, layer } = getAnnotationWithLayer(
+    id,
+    get(annotationsAtom),
+    get(annotationLayersAtom),
+  );
 
-  if (!current || layer?.locked) {
+  if (!annotation || layer?.locked) {
     return;
   }
 
   set(annotationsAtom, (prev) => prev.filter((a) => a.id !== id));
 
-  const selectedId = get(selectedAnnotationIdAtom);
-  if (selectedId === id) {
+  if (get(selectedAnnotationIdAtom) === id) {
     set(selectedAnnotationIdAtom, null);
   }
 
-  const editingId = get(editingTextIdAtom);
-  if (editingId === id) {
+  if (get(editingTextIdAtom) === id) {
     set(editingTextIdAtom, null);
   }
 
@@ -159,32 +175,33 @@ export const selectAnnotationAtom = atom(
   null,
   (get, set, id: string | null) => {
     if (id) {
-      const annotations = get(annotationsAtom);
-      const layers = get(annotationLayersAtom);
-      const selected = annotations.find((a) => a.id === id);
-      const layer = layers.find((l) => l.id === selected?.layerId);
+      const { annotation, layer } = getAnnotationWithLayer(
+        id,
+        get(annotationsAtom),
+        get(annotationLayersAtom),
+      );
 
-      if (!selected || layer?.visible === false) {
+      if (!annotation || layer?.visible === false) {
         return;
       }
     }
 
     set(selectedAnnotationIdAtom, id);
-    const editingId = get(editingTextIdAtom);
 
-    if (editingId !== id) {
+    if (get(editingTextIdAtom) !== id) {
       set(editingTextIdAtom, null);
     }
   },
 );
 
 export const startEditingTextAtom = atom(null, (get, set, id: string) => {
-  const annotations = get(annotationsAtom);
-  const layers = get(annotationLayersAtom);
-  const selected = annotations.find((a) => a.id === id);
-  const layer = layers.find((l) => l.id === selected?.layerId);
+  const { annotation, layer } = getAnnotationWithLayer(
+    id,
+    get(annotationsAtom),
+    get(annotationLayersAtom),
+  );
 
-  if (!selected || layer?.locked || layer?.visible === false) {
+  if (!annotation || layer?.locked || layer?.visible === false) {
     return;
   }
 

@@ -20,7 +20,7 @@ function defaultIsEqual<T>(a: T, b: T): boolean {
     if (a.size !== b.size) {
       return false;
     }
-    
+
     for (const [key, value] of a) {
       if (!b.has(key) || b.get(key) !== value) {
         return false;
