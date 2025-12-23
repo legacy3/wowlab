@@ -28,14 +28,14 @@ export function ItemCombosCard() {
   if (cooldownData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Cooldown Usage</CardTitle>
-          <CardDescription>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-sm font-medium">Cooldown Usage</CardTitle>
+          <CardDescription className="pt-0.5">
             Major cooldown timing throughout the fight
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+        <CardContent className="pt-0">
+          <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/10 py-8 px-6 text-center text-sm text-muted-foreground">
             Run a simulation to see cooldown usage
           </div>
         </CardContent>
@@ -63,28 +63,28 @@ export function ItemCombosCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Cooldown Usage</CardTitle>
-        <CardDescription>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Cooldown Usage</CardTitle>
+        <CardDescription className="pt-0.5">
           Major cooldown timing throughout the fight
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="pt-4">
+        <div className="space-y-5">
           {Array.from(cooldownsByAbility.entries()).map(
             ([ability, { times, duration }]) => (
-              <div key={ability} className="space-y-2">
+              <div key={ability} className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{ability}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {times.length}x used ({duration}s duration)
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {times.length}× used · {duration}s duration
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {times.map((time, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20"
+                      className="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium tabular-nums text-primary ring-1 ring-inset ring-primary/20"
                     >
                       {formatTime(time)}
                     </span>

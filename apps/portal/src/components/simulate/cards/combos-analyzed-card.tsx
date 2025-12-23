@@ -17,12 +17,14 @@ export function CombosAnalyzedCard() {
   if (casts === null) {
     return (
       <Card className="border-muted-foreground/25 bg-muted/5">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1.5 pb-4">
           <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Total Casts
           </CardDescription>
-          <CardTitle className="text-xl text-muted-foreground">--</CardTitle>
-          <p className="text-xs text-muted-foreground">Run a simulation</p>
+          <CardTitle className="text-2xl tabular-nums text-muted-foreground">
+            --
+          </CardTitle>
+          <p className="text-xs text-muted-foreground pt-1">Run a simulation</p>
         </CardHeader>
       </Card>
     );
@@ -30,12 +32,14 @@ export function CombosAnalyzedCard() {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-1.5 pb-4">
         <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Total Casts
         </CardDescription>
-        <CardTitle className="text-xl">{formatInt(casts)}</CardTitle>
-        <p className="text-xs text-muted-foreground">Abilities executed</p>
+        <CardTitle className="text-2xl tabular-nums">
+          {formatInt(casts)}
+        </CardTitle>
+        <p className="text-xs text-muted-foreground pt-1">Abilities executed</p>
       </CardHeader>
     </Card>
   );

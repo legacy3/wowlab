@@ -57,10 +57,13 @@ export function CooldownChart() {
       chartConfig={chartConfig}
       footer={
         <>
-          <div className="flex gap-2 leading-none font-medium">
-            {totalCooldowns} cooldowns used <Clock className="h-4 w-4" />
+          <div className="flex items-center gap-2 font-medium">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="tabular-nums">
+              {totalCooldowns} cooldowns used
+            </span>
           </div>
-          <div className="text-muted-foreground leading-none">
+          <div className="text-muted-foreground text-xs">
             Strategic timing for maximum DPS
           </div>
         </>
@@ -113,11 +116,17 @@ export function CooldownChart() {
             }
             const data = payload[0].payload;
             return (
-              <div className="border-border/50 bg-background rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+              <div className="border-border/50 bg-background/95 backdrop-blur-sm rounded-lg border px-3 py-2.5 text-xs shadow-xl space-y-1.5">
                 <div className="font-medium">{data.ability}</div>
-                <div className="text-muted-foreground">Time: {data.time}s</div>
-                <div className="text-muted-foreground">
-                  Duration: {data.duration}s
+                <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                  <span>Time</span>
+                  <span className="font-mono tabular-nums">{data.time}s</span>
+                </div>
+                <div className="flex items-center justify-between gap-4 text-muted-foreground">
+                  <span>Duration</span>
+                  <span className="font-mono tabular-nums">
+                    {data.duration}s
+                  </span>
                 </div>
               </div>
             );

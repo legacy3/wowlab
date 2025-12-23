@@ -17,11 +17,13 @@ export function CharacterEquipmentCard() {
   if (abilityData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Ability Breakdown</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-sm font-medium">
+            Ability Breakdown
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+        <CardContent className="pt-0">
+          <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/10 py-8 px-6 text-center text-sm text-muted-foreground">
             Run a simulation to see ability breakdown
           </div>
         </CardContent>
@@ -38,35 +40,35 @@ export function CharacterEquipmentCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Ability Breakdown</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {formatInt(totalCasts)} total casts | {formatDamage(totalDamage)}{" "}
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Ability Breakdown</CardTitle>
+        <p className="text-xs text-muted-foreground pt-0.5">
+          {formatInt(totalCasts)} total casts · {formatDamage(totalDamage)}{" "}
           total damage
         </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="pt-4">
+        <div className="space-y-5">
           {sortedAbilities.slice(0, 8).map((ability, idx) => {
             const damagePercent =
               totalDamage > 0 ? (ability.damage / totalDamage) * 100 : 0;
 
             return (
-              <div key={ability.ability} className="space-y-1">
+              <div key={ability.ability} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <span
-                      className="h-2 w-2 rounded-full"
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
                       style={{
                         backgroundColor: `hsl(var(--chart-${(idx % 5) + 1}))`,
                       }}
                     />
                     <span className="font-medium">{ability.ability}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       ({formatInt(ability.casts)} casts)
                     </span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right tabular-nums">
                     <span className="font-medium">
                       {formatDamage(ability.damage)}
                     </span>

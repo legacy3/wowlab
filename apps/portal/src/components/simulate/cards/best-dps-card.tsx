@@ -17,12 +17,14 @@ export function BestDpsCard() {
   if (dps === null) {
     return (
       <Card className="border-muted-foreground/25 bg-muted/5">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1.5 pb-4">
           <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Simulated DPS
           </CardDescription>
-          <CardTitle className="text-xl text-muted-foreground">--</CardTitle>
-          <p className="text-xs text-muted-foreground">Run a simulation</p>
+          <CardTitle className="text-2xl tabular-nums text-muted-foreground">
+            --
+          </CardTitle>
+          <p className="text-xs text-muted-foreground pt-1">Run a simulation</p>
         </CardHeader>
       </Card>
     );
@@ -30,12 +32,16 @@ export function BestDpsCard() {
 
   return (
     <Card className="border-green-500/25 bg-green-500/5">
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-1.5 pb-4">
         <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Simulated DPS
         </CardDescription>
-        <CardTitle className="text-xl">{formatInt(dps)} DPS</CardTitle>
-        <p className="text-xs text-muted-foreground">Average over encounter</p>
+        <CardTitle className="text-2xl tabular-nums">
+          {formatInt(dps)} DPS
+        </CardTitle>
+        <p className="text-xs text-muted-foreground pt-1">
+          Average over encounter
+        </p>
       </CardHeader>
     </Card>
   );

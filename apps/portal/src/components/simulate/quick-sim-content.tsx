@@ -221,10 +221,10 @@ function QuickSimContentInner() {
 
         {/* Parse error display */}
         {parseError && (
-          <Card className="border-destructive">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-destructive">
                     Failed to parse SimC export
@@ -480,39 +480,65 @@ function QuickSimContentInner() {
 
       {/* Results Display */}
       {result && (
-        <Card>
-          <CardContent className="pt-6 space-y-2">
-            <p className="text-lg font-semibold">
-              DPS: {formatInt(Math.round(result.dps))}
+        <Card className="border-green-500/25 bg-green-500/5">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Simulation Complete
+              </p>
+              {resultId && (
+                <Link
+                  href={`/simulate/results/${resultId}`}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  View full results →
+                </Link>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="pt-2 pb-4">
+            <p className="text-2xl font-semibold tabular-nums">
+              {formatInt(Math.round(result.dps))} DPS
             </p>
-            <p className="text-sm text-muted-foreground">
-              Total Damage: {formatInt(result.totalDamage)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Casts: {formatInt(result.casts)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Events: {formatInt(result.events.length)}
-            </p>
-
-            {/* Link to saved result */}
-            {resultId && (
-              <Link
-                href={`/simulate/results/${resultId}`}
-                className="text-sm underline hover:no-underline"
-              >
-                View full results
-              </Link>
-            )}
+            <div className="mt-3 grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Damage</p>
+                <p className="font-medium tabular-nums">
+                  {formatInt(result.totalDamage)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Casts</p>
+                <p className="font-medium tabular-nums">
+                  {formatInt(result.casts)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Events</p>
+                <p className="font-medium tabular-nums">
+                  {formatInt(result.events.length)}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Error Display */}
       {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error.message}</p>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-destructive">
+                  Simulation Failed
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {error.message}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

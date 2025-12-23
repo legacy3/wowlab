@@ -39,11 +39,13 @@ export function DpsChart() {
       chartConfig={chartConfig}
       footer={
         <>
-          <div className="flex gap-2 leading-none font-medium">
-            Peak DPS: {formatInt(maxDps)} <TrendingUp className="h-4 w-4" />
+          <div className="flex items-center gap-2 font-medium">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="tabular-nums">Peak: {formatInt(maxDps)} DPS</span>
           </div>
-          <div className="text-muted-foreground leading-none">
-            Average: {formatInt(avgDps)} DPS over 300 seconds
+          <div className="text-muted-foreground text-xs">
+            Average: <span className="tabular-nums">{formatInt(avgDps)}</span>{" "}
+            DPS over encounter
           </div>
         </>
       }

@@ -106,14 +106,16 @@ const TimelineHeader = memo(function TimelineHeader({
   onShowFpsChange,
 }: TimelineHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-muted-foreground">
-        {formatTime(visibleRange.start)} - {formatTime(visibleRange.end)}
-        <span className="ml-2 opacity-60">
-          {zenMode ? "(ESC to exit)" : "(Scroll to zoom, drag to pan)"}
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="tabular-nums font-medium">
+          {formatTime(visibleRange.start)} – {formatTime(visibleRange.end)}
         </span>
-      </span>
-      <div className="flex gap-1">
+        <span className="text-xs opacity-60">
+          {zenMode ? "ESC to exit" : "Scroll to zoom · drag to pan"}
+        </span>
+      </div>
+      <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="icon"
@@ -223,24 +225,24 @@ const TimelineLegend = memo(function TimelineLegend() {
   const [selectedSpell, setSelectedSpell] = useAtom(selectedSpellAtom);
 
   return (
-    <div className="flex flex-wrap gap-3 text-xs">
+    <div className="flex flex-wrap items-center gap-2 text-xs">
       {uniqueSpells.map((spell) => (
         <button
           key={spell.id}
           className={cn(
-            "flex items-center gap-1.5 rounded px-2 py-1 transition-opacity",
+            "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-all",
             selectedSpell === spell.id
-              ? "bg-accent"
+              ? "bg-accent ring-1 ring-accent-foreground/20"
               : selectedSpell !== null
-                ? "opacity-40"
-                : "hover:bg-accent/50",
+                ? "opacity-40 hover:opacity-70"
+                : "hover:bg-accent/60",
           )}
           onClick={() =>
             setSelectedSpell((prev) => (prev === spell.id ? null : spell.id))
           }
         >
           <div
-            className="h-3 w-3 rounded"
+            className="h-2.5 w-2.5 rounded-sm shrink-0"
             style={{ background: spell.color }}
           />
           <span className="text-muted-foreground">{spell.name}</span>
@@ -250,7 +252,7 @@ const TimelineLegend = memo(function TimelineLegend() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 text-xs"
+          className="h-7 px-2.5 text-xs"
           onClick={() => setSelectedSpell(null)}
         >
           Clear filter

@@ -50,16 +50,20 @@ export function DetailedChart() {
       chartConfig={chartConfig}
       footer={
         <>
-          <div className="flex gap-2 leading-none font-medium">
-            Total damage: {formatInt(finalDamage)}{" "}
-            <BarChart3 className="h-4 w-4" />
+          <div className="flex items-center gap-2 font-medium">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <span className="tabular-nums">
+              Total damage: {formatInt(finalDamage)}
+            </span>
           </div>
-          <div className="text-muted-foreground leading-none">
-            Average DPS: {formatInt(avgDps)} over entire encounter
+          <div className="text-muted-foreground text-xs">
+            Average DPS:{" "}
+            <span className="tabular-nums">{formatInt(avgDps)}</span> over
+            encounter
           </div>
         </>
       }
-      className="h-[350px]"
+      className="[&_[data-slot=chart-container]]:h-[280px]"
     >
       <ComposedChart
         accessibilityLayer

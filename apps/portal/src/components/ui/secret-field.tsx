@@ -69,8 +69,10 @@ function SecretField({
   );
 }
 
-interface SecretTextProps
-  extends Omit<React.ComponentProps<"button">, "value"> {
+interface SecretTextProps extends Omit<
+  React.ComponentProps<"button">,
+  "value"
+> {
   value: string;
   hiddenLength: number;
   defaultRevealed?: boolean;
