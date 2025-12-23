@@ -3,6 +3,11 @@
 import { memo, useMemo } from "react";
 import { KonvaGroup, KonvaLine, KonvaText } from "@/components/konva";
 import { TRACK_METRICS } from "@/hooks/timeline";
+import {
+  TIMELINE_AXIS,
+  TIMELINE_AXIS_TICK,
+  TIMELINE_TEXT_MUTED,
+} from "../colors";
 import { formatTime, generateTicks, filterVisibleTicks } from "../utils";
 
 interface XAxisProps {
@@ -36,7 +41,7 @@ export const XAxis = memo(function XAxis({
     <KonvaGroup y={totalHeight}>
       <KonvaLine
         points={[0, 0, innerWidth, 0]}
-        stroke="#444"
+        stroke={TIMELINE_AXIS}
         strokeWidth={1}
         listening={false}
       />
@@ -46,7 +51,7 @@ export const XAxis = memo(function XAxis({
           <KonvaGroup key={`tick-${tick}-${i}`} x={x}>
             <KonvaLine
               points={[0, 0, 0, 6]}
-              stroke="#444"
+              stroke={TIMELINE_AXIS_TICK}
               strokeWidth={1}
               listening={false}
             />
@@ -57,7 +62,7 @@ export const XAxis = memo(function XAxis({
               width={40}
               align="center"
               fontSize={11}
-              fill="#888"
+              fill={TIMELINE_TEXT_MUTED}
               listening={false}
             />
           </KonvaGroup>

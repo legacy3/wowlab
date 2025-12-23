@@ -135,6 +135,70 @@ export function decodeTalentsToBits(
   );
 }
 
+export function encodeSelectionsToLoadoutString(params: {
+  tree: {
+    allNodeIds: readonly number[];
+    nodes: readonly {
+      id: number;
+      type: number;
+      maxRanks: number;
+      entries: readonly { id: number }[];
+    }[];
+  };
+  decoded: DecodedTalentLoadout;
+  selections: Map<
+    number,
+    {
+      selected?: boolean;
+      ranksPurchased?: number;
+      choiceIndex?: number;
+    }
+  >;
+}): string {
+  const { decoded, selections, tree } = params;
+
+  const nodeById = new Map(tree.nodes.map((node) => [node.id, node]));
+
+  const allNodeIds = tree.allNodeIds;
+
+  let lastIndex = -1;
+  for (let i = 0; i < allNodeIds.length; i++) {
+    if (selections.has(allNodeIds[i]!)) {
+      lastIndex = i;
+    }
+  }
+
+  const nodes =
+    lastIndex >= 0
+      ? allNodeIds.slice(0, lastIndex + 1).map((nodeId) => {
+          const node = nodeById.get(nodeId);
+          const selection = selections.get(nodeId);
+          const selected = !!selection?.selected;
+          const ranksPurchased = selection?.ranksPurchased ?? 0;
+          const isChoiceNode =
+            node != null && node.type === 2 && node.entries.length > 1;
+          const maxRanks = node?.maxRanks ?? 1;
+
+          return {
+            choiceIndex: selection?.choiceIndex,
+            choiceNode: selected && isChoiceNode,
+            partiallyRanked:
+              selected && maxRanks > 1 && ranksPurchased < maxRanks,
+            purchased: selected && ranksPurchased > 0,
+            ranksPurchased,
+            selected,
+          };
+        })
+      : [];
+
+  return encodeTalentLoadout({
+    nodes,
+    specId: decoded.specId,
+    treeHash: decoded.treeHash,
+    version: decoded.version,
+  });
+}
+
 export function encodeTalentLoadout(loadout: {
   version: number;
   specId: number;

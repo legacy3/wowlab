@@ -8,4 +8,5 @@ export * as Profile from "./Profile.js";
 export * as Rng from "./Rng.js";
 export * as Rotation from "./Rotation.js";
 export * as State from "./State.js";
+export * as Talents from "./Talents.js";
 export * as Unit from "./Unit.js";

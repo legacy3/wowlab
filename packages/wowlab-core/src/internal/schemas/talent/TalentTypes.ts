@@ -46,11 +46,27 @@ export const TalentSubTreeSchema = Schema.Struct({
 
 export type TalentSubTree = Schema.Schema.Type<typeof TalentSubTreeSchema>;
 
+// Point limits per tree type
+export const TalentPointLimitsSchema = Schema.Struct({
+  class: Schema.Number, // treeIndex 1
+  hero: Schema.Number, // treeIndex 3
+  spec: Schema.Number, // treeIndex 2
+});
+
+export type TalentPointLimits = Schema.Schema.Type<
+  typeof TalentPointLimitsSchema
+>;
+
 // TalentTree - Complete tree structure
 export const TalentTreeSchema = Schema.Struct({
+  // All node IDs in the raw tree (sorted by ID), used for loadout string parsing.
+  // This includes nodes that are filtered from display (e.g., SubTreeSelection type 3).
+  allNodeIds: Schema.Array(Schema.Number),
   className: Schema.String,
   edges: Schema.Array(TalentEdgeSchema),
   nodes: Schema.Array(TalentNodeSchema),
+  // Point limits per tree type (class/spec/hero)
+  pointLimits: TalentPointLimitsSchema,
   specId: Schema.Number,
   specName: Schema.String,
   subTrees: Schema.Array(TalentSubTreeSchema), // hero talent trees

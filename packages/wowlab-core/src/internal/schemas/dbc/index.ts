@@ -95,6 +95,7 @@ export * from "./TalentSchema.js";
 export * from "./TraitCondSchema.js";
 export * from "./TraitCostSchema.js";
 export * from "./TraitCurrencySchema.js";
+export * from "./TraitCurrencySourceSchema.js";
 export * from "./TraitDefinitionEffectPointsSchema.js";
 export * from "./TraitDefinitionSchema.js";
 export * from "./TraitEdgeSchema.js";

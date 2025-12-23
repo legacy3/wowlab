@@ -1,27 +1,16 @@
 "use client";
 
-import { Suspense, useMemo, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useTimeoutEffect } from "@react-hookz/web";
 import type { ReactNode } from "react";
-import { useQueryState, parseAsString } from "nuqs";
 import dynamic from "next/dynamic";
-import {
-  decodeTalentLoadout,
-  type DecodedTalentLoadout,
-} from "@wowlab/parsers";
-import * as Effect from "effect/Effect";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTalentTree } from "@/hooks/use-talent-tree";
-import type { Talent } from "@wowlab/core/Schemas";
 import { TalentCalculatorSkeleton } from "./talent-calculator-skeleton";
 import { TalentStartScreen } from "./talent-start-screen";
 import { TalentStateMessage } from "./talent-state-message";
 import { TalentStringBar } from "./talent-string-bar";
-import {
-  createHeaderOnlyTalentString,
-  deriveInitialSelectionsFromDecoded,
-  encodeSelectionsToTalentString,
-} from "./talent-encoding";
 import { TalentsImportTour } from "@/components/tours";
+import { useTalentCalculatorController } from "./controller";
 
 function TalentTreeLoading() {
   return (
@@ -47,63 +36,32 @@ const TalentTree = dynamic(
 );
 
 function TalentCalculatorInner() {
-  const [talents, setTalents] = useQueryState(
-    "talents",
-    parseAsString.withDefault("").withOptions({
-      shallow: true,
-      history: "push",
-      throttleMs: 300,
-    }),
-  );
+  const {
+    talents,
+    decoded,
+    effectiveSpecId,
+    tree,
+    isLoading,
+    error,
+    initialSelections,
+    initialSelectionsKey,
+    onSpecSelect,
+    onTalentStringChange,
+    onSelectionsChange,
+  } = useTalentCalculatorController();
+  const [showDecodeError, setShowDecodeError] = useState(false);
 
-  const decoded = useMemo((): DecodedTalentLoadout | null => {
-    if (!talents) {
-      return null;
-    }
-
-    const effect = decodeTalentLoadout(talents);
-    const result = Effect.runSync(Effect.either(effect));
-
-    if (result._tag === "Right") {
-      return result.right;
-    }
-
-    return null;
-  }, [talents]);
-  const effectiveSpecId = decoded?.specId ?? null;
-
-  const { data: tree, isLoading, error } = useTalentTree(effectiveSpecId);
-
-  const treeDrivenTalentsRef = useRef<string | null>(null);
-  const initialSelectionsKey = useMemo(() => {
-    if (!talents) {
-      return null;
-    }
-    return talents === treeDrivenTalentsRef.current ? null : talents;
-  }, [talents]);
-
-  const initialSelections = useMemo(() => {
-    if (!tree || !decoded) {
-      return new Map<number, Talent.DecodedTalentSelection>();
-    }
-    return deriveInitialSelectionsFromDecoded(tree, decoded);
-  }, [decoded, tree]);
-
-  const handleSpecSelect = useCallback(
-    (specId: number) => {
-      treeDrivenTalentsRef.current = null;
-      setTalents(createHeaderOnlyTalentString(specId));
+  const shouldShowDecodeError = Boolean(talents && !decoded);
+  const [, resetDecodeTimer] = useTimeoutEffect(
+    () => {
+      setShowDecodeError(shouldShowDecodeError);
     },
-    [setTalents],
+    shouldShowDecodeError ? 500 : 0,
   );
 
-  const handleTalentStringChange = useCallback(
-    (next: string | null) => {
-      treeDrivenTalentsRef.current = null;
-      setTalents(next);
-    },
-    [setTalents],
-  );
+  useEffect(() => {
+    resetDecodeTimer();
+  }, [decoded, resetDecodeTimer, talents]);
 
   let content: ReactNode;
 
@@ -111,11 +69,11 @@ function TalentCalculatorInner() {
     content = (
       <TalentStartScreen
         talents={talents}
-        onTalentStringChange={handleTalentStringChange}
-        onSpecSelect={handleSpecSelect}
+        onTalentStringChange={onTalentStringChange}
+        onSpecSelect={onSpecSelect}
       />
     );
-  } else if (talents && !decoded) {
+  } else if (talents && !decoded && showDecodeError) {
     content = (
       <TalentStateMessage title="Unable to decode the provided talent string" />
     );
@@ -129,21 +87,7 @@ function TalentCalculatorInner() {
         tree={tree}
         initialSelections={initialSelections}
         initialSelectionsKey={initialSelectionsKey}
-        onSelectionsChange={(selections) => {
-          if (!decoded) {
-            return;
-          }
-          const next = encodeSelectionsToTalentString({
-            tree,
-            decoded,
-            selections,
-          });
-
-          if (next !== talents) {
-            treeDrivenTalentsRef.current = next;
-            setTalents(next);
-          }
-        }}
+        onSelectionsChange={onSelectionsChange}
         height={Math.max(700, window.innerHeight - 256)}
       />
     );
@@ -160,7 +104,7 @@ function TalentCalculatorInner() {
         <TalentStringBar
           talents={talents}
           specId={effectiveSpecId}
-          onTalentStringChange={handleTalentStringChange}
+          onTalentStringChange={onTalentStringChange}
         />
       )}
       {content}

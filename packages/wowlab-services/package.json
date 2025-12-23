@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "vite build && tsc-alias -p tsconfig.json",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/papaparse": "^5.5.0",
     "tsc-alias": "^1.8.16",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
   }
 }

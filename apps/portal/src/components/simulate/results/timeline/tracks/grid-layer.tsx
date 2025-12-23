@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import { KonvaRect, KonvaLine } from "@/components/konva";
 import { TRACK_METRICS } from "@/hooks/timeline";
+import { TIMELINE_GRID_BG, TIMELINE_GRID_LINE } from "../colors";
 import { generateTicks, filterVisibleTicks } from "../utils";
 
 interface GridLayerProps {
@@ -40,7 +41,7 @@ export const GridLayer = memo(function GridLayer({
         y={0}
         width={innerWidth}
         height={totalHeight}
-        fill="#1a1a1a"
+        fill={TIMELINE_GRID_BG}
         cornerRadius={TRACK_METRICS.cornerRadius}
         listening={false}
       />
@@ -53,7 +54,7 @@ export const GridLayer = memo(function GridLayer({
           <KonvaLine
             key={`grid-${tick}-${i}`}
             points={[x, 0, x, totalHeight]}
-            stroke="#333"
+            stroke={TIMELINE_GRID_LINE}
             strokeWidth={1}
             opacity={isMajor ? 0.4 : 0.15}
             dash={isMajor ? undefined : [2, 2]}

@@ -21,13 +21,14 @@ function downloadFile(dataURL: string, filename: string): void {
   document.body.removeChild(link);
 }
 
-function generateFilename(extension: string): string {
-  return `timeline-${Date.now()}.${extension}`;
+function generateFilename(prefix: string, extension: string): string {
+  return `${prefix}-${Date.now()}.${extension}`;
 }
 
 interface UseExportOptions {
   stageRef: RefObject<Konva.Stage | null>;
   contentHeight: number;
+  filenamePrefix: string;
 }
 
 interface UseExportReturn {
@@ -38,6 +39,7 @@ interface UseExportReturn {
 export function useExport({
   stageRef,
   contentHeight,
+  filenamePrefix,
 }: UseExportOptions): UseExportReturn {
   const getExportDataURL = useCallback(
     (height: number) => {
@@ -69,8 +71,8 @@ export function useExport({
       imageSmoothingEnabled: EXPORT_CONFIG.imageSmoothingEnabled,
     });
 
-    downloadFile(dataURL, generateFilename("png"));
-  }, [stageRef]);
+    downloadFile(dataURL, generateFilename(filenamePrefix, "png"));
+  }, [filenamePrefix, stageRef]);
 
   const exportPDF = useCallback(() => {
     const stage = stageRef.current;
@@ -95,8 +97,8 @@ export function useExport({
     pdf.rect(0, 0, width, contentHeight, "F");
 
     pdf.addImage(dataURL, 0, 0, width, contentHeight);
-    pdf.save(generateFilename("pdf"));
-  }, [stageRef, contentHeight, getExportDataURL]);
+    pdf.save(generateFilename(filenamePrefix, "pdf"));
+  }, [stageRef, contentHeight, getExportDataURL, filenamePrefix]);
 
   return { exportPNG, exportPDF };
 }

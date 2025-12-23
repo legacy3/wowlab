@@ -5,6 +5,7 @@
 import type { TalentSubTree, TalentTree } from "./types.js";
 
 interface TemplateData {
+  activeHeroTreeId: number | null;
   iconBaseUrl: string;
   nodeChoices: Map<number, number> | null;
   nodeRanks: Map<number, number> | null;
@@ -519,22 +520,28 @@ for (const node of nodes) {
   el.dataset.nodeId = node.id;
 
   if (isChoice && node.entries.length >= 2) {
-    // For choice nodes with loadout, only show selected choice or dim unselected
-    const entriesToShow = node.entries.slice(0, 2);
-    entriesToShow.forEach((entry, idx) => {
+    // If loadout has a choice selected, show only that icon full-size
+    // Otherwise show both icons side by side
+    if (hasLoadout && isSelected && choiceIndex !== null && node.entries[choiceIndex]) {
+      const entry = node.entries[choiceIndex];
       const img = document.createElement("img");
       img.src = getIconUrl(entry.iconFileName);
       img.alt = entry.name || "?";
       img.loading = "lazy";
-      // If we have loadout data and this is selected, highlight the chosen entry
-      if (hasLoadout && isSelected && choiceIndex !== null) {
-        img.style.opacity = (idx === choiceIndex) ? "1" : "0.3";
-        if (idx === choiceIndex) {
-          img.style.boxShadow = "0 0 8px var(--accent-green)";
-        }
-      }
+      img.style.width = "100%";
+      img.style.height = "100%";
       el.appendChild(img);
-    });
+    } else {
+      // No loadout or not selected - show both options
+      const entriesToShow = node.entries.slice(0, 2);
+      entriesToShow.forEach((entry) => {
+        const img = document.createElement("img");
+        img.src = getIconUrl(entry.iconFileName);
+        img.alt = entry.name || "?";
+        img.loading = "lazy";
+        el.appendChild(img);
+      });
+    }
   } else if (node.entries.length > 0) {
     const img = document.createElement("img");
     img.src = getIconUrl(node.entries[0].iconFileName);
@@ -563,13 +570,17 @@ for (const node of nodes) {
     const isChoice = node.type === 2 && node.entries.length > 1;
 
     if (isChoice) {
+      const selectedIdx = loadoutChoices?.get(node.id) ?? null;
       tooltip.innerHTML = '<div class="tooltip-header"><div><h3>Choose One' + heroLabel + '</h3><div class="subtitle">Choice Talent</div></div></div>' +
-        node.entries.map(e =>
-          '<div style="display:flex;gap:10px;align-items:start;margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px">' +
+        node.entries.map((e, idx) => {
+          const isChosen = selectedIdx === idx;
+          const borderStyle = isChosen ? 'border:2px solid var(--accent-green);' : '';
+          const labelHtml = isChosen ? ' <span style="color:var(--accent-green);font-size:11px">(Selected)</span>' : '';
+          return '<div style="display:flex;gap:10px;align-items:start;margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;' + borderStyle + '">' +
           '<img src="' + getIconUrl(e.iconFileName, "small") + '" style="width:32px;height:32px;border-radius:6px">' +
-          '<div><strong style="color:var(--accent-purple)">' + (e.name || "Unknown") + '</strong>' +
-          '<p style="margin-top:4px">' + (e.description || "No description.") + '</p></div></div>'
-        ).join("") +
+          '<div><strong style="color:var(--accent-purple)">' + (e.name || "Unknown") + '</strong>' + labelHtml +
+          '<p style="margin-top:4px">' + (e.description || "No description.") + '</p></div></div>';
+        }).join("") +
         '<div class="meta"><span>Node ' + node.id + '</span></div>';
     } else {
       const entry = node.entries[0] || {};
@@ -596,8 +607,9 @@ for (const node of nodes) {
   nodeEls.push({ el, node });
 }
 
-// Hero tree selector
-let selectedHeroId = treeData.subTrees[0]?.id ?? 0;
+// Hero tree selector - use loadout's active tree if available
+const loadoutActiveHeroTreeId = ${data.activeHeroTreeId !== null ? data.activeHeroTreeId : "null"};
+let selectedHeroId = loadoutActiveHeroTreeId ?? treeData.subTrees[0]?.id ?? 0;
 
 function updateVisibility() {
   for (const { el, node } of nodeEls) {
@@ -670,6 +682,28 @@ const renderHeroButtons = (
   );
 };
 
+/**
+ * Determine which hero tree is active based on the first selected hero node.
+ * In the game, selecting a hero tree requires allocating a point to a node in that tree.
+ */
+const detectActiveHeroTree = (
+  tree: TalentTree,
+  selectedNodeIds: Set<number> | null,
+): number | null => {
+  if (!selectedNodeIds) {
+    return null;
+  }
+
+  // Find the first selected hero node (by node ID order, which matches the loadout order)
+  for (const node of tree.nodes) {
+    if (node.subTreeId && node.subTreeId > 0 && selectedNodeIds.has(node.id)) {
+      return node.subTreeId;
+    }
+  }
+
+  return null;
+};
+
 export const generateHtml = (
   tree: TalentTree,
   supabaseUrl: string,
@@ -677,7 +711,10 @@ export const generateHtml = (
   nodeChoices: Map<number, number> | null = null,
   nodeRanks: Map<number, number> | null = null,
 ): string => {
+  const activeHeroTreeId = detectActiveHeroTree(tree, selectedNodeIds);
+
   const data: TemplateData = {
+    activeHeroTreeId,
     iconBaseUrl: supabaseUrl,
     nodeChoices,
     nodeRanks,

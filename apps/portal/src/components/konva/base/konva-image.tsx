@@ -6,7 +6,7 @@ import type Konva from "konva";
 import type { ImageConfig } from "konva/lib/shapes/Image";
 import type { KonvaNodeEvents } from "react-konva";
 import useImage from "use-image";
-import { getIconUrl } from "./icons";
+import { getIconUrl } from "../icons";
 
 type KonvaImageProps = Omit<ImageConfig, "image"> &
   KonvaNodeEvents & {

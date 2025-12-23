@@ -13,6 +13,7 @@ export default createPackageConfig({
     Rng: "src/Rng.ts",
     Rotation: "src/Rotation.ts",
     State: "src/State.ts",
+    Talents: "src/Talents.ts",
     Unit: "src/Unit.ts",
   },
 });

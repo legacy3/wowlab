@@ -337,6 +337,33 @@ export const transformTalentTree = (
       if (cur) currencyMap.set(cur.ID, cur);
     }
 
+    // 12b. Build group -> treeIndex map from trait_cond entries
+    // trait_cond entries with TraitNodeGroupID > 0 and TraitCurrencyID > 0 tell us
+    // which groups require spending from which currency (class vs spec)
+    const groupTreeConditions =
+      groupIds.length > 0
+        ? yield* dbc.getManyByFkValues(
+            "trait_cond",
+            "TraitNodeGroupID",
+            groupIds,
+          )
+        : [];
+
+    const groupToTreeIndex = new Map<number, number>();
+    for (const cond of groupTreeConditions) {
+      if (cond.TraitCurrencyID > 0 && cond.TraitNodeGroupID > 0) {
+        const currency = currencyMap.get(cond.TraitCurrencyID);
+        if (currency) {
+          // Flags: 0x4 = class, 0x8 = spec
+          if (currency.Flags === 4) {
+            groupToTreeIndex.set(cond.TraitNodeGroupID, 1);
+          } else if (currency.Flags === 8) {
+            groupToTreeIndex.set(cond.TraitNodeGroupID, 2);
+          }
+        }
+      }
+    }
+
     // 13. NodeXEntries and definitions
     const allNodeXEntries = yield* dbc.getManyByFkValues(
       "trait_node_x_trait_node_entry",
@@ -495,6 +522,12 @@ export const transformTalentTree = (
     // 17. Assemble the nodes using the pre-fetched data
     const nodes = filteredNodes
       .map((node) => {
+        // Skip SubTreeSelection nodes (type 3) - they're handled by the hero tree selector UI
+        // These have null entries and would render as empty boxes
+        if (node.Type === 3) {
+          return null;
+        }
+
         const specInfo = nodeSpecInfo.get(node.ID);
         if (specInfo?.allowed && !specInfo.allowed.has(specId)) {
           return null;
@@ -563,27 +596,27 @@ export const transformTalentTree = (
           }
         }
 
-        // Determine treeIndex from currency flags
-        let treeIndex = node.TraitSubTreeID > 0 ? 3 : 2;
-        const groupId = nodeGroupMemberships.find(
-          (m) => m.TraitNodeID === node.ID,
-        )?.TraitNodeGroupID;
-        const groupCostId = groupCosts.find(
-          (gc) => gc.TraitNodeGroupID === groupId,
-        )?.TraitCostID;
-        const cost = groupCostId ? costMap.get(groupCostId) : undefined;
-        const currency = cost
-          ? currencyMap.get(cost.TraitCurrencyID)
-          : undefined;
-        const fallbackCurrency =
-          treeCurrencies.find((c) => c._Index === 0) ?? treeCurrencies[0];
-        const fallbackCurrencyRow = fallbackCurrency
-          ? currencyMap.get(fallbackCurrency.TraitCurrencyID)
-          : undefined;
-        const flags = currency?.Flags ?? fallbackCurrencyRow?.Flags ?? 0;
+        // Determine treeIndex from node's group membership
+        // Hero tree nodes (subTreeId > 0) are always treeIndex 3
+        // For class/spec, check which "known" group the node belongs to
+        let treeIndex = node.TraitSubTreeID > 0 ? 3 : 2; // default to spec
         if (node.TraitSubTreeID === 0) {
-          if (flags & 0x8) treeIndex = 2;
-          else if (flags & 0x4) treeIndex = 1;
+          // Find all groups this node belongs to
+          const nodeGroups = nodeGroupMemberships.filter(
+            (m) => m.TraitNodeID === node.ID,
+          );
+
+          // Check if any of these groups maps to a known tree type
+          for (const membership of nodeGroups) {
+            const groupTreeType = groupToTreeIndex.get(
+              membership.TraitNodeGroupID,
+            );
+
+            if (groupTreeType !== undefined) {
+              treeIndex = groupTreeType;
+              break;
+            }
+          }
         }
 
         return {
@@ -617,7 +650,58 @@ export const transformTalentTree = (
         };
       });
 
+    // All node IDs sorted by ID (for loadout string parsing)
+    // This includes nodes that are filtered from display (e.g., SubTreeSelection type 3)
+    const allNodeIds = [...treeNodes]
+      .sort((a, b) => a.ID - b.ID)
+      .map((n) => n.ID);
+
+    // Get currency sources to calculate point limits
+    const currencySources = yield* dbc.getManyByFkValues(
+      "trait_currency_source",
+      "TraitCurrencyID",
+      currencyIds,
+    );
+
+    // Sum amounts per currency to get total available points
+    const currencyTotals = new Map<number, number>();
+    for (const source of currencySources) {
+      const current = currencyTotals.get(source.TraitCurrencyID) ?? 0;
+      currencyTotals.set(source.TraitCurrencyID, current + source.Amount);
+    }
+
+    // Determine point limits per tree type from currency flags
+    // Flags: 0x4 = class, 0x8 = spec, 0x0 = hero
+    let classLimit = 0;
+    let specLimit = 0;
+    let heroLimit = 0;
+
+    for (const treeCurrency of treeCurrencies) {
+      const currency = currencyMap.get(treeCurrency.TraitCurrencyID);
+      const total = currencyTotals.get(treeCurrency.TraitCurrencyID) ?? 0;
+
+      if (!currency) {
+        continue;
+      }
+
+      if (currency.Flags & 0x4) {
+        classLimit += total;
+      } else if (currency.Flags & 0x8) {
+        specLimit += total;
+      } else if (currency.Flags === 0) {
+        // Hero currencies have flags 0, take max of any hero currency
+        heroLimit = Math.max(heroLimit, total);
+      }
+    }
+
+    const pointLimits = {
+      class: classLimit,
+      hero: heroLimit,
+      spec: specLimit,
+    };
+
     return {
+      allNodeIds,
       className: chrClass.Name_lang ?? "",
       edges: filteredEdges.map((e) => ({
         fromNodeId: e.LeftTraitNodeID,
@@ -626,6 +710,7 @@ export const transformTalentTree = (
         visualStyle: e.VisualStyle,
       })),
       nodes,
+      pointLimits,
       specId,
       specName: spec.Name_lang ?? "",
       subTrees,
@@ -646,23 +731,30 @@ export const applyDecodedTalents = (
 ): Talent.TalentTreeWithSelections => {
   const selections = new Map<number, Talent.DecodedTalentSelection>();
 
-  // Sort nodes by node ID ascending to match SimC's std::map iteration order
-  // SimC iterates tree_nodes (std::map<unsigned, ...>) which orders by id_node ascending
-  const orderedNodes = [...tree.nodes].sort((a, b) => a.id - b.id);
+  // Build a map from node ID to the actual node (for looking up maxRanks)
+  const nodeById = new Map(tree.nodes.map((n) => [n.id, n]));
 
-  // Map decoded nodes to tree nodes
-  for (let i = 0; i < decoded.nodes.length && i < orderedNodes.length; i++) {
+  // Use allNodeIds which contains ALL node IDs in sorted order (including filtered nodes like type 3)
+  // This matches the order used by the loadout string encoding
+  const allNodeIds = tree.allNodeIds;
+
+  // Map decoded nodes to tree nodes using allNodeIds for correct positioning
+  for (let i = 0; i < decoded.nodes.length && i < allNodeIds.length; i++) {
     const decodedNode = decoded.nodes[i];
-    const treeNode = orderedNodes[i];
+    const nodeId = allNodeIds[i];
+    const treeNode = nodeById.get(nodeId);
 
-    selections.set(treeNode.id, {
-      choiceIndex: decodedNode.choiceIndex,
-      nodeId: treeNode.id,
-      ranksPurchased:
-        decodedNode.ranksPurchased ??
-        (decodedNode.purchased ? treeNode.maxRanks : 0),
-      selected: decodedNode.selected,
-    });
+    // Only create selections for nodes that exist in the filtered tree
+    if (treeNode) {
+      selections.set(nodeId, {
+        choiceIndex: decodedNode.choiceIndex,
+        nodeId,
+        ranksPurchased:
+          decodedNode.ranksPurchased ??
+          (decodedNode.purchased ? treeNode.maxRanks : 0),
+        selected: decodedNode.selected,
+      });
+    }
   }
 
   return {
