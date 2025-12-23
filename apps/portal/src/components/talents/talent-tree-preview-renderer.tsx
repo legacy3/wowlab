@@ -8,98 +8,142 @@ import {
   PREVIEW_EDGE_ACTIVE,
   PREVIEW_NODE,
   PREVIEW_NODE_ACTIVE,
-  PREVIEW_NODE_ACTIVE_STROKE,
 } from "./constants";
 
 interface TalentTreePreviewRendererProps {
   viewModel: TalentViewModel;
   className?: string;
+  transparentBg?: boolean;
+}
+
+const BASE_NODE_SIZE = 4;
+const ACTIVE_NODE_SIZE = 5;
+const CHOICE_NODE_SIZE = 6;
+const EDGE_WIDTH = 1.5;
+
+function ChoiceNodeHalf({
+  cx,
+  cy,
+  r,
+  isLeft,
+  isSelected,
+}: {
+  cx: number;
+  cy: number;
+  r: number;
+  isLeft: boolean;
+  isSelected: boolean;
+}) {
+  const startY = cy - r;
+  const endY = cy + r;
+  const path = isLeft
+    ? `M ${cx} ${startY} A ${r} ${r} 0 0 0 ${cx} ${endY} L ${cx} ${startY}`
+    : `M ${cx} ${startY} A ${r} ${r} 0 0 1 ${cx} ${endY} L ${cx} ${startY}`;
+
+  return (
+    <path
+      d={path}
+      fill={isSelected ? PREVIEW_NODE_ACTIVE : PREVIEW_NODE}
+      opacity={isSelected ? 1 : 0.25}
+    />
+  );
 }
 
 export function TalentTreePreviewRenderer({
   viewModel,
   className,
+  transparentBg = false,
 }: TalentTreePreviewRendererProps) {
-  const width = viewModel.layout.width;
-  const height = viewModel.layout.height;
+  const { width, height } = viewModel.layout;
+
+  const regularNodes = viewModel.nodes.filter((n) => n.node.type !== 2);
+  const choiceNodes = viewModel.nodes.filter((n) => n.node.type === 2);
+  const inactiveEdges = viewModel.edges.filter(
+    (e) => !(e.fromSelected && e.toSelected),
+  );
+  const activeEdges = viewModel.edges.filter(
+    (e) => e.fromSelected && e.toSelected,
+  );
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      className={cn("w-full h-auto rounded-lg", className)}
-      style={{
-        background: PREVIEW_BG,
-      }}
+      className={cn("w-full h-auto rounded", className)}
+      style={{ background: transparentBg ? "transparent" : PREVIEW_BG }}
     >
-      {viewModel.edges
-        .filter((edge) => !(edge.fromSelected && edge.toSelected))
-        .map((edge) => (
-          <line
-            key={edge.id}
-            x1={edge.fromX}
-            y1={edge.fromY}
-            x2={edge.toX}
-            y2={edge.toY}
-            stroke={PREVIEW_EDGE}
-            strokeWidth={1}
-            opacity={0.2}
-          />
-        ))}
+      {inactiveEdges.map((edge) => (
+        <line
+          key={edge.id}
+          x1={edge.fromX}
+          y1={edge.fromY}
+          x2={edge.toX}
+          y2={edge.toY}
+          stroke={PREVIEW_EDGE}
+          strokeWidth={EDGE_WIDTH * 0.5}
+          opacity={0.15}
+        />
+      ))}
 
-      {viewModel.edges
-        .filter((edge) => edge.fromSelected && edge.toSelected)
-        .map((edge) => (
-          <line
-            key={`active-${edge.id}`}
-            x1={edge.fromX}
-            y1={edge.fromY}
-            x2={edge.toX}
-            y2={edge.toY}
-            stroke={PREVIEW_EDGE_ACTIVE}
-            strokeWidth={4}
-            strokeLinecap="round"
-          />
-        ))}
+      {activeEdges.map((edge) => (
+        <line
+          key={`active-${edge.id}`}
+          x1={edge.fromX}
+          y1={edge.fromY}
+          x2={edge.toX}
+          y2={edge.toY}
+          stroke={PREVIEW_EDGE_ACTIVE}
+          strokeWidth={EDGE_WIDTH}
+          strokeLinecap="round"
+        />
+      ))}
 
-      {viewModel.nodes
-        .filter(
-          (node) =>
-            !(
-              node.selection?.selected &&
-              (node.selection.ranksPurchased ?? 0) > 0
-            ),
-        )
-        .map((nodePos) => (
+      {regularNodes.map((node) => {
+        const isActive = node.selection?.selected;
+        return (
           <circle
-            key={nodePos.id}
-            cx={nodePos.x}
-            cy={nodePos.y}
-            r={3}
-            fill={PREVIEW_NODE}
-            opacity={0.3}
+            key={node.id}
+            cx={node.x}
+            cy={node.y}
+            r={isActive ? ACTIVE_NODE_SIZE : BASE_NODE_SIZE}
+            fill={isActive ? PREVIEW_NODE_ACTIVE : PREVIEW_NODE}
+            opacity={isActive ? 1 : 0.25}
           />
-        ))}
+        );
+      })}
 
-      {viewModel.nodes
-        .filter(
-          (node) =>
-            node.selection?.selected &&
-            (node.selection.ranksPurchased ?? 0) > 0,
-        )
-        .map((nodePos) => {
-          const isChoice = nodePos.node.type === 2;
-          return (
-            <circle
-              key={`selected-${nodePos.id}`}
-              cx={nodePos.x}
-              cy={nodePos.y}
-              r={isChoice ? 10 : 7}
-              fill={PREVIEW_NODE_ACTIVE}
-              stroke={PREVIEW_NODE_ACTIVE_STROKE}
-              strokeWidth={2}
+      {choiceNodes.map((node) => {
+        const isSelected = node.selection?.selected ?? false;
+        const choiceIndex = node.selection?.choiceIndex ?? 0;
+        const isLeftSelected = isSelected && choiceIndex === 0;
+        const isRightSelected = isSelected && choiceIndex === 1;
+
+        return (
+          <g key={`choice-${node.id}`}>
+            <ChoiceNodeHalf
+              cx={node.x}
+              cy={node.y}
+              r={CHOICE_NODE_SIZE}
+              isLeft
+              isSelected={isLeftSelected}
             />
-          );
-        })}
+            <ChoiceNodeHalf
+              cx={node.x}
+              cy={node.y}
+              r={CHOICE_NODE_SIZE}
+              isLeft={false}
+              isSelected={isRightSelected}
+            />
+            <line
+              x1={node.x}
+              y1={node.y - CHOICE_NODE_SIZE}
+              x2={node.x}
+              y2={node.y + CHOICE_NODE_SIZE}
+              stroke={transparentBg ? "rgba(0,0,0,0.3)" : PREVIEW_BG}
+              strokeWidth={1}
+            />
+          </g>
+        );
+      })}
     </svg>
   );
 }
