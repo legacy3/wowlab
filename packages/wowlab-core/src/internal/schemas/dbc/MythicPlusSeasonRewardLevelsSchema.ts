@@ -9,4 +9,6 @@ export const MythicPlusSeasonRewardLevelsRowSchema = Schema.Struct({
   EndOfRunRewardLevel: Schema.NumberFromString,
 });
 
-export type MythicPlusSeasonRewardLevelsRow = Schema.Schema.Type<typeof MythicPlusSeasonRewardLevelsRowSchema>;
+export type MythicPlusSeasonRewardLevelsRow = Schema.Schema.Type<
+  typeof MythicPlusSeasonRewardLevelsRowSchema
+>;

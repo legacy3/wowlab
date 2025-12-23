@@ -8,4 +8,6 @@ export const MythicPlusSeasonRowSchema = Schema.Struct({
   HeroicLFGDungeonMinGear: Schema.NumberFromString,
 });
 
-export type MythicPlusSeasonRow = Schema.Schema.Type<typeof MythicPlusSeasonRowSchema>;
+export type MythicPlusSeasonRow = Schema.Schema.Type<
+  typeof MythicPlusSeasonRowSchema
+>;

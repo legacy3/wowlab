@@ -8,4 +8,6 @@ export const MythicPlusSeasonTrackedAffixRowSchema = Schema.Struct({
   DisplaySeasonID: Schema.NumberFromString,
 });
 
-export type MythicPlusSeasonTrackedAffixRow = Schema.Schema.Type<typeof MythicPlusSeasonTrackedAffixRowSchema>;
+export type MythicPlusSeasonTrackedAffixRow = Schema.Schema.Type<
+  typeof MythicPlusSeasonTrackedAffixRowSchema
+>;
