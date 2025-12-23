@@ -51,7 +51,8 @@ export const DBC_TABLES = {
 ## 3. Upload to Supabase
 
 ```bash
-pnpm cli upload-dbc myNewTable
+pnpm build # Rebuild packages
+pnpm cli upload-dbc --tables myNewTable
 ```
 
 Done. The table is now available everywhere.
