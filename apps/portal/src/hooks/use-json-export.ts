@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { formatIsoTimestamp } from "@/lib/format";
 
 export function useJsonExport<TData, TPayload = unknown>({
   data,
@@ -37,7 +38,7 @@ export function useJsonExport<TData, TPayload = unknown>({
     }
 
     if (!exportedAtRef.current) {
-      exportedAtRef.current = new Date().toISOString();
+      exportedAtRef.current = formatIsoTimestamp();
     }
 
     return exportedAtRef.current;

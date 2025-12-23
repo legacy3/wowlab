@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatInt } from "@/lib/format";
 import { useItemData } from "../item-context";
 
 export function StatBreakdownCard() {
@@ -35,7 +36,7 @@ export function StatBreakdownCard() {
                 <TableRow key={stat.name}>
                   <TableCell>{stat.name}</TableCell>
                   <TableCell className="text-right">
-                    {stat.value.toLocaleString()}
+                    {formatInt(stat.value)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -61,23 +62,23 @@ export function StatBreakdownCard() {
                 <TableRow key={stat.name}>
                   <TableCell>{stat.name}</TableCell>
                   <TableCell className="text-right">
-                    {stat.rating.toLocaleString()}
+                    {formatInt(stat.rating)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {stat.budgetPercent}%
+                    {formatInt(stat.budgetPercent)}%
                   </TableCell>
                   <TableCell className="text-right">
-                    {stat.percentAtLevel}%
+                    {formatInt(stat.percentAtLevel)}%
                   </TableCell>
                   <TableCell className="text-right">
-                    {stat.diminishedPercent}%
+                    {formatInt(stat.diminishedPercent)}%
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
           <p className="mt-2 text-xs text-muted-foreground">
-            Total Secondary Budget: {item.totalSecondaryBudget.toLocaleString()}{" "}
+            Total Secondary Budget: {formatInt(item.totalSecondaryBudget)}{" "}
             (100%)
           </p>
         </div>

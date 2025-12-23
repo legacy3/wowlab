@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { formatDate } from "@/lib/format";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Search, ChevronDown, Calendar, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ type BlogListProps = {
 };
 
 function BlogListItem({ post }: { post: BlogEntry }) {
-  const formattedDate = format(parseISO(post.publishedAt), "d MMM yyyy");
+  const formattedDate = formatDate(post.publishedAt, "d MMM yyyy");
 
   return (
     <article>

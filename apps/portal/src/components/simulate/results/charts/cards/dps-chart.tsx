@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartCard } from "../chart-card";
 import { dpsDataAtom } from "@/atoms";
+import { formatInt, formatDurationSeconds } from "@/lib/format";
 
 const chartConfig = {
   dps: {
@@ -39,11 +40,10 @@ export function DpsChart() {
       footer={
         <>
           <div className="flex gap-2 leading-none font-medium">
-            Peak DPS: {maxDps.toLocaleString()}{" "}
-            <TrendingUp className="h-4 w-4" />
+            Peak DPS: {formatInt(maxDps)} <TrendingUp className="h-4 w-4" />
           </div>
           <div className="text-muted-foreground leading-none">
-            Average: {avgDps.toLocaleString()} DPS over 300 seconds
+            Average: {formatInt(avgDps)} DPS over 300 seconds
           </div>
         </>
       }
@@ -62,18 +62,18 @@ export function DpsChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}s`}
+          tickFormatter={(value) => formatDurationSeconds(value)}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}`}
+          tickFormatter={(value) => formatInt(value)}
         />
         <ChartTooltip
           cursor={false}
           content={ChartTooltipContent}
-          labelFormatter={(value) => `${value}s`}
+          labelFormatter={(value) => formatDurationSeconds(value)}
         />
         <Line
           dataKey="dps"

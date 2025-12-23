@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { getQualityName, useItemData } from "../item-context";
+import { formatInt } from "@/lib/format";
 
 export function HeaderCard() {
   const item = useItemData();
@@ -59,17 +60,19 @@ export function HeaderCard() {
 
             <div className="mt-4 space-y-1">
               <p className="text-sm">
-                <span className="text-muted-foreground">{item.armor}</span>{" "}
+                <span className="text-muted-foreground">
+                  {formatInt(item.armor)}
+                </span>{" "}
                 Armor
               </p>
               {item.primaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm">
-                  +{stat.value.toLocaleString()} {stat.name}
+                  +{formatInt(stat.value)} {stat.name}
                 </p>
               ))}
               {item.secondaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm text-green-500">
-                  +{stat.rating.toLocaleString()} {stat.name}
+                  +{formatInt(stat.rating)} {stat.name}
                 </p>
               ))}
               {item.sockets.map((socket, i) => (
@@ -78,7 +81,7 @@ export function HeaderCard() {
                 </p>
               ))}
               <p className="text-sm text-muted-foreground">
-                Requires Level {item.requiredLevel}
+                Requires Level {formatInt(item.requiredLevel)}
               </p>
               {item.description && (
                 <p className="mt-2 text-sm italic text-yellow-500">

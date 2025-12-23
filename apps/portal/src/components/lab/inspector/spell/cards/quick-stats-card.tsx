@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Crosshair, Gauge, Shield, Zap } from "lucide-react";
-import { formatTime, useSpellData } from "../spell-context";
+import { formatDurationMs } from "@/lib/format";
+import { useSpellData } from "../spell-context";
 
 export function QuickStatsCard() {
   const spell = useSpellData();
@@ -18,14 +19,14 @@ export function QuickStatsCard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Cast Time</p>
-              <p className="font-medium">{formatTime(spell.castTime)}</p>
+              <p className="font-medium">{formatDurationMs(spell.castTime)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Gauge className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Cooldown</p>
-              <p className="font-medium">{formatTime(spell.cooldown)}</p>
+              <p className="font-medium">{formatDurationMs(spell.cooldown)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -48,7 +49,7 @@ export function QuickStatsCard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">GCD</p>
-              <p className="font-medium">{formatTime(spell.gcd)}</p>
+              <p className="font-medium">{formatDurationMs(spell.gcd)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

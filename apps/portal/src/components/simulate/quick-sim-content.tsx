@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { formatInt } from "@/lib/format";
 import {
   Tooltip,
   TooltipContent,
@@ -482,16 +483,16 @@ function QuickSimContentInner() {
         <Card>
           <CardContent className="pt-6 space-y-2">
             <p className="text-lg font-semibold">
-              DPS: {Math.round(result.dps).toLocaleString()}
+              DPS: {formatInt(Math.round(result.dps))}
             </p>
             <p className="text-sm text-muted-foreground">
-              Total Damage: {result.totalDamage.toLocaleString()}
+              Total Damage: {formatInt(result.totalDamage)}
             </p>
             <p className="text-sm text-muted-foreground">
-              Casts: {result.casts}
+              Casts: {formatInt(result.casts)}
             </p>
             <p className="text-sm text-muted-foreground">
-              Events: {result.events.length}
+              Events: {formatInt(result.events.length)}
             </p>
 
             {/* Link to saved result */}

@@ -5,6 +5,7 @@ import {
   type SimulationJob,
   type SimulationPhase,
 } from "@/atoms/computing/state";
+import { formatInt } from "@/lib/format";
 
 export interface CreateSimJobParams {
   name: string;
@@ -21,7 +22,7 @@ export const createSimJobAtom = atom(
       name: params.name,
       status: "running",
       progress: 0,
-      current: `0 / ${params.totalIterations.toLocaleString()}`,
+      current: `0 / ${formatInt(params.totalIterations)}`,
       eta: "Calculating...",
       phase: "preparing-spells",
       phaseDetail: "Loading spell data",
@@ -82,7 +83,7 @@ export const updateSimProgressAtom = atom(
           ? {
               ...job,
               progress,
-              current: `${params.current.toLocaleString()} / ${params.total.toLocaleString()}`,
+              current: `${formatInt(params.current)} / ${formatInt(params.total)}`,
               eta: params.eta ?? job.eta,
             }
           : job,

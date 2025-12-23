@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartCard } from "../chart-card";
 import { abilityDataAtom } from "@/atoms";
+import { formatInt } from "@/lib/format";
 
 const chartConfig = {
   casts: {
@@ -37,10 +38,11 @@ export function AbilityChart() {
       footer={
         <>
           <div className="flex gap-2 leading-none font-medium">
-            Total casts: {totalCasts} <Activity className="h-4 w-4" />
+            Total casts: {formatInt(totalCasts)}{" "}
+            <Activity className="h-4 w-4" />
           </div>
           <div className="text-muted-foreground leading-none">
-            Total damage: {totalDamage.toLocaleString()}
+            Total damage: {formatInt(totalDamage)}
           </div>
         </>
       }
@@ -65,7 +67,7 @@ export function AbilityChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}`}
+          tickFormatter={(value) => formatInt(value)}
         />
         <ChartTooltip content={ChartTooltipContent} />
         <Bar dataKey="casts" fill="var(--color-casts)" radius={4} />

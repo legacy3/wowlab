@@ -6,6 +6,7 @@ import type { TooltipContentProps as RechartsTooltipContentProps } from "rechart
 import type { Props as RechartsLegendContentProps } from "recharts/types/component/DefaultLegendContent";
 
 import { cn } from "@/lib/utils";
+import { formatInt } from "@/lib/format";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -240,7 +241,7 @@ function ChartTooltipContent({
                       </div>
                       {item.value && (
                         <span className="text-foreground font-mono font-medium tabular-nums">
-                          {item.value.toLocaleString()}
+                          {formatInt(item.value)}
                         </span>
                       )}
                     </div>

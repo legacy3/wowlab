@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { TrendDirection } from "@/atoms/dps-rankings";
+import { formatPercent } from "@/lib/format";
 
 // Shared tab header component
 interface TabHeaderProps {
@@ -111,7 +112,7 @@ export function TrendPill({ direction, value }: TrendPillProps) {
   if (direction === "flat") {
     return (
       <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-        {value.toFixed(1)}%
+        {formatPercent(value, 1)}
       </span>
     );
   }
@@ -133,7 +134,7 @@ export function TrendPill({ direction, value }: TrendPillProps) {
         <ArrowDownRight className="h-3 w-3" />
       )}
       {isPositive ? "+" : ""}
-      {value.toFixed(1)}%
+      {formatPercent(value, 1)}
     </span>
   );
 }

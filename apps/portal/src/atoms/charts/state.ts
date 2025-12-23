@@ -100,9 +100,19 @@ function generateMockResourceData(): ResourceDataPoint[] {
 
 function generateMockAbilityData(): AbilityUsageDataPoint[] {
   return [
-    { ability: "Kill Command", casts: 45, damage: 125000, fill: "var(--chart-1)" },
+    {
+      ability: "Kill Command",
+      casts: 45,
+      damage: 125000,
+      fill: "var(--chart-1)",
+    },
     { ability: "Cobra Shot", casts: 38, damage: 89000, fill: "var(--chart-2)" },
-    { ability: "Barbed Shot", casts: 28, damage: 67000, fill: "var(--chart-3)" },
+    {
+      ability: "Barbed Shot",
+      casts: 28,
+      damage: 67000,
+      fill: "var(--chart-3)",
+    },
     { ability: "Barrage", casts: 12, damage: 42000, fill: "var(--chart-4)" },
     { ability: "Kill Shot", casts: 5, damage: 35000, fill: "var(--chart-5)" },
   ];

@@ -13,6 +13,7 @@ import {
 import { CLASS_COLORS, type WowClass } from "@/atoms/dps-rankings";
 import { useTopSims } from "@/hooks/use-top-sims";
 import { TabHeader, EmptyState, RankingsCard, TabSkeleton } from "./shared";
+import { formatDate, formatInt } from "@/lib/format";
 
 export function TopSimsTab() {
   const {
@@ -99,13 +100,13 @@ export function TopSimsTab() {
                       {sim.author}
                     </TableCell>
                     <TableCell className="text-right font-medium tabular-nums">
-                      {Math.round(sim.dps).toLocaleString()}
+                      {formatInt(Math.round(sim.dps))}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-right tabular-nums text-muted-foreground">
                       {sim.scenario}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-right text-muted-foreground">
-                      {new Date(sim.simDate).toLocaleDateString()}
+                      {formatDate(sim.simDate, "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
                       <a

@@ -274,23 +274,3 @@ export function useSpellData(): SpellData {
 }
 
 // TODO Shared utility
-export function formatTime(ms: number | null): string {
-  if (ms === null) {
-    return "-";
-  }
-
-  if (ms === 0) {
-    return "Instant";
-  }
-
-  if (ms < 1000) {
-    return `${ms}ms`;
-  }
-
-  return `${(ms / 1000).toFixed(1)}s`;
-}
-
-// TODO Shared utility
-export function formatHex(value: number): string {
-  return `0x${value.toString(16).toUpperCase().padStart(8, "0")}`;
-}

@@ -430,11 +430,6 @@ export function useItemData(): ItemData {
   return context;
 }
 
-// TODO Shared utility
-export function formatHex(value: number): string {
-  return `0x${value.toString(16).toUpperCase().padStart(8, "0")}`;
-}
-
 // TODO Get this from dbc data
 export function getQualityName(quality: number): string {
   const names: Record<number, string> = {

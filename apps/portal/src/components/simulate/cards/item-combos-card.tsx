@@ -18,7 +18,7 @@ function formatTime(seconds: number): string {
   if (mins > 0) {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   }
-  
+
   return `${secs}s`;
 }
 
@@ -30,7 +30,9 @@ export function ItemCombosCard() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Cooldown Usage</CardTitle>
-          <CardDescription>Major cooldown timing throughout the fight</CardDescription>
+          <CardDescription>
+            Major cooldown timing throughout the fight
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
@@ -63,7 +65,9 @@ export function ItemCombosCard() {
     <Card>
       <CardHeader>
         <CardTitle className="text-sm">Cooldown Usage</CardTitle>
-        <CardDescription>Major cooldown timing throughout the fight</CardDescription>
+        <CardDescription>
+          Major cooldown timing throughout the fight
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

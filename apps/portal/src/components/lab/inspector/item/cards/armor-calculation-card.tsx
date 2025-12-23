@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield } from "lucide-react";
+import { formatInt, formatPercent } from "@/lib/format";
 import { useItemData } from "../item-context";
 
 export function ArmorCalculationCard() {
@@ -20,7 +21,7 @@ export function ArmorCalculationCard() {
           <div>
             <p className="text-muted-foreground">Base Armor</p>
             <p className="font-medium">
-              {item.armorCalculation.baseArmor.toLocaleString()}
+              {formatInt(item.armorCalculation.baseArmor)}
             </p>
           </div>
           <div>
@@ -39,8 +40,8 @@ export function ArmorCalculationCard() {
         <div>
           <p className="text-muted-foreground">Damage Reduction vs Level 80:</p>
           <p className="font-medium">
-            Physical DR: {item.armorCalculation.physicalDR}% (with this piece
-            only)
+            Physical DR: {formatPercent(item.armorCalculation.physicalDR, 1)}{" "}
+            (with this piece only)
           </p>
         </div>
       </CardContent>

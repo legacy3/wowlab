@@ -1,5 +1,5 @@
 import type { SpellDbcData } from "./dbc";
-import { formatNumber } from "./cst";
+import { formatNumber } from "@/lib/format";
 
 export function isEffectVarType(varType: string): boolean {
   return (

@@ -10,7 +10,6 @@ import {
   extractLeadingNumber,
   firstNode,
   firstTokenImage,
-  formatNumber,
   getNodes,
   getTokenImages,
   getTokens,
@@ -19,6 +18,7 @@ import {
   splitArgs,
   type CstNode,
 } from "./cst";
+import { formatNumber } from "@/lib/format";
 import type { SpellDbcData } from "./dbc";
 import type { SpellDescriptionKind } from "./types";
 import {

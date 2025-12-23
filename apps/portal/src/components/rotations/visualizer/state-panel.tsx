@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Zap, Heart } from "lucide-react";
 import { GameIcon } from "@/components/game";
 import * as colors from "@/lib/colors";
+import { formatDurationSeconds } from "@/lib/format";
 import type { PlaybackFrame, SpellInfo } from "./mock-data";
 import { MOCK_SPELLS } from "./mock-data";
 
@@ -68,7 +69,7 @@ function CooldownItem({
       <span
         className={`text-xs font-mono tabular-nums font-medium ${isReady ? "text-green-500" : "text-muted-foreground"}`}
       >
-        {isReady ? "Ready" : `${remaining.toFixed(1)}s`}
+        {isReady ? "Ready" : formatDurationSeconds(remaining)}
       </span>
     </div>
   );

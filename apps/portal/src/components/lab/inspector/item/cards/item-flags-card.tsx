@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatHex, useItemData } from "../item-context";
+import { formatHex } from "@/lib/hex";
+import { useItemData } from "../item-context";
 
 export function ItemFlagsCard() {
   const item = useItemData();

@@ -3,6 +3,7 @@
 // TODO(refine-migration): Replace with Refine data hooks in Phase 4/5
 // import { useAtom } from "jotai";
 // import { itemCombosAtom } from "@/atoms/sim/results";
+import { formatInt, formatPercent } from "@/lib/format";
 
 export function ResultsCombos() {
   // TODO(refine-migration): Replace with Refine useList hook
@@ -33,18 +34,18 @@ export function ResultsCombos() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                {combo.rank}
+                {formatInt(combo.rank)}
               </div>
               <span className="text-lg font-semibold">
-                {combo.dps.toLocaleString()} DPS
+                {formatInt(combo.dps)} DPS
               </span>
             </div>
             <div className="text-right">
               <div className="text-sm font-medium text-green-500">
-                +{combo.gain} DPS
+                +{formatInt(combo.gain)} DPS
               </div>
               <div className="text-xs text-muted-foreground">
-                +{combo.gainPercent}%
+                +{formatPercent(combo.gainPercent, 1)}
               </div>
             </div>
           </div>

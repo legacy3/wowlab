@@ -24,6 +24,7 @@ import type { SimulationEvent } from "@/lib/simulation/types";
 import { isResourceSnapshot } from "@/lib/simulation/transformers";
 import { useJsonExport } from "@/hooks/use-json-export";
 import { GAME_CONFIG } from "@/lib/config/game";
+import { formatDurationSeconds, formatInt } from "@/lib/format";
 
 type EventCategory = "cast" | "damage" | "aura" | "resource" | "other";
 
@@ -71,10 +72,7 @@ function getEventCategory(tag: string): EventCategory {
 }
 
 function formatTimestamp(timestamp: number): string {
-  const minutes = Math.floor(timestamp / 60);
-  const seconds = (timestamp % 60).toFixed(2);
-
-  return `${minutes}:${seconds.padStart(5, "0")}`;
+  return formatDurationSeconds(timestamp);
 }
 
 function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
@@ -106,13 +104,13 @@ function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
   if ("amount" in event && typeof event.amount === "number") {
     if (tag.includes("DAMAGE")) {
       const crit = "critical" in event && event.critical ? " (Crit)" : "";
-      details = `${event.amount.toLocaleString()} damage${crit}`;
+      details = `${formatInt(event.amount)} damage${crit}`;
     } else if (tag.includes("ENERGIZE")) {
-      details = `+${event.amount} resource`;
+      details = `+${formatInt(event.amount)} resource`;
     } else if (tag.includes("DRAIN")) {
-      details = `-${event.amount} resource`;
+      details = `-${formatInt(event.amount)} resource`;
     } else {
-      details = `${event.amount}`;
+      details = `${formatInt(event.amount)}`;
     }
   }
 
@@ -213,7 +211,7 @@ export function EventLogContent() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">
-                Event Log ({filteredEvents.length.toLocaleString()} events)
+                Event Log ({formatInt(filteredEvents.length)} events)
               </CardTitle>
               {exportJson && (
                 <>

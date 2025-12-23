@@ -42,12 +42,12 @@ All integration work has been completed. The charts, timeline, and simulation fe
 
 ### Executive Summary (Before Implementation)
 
-| Feature | Status | Main Blocker |
-|---------|--------|--------------|
-| **Timeline** | Working | Uses mock data, not connected to real sim |
-| **Charts** | Working | Uses mock data, not connected to real sim |
-| **Simulation** | Working | Results not integrated with UI |
-| **Results Overview** | Broken | Missing atoms from Refine migration |
+| Feature              | Status  | Main Blocker                              |
+| -------------------- | ------- | ----------------------------------------- |
+| **Timeline**         | Working | Uses mock data, not connected to real sim |
+| **Charts**           | Working | Uses mock data, not connected to real sim |
+| **Simulation**       | Working | Results not integrated with UI            |
+| **Results Overview** | Broken  | Missing atoms from Refine migration       |
 
 **Core Problem:** Everything renders and works independently, but there's no data pipeline connecting simulation results → charts/timeline display.
 
@@ -97,31 +97,32 @@ All integration work has been completed. The charts, timeline, and simulation fe
 **Problem:** Charts use hardcoded mock data generators in `atoms/charts/state.ts`
 
 **Files to modify:**
+
 - `src/atoms/charts/state.ts` - Replace mock generators with derived atoms
 
 **Required work:**
 
 ```typescript
 // Current (MOCK):
-export const dpsDataAtom = atom(() => generateDpsData())
+export const dpsDataAtom = atom(() => generateDpsData());
 
 // Needed (DERIVED from simulation):
 export const dpsDataAtom = atom((get) => {
-  const combatData = get(combatDataAtom)
-  if (!combatData) return generateDpsData() // fallback
-  return transformToDpsChartData(combatData)
-})
+  const combatData = get(combatDataAtom);
+  if (!combatData) return generateDpsData(); // fallback
+  return transformToDpsChartData(combatData);
+});
 ```
 
 **Create transformers for each chart type:**
 
-| Chart | Source Data | Transformation Needed |
-|-------|-------------|----------------------|
-| DPS Chart | `combatData.damage[]` | Aggregate damage over time windows, calculate running avg |
-| Resource Chart | `combatData.resources[]` | Map focus/mana snapshots to time series |
-| Ability Chart | `combatData.casts[]` | Group by spellId, count casts, sum damage |
-| Cooldown Chart | `combatData.casts[]` | Filter major CDs, extract timing/duration |
-| Detailed Chart | All of above | Combine cumulative damage, DPS, resources |
+| Chart          | Source Data              | Transformation Needed                                     |
+| -------------- | ------------------------ | --------------------------------------------------------- |
+| DPS Chart      | `combatData.damage[]`    | Aggregate damage over time windows, calculate running avg |
+| Resource Chart | `combatData.resources[]` | Map focus/mana snapshots to time series                   |
+| Ability Chart  | `combatData.casts[]`     | Group by spellId, count casts, sum damage                 |
+| Cooldown Chart | `combatData.casts[]`     | Filter major CDs, extract timing/duration                 |
+| Detailed Chart | All of above             | Combine cumulative damage, DPS, resources                 |
 
 **New file needed:** `src/atoms/charts/transformers.ts`
 
@@ -132,15 +133,18 @@ export const dpsDataAtom = atom((get) => {
 **Status:** `simulation-result-tabs.tsx` already calls `transformEventsWithResources()` and sets `combatDataAtom`.
 
 **What's working:**
+
 - `useLoadLocalJob()` hook loads job from storage
 - Events are transformed to `CombatData` format
 - Timeline reads from `combatDataAtom`
 
 **What's missing:**
+
 - No automatic loading when simulation completes
 - Timeline still defaults to mock generator when no job loaded
 
 **Files involved:**
+
 - `src/components/simulate/simulation-result-tabs.tsx:44-60` - Contains load logic
 - `src/atoms/timeline/state.ts:15-200` - Mock generator takes precedence
 
@@ -148,10 +152,10 @@ export const dpsDataAtom = atom((get) => {
 
 ```typescript
 // In atoms/timeline/state.ts
-export const combatDataAtom = atom<CombatData | null>(null)
+export const combatDataAtom = atom<CombatData | null>(null);
 export const effectiveCombatDataAtom = atom((get) => {
-  return get(combatDataAtom) ?? generateCombatData() // fallback to mock
-})
+  return get(combatDataAtom) ?? generateCombatData(); // fallback to mock
+});
 ```
 
 ---
@@ -161,6 +165,7 @@ export const effectiveCombatDataAtom = atom((get) => {
 **Status:** 7 cards are broken due to deleted atoms from Refine migration
 
 **Broken files:**
+
 ```
 src/components/simulate/
 ├── results-overview.tsx          # References deleted atoms
@@ -177,24 +182,26 @@ src/components/simulate/
 **Two options:**
 
 #### Option A: Create New Simulation-Based Atoms
+
 Replace the Refine-dependent atoms with simulation-derived ones:
 
 ```typescript
 // New atoms/simulation/results.ts
-export const simulationResultAtom = atom<SimulationResult | null>(null)
+export const simulationResultAtom = atom<SimulationResult | null>(null);
 
 export const bestDpsAtom = atom((get) => {
-  const result = get(simulationResultAtom)
-  return result?.dps ?? 0
-})
+  const result = get(simulationResultAtom);
+  return result?.dps ?? 0;
+});
 
 export const totalDamageAtom = atom((get) => {
-  const result = get(simulationResultAtom)
-  return result?.totalDamage ?? 0
-})
+  const result = get(simulationResultAtom);
+  return result?.totalDamage ?? 0;
+});
 ```
 
 #### Option B: Complete Refine Migration
+
 Finish the data provider integration with Supabase. This is marked as "Phase 4/5" in TODOs.
 
 **Recommendation:** Option A for quick wins, Option B for persistence.
@@ -206,6 +213,7 @@ Finish the data provider integration with Supabase. This is marked as "Phase 4/5
 **Goal:** Simulation complete → Results automatically displayed
 
 **Current flow (broken):**
+
 1. User clicks "Simulate"
 2. `useSimulation` runs simulation
 3. Result stored in `computingDrawerAtom` (job tracking)
@@ -215,6 +223,7 @@ Finish the data provider integration with Supabase. This is marked as "Phase 4/5
 7. ⚠️ Charts show mock data
 
 **Target flow:**
+
 1. User clicks "Simulate"
 2. `useSimulation` runs simulation
 3. Result stored in `simulationResultAtom`
@@ -227,20 +236,21 @@ Finish the data provider integration with Supabase. This is marked as "Phase 4/5
 
 ## 3. Dependencies & Libraries
 
-| Category | Library | Version | Status |
-|----------|---------|---------|--------|
-| Charts | recharts | 3.5.1 | Working |
-| Canvas | konva + react-konva | 10.0.12 / 19.2.1 | Working |
-| State | jotai | 2.15.2 | Working |
-| Simulation | effect | 3.19.4 | Working |
-| Data | @refinedev/core | 5.0.6 | Migration incomplete |
-| Export | jspdf | 3.0.4 | Working |
+| Category   | Library             | Version          | Status               |
+| ---------- | ------------------- | ---------------- | -------------------- |
+| Charts     | recharts            | 3.5.1            | Working              |
+| Canvas     | konva + react-konva | 10.0.12 / 19.2.1 | Working              |
+| State      | jotai               | 2.15.2           | Working              |
+| Simulation | effect              | 3.19.4           | Working              |
+| Data       | @refinedev/core     | 5.0.6            | Migration incomplete |
+| Export     | jspdf               | 3.0.4            | Working              |
 
 ---
 
 ## 4. File Reference
 
 ### Charts
+
 ```
 src/components/simulate/results/charts/
 ├── charts-content.tsx         # Dashboard wrapper with drag reorder
@@ -257,6 +267,7 @@ src/components/ui/chart.tsx    # Recharts wrapper with theme
 ```
 
 ### Timeline
+
 ```
 src/components/simulate/results/timeline/
 ├── timeline.tsx               # Main Konva Stage component
@@ -280,6 +291,7 @@ src/hooks/canvas/              # useZoom, useDragPan, useExport
 ```
 
 ### Simulation
+
 ```
 src/lib/simulation/
 ├── runner.ts                  # Main simulation loop (Effect-TS)
@@ -297,6 +309,7 @@ src/atoms/simulation/job.ts    # Job tracking state
 ```
 
 ### Results (Broken)
+
 ```
 src/components/simulate/
 ├── simulation-result-tabs.tsx  # Tab container (works)
@@ -365,28 +378,37 @@ This gets 2 charts and 2 cards working with real data, proving the architecture.
 ## 7. Technical Notes
 
 ### Event Types from Simulation
+
 ```typescript
 type SimulationEventType =
-  | 'SPELL_CAST_START' | 'SPELL_CAST_SUCCESS' | 'SPELL_CAST_FAILED'
-  | 'SPELL_DAMAGE' | 'SPELL_PERIODIC_DAMAGE'
-  | 'SPELL_AURA_APPLIED' | 'SPELL_AURA_REMOVED' | 'SPELL_AURA_REFRESH'
-  | 'SPELL_ENERGIZE' | 'SPELL_DRAIN'
-  | 'RESOURCE_SNAPSHOT'  // Custom, emitted every 10 casts
+  | "SPELL_CAST_START"
+  | "SPELL_CAST_SUCCESS"
+  | "SPELL_CAST_FAILED"
+  | "SPELL_DAMAGE"
+  | "SPELL_PERIODIC_DAMAGE"
+  | "SPELL_AURA_APPLIED"
+  | "SPELL_AURA_REMOVED"
+  | "SPELL_AURA_REFRESH"
+  | "SPELL_ENERGIZE"
+  | "SPELL_DRAIN"
+  | "RESOURCE_SNAPSHOT"; // Custom, emitted every 10 casts
 ```
 
 ### CombatData Structure (Timeline Format)
+
 ```typescript
 interface CombatData {
-  casts: CastEvent[]       // { spellId, name, start, end, damage? }
-  buffs: BuffEvent[]       // { spellId, name, start, end, stacks }
-  debuffs: BuffEvent[]
-  damage: DamageEvent[]    // { time, spellId, amount, isCrit }
-  resources: ResourceEvent[] // { time, current, max }
-  phases: PhaseEvent[]     // { name, start, end }
+  casts: CastEvent[]; // { spellId, name, start, end, damage? }
+  buffs: BuffEvent[]; // { spellId, name, start, end, stacks }
+  debuffs: BuffEvent[];
+  damage: DamageEvent[]; // { time, spellId, amount, isCrit }
+  resources: ResourceEvent[]; // { time, current, max }
+  phases: PhaseEvent[]; // { name, start, end }
 }
 ```
 
 ### Chart Data Structures
+
 ```typescript
 // DPS Chart
 { time: number, instantaneous: number, running_avg: number }[]
@@ -406,4 +428,4 @@ interface CombatData {
 
 ---
 
-*Generated: 2025-12-23*
+_Generated: 2025-12-23_

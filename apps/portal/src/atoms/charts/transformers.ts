@@ -48,7 +48,8 @@ export function transformToDpsChartData(
     const instantaneousDps = Math.round(windowDamage / windowSize);
 
     // Running average DPS
-    const runningAvg = t > 0 ? Math.round(cumulativeDamage / t) : instantaneousDps;
+    const runningAvg =
+      t > 0 ? Math.round(cumulativeDamage / t) : instantaneousDps;
 
     data.push({
       time: t,

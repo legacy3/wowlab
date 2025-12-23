@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { formatHex, useSpellData } from "../spell-context";
+import { formatHex } from "@/lib/hex";
+import { useSpellData } from "../spell-context";
 
 export function AttributesCard() {
   const spell = useSpellData();

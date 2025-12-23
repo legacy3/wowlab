@@ -17,7 +17,7 @@ function formatDuration(seconds: number): string {
   if (mins > 0) {
     return `${mins}m ${secs}s`;
   }
-  
+
   return `${secs}s`;
 }
 

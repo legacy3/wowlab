@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartCard } from "../chart-card";
 import { detailedDataAtom } from "@/atoms";
+import { formatCompact, formatInt, formatDurationSeconds } from "@/lib/format";
 
 const chartConfig = {
   damage: {
@@ -50,11 +51,11 @@ export function DetailedChart() {
       footer={
         <>
           <div className="flex gap-2 leading-none font-medium">
-            Total damage: {finalDamage.toLocaleString()}{" "}
+            Total damage: {formatInt(finalDamage)}{" "}
             <BarChart3 className="h-4 w-4" />
           </div>
           <div className="text-muted-foreground leading-none">
-            Average DPS: {avgDps.toLocaleString()} over entire encounter
+            Average DPS: {formatInt(avgDps)} over entire encounter
           </div>
         </>
       }
@@ -74,22 +75,14 @@ export function DetailedChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}s`}
+          tickFormatter={(value) => formatDurationSeconds(value)}
         />
         <YAxis
           yAxisId="left"
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => {
-            if (value >= 1000000) {
-              return `${(value / 1000000).toFixed(1)}M`;
-            }
-            if (value >= 1000) {
-              return `${(value / 1000).toFixed(0)}k`;
-            }
-            return value;
-          }}
+          tickFormatter={(value) => formatCompact(value)}
         />
         <YAxis
           yAxisId="right"
@@ -97,11 +90,11 @@ export function DetailedChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}`}
+          tickFormatter={(value) => formatInt(value)}
         />
         <ChartTooltip
           content={ChartTooltipContent}
-          labelFormatter={(value) => `${value}s`}
+          labelFormatter={(value) => formatDurationSeconds(value)}
         />
         <ChartLegend content={ChartLegendContent} />
         <Area

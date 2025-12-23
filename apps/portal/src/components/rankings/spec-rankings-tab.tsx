@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   selectedTierAtom,
@@ -164,13 +165,13 @@ export function SpecRankingsTab() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
-                        {Math.round(ranking.avgDps).toLocaleString()}
+                        {formatInt(Math.round(ranking.avgDps))}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         <TrendPill direction="flat" value={0} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {ranking.simCount.toLocaleString()}
+                        {formatInt(ranking.simCount)}
                       </TableCell>
                     </TableRow>
                   ))}

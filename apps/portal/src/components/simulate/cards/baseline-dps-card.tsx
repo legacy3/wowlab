@@ -9,25 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { simTotalDamageAtom } from "@/atoms/simulation/results";
-
-const intl = {
-  number: new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }),
-};
+import { formatCompact } from "@/lib/format";
 
 function formatDamage(value: number): string {
-  if (value >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toFixed(2)}B`;
-  }
-
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(2)}M`;
-  }
-
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`;
-  }
-  
-  return intl.number.format(value);
+  return formatCompact(value);
 }
 
 export function BaselineDpsCard() {

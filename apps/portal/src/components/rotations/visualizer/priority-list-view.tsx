@@ -42,6 +42,7 @@ import {
   getRowLayout,
   getRowY,
 } from "./constants";
+import { formatDurationSeconds } from "@/lib/format";
 
 interface SpellIconProps {
   iconName: string;
@@ -255,7 +256,7 @@ export const PriorityListView = memo(function PriorityListView({
         y={PADDING}
         text={
           currentFrame
-            ? `GCD @ ${currentFrame.time.toFixed(1)}s`
+            ? `GCD @ ${formatDurationSeconds(currentFrame.time)}`
             : "Priority List"
         }
         fontSize={HEADER_FONT_SIZE}

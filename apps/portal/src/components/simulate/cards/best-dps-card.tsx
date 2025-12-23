@@ -9,10 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { simDpsAtom } from "@/atoms/simulation/results";
-
-const intl = {
-  number: new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }),
-};
+import { formatInt } from "@/lib/format";
 
 export function BestDpsCard() {
   const dps = useAtomValue(simDpsAtom);
@@ -37,7 +34,7 @@ export function BestDpsCard() {
         <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Simulated DPS
         </CardDescription>
-        <CardTitle className="text-xl">{intl.number.format(dps)} DPS</CardTitle>
+        <CardTitle className="text-xl">{formatInt(dps)} DPS</CardTitle>
         <p className="text-xs text-muted-foreground">Average over encounter</p>
       </CardHeader>
     </Card>

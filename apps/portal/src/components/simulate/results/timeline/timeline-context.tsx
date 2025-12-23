@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { getSpell } from "@/atoms/timeline";
 import { formatTime, formatDamage } from "./utils";
+import { formatDurationSeconds } from "@/lib/format";
 
 export interface TooltipState {
   x: number;
@@ -88,13 +89,15 @@ export function buildSpellTooltip(
         <div className="text-xs text-muted-foreground">
           Duration: {formatTime(durationObj.start)} -{" "}
           {formatTime(durationObj.end)} (
-          {(durationObj.end - durationObj.start).toFixed(1)}s)
+          {formatDurationSeconds(durationObj.end - durationObj.start)})
         </div>
       ) : (
         <div className="text-xs text-muted-foreground">
           Time: {formatTime(timestamp)}
           {castDuration !== null && castDuration > 0 && (
-            <span className="ml-1">(cast: {castDuration.toFixed(1)}s)</span>
+            <span className="ml-1">
+              (cast: {formatDurationSeconds(castDuration)})
+            </span>
           )}
         </div>
       )}

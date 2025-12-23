@@ -5,21 +5,10 @@ import { useAtomValue } from "jotai";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { abilityDataAtom } from "@/atoms/charts/state";
-
-const intl = {
-  number: new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }),
-};
+import { formatCompact, formatInt, formatPercent } from "@/lib/format";
 
 function formatDamage(value: number): string {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(2)}M`;
-  }
-
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`;
-  }
-  
-  return intl.number.format(value);
+  return formatCompact(value);
 }
 
 export function CharacterEquipmentCard() {
@@ -52,8 +41,8 @@ export function CharacterEquipmentCard() {
       <CardHeader>
         <CardTitle className="text-sm">Ability Breakdown</CardTitle>
         <p className="text-xs text-muted-foreground">
-          {intl.number.format(totalCasts)} total casts |{" "}
-          {formatDamage(totalDamage)} total damage
+          {formatInt(totalCasts)} total casts | {formatDamage(totalDamage)}{" "}
+          total damage
         </p>
       </CardHeader>
       <CardContent>
@@ -74,7 +63,7 @@ export function CharacterEquipmentCard() {
                     />
                     <span className="font-medium">{ability.ability}</span>
                     <span className="text-xs text-muted-foreground">
-                      ({ability.casts} casts)
+                      ({formatInt(ability.casts)} casts)
                     </span>
                   </div>
                   <div className="text-right">
@@ -82,7 +71,7 @@ export function CharacterEquipmentCard() {
                       {formatDamage(ability.damage)}
                     </span>
                     <span className="ml-2 text-xs text-muted-foreground">
-                      {damagePercent.toFixed(1)}%
+                      {formatPercent(damagePercent, 1)}
                     </span>
                   </div>
                 </div>

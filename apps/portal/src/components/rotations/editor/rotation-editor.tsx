@@ -9,6 +9,7 @@ import type {
   RotationInsert,
   Rotation,
 } from "@/lib/supabase/types";
+import { formatIsoTimestamp } from "@/lib/format";
 import { MetadataSetup, type MetadataSubmitValues } from "./metadata-setup";
 import { EditorView } from "./editor-view";
 import type { SettingsValues } from "./settings-panel";
@@ -254,8 +255,8 @@ function RotationEditorInner({
       description: draft.description,
       isPublic: draft.isPublic,
       forkedFromId: forkSourceId ?? null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: formatIsoTimestamp(),
+      updatedAt: formatIsoTimestamp(),
     };
 
     return (

@@ -18,6 +18,7 @@ import {
   TIMELINE_WARNING,
 } from "../colors";
 import { formatDamage } from "../utils";
+import { formatDurationSeconds } from "@/lib/format";
 
 interface DamageEvent {
   id: string;
@@ -268,8 +269,8 @@ export const DamageTrack = memo(function DamageTrack({
                   e,
                   <div className="text-xs">
                     <div className="font-bold">
-                      {bucket.timestamp.toFixed(1)}s -{" "}
-                      {(bucket.timestamp + bucketSize).toFixed(1)}s
+                      {formatDurationSeconds(bucket.timestamp)} -{" "}
+                      {formatDurationSeconds(bucket.timestamp + bucketSize)}
                     </div>
                     <div>Total: {formatDamage(bucket.totalDamage)}</div>
                     <div className="mt-1 text-muted-foreground whitespace-pre">

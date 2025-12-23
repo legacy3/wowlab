@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { formatDate } from "@/lib/format";
 import { createArticleOgImage, createSectionOgImage, ogSize } from "@/lib/og";
 import { getBlogEntry } from "@/lib/blog";
 
@@ -21,7 +21,7 @@ export default async function Image({
     });
   }
 
-  const formattedDate = format(parseISO(entry.publishedAt), "MMMM d, yyyy");
+  const formattedDate = formatDate(entry.publishedAt, "MMMM d, yyyy");
 
   return createArticleOgImage({
     section: "Blog",

@@ -230,46 +230,38 @@ const aMurderOfCrows = handler(
   { requiresTarget: true },
 );
 
-const barrage = handler(
-  "bm:barrage",
-  BMSpells.BARRAGE,
-  (event, emit) => {
-    if (event.destGUID && event.destName) {
-      emit(
-        new CombatLog.SpellDamage({
-          ...fromTrigger(event),
-          school: 1,
-          spellId: BMSpells.BARRAGE,
-          spellName: "Barrage",
-          spellSchool: 1,
-          ...DAMAGE_DEFAULTS,
-        }),
-      );
-    }
-  },
-);
+const barrage = handler("bm:barrage", BMSpells.BARRAGE, (event, emit) => {
+  if (event.destGUID && event.destName) {
+    emit(
+      new CombatLog.SpellDamage({
+        ...fromTrigger(event),
+        school: 1,
+        spellId: BMSpells.BARRAGE,
+        spellName: "Barrage",
+        spellSchool: 1,
+        ...DAMAGE_DEFAULTS,
+      }),
+    );
+  }
+});
 
-const stampede = handler(
-  "bm:stampede",
-  BMSpells.STAMPEDE,
-  (event, emit) => {
-    const t = event.timestamp;
-    for (let i = 0; i < 5; i++) {
-      emit(
-        new CombatLog.SpellSummon({
-          ...fromTrigger(event),
-          destFlags: 0x2111,
-          destGUID: `Creature-0-0-0-0-${BMSpells.STAMPEDE}-${t}-${nextSummonId()}`,
-          destName: "Stampede Pet",
-          destRaidFlags: 0,
-          spellId: BMSpells.STAMPEDE,
-          spellName: "Stampede",
-          spellSchool: 1,
-        }),
-      );
-    }
-  },
-);
+const stampede = handler("bm:stampede", BMSpells.STAMPEDE, (event, emit) => {
+  const t = event.timestamp;
+  for (let i = 0; i < 5; i++) {
+    emit(
+      new CombatLog.SpellSummon({
+        ...fromTrigger(event),
+        destFlags: 0x2111,
+        destGUID: `Creature-0-0-0-0-${BMSpells.STAMPEDE}-${t}-${nextSummonId()}`,
+        destName: "Stampede Pet",
+        destRaidFlags: 0,
+        spellId: BMSpells.STAMPEDE,
+        spellName: "Stampede",
+        spellSchool: 1,
+      }),
+    );
+  }
+});
 
 const aspectOfTheCheetah = handler(
   "hunter:aspect-of-the-cheetah",
@@ -312,9 +304,9 @@ const counterShot = handler(
     emit(
       new CombatLog.SpellInterrupt({
         ...fromTrigger(event),
+        extraSchool: 0,
         extraSpellId: 0,
         extraSpellName: "",
-        extraSchool: 0,
         spellId: HunterSpells.COUNTER_SHOT,
         spellName: "Counter Shot",
         spellSchool: 1,
@@ -375,20 +367,16 @@ const feignDeath = handler(
   },
 );
 
-const flare = handler(
-  "hunter:flare",
-  HunterSpells.FLARE,
-  (event, emit) => {
-    emit(
-      new CombatLog.SpellCastSuccess({
-        ...fromTrigger(event, { toSelf: true }),
-        spellId: HunterSpells.FLARE,
-        spellName: "Flare",
-        spellSchool: 1,
-      }),
-    );
-  },
-);
+const flare = handler("hunter:flare", HunterSpells.FLARE, (event, emit) => {
+  emit(
+    new CombatLog.SpellCastSuccess({
+      ...fromTrigger(event, { toSelf: true }),
+      spellId: HunterSpells.FLARE,
+      spellName: "Flare",
+      spellSchool: 1,
+    }),
+  );
+});
 
 const freezingTrap = handler(
   "hunter:freezing-trap",
@@ -445,9 +433,9 @@ const tranquilizingShot = handler(
       new CombatLog.SpellDispel({
         ...fromTrigger(event),
         auraType: "BUFF",
+        extraSchool: 0,
         extraSpellId: 0,
         extraSpellName: "",
-        extraSchool: 0,
         spellId: HunterSpells.TRANQUILIZING_SHOT,
         spellName: "Tranquilizing Shot",
         spellSchool: 8,

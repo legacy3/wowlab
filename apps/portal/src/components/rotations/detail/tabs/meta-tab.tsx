@@ -2,10 +2,10 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { GitFork, Calendar, BarChart3, Users, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Rotation } from "@/lib/supabase/types";
+import { formatInt, formatRelativeToNow } from "@/lib/format";
 
 interface MetaTabProps {
   rotation: Rotation;
@@ -24,21 +24,11 @@ export const MetaTab = memo(function MetaTab({
       <div className="flex flex-wrap gap-6 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>
-            Created{" "}
-            {formatDistanceToNow(new Date(rotation.createdAt), {
-              addSuffix: true,
-            })}
-          </span>
+          <span>Created {formatRelativeToNow(rotation.createdAt)}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>
-            Updated{" "}
-            {formatDistanceToNow(new Date(rotation.updatedAt), {
-              addSuffix: true,
-            })}
-          </span>
+          <span>Updated {formatRelativeToNow(rotation.updatedAt)}</span>
         </div>
       </div>
 
@@ -51,7 +41,7 @@ export const MetaTab = memo(function MetaTab({
         </div>
         <div className="rounded-lg border p-4 text-center">
           <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-2xl font-bold">{forks.length}</p>
+          <p className="text-2xl font-bold">{formatInt(forks.length)}</p>
           <p className="text-xs text-muted-foreground">Forks</p>
         </div>
         <div className="rounded-lg border p-4 text-center">
@@ -88,7 +78,7 @@ export const MetaTab = memo(function MetaTab({
         <div>
           <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
             <GitFork className="h-4 w-4" />
-            Forks ({forks.length})
+            Forks ({formatInt(forks.length)})
           </h3>
           <div className="space-y-2">
             {forks.map((fork) => (
@@ -104,9 +94,7 @@ export const MetaTab = memo(function MetaTab({
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(fork.createdAt), {
-                    addSuffix: true,
-                  })}
+                  {formatRelativeToNow(fork.createdAt)}
                 </span>
               </Link>
             ))}

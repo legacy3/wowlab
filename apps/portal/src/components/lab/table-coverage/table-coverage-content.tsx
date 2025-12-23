@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { CopyButton } from "@/components/ui/copy-button";
 import { useJsonExport } from "@/hooks/use-json-export";
 import { GAME_CONFIG } from "@/lib/config/game";
+import { formatInt, formatPercent } from "@/lib/format";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1208,10 +1209,10 @@ export function TableCoverageContent() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-2xl font-bold">
-                {totalSupported} / {ALL_DBC_TABLES.length}
+                {formatInt(totalSupported)} / {formatInt(ALL_DBC_TABLES.length)}
               </p>
               <p className="text-sm text-muted-foreground">
-                tables supported ({coveragePercent.toFixed(1)}%)
+                tables supported ({formatPercent(coveragePercent, 1)})
               </p>
             </div>
             {exportJson && (

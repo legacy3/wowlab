@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { formatHex, useSpellData } from "../spell-context";
+import { formatHex } from "@/lib/hex";
+import { useSpellData } from "../spell-context";
 
 export function SpellClassCard() {
   const spell = useSpellData();

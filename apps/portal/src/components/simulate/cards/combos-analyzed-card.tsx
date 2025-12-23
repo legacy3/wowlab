@@ -9,10 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { simCastsAtom } from "@/atoms/simulation/results";
-
-const intl = {
-  number: new Intl.NumberFormat("en-US"),
-};
+import { formatInt } from "@/lib/format";
 
 export function CombosAnalyzedCard() {
   const casts = useAtomValue(simCastsAtom);
@@ -37,7 +34,7 @@ export function CombosAnalyzedCard() {
         <CardDescription className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Total Casts
         </CardDescription>
-        <CardTitle className="text-xl">{intl.number.format(casts)}</CardTitle>
+        <CardTitle className="text-xl">{formatInt(casts)}</CardTitle>
         <p className="text-xs text-muted-foreground">Abilities executed</p>
       </CardHeader>
     </Card>

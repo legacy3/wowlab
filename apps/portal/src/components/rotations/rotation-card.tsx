@@ -9,8 +9,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Code2, GitFork, Lock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import type { Rotation } from "@/lib/supabase/types";
+import { formatRelativeToNow } from "@/lib/format";
 
 interface RotationCardProps {
   rotation: Rotation;
@@ -56,9 +56,7 @@ export function RotationCard({ rotation }: RotationCardProps) {
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <time dateTime={rotation.updatedAt}>
-                {formatDistanceToNow(new Date(rotation.updatedAt), {
-                  addSuffix: true,
-                })}
+                {formatRelativeToNow(rotation.updatedAt)}
               </time>
             </div>
 
