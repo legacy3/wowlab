@@ -229,6 +229,20 @@ export function EditorView({
         </div>
       </div>
 
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 px-2 py-1 border-b bg-muted/20 shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs gap-1.5"
+          onClick={handleFormat}
+          disabled={isDisabled}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          Format
+        </Button>
+      </div>
+
       {/* Editor + Sidebar */}
       <div className="flex-1 min-h-0 flex">
         {/* Editor */}
@@ -270,16 +284,6 @@ export function EditorView({
 
       {/* Footer */}
       <div className="flex items-center justify-center gap-2 border-t px-4 py-2.5 bg-muted/30 shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleFormat}
-          disabled={isDisabled}
-          title="Format code (Prettier)"
-        >
-          <Sparkles className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-4 bg-border" />
         <Button
           variant="outline"
           size="sm"
