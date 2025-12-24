@@ -227,6 +227,7 @@ export function EditorView({
               onInsert={handleInsert}
               rotationId={rotation.id}
               currentVersion={rotation.currentVersion ?? undefined}
+              currentScript={script}
               onRestore={onScriptChange}
             />
           </div>

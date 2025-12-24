@@ -19,6 +19,7 @@ interface EditorSidebarProps {
   onInsert: (text: string) => void;
   rotationId?: string;
   currentVersion?: number;
+  currentScript?: string;
   onRestore?: (script: string) => void;
   className?: string;
 }
@@ -27,6 +28,7 @@ export function EditorSidebar({
   onInsert,
   rotationId,
   currentVersion,
+  currentScript,
   onRestore,
   className,
 }: EditorSidebarProps) {
@@ -95,6 +97,7 @@ export function EditorSidebar({
               <VersionHistory
                 rotationId={rotationId}
                 currentVersion={currentVersion}
+                currentScript={currentScript ?? ""}
                 onRestore={onRestore ?? (() => {})}
               />
             </TabsContent>

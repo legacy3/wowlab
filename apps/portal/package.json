@@ -71,6 +71,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "diff": "^8.0.2",
     "effect": "^3.19.4",
     "embla-carousel-react": "^8.6.0",
     "fuse.js": "^7.1.0",
@@ -112,6 +113,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/diff": "^8.0.0",
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Clock, RotateCcw, Eye, Loader2 } from "lucide-react";
+import {
+  Clock,
+  RotateCcw,
+  Eye,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -12,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CodeEditor } from "@/components/ui/code-editor";
+import { DiffView } from "@/components/ui/diff-view";
 import {
   useRotationHistory,
   useRotationHistoryVersion,
@@ -21,12 +28,14 @@ import {
 interface VersionHistoryProps {
   rotationId: string | undefined;
   currentVersion: number | undefined;
+  currentScript: string;
   onRestore: (script: string) => void;
 }
 
 export function VersionHistory({
   rotationId,
   currentVersion,
+  currentScript,
   onRestore,
 }: VersionHistoryProps) {
   const [viewingVersion, setViewingVersion] = useState<number | null>(null);
@@ -113,26 +122,47 @@ export function VersionHistory({
       >
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Version {viewingVersion}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Version {viewingVersion}</DialogTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title="Previous version (←)"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground min-w-[4rem] text-center">
+                  1 / 2
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title="Next version (→)"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <DialogDescription>
               Review this version and optionally restore it to the editor
             </DialogDescription>
           </DialogHeader>
 
-          <div className="border rounded-md overflow-hidden">
-            {isLoadingScript ? (
-              <div className="flex items-center justify-center h-[400px]">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <CodeEditor
-                value={versionScript ?? ""}
-                language="typescript"
-                height={400}
-                readOnly
-              />
-            )}
-          </div>
+          {isLoadingScript ? (
+            <div className="flex items-center justify-center h-[400px] border rounded-md">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <DiffView
+              oldText={versionScript ?? ""}
+              newText={currentScript}
+              oldLabel={`Version ${viewingVersion}`}
+              newLabel="Current"
+            />
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setViewingVersion(null)}>
