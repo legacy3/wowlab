@@ -56,10 +56,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      rotations_history: {
+        Row: {
+          createdAt: string | null;
+          createdBy: string | null;
+          id: string;
+          message: string | null;
+          rotationId: string;
+          script: string;
+          version: number;
+        };
+        Insert: {
+          createdAt?: string | null;
+          createdBy?: string | null;
+          id?: string;
+          message?: string | null;
+          rotationId: string;
+          script: string;
+          version: number;
+        };
+        Update: {
+          createdAt?: string | null;
+          createdBy?: string | null;
+          id?: string;
+          message?: string | null;
+          rotationId?: string;
+          script?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rotations_history_createdBy_fkey";
+            columns: ["createdBy"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rotations_history_rotationId_fkey";
+            columns: ["rotationId"];
+            isOneToOne: false;
+            referencedRelation: "rotations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       rotations: {
         Row: {
           class: string;
           createdAt: string;
+          currentVersion: number | null;
           description: string | null;
           forkedFromId: string | null;
           id: string;
@@ -74,6 +120,7 @@ export type Database = {
         Insert: {
           class: string;
           createdAt?: string;
+          currentVersion?: number | null;
           description?: string | null;
           forkedFromId?: string | null;
           id?: string;
@@ -88,6 +135,7 @@ export type Database = {
         Update: {
           class?: string;
           createdAt?: string;
+          currentVersion?: number | null;
           description?: string | null;
           forkedFromId?: string | null;
           id?: string;

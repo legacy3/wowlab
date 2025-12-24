@@ -22,12 +22,13 @@ import { TalentHoverLink } from "@/components/talents";
 import { SimulateIntroTour } from "@/components/tours";
 import {
   clearCharacterAtom,
-  currentRotationAtom,
+  selectedRotationIdAtom,
   fightDurationAtom,
   isParsingAtom,
   parsedCharacterAtom,
   recentCharactersParsedAtom,
 } from "@/atoms/sim";
+import { useRotation } from "@/hooks/rotations";
 import { AdvancedSettings } from "./advanced-settings";
 import { FightProfilePicker } from "./fight-profile-picker";
 import { RecentCharacterChips } from "./recent-character-chips";
@@ -42,15 +43,21 @@ function QuickSimContentInner() {
   const recentCharacters = useAtomValue(recentCharactersParsedAtom);
   const clearCharacter = useSetAtom(clearCharacterAtom);
   const fightDuration = useAtomValue(fightDurationAtom);
-  const currentRotation = useAtomValue(currentRotationAtom);
+  const selectedRotationId = useAtomValue(selectedRotationIdAtom);
+
+  // Fetch selected rotation from database
+  const { rotation: selectedRotation } = useRotation(
+    selectedRotationId ?? undefined,
+  );
 
   const { run, isRunning, result, error, resultId } = useSimulation();
 
   const handleRunSim = async () => {
-    if (!currentRotation) {
+    if (!selectedRotation?.currentVersion) {
       return;
     }
-    await run(currentRotation.rotation, fightDuration);
+    // TODO: Load compiled rotation module and run simulation
+    // await run(compiledRotation.run, fightDuration);
   };
 
   // Zen state: just the paste area
@@ -168,7 +175,7 @@ function QuickSimContentInner() {
       <Button
         size="lg"
         onClick={handleRunSim}
-        disabled={isRunning || !currentRotation}
+        disabled={isRunning || !selectedRotation?.currentVersion}
         className="w-full"
         data-tour="run-simulation"
       >
@@ -186,9 +193,9 @@ function QuickSimContentInner() {
       </Button>
 
       {/* No rotation warning */}
-      {!currentRotation && (
+      {!selectedRotation && (
         <p className="text-sm text-center text-muted-foreground">
-          No rotation available for {character.spec} {character.class}
+          Select a rotation to run the simulation
         </p>
       )}
 

@@ -7,14 +7,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { SIDEBAR_TABS, DEFAULT_TAB, type TabId } from "./sidebar-tabs";
-import { ApiReference, SpellBrowser, Snippets, DataInspector } from "./tabs";
+import {
+  ApiReference,
+  SpellBrowser,
+  Snippets,
+  DataInspector,
+  VersionHistory,
+} from "./tabs";
 
 interface EditorSidebarProps {
   onInsert: (text: string) => void;
+  rotationId?: string;
+  currentVersion?: number;
+  onRestore?: (script: string) => void;
   className?: string;
 }
 
-export function EditorSidebar({ onInsert, className }: EditorSidebarProps) {
+export function EditorSidebar({
+  onInsert,
+  rotationId,
+  currentVersion,
+  onRestore,
+  className,
+}: EditorSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>(DEFAULT_TAB);
 
@@ -75,6 +90,13 @@ export function EditorSidebar({ onInsert, className }: EditorSidebarProps) {
             </TabsContent>
             <TabsContent value="data" className="mt-0">
               <DataInspector />
+            </TabsContent>
+            <TabsContent value="history" className="mt-0">
+              <VersionHistory
+                rotationId={rotationId}
+                currentVersion={currentVersion}
+                onRestore={onRestore ?? (() => {})}
+              />
             </TabsContent>
           </div>
         </ScrollArea>

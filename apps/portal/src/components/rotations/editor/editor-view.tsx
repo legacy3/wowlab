@@ -221,7 +221,12 @@ export function EditorView({
         {/* Sidebar */}
         {showSidebar && (
           <div data-tour="rotation-editor-sidebar">
-            <EditorSidebar onInsert={handleInsert} />
+            <EditorSidebar
+              onInsert={handleInsert}
+              rotationId={rotation.id}
+              currentVersion={rotation.currentVersion ?? undefined}
+              onRestore={onScriptChange}
+            />
           </div>
         )}
       </div>

@@ -257,6 +257,7 @@ function RotationEditorInner({
       forkedFromId: forkSourceId ?? null,
       createdAt: formatIsoTimestamp(),
       updatedAt: formatIsoTimestamp(),
+      currentVersion: 1,
     };
 
     return (

@@ -4,6 +4,9 @@ export type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
 export type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
 
+export type RotationHistory =
+  Database["public"]["Tables"]["rotations_history"]["Row"];
+
 export type MostWantedItem =
   Database["public"]["Views"]["view_most_wanted_items"]["Row"];
 

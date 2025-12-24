@@ -3,11 +3,41 @@
 import { useCreate, useUpdate, useDelete } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import type {
   Rotation,
   RotationInsert,
   RotationUpdate,
 } from "@/lib/supabase/types";
+
+interface CompileResult {
+  success: boolean;
+  version: number;
+  error?: string;
+  details?: string;
+}
+
+async function compileRotation(rotation: Rotation): Promise<CompileResult> {
+  const supabase = createClient();
+  const { data, error } = await supabase.functions.invoke<CompileResult>(
+    "compile-rotation",
+    {
+      body: {
+        id: rotation.id,
+        name: rotation.name,
+        script: rotation.script,
+        currentVersion: rotation.currentVersion,
+      },
+    },
+  );
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!data?.success) {
+    throw new Error(data?.error ?? "Compilation failed");
+  }
+  return data;
+}
 
 export function useRotationMutations() {
   const router = useRouter();
@@ -25,7 +55,13 @@ export function useRotationMutations() {
         resource: "rotations",
         values,
       });
-      toast.success("Rotation created");
+      // Compile and show result
+      try {
+        await compileRotation(result.data);
+        toast.success("Rotation created and compiled");
+      } catch (compileError) {
+        toast.error(`Rotation saved but compilation failed: ${compileError}`);
+      }
       router.push(`/rotations/editor/${result.data.id}`);
       return result;
     } catch (error) {
@@ -41,7 +77,13 @@ export function useRotationMutations() {
         id,
         values,
       });
-      toast.success("Rotation saved");
+      // Compile and show result
+      try {
+        await compileRotation(result.data);
+        toast.success("Rotation saved and compiled");
+      } catch (compileError) {
+        toast.error(`Rotation saved but compilation failed: ${compileError}`);
+      }
       return result;
     } catch (error) {
       toast.error("Failed to save rotation");

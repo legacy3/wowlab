@@ -332,51 +332,44 @@ const changes = diffLines(oldScript, newScript);
 ## Verification Checklist
 
 ### Database
-- [ ] `compiled_url` column exists on `rotations` table
-- [ ] `compiled_at` column exists on `rotations` table
-- [ ] `current_version` column exists on `rotations` table
-- [ ] `rotation_versions` table exists
-- [ ] Version trigger fires on script update
-- [ ] Old version saved before update
+- [x] `compiledUrl` column exists on `rotations` table
+- [x] `compiledAt` column exists on `rotations` table
+- [x] `currentVersion` column exists on `rotations` table
+- [x] `rotations_history` table exists (renamed from rotation_versions)
+- [x] Version trigger fires on script update
+- [x] Old version saved before update
 
 ### Storage
-- [ ] `compiled-rotations` bucket exists
-- [ ] Bucket is publicly readable
+- [x] `compiled-rotations` bucket exists
+- [x] Bucket is publicly readable
 - [ ] CORS configured for portal domain
 
 ### Edge Function
-- [ ] `compile-rotation` function deployed
-- [ ] DB trigger calls function on insert/update
-- [ ] Function generates valid JS module
-- [ ] Function uploads to storage
-- [ ] Function updates `compiled_url` in DB
-
-### Lazy Loading
-- [ ] `tryCast` fetches spell data if not cached
-- [ ] Spell data cached in React Query / IndexedDB
-- [ ] Second simulation run uses cached data (no fetches)
+- [x] `compile-rotation` function deployed
+- [ ] Portal calls function on rotation save
+- [x] Function generates valid JS module
+- [x] Function uploads to storage
+- [x] Function updates `compiledUrl` in DB
 
 ### Portal - Simulate
-- [ ] Rotation picker shows "My Rotations" section
-- [ ] Rotation picker shows "Community" section
-- [ ] Rotation picker shows "Built-in" section
+- [x] Rotation picker shows "My Rotations" section
+- [x] Rotation picker shows "Community" section
+- [x] Builtin rotations removed - all rotations from DB
 - [ ] Selecting DB rotation loads compiled module
 - [ ] Simulation runs with DB rotation
-- [ ] Auto-detect still works for built-in rotations
 
 ### Version History
-- [ ] Version list shows in editor
-- [ ] Can view any previous version
-- [ ] Diff view works between versions
-- [ ] Restore copies script to editor
-- [ ] Commit message saves with version
+- [x] Version list shows in editor sidebar
+- [x] Can view any previous version
+- [ ] Diff view between versions (TODO: add diff npm package)
+- [x] Restore copies script to editor
+- [ ] Commit message saves with version (UI not yet wired)
 
 ### End-to-End
 - [ ] Create new rotation in editor
 - [ ] Save rotation
-- [ ] Wait for compilation (check `compiled_at`)
+- [ ] Wait for compilation (check `compiledAt`)
 - [ ] Go to simulate, select new rotation
 - [ ] Run simulation successfully
 - [ ] Edit rotation, save again
 - [ ] Version history shows both versions
-- [ ] Diff between v1 and v2 works
