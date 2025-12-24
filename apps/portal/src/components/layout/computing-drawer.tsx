@@ -3,7 +3,14 @@
 import { useAtom, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import Link from "next/link";
-import { Cpu, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import {
+  Cpu,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  X,
+  ExternalLink,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -122,10 +129,19 @@ export function ComputingDrawer() {
             <Cpu className="h-5 w-5" />
             Computing
           </SheetTitle>
-          <SheetDescription>
-            {activeJobs.length > 0
-              ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
-              : "No active simulations"}
+          <SheetDescription className="flex items-center justify-between">
+            <span>
+              {activeJobs.length > 0
+                ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
+                : "No active simulations"}
+            </span>
+            <Link
+              href="/computing"
+              onClick={() => setOpen(false)}
+              className="text-xs text-primary hover:underline"
+            >
+              Dashboard
+            </Link>
           </SheetDescription>
         </SheetHeader>
 

@@ -4,6 +4,57 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
 // -----------------------------------------------------------------------------
+// Worker System State
+// -----------------------------------------------------------------------------
+
+export interface WorkerSystemState {
+  workerVersion: string | null;
+  lastInitialized: number | null;
+  totalSimulationsRun: number;
+  totalIterationsRun: number;
+}
+
+export const workerSystemAtom = atomWithStorage<WorkerSystemState>(
+  "worker-system-state",
+  {
+    workerVersion: null,
+    lastInitialized: null,
+    totalSimulationsRun: 0,
+    totalIterationsRun: 0,
+  },
+);
+
+// Convenience atoms for reading specific values
+export const workerVersionAtom = atom(
+  (get) => get(workerSystemAtom).workerVersion,
+);
+
+// Action atom to update worker system state after a simulation
+export const updateWorkerSystemAtom = atom(
+  null,
+  (
+    get,
+    set,
+    update: {
+      workerVersion?: string | null;
+      iterationsRun?: number;
+    },
+  ) => {
+    const current = get(workerSystemAtom);
+    set(workerSystemAtom, {
+      ...current,
+      workerVersion: update.workerVersion ?? current.workerVersion,
+      lastInitialized: update.workerVersion
+        ? Date.now()
+        : current.lastInitialized,
+      totalSimulationsRun: current.totalSimulationsRun + 1,
+      totalIterationsRun:
+        current.totalIterationsRun + (update.iterationsRun ?? 0),
+    });
+  },
+);
+
+// -----------------------------------------------------------------------------
 // Simulation Phase
 // -----------------------------------------------------------------------------
 

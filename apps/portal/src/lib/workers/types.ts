@@ -46,6 +46,8 @@ export interface SingleSimResult {
 export interface SimulationResult {
   batchId: number;
   results: SingleSimResult[];
+  /** Worker version, included in init response */
+  workerVersion?: string;
 }
 
 /**

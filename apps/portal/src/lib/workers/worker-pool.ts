@@ -76,6 +76,7 @@ export interface SimulationStats {
   totalDamage: number;
   avgDps: number;
   errors: string[];
+  workerVersion: string | null;
 }
 
 // =============================================================================
@@ -130,7 +131,8 @@ const runSimulationsInternal = (
       { concurrency: "unbounded" },
     );
 
-    // Check for initialization errors
+    // Check for initialization errors and capture worker version
+    let workerVersion: string | null = null;
     for (const result of initResults) {
       if (result.results[0]?.error) {
         return yield* Effect.fail(
@@ -139,6 +141,9 @@ const runSimulationsInternal = (
             message: result.results[0].error,
           }),
         );
+      }
+      if (result.workerVersion && !workerVersion) {
+        workerVersion = result.workerVersion;
       }
     }
 
@@ -149,6 +154,7 @@ const runSimulationsInternal = (
       totalDamage: 0,
       avgDps: 0,
       errors: [],
+      workerVersion,
     };
 
     const waveSize = cfg.workerCount * 10;

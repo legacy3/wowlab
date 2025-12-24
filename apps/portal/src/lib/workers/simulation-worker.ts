@@ -39,6 +39,12 @@ import type {
 } from "./types";
 
 // =============================================================================
+// Worker Version - bump this to verify cache is cleared
+// =============================================================================
+
+export const WORKER_VERSION = "0.0.2";
+
+// =============================================================================
 // Worker State
 // =============================================================================
 
@@ -185,10 +191,11 @@ const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
         spells: init.spells,
       };
 
-      // Return success indicator
+      // Return success indicator with version
       return {
         batchId: -1,
         results: [{ simId: 0, casts: 0, duration: 0, totalDamage: 0, dps: 0 }],
+        workerVersion: WORKER_VERSION,
       };
     } catch (error) {
       return {
@@ -203,6 +210,7 @@ const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
             error: `Code compilation failed: ${String(error)}`,
           },
         ],
+        workerVersion: WORKER_VERSION,
       };
     }
   });

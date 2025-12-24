@@ -12,6 +12,7 @@ import {
   completeSimJobAtom,
   failSimJobAtom,
 } from "@/atoms/simulation/job";
+import { updateWorkerSystemAtom } from "@/atoms/computing";
 import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
 import { loadSpellsById, loadAurasById } from "@/lib/simulation";
 import {
@@ -98,6 +99,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
   const completeJob = useSetAtom(completeSimJobAtom);
   const failJob = useSetAtom(failSimJobAtom);
   const setDrawerOpen = useSetAtom(computingDrawerOpenAtom);
+  const updateWorkerSystem = useSetAtom(updateWorkerSystemAtom);
 
   const run = useCallback(
     async (params: WorkerSimulationParams) => {
@@ -190,6 +192,12 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
           workerConfig,
         );
 
+        // Track worker system state
+        updateWorkerSystem({
+          workerVersion: stats.workerVersion,
+          iterationsRun: iterations,
+        });
+
         // Check for errors
         if (stats.errors.length > 0) {
           const errorSummary =
@@ -250,6 +258,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       completeJob,
       failJob,
       setDrawerOpen,
+      updateWorkerSystem,
       options,
     ],
   );
