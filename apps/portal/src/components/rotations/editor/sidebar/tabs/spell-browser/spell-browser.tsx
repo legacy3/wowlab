@@ -5,7 +5,6 @@ import { Search, Plus, Clock, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MOCK_SPELLS,
   generateSpellIdSnippet,
@@ -30,8 +29,8 @@ export function SpellBrowser({ onInsert }: SpellBrowserProps) {
   });
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="relative mb-3">
+    <div className="space-y-3">
+      <div className="relative">
         <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search spells..."
@@ -41,18 +40,16 @@ export function SpellBrowser({ onInsert }: SpellBrowserProps) {
         />
       </div>
 
-      <ScrollArea className="flex-1 -mx-1">
-        <div className="space-y-1 px-1">
-          {filteredSpells.map((spell) => (
-            <SpellCard key={spell.id} spell={spell} onInsert={onInsert} />
-          ))}
-          {filteredSpells.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No spells found
-            </p>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="space-y-1.5">
+        {filteredSpells.map((spell) => (
+          <SpellCard key={spell.id} spell={spell} onInsert={onInsert} />
+        ))}
+        {filteredSpells.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No spells found
+          </p>
+        )}
+      </div>
     </div>
   );
 }

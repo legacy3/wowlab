@@ -10,7 +10,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -119,38 +118,34 @@ export function VersionHistory({
   return (
     <>
       <div className="space-y-1">
-        <ScrollArea className="h-[400px]">
-          <div className="space-y-0.5 pr-2">
-            {versions.map((version) => {
-              const isCurrent = version.version === currentVersion;
-              return (
-                <button
-                  key={version.id}
-                  onClick={() => setViewingVersion(version.version)}
-                  className="w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm tabular-nums">
-                      v{version.version}
-                    </span>
-                    {isCurrent && (
-                      <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary">
-                        current
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {version.createdAt
-                        ? formatDistanceToNow(new Date(version.createdAt), {
-                            addSuffix: true,
-                          })
-                        : ""}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
+        {versions.map((version) => {
+          const isCurrent = version.version === currentVersion;
+          return (
+            <button
+              key={version.id}
+              onClick={() => setViewingVersion(version.version)}
+              className="w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm tabular-nums">
+                  v{version.version}
+                </span>
+                {isCurrent && (
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary">
+                    current
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground ml-auto">
+                  {version.createdAt
+                    ? formatDistanceToNow(new Date(version.createdAt), {
+                        addSuffix: true,
+                      })
+                    : ""}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <Dialog

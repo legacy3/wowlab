@@ -10,6 +10,7 @@ import {
   Play,
   Save,
   Settings,
+  Sparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -124,6 +125,33 @@ export function EditorView({
   );
   /* eslint-enable react-hooks/preserve-manual-memoization */
 
+  const handleFormat = useCallback(async () => {
+    const editor = editorRef.editorRef.current;
+    if (!editor) {
+      return;
+    }
+
+    try {
+      const prettier = await import("prettier/standalone");
+      const estreePlugin = await import("prettier/plugins/estree");
+      const tsPlugin = await import("prettier/plugins/typescript");
+
+      const formatted = await prettier.format(script, {
+        parser: "typescript",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        plugins: [estreePlugin, tsPlugin] as any,
+        semi: true,
+        singleQuote: false,
+        tabWidth: 2,
+        trailingComma: "all",
+      });
+
+      onScriptChange(formatted);
+    } catch {
+      // Format failed, ignore
+    }
+  }, [script, onScriptChange, editorRef]);
+
   const isDisabled = isSaving || isTesting;
 
   return (
@@ -229,20 +257,29 @@ export function EditorView({
 
         {/* Sidebar */}
         {showSidebar && (
-          <div data-tour="rotation-editor-sidebar">
-            <EditorSidebar
-              onInsert={handleInsert}
-              rotationId={rotation.id}
-              currentVersion={rotation.currentVersion ?? undefined}
-              currentScript={script}
-              onRestore={onScriptChange}
-            />
-          </div>
+          <EditorSidebar
+            onInsert={handleInsert}
+            rotationId={rotation.id}
+            currentVersion={rotation.currentVersion ?? undefined}
+            currentScript={script}
+            onRestore={onScriptChange}
+            data-tour="rotation-editor-sidebar"
+          />
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-center gap-3 border-t px-4 py-3 bg-muted/30 shrink-0">
+      <div className="flex items-center justify-center gap-2 border-t px-4 py-2.5 bg-muted/30 shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleFormat}
+          disabled={isDisabled}
+          title="Format code (Prettier)"
+        >
+          <Sparkles className="h-4 w-4" />
+        </Button>
+        <div className="w-px h-4 bg-border" />
         <Button
           variant="outline"
           size="sm"

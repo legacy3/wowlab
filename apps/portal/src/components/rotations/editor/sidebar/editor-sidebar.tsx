@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { SIDEBAR_TABS, DEFAULT_TAB, type TabId } from "./sidebar-tabs";
@@ -50,13 +49,18 @@ export function EditorSidebar({
   }
 
   return (
-    <div className={cn("flex flex-col border-l bg-muted/30 w-72", className)}>
+    <div
+      className={cn(
+        "flex flex-col border-l bg-muted/30 w-72 h-full overflow-hidden",
+        className,
+      )}
+    >
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as TabId)}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full overflow-hidden"
       >
-        <div className="flex items-center justify-between border-b px-2 py-1">
+        <div className="flex items-center justify-between border-b px-2 py-1.5 shrink-0">
           <TabsList className="h-8 bg-transparent p-0 gap-1">
             {SIDEBAR_TABS.map((tab) => (
               <TabsTrigger
@@ -79,30 +83,28 @@ export function EditorSidebar({
           </Button>
         </div>
 
-        <ScrollArea className="flex-1">
-          <div className="p-3">
-            <TabsContent value="api" className="mt-0">
-              <ApiReference onInsert={onInsert} />
-            </TabsContent>
-            <TabsContent value="spells" className="mt-0">
-              <SpellBrowser onInsert={onInsert} />
-            </TabsContent>
-            <TabsContent value="snippets" className="mt-0">
-              <Snippets onInsert={onInsert} />
-            </TabsContent>
-            <TabsContent value="data" className="mt-0">
-              <DataInspector />
-            </TabsContent>
-            <TabsContent value="history" className="mt-0">
-              <VersionHistory
-                rotationId={rotationId}
-                currentVersion={currentVersion}
-                currentScript={currentScript ?? ""}
-                onRestore={onRestore ?? (() => {})}
-              />
-            </TabsContent>
-          </div>
-        </ScrollArea>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <TabsContent value="api" className="mt-0 h-full p-3">
+            <ApiReference onInsert={onInsert} />
+          </TabsContent>
+          <TabsContent value="spells" className="mt-0 h-full p-3">
+            <SpellBrowser onInsert={onInsert} />
+          </TabsContent>
+          <TabsContent value="snippets" className="mt-0 h-full p-3">
+            <Snippets onInsert={onInsert} />
+          </TabsContent>
+          <TabsContent value="data" className="mt-0 h-full p-3">
+            <DataInspector />
+          </TabsContent>
+          <TabsContent value="history" className="mt-0 h-full p-3">
+            <VersionHistory
+              rotationId={rotationId}
+              currentVersion={currentVersion}
+              currentScript={currentScript ?? ""}
+              onRestore={onRestore ?? (() => {})}
+            />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
@@ -124,7 +126,7 @@ function CollapsedSidebar({
   return (
     <div
       className={cn(
-        "flex flex-col items-center py-2 border-l bg-muted/30",
+        "flex flex-col items-center py-2 border-l bg-muted/30 h-full",
         className,
       )}
     >
