@@ -99,7 +99,6 @@ export function EditorView({
     [editorRef],
   );
 
-  /* eslint-disable react-hooks/preserve-manual-memoization -- ref.current access pattern is intentional */
   const handleInsert = useCallback(
     (text: string) => {
       const editor = editorRef.editorRef.current;
@@ -124,7 +123,6 @@ export function EditorView({
     },
     [editorRef],
   );
-  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   const handleFormat = useCallback(async () => {
     const editor = editorRef.editorRef.current;

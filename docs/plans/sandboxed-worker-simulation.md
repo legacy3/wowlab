@@ -236,27 +236,64 @@ interface SingleSimResult {
 
 ---
 
-## Security (Best Effort)
+## Security (Best Effort, Low Overhead)
+
+**Threat model:** prevent accidental misuse and casual abuse of rotation code while keeping near-native speed. This is **not** a hardened sandbox; a determined user can still break out. We explicitly avoid heavy sandboxing (e.g., SES/QuickJS) due to unacceptable slowdown.
 
 ### Compile-time Checks (Edge Function)
 
-Reject rotation code containing:
-- `globalThis`, `self` - global access
-- `eval`, `Function` - code generation
-- `import`, `require`, `importScripts` - module loading
-- `fetch`, `XMLHttpRequest`, `WebSocket` - network (belt & suspenders)
+Use a real JS parser (Acorn/Meriyah) and reject by syntax, not string match.
+Reject if AST contains:
+- Identifier access to `globalThis`, `self`, `window`, `document`, `parent`, `top`
+- Calls to `eval`, `Function`, `import`, `importScripts`, `require`
+- `new Function(...)` or `Function(...)` anywhere
+- `MemberExpression` that resolves to `constructor` off a function or object literal
+- Access to network APIs: `fetch`, `XMLHttpRequest`, `WebSocket`, `WebTransport` (belt & suspenders)
+
+**Notes:**
+- String/regex scanning is insufficient (Unicode escapes, comments, concatenation).
+- This is a fast parse step; it should not affect runtime perf.
 
 ### Runtime Protection (Worker)
 
+1) **Hardened execution wrapper** (low overhead, avoids globals in scope):
+
 ```typescript
-// Freeze all exposed APIs to prevent prototype pollution
+// Build a factory that only sees whitelisted APIs.
+const buildRotation = new Function(
+  "api",
+  `"use strict";
+   const globalThis = undefined;
+   const self = undefined;
+   const window = undefined;
+   const document = undefined;
+   const parent = undefined;
+   const top = undefined;
+   const Function = undefined;
+   const eval = undefined;
+   const importScripts = undefined;
+   const fetch = undefined;
+   const XMLHttpRequest = undefined;
+   const WebSocket = undefined;
+   const WebTransport = undefined;
+   const { Effect, RotationContext, tryCast, /* ... */ } = api;
+   return (function() { return ROTATION_CODE; })();`
+);
+
 const ALLOWED_APIS = Object.freeze({
   Effect: Object.freeze(Effect),
   RotationContext: Object.freeze(Context.RotationContext),
   tryCast: Object.freeze(tryCast),
   // ... etc
 });
+
+const rotation = buildRotation(ALLOWED_APIS);
 ```
+
+2) **Freeze exposed APIs** to prevent prototype pollution (no runtime cost).
+
+3) **Optional global hardening** (best effort): attempt to shadow/disable
+`self.fetch`, `self.WebSocket`, etc. where configurable (not guaranteed).
 
 ### Watchdog
 
@@ -268,6 +305,8 @@ const timeoutId = setTimeout(() => {
   reject(new Error('Simulation timeout'));
 }, TIMEOUT_MS);
 ```
+
+**Pool resilience:** if a worker is terminated, replace it so the pool never shrinks permanently.
 
 ---
 

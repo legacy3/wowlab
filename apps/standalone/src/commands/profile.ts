@@ -1,7 +1,6 @@
 import { Command, Options } from "@effect/cli";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Entities from "@wowlab/core/Entities";
-import * as Context from "@wowlab/rotation/Context";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
 import * as Effect from "effect/Effect";
@@ -38,7 +37,9 @@ export const profileCommand = Command.make(
         loadAuras(supabaseClient, rotation.spellIds),
       ]);
 
-      yield* Effect.log(`Profiling ${iterations} iterations of ${duration}s simulation`);
+      yield* Effect.log(
+        `Profiling ${iterations} iterations of ${duration}s simulation`,
+      );
       yield* Effect.log("---");
 
       // Timing accumulators
@@ -119,25 +120,53 @@ export const profileCommand = Command.make(
       yield* Effect.log("┌─────────────────────────────────────────┐");
       yield* Effect.log("│           Profiling Results             │");
       yield* Effect.log("├─────────────────────────────────────────┤");
-      yield* Effect.log(`│  Iterations:          ${iterations.toString().padStart(15)}  │`);
-      yield* Effect.log(`│  Total Casts:         ${totalCasts.toString().padStart(15)}  │`);
-      yield* Effect.log(`│  Avg Casts/Sim:       ${avgCastsPerSim.toFixed(1).padStart(15)}  │`);
+      yield* Effect.log(
+        `│  Iterations:          ${iterations.toString().padStart(15)}  │`,
+      );
+      yield* Effect.log(
+        `│  Total Casts:         ${totalCasts.toString().padStart(15)}  │`,
+      );
+      yield* Effect.log(
+        `│  Avg Casts/Sim:       ${avgCastsPerSim.toFixed(1).padStart(15)}  │`,
+      );
       yield* Effect.log("├─────────────────────────────────────────┤");
-      yield* Effect.log(`│  Total Time:          ${overallElapsed.toFixed(1).padStart(12)}ms  │`);
-      yield* Effect.log(`│  State Reset:         ${totalStateResetTime.toFixed(1).padStart(12)}ms  │`);
-      yield* Effect.log(`│  Unit Setup:          ${totalUnitSetupTime.toFixed(1).padStart(12)}ms  │`);
-      yield* Effect.log(`│  Rotation Code:       ${totalRotationTime.toFixed(1).padStart(12)}ms  │`);
+      yield* Effect.log(
+        `│  Total Time:          ${overallElapsed.toFixed(1).padStart(12)}ms  │`,
+      );
+      yield* Effect.log(
+        `│  State Reset:         ${totalStateResetTime.toFixed(1).padStart(12)}ms  │`,
+      );
+      yield* Effect.log(
+        `│  Unit Setup:          ${totalUnitSetupTime.toFixed(1).padStart(12)}ms  │`,
+      );
+      yield* Effect.log(
+        `│  Rotation Code:       ${totalRotationTime.toFixed(1).padStart(12)}ms  │`,
+      );
       yield* Effect.log("├─────────────────────────────────────────┤");
-      const otherTime = overallElapsed - totalStateResetTime - totalUnitSetupTime - totalRotationTime;
-      yield* Effect.log(`│  Other (Effect OH):   ${otherTime.toFixed(1).padStart(12)}ms  │`);
+      const otherTime =
+        overallElapsed -
+        totalStateResetTime -
+        totalUnitSetupTime -
+        totalRotationTime;
+      yield* Effect.log(
+        `│  Other (Effect OH):   ${otherTime.toFixed(1).padStart(12)}ms  │`,
+      );
       yield* Effect.log("├─────────────────────────────────────────┤");
-      const rotationPct = (totalRotationTime / overallElapsed * 100).toFixed(1);
-      const otherPct = (otherTime / overallElapsed * 100).toFixed(1);
-      yield* Effect.log(`│  Rotation %:          ${rotationPct.padStart(14)}%  │`);
+      const rotationPct = ((totalRotationTime / overallElapsed) * 100).toFixed(
+        1,
+      );
+      const otherPct = ((otherTime / overallElapsed) * 100).toFixed(1);
+      yield* Effect.log(
+        `│  Rotation %:          ${rotationPct.padStart(14)}%  │`,
+      );
       yield* Effect.log(`│  Other %:             ${otherPct.padStart(14)}%  │`);
       yield* Effect.log("├─────────────────────────────────────────┤");
-      yield* Effect.log(`│  Rotation calls:      ${rotationCalls.toString().padStart(15)}  │`);
-      yield* Effect.log(`│  Avg per call:        ${(totalRotationTime / rotationCalls * 1000).toFixed(2).padStart(13)}μs  │`);
+      yield* Effect.log(
+        `│  Rotation calls:      ${rotationCalls.toString().padStart(15)}  │`,
+      );
+      yield* Effect.log(
+        `│  Avg per call:        ${((totalRotationTime / rotationCalls) * 1000).toFixed(2).padStart(13)}μs  │`,
+      );
       yield* Effect.log("└─────────────────────────────────────────┘");
 
       yield* Effect.promise(() => runtime.dispose());

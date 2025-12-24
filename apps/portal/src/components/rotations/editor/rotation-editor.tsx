@@ -1,9 +1,14 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRotation, useRotationMutations } from "@/hooks/rotations";
+import {
+  useRotation,
+  useRotationMutations,
+  useWorkerSimulation,
+} from "@/hooks/rotations";
 import type {
   UserIdentity,
   RotationInsert,
@@ -53,7 +58,6 @@ function RotationEditorInner({
   // Draft state for new/fork rotations (not yet saved to DB)
   const [draft, setDraft] = useState<DraftRotation | null>(null);
   const [script, setScript] = useState(DEFAULT_SCRIPT);
-  const [isTesting, setIsTesting] = useState(false);
 
   const { data: auth, isLoading: authLoading } = useIsAuthenticated();
   const { data: identity, isLoading: identityLoading } =
@@ -73,6 +77,23 @@ function RotationEditorInner({
 
   const { createRotation, updateRotation, deleteRotation, isMutating } =
     useRotationMutations();
+
+  // Worker simulation hook
+  const {
+    run: runWorkerSimulation,
+    isRunning: isTesting,
+    stats: testStats,
+    error: testError,
+  } = useWorkerSimulation({
+    onComplete: (stats) => {
+      toast.success(
+        `Simulation complete: ${stats.completedSims} iterations, ${stats.totalCasts} total casts`,
+      );
+    },
+    onError: (error) => {
+      toast.error(`Simulation failed: ${error.message}`);
+    },
+  });
 
   const isEditMode = !!rotationId;
   const isForkMode = !!forkSourceId && !rotationId;
@@ -127,13 +148,22 @@ function RotationEditorInner({
     }
   };
 
-  // Handle test button
-  const handleTest = async () => {
-    setIsTesting(true);
-    // TODO: Wire up simulation here
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsTesting(false);
-  };
+  // Handle test button - runs simulation via worker pool
+  const handleTest = useCallback(async () => {
+    const rotationName =
+      draft?.name ?? existingRotation?.name ?? "Untitled Rotation";
+
+    try {
+      await runWorkerSimulation({
+        code: script,
+        name: rotationName,
+        iterations: 10, // Quick test with 10 iterations
+        duration: 30, // 30 second fight
+      });
+    } catch {
+      // Error already handled by onError callback
+    }
+  }, [script, draft?.name, existingRotation?.name, runWorkerSimulation]);
 
   // Handle settings update from zen editor (only for existing rotations)
   const handleSettingsChange = async (values: SettingsValues) => {
