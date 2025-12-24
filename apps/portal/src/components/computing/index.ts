@@ -1,1 +1,1 @@
-export { ComputingContent } from "./computing-content";
+export { ComputingContent, ComputingSkeleton } from "./computing-content";

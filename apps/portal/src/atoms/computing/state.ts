@@ -2,6 +2,35 @@
 
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { createPersistedOrderAtom } from "../utils";
+
+// -----------------------------------------------------------------------------
+// Dashboard Card Order
+// -----------------------------------------------------------------------------
+
+export type ComputingCardId =
+  | "cpu-cores"
+  | "memory"
+  | "workers"
+  | "simulations"
+  | "iterations"
+  | "status"
+  | "performance-chart"
+  | "job-history";
+
+export const computingOrderAtom = createPersistedOrderAtom<ComputingCardId>(
+  "computing-order-v3",
+  [
+    "cpu-cores",
+    "memory",
+    "workers",
+    "simulations",
+    "iterations",
+    "status",
+    "performance-chart",
+    "job-history",
+  ],
+);
 
 // -----------------------------------------------------------------------------
 // Worker System State
