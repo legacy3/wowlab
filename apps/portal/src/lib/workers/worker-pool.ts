@@ -5,7 +5,7 @@
  * @effect/platform-browser for browser Web Workers.
  */
 
-import * as Worker from "@effect/platform/Worker";
+import * as EffectWorker from "@effect/platform/Worker";
 import { BrowserWorker } from "@effect/platform-browser";
 import type * as Schemas from "@wowlab/core/Schemas";
 import * as Data from "effect/Data";
@@ -88,7 +88,7 @@ export interface SimulationStats {
  */
 const SimulationWorkerLayer = BrowserWorker.layer(
   () =>
-    new globalThis.Worker(new URL("./simulation-worker.ts", import.meta.url), {
+    new Worker(new URL("./simulation-worker.ts", import.meta.url), {
       type: "module",
     }),
 );
@@ -106,7 +106,7 @@ const runSimulationsInternal = (
 ) =>
   Effect.gen(function* () {
     // Create worker pool using Effect's platform abstraction
-    const pool = yield* Worker.makePool<
+    const pool = yield* EffectWorker.makePool<
       WorkerInit | SimulationBatch,
       SimulationResult,
       never
