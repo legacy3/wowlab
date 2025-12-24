@@ -84,6 +84,7 @@ export function EditorView({
   const { isZen, toggleZen } = useZenMode();
   const [editorReady, setEditorReady] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const editorRef = useCodeEditorRef();
 
   const handleBeforeMount = useCallback((monaco: MonacoInstance) => {
@@ -152,6 +153,14 @@ export function EditorView({
     }
   }, [script, onScriptChange, editorRef]);
 
+  const handleSettingsSave = useCallback(
+    (values: SettingsValues) => {
+      onSettingsChange(values);
+      setSettingsOpen(false);
+    },
+    [onSettingsChange],
+  );
+
   const isDisabled = isSaving || isTesting;
 
   return (
@@ -201,7 +210,7 @@ export function EditorView({
             {isZen ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
           </Button>
 
-          <Dialog>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"
@@ -220,7 +229,7 @@ export function EditorView({
               </DialogHeader>
               <SettingsPanel
                 rotation={rotation}
-                onSave={onSettingsChange}
+                onSave={handleSettingsSave}
                 onDelete={onDelete}
                 isDisabled={isDisabled}
               />
