@@ -5,7 +5,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   Clock,
   RotateCcw,
-  Eye,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -15,11 +14,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DiffView } from "@/components/ui/diff-view";
+import { DiffView, useDiffStats } from "@/components/ui/diff-view";
 import {
   useRotationHistory,
   useRotationHistoryVersion,
@@ -43,7 +41,8 @@ export function VersionHistory({
   const { data: versionScript, isLoading: isLoadingScript } =
     useRotationHistoryVersion(rotationId, viewingVersion ?? undefined);
 
-  // Get sorted version numbers for navigation
+  const stats = useDiffStats(versionScript ?? "", currentScript);
+
   const versionNumbers = useMemo(() => {
     if (!versions) {
       return [];
@@ -51,7 +50,6 @@ export function VersionHistory({
     return versions.map((v) => v.version).sort((a, b) => b - a);
   }, [versions]);
 
-  // Current position in version list (1-indexed for display)
   const currentIndex = viewingVersion
     ? versionNumbers.indexOf(viewingVersion)
     : -1;
@@ -70,7 +68,6 @@ export function VersionHistory({
     }
   }, [canGoNext, currentIndex, versionNumbers]);
 
-  // Keyboard navigation for version dialog
   useEffect(() => {
     if (viewingVersion === null) {
       return;
@@ -97,19 +94,8 @@ export function VersionHistory({
     }
   }, [versionScript, onRestore]);
 
-  const closeDialog = useCallback(() => {
-    setViewingVersion(null);
-  }, []);
-
   if (!rotationId) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <Clock className="h-8 w-8 mb-3 text-muted-foreground/50" />
-        <p className="text-sm text-muted-foreground">
-          Save the rotation to start tracking versions
-        </p>
-      </div>
-    );
+    return <EmptyState icon={Clock} title="Save to track versions" />;
   }
 
   if (isLoading) {
@@ -122,67 +108,44 @@ export function VersionHistory({
 
   if (!versions || versions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <Clock className="h-8 w-8 mb-3 text-muted-foreground/50" />
-        <p className="text-sm font-medium text-muted-foreground">
-          No version history yet
-        </p>
-        <p className="text-xs text-muted-foreground/70 mt-1">
-          Versions are created when you save changes
-        </p>
-      </div>
+      <EmptyState
+        icon={Clock}
+        title="No versions yet"
+        subtitle="Versions are created on save"
+      />
     );
   }
 
   return (
     <>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-          <span className="font-medium">
-            {versions.length} version{versions.length !== 1 ? "s" : ""}
-          </span>
-          {currentVersion && (
-            <span className="text-muted-foreground/70">
-              Current: v{currentVersion}
-            </span>
-          )}
-        </div>
-
+      <div className="space-y-1">
         <ScrollArea className="h-[400px]">
-          <div className="space-y-1 pr-2">
+          <div className="space-y-0.5 pr-2">
             {versions.map((version) => {
               const isCurrent = version.version === currentVersion;
               return (
                 <button
                   key={version.id}
                   onClick={() => setViewingVersion(version.version)}
-                  className="w-full text-left p-2.5 rounded-md hover:bg-muted/50 transition-colors group border border-transparent hover:border-border/50"
+                  className="w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 transition-colors group"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">
-                        v{version.version}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm tabular-nums">
+                      v{version.version}
+                    </span>
+                    {isCurrent && (
+                      <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary">
+                        current
                       </span>
-                      {isCurrent && (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                          current
-                        </span>
-                      )}
-                    </div>
-                    <Eye className="h-3.5 w-3.5 opacity-0 group-hover:opacity-50 transition-opacity shrink-0" />
+                    )}
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {version.createdAt
+                        ? formatDistanceToNow(new Date(version.createdAt), {
+                            addSuffix: true,
+                          })
+                        : ""}
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {version.createdAt
-                      ? formatDistanceToNow(new Date(version.createdAt), {
-                          addSuffix: true,
-                        })
-                      : "Unknown date"}
-                  </div>
-                  {version.message && (
-                    <div className="text-xs text-muted-foreground/70 mt-1.5 line-clamp-2">
-                      {version.message}
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -190,73 +153,92 @@ export function VersionHistory({
         </ScrollArea>
       </div>
 
-      <Dialog open={viewingVersion !== null} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-          <DialogHeader className="shrink-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle>Version {viewingVersion}</DialogTitle>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={goToPrevVersion}
-                  disabled={!canGoPrev || isLoadingScript}
-                  title="Newer version (←)"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-xs text-muted-foreground min-w-[4rem] text-center tabular-nums">
-                  {currentIndex + 1} / {versionNumbers.length}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={goToNextVersion}
-                  disabled={!canGoNext || isLoadingScript}
-                  title="Older version (→)"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+      <Dialog
+        open={viewingVersion !== null}
+        onOpenChange={(open) => !open && setViewingVersion(null)}
+      >
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="flex-row items-center gap-3 px-4 py-3 border-b shrink-0">
+            <DialogTitle className="font-mono">v{viewingVersion}</DialogTitle>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={goToPrevVersion}
+                disabled={!canGoPrev || isLoadingScript}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground tabular-nums min-w-[3rem] text-center">
+                {currentIndex + 1}/{versionNumbers.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={goToNextVersion}
+                disabled={!canGoNext || isLoadingScript}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <DialogDescription>
-              Compare this version with your current script. Use arrow keys to
-              navigate.
-            </DialogDescription>
+            {!isLoadingScript &&
+              (stats.additions > 0 || stats.deletions > 0) && (
+                <span className="text-xs tabular-nums ml-auto mr-8">
+                  <span className="text-green-400">+{stats.additions}</span>
+                  <span className="text-muted-foreground mx-1">/</span>
+                  <span className="text-red-400">-{stats.deletions}</span>
+                </span>
+              )}
           </DialogHeader>
 
-          <div className="flex-1 min-h-0 my-4">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {isLoadingScript ? (
-              <div className="flex items-center justify-center h-[400px] border rounded-md bg-muted/30">
+              <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <DiffView
                 oldText={versionScript ?? ""}
                 newText={currentScript}
-                oldLabel={`Version ${viewingVersion}`}
-                newLabel="Current"
                 className="h-full"
               />
             )}
           </div>
 
-          <div className="flex justify-end gap-2 shrink-0">
-            <Button variant="outline" onClick={closeDialog}>
-              Cancel
-            </Button>
+          <div className="flex justify-end px-4 py-2 border-t shrink-0">
             <Button
+              size="sm"
               onClick={handleRestore}
               disabled={!versionScript || isLoadingScript}
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Restore to Editor
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Restore this version
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <Icon className="h-6 w-6 mb-2 text-muted-foreground/40" />
+      <p className="text-sm text-muted-foreground">{title}</p>
+      {subtitle && (
+        <p className="text-xs text-muted-foreground/60 mt-0.5">{subtitle}</p>
+      )}
+    </div>
   );
 }

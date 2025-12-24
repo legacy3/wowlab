@@ -3,135 +3,152 @@
 import { useMemo } from "react";
 import { diffLines, type Change } from "diff";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "./scroll-area";
 
 interface DiffViewProps {
   oldText: string;
   newText: string;
-  oldLabel?: string;
-  newLabel?: string;
   className?: string;
 }
 
-interface DiffStats {
+export interface DiffStats {
   additions: number;
   deletions: number;
 }
 
-function computeStats(changes: Change[]): DiffStats {
-  let additions = 0;
-  let deletions = 0;
+export function useDiffStats(oldText: string, newText: string): DiffStats {
+  return useMemo(() => {
+    const changes = diffLines(oldText, newText);
+    let additions = 0;
+    let deletions = 0;
 
-  for (const change of changes) {
-    const lineCount = change.value.split("\n").filter(Boolean).length;
-    if (change.added) {
-      additions += lineCount;
-    } else if (change.removed) {
-      deletions += lineCount;
+    for (const change of changes) {
+      const lineCount = change.value.split("\n").filter(Boolean).length;
+      if (change.added) {
+        additions += lineCount;
+      } else if (change.removed) {
+        deletions += lineCount;
+      }
     }
-  }
 
-  return { additions, deletions };
+    return { additions, deletions };
+  }, [oldText, newText]);
 }
 
-export function DiffView({
-  oldText,
-  newText,
-  oldLabel = "Old",
-  newLabel = "New",
-  className,
-}: DiffViewProps) {
-  const changes = useMemo(() => diffLines(oldText, newText), [oldText, newText]);
-  const stats = useMemo(() => computeStats(changes), [changes]);
-  const hasChanges = stats.additions > 0 || stats.deletions > 0;
+export function DiffView({ oldText, newText, className }: DiffViewProps) {
+  const lines = useMemo(() => {
+    const changes = diffLines(oldText, newText);
+
+    return buildDiffLines(changes);
+  }, [oldText, newText]);
+
+  if (lines.length === 0) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center text-sm text-muted-foreground py-12",
+          className,
+        )}
+      >
+        No changes
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={cn(
-        "rounded-md border overflow-hidden flex flex-col",
-        className,
-      )}
-    >
-      {/* Header with labels and stats */}
-      <div className="flex items-center text-xs border-b bg-muted/50 shrink-0">
-        <div className="flex-1 px-3 py-2 font-medium text-destructive/80">
-          {oldLabel}
-        </div>
-        <div className="px-3 py-2 border-x bg-muted/30 text-muted-foreground tabular-nums">
-          {hasChanges ? (
-            <>
-              <span className="text-green-500">+{stats.additions}</span>
-              <span className="mx-1.5">/</span>
-              <span className="text-destructive">-{stats.deletions}</span>
-            </>
-          ) : (
-            <span>No changes</span>
-          )}
-        </div>
-        <div className="flex-1 px-3 py-2 font-medium text-green-500/80">
-          {newLabel}
-        </div>
-      </div>
-
-      {/* Diff content */}
-      <ScrollArea className="flex-1 min-h-0">
-        <pre className="text-xs font-mono p-0 m-0 min-h-[200px]">
-          {changes.length === 0 ? (
-            <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-              No content to compare
-            </div>
-          ) : (
-            changes.map((change, index) => (
-              <DiffBlock key={index} change={change} />
-            ))
-          )}
-        </pre>
-      </ScrollArea>
+    <div className={cn("overflow-auto font-mono text-xs", className)}>
+      <table className="w-full border-collapse">
+        <tbody>
+          {lines.map((line, i) => (
+            <tr
+              key={i}
+              className={cn(
+                line.type === "add" && "bg-green-500/15",
+                line.type === "remove" && "bg-red-500/15",
+              )}
+            >
+              <td
+                className={cn(
+                  "w-10 px-2 py-0 text-right select-none border-r border-border/50",
+                  line.type === "add"
+                    ? "text-transparent"
+                    : "text-muted-foreground/50",
+                )}
+              >
+                {line.oldNum}
+              </td>
+              <td
+                className={cn(
+                  "w-10 px-2 py-0 text-right select-none border-r border-border/50",
+                  line.type === "remove"
+                    ? "text-transparent"
+                    : "text-muted-foreground/50",
+                )}
+              >
+                {line.newNum}
+              </td>
+              <td
+                className={cn(
+                  "w-5 px-1 py-0 text-center select-none",
+                  line.type === "add" && "text-green-400",
+                  line.type === "remove" && "text-red-400",
+                )}
+              >
+                {line.type === "add" ? "+" : line.type === "remove" ? "-" : " "}
+              </td>
+              <td className="px-2 py-0 whitespace-pre">
+                {line.content || " "}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function DiffBlock({ change }: { change: Change }) {
-  // Split into lines, preserving empty lines but removing trailing split artifact
-  const lines = change.value.split("\n");
-  // Remove last element if it's empty (split artifact from trailing newline)
-  if (lines.length > 0 && lines[lines.length - 1] === "") {
-    lines.pop();
-  }
-  // If the entire change was just a newline, show one empty line
-  if (lines.length === 0 && change.value === "\n") {
-    lines.push("");
+interface DiffLine {
+  type: "add" | "remove" | "context";
+  oldNum: number | null;
+  newNum: number | null;
+  content: string;
+}
+
+function buildDiffLines(changes: Change[]): DiffLine[] {
+  const lines: DiffLine[] = [];
+  let oldNum = 1;
+  let newNum = 1;
+
+  for (const change of changes) {
+    const content = change.value.endsWith("\n")
+      ? change.value.slice(0, -1)
+      : change.value;
+    const splitLines = content.split("\n");
+
+    for (const line of splitLines) {
+      if (change.added) {
+        lines.push({
+          type: "add",
+          oldNum: null,
+          newNum: newNum++,
+          content: line,
+        });
+      } else if (change.removed) {
+        lines.push({
+          type: "remove",
+          oldNum: oldNum++,
+          newNum: null,
+          content: line,
+        });
+      } else {
+        lines.push({
+          type: "context",
+          oldNum: oldNum++,
+          newNum: newNum++,
+          content: line,
+        });
+      }
+    }
   }
 
-  return (
-    <>
-      {lines.map((line, i) => (
-        <div
-          key={i}
-          className={cn(
-            "px-3 py-0.5 border-l-2 min-h-[1.5em]",
-            change.added &&
-              "bg-green-500/10 border-l-green-500 text-green-200",
-            change.removed &&
-              "bg-destructive/10 border-l-destructive text-red-200",
-            !change.added &&
-              !change.removed &&
-              "border-l-transparent text-muted-foreground",
-          )}
-        >
-          <span
-            className={cn(
-              "inline-block w-5 text-right mr-3 select-none",
-              change.added && "text-green-500/60",
-              change.removed && "text-destructive/60",
-              !change.added && !change.removed && "text-muted-foreground/40",
-            )}
-          >
-            {change.added ? "+" : change.removed ? "-" : " "}
-          </span>
-          <span>{line || " "}</span>
-        </div>
-      ))}
-    </>
-  );
+  return lines;
 }
