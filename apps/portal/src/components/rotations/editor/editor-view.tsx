@@ -50,12 +50,19 @@ interface EditorViewProps {
 
 function EditorSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] p-4 gap-2">
-      <Skeleton className="h-4 w-32 bg-zinc-700" />
-      <Skeleton className="h-4 w-48 bg-zinc-700" />
-      <Skeleton className="h-4 w-24 bg-zinc-700" />
-      <Skeleton className="h-4 w-64 bg-zinc-700" />
-      <Skeleton className="h-4 w-40 bg-zinc-700" />
+    <div className="flex flex-col h-full bg-[#1e1e1e] p-4 gap-3">
+      <div className="flex gap-2">
+        <Skeleton className="h-4 w-16 bg-zinc-700/50" />
+        <Skeleton className="h-4 w-24 bg-zinc-700/50" />
+      </div>
+      <Skeleton className="h-4 w-48 bg-zinc-700/50" />
+      <Skeleton className="h-4 w-32 bg-zinc-700/50" />
+      <div className="flex gap-2 mt-2">
+        <Skeleton className="h-4 w-8 bg-zinc-700/50" />
+        <Skeleton className="h-4 w-64 bg-zinc-700/50" />
+      </div>
+      <Skeleton className="h-4 w-40 bg-zinc-700/50" />
+      <Skeleton className="h-4 w-56 bg-zinc-700/50" />
     </div>
   );
 }
@@ -106,7 +113,7 @@ export function EditorView({
       editor.executeEdits("insert", [
         {
           range: selection,
-          text: text,
+          text,
           forceMoveMarkers: true,
         },
       ]);

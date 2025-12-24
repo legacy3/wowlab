@@ -8,7 +8,9 @@ export function useRotationHistory(rotationId: string | undefined) {
   return useQuery({
     queryKey: ["rotation-history", rotationId],
     queryFn: async () => {
-      if (!rotationId) return [];
+      if (!rotationId) {
+        return [];
+      }
       const supabase = createClient();
       const { data, error } = await supabase
         .from("rotations_history")
@@ -33,7 +35,9 @@ export function useRotationHistoryVersion(
   return useQuery({
     queryKey: ["rotation-history-version", rotationId, version],
     queryFn: async () => {
-      if (!rotationId || version === undefined) return null;
+      if (!rotationId || version === undefined) {
+        return null;
+      }
       const supabase = createClient();
       const { data, error } = await supabase
         .from("rotations_history")

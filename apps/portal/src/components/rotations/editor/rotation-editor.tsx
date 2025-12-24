@@ -25,9 +25,9 @@ interface RotationEditorProps {
   forkSourceId?: string;
 }
 
-function RotationEditorSkeleton() {
+export function RotationEditorSkeleton() {
   return (
-    <div className="flex flex-col h-[600px] rounded-lg border overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-10rem)] rounded-lg border overflow-hidden bg-background">
       <Skeleton className="h-12 w-full rounded-none" />
       <Skeleton className="flex-1 rounded-none" />
       <Skeleton className="h-14 w-full rounded-none" />
