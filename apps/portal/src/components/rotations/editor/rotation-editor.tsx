@@ -267,6 +267,7 @@ function RotationEditorInner({
         isSaving={isMutating}
         isTesting={isTesting}
         isDraft={true}
+        hasChanges={true}
         onScriptChange={setScript}
         onSave={handleSave}
         onTest={handleTest}
@@ -277,6 +278,8 @@ function RotationEditorInner({
 
   // EDIT MODE: Show editor with existing rotation
   if (isEditMode && existingRotation) {
+    const hasChanges = script !== existingRotation.script;
+
     return (
       <EditorView
         rotation={existingRotation}
@@ -284,6 +287,7 @@ function RotationEditorInner({
         isSaving={isMutating}
         isTesting={isTesting}
         isDraft={false}
+        hasChanges={hasChanges}
         onScriptChange={setScript}
         onSave={handleSave}
         onTest={handleTest}

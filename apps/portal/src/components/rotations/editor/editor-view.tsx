@@ -40,6 +40,7 @@ interface EditorViewProps {
   isSaving: boolean;
   isTesting: boolean;
   isDraft: boolean;
+  hasChanges: boolean;
   onScriptChange: (script: string) => void;
   onSave: () => void;
   onTest: () => void;
@@ -65,6 +66,7 @@ export function EditorView({
   isSaving,
   isTesting,
   isDraft,
+  hasChanges,
   onScriptChange,
   onSave,
   onTest,
@@ -237,7 +239,7 @@ export function EditorView({
           variant="outline"
           size="sm"
           onClick={onSave}
-          disabled={isDisabled}
+          disabled={isDisabled || (!isDraft && !hasChanges)}
           data-tour="rotation-editor-save"
         >
           {isSaving ? (

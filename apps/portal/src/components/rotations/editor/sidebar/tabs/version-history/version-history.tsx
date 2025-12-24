@@ -119,16 +119,16 @@ export function VersionHistory({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="h-[400px] border rounded-md overflow-hidden">
+          <div className="border rounded-md overflow-hidden">
             {isLoadingScript ? (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex items-center justify-center h-[400px]">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <CodeEditor
                 value={versionScript ?? ""}
                 language="typescript"
-                height="100%"
+                height={400}
                 readOnly
               />
             )}
