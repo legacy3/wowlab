@@ -1,52 +1,47 @@
 "use client";
 
 import { Suspense, useState } from "react";
-// TODO(refine-migration): Replace with Refine hooks in Phase 4/5
-// import { useAtom } from "jotai";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DraggableDashboard,
   type DashboardConfig,
 } from "@/components/ui/draggable-dashboard";
-// TODO(refine-migration): resultsCardOrderAtom deleted - implement with Refine/localStorage
-// import { resultsCardOrderAtom, type ResultsCardId } from "@/atoms/sim";
 import {
-  BestDpsCard,
-  BaselineDpsCard,
-  AvgGainCard,
-  CombosAnalyzedCard,
+  DpsCard,
+  TotalDamageCard,
+  DurationCard,
+  TotalCastsCard,
   CharacterEquipmentCard,
   ItemCombosCard,
 } from "./cards";
 
-// Temporary type definition until Refine migration
 type ResultsCardId =
-  | "best-dps"
-  | "baseline-dps"
-  | "avg-gain"
-  | "combos-analyzed"
-  | "character-equipment"
-  | "item-combos";
+  | "dps"
+  | "total-damage"
+  | "duration"
+  | "total-casts"
+  | "ability-breakdown"
+  | "cooldown-usage";
 
 const components: DashboardConfig<ResultsCardId> = {
-  "best-dps": {
-    Component: BestDpsCard,
+  dps: {
+    Component: DpsCard,
   },
-  "baseline-dps": {
-    Component: BaselineDpsCard,
+  "total-damage": {
+    Component: TotalDamageCard,
   },
-  "avg-gain": {
-    Component: AvgGainCard,
+  duration: {
+    Component: DurationCard,
   },
-  "combos-analyzed": {
-    Component: CombosAnalyzedCard,
+  "total-casts": {
+    Component: TotalCastsCard,
   },
-  "character-equipment": {
+  "ability-breakdown": {
     Component: CharacterEquipmentCard,
     className: "sm:col-span-2 lg:col-span-4",
   },
-  "item-combos": {
+  "cooldown-usage": {
     Component: ItemCombosCard,
     className: "sm:col-span-2 lg:col-span-4",
   },
@@ -61,15 +56,13 @@ export function ResultsOverview() {
 }
 
 function ResultsOverviewInner() {
-  // TODO(refine-migration): Replace with Refine/localStorage for persistence
-  // const [order, setOrder] = useAtom(resultsCardOrderAtom);
   const [order, setOrder] = useState<ResultsCardId[]>([
-    "best-dps",
-    "baseline-dps",
-    "avg-gain",
-    "combos-analyzed",
-    "character-equipment",
-    "item-combos",
+    "dps",
+    "total-damage",
+    "duration",
+    "total-casts",
+    "ability-breakdown",
+    "cooldown-usage",
   ]);
 
   return (
