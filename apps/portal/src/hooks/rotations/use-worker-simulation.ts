@@ -14,6 +14,7 @@ import {
 } from "@/atoms/simulation/job";
 import { updateWorkerSystemAtom } from "@/atoms/computing";
 import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
+import { combatDataAtom, createEmptyCombatData } from "@/atoms/timeline";
 import { loadSpellsById, loadAurasById } from "@/lib/simulation";
 import {
   runSimulationsPromise,
@@ -82,6 +83,18 @@ export interface UseWorkerSimulationOptions {
   onError?: (error: Error) => void;
 }
 
+function formatEta(etaMs: number | null) {
+  if (!etaMs || !Number.isFinite(etaMs)) {
+    return "Calculating...";
+  }
+  const totalSeconds = Math.max(0, Math.ceil(etaMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0
+    ? `${minutes}m ${seconds}s remaining`
+    : `${seconds}s remaining`;
+}
+
 export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
   const [state, setState] = useState<WorkerSimulationState>({
     isRunning: false,
@@ -100,6 +113,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
   const failJob = useSetAtom(failSimJobAtom);
   const setDrawerOpen = useSetAtom(computingDrawerOpenAtom);
   const updateWorkerSystem = useSetAtom(updateWorkerSystemAtom);
+  const setCombatData = useSetAtom(combatDataAtom);
 
   const run = useCallback(
     async (params: WorkerSimulationParams) => {
@@ -190,6 +204,14 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
             duration,
           },
           workerConfig,
+          (progress) => {
+            updateProgress({
+              jobId,
+              current: progress.completed,
+              total: progress.total,
+              eta: formatEta(progress.etaMs),
+            });
+          },
         );
 
         // Track worker system state
@@ -218,6 +240,8 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
             casts: stats.totalCasts,
           },
         });
+
+        setCombatData(createEmptyCombatData());
 
         setState({
           isRunning: false,
@@ -259,6 +283,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       failJob,
       setDrawerOpen,
       updateWorkerSystem,
+      setCombatData,
       options,
     ],
   );

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useSimulation } from "@/hooks/use-simulation";
+import { useWorkerSimulation } from "@/hooks/rotations";
 import {
   CharacterSummaryCard,
   EquipmentColumn,
@@ -24,6 +24,7 @@ import {
   clearCharacterAtom,
   selectedRotationIdAtom,
   fightDurationAtom,
+  iterationsAtom,
   isParsingAtom,
   parsedCharacterAtom,
   recentCharactersParsedAtom,
@@ -43,6 +44,7 @@ function QuickSimContentInner() {
   const recentCharacters = useAtomValue(recentCharactersParsedAtom);
   const clearCharacter = useSetAtom(clearCharacterAtom);
   const fightDuration = useAtomValue(fightDurationAtom);
+  const iterations = useAtomValue(iterationsAtom);
   const selectedRotationId = useAtomValue(selectedRotationIdAtom);
 
   // Fetch selected rotation from database
@@ -50,14 +52,28 @@ function QuickSimContentInner() {
     selectedRotationId ?? undefined,
   );
 
-  const { run, isRunning, result, error, resultId } = useSimulation();
+  const { run, isRunning, stats, error } = useWorkerSimulation();
+
+  const result = stats
+    ? {
+        dps: stats.avgDps,
+        totalDamage: stats.totalDamage,
+        durationMs: fightDuration * 1000,
+        events: [],
+        casts: stats.totalCasts,
+      }
+    : null;
 
   const handleRunSim = async () => {
-    if (!selectedRotation?.currentVersion) {
+    if (!selectedRotation?.script) {
       return;
     }
-    // TODO: Load compiled rotation module and run simulation
-    // await run(compiledRotation.run, fightDuration);
+    await run({
+      code: selectedRotation.script,
+      name: selectedRotation.name,
+      iterations,
+      duration: fightDuration,
+    });
   };
 
   // Zen state: just the paste area
@@ -200,7 +216,7 @@ function QuickSimContentInner() {
       )}
 
       {/* Results Display */}
-      {result && <SimulationResultCard result={result} resultId={resultId} />}
+      {result && <SimulationResultCard result={result} resultId={null} />}
 
       {/* Error Display */}
       {error && <SimulationErrorCard error={error} />}

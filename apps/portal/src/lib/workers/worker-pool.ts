@@ -79,6 +79,15 @@ export interface SimulationStats {
   workerVersion: string | null;
 }
 
+export interface SimulationProgress {
+  completed: number;
+  total: number;
+  elapsedMs: number;
+  etaMs: number | null;
+}
+
+export type SimulationProgressCallback = (progress: SimulationProgress) => void;
+
 // =============================================================================
 // Worker Layer
 // =============================================================================
@@ -104,6 +113,7 @@ const SimulationWorkerLayer = BrowserWorker.layer(
 const runSimulationsInternal = (
   params: SimulationParams,
   cfg: Required<WorkerPoolConfig>,
+  onProgress?: SimulationProgressCallback,
 ) =>
   Effect.gen(function* () {
     // Create worker pool using Effect's platform abstraction
@@ -157,6 +167,8 @@ const runSimulationsInternal = (
       workerVersion,
     };
 
+    const startTime = Date.now();
+    let processedSims = 0;
     const waveSize = cfg.workerCount * 10;
     let batchId = 0;
 
@@ -202,6 +214,7 @@ const runSimulationsInternal = (
       // Aggregate results
       for (const batchResults of waveResults) {
         for (const result of batchResults) {
+          processedSims += 1;
           if (result.error) {
             stats.errors.push(result.error);
           } else {
@@ -209,6 +222,21 @@ const runSimulationsInternal = (
             stats.totalCasts += result.casts;
             stats.totalDamage += result.totalDamage;
           }
+        }
+
+        if (onProgress) {
+          const elapsedMs = Date.now() - startTime;
+          const ratePerSec =
+            elapsedMs > 0 ? processedSims / (elapsedMs / 1000) : 0;
+          const remaining = params.iterations - processedSims;
+          const etaMs =
+            ratePerSec > 0 ? Math.max(0, remaining / ratePerSec) * 1000 : null;
+          onProgress({
+            completed: processedSims,
+            total: params.iterations,
+            elapsedMs,
+            etaMs,
+          });
         }
       }
     }
@@ -230,10 +258,11 @@ const runSimulationsInternal = (
 export const runSimulations = (
   params: SimulationParams,
   config: WorkerPoolConfig = {},
+  onProgress?: SimulationProgressCallback,
 ): Effect.Effect<SimulationStats, WorkerPoolError> => {
   const cfg = { ...defaultConfig, ...config };
 
-  return runSimulationsInternal(params, cfg).pipe(
+  return runSimulationsInternal(params, cfg, onProgress).pipe(
     Effect.scoped,
     Effect.provide(SimulationWorkerLayer),
     Effect.mapError(
@@ -260,5 +289,6 @@ export const runSimulations = (
 export const runSimulationsPromise = (
   params: SimulationParams,
   config?: WorkerPoolConfig,
+  onProgress?: SimulationProgressCallback,
 ): Promise<SimulationStats> =>
-  Effect.runPromise(runSimulations(params, config));
+  Effect.runPromise(runSimulations(params, config, onProgress));

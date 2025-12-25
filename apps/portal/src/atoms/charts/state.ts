@@ -46,113 +46,6 @@ export interface DetailedDataPoint {
   dps: number;
 }
 
-// Fallback mock data generators (used when no simulation data is available)
-
-function generateMockDpsData(): DpsDataPoint[] {
-  const data: DpsDataPoint[] = [];
-  const baseDps = 800;
-
-  for (let i = 0; i <= 300; i += 5) {
-    const cooldownBonus =
-      Math.floor(i / 60) !== Math.floor((i - 5) / 60) ? 400 : 0;
-    const variance = Math.random() * 200 - 100;
-    const currentDps = baseDps + cooldownBonus + variance;
-
-    const runningAvg =
-      data.length > 0
-        ? data[data.length - 1].running_avg * 0.8 + currentDps * 0.2
-        : currentDps;
-
-    data.push({
-      time: i,
-      dps: Math.round(currentDps),
-      running_avg: Math.round(runningAvg),
-    });
-  }
-
-  return data;
-}
-
-function generateMockResourceData(): ResourceDataPoint[] {
-  const data: ResourceDataPoint[] = [];
-  let mana = 10000;
-  let totalSpent = 0;
-
-  for (let i = 0; i <= 300; i += 5) {
-    const regen = 50;
-    const spent =
-      Math.random() > 0.7
-        ? Math.floor(Math.random() * 500)
-        : Math.floor(Math.random() * 200);
-
-    mana = Math.max(0, Math.min(10000, mana + regen - spent));
-    totalSpent += spent;
-
-    data.push({
-      time: i,
-      mana: Math.round(mana),
-      mana_spent: totalSpent,
-    });
-  }
-
-  return data;
-}
-
-function generateMockAbilityData(): AbilityUsageDataPoint[] {
-  return [
-    {
-      ability: "Kill Command",
-      casts: 45,
-      damage: 125000,
-      fill: "var(--chart-1)",
-    },
-    { ability: "Cobra Shot", casts: 38, damage: 89000, fill: "var(--chart-2)" },
-    {
-      ability: "Barbed Shot",
-      casts: 28,
-      damage: 67000,
-      fill: "var(--chart-3)",
-    },
-    { ability: "Barrage", casts: 12, damage: 42000, fill: "var(--chart-4)" },
-    { ability: "Kill Shot", casts: 5, damage: 35000, fill: "var(--chart-5)" },
-  ];
-}
-
-function generateMockCooldownData(): CooldownEvent[] {
-  return [
-    { time: 0, ability: "Bestial Wrath", duration: 15 },
-    { time: 90, ability: "Bestial Wrath", duration: 15 },
-    { time: 180, ability: "Bestial Wrath", duration: 15 },
-    { time: 270, ability: "Bestial Wrath", duration: 15 },
-    { time: 0, ability: "Call of the Wild", duration: 20 },
-    { time: 120, ability: "Call of the Wild", duration: 20 },
-    { time: 240, ability: "Call of the Wild", duration: 20 },
-    { time: 45, ability: "Bloodshed", duration: 12 },
-    { time: 90, ability: "Bloodshed", duration: 12 },
-  ];
-}
-
-function generateMockDetailedData(): DetailedDataPoint[] {
-  const data: DetailedDataPoint[] = [];
-  let cumulativeDamage = 0;
-
-  for (let i = 0; i <= 300; i += 10) {
-    const damage = Math.floor(Math.random() * 5000 + 8000);
-    cumulativeDamage += damage;
-    const dps = cumulativeDamage / Math.max(1, i);
-    const mana = 10000 - (i / 300) * 8000 + Math.random() * 1000;
-
-    data.push({
-      time: i,
-      damage: Math.round(cumulativeDamage),
-      mana: Math.round(Math.max(0, mana)),
-      dps: Math.round(dps),
-    });
-  }
-
-  return data;
-}
-
 // Derived atoms that read from combatData with fallback to mock data
 
 export const dpsDataAtom = atom<DpsDataPoint[]>((get) => {
@@ -163,8 +56,7 @@ export const dpsDataAtom = atom<DpsDataPoint[]>((get) => {
     return transformToDpsChartData(combatData);
   }
 
-  // Fallback to mock data
-  return generateMockDpsData();
+  return [];
 });
 
 export const resourceDataAtom = atom<ResourceDataPoint[]>((get) => {
@@ -175,8 +67,7 @@ export const resourceDataAtom = atom<ResourceDataPoint[]>((get) => {
     return transformToResourceChartData(combatData);
   }
 
-  // Fallback to mock data
-  return generateMockResourceData();
+  return [];
 });
 
 export const abilityDataAtom = atom<AbilityUsageDataPoint[]>((get) => {
@@ -187,8 +78,7 @@ export const abilityDataAtom = atom<AbilityUsageDataPoint[]>((get) => {
     return transformToAbilityChartData(combatData);
   }
 
-  // Fallback to mock data
-  return generateMockAbilityData();
+  return [];
 });
 
 export const cooldownDataAtom = atom<CooldownEvent[]>((get) => {
@@ -199,8 +89,7 @@ export const cooldownDataAtom = atom<CooldownEvent[]>((get) => {
     return transformToCooldownChartData(combatData);
   }
 
-  // Fallback to mock data
-  return generateMockCooldownData();
+  return [];
 });
 
 export const detailedDataAtom = atom<DetailedDataPoint[]>((get) => {
@@ -211,8 +100,7 @@ export const detailedDataAtom = atom<DetailedDataPoint[]>((get) => {
     return transformToDetailedChartData(combatData);
   }
 
-  // Fallback to mock data
-  return generateMockDetailedData();
+  return [];
 });
 
 // Chart order management

@@ -44,8 +44,7 @@ export function RotationEditorSkeleton() {
 interface DraftRotation {
   name: string;
   slug: string;
-  class: string;
-  spec: string;
+  specId: number;
   description: string | null;
   script: string;
   isPublic: boolean;
@@ -114,8 +113,7 @@ function RotationEditorInner({
     setDraft({
       name: values.name,
       slug: values.slug,
-      class: values.class,
-      spec: values.spec,
+      specId: values.specId,
       description: values.description || null,
       script: initialScript,
       isPublic: false,
@@ -133,8 +131,7 @@ function RotationEditorInner({
         userId: identity.id,
         name: draft.name,
         slug: draft.slug,
-        class: draft.class,
-        spec: draft.spec,
+        specId: draft.specId,
         script: script,
         description: draft.description,
         isPublic: draft.isPublic,
@@ -255,8 +252,7 @@ function RotationEditorInner({
         ? {
             name: `${forkSource.name} (Fork)`,
             slug: `${forkSource.slug}-fork`,
-            class: forkSource.class,
-            spec: forkSource.spec,
+            specId: forkSource.specId,
             description: forkSource.description ?? "",
           }
         : undefined;
@@ -279,8 +275,7 @@ function RotationEditorInner({
       userId: identity.id,
       name: draft.name,
       slug: draft.slug,
-      class: draft.class,
-      spec: draft.spec,
+      specId: draft.specId,
       script: draft.script,
       description: draft.description,
       isPublic: draft.isPublic,

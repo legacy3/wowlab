@@ -5,11 +5,11 @@ import { Zap, Heart } from "lucide-react";
 import { GameIcon } from "@/components/game";
 import * as colors from "@/lib/colors";
 import { formatDurationSeconds } from "@/lib/format";
-import type { PlaybackFrame, SpellInfo } from "./mock-data";
-import { MOCK_SPELLS } from "./mock-data";
+import type { PlaybackFrame, SpellInfo } from "./types";
 
 interface StatePanelProps {
   frame: PlaybackFrame | null;
+  spells?: SpellInfo[];
 }
 
 function ResourceBar({
@@ -75,7 +75,10 @@ function CooldownItem({
   );
 }
 
-export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
+export const StatePanel = memo(function StatePanel({
+  frame,
+  spells = [],
+}: StatePanelProps) {
   if (!frame) {
     return (
       <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground text-center">
@@ -85,8 +88,8 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
   }
 
   const { state } = frame;
-  const spellsWithCooldowns = MOCK_SPELLS.filter((s) => s.cooldown > 0);
-  const barbedShot = MOCK_SPELLS.find((s) => s.id === 217200);
+  const spellsWithCooldowns = spells.filter((s) => s.cooldown > 0);
+  const barbedShot = spells.find((s) => s.id === 217200);
   const barbedCharges = state.charges.get(217200) ?? 0;
 
   return (
@@ -155,14 +158,14 @@ export const StatePanel = memo(function StatePanel({ frame }: StatePanelProps) {
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-green-500/10 border border-green-500/20">
             <GameIcon
               iconName={
-                MOCK_SPELLS.find((s) => s.id === frame.castSpellId)?.icon ??
+                spells.find((s) => s.id === frame.castSpellId)?.icon ??
                 "inv_misc_questionmark"
               }
               size="small"
               className="w-6 h-6"
             />
             <span className="text-sm font-medium text-green-400">
-              {MOCK_SPELLS.find((s) => s.id === frame.castSpellId)?.name}
+              {spells.find((s) => s.id === frame.castSpellId)?.name}
             </span>
           </div>
         </div>

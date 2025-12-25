@@ -15,11 +15,11 @@ export type ComputingCardId =
   | "simulations"
   | "iterations"
   | "status"
-  | "performance-chart"
-  | "job-history";
+  | "job-history"
+  | "performance-chart";
 
 export const computingOrderAtom = createPersistedOrderAtom<ComputingCardId>(
-  "computing-order-v3",
+  "computing-order-v5",
   [
     "cpu-cores",
     "memory",

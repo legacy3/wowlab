@@ -8,7 +8,7 @@ import {
   KonvaLine,
   KonvaImage,
 } from "@/components/konva";
-import type { PriorityEntry, PlaybackFrame, DecisionStep } from "./mock-data";
+import type { PriorityEntry, PlaybackFrame, DecisionStep } from "./types";
 import {
   ROW_HEIGHT,
   HEADER_HEIGHT,

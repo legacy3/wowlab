@@ -103,7 +103,6 @@ export type Database = {
       };
       rotations: {
         Row: {
-          class: string;
           createdAt: string;
           currentVersion: number | null;
           description: string | null;
@@ -113,12 +112,11 @@ export type Database = {
           name: string;
           script: string;
           slug: string;
-          spec: string;
+          specId: number;
           updatedAt: string;
           userId: string;
         };
         Insert: {
-          class: string;
           createdAt?: string;
           currentVersion?: number | null;
           description?: string | null;
@@ -128,12 +126,11 @@ export type Database = {
           name: string;
           script: string;
           slug: string;
-          spec: string;
+          specId: number;
           updatedAt?: string;
           userId: string;
         };
         Update: {
-          class?: string;
           createdAt?: string;
           currentVersion?: number | null;
           description?: string | null;
@@ -143,7 +140,7 @@ export type Database = {
           name?: string;
           script?: string;
           slug?: string;
-          spec?: string;
+          specId?: number;
           updatedAt?: string;
           userId?: string;
         };

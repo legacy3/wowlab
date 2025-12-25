@@ -4,8 +4,7 @@ import { useList, useGetIdentity } from "@refinedev/core";
 import type { Rotation } from "@/lib/supabase/types";
 
 interface UseRotationsListOptions {
-  wowClass?: string;
-  spec?: string;
+  specId?: number;
 }
 
 interface UserIdentity {
@@ -22,11 +21,8 @@ export function useMyRotations(options: UseRotationsListOptions = {}) {
     resource: "rotations",
     filters: [
       { field: "userId", operator: "eq", value: user?.id },
-      ...(options.wowClass
-        ? [{ field: "class", operator: "eq" as const, value: options.wowClass }]
-        : []),
-      ...(options.spec
-        ? [{ field: "spec", operator: "eq" as const, value: options.spec }]
+      ...(options.specId
+        ? [{ field: "specId", operator: "eq" as const, value: options.specId }]
         : []),
     ],
     sorters: [{ field: "updatedAt", order: "desc" }],
@@ -47,11 +43,8 @@ export function useCommunityRotations(options: UseRotationsListOptions = {}) {
       ...(user?.id
         ? [{ field: "userId", operator: "ne" as const, value: user.id }]
         : []),
-      ...(options.wowClass
-        ? [{ field: "class", operator: "eq" as const, value: options.wowClass }]
-        : []),
-      ...(options.spec
-        ? [{ field: "spec", operator: "eq" as const, value: options.spec }]
+      ...(options.specId
+        ? [{ field: "specId", operator: "eq" as const, value: options.specId }]
         : []),
     ],
     sorters: [{ field: "updatedAt", order: "desc" }],

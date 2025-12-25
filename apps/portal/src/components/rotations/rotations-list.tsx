@@ -1,5 +1,9 @@
+"use client";
+
+import { useMemo } from "react";
 import { RotationCard } from "./rotation-card";
 import type { Rotation } from "@/lib/supabase/types";
+import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
 
 interface RotationsListProps {
   rotations: Rotation[];
@@ -10,6 +14,20 @@ export function RotationsList({
   rotations,
   groupByClass = true,
 }: RotationsListProps) {
+  const { classes, specs } = useClassesAndSpecs();
+
+  const classNameById = useMemo(() => {
+    return new Map(
+      (classes.result?.data ?? []).map((cls) => [cls.ID, cls.Name_lang ?? ""]),
+    );
+  }, [classes.result?.data]);
+
+  const classIdBySpecId = useMemo(() => {
+    return new Map(
+      (specs.result?.data ?? []).map((spec) => [spec.ID, spec.ClassID]),
+    );
+  }, [specs.result?.data]);
+
   if (!groupByClass) {
     return (
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -22,10 +40,13 @@ export function RotationsList({
 
   const grouped = rotations.reduce(
     (acc, rotation) => {
-      if (!acc[rotation.class]) {
-        acc[rotation.class] = [];
+      const classId = classIdBySpecId.get(rotation.specId);
+      const className =
+        (classId ? classNameById.get(classId) : undefined) || "Unknown";
+      if (!acc[className]) {
+        acc[className] = [];
       }
-      acc[rotation.class].push(rotation);
+      acc[className].push(rotation);
       return acc;
     },
     {} as Record<string, Rotation[]>,

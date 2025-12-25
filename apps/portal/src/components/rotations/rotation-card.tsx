@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Card,
@@ -11,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Clock, Code2, GitFork, Lock } from "lucide-react";
 import type { Rotation } from "@/lib/supabase/types";
 import { formatRelativeToNow } from "@/lib/format";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface RotationCardProps {
   rotation: Rotation;
@@ -30,7 +33,7 @@ export function RotationCard({ rotation }: RotationCardProps) {
                 </CardTitle>
               </div>
               <CardDescription className="truncate">
-                {rotation.class} • {rotation.spec}
+                <SpecLabel specId={rotation.specId} size="sm" showIcon={false} />
               </CardDescription>
             </div>
 

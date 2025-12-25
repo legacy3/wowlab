@@ -14,8 +14,8 @@ import {
   SimulationsCard,
   IterationsCard,
   StatusCard,
-  PerformanceChartCard,
   JobHistoryCard,
+  PerformanceChartCard,
 } from "./cards";
 
 const components: DashboardConfig<ComputingCardId> = {
@@ -25,12 +25,12 @@ const components: DashboardConfig<ComputingCardId> = {
   simulations: { Component: SimulationsCard },
   iterations: { Component: IterationsCard },
   status: { Component: StatusCard },
-  "performance-chart": {
-    Component: PerformanceChartCard,
-    className: "col-span-2 sm:col-span-3 lg:col-span-6",
-  },
   "job-history": {
     Component: JobHistoryCard,
+    className: "col-span-2 sm:col-span-3 lg:col-span-6",
+  },
+  "performance-chart": {
+    Component: PerformanceChartCard,
     className: "col-span-2 sm:col-span-3 lg:col-span-6",
   },
 };

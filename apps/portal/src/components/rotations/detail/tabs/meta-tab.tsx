@@ -6,6 +6,7 @@ import { GitFork, Calendar, BarChart3, Users, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Rotation } from "@/lib/supabase/types";
 import { formatInt, formatRelativeToNow } from "@/lib/format";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface MetaTabProps {
   rotation: Rotation;
@@ -67,7 +68,7 @@ export const MetaTab = memo(function MetaTab({
             <div>
               <p className="font-medium">{parent.name}</p>
               <p className="text-sm text-muted-foreground">
-                {parent.class} • {parent.spec}
+                <SpecLabel specId={parent.specId} size="sm" showIcon={false} />
               </p>
             </div>
             <Badge variant="outline">View</Badge>
@@ -92,7 +93,7 @@ export const MetaTab = memo(function MetaTab({
                 <div>
                   <p className="font-medium">{fork.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {fork.class} • {fork.spec}
+                    <SpecLabel specId={fork.specId} size="sm" showIcon={false} />
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">

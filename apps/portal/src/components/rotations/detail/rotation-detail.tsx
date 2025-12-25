@@ -8,8 +8,8 @@ import type { Rotation, Profile, UserIdentity } from "@/lib/supabase/types";
 
 import { RotationHeader, RotationHeaderSkeleton } from "./rotation-header";
 import { SourceTab } from "./tabs/source-tab";
-import { VisualizeTab } from "./tabs/visualize-tab";
 import { MetaTab } from "./tabs/meta-tab";
+import { VisualizeTab } from "./tabs/visualize-tab";
 
 interface RotationDetailProps {
   rotationId: string;
@@ -19,7 +19,7 @@ function RotationDetailSkeleton() {
   return (
     <div className="space-y-6">
       <RotationHeaderSkeleton />
-      <TabsSkeleton tabCount={4} className="w-full max-w-md" />
+      <TabsSkeleton tabCount={3} className="w-full max-w-md" />
       <Skeleton className="h-96 w-full" />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Check, ChevronsUpDown, Sparkles, User, Users } from "lucide-react";
 
@@ -26,6 +26,8 @@ import {
 } from "@/atoms/sim";
 import { parsedCharacterAtom } from "@/atoms/sim/character";
 import { useMyRotations, useCommunityRotations } from "@/hooks/rotations";
+import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 export function RotationPicker() {
   const [open, setOpen] = useState(false);
@@ -36,13 +38,47 @@ export function RotationPicker() {
 
   const wowClass = parsedData?.character.class;
   const spec = parsedData?.character.spec;
+  const { classes, specs } = useClassesAndSpecs();
+
+  const specId = useMemo(() => {
+    if (!wowClass || !spec) {
+      return undefined;
+    }
+
+    const classEntry = (classes.result?.data ?? []).find(
+      (cls) => cls.Name_lang?.toLowerCase() === wowClass.toLowerCase(),
+    );
+
+    const specEntry = (specs.result?.data ?? []).find(
+      (specEntry) =>
+        specEntry.Name_lang?.toLowerCase() === spec.toLowerCase() &&
+        specEntry.ClassID === classEntry?.ID,
+    );
+
+    return specEntry?.ID;
+  }, [wowClass, spec, classes.result?.data, specs.result?.data]);
 
   // Fetch database rotations
-  const { result: myRotationsResult } = useMyRotations({ wowClass, spec });
-  const { result: communityResult } = useCommunityRotations({ wowClass, spec });
+  const { result: myRotationsResult } = useMyRotations({ specId });
+  const { result: communityResult } = useCommunityRotations({ specId });
 
   const myRotations = myRotationsResult?.data ?? [];
   const communityRotations = communityResult?.data ?? [];
+
+  const specLabelById = useMemo(() => {
+    const classNameById = new Map(
+      (classes.result?.data ?? []).map((cls) => [
+        cls.ID,
+        cls.Name_lang ?? "",
+      ]),
+    );
+    return new Map(
+      (specs.result?.data ?? []).map((specEntry) => [
+        specEntry.ID,
+        `${classNameById.get(specEntry.ClassID) ?? ""} ${specEntry.Name_lang ?? ""}`.trim(),
+      ]),
+    );
+  }, [classes.result?.data, specs.result?.data]);
 
   // Find selected rotation for display
   const selectedRotation =
@@ -84,7 +120,15 @@ export function RotationPicker() {
                     <span className="font-medium">{selectedRotation.name}</span>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {selectedRotation.class} · {selectedRotation.spec}
+                    {specLabelById.get(selectedRotation.specId) ? (
+                      <SpecLabel
+                        specId={selectedRotation.specId}
+                        size="sm"
+                        showIcon={false}
+                      />
+                    ) : (
+                      "Unknown spec"
+                    )}
                   </div>
                 </>
               ) : (
@@ -142,7 +186,7 @@ export function RotationPicker() {
                   {myRotations.map((rotation) => (
                     <CommandItem
                       key={rotation.id}
-                      value={`my ${rotation.class} ${rotation.spec} ${rotation.name}`}
+                      value={`my ${specLabelById.get(rotation.specId) ?? ""} ${rotation.name}`}
                       onSelect={() => handleSelect(rotation.id)}
                       className="flex items-center gap-2 py-3"
                     >
@@ -150,7 +194,15 @@ export function RotationPicker() {
                       <div className="flex flex-col flex-1">
                         <span className="font-medium">{rotation.name}</span>
                         <span className="text-xs text-muted-foreground">
-                          {rotation.class} · {rotation.spec}
+                          {specLabelById.get(rotation.specId) ? (
+                            <SpecLabel
+                              specId={rotation.specId}
+                              size="sm"
+                              showIcon={false}
+                            />
+                          ) : (
+                            "Unknown spec"
+                          )}
                         </span>
                       </div>
                       {selectedId === rotation.id && (
@@ -166,7 +218,7 @@ export function RotationPicker() {
                   {communityRotations.map((rotation) => (
                     <CommandItem
                       key={rotation.id}
-                      value={`community ${rotation.class} ${rotation.spec} ${rotation.name}`}
+                      value={`community ${specLabelById.get(rotation.specId) ?? ""} ${rotation.name}`}
                       onSelect={() => handleSelect(rotation.id)}
                       className="flex items-center gap-2 py-3"
                     >
@@ -174,7 +226,15 @@ export function RotationPicker() {
                       <div className="flex flex-col flex-1">
                         <span className="font-medium">{rotation.name}</span>
                         <span className="text-xs text-muted-foreground">
-                          {rotation.class} · {rotation.spec}
+                          {specLabelById.get(rotation.specId) ? (
+                            <SpecLabel
+                              specId={rotation.specId}
+                              size="sm"
+                              showIcon={false}
+                            />
+                          ) : (
+                            "Unknown spec"
+                          )}
                         </span>
                       </div>
                       {selectedId === rotation.id && (

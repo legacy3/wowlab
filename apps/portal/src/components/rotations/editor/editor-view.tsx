@@ -34,6 +34,7 @@ import { SettingsPanel, type SettingsValues } from "./settings-panel";
 import { EditorSidebar } from "./sidebar";
 import type { Rotation } from "@/lib/supabase/types";
 import { RotationEditorTour } from "@/components/tours";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface EditorViewProps {
   rotation: Rotation;
@@ -181,7 +182,7 @@ export function EditorView({
           <div>
             <h1 className="text-sm font-medium">{rotation.name}</h1>
             <p className="text-xs text-muted-foreground">
-              {rotation.class} · {rotation.spec}
+              <SpecLabel specId={rotation.specId} size="sm" showIcon={false} />
               {isZen && <span className="ml-2 opacity-60">(ESC to exit)</span>}
             </p>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { PlaybackFrame } from "./mock-data";
+import type { PlaybackFrame } from "./types";
 
 interface UsePlaybackOptions {
   frames: PlaybackFrame[];

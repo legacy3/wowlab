@@ -11,10 +11,7 @@ import { ChartsContent } from "@/components/simulate/results/charts";
 import { EventLogContent } from "@/components/simulate/results/event-log";
 import { jobsAtom } from "@/atoms/computing";
 import { combatDataAtom, timelineBoundsAtom } from "@/atoms/timeline";
-import {
-  simulationResultAtom,
-  activeJobIdAtom,
-} from "@/atoms/simulation/results";
+import { simulationResultAtom } from "@/atoms/simulation/results";
 import { transformEventsWithResources } from "@/lib/simulation/transformers";
 import type { SimulationEvent, SimulationResult } from "@/lib/simulation/types";
 
@@ -25,7 +22,6 @@ function useLoadLocalJob() {
   const setCombatData = useSetAtom(combatDataAtom);
   const setBounds = useSetAtom(timelineBoundsAtom);
   const setSimulationResult = useSetAtom(simulationResultAtom);
-  const setActiveJobId = useSetAtom(activeJobIdAtom);
 
   useEffect(() => {
     if (!jobId) {
@@ -48,7 +44,6 @@ function useLoadLocalJob() {
     // Set all atoms with simulation data
     setCombatData(combatData);
     setBounds({ min: 0, max: durationSec });
-    setActiveJobId(jobId);
 
     // Create SimulationResult for overview cards
     const result: SimulationResult = {
@@ -65,7 +60,6 @@ function useLoadLocalJob() {
     setCombatData,
     setBounds,
     setSimulationResult,
-    setActiveJobId,
   ]);
 }
 

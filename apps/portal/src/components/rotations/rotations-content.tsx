@@ -23,6 +23,7 @@ import { Filter, Library, Search, X } from "lucide-react";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import type { Rotation } from "@/lib/supabase/types";
 import { RotationsBrowseTour } from "@/components/tours";
+import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
 
 function RotationsBrowseSkeleton() {
   return (
@@ -43,6 +44,7 @@ export function RotationsBrowse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const { classes, specs } = useClassesAndSpecs();
 
   const {
     result,
@@ -56,18 +58,27 @@ export function RotationsBrowse() {
 
   const rotations = result?.data ?? [];
 
+  const classIdBySpecId = useMemo(() => {
+    return new Map(
+      (specs.result?.data ?? []).map((spec) => [spec.ID, spec.ClassID]),
+    );
+  }, [specs.result?.data]);
+
   const classFilteredRotations = useMemo(() => {
     if (classFilter === "all") {
       return rotations;
     }
 
-    return rotations.filter((r) => r.class === classFilter);
-  }, [rotations, classFilter]);
+    const classId = Number(classFilter);
+    return rotations.filter(
+      (r) => classIdBySpecId.get(r.specId) === classId,
+    );
+  }, [rotations, classFilter, classIdBySpecId]);
 
   const { results: filteredRotations } = useFuzzySearch({
     items: classFilteredRotations,
     query: searchQuery,
-    keys: ["name", "spec", "description"],
+    keys: ["name", "description"],
     threshold: 0.4,
   });
 
@@ -136,15 +147,11 @@ export function RotationsBrowse() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Classes</SelectItem>
-                    <SelectItem value="Priest">Priest</SelectItem>
-                    <SelectItem value="Mage">Mage</SelectItem>
-                    <SelectItem value="Warlock">Warlock</SelectItem>
-                    <SelectItem value="Paladin">Paladin</SelectItem>
-                    <SelectItem value="Druid">Druid</SelectItem>
-                    <SelectItem value="Shaman">Shaman</SelectItem>
-                    <SelectItem value="Hunter">Hunter</SelectItem>
-                    <SelectItem value="Rogue">Rogue</SelectItem>
-                    <SelectItem value="Warrior">Warrior</SelectItem>
+                    {(classes.result?.data ?? []).map((cls) => (
+                      <SelectItem key={cls.ID} value={String(cls.ID)}>
+                        {cls.Name_lang}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
