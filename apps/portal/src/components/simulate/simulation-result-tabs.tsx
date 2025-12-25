@@ -54,13 +54,7 @@ function useLoadLocalJob() {
       dps: job.result.dps,
     };
     setSimulationResult(result);
-  }, [
-    jobId,
-    jobs,
-    setCombatData,
-    setBounds,
-    setSimulationResult,
-  ]);
+  }, [jobId, jobs, setCombatData, setBounds, setSimulationResult]);
 }
 
 export function SimulationResultTabs() {

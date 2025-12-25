@@ -22,7 +22,10 @@ import {
   PHASE_LABELS,
   type SimulationJob,
 } from "@/atoms/computing";
-import { JOB_STATUS_COLORS, JOB_STATUS_ICONS } from "@/components/computing/job-status";
+import {
+  JOB_STATUS_COLORS,
+  JOB_STATUS_ICONS,
+} from "@/components/computing/job-status";
 
 // Drawer open state - can be controlled from anywhere
 export const computingDrawerOpenAtom = atom(false);

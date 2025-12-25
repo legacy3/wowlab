@@ -56,7 +56,7 @@ export function RotationsBrowse() {
     pagination: { pageSize: 50 },
   });
 
-  const rotations = result?.data ?? [];
+  const rotations = useMemo(() => result?.data ?? [], [result?.data]);
 
   const classIdBySpecId = useMemo(() => {
     return new Map(
@@ -70,9 +70,7 @@ export function RotationsBrowse() {
     }
 
     const classId = Number(classFilter);
-    return rotations.filter(
-      (r) => classIdBySpecId.get(r.specId) === classId,
-    );
+    return rotations.filter((r) => classIdBySpecId.get(r.specId) === classId);
   }, [rotations, classFilter, classIdBySpecId]);
 
   const { results: filteredRotations } = useFuzzySearch({

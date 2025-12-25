@@ -1,13 +1,3 @@
-/**
- * Simulation worker for browser.
- *
- * This worker executes user rotation code in a sandboxed environment.
- * It's based on the standalone worker but adapted for:
- * - Browser Web Workers (not Node.js worker_threads)
- * - Dynamic code execution from strings
- * - Security sandboxing
- */
-
 import { BrowserWorkerRunner } from "@effect/platform-browser";
 import * as WorkerRunner from "@effect/platform/WorkerRunner";
 import * as Entities from "@wowlab/core/Entities";
@@ -38,15 +28,7 @@ import type {
   WorkerInit,
 } from "./types";
 
-// =============================================================================
-// Worker Version - bump this to verify cache is cleared
-// =============================================================================
-
 export const WORKER_VERSION = "0.0.2";
-
-// =============================================================================
-// Worker State
-// =============================================================================
 
 interface WorkerState {
   runtime: ManagedRuntime.ManagedRuntime<
@@ -66,37 +48,27 @@ interface CompiledRotation {
   spellIds: readonly number[];
 }
 
-// Worker-level state - initialized once, reused for all batches
 let workerState: WorkerState | null = null;
 
-// =============================================================================
-// Code Compilation
-// =============================================================================
+interface SandboxAPI {
+  Effect: typeof Effect;
+  rotation: Context.RotationContext;
+  playerId: Schemas.Branded.UnitID;
+  targetId: Schemas.Branded.UnitID;
+  tryCast: (
+    spellId: number,
+    targetId?: Schemas.Branded.UnitID,
+  ) => Effect.Effect<CastResult, Errors.SpellNotFound | Errors.UnitNotFound>;
+}
 
-/**
- * Compile user rotation code into a RotationDefinition.
- *
- * Security measures:
- * 1. Shadow dangerous globals (eval, Function, fetch, etc.)
- * 2. Provide only whitelisted APIs
- * 3. Code runs in strict mode
- */
 function compileRotation(
   code: string,
   spellIds: readonly number[],
 ): CompiledRotation {
-  // The user code is the body of a generator function that yields* effects.
-  // We wrap it to provide the sandboxed environment.
-  //
-  // Note: Using new Function is intentional here - this IS the sandbox boundary.
-  // The code string comes from user input and needs to be evaluated.
-  // All dangerous globals are shadowed and only safe APIs are provided.
   const createRotationFn = new Function(
     "api",
     `
     "use strict";
-
-    // Shadow dangerous globals
     const globalThis = undefined;
     const self = undefined;
     const window = undefined;
@@ -107,11 +79,7 @@ function compileRotation(
     const fetch = undefined;
     const XMLHttpRequest = undefined;
     const WebSocket = undefined;
-
-    // Destructure provided APIs
     const { Effect, rotation, playerId, targetId, tryCast } = api;
-
-    // Return an Effect generator with the user's rotation code
     return Effect.gen(function* () {
       ${code}
     });
@@ -137,41 +105,18 @@ function compileRotation(
   };
 }
 
-// =============================================================================
-// Sandbox API
-// =============================================================================
-
-interface SandboxAPI {
-  Effect: typeof Effect;
-  rotation: Context.RotationContext;
-  playerId: Schemas.Branded.UnitID;
-  targetId: Schemas.Branded.UnitID;
-  tryCast: (
-    spellId: number,
-    targetId?: Schemas.Branded.UnitID,
-  ) => Effect.Effect<CastResult, Errors.SpellNotFound | Errors.UnitNotFound>;
-}
-
-// =============================================================================
-// Worker Handlers
-// =============================================================================
-
 const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
   Effect.sync(() => {
     try {
-      // Compile user code
       const rotation = compileRotation(init.code, init.spellIds);
 
-      // Create metadata layer with spell/aura data
       const metadataLayer = Metadata.InMemoryMetadata({
         items: [],
         spells: init.spells,
       });
 
-      // Create base app layer with all core services
       const baseAppLayer = createAppLayer({ metadata: metadataLayer });
 
-      // Build full layer with rotation context (no logging for workers)
       const loggerLayer = Layer.merge(
         Logger.replace(Logger.defaultLogger, Logger.none),
         Logger.minimumLogLevel(LogLevel.None),
@@ -185,13 +130,8 @@ const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
 
       const runtime = ManagedRuntime.make(fullLayer);
 
-      workerState = {
-        rotation,
-        runtime,
-        spells: init.spells,
-      };
+      workerState = { rotation, runtime, spells: init.spells };
 
-      // Return success indicator with version
       return {
         batchId: -1,
         results: [{ simId: 0, casts: 0, duration: 0, totalDamage: 0, dps: 0 }],
@@ -234,13 +174,11 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
     const { rotation, runtime, spells } = workerState;
     const results: SingleSimResult[] = [];
 
-    // Run each simulation in the batch - REUSING the same runtime
     for (const simId of batch.simIds) {
       try {
         const result = yield* Effect.promise(() =>
           runtime.runPromise(
             Effect.gen(function* () {
-              // Reset state to fresh GameState before each simulation
               const stateService = yield* State.StateService;
               yield* stateService.setState(
                 Entities.GameState.createGameState(),
@@ -314,10 +252,6 @@ const handleRequest = (
   }
   return runBatch(request);
 };
-
-// =============================================================================
-// Worker Entry Point
-// =============================================================================
 
 const WorkerLive = WorkerRunner.layer(handleRequest).pipe(
   Layer.provide(BrowserWorkerRunner.layer),

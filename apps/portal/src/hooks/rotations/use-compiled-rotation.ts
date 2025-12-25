@@ -25,8 +25,8 @@ async function loadCompiledModule(url: string): Promise<RotationDefinition> {
   const blob = new Blob([code], { type: "application/javascript" });
   const blobUrl = URL.createObjectURL(blob);
   try {
-    const module = await import(/* @vite-ignore */ blobUrl);
-    return module.default as RotationDefinition;
+    const loadedModule = await import(/* @vite-ignore */ blobUrl);
+    return loadedModule.default as RotationDefinition;
   } finally {
     URL.revokeObjectURL(blobUrl);
   }

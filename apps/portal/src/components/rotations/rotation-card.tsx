@@ -33,7 +33,11 @@ export function RotationCard({ rotation }: RotationCardProps) {
                 </CardTitle>
               </div>
               <CardDescription className="truncate">
-                <SpecLabel specId={rotation.specId} size="sm" showIcon={false} />
+                <SpecLabel
+                  specId={rotation.specId}
+                  size="sm"
+                  showIcon={false}
+                />
               </CardDescription>
             </div>
 

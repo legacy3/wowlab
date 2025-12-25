@@ -227,14 +227,12 @@ interface PriorityListViewProps {
   priorityList: PriorityEntry[];
   currentFrame: PlaybackFrame | null;
   width: number;
-  height: number;
 }
 
 export const PriorityListView = memo(function PriorityListView({
   priorityList,
   currentFrame,
   width,
-  height: _height,
 }: PriorityListViewProps) {
   const decisionMap = useMemo(() => {
     const map = new Map<number, DecisionStep>();

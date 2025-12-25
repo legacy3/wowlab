@@ -8,7 +8,6 @@ interface HardwareInfo {
   workers: number | null;
 }
 
-// Cache the hardware info since it never changes
 let cachedInfo: HardwareInfo | null = null;
 
 function getHardwareInfo(): HardwareInfo {
@@ -22,13 +21,13 @@ function getHardwareInfo(): HardwareInfo {
   return cachedInfo;
 }
 
-const serverSnapshot: HardwareInfo = { cores: null, memory: null, workers: null };
+const serverSnapshot: HardwareInfo = {
+  cores: null,
+  memory: null,
+  workers: null,
+};
 const emptySubscribe = () => () => {};
 
-/**
- * Hook to get client hardware information.
- * Uses useSyncExternalStore for proper SSR/hydration handling without cascading renders.
- */
 export function useClientHardware(): HardwareInfo {
   return useSyncExternalStore(
     emptySubscribe,

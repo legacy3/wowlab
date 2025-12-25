@@ -1,10 +1,3 @@
-/**
- * Worker pool for running simulations in parallel.
- *
- * This module provides an Effect-based worker pool that uses
- * @effect/platform-browser for browser Web Workers.
- */
-
 import * as EffectWorker from "@effect/platform/Worker";
 import { BrowserWorker } from "@effect/platform-browser";
 import type * as Schemas from "@wowlab/core/Schemas";
@@ -12,10 +5,6 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 
 import type { SimulationBatch, SimulationResult, WorkerInit } from "./types";
-
-// =============================================================================
-// Errors
-// =============================================================================
 
 export class WorkerPoolError extends Data.TaggedError("WorkerPoolError")<{
   readonly reason:
@@ -27,16 +16,9 @@ export class WorkerPoolError extends Data.TaggedError("WorkerPoolError")<{
   readonly cause?: unknown;
 }> {}
 
-// =============================================================================
-// Configuration
-// =============================================================================
-
 export interface WorkerPoolConfig {
-  /** Number of workers in the pool. Defaults to navigator.hardwareConcurrency / 2 */
   readonly workerCount?: number;
-  /** Batch size for simulation batches. Defaults to 100 */
   readonly batchSize?: number;
-  /** Timeout per batch in milliseconds. Defaults to 60000 (1 minute) */
   readonly batchTimeoutMs?: number;
 }
 
@@ -51,22 +33,12 @@ const defaultConfig: Required<WorkerPoolConfig> = {
   batchTimeoutMs: 60_000,
 };
 
-// =============================================================================
-// Simulation Parameters
-// =============================================================================
-
 export interface SimulationParams {
-  /** Rotation code as JavaScript source string */
   readonly code: string;
-  /** Spell IDs used by the rotation */
   readonly spellIds: readonly number[];
-  /** Pre-loaded spell data */
   readonly spells: Schemas.Spell.SpellDataFlat[];
-  /** Pre-loaded aura data */
   readonly auras: Schemas.Aura.AuraDataFlat[];
-  /** Number of simulation iterations */
   readonly iterations: number;
-  /** Duration of each simulation in seconds */
   readonly duration: number;
 }
 
@@ -88,14 +60,6 @@ export interface SimulationProgress {
 
 export type SimulationProgressCallback = (progress: SimulationProgress) => void;
 
-// =============================================================================
-// Worker Layer
-// =============================================================================
-
-/**
- * Layer that provides the worker spawner for the simulation worker.
- * BrowserWorker.layer provides both WorkerManager and Spawner.
- */
 const SimulationWorkerLayer = BrowserWorker.layer(
   () =>
     new Worker(new URL("./simulation-worker.ts", import.meta.url), {
@@ -103,29 +67,18 @@ const SimulationWorkerLayer = BrowserWorker.layer(
     }),
 );
 
-// =============================================================================
-// Worker Pool Implementation
-// =============================================================================
-
-/**
- * Internal implementation that requires the worker layer.
- */
 const runSimulationsInternal = (
   params: SimulationParams,
   cfg: Required<WorkerPoolConfig>,
   onProgress?: SimulationProgressCallback,
 ) =>
   Effect.gen(function* () {
-    // Create worker pool using Effect's platform abstraction
     const pool = yield* EffectWorker.makePool<
       WorkerInit | SimulationBatch,
       SimulationResult,
       never
-    >({
-      size: cfg.workerCount,
-    });
+    >({ size: cfg.workerCount });
 
-    // Initialize all workers with rotation code
     const initMessage: WorkerInit = {
       type: "init",
       code: params.code,
@@ -141,7 +94,6 @@ const runSimulationsInternal = (
       { concurrency: "unbounded" },
     );
 
-    // Check for initialization errors and capture worker version
     let workerVersion: string | null = null;
     for (const result of initResults) {
       if (result.results[0]?.error) {
@@ -157,7 +109,6 @@ const runSimulationsInternal = (
       }
     }
 
-    // Run simulation batches
     const stats: SimulationStats = {
       completedSims: 0,
       totalCasts: 0,
@@ -172,7 +123,6 @@ const runSimulationsInternal = (
     const waveSize = cfg.workerCount * 10;
     let batchId = 0;
 
-    // Wave processing for memory efficiency
     for (
       let waveStart = 0;
       waveStart < params.iterations;
@@ -201,7 +151,6 @@ const runSimulationsInternal = (
         });
       }
 
-      // Execute wave in parallel
       const waveResults = yield* Effect.all(
         waveBatches.map((batch) =>
           pool
@@ -211,7 +160,6 @@ const runSimulationsInternal = (
         { concurrency: "unbounded" },
       );
 
-      // Aggregate results
       for (const batchResults of waveResults) {
         for (const result of batchResults) {
           processedSims += 1;
@@ -241,7 +189,6 @@ const runSimulationsInternal = (
       }
     }
 
-    // Calculate average DPS
     if (stats.completedSims > 0) {
       stats.avgDps = stats.totalDamage / stats.completedSims / params.duration;
     }
@@ -249,12 +196,6 @@ const runSimulationsInternal = (
     return stats;
   });
 
-/**
- * Run simulations using a worker pool.
- *
- * This creates a pool of workers, initializes them with rotation code,
- * and runs the specified number of simulation iterations in parallel batches.
- */
 export const runSimulations = (
   params: SimulationParams,
   config: WorkerPoolConfig = {},
@@ -279,13 +220,6 @@ export const runSimulations = (
   );
 };
 
-// =============================================================================
-// React Hook Helper
-// =============================================================================
-
-/**
- * Run simulations and return a Promise (for use in React components).
- */
 export const runSimulationsPromise = (
   params: SimulationParams,
   config?: WorkerPoolConfig,

@@ -67,7 +67,9 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
     filters: [
       { field: "namespace", operator: "eq", value: namespace },
       { field: "deletedAt", operator: "null", value: true },
-      ...(isOwnProfile ? [] : [{ field: "isPublic", operator: "eq" as const, value: true }]),
+      ...(isOwnProfile
+        ? []
+        : [{ field: "isPublic", operator: "eq" as const, value: true }]),
     ],
     sorters: [{ field: "updatedAt", order: "desc" }],
     queryOptions: {

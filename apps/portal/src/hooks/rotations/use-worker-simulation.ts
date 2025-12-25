@@ -22,19 +22,9 @@ import {
   type WorkerPoolConfig,
 } from "@/lib/workers";
 
-/**
- * Extract spell IDs from rotation code.
- *
- * Looks for patterns like:
- * - `SpellIds = { COBRA_SHOT: 193455, ... }`
- * - `const SPELL_ID = 12345`
- * - Direct numbers in tryCast calls: `tryCast(..., 12345, ...)`
- */
 export function extractSpellIds(code: string): number[] {
   const ids = new Set<number>();
 
-  // Pattern 1: SpellIds object - { NAME: 12345 }
-  // Using [\s\S] instead of . with s flag for cross-line matching
   const spellIdsObjectMatch = code.match(/SpellIds\s*=\s*\{([\s\S]+?)\}/);
   if (spellIdsObjectMatch) {
     const objectContent = spellIdsObjectMatch[1];
@@ -44,17 +34,14 @@ export function extractSpellIds(code: string): number[] {
     }
   }
 
-  // Pattern 2: const NAME = 12345 (for spell ID constants)
   const constMatches = code.matchAll(/const\s+[A-Z_]+\s*=\s*(\d{4,})/g);
   for (const match of constMatches) {
     const num = parseInt(match[1], 10);
-    // Only consider 5+ digit numbers as spell IDs
     if (num >= 10000) {
       ids.add(num);
     }
   }
 
-  // Pattern 3: Direct numbers in tryCast - tryCast(rotation, playerId, 12345, ...)
   const tryCastMatches = code.matchAll(/tryCast\s*\([^,]+,\s*[^,]+,\s*(\d+)/g);
   for (const match of tryCastMatches) {
     ids.add(parseInt(match[1], 10));
@@ -125,14 +112,8 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         workerConfig,
       } = params;
 
-      setState({
-        isRunning: true,
-        stats: null,
-        error: null,
-        jobId: null,
-      });
+      setState({ isRunning: true, stats: null, error: null, jobId: null });
 
-      // Create job in computing drawer
       const jobId = createJob({
         name: `${name} (Worker Sim)`,
         rotationId: name.toLowerCase().replace(/\s+/g, "-"),
@@ -143,7 +124,6 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       setState((prev) => ({ ...prev, jobId }));
 
       try {
-        // Phase 1: Extract spell IDs from code
         updatePhase({
           jobId,
           phase: "preparing-spells",
@@ -151,14 +131,12 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         });
 
         const spellIds = extractSpellIds(code);
-
         if (spellIds.length === 0) {
           throw new Error(
             "No spell IDs found in rotation code. Define a SpellIds object or use numeric spell IDs.",
           );
         }
 
-        // Phase 2: Load spell and aura data
         updatePhase({
           jobId,
           phase: "preparing-spells",
@@ -180,14 +158,11 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
 
         const auras = await loadAurasById(spellIds, queryClient, dataProvider);
 
-        // Phase 3: Initialize workers
         updatePhase({
           jobId,
           phase: "booting-engine",
           detail: "Starting worker pool",
         });
-
-        // Phase 4: Run simulations
         updatePhase({
           jobId,
           phase: "running",
@@ -195,14 +170,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         });
 
         const stats = await runSimulationsPromise(
-          {
-            code,
-            spellIds,
-            spells,
-            auras,
-            iterations,
-            duration,
-          },
+          { code, spellIds, spells, auras, iterations, duration },
           workerConfig,
           (progress) => {
             updateProgress({
@@ -214,13 +182,11 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
           },
         );
 
-        // Track worker system state
         updateWorkerSystem({
           workerVersion: stats.workerVersion,
           iterationsRun: iterations,
         });
 
-        // Check for errors
         if (stats.errors.length > 0) {
           const errorSummary =
             stats.errors.length === 1
@@ -242,34 +208,15 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         });
 
         setCombatData(createEmptyCombatData());
-
-        setState({
-          isRunning: false,
-          stats,
-          error: null,
-          jobId,
-        });
-
+        setState({ isRunning: false, stats, error: null, jobId });
         options?.onComplete?.(stats);
 
         return stats;
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-
-        failJob({
-          jobId,
-          error: err.message,
-        });
-
-        setState({
-          isRunning: false,
-          stats: null,
-          error: err,
-          jobId,
-        });
-
+        failJob({ jobId, error: err.message });
+        setState({ isRunning: false, stats: null, error: err, jobId });
         options?.onError?.(err);
-
         throw err;
       }
     },
@@ -288,8 +235,5 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
     ],
   );
 
-  return {
-    run,
-    ...state,
-  };
+  return { run, ...state };
 }

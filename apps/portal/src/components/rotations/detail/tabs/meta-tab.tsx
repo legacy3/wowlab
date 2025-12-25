@@ -93,7 +93,11 @@ export const MetaTab = memo(function MetaTab({
                 <div>
                   <p className="font-medium">{fork.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    <SpecLabel specId={fork.specId} size="sm" showIcon={false} />
+                    <SpecLabel
+                      specId={fork.specId}
+                      size="sm"
+                      showIcon={false}
+                    />
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">

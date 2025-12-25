@@ -67,10 +67,7 @@ export function RotationPicker() {
 
   const specLabelById = useMemo(() => {
     const classNameById = new Map(
-      (classes.result?.data ?? []).map((cls) => [
-        cls.ID,
-        cls.Name_lang ?? "",
-      ]),
+      (classes.result?.data ?? []).map((cls) => [cls.ID, cls.Name_lang ?? ""]),
     );
     return new Map(
       (specs.result?.data ?? []).map((specEntry) => [

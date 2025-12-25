@@ -80,7 +80,7 @@ export function JobHistoryCard() {
                   variant="outline"
                   className={`cursor-pointer transition-colors ${
                     statusFilter === status
-                        ? status === "all"
+                      ? status === "all"
                         ? "bg-primary/20 text-primary border-primary/30"
                         : JOB_STATUS_COLORS[status]
                       : "hover:bg-muted/60"

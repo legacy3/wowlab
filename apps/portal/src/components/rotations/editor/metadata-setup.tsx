@@ -32,7 +32,6 @@ import {
 import { SpecPicker } from "@/components/ui/spec-picker";
 import { SpecLabel } from "@/components/ui/spec-label";
 
-
 interface RotationTemplate {
   id: string;
   name: string;

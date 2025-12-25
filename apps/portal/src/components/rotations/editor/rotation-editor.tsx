@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,9 +56,10 @@ function RotationEditorInner({
 }: RotationEditorProps) {
   // Draft state for new/fork rotations (not yet saved to DB)
   const [draft, setDraft] = useState<DraftRotation | null>(null);
-  const [script, setScript] = useState(DEFAULT_SCRIPT);
+  // Track local script edits separately from initial load
+  const [localScript, setLocalScript] = useState<string | null>(null);
 
-  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
+  const { isLoading: authLoading } = useIsAuthenticated();
   const { data: identity, isLoading: identityLoading } =
     useGetIdentity<UserIdentity>();
 
@@ -78,33 +79,26 @@ function RotationEditorInner({
     useRotationMutations();
 
   // Worker simulation hook
-  const {
-    run: runWorkerSimulation,
-    isRunning: isTesting,
-    stats: testStats,
-    error: testError,
-  } = useWorkerSimulation({
-    onComplete: (stats) => {
-      toast.success(
-        `Simulation complete: ${stats.completedSims} iterations, ${stats.totalCasts} total casts`,
-      );
-    },
-    onError: (error) => {
-      toast.error(`Simulation failed: ${error.message}`);
-    },
-  });
+  const { run: runWorkerSimulation, isRunning: isTesting } =
+    useWorkerSimulation({
+      onComplete: (stats) => {
+        toast.success(
+          `Simulation complete: ${stats.completedSims} iterations, ${stats.totalCasts} total casts`,
+        );
+      },
+      onError: (error) => {
+        toast.error(`Simulation failed: ${error.message}`);
+      },
+    });
 
   const isEditMode = !!rotationId;
   const isForkMode = !!forkSourceId && !rotationId;
   const isNewMode = !rotationId && !forkSourceId;
   const isDraftMode = draft !== null && !isEditMode;
 
-  // Sync script state when existing rotation loads
-  useEffect(() => {
-    if (isEditMode && existingRotation) {
-      setScript(existingRotation.script);
-    }
-  }, [isEditMode, existingRotation]);
+  // Derive script value: user edits > existing rotation > default
+  const script = localScript ?? existingRotation?.script ?? DEFAULT_SCRIPT;
+  const setScript = setLocalScript;
 
   // Handle metadata form submission - just store in local state, don't create yet
   const handleMetadataSubmit = (values: MetadataSubmitValues) => {
@@ -303,7 +297,8 @@ function RotationEditorInner({
 
   // EDIT MODE: Show editor with existing rotation
   if (isEditMode && existingRotation) {
-    const hasChanges = script !== existingRotation.script;
+    const hasChanges =
+      localScript !== null && localScript !== existingRotation.script;
 
     return (
       <EditorView
