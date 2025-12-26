@@ -75,7 +75,7 @@ JavaScript only has access to `navigator.hardwareConcurrency`. There's no browse
 - Performance vs efficiency cores
 - CPU architecture
 
-[Mozilla's research](https://blog.mozilla.org/en/firefox/firefox-ai/what-is-the-best-hardware-concurrency-for-running-inference-on-cpu/) found that using all logical cores can degrade performance due to thread scheduling overhead and cache contention. Their recommendation: use physical cores on x86, performance cores only on ARM.
+[Mozilla's research](https://blog.mozilla.org/en/firefox/firefox-ai/what-is-the-best-hardware-concurrency-for-running-inference-on-cpu/) found that using all logical cores can degrade performance due to thread scheduling overhead and [cache contention](https://en.wikipedia.org/wiki/Resource_contention). Their recommendation: use physical cores on x86, performance cores only on ARM.
 
 Mozilla's ML team built a utility that detects optimal thread counts using internal browser APIs with direct OS access. These APIs aren't exposed to websites - we only get `navigator.hardwareConcurrency`. Most web apps fall back to heuristics like `Math.ceil(cores / 2)` to guess physical cores, but Mozilla found this underutilizes capable devices while overloading weaker ones. We cap at 4 by default to stay safe across varied hardware.
 
