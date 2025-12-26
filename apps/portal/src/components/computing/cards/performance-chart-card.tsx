@@ -1,5 +1,7 @@
 "use client";
 
+import { useAtomValue } from "jotai";
+import { Activity } from "lucide-react";
 import {
   Area,
   ComposedChart,
@@ -10,18 +12,20 @@ import {
 } from "recharts";
 
 import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import {
   type ChartConfig,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { ChartCard } from "@/components/simulate/results/charts/chart-card";
 import { formatInt, formatCompact } from "@/lib/format";
-
-const mockThroughputData = Array.from({ length: 30 }, (_, i) => ({
-  time: i,
-  itersPerSec: Math.floor(800 + Math.random() * 400 + Math.sin(i / 3) * 200),
-  memoryMB: Math.floor(120 + Math.random() * 80 + i * 2 + Math.sin(i / 3) * 20),
-}));
+import { performanceDataAtom } from "@/atoms/computing";
 
 const throughputConfig = {
   itersPerSec: {
@@ -35,17 +39,39 @@ const throughputConfig = {
 } satisfies ChartConfig;
 
 export function PerformanceChartCard() {
-  const data = mockThroughputData;
+  const data = useAtomValue(performanceDataAtom);
 
   const iters = data.map((d) => d.itersPerSec);
-  const minIters = Math.min(...iters);
-  const maxIters = Math.max(...iters);
-  const avgIters = Math.round(iters.reduce((a, b) => a + b, 0) / iters.length);
+  const minIters = iters.length > 0 ? Math.min(...iters) : 0;
+  const maxIters = iters.length > 0 ? Math.max(...iters) : 0;
+  const avgIters =
+    iters.length > 0
+      ? Math.round(iters.reduce((a, b) => a + b, 0) / iters.length)
+      : 0;
 
   const mem = data.map((d) => d.memoryMB);
-  const minMem = Math.min(...mem);
-  const maxMem = Math.max(...mem);
-  const avgMem = Math.round(mem.reduce((a, b) => a + b, 0) / mem.length);
+  const minMem = mem.length > 0 ? Math.min(...mem) : 0;
+  const maxMem = mem.length > 0 ? Math.max(...mem) : 0;
+  const avgMem =
+    mem.length > 0
+      ? Math.round(mem.reduce((a, b) => a + b, 0) / mem.length)
+      : 0;
+
+  if (data.length === 0) {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Activity />
+          </EmptyMedia>
+          <EmptyTitle>No simulation running</EmptyTitle>
+          <EmptyDescription>
+            Start a simulation to see live performance metrics
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
 
   return (
     <ChartCard

@@ -134,83 +134,66 @@ const runSimulationsInternal = (
 
     const startTime = Date.now();
     let processedSims = 0;
-    const waveSize = cfg.workerCount * 10;
+
+    // Create all batches upfront
+    const allBatches: SimulationBatch[] = [];
     let batchId = 0;
+    for (let start = 0; start < params.iterations; start += cfg.batchSize) {
+      const simsInBatch = Math.min(cfg.batchSize, params.iterations - start);
+      allBatches.push({
+        type: "batch",
+        batchId: batchId++,
+        duration: params.duration,
+        simIds: Array.from({ length: simsInBatch }, (_, j) => start + j + 1),
+      });
+    }
 
-    for (
-      let waveStart = 0;
-      waveStart < params.iterations;
-      waveStart += waveSize * cfg.batchSize
-    ) {
-      const waveBatches: SimulationBatch[] = [];
+    // Process batches with controlled concurrency, updating progress as each completes
+    yield* Effect.forEach(
+      allBatches,
+      (batch) =>
+        Effect.gen(function* () {
+          const result = yield* pool.executeEffect(batch);
 
-      for (
-        let i = 0;
-        i < waveSize && batchId * cfg.batchSize < params.iterations;
-        i++
-      ) {
-        const startSim = batchId * cfg.batchSize;
-        const simsInBatch = Math.min(
-          cfg.batchSize,
-          params.iterations - startSim,
-        );
-        waveBatches.push({
-          type: "batch",
-          batchId: batchId++,
-          duration: params.duration,
-          simIds: Array.from(
-            { length: simsInBatch },
-            (_, j) => startSim + j + 1,
-          ),
-        });
-      }
+          for (const simResult of result.results) {
+            processedSims += 1;
+            if (simResult.error) {
+              stats.errors.push(simResult.error);
+            } else {
+              stats.completedSims++;
+              stats.totalCasts += simResult.casts;
+              stats.totalDamage += simResult.totalDamage;
 
-      const waveResults = yield* Effect.all(
-        waveBatches.map((batch) =>
-          pool
-            .executeEffect(batch)
-            .pipe(Effect.map((result) => result.results)),
-        ),
-        { concurrency: "unbounded" },
-      );
-
-      for (const batchResults of waveResults) {
-        for (const result of batchResults) {
-          processedSims += 1;
-          if (result.error) {
-            stats.errors.push(result.error);
-          } else {
-            stats.completedSims++;
-            stats.totalCasts += result.casts;
-            stats.totalDamage += result.totalDamage;
-
-            // Track best result (highest DPS, or first if all 0)
-            if (
-              !stats.bestResult ||
-              result.dps > stats.bestResult.dps ||
-              (result.dps === 0 && !stats.bestResult.events?.length)
-            ) {
-              stats.bestResult = result;
+              // Track best result (highest DPS, or first if all 0)
+              if (
+                !stats.bestResult ||
+                simResult.dps > stats.bestResult.dps ||
+                (simResult.dps === 0 && !stats.bestResult.events?.length)
+              ) {
+                stats.bestResult = simResult;
+              }
             }
           }
-        }
 
-        if (onProgress) {
-          const elapsedMs = Date.now() - startTime;
-          const ratePerSec =
-            elapsedMs > 0 ? processedSims / (elapsedMs / 1000) : 0;
-          const remaining = params.iterations - processedSims;
-          const etaMs =
-            ratePerSec > 0 ? Math.max(0, remaining / ratePerSec) * 1000 : null;
-          onProgress({
-            completed: processedSims,
-            total: params.iterations,
-            elapsedMs,
-            etaMs,
-          });
-        }
-      }
-    }
+          if (onProgress) {
+            const elapsedMs = Date.now() - startTime;
+            const ratePerSec =
+              elapsedMs > 0 ? processedSims / (elapsedMs / 1000) : 0;
+            const remaining = params.iterations - processedSims;
+            const etaMs =
+              ratePerSec > 0
+                ? Math.max(0, remaining / ratePerSec) * 1000
+                : null;
+            onProgress({
+              completed: processedSims,
+              total: params.iterations,
+              elapsedMs,
+              etaMs,
+            });
+          }
+        }),
+      { concurrency: cfg.workerCount },
+    );
 
     if (stats.completedSims > 0) {
       stats.avgDps = stats.totalDamage / stats.completedSims / params.duration;

@@ -11,6 +11,7 @@ export interface CreateSimJobParams {
   name: string;
   rotationId: string;
   totalIterations: number;
+  code: string;
 }
 
 export const createSimJobAtom = atom(
@@ -29,6 +30,7 @@ export const createSimJobAtom = atom(
       rotationId: params.rotationId,
       resultId: null,
       error: null,
+      codeBase64: btoa(params.code),
       result: null,
     };
 

@@ -5,5 +5,9 @@ export {
   useRotationHistoryVersion,
 } from "./use-rotation-history";
 export { useMyRotations, useCommunityRotations } from "./use-rotations-list";
-export { useWorkerSimulation, extractSpellIds } from "./use-worker-simulation";
+export {
+  useWorkerSimulation,
+  extractSpellIds,
+  cancelSimulation,
+} from "./use-worker-simulation";
 export { useCompiledRotation } from "./use-compiled-rotation";

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Trash2 } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import { CopyButton } from "@/components/ui/copy-button";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { jobsAtom, cancelJobAtom, type SimulationJob } from "@/atoms/computing";
+import { useWorkerSimulation } from "@/hooks/rotations";
 import { formatInt, formatCompact, formatDurationMs } from "@/lib/format";
 import {
   JOB_STATUS_COLORS,
@@ -38,6 +39,7 @@ type JobStatus = SimulationJob["status"];
 export function JobHistoryCard() {
   const jobs = useAtomValue(jobsAtom);
   const cancelJob = useSetAtom(cancelJobAtom);
+  const { run: runSimulation, isRunning } = useWorkerSimulation();
 
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -267,6 +269,26 @@ export function JobHistoryCard() {
                   <div>Result ID: {selectedJob.resultId}</div>
                 )}
               </div>
+
+              {/* Rerun Button */}
+              {selectedJob.codeBase64 && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={isRunning}
+                  onClick={() => {
+                    const code = atob(selectedJob.codeBase64!);
+                    runSimulation({
+                      code,
+                      name: selectedJob.name.replace(" (Worker Sim)", ""),
+                    });
+                    setSelectedJob(null);
+                  }}
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Rerun Simulation
+                </Button>
+              )}
             </div>
           )}
         </DialogContent>

@@ -148,8 +148,7 @@ function RotationEditorInner({
       await runWorkerSimulation({
         code: script,
         name: rotationName,
-        iterations: 10, // Quick test with 10 iterations
-        duration: 30, // 30 second fight
+        // iterations/workerCount use defaults from hook (100k/12)
       });
     } catch {
       // Error already handled by onError callback

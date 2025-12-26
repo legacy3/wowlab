@@ -90,7 +90,13 @@ export const PHASE_LABELS: Record<SimulationPhase, string> = {
 export interface SimulationJob {
   id: string;
   name: string;
-  status: "running" | "queued" | "completed" | "paused" | "failed";
+  status:
+    | "running"
+    | "queued"
+    | "completed"
+    | "paused"
+    | "failed"
+    | "cancelled";
   progress: number;
   current: string;
   eta: string;
@@ -99,6 +105,8 @@ export interface SimulationJob {
   rotationId: string;
   resultId: string | null;
   error: string | null;
+  /** Base64 encoded rotation code for rerunning */
+  codeBase64: string | null;
   result: {
     dps: number;
     totalDamage: number;
@@ -113,10 +121,42 @@ export const jobsAtom = atomWithStorage<SimulationJob[]>("computing-jobs", []);
 export const cancelJobAtom = atom(null, (get, set, jobId: string) => {
   set(
     jobsAtom,
-    get(jobsAtom).filter((job) => job.id !== jobId),
+    get(jobsAtom).map((job) =>
+      job.id === jobId
+        ? {
+            ...job,
+            status: "cancelled" as const,
+            phase: "failed" as const,
+            phaseDetail: "Cancelled by user",
+            eta: "Cancelled",
+          }
+        : job,
+    ),
   );
 });
 
 export const activeJobsCountAtom = atom(
   (get) => get(jobsAtom).filter((job) => job.status === "running").length,
 );
+
+export interface PerformanceDataPoint {
+  time: number;
+  itersPerSec: number;
+  memoryMB: number;
+}
+
+export const performanceDataAtom = atom<PerformanceDataPoint[]>([]);
+
+export const pushPerformanceDataAtom = atom(
+  null,
+  (get, set, point: PerformanceDataPoint) => {
+    const current = get(performanceDataAtom);
+    // Keep last 60 data points
+    const updated = [...current, point].slice(-60);
+    set(performanceDataAtom, updated);
+  },
+);
+
+export const clearPerformanceDataAtom = atom(null, (_get, set) => {
+  set(performanceDataAtom, []);
+});

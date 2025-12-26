@@ -4,6 +4,9 @@ import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDataProvider } from "@refinedev/core";
 import { useSetAtom } from "jotai";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Exit from "effect/Exit";
 
 import {
   createSimJobAtom,
@@ -12,15 +15,33 @@ import {
   completeSimJobAtom,
   failSimJobAtom,
 } from "@/atoms/simulation/job";
-import { updateWorkerSystemAtom } from "@/atoms/computing";
+import {
+  updateWorkerSystemAtom,
+  pushPerformanceDataAtom,
+  clearPerformanceDataAtom,
+} from "@/atoms/computing";
 import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
 import { combatDataAtom, createEmptyCombatData } from "@/atoms/timeline";
 import { loadSpellsById, loadAurasById } from "@/lib/simulation";
 import {
-  runSimulationsPromise,
+  runSimulations,
   type SimulationStats,
   type WorkerPoolConfig,
 } from "@/lib/workers";
+
+// Store active fibers by job ID for cancellation
+const activeFibers = new Map<
+  string,
+  Fiber.RuntimeFiber<SimulationStats, unknown>
+>();
+
+export function cancelSimulation(jobId: string): void {
+  const fiber = activeFibers.get(jobId);
+  if (fiber) {
+    Effect.runFork(Fiber.interrupt(fiber));
+    activeFibers.delete(jobId);
+  }
+}
 
 export function extractSpellIds(code: string): number[] {
   const ids = new Set<number>();
@@ -101,23 +122,27 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
   const setDrawerOpen = useSetAtom(computingDrawerOpenAtom);
   const updateWorkerSystem = useSetAtom(updateWorkerSystemAtom);
   const setCombatData = useSetAtom(combatDataAtom);
+  const pushPerformanceData = useSetAtom(pushPerformanceDataAtom);
+  const clearPerformanceData = useSetAtom(clearPerformanceDataAtom);
 
   const run = useCallback(
     async (params: WorkerSimulationParams) => {
       const {
         code,
         name,
-        iterations = 100,
+        iterations = 100_000, // TODO: wire up user settings
         duration = 60,
-        workerConfig,
+        workerConfig = { workerCount: 12 }, // TODO: wire up user settings
       } = params;
 
       setState({ isRunning: true, stats: null, error: null, jobId: null });
+      clearPerformanceData();
 
       const jobId = createJob({
         name: `${name} (Worker Sim)`,
         rotationId: name.toLowerCase().replace(/\s+/g, "-"),
         totalIterations: iterations,
+        code,
       });
 
       setDrawerOpen(true);
@@ -169,7 +194,10 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
           detail: `Running ${iterations} iterations`,
         });
 
-        const stats = await runSimulationsPromise(
+        let lastCompleted = 0;
+        let lastTime = Date.now();
+
+        const simulationEffect = runSimulations(
           { code, spellIds, spells, auras, iterations, duration },
           workerConfig,
           (progress) => {
@@ -179,8 +207,63 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
               total: progress.total,
               eta: formatEta(progress.etaMs),
             });
+
+            // Calculate iterations per second
+            const now = Date.now();
+            const deltaTime = (now - lastTime) / 1000;
+            const deltaIters = progress.completed - lastCompleted;
+
+            if (deltaTime > 0.5) {
+              const itersPerSec = Math.round(deltaIters / deltaTime);
+              const memoryMB =
+                typeof performance !== "undefined" &&
+                "memory" in performance &&
+                (performance as { memory?: { usedJSHeapSize?: number } }).memory
+                  ?.usedJSHeapSize
+                  ? Math.round(
+                      ((
+                        performance as {
+                          memory: { usedJSHeapSize: number };
+                        }
+                      ).memory.usedJSHeapSize /
+                        1024 /
+                        1024) *
+                        10,
+                    ) / 10
+                  : 0;
+
+              pushPerformanceData({
+                time: Math.round(progress.elapsedMs / 1000),
+                itersPerSec,
+                memoryMB,
+              });
+
+              lastCompleted = progress.completed;
+              lastTime = now;
+            }
           },
         );
+
+        // Run as fiber so it can be interrupted
+        const fiber = Effect.runFork(simulationEffect);
+        activeFibers.set(jobId, fiber);
+
+        const exit = await Effect.runPromise(Fiber.await(fiber));
+        activeFibers.delete(jobId);
+
+        if (Exit.isFailure(exit)) {
+          if (Exit.isInterrupted(exit)) {
+            // Job is already marked as cancelled by cancelJobAtom
+            setState({ isRunning: false, stats: null, error: null, jobId });
+            return null;
+          }
+          const cause = Exit.causeOption(exit);
+          const errorMsg =
+            cause._tag === "Some" ? String(cause.value) : "Simulation failed";
+          throw new Error(errorMsg);
+        }
+
+        const stats = exit.value;
 
         updateWorkerSystem({
           workerVersion: stats.workerVersion,
@@ -231,6 +314,8 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       setDrawerOpen,
       updateWorkerSystem,
       setCombatData,
+      pushPerformanceData,
+      clearPerformanceData,
       options,
     ],
   );
