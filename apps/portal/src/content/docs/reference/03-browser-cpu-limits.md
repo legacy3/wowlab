@@ -57,11 +57,11 @@ The [WHATWG spec](https://html.spec.whatwg.org/multipage/workers.html#navigator.
 
 **Chrome** reports your actual core count with no limits.
 
-**Brave** randomizes between 2 and your actual count as part of Shields. The value can change between sessions.
+**Brave** randomizes between 2 and your actual count as part of [Shields](https://brave.com/shields/). The value can change between sessions.
 
 ## Hardware details
 
-**Apple Silicon** (M1 and later) chips have two core types: performance cores for heavy work and efficiency cores for background tasks. The browser reports the total without distinguishing between them. An M3 Pro with 6 P-cores and 6 E-cores reports 12, but they don't perform equally for compute work.
+**Apple Silicon** chips (M1 and later) have two core types: performance cores for heavy work and efficiency cores for background tasks. The browser reports the total without distinguishing between them. An M3 Pro with 6 P-cores and 6 E-cores reports 12, but they don't perform equally for compute work.
 
 More on this: [How macOS manages M1 CPU cores](https://eclecticlight.co/2022/04/25/how-macos-manages-m1-cpu-cores/)
 
@@ -77,7 +77,7 @@ JavaScript only has access to `navigator.hardwareConcurrency`. There's no browse
 
 [Mozilla's research](https://blog.mozilla.org/en/firefox/firefox-ai/what-is-the-best-hardware-concurrency-for-running-inference-on-cpu/) found that using all logical cores can degrade performance due to thread scheduling overhead and cache contention. Their recommendation: use physical cores on x86, performance cores only on ARM.
 
-They implemented this in native C++ with direct OS access. Web apps can't do this. The formula `Math.ceil(cores / 2)` is a rough guess that underutilizes capable devices while overloading weaker ones. We cap at 4 by default to stay safe across all hardware.
+Mozilla's ML team built a utility that detects optimal thread counts using internal browser APIs with direct OS access. These APIs aren't exposed to websites - we only get `navigator.hardwareConcurrency`. Most web apps fall back to heuristics like `Math.ceil(cores / 2)` to guess physical cores, but Mozilla found this underutilizes capable devices while overloading weaker ones. We cap at 4 by default to stay safe across varied hardware.
 
 If you know your hardware and want to push it, use the [settings override](/account/settings).
 
