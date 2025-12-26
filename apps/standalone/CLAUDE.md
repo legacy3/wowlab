@@ -9,13 +9,31 @@ CLI for running simulations with Supabase data backend.
 Just run `pnpm dev` directly - it handles everything:
 
 ```bash
-pnpm dev run --iterations 1 --duration 60
-pnpm dev profile --iterations 100 --duration 60
+pnpm dev run -n 1 -d 60
+pnpm dev profile -n 100 -d 60
 ```
 
 - `pnpm dev` = auto-rebuilds deps + runs with tsx (USE THIS)
 - `pnpm start` = WRONG, don't use
 - `pnpm build` before running = WRONG, unnecessary
+
+## CPU Profiling
+
+**Exception:** `cpu-profile` requires a build because it spawns a separate node process with `--cpu-prof`:
+
+```bash
+pnpm build && node --env-file=.env dist/index.js cpu-profile -n 500 beast-mastery
+```
+
+Options:
+- `-n, --iterations` - number of simulations (default 500)
+- `-d, --duration` - simulation duration in seconds (default 60)
+- `-t, --top` - number of top functions to show (default 40)
+
+Output shows:
+- Category breakdown (effect, node, app, immutable, deps)
+- Top functions by CPU sample count
+- Profile file path (can open in Chrome DevTools)
 
 ## Structure
 
