@@ -1,5 +1,5 @@
-import { PageLoader } from "@/components/ui/logo-loader";
+import { PageLoader } from "@/components/ui/flask-loader";
 
 export default function LoadersLoading() {
-  return <PageLoader variant="effervescent" message="Loading loaders..." />;
+  return <PageLoader message="Loading loaders..." />;
 }

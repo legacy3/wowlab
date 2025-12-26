@@ -2,111 +2,44 @@
 
 import { useState } from "react";
 import {
-  LogoLoader,
+  FlaskLoader,
   PageLoader,
   CardLoader,
   OverlayLoader,
-  InlineLoader,
   FlaskInlineLoader,
-} from "@/components/ui/logo-loader";
+} from "@/components/ui/flask-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type FillVariant =
-  | "fill"
-  | "fill-slow"
-  | "fill-simmer"
-  | "fill-pulse"
-  | "chromatic"
-  | "tidal"
-  | "effervescent"
-  | "viscous"
-  | "aurora"
-  | "swirl"
-  | "vapor"
-  | "surge";
+type FlaskVariant = "loading" | "processing" | "idle";
 type LoaderSize = "sm" | "md" | "lg" | "xl";
 
 const variants: {
-  id: FillVariant;
+  id: FlaskVariant;
   name: string;
   description: string;
   useCase: string;
 }[] = [
   {
-    id: "fill",
-    name: "Fill",
+    id: "loading",
+    name: "Loading",
     description: "Smooth liquid rise and fall",
     useCase: "General loading, page transitions",
   },
   {
-    id: "fill-slow",
-    name: "Slow",
-    description: "Relaxed, zen-like motion",
-    useCase: "Background tasks, long operations",
-  },
-  {
-    id: "fill-simmer",
-    name: "Simmer",
+    id: "processing",
+    name: "Processing",
     description: "Active bubbling with steam",
-    useCase: "Processing, computations",
+    useCase: "Heavy work, simulations",
   },
   {
-    id: "fill-pulse",
-    name: "Pulse",
-    description: "Breathing glow effect",
-    useCase: "Waiting states, idle",
-  },
-  {
-    id: "chromatic",
-    name: "Chromatic",
-    description: "Hue cycles like shifting chemicals",
-    useCase: "Alchemy, longer waits",
-  },
-  {
-    id: "tidal",
-    name: "Tidal",
-    description: "Surface sloshes side-to-side",
-    useCase: "Active working state",
-  },
-  {
-    id: "effervescent",
-    name: "Effervescent",
-    description: "Bubbles burst at surface with rings",
-    useCase: "Playful, potion vibe",
-  },
-  {
-    id: "viscous",
-    name: "Viscous",
-    description: "Thick liquid with droplet formation",
-    useCase: "Heavy processing",
-  },
-  {
-    id: "aurora",
-    name: "Aurora",
-    description: "Slow-moving gradient waves with glow",
-    useCase: "Premium, elegant UI",
-  },
-  {
-    id: "swirl",
-    name: "Swirl",
-    description: "Liquid rotates in slow vortex",
-    useCase: "Mixing, processing",
-  },
-  {
-    id: "vapor",
-    name: "Vapor",
-    description: "Steam puffs rise above neck",
-    useCase: "Hot/active without aggression",
-  },
-  {
-    id: "surge",
-    name: "Surge",
-    description: "Bright charge wave through liquid",
-    useCase: "Progress, charging states",
+    id: "idle",
+    name: "Idle",
+    description: "Subtle breathing pulse",
+    useCase: "Ready state, waiting for input",
   },
 ];
 
@@ -118,7 +51,8 @@ const sizes: { id: LoaderSize; name: string; px: string }[] = [
 ];
 
 export function LoadersContent() {
-  const [selectedVariant, setSelectedVariant] = useState<FillVariant>("fill");
+  const [selectedVariant, setSelectedVariant] =
+    useState<FlaskVariant>("loading");
   const [isButtonLoading, setIsButtonLoading] = useState(false);
   const [isCardLoading, setIsCardLoading] = useState(true);
   const [isOverlayLoading, setIsOverlayLoading] = useState(false);
@@ -149,7 +83,7 @@ export function LoadersContent() {
 
         {/* Variants Gallery */}
         <TabsContent value="variants" className="mt-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {variants.map((variant) => (
               <Card
                 key={variant.id}
@@ -171,8 +105,8 @@ export function LoadersContent() {
                     {variant.description}
                   </p>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center gap-3 py-6 bg-muted/30">
-                  <LogoLoader variant={variant.id} size="lg" />
+                <CardContent className="flex flex-col items-center gap-4 py-8 bg-muted/30">
+                  <FlaskLoader variant={variant.id} size="xl" />
                   <p className="text-xs text-muted-foreground text-center">
                     {variant.useCase}
                   </p>
@@ -318,65 +252,33 @@ export function LoadersContent() {
             <CardHeader>
               <CardTitle className="text-base">Button Loading States</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Inline loaders for buttons and actions
+                Inline flask loader for buttons
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* InlineLoader */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-3 font-medium">
-                  InlineLoader (dots)
-                </p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button disabled>
-                    <InlineLoader className="mr-2" />
-                    Processing
-                  </Button>
-                  <Button variant="secondary" disabled>
-                    Saving
-                    <InlineLoader className="ml-2" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleButtonClick}
-                    disabled={isButtonLoading}
-                  >
-                    {isButtonLoading ? (
-                      <>
-                        <InlineLoader className="mr-2" />
-                        Loading...
-                      </>
-                    ) : (
-                      "Click to test"
-                    )}
-                  </Button>
-                </div>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button disabled>
+                  <FlaskInlineLoader className="mr-2" />
+                  Processing
+                </Button>
+                <Button variant="secondary" disabled>
+                  <FlaskInlineLoader className="mr-2" />
+                  Saving
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleButtonClick}
+                  disabled={isButtonLoading}
+                >
+                  <FlaskInlineLoader
+                    className="mr-2"
+                    animate={isButtonLoading}
+                  />
+                  Click to test
+                </Button>
               </div>
-
-              {/* FlaskInlineLoader */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-3 font-medium">
-                  FlaskInlineLoader (branded)
-                </p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button disabled>
-                    <FlaskInlineLoader className="mr-2" />
-                    Brewing
-                  </Button>
-                  <Button variant="secondary" disabled>
-                    Mixing
-                    <FlaskInlineLoader className="ml-2" />
-                  </Button>
-                  <Button variant="destructive" disabled>
-                    <FlaskInlineLoader className="mr-2" />
-                    Reacting
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-muted/50 font-mono text-xs space-y-1">
-                <div>{`<Button><InlineLoader className="mr-2" />Processing</Button>`}</div>
-                <div>{`<Button><FlaskInlineLoader className="mr-2" />Brewing</Button>`}</div>
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 font-mono text-xs">
+                {`<Button disabled><FlaskInlineLoader className="mr-2" />Text</Button>`}
               </div>
             </CardContent>
           </Card>
@@ -388,14 +290,14 @@ export function LoadersContent() {
                 Combined with Skeleton
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Logo loader as a focal point with skeleton placeholders
+                Flask loader as a focal point with skeleton placeholders
               </p>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-4 p-4 rounded-lg border">
                   <div className="flex items-center gap-3">
-                    <LogoLoader variant={selectedVariant} size="md" />
+                    <FlaskLoader variant={selectedVariant} size="md" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-3 w-1/2" />
@@ -413,39 +315,13 @@ export function LoadersContent() {
                       <Skeleton className="h-5 w-32" />
                       <Skeleton className="h-3 w-24" />
                     </div>
-                    <LogoLoader variant={selectedVariant} size="sm" />
+                    <FlaskLoader variant={selectedVariant} size="sm" />
                   </div>
                   <div className="space-y-2">
                     <Skeleton className="h-3 w-full" />
                     <Skeleton className="h-3 w-full" />
                     <Skeleton className="h-3 w-2/3" />
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dark/Light comparison */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Theme Compatibility</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Adapts to your theme colors automatically
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col items-center justify-center py-8 rounded-lg bg-white dark:bg-zinc-950 border">
-                  <LogoLoader variant={selectedVariant} size="lg" />
-                  <p className="mt-3 text-xs text-zinc-500">Light context</p>
-                </div>
-                <div className="flex flex-col items-center justify-center py-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 border">
-                  <div className="[&_*]:!text-white dark:[&_*]:!text-zinc-900">
-                    <LogoLoader variant={selectedVariant} size="lg" />
-                  </div>
-                  <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-600">
-                    Dark context
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -469,7 +345,7 @@ export function LoadersContent() {
                     key={size.id}
                     className="flex flex-col items-center gap-3"
                   >
-                    <LogoLoader variant={selectedVariant} size={size.id} />
+                    <FlaskLoader variant={selectedVariant} size={size.id} />
                     <div className="text-center">
                       <p className="text-sm font-medium">{size.name}</p>
                       <p className="text-xs text-muted-foreground">{size.px}</p>
