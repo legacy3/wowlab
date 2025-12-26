@@ -18,7 +18,6 @@ import * as LogLevel from "effect/LogLevel";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 
 import type { SimulationEvent } from "../simulation/types";
-
 import {
   createPlayerWithSpells,
   createTargetDummy,
@@ -33,9 +32,9 @@ import type {
   WorkerInit,
 } from "./types";
 
-export const WORKER_VERSION = "0.0.4";
+export const WORKER_VERSION = "0.0.5";
 
-const EVENT_STREAM_FILTER = [
+const EVENT_TYPES = [
   "SPELL_CAST_START",
   "SPELL_CAST_SUCCESS",
   "SPELL_CAST_FAILED",
@@ -50,29 +49,30 @@ const EVENT_STREAM_FILTER = [
   "SPELL_DRAIN",
 ] as const;
 
-interface WorkerState {
-  runtime: ManagedRuntime.ManagedRuntime<
-    | Context.RotationContext
-    | State.StateService
-    | Unit.UnitService
-    | CombatLogService.CombatLogService
-    | CombatLogService.SimDriver,
-    never
-  >;
-  rotation: CompiledRotation;
-  spells: Schemas.Spell.SpellDataFlat[];
-}
+// --- Result Helpers ---
 
-interface CompiledRotation {
-  name: string;
-  run: (
-    playerId: Schemas.Branded.UnitID,
-    targetId: Schemas.Branded.UnitID,
-  ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
-  spellIds: readonly number[];
-}
+const createErrorResult = (
+  simId: number,
+  duration: number,
+  error: string,
+): SingleSimResult => ({
+  simId,
+  casts: 0,
+  duration,
+  totalDamage: 0,
+  dps: 0,
+  error,
+});
 
-let workerState: WorkerState | null = null;
+const createEmptyResult = (simId: number): SingleSimResult => ({
+  simId,
+  casts: 0,
+  duration: 0,
+  totalDamage: 0,
+  dps: 0,
+});
+
+// --- Rotation Compilation ---
 
 interface SandboxAPI {
   Effect: typeof Effect;
@@ -85,13 +85,19 @@ interface SandboxAPI {
   ) => Effect.Effect<CastResult, Errors.SpellNotFound | Errors.UnitNotFound>;
 }
 
+interface CompiledRotation {
+  name: string;
+  run: (
+    playerId: Schemas.Branded.UnitID,
+    targetId: Schemas.Branded.UnitID,
+  ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
+  spellIds: readonly number[];
+}
+
 function compileRotation(
   code: string,
   spellIds: readonly number[],
 ): CompiledRotation {
-  // Shadow dangerous globals by destructuring from an object
-  // Note: `eval` cannot be shadowed in strict mode, but it's still restricted
-  // since this runs in a worker with limited scope
   const createRotationFn = new Function(
     "api",
     `
@@ -115,7 +121,7 @@ function compileRotation(
           rotation,
           playerId,
           targetId,
-          tryCast: (spellId: number, target?: Schemas.Branded.UnitID) =>
+          tryCast: (spellId, target) =>
             tryCast(rotation, playerId, spellId, target ?? targetId),
         };
         return yield* createRotationFn(api);
@@ -124,178 +130,170 @@ function compileRotation(
   };
 }
 
+// --- Worker State ---
+
+type WorkerRuntime = ManagedRuntime.ManagedRuntime<
+  | Context.RotationContext
+  | State.StateService
+  | Unit.UnitService
+  | CombatLogService.CombatLogService
+  | CombatLogService.SimDriver,
+  never
+>;
+
+interface WorkerState {
+  runtime: WorkerRuntime;
+  rotation: CompiledRotation;
+  spells: Schemas.Spell.SpellDataFlat[];
+}
+
+let workerState: WorkerState | null = null;
+
+// --- Initialization ---
+
+function createRuntime(spells: Schemas.Spell.SpellDataFlat[]): WorkerRuntime {
+  const metadataLayer = Metadata.InMemoryMetadata({ items: [], spells });
+  const baseAppLayer = createAppLayer({ metadata: metadataLayer });
+  const loggerLayer = Layer.merge(
+    Logger.replace(Logger.defaultLogger, Logger.none),
+    Logger.minimumLogLevel(LogLevel.None),
+  );
+  const fullLayer = Context.RotationContext.Default.pipe(
+    Layer.provide(baseAppLayer),
+    Layer.merge(baseAppLayer),
+    Layer.provide(loggerLayer),
+  );
+  return ManagedRuntime.make(fullLayer);
+}
+
 const initWorker = (init: WorkerInit): Effect.Effect<SimulationResult> =>
   Effect.sync(() => {
     try {
       const rotation = compileRotation(init.code, init.spellIds);
-
-      const metadataLayer = Metadata.InMemoryMetadata({
-        items: [],
-        spells: init.spells,
-      });
-
-      const baseAppLayer = createAppLayer({ metadata: metadataLayer });
-
-      const loggerLayer = Layer.merge(
-        Logger.replace(Logger.defaultLogger, Logger.none),
-        Logger.minimumLogLevel(LogLevel.None),
-      );
-
-      const fullLayer = Context.RotationContext.Default.pipe(
-        Layer.provide(baseAppLayer),
-        Layer.merge(baseAppLayer),
-        Layer.provide(loggerLayer),
-      );
-
-      const runtime = ManagedRuntime.make(fullLayer);
-
+      const runtime = createRuntime(init.spells);
       workerState = { rotation, runtime, spells: init.spells };
-
       return {
         batchId: -1,
-        results: [{ simId: 0, casts: 0, duration: 0, totalDamage: 0, dps: 0 }],
+        results: [createEmptyResult(0)],
         workerVersion: WORKER_VERSION,
       };
     } catch (error) {
       return {
         batchId: -1,
-        results: [
-          {
-            simId: 0,
-            casts: 0,
-            duration: 0,
-            totalDamage: 0,
-            dps: 0,
-            error: `Code compilation failed: ${String(error)}`,
-          },
-        ],
+        results: [createErrorResult(0, 0, `Code compilation failed: ${error}`)],
         workerVersion: WORKER_VERSION,
       };
     }
   });
+
+// --- Simulation Execution ---
+
+const runSingleSim = (
+  simId: number,
+  duration: number,
+  state: WorkerState,
+): Effect.Effect<SingleSimResult> =>
+  Effect.gen(function* () {
+    const { rotation, runtime, spells } = state;
+
+    const result = yield* Effect.promise(() =>
+      runtime.runPromise(
+        Effect.gen(function* () {
+          yield* Shared.registerSpec(Hunter.BeastMastery);
+
+          const stateService = yield* State.StateService;
+          yield* stateService.setState(Entities.GameState.createGameState());
+
+          const playerId = Schemas.Branded.UnitID(`player-${simId}`);
+          const targetId = Schemas.Branded.UnitID(`target-${simId}`);
+
+          const player = createPlayerWithSpells(
+            playerId,
+            rotation.name,
+            rotation.spellIds,
+            spells,
+          );
+          const target = createTargetDummy(targetId);
+
+          const unitService = yield* Unit.UnitService;
+          yield* unitService.add(player);
+          yield* unitService.add(target);
+
+          const simDriver = yield* CombatLogService.SimDriver;
+          const events: SimulationEvent[] = [];
+          let casts = 0;
+          let totalDamage = 0;
+
+          const subscription = yield* simDriver.subscribe({
+            filter: EVENT_TYPES,
+            onEvent: (event) => {
+              events.push(event);
+              if (event._tag === "SPELL_DAMAGE" && "amount" in event) {
+                totalDamage += event.amount ?? 0;
+              }
+              return Effect.void;
+            },
+          });
+
+          while (true) {
+            const gameState = yield* stateService.getState();
+            if (gameState.currentTime >= duration) break;
+
+            yield* Effect.catchAll(
+              rotation.run(playerId, targetId),
+              () => Effect.void,
+            );
+            yield* simDriver.run(gameState.currentTime + 0.1);
+            casts++;
+          }
+
+          yield* subscription.unsubscribe;
+
+          return {
+            simId,
+            casts,
+            duration,
+            totalDamage,
+            dps: duration > 0 ? totalDamage / duration : 0,
+            events,
+          };
+        }),
+      ),
+    );
+
+    return result;
+  }).pipe(
+    Effect.catchAll((err) =>
+      Effect.succeed(createErrorResult(simId, duration, String(err))),
+    ),
+  );
 
 const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
   Effect.gen(function* () {
     if (!workerState) {
       return {
         batchId: batch.batchId,
-        results: batch.simIds.map((simId) => ({
-          simId,
-          casts: 0,
-          duration: batch.duration,
-          totalDamage: 0,
-          dps: 0,
-          error: "Worker not initialized",
-        })),
+        results: batch.simIds.map((id) =>
+          createErrorResult(id, batch.duration, "Worker not initialized"),
+        ),
       };
     }
 
-    const { rotation, runtime, spells } = workerState;
     const results: SingleSimResult[] = [];
-
     for (const simId of batch.simIds) {
-      try {
-        const result = yield* Effect.promise(() =>
-          runtime.runPromise(
-            Effect.gen(function* () {
-              // Register spec handlers
-              yield* Shared.registerSpec(Hunter.BeastMastery);
-
-              const stateService = yield* State.StateService;
-              yield* stateService.setState(
-                Entities.GameState.createGameState(),
-              );
-
-              const playerId = Schemas.Branded.UnitID(`player-${simId}`);
-              const targetId = Schemas.Branded.UnitID(`target-${simId}`);
-
-              const player = createPlayerWithSpells(
-                playerId,
-                rotation.name,
-                rotation.spellIds,
-                spells,
-              );
-              const target = createTargetDummy(targetId);
-
-              const unitService = yield* Unit.UnitService;
-              yield* unitService.add(player);
-              yield* unitService.add(target);
-
-              // Get SimDriver for event processing
-              const simDriver = yield* CombatLogService.SimDriver;
-
-              const events: SimulationEvent[] = [];
-              let casts = 0;
-              let totalDamage = 0;
-
-              // Subscribe to combat events
-              const subscription = yield* simDriver.subscribe({
-                filter: EVENT_STREAM_FILTER,
-                onEvent: (event) => {
-                  events.push(event);
-                  if (event._tag === "SPELL_DAMAGE" && "amount" in event) {
-                    totalDamage += event.amount ?? 0;
-                  }
-                  return Effect.void;
-                },
-              });
-
-              while (true) {
-                const state = yield* stateService.getState();
-                if (state.currentTime >= batch.duration) {
-                  break;
-                }
-
-                yield* Effect.catchAll(
-                  rotation.run(playerId, targetId),
-                  () => Effect.void,
-                );
-
-                // Process events
-                yield* simDriver.run(state.currentTime + 0.1);
-
-                casts++;
-              }
-
-              yield* subscription.unsubscribe;
-
-              const dps = batch.duration > 0 ? totalDamage / batch.duration : 0;
-
-              return {
-                simId,
-                casts,
-                duration: batch.duration,
-                totalDamage,
-                dps,
-                events,
-              };
-            }),
-          ),
-        );
-        results.push(result);
-      } catch (err) {
-        results.push({
-          simId,
-          casts: 0,
-          duration: batch.duration,
-          totalDamage: 0,
-          dps: 0,
-          error: String(err),
-        });
-      }
+      const result = yield* runSingleSim(simId, batch.duration, workerState);
+      results.push(result);
     }
 
     return { batchId: batch.batchId, results };
   });
 
+// --- Worker Entry ---
+
 const handleRequest = (
   request: SimulationRequest,
-): Effect.Effect<SimulationResult> => {
-  if (request.type === "init") {
-    return initWorker(request);
-  }
-  return runBatch(request);
-};
+): Effect.Effect<SimulationResult> =>
+  request.type === "init" ? initWorker(request) : runBatch(request);
 
 const WorkerLive = WorkerRunner.layer(handleRequest).pipe(
   Layer.provide(BrowserWorkerRunner.layer),

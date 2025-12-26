@@ -11,32 +11,30 @@ import type {
   WorkerInit,
 } from "./types";
 
+// --- Error Types ---
+
 export class WorkerPoolError extends Data.TaggedError("WorkerPoolError")<{
-  readonly reason:
-    | "WorkerCreationFailed"
-    | "InitializationFailed"
-    | "ExecutionFailed"
-    | "Timeout";
+  readonly reason: "InitializationFailed" | "ExecutionFailed";
   readonly message: string;
   readonly cause?: unknown;
 }> {}
 
+// --- Configuration ---
+
 export interface WorkerPoolConfig {
   readonly workerCount?: number;
   readonly batchSize?: number;
-  readonly batchTimeoutMs?: number;
 }
 
-const getDefaultWorkerCount = () =>
-  typeof navigator !== "undefined"
-    ? Math.max(2, Math.floor((navigator.hardwareConcurrency || 4) / 2))
-    : 4;
-
-const defaultConfig: Required<WorkerPoolConfig> = {
-  workerCount: getDefaultWorkerCount(),
+const DEFAULT_CONFIG = {
+  workerCount:
+    typeof navigator !== "undefined"
+      ? Math.max(2, Math.floor((navigator.hardwareConcurrency || 4) / 2))
+      : 4,
   batchSize: 100,
-  batchTimeoutMs: 60_000,
-};
+} as const;
+
+// --- Public Types ---
 
 export interface SimulationParams {
   readonly code: string;
@@ -66,6 +64,78 @@ export interface SimulationProgress {
 
 export type SimulationProgressCallback = (progress: SimulationProgress) => void;
 
+// --- Stats Helpers ---
+
+const createEmptyStats = (workerVersion: string | null): SimulationStats => ({
+  completedSims: 0,
+  totalCasts: 0,
+  totalDamage: 0,
+  avgDps: 0,
+  errors: [],
+  workerVersion,
+  bestResult: null,
+});
+
+const aggregateResult = (
+  stats: SimulationStats,
+  result: SingleSimResult,
+): void => {
+  if (result.error) {
+    stats.errors.push(result.error);
+    return;
+  }
+
+  stats.completedSims++;
+  stats.totalCasts += result.casts;
+  stats.totalDamage += result.totalDamage;
+
+  const isBetter =
+    !stats.bestResult ||
+    result.dps > stats.bestResult.dps ||
+    (result.dps === 0 && !stats.bestResult.events?.length);
+
+  if (isBetter) {
+    stats.bestResult = result;
+  }
+};
+
+const calculateProgress = (
+  completed: number,
+  total: number,
+  startTime: number,
+): SimulationProgress => {
+  const elapsedMs = Date.now() - startTime;
+  const rate = elapsedMs > 0 ? completed / (elapsedMs / 1000) : 0;
+  const remaining = total - completed;
+  const etaMs = rate > 0 ? Math.max(0, (remaining / rate) * 1000) : null;
+  return { completed, total, elapsedMs, etaMs };
+};
+
+// --- Batch Creation ---
+
+const createBatches = (
+  iterations: number,
+  duration: number,
+  batchSize: number,
+): SimulationBatch[] => {
+  const batches: SimulationBatch[] = [];
+  let batchId = 0;
+
+  for (let start = 0; start < iterations; start += batchSize) {
+    const count = Math.min(batchSize, iterations - start);
+    batches.push({
+      type: "batch",
+      batchId: batchId++,
+      duration,
+      simIds: Array.from({ length: count }, (_, j) => start + j + 1),
+    });
+  }
+
+  return batches;
+};
+
+// --- Worker Layer ---
+
 const SimulationWorkerLayer = BrowserWorker.layer(
   () =>
     new Worker(new URL("./simulation-worker.ts", import.meta.url), {
@@ -73,9 +143,11 @@ const SimulationWorkerLayer = BrowserWorker.layer(
     }),
 );
 
+// --- Main Implementation ---
+
 const runSimulationsInternal = (
   params: SimulationParams,
-  cfg: Required<WorkerPoolConfig>,
+  config: Required<WorkerPoolConfig>,
   onProgress?: SimulationProgressCallback,
 ) =>
   Effect.gen(function* () {
@@ -83,8 +155,9 @@ const runSimulationsInternal = (
       WorkerInit | SimulationBatch,
       SimulationResult,
       never
-    >({ size: cfg.workerCount });
+    >({ size: config.workerCount });
 
+    // Initialize all workers
     const initMessage: WorkerInit = {
       type: "init",
       code: params.code,
@@ -94,23 +167,19 @@ const runSimulationsInternal = (
     };
 
     const initResults = yield* Effect.all(
-      Array.from({ length: cfg.workerCount }, () =>
+      Array.from({ length: config.workerCount }, () =>
         pool.executeEffect(initMessage),
       ),
       { concurrency: "unbounded" },
     );
 
+    // Check for init errors
     let workerVersion: string | null = null;
     let initError: string | null = null;
 
     for (const result of initResults) {
-      if (result.workerVersion && !workerVersion) {
-        workerVersion = result.workerVersion;
-      }
-
-      if (result.results[0]?.error && !initError) {
-        initError = result.results[0].error;
-      }
+      workerVersion ??= result.workerVersion ?? null;
+      initError ??= result.results[0]?.error ?? null;
     }
 
     if (initError) {
@@ -122,77 +191,32 @@ const runSimulationsInternal = (
       );
     }
 
-    const stats: SimulationStats = {
-      completedSims: 0,
-      totalCasts: 0,
-      totalDamage: 0,
-      avgDps: 0,
-      errors: [],
-      workerVersion,
-      bestResult: null,
-    };
-
+    // Run simulations
+    const stats = createEmptyStats(workerVersion);
+    const batches = createBatches(
+      params.iterations,
+      params.duration,
+      config.batchSize,
+    );
     const startTime = Date.now();
     let processedSims = 0;
 
-    // Create all batches upfront
-    const allBatches: SimulationBatch[] = [];
-    let batchId = 0;
-    for (let start = 0; start < params.iterations; start += cfg.batchSize) {
-      const simsInBatch = Math.min(cfg.batchSize, params.iterations - start);
-      allBatches.push({
-        type: "batch",
-        batchId: batchId++,
-        duration: params.duration,
-        simIds: Array.from({ length: simsInBatch }, (_, j) => start + j + 1),
-      });
-    }
-
-    // Process batches with controlled concurrency, updating progress as each completes
     yield* Effect.forEach(
-      allBatches,
+      batches,
       (batch) =>
         Effect.gen(function* () {
           const result = yield* pool.executeEffect(batch);
 
           for (const simResult of result.results) {
-            processedSims += 1;
-            if (simResult.error) {
-              stats.errors.push(simResult.error);
-            } else {
-              stats.completedSims++;
-              stats.totalCasts += simResult.casts;
-              stats.totalDamage += simResult.totalDamage;
-
-              // Track best result (highest DPS, or first if all 0)
-              if (
-                !stats.bestResult ||
-                simResult.dps > stats.bestResult.dps ||
-                (simResult.dps === 0 && !stats.bestResult.events?.length)
-              ) {
-                stats.bestResult = simResult;
-              }
-            }
+            processedSims++;
+            aggregateResult(stats, simResult);
           }
 
-          if (onProgress) {
-            const elapsedMs = Date.now() - startTime;
-            const ratePerSec =
-              elapsedMs > 0 ? processedSims / (elapsedMs / 1000) : 0;
-            const remaining = params.iterations - processedSims;
-            const etaMs =
-              ratePerSec > 0
-                ? Math.max(0, remaining / ratePerSec) * 1000
-                : null;
-            onProgress({
-              completed: processedSims,
-              total: params.iterations,
-              elapsedMs,
-              etaMs,
-            });
-          }
+          onProgress?.(
+            calculateProgress(processedSims, params.iterations, startTime),
+          );
         }),
-      { concurrency: cfg.workerCount },
+      { concurrency: config.workerCount },
     );
 
     if (stats.completedSims > 0) {
@@ -202,12 +226,14 @@ const runSimulationsInternal = (
     return stats;
   });
 
+// --- Public API ---
+
 export const runSimulations = (
   params: SimulationParams,
   config: WorkerPoolConfig = {},
   onProgress?: SimulationProgressCallback,
 ): Effect.Effect<SimulationStats, WorkerPoolError> => {
-  const cfg = { ...defaultConfig, ...config };
+  const cfg = { ...DEFAULT_CONFIG, ...config };
 
   return runSimulationsInternal(params, cfg, onProgress).pipe(
     Effect.scoped,

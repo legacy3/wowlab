@@ -23,13 +23,15 @@ import {
 import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
 import { combatDataAtom, createEmptyCombatData } from "@/atoms/timeline";
 import { loadSpellsById, loadAurasById } from "@/lib/simulation";
+import { formatDurationMs } from "@/lib/format";
 import {
   runSimulations,
   type SimulationStats,
   type WorkerPoolConfig,
 } from "@/lib/workers";
 
-// Store active fibers by job ID for cancellation
+// --- Fiber Management ---
+
 const activeFibers = new Map<
   string,
   Fiber.RuntimeFiber<SimulationStats, unknown>
@@ -43,33 +45,67 @@ export function cancelSimulation(jobId: string): void {
   }
 }
 
+// --- Spell ID Extraction ---
+
+// TODO This whole code gets refactored/removed
+const SPELL_ID_PATTERNS = [
+  // SpellIds = { KEY: 12345 }
+  { regex: /SpellIds\s*=\s*\{([\s\S]+?)\}/, extractor: extractObjectValues },
+  // const SPELL_NAME = 12345
+  { regex: /const\s+[A-Z_]+\s*=\s*(\d{4,})/g, extractor: extractMatch },
+  // tryCast(12345, ...)
+  { regex: /tryCast\s*\(\s*(\d+)/g, extractor: extractMatch },
+] as const;
+
+function extractObjectValues(match: RegExpMatchArray): number[] {
+  const content = match[1];
+  const values = content.matchAll(/:\s*(\d+)/g);
+
+  return Array.from(values, (m) => parseInt(m[1], 10));
+}
+
+function extractMatch(match: RegExpMatchArray): number[] {
+  const num = parseInt(match[1], 10);
+
+  return num >= 10000 ? [num] : [];
+}
+
 export function extractSpellIds(code: string): number[] {
   const ids = new Set<number>();
 
-  const spellIdsObjectMatch = code.match(/SpellIds\s*=\s*\{([\s\S]+?)\}/);
-  if (spellIdsObjectMatch) {
-    const objectContent = spellIdsObjectMatch[1];
-    const valueMatches = objectContent.matchAll(/:\s*(\d+)/g);
-    for (const match of valueMatches) {
-      ids.add(parseInt(match[1], 10));
+  for (const { regex, extractor } of SPELL_ID_PATTERNS) {
+    if (regex.global) {
+      for (const match of code.matchAll(regex)) {
+        extractor(match).forEach((id) => ids.add(id));
+      }
+    } else {
+      const match = code.match(regex);
+      if (match) {
+        extractor(match).forEach((id) => ids.add(id));
+      }
     }
-  }
-
-  const constMatches = code.matchAll(/const\s+[A-Z_]+\s*=\s*(\d{4,})/g);
-  for (const match of constMatches) {
-    const num = parseInt(match[1], 10);
-    if (num >= 10000) {
-      ids.add(num);
-    }
-  }
-
-  const tryCastMatches = code.matchAll(/tryCast\s*\([^,]+,\s*[^,]+,\s*(\d+)/g);
-  for (const match of tryCastMatches) {
-    ids.add(parseInt(match[1], 10));
   }
 
   return Array.from(ids);
 }
+
+// --- Memory Tracking ---
+
+// TODO This is always 0
+function getMemoryUsageMB(): number {
+  if (typeof performance === "undefined" || !("memory" in performance)) {
+    return 0;
+  }
+
+  const memory = (performance as { memory?: { usedJSHeapSize?: number } })
+    .memory;
+
+  return memory?.usedJSHeapSize
+    ? Math.round((memory.usedJSHeapSize / 1024 / 1024) * 10) / 10
+    : 0;
+}
+
+// --- Types ---
 
 export interface WorkerSimulationState {
   isRunning: boolean;
@@ -91,17 +127,7 @@ export interface UseWorkerSimulationOptions {
   onError?: (error: Error) => void;
 }
 
-function formatEta(etaMs: number | null) {
-  if (!etaMs || !Number.isFinite(etaMs)) {
-    return "Calculating...";
-  }
-  const totalSeconds = Math.max(0, Math.ceil(etaMs / 1000));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return minutes > 0
-    ? `${minutes}m ${seconds}s remaining`
-    : `${seconds}s remaining`;
-}
+// --- Hook ---
 
 export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
   const [state, setState] = useState<WorkerSimulationState>({
@@ -130,9 +156,9 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       const {
         code,
         name,
-        iterations = 100_000, // TODO: wire up user settings
+        iterations = 5000,
         duration = 60,
-        workerConfig = { workerCount: 12 }, // TODO: wire up user settings
+        workerConfig = { workerCount: 4 },
       } = params;
 
       setState({ isRunning: true, stats: null, error: null, jobId: null });
@@ -149,6 +175,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
       setState((prev) => ({ ...prev, jobId }));
 
       try {
+        // Load spell data
         updatePhase({
           jobId,
           phase: "preparing-spells",
@@ -157,9 +184,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
 
         const spellIds = extractSpellIds(code);
         if (spellIds.length === 0) {
-          throw new Error(
-            "No spell IDs found in rotation code. Define a SpellIds object or use numeric spell IDs.",
-          );
+          throw new Error("No spell IDs found in rotation code.");
         }
 
         updatePhase({
@@ -172,22 +197,18 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
           spellIds,
           queryClient,
           dataProvider,
-          (progress) => {
+          (p) => {
             updatePhase({
               jobId,
               phase: "preparing-spells",
-              detail: `Loading spell ${progress.loaded}/${progress.total}`,
+              detail: `Loading spell ${p.loaded}/${p.total}`,
             });
           },
         );
 
         const auras = await loadAurasById(spellIds, queryClient, dataProvider);
 
-        updatePhase({
-          jobId,
-          phase: "booting-engine",
-          detail: "Starting worker pool",
-        });
+        // Run simulation
         updatePhase({
           jobId,
           phase: "running",
@@ -197,7 +218,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         let lastCompleted = 0;
         let lastTime = Date.now();
 
-        const simulationEffect = runSimulations(
+        const effect = runSimulations(
           { code, spellIds, spells, auras, iterations, duration },
           workerConfig,
           (progress) => {
@@ -205,47 +226,29 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
               jobId,
               current: progress.completed,
               total: progress.total,
-              eta: formatEta(progress.etaMs),
+              eta: progress.etaMs
+                ? `${formatDurationMs(progress.etaMs)} remaining`
+                : "Calculating...",
             });
 
-            // Calculate iterations per second
+            // Track performance metrics (throttled)
             const now = Date.now();
             const deltaTime = (now - lastTime) / 1000;
-            const deltaIters = progress.completed - lastCompleted;
-
             if (deltaTime > 0.5) {
-              const itersPerSec = Math.round(deltaIters / deltaTime);
-              const memoryMB =
-                typeof performance !== "undefined" &&
-                "memory" in performance &&
-                (performance as { memory?: { usedJSHeapSize?: number } }).memory
-                  ?.usedJSHeapSize
-                  ? Math.round(
-                      ((
-                        performance as {
-                          memory: { usedJSHeapSize: number };
-                        }
-                      ).memory.usedJSHeapSize /
-                        1024 /
-                        1024) *
-                        10,
-                    ) / 10
-                  : 0;
-
+              const deltaIters = progress.completed - lastCompleted;
               pushPerformanceData({
                 time: Math.round(progress.elapsedMs / 1000),
-                itersPerSec,
-                memoryMB,
+                itersPerSec: Math.round(deltaIters / deltaTime),
+                memoryMB: getMemoryUsageMB(),
               });
-
               lastCompleted = progress.completed;
               lastTime = now;
             }
           },
         );
 
-        // Run as fiber so it can be interrupted
-        const fiber = Effect.runFork(simulationEffect);
+        // Run as fiber for cancellation support
+        const fiber = Effect.runFork(effect);
         activeFibers.set(jobId, fiber);
 
         const exit = await Effect.runPromise(Fiber.await(fiber));
@@ -253,14 +256,13 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
 
         if (Exit.isFailure(exit)) {
           if (Exit.isInterrupted(exit)) {
-            // Job is already marked as cancelled by cancelJobAtom
             setState({ isRunning: false, stats: null, error: null, jobId });
             return null;
           }
           const cause = Exit.causeOption(exit);
-          const errorMsg =
-            cause._tag === "Some" ? String(cause.value) : "Simulation failed";
-          throw new Error(errorMsg);
+          throw new Error(
+            cause._tag === "Some" ? String(cause.value) : "Simulation failed",
+          );
         }
 
         const stats = exit.value;
@@ -271,11 +273,11 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
         });
 
         if (stats.errors.length > 0) {
-          const errorSummary =
+          const msg =
             stats.errors.length === 1
               ? stats.errors[0]
               : `${stats.errors.length} errors occurred`;
-          throw new Error(errorSummary);
+          throw new Error(msg);
         }
 
         completeJob({
