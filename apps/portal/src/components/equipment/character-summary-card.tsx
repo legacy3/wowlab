@@ -13,7 +13,7 @@ export type CharacterSummary = Readonly<{
   name: string;
   race: string;
   region: string;
-  server: string;
+  realm: string;
   spec?: string;
 }>;
 
@@ -34,7 +34,7 @@ export function CharacterSummaryCard({
         <div>
           <h2 className="text-base font-bold">{character.name}</h2>
           <p className="text-xs text-muted-foreground">
-            {character.server} • {character.region}
+            {character.realm} • {character.region}
           </p>
         </div>
         <div className="flex flex-wrap gap-1">

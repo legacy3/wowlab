@@ -2,21 +2,15 @@
 
 import { Suspense } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Play, Loader2, User } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useWorkerSimulation } from "@/hooks/rotations";
 import {
-  CharacterSummaryCard,
-  EquipmentColumn,
-  EquipmentSlotCard,
-  EQUIPMENT_LEFT_COLUMN,
-  EQUIPMENT_RIGHT_COLUMN,
-  EQUIPMENT_TRINKET_SLOTS,
-  EQUIPMENT_WEAPON_SLOTS,
+  CharacterEquipmentPanel,
+  type CharacterStats,
 } from "@/components/equipment";
 import { TalentHoverLink } from "@/components/talents";
 import { SimulateIntroTour } from "@/components/tours";
@@ -37,6 +31,16 @@ import { RotationPicker } from "./rotation-picker";
 import { SimcPasteArea } from "./simc-paste-area";
 import { SimulationErrorCard } from "./simulation-error-card";
 import { SimulationResultCard } from "./simulation-result-card";
+
+// Mock stats until we parse them from simc
+const MOCK_STATS: CharacterStats = {
+  primaryStat: 40000,
+  stamina: 110000,
+  criticalStrike: 25,
+  haste: 30,
+  mastery: 30,
+  versatility: 10,
+};
 
 function QuickSimContentInner() {
   const parsedData = useAtomValue(parsedCharacterAtom);
@@ -96,84 +100,18 @@ function QuickSimContentInner() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Character + Equipment Card */}
-      <Card>
-        <CardHeader>
-          <CharacterSummaryCard
-            character={character}
-            professions={professions}
-            rightContent={
-              talents.encoded ? (
-                <TalentHoverLink encodedTalents={talents.encoded} />
-              ) : null
-            }
-          />
-        </CardHeader>
-        <CardContent>
-          {/* Equipment Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <EquipmentColumn
-              gear={gear}
-              position="left"
-              slots={EQUIPMENT_LEFT_COLUMN}
-            />
-
-            <div className="flex items-center justify-center">
-              <div className="h-28 w-28 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <User className="mx-auto mb-1 h-7 w-7" />
-                  <p className="text-[11px] font-semibold">{character.name}</p>
-                  <p className="text-[9px]">
-                    {character.race} {character.class}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <EquipmentColumn
-              gear={gear}
-              position="right"
-              slots={EQUIPMENT_RIGHT_COLUMN}
-            />
-          </div>
-
-          <Separator className="my-4" />
-
-          {/* Trinkets */}
-          <div className="grid grid-cols-2 gap-3">
-            {EQUIPMENT_TRINKET_SLOTS.map((slot, index) => (
-              <EquipmentSlotCard
-                key={slot}
-                slot={slot}
-                itemId={gear[slot]}
-                position={index === 0 ? "left" : "right"}
-              />
-            ))}
-          </div>
-
-          <Separator className="my-4" />
-
-          {/* Weapons */}
-          <div className="grid grid-cols-2 gap-3">
-            {EQUIPMENT_WEAPON_SLOTS.map((slot, index) => (
-              <EquipmentSlotCard
-                key={slot}
-                slot={slot}
-                itemId={gear[slot]}
-                position={index === 0 ? "left" : "right"}
-              />
-            ))}
-          </div>
-
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => clearCharacter()}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Import different character
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      <CharacterEquipmentPanel
+        character={character}
+        gear={gear}
+        stats={MOCK_STATS}
+        professions={professions}
+        rightContent={
+          talents.encoded ? (
+            <TalentHoverLink encodedTalents={talents.encoded} />
+          ) : null
+        }
+        onClear={() => clearCharacter()}
+      />
 
       {/* Rotation Picker */}
       <RotationPicker />

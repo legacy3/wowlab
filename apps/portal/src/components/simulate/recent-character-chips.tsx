@@ -29,7 +29,7 @@ export function RecentCharacterChips() {
         const tooltipText = [
           character.class,
           character.spec,
-          character.server,
+          character.realm,
           character.region,
           professions.length > 0
             ? professions.map((p) => `${p.name} ${p.rank}`).join(" • ")
@@ -39,7 +39,7 @@ export function RecentCharacterChips() {
           .join(" • ");
 
         return (
-          <Tooltip key={`${character.name}-${character.server}-chip-${index}`}>
+          <Tooltip key={`${character.name}-${character.realm}-chip-${index}`}>
             <TooltipTrigger asChild>
               <Button
                 size="sm"
