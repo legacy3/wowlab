@@ -6,7 +6,7 @@ import { useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const MINI_FLASK_PATH =
-  "M9 2h6v4l4 10c.5 1.5-.5 2-1.5 2h-11c-1 0-2-.5-1.5-2L9 6V2z";
+  "M9 4h6v4l4 10c.5 1.5-.5 2-1.5 2h-11c-1 0-2-.5-1.5-2L9 8V4z";
 
 export interface FlaskInlineLoaderProps {
   className?: string;
@@ -35,7 +35,7 @@ export function FlaskInlineLoader({
         strokeLinecap="round"
       />
       <path
-        d="M7 2h10"
+        d="M7 4h10"
         className="stroke-current"
         strokeWidth="2"
         strokeLinecap="round"
@@ -45,14 +45,14 @@ export function FlaskInlineLoader({
           <>
             <rect
               x="5"
-              y="12"
+              y="14"
               width="14"
               height="16"
               className="fill-current/60"
             />
             <ellipse
               cx="12"
-              cy="12"
+              cy="14"
               rx="7"
               ry="1.5"
               className="fill-current/80"
@@ -65,7 +65,7 @@ export function FlaskInlineLoader({
               width="14"
               height="16"
               className="fill-current/60"
-              animate={{ y: [18, 8, 18] }}
+              animate={{ y: [20, 10, 20] }}
               transition={{
                 duration: 2.2,
                 repeat: Infinity,
@@ -77,7 +77,7 @@ export function FlaskInlineLoader({
               rx="7"
               ry="1.5"
               className="fill-current/80"
-              animate={{ cy: [18, 8, 18], ry: [1.5, 2, 1.5] }}
+              animate={{ cy: [20, 10, 20], ry: [1.5, 2, 1.5] }}
               transition={{
                 duration: 2.2,
                 repeat: Infinity,

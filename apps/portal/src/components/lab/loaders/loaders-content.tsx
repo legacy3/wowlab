@@ -7,6 +7,7 @@ import {
   CardLoader,
   OverlayLoader,
   FlaskInlineLoader,
+  FlaskButton,
 } from "@/components/ui/flask-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -252,33 +253,26 @@ export function LoadersContent() {
             <CardHeader>
               <CardTitle className="text-base">Button Loading States</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Inline flask loader for buttons
+                FlaskButton component with built-in loading state
               </p>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap items-center gap-3">
-                <Button disabled>
-                  <FlaskInlineLoader className="mr-2" />
-                  Processing
-                </Button>
-                <Button variant="secondary" disabled>
-                  <FlaskInlineLoader className="mr-2" />
+                <FlaskButton loading>Processing</FlaskButton>
+                <FlaskButton variant="secondary" loading>
                   Saving
-                </Button>
-                <Button
+                </FlaskButton>
+                <FlaskButton
                   variant="outline"
                   onClick={handleButtonClick}
-                  disabled={isButtonLoading}
+                  loading={isButtonLoading}
                 >
-                  <FlaskInlineLoader
-                    className="mr-2"
-                    animate={isButtonLoading}
-                  />
                   Click to test
-                </Button>
+                </FlaskButton>
               </div>
-              <div className="mt-4 p-3 rounded-lg bg-muted/50 font-mono text-xs">
-                {`<Button disabled><FlaskInlineLoader className="mr-2" />Text</Button>`}
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 font-mono text-xs space-y-1">
+                <div>{`<FlaskButton loading>Processing</FlaskButton>`}</div>
+                <div>{`<FlaskButton loading={isLoading} onClick={...}>Click</FlaskButton>`}</div>
               </div>
             </CardContent>
           </Card>
