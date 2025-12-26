@@ -1,4 +1,5 @@
 import type * as Schemas from "@wowlab/core/Schemas";
+import type { SimulationEvent } from "../simulation/types";
 
 /**
  * Initial setup message sent once per worker.
@@ -40,6 +41,7 @@ export interface SingleSimResult {
   totalDamage: number;
   dps: number;
   error?: string;
+  events?: SimulationEvent[];
 }
 
 /** Batch result returned from worker */

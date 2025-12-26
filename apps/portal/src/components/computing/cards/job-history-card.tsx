@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
+import { CopyButton } from "@/components/ui/copy-button";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Badge } from "@/components/ui/badge";
@@ -194,6 +195,13 @@ export function JobHistoryCard() {
                   return <Icon className="h-4 w-4" />;
                 })()}
               {selectedJob?.name}
+              {selectedJob && (
+                <CopyButton
+                  value={JSON.stringify(selectedJob, null, 2)}
+                  label="Job details"
+                  title="Copy job details"
+                />
+              )}
             </DialogTitle>
             <DialogDescription>Job ID: {selectedJob?.id}</DialogDescription>
           </DialogHeader>

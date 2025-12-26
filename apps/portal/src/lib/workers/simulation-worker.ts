@@ -5,14 +5,19 @@ import * as Errors from "@wowlab/core/Errors";
 import * as Schemas from "@wowlab/core/Schemas";
 import * as Context from "@wowlab/rotation/Context";
 import { createAppLayer } from "@wowlab/runtime";
+import * as CombatLogService from "@wowlab/services/CombatLog";
 import * as Metadata from "@wowlab/services/Metadata";
 import * as State from "@wowlab/services/State";
 import * as Unit from "@wowlab/services/Unit";
+import * as Hunter from "@wowlab/specs/Hunter";
+import * as Shared from "@wowlab/specs/Shared";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as LogLevel from "effect/LogLevel";
 import * as ManagedRuntime from "effect/ManagedRuntime";
+
+import type { SimulationEvent } from "../simulation/types";
 
 import {
   createPlayerWithSpells,
@@ -28,11 +33,30 @@ import type {
   WorkerInit,
 } from "./types";
 
-export const WORKER_VERSION = "0.0.2";
+export const WORKER_VERSION = "0.0.4";
+
+const EVENT_STREAM_FILTER = [
+  "SPELL_CAST_START",
+  "SPELL_CAST_SUCCESS",
+  "SPELL_CAST_FAILED",
+  "SPELL_DAMAGE",
+  "SPELL_PERIODIC_DAMAGE",
+  "SPELL_AURA_APPLIED",
+  "SPELL_AURA_REMOVED",
+  "SPELL_AURA_REFRESH",
+  "SPELL_AURA_APPLIED_DOSE",
+  "SPELL_AURA_REMOVED_DOSE",
+  "SPELL_ENERGIZE",
+  "SPELL_DRAIN",
+] as const;
 
 interface WorkerState {
   runtime: ManagedRuntime.ManagedRuntime<
-    Context.RotationContext | State.StateService | Unit.UnitService,
+    | Context.RotationContext
+    | State.StateService
+    | Unit.UnitService
+    | CombatLogService.CombatLogService
+    | CombatLogService.SimDriver,
     never
   >;
   rotation: CompiledRotation;
@@ -65,20 +89,15 @@ function compileRotation(
   code: string,
   spellIds: readonly number[],
 ): CompiledRotation {
+  // Shadow dangerous globals by destructuring from an object
+  // Note: `eval` cannot be shadowed in strict mode, but it's still restricted
+  // since this runs in a worker with limited scope
   const createRotationFn = new Function(
     "api",
     `
     "use strict";
-    const globalThis = undefined;
-    const self = undefined;
-    const window = undefined;
-    const document = undefined;
-    const eval = undefined;
-    const Function = undefined;
-    const importScripts = undefined;
-    const fetch = undefined;
-    const XMLHttpRequest = undefined;
-    const WebSocket = undefined;
+    const _blocked = { globalThis: undefined, self: undefined, window: undefined, document: undefined, Function: undefined, importScripts: undefined, fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined };
+    const { globalThis, self, window, document, Function, importScripts, fetch, XMLHttpRequest, WebSocket } = _blocked;
     const { Effect, rotation, playerId, targetId, tryCast } = api;
     return Effect.gen(function* () {
       ${code}
@@ -179,6 +198,9 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
         const result = yield* Effect.promise(() =>
           runtime.runPromise(
             Effect.gen(function* () {
+              // Register spec handlers
+              yield* Shared.registerSpec(Hunter.BeastMastery);
+
               const stateService = yield* State.StateService;
               yield* stateService.setState(
                 Entities.GameState.createGameState(),
@@ -199,8 +221,24 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
               yield* unitService.add(player);
               yield* unitService.add(target);
 
+              // Get SimDriver for event processing
+              const simDriver = yield* CombatLogService.SimDriver;
+
+              const events: SimulationEvent[] = [];
               let casts = 0;
-              const totalDamage = 0;
+              let totalDamage = 0;
+
+              // Subscribe to combat events
+              const subscription = yield* simDriver.subscribe({
+                filter: EVENT_STREAM_FILTER,
+                onEvent: (event) => {
+                  events.push(event);
+                  if (event._tag === "SPELL_DAMAGE" && "amount" in event) {
+                    totalDamage += event.amount ?? 0;
+                  }
+                  return Effect.void;
+                },
+              });
 
               while (true) {
                 const state = yield* stateService.getState();
@@ -213,8 +251,13 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
                   () => Effect.void,
                 );
 
+                // Process events
+                yield* simDriver.run(state.currentTime + 0.1);
+
                 casts++;
               }
+
+              yield* subscription.unsubscribe;
 
               const dps = batch.duration > 0 ? totalDamage / batch.duration : 0;
 
@@ -224,6 +267,7 @@ const runBatch = (batch: SimulationBatch): Effect.Effect<SimulationResult> =>
                 duration: batch.duration,
                 totalDamage,
                 dps,
+                events,
               };
             }),
           ),

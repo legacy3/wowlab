@@ -202,7 +202,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
             dps: stats.avgDps,
             totalDamage: stats.totalDamage,
             durationMs: duration * 1000,
-            events: [],
+            events: stats.bestResult?.events ?? [],
             casts: stats.totalCasts,
           },
         });

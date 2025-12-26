@@ -4,7 +4,12 @@ import type * as Schemas from "@wowlab/core/Schemas";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 
-import type { SimulationBatch, SimulationResult, WorkerInit } from "./types";
+import type {
+  SimulationBatch,
+  SimulationResult,
+  SingleSimResult,
+  WorkerInit,
+} from "./types";
 
 export class WorkerPoolError extends Data.TaggedError("WorkerPoolError")<{
   readonly reason:
@@ -49,6 +54,7 @@ export interface SimulationStats {
   avgDps: number;
   errors: string[];
   workerVersion: string | null;
+  bestResult: SingleSimResult | null;
 }
 
 export interface SimulationProgress {
@@ -95,18 +101,25 @@ const runSimulationsInternal = (
     );
 
     let workerVersion: string | null = null;
+    let initError: string | null = null;
+
     for (const result of initResults) {
-      if (result.results[0]?.error) {
-        return yield* Effect.fail(
-          new WorkerPoolError({
-            reason: "InitializationFailed",
-            message: result.results[0].error,
-          }),
-        );
-      }
       if (result.workerVersion && !workerVersion) {
         workerVersion = result.workerVersion;
       }
+
+      if (result.results[0]?.error && !initError) {
+        initError = result.results[0].error;
+      }
+    }
+
+    if (initError) {
+      return yield* Effect.fail(
+        new WorkerPoolError({
+          reason: "InitializationFailed",
+          message: `[Worker ${workerVersion ?? "unknown"}] ${initError}`,
+        }),
+      );
     }
 
     const stats: SimulationStats = {
@@ -116,6 +129,7 @@ const runSimulationsInternal = (
       avgDps: 0,
       errors: [],
       workerVersion,
+      bestResult: null,
     };
 
     const startTime = Date.now();
@@ -169,6 +183,15 @@ const runSimulationsInternal = (
             stats.completedSims++;
             stats.totalCasts += result.casts;
             stats.totalDamage += result.totalDamage;
+
+            // Track best result (highest DPS, or first if all 0)
+            if (
+              !stats.bestResult ||
+              result.dps > stats.bestResult.dps ||
+              (result.dps === 0 && !stats.bestResult.events?.length)
+            ) {
+              stats.bestResult = result;
+            }
           }
         }
 
