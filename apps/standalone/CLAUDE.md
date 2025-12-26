@@ -2,11 +2,20 @@
 
 CLI for running simulations with Supabase data backend.
 
-## Running
+## ⚠️ RUNNING COMMANDS - READ THIS FIRST
+
+**DO NOT run `pnpm build` before running commands. DO NOT use `pnpm start`.**
+
+Just run `pnpm dev` directly - it handles everything:
 
 ```bash
-pnpm start <command>
+pnpm dev run --iterations 1 --duration 60
+pnpm dev profile --iterations 100 --duration 60
 ```
+
+- `pnpm dev` = auto-rebuilds deps + runs with tsx (USE THIS)
+- `pnpm start` = WRONG, don't use
+- `pnpm build` before running = WRONG, unnecessary
 
 ## Structure
 
