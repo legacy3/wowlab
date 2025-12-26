@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Copy, Loader2, type LucideIcon } from "lucide-react";
+import { Check, Copy, type LucideIcon } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ export function CopyButton({
       title={title}
     >
       {loading ? (
-        <Loader2 className="animate-spin" />
+        <FlaskInlineLoader />
       ) : state.copied ? (
         <Check className="text-green-500 animate-in zoom-in-50 duration-200" />
       ) : (

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { Cpu, Loader2 } from "lucide-react";
+import { Cpu } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { MobileMenu } from "./mobile-menu";
 import { ThemeToggle } from "./theme-toggle";
@@ -25,7 +26,7 @@ function ComputingTrigger() {
       onClick={() => setOpen(true)}
     >
       {activeCount > 0 ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <FlaskInlineLoader className="h-4 w-4" variant="processing" />
       ) : (
         <Cpu className="h-4 w-4" />
       )}

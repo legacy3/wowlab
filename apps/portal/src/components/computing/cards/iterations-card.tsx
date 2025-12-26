@@ -1,7 +1,8 @@
 "use client";
 
 import { useAtomValue } from "jotai";
-import { Loader2, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { workerSystemAtom, jobsAtom } from "@/atoms/computing";
@@ -17,7 +18,7 @@ export function IterationsCard() {
       <div className="flex items-center justify-between text-muted-foreground text-xs">
         <div className="flex items-center gap-2">
           {runningJob ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <FlaskInlineLoader className="h-3.5 w-3.5" variant="processing" />
           ) : (
             <Activity className="h-3.5 w-3.5" />
           )}

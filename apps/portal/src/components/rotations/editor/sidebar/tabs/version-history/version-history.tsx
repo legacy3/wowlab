@@ -2,13 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Clock,
-  RotateCcw,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Clock, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { FlaskLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -100,7 +95,7 @@ export function VersionHistory({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <FlaskLoader size="sm" />
       </div>
     );
   }
@@ -191,7 +186,7 @@ export function VersionHistory({
           <div className="flex-1 min-h-0 overflow-hidden">
             {isLoadingScript ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <FlaskLoader size="md" />
               </div>
             ) : (
               <DiffView

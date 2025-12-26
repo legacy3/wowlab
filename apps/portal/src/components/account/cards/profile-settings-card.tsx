@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { SecretField } from "@/components/ui/secret-field";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import type { Profile } from "@/lib/supabase/types";
 
 // Default handles from generate_default_handle(): "user-{6 hex chars}" or "user-{6 hex chars}-{counter}"
@@ -150,7 +150,7 @@ function HandleEditForm({
           size="sm"
           disabled={isUpdating || !form.formState.isValid}
         >
-          {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isUpdating && <FlaskInlineLoader className="mr-2 h-4 w-4" />}
           {isUpdating ? "Saving..." : "Save"}
         </Button>
         <Button

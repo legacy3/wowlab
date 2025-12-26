@@ -1,7 +1,8 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +47,7 @@ export function SimcPasteArea() {
 
       {isParsing && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <FlaskInlineLoader className="h-4 w-4" />
           Parsing SimC data...
         </div>
       )}

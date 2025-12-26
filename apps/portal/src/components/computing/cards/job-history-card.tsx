@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Trash2 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -181,12 +182,16 @@ export function JobHistoryCard() {
             <DialogTitle className="flex items-center gap-2">
               {selectedJob &&
                 (() => {
+                  if (selectedJob.status === "running") {
+                    return (
+                      <FlaskInlineLoader
+                        className="h-4 w-4"
+                        variant="processing"
+                      />
+                    );
+                  }
                   const Icon = JOB_STATUS_ICONS[selectedJob.status];
-                  return (
-                    <Icon
-                      className={`h-4 w-4 ${selectedJob.status === "running" ? "animate-spin" : ""}`}
-                    />
-                  );
+                  return <Icon className="h-4 w-4" />;
                 })()}
               {selectedJob?.name}
             </DialogTitle>

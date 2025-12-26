@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
+import { Search, Wand2, Package, Sparkles } from "lucide-react";
+import { FlaskLoader } from "@/components/ui/flask-loader";
 import { Link } from "@/components/ui/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,7 @@ export function DataInspector() {
 
       {loading && (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <FlaskLoader size="sm" />
         </div>
       )}
 

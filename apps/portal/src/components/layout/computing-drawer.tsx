@@ -4,6 +4,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import Link from "next/link";
 import { Cpu, X } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,11 +50,14 @@ function JobCard({
     <div className="rounded-xl border bg-card/50 p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <StatusIcon
-            className={`h-5 w-5 ${statusTextClass} ${
-              job.status === "running" ? "animate-spin" : ""
-            }`}
-          />
+          {job.status === "running" ? (
+            <FlaskInlineLoader
+              className={`h-5 w-5 ${statusTextClass}`}
+              variant="processing"
+            />
+          ) : (
+            <StatusIcon className={`h-5 w-5 ${statusTextClass}`} />
+          )}
           <span className="font-medium">{job.name}</span>
         </div>
         {(job.status === "running" || job.status === "queued") && (

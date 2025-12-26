@@ -2,7 +2,8 @@
 
 import { Suspense } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Play, Loader2 } from "lucide-react";
+import { Play } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -135,7 +136,7 @@ function QuickSimContentInner() {
       >
         {isRunning ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" variant="processing" />
             Running...
           </>
         ) : (

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Link } from "@/components/ui/link";
 import type { OAuthProvider } from "@/lib/refine/auth-provider";
-import { Loader2 } from "lucide-react";
+import { CardLoader } from "@/components/ui/flask-loader";
 import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
 
 interface SignInFormProps {
@@ -47,13 +47,8 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
     return (
       <div className="w-full max-w-md">
         <Card className="border-2">
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Signing you in ...
-              </p>
-            </div>
+          <CardContent className="py-6">
+            <CardLoader message="Signing you in ..." />
           </CardContent>
         </Card>
       </div>

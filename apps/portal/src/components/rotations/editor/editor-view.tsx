@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Expand,
-  Loader2,
   PanelRight,
   Play,
   Save,
@@ -13,6 +12,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import {
   CodeEditor,
@@ -300,7 +300,7 @@ export function EditorView({
           data-tour="rotation-editor-save"
         >
           {isSaving ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" />
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
@@ -313,7 +313,7 @@ export function EditorView({
           data-tour="rotation-editor-test"
         >
           {isTesting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" variant="processing" />
           ) : (
             <Play className="mr-2 h-4 w-4" />
           )}

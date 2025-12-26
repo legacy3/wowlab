@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSetAtom } from "jotai";
-import { PlayCircle, Loader2 } from "lucide-react";
+import { PlayCircle } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import {
   Card,
   CardContent,
@@ -53,7 +54,7 @@ export function QuickSimCard() {
           className="w-full"
         >
           {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" />
           ) : (
             <PlayCircle className="mr-2 h-4 w-4" />
           )}

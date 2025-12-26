@@ -5,6 +5,7 @@ import { useTimeoutEffect } from "@react-hookz/web";
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FlaskLoader } from "@/components/ui/flask-loader";
 import { TalentCalculatorSkeleton } from "./talent-calculator-skeleton";
 import { TalentStartScreen } from "./talent-start-screen";
 import { TalentStateMessage } from "./talent-state-message";
@@ -21,7 +22,7 @@ function TalentTreeLoading() {
       {/* Spinner overlay */}
       <div className="absolute inset-0 flex items-center justify-center bg-background/60">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
-          <div className="h-8 w-8 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+          <FlaskLoader size="md" />
           <span className="text-sm">Loading talent tree ...</span>
         </div>
       </div>
