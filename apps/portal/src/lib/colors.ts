@@ -33,3 +33,21 @@ export const gridLine = "#333";
 // Pure
 export const white = colors.white;
 export const black = colors.black;
+
+// WoW Class Colors
+// TODO Get this from dbc data
+export const CLASS_COLORS: Record<string, string> = {
+  "Death Knight": "#C41E3A",
+  "Demon Hunter": "#A330C9",
+  Druid: "#FF7D0A",
+  Evoker: "#33937F",
+  Hunter: "#ABD473",
+  Mage: "#69CCF0",
+  Monk: "#00FF96",
+  Paladin: "#F58CBA",
+  Priest: "#FFFFFF",
+  Rogue: "#FFF569",
+  Shaman: "#0070DE",
+  Warlock: "#9482C9",
+  Warrior: "#C79C6E",
+};
