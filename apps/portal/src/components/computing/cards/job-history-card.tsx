@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Trash2, RotateCcw } from "lucide-react";
+import { X, RotateCcw } from "lucide-react";
 import { CopyButton } from "@/components/ui/copy-button";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
@@ -17,6 +17,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -116,7 +121,7 @@ export function JobHistoryCard() {
                   <TableHead className="font-medium">Name</TableHead>
                   <TableHead className="w-[120px] font-medium">DPS</TableHead>
                   <TableHead className="w-[100px] font-medium">Casts</TableHead>
-                  <TableHead className="w-[80px] font-medium"></TableHead>
+                  <TableHead className="w-20 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,20 +156,60 @@ export function JobHistoryCard() {
                         {job.result?.casts ?? "—"}
                       </TableCell>
                       <TableCell>
-                        {(job.status === "running" ||
-                          job.status === "queued") && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              cancelJob(job.id);
-                            }}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        <div className="flex gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                aria-label="Cancel simulation"
+                                disabled={
+                                  job.status !== "running" &&
+                                  job.status !== "queued"
+                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelJob(job.id);
+                                }}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Cancel</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                aria-label="Rerun simulation"
+                                disabled={
+                                  !job.codeBase64 ||
+                                  job.status === "running" ||
+                                  job.status === "queued" ||
+                                  isRunning
+                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+
+                                  if (!job.codeBase64) {
+                                    return;
+                                  }
+
+                                  runSimulation({
+                                    code: atob(job.codeBase64),
+                                    name: job.name.replace(" (Worker Sim)", ""),
+                                  });
+                                }}
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Rerun</TooltipContent>
+                          </Tooltip>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -269,26 +314,6 @@ export function JobHistoryCard() {
                   <div>Result ID: {selectedJob.resultId}</div>
                 )}
               </div>
-
-              {/* Rerun Button */}
-              {selectedJob.codeBase64 && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={isRunning}
-                  onClick={() => {
-                    const code = atob(selectedJob.codeBase64!);
-                    runSimulation({
-                      code,
-                      name: selectedJob.name.replace(" (Worker Sim)", ""),
-                    });
-                    setSelectedJob(null);
-                  }}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Rerun Simulation
-                </Button>
-              )}
             </div>
           )}
         </DialogContent>
