@@ -43,7 +43,7 @@ parentPort?.on("message", (msg: WasmWorkerInit | WasmWorkerBatch) => {
         type: "error",
         error: "Simulator not initialized",
       });
-      
+
       return;
     }
 
