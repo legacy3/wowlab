@@ -3,6 +3,15 @@ name = "bench-engine"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+# Pass through engine feature flags
+meta_events = ["engine/meta_events"]
+front_buffer = ["engine/front_buffer"]
+large_capacity = ["engine/large_capacity"]
+quaternary_heap = ["engine/quaternary_heap"]
+debug_logging = ["engine/debug_logging"]
+
 [dependencies]
 engine = { path = "../engine" }
 serde_json = "1.0"

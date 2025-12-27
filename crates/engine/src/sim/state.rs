@@ -179,69 +179,84 @@ impl Resources {
     }
 }
 
-/// Active aura tracking with compact storage.
+/// Maximum aura slots (matches typical WoW limits)
+const MAX_AURA_SLOTS: usize = 32;
+
+/// Slot-based aura tracking - O(1) lookup by aura index.
+/// Slots are indexed by aura_idx from config, not aura_id.
 pub struct AuraTracker {
-    /// Active auras: (aura_id, instance) - preallocated
-    active: Vec<(u32, AuraInstance)>,
+    /// Fixed slots indexed by aura_idx - None = inactive
+    slots: [Option<AuraInstance>; MAX_AURA_SLOTS],
 }
 
 impl AuraTracker {
     pub fn new() -> Self {
         Self {
-            active: Vec::with_capacity(32),
+            slots: [None; MAX_AURA_SLOTS],
         }
     }
 
     #[inline]
     pub fn clear(&mut self) {
-        self.active.clear();
+        self.slots = [None; MAX_AURA_SLOTS];
     }
 
-    #[inline]
-    pub fn apply(&mut self, aura_id: u32, duration: f32, max_stacks: u8, current_time: f32) {
-        if let Some((_, instance)) = self.active.iter_mut().find(|(id, _)| *id == aura_id) {
+    /// Apply aura by slot index (aura_idx from config) - O(1)
+    #[inline(always)]
+    pub fn apply_slot(&mut self, slot: usize, duration: f32, max_stacks: u8, current_time: f32) {
+        if slot >= MAX_AURA_SLOTS {
+            return;
+        }
+        if let Some(ref mut instance) = self.slots[slot] {
             // Refresh existing aura
             instance.expires = current_time + duration;
             instance.stacks = (instance.stacks + 1).min(max_stacks);
         } else {
             // Apply new aura
-            self.active.push((
-                aura_id,
-                AuraInstance::new(current_time + duration, 1),
-            ));
+            self.slots[slot] = Some(AuraInstance::new(current_time + duration, 1));
         }
     }
 
-    #[inline]
-    pub fn remove(&mut self, aura_id: u32) {
-        self.active.retain(|(id, _)| *id != aura_id);
+    /// Remove aura by slot index - O(1)
+    #[inline(always)]
+    pub fn remove_slot(&mut self, slot: usize) {
+        if slot < MAX_AURA_SLOTS {
+            self.slots[slot] = None;
+        }
     }
 
-    #[inline]
-    pub fn has(&self, aura_id: u32) -> bool {
-        self.active.iter().any(|(id, _)| *id == aura_id)
+    /// Check if aura is active by slot index - O(1)
+    #[inline(always)]
+    pub fn has_slot(&self, slot: usize) -> bool {
+        slot < MAX_AURA_SLOTS && self.slots[slot].is_some()
     }
 
-    #[inline]
-    pub fn stacks(&self, aura_id: u32) -> u8 {
-        self.active
-            .iter()
-            .find(|(id, _)| *id == aura_id)
-            .map(|(_, i)| i.stacks)
-            .unwrap_or(0)
+    /// Get aura stacks by slot index - O(1)
+    #[inline(always)]
+    pub fn stacks_slot(&self, slot: usize) -> u8 {
+        if slot < MAX_AURA_SLOTS {
+            if let Some(instance) = self.slots[slot] {
+                instance.stacks
+            } else {
+                0
+            }
+        } else {
+            0
+        }
     }
 
-    #[inline]
-    pub fn remaining(&self, aura_id: u32, current_time: f32) -> f32 {
-        self.active
-            .iter()
-            .find(|(id, _)| *id == aura_id)
-            .map(|(_, i)| (i.expires - current_time).max(0.0))
-            .unwrap_or(0.0)
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (u32, &AuraInstance)> {
-        self.active.iter().map(|(id, inst)| (*id, inst))
+    /// Get remaining duration by slot index - O(1)
+    #[inline(always)]
+    pub fn remaining_slot(&self, slot: usize, current_time: f32) -> f32 {
+        if slot < MAX_AURA_SLOTS {
+            if let Some(instance) = self.slots[slot] {
+                (instance.expires - current_time).max(0.0)
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        }
     }
 }
 
@@ -360,6 +375,9 @@ impl SimState {
             time: 0.0,
             duration: config.duration,
             player,
+            #[cfg(feature = "large_capacity")]
+            events: EventQueue::with_capacity(16384),
+            #[cfg(not(feature = "large_capacity"))]
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
             target: TargetState::new(config.target.max_health),

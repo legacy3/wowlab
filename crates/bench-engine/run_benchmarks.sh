@@ -5,7 +5,7 @@
 
 set -e
 
-ITERATIONS=${1:-16000000}
+ITERATIONS=${1:-100000}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -16,18 +16,22 @@ echo "Iterations: $ITERATIONS"
 echo "Date: $(date)"
 echo ""
 
-# Feature combinations to test
+# Feature combinations to test (all with stress_events for high event count)
 declare -a FEATURES=(
-    ""
-    "engine/quaternary_heap"
-    "engine/front_buffer"
-    "engine/all_optimizations"
+    "engine/stress_events"
+    "engine/stress_events,engine/quaternary_heap"
+    "engine/stress_events,engine/front_buffer"
+    "engine/stress_events,engine/large_capacity"
+    "engine/stress_events,engine/quaternary_heap,engine/front_buffer"
+    "engine/stress_events,engine/all_optimizations"
 )
 
 declare -a NAMES=(
-    "baseline (binary heap)"
+    "baseline (stress)"
     "quaternary_heap"
     "front_buffer"
+    "large_capacity"
+    "quat + front"
     "all_optimizations"
 )
 
@@ -62,9 +66,9 @@ for i in "${!FEATURES[@]}"; do
     echo "--- $name ---"
 
     if [ -z "$feat" ]; then
-        output=$(cargo run --release 2>&1)
+        output=$(cargo run --release -- "$ITERATIONS" 2>&1)
     else
-        output=$(cargo run --release --features "$feat" 2>&1)
+        output=$(cargo run --release --features "$feat" -- "$ITERATIONS" 2>&1)
     fi
 
     # Extract key metrics

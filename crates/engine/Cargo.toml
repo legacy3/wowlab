@@ -10,10 +10,11 @@ crate-type = ["cdylib", "rlib"]
 default = []
 debug_logging = []  # Enable with --features debug_logging
 
-# Performance optimization flags - enable individually to benchmark
-quaternary_heap = []  # Use 4-ary heap instead of binary (2-ary) heap
+# Performance optimization flags
+quaternary_heap = []  # Use dary_heap::QuaternaryHeap (4-ary) instead of binary
 front_buffer = []     # Use front buffer for same-time events
-all_optimizations = ["quaternary_heap", "front_buffer"]
+large_capacity = []   # Preallocate 16384 events instead of 256
+meta_events = []      # Batch same-time events into meta events
 
 [dependencies]
 wasm-bindgen = "0.2"

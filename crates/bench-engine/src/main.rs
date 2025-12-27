@@ -1,6 +1,6 @@
 use engine::config::{
     PlayerConfig, ResourceConfig, ResourceType, SimConfig, SpecId, SpellDef, Stats, TargetConfig,
-    DamageFormula, ResourceCost,
+    DamageFormula, ResourceCost, SpellEffect, AuraDef, AuraEffect,
 };
 use engine::rotation::RotationAction;
 use engine::sim::{run_batch, SimState};
@@ -27,8 +27,23 @@ fn create_bm_hunter_config() -> SimConfig {
                 regen_per_second: 10.0,
                 initial: 100.0,
             },
+            // Ranged weapon (bow) - 3.0 second base speed
+            weapon_speed: 3.0,
+            weapon_damage: (500.0, 700.0),
         },
-        pet: None,
+        pet: Some(engine::config::PetConfig {
+            name: "Hati".to_string(),
+            stats: Stats {
+                agility: 5000.0,
+                strength: 1000.0,
+                crit_pct: 20.0,
+                haste_pct: 15.0,
+                ..Default::default()
+            },
+            spells: vec![],
+            attack_speed: 2.0,
+            attack_damage: (300.0, 400.0),
+        }),
         spells: vec![
             // Kill Command
             SpellDef {
@@ -52,7 +67,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 is_gcd: true,
                 is_harmful: true,
             },
-            // Barbed Shot
+            // Barbed Shot - applies a DoT
             SpellDef {
                 id: 217200,
                 name: "Barbed Shot".to_string(),
@@ -67,7 +82,9 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.3,
                     ..Default::default()
                 },
-                effects: vec![],
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 217200, duration: 8.0 }, // Barbed Shot bleed
+                ],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -93,7 +110,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 is_gcd: true,
                 is_harmful: true,
             },
-            // Bestial Wrath
+            // Bestial Wrath - applies buff
             SpellDef {
                 id: 19574,
                 name: "Bestial Wrath".to_string(),
@@ -103,17 +120,81 @@ fn create_bm_hunter_config() -> SimConfig {
                 cast_time: 0.0,
                 cost: ResourceCost::default(),
                 damage: DamageFormula::default(),
-                effects: vec![],
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 19574, duration: 15.0 },
+                ],
                 is_gcd: false,
                 is_harmful: false,
             },
+            // Serpent Sting - applies DoT
+            SpellDef {
+                id: 271788,
+                name: "Serpent Sting".to_string(),
+                cooldown: 0.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 10.0,
+                },
+                damage: DamageFormula {
+                    base_min: 100.0,
+                    base_max: 120.0,
+                    ap_coefficient: 0.1,
+                    ..Default::default()
+                },
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 271788, duration: 18.0 },
+                ],
+                is_gcd: true,
+                is_harmful: true,
+            },
         ],
-        auras: vec![],
+        auras: vec![
+            // Barbed Shot bleed - 8 sec duration, ticks every 2 sec (4 ticks)
+            AuraDef {
+                id: 217200,
+                name: "Barbed Shot".to_string(),
+                duration: 8.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::PeriodicDamage { amount: 200.0, coefficient: 0.15 },
+                ],
+                pandemic: false,
+                tick_interval: 2.0,
+            },
+            // Serpent Sting - 18 sec duration, ticks every 3 sec (6 ticks)
+            AuraDef {
+                id: 271788,
+                name: "Serpent Sting".to_string(),
+                duration: 18.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::PeriodicDamage { amount: 150.0, coefficient: 0.1 },
+                ],
+                pandemic: true,
+                tick_interval: 3.0,
+            },
+            // Bestial Wrath buff - damage increase
+            AuraDef {
+                id: 19574,
+                name: "Bestial Wrath".to_string(),
+                duration: 15.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::DamageDone { percent: 25.0, school: None },
+                ],
+                pandemic: false,
+                tick_interval: 0.0,
+            },
+        ],
         rotation: vec![
-            // Priority: Bestial Wrath (off-GCD) > Kill Command > Barbed Shot > Cobra Shot
+            // Priority: Bestial Wrath (off-GCD) > Kill Command > Barbed Shot > Serpent Sting > Cobra Shot
             RotationAction::Cast { spell_id: 19574 },  // Bestial Wrath (off-GCD)
             RotationAction::Cast { spell_id: 34026 },  // Kill Command
             RotationAction::Cast { spell_id: 217200 }, // Barbed Shot
+            RotationAction::Cast { spell_id: 271788 }, // Serpent Sting
             RotationAction::Cast { spell_id: 193455 }, // Cobra Shot (filler)
         ],
         duration: 300.0, // 5 minute fight (realistic boss fight)
@@ -126,6 +207,11 @@ fn create_bm_hunter_config() -> SimConfig {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let iterations: u32 = args.get(1)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1_000_000);
+
     println!("=== Engine Benchmark ===\n");
 
     let config = create_bm_hunter_config();
@@ -137,31 +223,34 @@ fn main() {
     let result = engine::sim::run_simulation(&mut state, &config, &mut rng);
     println!("Single {}s sim: {} casts, {:.0} DPS", config.duration, result.casts, result.dps);
     println!("Events processed: {}", state.events.events_processed);
-    println!("Final focus: {:.1}/{:.1}", state.player.resources.current, state.player.resources.max);
-    println!("Expected GCDs: ~{}", (config.duration / 1.25) as u32);
-    println!();
+
+    #[cfg(feature = "meta_events")]
+    {
+        let batches = state.events.batches_processed;
+        let events = state.events.events_processed;
+        let avg_batch = events as f32 / batches as f32;
+        println!("Batches: {} (avg {:.2} events/batch, max {})",
+            batches, avg_batch, state.events.max_batch_size);
+    }
 
     // Warmup
-    println!("Warming up...");
     let _ = run_batch(&mut state, &config, &mut rng, 1000, 0);
 
-    // Benchmark
-    let iterations = 100_000u32;
+    // Main benchmark
+    let warmup_iters = iterations.min(100_000);
     let start = Instant::now();
-    let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
+    let result = run_batch(&mut state, &config, &mut rng, warmup_iters, 0);
     let elapsed = start.elapsed();
-    let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
+    let sims_per_sec = warmup_iters as f64 / elapsed.as_secs_f64();
     println!(
         "{:>10} sims: {:>8.2?} ({:.2}M sims/sec, avg DPS: {:.0})",
-        iterations,
+        warmup_iters,
         elapsed,
         sims_per_sec / 1_000_000.0,
         result.mean_dps
     );
 
-    // 16M benchmark
-    println!("\n--- 16M iterations (Top Gear scale) ---");
-    let iterations = 16_000_000u32;
+    // Full benchmark
     let start = Instant::now();
     let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
     let elapsed = start.elapsed();

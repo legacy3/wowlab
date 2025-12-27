@@ -36,6 +36,14 @@ pub struct PlayerConfig {
     pub spec: SpecId,
     pub stats: Stats,
     pub resources: ResourceConfig,
+
+    /// Weapon swing speed (0 = no auto-attacks)
+    #[serde(default)]
+    pub weapon_speed: f32,
+
+    /// Weapon damage range
+    #[serde(default)]
+    pub weapon_damage: (f32, f32),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -53,6 +61,18 @@ pub struct PetConfig {
     pub name: String,
     pub stats: Stats,
     pub spells: Vec<SpellDef>,
+
+    /// Pet melee attack speed
+    #[serde(default = "default_pet_attack_speed")]
+    pub attack_speed: f32,
+
+    /// Pet melee damage range
+    #[serde(default)]
+    pub attack_damage: (f32, f32),
+}
+
+fn default_pet_attack_speed() -> f32 {
+    2.0
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

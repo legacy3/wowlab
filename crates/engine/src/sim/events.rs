@@ -1,11 +1,15 @@
 //! Event system with configurable optimizations via feature flags.
 //!
 //! Features:
-//! - `quaternary_heap`: Use 4-ary heap instead of binary (2-ary) for better cache locality
-//! - `front_buffer`: Use front buffer for same-time events to avoid heap ops
+//! - `quaternary_heap`: Use 4-ary heap instead of binary (2-ary) - slower in benchmarks
+//! - `front_buffer`: Use front buffer for same-time events - adds overhead, not worth it
+//! - `meta_events`: Process same-time events as a batch - semantic correctness, ~5% slower
+//!
+//! Default: dary_heap::BinaryHeap - fast and allows swapping to quaternary for testing
 
 use std::cmp::Ordering;
 
+// Default: dary_heap::BinaryHeap (allows swapping to quaternary later)
 #[cfg(feature = "quaternary_heap")]
 use dary_heap::QuaternaryHeap as Heap;
 
@@ -15,6 +19,10 @@ use dary_heap::BinaryHeap as Heap;
 /// Maximum events in the front buffer (immediate-next events).
 #[cfg(feature = "front_buffer")]
 const FRONT_BUFFER_SIZE: usize = 4;
+
+/// Maximum events in a meta event batch.
+#[cfg(feature = "meta_events")]
+const META_BATCH_SIZE: usize = 64;
 
 /// Event types in the simulation - compact enum.
 /// Ordered by frequency for branch prediction optimization.
@@ -89,10 +97,10 @@ impl Ord for TimedEvent {
     fn cmp(&self, other: &Self) -> Ordering {
         // Min-heap ordering: smaller time/seq comes first
         // Reverse comparison so heap pops minimum first
-        match other.time.partial_cmp(&self.time) {
-            Some(Ordering::Equal) => other.seq.cmp(&self.seq),
-            Some(ord) => ord,
-            None => Ordering::Equal,
+        // Use total_cmp for faster f32 comparison (no NaN handling branches)
+        match other.time.total_cmp(&self.time) {
+            Ordering::Equal => other.seq.cmp(&self.seq),
+            ord => ord,
         }
     }
 }
@@ -111,6 +119,16 @@ pub struct EventQueue {
     next_seq: u32,
     pub events_processed: u32,
     pub events_scheduled: u32,
+
+    /// Cached: does next event have same timestamp as last popped?
+    /// Avoids repeated peek() calls in meta_events batching
+    next_time_cache: f32,
+
+    /// Track batch statistics (for meta_events analysis)
+    #[cfg(feature = "meta_events")]
+    pub batches_processed: u32,
+    #[cfg(feature = "meta_events")]
+    pub max_batch_size: u32,
 }
 
 impl EventQueue {
@@ -128,6 +146,13 @@ impl EventQueue {
             next_seq: 0,
             events_processed: 0,
             events_scheduled: 0,
+
+            next_time_cache: f32::MAX,
+
+            #[cfg(feature = "meta_events")]
+            batches_processed: 0,
+            #[cfg(feature = "meta_events")]
+            max_batch_size: 0,
         }
     }
 
@@ -145,6 +170,61 @@ impl EventQueue {
         self.next_seq = 0;
         self.events_processed = 0;
         self.events_scheduled = 0;
+        self.next_time_cache = f32::MAX;
+
+        #[cfg(feature = "meta_events")]
+        {
+            self.batches_processed = 0;
+            self.max_batch_size = 0;
+        }
+    }
+
+    /// Peek and cache the next event's timestamp (call once per batch)
+    #[inline(always)]
+    pub fn cache_next_time(&mut self) {
+        self.next_time_cache = if let Some(e) = self.heap.peek() {
+            e.time
+        } else {
+            f32::MAX
+        };
+    }
+
+    /// Check if next event has same timestamp (uses cached peek result)
+    /// Must call cache_next_time() first to populate the cache!
+    #[inline(always)]
+    pub fn next_has_same_time(&self, current_time: f32) -> bool {
+        self.next_time_cache == current_time
+    }
+
+    /// Process all events at the same timestamp with a callback.
+    /// Returns the timestamp processed, or None if empty.
+    #[cfg(feature = "meta_events")]
+    #[inline]
+    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<f32>
+    where
+        F: FnMut(SimEvent),
+    {
+        let first = self.heap.pop()?;
+        let time = first.time;
+
+        f(first.event);
+        self.events_processed += 1;
+
+        // Process all events at same time
+        loop {
+            if let Some(next) = self.heap.peek() {
+                if next.time == time {
+                    f(self.heap.pop().unwrap().event);
+                    self.events_processed += 1;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        Some(time)
     }
 
     #[inline(always)]
@@ -200,6 +280,16 @@ impl EventQueue {
                 self.front_count -= 1;
                 let event = self.front_buffer[self.front_count as usize].take();
                 self.events_processed += 1;
+                // Cache next time for front buffer events
+                if self.front_count > 0 {
+                    if let Some(ref next) = self.front_buffer[(self.front_count - 1) as usize] {
+                        self.next_time_cache = next.time;
+                    }
+                } else if let Some(next) = self.heap.peek() {
+                    self.next_time_cache = next.time;
+                } else {
+                    self.next_time_cache = f32::MAX;
+                }
                 return event;
             }
         }
@@ -223,11 +313,18 @@ impl EventQueue {
                         break;
                     }
                 }
+                // Update cache after front buffer fill
+                if self.front_count > 0 {
+                    if let Some(ref next) = self.front_buffer[(self.front_count - 1) as usize] {
+                        self.next_time_cache = next.time;
+                    }
+                }
             }
 
             return Some(event);
         }
 
+        self.next_time_cache = f32::MAX;
         None
     }
 
