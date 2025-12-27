@@ -6,5 +6,12 @@ build/
 profiles/
 *.cpuprofile
 
+# WASM build artifacts (rebuilt from crates/engine)
+wasm/*.wasm
+wasm/*.js
+wasm/package.json
+wasm/.gitignore
+!wasm/*.d.ts
+
 # Credentials (kept out of git but bundled during npm publish)
 src/config.ts

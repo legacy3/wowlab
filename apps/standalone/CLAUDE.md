@@ -17,6 +17,14 @@ pnpm dev profile -n 100 -d 60
 - `pnpm start` = WRONG, don't use
 - `pnpm build` before running = WRONG, unnecessary
 
+## WASM Engine
+
+Rust simulation core lives in `crates/engine/`. Build to `wasm/`:
+
+```bash
+cd crates/engine && wasm-pack build --target web --out-dir ../../apps/standalone/wasm
+```
+
 ## CPU Profiling
 
 **Exception:** `cpu-profile` requires a build because it spawns a separate node process with `--cpu-prof`:
@@ -26,11 +34,13 @@ pnpm build && node --env-file=.env dist/index.js cpu-profile -n 500 beast-master
 ```
 
 Options:
+
 - `-n, --iterations` - number of simulations (default 500)
 - `-d, --duration` - simulation duration in seconds (default 60)
 - `-t, --top` - number of top functions to show (default 40)
 
 Output shows:
+
 - Category breakdown (effect, node, app, immutable, deps)
 - Top functions by CPU sample count
 - Profile file path (can open in Chrome DevTools)

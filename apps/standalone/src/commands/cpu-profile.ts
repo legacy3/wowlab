@@ -160,57 +160,62 @@ export const cpuProfileCommand = Command.make(
       }
       fs.mkdirSync(profileDir, { recursive: true });
 
-      yield* Effect.log(`Running ${iterations} iterations with CPU profiler...`);
+      yield* Effect.log(
+        `Running ${iterations} iterations with CPU profiler...`,
+      );
       yield* Effect.log(`Rotation: ${rotation}, Duration: ${duration}s`);
       yield* Effect.log("");
 
       // Spawn node with CPU profiler
-      const result = yield* Effect.tryPromise(() =>
-        new Promise<{ code: number; stdout: string; stderr: string }>(
-          (resolve, reject) => {
-            const args = [
-              "--cpu-prof",
-              `--cpu-prof-dir=${profileDir}`,
-              distPath,
-              "run",
-              `-n`,
-              String(iterations),
-              `-w`,
-              "0",
-              `-d`,
-              String(duration),
-              rotation,
-            ];
+      const result = yield* Effect.tryPromise(
+        () =>
+          new Promise<{ code: number; stdout: string; stderr: string }>(
+            (resolve, reject) => {
+              const args = [
+                "--cpu-prof",
+                `--cpu-prof-dir=${profileDir}`,
+                distPath,
+                "run",
+                `-n`,
+                String(iterations),
+                `-w`,
+                "0",
+                `-d`,
+                String(duration),
+                rotation,
+              ];
 
-            const child = spawn("node", args, {
-              env: process.env,
-              stdio: ["inherit", "pipe", "pipe"],
-            });
+              const child = spawn("node", args, {
+                env: process.env,
+                stdio: ["inherit", "pipe", "pipe"],
+              });
 
-            let stdout = "";
-            let stderr = "";
+              let stdout = "";
+              let stderr = "";
 
-            child.stdout?.on("data", (data) => {
-              stdout += data.toString();
-              process.stdout.write(data);
-            });
+              child.stdout?.on("data", (data) => {
+                stdout += data.toString();
+                process.stdout.write(data);
+              });
 
-            child.stderr?.on("data", (data) => {
-              stderr += data.toString();
-              process.stderr.write(data);
-            });
+              child.stderr?.on("data", (data) => {
+                stderr += data.toString();
+                process.stderr.write(data);
+              });
 
-            child.on("close", (code) => {
-              resolve({ code: code ?? 0, stdout, stderr });
-            });
+              child.on("close", (code) => {
+                resolve({ code: code ?? 0, stdout, stderr });
+              });
 
-            child.on("error", reject);
-          },
-        ),
+              child.on("error", reject);
+            },
+          ),
       );
 
       if (result.code !== 0) {
-        yield* Effect.fail(new Error(`Process exited with code ${result.code}`));
+        yield* Effect.fail(
+          new Error(`Process exited with code ${result.code}`),
+        );
       }
 
       // Find the profile file
@@ -228,6 +233,8 @@ export const cpuProfileCommand = Command.make(
       yield* parseProfile(profilePath, top);
 
       yield* Effect.log(`Profile file: ${profilePath}`);
-      yield* Effect.log("Open in Chrome DevTools: chrome://inspect -> Open dedicated DevTools for Node");
+      yield* Effect.log(
+        "Open in Chrome DevTools: chrome://inspect -> Open dedicated DevTools for Node",
+      );
     }),
 );
