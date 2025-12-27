@@ -10,11 +10,15 @@
 
 use std::cmp::Ordering;
 
-// Bucket queue: O(1) insert/pop for simulation workloads
+// Timing wheel (SimC-style): O(1) amortized insert/pop
+// - wheel_shift=5 means each slot covers 32ms (1000ms / 32 = 31.25ms)
+// - 32K slots = ~1024 seconds of simulation time
 #[cfg(feature = "bucket_queue")]
-const BUCKET_RESOLUTION: f32 = 0.01; // 10ms buckets
+const WHEEL_SHIFT: u32 = 5; // divide time_ms by 32
 #[cfg(feature = "bucket_queue")]
-const MAX_BUCKETS: usize = 32768; // ~327 seconds at 10ms resolution
+const WHEEL_SIZE: usize = 32768; // 2^15 slots
+#[cfg(feature = "bucket_queue")]
+const WHEEL_MASK: usize = WHEEL_SIZE - 1;
 
 // Heap-based queue (default fallback)
 #[cfg(all(not(feature = "bucket_queue"), feature = "quaternary_heap"))]
@@ -113,24 +117,45 @@ impl Ord for TimedEvent {
 }
 
 // ============================================================================
-// BUCKET QUEUE IMPLEMENTATION - O(1) insert/pop for simulation workloads
+// TIMING WHEEL IMPLEMENTATION (SimC-style) - O(1) amortized insert/pop
+// Uses index-based linked list with arena allocation (no Box/malloc per event)
 // ============================================================================
+
+/// Index into the node arena (u32::MAX = null)
+#[cfg(feature = "bucket_queue")]
+type NodeIdx = u32;
+#[cfg(feature = "bucket_queue")]
+const NULL_IDX: NodeIdx = u32::MAX;
+
+/// Linked list node stored in arena
+#[cfg(feature = "bucket_queue")]
+#[derive(Clone, Copy)]
+struct EventNode {
+    event: TimedEvent,
+    next: NodeIdx,
+}
+
 #[cfg(feature = "bucket_queue")]
 pub struct EventQueue {
-    /// Buckets indexed by (time / BUCKET_RESOLUTION) as usize
-    /// Each bucket is a Vec of events at that time slice
-    buckets: Vec<Vec<TimedEvent>>,
+    /// Node arena - pre-allocated storage for all nodes
+    arena: Vec<EventNode>,
 
-    /// Current bucket index (monotonically increasing)
-    current_bucket: usize,
+    /// Free list head (recycled nodes)
+    free_head: NodeIdx,
 
-    /// Sequence number for FIFO ordering within same timestamp
+    /// Timing wheel: each slot is (head, tail) linked list indices
+    wheel_head: Vec<NodeIdx>,
+    wheel_tail: Vec<NodeIdx>,
+
+    /// Current wheel position
+    current_slot: usize,
+
+    /// Sequence number for FIFO ordering
     next_seq: u32,
 
     pub events_processed: u32,
     pub events_scheduled: u32,
 
-    /// For API compatibility
     next_time_cache: f32,
 
     #[cfg(feature = "meta_events")]
@@ -141,10 +166,14 @@ pub struct EventQueue {
 
 #[cfg(feature = "bucket_queue")]
 impl EventQueue {
-    pub fn with_capacity(_capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
+        let arena_size = capacity.max(16384);
         Self {
-            buckets: vec![Vec::new(); MAX_BUCKETS],
-            current_bucket: 0,
+            arena: Vec::with_capacity(arena_size),
+            free_head: NULL_IDX,
+            wheel_head: vec![NULL_IDX; WHEEL_SIZE],
+            wheel_tail: vec![NULL_IDX; WHEEL_SIZE],
+            current_slot: 0,
             next_seq: 0,
             events_processed: 0,
             events_scheduled: 0,
@@ -158,10 +187,15 @@ impl EventQueue {
 
     #[inline]
     pub fn clear(&mut self) {
-        for bucket in &mut self.buckets {
-            bucket.clear();
+        // Reset wheel
+        self.wheel_head.fill(NULL_IDX);
+        self.wheel_tail.fill(NULL_IDX);
+        // Put all nodes on free list
+        self.free_head = if self.arena.is_empty() { NULL_IDX } else { 0 };
+        for i in 0..self.arena.len() {
+            self.arena[i].next = if i + 1 < self.arena.len() { (i + 1) as NodeIdx } else { NULL_IDX };
         }
-        self.current_bucket = 0;
+        self.current_slot = 0;
         self.next_seq = 0;
         self.events_processed = 0;
         self.events_scheduled = 0;
@@ -174,18 +208,80 @@ impl EventQueue {
     }
 
     #[inline(always)]
-    fn time_to_bucket(time: f32) -> usize {
-        ((time / BUCKET_RESOLUTION) as usize).min(MAX_BUCKETS - 1)
+    fn alloc_node(&mut self, event: TimedEvent) -> NodeIdx {
+        if self.free_head != NULL_IDX {
+            let idx = self.free_head;
+            self.free_head = self.arena[idx as usize].next;
+            self.arena[idx as usize] = EventNode { event, next: NULL_IDX };
+            idx
+        } else {
+            let idx = self.arena.len() as NodeIdx;
+            self.arena.push(EventNode { event, next: NULL_IDX });
+            idx
+        }
     }
 
+    #[inline(always)]
+    fn free_node(&mut self, idx: NodeIdx) {
+        self.arena[idx as usize].next = self.free_head;
+        self.free_head = idx;
+    }
+
+    #[inline(always)]
+    fn time_to_slot(time: f32) -> usize {
+        let time_ms = (time * 1000.0) as u32;
+        ((time_ms >> WHEEL_SHIFT) as usize) & WHEEL_MASK
+    }
+
+    /// Insert sorted by time - O(1) for common case (append to tail)
     #[inline(always)]
     pub fn push(&mut self, time: f32, event: SimEvent) {
         self.events_scheduled += 1;
         let seq = self.next_seq;
         self.next_seq += 1;
 
-        let bucket_idx = Self::time_to_bucket(time);
-        self.buckets[bucket_idx].push(TimedEvent::new(time, seq, event));
+        let slot_idx = Self::time_to_slot(time);
+        let new_event = TimedEvent::new(time, seq, event);
+        let new_idx = self.alloc_node(new_event);
+
+        let tail_idx = self.wheel_tail[slot_idx];
+
+        // Fast path: empty list or new event goes at end
+        if tail_idx == NULL_IDX {
+            // Empty list
+            self.wheel_head[slot_idx] = new_idx;
+            self.wheel_tail[slot_idx] = new_idx;
+            return;
+        }
+
+        let tail = &self.arena[tail_idx as usize];
+        if time > tail.event.time || (time == tail.event.time && seq > tail.event.seq) {
+            // Append at tail (most common case - scheduling future events)
+            self.arena[tail_idx as usize].next = new_idx;
+            self.wheel_tail[slot_idx] = new_idx;
+            return;
+        }
+
+        // Slow path: need to find insertion point
+        let mut prev_idx = NULL_IDX;
+        let mut curr_idx = self.wheel_head[slot_idx];
+
+        while curr_idx != NULL_IDX {
+            let curr = &self.arena[curr_idx as usize];
+            if curr.event.time > time || (curr.event.time == time && curr.event.seq > seq) {
+                break;
+            }
+            prev_idx = curr_idx;
+            curr_idx = curr.next;
+        }
+
+        // Insert new node
+        self.arena[new_idx as usize].next = curr_idx;
+        if prev_idx == NULL_IDX {
+            self.wheel_head[slot_idx] = new_idx;
+        } else {
+            self.arena[prev_idx as usize].next = new_idx;
+        }
     }
 
     #[inline(always)]
@@ -193,38 +289,43 @@ impl EventQueue {
         self.push(time, event);
     }
 
+    /// Pop from head (O(1))
     #[inline(always)]
     pub fn pop(&mut self) -> Option<TimedEvent> {
-        // Find next non-empty bucket
-        while self.current_bucket < MAX_BUCKETS {
-            if let Some(event) = self.buckets[self.current_bucket].pop() {
+        for _ in 0..WHEEL_SIZE {
+            let head_idx = self.wheel_head[self.current_slot];
+            if head_idx != NULL_IDX {
+                let node = self.arena[head_idx as usize];
+                self.wheel_head[self.current_slot] = node.next;
+                // Update tail if list is now empty
+                if node.next == NULL_IDX {
+                    self.wheel_tail[self.current_slot] = NULL_IDX;
+                }
+                self.free_node(head_idx);
                 self.events_processed += 1;
-                return Some(event);
+                return Some(node.event);
             }
-            self.current_bucket += 1;
+            self.current_slot = (self.current_slot + 1) & WHEEL_MASK;
         }
         None
     }
 
     #[inline]
     pub fn peek(&self) -> Option<&TimedEvent> {
-        let mut bucket = self.current_bucket;
-        while bucket < MAX_BUCKETS {
-            if let Some(event) = self.buckets[bucket].last() {
-                return Some(event);
+        let mut slot_idx = self.current_slot;
+        for _ in 0..WHEEL_SIZE {
+            let head_idx = self.wheel_head[slot_idx];
+            if head_idx != NULL_IDX {
+                return Some(&self.arena[head_idx as usize].event);
             }
-            bucket += 1;
+            slot_idx = (slot_idx + 1) & WHEEL_MASK;
         }
         None
     }
 
     #[inline(always)]
     pub fn cache_next_time(&mut self) {
-        self.next_time_cache = if let Some(e) = self.peek() {
-            e.time
-        } else {
-            f32::MAX
-        };
+        self.next_time_cache = if let Some(e) = self.peek() { e.time } else { f32::MAX };
     }
 
     #[inline(always)]
@@ -241,7 +342,6 @@ impl EventQueue {
         let first = self.pop()?;
         let time = first.time;
         f(first.event);
-
         while let Some(next) = self.peek() {
             if next.time == time {
                 f(self.pop().unwrap().event);
@@ -259,7 +359,7 @@ impl EventQueue {
 
     #[inline]
     pub fn len(&self) -> usize {
-        self.buckets.iter().map(|b| b.len()).sum()
+        self.wheel_head.iter().filter(|&&idx| idx != NULL_IDX).count()
     }
 }
 
