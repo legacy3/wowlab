@@ -1,0 +1,8 @@
+[package]
+name = "bench-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+engine = { path = "../engine" }
+serde_json = "1.0"

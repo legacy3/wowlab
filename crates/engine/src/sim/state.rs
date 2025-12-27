@@ -51,6 +51,9 @@ pub struct UnitState {
 
     /// Spell being cast
     pub casting_spell: Option<u32>,
+
+    /// Last time resources were updated (for lazy regen)
+    pub last_resource_update: f32,
 }
 
 impl UnitState {
@@ -64,6 +67,7 @@ impl UnitState {
             gcd_ready: 0.0,
             cast_end: 0.0,
             casting_spell: None,
+            last_resource_update: 0.0,
         }
     }
 
@@ -77,6 +81,7 @@ impl UnitState {
         self.gcd_ready = 0.0;
         self.cast_end = 0.0;
         self.casting_spell = None;
+        self.last_resource_update = 0.0;
     }
 }
 
