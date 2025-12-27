@@ -72,6 +72,8 @@ impl Ord for TimedEvent {
 pub struct EventQueue {
     events: Vec<TimedEvent>,
     next_seq: u32,
+    /// Track total events processed (for debugging)
+    pub events_processed: u32,
 }
 
 impl EventQueue {
@@ -79,12 +81,14 @@ impl EventQueue {
         Self {
             events: Vec::with_capacity(capacity),
             next_seq: 0,
+            events_processed: 0,
         }
     }
 
     pub fn clear(&mut self) {
         self.events.clear();
         self.next_seq = 0;
+        self.events_processed = 0;
     }
 
     pub fn push(&mut self, time: f32, event: SimEvent) {
@@ -113,6 +117,7 @@ impl EventQueue {
             self.sift_down(0);
         }
 
+        self.events_processed += 1;
         result
     }
 

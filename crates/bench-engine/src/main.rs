@@ -130,6 +130,15 @@ fn main() {
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);
 
+    // Single sim to count events
+    rng.reseed(0);
+    let result = engine::sim::run_simulation(&mut state, &config, &mut rng);
+    println!("Single {}s sim: {} casts, {:.0} DPS", config.duration, result.casts, result.dps);
+    println!("Events processed: {}", state.events.events_processed);
+    println!("Final focus: {:.1}/{:.1}", state.player.resources.current, state.player.resources.max);
+    println!("Expected GCDs: ~{}", (config.duration / 1.25) as u32);
+    println!();
+
     // Warmup
     println!("Warming up...");
     let _ = run_batch(&mut state, &config, &mut rng, 1000, 0);

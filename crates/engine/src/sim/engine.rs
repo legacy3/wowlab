@@ -9,6 +9,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
 
     // Schedule initial GCD ready (start of combat)
     state.events.push(0.0, SimEvent::GcdReady);
+    state.player.gcd_event_pending = true;
 
     // Main simulation loop - pure event driven
     while let Some(timed_event) = state.events.pop() {
@@ -20,6 +21,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
 
         match timed_event.event {
             SimEvent::GcdReady => {
+                state.player.gcd_event_pending = false;
                 handle_gcd_ready(state, config, rng);
             }
             SimEvent::SpellDamage { spell_id, amount } => {
@@ -32,7 +34,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
                 handle_aura_expire(state, aura_id);
             }
             SimEvent::CooldownReady { spell_id } => {
-                handle_cooldown_ready(state, config, rng, spell_id);
+                handle_cooldown_ready(state, config, spell_id);
             }
             _ => {}
         }
@@ -81,25 +83,36 @@ fn handle_gcd_ready(state: &mut SimState, config: &SimConfig, rng: &mut FastRng)
     }
 }
 
-fn handle_cooldown_ready(state: &mut SimState, config: &SimConfig, rng: &mut FastRng, _spell_id: u32) {
-    // A cooldown finished - if we're not on GCD, try to cast
-    if state.player.gcd_ready <= state.time {
-        // Update resources
-        let elapsed = state.time - state.player.last_resource_update;
-        if elapsed > 0.0 {
-            state.player.resources.regen(elapsed);
-            state.player.last_resource_update = state.time;
-        }
+fn handle_cooldown_ready(state: &mut SimState, config: &SimConfig, spell_id: u32) {
+    // A cooldown finished - if we're not on GCD and no event pending, schedule check
+    if state.player.gcd_ready <= state.time && !state.player.gcd_event_pending {
+        // Schedule immediate GCD check
+        state.events.push(state.time, SimEvent::GcdReady);
+        state.player.gcd_event_pending = true;
+    }
 
-        if let Some(spell_idx) = evaluate_rotation(state, config) {
-            cast_spell(state, config, spell_idx, rng);
+    // Update charge if this is a charge-based spell
+    for (idx, spell) in config.spells.iter().enumerate() {
+        if spell.id == spell_id && spell.charges > 0 {
+            let spell_state = &mut state.player.spell_states[idx];
+            if spell_state.charges < spell.charges {
+                spell_state.charges += 1;
+                // Schedule next charge if not at max
+                if spell_state.charges < spell.charges {
+                    spell_state.cooldown_ready = state.time + spell.cooldown;
+                    state.events.push(
+                        spell_state.cooldown_ready,
+                        SimEvent::CooldownReady { spell_id },
+                    );
+                }
+            }
+            break;
         }
     }
 }
 
 fn evaluate_rotation(state: &SimState, config: &SimConfig) -> Option<usize> {
     // Simple priority: cast first spell that's ready
-    // TODO: implement proper condition evaluation from rotation config
     for (idx, spell) in config.spells.iter().enumerate() {
         let spell_state = &state.player.spell_states[idx];
 
@@ -118,6 +131,10 @@ fn evaluate_rotation(state: &SimState, config: &SimConfig) -> Option<usize> {
 
 /// Schedule the next opportunity to cast when we can't cast now
 fn schedule_next_opportunity(state: &mut SimState, config: &SimConfig) {
+    if state.player.gcd_event_pending {
+        return; // Already have an event scheduled
+    }
+
     let mut next_time = f32::MAX;
 
     for (idx, spell) in config.spells.iter().enumerate() {
@@ -125,7 +142,7 @@ fn schedule_next_opportunity(state: &mut SimState, config: &SimConfig) {
 
         // When will this spell be castable?
         let cd_ready_time = if spell_state.charges > 0 {
-            state.time // Already have charges
+            state.time
         } else {
             spell_state.cooldown_ready
         };
@@ -137,7 +154,7 @@ fn schedule_next_opportunity(state: &mut SimState, config: &SimConfig) {
             let needed = spell.cost.amount - state.player.resources.current;
             state.time + needed / state.player.resources.regen_per_second
         } else {
-            f32::MAX // Never if no regen
+            f32::MAX
         };
 
         // The spell becomes castable at the later of cd/resource ready
@@ -154,6 +171,7 @@ fn schedule_next_opportunity(state: &mut SimState, config: &SimConfig) {
     // Schedule next check if within sim duration
     if next_time < state.duration && next_time > state.time {
         state.events.push(next_time, SimEvent::GcdReady);
+        state.player.gcd_event_pending = true;
     }
 }
 
@@ -167,28 +185,21 @@ fn cast_spell(state: &mut SimState, config: &SimConfig, spell_idx: usize, rng: &
     // Handle cooldown/charges
     if spell.charges > 0 {
         // Charge-based spell
-        if spell_state.charges > 0 {
-            spell_state.charges -= 1;
+        spell_state.charges -= 1;
 
-            // Start recharge if we just went below max
-            if spell_state.charges == spell.charges - 1 {
-                spell_state.cooldown_ready = state.time + spell.cooldown;
-                // Schedule cooldown ready event for charge recovery
-                state.events.push(
-                    spell_state.cooldown_ready,
-                    SimEvent::CooldownReady { spell_id: spell.id },
-                );
-            }
-        }
-    } else {
-        // Regular cooldown spell
-        spell_state.cooldown_ready = state.time + spell.cooldown;
-        if spell.cooldown > 0.0 {
+        // Start recharge if we just went below max
+        if spell_state.charges == spell.charges - 1 {
+            spell_state.cooldown_ready = state.time + spell.cooldown;
             state.events.push(
                 spell_state.cooldown_ready,
                 SimEvent::CooldownReady { spell_id: spell.id },
             );
         }
+    } else if spell.cooldown > 0.0 {
+        // Regular cooldown spell
+        spell_state.cooldown_ready = state.time + spell.cooldown;
+        // No need to schedule CooldownReady for non-charge spells
+        // The next GcdReady will check if it's available
     }
 
     // Apply GCD
@@ -200,8 +211,11 @@ fn cast_spell(state: &mut SimState, config: &SimConfig, spell_idx: usize, rng: &
 
     if gcd > 0.0 {
         state.player.gcd_ready = state.time + gcd;
-        // Schedule next GCD ready
-        state.events.push(state.player.gcd_ready, SimEvent::GcdReady);
+        // Schedule next GCD ready if not already pending
+        if !state.player.gcd_event_pending {
+            state.events.push(state.player.gcd_ready, SimEvent::GcdReady);
+            state.player.gcd_event_pending = true;
+        }
     }
 
     // Calculate damage
@@ -220,15 +234,9 @@ fn cast_spell(state: &mut SimState, config: &SimConfig, spell_idx: usize, rng: &
     // Apply versatility
     let damage = damage * (1.0 + state.player.stats.versatility_pct / 100.0);
 
-    // Schedule damage event (instant for now)
-    state.events.push(
-        state.time,
-        SimEvent::SpellDamage {
-            spell_id: spell.id,
-            amount: damage,
-        },
-    );
-
+    // Record damage immediately (no need to schedule for instant spells)
+    state.results.record_damage(spell.id, damage as f64);
+    state.target.health -= damage;
     state.results.record_cast();
 }
 
@@ -246,7 +254,6 @@ fn handle_aura_apply(state: &mut SimState, config: &SimConfig, aura_id: u32, _st
             state.time,
         );
 
-        // Schedule expiration
         state.events.push(
             state.time + aura_def.duration,
             SimEvent::AuraExpire { aura_id },

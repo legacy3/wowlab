@@ -46,6 +46,9 @@ pub struct UnitState {
     /// GCD end time
     pub gcd_ready: f32,
 
+    /// Whether a GcdReady event is already scheduled
+    pub gcd_event_pending: bool,
+
     /// Current cast end time (0 if not casting)
     pub cast_end: f32,
 
@@ -65,6 +68,7 @@ impl UnitState {
             spell_states: vec![SpellState::default(); spell_count],
             auras: AuraTracker::new(),
             gcd_ready: 0.0,
+            gcd_event_pending: false,
             cast_end: 0.0,
             casting_spell: None,
             last_resource_update: 0.0,
@@ -79,6 +83,7 @@ impl UnitState {
         }
         self.auras.clear();
         self.gcd_ready = 0.0;
+        self.gcd_event_pending = false;
         self.cast_end = 0.0;
         self.casting_spell = None;
         self.last_resource_update = 0.0;
