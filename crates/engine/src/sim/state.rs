@@ -1,47 +1,46 @@
+//! Simulation state with cache-friendly layouts.
+//!
+//! Key optimizations:
+//! - Hot fields grouped together for cache locality
+//! - Tight struct packing with explicit repr(C)
+//! - Minimal padding between fields
+//! - Pre-allocated vectors for zero-alloc hot loop
+
 use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
 
 use super::EventQueue;
 
-/// Mutable simulation state
+/// Main simulation state - hot fields first for cache locality.
 pub struct SimState {
-    /// Current simulation time
+    /// Current simulation time (hot - accessed every event)
     pub time: f32,
 
-    /// Player state
-    pub player: UnitState,
-
-    /// Pet state (if any)
-    pub pet: Option<UnitState>,
-
-    /// Target state
-    pub target: TargetState,
-
-    /// Event queue
-    pub events: EventQueue,
-
-    /// Simulation duration
+    /// Simulation duration (hot - checked every event)
     pub duration: f32,
 
-    /// Results accumulator
+    /// Player state (hot - accessed most events)
+    pub player: UnitState,
+
+    /// Event queue (hot - accessed every event)
+    pub events: EventQueue,
+
+    /// Results accumulator (hot - written every cast)
     pub results: SimResultsAccum,
+
+    /// Target state (warm - accessed on damage)
+    pub target: TargetState,
+
+    /// Pet state (cold - rarely accessed)
+    pub pet: Option<UnitState>,
 }
 
-/// Runtime state for a unit (player or pet)
+/// Runtime state for a unit - cache-friendly layout.
+/// Hot fields (accessed every GCD) are grouped at the start.
+#[repr(C)]
 pub struct UnitState {
-    /// Current stats (base + modifiers)
-    pub stats: Stats,
-
-    /// Base stats (without modifiers)
-    pub base_stats: Stats,
-
+    // === Hot fields (every GCD check) ===
     /// Current resources
     pub resources: Resources,
-
-    /// Spell cooldown/charge states (indexed by spell position)
-    pub spell_states: Vec<SpellState>,
-
-    /// Active auras
-    pub auras: AuraTracker,
 
     /// GCD end time
     pub gcd_ready: f32,
@@ -49,29 +48,46 @@ pub struct UnitState {
     /// Whether a GcdReady event is already scheduled
     pub gcd_event_pending: bool,
 
+    /// Last time resources were updated (for lazy regen)
+    pub last_resource_update: f32,
+
+    // === Warm fields (spell casting) ===
+    /// Current stats (base + modifiers)
+    pub stats: Stats,
+
+    /// Spell cooldown/charge states (indexed by spell position)
+    pub spell_states: Vec<SpellState>,
+
+    // === Cold fields (rarely accessed) ===
+    /// Base stats (without modifiers) - only used on reset
+    pub base_stats: Stats,
+
+    /// Active auras
+    pub auras: AuraTracker,
+
     /// Current cast end time (0 if not casting)
     pub cast_end: f32,
 
     /// Spell being cast
     pub casting_spell: Option<u32>,
-
-    /// Last time resources were updated (for lazy regen)
-    pub last_resource_update: f32,
 }
 
 impl UnitState {
     pub fn new(stats: Stats, resources: ResourceConfig, spell_count: usize) -> Self {
         Self {
-            stats,
-            base_stats: stats,
+            // Hot fields
             resources: Resources::new(resources),
-            spell_states: vec![SpellState::default(); spell_count],
-            auras: AuraTracker::new(),
             gcd_ready: 0.0,
             gcd_event_pending: false,
+            last_resource_update: 0.0,
+            // Warm fields
+            stats,
+            spell_states: vec![SpellState::default(); spell_count],
+            // Cold fields
+            base_stats: stats,
+            auras: AuraTracker::new(),
             cast_end: 0.0,
             casting_spell: None,
-            last_resource_update: 0.0,
         }
     }
 
@@ -91,8 +107,9 @@ impl UnitState {
     }
 }
 
-/// Runtime spell state
+/// Runtime spell state - compact 8-byte struct.
 #[derive(Debug, Clone, Copy, Default)]
+#[repr(C)]
 pub struct SpellState {
     /// Time when cooldown is ready
     pub cooldown_ready: f32,
@@ -102,17 +119,22 @@ pub struct SpellState {
 
     /// Max charges (copied from SpellDef)
     pub max_charges: u8,
+
+    /// Padding for alignment
+    _pad: [u8; 2],
 }
 
 impl SpellState {
+    #[inline]
     pub fn reset(&mut self) {
         self.cooldown_ready = 0.0;
         self.charges = self.max_charges;
     }
 }
 
-/// Resource tracking
+/// Resource tracking - compact 16-byte struct.
 #[derive(Debug, Clone, Copy)]
+#[repr(C)]
 pub struct Resources {
     pub current: f32,
     pub max: f32,
@@ -121,6 +143,7 @@ pub struct Resources {
 }
 
 impl Resources {
+    #[inline]
     pub fn new(config: ResourceConfig) -> Self {
         Self {
             current: config.initial,
@@ -130,11 +153,12 @@ impl Resources {
         }
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.current = self.max;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn spend(&mut self, amount: f32) -> bool {
         if self.current >= amount {
             self.current -= amount;
@@ -144,20 +168,20 @@ impl Resources {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn gain(&mut self, amount: f32) {
         self.current = (self.current + amount).min(self.max);
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn regen(&mut self, elapsed: f32) {
         self.gain(self.regen_per_second * elapsed);
     }
 }
 
-/// Active aura tracking
+/// Active aura tracking with compact storage.
 pub struct AuraTracker {
-    /// Active auras: (aura_id, instance)
+    /// Active auras: (aura_id, instance) - preallocated
     active: Vec<(u32, AuraInstance)>,
 }
 
@@ -168,10 +192,12 @@ impl AuraTracker {
         }
     }
 
+    #[inline]
     pub fn clear(&mut self) {
         self.active.clear();
     }
 
+    #[inline]
     pub fn apply(&mut self, aura_id: u32, duration: f32, max_stacks: u8, current_time: f32) {
         if let Some((_, instance)) = self.active.iter_mut().find(|(id, _)| *id == aura_id) {
             // Refresh existing aura
@@ -181,22 +207,22 @@ impl AuraTracker {
             // Apply new aura
             self.active.push((
                 aura_id,
-                AuraInstance {
-                    expires: current_time + duration,
-                    stacks: 1,
-                },
+                AuraInstance::new(current_time + duration, 1),
             ));
         }
     }
 
+    #[inline]
     pub fn remove(&mut self, aura_id: u32) {
         self.active.retain(|(id, _)| *id != aura_id);
     }
 
+    #[inline]
     pub fn has(&self, aura_id: u32) -> bool {
         self.active.iter().any(|(id, _)| *id == aura_id)
     }
 
+    #[inline]
     pub fn stacks(&self, aura_id: u32) -> u8 {
         self.active
             .iter()
@@ -205,6 +231,7 @@ impl AuraTracker {
             .unwrap_or(0)
     }
 
+    #[inline]
     pub fn remaining(&self, aura_id: u32, current_time: f32) -> f32 {
         self.active
             .iter()
@@ -218,13 +245,33 @@ impl AuraTracker {
     }
 }
 
+/// Aura instance - compact 8-byte struct.
 #[derive(Debug, Clone, Copy)]
+#[repr(C)]
 pub struct AuraInstance {
     pub expires: f32,
     pub stacks: u8,
+    _pad: [u8; 3],
 }
 
-/// Target state
+impl AuraInstance {
+    #[inline]
+    pub fn new(expires: f32, stacks: u8) -> Self {
+        Self {
+            expires,
+            stacks,
+            _pad: [0; 3],
+        }
+    }
+}
+
+impl Default for AuraInstance {
+    fn default() -> Self {
+        Self::new(0.0, 0)
+    }
+}
+
+/// Target state - compact layout.
 pub struct TargetState {
     pub health: f32,
     pub max_health: f32,
@@ -240,23 +287,26 @@ impl TargetState {
         }
     }
 
+    #[inline]
     pub fn health_pct(&self) -> f32 {
         (self.health / self.max_health) * 100.0
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.health = self.max_health;
         self.auras.clear();
     }
 }
 
-/// Results accumulator for current simulation (index by spell position, not spell_id)
+/// Results accumulator - index by spell position for O(1) access.
 #[derive(Debug, Clone)]
 pub struct SimResultsAccum {
     pub total_damage: f64,
     pub cast_count: u32,
-    /// Damage and cast count per spell index (not spell_id)
+    /// Damage per spell index (not spell_id)
     pub spell_damage: Vec<f64>,
+    /// Cast count per spell index
     pub spell_casts: Vec<u32>,
 }
 
@@ -270,7 +320,7 @@ impl SimResultsAccum {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn reset(&mut self) {
         self.total_damage = 0.0;
         self.cast_count = 0;
@@ -278,14 +328,14 @@ impl SimResultsAccum {
         self.spell_casts.fill(0);
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn record_damage(&mut self, spell_idx: usize, damage: f64) {
         self.total_damage += damage;
         self.spell_damage[spell_idx] += damage;
         self.spell_casts[spell_idx] += 1;
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn record_cast(&mut self) {
         self.cast_count += 1;
     }
@@ -306,15 +356,14 @@ impl SimState {
             spell_count,
         );
 
-        // Initialize spell charges
         let mut state = Self {
             time: 0.0,
-            player,
-            pet: None, // TODO: initialize pet
-            target: TargetState::new(config.target.max_health),
-            events: EventQueue::with_capacity(256),
             duration: config.duration,
+            player,
+            events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
+            target: TargetState::new(config.target.max_health),
+            pet: None,
         };
 
         // Set initial charges from spell defs
@@ -326,6 +375,7 @@ impl SimState {
         state
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.time = 0.0;
         self.player.reset();
