@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 /// Event types in the simulation
 #[derive(Debug, Clone, Copy)]
@@ -22,7 +23,7 @@ pub enum SimEvent {
     AuraTick { aura_id: u32 },
 
     /// Cooldown has finished (for tracking/procs)
-    CooldownReady { spell_id: u32 },
+    CooldownReady { spell_idx: u8 },
 
     /// Resource regeneration tick
     ResourceTick,
@@ -68,9 +69,9 @@ impl Ord for TimedEvent {
     }
 }
 
-/// Fixed-capacity event queue (no allocations after init)
+/// Event queue using std::collections::BinaryHeap
 pub struct EventQueue {
-    events: Vec<TimedEvent>,
+    events: BinaryHeap<TimedEvent>,
     next_seq: u32,
     /// Track total events processed (for debugging)
     pub events_processed: u32,
@@ -79,7 +80,7 @@ pub struct EventQueue {
 impl EventQueue {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            events: Vec::with_capacity(capacity),
+            events: BinaryHeap::with_capacity(capacity),
             next_seq: 0,
             events_processed: 0,
         }
@@ -91,6 +92,7 @@ impl EventQueue {
         self.events_processed = 0;
     }
 
+    #[inline(always)]
     pub fn push(&mut self, time: f32, event: SimEvent) {
         let timed = TimedEvent {
             time,
@@ -98,31 +100,17 @@ impl EventQueue {
             seq: self.next_seq,
         };
         self.next_seq += 1;
-
-        // Binary heap push
         self.events.push(timed);
-        self.sift_up(self.events.len() - 1);
     }
 
+    #[inline(always)]
     pub fn pop(&mut self) -> Option<TimedEvent> {
-        if self.events.is_empty() {
-            return None;
-        }
-
-        let last = self.events.len() - 1;
-        self.events.swap(0, last);
-        let result = self.events.pop();
-
-        if !self.events.is_empty() {
-            self.sift_down(0);
-        }
-
         self.events_processed += 1;
-        result
+        self.events.pop()
     }
 
     pub fn peek(&self) -> Option<&TimedEvent> {
-        self.events.first()
+        self.events.peek()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -131,41 +119,6 @@ impl EventQueue {
 
     pub fn len(&self) -> usize {
         self.events.len()
-    }
-
-    fn sift_up(&mut self, mut idx: usize) {
-        while idx > 0 {
-            let parent = (idx - 1) / 2;
-            if self.events[idx] > self.events[parent] {
-                self.events.swap(idx, parent);
-                idx = parent;
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn sift_down(&mut self, mut idx: usize) {
-        let len = self.events.len();
-        loop {
-            let left = 2 * idx + 1;
-            let right = 2 * idx + 2;
-            let mut largest = idx;
-
-            if left < len && self.events[left] > self.events[largest] {
-                largest = left;
-            }
-            if right < len && self.events[right] > self.events[largest] {
-                largest = right;
-            }
-
-            if largest != idx {
-                self.events.swap(idx, largest);
-                idx = largest;
-            } else {
-                break;
-            }
-        }
     }
 }
 

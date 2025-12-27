@@ -110,11 +110,13 @@ fn create_bm_hunter_config() -> SimConfig {
         ],
         auras: vec![],
         rotation: vec![
-            RotationAction::Cast { spell_id: 34026 },
-            RotationAction::Cast { spell_id: 217200 },
-            RotationAction::Cast { spell_id: 193455 },
+            // Priority: Bestial Wrath (off-GCD) > Kill Command > Barbed Shot > Cobra Shot
+            RotationAction::Cast { spell_id: 19574 },  // Bestial Wrath (off-GCD)
+            RotationAction::Cast { spell_id: 34026 },  // Kill Command
+            RotationAction::Cast { spell_id: 217200 }, // Barbed Shot
+            RotationAction::Cast { spell_id: 193455 }, // Cobra Shot (filler)
         ],
-        duration: 300.0, // 5 minute fight
+        duration: 300.0, // 5 minute fight (realistic boss fight)
         target: TargetConfig {
             level_diff: 3,
             max_health: 10_000_000.0,
@@ -143,32 +145,26 @@ fn main() {
     println!("Warming up...");
     let _ = run_batch(&mut state, &config, &mut rng, 1000, 0);
 
-    // Benchmark different iteration counts
-    for &iterations in &[1_000u32, 10_000, 100_000, 1_000_000] {
-        let start = Instant::now();
-        let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
-        let elapsed = start.elapsed();
-
-        let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
-        println!(
-            "{:>10} sims: {:>8.2?} ({:.2}M sims/sec, avg DPS: {:.0})",
-            iterations,
-            elapsed,
-            sims_per_sec / 1_000_000.0,
-            result.mean_dps
-        );
-    }
-
-    println!("\n--- Scaling to Raidbots level ---");
-
-    // 16M combinations benchmark
-    let iterations = 16_000_000u32;
-    println!("\nRunning {} iterations (top gear scale)...", iterations);
-
+    // Benchmark
+    let iterations = 100_000u32;
     let start = Instant::now();
     let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
     let elapsed = start.elapsed();
+    let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
+    println!(
+        "{:>10} sims: {:>8.2?} ({:.2}M sims/sec, avg DPS: {:.0})",
+        iterations,
+        elapsed,
+        sims_per_sec / 1_000_000.0,
+        result.mean_dps
+    );
 
+    // 16M benchmark
+    println!("\n--- 16M iterations (Top Gear scale) ---");
+    let iterations = 16_000_000u32;
+    let start = Instant::now();
+    let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
+    let elapsed = start.elapsed();
     let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
     println!("Time: {:?}", elapsed);
     println!("Throughput: {:.2}M sims/sec", sims_per_sec / 1_000_000.0);

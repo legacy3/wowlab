@@ -75,6 +75,7 @@ impl UnitState {
         }
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.stats = self.base_stats;
         self.resources.reset();
@@ -133,6 +134,7 @@ impl Resources {
         self.current = self.max;
     }
 
+    #[inline]
     pub fn spend(&mut self, amount: f32) -> bool {
         if self.current >= amount {
             self.current -= amount;
@@ -142,10 +144,12 @@ impl Resources {
         }
     }
 
+    #[inline]
     pub fn gain(&mut self, amount: f32) {
         self.current = (self.current + amount).min(self.max);
     }
 
+    #[inline]
     pub fn regen(&mut self, elapsed: f32) {
         self.gain(self.regen_per_second * elapsed);
     }
@@ -246,46 +250,60 @@ impl TargetState {
     }
 }
 
-/// Results accumulator for current simulation
-#[derive(Debug, Clone, Default)]
+/// Results accumulator for current simulation (index by spell position, not spell_id)
+#[derive(Debug, Clone)]
 pub struct SimResultsAccum {
     pub total_damage: f64,
     pub cast_count: u32,
-    pub spell_damage: Vec<(u32, f64, u32)>, // (spell_id, damage, casts)
+    /// Damage and cast count per spell index (not spell_id)
+    pub spell_damage: Vec<f64>,
+    pub spell_casts: Vec<u32>,
 }
 
 impl SimResultsAccum {
-    pub fn reset(&mut self) {
-        self.total_damage = 0.0;
-        self.cast_count = 0;
-        self.spell_damage.clear();
-    }
-
-    pub fn record_damage(&mut self, spell_id: u32, damage: f64) {
-        self.total_damage += damage;
-        if let Some((_, total, casts)) = self
-            .spell_damage
-            .iter_mut()
-            .find(|(id, _, _)| *id == spell_id)
-        {
-            *total += damage;
-            *casts += 1;
-        } else {
-            self.spell_damage.push((spell_id, damage, 1));
+    pub fn new(spell_count: usize) -> Self {
+        Self {
+            total_damage: 0.0,
+            cast_count: 0,
+            spell_damage: vec![0.0; spell_count],
+            spell_casts: vec![0; spell_count],
         }
     }
 
+    #[inline]
+    pub fn reset(&mut self) {
+        self.total_damage = 0.0;
+        self.cast_count = 0;
+        self.spell_damage.fill(0.0);
+        self.spell_casts.fill(0);
+    }
+
+    #[inline]
+    pub fn record_damage(&mut self, spell_idx: usize, damage: f64) {
+        self.total_damage += damage;
+        self.spell_damage[spell_idx] += damage;
+        self.spell_casts[spell_idx] += 1;
+    }
+
+    #[inline]
     pub fn record_cast(&mut self) {
         self.cast_count += 1;
     }
 }
 
+impl Default for SimResultsAccum {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
 impl SimState {
     pub fn new(config: &SimConfig) -> Self {
+        let spell_count = config.spells.len();
         let player = UnitState::new(
             config.player.stats,
             config.player.resources,
-            config.spells.len(),
+            spell_count,
         );
 
         // Initialize spell charges
@@ -296,7 +314,7 @@ impl SimState {
             target: TargetState::new(config.target.max_health),
             events: EventQueue::with_capacity(256),
             duration: config.duration,
-            results: SimResultsAccum::default(),
+            results: SimResultsAccum::new(spell_count),
         };
 
         // Set initial charges from spell defs

@@ -28,21 +28,25 @@ pub struct Stats {
 
 impl Stats {
     /// Calculate attack power (for physical specs)
+    #[inline]
     pub fn attack_power(&self) -> f32 {
         self.agility + self.strength
     }
 
     /// Calculate spell power
+    #[inline]
     pub fn spell_power(&self) -> f32 {
         self.intellect
     }
 
     /// GCD modified by haste (minimum 0.75s)
+    #[inline]
     pub fn gcd(&self, base_gcd: f32) -> f32 {
         (base_gcd / (1.0 + self.haste_pct / 100.0)).max(0.75)
     }
 
     /// Cast time modified by haste
+    #[inline]
     pub fn cast_time(&self, base_cast_time: f32) -> f32 {
         base_cast_time / (1.0 + self.haste_pct / 100.0)
     }

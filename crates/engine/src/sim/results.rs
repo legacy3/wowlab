@@ -32,7 +32,7 @@ pub struct SpellBreakdown {
     pub pct_of_total: f32,
 }
 
-/// Accumulator for batch statistics
+/// Accumulator for batch statistics (index-based, no linear search)
 pub struct BatchAccumulator {
     pub iterations: u32,
     pub sum_dps: f64,
@@ -40,7 +40,9 @@ pub struct BatchAccumulator {
     pub min_dps: f64,
     pub max_dps: f64,
     pub total_casts: u64,
-    pub spell_totals: Vec<(u32, f64, u64)>, // (spell_id, damage, casts)
+    /// Indexed by spell position
+    pub spell_damage: Vec<f64>,
+    pub spell_casts: Vec<u64>,
 }
 
 impl BatchAccumulator {
@@ -52,11 +54,13 @@ impl BatchAccumulator {
             min_dps: f64::MAX,
             max_dps: f64::MIN,
             total_casts: 0,
-            spell_totals: Vec::new(),
+            spell_damage: Vec::new(),
+            spell_casts: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, result: &SimResult, spell_damage: &[(u32, f64, u32)]) {
+    #[inline]
+    pub fn add(&mut self, result: &SimResult, spell_damage: &[f64], spell_casts: &[u32]) {
         self.iterations += 1;
         self.sum_dps += result.dps;
         self.sum_sq_dps += result.dps * result.dps;
@@ -64,33 +68,34 @@ impl BatchAccumulator {
         self.max_dps = self.max_dps.max(result.dps);
         self.total_casts += result.casts as u64;
 
-        // Accumulate spell breakdown
-        for (spell_id, damage, casts) in spell_damage {
-            if let Some((_, total, count)) = self
-                .spell_totals
-                .iter_mut()
-                .find(|(id, _, _)| *id == *spell_id)
-            {
-                *total += damage;
-                *count += *casts as u64;
-            } else {
-                self.spell_totals.push((*spell_id, *damage, *casts as u64));
-            }
+        // Initialize vectors on first add
+        if self.spell_damage.is_empty() {
+            self.spell_damage.resize(spell_damage.len(), 0.0);
+            self.spell_casts.resize(spell_casts.len(), 0);
+        }
+
+        // Direct index accumulation - no search
+        for (i, &dmg) in spell_damage.iter().enumerate() {
+            self.spell_damage[i] += dmg;
+            self.spell_casts[i] += spell_casts[i] as u64;
         }
     }
 
-    pub fn finalize(self, duration: f32) -> BatchResult {
+    pub fn finalize(self, duration: f32, spell_ids: &[u32]) -> BatchResult {
         let n = self.iterations as f64;
         let mean_dps = self.sum_dps / n;
         let variance = (self.sum_sq_dps / n) - (mean_dps * mean_dps);
         let std_dps = variance.sqrt();
 
-        let total_damage: f64 = self.spell_totals.iter().map(|(_, d, _)| d).sum();
+        let total_damage: f64 = self.spell_damage.iter().sum();
 
         let spell_breakdown: Vec<_> = self
-            .spell_totals
+            .spell_damage
             .iter()
-            .map(|(spell_id, damage, casts)| {
+            .zip(self.spell_casts.iter())
+            .zip(spell_ids.iter())
+            .filter(|((dmg, _), _)| **dmg > 0.0)
+            .map(|((damage, casts), spell_id)| {
                 let avg_damage = damage / n;
                 let dps_contribution = avg_damage / duration as f64;
                 SpellBreakdown {
