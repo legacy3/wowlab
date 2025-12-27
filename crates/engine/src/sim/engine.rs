@@ -326,19 +326,19 @@ fn calculate_damage_inline(
     // Base damage roll
     let base_damage = rng.range_f32(spell.damage.base_min, spell.damage.base_max);
 
-    // Attack power contribution
-    let ap_damage = spell.damage.ap_coefficient * stats.attack_power();
+    // Attack power contribution (use precomputed)
+    let ap_damage = spell.damage.ap_coefficient * stats.attack_power;
 
     // Total base damage
     let mut total_damage = base_damage + ap_damage;
 
-    // Critical strike
-    if rng.roll(stats.crit_pct / 100.0) {
+    // Critical strike (use precomputed crit_chance)
+    if rng.roll(stats.crit_chance) {
         total_damage *= 2.0;
     }
 
-    // Versatility
-    total_damage *= 1.0 + stats.versatility_pct / 100.0;
+    // Versatility (use precomputed vers_mult)
+    total_damage *= stats.vers_mult;
 
     // Record damage
     state.results.record_damage(spell_idx, total_damage as f64);
@@ -491,20 +491,17 @@ fn handle_aura_tick_inline(
     for effect in &aura_def.effects {
         match effect {
             crate::config::AuraEffect::PeriodicDamage { amount, coefficient } => {
-                let ap = state.player.stats.attack_power();
-                let damage = amount + coefficient * ap;
+                let damage = amount + coefficient * state.player.stats.attack_power;
 
-                // Apply crit (use precomputed multiplier: crit_pct / 100.0)
-                let crit_chance = state.player.stats.crit_pct * 0.01;
-                let damage = if rng.roll(crit_chance) {
+                // Apply crit using precomputed crit_chance
+                let damage = if rng.roll(state.player.stats.crit_chance) {
                     damage * 2.0
                 } else {
                     damage
                 };
 
-                // Apply versatility (use precomputed: 1.0 + vers_pct / 100.0)
-                let vers_mult = 1.0 + state.player.stats.versatility_pct * 0.01;
-                let damage = damage * vers_mult;
+                // Apply versatility using precomputed vers_mult
+                let damage = damage * state.player.stats.vers_mult;
 
                 state.results.total_damage += damage as f64;
                 state.target.health -= damage;
@@ -598,13 +595,13 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut 
     let (min_dmg, max_dmg) = pet.attack_damage;
     let pet_stats = &pet.stats;
 
-    // Calculate pet damage
+    // Calculate pet damage (use precomputed attack_power)
     let base_damage = rng.range_f32(min_dmg, max_dmg);
-    let ap_bonus = pet_stats.attack_power() / 14.0 * pet.attack_speed;
+    let ap_bonus = pet_stats.attack_power / 14.0 * pet.attack_speed;
     let mut damage = base_damage + ap_bonus;
 
-    // Crit check
-    if rng.roll(pet_stats.crit_pct / 100.0) {
+    // Crit check (use precomputed crit_chance)
+    if rng.roll(pet_stats.crit_chance) {
         damage *= 2.0;
     }
 
@@ -634,24 +631,23 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut
 
     // Calculate weapon damage
     let weapon_damage = rng.range_f32(min_dmg, max_dmg);
-    let ap_bonus = stats.attack_power() / 14.0 * weapon_speed; // normalized AP
+    let ap_bonus = stats.attack_power / 14.0 * weapon_speed; // normalized AP
     let mut damage = weapon_damage + ap_bonus;
 
-    // Crit check
-    if rng.roll(stats.crit_pct / 100.0) {
+    // Crit check (use precomputed crit_chance)
+    if rng.roll(stats.crit_chance) {
         damage *= 2.0;
     }
 
-    // Versatility
-    damage *= 1.0 + stats.versatility_pct / 100.0;
+    // Versatility (use precomputed vers_mult)
+    damage *= stats.vers_mult;
 
     // Record damage (use index 255 for auto-attacks to avoid collision with spells)
     state.results.total_damage += damage as f64;
     state.target.health -= damage;
 
-    // Schedule next auto-attack (modified by haste)
-    let haste_mod = 1.0 + stats.haste_pct / 100.0;
-    let next_swing = current_time + weapon_speed / haste_mod;
+    // Schedule next auto-attack (use precomputed haste_mult)
+    let next_swing = current_time + weapon_speed / stats.haste_mult;
 
     if next_swing < state.duration {
         state.events.push(next_swing, SimEvent::AutoAttack);

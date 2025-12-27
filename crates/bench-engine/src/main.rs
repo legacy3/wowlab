@@ -214,7 +214,8 @@ fn main() {
 
     println!("=== Engine Benchmark ===\n");
 
-    let config = create_bm_hunter_config();
+    let mut config = create_bm_hunter_config();
+    config.finalize(); // Precompute derived stats
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);
 

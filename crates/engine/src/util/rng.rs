@@ -4,6 +4,9 @@ pub struct FastRng {
     state: u64,
 }
 
+// Precomputed: 1.0 / (u32::MAX as f32 + 1.0) for fast f32 conversion
+const F32_SCALE: f32 = 1.0 / 4294967296.0; // 1 / 2^32
+
 impl FastRng {
     pub fn new(seed: u64) -> Self {
         Self {
@@ -15,7 +18,7 @@ impl FastRng {
         self.state = if seed == 0 { 1 } else { seed };
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn next_u64(&mut self) -> u64 {
         let mut x = self.state;
         x ^= x << 13;
@@ -25,9 +28,11 @@ impl FastRng {
         x
     }
 
-    #[inline]
+    /// Returns random f32 in [0, 1) using upper 32 bits
+    #[inline(always)]
     pub fn next_f32(&mut self) -> f32 {
-        (self.next_u64() as f32) / (u64::MAX as f32)
+        // Use upper 32 bits (better randomness) and multiply by reciprocal
+        ((self.next_u64() >> 32) as u32 as f32) * F32_SCALE
     }
 
     #[inline]
@@ -36,13 +41,13 @@ impl FastRng {
     }
 
     /// Returns true with probability `chance` (0.0 to 1.0)
-    #[inline]
+    #[inline(always)]
     pub fn roll(&mut self, chance: f32) -> bool {
         self.next_f32() < chance
     }
 
     /// Returns a random value in [min, max)
-    #[inline]
+    #[inline(always)]
     pub fn range_f32(&mut self, min: f32, max: f32) -> f32 {
         min + self.next_f32() * (max - min)
     }

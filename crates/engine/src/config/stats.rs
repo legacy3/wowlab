@@ -24,13 +24,26 @@ pub struct Stats {
     pub mastery_pct: f32,
     #[serde(default)]
     pub versatility_pct: f32,
+
+    // Precomputed for hot path (call finalize() after loading)
+    #[serde(skip)]
+    pub attack_power: f32,
+    #[serde(skip)]
+    pub crit_chance: f32, // crit_pct * 0.01
+    #[serde(skip)]
+    pub vers_mult: f32, // 1.0 + vers_pct * 0.01
+    #[serde(skip)]
+    pub haste_mult: f32, // 1.0 + haste_pct * 0.01
 }
 
 impl Stats {
-    /// Calculate attack power (for physical specs)
+    /// Precompute derived values - call after loading/modifying stats
     #[inline]
-    pub fn attack_power(&self) -> f32 {
-        self.agility + self.strength
+    pub fn finalize(&mut self) {
+        self.attack_power = self.agility + self.strength;
+        self.crit_chance = self.crit_pct * 0.01;
+        self.vers_mult = 1.0 + self.versatility_pct * 0.01;
+        self.haste_mult = 1.0 + self.haste_pct * 0.01;
     }
 
     /// Calculate spell power
@@ -42,13 +55,13 @@ impl Stats {
     /// GCD modified by haste (minimum 0.75s)
     #[inline]
     pub fn gcd(&self, base_gcd: f32) -> f32 {
-        (base_gcd / (1.0 + self.haste_pct / 100.0)).max(0.75)
+        (base_gcd / self.haste_mult).max(0.75)
     }
 
     /// Cast time modified by haste
     #[inline]
     pub fn cast_time(&self, base_cast_time: f32) -> f32 {
-        base_cast_time / (1.0 + self.haste_pct / 100.0)
+        base_cast_time / self.haste_mult
     }
 }
 

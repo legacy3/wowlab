@@ -23,8 +23,11 @@ impl Simulator {
     /// Create a new simulator from JSON config
     #[wasm_bindgen(constructor)]
     pub fn new(config_json: &str) -> Result<Simulator, JsValue> {
-        let config: SimConfig = serde_json::from_str(config_json)
+        let mut config: SimConfig = serde_json::from_str(config_json)
             .map_err(|e| JsValue::from_str(&format!("Failed to parse config: {}", e)))?;
+
+        // Precompute derived stats
+        config.finalize();
 
         let state = SimState::new(&config);
 

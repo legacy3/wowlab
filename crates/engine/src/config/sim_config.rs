@@ -93,3 +93,13 @@ pub struct TargetConfig {
 fn default_target_health() -> f32 {
     10_000_000.0
 }
+
+impl SimConfig {
+    /// Finalize all stats (precompute derived values)
+    pub fn finalize(&mut self) {
+        self.player.stats.finalize();
+        if let Some(ref mut pet) = self.pet {
+            pet.stats.finalize();
+        }
+    }
+}

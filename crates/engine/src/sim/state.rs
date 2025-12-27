@@ -74,6 +74,8 @@ pub struct UnitState {
 
 impl UnitState {
     pub fn new(stats: Stats, resources: ResourceConfig, spell_count: usize) -> Self {
+        let mut stats = stats;
+        stats.finalize();
         Self {
             // Hot fields
             resources: Resources::new(resources),
@@ -250,7 +252,9 @@ impl AuraTracker {
     pub fn remaining_slot(&self, slot: usize, current_time: f32) -> f32 {
         if slot < MAX_AURA_SLOTS {
             if let Some(instance) = self.slots[slot] {
-                (instance.expires - current_time).max(0.0)
+                let remaining = instance.expires - current_time;
+                // Branchless max(0.0) - faster than f32::max
+                if remaining > 0.0 { remaining } else { 0.0 }
             } else {
                 0.0
             }
