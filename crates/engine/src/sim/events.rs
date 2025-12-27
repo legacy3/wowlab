@@ -1,6 +1,7 @@
 //! Event system with configurable optimizations via feature flags.
 //!
 //! Features:
+//! - `bucket_queue`: O(1) bucket-based queue for simulation events (RECOMMENDED)
 //! - `quaternary_heap`: Use 4-ary heap instead of binary (2-ary) - slower in benchmarks
 //! - `front_buffer`: Use front buffer for same-time events - adds overhead, not worth it
 //! - `meta_events`: Process same-time events as a batch - semantic correctness, ~5% slower
@@ -9,11 +10,17 @@
 
 use std::cmp::Ordering;
 
-// Default: dary_heap::BinaryHeap (allows swapping to quaternary later)
-#[cfg(feature = "quaternary_heap")]
+// Bucket queue: O(1) insert/pop for simulation workloads
+#[cfg(feature = "bucket_queue")]
+const BUCKET_RESOLUTION: f32 = 0.01; // 10ms buckets
+#[cfg(feature = "bucket_queue")]
+const MAX_BUCKETS: usize = 32768; // ~327 seconds at 10ms resolution
+
+// Heap-based queue (default fallback)
+#[cfg(all(not(feature = "bucket_queue"), feature = "quaternary_heap"))]
 use dary_heap::QuaternaryHeap as Heap;
 
-#[cfg(not(feature = "quaternary_heap"))]
+#[cfg(all(not(feature = "bucket_queue"), not(feature = "quaternary_heap")))]
 use dary_heap::BinaryHeap as Heap;
 
 /// Maximum events in the front buffer (immediate-next events).
@@ -105,6 +112,161 @@ impl Ord for TimedEvent {
     }
 }
 
+// ============================================================================
+// BUCKET QUEUE IMPLEMENTATION - O(1) insert/pop for simulation workloads
+// ============================================================================
+#[cfg(feature = "bucket_queue")]
+pub struct EventQueue {
+    /// Buckets indexed by (time / BUCKET_RESOLUTION) as usize
+    /// Each bucket is a Vec of events at that time slice
+    buckets: Vec<Vec<TimedEvent>>,
+
+    /// Current bucket index (monotonically increasing)
+    current_bucket: usize,
+
+    /// Sequence number for FIFO ordering within same timestamp
+    next_seq: u32,
+
+    pub events_processed: u32,
+    pub events_scheduled: u32,
+
+    /// For API compatibility
+    next_time_cache: f32,
+
+    #[cfg(feature = "meta_events")]
+    pub batches_processed: u32,
+    #[cfg(feature = "meta_events")]
+    pub max_batch_size: u32,
+}
+
+#[cfg(feature = "bucket_queue")]
+impl EventQueue {
+    pub fn with_capacity(_capacity: usize) -> Self {
+        Self {
+            buckets: vec![Vec::new(); MAX_BUCKETS],
+            current_bucket: 0,
+            next_seq: 0,
+            events_processed: 0,
+            events_scheduled: 0,
+            next_time_cache: f32::MAX,
+            #[cfg(feature = "meta_events")]
+            batches_processed: 0,
+            #[cfg(feature = "meta_events")]
+            max_batch_size: 0,
+        }
+    }
+
+    #[inline]
+    pub fn clear(&mut self) {
+        for bucket in &mut self.buckets {
+            bucket.clear();
+        }
+        self.current_bucket = 0;
+        self.next_seq = 0;
+        self.events_processed = 0;
+        self.events_scheduled = 0;
+        self.next_time_cache = f32::MAX;
+        #[cfg(feature = "meta_events")]
+        {
+            self.batches_processed = 0;
+            self.max_batch_size = 0;
+        }
+    }
+
+    #[inline(always)]
+    fn time_to_bucket(time: f32) -> usize {
+        ((time / BUCKET_RESOLUTION) as usize).min(MAX_BUCKETS - 1)
+    }
+
+    #[inline(always)]
+    pub fn push(&mut self, time: f32, event: SimEvent) {
+        self.events_scheduled += 1;
+        let seq = self.next_seq;
+        self.next_seq += 1;
+
+        let bucket_idx = Self::time_to_bucket(time);
+        self.buckets[bucket_idx].push(TimedEvent::new(time, seq, event));
+    }
+
+    #[inline(always)]
+    pub fn push_immediate(&mut self, time: f32, event: SimEvent) {
+        self.push(time, event);
+    }
+
+    #[inline(always)]
+    pub fn pop(&mut self) -> Option<TimedEvent> {
+        // Find next non-empty bucket
+        while self.current_bucket < MAX_BUCKETS {
+            if let Some(event) = self.buckets[self.current_bucket].pop() {
+                self.events_processed += 1;
+                return Some(event);
+            }
+            self.current_bucket += 1;
+        }
+        None
+    }
+
+    #[inline]
+    pub fn peek(&self) -> Option<&TimedEvent> {
+        let mut bucket = self.current_bucket;
+        while bucket < MAX_BUCKETS {
+            if let Some(event) = self.buckets[bucket].last() {
+                return Some(event);
+            }
+            bucket += 1;
+        }
+        None
+    }
+
+    #[inline(always)]
+    pub fn cache_next_time(&mut self) {
+        self.next_time_cache = if let Some(e) = self.peek() {
+            e.time
+        } else {
+            f32::MAX
+        };
+    }
+
+    #[inline(always)]
+    pub fn next_has_same_time(&self, current_time: f32) -> bool {
+        self.next_time_cache == current_time
+    }
+
+    #[cfg(feature = "meta_events")]
+    #[inline]
+    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<f32>
+    where
+        F: FnMut(SimEvent),
+    {
+        let first = self.pop()?;
+        let time = first.time;
+        f(first.event);
+
+        while let Some(next) = self.peek() {
+            if next.time == time {
+                f(self.pop().unwrap().event);
+            } else {
+                break;
+            }
+        }
+        Some(time)
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.peek().is_none()
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.buckets.iter().map(|b| b.len()).sum()
+    }
+}
+
+// ============================================================================
+// HEAP-BASED QUEUE IMPLEMENTATION - Default fallback
+// ============================================================================
+#[cfg(not(feature = "bucket_queue"))]
 /// Event queue with configurable optimizations.
 pub struct EventQueue {
     heap: Heap<TimedEvent>,
@@ -131,6 +293,7 @@ pub struct EventQueue {
     pub max_batch_size: u32,
 }
 
+#[cfg(not(feature = "bucket_queue"))]
 impl EventQueue {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {

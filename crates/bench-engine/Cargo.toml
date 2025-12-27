@@ -6,6 +6,7 @@ edition = "2021"
 [features]
 default = []
 # Pass through engine feature flags
+bucket_queue = ["engine/bucket_queue"]
 meta_events = ["engine/meta_events"]
 front_buffer = ["engine/front_buffer"]
 large_capacity = ["engine/large_capacity"]
