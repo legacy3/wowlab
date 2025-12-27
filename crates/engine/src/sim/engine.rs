@@ -1,6 +1,26 @@
+/*
+TODO:
+
+- Use meta-events to batch all actions per game tick or logical timeframe
+- Process all same-timestamp ("instant") follow-up effects inline, avoid rescheduling
+- Minimize total event count: schedule only when state actually changes, not for passive delays
+- For predictable periodic effects (auras, dots), bulk process them in dedicated tick handlers
+- Use a single event per actor/entity per tick if possible (batch status, procs, damage, etc.)
+- Preallocate event storage via bump arenas, slabs, or array pools to avoid heap alloc churn
+- Switch to a d-ary (e.g., 4-ary) heap if pop/push is the true bottleneck (optional)
+- Employ a "front buffer" (small fixed array/Vec) for immediate-next events for cache locality
+- Combine repeated triggers or group child events under parent "bucket" events where practical
+- Profile event type frequency: optimize "hot-path" (common, performance-critical) event handlers
+- Inline function calls and specialize event handlers for highest-frequency event types
+- Exploit Rust's tight struct packing and cache-friendly layouts for events and state
+- Avoid sending/handling events for no-ops or unchanged state conditions
+- Consider simulation granularity: slightly larger tick time = fewer total events (if fidelity allows)
+- Use efficient match/enums for branching within event handlers
+- Profile everything (esp. in WASM) and refactor based on real flamegraphs/hotspots
+*/
+
 //! High-performance simulation engine with optimized event processing.
 //!
-//! Key optimizations:
 //! - Inline processing of same-timestamp events (no rescheduling)
 //! - Minimal event scheduling (only when state actually changes)
 //! - Specialized hot-path handlers with aggressive inlining
