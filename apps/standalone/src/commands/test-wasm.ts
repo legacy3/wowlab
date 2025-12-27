@@ -24,12 +24,66 @@ export const testWasmCommand = Command.make(
       initSync({ module: wasmBuffer });
 
       const config = {
+        player: {
+          name: "Test Hunter",
+          spec: "beast_mastery",
+          stats: {
+            agility: 5000,
+            intellect: 0,
+            strength: 0,
+            stamina: 4000,
+            crit_rating: 1000,
+            haste_rating: 800,
+            mastery_rating: 600,
+            versatility_rating: 400,
+            crit_pct: 25.0,
+            haste_pct: 15.0,
+            mastery_pct: 20.0,
+            versatility_pct: 5.0,
+          },
+          resources: {
+            resource_type: "focus",
+            max: 100,
+            regen_per_second: 10,
+            initial: 100,
+          },
+        },
         spells: [
-          { id: 34026, cooldown: 6.0, gcd: 1.5, cast_time: 0, charges: 2 }, // Kill Command
-          { id: 56641, cooldown: 0, gcd: 1.5, cast_time: 0, charges: 0 }, // Cobra Shot (filler)
+          {
+            id: 34026,
+            name: "Kill Command",
+            cooldown: 6.0,
+            gcd: 1.5,
+            cast_time: 0,
+            charges: 2,
+            cost: { resource_type: "focus", amount: 30 },
+            damage: { base_min: 1000, base_max: 1200, ap_coefficient: 1.2, sp_coefficient: 0, weapon_coefficient: 0 },
+            effects: [],
+            is_gcd: true,
+            is_harmful: true,
+          },
+          {
+            id: 56641,
+            name: "Cobra Shot",
+            cooldown: 0,
+            gcd: 1.5,
+            cast_time: 0,
+            charges: 0,
+            cost: { resource_type: "focus", amount: 35 },
+            damage: { base_min: 500, base_max: 600, ap_coefficient: 0.6, sp_coefficient: 0, weapon_coefficient: 0 },
+            effects: [],
+            is_gcd: true,
+            is_harmful: true,
+          },
         ],
-        resources: { focus: 100, focus_max: 100, focus_regen: 10 },
+        auras: [],
+        rotation: [],
         duration: 60,
+        target: {
+          level_diff: 3,
+          max_health: 10000000,
+          armor: 0,
+        },
       };
 
       yield* Effect.log("Creating simulator...");
