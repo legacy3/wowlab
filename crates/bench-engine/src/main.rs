@@ -211,10 +211,14 @@ fn main() {
     let iterations: u32 = args.get(1)
         .and_then(|s| s.parse().ok())
         .unwrap_or(1_000_000);
+    let duration: f32 = args.get(2)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(300.0);
 
     println!("=== Engine Benchmark ===\n");
 
     let mut config = create_bm_hunter_config();
+    config.duration = duration;
     config.finalize(); // Precompute derived stats
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);

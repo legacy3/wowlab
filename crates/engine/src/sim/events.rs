@@ -11,12 +11,13 @@
 use std::cmp::Ordering;
 
 // Timing wheel (SimC-style): O(1) amortized insert/pop
-// - wheel_shift=5 means each slot covers 32ms (1000ms / 32 = 31.25ms)
-// - 32K slots = ~1024 seconds of simulation time
+// - wheel_shift=5 means each slot covers 32ms
+// - 4K slots = ~131 seconds coverage, wraps for longer sims
+// Benchmarked: 4K optimal across 60s/300s/600s durations
 #[cfg(feature = "bucket_queue")]
 const WHEEL_SHIFT: u32 = 5; // divide time_ms by 32
 #[cfg(feature = "bucket_queue")]
-const WHEEL_SIZE: usize = 32768; // 2^15 slots
+const WHEEL_SIZE: usize = 4096; // 2^12 slots - 32KB cache footprint
 #[cfg(feature = "bucket_queue")]
 const WHEEL_MASK: usize = WHEEL_SIZE - 1;
 
