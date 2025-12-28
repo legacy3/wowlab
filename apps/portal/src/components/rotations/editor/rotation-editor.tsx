@@ -1,14 +1,20 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRotation, useRotationMutations } from "@/hooks/rotations";
+import {
+  useRotation,
+  useRotationMutations,
+  useWorkerSimulation,
+} from "@/hooks/rotations";
 import type {
   UserIdentity,
   RotationInsert,
   Rotation,
 } from "@/lib/supabase/types";
+import { formatIsoTimestamp } from "@/lib/format";
 import { MetadataSetup, type MetadataSubmitValues } from "./metadata-setup";
 import { EditorView } from "./editor-view";
 import type { SettingsValues } from "./settings-panel";
@@ -24,9 +30,9 @@ interface RotationEditorProps {
   forkSourceId?: string;
 }
 
-function RotationEditorSkeleton() {
+export function RotationEditorSkeleton() {
   return (
-    <div className="flex flex-col h-[600px] rounded-lg border overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-10rem)] rounded-lg border overflow-hidden bg-background">
       <Skeleton className="h-12 w-full rounded-none" />
       <Skeleton className="flex-1 rounded-none" />
       <Skeleton className="h-14 w-full rounded-none" />
@@ -38,8 +44,7 @@ function RotationEditorSkeleton() {
 interface DraftRotation {
   name: string;
   slug: string;
-  class: string;
-  spec: string;
+  specId: number;
   description: string | null;
   script: string;
   isPublic: boolean;
@@ -51,10 +56,10 @@ function RotationEditorInner({
 }: RotationEditorProps) {
   // Draft state for new/fork rotations (not yet saved to DB)
   const [draft, setDraft] = useState<DraftRotation | null>(null);
-  const [script, setScript] = useState(DEFAULT_SCRIPT);
-  const [isTesting, setIsTesting] = useState(false);
+  // Track local script edits separately from initial load
+  const [localScript, setLocalScript] = useState<string | null>(null);
 
-  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
+  const { isLoading: authLoading } = useIsAuthenticated();
   const { data: identity, isLoading: identityLoading } =
     useGetIdentity<UserIdentity>();
 
@@ -73,17 +78,27 @@ function RotationEditorInner({
   const { createRotation, updateRotation, deleteRotation, isMutating } =
     useRotationMutations();
 
+  // Worker simulation hook
+  const { run: runWorkerSimulation, isRunning: isTesting } =
+    useWorkerSimulation({
+      onComplete: (stats) => {
+        toast.success(
+          `Simulation complete: ${stats.completedSims} iterations, ${stats.totalCasts} total casts`,
+        );
+      },
+      onError: (error) => {
+        toast.error(`Simulation failed: ${error.message}`);
+      },
+    });
+
   const isEditMode = !!rotationId;
   const isForkMode = !!forkSourceId && !rotationId;
   const isNewMode = !rotationId && !forkSourceId;
   const isDraftMode = draft !== null && !isEditMode;
 
-  // Sync script state when existing rotation loads
-  useEffect(() => {
-    if (isEditMode && existingRotation) {
-      setScript(existingRotation.script);
-    }
-  }, [isEditMode, existingRotation]);
+  // Derive script value: user edits > existing rotation > default
+  const script = localScript ?? existingRotation?.script ?? DEFAULT_SCRIPT;
+  const setScript = setLocalScript;
 
   // Handle metadata form submission - just store in local state, don't create yet
   const handleMetadataSubmit = (values: MetadataSubmitValues) => {
@@ -92,8 +107,7 @@ function RotationEditorInner({
     setDraft({
       name: values.name,
       slug: values.slug,
-      class: values.class,
-      spec: values.spec,
+      specId: values.specId,
       description: values.description || null,
       script: initialScript,
       isPublic: false,
@@ -111,8 +125,7 @@ function RotationEditorInner({
         userId: identity.id,
         name: draft.name,
         slug: draft.slug,
-        class: draft.class,
-        spec: draft.spec,
+        specId: draft.specId,
         script: script,
         description: draft.description,
         isPublic: draft.isPublic,
@@ -126,13 +139,21 @@ function RotationEditorInner({
     }
   };
 
-  // Handle test button
-  const handleTest = async () => {
-    setIsTesting(true);
-    // TODO: Wire up simulation here
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsTesting(false);
-  };
+  // Handle test button - runs simulation via worker pool
+  const handleTest = useCallback(async () => {
+    const rotationName =
+      draft?.name ?? existingRotation?.name ?? "Untitled Rotation";
+
+    try {
+      await runWorkerSimulation({
+        code: script,
+        name: rotationName,
+        // iterations/workerCount use defaults from hook (100k/12)
+      });
+    } catch {
+      // Error already handled by onError callback
+    }
+  }, [script, draft?.name, existingRotation?.name, runWorkerSimulation]);
 
   // Handle settings update from zen editor (only for existing rotations)
   const handleSettingsChange = async (values: SettingsValues) => {
@@ -224,8 +245,7 @@ function RotationEditorInner({
         ? {
             name: `${forkSource.name} (Fork)`,
             slug: `${forkSource.slug}-fork`,
-            class: forkSource.class,
-            spec: forkSource.spec,
+            specId: forkSource.specId,
             description: forkSource.description ?? "",
           }
         : undefined;
@@ -248,14 +268,14 @@ function RotationEditorInner({
       userId: identity.id,
       name: draft.name,
       slug: draft.slug,
-      class: draft.class,
-      spec: draft.spec,
+      specId: draft.specId,
       script: draft.script,
       description: draft.description,
       isPublic: draft.isPublic,
       forkedFromId: forkSourceId ?? null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: formatIsoTimestamp(),
+      updatedAt: formatIsoTimestamp(),
+      currentVersion: 1,
     };
 
     return (
@@ -265,6 +285,7 @@ function RotationEditorInner({
         isSaving={isMutating}
         isTesting={isTesting}
         isDraft={true}
+        hasChanges={true}
         onScriptChange={setScript}
         onSave={handleSave}
         onTest={handleTest}
@@ -275,6 +296,9 @@ function RotationEditorInner({
 
   // EDIT MODE: Show editor with existing rotation
   if (isEditMode && existingRotation) {
+    const hasChanges =
+      localScript !== null && localScript !== existingRotation.script;
+
     return (
       <EditorView
         rotation={existingRotation}
@@ -282,6 +306,7 @@ function RotationEditorInner({
         isSaving={isMutating}
         isTesting={isTesting}
         isDraft={false}
+        hasChanges={hasChanges}
         onScriptChange={setScript}
         onSave={handleSave}
         onTest={handleTest}

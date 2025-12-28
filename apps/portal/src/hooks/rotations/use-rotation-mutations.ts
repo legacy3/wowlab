@@ -1,6 +1,7 @@
 "use client";
 
 import { useCreate, useUpdate, useDelete } from "@refinedev/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type {
@@ -11,6 +12,7 @@ import type {
 
 export function useRotationMutations() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { mutateAsync: createMutation, mutation: createMutationState } =
     useCreate<Rotation>();
@@ -42,6 +44,10 @@ export function useRotationMutations() {
         values,
       });
       toast.success("Rotation saved");
+      // Invalidate version history query
+      await queryClient.invalidateQueries({
+        queryKey: ["rotation-history", id],
+      });
       return result;
     } catch (error) {
       toast.error("Failed to save rotation");

@@ -8,7 +8,7 @@ import {
   KonvaLine,
   KonvaImage,
 } from "@/components/konva";
-import type { PriorityEntry, PlaybackFrame, DecisionStep } from "./mock-data";
+import type { PriorityEntry, PlaybackFrame, DecisionStep } from "./types";
 import {
   ROW_HEIGHT,
   HEADER_HEIGHT,
@@ -42,6 +42,7 @@ import {
   getRowLayout,
   getRowY,
 } from "./constants";
+import { formatDurationSeconds } from "@/lib/format";
 
 interface SpellIconProps {
   iconName: string;
@@ -226,14 +227,12 @@ interface PriorityListViewProps {
   priorityList: PriorityEntry[];
   currentFrame: PlaybackFrame | null;
   width: number;
-  height: number;
 }
 
 export const PriorityListView = memo(function PriorityListView({
   priorityList,
   currentFrame,
   width,
-  height: _height,
 }: PriorityListViewProps) {
   const decisionMap = useMemo(() => {
     const map = new Map<number, DecisionStep>();
@@ -255,7 +254,7 @@ export const PriorityListView = memo(function PriorityListView({
         y={PADDING}
         text={
           currentFrame
-            ? `GCD @ ${currentFrame.time.toFixed(1)}s`
+            ? `GCD @ ${formatDurationSeconds(currentFrame.time)}`
             : "Priority List"
         }
         fontSize={HEADER_FONT_SIZE}

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartCard } from "../chart-card";
 import { resourceDataAtom } from "@/atoms";
+import { formatInt, formatDurationSeconds } from "@/lib/format";
 
 const chartConfig = {
   mana: {
@@ -38,12 +39,15 @@ export function ResourceChart() {
       chartConfig={chartConfig}
       footer={
         <>
-          <div className="flex gap-2 leading-none font-medium">
-            Total mana spent: {totalSpent.toLocaleString()}{" "}
-            <TrendingDown className="h-4 w-4" />
+          <div className="flex items-center gap-2 font-medium">
+            <TrendingDown className="h-4 w-4 text-primary" />
+            <span className="tabular-nums">
+              Total spent: {formatInt(totalSpent)}
+            </span>
           </div>
-          <div className="text-muted-foreground leading-none">
-            Average mana: {avgMana.toLocaleString()} / 10,000
+          <div className="text-muted-foreground text-xs">
+            Average: <span className="tabular-nums">{formatInt(avgMana)}</span>{" "}
+            / 10,000
           </div>
         </>
       }
@@ -62,13 +66,13 @@ export function ResourceChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}s`}
+          tickFormatter={(value) => formatDurationSeconds(value)}
         />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} tickCount={3} />
         <ChartTooltip
           cursor={false}
           content={ChartTooltipContent}
-          labelFormatter={(value) => `${value}s`}
+          labelFormatter={(value) => formatDurationSeconds(value)}
         />
         <Area
           dataKey="mana"

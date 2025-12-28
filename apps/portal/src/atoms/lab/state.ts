@@ -2,11 +2,15 @@
 
 import { createPersistedOrderAtom } from "../utils";
 
-export type LabCardId = "data-inspector" | "spec-coverage" | "table-coverage";
+export type LabCardId =
+  | "data-inspector"
+  | "preset-characters"
+  | "spec-coverage"
+  | "table-coverage";
 
 export const labOrderAtom = createPersistedOrderAtom<LabCardId>(
-  "lab-order-v4",
-  ["data-inspector", "spec-coverage", "table-coverage"],
+  "lab-order-v5",
+  ["data-inspector", "preset-characters", "spec-coverage", "table-coverage"],
 );
 
 // Spell Detail Page

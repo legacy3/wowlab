@@ -3,6 +3,10 @@ export {
   type CharacterProfession,
   type CharacterSummary,
 } from "./character-summary-card";
+export {
+  CharacterEquipmentPanel,
+  type CharacterStats,
+} from "./character-equipment-panel";
 export { EquipmentSlotCard } from "./equipment-slot-card";
 export { EquipmentColumn } from "./equipment-column";
 export {

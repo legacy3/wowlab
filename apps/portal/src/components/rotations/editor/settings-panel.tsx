@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toSlug } from "@/lib/slugify";
-import { Loader2, Save, Trash2 } from "lucide-react";
+import { Save, Trash2 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -132,7 +133,7 @@ export function SettingsPanel({
 
       <Button type="submit" className="w-full" disabled={isDisabled}>
         {isDisabled ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <FlaskInlineLoader className="mr-2 h-4 w-4" />
         ) : (
           <Save className="mr-2 h-4 w-4" />
         )}

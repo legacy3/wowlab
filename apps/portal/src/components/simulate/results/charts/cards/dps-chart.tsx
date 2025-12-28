@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartCard } from "../chart-card";
 import { dpsDataAtom } from "@/atoms";
+import { formatInt, formatDurationSeconds } from "@/lib/format";
 
 const chartConfig = {
   dps: {
@@ -38,12 +39,13 @@ export function DpsChart() {
       chartConfig={chartConfig}
       footer={
         <>
-          <div className="flex gap-2 leading-none font-medium">
-            Peak DPS: {maxDps.toLocaleString()}{" "}
-            <TrendingUp className="h-4 w-4" />
+          <div className="flex items-center gap-2 font-medium">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="tabular-nums">Peak: {formatInt(maxDps)} DPS</span>
           </div>
-          <div className="text-muted-foreground leading-none">
-            Average: {avgDps.toLocaleString()} DPS over 300 seconds
+          <div className="text-muted-foreground text-xs">
+            Average: <span className="tabular-nums">{formatInt(avgDps)}</span>{" "}
+            DPS over encounter
           </div>
         </>
       }
@@ -62,18 +64,18 @@ export function DpsChart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}s`}
+          tickFormatter={(value) => formatDurationSeconds(value)}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `${value}`}
+          tickFormatter={(value) => formatInt(value)}
         />
         <ChartTooltip
           cursor={false}
           content={ChartTooltipContent}
-          labelFormatter={(value) => `${value}s`}
+          labelFormatter={(value) => formatDurationSeconds(value)}
         />
         <Line
           dataKey="dps"

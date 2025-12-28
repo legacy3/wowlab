@@ -46,6 +46,7 @@ function NamespacePageSkeleton() {
 
 export function NamespacePage({ namespace }: NamespacePageProps) {
   const { data: identity } = useGetIdentity<UserIdentity>();
+  const isOwnProfile = identity?.handle === namespace;
 
   const {
     result: profileResult,
@@ -66,6 +67,9 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
     filters: [
       { field: "namespace", operator: "eq", value: namespace },
       { field: "deletedAt", operator: "null", value: true },
+      ...(isOwnProfile
+        ? []
+        : [{ field: "isPublic", operator: "eq" as const, value: true }]),
     ],
     sorters: [{ field: "updatedAt", order: "desc" }],
     queryOptions: {
@@ -74,7 +78,6 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
   });
 
   const rotations = rotationsResult?.data ?? [];
-  const isOwnProfile = identity?.handle === namespace;
 
   if (profileLoading || rotationsLoading) {
     return <NamespacePageSkeleton />;

@@ -11,7 +11,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
+import { Search, Wand2, Package, Sparkles } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import type { DataType } from "@/atoms/lab";
 import { useDataInspector } from "@/hooks/use-data-inspector";
 
@@ -76,14 +77,14 @@ export function ControlsCard() {
                 query();
               }
             }}
-            placeholder={`Enter ${dataType} ID...`}
+            placeholder={`Enter ${dataType} ID ...`}
           />
         </div>
 
         <Button onClick={query} disabled={loading} className="w-full" size="lg">
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <FlaskInlineLoader className="mr-2 h-4 w-4" />
               Querying...
             </>
           ) : (

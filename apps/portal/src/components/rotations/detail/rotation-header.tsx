@@ -65,7 +65,12 @@ export const RotationHeader = memo(function RotationHeader({
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <UserHandle handle={author?.handle ?? "unknown"} size="sm" />
             <span>·</span>
-            <SpecLabel specId={253} size="sm" showChevron showIcon />
+            <SpecLabel
+              specId={rotation.specId}
+              size="sm"
+              showChevron
+              showIcon
+            />
           </div>
         </div>
       </div>

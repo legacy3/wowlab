@@ -1,6 +1,13 @@
-import { Book, Wand2, Code2, Database, type LucideIcon } from "lucide-react";
+import {
+  Book,
+  Wand2,
+  Code2,
+  Database,
+  History,
+  type LucideIcon,
+} from "lucide-react";
 
-export type TabId = "api" | "spells" | "snippets" | "data";
+export type TabId = "api" | "spells" | "snippets" | "data" | "history";
 
 export interface SidebarTabConfig {
   id: TabId;
@@ -13,6 +20,7 @@ export const SIDEBAR_TABS: SidebarTabConfig[] = [
   { id: "spells", label: "Spells", icon: Wand2 },
   { id: "snippets", label: "Snippets", icon: Code2 },
   { id: "data", label: "Data Inspector", icon: Database },
+  { id: "history", label: "Version History", icon: History },
 ];
 
 export const DEFAULT_TAB: TabId = "spells";

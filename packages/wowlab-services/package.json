@@ -16,20 +16,22 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "ncu": "ncu -u"
   },
   "dependencies": {
     "@wowlab/core": "workspace:*",
     "effect": "^3.19.4",
     "immutable": "^5.1.4",
-    "nanoid": "^5.0.9",
+    "nanoid": "^5.1.6",
     "papaparse": "^5.5.3",
     "tinyqueue": "^3.0.0"
   },
   "devDependencies": {
-    "@types/papaparse": "^5.5.0",
+    "@types/papaparse": "^5.5.2",
     "tsc-alias": "^1.8.16",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.16"
   }
 }

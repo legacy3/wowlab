@@ -28,9 +28,9 @@ export function LandingCard({
   return (
     <Link href={href} className="block h-full">
       <Card className="h-full hover:border-primary/50">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Icon className="h-5 w-5 text-primary" />
+            <Icon className="h-5 w-5 shrink-0 text-primary" />
             {title}
           </CardTitle>
           <CardDescription>{description}</CardDescription>

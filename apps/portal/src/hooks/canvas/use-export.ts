@@ -3,6 +3,7 @@
 import { useCallback, type RefObject } from "react";
 import type Konva from "konva";
 import { jsPDF } from "jspdf";
+import { parseHexColor } from "@/lib/hex";
 
 const EXPORT_CONFIG = {
   pixelRatio: 2,
@@ -89,11 +90,8 @@ export function useExport({
     const pdf = new jsPDF("l", "px", [width, contentHeight]);
 
     // Fill background to cover transparent areas
-    pdf.setFillColor(
-      parseInt(EXPORT_CONFIG.backgroundColor.slice(1, 3), 16),
-      parseInt(EXPORT_CONFIG.backgroundColor.slice(3, 5), 16),
-      parseInt(EXPORT_CONFIG.backgroundColor.slice(5, 7), 16),
-    );
+    const { r, g, b } = parseHexColor(EXPORT_CONFIG.backgroundColor);
+    pdf.setFillColor(r, g, b);
     pdf.rect(0, 0, width, contentHeight, "F");
 
     pdf.addImage(dataURL, 0, 0, width, contentHeight);

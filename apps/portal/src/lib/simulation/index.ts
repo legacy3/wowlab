@@ -3,4 +3,4 @@ export * from "./runtime";
 export * from "./rotation-utils";
 export * from "./loader";
 export * from "./runner";
-export { getRotation, listRotations, BeastMasteryRotation } from "./rotations";
+// Builtin rotation registry removed - all rotations now come from the database

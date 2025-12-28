@@ -3,8 +3,16 @@
 import { atom } from "jotai";
 
 import { createPersistedOrderAtom } from "../utils";
+import { combatDataAtom } from "../timeline";
+import {
+  transformToDpsChartData,
+  transformToResourceChartData,
+  transformToAbilityChartData,
+  transformToCooldownChartData,
+  transformToDetailedChartData,
+} from "./transformers";
 
-// Mock data generators for simulation analytics
+// Chart data types
 
 export interface DpsDataPoint {
   time: number;
@@ -38,127 +46,62 @@ export interface DetailedDataPoint {
   dps: number;
 }
 
-// Generate mock DPS data (simulating a rotation over 300 seconds)
-function generateDpsData(): DpsDataPoint[] {
-  const data: DpsDataPoint[] = [];
-  const baseDps = 800;
+// Derived atoms that read from combatData with fallback to mock data
 
-  for (let i = 0; i <= 300; i += 5) {
-    // Simulate cooldown spikes every ~60 seconds
-    const cooldownBonus =
-      Math.floor(i / 60) !== Math.floor((i - 5) / 60) ? 400 : 0;
-    // Add some variance
-    const variance = Math.random() * 200 - 100;
-    const currentDps = baseDps + cooldownBonus + variance;
+export const dpsDataAtom = atom<DpsDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-    // Running average (smoothed)
-    const runningAvg =
-      data.length > 0
-        ? data[data.length - 1].running_avg * 0.8 + currentDps * 0.2
-        : currentDps;
-
-    data.push({
-      time: i,
-      dps: Math.round(currentDps),
-      running_avg: Math.round(runningAvg),
-    });
+  // If we have damage data, transform it
+  if (combatData && combatData.damage.length > 0) {
+    return transformToDpsChartData(combatData);
   }
 
-  return data;
-}
+  return [];
+});
 
-// Generate mock resource (mana) data
-function generateResourceData(): ResourceDataPoint[] {
-  const data: ResourceDataPoint[] = [];
-  let mana = 10000;
-  let totalSpent = 0;
+export const resourceDataAtom = atom<ResourceDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-  for (let i = 0; i <= 300; i += 5) {
-    // Mana regeneration
-    const regen = 50;
-    // Mana spending (spiky with ability usage)
-    const spent =
-      Math.random() > 0.7
-        ? Math.floor(Math.random() * 500)
-        : Math.floor(Math.random() * 200);
-
-    mana = Math.max(0, Math.min(10000, mana + regen - spent));
-    totalSpent += spent;
-
-    data.push({
-      time: i,
-      mana: Math.round(mana),
-      mana_spent: totalSpent,
-    });
+  // If we have resource data, transform it
+  if (combatData && combatData.resources.length > 0) {
+    return transformToResourceChartData(combatData);
   }
 
-  return data;
-}
+  return [];
+});
 
-// Generate mock ability usage data
-function generateAbilityData(): AbilityUsageDataPoint[] {
-  return [
-    { ability: "Fireball", casts: 45, damage: 125000, fill: "var(--chart-1)" },
-    { ability: "Pyroblast", casts: 12, damage: 89000, fill: "var(--chart-2)" },
-    { ability: "Fire Blast", casts: 38, damage: 67000, fill: "var(--chart-3)" },
-    { ability: "Scorch", casts: 28, damage: 42000, fill: "var(--chart-4)" },
-    { ability: "Combustion", casts: 5, damage: 35000, fill: "var(--chart-5)" },
-  ];
-}
+export const abilityDataAtom = atom<AbilityUsageDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-// Generate mock cooldown events
-function generateCooldownData(): CooldownEvent[] {
-  return [
-    { time: 0, ability: "Combustion", duration: 10 },
-    { time: 60, ability: "Combustion", duration: 10 },
-    { time: 120, ability: "Combustion", duration: 10 },
-    { time: 180, ability: "Combustion", duration: 10 },
-    { time: 240, ability: "Combustion", duration: 10 },
-    { time: 30, ability: "Icy Veins", duration: 20 },
-    { time: 150, ability: "Icy Veins", duration: 20 },
-    { time: 90, ability: "Presence of Mind", duration: 15 },
-    { time: 210, ability: "Presence of Mind", duration: 15 },
-  ];
-}
-
-// Generate detailed breakdown data
-function generateDetailedData(): DetailedDataPoint[] {
-  const data: DetailedDataPoint[] = [];
-  let cumulativeDamage = 0;
-
-  for (let i = 0; i <= 300; i += 10) {
-    const damage = Math.floor(Math.random() * 5000 + 8000);
-    cumulativeDamage += damage;
-    const dps = cumulativeDamage / Math.max(1, i);
-    const mana = 10000 - (i / 300) * 8000 + Math.random() * 1000;
-
-    data.push({
-      time: i,
-      damage: Math.round(cumulativeDamage),
-      mana: Math.round(Math.max(0, mana)),
-      dps: Math.round(dps),
-    });
+  // If we have cast data, transform it
+  if (combatData && combatData.casts.length > 0) {
+    return transformToAbilityChartData(combatData);
   }
 
-  return data;
-}
+  return [];
+});
 
-// Atoms for chart data
-export const dpsDataAtom = atom<DpsDataPoint[]>(generateDpsData());
+export const cooldownDataAtom = atom<CooldownEvent[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-export const resourceDataAtom = atom<ResourceDataPoint[]>(
-  generateResourceData(),
-);
+  // If we have buff data, transform it
+  if (combatData && combatData.buffs.length > 0) {
+    return transformToCooldownChartData(combatData);
+  }
 
-export const abilityDataAtom = atom<AbilityUsageDataPoint[]>(
-  generateAbilityData(),
-);
+  return [];
+});
 
-export const cooldownDataAtom = atom<CooldownEvent[]>(generateCooldownData());
+export const detailedDataAtom = atom<DetailedDataPoint[]>((get) => {
+  const combatData = get(combatDataAtom);
 
-export const detailedDataAtom = atom<DetailedDataPoint[]>(
-  generateDetailedData(),
-);
+  // If we have damage data, transform it
+  if (combatData && combatData.damage.length > 0) {
+    return transformToDetailedChartData(combatData);
+  }
+
+  return [];
+});
 
 // Chart order management
 export type ChartId = "dps" | "resource" | "ability" | "cooldown" | "detailed";

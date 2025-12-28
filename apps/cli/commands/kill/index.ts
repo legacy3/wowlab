@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import { execSync } from "node:child_process";
 
 const killProgram = Effect.gen(function* () {
-  yield* Effect.logInfo("Searching for development processes...");
+  yield* Effect.logInfo("Searching for development processes ...");
 
   yield* Effect.try({
     catch: (error) => {

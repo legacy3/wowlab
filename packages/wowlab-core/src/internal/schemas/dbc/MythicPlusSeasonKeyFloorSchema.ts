@@ -7,4 +7,6 @@ export const MythicPlusSeasonKeyFloorRowSchema = Schema.Struct({
   DisplaySeasonID: Schema.NumberFromString,
 });
 
-export type MythicPlusSeasonKeyFloorRow = Schema.Schema.Type<typeof MythicPlusSeasonKeyFloorRowSchema>;
+export type MythicPlusSeasonKeyFloorRow = Schema.Schema.Type<
+  typeof MythicPlusSeasonKeyFloorRowSchema
+>;

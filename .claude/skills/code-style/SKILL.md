@@ -105,6 +105,64 @@ for (const item of items) {
 - Remove console.log statements
 - Clean up TODO comments by doing them or removing them
 
+## Formatting - Use Utilities
+
+**Always use `@/lib/format` instead of manual formatting.**
+
+### Wrong
+
+```tsx
+{
+  value.toLocaleString();
+}
+{
+  new Date(date).toLocaleDateString();
+}
+{
+  `${duration}ms`;
+}
+{
+  (percent * 100).toFixed(1) + "%";
+}
+```
+
+### Right
+
+```tsx
+import {
+  formatInt,
+  formatRelativeToNow,
+  formatDurationMs,
+  formatPercent,
+} from "@/lib/format";
+
+{
+  formatInt(value);
+}
+{
+  formatRelativeToNow(date);
+}
+{
+  formatDurationMs(duration);
+}
+{
+  formatPercent(percent);
+}
+```
+
+### Available Formatters
+
+| Function                | Use For                    |
+| ----------------------- | -------------------------- |
+| `formatInt`             | Large integers with commas |
+| `formatCompact`         | Abbreviated numbers (1.2M) |
+| `formatPercent`         | Percentages                |
+| `formatNumber`          | Spell description numbers  |
+| `formatRelativeToNow`   | Relative time ("2h ago")   |
+| `formatDate`            | Formatted dates            |
+| `formatDurationMs`      | Millisecond durations      |
+| `formatDurationSeconds` | Second durations           |
+
 ## Instructions
 
 When writing or reviewing code:
@@ -114,3 +172,4 @@ When writing or reviewing code:
 3. Delete obsolete code, don't deprecate
 4. Remove legacy patterns, don't maintain them
 5. Keep codebase lean - when in doubt, delete
+6. Use `@/lib/format` for all number/date/duration formatting

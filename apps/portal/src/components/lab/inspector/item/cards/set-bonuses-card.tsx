@@ -35,9 +35,9 @@ export function SetBonusesCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Sparkles className="h-4 w-4 shrink-0" />
           Set Bonuses
         </CardTitle>
       </CardHeader>

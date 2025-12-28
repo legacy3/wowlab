@@ -13,7 +13,7 @@ import { UserHandle } from "@/components/ui/user-handle";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Profile } from "@/lib/supabase/types";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/format";
 
 interface UserProfileProps {
   userId: string;
@@ -68,7 +68,7 @@ function UserProfileInner({ userId }: UserProfileProps) {
               {isOwnProfile && <Badge variant="secondary">You</Badge>}
             </div>
             <CardDescription>
-              Member since {format(new Date(user.createdAt), "MMMM yyyy")}
+              Member since {formatDate(user.createdAt, "MMMM yyyy")}
             </CardDescription>
           </div>
         </div>

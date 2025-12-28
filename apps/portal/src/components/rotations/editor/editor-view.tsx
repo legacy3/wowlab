@@ -5,13 +5,14 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Expand,
-  Loader2,
   PanelRight,
   Play,
   Save,
   Settings,
+  Sparkles,
   X,
 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import {
   CodeEditor,
@@ -33,6 +34,7 @@ import { SettingsPanel, type SettingsValues } from "./settings-panel";
 import { EditorSidebar } from "./sidebar";
 import type { Rotation } from "@/lib/supabase/types";
 import { RotationEditorTour } from "@/components/tours";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface EditorViewProps {
   rotation: Rotation;
@@ -40,6 +42,7 @@ interface EditorViewProps {
   isSaving: boolean;
   isTesting: boolean;
   isDraft: boolean;
+  hasChanges: boolean;
   onScriptChange: (script: string) => void;
   onSave: () => void;
   onTest: () => void;
@@ -49,12 +52,19 @@ interface EditorViewProps {
 
 function EditorSkeleton() {
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] p-4 gap-2">
-      <Skeleton className="h-4 w-32 bg-zinc-700" />
-      <Skeleton className="h-4 w-48 bg-zinc-700" />
-      <Skeleton className="h-4 w-24 bg-zinc-700" />
-      <Skeleton className="h-4 w-64 bg-zinc-700" />
-      <Skeleton className="h-4 w-40 bg-zinc-700" />
+    <div className="flex flex-col h-full bg-[#1e1e1e] p-4 gap-3">
+      <div className="flex gap-2">
+        <Skeleton className="h-4 w-16 bg-zinc-700/50" />
+        <Skeleton className="h-4 w-24 bg-zinc-700/50" />
+      </div>
+      <Skeleton className="h-4 w-48 bg-zinc-700/50" />
+      <Skeleton className="h-4 w-32 bg-zinc-700/50" />
+      <div className="flex gap-2 mt-2">
+        <Skeleton className="h-4 w-8 bg-zinc-700/50" />
+        <Skeleton className="h-4 w-64 bg-zinc-700/50" />
+      </div>
+      <Skeleton className="h-4 w-40 bg-zinc-700/50" />
+      <Skeleton className="h-4 w-56 bg-zinc-700/50" />
     </div>
   );
 }
@@ -65,6 +75,7 @@ export function EditorView({
   isSaving,
   isTesting,
   isDraft,
+  hasChanges,
   onScriptChange,
   onSave,
   onTest,
@@ -74,6 +85,7 @@ export function EditorView({
   const { isZen, toggleZen } = useZenMode();
   const [editorReady, setEditorReady] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const editorRef = useCodeEditorRef();
 
   const handleBeforeMount = useCallback((monaco: MonacoInstance) => {
@@ -88,7 +100,6 @@ export function EditorView({
     [editorRef],
   );
 
-  /* eslint-disable react-hooks/preserve-manual-memoization -- ref.current access pattern is intentional */
   const handleInsert = useCallback(
     (text: string) => {
       const editor = editorRef.editorRef.current;
@@ -104,7 +115,7 @@ export function EditorView({
       editor.executeEdits("insert", [
         {
           range: selection,
-          text: text,
+          text,
           forceMoveMarkers: true,
         },
       ]);
@@ -113,7 +124,41 @@ export function EditorView({
     },
     [editorRef],
   );
-  /* eslint-enable react-hooks/preserve-manual-memoization */
+
+  const handleFormat = useCallback(async () => {
+    const editor = editorRef.editorRef.current;
+    if (!editor) {
+      return;
+    }
+
+    try {
+      const prettier = await import("prettier/standalone");
+      const estreePlugin = await import("prettier/plugins/estree");
+      const tsPlugin = await import("prettier/plugins/typescript");
+
+      const formatted = await prettier.format(script, {
+        parser: "typescript",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        plugins: [estreePlugin, tsPlugin] as any,
+        semi: true,
+        singleQuote: false,
+        tabWidth: 2,
+        trailingComma: "all",
+      });
+
+      onScriptChange(formatted);
+    } catch {
+      // Format failed, ignore
+    }
+  }, [script, onScriptChange, editorRef]);
+
+  const handleSettingsSave = useCallback(
+    (values: SettingsValues) => {
+      onSettingsChange(values);
+      setSettingsOpen(false);
+    },
+    [onSettingsChange],
+  );
 
   const isDisabled = isSaving || isTesting;
 
@@ -137,7 +182,7 @@ export function EditorView({
           <div>
             <h1 className="text-sm font-medium">{rotation.name}</h1>
             <p className="text-xs text-muted-foreground">
-              {rotation.class} · {rotation.spec}
+              <SpecLabel specId={rotation.specId} size="sm" showIcon={false} />
               {isZen && <span className="ml-2 opacity-60">(ESC to exit)</span>}
             </p>
           </div>
@@ -164,7 +209,7 @@ export function EditorView({
             {isZen ? <X className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
           </Button>
 
-          <Dialog>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"
@@ -183,13 +228,27 @@ export function EditorView({
               </DialogHeader>
               <SettingsPanel
                 rotation={rotation}
-                onSave={onSettingsChange}
+                onSave={handleSettingsSave}
                 onDelete={onDelete}
                 isDisabled={isDisabled}
               />
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 px-2 py-1 border-b bg-muted/20 shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs gap-1.5"
+          onClick={handleFormat}
+          disabled={isDisabled}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          Format
+        </Button>
       </div>
 
       {/* Editor + Sidebar */}
@@ -220,23 +279,28 @@ export function EditorView({
 
         {/* Sidebar */}
         {showSidebar && (
-          <div data-tour="rotation-editor-sidebar">
-            <EditorSidebar onInsert={handleInsert} />
-          </div>
+          <EditorSidebar
+            onInsert={handleInsert}
+            rotationId={rotation.id}
+            currentVersion={rotation.currentVersion ?? undefined}
+            currentScript={script}
+            onRestore={onScriptChange}
+            data-tour="rotation-editor-sidebar"
+          />
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-center gap-3 border-t px-4 py-3 bg-muted/30 shrink-0">
+      <div className="flex items-center justify-center gap-2 border-t px-4 py-2.5 bg-muted/30 shrink-0">
         <Button
           variant="outline"
           size="sm"
           onClick={onSave}
-          disabled={isDisabled}
+          disabled={isDisabled || (!isDraft && !hasChanges)}
           data-tour="rotation-editor-save"
         >
           {isSaving ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" />
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
@@ -249,7 +313,7 @@ export function EditorView({
           data-tour="rotation-editor-test"
         >
           {isTesting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" variant="processing" />
           ) : (
             <Play className="mr-2 h-4 w-4" />
           )}

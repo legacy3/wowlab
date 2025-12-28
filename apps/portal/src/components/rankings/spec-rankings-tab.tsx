@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   selectedTierAtom,
@@ -123,13 +124,21 @@ export function SpecRankingsTab() {
           ) : (
             <div className="overflow-x-auto rounded-lg border">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-14 text-center">#</TableHead>
-                    <TableHead>Spec</TableHead>
-                    <TableHead className="text-right">DPS</TableHead>
-                    <TableHead className="w-32 text-right">Change</TableHead>
-                    <TableHead className="w-32 text-right">Parses</TableHead>
+                <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-14 text-center font-medium">
+                      #
+                    </TableHead>
+                    <TableHead className="font-medium">Spec</TableHead>
+                    <TableHead className="text-right font-medium">
+                      DPS
+                    </TableHead>
+                    <TableHead className="w-32 text-right font-medium">
+                      Change
+                    </TableHead>
+                    <TableHead className="w-32 text-right font-medium">
+                      Parses
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -164,13 +173,13 @@ export function SpecRankingsTab() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
-                        {Math.round(ranking.avgDps).toLocaleString()}
+                        {formatInt(Math.round(ranking.avgDps))}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         <TrendPill direction="flat" value={0} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {ranking.simCount.toLocaleString()}
+                        {formatInt(ranking.simCount)}
                       </TableCell>
                     </TableRow>
                   ))}

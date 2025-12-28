@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { getQualityName, useItemData } from "../item-context";
+import { formatInt } from "@/lib/format";
 
 export function HeaderCard() {
   const item = useItemData();
@@ -57,19 +58,25 @@ export function HeaderCard() {
               <span>{item.classification.subclassName} Armor</span>
             </div>
 
-            <div className="mt-4 space-y-1">
+            <div className="mt-4 space-y-1.5">
               <p className="text-sm">
-                <span className="text-muted-foreground">{item.armor}</span>{" "}
+                <span className="text-muted-foreground tabular-nums">
+                  {formatInt(item.armor)}
+                </span>{" "}
                 Armor
               </p>
               {item.primaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm">
-                  +{stat.value.toLocaleString()} {stat.name}
+                  <span className="tabular-nums">+{formatInt(stat.value)}</span>{" "}
+                  {stat.name}
                 </p>
               ))}
               {item.secondaryStats.map((stat) => (
                 <p key={stat.name} className="text-sm text-green-500">
-                  +{stat.rating.toLocaleString()} {stat.name}
+                  <span className="tabular-nums">
+                    +{formatInt(stat.rating)}
+                  </span>{" "}
+                  {stat.name}
                 </p>
               ))}
               {item.sockets.map((socket, i) => (
@@ -78,7 +85,10 @@ export function HeaderCard() {
                 </p>
               ))}
               <p className="text-sm text-muted-foreground">
-                Requires Level {item.requiredLevel}
+                Requires Level{" "}
+                <span className="tabular-nums">
+                  {formatInt(item.requiredLevel)}
+                </span>
               </p>
               {item.description && (
                 <p className="mt-2 text-sm italic text-yellow-500">

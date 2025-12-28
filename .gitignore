@@ -38,6 +38,7 @@ yarn-error.log*
 
 # Coverage (now in build/)
 .nyc_output/
+profile.json.gz
 
 # Temporary files
 *.tmp

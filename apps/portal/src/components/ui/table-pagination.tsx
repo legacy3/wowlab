@@ -12,6 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
+import { formatInt } from "@/lib/format";
 
 type TablePaginationProps = {
   readonly className?: string;
@@ -78,8 +79,7 @@ export function TablePagination({
       )}
     >
       <span className="tabular-nums whitespace-nowrap">
-        Showing {start.toLocaleString()}–{end.toLocaleString()} of{" "}
-        {totalCount.toLocaleString()}
+        Showing {formatInt(start)}–{formatInt(end)} of {formatInt(totalCount)}
       </span>
       <Pagination>
         <PaginationContent>

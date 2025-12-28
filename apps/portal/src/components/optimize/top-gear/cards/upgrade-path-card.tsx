@@ -36,8 +36,8 @@ const UPGRADE_STEPS = [
 export function TopGearUpgradePathCard() {
   return (
     <Card className="h-full" data-tour="upgrade-path">
-      <CardHeader>
-        <CardTitle>Upgrade Path</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Upgrade Path</CardTitle>
         <CardDescription>Recommended gear acquisition order</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

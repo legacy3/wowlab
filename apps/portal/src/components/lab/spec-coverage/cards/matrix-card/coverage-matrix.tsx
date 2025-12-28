@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Legend } from "./legend";
 import { ClassRow } from "./class-row";
@@ -31,7 +31,7 @@ export function CoverageMatrix() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <FlaskInlineLoader className="h-6 w-6 text-muted-foreground" />
         <span className="ml-2 text-sm text-muted-foreground">
           Loading coverage matrix...
         </span>

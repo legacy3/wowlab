@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 
-import { SpellActions } from "../actions/spell/SpellActions.js";
 import { ControlActions } from "../actions/control/ControlActions.js";
+import { SpellActions } from "../actions/spell/SpellActions.js";
 
 /**
  * High-level rotation context that provides all rotation actions.
@@ -15,8 +15,8 @@ export class RotationContext extends Effect.Service<RotationContext>()(
       const control = yield* ControlActions;
 
       return {
-        spell,
         control,
+        spell,
       };
     }),
   },

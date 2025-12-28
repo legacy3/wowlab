@@ -22,8 +22,8 @@ export interface EventFilter {
  * Receives an event and an emitter to emit new events.
  */
 export type EventHandler<
-  E extends
-    CombatLog.CombatLog.CombatLogEvent = CombatLog.CombatLog.CombatLogEvent,
+  E extends CombatLog.CombatLog.CombatLogEvent =
+    CombatLog.CombatLog.CombatLogEvent,
   R = never,
   Err = never,
 > = (event: E, emitter: Emitter) => Effect.Effect<void, Err, R>;

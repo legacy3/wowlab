@@ -69,9 +69,9 @@ export function RecentCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <History className="h-5 w-5 text-muted-foreground" />
+          <History className="h-5 w-5 shrink-0 text-muted-foreground" />
           Recent Characters
         </CardTitle>
         <CardDescription>

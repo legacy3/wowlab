@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { TrendDirection } from "@/atoms/dps-rankings";
+import { formatPercent } from "@/lib/format";
 
 // Shared tab header component
 interface TabHeaderProps {
@@ -43,11 +44,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description }: EmptyStateProps) {
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/10 p-12 text-center">
       <div className="rounded-full bg-muted p-3">{icon}</div>
-      <div>
+      <div className="space-y-1.5">
         <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
     </div>
   );
@@ -76,8 +77,8 @@ export function RankingsCard({
   return (
     <Card>
       {header && (
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-lg font-semibold">
+        <CardHeader className="space-y-1.5 pb-4">
+          <CardTitle className="text-base font-medium">
             {header.title}
           </CardTitle>
           <CardDescription>{header.description}</CardDescription>
@@ -110,8 +111,8 @@ interface TrendPillProps {
 export function TrendPill({ direction, value }: TrendPillProps) {
   if (direction === "flat") {
     return (
-      <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-        {value.toFixed(1)}%
+      <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium tabular-nums text-muted-foreground">
+        {formatPercent(value, 1)}
       </span>
     );
   }
@@ -121,19 +122,19 @@ export function TrendPill({ direction, value }: TrendPillProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-end gap-1 rounded-full px-2 py-1 text-xs font-semibold",
+        "inline-flex items-center justify-end gap-1 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums",
         isPositive
           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
           : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
       )}
     >
       {isPositive ? (
-        <ArrowUpRight className="h-3 w-3" />
+        <ArrowUpRight className="h-3 w-3 shrink-0" />
       ) : (
-        <ArrowDownRight className="h-3 w-3" />
+        <ArrowDownRight className="h-3 w-3 shrink-0" />
       )}
       {isPositive ? "+" : ""}
-      {value.toFixed(1)}%
+      {formatPercent(value, 1)}
     </span>
   );
 }

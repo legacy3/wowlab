@@ -322,7 +322,7 @@ export function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
         style={{ color: spell.school ? schoolColor : "#ffd100" }}
       >
         {isLoading && !renderedDescription
-          ? "Loading description..."
+          ? "Loading description ..."
           : description}
       </p>
     </div>

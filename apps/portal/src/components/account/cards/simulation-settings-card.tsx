@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -24,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RotateCcw } from "lucide-react";
+import { HelpCircle, RotateCcw } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { settingsCardOrderAtom } from "@/atoms/user/settings-ui";
@@ -127,6 +129,8 @@ export function SimulationSettingsCard() {
             </div>
           </Field>
 
+          <WorkerThreadsField isUpdating={isUpdating} />
+
           <Field>
             <FieldLabel>Game Version</FieldLabel>
             <Select defaultValue="live" disabled>
@@ -163,6 +167,61 @@ export function SimulationSettingsCard() {
   );
 }
 
+// TODO Actually make this setting work and use reasonable defaults according to our formula
+const MIN_WORKERS = 1;
+const MAX_WORKERS = 32;
+const DEFAULT_WORKERS = 8;
+
+function WorkerThreadsField({ isUpdating }: { isUpdating: boolean }) {
+  const [useOverride, setUseOverride] = useState(false);
+  const [workerCount, setWorkerCount] = useState(DEFAULT_WORKERS);
+
+  return (
+    <Field>
+      <FieldLabel className="flex items-center gap-1.5">
+        Worker Threads
+        <Link
+          href="/docs/reference/03-browser-cpu-limits"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+        </Link>
+      </FieldLabel>
+      <div className="space-y-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <Switch
+            checked={useOverride}
+            onCheckedChange={setUseOverride}
+            disabled={isUpdating}
+          />
+          <span className="text-sm">Override browser-reported count</span>
+        </label>
+        {useOverride && (
+          <div className="flex items-center gap-4">
+            <Slider
+              min={MIN_WORKERS}
+              max={MAX_WORKERS}
+              step={1}
+              value={[workerCount]}
+              onValueChange={(v) => setWorkerCount(v[0])}
+              disabled={isUpdating}
+              className="flex-1"
+            />
+            <div className="w-16 text-center font-medium tabular-nums">
+              {workerCount}
+            </div>
+          </div>
+        )}
+        <FieldDescription>
+          {useOverride
+            ? "Manual thread count. Syncs with your account, not this device."
+            : "Uses navigator.hardwareConcurrency (may be limited by your browser)"}
+        </FieldDescription>
+      </div>
+    </Field>
+  );
+}
+
 function SimulationSettingsCardSkeleton() {
   return (
     <Card>
@@ -194,6 +253,11 @@ function SimulationSettingsCardSkeleton() {
                 <Skeleton className="h-6 w-16" />
               </div>
             </div>
+          </Field>
+
+          <Field>
+            <FieldLabel>Worker Threads</FieldLabel>
+            <Skeleton className="h-5 w-32" />
           </Field>
 
           <Field>

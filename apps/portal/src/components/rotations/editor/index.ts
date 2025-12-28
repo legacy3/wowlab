@@ -1,1 +1,1 @@
-export { RotationEditor } from "./rotation-editor";
+export { RotationEditor, RotationEditorSkeleton } from "./rotation-editor";

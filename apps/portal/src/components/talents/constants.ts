@@ -6,6 +6,7 @@ import {
   primary,
   gridLine,
   success,
+  textDim,
   textMuted,
   warning,
   white,
@@ -51,9 +52,9 @@ export const COLOR_HERE_ARROW = white;
 export const COLOR_HERE_ARROW_GLOW = primary;
 export const GRID_COLOR = `${gridLine}26`;
 
-export const PREVIEW_BG = "linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)";
-export const PREVIEW_EDGE = primary;
-export const PREVIEW_EDGE_ACTIVE = gold;
-export const PREVIEW_NODE = primary;
-export const PREVIEW_NODE_ACTIVE = gold;
-export const PREVIEW_NODE_ACTIVE_STROKE = warning;
+export const PREVIEW_BG = "#0a0a0b";
+export const PREVIEW_EDGE = textDim;
+export const PREVIEW_EDGE_ACTIVE = success;
+export const PREVIEW_NODE = textDim;
+export const PREVIEW_NODE_ACTIVE = success;
+export const PREVIEW_NODE_ACTIVE_STROKE = "#22c55e80";

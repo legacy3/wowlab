@@ -62,7 +62,7 @@ export function simcProfileToPortalData(profile: SimcProfile): ParsedSimcData {
     name: character.name,
     race: capitalCase(character.race),
     region: character.region?.toUpperCase() ?? "Unknown",
-    server: character.server ?? "Unknown",
+    realm: character.server ?? "Unknown",
     spec: character.spec ? capitalCase(character.spec) : undefined,
   };
 

@@ -69,6 +69,7 @@ export function useSimulation(options?: UseSimulationOptions) {
         name: `${rotation.name} Simulation`,
         rotationId: rotation.name.toLowerCase().replace(/\s+/g, "-"),
         totalIterations: Math.ceil((durationSeconds * 1000) / 100), // Approx ticks
+        code: "",
       });
 
       // Open the computing drawer to show progress

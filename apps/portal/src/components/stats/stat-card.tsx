@@ -46,9 +46,9 @@ export function StatCard({
               {icon}
             </div>
           ) : null}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className={valueClassName}>{value}</p>
+            <p className={cn(valueClassName, "tabular-nums")}>{value}</p>
             {badge}
             {description ? (
               <p className="text-xs text-muted-foreground">{description}</p>

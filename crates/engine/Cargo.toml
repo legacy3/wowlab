@@ -1,0 +1,35 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "bench"
+path = "src/bin/bench.rs"
+
+[features]
+default = []
+debug_logging = []  # Enable with --features debug_logging
+large_capacity = [] # Preallocate 16384 events instead of default
+meta_events = []    # Batch same-time events into meta events
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6"
+thiserror = "2.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# For profiling the bench binary (no LTO for symbol resolution)
+[profile.bench-profile]
+inherits = "release"
+debug = "line-tables-only"
+lto = false
+codegen-units = 16

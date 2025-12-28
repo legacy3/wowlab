@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { formatHex, useSpellData } from "../spell-context";
+import { formatHex } from "@/lib/hex";
+import { useSpellData } from "../spell-context";
 
 export function AttributesCard() {
   const spell = useSpellData();
@@ -14,10 +15,12 @@ export function AttributesCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Spell Attributes (Flags)</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Spell Attributes (Flags)
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3 pt-4">
         {displayedAttributes.map((attr) => (
           <div key={attr.index} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
@@ -59,7 +62,7 @@ export function AttributesCard() {
           >
             {expanded
               ? "Show less"
-              : `Expand all ${spell.attributes.length} attribute flags...`}
+              : `Expand all ${spell.attributes.length} attribute flags ...`}
           </button>
         )}
       </CardContent>

@@ -6,4 +6,6 @@ export const MythicPlusSeasonTrackedMapRowSchema = Schema.Struct({
   DisplaySeasonID: Schema.NumberFromString,
 });
 
-export type MythicPlusSeasonTrackedMapRow = Schema.Schema.Type<typeof MythicPlusSeasonTrackedMapRowSchema>;
+export type MythicPlusSeasonTrackedMapRow = Schema.Schema.Type<
+  typeof MythicPlusSeasonTrackedMapRowSchema
+>;

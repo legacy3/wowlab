@@ -19,9 +19,10 @@ interface VisualizeTabProps {
 
 const CANVAS_HEIGHT = calculateCanvasHeight(MOCK_PRIORITY_LIST.length);
 
-export const VisualizeTab = memo(function VisualizeTab({
-  rotation,
-}: VisualizeTabProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const VisualizeTab = memo(function VisualizeTab(
+  _props: VisualizeTabProps,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
@@ -63,7 +64,6 @@ export const VisualizeTab = memo(function VisualizeTab({
                   priorityList={MOCK_PRIORITY_LIST}
                   currentFrame={currentFrame}
                   width={canvasWidth}
-                  height={CANVAS_HEIGHT}
                 />
               </KonvaLayer>
             </KonvaStage>

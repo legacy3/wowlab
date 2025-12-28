@@ -2,26 +2,29 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { formatHex, useSpellData } from "../spell-context";
+import { formatHex } from "@/lib/hex";
+import { useSpellData } from "../spell-context";
 
 export function SpellClassCard() {
   const spell = useSpellData();
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Spell Class Options</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">
+          Spell Class Options
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Spell Class Set</p>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Spell Class Set</p>
             <p className="font-medium">
               {spell.spellClassSet} ({spell.spellClassSetName})
             </p>
           </div>
-          <div>
-            <p className="text-muted-foreground">Spell Class Mask</p>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Spell Class Mask</p>
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
               [{spell.spellClassMask.map(formatHex).join(", ")}]
             </code>

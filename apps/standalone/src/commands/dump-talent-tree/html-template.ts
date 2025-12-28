@@ -741,7 +741,7 @@ export const generateHtml = (
     <div class="hero-selector">
       ${renderHeroButtons(tree.subTrees, supabaseUrl)}
     </div>
-    <input type="text" class="search-input" id="searchInput" placeholder="Search talents...">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search talents ...">
     <div class="stats">${tree.nodes.length} nodes · ${tree.edges.length} edges</div>
     <div class="legend">
       <span><div class="dot normal"></div> Talent</span>

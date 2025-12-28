@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -103,7 +104,7 @@ export function UntrackedCard() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <FlaskInlineLoader className="h-6 w-6 text-muted-foreground" />
             <span className="ml-2 text-sm text-muted-foreground">
               Loading...
             </span>

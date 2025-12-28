@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink, Loader2, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 interface WowLinkProps {
   href: string;
@@ -18,7 +19,7 @@ export function WowLink({ href, name, fallback, isLoading }: WowLinkProps) {
       className="inline-flex items-center gap-1.5 hover:underline"
     >
       {name ?? fallback}
-      {isLoading && <Loader2 className="h-3 w-3 animate-spin opacity-50" />}
+      {isLoading && <FlaskInlineLoader className="h-3 w-3 opacity-50" />}
       {!isLoading && !name && <AlertTriangle className="h-3 w-3 opacity-50" />}
       <ExternalLink className="h-3 w-3 opacity-50" />
     </a>

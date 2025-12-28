@@ -4,7 +4,12 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { env } from "@/lib/env";
 
-import { ThemeProvider, JotaiProvider, RefineProvider } from "@/providers";
+import {
+  ThemeProvider,
+  JotaiProvider,
+  RefineProvider,
+  NodeManagerProvider,
+} from "@/providers";
 import { SiteShell } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -49,15 +54,17 @@ export default function RootLayout({
         <NuqsAdapter>
           <JotaiProvider>
             <RefineProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <SiteShell>{children}</SiteShell>
-                <Toaster />
-              </ThemeProvider>
+              <NodeManagerProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <SiteShell>{children}</SiteShell>
+                  <Toaster />
+                </ThemeProvider>
+              </NodeManagerProvider>
             </RefineProvider>
           </JotaiProvider>
         </NuqsAdapter>

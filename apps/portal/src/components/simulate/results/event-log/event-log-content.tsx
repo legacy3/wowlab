@@ -24,6 +24,7 @@ import type { SimulationEvent } from "@/lib/simulation/types";
 import { isResourceSnapshot } from "@/lib/simulation/transformers";
 import { useJsonExport } from "@/hooks/use-json-export";
 import { GAME_CONFIG } from "@/lib/config/game";
+import { formatDurationSeconds, formatInt } from "@/lib/format";
 
 type EventCategory = "cast" | "damage" | "aura" | "resource" | "other";
 
@@ -71,10 +72,7 @@ function getEventCategory(tag: string): EventCategory {
 }
 
 function formatTimestamp(timestamp: number): string {
-  const minutes = Math.floor(timestamp / 60);
-  const seconds = (timestamp % 60).toFixed(2);
-
-  return `${minutes}:${seconds.padStart(5, "0")}`;
+  return formatDurationSeconds(timestamp);
 }
 
 function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
@@ -106,13 +104,13 @@ function transformEvent(event: SimulationEvent, index: number): DisplayEvent {
   if ("amount" in event && typeof event.amount === "number") {
     if (tag.includes("DAMAGE")) {
       const crit = "critical" in event && event.critical ? " (Crit)" : "";
-      details = `${event.amount.toLocaleString()} damage${crit}`;
+      details = `${formatInt(event.amount)} damage${crit}`;
     } else if (tag.includes("ENERGIZE")) {
-      details = `+${event.amount} resource`;
+      details = `+${formatInt(event.amount)} resource`;
     } else if (tag.includes("DRAIN")) {
-      details = `-${event.amount} resource`;
+      details = `-${formatInt(event.amount)} resource`;
     } else {
-      details = `${event.amount}`;
+      details = `${formatInt(event.amount)}`;
     }
   }
 
@@ -199,132 +197,137 @@ export function EventLogContent() {
   if (!job?.result?.events) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          No event data available
+        <CardContent className="py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            No event data available
+          </p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">
-                Event Log ({filteredEvents.length.toLocaleString()} events)
-              </CardTitle>
-              {exportJson && (
-                <>
-                  <CopyButton
-                    value={exportJson}
-                    label="event log"
-                    title="Copy event log"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                    onClick={downloadJson}
-                    title="Download event log JSON"
-                  >
-                    <Download />
-                  </Button>
-                </>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant="outline"
-                  className={`cursor-pointer transition-colors ${
-                    categoryFilter === cat
-                      ? cat === "all"
-                        ? "bg-primary/20 text-primary border-primary/30"
-                        : CATEGORY_COLORS[cat]
-                      : "hover:bg-muted"
-                  }`}
-                  onClick={() => setCategoryFilter(cat)}
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-base font-medium">
+              Event Log
+              <span className="ml-2 text-sm font-normal text-muted-foreground tabular-nums">
+                ({formatInt(filteredEvents.length)} events)
+              </span>
+            </CardTitle>
+            {exportJson && (
+              <div className="flex items-center gap-1">
+                <CopyButton
+                  value={exportJson}
+                  label="event log"
+                  title="Copy event log"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  onClick={downloadJson}
+                  title="Download event log JSON"
                 >
-                  {cat === "all"
-                    ? "All"
-                    : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </Badge>
-              ))}
-            </div>
+                  <Download />
+                </Button>
+              </div>
+            )}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            placeholder="Filter events..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="max-w-sm"
-          />
-          <div className="max-h-[600px] overflow-auto rounded-md border">
-            <Table>
-              <TableHeader className="sticky top-0 z-10">
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((cat) => (
+              <Badge
+                key={cat}
+                variant="outline"
+                className={`cursor-pointer transition-colors ${
+                  categoryFilter === cat
+                    ? cat === "all"
+                      ? "bg-primary/20 text-primary border-primary/30"
+                      : CATEGORY_COLORS[cat]
+                    : "hover:bg-muted/60"
+                }`}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat === "all"
+                  ? "All"
+                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-0">
+        <Input
+          placeholder="Filter events ..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="max-w-sm"
+        />
+        <div className="max-h-[600px] overflow-auto rounded-lg border">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-20 font-medium">Time</TableHead>
+                <TableHead className="w-[100px] font-medium">
+                  Category
+                </TableHead>
+                <TableHead className="w-[180px] font-medium">Event</TableHead>
+                <TableHead className="font-medium">Spell</TableHead>
+                <TableHead className="font-medium">Source</TableHead>
+                <TableHead className="font-medium">Target</TableHead>
+                <TableHead className="font-medium">Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredEvents.length === 0 ? (
                 <TableRow>
-                  <TableHead className="w-20">Time</TableHead>
-                  <TableHead className="w-[100px]">Category</TableHead>
-                  <TableHead className="w-[180px]">Event</TableHead>
-                  <TableHead>Spell</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Details</TableHead>
+                  <TableCell
+                    colSpan={7}
+                    className="h-32 text-center text-muted-foreground"
+                  >
+                    No events match the current filter
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEvents.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No events match the current filter
+              ) : (
+                filteredEvents.map((event) => (
+                  <TableRow key={event.id} className="group">
+                    <TableCell className="font-mono text-xs tabular-nums">
+                      {formatTimestamp(event.timestamp)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={CATEGORY_COLORS[event.category]}
+                      >
+                        {event.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {event.type}
+                    </TableCell>
+                    <TableCell>
+                      {event.spellId !== null ? (
+                        <span className="text-sm">
+                          <WowSpellLink spellId={event.spellId} />
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/60">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">{event.source}</TableCell>
+                    <TableCell className="text-sm">{event.target}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {event.details || "—"}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="font-mono text-xs">
-                        {formatTimestamp(event.timestamp)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={CATEGORY_COLORS[event.category]}
-                        >
-                          {event.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {event.type}
-                      </TableCell>
-                      <TableCell>
-                        {event.spellId !== null ? (
-                          <span className="text-sm">
-                            <WowSpellLink spellId={event.spellId} />
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">{event.source}</TableCell>
-                      <TableCell className="text-sm">{event.target}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {event.details || "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

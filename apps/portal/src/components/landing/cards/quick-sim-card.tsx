@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSetAtom } from "jotai";
-import { PlayCircle, Loader2 } from "lucide-react";
+import { PlayCircle } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import {
   Card,
   CardContent,
@@ -33,9 +34,9 @@ export function QuickSimCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <PlayCircle className="h-5 w-5 text-primary" />
+          <PlayCircle className="h-5 w-5 shrink-0 text-primary" />
           Quick Sim
         </CardTitle>
         <CardDescription>Paste SimC export and go</CardDescription>
@@ -44,7 +45,7 @@ export function QuickSimCard() {
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={'shaman="Name"\nlevel=80\n...'}
+          placeholder={'shaman="Name"\nlevel=80\n ...'}
           className="min-h-24 resize-none font-mono text-xs"
         />
         <Button
@@ -53,7 +54,7 @@ export function QuickSimCard() {
           className="w-full"
         >
           {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <FlaskInlineLoader className="mr-2 h-4 w-4" />
           ) : (
             <PlayCircle className="mr-2 h-4 w-4" />
           )}

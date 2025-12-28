@@ -8,6 +8,7 @@ import {
 import { labOrderAtom, type LabCardId } from "@/atoms/lab";
 import {
   DataInspectorCard,
+  PresetCharactersCard,
   SpecCoverageCard,
   TableCoverageCard,
 } from "./cards";
@@ -15,6 +16,7 @@ import { LabOverviewTour } from "@/components/tours";
 
 const components: DashboardConfig<LabCardId> = {
   "data-inspector": { Component: DataInspectorCard },
+  "preset-characters": { Component: PresetCharactersCard },
   "spec-coverage": { Component: SpecCoverageCard },
   "table-coverage": { Component: TableCoverageCard },
 };

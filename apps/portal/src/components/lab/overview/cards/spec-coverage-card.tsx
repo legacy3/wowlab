@@ -17,9 +17,9 @@ export function SpecCoverageCard() {
         className="h-full transition-colors hover:border-primary/50"
         data-tour="spec-coverage"
       >
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-primary" />
+            <CheckSquare className="h-5 w-5 shrink-0 text-primary" />
             Spec Coverage
           </CardTitle>
           <CardDescription>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, Wand2, Package, Sparkles } from "lucide-react";
+import { Search, Wand2, Package, Sparkles } from "lucide-react";
+import { FlaskLoader } from "@/components/ui/flask-loader";
 import { Link } from "@/components/ui/link";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDataInspector } from "@/hooks/use-data-inspector";
 import { useSpellDescription } from "@/hooks/use-spell-description";
 import type { DataType } from "@/atoms/lab";
@@ -62,23 +62,21 @@ export function DataInspector() {
         </TabsList>
       </Tabs>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={`${type.charAt(0).toUpperCase() + type.slice(1)} ID...`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pl-8 h-8 text-sm"
-            type="number"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder={`${type.charAt(0).toUpperCase() + type.slice(1)} ID ...`}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="pl-8 h-8 text-sm"
+          type="number"
+        />
       </div>
 
       {loading && (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <FlaskLoader size="sm" />
         </div>
       )}
 
@@ -87,85 +85,81 @@ export function DataInspector() {
       )}
 
       {data && !loading && (
-        <ScrollArea className="h-[300px]">
-          <div className="rounded-md border bg-card p-3 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold">
-                  {"name" in data ? data.name : `${type} ${id}`}
-                </h3>
-                <p className="text-xs text-muted-foreground font-mono">
-                  ID: {"id" in data ? String(data.id) : id}
-                </p>
-              </div>
-              <Badge variant="outline" className="text-[10px] capitalize">
-                {type}
-              </Badge>
+        <div className="rounded-md border bg-card p-3 space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-semibold text-sm">
+                {"name" in data ? data.name : `${type} ${id}`}
+              </h3>
+              <p className="text-xs text-muted-foreground font-mono">
+                ID: {"id" in data ? String(data.id) : id}
+              </p>
             </div>
-
-            {isSpellData(data) && (
-              <>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Cooldown</p>
-                    <p className="font-medium">
-                      {data.recoveryTime > 0
-                        ? `${data.recoveryTime / 1000}s`
-                        : "None"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Cast Time</p>
-                    <p className="font-medium">
-                      {data.castTime > 0
-                        ? `${data.castTime / 1000}s`
-                        : "Instant"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Range</p>
-                    <p className="font-medium">
-                      {data.rangeMax0 > 0 ? `${data.rangeMax0} yd` : "Self"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">GCD</p>
-                    <p className="font-medium">
-                      {data.startRecoveryTime > 0
-                        ? `${data.startRecoveryTime / 1000}s`
-                        : "Off-GCD"}
-                    </p>
-                  </div>
-                </div>
-
-                {(spellDescription ||
-                  data.description ||
-                  spellDescriptionLoading) && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Description</p>
-                    <p className="text-xs">
-                      {spellDescriptionLoading && !spellDescription
-                        ? "Loading description..."
-                        : (spellDescription?.text ??
-                          data.description ??
-                          "No description available.")}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <Link href={`/lab/inspector/${type}/${id}`} className="text-xs">
-              View in Inspector
-            </Link>
+            <Badge variant="outline" className="text-[10px] capitalize">
+              {type}
+            </Badge>
           </div>
-        </ScrollArea>
+
+          {isSpellData(data) && (
+            <>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">Cooldown</p>
+                  <p className="font-medium">
+                    {data.recoveryTime > 0
+                      ? `${data.recoveryTime / 1000}s`
+                      : "None"}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">Cast Time</p>
+                  <p className="font-medium">
+                    {data.castTime > 0 ? `${data.castTime / 1000}s` : "Instant"}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">Range</p>
+                  <p className="font-medium">
+                    {data.rangeMax0 > 0 ? `${data.rangeMax0} yd` : "Self"}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">GCD</p>
+                  <p className="font-medium">
+                    {data.startRecoveryTime > 0
+                      ? `${data.startRecoveryTime / 1000}s`
+                      : "Off-GCD"}
+                  </p>
+                </div>
+              </div>
+
+              {(spellDescription ||
+                data.description ||
+                spellDescriptionLoading) && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Description</p>
+                  <p className="text-xs">
+                    {spellDescriptionLoading && !spellDescription
+                      ? "Loading description ..."
+                      : (spellDescription?.text ??
+                        data.description ??
+                        "No description available.")}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          <Link href={`/lab/inspector/${type}/${id}`} className="text-xs">
+            View in Inspector
+          </Link>
+        </div>
       )}
 
       {!data && !loading && !error && (
         <div className="text-center py-6 text-muted-foreground">
           <p className="text-sm">Search for a {type} by ID</p>
-          <p className="text-xs mt-1">Enter an ID and press Enter to search</p>
+          <p className="text-xs mt-1">Enter an ID and press Enter</p>
         </div>
       )}
     </div>

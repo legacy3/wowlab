@@ -22,37 +22,44 @@ export function BonusIdsCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Bonus IDs</CardTitle>
-        <CardDescription>
-          Current Bonus IDs: [{item.bonusIds.join(", ")}]
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Bonus IDs</CardTitle>
+        <CardDescription className="text-xs font-mono">
+          [{item.bonusIds.join(", ")}]
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Description</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {item.bonusBreakdown.map((bonus) => (
-              <TableRow key={bonus.id}>
-                <TableCell className="font-mono">{bonus.id}</TableCell>
-                <TableCell>
-                  {bonus.type} ({bonus.typeId})
-                </TableCell>
-                <TableCell className="font-mono">{bonus.value}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {bonus.description}
-                </TableCell>
+      <CardContent className="pt-4">
+        <div className="rounded-lg border overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-medium">ID</TableHead>
+                <TableHead className="font-medium">Type</TableHead>
+                <TableHead className="font-medium">Value</TableHead>
+                <TableHead className="font-medium">Description</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {item.bonusBreakdown.map((bonus) => (
+                <TableRow key={bonus.id}>
+                  <TableCell className="font-mono tabular-nums">
+                    {bonus.id}
+                  </TableCell>
+                  <TableCell>
+                    {bonus.type}{" "}
+                    <span className="tabular-nums">({bonus.typeId})</span>
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {bonus.value}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {bonus.description}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

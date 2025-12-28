@@ -2,25 +2,9 @@
 
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CLASS_COLORS } from "@/lib/colors";
 import { GameIcon } from "@/components/game";
 import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
-
-// TODO Get this from dbc data and add to hook
-const CLASS_COLORS: Record<string, string> = {
-  "Death Knight": "#C41E3A",
-  Druid: "#FF7D0A",
-  Hunter: "#ABD473",
-  Mage: "#69CCF0",
-  Paladin: "#F58CBA",
-  Priest: "#FFFFFF",
-  Rogue: "#FFF569",
-  Shaman: "#0070DE",
-  Warlock: "#9482C9",
-  Warrior: "#C79C6E",
-  Monk: "#00FF96",
-  "Demon Hunter": "#A330C9",
-  Evoker: "#33937F",
-};
 
 interface SpecLabelProps {
   specId: number;

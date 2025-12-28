@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Card,
@@ -9,8 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Code2, GitFork, Lock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import type { Rotation } from "@/lib/supabase/types";
+import { formatRelativeToNow } from "@/lib/format";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface RotationCardProps {
   rotation: Rotation;
@@ -20,7 +23,7 @@ export function RotationCard({ rotation }: RotationCardProps) {
   return (
     <Link href={`/rotations/${rotation.id}`}>
       <Card className="hover:border-primary/50 cursor-pointer h-full">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -30,7 +33,11 @@ export function RotationCard({ rotation }: RotationCardProps) {
                 </CardTitle>
               </div>
               <CardDescription className="truncate">
-                {rotation.class} • {rotation.spec}
+                <SpecLabel
+                  specId={rotation.specId}
+                  size="sm"
+                  showIcon={false}
+                />
               </CardDescription>
             </div>
 
@@ -56,9 +63,7 @@ export function RotationCard({ rotation }: RotationCardProps) {
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <time dateTime={rotation.updatedAt}>
-                {formatDistanceToNow(new Date(rotation.updatedAt), {
-                  addSuffix: true,
-                })}
+                {formatRelativeToNow(rotation.updatedAt)}
               </time>
             </div>
 

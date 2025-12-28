@@ -15,7 +15,9 @@
     "build": "vite build && tsc-alias -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "ncu": "ncu -u"
   },
   "dependencies": {
     "effect": "^3.19.4",

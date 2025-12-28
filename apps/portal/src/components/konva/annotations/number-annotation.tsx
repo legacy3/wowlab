@@ -7,6 +7,7 @@ import type {
   NumberAnnotation as NumberAnnotationType,
   AnnotationComponentProps,
 } from "./types";
+import { parseHexColorNormalized } from "@/lib/hex";
 import {
   ANNOTATION_BADGE_STROKE,
   ANNOTATION_DEFAULT_OPACITY,
@@ -26,9 +27,7 @@ function getReadableTextColor(hex: string): string {
     return ANNOTATION_TEXT_DARK;
   }
 
-  const r = parseInt(normalized.slice(0, 2), 16) / 255;
-  const g = parseInt(normalized.slice(2, 4), 16) / 255;
-  const b = parseInt(normalized.slice(4, 6), 16) / 255;
+  const { r, g, b } = parseHexColorNormalized(normalized);
 
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 

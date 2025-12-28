@@ -21,8 +21,8 @@ const CURRENT_SLOTS = [
 export function TopGearCurrentGearCard() {
   return (
     <Card className="h-full" data-tour="current-gear">
-      <CardHeader>
-        <CardTitle>Current Gear Set</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Current Gear Set</CardTitle>
         <CardDescription>
           Your equipped items and their performance
         </CardDescription>

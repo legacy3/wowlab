@@ -24,4 +24,6 @@ export const MapChallengeModeRowSchema = Schema.Struct({
   RewardQuestID_5: Schema.NumberFromString,
 });
 
-export type MapChallengeModeRow = Schema.Schema.Type<typeof MapChallengeModeRowSchema>;
+export type MapChallengeModeRow = Schema.Schema.Type<
+  typeof MapChallengeModeRowSchema
+>;

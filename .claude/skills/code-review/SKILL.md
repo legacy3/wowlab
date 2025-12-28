@@ -31,6 +31,9 @@ Read-only review skill for checking code quality against project conventions.
 - [ ] `"use client"` only where needed
 - [ ] Barrel exports in `index.ts`
 - [ ] Jotai atoms in domain folders under `atoms/`
+- [ ] Uses `@/lib/format` utilities (not raw `.toLocaleString()` or manual formatting)
+- [ ] Loading states use Flask components (not Loader2 from lucide)
+- [ ] Providers export hook + Provider + types from `providers/index.ts`
 
 ### General
 
@@ -38,6 +41,8 @@ Read-only review skill for checking code quality against project conventions.
 - [ ] No `console.log` in production code
 - [ ] Error handling is comprehensive
 - [ ] Types are explicit at module boundaries
+- [ ] Control flow has braces (no single-line if/for)
+- [ ] No backwards-compat shims or deprecated code
 
 ## How to Use
 

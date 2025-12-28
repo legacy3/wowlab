@@ -19,7 +19,7 @@ export function TalentStringBar({
   return (
     <div className="flex items-center gap-2">
       <Input
-        placeholder="Paste a talent string..."
+        placeholder="Paste a talent string ..."
         value={talents}
         onChange={(e) => onTalentStringChange(e.target.value.trim() || null)}
         className="flex-1 font-mono text-sm"

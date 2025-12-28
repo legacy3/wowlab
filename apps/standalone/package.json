@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "ncu": "ncu -u"
   },
   "dependencies": {
@@ -18,7 +19,7 @@
     "@effect/platform": "^0.93.3",
     "@effect/platform-node": "^0.100.0",
     "@effect/rpc": "^0.72.1",
-    "@supabase/supabase-js": "^2.84.0",
+    "@supabase/supabase-js": "^2.89.0",
     "@wowlab/core": "workspace:*",
     "@wowlab/rotation": "workspace:*",
     "@wowlab/runtime": "workspace:*",
@@ -30,10 +31,10 @@
     "immutable": "^5.1.4",
     "pretty-error": "^4.0.0",
     "stacktrace-parser": "^0.1.11",
-    "tsx": "^4.20.6"
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@types/node": "^24",
+    "@types/node": "^25",
     "typescript": "^5"
   }
 }

@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ItemProvider, type ItemData } from "./item-context";
 import { ItemDetailContent } from "./item-detail-content";
+import { formatHex } from "@/lib/hex";
 
 // Mapping from ItemDataFlat.binding (number) to ItemData.binding (string)
 function mapBinding(binding: number): "BoP" | "BoE" | "BoU" {
@@ -118,8 +119,7 @@ function adaptItemDataFlat(flat: Item.ItemDataFlat): ItemData {
   const flags = flat.flags.map((value, index) => ({
     index,
     value,
-    description:
-      value !== 0 ? `Flag value: 0x${value.toString(16).toUpperCase()}` : null,
+    description: value !== 0 ? `Flag value: ${formatHex(value, 8)}` : null,
   }));
 
   return {

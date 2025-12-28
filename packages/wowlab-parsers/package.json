@@ -18,16 +18,18 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "ncu": "ncu -u"
   },
   "dependencies": {
     "chevrotain": "^11.0.3",
     "effect": "^3.19.4"
   },
   "devDependencies": {
-    "@vitest/ui": "^3.2.4",
+    "@vitest/ui": "^4.0.16",
     "tsc-alias": "^1.8.16",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.16"
   }
 }

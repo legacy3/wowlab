@@ -1,19 +1,9 @@
-const compactFormatter = new Intl.NumberFormat("en", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
+import { formatDurationSeconds, formatCompact } from "@/lib/format";
 
 export function formatDamage(amount: number): string {
-  return compactFormatter.format(amount);
+  return formatCompact(amount);
 }
 
 export function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-
-  if (mins > 0) {
-    return `${mins}:${secs.toFixed(1).padStart(4, "0")}`;
-  }
-
-  return `${secs.toFixed(1)}s`;
+  return formatDurationSeconds(seconds);
 }

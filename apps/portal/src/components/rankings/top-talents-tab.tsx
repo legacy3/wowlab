@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { formatInt, formatPercent } from "@/lib/format";
 import { GameIcon } from "@/components/game";
 import {
   CLASS_COLORS,
@@ -460,7 +461,7 @@ function TalentRow({ combo }: { combo: TalentCombination }) {
               </p>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Users className="h-3 w-3" />
-                <span>{combo.sampleSize.toLocaleString()} sims</span>
+                <span>{formatInt(combo.sampleSize)} sims</span>
               </div>
             </div>
           </div>
@@ -493,7 +494,7 @@ function TalentRow({ combo }: { combo: TalentCombination }) {
           </div>
         </TableCell>
         <TableCell className="text-right font-medium tabular-nums">
-          {combo.avgDps.toLocaleString()}
+          {formatInt(combo.avgDps)}
         </TableCell>
         <TableCell className="hidden sm:table-cell">
           <div className="flex items-center justify-end gap-2">
@@ -504,7 +505,7 @@ function TalentRow({ combo }: { combo: TalentCombination }) {
               />
             </div>
             <span className="w-12 text-right text-sm tabular-nums text-muted-foreground">
-              {combo.usagePercent.toFixed(1)}%
+              {formatPercent(combo.usagePercent, 1)}
             </span>
           </div>
         </TableCell>
@@ -554,20 +555,20 @@ function TalentRow({ combo }: { combo: TalentCombination }) {
               </div>
               <div className="flex gap-6 pt-2 text-sm text-muted-foreground">
                 <div>
-                  <span className="font-medium text-foreground">
-                    {combo.avgDps.toLocaleString()}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatInt(combo.avgDps)}
                   </span>{" "}
                   avg DPS
                 </div>
                 <div>
-                  <span className="font-medium text-foreground">
-                    {combo.usagePercent.toFixed(1)}%
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatPercent(combo.usagePercent, 1)}
                   </span>{" "}
                   usage rate
                 </div>
                 <div>
-                  <span className="font-medium text-foreground">
-                    {combo.sampleSize.toLocaleString()}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatInt(combo.sampleSize)}
                   </span>{" "}
                   simulations
                 </div>
@@ -659,18 +660,22 @@ export function TopTalentCombinationsTab() {
       >
         <div className="overflow-x-auto rounded-lg border">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14 text-center">#</TableHead>
-                <TableHead>Spec</TableHead>
-                <TableHead className="hidden md:table-cell">
+            <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-14 text-center font-medium">
+                  #
+                </TableHead>
+                <TableHead className="font-medium">Spec</TableHead>
+                <TableHead className="hidden md:table-cell font-medium">
                   Key Talents
                 </TableHead>
-                <TableHead className="text-right">Avg DPS</TableHead>
-                <TableHead className="hidden sm:table-cell text-right">
+                <TableHead className="text-right font-medium">
+                  Avg DPS
+                </TableHead>
+                <TableHead className="hidden sm:table-cell text-right font-medium">
                   Usage
                 </TableHead>
-                <TableHead className="hidden lg:table-cell text-right">
+                <TableHead className="hidden lg:table-cell text-right font-medium">
                   Trend
                 </TableHead>
                 <TableHead className="w-10" />

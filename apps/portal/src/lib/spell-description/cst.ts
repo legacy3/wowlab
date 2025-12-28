@@ -101,19 +101,6 @@ export function splitArgs(text: string): ReadonlyArray<string> {
     .filter((s) => s.length > 0);
 }
 
-export function formatNumber(n: number): string {
-  if (!Number.isFinite(n)) {
-    return "0";
-  }
-
-  const rounded = Math.abs(n) < 1e-9 ? 0 : n;
-  if (Number.isInteger(rounded)) {
-    return String(rounded);
-  }
-
-  return rounded.toFixed(3).replace(/\.?0+$/, "");
-}
-
 export function extractLeadingNumber(text: string): number | undefined {
   const m = text.match(/-?\d+(?:\.\d+)?/);
 

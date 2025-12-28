@@ -16,9 +16,9 @@ export function SocketsCard() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gem className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Gem className="h-4 w-4 shrink-0" />
           Sockets & Gems
         </CardTitle>
       </CardHeader>

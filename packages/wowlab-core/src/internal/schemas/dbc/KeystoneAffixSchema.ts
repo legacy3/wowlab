@@ -7,4 +7,6 @@ export const KeystoneAffixRowSchema = Schema.Struct({
   FiledataID: Schema.NumberFromString,
 });
 
-export type KeystoneAffixRow = Schema.Schema.Type<typeof KeystoneAffixRowSchema>;
+export type KeystoneAffixRow = Schema.Schema.Type<
+  typeof KeystoneAffixRowSchema
+>;

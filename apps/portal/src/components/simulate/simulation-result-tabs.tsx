@@ -11,8 +11,9 @@ import { ChartsContent } from "@/components/simulate/results/charts";
 import { EventLogContent } from "@/components/simulate/results/event-log";
 import { jobsAtom } from "@/atoms/computing";
 import { combatDataAtom, timelineBoundsAtom } from "@/atoms/timeline";
+import { simulationResultAtom } from "@/atoms/simulation/results";
 import { transformEventsWithResources } from "@/lib/simulation/transformers";
-import type { SimulationEvent } from "@/lib/simulation/types";
+import type { SimulationEvent, SimulationResult } from "@/lib/simulation/types";
 
 function useLoadLocalJob() {
   const params = useParams();
@@ -20,6 +21,7 @@ function useLoadLocalJob() {
   const jobs = useAtomValue(jobsAtom);
   const setCombatData = useSetAtom(combatDataAtom);
   const setBounds = useSetAtom(timelineBoundsAtom);
+  const setSimulationResult = useSetAtom(simulationResultAtom);
 
   useEffect(() => {
     if (!jobId) {
@@ -39,9 +41,20 @@ function useLoadLocalJob() {
     // Transform using the proper event transformer
     const combatData = transformEventsWithResources(events, durationMs);
 
+    // Set all atoms with simulation data
     setCombatData(combatData);
     setBounds({ min: 0, max: durationSec });
-  }, [jobId, jobs, setCombatData, setBounds]);
+
+    // Create SimulationResult for overview cards
+    const result: SimulationResult = {
+      events,
+      casts: job.result.casts,
+      durationMs: job.result.durationMs,
+      totalDamage: job.result.totalDamage,
+      dps: job.result.dps,
+    };
+    setSimulationResult(result);
+  }, [jobId, jobs, setCombatData, setBounds, setSimulationResult]);
 }
 
 export function SimulationResultTabs() {

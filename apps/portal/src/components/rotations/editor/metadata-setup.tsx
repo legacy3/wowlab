@@ -10,13 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -36,30 +29,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-
-const WOW_CLASSES = [
-  "Druid",
-  "Hunter",
-  "Mage",
-  "Paladin",
-  "Priest",
-  "Rogue",
-  "Shaman",
-  "Warlock",
-  "Warrior",
-] as const;
-
-const CLASS_SPECS: Record<string, string[]> = {
-  Druid: ["Balance", "Feral", "Restoration"],
-  Hunter: ["Beast Mastery", "Marksmanship", "Survival"],
-  Mage: ["Arcane", "Fire", "Frost"],
-  Paladin: ["Holy", "Protection", "Retribution"],
-  Priest: ["Discipline", "Holy", "Shadow"],
-  Rogue: ["Assassination", "Combat", "Subtlety"],
-  Shaman: ["Elemental", "Enhancement", "Restoration"],
-  Warlock: ["Affliction", "Demonology", "Destruction"],
-  Warrior: ["Arms", "Fury", "Protection"],
-};
+import { SpecPicker } from "@/components/ui/spec-picker";
+import { SpecLabel } from "@/components/ui/spec-label";
 
 interface RotationTemplate {
   id: string;
@@ -80,13 +51,13 @@ if (cobraShot.cast && cobraShot.consumedGCD) {
 };
 
 // Templates per spec - can be expanded later
-const SPEC_TEMPLATES: Record<string, RotationTemplate[]> = {
+const SPEC_TEMPLATES: Record<number, RotationTemplate[]> = {
   //
 };
 
 // Default template for specs without specific templates
-const getTemplatesForSpec = (spec: string): RotationTemplate[] => {
-  return SPEC_TEMPLATES[spec] ?? [EMPTY_TEMPLATE];
+const getTemplatesForSpec = (specId: number): RotationTemplate[] => {
+  return SPEC_TEMPLATES[specId] ?? [EMPTY_TEMPLATE];
 };
 
 const metadataSchema = z.object({
@@ -99,8 +70,7 @@ const metadataSchema = z.object({
       /^[a-z0-9-]+$/,
       "Slug can only contain lowercase letters, numbers, and hyphens",
     ),
-  class: z.string().min(1, "Class is required"),
-  spec: z.string().min(1, "Spec is required"),
+  specId: z.number().int().positive("Spec is required"),
   description: z.string().optional(),
 });
 
@@ -125,27 +95,22 @@ export function MetadataSetup({ defaultValues, onSubmit }: MetadataSetupProps) {
     defaultValues: {
       name: "",
       slug: "",
-      class: "",
-      spec: "",
+      specId: 0,
       description: "",
       ...defaultValues,
     },
     mode: "onChange",
   });
 
-  const selectedClass = form.watch("class");
-  const selectedSpec = form.watch("spec");
-  const availableSpecs = selectedClass
-    ? (CLASS_SPECS[selectedClass] ?? [])
-    : [];
-  const availableTemplates = selectedSpec
-    ? getTemplatesForSpec(selectedSpec)
+  const selectedSpecId = form.watch("specId");
+  const availableTemplates = selectedSpecId
+    ? getTemplatesForSpec(selectedSpecId)
     : [EMPTY_TEMPLATE];
 
   // Reset template when spec changes
   useEffect(() => {
     setSelectedTemplate(EMPTY_TEMPLATE);
-  }, [selectedSpec]);
+  }, [selectedSpecId]);
 
   const watchedName = form.watch("name");
   useEffect(() => {
@@ -210,68 +175,27 @@ export function MetadataSetup({ defaultValues, onSubmit }: MetadataSetupProps) {
             )}
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field data-invalid={!!form.formState.errors.class}>
-              <FieldLabel>Class</FieldLabel>
-              <Select
-                value={form.watch("class")}
-                onValueChange={(value) => {
-                  form.setValue("class", value, { shouldValidate: true });
-                  form.setValue("spec", "", { shouldValidate: true });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {WOW_CLASSES.map((cls) => (
-                    <SelectItem key={cls} value={cls}>
-                      {cls}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.class && (
-                <FieldError
-                  errors={[{ message: form.formState.errors.class.message }]}
-                />
-              )}
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.spec}>
-              <FieldLabel>Spec</FieldLabel>
-              <Select
-                value={form.watch("spec")}
-                onValueChange={(value) =>
-                  form.setValue("spec", value, { shouldValidate: true })
-                }
-                disabled={!selectedClass}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      selectedClass ? "Select spec" : "Select class first"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableSpecs.map((spec) => (
-                    <SelectItem key={spec} value={spec}>
-                      {spec}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.spec && (
-                <FieldError
-                  errors={[{ message: form.formState.errors.spec.message }]}
-                />
-              )}
-            </Field>
-          </div>
+          <Field data-invalid={!!form.formState.errors.specId}>
+            <FieldLabel>Spec</FieldLabel>
+            {selectedSpecId > 0 && (
+              <div className="mb-3 rounded-lg border px-3 py-2">
+                <SpecLabel specId={selectedSpecId} size="sm" showIcon />
+              </div>
+            )}
+            <SpecPicker
+              onSpecSelect={(specId) =>
+                form.setValue("specId", specId, { shouldValidate: true })
+              }
+            />
+            {form.formState.errors.specId && (
+              <FieldError
+                errors={[{ message: form.formState.errors.specId.message }]}
+              />
+            )}
+          </Field>
 
           {/* Template picker - only show after spec is selected */}
-          {selectedSpec && (
+          {selectedSpecId > 0 && (
             <Field>
               <FieldLabel>Template</FieldLabel>
               <Popover
@@ -304,7 +228,7 @@ export function MetadataSetup({ defaultValues, onSubmit }: MetadataSetupProps) {
                   align="start"
                 >
                   <Command>
-                    <CommandInput placeholder="Search templates..." />
+                    <CommandInput placeholder="Search templates ..." />
                     <CommandList>
                       <CommandEmpty>No template found.</CommandEmpty>
                       <CommandGroup>

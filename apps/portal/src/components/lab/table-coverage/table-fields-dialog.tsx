@@ -175,7 +175,7 @@ export function TableFieldsDialog({
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Filter fields..."
+                      placeholder="Filter fields ..."
                       className="pl-9"
                     />
                   </div>

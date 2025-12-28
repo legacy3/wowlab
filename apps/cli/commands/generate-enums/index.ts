@@ -10,7 +10,7 @@ import {
 } from "./file-ops";
 
 const generateEnumsProgram = Effect.gen(function* () {
-  yield* Effect.logInfo("Scanning WoW UI documentation files...");
+  yield* Effect.logInfo("Scanning WoW UI documentation files ...");
 
   const metadata = yield* getWowSourceMetadata();
   yield* Effect.logInfo(`WoW Version: ${metadata.version}`);
@@ -39,7 +39,7 @@ const generateEnumsProgram = Effect.gen(function* () {
   }
 
   yield* Effect.logInfo(`Extracted ${enumCount} enums from ${fileCount} files`);
-  yield* Effect.logInfo(`Generating TypeScript files...`);
+  yield* Effect.logInfo(`Generating TypeScript files ...`);
 
   const writtenCount = yield* writeEnumFiles(allEnums);
 

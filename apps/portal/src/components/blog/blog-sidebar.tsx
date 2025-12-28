@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatDate, formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BlogEntry } from "@/lib/blog/types";
 import type { TocEntry } from "@/lib/content/types";
@@ -74,7 +74,7 @@ function useActiveHeading(headingIds: string[]) {
 }
 
 function ArticleMeta({ entry }: { entry: BlogEntry }) {
-  const formattedDate = format(parseISO(entry.publishedAt), "d MMM yyyy");
+  const formattedDate = formatDate(entry.publishedAt, "d MMM yyyy");
   const readingMinutes = Math.max(
     1,
     Math.round(entry.readingTime?.minutes ?? 0),
@@ -89,7 +89,7 @@ function ArticleMeta({ entry }: { entry: BlogEntry }) {
       {readingMinutes > 0 && (
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{readingMinutes} min read</span>
+          <span>{formatInt(readingMinutes)} min read</span>
         </div>
       )}
     </div>

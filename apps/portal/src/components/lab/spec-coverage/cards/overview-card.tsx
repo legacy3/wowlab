@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Wand2, Users, TrendingUp, Loader2, Download } from "lucide-react";
+import { Wand2, Users, TrendingUp, Download } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -61,7 +62,7 @@ export function OverviewCard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <FlaskInlineLoader className="h-6 w-6 text-muted-foreground" />
             <span className="ml-2 text-sm text-muted-foreground">
               Loading coverage data...
             </span>

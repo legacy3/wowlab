@@ -300,7 +300,7 @@ const getTalentSpellIds = async (
 const getSpecCoverage = async (
   supabase: SupabaseClient,
 ): Promise<SpecCoverage[]> => {
-  console.log("Fetching classes, specs, and race data...");
+  console.log("Fetching classes, specs, and race data ...");
 
   // Get all playable classes (exclude Adventurer=14, Traveler=15)
   const classes = await query<Array<{ ID: number; Name_lang: string }>>(
@@ -430,7 +430,7 @@ export const specCoverageCommand = Command.make(
   { output: outputOption },
   ({ output }) =>
     Effect.gen(function* () {
-      yield* Effect.log("Starting spec coverage analysis...");
+      yield* Effect.log("Starting spec coverage analysis ...");
 
       const results = yield* Effect.tryPromise({
         catch: (e) => new Error(String(e)),

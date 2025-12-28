@@ -228,7 +228,7 @@ export function SpellListDialog({
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Filter spells..."
+                      placeholder="Filter spells ..."
                       className="pl-9"
                     />
                   </div>

@@ -3,7 +3,8 @@
 import { useAtom, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import Link from "next/link";
-import { Cpu, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import { Cpu, X } from "lucide-react";
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,11 @@ import {
   PHASE_LABELS,
   type SimulationJob,
 } from "@/atoms/computing";
+import { cancelSimulation } from "@/hooks/rotations";
+import {
+  JOB_STATUS_COLORS,
+  JOB_STATUS_ICONS,
+} from "@/components/computing/job-status";
 
 // Drawer open state - can be controlled from anywhere
 export const computingDrawerOpenAtom = atom(false);
@@ -35,19 +41,24 @@ function JobCard({
 }) {
   const cancelJob = useSetAtom(cancelJobAtom);
 
-  const statusIcon = {
-    running: <Loader2 className="h-5 w-5 animate-spin text-blue-500" />,
-    completed: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-    failed: <AlertCircle className="h-5 w-5 text-red-500" />,
-    queued: <Cpu className="h-5 w-5 text-muted-foreground" />,
-    paused: <Cpu className="h-5 w-5 text-yellow-500" />,
-  };
+  const StatusIcon = JOB_STATUS_ICONS[job.status];
+  const statusTextClass =
+    JOB_STATUS_COLORS[job.status]
+      .split(" ")
+      .find((cls) => cls.startsWith("text-")) ?? "text-muted-foreground";
 
   return (
     <div className="rounded-xl border bg-card/50 p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          {statusIcon[job.status]}
+          {job.status === "running" ? (
+            <FlaskInlineLoader
+              className={`h-5 w-5 ${statusTextClass}`}
+              variant="processing"
+            />
+          ) : StatusIcon ? (
+            <StatusIcon className={`h-5 w-5 ${statusTextClass}`} />
+          ) : null}
           <span className="font-medium">{job.name}</span>
         </div>
         {(job.status === "running" || job.status === "queued") && (
@@ -55,7 +66,10 @@ function JobCard({
             variant="ghost"
             size="icon"
             className="h-7 w-7 shrink-0 -mr-1"
-            onClick={() => cancelJob(job.id)}
+            onClick={() => {
+              cancelSimulation(job.id);
+              cancelJob(job.id);
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -111,7 +125,10 @@ export function ComputingDrawer() {
     (j) => j.status === "running" || j.status === "queued",
   );
   const completedJobs = jobs.filter(
-    (j) => j.status === "completed" || j.status === "failed",
+    (j) =>
+      j.status === "completed" ||
+      j.status === "failed" ||
+      j.status === "cancelled",
   );
 
   return (
@@ -122,10 +139,19 @@ export function ComputingDrawer() {
             <Cpu className="h-5 w-5" />
             Computing
           </SheetTitle>
-          <SheetDescription>
-            {activeJobs.length > 0
-              ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
-              : "No active simulations"}
+          <SheetDescription className="flex items-center justify-between">
+            <span>
+              {activeJobs.length > 0
+                ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
+                : "No active simulations"}
+            </span>
+            <Link
+              href="/computing"
+              onClick={() => setOpen(false)}
+              className="text-xs text-primary hover:underline"
+            >
+              Dashboard
+            </Link>
           </SheetDescription>
         </SheetHeader>
 
