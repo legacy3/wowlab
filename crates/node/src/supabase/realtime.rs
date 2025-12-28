@@ -89,8 +89,15 @@ async fn run_with_reconnect(
 
         let _ = tx.send(RealtimeEvent::Disconnected).await;
 
-        tracing::debug!("Reconnecting in {delay:?}");
-        tokio::time::sleep(delay).await;
+        let jitter_ms = (std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .subsec_nanos()
+            % 1000) as u64;
+        let jittered_delay = delay + Duration::from_millis(jitter_ms);
+
+        tracing::debug!("Reconnecting in {jittered_delay:?}");
+        tokio::time::sleep(jittered_delay).await;
 
         delay = (delay * 2).min(MAX_RECONNECT_DELAY);
     }

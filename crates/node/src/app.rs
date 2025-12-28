@@ -7,6 +7,7 @@ use crate::{
         claim_view, dashboard,
         icons::{icon, Icon},
         logs::{self, LogFilter},
+        settings::{self, SettingsAction},
         theme,
     },
     worker::WorkerPool,
@@ -69,6 +70,7 @@ pub enum Tab {
     #[default]
     Status,
     Logs,
+    Settings,
 }
 
 enum RegisterResult {
@@ -427,6 +429,14 @@ impl eframe::App for NodeApp {
                             &icon(Icon::ScrollText),
                             &logs_label,
                         );
+                        ui.add_space(4.0);
+                        tab_button(
+                            ui,
+                            &mut self.current_tab,
+                            Tab::Settings,
+                            &icon(Icon::Settings),
+                            "Settings",
+                        );
                     });
 
                     ui.add_space(4.0);
@@ -434,6 +444,13 @@ impl eframe::App for NodeApp {
                     match self.current_tab {
                         Tab::Status => dashboard::show(ui, &self.stats()),
                         Tab::Logs => logs::show(ui, &self.logs, &mut self.log_filter),
+                        Tab::Settings => {
+                            let action = settings::show(ui, &self.node_name, self.node_id);
+                            if matches!(action, SettingsAction::Unlink) {
+                                NodeConfig::delete();
+                                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                            }
+                        }
                     }
                 }
             });

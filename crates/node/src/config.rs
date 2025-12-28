@@ -115,4 +115,21 @@ impl NodeConfig {
         self.node_id = Some(id);
         self.save();
     }
+
+    pub fn delete() -> bool {
+        let Some(path) = Self::config_path() else {
+            return false;
+        };
+
+        match std::fs::remove_file(&path) {
+            Ok(()) => {
+                tracing::info!("Config deleted: {:?}", path);
+                true
+            }
+            Err(e) => {
+                tracing::error!("Failed to delete config: {}", e);
+                false
+            }
+        }
+    }
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -6,6 +7,9 @@ pub struct ApiClient {
     http: reqwest::Client,
     api_url: String,
 }
+
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,10 +28,13 @@ pub enum ApiError {
 
 impl ApiClient {
     pub fn new(api_url: String) -> Self {
-        Self {
-            http: reqwest::Client::new(),
-            api_url,
-        }
+        let http = reqwest::Client::builder()
+            .timeout(REQUEST_TIMEOUT)
+            .connect_timeout(CONNECT_TIMEOUT)
+            .build()
+            .expect("Failed to create HTTP client");
+
+        Self { http, api_url }
     }
 
     pub async fn register_node(
