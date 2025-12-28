@@ -202,7 +202,7 @@ def main():
     print("Building with debug symbols...")
     os.chdir(SCRIPT_DIR)
     subprocess.run(
-        ["cargo", "build", "--release", "--features", "bucket_queue"],
+        ["cargo", "build", "--release"],
         env={**os.environ, "CARGO_PROFILE_RELEASE_DEBUG": "2"},
         check=True
     )

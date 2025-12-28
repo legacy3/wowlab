@@ -1,40 +1,15 @@
-//! Event system with configurable optimizations via feature flags.
+//! Timing wheel event queue (SimC-style): O(1) amortized insert/pop
 //!
-//! Features:
-//! - `bucket_queue`: O(1) bucket-based queue for simulation events (RECOMMENDED)
-//! - `quaternary_heap`: Use 4-ary heap instead of binary (2-ary) - slower in benchmarks
-//! - `front_buffer`: Use front buffer for same-time events - adds overhead, not worth it
-//! - `meta_events`: Process same-time events as a batch - semantic correctness, ~5% slower
-//!
-//! Default: dary_heap::BinaryHeap - fast and allows swapping to quaternary for testing
+//! - wheel_shift=5 means each slot covers 32ms
+//! - 4K slots = ~131 seconds coverage, wraps for longer sims
+//! - Benchmarked: 4K optimal across 60s/300s/600s durations
 
 use std::cmp::Ordering;
 
-// Timing wheel (SimC-style): O(1) amortized insert/pop
-// - wheel_shift=5 means each slot covers 32ms
-// - 4K slots = ~131 seconds coverage, wraps for longer sims
-// Benchmarked: 4K optimal across 60s/300s/600s durations
-#[cfg(feature = "bucket_queue")]
 const WHEEL_SHIFT: u32 = 5; // divide time_ms by 32
-#[cfg(feature = "bucket_queue")]
 const WHEEL_SIZE: usize = 4096; // 2^12 slots - 32KB cache footprint
-#[cfg(feature = "bucket_queue")]
 const WHEEL_MASK: usize = WHEEL_SIZE - 1;
-
-// Heap-based queue (default fallback)
-#[cfg(all(not(feature = "bucket_queue"), feature = "quaternary_heap"))]
-use dary_heap::QuaternaryHeap as Heap;
-
-#[cfg(all(not(feature = "bucket_queue"), not(feature = "quaternary_heap")))]
-use dary_heap::BinaryHeap as Heap;
-
-/// Maximum events in the front buffer (immediate-next events).
-#[cfg(feature = "front_buffer")]
-const FRONT_BUFFER_SIZE: usize = 4;
-
-/// Maximum events in a meta event batch.
-#[cfg(feature = "meta_events")]
-const META_BATCH_SIZE: usize = 64;
+const BITMAP_SIZE: usize = WHEEL_SIZE / 64; // 64 u64s = 4096 bits
 
 /// Event types in the simulation - compact enum.
 /// Ordered by frequency for branch prediction optimization.
@@ -115,26 +90,17 @@ impl Ord for TimedEvent {
     }
 }
 
-// ============================================================================
-// TIMING WHEEL IMPLEMENTATION (SimC-style) - O(1) amortized insert/pop
-// Uses index-based linked list with arena allocation (no Box/malloc per event)
-// ============================================================================
-
 /// Index into the node arena (u32::MAX = null)
-#[cfg(feature = "bucket_queue")]
 type NodeIdx = u32;
-#[cfg(feature = "bucket_queue")]
 const NULL_IDX: NodeIdx = u32::MAX;
 
 /// Linked list node stored in arena
-#[cfg(feature = "bucket_queue")]
 #[derive(Clone, Copy)]
 struct EventNode {
     event: TimedEvent,
     next: NodeIdx,
 }
 
-#[cfg(feature = "bucket_queue")]
 pub struct EventQueue {
     /// Node arena - pre-allocated storage for all nodes
     arena: Vec<EventNode>,
@@ -145,6 +111,9 @@ pub struct EventQueue {
     /// Timing wheel: each slot is (head, tail) linked list indices
     wheel_head: Vec<NodeIdx>,
     wheel_tail: Vec<NodeIdx>,
+
+    /// Bitmap tracking non-empty slots (1 bit per slot)
+    slot_bitmap: [u64; BITMAP_SIZE],
 
     /// Current wheel position
     current_slot: usize,
@@ -163,7 +132,6 @@ pub struct EventQueue {
     pub max_batch_size: u32,
 }
 
-#[cfg(feature = "bucket_queue")]
 impl EventQueue {
     pub fn with_capacity(capacity: usize) -> Self {
         let arena_size = capacity.max(16384);
@@ -172,6 +140,7 @@ impl EventQueue {
             free_head: NULL_IDX,
             wheel_head: vec![NULL_IDX; WHEEL_SIZE],
             wheel_tail: vec![NULL_IDX; WHEEL_SIZE],
+            slot_bitmap: [0; BITMAP_SIZE],
             current_slot: 0,
             next_seq: 0,
             events_processed: 0,
@@ -184,11 +153,59 @@ impl EventQueue {
         }
     }
 
+    #[inline(always)]
+    fn set_slot_bit(&mut self, slot: usize) {
+        let word = slot >> 6; // slot / 64
+        let bit = slot & 63;  // slot % 64
+        self.slot_bitmap[word] |= 1u64 << bit;
+    }
+
+    #[inline(always)]
+    fn clear_slot_bit(&mut self, slot: usize) {
+        let word = slot >> 6;
+        let bit = slot & 63;
+        self.slot_bitmap[word] &= !(1u64 << bit);
+    }
+
+    /// Find the next non-empty slot starting from current_slot.
+    /// Returns None if all slots are empty.
+    #[inline(always)]
+    fn find_next_slot(&self) -> Option<usize> {
+        let start_word = self.current_slot >> 6;
+        let start_bit = self.current_slot & 63;
+
+        // Check current word (mask off bits before current_slot)
+        let mask = !0u64 << start_bit;
+        let masked = self.slot_bitmap[start_word] & mask;
+        if masked != 0 {
+            return Some((start_word << 6) | masked.trailing_zeros() as usize);
+        }
+
+        // Check remaining words (with wrap-around)
+        for i in 1..BITMAP_SIZE {
+            let word_idx = (start_word + i) & (BITMAP_SIZE - 1);
+            let word = self.slot_bitmap[word_idx];
+            if word != 0 {
+                return Some((word_idx << 6) | word.trailing_zeros() as usize);
+            }
+        }
+
+        // Check the part of start_word before current_slot (wrap-around case)
+        let wrap_mask = (1u64 << start_bit) - 1;
+        let wrap_masked = self.slot_bitmap[start_word] & wrap_mask;
+        if wrap_masked != 0 {
+            return Some((start_word << 6) | wrap_masked.trailing_zeros() as usize);
+        }
+
+        None
+    }
+
     #[inline]
     pub fn clear(&mut self) {
         // Reset wheel
         self.wheel_head.fill(NULL_IDX);
         self.wheel_tail.fill(NULL_IDX);
+        self.slot_bitmap.fill(0);
         // Put all nodes on free list
         self.free_head = if self.arena.is_empty() { NULL_IDX } else { 0 };
         for i in 0..self.arena.len() {
@@ -246,9 +263,10 @@ impl EventQueue {
 
         // Fast path: empty list or new event goes at end
         if tail_idx == NULL_IDX {
-            // Empty list
+            // Empty list - set bitmap bit
             self.wheel_head[slot_idx] = new_idx;
             self.wheel_tail[slot_idx] = new_idx;
+            self.set_slot_bit(slot_idx);
             return;
         }
 
@@ -287,36 +305,52 @@ impl EventQueue {
         self.push(time_ms, event);
     }
 
-    /// Pop from head (O(1))
+    /// Pop from head - O(1) with bitmap for slot lookup
     #[inline(always)]
     pub fn pop(&mut self) -> Option<TimedEvent> {
-        for _ in 0..WHEEL_SIZE {
-            let head_idx = self.wheel_head[self.current_slot];
-            if head_idx != NULL_IDX {
-                let node = self.arena[head_idx as usize];
-                self.wheel_head[self.current_slot] = node.next;
-                // Update tail if list is now empty
-                if node.next == NULL_IDX {
-                    self.wheel_tail[self.current_slot] = NULL_IDX;
-                }
-                self.free_node(head_idx);
-                self.events_processed += 1;
-                return Some(node.event);
+        // Fast path: check current slot first
+        let head_idx = self.wheel_head[self.current_slot];
+        if head_idx != NULL_IDX {
+            let node = self.arena[head_idx as usize];
+            self.wheel_head[self.current_slot] = node.next;
+            if node.next == NULL_IDX {
+                self.wheel_tail[self.current_slot] = NULL_IDX;
+                self.clear_slot_bit(self.current_slot);
             }
-            self.current_slot = (self.current_slot + 1) & WHEEL_MASK;
+            self.free_node(head_idx);
+            self.events_processed += 1;
+            return Some(node.event);
         }
+
+        // Use bitmap to find next non-empty slot
+        if let Some(next_slot) = self.find_next_slot() {
+            self.current_slot = next_slot;
+            let head_idx = self.wheel_head[next_slot];
+            let node = self.arena[head_idx as usize];
+            self.wheel_head[next_slot] = node.next;
+            if node.next == NULL_IDX {
+                self.wheel_tail[next_slot] = NULL_IDX;
+                self.clear_slot_bit(next_slot);
+            }
+            self.free_node(head_idx);
+            self.events_processed += 1;
+            return Some(node.event);
+        }
+
         None
     }
 
     #[inline]
     pub fn peek(&self) -> Option<&TimedEvent> {
-        let mut slot_idx = self.current_slot;
-        for _ in 0..WHEEL_SIZE {
+        // Fast path: check current slot
+        let head_idx = self.wheel_head[self.current_slot];
+        if head_idx != NULL_IDX {
+            return Some(&self.arena[head_idx as usize].event);
+        }
+        // Use bitmap to find next non-empty slot
+        if let Some(slot_idx) = self.find_next_slot() {
             let head_idx = self.wheel_head[slot_idx];
-            if head_idx != NULL_IDX {
-                return Some(&self.arena[head_idx as usize].event);
-            }
-            slot_idx = (slot_idx + 1) & WHEEL_MASK;
+            return Some(&self.arena[head_idx as usize].event);
         }
         None
     }
@@ -352,273 +386,13 @@ impl EventQueue {
 
     #[inline]
     pub fn is_empty(&self) -> bool {
-        self.peek().is_none()
+        // Check if any bitmap word is non-zero
+        self.slot_bitmap.iter().all(|&w| w == 0)
     }
 
     #[inline]
     pub fn len(&self) -> usize {
         self.wheel_head.iter().filter(|&&idx| idx != NULL_IDX).count()
-    }
-}
-
-// ============================================================================
-// HEAP-BASED QUEUE IMPLEMENTATION - Default fallback
-// ============================================================================
-#[cfg(not(feature = "bucket_queue"))]
-/// Event queue with configurable optimizations.
-pub struct EventQueue {
-    heap: Heap<TimedEvent>,
-
-    #[cfg(feature = "front_buffer")]
-    front_buffer: [Option<TimedEvent>; FRONT_BUFFER_SIZE],
-    #[cfg(feature = "front_buffer")]
-    front_count: u8,
-    #[cfg(feature = "front_buffer")]
-    front_time_ms: u32,
-
-    next_seq: u32,
-    pub events_processed: u32,
-    pub events_scheduled: u32,
-
-    /// Cached: does next event have same timestamp as last popped?
-    /// Avoids repeated peek() calls in meta_events batching
-    next_time_cache: u32,
-
-    /// Track batch statistics (for meta_events analysis)
-    #[cfg(feature = "meta_events")]
-    pub batches_processed: u32,
-    #[cfg(feature = "meta_events")]
-    pub max_batch_size: u32,
-}
-
-#[cfg(not(feature = "bucket_queue"))]
-impl EventQueue {
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            heap: Heap::with_capacity(capacity),
-
-            #[cfg(feature = "front_buffer")]
-            front_buffer: [None; FRONT_BUFFER_SIZE],
-            #[cfg(feature = "front_buffer")]
-            front_count: 0,
-            #[cfg(feature = "front_buffer")]
-            front_time_ms: 0,
-
-            next_seq: 0,
-            events_processed: 0,
-            events_scheduled: 0,
-
-            next_time_cache: u32::MAX,
-
-            #[cfg(feature = "meta_events")]
-            batches_processed: 0,
-            #[cfg(feature = "meta_events")]
-            max_batch_size: 0,
-        }
-    }
-
-    #[inline]
-    pub fn clear(&mut self) {
-        self.heap.clear();
-
-        #[cfg(feature = "front_buffer")]
-        {
-            self.front_buffer = [None; FRONT_BUFFER_SIZE];
-            self.front_count = 0;
-            self.front_time_ms = 0;
-        }
-
-        self.next_seq = 0;
-        self.events_processed = 0;
-        self.events_scheduled = 0;
-        self.next_time_cache = u32::MAX;
-
-        #[cfg(feature = "meta_events")]
-        {
-            self.batches_processed = 0;
-            self.max_batch_size = 0;
-        }
-    }
-
-    /// Peek and cache the next event's timestamp (call once per batch)
-    #[inline(always)]
-    pub fn cache_next_time(&mut self) {
-        self.next_time_cache = if let Some(e) = self.heap.peek() {
-            e.time
-        } else {
-            u32::MAX
-        };
-    }
-
-    /// Check if next event has same timestamp (uses cached peek result)
-    /// Must call cache_next_time() first to populate the cache!
-    #[inline(always)]
-    pub fn next_has_same_time(&self, current_time_ms: u32) -> bool {
-        self.next_time_cache == current_time_ms
-    }
-
-    /// Process all events at the same timestamp with a callback.
-    /// Returns the timestamp processed, or None if empty.
-    #[cfg(feature = "meta_events")]
-    #[inline]
-    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<u32>
-    where
-        F: FnMut(SimEvent),
-    {
-        let first = self.heap.pop()?;
-        let time_ms = first.time;
-
-        f(first.event);
-        self.events_processed += 1;
-
-        // Process all events at same time
-        loop {
-            if let Some(next) = self.heap.peek() {
-                if next.time == time_ms {
-                    f(self.heap.pop().unwrap().event);
-                    self.events_processed += 1;
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-
-        Some(time_ms)
-    }
-
-    #[inline(always)]
-    pub fn push(&mut self, time_ms: u32, event: SimEvent) {
-        self.events_scheduled += 1;
-        let seq = self.next_seq;
-        self.next_seq += 1;
-
-        #[cfg(feature = "front_buffer")]
-        {
-            // Try front buffer for same-time events
-            if time_ms == self.front_time_ms && (self.front_count as usize) < FRONT_BUFFER_SIZE {
-                self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time_ms, seq, event));
-                self.front_count += 1;
-                return;
-            }
-        }
-
-        self.heap.push(TimedEvent::new(time_ms, seq, event));
-    }
-
-    /// Push an event for immediate processing (same timestamp).
-    #[cfg(feature = "front_buffer")]
-    #[inline(always)]
-    pub fn push_immediate(&mut self, time_ms: u32, event: SimEvent) {
-        self.events_scheduled += 1;
-        let seq = self.next_seq;
-        self.next_seq += 1;
-
-        if (self.front_count as usize) < FRONT_BUFFER_SIZE {
-            if self.front_count == 0 {
-                self.front_time_ms = time_ms;
-            }
-            self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time_ms, seq, event));
-            self.front_count += 1;
-        } else {
-            self.heap.push(TimedEvent::new(time_ms, seq, event));
-        }
-    }
-
-    #[cfg(not(feature = "front_buffer"))]
-    #[inline(always)]
-    pub fn push_immediate(&mut self, time_ms: u32, event: SimEvent) {
-        self.push(time_ms, event);
-    }
-
-    #[inline(always)]
-    pub fn pop(&mut self) -> Option<TimedEvent> {
-        #[cfg(feature = "front_buffer")]
-        {
-            // Drain front buffer first
-            if self.front_count > 0 {
-                self.front_count -= 1;
-                let event = self.front_buffer[self.front_count as usize].take();
-                self.events_processed += 1;
-                // Cache next time for front buffer events
-                if self.front_count > 0 {
-                    if let Some(ref next) = self.front_buffer[(self.front_count - 1) as usize] {
-                        self.next_time_cache = next.time;
-                    }
-                } else if let Some(next) = self.heap.peek() {
-                    self.next_time_cache = next.time;
-                } else {
-                    self.next_time_cache = u32::MAX;
-                }
-                return event;
-            }
-        }
-
-        if let Some(event) = self.heap.pop() {
-            self.events_processed += 1;
-
-            #[cfg(feature = "front_buffer")]
-            {
-                // Refill front buffer with same-time events
-                self.front_time_ms = event.time;
-                while (self.front_count as usize) < FRONT_BUFFER_SIZE {
-                    if let Some(next) = self.heap.peek() {
-                        if next.time == event.time {
-                            self.front_buffer[self.front_count as usize] = self.heap.pop();
-                            self.front_count += 1;
-                        } else {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                // Update cache after front buffer fill
-                if self.front_count > 0 {
-                    if let Some(ref next) = self.front_buffer[(self.front_count - 1) as usize] {
-                        self.next_time_cache = next.time;
-                    }
-                }
-            }
-
-            return Some(event);
-        }
-
-        self.next_time_cache = u32::MAX;
-        None
-    }
-
-    #[inline]
-    pub fn peek(&self) -> Option<&TimedEvent> {
-        #[cfg(feature = "front_buffer")]
-        {
-            if self.front_count > 0 {
-                return self.front_buffer[(self.front_count - 1) as usize].as_ref();
-            }
-        }
-        self.heap.peek()
-    }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        #[cfg(feature = "front_buffer")]
-        {
-            if self.front_count > 0 {
-                return false;
-            }
-        }
-        self.heap.is_empty()
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize {
-        #[cfg(feature = "front_buffer")]
-        {
-            return self.front_count as usize + self.heap.len();
-        }
-        #[cfg(not(feature = "front_buffer"))]
-        self.heap.len()
     }
 }
 
