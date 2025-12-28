@@ -24,8 +24,11 @@ pub enum RealtimeEvent {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodePayload {
+    #[serde(default)]
     pub user_id: Option<String>,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub max_parallel: i32,
 }
 
@@ -177,7 +180,9 @@ async fn run_realtime(
     Ok(())
 }
 
-fn parse_change<T: for<'de> Deserialize<'de>>(change: &PostgresChangesPayload) -> Option<T> {
+fn parse_change<T: for<'de> Deserialize<'de> + std::fmt::Debug>(
+    change: &PostgresChangesPayload,
+) -> Option<T> {
     let record = match change {
         PostgresChangesPayload::Insert(p) => Some(&p.new),
         PostgresChangesPayload::Update(p) => Some(&p.new),
@@ -185,9 +190,17 @@ fn parse_change<T: for<'de> Deserialize<'de>>(change: &PostgresChangesPayload) -
     };
 
     record.and_then(|map| {
-        serde_json::to_value(map)
-            .ok()
-            .and_then(|v| serde_json::from_value(v).ok())
+        let value = serde_json::to_value(map).ok()?;
+        match serde_json::from_value::<T>(value.clone()) {
+            Ok(parsed) => {
+                tracing::debug!("Parsed change: {:?}", parsed);
+                Some(parsed)
+            }
+            Err(e) => {
+                tracing::warn!("Failed to parse change: {} - raw: {}", e, value);
+                None
+            }
+        }
     })
 }
 

@@ -1,5 +1,8 @@
 use super::icons::{icon, Icon};
 use super::theme::{BORDER, GREEN_500, SURFACE, TEXT_MUTED, TEXT_PRIMARY, ZINC_700, ZINC_950};
+use std::time::Instant;
+
+const COPIED_FEEDBACK_DURATION: f64 = 2.0;
 
 pub fn show(ui: &mut egui::Ui, code: &str) {
     let available = ui.available_rect_before_wrap();
@@ -52,10 +55,6 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
                 ui.add_space(28.0);
 
                 open_claim_button(ui, &full_url);
-
-                ui.add_space(12.0);
-
-                copy_link_button(ui, &full_url);
             });
         });
 }
@@ -85,19 +84,33 @@ fn code_display(ui: &mut egui::Ui, chars: &[char]) {
 }
 
 fn copy_code_button(ui: &mut egui::Ui, code: &str) {
+    let copied_at = ui.ctx().memory_mut(|mem| {
+        mem.data.get_temp::<Instant>(egui::Id::new("code_copied_at"))
+    });
+
+    let show_copied = copied_at
+        .map(|t| t.elapsed().as_secs_f64() < COPIED_FEEDBACK_DURATION)
+        .unwrap_or(false);
+
+    let (text, color) = if show_copied {
+        (format!("{} Copied!", icon(Icon::Check)), GREEN_500)
+    } else {
+        (format!("{} Click to copy", icon(Icon::Copy)), TEXT_MUTED)
+    };
+
     if ui
         .add(
-            egui::Label::new(
-                egui::RichText::new(format!("{} Click to copy", icon(Icon::Copy)))
-                    .size(11.0)
-                    .color(TEXT_MUTED),
-            )
-            .sense(egui::Sense::click()),
+            egui::Label::new(egui::RichText::new(text).size(11.0).color(color))
+                .sense(egui::Sense::click()),
         )
         .on_hover_cursor(egui::CursorIcon::PointingHand)
         .clicked()
     {
         ui.output_mut(|o| o.copied_text = code.to_string());
+        ui.ctx().memory_mut(|mem| {
+            mem.data
+                .insert_temp(egui::Id::new("code_copied_at"), Instant::now());
+        });
     }
 }
 
@@ -118,24 +131,6 @@ fn open_claim_button(ui: &mut egui::Ui, url: &str) {
     }
     if response.clicked() {
         let _ = open::that(url);
-    }
-}
-
-fn copy_link_button(ui: &mut egui::Ui, url: &str) {
-    if ui
-        .add(
-            egui::Label::new(
-                egui::RichText::new("or copy link manually")
-                    .size(12.0)
-                    .color(TEXT_MUTED),
-            )
-            .sense(egui::Sense::click()),
-        )
-        .on_hover_text(url)
-        .on_hover_cursor(egui::CursorIcon::PointingHand)
-        .clicked()
-    {
-        ui.output_mut(|o| o.copied_text = url.to_string());
     }
 }
 

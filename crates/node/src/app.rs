@@ -24,6 +24,7 @@ use tracing::Level;
 const MAX_LOGS: usize = 100;
 const MAX_EVENTS_PER_FRAME: usize = 10;
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5 * 60);
+const CLAIM_POLL_INTERVAL: Duration = Duration::from_secs(3);
 
 #[derive(Clone)]
 pub struct LogEntry {
@@ -97,6 +98,8 @@ pub struct NodeApp {
     max_parallel: u32,
     connection_status: ConnectionStatus,
     last_heartbeat: Option<Instant>,
+    last_claim_poll: Option<Instant>,
+    claim_rx: Option<mpsc::Receiver<bool>>,
 }
 
 impl NodeApp {
@@ -133,6 +136,8 @@ impl NodeApp {
             max_parallel: default_cores,
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
+            last_claim_poll: None,
+            claim_rx: None,
             config,
         }
     }
@@ -305,6 +310,52 @@ impl NodeApp {
         }
     }
 
+    fn poll_claim_status(&mut self) {
+        if !matches!(self.state, AppState::Claiming { .. }) {
+            return;
+        }
+
+        let should_poll = match self.last_claim_poll {
+            Some(last) => last.elapsed() >= CLAIM_POLL_INTERVAL,
+            None => true,
+        };
+
+        if !should_poll || self.claim_rx.is_some() {
+            return;
+        }
+
+        let Some(node_id) = self.node_id else { return };
+        self.last_claim_poll = Some(Instant::now());
+
+        let (tx, rx) = mpsc::channel(1);
+        self.claim_rx = Some(rx);
+        let api = self.api.clone();
+
+        self.runtime.spawn(async move {
+            let claimed = api.set_online(node_id).await.is_ok();
+            let _ = tx.send(claimed).await;
+        });
+    }
+
+    fn check_claim_result(&mut self) {
+        let Some(ref mut rx) = self.claim_rx else { return };
+
+        match rx.try_recv() {
+            Ok(true) => {
+                tracing::info!("Node claimed successfully!");
+                self.state = AppState::Dashboard;
+                self.claim_rx = None;
+            }
+            Ok(false) => {
+                self.claim_rx = None;
+            }
+            Err(mpsc::error::TryRecvError::Empty) => {}
+            Err(mpsc::error::TryRecvError::Disconnected) => {
+                self.claim_rx = None;
+            }
+        }
+    }
+
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
         let (color, text, icon_char) = match (&self.state, self.connection_status) {
             (AppState::Registering, _) => (theme::ZINC_500, "Registering", icon(Icon::Loader)),
@@ -358,6 +409,8 @@ impl eframe::App for NodeApp {
         self.check_registration();
         self.check_realtime_events();
         self.check_heartbeat();
+        self.poll_claim_status();
+        self.check_claim_result();
 
         egui::TopBottomPanel::top("header")
             .frame(
