@@ -41,8 +41,8 @@ fn main() -> eframe::Result<()> {
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
 
     let mut viewport = egui::ViewportBuilder::default()
-        .with_inner_size([400.0, 500.0])
-        .with_min_inner_size([350.0, 400.0])
+        .with_inner_size([480.0, 600.0])
+        .with_min_inner_size([400.0, 500.0])
         .with_title("WoW Lab Node");
 
     if let Some(icon) = load_icon() {

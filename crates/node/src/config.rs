@@ -66,7 +66,7 @@ impl NodeConfig {
         {
             Ok(settings) => match settings.try_deserialize::<ConfigFile>() {
                 Ok(file) => {
-                    tracing::info!("Loaded config from {:?}", path);
+                    tracing::debug!("Loaded config from {:?}", path);
                     file.node
                 }
                 Err(e) => {

@@ -1,20 +1,20 @@
 use crate::supabase::{ApiClient, ApiError};
 use uuid::Uuid;
 
-pub fn get_default_name() -> String {
+pub fn default_name() -> String {
     hostname::get()
         .ok()
         .and_then(|h| h.into_string().ok())
         .unwrap_or_else(|| "WowLab Node".to_string())
 }
 
-pub fn get_default_cores() -> i32 {
+pub fn default_cores() -> i32 {
     i32::try_from(num_cpus::get()).unwrap_or(4)
 }
 
 pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> {
-    let hostname = get_default_name();
-    let cores = get_default_cores();
+    let hostname = default_name();
+    let cores = default_cores();
     let version = env!("CARGO_PKG_VERSION");
 
     let response = client.register_node(&hostname, cores, version).await?;

@@ -6,7 +6,8 @@ use crate::{
     ui::{
         claim_view, dashboard,
         icons::{icon, Icon},
-        logs, theme,
+        logs::{self, LogFilter},
+        theme,
     },
     worker::WorkerPool,
 };
@@ -30,8 +31,9 @@ pub struct LogEntry {
     pub message: String,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum LogLevel {
+    #[default]
     Info,
     Warn,
     Error,
@@ -81,6 +83,7 @@ pub struct NodeApp {
     api: ApiClient,
     worker_pool: WorkerPool,
     logs: VecDeque<LogEntry>,
+    log_filter: LogFilter,
     log_rx: mpsc::Receiver<UiLogEntry>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
@@ -102,7 +105,7 @@ impl NodeApp {
     ) -> Self {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
-        let default_cores = claim::get_default_cores().unsigned_abs();
+        let default_cores = claim::default_cores().unsigned_abs();
 
         let state = if config.node_id.is_some() {
             AppState::Dashboard
@@ -116,6 +119,7 @@ impl NodeApp {
             api,
             worker_pool: WorkerPool::new(default_cores as usize),
             logs: VecDeque::with_capacity(MAX_LOGS),
+            log_filter: LogFilter::default(),
             log_rx,
             register_rx: None,
             realtime_rx: None,
@@ -123,7 +127,7 @@ impl NodeApp {
             current_tab: Tab::Status,
             started: false,
             logo: None,
-            node_name: claim::get_default_name(),
+            node_name: claim::default_name(),
             max_parallel: default_cores,
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
@@ -241,12 +245,12 @@ impl NodeApp {
         match event {
             RealtimeEvent::Connected => {
                 self.connection_status = ConnectionStatus::Connected;
-                tracing::info!("Connected to Realtime");
+                tracing::info!("Connected");
                 self.send_heartbeat();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
-                tracing::warn!("Disconnected from Realtime, reconnecting...");
+                tracing::info!("Disconnected, reconnecting...");
             }
             RealtimeEvent::NodeUpdated(ref payload) => self.handle_node_update(payload),
             RealtimeEvent::ChunkAssigned(ref payload) => {
@@ -257,7 +261,7 @@ impl NodeApp {
                 );
             }
             RealtimeEvent::Error(ref err) => {
-                tracing::error!("Realtime error: {err}");
+                tracing::warn!("Connection error: {err}");
             }
         }
     }
@@ -279,7 +283,7 @@ impl NodeApp {
 
         self.runtime.spawn(async move {
             if let Err(e) = api.set_online(node_id).await {
-                tracing::warn!("Heartbeat failed: {}", e);
+                tracing::debug!("Heartbeat failed: {}", e);
             }
         });
     }
@@ -429,7 +433,7 @@ impl eframe::App for NodeApp {
 
                     match self.current_tab {
                         Tab::Status => dashboard::show(ui, &self.stats()),
-                        Tab::Logs => logs::show(ui, &self.logs),
+                        Tab::Logs => logs::show(ui, &self.logs, &mut self.log_filter),
                     }
                 }
             });

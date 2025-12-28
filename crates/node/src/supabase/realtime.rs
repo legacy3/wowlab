@@ -80,16 +80,16 @@ async fn run_with_reconnect(
 
     loop {
         match run_realtime(&ws_url, &anon_key, node_id, &tx).await {
-            Ok(()) => tracing::info!("Realtime connection closed normally"),
+            Ok(()) => tracing::debug!("Realtime connection closed normally"),
             Err(e) => {
-                tracing::error!("Realtime error: {e}");
+                tracing::debug!("Realtime error: {e}");
                 let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
             }
         }
 
         let _ = tx.send(RealtimeEvent::Disconnected).await;
 
-        tracing::info!("Reconnecting in {delay:?}");
+        tracing::debug!("Reconnecting in {delay:?}");
         tokio::time::sleep(delay).await;
 
         delay = (delay * 2).min(MAX_RECONNECT_DELAY);
@@ -102,7 +102,7 @@ async fn run_realtime(
     node_id: Uuid,
     tx: &mpsc::Sender<RealtimeEvent>,
 ) -> Result<(), RealtimeError> {
-    tracing::info!("Connecting to Realtime: {ws_url}");
+    tracing::debug!("Connecting to Realtime: {ws_url}");
 
     let client = RealtimeClient::new(
         ws_url,
@@ -131,7 +131,7 @@ async fn run_realtime(
         .await;
 
     node_channel.subscribe().await?;
-    tracing::info!("Subscribed to node updates");
+    tracing::debug!("Subscribed to node updates");
 
     let chunks_channel = client
         .channel(
@@ -149,7 +149,7 @@ async fn run_realtime(
         .await;
 
     chunks_channel.subscribe().await?;
-    tracing::info!("Subscribed to chunk assignments");
+    tracing::debug!("Subscribed to chunk assignments");
 
     loop {
         tokio::select! {

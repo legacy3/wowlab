@@ -83,6 +83,7 @@ pub fn apply_theme(ctx: &egui::Context) {
         style.spacing.item_spacing = Vec2::new(8.0, 6.0);
         style.spacing.button_padding = Vec2::new(12.0, 6.0);
         style.spacing.window_margin = egui::Margin::same(16.0);
+        style.interaction.selectable_labels = false;
     });
 }
 

@@ -1,4 +1,5 @@
 use directories::ProjectDirs;
+use std::path::PathBuf;
 use std::sync::OnceLock;
 use tokio::sync::mpsc;
 use tracing::Level;
@@ -7,6 +8,10 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
 
 static UI_SENDER: OnceLock<mpsc::Sender<UiLogEntry>> = OnceLock::new();
+
+pub fn log_dir() -> Option<PathBuf> {
+    ProjectDirs::from("gg", "wowlab", "wowlab-node").map(|dirs| dirs.data_dir().join("logs"))
+}
 
 #[derive(Debug, Clone)]
 pub struct UiLogEntry {
@@ -18,10 +23,11 @@ pub fn init() -> mpsc::Receiver<UiLogEntry> {
     let (tx, rx) = mpsc::channel(100);
     UI_SENDER.set(tx).ok();
 
+    // These are compile-time constants, parse failure is a programmer error
     let env_filter = tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive("node=info".parse().unwrap())
-        .add_directive("eframe=warn".parse().unwrap())
-        .add_directive("egui=warn".parse().unwrap());
+        .add_directive("node=debug".parse().expect("valid directive"))
+        .add_directive("eframe=warn".parse().expect("valid directive"))
+        .add_directive("egui=warn".parse().expect("valid directive"));
 
     let console_layer = tracing_subscriber::fmt::layer().with_target(true);
     let ui_layer = UiLayer;
@@ -44,7 +50,7 @@ pub fn init() -> mpsc::Receiver<UiLogEntry> {
                 .with_writer(non_blocking);
 
             registry.with(file_layer).init();
-            tracing::info!("Logging to {log_dir:?}");
+            tracing::debug!("Logging to {log_dir:?}");
             return rx;
         }
     }
