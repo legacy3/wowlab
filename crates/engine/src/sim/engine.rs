@@ -36,6 +36,12 @@ use crate::util::FastRng;
 
 use super::{BatchAccumulator, BatchResult, SimEvent, SimResult, SimState};
 
+/// Convert f32 seconds to u32 milliseconds
+#[inline(always)]
+fn to_ms(seconds: f32) -> u32 {
+    (seconds * 1000.0) as u32
+}
+
 /// Dispatch a single event - extracted for reuse in meta_events mode
 #[inline(always)]
 fn dispatch_event(
@@ -43,8 +49,6 @@ fn dispatch_event(
     config: &SimConfig,
     rng: &mut FastRng,
     event: SimEvent,
-    event_time: f32,
-    duration: f32,
 ) {
     match event {
         SimEvent::GcdReady => {
@@ -95,18 +99,18 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     state.reset();
 
     // Schedule initial GCD ready (start of combat)
-    state.events.push(0.0, SimEvent::GcdReady);
+    state.events.push(0, SimEvent::GcdReady);
     state.player.gcd_event_pending = true;
 
     // Schedule initial auto-attack if weapon speed > 0
     if config.player.weapon_speed > 0.0 {
-        state.events.push(0.0, SimEvent::AutoAttack);
+        state.events.push(0, SimEvent::AutoAttack);
     }
 
     // Schedule initial pet attack if pet exists
     if let Some(ref pet) = config.pet {
         if pet.attack_speed > 0.0 {
-            state.events.push(0.0, SimEvent::PetAttack);
+            state.events.push(0, SimEvent::PetAttack);
         }
     }
 
@@ -115,8 +119,9 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     // Meta events: process same-time events together (minimal overhead version)
     #[cfg(feature = "meta_events")]
     {
-        let mut current_batch_time = f32::NEG_INFINITY;
+        let mut current_batch_time = 0u32;
         let mut batch_count = 0u32;
+        let mut first_event = true;
 
         while let Some(timed_event) = state.events.pop() {
             let event_time = timed_event.time;
@@ -125,7 +130,8 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
             }
 
             // Only update time when timestamp changes (not every event)
-            if event_time != current_batch_time {
+            if first_event || event_time != current_batch_time {
+                first_event = false;
                 // New batch
                 if batch_count > 0 {
                     state.events.batches_processed += 1;
@@ -139,7 +145,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
             }
 
             batch_count += 1;
-            dispatch_event(state, config, rng, timed_event.event, event_time, duration);
+            dispatch_event(state, config, rng, timed_event.event);
         }
 
         // Final batch
@@ -162,13 +168,15 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
             }
 
             state.time = event_time;
-            dispatch_event(state, config, rng, timed_event.event, event_time, duration);
+            dispatch_event(state, config, rng, timed_event.event);
         }
     }
 
+    // Duration is in ms, convert to seconds for DPS
+    let duration_secs = duration as f64 / 1000.0;
     SimResult {
         damage: state.results.total_damage,
-        dps: state.results.total_damage / duration as f64,
+        dps: state.results.total_damage / duration_secs,
         casts: state.results.cast_count,
     }
 }
@@ -200,9 +208,10 @@ fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut F
     let current_time = state.time;
 
     // Lazy resource regeneration - only compute when needed
-    let elapsed = current_time - state.player.last_resource_update;
-    if elapsed > 0.0 {
-        state.player.resources.regen(elapsed);
+    let elapsed_ms = current_time - state.player.last_resource_update;
+    if elapsed_ms > 0 {
+        // Convert ms to seconds for regen calculation
+        state.player.resources.regen(elapsed_ms as f32 * 0.001);
         state.player.last_resource_update = current_time;
     }
 
@@ -220,7 +229,7 @@ fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut F
 
 /// Find the first castable spell - inlined rotation evaluation.
 #[inline(always)]
-fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time: f32) -> Option<usize> {
+fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time: u32) -> Option<usize> {
     let player = &state.player;
     let gcd_ready = player.gcd_ready <= current_time;
     let current_resource = player.resources.current;
@@ -259,7 +268,7 @@ fn cast_spell_inline(
     config: &SimConfig,
     spell_idx: usize,
     rng: &mut FastRng,
-    current_time: f32,
+    current_time: u32,
 ) {
     let spell = &config.spells[spell_idx];
     let spell_state = &mut state.player.spell_states[spell_idx];
@@ -268,33 +277,36 @@ fn cast_spell_inline(
     state.player.resources.spend(spell.cost.amount);
 
     // Handle cooldown/charges
+    let cooldown_ms = spell_state.cooldown_ms;
     if spell.charges > 0 {
         // Charge-based spell
         spell_state.charges -= 1;
 
         // Start recharge if we just went below max
         if spell_state.charges == spell.charges - 1 {
-            spell_state.cooldown_ready = current_time + spell.cooldown;
+            spell_state.cooldown_ready = current_time + cooldown_ms;
             state.events.push(
                 spell_state.cooldown_ready,
                 SimEvent::CooldownReady { spell_idx: spell_idx as u8 },
             );
         }
-    } else if spell.cooldown > 0.0 {
+    } else if cooldown_ms > 0 {
         // Regular cooldown spell
-        spell_state.cooldown_ready = current_time + spell.cooldown;
+        spell_state.cooldown_ready = current_time + cooldown_ms;
         // No event needed - rotation will check cooldown_ready
     }
 
-    // Apply GCD and schedule next check
-    let gcd = if spell.gcd > 0.0 {
-        state.player.stats.gcd(spell.gcd)
+    // Apply GCD and schedule next check (apply haste to base GCD)
+    let gcd_ms = spell_state.gcd_ms;
+    let hasted_gcd_ms = if gcd_ms > 0 {
+        // Apply haste: gcd_ms / haste_mult
+        (gcd_ms as f32 / state.player.stats.haste_mult) as u32
     } else {
-        0.0
+        0
     };
 
-    if gcd > 0.0 {
-        state.player.gcd_ready = current_time + gcd;
+    if hasted_gcd_ms > 0 {
+        state.player.gcd_ready = current_time + hasted_gcd_ms;
         if !state.player.gcd_event_pending {
             state.events.push(state.player.gcd_ready, SimEvent::GcdReady);
             state.player.gcd_event_pending = true;
@@ -383,13 +395,13 @@ fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_
 /// Schedule next opportunity when no spell is castable.
 /// Computes the earliest time any spell becomes available.
 #[inline]
-fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, current_time: f32) {
+fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, current_time: u32) {
     if state.player.gcd_event_pending {
         return;
     }
 
     let duration = state.duration;
-    let mut next_time = f32::MAX;
+    let mut next_time = u32::MAX;
 
     let player = &state.player;
     let regen_rate = player.resources.regen_per_second;
@@ -405,14 +417,14 @@ fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, cu
             spell_state.cooldown_ready
         };
 
-        // Resource ready time
+        // Resource ready time (convert to ms)
         let resource_ready_time = if current_resource >= spell.cost.amount {
             current_time
         } else if regen_rate > 0.0 {
             let needed = spell.cost.amount - current_resource;
-            current_time + needed / regen_rate
+            current_time + to_ms(needed / regen_rate)
         } else {
-            f32::MAX
+            u32::MAX
         };
 
         // Spell ready at later of CD and resource
@@ -438,17 +450,16 @@ fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, cu
 fn handle_cooldown_ready_inline(state: &mut SimState, config: &SimConfig, spell_idx: u8) {
     let idx = spell_idx as usize;
     let spell = &config.spells[idx];
+    let spell_state = &mut state.player.spell_states[idx];
 
     // Only charge-based spells trigger this event
     if spell.charges > 0 {
-        let spell_state = &mut state.player.spell_states[idx];
-
         if spell_state.charges < spell.charges {
             spell_state.charges += 1;
 
             // Schedule next charge if not at max
             if spell_state.charges < spell.charges {
-                spell_state.cooldown_ready = state.time + spell.cooldown;
+                spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
                 state.events.push(
                     spell_state.cooldown_ready,
                     SimEvent::CooldownReady { spell_idx },
@@ -479,9 +490,9 @@ fn handle_aura_tick_inline(
         return;
     }
 
-    // Get remaining time - also checks if aura is active (returns 0.0 if not)
+    // Get remaining time in ms - also checks if aura is active (returns 0 if not)
     let remaining = state.player.auras.remaining_slot(idx, state.time);
-    if remaining <= 0.0 {
+    if remaining == 0 {
         return;
     }
 
@@ -511,9 +522,9 @@ fn handle_aura_tick_inline(
     }
 
     // Schedule next tick if aura still has duration remaining
-    let tick_interval = aura_def.tick_interval;
-    if tick_interval > 0.0 {
-        let next_tick = state.time + tick_interval;
+    let tick_interval_ms = state.aura_timing[idx].tick_interval_ms;
+    if tick_interval_ms > 0 {
+        let next_tick = state.time + tick_interval_ms;
         if next_tick < state.time + remaining {
             state.events.push(next_tick, SimEvent::AuraTick { aura_idx });
         }
@@ -526,7 +537,7 @@ fn handle_aura_expire_inline(state: &mut SimState, aura_idx: u8) {
     let idx = aura_idx as usize;
     // Only remove if actually expired (handles refresh case where old expire event is stale)
     let remaining = state.player.auras.remaining_slot(idx, state.time);
-    if remaining <= 0.0 {
+    if remaining == 0 {
         state.player.auras.remove_slot(idx);
     }
 }
@@ -546,6 +557,7 @@ fn handle_aura_apply_inline(
     }
 
     let aura_def = &config.auras[idx];
+    let timing = &state.aura_timing[idx];
 
     #[cfg(feature = "debug_logging")]
     eprintln!("AuraApply: {} to slot {} at time {}", aura_def.name, idx, state.time);
@@ -553,7 +565,7 @@ fn handle_aura_apply_inline(
     // Apply using slot index - O(1)
     state.player.auras.apply_slot(
         idx,
-        aura_def.duration,
+        timing.duration_ms,
         aura_def.max_stacks,
         state.time,
     );
@@ -563,14 +575,14 @@ fn handle_aura_apply_inline(
 
     // Schedule expiration
     state.events.push(
-        state.time + aura_def.duration,
+        state.time + timing.duration_ms,
         SimEvent::AuraExpire { aura_idx },
     );
 
     // Schedule first tick if DoT/HoT
-    if aura_def.tick_interval > 0.0 {
+    if timing.tick_interval_ms > 0 {
         state.events.push(
-            state.time + aura_def.tick_interval,
+            state.time + timing.tick_interval_ms,
             SimEvent::AuraTick { aura_idx },
         );
     }
@@ -610,7 +622,7 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut 
     state.target.health -= damage;
 
     // Schedule next pet attack
-    let next_attack = current_time + pet.attack_speed;
+    let next_attack = current_time + state.pet_attack_speed_ms;
     if next_attack < state.duration {
         state.events.push(next_attack, SimEvent::PetAttack);
     }
@@ -646,8 +658,9 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut
     state.results.total_damage += damage as f64;
     state.target.health -= damage;
 
-    // Schedule next auto-attack (use precomputed haste_mult)
-    let next_swing = current_time + weapon_speed / stats.haste_mult;
+    // Schedule next auto-attack (apply haste to pre-computed weapon speed)
+    let next_swing_ms = (state.weapon_speed_ms as f32 / stats.haste_mult) as u32;
+    let next_swing = current_time + next_swing_ms;
 
     if next_swing < state.duration {
         state.events.push(next_swing, SimEvent::AutoAttack);

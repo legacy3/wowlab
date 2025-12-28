@@ -72,18 +72,18 @@ pub enum SimEvent {
     CastComplete { spell_idx: u8 } = 9,
 }
 
-/// Compact timed event.
+/// Compact timed event - u32 milliseconds.
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct TimedEvent {
-    pub time: f32,
+    pub time: u32,
     seq: u32,
     pub event: SimEvent,
 }
 
 impl TimedEvent {
     #[inline(always)]
-    pub const fn new(time: f32, seq: u32, event: SimEvent) -> Self {
+    pub const fn new(time: u32, seq: u32, event: SimEvent) -> Self {
         Self { time, seq, event }
     }
 }
@@ -108,9 +108,7 @@ impl Ord for TimedEvent {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> Ordering {
         // Min-heap ordering: smaller time/seq comes first
-        // Reverse comparison so heap pops minimum first
-        // Use total_cmp for faster f32 comparison (no NaN handling branches)
-        match other.time.total_cmp(&self.time) {
+        match other.time.cmp(&self.time) {
             Ordering::Equal => other.seq.cmp(&self.seq),
             ord => ord,
         }
@@ -157,7 +155,7 @@ pub struct EventQueue {
     pub events_processed: u32,
     pub events_scheduled: u32,
 
-    next_time_cache: f32,
+    next_time_cache: u32,
 
     #[cfg(feature = "meta_events")]
     pub batches_processed: u32,
@@ -178,7 +176,7 @@ impl EventQueue {
             next_seq: 0,
             events_processed: 0,
             events_scheduled: 0,
-            next_time_cache: f32::MAX,
+            next_time_cache: u32::MAX,
             #[cfg(feature = "meta_events")]
             batches_processed: 0,
             #[cfg(feature = "meta_events")]
@@ -200,7 +198,7 @@ impl EventQueue {
         self.next_seq = 0;
         self.events_processed = 0;
         self.events_scheduled = 0;
-        self.next_time_cache = f32::MAX;
+        self.next_time_cache = u32::MAX;
         #[cfg(feature = "meta_events")]
         {
             self.batches_processed = 0;
@@ -229,20 +227,19 @@ impl EventQueue {
     }
 
     #[inline(always)]
-    fn time_to_slot(time: f32) -> usize {
-        let time_ms = (time * 1000.0) as u32;
+    fn time_to_slot(time_ms: u32) -> usize {
         ((time_ms >> WHEEL_SHIFT) as usize) & WHEEL_MASK
     }
 
     /// Insert sorted by time - O(1) for common case (append to tail)
     #[inline(always)]
-    pub fn push(&mut self, time: f32, event: SimEvent) {
+    pub fn push(&mut self, time_ms: u32, event: SimEvent) {
         self.events_scheduled += 1;
         let seq = self.next_seq;
         self.next_seq += 1;
 
-        let slot_idx = Self::time_to_slot(time);
-        let new_event = TimedEvent::new(time, seq, event);
+        let slot_idx = Self::time_to_slot(time_ms);
+        let new_event = TimedEvent::new(time_ms, seq, event);
         let new_idx = self.alloc_node(new_event);
 
         let tail_idx = self.wheel_tail[slot_idx];
@@ -256,7 +253,7 @@ impl EventQueue {
         }
 
         let tail = &self.arena[tail_idx as usize];
-        if time > tail.event.time || (time == tail.event.time && seq > tail.event.seq) {
+        if time_ms > tail.event.time || (time_ms == tail.event.time && seq > tail.event.seq) {
             // Append at tail (most common case - scheduling future events)
             self.arena[tail_idx as usize].next = new_idx;
             self.wheel_tail[slot_idx] = new_idx;
@@ -269,7 +266,7 @@ impl EventQueue {
 
         while curr_idx != NULL_IDX {
             let curr = &self.arena[curr_idx as usize];
-            if curr.event.time > time || (curr.event.time == time && curr.event.seq > seq) {
+            if curr.event.time > time_ms || (curr.event.time == time_ms && curr.event.seq > seq) {
                 break;
             }
             prev_idx = curr_idx;
@@ -286,8 +283,8 @@ impl EventQueue {
     }
 
     #[inline(always)]
-    pub fn push_immediate(&mut self, time: f32, event: SimEvent) {
-        self.push(time, event);
+    pub fn push_immediate(&mut self, time_ms: u32, event: SimEvent) {
+        self.push(time_ms, event);
     }
 
     /// Pop from head (O(1))
@@ -326,31 +323,31 @@ impl EventQueue {
 
     #[inline(always)]
     pub fn cache_next_time(&mut self) {
-        self.next_time_cache = if let Some(e) = self.peek() { e.time } else { f32::MAX };
+        self.next_time_cache = if let Some(e) = self.peek() { e.time } else { u32::MAX };
     }
 
     #[inline(always)]
-    pub fn next_has_same_time(&self, current_time: f32) -> bool {
-        self.next_time_cache == current_time
+    pub fn next_has_same_time(&self, current_time_ms: u32) -> bool {
+        self.next_time_cache == current_time_ms
     }
 
     #[cfg(feature = "meta_events")]
     #[inline]
-    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<f32>
+    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<u32>
     where
         F: FnMut(SimEvent),
     {
         let first = self.pop()?;
-        let time = first.time;
+        let time_ms = first.time;
         f(first.event);
         while let Some(next) = self.peek() {
-            if next.time == time {
+            if next.time == time_ms {
                 f(self.pop().unwrap().event);
             } else {
                 break;
             }
         }
-        Some(time)
+        Some(time_ms)
     }
 
     #[inline]
@@ -377,7 +374,7 @@ pub struct EventQueue {
     #[cfg(feature = "front_buffer")]
     front_count: u8,
     #[cfg(feature = "front_buffer")]
-    front_time: f32,
+    front_time_ms: u32,
 
     next_seq: u32,
     pub events_processed: u32,
@@ -385,7 +382,7 @@ pub struct EventQueue {
 
     /// Cached: does next event have same timestamp as last popped?
     /// Avoids repeated peek() calls in meta_events batching
-    next_time_cache: f32,
+    next_time_cache: u32,
 
     /// Track batch statistics (for meta_events analysis)
     #[cfg(feature = "meta_events")]
@@ -405,13 +402,13 @@ impl EventQueue {
             #[cfg(feature = "front_buffer")]
             front_count: 0,
             #[cfg(feature = "front_buffer")]
-            front_time: f32::NEG_INFINITY,
+            front_time_ms: 0,
 
             next_seq: 0,
             events_processed: 0,
             events_scheduled: 0,
 
-            next_time_cache: f32::MAX,
+            next_time_cache: u32::MAX,
 
             #[cfg(feature = "meta_events")]
             batches_processed: 0,
@@ -428,13 +425,13 @@ impl EventQueue {
         {
             self.front_buffer = [None; FRONT_BUFFER_SIZE];
             self.front_count = 0;
-            self.front_time = f32::NEG_INFINITY;
+            self.front_time_ms = 0;
         }
 
         self.next_seq = 0;
         self.events_processed = 0;
         self.events_scheduled = 0;
-        self.next_time_cache = f32::MAX;
+        self.next_time_cache = u32::MAX;
 
         #[cfg(feature = "meta_events")]
         {
@@ -449,27 +446,27 @@ impl EventQueue {
         self.next_time_cache = if let Some(e) = self.heap.peek() {
             e.time
         } else {
-            f32::MAX
+            u32::MAX
         };
     }
 
     /// Check if next event has same timestamp (uses cached peek result)
     /// Must call cache_next_time() first to populate the cache!
     #[inline(always)]
-    pub fn next_has_same_time(&self, current_time: f32) -> bool {
-        self.next_time_cache == current_time
+    pub fn next_has_same_time(&self, current_time_ms: u32) -> bool {
+        self.next_time_cache == current_time_ms
     }
 
     /// Process all events at the same timestamp with a callback.
     /// Returns the timestamp processed, or None if empty.
     #[cfg(feature = "meta_events")]
     #[inline]
-    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<f32>
+    pub fn drain_batch<F>(&mut self, mut f: F) -> Option<u32>
     where
         F: FnMut(SimEvent),
     {
         let first = self.heap.pop()?;
-        let time = first.time;
+        let time_ms = first.time;
 
         f(first.event);
         self.events_processed += 1;
@@ -477,7 +474,7 @@ impl EventQueue {
         // Process all events at same time
         loop {
             if let Some(next) = self.heap.peek() {
-                if next.time == time {
+                if next.time == time_ms {
                     f(self.heap.pop().unwrap().event);
                     self.events_processed += 1;
                 } else {
@@ -488,11 +485,11 @@ impl EventQueue {
             }
         }
 
-        Some(time)
+        Some(time_ms)
     }
 
     #[inline(always)]
-    pub fn push(&mut self, time: f32, event: SimEvent) {
+    pub fn push(&mut self, time_ms: u32, event: SimEvent) {
         self.events_scheduled += 1;
         let seq = self.next_seq;
         self.next_seq += 1;
@@ -500,39 +497,39 @@ impl EventQueue {
         #[cfg(feature = "front_buffer")]
         {
             // Try front buffer for same-time events
-            if time == self.front_time && (self.front_count as usize) < FRONT_BUFFER_SIZE {
-                self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time, seq, event));
+            if time_ms == self.front_time_ms && (self.front_count as usize) < FRONT_BUFFER_SIZE {
+                self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time_ms, seq, event));
                 self.front_count += 1;
                 return;
             }
         }
 
-        self.heap.push(TimedEvent::new(time, seq, event));
+        self.heap.push(TimedEvent::new(time_ms, seq, event));
     }
 
     /// Push an event for immediate processing (same timestamp).
     #[cfg(feature = "front_buffer")]
     #[inline(always)]
-    pub fn push_immediate(&mut self, time: f32, event: SimEvent) {
+    pub fn push_immediate(&mut self, time_ms: u32, event: SimEvent) {
         self.events_scheduled += 1;
         let seq = self.next_seq;
         self.next_seq += 1;
 
         if (self.front_count as usize) < FRONT_BUFFER_SIZE {
             if self.front_count == 0 {
-                self.front_time = time;
+                self.front_time_ms = time_ms;
             }
-            self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time, seq, event));
+            self.front_buffer[self.front_count as usize] = Some(TimedEvent::new(time_ms, seq, event));
             self.front_count += 1;
         } else {
-            self.heap.push(TimedEvent::new(time, seq, event));
+            self.heap.push(TimedEvent::new(time_ms, seq, event));
         }
     }
 
     #[cfg(not(feature = "front_buffer"))]
     #[inline(always)]
-    pub fn push_immediate(&mut self, time: f32, event: SimEvent) {
-        self.push(time, event);
+    pub fn push_immediate(&mut self, time_ms: u32, event: SimEvent) {
+        self.push(time_ms, event);
     }
 
     #[inline(always)]
@@ -552,7 +549,7 @@ impl EventQueue {
                 } else if let Some(next) = self.heap.peek() {
                     self.next_time_cache = next.time;
                 } else {
-                    self.next_time_cache = f32::MAX;
+                    self.next_time_cache = u32::MAX;
                 }
                 return event;
             }
@@ -564,7 +561,7 @@ impl EventQueue {
             #[cfg(feature = "front_buffer")]
             {
                 // Refill front buffer with same-time events
-                self.front_time = event.time;
+                self.front_time_ms = event.time;
                 while (self.front_count as usize) < FRONT_BUFFER_SIZE {
                     if let Some(next) = self.heap.peek() {
                         if next.time == event.time {
@@ -588,7 +585,7 @@ impl EventQueue {
             return Some(event);
         }
 
-        self.next_time_cache = f32::MAX;
+        self.next_time_cache = u32::MAX;
         None
     }
 
@@ -633,13 +630,13 @@ mod tests {
     fn test_event_queue_ordering() {
         let mut queue = EventQueue::with_capacity(16);
 
-        queue.push(3.0, SimEvent::GcdReady);
-        queue.push(1.0, SimEvent::GcdReady);
-        queue.push(2.0, SimEvent::GcdReady);
+        queue.push(3000, SimEvent::GcdReady);
+        queue.push(1000, SimEvent::GcdReady);
+        queue.push(2000, SimEvent::GcdReady);
 
-        assert_eq!(queue.pop().unwrap().time, 1.0);
-        assert_eq!(queue.pop().unwrap().time, 2.0);
-        assert_eq!(queue.pop().unwrap().time, 3.0);
+        assert_eq!(queue.pop().unwrap().time, 1000);
+        assert_eq!(queue.pop().unwrap().time, 2000);
+        assert_eq!(queue.pop().unwrap().time, 3000);
         assert!(queue.pop().is_none());
     }
 
@@ -647,9 +644,9 @@ mod tests {
     fn test_same_time_fifo() {
         let mut queue = EventQueue::with_capacity(16);
 
-        queue.push(1.0, SimEvent::GcdReady);
-        queue.push(1.0, SimEvent::ResourceTick);
-        queue.push(1.0, SimEvent::PetAttack);
+        queue.push(1000, SimEvent::GcdReady);
+        queue.push(1000, SimEvent::ResourceTick);
+        queue.push(1000, SimEvent::PetAttack);
 
         let e1 = queue.pop().unwrap();
         let e2 = queue.pop().unwrap();

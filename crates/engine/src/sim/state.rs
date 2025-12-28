@@ -10,13 +10,20 @@ use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
 
 use super::EventQueue;
 
+/// Pre-computed aura timing (ms)
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AuraTiming {
+    pub duration_ms: u32,
+    pub tick_interval_ms: u32,
+}
+
 /// Main simulation state - hot fields first for cache locality.
 pub struct SimState {
-    /// Current simulation time (hot - accessed every event)
-    pub time: f32,
+    /// Current simulation time in milliseconds (hot - accessed every event)
+    pub time: u32,
 
-    /// Simulation duration (hot - checked every event)
-    pub duration: f32,
+    /// Simulation duration in milliseconds (hot - checked every event)
+    pub duration: u32,
 
     /// Player state (hot - accessed most events)
     pub player: UnitState,
@@ -26,6 +33,15 @@ pub struct SimState {
 
     /// Results accumulator (hot - written every cast)
     pub results: SimResultsAccum,
+
+    /// Pre-computed aura timing values (avoid to_ms in hot loop)
+    pub aura_timing: Vec<AuraTiming>,
+
+    /// Pre-computed weapon speed in ms (base, before haste)
+    pub weapon_speed_ms: u32,
+
+    /// Pre-computed pet attack speed in ms
+    pub pet_attack_speed_ms: u32,
 
     /// Target state (warm - accessed on damage)
     pub target: TargetState,
@@ -42,14 +58,14 @@ pub struct UnitState {
     /// Current resources
     pub resources: Resources,
 
-    /// GCD end time
-    pub gcd_ready: f32,
+    /// GCD end time in milliseconds
+    pub gcd_ready: u32,
 
     /// Whether a GcdReady event is already scheduled
     pub gcd_event_pending: bool,
 
-    /// Last time resources were updated (for lazy regen)
-    pub last_resource_update: f32,
+    /// Last time resources were updated in milliseconds (for lazy regen)
+    pub last_resource_update: u32,
 
     // === Warm fields (spell casting) ===
     /// Current stats (base + modifiers)
@@ -79,9 +95,9 @@ impl UnitState {
         Self {
             // Hot fields
             resources: Resources::new(resources),
-            gcd_ready: 0.0,
+            gcd_ready: 0,
             gcd_event_pending: false,
-            last_resource_update: 0.0,
+            last_resource_update: 0,
             // Warm fields
             stats,
             spell_states: vec![SpellState::default(); spell_count],
@@ -101,20 +117,26 @@ impl UnitState {
             state.reset();
         }
         self.auras.clear();
-        self.gcd_ready = 0.0;
+        self.gcd_ready = 0;
         self.gcd_event_pending = false;
         self.cast_end = 0.0;
         self.casting_spell = None;
-        self.last_resource_update = 0.0;
+        self.last_resource_update = 0;
     }
 }
 
-/// Runtime spell state - compact 8-byte struct.
+/// Runtime spell state - pre-computed values for hot path.
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(C)]
 pub struct SpellState {
-    /// Time when cooldown is ready
-    pub cooldown_ready: f32,
+    /// Time when cooldown is ready in milliseconds
+    pub cooldown_ready: u32,
+
+    /// Pre-computed cooldown in ms (from config)
+    pub cooldown_ms: u32,
+
+    /// Pre-computed GCD in ms (from config, before haste)
+    pub gcd_ms: u32,
 
     /// Current charges (for charge-based spells)
     pub charges: u8,
@@ -129,7 +151,7 @@ pub struct SpellState {
 impl SpellState {
     #[inline]
     pub fn reset(&mut self) {
-        self.cooldown_ready = 0.0;
+        self.cooldown_ready = 0;
         self.charges = self.max_charges;
     }
 }
@@ -205,17 +227,17 @@ impl AuraTracker {
 
     /// Apply aura by slot index (aura_idx from config) - O(1)
     #[inline(always)]
-    pub fn apply_slot(&mut self, slot: usize, duration: f32, max_stacks: u8, current_time: f32) {
+    pub fn apply_slot(&mut self, slot: usize, duration_ms: u32, max_stacks: u8, current_time: u32) {
         if slot >= MAX_AURA_SLOTS {
             return;
         }
         if let Some(ref mut instance) = self.slots[slot] {
             // Refresh existing aura
-            instance.expires = current_time + duration;
+            instance.expires = current_time + duration_ms;
             instance.stacks = (instance.stacks + 1).min(max_stacks);
         } else {
             // Apply new aura
-            self.slots[slot] = Some(AuraInstance::new(current_time + duration, 1));
+            self.slots[slot] = Some(AuraInstance::new(current_time + duration_ms, 1));
         }
     }
 
@@ -247,19 +269,17 @@ impl AuraTracker {
         }
     }
 
-    /// Get remaining duration by slot index - O(1)
+    /// Get remaining duration in ms by slot index - O(1)
     #[inline(always)]
-    pub fn remaining_slot(&self, slot: usize, current_time: f32) -> f32 {
+    pub fn remaining_slot(&self, slot: usize, current_time: u32) -> u32 {
         if slot < MAX_AURA_SLOTS {
             if let Some(instance) = self.slots[slot] {
-                let remaining = instance.expires - current_time;
-                // Branchless max(0.0) - faster than f32::max
-                if remaining > 0.0 { remaining } else { 0.0 }
+                instance.expires.saturating_sub(current_time)
             } else {
-                0.0
+                0
             }
         } else {
-            0.0
+            0
         }
     }
 }
@@ -268,14 +288,14 @@ impl AuraTracker {
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct AuraInstance {
-    pub expires: f32,
+    pub expires: u32,
     pub stacks: u8,
     _pad: [u8; 3],
 }
 
 impl AuraInstance {
     #[inline]
-    pub fn new(expires: f32, stacks: u8) -> Self {
+    pub fn new(expires: u32, stacks: u8) -> Self {
         Self {
             expires,
             stacks,
@@ -286,7 +306,7 @@ impl AuraInstance {
 
 impl Default for AuraInstance {
     fn default() -> Self {
-        Self::new(0.0, 0)
+        Self::new(0, 0)
     }
 }
 
@@ -375,23 +395,43 @@ impl SimState {
             spell_count,
         );
 
+        // Convert duration from f32 seconds to u32 milliseconds
+        let duration_ms = (config.duration * 1000.0) as u32;
+
+        // Pre-compute aura timing values
+        let aura_timing: Vec<AuraTiming> = config.auras.iter().map(|a| AuraTiming {
+            duration_ms: (a.duration * 1000.0) as u32,
+            tick_interval_ms: (a.tick_interval * 1000.0) as u32,
+        }).collect();
+
+        // Pre-compute attack speeds
+        let weapon_speed_ms = (config.player.weapon_speed * 1000.0) as u32;
+        let pet_attack_speed_ms = config.pet.as_ref()
+            .map(|p| (p.attack_speed * 1000.0) as u32)
+            .unwrap_or(0);
+
         let mut state = Self {
-            time: 0.0,
-            duration: config.duration,
+            time: 0,
+            duration: duration_ms,
             player,
             #[cfg(feature = "large_capacity")]
             events: EventQueue::with_capacity(16384),
             #[cfg(not(feature = "large_capacity"))]
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
+            aura_timing,
+            weapon_speed_ms,
+            pet_attack_speed_ms,
             target: TargetState::new(config.target.max_health),
             pet: None,
         };
 
-        // Set initial charges from spell defs
+        // Set initial charges and pre-compute ms values from spell defs
         for (i, spell) in config.spells.iter().enumerate() {
             state.player.spell_states[i].max_charges = spell.charges;
             state.player.spell_states[i].charges = spell.charges;
+            state.player.spell_states[i].cooldown_ms = (spell.cooldown * 1000.0) as u32;
+            state.player.spell_states[i].gcd_ms = (spell.gcd * 1000.0) as u32;
         }
 
         state
@@ -399,7 +439,7 @@ impl SimState {
 
     #[inline]
     pub fn reset(&mut self) {
-        self.time = 0.0;
+        self.time = 0;
         self.player.reset();
         if let Some(pet) = &mut self.pet {
             pet.reset();
