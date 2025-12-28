@@ -21,6 +21,33 @@ pub struct AuraRuntime {
     pub tick_coefficient: f32,
 }
 
+/// Maximum effects per spell (auras to apply)
+const MAX_SPELL_AURAS: usize = 4;
+
+/// Pre-computed spell data for hot path - avoids touching SpellDef (has String, Vec)
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(C)]
+pub struct SpellRuntime {
+    // Damage calculation (32 bytes)
+    pub damage_min: f32,
+    pub damage_max: f32,
+    pub ap_coefficient: f32,
+    pub cost_amount: f32,
+
+    // Pre-resolved aura indices (no more linear search)
+    pub apply_aura_indices: [u8; MAX_SPELL_AURAS],
+    pub apply_aura_count: u8,
+
+    // Energize effect (if any)
+    pub energize_amount: f32,
+
+    // Charges (0 = not charge-based)
+    pub max_charges: u8,
+
+    // Padding for alignment
+    _pad: [u8; 2],
+}
+
 /// Main simulation state - hot fields first for cache locality.
 pub struct SimState {
     /// Current simulation time in milliseconds (hot - accessed every event)
@@ -37,6 +64,9 @@ pub struct SimState {
 
     /// Results accumulator (hot - written every cast)
     pub results: SimResultsAccum,
+
+    /// Pre-computed spell runtime data (hot - accessed every cast)
+    pub spell_runtime: Vec<SpellRuntime>,
 
     /// Pre-computed aura runtime data (timing + periodic damage)
     pub aura_runtime: Vec<AuraRuntime>,
@@ -430,6 +460,41 @@ impl SimState {
             .map(|p| (p.attack_speed * 1000.0) as u32)
             .unwrap_or(0);
 
+        // Pre-compute spell runtime data (avoids touching SpellDef in hot loop)
+        let spell_runtime: Vec<SpellRuntime> = config.spells.iter().map(|spell| {
+            let mut runtime = SpellRuntime {
+                damage_min: spell.damage.base_min,
+                damage_max: spell.damage.base_max,
+                ap_coefficient: spell.damage.ap_coefficient,
+                cost_amount: spell.cost.amount,
+                max_charges: spell.charges,
+                apply_aura_indices: [0; MAX_SPELL_AURAS],
+                apply_aura_count: 0,
+                energize_amount: 0.0,
+                _pad: [0; 2],
+            };
+
+            // Pre-resolve effects
+            for effect in &spell.effects {
+                match effect {
+                    crate::config::SpellEffect::ApplyAura { aura_id, .. } => {
+                        // Resolve aura_id to aura_idx at load time (no more linear search per cast)
+                        if let Some(aura_idx) = config.auras.iter().position(|a| a.id == *aura_id) {
+                            if (runtime.apply_aura_count as usize) < MAX_SPELL_AURAS {
+                                runtime.apply_aura_indices[runtime.apply_aura_count as usize] = aura_idx as u8;
+                                runtime.apply_aura_count += 1;
+                            }
+                        }
+                    }
+                    crate::config::SpellEffect::Energize { amount, .. } => {
+                        runtime.energize_amount = *amount;
+                    }
+                    _ => {}
+                }
+            }
+            runtime
+        }).collect();
+
         let mut state = Self {
             time: 0,
             duration: duration_ms,
@@ -439,6 +504,7 @@ impl SimState {
             #[cfg(not(feature = "large_capacity"))]
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
+            spell_runtime,
             aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,

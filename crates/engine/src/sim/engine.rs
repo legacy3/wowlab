@@ -9,6 +9,8 @@ IMPLEMENTED:
 ✓ Smart wake-up scheduling (avoid busy-looping)
 ✓ Precomputed stats (ap_normalized, crit_chance, vers_mult, haste_mult)
 ✓ Unchecked array indexing in hot path (record_damage)
+✓ SpellRuntime table - pre-computed damage/cost/aura indices, avoids touching SpellDef
+✓ Pre-resolved aura_id → aura_idx at config load (no linear search per cast)
 
 TESTED BUT NOT BENEFICIAL:
 ✗ Quaternary (4-ary) heap - 36% SLOWER than binary heap
@@ -17,24 +19,14 @@ TESTED BUT NOT BENEFICIAL:
 ✗ large_capacity preallocation - no measurable difference
 ✗ RNG pool/batching - 3% SLOWER (xorshift64 already optimal, caching overhead > benefit)
 ✗ RNG dual-value extraction (upper/lower 32 bits from u64) - 2.5% SLOWER (NaN check overhead)
+✗ inv_haste_mult precompute - 5% SLOWER (extra field hurts cache, compiler already optimizes div)
+✗ EventQueue::clear bitmap drain - no measurable difference (vectorized fill already fast)
 
 POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 
 === HIGH IMPACT (10-25% potential) ===
 
-1. Compile compact SpellRuntime table (10-25%)
-   - Stop touching SpellDef (has String, Vec<SpellEffect>) in hot loop
-   - Create SpellRuntime with just: cost_amount, cooldown_ms, gcd_ms, damage_min/max,
-     ap_coeff, flags, and pre-resolved effect indices
-   - Hot path uses only runtime arrays in SimState
-   Where: engine.rs (find/cast/damage/effects), state.rs (add runtime arrays)
-
-2. Resolve aura_id → aura_idx at config load (5-15%)
-   - process_spell_effects_inline does config.auras.iter().position(...) per ApplyAura
-   - Replace SpellEffect::ApplyAura { aura_id } with ApplyAuraIdx { aura_idx: u8 }
-   Where: engine.rs, config/spell_def.rs, SimConfig::finalize
-
-3. Batch aura ticks into single sweep event (10-30% if aura-heavy)
+1. Batch aura ticks into single sweep event (10-30% if aura-heavy)
    - Instead of N events for N active auras, one "tick sweep" event
    - Iterate active auras and apply tick damage in batch
    - Enables SIMD vectorization of tick damage calculation
@@ -42,44 +34,35 @@ POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 
 === MEDIUM IMPACT (3-8%) ===
 
-4. EventQueue::clear optimization (3-8%)
-   - Currently walks entire arena O(arena_len) per sim to rebuild free list
-   - Instead, keep free list as-is; nodes already freed on pop
-   Where: events.rs (EventQueue::clear)
-
-5. SoA for spell_states (5-15%)
+2. SoA for spell_states (5-15%)
    - Switch spell_states: Vec<SpellState> to separate arrays
    - cooldown_ready[], charges[], cooldown_ms[], gcd_ms[], cost_amount[]
    - Cuts pointer chasing in find_castable_spell_inline
    Where: state.rs, engine.rs
 
-6. Precompute inv_haste_mult (1-3%)
-   - Replace divides with multiplies in cast_spell_inline, handle_auto_attack_inline
-   Where: config/stats.rs, engine.rs
-
-7. Add duration checks before scheduling (1-5%)
+3. Add duration checks before scheduling (1-5%)
    - Several push sites don't check time <= duration
    - Reduces queue size and leftover events that clear must handle
    Where: engine.rs (cast_spell_inline, handle_cooldown_ready_inline, handle_aura_apply_inline)
 
 === LOW IMPACT (1-5%) ===
 
-8. Split hot/cold unit state
+4. Split hot/cold unit state
    - Put only hot fields in tight UnitHot struct
    - Move cold fields (auras, base_stats, casting) to separate struct
    Where: state.rs
 
-9. Shrink TimedEvent if FIFO not required
+5. Shrink TimedEvent if FIFO not required
    - Currently 16 bytes; could drop seq or use u16 seq
    Where: events.rs
 
-10. AuraTracker to SoA (1-4%)
-    - Convert [Option<AuraInstance>; 32] to expires[], stacks[], active[] arrays
-    Where: state.rs
+6. AuraTracker to SoA (1-4%)
+   - Convert [Option<AuraInstance>; 32] to expires[], stacks[], active[] arrays
+   Where: state.rs
 
-11. Early-return for spells with no effects
-    - Add has_effects flag in runtime spell data
-    Where: engine.rs, state.rs
+7. Early-return for spells with no effects
+   - Add has_effects flag in runtime spell data
+   Where: engine.rs, state.rs
 
 === OTHER ===
 
@@ -119,12 +102,11 @@ fn dispatch_event(
     match event {
         SimEvent::GcdReady => {
             state.player.gcd_event_pending = false;
-            handle_gcd_ready_inline(state, config, rng);
-
+            handle_gcd_ready_inline(state, rng);
         }
 
         SimEvent::CooldownReady { spell_idx } => {
-            handle_cooldown_ready_inline(state, config, spell_idx);
+            handle_cooldown_ready_inline(state, spell_idx);
         }
 
         SimEvent::AuraTick { aura_idx } => {
@@ -270,7 +252,7 @@ pub fn run_batch(
 /// Handle GCD ready - the most frequent event, heavily optimized.
 /// Inlines rotation evaluation and spell casting for maximum performance.
 #[inline(always)]
-fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) {
+fn handle_gcd_ready_inline(state: &mut SimState, rng: &mut FastRng) {
     let current_time = state.time;
 
     // Lazy resource regeneration - only compute when needed
@@ -281,21 +263,21 @@ fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut F
         state.player.last_resource_update = current_time;
     }
 
-    // Inline rotation evaluation - find first castable spell
-    let spell_idx = find_castable_spell_inline(state, config, current_time);
+    // Inline rotation evaluation - find first castable spell (uses spell_runtime)
+    let spell_idx = find_castable_spell_inline(state, current_time);
 
     if let Some(idx) = spell_idx {
-        // Cast the spell inline
-        cast_spell_inline(state, config, idx, rng, current_time);
+        // Cast the spell inline (uses spell_runtime)
+        cast_spell_inline(state, idx, rng, current_time);
     } else {
-        // No spell available - compute next wake-up time
-        schedule_next_opportunity_inline(state, config, current_time);
+        // No spell available - compute next wake-up time (uses spell_runtime)
+        schedule_next_opportunity_inline(state, current_time);
     }
 }
 
 /// Find the first castable spell - inlined rotation evaluation.
 #[inline(always)]
-fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time: u32) -> Option<usize> {
+fn find_castable_spell_inline(state: &SimState, current_time: u32) -> Option<usize> {
     let player = &state.player;
     let gcd_ready = player.gcd_ready <= current_time;
     let current_resource = player.resources.current;
@@ -305,8 +287,8 @@ fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time
         return None;
     }
 
-    // Iterate through spells in priority order
-    for (idx, spell) in config.spells.iter().enumerate() {
+    // Iterate through spells in priority order (use runtime data, not config)
+    for (idx, spell_rt) in state.spell_runtime.iter().enumerate() {
         let spell_state = &player.spell_states[idx];
 
         // Check cooldown/charges - most common rejection
@@ -315,8 +297,8 @@ fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time
             continue;
         }
 
-        // Check resources
-        if current_resource < spell.cost.amount {
+        // Check resources (use pre-computed cost_amount)
+        if current_resource < spell_rt.cost_amount {
             continue;
         }
 
@@ -331,25 +313,25 @@ fn find_castable_spell_inline(state: &SimState, config: &SimConfig, current_time
 #[inline(always)]
 fn cast_spell_inline(
     state: &mut SimState,
-    config: &SimConfig,
     spell_idx: usize,
     rng: &mut FastRng,
     current_time: u32,
 ) {
-    let spell = &config.spells[spell_idx];
+    let spell_rt = &state.spell_runtime[spell_idx];
     let spell_state = &mut state.player.spell_states[spell_idx];
 
-    // Consume resources
-    state.player.resources.spend(spell.cost.amount);
+    // Consume resources (use pre-computed cost_amount)
+    state.player.resources.spend(spell_rt.cost_amount);
 
-    // Handle cooldown/charges
+    // Handle cooldown/charges (use pre-computed max_charges)
     let cooldown_ms = spell_state.cooldown_ms;
-    if spell.charges > 0 {
+    let max_charges = spell_rt.max_charges;
+    if max_charges > 0 {
         // Charge-based spell
         spell_state.charges -= 1;
 
         // Start recharge if we just went below max
-        if spell_state.charges == spell.charges - 1 {
+        if spell_state.charges == max_charges - 1 {
             spell_state.cooldown_ready = current_time + cooldown_ms;
             state.events.push(
                 spell_state.cooldown_ready,
@@ -387,25 +369,24 @@ fn cast_spell_inline(
     }
 
     // Calculate and record damage inline
-    calculate_damage_inline(state, config, spell_idx, rng);
+    calculate_damage_inline(state, spell_idx, rng);
 }
 
 /// Calculate damage for a spell - inlined with all multipliers.
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
-    config: &SimConfig,
     spell_idx: usize,
     rng: &mut FastRng,
 ) {
-    let spell = &config.spells[spell_idx];
+    let spell_rt = &state.spell_runtime[spell_idx];
     let stats = &state.player.stats;
 
-    // Base damage roll
-    let base_damage = rng.range_f32(spell.damage.base_min, spell.damage.base_max);
+    // Base damage roll (use pre-computed damage_min/max)
+    let base_damage = rng.range_f32(spell_rt.damage_min, spell_rt.damage_max);
 
-    // Attack power contribution (use precomputed)
-    let ap_damage = spell.damage.ap_coefficient * stats.attack_power;
+    // Attack power contribution (use pre-computed ap_coefficient)
+    let ap_damage = spell_rt.ap_coefficient * stats.attack_power;
 
     // Total base damage
     let mut total_damage = base_damage + ap_damage;
@@ -424,44 +405,38 @@ fn calculate_damage_inline(
     state.results.record_cast();
 
     // Process spell effects (apply auras, trigger spells, etc.)
-    process_spell_effects_inline(state, config, spell_idx);
+    process_spell_effects_inline(state, spell_idx);
 }
 
 /// Process spell effects - apply auras, trigger spells, etc.
+/// Uses pre-resolved aura indices (no more linear search per cast)
 #[inline(always)]
-fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_idx: usize) {
-    let spell = &config.spells[spell_idx];
+fn process_spell_effects_inline(state: &mut SimState, spell_idx: usize) {
+    let spell_rt = &state.spell_runtime[spell_idx];
     let current_time = state.time;
 
-    for effect in &spell.effects {
-        match effect {
-            crate::config::SpellEffect::ApplyAura { aura_id, duration: _ } => {
-                // Find aura index in config
-                if let Some(aura_idx) = config.auras.iter().position(|a| a.id == *aura_id) {
-                    state.events.push(
-                        current_time,
-                        SimEvent::AuraApply {
-                            aura_idx: aura_idx as u8,
-                            stacks: 1,
-                        },
-                    );
-                }
-            }
-            crate::config::SpellEffect::TriggerSpell { spell_id: _ } => {
-                // TODO: trigger spell casting
-            }
-            crate::config::SpellEffect::Energize { resource_type: _, amount } => {
-                state.player.resources.gain(*amount);
-            }
-            _ => {}
-        }
+    // Apply pre-resolved auras (no linear search - O(1) per aura)
+    for i in 0..spell_rt.apply_aura_count as usize {
+        let aura_idx = spell_rt.apply_aura_indices[i];
+        state.events.push(
+            current_time,
+            SimEvent::AuraApply {
+                aura_idx,
+                stacks: 1,
+            },
+        );
+    }
+
+    // Apply pre-computed energize effect
+    if spell_rt.energize_amount > 0.0 {
+        state.player.resources.gain(spell_rt.energize_amount);
     }
 }
 
 /// Schedule next opportunity when no spell is castable.
 /// Computes the earliest time any spell becomes available.
 #[inline]
-fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, current_time: u32) {
+fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
     if state.player.gcd_event_pending {
         return;
     }
@@ -473,7 +448,8 @@ fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, cu
     let regen_rate = player.resources.regen_per_second;
     let current_resource = player.resources.current;
 
-    for (idx, spell) in config.spells.iter().enumerate() {
+    // Use spell_runtime for cost_amount (avoid touching config.spells)
+    for (idx, spell_rt) in state.spell_runtime.iter().enumerate() {
         let spell_state = &player.spell_states[idx];
 
         // Cooldown ready time
@@ -483,11 +459,11 @@ fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, cu
             spell_state.cooldown_ready
         };
 
-        // Resource ready time (convert to ms)
-        let resource_ready_time = if current_resource >= spell.cost.amount {
+        // Resource ready time (convert to ms) - use pre-computed cost_amount
+        let resource_ready_time = if current_resource >= spell_rt.cost_amount {
             current_time
         } else if regen_rate > 0.0 {
-            let needed = spell.cost.amount - current_resource;
+            let needed = spell_rt.cost_amount - current_resource;
             current_time + to_ms(needed / regen_rate)
         } else {
             u32::MAX
@@ -513,18 +489,19 @@ fn schedule_next_opportunity_inline(state: &mut SimState, config: &SimConfig, cu
 
 /// Handle cooldown ready - updates charge and potentially triggers rotation check.
 #[inline(always)]
-fn handle_cooldown_ready_inline(state: &mut SimState, config: &SimConfig, spell_idx: u8) {
+fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
     let idx = spell_idx as usize;
-    let spell = &config.spells[idx];
+    let spell_rt = &state.spell_runtime[idx];
     let spell_state = &mut state.player.spell_states[idx];
 
-    // Only charge-based spells trigger this event
-    if spell.charges > 0 {
-        if spell_state.charges < spell.charges {
+    // Only charge-based spells trigger this event (use pre-computed max_charges)
+    let max_charges = spell_rt.max_charges;
+    if max_charges > 0 {
+        if spell_state.charges < max_charges {
             spell_state.charges += 1;
 
             // Schedule next charge if not at max
-            if spell_state.charges < spell.charges {
+            if spell_state.charges < max_charges {
                 spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
                 state.events.push(
                     spell_state.cooldown_ready,

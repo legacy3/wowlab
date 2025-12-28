@@ -150,6 +150,235 @@ fn create_bm_hunter_config() -> SimConfig {
                 is_gcd: true,
                 is_harmful: true,
             },
+            // Multi-Shot
+            SpellDef {
+                id: 2643,
+                name: "Multi-Shot".to_string(),
+                cooldown: 0.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 40.0,
+                },
+                damage: DamageFormula {
+                    base_min: 400.0,
+                    base_max: 500.0,
+                    ap_coefficient: 0.25,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Dire Beast
+            SpellDef {
+                id: 120679,
+                name: "Dire Beast".to_string(),
+                cooldown: 20.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula {
+                    base_min: 600.0,
+                    base_max: 800.0,
+                    ap_coefficient: 0.4,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // A Murder of Crows
+            SpellDef {
+                id: 131894,
+                name: "A Murder of Crows".to_string(),
+                cooldown: 60.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 30.0,
+                },
+                damage: DamageFormula {
+                    base_min: 300.0,
+                    base_max: 400.0,
+                    ap_coefficient: 0.2,
+                    ..Default::default()
+                },
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 131894, duration: 15.0 },
+                ],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Aspect of the Wild
+            SpellDef {
+                id: 193530,
+                name: "Aspect of the Wild".to_string(),
+                cooldown: 120.0,
+                charges: 0,
+                gcd: 0.0,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula::default(),
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 193530, duration: 20.0 },
+                ],
+                is_gcd: false,
+                is_harmful: false,
+            },
+            // Bloodshed
+            SpellDef {
+                id: 321530,
+                name: "Bloodshed".to_string(),
+                cooldown: 60.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula {
+                    base_min: 1500.0,
+                    base_max: 1800.0,
+                    ap_coefficient: 0.8,
+                    ..Default::default()
+                },
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 321530, duration: 18.0 },
+                ],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Stampede
+            SpellDef {
+                id: 201430,
+                name: "Stampede".to_string(),
+                cooldown: 120.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula {
+                    base_min: 2000.0,
+                    base_max: 2500.0,
+                    ap_coefficient: 1.0,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Chimaera Shot
+            SpellDef {
+                id: 53209,
+                name: "Chimaera Shot".to_string(),
+                cooldown: 15.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 20.0,
+                },
+                damage: DamageFormula {
+                    base_min: 700.0,
+                    base_max: 850.0,
+                    ap_coefficient: 0.35,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Wailing Arrow
+            SpellDef {
+                id: 392060,
+                name: "Wailing Arrow".to_string(),
+                cooldown: 60.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 2.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 15.0,
+                },
+                damage: DamageFormula {
+                    base_min: 1200.0,
+                    base_max: 1400.0,
+                    ap_coefficient: 0.7,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Explosive Shot
+            SpellDef {
+                id: 212431,
+                name: "Explosive Shot".to_string(),
+                cooldown: 30.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost {
+                    resource_type: ResourceType::Focus,
+                    amount: 20.0,
+                },
+                damage: DamageFormula {
+                    base_min: 900.0,
+                    base_max: 1100.0,
+                    ap_coefficient: 0.5,
+                    ..Default::default()
+                },
+                effects: vec![],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Death Chakram
+            SpellDef {
+                id: 375891,
+                name: "Death Chakram".to_string(),
+                cooldown: 45.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula {
+                    base_min: 800.0,
+                    base_max: 1000.0,
+                    ap_coefficient: 0.45,
+                    ..Default::default()
+                },
+                effects: vec![
+                    SpellEffect::Energize { resource_type: ResourceType::Focus, amount: 10.0 },
+                ],
+                is_gcd: true,
+                is_harmful: true,
+            },
+            // Steel Trap
+            SpellDef {
+                id: 162488,
+                name: "Steel Trap".to_string(),
+                cooldown: 30.0,
+                charges: 0,
+                gcd: 1.5,
+                cast_time: 0.0,
+                cost: ResourceCost::default(),
+                damage: DamageFormula {
+                    base_min: 500.0,
+                    base_max: 600.0,
+                    ap_coefficient: 0.25,
+                    ..Default::default()
+                },
+                effects: vec![
+                    SpellEffect::ApplyAura { aura_id: 162487, duration: 20.0 },
+                ],
+                is_gcd: true,
+                is_harmful: true,
+            },
         ],
         auras: vec![
             // Barbed Shot bleed - 8 sec duration, ticks every 2 sec (4 ticks)
@@ -188,14 +417,73 @@ fn create_bm_hunter_config() -> SimConfig {
                 pandemic: false,
                 tick_interval: 0.0,
             },
+            // A Murder of Crows - periodic damage
+            AuraDef {
+                id: 131894,
+                name: "A Murder of Crows".to_string(),
+                duration: 15.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::PeriodicDamage { amount: 250.0, coefficient: 0.12 },
+                ],
+                pandemic: false,
+                tick_interval: 1.0,
+            },
+            // Aspect of the Wild buff - crit increase
+            AuraDef {
+                id: 193530,
+                name: "Aspect of the Wild".to_string(),
+                duration: 20.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::DamageDone { percent: 10.0, school: None },
+                ],
+                pandemic: false,
+                tick_interval: 0.0,
+            },
+            // Bloodshed - bleed DoT
+            AuraDef {
+                id: 321530,
+                name: "Bloodshed".to_string(),
+                duration: 18.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::PeriodicDamage { amount: 300.0, coefficient: 0.2 },
+                ],
+                pandemic: false,
+                tick_interval: 2.0,
+            },
+            // Steel Trap - bleed DoT
+            AuraDef {
+                id: 162487,
+                name: "Steel Trap".to_string(),
+                duration: 20.0,
+                max_stacks: 1,
+                effects: vec![
+                    AuraEffect::PeriodicDamage { amount: 180.0, coefficient: 0.08 },
+                ],
+                pandemic: false,
+                tick_interval: 2.0,
+            },
         ],
         rotation: vec![
-            // Priority: Bestial Wrath (off-GCD) > Kill Command > Barbed Shot > Serpent Sting > Cobra Shot
-            RotationAction::Cast { spell_id: 19574 },  // Bestial Wrath (off-GCD)
-            RotationAction::Cast { spell_id: 34026 },  // Kill Command
-            RotationAction::Cast { spell_id: 217200 }, // Barbed Shot
-            RotationAction::Cast { spell_id: 271788 }, // Serpent Sting
-            RotationAction::Cast { spell_id: 193455 }, // Cobra Shot (filler)
+            // Full priority APL with all spells
+            RotationAction::Cast { spell_id: 19574 },   // Bestial Wrath (off-GCD)
+            RotationAction::Cast { spell_id: 193530 },  // Aspect of the Wild (off-GCD)
+            RotationAction::Cast { spell_id: 321530 },  // Bloodshed
+            RotationAction::Cast { spell_id: 131894 },  // A Murder of Crows
+            RotationAction::Cast { spell_id: 201430 },  // Stampede
+            RotationAction::Cast { spell_id: 392060 },  // Wailing Arrow
+            RotationAction::Cast { spell_id: 375891 },  // Death Chakram
+            RotationAction::Cast { spell_id: 34026 },   // Kill Command
+            RotationAction::Cast { spell_id: 217200 },  // Barbed Shot
+            RotationAction::Cast { spell_id: 120679 },  // Dire Beast
+            RotationAction::Cast { spell_id: 212431 },  // Explosive Shot
+            RotationAction::Cast { spell_id: 53209 },   // Chimaera Shot
+            RotationAction::Cast { spell_id: 162488 },  // Steel Trap
+            RotationAction::Cast { spell_id: 271788 },  // Serpent Sting
+            RotationAction::Cast { spell_id: 2643 },    // Multi-Shot
+            RotationAction::Cast { spell_id: 193455 },  // Cobra Shot (filler)
         ],
         duration: 300.0, // 5 minute fight (realistic boss fight)
         target: TargetConfig {
