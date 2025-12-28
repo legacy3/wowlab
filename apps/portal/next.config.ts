@@ -23,6 +23,24 @@ const nextConfig: NextConfig = {
         destination: "https://github.com/legacy3/wowlab",
         permanent: false,
       },
+      {
+        source: "/go/node-linux",
+        destination:
+          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-linux-x64",
+        permanent: false,
+      },
+      {
+        source: "/go/node-macos",
+        destination:
+          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-macos-arm64",
+        permanent: false,
+      },
+      {
+        source: "/go/node-windows",
+        destination:
+          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-windows-x64.exe",
+        permanent: false,
+      },
     ];
   },
 };
