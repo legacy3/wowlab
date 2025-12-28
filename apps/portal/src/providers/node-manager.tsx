@@ -230,7 +230,11 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
   const validateClaimCode = useCallback(
     async (
       code: string,
-    ): Promise<{ success: boolean; node?: PendingNodeInfo; error?: string }> => {
+    ): Promise<{
+      success: boolean;
+      node?: PendingNodeInfo;
+      error?: string;
+    }> => {
       try {
         const supabase = createClient();
 

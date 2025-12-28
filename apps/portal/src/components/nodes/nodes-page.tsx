@@ -22,11 +22,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Server, Settings, Monitor } from "lucide-react";
+import { Plus, Server, Settings, Monitor, Globe } from "lucide-react";
 import Link from "next/link";
 import type { UserIdentity } from "@/lib/supabase/types";
 import { useNodeManager, type NodeListItem } from "@/providers";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
+import { SecretText } from "@/components/ui/secret-field";
 import { NodeStatusBadge } from "./node-status-badge";
 import { NodeSettingsSheet } from "./node-settings-sheet";
 import { formatRelativeToNow, formatInt } from "@/lib/format";
@@ -34,9 +35,11 @@ import { formatRelativeToNow, formatInt } from "@/lib/format";
 function NodesTable({
   nodes,
   onSettings,
+  getNodeAccess,
 }: {
   nodes: NodeListItem[];
   onSettings: (node: NodeListItem) => void;
+  getNodeAccess: (nodeId: string) => string;
 }) {
   return (
     <div className="rounded-lg border">
@@ -51,42 +54,61 @@ function NodesTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {nodes.map((node) => (
-            <TableRow key={node.id}>
-              <TableCell>
-                <NodeStatusBadge status={node.status} />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{node.name}</span>
-                  {node.isLocal && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Monitor className="mr-1 h-3 w-3" />
-                      Local
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="tabular-nums">{node.maxParallel}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {node.isLocal
-                  ? "—"
-                  : node.lastSeenAt
-                    ? formatRelativeToNow(node.lastSeenAt)
-                    : "Never"}
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onSettings(node)}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {nodes.map((node) => {
+            const isPublic =
+              node.isOwner &&
+              !node.isLocal &&
+              getNodeAccess(node.id) === "public";
+            return (
+              <TableRow key={node.id}>
+                <TableCell>
+                  <NodeStatusBadge status={node.status} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {node.isLocal ? (
+                      <span className="font-medium">{node.name}</span>
+                    ) : (
+                      <SecretText
+                        value={node.name}
+                        hiddenLength={15}
+                        className="font-medium"
+                      />
+                    )}
+                    {node.isLocal && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Monitor className="mr-1 h-3 w-3" />
+                        Local
+                      </Badge>
+                    )}
+                    {isPublic && (
+                      <Globe className="h-3.5 w-3.5 text-amber-500" />
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="tabular-nums">
+                  {node.maxParallel}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {node.isLocal
+                    ? "—"
+                    : node.lastSeenAt
+                      ? formatRelativeToNow(node.lastSeenAt)
+                      : "Never"}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onSettings(node)}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
@@ -96,7 +118,8 @@ function NodesTable({
 type OwnerFilter = "all" | "mine" | "shared";
 
 function NodesContent() {
-  const { myNodes, availableNodes, isLoading } = useNodeManager();
+  const { myNodes, availableNodes, isLoading, getNodeAccess } =
+    useNodeManager();
   const [selectedNode, setSelectedNode] = useState<NodeListItem | null>(null);
   const [filter, setFilter] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
@@ -135,21 +158,6 @@ function NodesContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Compute Nodes</h2>
-          <p className="text-muted-foreground">
-            Manage your simulation compute nodes
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/account/nodes/claim">
-            <Plus className="mr-2 h-4 w-4" />
-            Claim Node
-          </Link>
-        </Button>
-      </div>
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-1.5">
           {filters.map((f) => (
@@ -167,9 +175,17 @@ function NodesContent() {
             </Badge>
           ))}
         </div>
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {formatInt(filteredNodes.length)} nodes
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {formatInt(filteredNodes.length)} nodes
+          </span>
+          <Button asChild size="sm">
+            <Link href="/account/nodes/claim">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Claim
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Input
@@ -180,7 +196,11 @@ function NodesContent() {
       />
 
       {filteredNodes.length > 0 ? (
-        <NodesTable nodes={filteredNodes} onSettings={setSelectedNode} />
+        <NodesTable
+          nodes={filteredNodes}
+          onSettings={setSelectedNode}
+          getNodeAccess={getNodeAccess}
+        />
       ) : allNodes.length === 0 ? (
         <Card>
           <CardHeader className="text-center">

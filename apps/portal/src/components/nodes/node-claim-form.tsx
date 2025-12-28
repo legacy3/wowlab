@@ -90,7 +90,13 @@ export function NodeClaimForm() {
 
   if (step === "code") {
     return (
-      <div className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleValidateCode();
+        }}
+        className="space-y-6"
+      >
         <div className="flex justify-center">
           <InputOTP
             maxLength={6}
@@ -140,16 +146,15 @@ export function NodeClaimForm() {
         )}
 
         <FlaskButton
-          type="button"
+          type="submit"
           className="w-full"
           disabled={!isCodeValid}
           loading={isValidating}
-          onClick={handleValidateCode}
         >
           <Check className="mr-2 h-4 w-4" />
           Verify Code
         </FlaskButton>
-      </div>
+      </form>
     );
   }
 

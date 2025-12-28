@@ -8,6 +8,7 @@ export default function NodesLayout({
   return (
     <PageLayout
       title="Compute Nodes"
+      description="Manage your simulation compute nodes"
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Account", href: "/account" },

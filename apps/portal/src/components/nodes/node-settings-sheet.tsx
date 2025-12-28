@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +28,7 @@ import {
 import { Globe, Users, User, Lock, Trash2 } from "lucide-react";
 import { useNodeManager, type NodeListItem } from "@/providers";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
+import { SecretText } from "@/components/ui/secret-field";
 
 interface NodeSettingsSheetProps {
   node: NodeListItem | null;
@@ -84,6 +86,8 @@ export function NodeSettingsSheet({
 
   const [accessType, setAccessType] = useState<AccessType>("owner");
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const currentAccess =
     node && !node.isLocal ? getNodeAccess(node.id) : "owner";
@@ -101,13 +105,14 @@ export function NodeSettingsSheet({
   const maxConcurrency =
     typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 8) : 8;
 
-  const handleSaveAccess = async () => {
-    if (node.isLocal) {
+  const handleAccessChange = async (newAccess: AccessType) => {
+    if (node.isLocal || newAccess === currentAccess) {
       return;
     }
+    setAccessType(newAccess);
     setIsSaving(true);
     try {
-      await updateNodeAccess(node.id, accessType);
+      await updateNodeAccess(node.id, newAccess);
     } finally {
       setIsSaving(false);
     }
@@ -115,22 +120,33 @@ export function NodeSettingsSheet({
 
   const handleDelete = async () => {
     await deleteNode(node.id);
+    setDeleteDialogOpen(false);
+    setDeleteConfirmation("");
     onOpenChange(false);
   };
 
-  const hasAccessChanges = currentAccess !== accessType;
+  const canDelete = deleteConfirmation === node.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{node.name}</DialogTitle>
+          <DialogTitle>
+            {node.isLocal ? (
+              node.name
+            ) : (
+              <SecretText
+                value={node.name}
+                hiddenLength={15}
+              />
+            )}
+          </DialogTitle>
           <DialogDescription>
             {node.isLocal ? "Browser compute node" : "Remote compute node"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Local node: enabled toggle */}
           {node.isLocal && (
             <div className="flex items-center justify-between">
@@ -169,70 +185,85 @@ export function NodeSettingsSheet({
 
           {/* Access settings (remote only) */}
           {!node.isLocal && node.isOwner && (
-            <div className="space-y-4">
-              <Label>Who can use this node</Label>
+            <div className="space-y-3">
+              <Label className="text-xs text-muted-foreground flex items-center gap-2">
+                Access
+                {isSaving && <FlaskInlineLoader className="h-3 w-3" />}
+              </Label>
               <RadioGroup
                 value={accessType}
-                onValueChange={(v) => setAccessType(v as AccessType)}
-                className="space-y-2"
+                onValueChange={(v) => handleAccessChange(v as AccessType)}
+                className="grid grid-cols-2 gap-2"
+                disabled={isSaving}
               >
                 {accessOptions.map((opt) => (
                   <div
                     key={opt.value}
-                    className="flex items-center space-x-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50"
-                    onClick={() => setAccessType(opt.value)}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/50 has-[[data-state=checked]]:border-primary"
+                    onClick={() => !isSaving && handleAccessChange(opt.value)}
                   >
-                    <RadioGroupItem value={opt.value} id={opt.value} />
-                    <div className="flex-1">
-                      <Label
-                        htmlFor={opt.value}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        {opt.icon}
-                        {opt.label}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {opt.description}
-                      </p>
-                    </div>
+                    <RadioGroupItem
+                      value={opt.value}
+                      id={opt.value}
+                      className="sr-only"
+                    />
+                    {opt.icon}
+                    <span className="text-sm">{opt.label}</span>
                   </div>
                 ))}
               </RadioGroup>
-
-              {hasAccessChanges && (
-                <Button
-                  onClick={handleSaveAccess}
-                  disabled={isSaving}
-                  className="w-full"
-                >
-                  {isSaving && <FlaskInlineLoader className="mr-2 h-4 w-4" />}
-                  Save Access Settings
-                </Button>
-              )}
             </div>
           )}
 
           {/* Delete button (remote only) */}
           {!node.isLocal && node.isOwner && (
-            <div className="pt-4 border-t">
-              <AlertDialog>
+            <div className="pt-3 border-t">
+              <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={(open) => {
+                  setDeleteDialogOpen(open);
+                  if (!open) setDeleteConfirmation("");
+                }}
+              >
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full">
-                    <Trash2 className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-3 w-3" />
                     Delete Node
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete node?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete &quot;{node.name}&quot;. This
-                      action cannot be undone.
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-3">
+                        <p>
+                          Type{" "}
+                          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                            {node.name}
+                          </code>{" "}
+                          to confirm.
+                        </p>
+                        <Input
+                          value={deleteConfirmation}
+                          onChange={(e) =>
+                            setDeleteConfirmation(e.target.value)
+                          }
+                          placeholder={node.name}
+                          autoComplete="off"
+                        />
+                      </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={!canDelete}
+                    >
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
