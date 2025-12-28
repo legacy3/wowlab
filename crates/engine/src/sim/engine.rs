@@ -20,31 +20,72 @@ TESTED BUT NOT BENEFICIAL:
 
 POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 
-Memory layout / cache efficiency:
-- Replace Vecs with fixed-size arrays: spells[8], auras[16], spell_states[8], etc.
-  (eliminates pointer indirection on every access - likely 5-10% gain)
-- SoA (struct of arrays) for spell_states: separate arrays for cooldown_ready, charges, etc.
-  (better cache locality when scanning cooldowns)
-- Remove String from SpellDef/AuraDef (use interned IDs or indices)
+=== HIGH IMPACT (10-25% potential) ===
 
-Event count reduction:
-- Minimize event count: only schedule when state actually changes
-- Bulk process periodic effects: single "tick" event processes all active auras
-- Combine auto-attack + pet attack into single "attacks" event
-- Use single event per actor/entity per tick (batch status, procs, damage)
+1. Compile compact SpellRuntime table (10-25%)
+   - Stop touching SpellDef (has String, Vec<SpellEffect>) in hot loop
+   - Create SpellRuntime with just: cost_amount, cooldown_ms, gcd_ms, damage_min/max,
+     ap_coeff, flags, and pre-resolved effect indices
+   - Hot path uses only runtime arrays in SimState
+   Where: engine.rs (find/cast/damage/effects), state.rs (add runtime arrays)
 
-Float precision:
-- Keep damage accumulation as f32 (avoid f32→f64 conversions in hot path)
-- Use integer damage (multiply by 100, store as u64) for perfect reproducibility
+2. Resolve aura_id → aura_idx at config load (5-15%)
+   - process_spell_effects_inline does config.auras.iter().position(...) per ApplyAura
+   - Replace SpellEffect::ApplyAura { aura_id } with ApplyAuraIdx { aura_idx: u8 }
+   Where: engine.rs, config/spell_def.rs, SimConfig::finalize
 
-Event dispatch:
-- Jump table for event dispatch instead of match (compiler may already do this)
-- Order match arms by frequency (GcdReady first, then AuraTick, AutoAttack)
+3. Batch aura ticks into single sweep event (10-30% if aura-heavy)
+   - Instead of N events for N active auras, one "tick sweep" event
+   - Iterate active auras and apply tick damage in batch
+   - Enables SIMD vectorization of tick damage calculation
+   Where: engine.rs (aura tick handling), state.rs (active aura list/bitset)
 
-WASM-specific:
-- Profile in WASM specifically - may have different hotspots
-- Bump arena allocation if heap alloc becomes bottleneck in WASM
-- Consider SIMD for batch damage calculations (if available in WASM target)
+=== MEDIUM IMPACT (3-8%) ===
+
+4. EventQueue::clear optimization (3-8%)
+   - Currently walks entire arena O(arena_len) per sim to rebuild free list
+   - Instead, keep free list as-is; nodes already freed on pop
+   Where: events.rs (EventQueue::clear)
+
+5. SoA for spell_states (5-15%)
+   - Switch spell_states: Vec<SpellState> to separate arrays
+   - cooldown_ready[], charges[], cooldown_ms[], gcd_ms[], cost_amount[]
+   - Cuts pointer chasing in find_castable_spell_inline
+   Where: state.rs, engine.rs
+
+6. Precompute inv_haste_mult (1-3%)
+   - Replace divides with multiplies in cast_spell_inline, handle_auto_attack_inline
+   Where: config/stats.rs, engine.rs
+
+7. Add duration checks before scheduling (1-5%)
+   - Several push sites don't check time <= duration
+   - Reduces queue size and leftover events that clear must handle
+   Where: engine.rs (cast_spell_inline, handle_cooldown_ready_inline, handle_aura_apply_inline)
+
+=== LOW IMPACT (1-5%) ===
+
+8. Split hot/cold unit state
+   - Put only hot fields in tight UnitHot struct
+   - Move cold fields (auras, base_stats, casting) to separate struct
+   Where: state.rs
+
+9. Shrink TimedEvent if FIFO not required
+   - Currently 16 bytes; could drop seq or use u16 seq
+   Where: events.rs
+
+10. AuraTracker to SoA (1-4%)
+    - Convert [Option<AuraInstance>; 32] to expires[], stacks[], active[] arrays
+    Where: state.rs
+
+11. Early-return for spells with no effects
+    - Add has_effects flag in runtime spell data
+    Where: engine.rs, state.rs
+
+=== OTHER ===
+
+- Float precision: Keep damage as f32, avoid f32→f64 conversions
+- WASM-specific: Profile in WASM, consider SIMD for batch damage
+- Jump table for event dispatch (compiler may already do this)
 */
 
 //! High-performance simulation engine with optimized event processing.
