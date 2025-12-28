@@ -11,27 +11,33 @@ import {
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { FlaskButton } from "@/components/ui/flask-loader";
-import { useClaimNode } from "@/hooks/nodes";
+import { useNodeManager } from "@/providers";
 
 export function NodeClaimForm() {
   const router = useRouter();
+  const { claimNode } = useNodeManager();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const { mutate: claimNode, isPending, error } = useClaimNode();
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (code.length !== 6 || !name.trim()) return;
 
-    claimNode(
-      { code: code.toUpperCase(), name: name.trim() },
-      {
-        onSuccess: (node) => {
-          router.push(`/account/nodes/${node.id}`);
-        },
-      },
-    );
+    setIsPending(true);
+    setError(null);
+
+    const result = await claimNode(code.toUpperCase(), name.trim());
+
+    setIsPending(false);
+
+    if (result.success) {
+      router.push("/account/nodes");
+    } else {
+      setError(result.error || "Failed to claim node");
+    }
   };
 
   const isValid = code.length === 6 && name.trim().length > 0;
@@ -94,9 +100,7 @@ export function NodeClaimForm() {
 
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {error instanceof Error
-            ? error.message
-            : "Failed to claim node. Please check the code and try again."}
+          {error}
         </div>
       )}
 
