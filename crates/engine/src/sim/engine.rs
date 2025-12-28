@@ -377,27 +377,20 @@ fn cast_spell_inline(
 fn calculate_damage_inline(
     state: &mut SimState,
     spell_idx: usize,
-    rng: &mut FastRng,
+    _rng: &mut FastRng,
 ) {
     let spell_rt = &state.spell_runtime[spell_idx];
     let stats = &state.player.stats;
 
-    // Base damage roll (use pre-computed damage_min/max)
-    let base_damage = rng.range_f32(spell_rt.damage_min, spell_rt.damage_max);
+    // Expected base damage (midpoint of range)
+    let base_damage = (spell_rt.damage_min + spell_rt.damage_max) * 0.5;
 
     // Attack power contribution (use pre-computed ap_coefficient)
     let ap_damage = spell_rt.ap_coefficient * stats.attack_power;
 
-    // Total base damage
-    let mut total_damage = base_damage + ap_damage;
-
-    // Critical strike (use precomputed crit_chance)
-    if rng.roll(stats.crit_chance) {
-        total_damage *= 2.0;
-    }
-
-    // Versatility (use precomputed vers_mult)
-    total_damage *= stats.vers_mult;
+    // Total damage with expected crit multiplier: 1 + crit_chance * (crit_mult - 1)
+    // For 2x crit multiplier: 1 + crit_chance
+    let total_damage = (base_damage + ap_damage) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
     // Record damage
     state.results.record_damage(spell_idx, total_damage as f64);
@@ -523,7 +516,7 @@ fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
 fn handle_aura_tick_inline(
     state: &mut SimState,
     aura_idx: u8,
-    rng: &mut FastRng,
+    _rng: &mut FastRng,
 ) {
     let idx = aura_idx as usize;
     let runtime = &state.aura_runtime[idx];
@@ -534,19 +527,12 @@ fn handle_aura_tick_inline(
         return;
     }
 
-    // Process periodic damage (pre-computed, no Vec iteration)
+    // Process periodic damage with expected crit (pre-computed, no Vec iteration)
     if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
-        let damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
+        let base_damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
 
-        // Apply crit
-        let damage = if rng.roll(state.player.stats.crit_chance) {
-            damage * 2.0
-        } else {
-            damage
-        };
-
-        // Apply versatility
-        let damage = damage * state.player.stats.vers_mult;
+        // Expected damage: base * (1 + crit_chance) * vers_mult
+        let damage = base_damage * (1.0 + state.player.stats.crit_chance) * state.player.stats.vers_mult;
 
         state.results.total_damage += damage as f64;
         state.target.health -= damage;
@@ -623,7 +609,7 @@ fn handle_aura_apply_inline(
 
 /// Handle pet attack - melee swing damage and schedule next.
 #[inline(always)]
-fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) {
+fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mut FastRng) {
     let current_time = state.time;
 
     let pet = match &config.pet {
@@ -638,15 +624,10 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut 
     let (min_dmg, max_dmg) = pet.attack_damage;
     let pet_stats = &pet.stats;
 
-    // Calculate pet damage (use precomputed attack_power)
-    let base_damage = rng.range_f32(min_dmg, max_dmg);
+    // Expected pet damage
+    let base_damage = (min_dmg + max_dmg) * 0.5;
     let ap_bonus = pet_stats.ap_normalized * pet.attack_speed;
-    let mut damage = base_damage + ap_bonus;
-
-    // Crit check (use precomputed crit_chance)
-    if rng.roll(pet_stats.crit_chance) {
-        damage *= 2.0;
-    }
+    let damage = (base_damage + ap_bonus) * (1.0 + pet_stats.crit_chance);
 
     // Record damage
     state.results.total_damage += damage as f64;
@@ -661,7 +642,7 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut 
 
 /// Handle auto-attack - melee swing damage and schedule next.
 #[inline(always)]
-fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) {
+fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mut FastRng) {
     let current_time = state.time;
     let weapon_speed = config.player.weapon_speed;
 
@@ -672,18 +653,10 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut
     let stats = &state.player.stats;
     let (min_dmg, max_dmg) = config.player.weapon_damage;
 
-    // Calculate weapon damage
-    let weapon_damage = rng.range_f32(min_dmg, max_dmg);
-    let ap_bonus = stats.ap_normalized * weapon_speed; // precomputed normalized AP
-    let mut damage = weapon_damage + ap_bonus;
-
-    // Crit check (use precomputed crit_chance)
-    if rng.roll(stats.crit_chance) {
-        damage *= 2.0;
-    }
-
-    // Versatility (use precomputed vers_mult)
-    damage *= stats.vers_mult;
+    // Expected weapon damage
+    let weapon_damage = (min_dmg + max_dmg) * 0.5;
+    let ap_bonus = stats.ap_normalized * weapon_speed;
+    let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
     // Record damage (use index 255 for auto-attacks to avoid collision with spells)
     state.results.total_damage += damage as f64;
