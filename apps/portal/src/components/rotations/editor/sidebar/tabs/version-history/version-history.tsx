@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { Clock, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { formatRelativeToNow } from "@/lib/format";
 import { FlaskLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,9 +132,7 @@ export function VersionHistory({
                 )}
                 <span className="text-xs text-muted-foreground ml-auto">
                   {version.createdAt
-                    ? formatDistanceToNow(new Date(version.createdAt), {
-                        addSuffix: true,
-                      })
+                    ? formatRelativeToNow(version.createdAt)
                     : ""}
                 </span>
               </div>

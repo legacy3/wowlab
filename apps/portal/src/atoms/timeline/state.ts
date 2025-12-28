@@ -1,3 +1,5 @@
+"use client";
+
 import { atom } from "jotai";
 
 import {
@@ -122,7 +124,9 @@ export const uniqueSpellsAtom = atom((get) => {
   const seen = new Set<number>();
   return data.casts
     .filter((c) => {
-      if (seen.has(c.spellId)) return false;
+      if (seen.has(c.spellId)) {
+        return false;
+      }
       seen.add(c.spellId);
       return true;
     })

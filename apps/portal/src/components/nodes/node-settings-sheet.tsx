@@ -85,7 +85,8 @@ export function NodeSettingsSheet({
   const [accessType, setAccessType] = useState<AccessType>("owner");
   const [isSaving, setIsSaving] = useState(false);
 
-  const currentAccess = node && !node.isLocal ? getNodeAccess(node.id) : "owner";
+  const currentAccess =
+    node && !node.isLocal ? getNodeAccess(node.id) : "owner";
 
   useEffect(() => {
     if (currentAccess) {
@@ -93,13 +94,17 @@ export function NodeSettingsSheet({
     }
   }, [currentAccess]);
 
-  if (!node) return null;
+  if (!node) {
+    return null;
+  }
 
   const maxConcurrency =
-    typeof navigator !== "undefined" ? navigator.hardwareConcurrency ?? 8 : 8;
+    typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 8) : 8;
 
   const handleSaveAccess = async () => {
-    if (node.isLocal) return;
+    if (node.isLocal) {
+      return;
+    }
     setIsSaving(true);
     try {
       await updateNodeAccess(node.id, accessType);

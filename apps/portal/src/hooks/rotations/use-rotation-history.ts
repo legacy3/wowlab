@@ -18,7 +18,9 @@ export function useRotationHistory(rotationId: string | undefined) {
         .eq("rotationId", rotationId)
         .order("version", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return data as Pick<
         RotationHistory,
         "id" | "version" | "createdAt" | "message" | "createdBy"
@@ -46,7 +48,9 @@ export function useRotationHistoryVersion(
         .eq("version", version)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       return data?.script ?? null;
     },
     enabled: !!rotationId && version !== undefined,

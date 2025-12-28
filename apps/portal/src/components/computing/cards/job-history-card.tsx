@@ -54,7 +54,9 @@ export function JobHistoryCard() {
 
   const filteredJobs = useMemo(() => {
     return displayJobs.filter((job) => {
-      if (statusFilter !== "all" && job.status !== statusFilter) return false;
+      if (statusFilter !== "all" && job.status !== statusFilter) {
+        return false;
+      }
       if (filter) {
         const search = filter.toLowerCase();
         return job.name.toLowerCase().includes(search);
@@ -148,9 +150,7 @@ export function JobHistoryCard() {
                       </TableCell>
                       <TableCell className="font-medium">{job.name}</TableCell>
                       <TableCell className="font-mono text-sm tabular-nums">
-                        {job.result?.dps
-                          ? `${(job.result.dps / 1000).toFixed(1)}k`
-                          : "—"}
+                        {job.result?.dps ? formatCompact(job.result.dps) : "—"}
                       </TableCell>
                       <TableCell className="font-mono text-sm tabular-nums">
                         {job.result?.casts ?? "—"}
@@ -239,7 +239,7 @@ export function JobHistoryCard() {
                     );
                   }
                   const Icon = JOB_STATUS_ICONS[selectedJob.status];
-                  return <Icon className="h-4 w-4" />;
+                  return Icon ? <Icon className="h-4 w-4" /> : null;
                 })()}
               {selectedJob?.name}
               {selectedJob && (

@@ -24,7 +24,9 @@ export function NodeClaimForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (code.length !== 6 || !name.trim()) return;
+    if (code.length !== 6 || !name.trim()) {
+      return;
+    }
 
     setIsPending(true);
     setError(null);

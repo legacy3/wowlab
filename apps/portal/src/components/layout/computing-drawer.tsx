@@ -56,9 +56,9 @@ function JobCard({
               className={`h-5 w-5 ${statusTextClass}`}
               variant="processing"
             />
-          ) : (
+          ) : StatusIcon ? (
             <StatusIcon className={`h-5 w-5 ${statusTextClass}`} />
-          )}
+          ) : null}
           <span className="font-medium">{job.name}</span>
         </div>
         {(job.status === "running" || job.status === "queued") && (

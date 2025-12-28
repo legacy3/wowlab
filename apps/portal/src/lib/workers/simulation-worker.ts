@@ -237,7 +237,9 @@ const runSingleSim = (
 
           while (true) {
             const gameState = yield* stateService.getState();
-            if (gameState.currentTime >= duration) break;
+            if (gameState.currentTime >= duration) {
+              break;
+            }
 
             yield* Effect.catchAll(
               rotation.run(playerId, targetId),

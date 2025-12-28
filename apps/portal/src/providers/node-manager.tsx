@@ -5,6 +5,7 @@ import {
   useContext,
   useCallback,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -85,7 +86,10 @@ interface NodeManagerContextValue {
 const NodeManagerContext = createContext<NodeManagerContextValue | null>(null);
 
 function loadLocalNode(): LocalNode {
-  if (typeof window === "undefined") return DEFAULT_LOCAL_NODE;
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCAL_NODE;
+  }
+
   try {
     const stored = localStorage.getItem(LOCAL_NODE_KEY);
     if (stored) {
@@ -94,11 +98,14 @@ function loadLocalNode(): LocalNode {
   } catch {
     // ignore
   }
+
   return DEFAULT_LOCAL_NODE;
 }
 
 function saveLocalNode(node: LocalNode): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   localStorage.setItem(LOCAL_NODE_KEY, JSON.stringify(node));
 }
 
@@ -274,10 +281,18 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
       const permissions = permissionsResult?.data ?? [];
       const nodePermissions = permissions.filter((p) => p.nodeId === nodeId);
 
-      if (nodePermissions.some((p) => p.accessType === "public"))
+      if (nodePermissions.some((p) => p.accessType === "public")) {
         return "public";
-      if (nodePermissions.some((p) => p.accessType === "guild")) return "guild";
-      if (nodePermissions.some((p) => p.accessType === "user")) return "friends";
+      }
+
+      if (nodePermissions.some((p) => p.accessType === "guild")) {
+        return "guild";
+      }
+
+      if (nodePermissions.some((p) => p.accessType === "user")) {
+        return "friends";
+      }
+
       return "owner";
     },
     [permissionsResult?.data],
@@ -311,23 +326,39 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
 
   const isLoading = myNodesQuery.isLoading || availableQuery.isLoading;
 
+  const contextValue = useMemo(
+    (): NodeManagerContextValue => ({
+      localNode,
+      myNodes,
+      availableNodes,
+      allNodes,
+      isLoading,
+      setLocalEnabled,
+      setLocalConcurrency,
+      claimNode,
+      deleteNode,
+      getNodeAccess,
+      updateNodeAccess,
+      refetch,
+    }),
+    [
+      localNode,
+      myNodes,
+      availableNodes,
+      allNodes,
+      isLoading,
+      setLocalEnabled,
+      setLocalConcurrency,
+      claimNode,
+      deleteNode,
+      getNodeAccess,
+      updateNodeAccess,
+      refetch,
+    ],
+  );
+
   return (
-    <NodeManagerContext.Provider
-      value={{
-        localNode,
-        myNodes,
-        availableNodes,
-        allNodes,
-        isLoading,
-        setLocalEnabled,
-        setLocalConcurrency,
-        claimNode,
-        deleteNode,
-        getNodeAccess,
-        updateNodeAccess,
-        refetch,
-      }}
-    >
+    <NodeManagerContext.Provider value={contextValue}>
       {children}
     </NodeManagerContext.Provider>
   );
