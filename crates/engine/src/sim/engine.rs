@@ -123,7 +123,7 @@ fn dispatch_event(
 
         SimEvent::SpellDamage { spell_idx, damage_x100 } => {
             let damage = (damage_x100 as f32) / 100.0;
-            state.results.record_damage(spell_idx as usize, damage as f64);
+            state.results.record_damage(spell_idx as usize, damage );
             state.target.health -= damage;
         }
 
@@ -221,7 +221,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     }
 
     // Duration is in ms, convert to seconds for DPS
-    let duration_secs = duration as f64 / 1000.0;
+    let duration_secs = duration as f32 / 1000.0;
     SimResult {
         damage: state.results.total_damage,
         dps: state.results.total_damage / duration_secs,
@@ -393,7 +393,7 @@ fn calculate_damage_inline(
     let total_damage = (base_damage + ap_damage) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
     // Record damage
-    state.results.record_damage(spell_idx, total_damage as f64);
+    state.results.record_damage(spell_idx, total_damage );
     state.target.health -= total_damage;
     state.results.record_cast();
 
@@ -534,7 +534,7 @@ fn handle_aura_tick_inline(
         // Expected damage: base * (1 + crit_chance) * vers_mult
         let damage = base_damage * (1.0 + state.player.stats.crit_chance) * state.player.stats.vers_mult;
 
-        state.results.total_damage += damage as f64;
+        state.results.total_damage += damage;
         state.target.health -= damage;
     }
 
@@ -630,7 +630,7 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mut
     let damage = (base_damage + ap_bonus) * (1.0 + pet_stats.crit_chance);
 
     // Record damage
-    state.results.total_damage += damage as f64;
+    state.results.total_damage += damage;
     state.target.health -= damage;
 
     // Schedule next pet attack
@@ -659,7 +659,7 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mu
     let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
     // Record damage (use index 255 for auto-attacks to avoid collision with spells)
-    state.results.total_damage += damage as f64;
+    state.results.total_damage += damage;
     state.target.health -= damage;
 
     // Schedule next auto-attack (apply haste to pre-computed weapon speed)

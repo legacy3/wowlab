@@ -3,8 +3,8 @@ use serde::Serialize;
 /// Results from a single simulation run
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SimResult {
-    pub damage: f64,
-    pub dps: f64,
+    pub damage: f32,
+    pub dps: f32,
     pub casts: u32,
 }
 
@@ -12,10 +12,10 @@ pub struct SimResult {
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct BatchResult {
     pub iterations: u32,
-    pub mean_dps: f64,
-    pub std_dps: f64,
-    pub min_dps: f64,
-    pub max_dps: f64,
+    pub mean_dps: f32,
+    pub std_dps: f32,
+    pub min_dps: f32,
+    pub max_dps: f32,
     pub total_casts: u64,
 
     /// Damage breakdown by spell
@@ -26,22 +26,22 @@ pub struct BatchResult {
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SpellBreakdown {
     pub spell_id: u32,
-    pub total_damage: f64,
+    pub total_damage: f32,
     pub casts: u64,
-    pub dps_contribution: f64,
+    pub dps_contribution: f32,
     pub pct_of_total: f32,
 }
 
 /// Accumulator for batch statistics (index-based, no linear search)
 pub struct BatchAccumulator {
     pub iterations: u32,
-    pub sum_dps: f64,
-    pub sum_sq_dps: f64,
-    pub min_dps: f64,
-    pub max_dps: f64,
+    pub sum_dps: f32,
+    pub sum_sq_dps: f32,
+    pub min_dps: f32,
+    pub max_dps: f32,
     pub total_casts: u64,
     /// Indexed by spell position
-    pub spell_damage: Vec<f64>,
+    pub spell_damage: Vec<f32>,
     pub spell_casts: Vec<u64>,
 }
 
@@ -51,8 +51,8 @@ impl BatchAccumulator {
             iterations: 0,
             sum_dps: 0.0,
             sum_sq_dps: 0.0,
-            min_dps: f64::MAX,
-            max_dps: f64::MIN,
+            min_dps: f32::MAX,
+            max_dps: f32::MIN,
             total_casts: 0,
             spell_damage: Vec::new(),
             spell_casts: Vec::new(),
@@ -60,7 +60,7 @@ impl BatchAccumulator {
     }
 
     #[inline]
-    pub fn add(&mut self, result: &SimResult, spell_damage: &[f64], spell_casts: &[u32]) {
+    pub fn add(&mut self, result: &SimResult, spell_damage: &[f32], spell_casts: &[u32]) {
         self.iterations += 1;
         self.sum_dps += result.dps;
         self.sum_sq_dps += result.dps * result.dps;
@@ -82,12 +82,12 @@ impl BatchAccumulator {
     }
 
     pub fn finalize(self, duration: f32, spell_ids: &[u32]) -> BatchResult {
-        let n = self.iterations as f64;
+        let n = self.iterations as f32;
         let mean_dps = self.sum_dps / n;
         let variance = (self.sum_sq_dps / n) - (mean_dps * mean_dps);
         let std_dps = variance.sqrt();
 
-        let total_damage: f64 = self.spell_damage.iter().sum();
+        let total_damage: f32 = self.spell_damage.iter().sum();
 
         let spell_breakdown: Vec<_> = self
             .spell_damage
@@ -97,14 +97,14 @@ impl BatchAccumulator {
             .filter(|((dmg, _), _)| **dmg > 0.0)
             .map(|((damage, casts), spell_id)| {
                 let avg_damage = damage / n;
-                let dps_contribution = avg_damage / duration as f64;
+                let dps_contribution = avg_damage / duration;
                 SpellBreakdown {
                     spell_id: *spell_id,
                     total_damage: *damage,
                     casts: *casts,
                     dps_contribution,
                     pct_of_total: if total_damage > 0.0 {
-                        (damage / total_damage * 100.0) as f32
+                        damage / total_damage * 100.0
                     } else {
                         0.0
                     },

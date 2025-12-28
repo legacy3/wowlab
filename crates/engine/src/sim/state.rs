@@ -375,10 +375,10 @@ impl TargetState {
 /// Results accumulator - index by spell position for O(1) access.
 #[derive(Debug, Clone)]
 pub struct SimResultsAccum {
-    pub total_damage: f64,
+    pub total_damage: f32,
     pub cast_count: u32,
     /// Damage per spell index (not spell_id)
-    pub spell_damage: Vec<f64>,
+    pub spell_damage: Vec<f32>,
     /// Cast count per spell index
     pub spell_casts: Vec<u32>,
 }
@@ -402,7 +402,7 @@ impl SimResultsAccum {
     }
 
     #[inline(always)]
-    pub fn record_damage(&mut self, spell_idx: usize, damage: f64) {
+    pub fn record_damage(&mut self, spell_idx: usize, damage: f32) {
         self.total_damage += damage;
         // SAFETY: spell_idx is always < spell_count (validated at config time)
         unsafe {
