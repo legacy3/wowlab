@@ -228,7 +228,7 @@ export function MetadataSetup({ defaultValues, onSubmit }: MetadataSetupProps) {
                   align="start"
                 >
                   <Command>
-                    <CommandInput placeholder="Search templates..." />
+                    <CommandInput placeholder="Search templates ..." />
                     <CommandList>
                       <CommandEmpty>No template found.</CommandEmpty>
                       <CommandGroup>

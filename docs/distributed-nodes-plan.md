@@ -312,7 +312,7 @@
 
              ui.add_space(20.0);
              ui.spinner();
-             ui.label("Waiting for claim...");
+             ui.label("Waiting for claim ...");
          });
      }
 

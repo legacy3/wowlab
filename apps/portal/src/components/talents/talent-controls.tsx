@@ -143,7 +143,7 @@ export const TalentControls = memo(function TalentControls({
 
       {/* Center: Search */}
       <Input
-        placeholder="Search..."
+        placeholder="Search ..."
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         className="h-6 w-28 text-xs mx-1"

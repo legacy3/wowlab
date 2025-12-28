@@ -61,7 +61,7 @@ export const dumpTalentTreeCommand = Command.make(
   },
   ({ html, loadout, output, pretty, spec }) =>
     Effect.gen(function* () {
-      yield* Effect.log("Starting talent tree dump...");
+      yield* Effect.log("Starting talent tree dump ...");
 
       const results: TalentTree[] = [];
 
@@ -109,7 +109,7 @@ export const dumpTalentTreeCommand = Command.make(
           );
         }
       } else {
-        yield* Effect.log("Loading all specs...");
+        yield* Effect.log("Loading all specs ...");
 
         const allSpecs = yield* Effect.tryPromise({
           catch: (e) => new Error(String(e)),

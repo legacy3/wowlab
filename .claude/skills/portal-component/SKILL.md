@@ -119,12 +119,7 @@ For complex features needing data fetching + actions (like nodes, auth):
 // providers/feature-manager.tsx
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useList, useCreate, useUpdate } from "@refinedev/core";
 
 interface FeatureManagerContextValue {
@@ -138,7 +133,9 @@ interface FeatureManagerContextValue {
   refetch: () => void;
 }
 
-const FeatureManagerContext = createContext<FeatureManagerContextValue | null>(null);
+const FeatureManagerContext = createContext<FeatureManagerContextValue | null>(
+  null,
+);
 
 export function FeatureManagerProvider({ children }: { children: ReactNode }) {
   const { result, query } = useList<ItemType>({
@@ -147,10 +144,13 @@ export function FeatureManagerProvider({ children }: { children: ReactNode }) {
 
   const { mutateAsync: createMutation } = useCreate<ItemType>();
 
-  const createItem = useCallback(async (data: CreateData) => {
-    await createMutation({ resource: "items", values: data });
-    query.refetch();
-  }, [createMutation, query]);
+  const createItem = useCallback(
+    async (data: CreateData) => {
+      await createMutation({ resource: "items", values: data });
+      query.refetch();
+    },
+    [createMutation, query],
+  );
 
   return (
     <FeatureManagerContext.Provider
@@ -169,7 +169,9 @@ export function FeatureManagerProvider({ children }: { children: ReactNode }) {
 export function useFeatureManager(): FeatureManagerContextValue {
   const context = useContext(FeatureManagerContext);
   if (!context) {
-    throw new Error("useFeatureManager must be used within FeatureManagerProvider");
+    throw new Error(
+      "useFeatureManager must be used within FeatureManagerProvider",
+    );
   }
 
   return context;
@@ -188,20 +190,25 @@ export type { ItemType } from "./feature-manager";
 Always use `@/lib/format` for consistent formatting:
 
 ```tsx
-import { formatInt, formatRelativeToNow, formatPercent, formatDurationMs } from "@/lib/format";
+import {
+  formatInt,
+  formatRelativeToNow,
+  formatPercent,
+  formatDurationMs,
+} from "@/lib/format";
 
 // Numbers
-formatInt(1234567)           // "1,234,567"
-formatCompact(1234567)       // "1.2M"
-formatPercent(85.5)          // "85.5%"
+formatInt(1234567); // "1,234,567"
+formatCompact(1234567); // "1.2M"
+formatPercent(85.5); // "85.5%"
 
 // Dates
-formatRelativeToNow(date)    // "2 hours ago"
-formatDate(date, "PP")       // "Jan 1, 2024"
+formatRelativeToNow(date); // "2 hours ago"
+formatDate(date, "PP"); // "Jan 1, 2024"
 
 // Durations
-formatDurationMs(5000)       // "5 seconds"
-formatDurationSeconds(300)   // "5 minutes"
+formatDurationMs(5000); // "5 seconds"
+formatDurationSeconds(300); // "5 minutes"
 ```
 
 ## Instructions

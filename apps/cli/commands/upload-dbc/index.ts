@@ -223,7 +223,7 @@ const uploadDbcProgram = (
 
     // If --empty is specified, filter to only empty tables
     if (emptyOnly) {
-      yield* Effect.logInfo("Checking for empty tables...");
+      yield* Effect.logInfo("Checking for empty tables ...");
       const emptyTables: DbcTableKey[] = [];
 
       for (const tableKey of tablesToUpload) {
@@ -251,7 +251,7 @@ const uploadDbcProgram = (
 
     const modeLabel = dryRun ? "[DRY RUN] " : "";
     yield* Effect.logInfo(
-      `${modeLabel}Uploading ${tablesToUpload.length} tables to raw_dbc schema...`,
+      `${modeLabel}Uploading ${tablesToUpload.length} tables to raw_dbc schema ...`,
     );
 
     let totalRows = 0;

@@ -173,7 +173,7 @@ function NodesContent() {
       </div>
 
       <Input
-        placeholder="Filter nodes..."
+        placeholder="Filter nodes ..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         className="max-w-sm"

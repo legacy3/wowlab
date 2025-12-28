@@ -112,35 +112,56 @@ for (const item of items) {
 ### Wrong
 
 ```tsx
-{value.toLocaleString()}
-{new Date(date).toLocaleDateString()}
-{`${duration}ms`}
-{(percent * 100).toFixed(1) + "%"}
+{
+  value.toLocaleString();
+}
+{
+  new Date(date).toLocaleDateString();
+}
+{
+  `${duration}ms`;
+}
+{
+  (percent * 100).toFixed(1) + "%";
+}
 ```
 
 ### Right
 
 ```tsx
-import { formatInt, formatRelativeToNow, formatDurationMs, formatPercent } from "@/lib/format";
+import {
+  formatInt,
+  formatRelativeToNow,
+  formatDurationMs,
+  formatPercent,
+} from "@/lib/format";
 
-{formatInt(value)}
-{formatRelativeToNow(date)}
-{formatDurationMs(duration)}
-{formatPercent(percent)}
+{
+  formatInt(value);
+}
+{
+  formatRelativeToNow(date);
+}
+{
+  formatDurationMs(duration);
+}
+{
+  formatPercent(percent);
+}
 ```
 
 ### Available Formatters
 
-| Function | Use For |
-|----------|---------|
-| `formatInt` | Large integers with commas |
-| `formatCompact` | Abbreviated numbers (1.2M) |
-| `formatPercent` | Percentages |
-| `formatNumber` | Spell description numbers |
-| `formatRelativeToNow` | Relative time ("2h ago") |
-| `formatDate` | Formatted dates |
-| `formatDurationMs` | Millisecond durations |
-| `formatDurationSeconds` | Second durations |
+| Function                | Use For                    |
+| ----------------------- | -------------------------- |
+| `formatInt`             | Large integers with commas |
+| `formatCompact`         | Abbreviated numbers (1.2M) |
+| `formatPercent`         | Percentages                |
+| `formatNumber`          | Spell description numbers  |
+| `formatRelativeToNow`   | Relative time ("2h ago")   |
+| `formatDate`            | Formatted dates            |
+| `formatDurationMs`      | Millisecond durations      |
+| `formatDurationSeconds` | Second durations           |
 
 ## Instructions
 

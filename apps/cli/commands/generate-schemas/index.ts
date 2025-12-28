@@ -153,19 +153,19 @@ const generateSchemasProgram = (
       // Use specified tables
       tablesToGenerate = [...tables];
       yield* Effect.logInfo(
-        `Generating schemas for ${tablesToGenerate.length} specified tables...`,
+        `Generating schemas for ${tablesToGenerate.length} specified tables ...`,
       );
     } else if (all) {
       // Generate for all CSV files
       tablesToGenerate = yield* getAllCsvFiles;
       yield* Effect.logInfo(
-        `Generating schemas for all ${tablesToGenerate.length} CSV files...`,
+        `Generating schemas for all ${tablesToGenerate.length} CSV files ...`,
       );
     } else {
       // Only update existing schema files
       tablesToGenerate = yield* getExistingSchemas;
       yield* Effect.logInfo(
-        `Updating ${tablesToGenerate.length} existing schema files...`,
+        `Updating ${tablesToGenerate.length} existing schema files ...`,
       );
     }
 

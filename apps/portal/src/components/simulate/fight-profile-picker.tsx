@@ -93,7 +93,7 @@ export function FightProfilePicker() {
           align="start"
         >
           <Command>
-            <CommandInput placeholder="Search profiles..." />
+            <CommandInput placeholder="Search profiles ..." />
             <CommandList>
               <CommandEmpty>No profile found.</CommandEmpty>
               {Object.entries(groupedProfiles).map(([group, profiles]) => (

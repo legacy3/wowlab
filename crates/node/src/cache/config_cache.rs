@@ -1,7 +1,10 @@
-//! Configuration cache - stores sim configs locally to avoid repeated fetches
+//! Configuration cache - stores sim configs locally
+//!
+//! Configs are delivered with chunk-claim response. We cache them
+//! locally in case the same config is used for multiple chunks.
+
 #![allow(dead_code)]
 
-use crate::supabase::SupabaseClient;
 use directories::ProjectDirs;
 use lru::LruCache;
 use std::{
@@ -37,18 +40,14 @@ impl ConfigCache {
         }
     }
 
-    /// Get a config from cache or fetch from Supabase
-    pub async fn get_or_fetch(
-        &self,
-        hash: &str,
-        client: &SupabaseClient,
-    ) -> Result<String, CacheError> {
+    /// Get a config from cache by hash
+    pub fn get(&self, hash: &str) -> Option<String> {
         // Check memory cache
         {
             let mut cache = self.memory.lock().unwrap();
             if let Some(config) = cache.get(hash) {
                 tracing::debug!("Config {} found in memory cache", hash);
-                return Ok(config.clone());
+                return Some(config.clone());
             }
         }
 
@@ -61,31 +60,37 @@ impl ConfigCache {
                     // Add to memory cache
                     let mut cache = self.memory.lock().unwrap();
                     cache.put(hash.to_string(), config.clone());
-                    return Ok(config);
+                    return Some(config);
                 }
                 Err(e) => {
                     tracing::warn!("Failed to read cached config: {}", e);
-                    // Continue to fetch from network
                 }
             }
         }
 
-        // Fetch from Supabase
-        tracing::info!("Fetching config {} from Supabase", hash);
-        let config = client.get_config(hash).await?;
+        None
+    }
 
+    /// Store a config in the cache
+    pub fn put(&self, hash: &str, config: &str) {
         // Store in disk cache
-        if let Err(e) = std::fs::write(&disk_file, &config) {
+        let disk_file = self.disk_path.join(hash);
+        if let Err(e) = std::fs::write(&disk_file, config) {
             tracing::warn!("Failed to cache config to disk: {}", e);
         }
 
         // Store in memory cache
         {
             let mut cache = self.memory.lock().unwrap();
-            cache.put(hash.to_string(), config.clone());
+            cache.put(hash.to_string(), config.to_string());
         }
+    }
 
-        Ok(config)
+    /// Store a config from JSON value
+    pub fn put_json(&self, hash: &str, config: &serde_json::Value) {
+        if let Ok(json_str) = serde_json::to_string(config) {
+            self.put(hash, &json_str);
+        }
     }
 
     /// Verify a config hash matches its content
@@ -141,12 +146,4 @@ impl Default for ConfigCache {
 pub struct CacheStats {
     pub memory_count: usize,
     pub disk_count: usize,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum CacheError {
-    #[error("Network error: {0}")]
-    Network(#[from] crate::supabase::SupabaseError),
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
 }

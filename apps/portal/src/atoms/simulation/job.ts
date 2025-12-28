@@ -26,7 +26,7 @@ export const createSimJobAtom = atom(
       status: "running",
       progress: 0,
       current: `0 / ${formatInt(params.totalIterations)}`,
-      eta: "Calculating...",
+      eta: "Calculating ...",
       phase: "preparing-spells",
       phaseDetail: "Loading spell data",
       rotationId: params.rotationId,

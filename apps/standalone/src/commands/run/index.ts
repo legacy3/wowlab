@@ -192,7 +192,7 @@ const runWithWorkers = (
 
     const totalBatches = Math.ceil(iterations / batchSize);
     yield* Effect.log(
-      `Initialized ${workerCount} workers, processing ${totalBatches} batches...`,
+      `Initialized ${workerCount} workers, processing ${totalBatches} batches ...`,
     );
 
     const stats: AggregatedStats = { completedSims: 0, totalCasts: 0 };
@@ -384,7 +384,7 @@ export const runCommand = Command.make(
 
         if (useWorkers) {
           yield* Effect.log(
-            `Running ${iterations.toLocaleString()} simulations using ${workerCount} worker threads...`,
+            `Running ${iterations.toLocaleString()} simulations using ${workerCount} worker threads ...`,
           );
 
           const startTime = performance.now();

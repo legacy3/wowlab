@@ -1243,7 +1243,7 @@ export function TableCoverageContent() {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search tables..."
+            placeholder="Search tables ..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"

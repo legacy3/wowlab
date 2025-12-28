@@ -33,7 +33,7 @@ export function SpellBrowser({ onInsert }: SpellBrowserProps) {
       <div className="relative">
         <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search spells..."
+          placeholder="Search spells ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-8 h-8 text-sm"
@@ -112,7 +112,7 @@ function SpellCard({ spell, onInsert }: SpellCardProps) {
       </div>
       <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
         {isLoading && !description
-          ? "Loading description..."
+          ? "Loading description ..."
           : (description?.text ?? spell.description)}
       </p>
     </div>

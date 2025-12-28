@@ -14,7 +14,7 @@ import {
 } from "@/atoms/sim";
 
 const DEFAULT_SIMC_PLACEHOLDER = [
-  "Paste your SimulationCraft export here...",
+  "Paste your SimulationCraft export here ...",
   "",
   'shaman="Wellenwilli"',
   "level=80",
@@ -23,7 +23,7 @@ const DEFAULT_SIMC_PLACEHOLDER = [
   "server=blackmoore",
   "spec=restoration",
   "",
-  "talents=CgQAL+iDLHPJSLC...",
+  "talents=CgQAL+iDLHPJSLC ...",
   "",
   "head=,id=212011,bonus_id=6652/10877...",
 ].join("\n");

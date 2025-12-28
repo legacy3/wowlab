@@ -334,7 +334,7 @@ def main():
 
     # Build
     if not args.json:
-        print("Building with debug symbols...")
+        print("Building with debug symbols ...")
     subprocess.run(
         ["cargo", "build", "--release", "--bin", "bench"],
         env={**os.environ, "CARGO_PROFILE_RELEASE_DEBUG": "2"},
@@ -344,7 +344,7 @@ def main():
 
     # Profile
     if not args.json:
-        print(f"Profiling {args.iterations} iterations...")
+        print(f"Profiling {args.iterations} iterations ...")
     bench_result = subprocess.run(
         [str(BINARY), str(args.iterations)], capture_output=True, text=True
     )
@@ -364,7 +364,7 @@ def main():
 
     # Analyze
     if not args.json:
-        print("Analyzing...")
+        print("Analyzing ...")
     result = analyze_profile(args.iterations, bench_result.stdout, args.top)
 
     # Output

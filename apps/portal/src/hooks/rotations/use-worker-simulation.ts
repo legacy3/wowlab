@@ -228,7 +228,7 @@ export function useWorkerSimulation(options?: UseWorkerSimulationOptions) {
               total: progress.total,
               eta: progress.etaMs
                 ? `${formatDurationMs(progress.etaMs)} remaining`
-                : "Calculating...",
+                : "Calculating ...",
             });
 
             // Track performance metrics (throttled)

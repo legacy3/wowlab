@@ -151,7 +151,7 @@ function HandleEditForm({
           disabled={isUpdating || !form.formState.isValid}
         >
           {isUpdating && <FlaskInlineLoader className="mr-2 h-4 w-4" />}
-          {isUpdating ? "Saving..." : "Save"}
+          {isUpdating ? "Saving ..." : "Save"}
         </Button>
         <Button
           type="button"

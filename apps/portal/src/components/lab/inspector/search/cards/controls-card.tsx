@@ -77,7 +77,7 @@ export function ControlsCard() {
                 query();
               }
             }}
-            placeholder={`Enter ${dataType} ID...`}
+            placeholder={`Enter ${dataType} ID ...`}
           />
         </div>
 

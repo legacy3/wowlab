@@ -13,7 +13,8 @@ mod worker;
 use app::NodeApp;
 use std::sync::Arc;
 
-fn setup_fonts(ctx: &egui::Context) {
+fn setup_egui(ctx: &egui::Context) {
+    // Setup fonts
     let mut fonts = egui::FontDefinitions::default();
 
     // Add Lucide icon font
@@ -30,6 +31,9 @@ fn setup_fonts(ctx: &egui::Context) {
         .push("lucide".to_owned());
 
     ctx.set_fonts(fonts);
+
+    // Apply custom theme
+    ui::theme::apply_theme(ctx);
 }
 
 fn load_icon() -> Option<egui::IconData> {
@@ -77,7 +81,7 @@ fn main() -> eframe::Result<()> {
         "WoW Lab Node",
         options,
         Box::new(|cc| {
-            setup_fonts(&cc.egui_ctx);
+            setup_egui(&cc.egui_ctx);
             Ok(Box::new(NodeApp::new(cc, runtime)))
         }),
     )

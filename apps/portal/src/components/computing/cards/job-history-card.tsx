@@ -108,7 +108,7 @@ export function JobHistoryCard() {
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           <Input
-            placeholder="Filter jobs..."
+            placeholder="Filter jobs ..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="max-w-sm"

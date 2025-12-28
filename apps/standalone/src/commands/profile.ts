@@ -31,7 +31,7 @@ export const profileCommand = Command.make(
     Effect.gen(function* () {
       const rotation = rotations["beast-mastery"];
 
-      yield* Effect.log("Loading spell data...");
+      yield* Effect.log("Loading spell data ...");
       const [spells, auras] = yield* Effect.all([
         loadSpells(supabaseClient, rotation.spellIds),
         loadAuras(supabaseClient, rotation.spellIds),

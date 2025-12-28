@@ -1,57 +1,57 @@
 //! Node claiming flow implementation
 
-use crate::supabase::SupabaseClient;
-use rand::Rng;
+use crate::supabase::{ApiClient, ApiError};
 use std::time::Duration;
 use uuid::Uuid;
 
-/// Character set for claim codes (no confusing chars like 0/O, 1/l/I)
-const CHARSET: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-/// Generate a 6-character claim code
-pub fn generate_code() -> String {
-    let mut rng = rand::thread_rng();
-    (0..6)
-        .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect()
+/// Get the system hostname as default node name
+pub fn get_default_name() -> String {
+    hostname::get()
+        .ok()
+        .and_then(|h| h.into_string().ok())
+        .unwrap_or_else(|| "WowLab Node".to_string())
 }
 
-/// Register a pending node with the given claim code and wait for it to be claimed
-pub async fn register_and_wait(client: &SupabaseClient, code: &str) -> Result<Uuid, ClaimError> {
-    // Register the pending node
-    let node_id = client.create_pending_node(code).await?;
-    tracing::info!("Registered pending node {} with code {}", node_id, code);
+/// Get the number of CPU cores as default max_parallel
+pub fn get_default_cores() -> i32 {
+    num_cpus::get() as i32
+}
 
-    // Poll for claim
+/// Register a pending node and return the node ID and claim code
+/// Sends OS defaults (hostname, cores) which user can modify in portal before claiming
+pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> {
+    let hostname = get_default_name();
+    let cores = get_default_cores();
+    let version = env!("CARGO_PKG_VERSION");
+
+    let response = client.register_node(&hostname, cores, version).await?;
+    tracing::info!(
+        "Registered pending node {} with code {}",
+        response.id,
+        response.claim_code
+    );
+    Ok((response.id, response.claim_code))
+}
+
+/// Wait for a node to be claimed by polling status
+/// Returns the node name when claimed
+pub async fn wait_for_claim(client: &ApiClient, node_id: Uuid) -> Result<String, ClaimError> {
     loop {
         tokio::time::sleep(Duration::from_secs(3)).await;
 
-        match client.get_node(node_id).await {
-            Ok(Some(node)) => {
-                if node.user_id.is_some() {
-                    // Node has been claimed!
-                    tracing::info!("Node {} claimed by user {:?}", node_id, node.user_id);
-
-                    // Update local config
-                    let mut config = crate::config::NodeConfig::load_or_create();
-                    config.set_node_id(node_id);
-                    if let Some(user_id) = node.user_id {
-                        config.set_user_id(user_id);
-                    }
-
-                    return Ok(node_id);
+        match client.get_status(node_id).await {
+            Ok(status) => {
+                if status.claimed {
+                    tracing::info!("Node {} claimed!", node_id);
+                    return Ok(status.name);
                 }
+                // Still pending, continue waiting
             }
-            Ok(None) => {
-                // Node was deleted - abort
+            Err(ApiError::NotFound) => {
                 return Err(ClaimError::NodeDeleted);
             }
             Err(e) => {
-                tracing::warn!("Failed to check node status: {}", e);
-                // Continue polling
+                tracing::warn!("Status check failed: {}", e);
             }
         }
     }
@@ -63,31 +63,6 @@ pub enum ClaimError {
     RegistrationFailed(String),
     #[error("Node was deleted before claiming")]
     NodeDeleted,
-    #[error("Network error: {0}")]
-    Network(#[from] reqwest::Error),
-}
-
-impl From<crate::supabase::SupabaseError> for ClaimError {
-    fn from(e: crate::supabase::SupabaseError) -> Self {
-        ClaimError::RegistrationFailed(e.to_string())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_code() {
-        let code = generate_code();
-        assert_eq!(code.len(), 6);
-        assert!(code.chars().all(|c| CHARSET.contains(&(c as u8))));
-    }
-
-    #[test]
-    fn test_code_uniqueness() {
-        let codes: std::collections::HashSet<_> = (0..1000).map(|_| generate_code()).collect();
-        // Should have high uniqueness (not exactly 1000 due to random chance, but close)
-        assert!(codes.len() > 990);
-    }
+    #[error("API error: {0}")]
+    Api(#[from] ApiError),
 }

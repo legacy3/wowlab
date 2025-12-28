@@ -45,7 +45,7 @@ export function QuickSimCard() {
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={'shaman="Name"\nlevel=80\n...'}
+          placeholder={'shaman="Name"\nlevel=80\n ...'}
           className="min-h-24 resize-none font-mono text-xs"
         />
         <Button

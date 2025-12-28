@@ -118,7 +118,7 @@ const runSingleThreaded = (iterations: number) =>
     const config = createConfig();
     const sim = new Simulator(JSON.stringify(config));
 
-    yield* Effect.log(`Running ${iterations.toLocaleString()} simulations...`);
+    yield* Effect.log(`Running ${iterations.toLocaleString()} simulations ...`);
     const startTime = performance.now();
     const result = sim.run_batch(iterations, BigInt(Date.now()));
     const elapsed = performance.now() - startTime;
@@ -193,7 +193,7 @@ const runWithWorkers = (
   batchSize: number,
 ) =>
   Effect.gen(function* () {
-    yield* Effect.log(`Initializing ${workerCount} WASM workers...`);
+    yield* Effect.log(`Initializing ${workerCount} WASM workers ...`);
 
     const config = createConfig();
 
@@ -210,7 +210,7 @@ const runWithWorkers = (
     }
 
     yield* Effect.log(
-      `Running ${iterations.toLocaleString()} simulations across ${workerCount} workers...`,
+      `Running ${iterations.toLocaleString()} simulations across ${workerCount} workers ...`,
     );
 
     const startTime = performance.now();

@@ -39,7 +39,7 @@ declare -a NAMES=(
 declare -a RESULTS=()
 
 # Build all variants first
-echo "Building all variants..."
+echo "Building all variants ..."
 for i in "${!FEATURES[@]}"; do
     feat="${FEATURES[$i]}"
     name="${NAMES[$i]}"

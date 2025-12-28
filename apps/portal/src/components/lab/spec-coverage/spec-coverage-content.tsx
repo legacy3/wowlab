@@ -51,13 +51,13 @@ export function SpecCoverageContent() {
                     {progress.specName}
                   </>
                 ) : (
-                  "Initializing..."
+                  "Initializing ..."
                 )}
               </p>
               <p className="text-xs text-muted-foreground">
                 {progress
                   ? `${progress.loaded} of ${progress.total} specs (${progressPercent}%)`
-                  : "Fetching class data..."}
+                  : "Fetching class data ..."}
               </p>
             </div>
             <Progress value={progressPercent} className="h-1.5 w-64" />

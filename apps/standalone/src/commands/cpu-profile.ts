@@ -161,7 +161,7 @@ export const cpuProfileCommand = Command.make(
       fs.mkdirSync(profileDir, { recursive: true });
 
       yield* Effect.log(
-        `Running ${iterations} iterations with CPU profiler...`,
+        `Running ${iterations} iterations with CPU profiler ...`,
       );
       yield* Effect.log(`Rotation: ${rotation}, Duration: ${duration}s`);
       yield* Effect.log("");

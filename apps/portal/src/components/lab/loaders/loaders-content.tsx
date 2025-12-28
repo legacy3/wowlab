@@ -131,11 +131,11 @@ export function LoadersContent() {
               <div className="rounded-lg border bg-muted/20 min-h-[320px]">
                 <PageLoader
                   variant={selectedVariant}
-                  message="Loading your data..."
+                  message="Loading your data ..."
                 />
               </div>
               <div className="mt-4 p-3 rounded-lg bg-muted/50 font-mono text-xs">
-                {`<PageLoader variant="${selectedVariant}" message="Loading..." />`}
+                {`<PageLoader variant="${selectedVariant}" message="Loading ..." />`}
               </div>
             </CardContent>
           </Card>
@@ -169,7 +169,7 @@ export function LoadersContent() {
                     {isCardLoading ? (
                       <CardLoader
                         variant={selectedVariant}
-                        message="Loading stats..."
+                        message="Loading stats ..."
                       />
                     ) : (
                       <div className="space-y-3 py-4">
@@ -235,15 +235,15 @@ export function LoadersContent() {
                     {isOverlayLoading && (
                       <OverlayLoader
                         variant={selectedVariant}
-                        message="Syncing..."
+                        message="Syncing ..."
                       />
                     )}
                   </CardContent>
                 </Card>
               </div>
               <div className="mt-4 p-3 rounded-lg bg-muted/50 font-mono text-xs space-y-1">
-                <div>{`<CardLoader variant="${selectedVariant}" message="Loading..." />`}</div>
-                <div>{`<OverlayLoader variant="${selectedVariant}" message="Syncing..." />`}</div>
+                <div>{`<CardLoader variant="${selectedVariant}" message="Loading ..." />`}</div>
+                <div>{`<OverlayLoader variant="${selectedVariant}" message="Syncing ..." />`}</div>
               </div>
             </CardContent>
           </Card>

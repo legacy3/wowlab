@@ -157,7 +157,7 @@ export function RotationPicker() {
           align="start"
         >
           <Command>
-            <CommandInput placeholder="Search rotations..." />
+            <CommandInput placeholder="Search rotations ..." />
             <CommandList>
               <CommandEmpty>No rotation found.</CommandEmpty>
 

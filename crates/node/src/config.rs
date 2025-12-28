@@ -5,33 +5,21 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use uuid::Uuid;
 
-/// Persistent node configuration
+/// Local node configuration
+/// Settings like name and maxParallel come from the server via heartbeat
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeConfig {
     /// Unique node identifier (set after claiming)
     pub node_id: Option<Uuid>,
-    /// User-visible name for this node
-    pub name: String,
-    /// Maximum parallel simulation workers
-    pub max_parallel: u32,
-    /// Supabase project URL
-    pub supabase_url: String,
-    /// Supabase anonymous key
-    pub supabase_anon_key: String,
-    /// Last known user ID (owner)
-    pub user_id: Option<String>,
+    /// API URL (edge functions base URL)
+    pub api_url: String,
 }
 
 impl Default for NodeConfig {
     fn default() -> Self {
         Self {
             node_id: None,
-            name: format!("Node-{}", &Uuid::new_v4().to_string()[..8]),
-            max_parallel: num_cpus::get().max(1).min(16) as u32,
-            // Default to production Supabase instance
-            supabase_url: "https://api.wowlab.gg".to_string(),
-            supabase_anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM".to_string(),
-            user_id: None,
+            api_url: "https://api.wowlab.gg".to_string(),
         }
     }
 }
@@ -87,20 +75,5 @@ impl NodeConfig {
     pub fn set_node_id(&mut self, id: Uuid) {
         self.node_id = Some(id);
         self.save();
-    }
-
-    /// Update the user ID after claiming
-    pub fn set_user_id(&mut self, user_id: String) {
-        self.user_id = Some(user_id);
-        self.save();
-    }
-}
-
-/// Get number of CPUs available (fallback for systems without num_cpus)
-mod num_cpus {
-    pub fn get() -> usize {
-        std::thread::available_parallelism()
-            .map(|p| p.get())
-            .unwrap_or(4)
     }
 }

@@ -294,7 +294,7 @@ export function TalentPresetPicker({
         title="Load Talent Preset"
         description="Search and select a talent preset to load"
       >
-        <CommandInput placeholder="Search presets..." />
+        <CommandInput placeholder="Search presets ..." />
         <CommandList className="max-h-[400px]">
           <CommandEmpty>No presets found.</CommandEmpty>
           {Object.entries(groupedPresets).map(([group, presets]) => (

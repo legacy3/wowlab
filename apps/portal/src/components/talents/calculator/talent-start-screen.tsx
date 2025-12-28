@@ -26,7 +26,7 @@ export function TalentStartScreen({
           data-tour="talent-import-input"
         >
           <Input
-            placeholder="Paste a talent string..."
+            placeholder="Paste a talent string ..."
             value={talents}
             onChange={(e) =>
               onTalentStringChange(e.target.value.trim() || null)

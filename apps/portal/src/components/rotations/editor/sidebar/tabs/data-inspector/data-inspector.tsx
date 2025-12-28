@@ -65,7 +65,7 @@ export function DataInspector() {
       <div className="relative">
         <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder={`${type.charAt(0).toUpperCase() + type.slice(1)} ID...`}
+          placeholder={`${type.charAt(0).toUpperCase() + type.slice(1)} ID ...`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -140,7 +140,7 @@ export function DataInspector() {
                   <p className="text-xs text-muted-foreground">Description</p>
                   <p className="text-xs">
                     {spellDescriptionLoading && !spellDescription
-                      ? "Loading description..."
+                      ? "Loading description ..."
                       : (spellDescription?.text ??
                         data.description ??
                         "No description available.")}

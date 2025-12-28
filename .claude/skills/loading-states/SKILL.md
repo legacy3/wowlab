@@ -11,23 +11,23 @@ The portal uses custom Flask loader components for all loading states. Never use
 
 Import from `@/components/ui/flask-loader`:
 
-| Component | Use Case |
-|-----------|----------|
-| `FlaskLoader` | Centered loading for cards, panels, overlays |
-| `FlaskInlineLoader` | Inline loading in buttons, text, badges |
-| `FlaskButton` | Button with built-in loading state |
-| `CardLoader` | Full card loading with optional message |
-| `PageLoader` | Full page loading (rarely needed) |
+| Component           | Use Case                                     |
+| ------------------- | -------------------------------------------- |
+| `FlaskLoader`       | Centered loading for cards, panels, overlays |
+| `FlaskInlineLoader` | Inline loading in buttons, text, badges      |
+| `FlaskButton`       | Button with built-in loading state           |
+| `CardLoader`        | Full card loading with optional message      |
+| `PageLoader`        | Full page loading (rarely needed)            |
 
 ## Variants
 
 Both `FlaskLoader` and `FlaskInlineLoader` support variants:
 
-| Variant | Use When |
-|---------|----------|
-| `loading` (default) | Fetching data, waiting for response |
-| `processing` | Running computations, simulations, tests |
-| `idle` | Ready state with subtle animation |
+| Variant             | Use When                                 |
+| ------------------- | ---------------------------------------- |
+| `loading` (default) | Fetching data, waiting for response      |
+| `processing`        | Running computations, simulations, tests |
+| `idle`              | Ready state with subtle animation        |
 
 ## Button Loading States
 
@@ -45,7 +45,7 @@ import { Save } from "lucide-react";
     <Save className="mr-2 h-4 w-4" />
   )}
   Save
-</Button>
+</Button>;
 ```
 
 ### Processing Button (simulations, tests)
@@ -68,7 +68,7 @@ import { FlaskButton } from "@/components/ui/flask-loader";
 
 <FlaskButton loading={isLoading} onClick={handleSave}>
   Save Changes
-</FlaskButton>
+</FlaskButton>;
 ```
 
 ## Card/Panel Loading
@@ -78,13 +78,15 @@ import { FlaskButton } from "@/components/ui/flask-loader";
 ```tsx
 import { FlaskLoader } from "@/components/ui/flask-loader";
 
-{loading ? (
-  <div className="flex items-center justify-center py-8">
-    <FlaskLoader size="sm" />
-  </div>
-) : (
-  <CardContent>...</CardContent>
-)}
+{
+  loading ? (
+    <div className="flex items-center justify-center py-8">
+      <FlaskLoader size="sm" />
+    </div>
+  ) : (
+    <CardContent>...</CardContent>
+  );
+}
 ```
 
 ### CardLoader with Message
@@ -92,7 +94,9 @@ import { FlaskLoader } from "@/components/ui/flask-loader";
 ```tsx
 import { CardLoader } from "@/components/ui/flask-loader";
 
-{loading && <CardLoader message="Loading data..." />}
+{
+  loading && <CardLoader message="Loading data ..." />;
+}
 ```
 
 ### Inline with Text
@@ -111,17 +115,21 @@ import { CardLoader } from "@/components/ui/flask-loader";
 ### Active Job/Process
 
 ```tsx
-{job.status === "running" ? (
-  <FlaskInlineLoader className="h-4 w-4" variant="processing" />
-) : (
-  <CheckIcon className="h-4 w-4" />
-)}
+{
+  job.status === "running" ? (
+    <FlaskInlineLoader className="h-4 w-4" variant="processing" />
+  ) : (
+    <CheckIcon className="h-4 w-4" />
+  );
+}
 ```
 
 ### In Links (name resolution)
 
 ```tsx
-{isLoading && <FlaskInlineLoader className="h-3 w-3 opacity-50" />}
+{
+  isLoading && <FlaskInlineLoader className="h-3 w-3 opacity-50" />;
+}
 ```
 
 ## Sizes

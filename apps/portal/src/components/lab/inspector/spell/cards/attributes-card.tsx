@@ -62,7 +62,7 @@ export function AttributesCard() {
           >
             {expanded
               ? "Show less"
-              : `Expand all ${spell.attributes.length} attribute flags...`}
+              : `Expand all ${spell.attributes.length} attribute flags ...`}
           </button>
         )}
       </CardContent>

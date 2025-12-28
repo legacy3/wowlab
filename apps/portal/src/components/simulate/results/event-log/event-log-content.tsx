@@ -260,7 +260,7 @@ export function EventLogContent() {
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         <Input
-          placeholder="Filter events..."
+          placeholder="Filter events ..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"

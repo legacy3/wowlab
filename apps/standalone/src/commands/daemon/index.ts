@@ -29,7 +29,7 @@ export const daemonCommand = Command.make(
   },
   ({ host, port }) =>
     Effect.gen(function* () {
-      yield* Effect.log(`Starting WowLab simulation daemon...`);
+      yield* Effect.log(`Starting WowLab simulation daemon ...`);
       yield* Effect.log(`Binding to ${host}:${port}`);
 
       // Create the RPC server layer
