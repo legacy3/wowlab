@@ -1,8 +1,7 @@
-//! API client module
+//! Supabase client module
 
 mod client;
 pub mod realtime;
 
-pub use client::{
-    ApiClient, ApiError, ClaimChunkResponse, HeartbeatResponse, RegisterResponse, StatusResponse,
-};
+pub use client::{ApiClient, ApiError};
+pub use realtime::{NodePayload, RealtimeEvent, SupabaseRealtime};

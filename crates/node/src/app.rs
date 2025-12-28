@@ -3,8 +3,13 @@
 use crate::{
     claim,
     config::NodeConfig,
-    supabase::ApiClient,
-    ui::{claim_view, dashboard, icons::{icon, Icon}, logs, theme::*},
+    supabase::{ApiClient, NodePayload, RealtimeEvent, SupabaseRealtime},
+    ui::{
+        claim_view, dashboard,
+        icons::{icon, Icon},
+        logs,
+        theme::*,
+    },
     worker::WorkerPool,
 };
 use std::{
@@ -14,7 +19,6 @@ use std::{
 };
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-use crate::supabase::HeartbeatResponse;
 
 /// Log entry for the scrolling log view
 #[derive(Clone)]
@@ -60,10 +64,18 @@ pub struct NodeStats {
 pub enum AppState {
     /// Registering with server
     Registering,
-    /// Showing claim code, waiting for user to claim
+    /// Showing claim code, waiting for user to claim via Realtime
     Claiming { code: String },
     /// Normal operation - dashboard view
     Dashboard { stats: NodeStats },
+}
+
+/// Connection status for the Realtime WebSocket
+#[derive(Clone, Copy, PartialEq)]
+pub enum ConnectionStatus {
+    Connecting,
+    Connected,
+    Disconnected,
 }
 
 /// Main application struct
@@ -77,8 +89,8 @@ pub struct NodeApp {
     max_logs: usize,
 
     // Async communication
-    claim_rx: Option<mpsc::Receiver<ClaimResult>>,
-    heartbeat_rx: Option<mpsc::Receiver<HeartbeatResult>>,
+    register_rx: Option<mpsc::Receiver<RegisterResult>>,
+    realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     node_id: Option<uuid::Uuid>,
 
     // UI state
@@ -86,14 +98,19 @@ pub struct NodeApp {
 
     // Track if we've started async tasks
     started: bool,
-    last_heartbeat: Option<Instant>,
 
     // Logo texture
     logo: Option<egui::TextureHandle>,
 
-    // Server-provided settings (synced via heartbeat)
+    // Node settings (from Realtime updates)
     node_name: String,
     max_parallel: u32,
+
+    // Connection status
+    connection_status: ConnectionStatus,
+
+    // Heartbeat tracking (5 min interval)
+    last_heartbeat: Option<Instant>,
 }
 
 #[derive(Clone, Copy, PartialEq, Default)]
@@ -103,14 +120,8 @@ pub enum Tab {
     Logs,
 }
 
-enum ClaimResult {
-    Registered { id: uuid::Uuid, code: String },
-    Claimed { name: String },
-    Failed(String),
-}
-
-enum HeartbeatResult {
-    Success(HeartbeatResponse),
+enum RegisterResult {
+    Success { id: uuid::Uuid, code: String },
     Failed(String),
 }
 
@@ -119,11 +130,11 @@ impl NodeApp {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
 
-        // Use OS defaults until we get server settings via heartbeat
+        // Use OS defaults until we get server settings via Realtime
         let default_cores = claim::get_default_cores() as u32;
 
         let state = if config.node_id.is_some() {
-            // Already claimed, go to dashboard
+            // Already registered, go to dashboard (will connect to Realtime)
             AppState::Dashboard {
                 stats: NodeStats {
                     max_workers: default_cores,
@@ -136,8 +147,6 @@ impl NodeApp {
         };
 
         let worker_pool = WorkerPool::new(default_cores as usize);
-
-        // Load persisted node_id if already claimed
         let node_id = config.node_id;
 
         let mut app = Self {
@@ -148,15 +157,16 @@ impl NodeApp {
             worker_pool,
             logs: VecDeque::with_capacity(100),
             max_logs: 100,
-            claim_rx: None,
-            heartbeat_rx: None,
+            register_rx: None,
+            realtime_rx: None,
             node_id,
             current_tab: Tab::Status,
             started: false,
-            last_heartbeat: None,
             logo: None,
             node_name: claim::get_default_name(),
             max_parallel: default_cores,
+            connection_status: ConnectionStatus::Connecting,
+            last_heartbeat: None,
         };
 
         app.log(LogLevel::Info, "WoW Lab Node started");
@@ -173,37 +183,56 @@ impl NodeApp {
         // Start the worker pool
         self.worker_pool.start(self.runtime.handle());
 
-        // If we need to register, start that flow
-        if matches!(self.state, AppState::Registering) {
+        if let Some(node_id) = self.node_id {
+            // Already registered, connect to Realtime
+            self.start_realtime(node_id);
+        } else {
+            // Need to register first
             self.start_registration();
         }
     }
 
     fn start_registration(&mut self) {
         let (tx, rx) = mpsc::channel(1);
-        self.claim_rx = Some(rx);
+        self.register_rx = Some(rx);
 
         let api = self.api.clone();
 
         self.runtime.spawn(async move {
-            // Register with server (sends hostname + cores as defaults)
             match claim::register(&api).await {
                 Ok((id, code)) => {
-                    let _ = tx.send(ClaimResult::Registered { id, code }).await;
+                    let _ = tx.send(RegisterResult::Success { id, code }).await;
+                }
+                Err(e) => {
+                    tracing::error!("Registration failed: {}", e);
+                    let _ = tx.send(RegisterResult::Failed(e.to_string())).await;
+                }
+            }
+        });
+    }
 
-                    // Now wait for claim
-                    match claim::wait_for_claim(&api, id).await {
-                        Ok(name) => {
-                            let _ = tx.send(ClaimResult::Claimed { name }).await;
-                        }
-                        Err(e) => {
-                            let _ = tx.send(ClaimResult::Failed(e.to_string())).await;
+    fn start_realtime(&mut self, node_id: uuid::Uuid) {
+        let realtime = Arc::new(SupabaseRealtime::new(
+            self.config.api_url.clone(),
+            self.config.anon_key.clone(),
+        ));
+
+        let (tx, rx) = mpsc::channel(32);
+        self.realtime_rx = Some(rx);
+
+        let rt = self.runtime.clone();
+        rt.spawn(async move {
+            match realtime.subscribe(node_id).await {
+                Ok(mut event_rx) => {
+                    while let Some(event) = event_rx.recv().await {
+                        if tx.send(event).await.is_err() {
+                            break;
                         }
                     }
                 }
                 Err(e) => {
-                    tracing::error!("Registration failed: {}", e);
-                    let _ = tx.send(ClaimResult::Failed(e.to_string())).await;
+                    tracing::error!("Failed to start Realtime: {}", e);
+                    let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
                 }
             }
         });
@@ -222,111 +251,158 @@ impl NodeApp {
         self.logs.push_back(entry);
     }
 
-    fn check_claim_status(&mut self) {
-        if let Some(ref mut rx) = self.claim_rx {
+    fn check_registration(&mut self) {
+        if let Some(ref mut rx) = self.register_rx {
             match rx.try_recv() {
-                Ok(ClaimResult::Registered { id, code }) => {
+                Ok(RegisterResult::Success { id, code }) => {
                     self.node_id = Some(id);
+                    self.config.set_node_id(id);
                     self.state = AppState::Claiming { code: code.clone() };
                     self.log(LogLevel::Info, format!("Registered! Claim code: {}", code));
-                }
-                Ok(ClaimResult::Claimed { name }) => {
-                    // Save node ID to config
-                    if let Some(id) = self.node_id {
-                        self.config.set_node_id(id);
-                    }
-                    // Update local name (server may have changed it)
-                    self.node_name = name;
+                    self.register_rx = None;
 
-                    self.state = AppState::Dashboard {
-                        stats: NodeStats {
-                            max_workers: self.max_parallel,
-                            ..Default::default()
-                        },
-                    };
-                    self.claim_rx = None;
-                    self.log(LogLevel::Info, "Node claimed successfully!");
-                    // Send initial heartbeat
-                    self.send_heartbeat();
+                    // Start Realtime to listen for claim
+                    self.start_realtime(id);
                 }
-                Ok(ClaimResult::Failed(err)) => {
-                    self.log(LogLevel::Error, format!("Error: {}", err));
-                    // Stay in current state, maybe retry
+                Ok(RegisterResult::Failed(err)) => {
+                    self.log(LogLevel::Error, format!("Registration failed: {}", err));
+                    self.register_rx = None;
                 }
                 Err(mpsc::error::TryRecvError::Empty) => {
                     // Still waiting
                 }
                 Err(mpsc::error::TryRecvError::Disconnected) => {
-                    self.claim_rx = None;
+                    self.register_rx = None;
                 }
             }
         }
     }
 
-    fn send_heartbeat(&mut self) {
-        let node_id = match self.node_id {
-            Some(id) => id,
-            None => return,
+    fn check_realtime_events(&mut self) {
+        // Collect events first to avoid borrow issues
+        let mut events = Vec::new();
+        let mut disconnected = false;
+
+        if let Some(ref mut rx) = self.realtime_rx {
+            loop {
+                match rx.try_recv() {
+                    Ok(event) => events.push(event),
+                    Err(mpsc::error::TryRecvError::Empty) => break,
+                    Err(mpsc::error::TryRecvError::Disconnected) => {
+                        disconnected = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Process collected events
+        for event in events {
+            self.handle_realtime_event(event);
+        }
+
+        if disconnected {
+            self.realtime_rx = None;
+            self.connection_status = ConnectionStatus::Disconnected;
+        }
+    }
+
+    fn handle_realtime_event(&mut self, event: RealtimeEvent) {
+        match event {
+            RealtimeEvent::Connected => {
+                self.connection_status = ConnectionStatus::Connected;
+                self.log(LogLevel::Info, "Connected to Realtime");
+                // Update status to online (sets lastSeenAt)
+                self.send_online_status();
+            }
+            RealtimeEvent::Disconnected => {
+                self.connection_status = ConnectionStatus::Disconnected;
+                self.log(LogLevel::Warn, "Disconnected from Realtime, reconnecting...");
+            }
+            RealtimeEvent::NodeUpdated(payload) => {
+                self.handle_node_update(payload);
+            }
+            RealtimeEvent::ChunkAssigned(payload) => {
+                self.log(
+                    LogLevel::Info,
+                    format!("Chunk assigned: {} ({} iterations)", payload.id, payload.iterations),
+                );
+                // TODO: Queue chunk for processing
+            }
+            RealtimeEvent::Error(err) => {
+                self.log(LogLevel::Error, format!("Realtime error: {}", err));
+            }
+        }
+    }
+
+    fn send_online_status(&mut self) {
+        if let Some(node_id) = self.node_id {
+            self.last_heartbeat = Some(Instant::now());
+            let api = self.api.clone();
+            self.runtime.spawn(async move {
+                if let Err(e) = api.set_online(node_id).await {
+                    tracing::warn!("Failed to set online status: {}", e);
+                }
+            });
+        }
+    }
+
+    /// Send heartbeat every 5 minutes while connected
+    fn check_heartbeat(&mut self) {
+        const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5 * 60);
+
+        if self.connection_status != ConnectionStatus::Connected {
+            return;
+        }
+
+        let should_send = match self.last_heartbeat {
+            Some(last) => last.elapsed() >= HEARTBEAT_INTERVAL,
+            None => true,
         };
 
-        let (tx, rx) = mpsc::channel(1);
-        self.heartbeat_rx = Some(rx);
-        self.last_heartbeat = Some(Instant::now());
-
-        let api = self.api.clone();
-
-        self.runtime.spawn(async move {
-            match api.heartbeat(node_id, "online").await {
-                Ok(response) => {
-                    let _ = tx.send(HeartbeatResult::Success(response)).await;
-                }
-                Err(e) => {
-                    let _ = tx.send(HeartbeatResult::Failed(e.to_string())).await;
-                }
-            }
-        });
+        if should_send {
+            self.send_online_status();
+        }
     }
 
-    fn check_heartbeat(&mut self) {
-        // Check for heartbeat response
-        if let Some(ref mut rx) = self.heartbeat_rx {
-            match rx.try_recv() {
-                Ok(HeartbeatResult::Success(response)) => {
-                    // Sync settings from server
-                    self.node_name = response.name;
-                    self.max_parallel = response.max_parallel as u32;
-                    self.heartbeat_rx = None;
-                }
-                Ok(HeartbeatResult::Failed(err)) => {
-                    self.log(LogLevel::Warn, format!("Heartbeat failed: {}", err));
-                    self.heartbeat_rx = None;
-                }
-                Err(mpsc::error::TryRecvError::Empty) => {
-                    // Still waiting
-                }
-                Err(mpsc::error::TryRecvError::Disconnected) => {
-                    self.heartbeat_rx = None;
-                }
+    fn handle_node_update(&mut self, payload: NodePayload) {
+        // Check if this is a claim event (user_id became set)
+        if payload.user_id.is_some() {
+            if matches!(self.state, AppState::Claiming { .. }) {
+                // Node was just claimed!
+                self.log(LogLevel::Info, "Node claimed successfully!");
+                self.state = AppState::Dashboard {
+                    stats: NodeStats {
+                        max_workers: payload.max_parallel as u32,
+                        ..Default::default()
+                    },
+                };
             }
         }
 
-        // Send periodic heartbeat (every 60 seconds) when in Dashboard state
-        if matches!(self.state, AppState::Dashboard { .. }) && self.heartbeat_rx.is_none() {
-            let should_send = match self.last_heartbeat {
-                None => true,
-                Some(last) => last.elapsed() > Duration::from_secs(60),
-            };
-            if should_send {
-                self.send_heartbeat();
-            }
+        // Always sync settings from server
+        self.node_name = payload.name;
+        self.max_parallel = payload.max_parallel as u32;
+
+        // Update dashboard stats if in that state
+        if let AppState::Dashboard { ref mut stats } = self.state {
+            stats.max_workers = payload.max_parallel as u32;
         }
     }
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
-        let (color, text, icon_char) = match &self.state {
-            AppState::Registering => (ZINC_500, "Connecting", icon(Icon::Loader)),
-            AppState::Claiming { .. } => (YELLOW_500, "Pending", icon(Icon::Clock)),
-            AppState::Dashboard { .. } => (GREEN_500, "Online", icon(Icon::Wifi)),
+        let (color, text, icon_char) = match (&self.state, self.connection_status) {
+            (AppState::Registering, _) => (ZINC_500, "Registering", icon(Icon::Loader)),
+            (AppState::Claiming { .. }, _) => (YELLOW_500, "Pending", icon(Icon::Clock)),
+            (AppState::Dashboard { .. }, ConnectionStatus::Connected) => {
+                (GREEN_500, "Online", icon(Icon::Wifi))
+            }
+            (AppState::Dashboard { .. }, ConnectionStatus::Connecting) => {
+                (YELLOW_500, "Connecting", icon(Icon::Loader))
+            }
+            (AppState::Dashboard { .. }, ConnectionStatus::Disconnected) => {
+                (RED_500, "Offline", icon(Icon::WifiOff))
+            }
         };
 
         ui.horizontal(|ui| {
@@ -360,18 +436,23 @@ impl eframe::App for NodeApp {
         // Load logo texture on first frame
         self.load_logo(ctx);
 
-        // Check for async claim updates
-        self.check_claim_status();
+        // Check for registration result
+        self.check_registration();
 
-        // Check heartbeat status and send periodic heartbeats
+        // Check for Realtime events
+        self.check_realtime_events();
+
+        // Periodic heartbeat (every 5 min)
         self.check_heartbeat();
 
         // Top bar with status
         egui::TopBottomPanel::top("header")
-            .frame(egui::Frame::none()
-                .fill(ZINC_900)
-                .stroke(egui::Stroke::new(1.0, ZINC_800))
-                .inner_margin(egui::Margin::symmetric(16.0, 12.0)))
+            .frame(
+                egui::Frame::none()
+                    .fill(ZINC_900)
+                    .stroke(egui::Stroke::new(1.0, ZINC_800))
+                    .inner_margin(egui::Margin::symmetric(16.0, 12.0)),
+            )
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     // Logo
@@ -394,9 +475,11 @@ impl eframe::App for NodeApp {
 
         // Main content
         egui::CentralPanel::default()
-            .frame(egui::Frame::none()
-                .fill(ZINC_950)
-                .inner_margin(egui::Margin::same(16.0)))
+            .frame(
+                egui::Frame::none()
+                    .fill(ZINC_950)
+                    .inner_margin(egui::Margin::same(16.0)),
+            )
             .show(ctx, |ui| {
                 match &self.state {
                     AppState::Registering => {
@@ -417,9 +500,21 @@ impl eframe::App for NodeApp {
                     AppState::Dashboard { stats } => {
                         // Tab bar with custom styling
                         ui.horizontal(|ui| {
-                            tab_button(ui, &mut self.current_tab, Tab::Status, icon(Icon::LayoutDashboard), "Status");
+                            tab_button(
+                                ui,
+                                &mut self.current_tab,
+                                Tab::Status,
+                                icon(Icon::LayoutDashboard),
+                                "Status",
+                            );
                             ui.add_space(4.0);
-                            tab_button(ui, &mut self.current_tab, Tab::Logs, icon(Icon::ScrollText), &format!("Logs ({})", self.logs.len()));
+                            tab_button(
+                                ui,
+                                &mut self.current_tab,
+                                Tab::Logs,
+                                icon(Icon::ScrollText),
+                                &format!("Logs ({})", self.logs.len()),
+                            );
                         });
 
                         ui.add_space(4.0);

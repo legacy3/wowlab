@@ -1,7 +1,6 @@
 //! Node claiming flow implementation
 
 use crate::supabase::{ApiClient, ApiError};
-use std::time::Duration;
 use uuid::Uuid;
 
 /// Get the system hostname as default node name
@@ -33,36 +32,10 @@ pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> 
     Ok((response.id, response.claim_code))
 }
 
-/// Wait for a node to be claimed by polling status
-/// Returns the node name when claimed
-pub async fn wait_for_claim(client: &ApiClient, node_id: Uuid) -> Result<String, ClaimError> {
-    loop {
-        tokio::time::sleep(Duration::from_secs(3)).await;
-
-        match client.get_status(node_id).await {
-            Ok(status) => {
-                if status.claimed {
-                    tracing::info!("Node {} claimed!", node_id);
-                    return Ok(status.name);
-                }
-                // Still pending, continue waiting
-            }
-            Err(ApiError::NotFound) => {
-                return Err(ClaimError::NodeDeleted);
-            }
-            Err(e) => {
-                tracing::warn!("Status check failed: {}", e);
-            }
-        }
-    }
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum ClaimError {
     #[error("Failed to register node: {0}")]
     RegistrationFailed(String),
-    #[error("Node was deleted before claiming")]
-    NodeDeleted,
     #[error("API error: {0}")]
     Api(#[from] ApiError),
 }

@@ -1,127 +1,208 @@
-//! Supabase Realtime WebSocket client (placeholder for future implementation)
+//! Supabase Realtime client using supabase-realtime-rs
 //!
-//! Currently uses polling for simplicity. This module can be extended to use
-//! WebSocket subscriptions for real-time chunk assignments.
-#![allow(dead_code)]
+//! Subscribes to postgres changes for node updates and chunk assignments.
 
-use futures_util::{SinkExt, StreamExt};
-use serde::{Deserialize, Serialize};
-use tokio_tungstenite::{connect_async, tungstenite::Message};
+use serde::Deserialize;
+use std::sync::Arc;
+use supabase_realtime_rs::{
+    PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload, RealtimeClient,
+    RealtimeClientOptions, RealtimeError as SbRealtimeError,
+};
+use tokio::sync::mpsc;
+use uuid::Uuid;
 
-/// Realtime event types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "event")]
+/// Events received from Realtime subscriptions
+#[derive(Debug, Clone)]
 pub enum RealtimeEvent {
-    #[serde(rename = "INSERT")]
-    Insert { new: serde_json::Value },
-    #[serde(rename = "UPDATE")]
-    Update {
-        old: serde_json::Value,
-        new: serde_json::Value,
-    },
-    #[serde(rename = "DELETE")]
-    Delete { old: serde_json::Value },
+    /// Node row was updated (claim, settings change, etc.)
+    NodeUpdated(NodePayload),
+    /// A chunk was assigned to this node
+    ChunkAssigned(ChunkPayload),
+    /// Connection established
+    Connected,
+    /// Connection lost
+    Disconnected,
+    /// Error occurred
+    Error(String),
 }
 
-/// Realtime subscription handle
-pub struct RealtimeSubscription {
-    // WebSocket connection handle
-    // This is a placeholder - actual implementation would manage the WS connection
-    _marker: std::marker::PhantomData<()>,
+/// Payload for node updates
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodePayload {
+    pub id: Uuid,
+    pub user_id: Option<String>,
+    pub name: String,
+    pub max_parallel: i32,
+    pub status: String,
+    pub claim_code: Option<String>,
 }
 
-impl RealtimeSubscription {
-    /// Create a new subscription to a table
-    pub async fn subscribe(
-        base_url: &str,
-        anon_key: &str,
-        table: &str,
-        filter: Option<&str>,
-    ) -> Result<Self, RealtimeError> {
-        // Convert HTTP URL to WebSocket URL
-        let ws_url = base_url
-            .replace("https://", "wss://")
-            .replace("http://", "ws://");
-        let ws_url = format!("{}/realtime/v1/websocket?apikey={}", ws_url, anon_key);
+/// Payload for chunk assignments
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChunkPayload {
+    pub id: Uuid,
+    pub job_id: Uuid,
+    pub node_id: Option<Uuid>,
+    pub config_hash: String,
+    pub iterations: i32,
+    pub seed_offset: i32,
+    pub status: String,
+}
 
-        tracing::info!("Connecting to Realtime: {}", ws_url);
+/// Wrapper around supabase-realtime-rs client
+pub struct SupabaseRealtime {
+    api_url: String,
+    anon_key: String,
+}
 
-        let (ws_stream, _) = connect_async(&ws_url).await?;
-        let (mut write, mut read) = ws_stream.split();
-
-        // Send join message
-        let join_msg = serde_json::json!({
-            "topic": format!("realtime:public:{}", table),
-            "event": "phx_join",
-            "payload": {
-                "config": {
-                    "postgres_changes": [{
-                        "event": "*",
-                        "schema": "public",
-                        "table": table,
-                        "filter": filter.unwrap_or("")
-                    }]
-                }
-            },
-            "ref": "1"
-        });
-
-        write
-            .send(Message::Text(join_msg.to_string()))
-            .await
-            .map_err(|e| RealtimeError::Connection(e.to_string()))?;
-
-        // Start heartbeat task
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
-            loop {
-                interval.tick().await;
-                let heartbeat = serde_json::json!({
-                    "topic": "phoenix",
-                    "event": "heartbeat",
-                    "payload": {},
-                    "ref": "heartbeat"
-                });
-                if write
-                    .send(Message::Text(heartbeat.to_string()))
-                    .await
-                    .is_err()
-                {
-                    break;
-                }
-            }
-        });
-
-        // Message handling would go here
-        tokio::spawn(async move {
-            while let Some(msg) = read.next().await {
-                match msg {
-                    Ok(Message::Text(text)) => {
-                        tracing::debug!("Realtime message: {}", text);
-                    }
-                    Ok(Message::Close(_)) => {
-                        tracing::info!("Realtime connection closed");
-                        break;
-                    }
-                    Err(e) => {
-                        tracing::error!("Realtime error: {}", e);
-                        break;
-                    }
-                    _ => {}
-                }
-            }
-        });
-
-        Ok(Self {
-            _marker: std::marker::PhantomData,
-        })
+impl SupabaseRealtime {
+    pub fn new(api_url: String, anon_key: String) -> Self {
+        Self { api_url, anon_key }
     }
+
+    fn ws_url(&self) -> String {
+        self.api_url
+            .replace("https://", "wss://")
+            .replace("http://", "ws://")
+            + "/realtime/v1"
+    }
+
+    /// Subscribe to node updates and chunk assignments
+    /// Returns a receiver for events
+    pub async fn subscribe(
+        self: Arc<Self>,
+        node_id: Uuid,
+    ) -> Result<mpsc::Receiver<RealtimeEvent>, RealtimeError> {
+        let (tx, rx) = mpsc::channel(32);
+
+        let ws_url = self.ws_url();
+        let anon_key = self.anon_key.clone();
+
+        tokio::spawn(async move {
+            if let Err(e) = run_realtime(ws_url, anon_key, node_id, tx.clone()).await {
+                tracing::error!("Realtime error: {}", e);
+                let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
+            }
+        });
+
+        Ok(rx)
+    }
+}
+
+async fn run_realtime(
+    ws_url: String,
+    anon_key: String,
+    node_id: Uuid,
+    tx: mpsc::Sender<RealtimeEvent>,
+) -> Result<(), RealtimeError> {
+    tracing::info!("Connecting to Realtime: {}", ws_url);
+
+    let client = RealtimeClient::new(
+        &ws_url,
+        RealtimeClientOptions {
+            api_key: anon_key,
+            ..Default::default()
+        },
+    )?;
+
+    client.connect().await?;
+    let _ = tx.send(RealtimeEvent::Connected).await;
+
+    // Subscribe to node updates
+    let node_channel = client
+        .channel(&format!("node:{}", node_id), Default::default())
+        .await;
+
+    let mut node_rx = node_channel
+        .on_postgres_changes(
+            PostgresChangesFilter::new(PostgresChangeEvent::All, "public")
+                .table("user_nodes")
+                .filter(&format!("id=eq.{}", node_id)),
+        )
+        .await;
+
+    node_channel.subscribe().await?;
+    tracing::info!("Subscribed to node updates");
+
+    // Subscribe to chunk assignments
+    let chunks_channel = client
+        .channel(&format!("chunks:{}", node_id), Default::default())
+        .await;
+
+    let mut chunks_rx = chunks_channel
+        .on_postgres_changes(
+            PostgresChangesFilter::new(PostgresChangeEvent::All, "public")
+                .table("sim_chunks")
+                .filter(&format!("nodeId=eq.{}", node_id)),
+        )
+        .await;
+
+    chunks_channel.subscribe().await?;
+    tracing::info!("Subscribed to chunk assignments");
+
+    // Process events from both channels
+    loop {
+        tokio::select! {
+            Some(change) = node_rx.recv() => {
+                if let Some(event) = parse_node_change(&change) {
+                    if tx.send(event).await.is_err() {
+                        break;
+                    }
+                }
+            }
+            Some(change) = chunks_rx.recv() => {
+                if let Some(event) = parse_chunk_change(&change) {
+                    if tx.send(event).await.is_err() {
+                        break;
+                    }
+                }
+            }
+            else => {
+                let _ = tx.send(RealtimeEvent::Disconnected).await;
+                break;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_node_change(change: &PostgresChangesPayload) -> Option<RealtimeEvent> {
+    let record = match change {
+        PostgresChangesPayload::Insert(p) => Some(&p.new),
+        PostgresChangesPayload::Update(p) => Some(&p.new),
+        PostgresChangesPayload::Delete(_) => None,
+    };
+
+    record.and_then(|map| {
+        // Convert HashMap to serde_json::Value for deserialization
+        let value = serde_json::to_value(map).ok()?;
+        serde_json::from_value::<NodePayload>(value)
+            .ok()
+            .map(RealtimeEvent::NodeUpdated)
+    })
+}
+
+fn parse_chunk_change(change: &PostgresChangesPayload) -> Option<RealtimeEvent> {
+    let record = match change {
+        PostgresChangesPayload::Insert(p) => Some(&p.new),
+        PostgresChangesPayload::Update(p) => Some(&p.new),
+        PostgresChangesPayload::Delete(_) => None,
+    };
+
+    record.and_then(|map| {
+        // Convert HashMap to serde_json::Value for deserialization
+        let value = serde_json::to_value(map).ok()?;
+        serde_json::from_value::<ChunkPayload>(value)
+            .ok()
+            .map(RealtimeEvent::ChunkAssigned)
+    })
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum RealtimeError {
-    #[error("WebSocket error: {0}")]
-    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
-    #[error("Connection error: {0}")]
-    Connection(String),
+    #[error("Realtime client error: {0}")]
+    Client(#[from] SbRealtimeError),
 }

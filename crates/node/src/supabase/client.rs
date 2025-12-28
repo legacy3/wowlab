@@ -19,28 +19,6 @@ pub struct RegisterResponse {
     pub claim_code: String,
 }
 
-/// Response from node-status
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StatusResponse {
-    pub id: Uuid,
-    pub user_id: Option<String>,
-    pub name: String,
-    pub status: String,
-    pub max_parallel: i32,
-    pub claimed: bool,
-}
-
-/// Response from node-heartbeat (current node state)
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HeartbeatResponse {
-    pub id: Uuid,
-    pub name: String,
-    pub max_parallel: i32,
-    pub status: String,
-}
-
 /// Response from chunk-claim (includes config)
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -109,69 +87,6 @@ impl ApiClient {
         Ok(response.json().await?)
     }
 
-    /// Get node status (check if claimed)
-    pub async fn get_status(&self, node_id: Uuid) -> Result<StatusResponse, ApiError> {
-        let url = format!("{}/functions/v1/node-status", self.api_url);
-
-        #[derive(Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct Request {
-            node_id: Uuid,
-        }
-
-        let response = self
-            .http
-            .post(&url)
-            .json(&Request { node_id })
-            .send()
-            .await?;
-
-        if response.status().as_u16() == 404 {
-            return Err(ApiError::NotFound);
-        }
-
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(ApiError::Api(error_text));
-        }
-
-        Ok(response.json().await?)
-    }
-
-    /// Send heartbeat to update node status, returns current node state
-    pub async fn heartbeat(
-        &self,
-        node_id: Uuid,
-        status: &str,
-    ) -> Result<HeartbeatResponse, ApiError> {
-        let url = format!("{}/functions/v1/node-heartbeat", self.api_url);
-
-        #[derive(Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct Request<'a> {
-            node_id: Uuid,
-            status: &'a str,
-        }
-
-        let response = self
-            .http
-            .post(&url)
-            .json(&Request { node_id, status })
-            .send()
-            .await?;
-
-        if response.status().as_u16() == 404 {
-            return Err(ApiError::NotFound);
-        }
-
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(ApiError::Api(error_text));
-        }
-
-        Ok(response.json().await?)
-    }
-
     /// Claim a chunk for processing (returns chunk data + config)
     pub async fn claim_chunk(
         &self,
@@ -227,6 +142,35 @@ impl ApiClient {
         if !response.status().is_success() {
             let error_text = response.text().await.unwrap_or_default();
             return Err(ApiError::Api(error_text));
+        }
+
+        Ok(())
+    }
+
+    /// Set node status to online (updates lastSeenAt)
+    pub async fn set_online(&self, node_id: Uuid) -> Result<(), ApiError> {
+        let url = format!("{}/functions/v1/node-heartbeat", self.api_url);
+
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Request {
+            node_id: Uuid,
+            status: &'static str,
+        }
+
+        let response = self
+            .http
+            .post(&url)
+            .json(&Request {
+                node_id,
+                status: "online",
+            })
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            // Ignore errors - node might not be claimed yet
+            tracing::debug!("set_online failed: {}", response.status());
         }
 
         Ok(())

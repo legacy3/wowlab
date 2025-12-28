@@ -6,13 +6,16 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 /// Local node configuration
-/// Settings like name and maxParallel come from the server via heartbeat
+/// Settings like name and maxParallel come from Realtime subscription
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct NodeConfig {
-    /// Unique node identifier (set after claiming)
+    /// Unique node identifier (set after registration)
     pub node_id: Option<Uuid>,
-    /// API URL (edge functions base URL)
+    /// API URL (Supabase project URL)
     pub api_url: String,
+    /// Supabase anon key for Realtime connection
+    pub anon_key: String,
 }
 
 impl Default for NodeConfig {
@@ -20,6 +23,7 @@ impl Default for NodeConfig {
         Self {
             node_id: None,
             api_url: "https://api.wowlab.gg".to_string(),
+            anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM".to_string(),
         }
     }
 }
