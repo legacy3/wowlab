@@ -15,6 +15,8 @@ TESTED BUT NOT BENEFICIAL:
 ✗ Front buffer for same-time events - 7% SLOWER (overhead > benefit)
 ✗ meta_events batching - 5% SLOWER (peek overhead eats gains, even with avg 8 events/batch)
 ✗ large_capacity preallocation - no measurable difference
+✗ RNG pool/batching - 3% SLOWER (xorshift64 already optimal, caching overhead > benefit)
+✗ RNG dual-value extraction (upper/lower 32 bits from u64) - 2.5% SLOWER (NaN check overhead)
 
 POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 
@@ -24,11 +26,6 @@ Memory layout / cache efficiency:
 - SoA (struct of arrays) for spell_states: separate arrays for cooldown_ready, charges, etc.
   (better cache locality when scanning cooldowns)
 - Remove String from SpellDef/AuraDef (use interned IDs or indices)
-
-RNG optimization:
-- Batch RNG: generate pool of random values at sim start, consume sequentially
-  (reduces RNG calls from 2+ per damage to 1 read - maybe 2-3% gain)
-- Consider faster RNG (wyrand, PCG) if xorshift64 shows up in profiles
 
 Event count reduction:
 - Minimize event count: only schedule when state actually changes
