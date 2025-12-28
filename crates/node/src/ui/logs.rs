@@ -1,16 +1,14 @@
-//! Logs view - scrolling log display
-
 use super::icons::{icon, Icon};
-use super::theme::*;
+use super::theme::{
+    card_frame, RED_500, TEXT_MUTED, TEXT_SECONDARY, YELLOW_500, ZINC_500, ZINC_600, ZINC_700,
+};
 use crate::app::{LogEntry, LogLevel};
 use std::collections::VecDeque;
 
-/// Show the scrolling logs panel
 pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>) {
     ui.add_space(8.0);
 
     card_frame().show(ui, |ui| {
-        // Header
         ui.horizontal(|ui| {
             ui.label(
                 egui::RichText::new(icon(Icon::ScrollText))
@@ -36,7 +34,6 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>) {
         ui.separator();
         ui.add_space(4.0);
 
-        // Scrollable log area
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .stick_to_bottom(true)
@@ -61,7 +58,7 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>) {
                     });
                     ui.add_space(20.0);
                 } else {
-                    for entry in logs.iter() {
+                    for entry in logs {
                         log_entry_row(ui, entry);
                     }
                 }
@@ -80,10 +77,9 @@ fn log_entry_row(ui: &mut egui::Ui, entry: &LogEntry) {
     ui.horizontal(|ui| {
         ui.add_space(4.0);
 
-        // Time
         let secs = entry.timestamp.elapsed().as_secs();
         let time_str = if secs < 60 {
-            format!("{:>2}s", secs)
+            format!("{secs:>2}s")
         } else if secs < 3600 {
             format!("{:>2}m", secs / 60)
         } else {
@@ -96,31 +92,29 @@ fn log_entry_row(ui: &mut egui::Ui, entry: &LogEntry) {
                 .monospace()
                 .color(ZINC_600),
         );
-
         ui.add_space(8.0);
-
-        // Level icon
-        ui.label(egui::RichText::new(level_icon).size(12.0).color(level_color));
-
+        ui.label(
+            egui::RichText::new(level_icon)
+                .size(12.0)
+                .color(level_color),
+        );
         ui.add_space(6.0);
 
-        // Message
         let msg_color = match entry.level {
             LogLevel::Error => RED_500,
             LogLevel::Warn => YELLOW_500,
             _ => TEXT_SECONDARY,
         };
 
-        let msg = if entry.message.len() > 60 {
-            format!("{}...", &entry.message[..57])
+        let (msg, truncated) = if entry.message.len() > 60 {
+            (format!("{}...", &entry.message[..57]), true)
         } else {
-            entry.message.clone()
+            (entry.message.clone(), false)
         };
 
         let label = ui.label(egui::RichText::new(&msg).size(12.0).color(msg_color));
 
-        // Show full message on hover if truncated
-        if entry.message.len() > 60 {
+        if truncated {
             label.on_hover_text(&entry.message);
         }
     });

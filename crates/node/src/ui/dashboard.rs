@@ -1,17 +1,15 @@
-//! Dashboard view - normal operation display
-
 use super::icons::{icon, Icon};
-use super::theme::*;
+use super::theme::{
+    card_frame, BLUE_500, BORDER, GREEN_500, RED_500, SURFACE, TEXT_MUTED, TEXT_PRIMARY,
+    YELLOW_500, ZINC_800,
+};
 use crate::app::NodeStats;
 
-/// Show the main dashboard with node statistics
-pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
+pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
     ui.add_space(12.0);
 
-    // Status card
     card_frame().show(ui, |ui| {
         ui.horizontal(|ui| {
-            // Status indicator
             ui.label(
                 egui::RichText::new(icon(Icon::Activity))
                     .color(GREEN_500)
@@ -37,10 +35,8 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
 
     ui.add_space(12.0);
 
-    // Stats grid - 2x2 layout
     ui.horizontal(|ui| {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
-            // Workers card
             stat_card(
                 ui,
                 &icon(Icon::Cpu),
@@ -52,10 +48,7 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
                     None
                 },
             );
-
             ui.add_space(8.0);
-
-            // Active jobs card
             stat_card(
                 ui,
                 &icon(Icon::Layers),
@@ -74,7 +67,6 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
 
     ui.horizontal(|ui| {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
-            // Completed card
             stat_card(
                 ui,
                 &icon(Icon::CircleCheck),
@@ -82,10 +74,7 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
                 &format_number(stats.completed_chunks),
                 None,
             );
-
             ui.add_space(8.0);
-
-            // Performance card
             stat_card(
                 ui,
                 &icon(Icon::Zap),
@@ -102,7 +91,6 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
 
     ui.add_space(16.0);
 
-    // CPU usage bar
     card_frame().show(ui, |ui| {
         ui.horizontal(|ui| {
             ui.label(
@@ -111,7 +99,11 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
                     .size(14.0),
             );
             ui.add_space(4.0);
-            ui.label(egui::RichText::new("CPU Usage").color(TEXT_MUTED).size(13.0));
+            ui.label(
+                egui::RichText::new("CPU Usage")
+                    .color(TEXT_MUTED)
+                    .size(13.0),
+            );
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.label(
@@ -126,20 +118,16 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
 
         ui.add_space(8.0);
 
-        // Custom progress bar
         let available_width = ui.available_width();
-        let (rect, _response) = ui.allocate_exact_size(
-            egui::vec2(available_width, 8.0),
-            egui::Sense::hover(),
-        );
+        let (rect, _) =
+            ui.allocate_exact_size(egui::vec2(available_width, 8.0), egui::Sense::hover());
 
-        // Background
         ui.painter().rect_filled(rect, 4.0, ZINC_800);
 
-        // Fill
         let fill_width = rect.width() * stats.cpu_usage;
         if fill_width > 0.0 {
-            let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
+            let fill_rect =
+                egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
             let fill_color = if stats.cpu_usage > 0.8 {
                 RED_500
             } else if stats.cpu_usage > 0.5 {
@@ -152,8 +140,13 @@ pub fn show(ui: &mut egui::Ui, stats: NodeStats) {
     });
 }
 
-/// Render a stat card with icon, label, and value
-fn stat_card(ui: &mut egui::Ui, icon_char: &str, label: &str, value: &str, accent: Option<egui::Color32>) {
+fn stat_card(
+    ui: &mut egui::Ui,
+    icon_char: &str,
+    label: &str,
+    value: &str,
+    accent: Option<egui::Color32>,
+) {
     let width = (ui.available_width() - 8.0) / 2.0;
 
     egui::Frame::none()
@@ -166,24 +159,15 @@ fn stat_card(ui: &mut egui::Ui, icon_char: &str, label: &str, value: &str, accen
 
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
-                    ui.label(
-                        egui::RichText::new(icon_char)
-                            .color(TEXT_MUTED)
-                            .size(14.0),
-                    );
-                    ui.label(
-                        egui::RichText::new(label)
-                            .color(TEXT_MUTED)
-                            .size(12.0),
-                    );
+                    ui.label(egui::RichText::new(icon_char).color(TEXT_MUTED).size(14.0));
+                    ui.label(egui::RichText::new(label).color(TEXT_MUTED).size(12.0));
                 });
 
                 ui.add_space(6.0);
 
-                let color = accent.unwrap_or(TEXT_PRIMARY);
                 ui.label(
                     egui::RichText::new(value)
-                        .color(color)
+                        .color(accent.unwrap_or(TEXT_PRIMARY))
                         .size(22.0)
                         .strong()
                         .monospace(),
@@ -192,7 +176,7 @@ fn stat_card(ui: &mut egui::Ui, icon_char: &str, label: &str, value: &str, accen
         });
 }
 
-/// Format large numbers with K/M suffixes
+#[allow(clippy::cast_precision_loss)]
 fn format_number(n: u64) -> String {
     if n >= 1_000_000 {
         format!("{:.1}M", n as f64 / 1_000_000.0)

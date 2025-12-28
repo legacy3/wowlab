@@ -1,14 +1,11 @@
-//! Main application state and egui App implementation
-
 use crate::{
     claim,
     config::NodeConfig,
-    supabase::{ApiClient, NodePayload, RealtimeEvent, SupabaseRealtime},
+    supabase::{ApiClient, ChunkPayload, NodePayload, RealtimeEvent, SupabaseRealtime},
     ui::{
         claim_view, dashboard,
         icons::{icon, Icon},
-        logs,
-        theme::*,
+        logs, theme,
     },
     worker::WorkerPool,
 };
@@ -20,7 +17,10 @@ use std::{
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
-/// Log entry for the scrolling log view
+const MAX_LOGS: usize = 100;
+const MAX_EVENTS_PER_FRAME: usize = 10;
+const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5 * 60);
+
 #[derive(Clone)]
 pub struct LogEntry {
     pub timestamp: Instant,
@@ -29,27 +29,14 @@ pub struct LogEntry {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-#[allow(dead_code)]
 pub enum LogLevel {
     Info,
     Warn,
     Error,
+    #[allow(dead_code)]
     Debug,
 }
 
-impl LogLevel {
-    #[allow(dead_code)]
-    pub fn color(&self) -> egui::Color32 {
-        match self {
-            LogLevel::Info => egui::Color32::WHITE,
-            LogLevel::Warn => egui::Color32::YELLOW,
-            LogLevel::Error => egui::Color32::from_rgb(255, 100, 100),
-            LogLevel::Debug => egui::Color32::GRAY,
-        }
-    }
-}
-
-/// Statistics about node operation
 #[derive(Default, Clone)]
 pub struct NodeStats {
     pub active_jobs: u32,
@@ -60,57 +47,17 @@ pub struct NodeStats {
     pub cpu_usage: f32,
 }
 
-/// Application state enum
 pub enum AppState {
-    /// Registering with server
     Registering,
-    /// Showing claim code, waiting for user to claim via Realtime
     Claiming { code: String },
-    /// Normal operation - dashboard view
-    Dashboard { stats: NodeStats },
+    Dashboard,
 }
 
-/// Connection status for the Realtime WebSocket
 #[derive(Clone, Copy, PartialEq)]
 pub enum ConnectionStatus {
     Connecting,
     Connected,
     Disconnected,
-}
-
-/// Main application struct
-pub struct NodeApp {
-    runtime: Arc<Runtime>,
-    state: AppState,
-    config: NodeConfig,
-    api: ApiClient,
-    worker_pool: WorkerPool,
-    logs: VecDeque<LogEntry>,
-    max_logs: usize,
-
-    // Async communication
-    register_rx: Option<mpsc::Receiver<RegisterResult>>,
-    realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
-    node_id: Option<uuid::Uuid>,
-
-    // UI state
-    current_tab: Tab,
-
-    // Track if we've started async tasks
-    started: bool,
-
-    // Logo texture
-    logo: Option<egui::TextureHandle>,
-
-    // Node settings (from Realtime updates)
-    node_name: String,
-    max_parallel: u32,
-
-    // Connection status
-    connection_status: ConnectionStatus,
-
-    // Heartbeat tracking (5 min interval)
-    last_heartbeat: Option<Instant>,
 }
 
 #[derive(Clone, Copy, PartialEq, Default)]
@@ -125,41 +72,46 @@ enum RegisterResult {
     Failed(String),
 }
 
+pub struct NodeApp {
+    runtime: Arc<Runtime>,
+    state: AppState,
+    config: NodeConfig,
+    api: ApiClient,
+    worker_pool: WorkerPool,
+    logs: VecDeque<LogEntry>,
+    register_rx: Option<mpsc::Receiver<RegisterResult>>,
+    realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
+    node_id: Option<uuid::Uuid>,
+    current_tab: Tab,
+    started: bool,
+    logo: Option<egui::TextureHandle>,
+    node_name: String,
+    max_parallel: u32,
+    connection_status: ConnectionStatus,
+    last_heartbeat: Option<Instant>,
+}
+
 impl NodeApp {
     pub fn new(_cc: &eframe::CreationContext<'_>, runtime: Arc<Runtime>) -> Self {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
-
-        // Use OS defaults until we get server settings via Realtime
-        let default_cores = claim::get_default_cores() as u32;
+        let default_cores = claim::get_default_cores().unsigned_abs();
 
         let state = if config.node_id.is_some() {
-            // Already registered, go to dashboard (will connect to Realtime)
-            AppState::Dashboard {
-                stats: NodeStats {
-                    max_workers: default_cores,
-                    ..Default::default()
-                },
-            }
+            AppState::Dashboard
         } else {
-            // Need to register with server
             AppState::Registering
         };
-
-        let worker_pool = WorkerPool::new(default_cores as usize);
-        let node_id = config.node_id;
 
         let mut app = Self {
             runtime,
             state,
-            config,
             api,
-            worker_pool,
-            logs: VecDeque::with_capacity(100),
-            max_logs: 100,
+            worker_pool: WorkerPool::new(default_cores as usize),
+            logs: VecDeque::with_capacity(MAX_LOGS),
             register_rx: None,
             realtime_rx: None,
-            node_id,
+            node_id: config.node_id,
             current_tab: Tab::Status,
             started: false,
             logo: None,
@@ -167,35 +119,29 @@ impl NodeApp {
             max_parallel: default_cores,
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
+            config,
         };
 
         app.log(LogLevel::Info, "WoW Lab Node started");
         app
     }
 
-    /// Start async tasks (called on first update when we're in the runtime context)
     fn start_async_tasks(&mut self) {
         if self.started {
             return;
         }
         self.started = true;
-
-        // Start the worker pool
         self.worker_pool.start(self.runtime.handle());
 
-        if let Some(node_id) = self.node_id {
-            // Already registered, connect to Realtime
-            self.start_realtime(node_id);
-        } else {
-            // Need to register first
-            self.start_registration();
+        match self.node_id {
+            Some(id) => self.start_realtime(id),
+            None => self.start_registration(),
         }
     }
 
     fn start_registration(&mut self) {
         let (tx, rx) = mpsc::channel(1);
         self.register_rx = Some(rx);
-
         let api = self.api.clone();
 
         self.runtime.spawn(async move {
@@ -216,94 +162,65 @@ impl NodeApp {
             self.config.api_url.clone(),
             self.config.anon_key.clone(),
         ));
-
-        let (tx, rx) = mpsc::channel(32);
-        self.realtime_rx = Some(rx);
-
-        let rt = self.runtime.clone();
-        rt.spawn(async move {
-            match realtime.subscribe(node_id).await {
-                Ok(mut event_rx) => {
-                    while let Some(event) = event_rx.recv().await {
-                        if tx.send(event).await.is_err() {
-                            break;
-                        }
-                    }
-                }
-                Err(e) => {
-                    tracing::error!("Failed to start Realtime: {}", e);
-                    let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
-                }
-            }
-        });
+        self.realtime_rx = Some(realtime.subscribe(node_id));
     }
 
-    pub fn log(&mut self, level: LogLevel, message: impl Into<String>) {
-        let entry = LogEntry {
+    fn log(&mut self, level: LogLevel, message: impl Into<String>) {
+        if self.logs.len() >= MAX_LOGS {
+            self.logs.pop_front();
+        }
+        self.logs.push_back(LogEntry {
             timestamp: Instant::now(),
             level,
             message: message.into(),
-        };
-
-        if self.logs.len() >= self.max_logs {
-            self.logs.pop_front();
-        }
-        self.logs.push_back(entry);
+        });
     }
 
     fn check_registration(&mut self) {
-        if let Some(ref mut rx) = self.register_rx {
-            match rx.try_recv() {
-                Ok(RegisterResult::Success { id, code }) => {
-                    self.node_id = Some(id);
-                    self.config.set_node_id(id);
-                    self.state = AppState::Claiming { code: code.clone() };
-                    self.log(LogLevel::Info, format!("Registered! Claim code: {}", code));
-                    self.register_rx = None;
+        let Some(ref mut rx) = self.register_rx else {
+            return;
+        };
 
-                    // Start Realtime to listen for claim
-                    self.start_realtime(id);
-                }
-                Ok(RegisterResult::Failed(err)) => {
-                    self.log(LogLevel::Error, format!("Registration failed: {}", err));
-                    self.register_rx = None;
-                }
-                Err(mpsc::error::TryRecvError::Empty) => {
-                    // Still waiting
-                }
-                Err(mpsc::error::TryRecvError::Disconnected) => {
-                    self.register_rx = None;
-                }
+        match rx.try_recv() {
+            Ok(RegisterResult::Success { id, code }) => {
+                self.node_id = Some(id);
+                self.config.set_node_id(id);
+                self.state = AppState::Claiming { code: code.clone() };
+                self.log(LogLevel::Info, format!("Registered! Claim code: {code}"));
+                self.register_rx = None;
+                self.start_realtime(id);
+            }
+            Ok(RegisterResult::Failed(err)) => {
+                self.log(LogLevel::Error, format!("Registration failed: {err}"));
+                self.register_rx = None;
+            }
+            Err(mpsc::error::TryRecvError::Empty) => {}
+            Err(mpsc::error::TryRecvError::Disconnected) => {
+                self.register_rx = None;
             }
         }
     }
 
     fn check_realtime_events(&mut self) {
-        // Collect events first to avoid borrow issues
-        let mut events = Vec::new();
-        let mut disconnected = false;
+        let Some(ref mut rx) = self.realtime_rx else {
+            return;
+        };
 
-        if let Some(ref mut rx) = self.realtime_rx {
-            loop {
-                match rx.try_recv() {
-                    Ok(event) => events.push(event),
-                    Err(mpsc::error::TryRecvError::Empty) => break,
-                    Err(mpsc::error::TryRecvError::Disconnected) => {
-                        disconnected = true;
-                        break;
-                    }
+        let mut events = Vec::new();
+        for _ in 0..MAX_EVENTS_PER_FRAME {
+            match rx.try_recv() {
+                Ok(event) => events.push(event),
+                Err(mpsc::error::TryRecvError::Empty) => break,
+                Err(mpsc::error::TryRecvError::Disconnected) => {
+                    self.realtime_rx = None;
+                    self.connection_status = ConnectionStatus::Disconnected;
+                    return;
                 }
             }
         }
 
-        // Process collected events
         for event in events {
             self.handle_realtime_event(event);
-        }
-
-        if disconnected {
-            self.realtime_rx = None;
-            self.connection_status = ConnectionStatus::Disconnected;
         }
     }
 
@@ -312,45 +229,56 @@ impl NodeApp {
             RealtimeEvent::Connected => {
                 self.connection_status = ConnectionStatus::Connected;
                 self.log(LogLevel::Info, "Connected to Realtime");
-                // Update status to online (sets lastSeenAt)
-                self.send_online_status();
+                self.send_heartbeat();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
-                self.log(LogLevel::Warn, "Disconnected from Realtime, reconnecting...");
-            }
-            RealtimeEvent::NodeUpdated(payload) => {
-                self.handle_node_update(payload);
-            }
-            RealtimeEvent::ChunkAssigned(payload) => {
                 self.log(
-                    LogLevel::Info,
-                    format!("Chunk assigned: {} ({} iterations)", payload.id, payload.iterations),
+                    LogLevel::Warn,
+                    "Disconnected from Realtime, reconnecting...",
                 );
-                // TODO: Queue chunk for processing
             }
+            RealtimeEvent::NodeUpdated(ref payload) => self.handle_node_update(payload),
+            RealtimeEvent::ChunkAssigned(ref payload) => self.handle_chunk_assigned(payload),
             RealtimeEvent::Error(err) => {
-                self.log(LogLevel::Error, format!("Realtime error: {}", err));
+                self.log(LogLevel::Error, format!("Realtime error: {err}"));
             }
         }
     }
 
-    fn send_online_status(&mut self) {
-        if let Some(node_id) = self.node_id {
-            self.last_heartbeat = Some(Instant::now());
-            let api = self.api.clone();
-            self.runtime.spawn(async move {
-                if let Err(e) = api.set_online(node_id).await {
-                    tracing::warn!("Failed to set online status: {}", e);
-                }
-            });
+    fn handle_node_update(&mut self, payload: &NodePayload) {
+        if payload.user_id.is_some() && matches!(self.state, AppState::Claiming { .. }) {
+            self.log(LogLevel::Info, "Node claimed successfully!");
+            self.state = AppState::Dashboard;
         }
+
+        self.node_name.clone_from(&payload.name);
+        self.max_parallel = payload.max_parallel.unsigned_abs();
     }
 
-    /// Send heartbeat every 5 minutes while connected
-    fn check_heartbeat(&mut self) {
-        const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5 * 60);
+    fn handle_chunk_assigned(&mut self, payload: &ChunkPayload) {
+        self.log(
+            LogLevel::Info,
+            format!(
+                "Chunk assigned: {} ({} iterations)",
+                payload.id, payload.iterations
+            ),
+        );
+    }
 
+    fn send_heartbeat(&mut self) {
+        let Some(node_id) = self.node_id else { return };
+        self.last_heartbeat = Some(Instant::now());
+        let api = self.api.clone();
+
+        self.runtime.spawn(async move {
+            if let Err(e) = api.set_online(node_id).await {
+                tracing::warn!("Heartbeat failed: {}", e);
+            }
+        });
+    }
+
+    fn check_heartbeat(&mut self) {
         if self.connection_status != ConnectionStatus::Connected {
             return;
         }
@@ -361,47 +289,22 @@ impl NodeApp {
         };
 
         if should_send {
-            self.send_online_status();
-        }
-    }
-
-    fn handle_node_update(&mut self, payload: NodePayload) {
-        // Check if this is a claim event (user_id became set)
-        if payload.user_id.is_some() {
-            if matches!(self.state, AppState::Claiming { .. }) {
-                // Node was just claimed!
-                self.log(LogLevel::Info, "Node claimed successfully!");
-                self.state = AppState::Dashboard {
-                    stats: NodeStats {
-                        max_workers: payload.max_parallel as u32,
-                        ..Default::default()
-                    },
-                };
-            }
-        }
-
-        // Always sync settings from server
-        self.node_name = payload.name;
-        self.max_parallel = payload.max_parallel as u32;
-
-        // Update dashboard stats if in that state
-        if let AppState::Dashboard { ref mut stats } = self.state {
-            stats.max_workers = payload.max_parallel as u32;
+            self.send_heartbeat();
         }
     }
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
         let (color, text, icon_char) = match (&self.state, self.connection_status) {
-            (AppState::Registering, _) => (ZINC_500, "Registering", icon(Icon::Loader)),
-            (AppState::Claiming { .. }, _) => (YELLOW_500, "Pending", icon(Icon::Clock)),
-            (AppState::Dashboard { .. }, ConnectionStatus::Connected) => {
-                (GREEN_500, "Online", icon(Icon::Wifi))
+            (AppState::Registering, _) => (theme::ZINC_500, "Registering", icon(Icon::Loader)),
+            (AppState::Claiming { .. }, _) => (theme::YELLOW_500, "Pending", icon(Icon::Clock)),
+            (AppState::Dashboard, ConnectionStatus::Connected) => {
+                (theme::GREEN_500, "Online", icon(Icon::Wifi))
             }
-            (AppState::Dashboard { .. }, ConnectionStatus::Connecting) => {
-                (YELLOW_500, "Connecting", icon(Icon::Loader))
+            (AppState::Dashboard, ConnectionStatus::Connecting) => {
+                (theme::YELLOW_500, "Connecting", icon(Icon::Loader))
             }
-            (AppState::Dashboard { .. }, ConnectionStatus::Disconnected) => {
-                (RED_500, "Offline", icon(Icon::WifiOff))
+            (AppState::Dashboard, ConnectionStatus::Disconnected) => {
+                (theme::RED_500, "Offline", icon(Icon::WifiOff))
             }
         };
 
@@ -416,46 +319,42 @@ impl NodeApp {
             return;
         }
 
-        let icon_bytes = include_bytes!("../assets/icon.png");
-        if let Ok(image) = image::load_from_memory(icon_bytes) {
-            let rgba = image.into_rgba8();
-            let (width, height) = (rgba.width() as usize, rgba.height() as usize);
-            let pixels = rgba.into_raw();
+        let bytes = include_bytes!("../assets/icon.png");
+        let Ok(image) = image::load_from_memory(bytes) else {
+            return;
+        };
 
-            let color_image = egui::ColorImage::from_rgba_unmultiplied([width, height], &pixels);
-            self.logo = Some(ctx.load_texture("logo", color_image, egui::TextureOptions::LINEAR));
-        }
+        let rgba = image.into_rgba8();
+        let (width, height) = (rgba.width() as usize, rgba.height() as usize);
+        let color_image =
+            egui::ColorImage::from_rgba_unmultiplied([width, height], &rgba.into_raw());
+        self.logo = Some(ctx.load_texture("logo", color_image, egui::TextureOptions::LINEAR));
+    }
+
+    fn stats(&self) -> NodeStats {
+        let mut stats = self.worker_pool.stats();
+        stats.max_workers = self.max_parallel;
+        stats
     }
 }
 
 impl eframe::App for NodeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Start async tasks on first update
         self.start_async_tasks();
-
-        // Load logo texture on first frame
         self.load_logo(ctx);
-
-        // Check for registration result
         self.check_registration();
-
-        // Check for Realtime events
         self.check_realtime_events();
-
-        // Periodic heartbeat (every 5 min)
         self.check_heartbeat();
 
-        // Top bar with status
         egui::TopBottomPanel::top("header")
             .frame(
                 egui::Frame::none()
-                    .fill(ZINC_900)
-                    .stroke(egui::Stroke::new(1.0, ZINC_800))
+                    .fill(theme::ZINC_900)
+                    .stroke(egui::Stroke::new(1.0, theme::ZINC_800))
                     .inner_margin(egui::Margin::symmetric(16.0, 12.0)),
             )
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    // Logo
                     if let Some(logo) = &self.logo {
                         ui.add(egui::Image::new(logo).fit_to_exact_size(egui::vec2(22.0, 22.0)));
                     }
@@ -464,7 +363,7 @@ impl eframe::App for NodeApp {
                         egui::RichText::new("WoW Lab Node")
                             .size(16.0)
                             .strong()
-                            .color(TEXT_PRIMARY),
+                            .color(theme::TEXT_PRIMARY),
                     );
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -473,82 +372,81 @@ impl eframe::App for NodeApp {
                 });
             });
 
-        // Main content
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::none()
-                    .fill(ZINC_950)
+                    .fill(theme::ZINC_950)
                     .inner_margin(egui::Margin::same(16.0)),
             )
-            .show(ctx, |ui| {
-                match &self.state {
-                    AppState::Registering => {
-                        ui.vertical_centered(|ui| {
-                            ui.add_space(60.0);
-                            ui.add(egui::widgets::Spinner::new().size(32.0).color(GREEN_500));
-                            ui.add_space(16.0);
-                            ui.label(
-                                egui::RichText::new("Connecting to server ...")
-                                    .size(14.0)
-                                    .color(TEXT_MUTED),
-                            );
-                        });
-                    }
-                    AppState::Claiming { code } => {
-                        claim_view::show(ui, code);
-                    }
-                    AppState::Dashboard { stats } => {
-                        // Tab bar with custom styling
-                        ui.horizontal(|ui| {
-                            tab_button(
-                                ui,
-                                &mut self.current_tab,
-                                Tab::Status,
-                                icon(Icon::LayoutDashboard),
-                                "Status",
-                            );
-                            ui.add_space(4.0);
-                            tab_button(
-                                ui,
-                                &mut self.current_tab,
-                                Tab::Logs,
-                                icon(Icon::ScrollText),
-                                &format!("Logs ({})", self.logs.len()),
-                            );
-                        });
-
+            .show(ctx, |ui| match &self.state {
+                AppState::Registering => {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(60.0);
+                        ui.add(
+                            egui::widgets::Spinner::new()
+                                .size(32.0)
+                                .color(theme::GREEN_500),
+                        );
+                        ui.add_space(16.0);
+                        ui.label(
+                            egui::RichText::new("Connecting to server...")
+                                .size(14.0)
+                                .color(theme::TEXT_MUTED),
+                        );
+                    });
+                }
+                AppState::Claiming { code } => {
+                    claim_view::show(ui, code);
+                }
+                AppState::Dashboard => {
+                    ui.horizontal(|ui| {
+                        tab_button(
+                            ui,
+                            &mut self.current_tab,
+                            Tab::Status,
+                            &icon(Icon::LayoutDashboard),
+                            "Status",
+                        );
                         ui.add_space(4.0);
+                        let logs_label = format!("Logs ({})", self.logs.len());
+                        tab_button(
+                            ui,
+                            &mut self.current_tab,
+                            Tab::Logs,
+                            &icon(Icon::ScrollText),
+                            &logs_label,
+                        );
+                    });
 
-                        match self.current_tab {
-                            Tab::Status => dashboard::show(ui, stats.clone()),
-                            Tab::Logs => logs::show(ui, &self.logs),
-                        }
+                    ui.add_space(4.0);
+
+                    match self.current_tab {
+                        Tab::Status => dashboard::show(ui, &self.stats()),
+                        Tab::Logs => logs::show(ui, &self.logs),
                     }
                 }
             });
 
-        // Request repaint for real-time updates
         ctx.request_repaint_after(Duration::from_millis(100));
     }
 }
 
-/// Custom tab button with icon
-fn tab_button(ui: &mut egui::Ui, current: &mut Tab, tab: Tab, icon_char: String, label: &str) {
+fn tab_button(ui: &mut egui::Ui, current: &mut Tab, tab: Tab, icon_char: &str, label: &str) {
     let is_active = *current == tab;
     let (bg, text_color) = if is_active {
-        (ZINC_800, TEXT_PRIMARY)
+        (theme::ZINC_800, theme::TEXT_PRIMARY)
     } else {
-        (egui::Color32::TRANSPARENT, TEXT_MUTED)
+        (egui::Color32::TRANSPARENT, theme::TEXT_MUTED)
     };
 
     let button = egui::Button::new(
-        egui::RichText::new(format!("{}  {}", icon_char, label))
+        egui::RichText::new(format!("{icon_char}  {label}"))
             .size(13.0)
             .color(text_color),
     )
     .fill(bg)
     .stroke(if is_active {
-        egui::Stroke::new(1.0, ZINC_700)
+        egui::Stroke::new(1.0, theme::ZINC_700)
     } else {
         egui::Stroke::NONE
     })

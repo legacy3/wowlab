@@ -1,5 +1,3 @@
-//! UI module - egui view components
-
 pub mod claim_view;
 pub mod dashboard;
 pub mod icons;

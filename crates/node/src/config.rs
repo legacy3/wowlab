@@ -1,81 +1,116 @@
-//! Node configuration persistence
-
+use config::{Config, File, FileFormat};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+use std::fmt::Write;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-/// Local node configuration
-/// Settings like name and maxParallel come from Realtime subscription
+const DEFAULT_API_URL: &str = "https://api.wowlab.gg";
+const DEFAULT_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM";
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+struct ConfigFile {
+    #[serde(default)]
+    node: NodeConfig,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
 pub struct NodeConfig {
-    /// Unique node identifier (set after registration)
+    #[serde(default)]
     pub node_id: Option<Uuid>,
-    /// API URL (Supabase project URL)
+    #[serde(default = "default_api_url")]
     pub api_url: String,
-    /// Supabase anon key for Realtime connection
+    #[serde(default = "default_anon_key")]
     pub anon_key: String,
+}
+
+fn default_api_url() -> String {
+    DEFAULT_API_URL.to_string()
+}
+
+fn default_anon_key() -> String {
+    DEFAULT_ANON_KEY.to_string()
 }
 
 impl Default for NodeConfig {
     fn default() -> Self {
         Self {
             node_id: None,
-            api_url: "https://api.wowlab.gg".to_string(),
-            anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM".to_string(),
+            api_url: default_api_url(),
+            anon_key: default_anon_key(),
         }
     }
 }
 
 impl NodeConfig {
-    /// Get the config file path
     fn config_path() -> Option<PathBuf> {
         ProjectDirs::from("gg", "wowlab", "wowlab-node")
-            .map(|dirs| dirs.config_dir().join("config.json"))
+            .map(|dirs| dirs.config_dir().join("config.ini"))
     }
 
-    /// Load config from disk or create default
     pub fn load_or_create() -> Self {
-        if let Some(path) = Self::config_path() {
-            if path.exists() {
-                if let Ok(contents) = std::fs::read_to_string(&path) {
-                    if let Ok(config) = serde_json::from_str(&contents) {
-                        tracing::info!("Loaded config from {:?}", path);
-                        return config;
-                    }
-                }
-            }
+        let Some(path) = Self::config_path() else {
+            tracing::warn!("Could not determine config directory");
+            return Self::default();
+        };
+
+        if !path.exists() {
+            let config = Self::default();
+            config.save();
+            return config;
         }
 
-        let config = Self::default();
-        config.save();
-        config
-    }
-
-    /// Save config to disk
-    pub fn save(&self) {
-        if let Some(path) = Self::config_path() {
-            if let Some(parent) = path.parent() {
-                let _ = std::fs::create_dir_all(parent);
-            }
-
-            match serde_json::to_string_pretty(self) {
-                Ok(contents) => {
-                    if let Err(e) = std::fs::write(&path, contents) {
-                        tracing::error!("Failed to save config: {}", e);
-                    } else {
-                        tracing::info!("Saved config to {:?}", path);
-                    }
+        match Config::builder()
+            .add_source(File::new(path.to_str().unwrap_or(""), FileFormat::Ini))
+            .build()
+        {
+            Ok(settings) => match settings.try_deserialize::<ConfigFile>() {
+                Ok(file) => {
+                    tracing::info!("Loaded config from {:?}", path);
+                    file.node
                 }
                 Err(e) => {
-                    tracing::error!("Failed to serialize config: {}", e);
+                    tracing::error!("Invalid config at {:?}: {}. Creating backup.", path, e);
+                    let backup = path.with_extension("ini.bak");
+                    let _ = std::fs::rename(&path, &backup);
+                    let config = Self::default();
+                    config.save();
+                    config
                 }
+            },
+            Err(e) => {
+                tracing::error!("Failed to read config at {:?}: {}", path, e);
+                let config = Self::default();
+                config.save();
+                config
             }
         }
     }
 
-    /// Update the node ID after claiming
+    pub fn save(&self) {
+        let Some(path) = Self::config_path() else {
+            return;
+        };
+
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+
+        let mut content = String::new();
+        content.push_str("[node]\n");
+
+        if let Some(id) = &self.node_id {
+            let _ = writeln!(content, "node_id = {id}");
+        }
+
+        let _ = writeln!(content, "api_url = {}", self.api_url);
+        let _ = writeln!(content, "anon_key = {}", self.anon_key);
+
+        if let Err(e) = std::fs::write(&path, content) {
+            tracing::error!("Failed to save config: {}", e);
+        }
+    }
+
     pub fn set_node_id(&mut self, id: Uuid) {
         self.node_id = Some(id);
         self.save();

@@ -9,36 +9,21 @@ name = "node"
 path = "src/main.rs"
 
 [dependencies]
-# Note: engine crate is WASM-only, so we use a mock runner for now
-# engine = { path = "../engine" }
-
-# GUI
 eframe = "0.29"
 egui = "0.29"
-
-# Async runtime
 tokio = { version = "1", features = ["full"] }
-
-# HTTP & WebSocket
 reqwest = { version = "0.12", features = ["json"] }
 supabase-realtime-rs = "0.1"
-
-# Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-# Utils
-sha2 = "0.10"
+config = { version = "0.14", features = ["ini"] }
 directories = "5"
 uuid = { version = "1", features = ["v4", "serde"] }
 hostname = "0.4"
 num_cpus = "1.16"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-rand = "0.8"
-lru = "0.12"
 thiserror = "2.0"
-chrono = { version = "0.4", features = ["serde"] }
 open = "5"
 image = { version = "0.25", default-features = false, features = ["png"] }
 lucide-icons = "0.562"
@@ -46,6 +31,3 @@ lucide-icons = "0.562"
 [profile.release]
 opt-level = 3
 lto = true
-#strip = true
-#codegen-units = 1
-#panic = "abort"
