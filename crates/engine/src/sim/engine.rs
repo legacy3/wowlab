@@ -1,12 +1,14 @@
 /*
-OPTIMIZATION NOTES (benchmarked with ~9300 events/sim):
+OPTIMIZATION NOTES (benchmarked with ~9300 events/sim, ~13K sims/sec = 120M events/sec):
 
 IMPLEMENTED:
-✓ dary_heap::BinaryHeap - default, allows swapping to quaternary for testing
+✓ Timing wheel with bitmap - O(1) slot lookup via 64-word bitmap + trailing_zeros()
 ✓ Inline function calls for event handlers (#[inline(always)])
 ✓ Cache-friendly struct layouts with #[repr(C)]
 ✓ Lazy resource regeneration (compute on demand)
 ✓ Smart wake-up scheduling (avoid busy-looping)
+✓ Precomputed stats (ap_normalized, crit_chance, vers_mult, haste_mult)
+✓ Unchecked array indexing in hot path (record_damage)
 
 TESTED BUT NOT BENEFICIAL:
 ✗ Quaternary (4-ary) heap - 36% SLOWER than binary heap
@@ -14,12 +16,38 @@ TESTED BUT NOT BENEFICIAL:
 ✗ meta_events batching - 5% SLOWER (peek overhead eats gains, even with avg 8 events/batch)
 ✗ large_capacity preallocation - no measurable difference
 
-POTENTIAL FUTURE OPTIMIZATIONS:
+POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
+
+Memory layout / cache efficiency:
+- Replace Vecs with fixed-size arrays: spells[8], auras[16], spell_states[8], etc.
+  (eliminates pointer indirection on every access - likely 5-10% gain)
+- SoA (struct of arrays) for spell_states: separate arrays for cooldown_ready, charges, etc.
+  (better cache locality when scanning cooldowns)
+- Remove String from SpellDef/AuraDef (use interned IDs or indices)
+
+RNG optimization:
+- Batch RNG: generate pool of random values at sim start, consume sequentially
+  (reduces RNG calls from 2+ per damage to 1 read - maybe 2-3% gain)
+- Consider faster RNG (wyrand, PCG) if xorshift64 shows up in profiles
+
+Event count reduction:
 - Minimize event count: only schedule when state actually changes
-- Bulk process periodic effects (auras, dots) in dedicated tick handlers
+- Bulk process periodic effects: single "tick" event processes all active auras
+- Combine auto-attack + pet attack into single "attacks" event
 - Use single event per actor/entity per tick (batch status, procs, damage)
-- Bump arena allocation if heap alloc becomes bottleneck in WASM
+
+Float precision:
+- Keep damage accumulation as f32 (avoid f32→f64 conversions in hot path)
+- Use integer damage (multiply by 100, store as u64) for perfect reproducibility
+
+Event dispatch:
+- Jump table for event dispatch instead of match (compiler may already do this)
+- Order match arms by frequency (GcdReady first, then AuraTick, AutoAttack)
+
+WASM-specific:
 - Profile in WASM specifically - may have different hotspots
+- Bump arena allocation if heap alloc becomes bottleneck in WASM
+- Consider SIMD for batch damage calculations (if available in WASM target)
 */
 
 //! High-performance simulation engine with optimized event processing.
