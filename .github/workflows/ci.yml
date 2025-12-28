@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-ts:
+    name: Build TypeScript
     runs-on: ubuntu-latest
 
     steps:
@@ -30,3 +31,33 @@ jobs:
 
       - name: Build packages only
         run: pnpm -r --filter './packages/**' build
+
+  build-rust:
+    name: Build Rust
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+
+      - name: Build engine crate
+        run: cargo build --release --manifest-path crates/engine/Cargo.toml
+
+      - name: Build node crate
+        run: cargo build --release --manifest-path crates/node/Cargo.toml
+
+      - name: Run engine tests
+        run: cargo test --manifest-path crates/engine/Cargo.toml
