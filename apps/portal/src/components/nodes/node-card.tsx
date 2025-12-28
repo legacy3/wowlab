@@ -10,31 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import type { Node } from "@/hooks/nodes/types";
+import type { UserNode } from "@/hooks/nodes/types";
 import { NodeStatusBadge } from "./node-status-badge";
+import { formatRelativeToNow } from "@/lib/format";
 
 interface NodeCardProps {
-  node: Node;
+  node: UserNode;
 }
 
 export function NodeCard({ node }: NodeCardProps) {
-  const formatLastSeen = (dateString: string | null) => {
-    if (!dateString) return "Never";
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -47,11 +31,13 @@ export function NodeCard({ node }: NodeCardProps) {
         <dl className="grid gap-1 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Max parallel:</dt>
-            <dd className="font-medium">{node.max_parallel}</dd>
+            <dd className="font-medium">{node.maxParallel}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Last seen:</dt>
-            <dd className="font-medium">{formatLastSeen(node.last_seen_at)}</dd>
+            <dd className="font-medium">
+              {node.lastSeenAt ? formatRelativeToNow(node.lastSeenAt) : "Never"}
+            </dd>
           </div>
           {node.version && (
             <div className="flex justify-between">

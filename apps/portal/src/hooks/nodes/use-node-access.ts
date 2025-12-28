@@ -1,17 +1,17 @@
 "use client";
 
 import { useList, useCreate, useInvalidate } from "@refinedev/core";
-import type { NodeAccess } from "./types";
+import type { UserNodePermission, AccessType } from "./types";
 
-type AccessType = "owner" | "friends" | "guild" | "public";
+type UIAccessType = "owner" | "friends" | "guild" | "public";
 
 /**
  * Hook to get node access settings
  */
 export function useNodeAccess(nodeId: string) {
-  const { result, query } = useList<NodeAccess>({
-    resource: "node_access",
-    filters: [{ field: "node_id", operator: "eq", value: nodeId }],
+  const { result, query } = useList<UserNodePermission>({
+    resource: "user_nodes_permissions",
+    filters: [{ field: "nodeId", operator: "eq", value: nodeId }],
     queryOptions: {
       enabled: !!nodeId,
     },
@@ -22,11 +22,11 @@ export function useNodeAccess(nodeId: string) {
   const accessList = result?.data ?? [];
 
   // Find highest priority access type
-  const hasPublic = accessList.some((a) => a.access_type === "public");
-  const hasGuild = accessList.some((a) => a.access_type === "guild");
-  const hasFriends = accessList.some((a) => a.access_type === "user");
+  const hasPublic = accessList.some((a) => a.accessType === "public");
+  const hasGuild = accessList.some((a) => a.accessType === "guild");
+  const hasFriends = accessList.some((a) => a.accessType === "user");
 
-  let accessType: AccessType = "owner";
+  let accessType: UIAccessType = "owner";
   if (hasPublic) {
     accessType = "public";
   } else if (hasGuild) {
@@ -50,29 +50,29 @@ export function useNodeAccess(nodeId: string) {
  */
 export function useUpdateNodeAccess() {
   const invalidate = useInvalidate();
-  const { mutateAsync, mutation } = useCreate<NodeAccess>();
+  const { mutateAsync, mutation } = useCreate<UserNodePermission>();
 
   const updateAccess = async (params: {
     nodeId: string;
-    accessType: AccessType;
+    accessType: UIAccessType;
   }) => {
     // For simplicity, we create a new access entry
     // In production, this should be an RPC function for atomicity
 
-    const newAccessType =
+    const newAccessType: AccessType =
       params.accessType === "friends" ? "user" : params.accessType;
 
     await mutateAsync({
-      resource: "node_access",
+      resource: "user_nodes_permissions",
       values: {
-        node_id: params.nodeId,
-        access_type: newAccessType,
-        target_id: null,
-      } as unknown as NodeAccess,
+        nodeId: params.nodeId,
+        accessType: newAccessType,
+        targetId: null,
+      } as unknown as UserNodePermission,
     });
 
     invalidate({
-      resource: "node_access",
+      resource: "user_nodes_permissions",
       invalidates: ["list"],
     });
   };

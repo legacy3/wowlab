@@ -17,6 +17,7 @@ import type { UserIdentity } from "@/lib/supabase/types";
 import { useNode, useDeleteNode } from "@/hooks/nodes";
 import { NodeStatusBadge } from "./node-status-badge";
 import { NodeAccessSettings } from "./node-access-settings";
+import { formatRelativeToNow, formatDate } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,11 +76,6 @@ export function NodeDetailPage({ nodeId }: NodeDetailPageProps) {
     deleteNode(nodeId);
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Never";
-    return new Date(dateString).toLocaleString();
-  };
-
   return (
     <div className="space-y-6">
       {/* Back Navigation */}
@@ -99,7 +95,10 @@ export function NodeDetailPage({ nodeId }: NodeDetailPageProps) {
               <div>
                 <CardTitle>{node.name}</CardTitle>
                 <CardDescription className="mt-1">
-                  Last seen: {formatDate(node.last_seen_at)}
+                  Last seen:{" "}
+                  {node.lastSeenAt
+                    ? formatRelativeToNow(node.lastSeenAt)
+                    : "Never"}
                 </CardDescription>
               </div>
             </div>
@@ -141,7 +140,7 @@ export function NodeDetailPage({ nodeId }: NodeDetailPageProps) {
               <dt className="text-sm font-medium text-muted-foreground">
                 Max Parallel
               </dt>
-              <dd className="mt-1">{node.max_parallel} workers</dd>
+              <dd className="mt-1">{node.maxParallel} workers</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-muted-foreground">
@@ -153,7 +152,9 @@ export function NodeDetailPage({ nodeId }: NodeDetailPageProps) {
               <dt className="text-sm font-medium text-muted-foreground">
                 Created
               </dt>
-              <dd className="mt-1">{formatDate(node.created_at)}</dd>
+              <dd className="mt-1">
+                {node.createdAt ? formatDate(node.createdAt, "PP") : "Unknown"}
+              </dd>
             </div>
           </dl>
         </CardContent>

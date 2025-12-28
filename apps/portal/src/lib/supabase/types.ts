@@ -29,58 +29,46 @@ export type RotationInsert =
 export type RotationUpdate =
   Database["public"]["Tables"]["rotations"]["Update"];
 
-// Node types (until database schema is created)
-export interface Node {
-  id: string;
-  user_id: string;
-  name: string;
-  claim_code: string | null;
-  max_parallel: number;
-  status: "pending" | "online" | "offline";
-  last_seen_at: string | null;
-  version: string | null;
-  created_at: string;
-  // Extended fields for available nodes
-  access_type?: string;
-  owner_name?: string;
-}
+// Node types
+export type UserNode = Database["public"]["Tables"]["user_nodes"]["Row"];
+export type UserNodeInsert =
+  Database["public"]["Tables"]["user_nodes"]["Insert"];
+export type UserNodeUpdate =
+  Database["public"]["Tables"]["user_nodes"]["Update"];
 
-export interface NodeAccess {
-  id: string;
-  node_id: string;
-  access_type: "owner" | "user" | "guild" | "public";
-  target_id: string | null;
-  created_at: string;
-}
+export type UserNodePermission =
+  Database["public"]["Tables"]["user_nodes_permissions"]["Row"];
+export type UserNodePermissionInsert =
+  Database["public"]["Tables"]["user_nodes_permissions"]["Insert"];
 
-export interface SimConfig {
-  hash: string;
-  config: unknown;
-  created_at: string;
-  last_used_at: string;
-}
+// Simulation types
+export type SimConfig = Database["public"]["Tables"]["sim_configs"]["Row"];
+export type SimConfigInsert =
+  Database["public"]["Tables"]["sim_configs"]["Insert"];
 
-export interface SimJob {
-  id: string;
-  user_id: string;
-  config_hash: string;
-  total_iterations: number;
-  completed_iterations: number;
-  status: "pending" | "running" | "completed" | "failed";
-  result: unknown | null;
-  created_at: string;
-  completed_at: string | null;
-}
+export type SimJob = Database["public"]["Tables"]["sim_jobs"]["Row"];
+export type SimJobInsert = Database["public"]["Tables"]["sim_jobs"]["Insert"];
+export type SimJobUpdate = Database["public"]["Tables"]["sim_jobs"]["Update"];
 
-export interface SimChunk {
-  id: string;
-  job_id: string;
-  node_id: string | null;
-  config_hash: string;
-  iterations: number;
-  seed_offset: number;
-  status: "pending" | "claimed" | "running" | "completed" | "failed";
-  result: unknown | null;
-  claimed_at: string | null;
-  completed_at: string | null;
+export type SimChunk = Database["public"]["Tables"]["sim_chunks"]["Row"];
+export type SimChunkInsert =
+  Database["public"]["Tables"]["sim_chunks"]["Insert"];
+export type SimChunkUpdate =
+  Database["public"]["Tables"]["sim_chunks"]["Update"];
+
+// Status enums for better type safety
+export type NodeStatus = "pending" | "online" | "offline";
+export type AccessType = "owner" | "user" | "guild" | "public";
+export type JobStatus = "pending" | "running" | "completed" | "failed";
+export type ChunkStatus =
+  | "pending"
+  | "claimed"
+  | "running"
+  | "completed"
+  | "failed";
+
+// Extended node type with optional joined fields
+export interface UserNodeWithAccess extends UserNode {
+  accessType?: AccessType;
+  ownerName?: string;
 }

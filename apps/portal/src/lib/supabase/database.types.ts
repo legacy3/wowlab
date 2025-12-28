@@ -229,6 +229,200 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_nodes: {
+        Row: {
+          claimCode: string | null;
+          createdAt: string;
+          id: string;
+          lastSeenAt: string | null;
+          maxParallel: number;
+          name: string;
+          status: string;
+          userId: string | null;
+          version: string | null;
+        };
+        Insert: {
+          claimCode?: string | null;
+          createdAt?: string;
+          id?: string;
+          lastSeenAt?: string | null;
+          maxParallel?: number;
+          name?: string;
+          status?: string;
+          userId?: string | null;
+          version?: string | null;
+        };
+        Update: {
+          claimCode?: string | null;
+          createdAt?: string;
+          id?: string;
+          lastSeenAt?: string | null;
+          maxParallel?: number;
+          name?: string;
+          status?: string;
+          userId?: string | null;
+          version?: string | null;
+        };
+        Relationships: [];
+      };
+      user_nodes_permissions: {
+        Row: {
+          accessType: string;
+          createdAt: string;
+          id: string;
+          nodeId: string;
+          targetId: string | null;
+        };
+        Insert: {
+          accessType: string;
+          createdAt?: string;
+          id?: string;
+          nodeId: string;
+          targetId?: string | null;
+        };
+        Update: {
+          accessType?: string;
+          createdAt?: string;
+          id?: string;
+          nodeId?: string;
+          targetId?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_nodes_permissions_nodeId_fkey";
+            columns: ["nodeId"];
+            isOneToOne: false;
+            referencedRelation: "user_nodes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sim_configs: {
+        Row: {
+          config: Json;
+          createdAt: string;
+          hash: string;
+          lastUsedAt: string;
+        };
+        Insert: {
+          config: Json;
+          createdAt?: string;
+          hash: string;
+          lastUsedAt?: string;
+        };
+        Update: {
+          config?: Json;
+          createdAt?: string;
+          hash?: string;
+          lastUsedAt?: string;
+        };
+        Relationships: [];
+      };
+      sim_jobs: {
+        Row: {
+          completedAt: string | null;
+          completedIterations: number;
+          configHash: string;
+          createdAt: string;
+          id: string;
+          result: Json | null;
+          status: string;
+          totalIterations: number;
+          userId: string;
+        };
+        Insert: {
+          completedAt?: string | null;
+          completedIterations?: number;
+          configHash: string;
+          createdAt?: string;
+          id?: string;
+          result?: Json | null;
+          status?: string;
+          totalIterations: number;
+          userId: string;
+        };
+        Update: {
+          completedAt?: string | null;
+          completedIterations?: number;
+          configHash?: string;
+          createdAt?: string;
+          id?: string;
+          result?: Json | null;
+          status?: string;
+          totalIterations?: number;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sim_jobs_configHash_fkey";
+            columns: ["configHash"];
+            isOneToOne: false;
+            referencedRelation: "sim_configs";
+            referencedColumns: ["hash"];
+          },
+        ];
+      };
+      sim_chunks: {
+        Row: {
+          claimedAt: string | null;
+          completedAt: string | null;
+          configHash: string;
+          id: string;
+          iterations: number;
+          jobId: string;
+          nodeId: string | null;
+          result: Json | null;
+          seedOffset: number;
+          status: string;
+        };
+        Insert: {
+          claimedAt?: string | null;
+          completedAt?: string | null;
+          configHash: string;
+          id?: string;
+          iterations: number;
+          jobId: string;
+          nodeId?: string | null;
+          result?: Json | null;
+          seedOffset: number;
+          status?: string;
+        };
+        Update: {
+          claimedAt?: string | null;
+          completedAt?: string | null;
+          configHash?: string;
+          id?: string;
+          iterations?: number;
+          jobId?: string;
+          nodeId?: string | null;
+          result?: Json | null;
+          seedOffset?: number;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sim_chunks_configHash_fkey";
+            columns: ["configHash"];
+            isOneToOne: false;
+            referencedRelation: "sim_configs";
+            referencedColumns: ["hash"];
+          },
+          {
+            foreignKeyName: "sim_chunks_jobId_fkey";
+            columns: ["jobId"];
+            isOneToOne: false;
+            referencedRelation: "sim_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sim_chunks_nodeId_fkey";
+            columns: ["nodeId"];
+            isOneToOne: false;
+            referencedRelation: "user_nodes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       // Materialized view - hardcoded VALUES, all columns non-null

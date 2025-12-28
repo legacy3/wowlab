@@ -2,12 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Node } from "@/hooks/nodes/types";
+import type { UserNodeWithAccess } from "@/hooks/nodes/types";
 import { NodeStatusBadge } from "./node-status-badge";
 import { Globe, User, Users } from "lucide-react";
 
 interface AvailableNodesListProps {
-  nodes: Node[];
+  nodes: UserNodeWithAccess[];
 }
 
 export function AvailableNodesList({ nodes }: AvailableNodesListProps) {
@@ -15,11 +15,14 @@ export function AvailableNodesList({ nodes }: AvailableNodesListProps) {
     switch (accessType) {
       case "public":
         return <Globe className="h-3 w-3" />;
+
       case "guild":
         return <Users className="h-3 w-3" />;
+
       case "friends":
       case "user":
         return <User className="h-3 w-3" />;
+
       default:
         return null;
     }
@@ -29,12 +32,16 @@ export function AvailableNodesList({ nodes }: AvailableNodesListProps) {
     switch (accessType) {
       case "public":
         return "Public";
+
       case "guild":
         return "Guild";
+
       case "friends":
         return "Friend";
+
       case "user":
         return "Shared";
+
       default:
         return "Shared";
     }
@@ -51,8 +58,8 @@ export function AvailableNodesList({ nodes }: AvailableNodesListProps) {
                 <CardTitle className="text-lg">{node.name}</CardTitle>
               </div>
               <Badge variant="outline" className="flex items-center gap-1">
-                {getAccessIcon(node.access_type)}
-                {getAccessLabel(node.access_type)}
+                {getAccessIcon(node.accessType)}
+                {getAccessLabel(node.accessType)}
               </Badge>
             </div>
           </CardHeader>
@@ -60,12 +67,12 @@ export function AvailableNodesList({ nodes }: AvailableNodesListProps) {
             <dl className="grid gap-1 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Max parallel:</dt>
-                <dd className="font-medium">{node.max_parallel}</dd>
+                <dd className="font-medium">{node.maxParallel}</dd>
               </div>
-              {node.owner_name && (
+              {node.ownerName && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Owner:</dt>
-                  <dd className="font-medium">{node.owner_name}</dd>
+                  <dd className="font-medium">{node.ownerName}</dd>
                 </div>
               )}
             </dl>

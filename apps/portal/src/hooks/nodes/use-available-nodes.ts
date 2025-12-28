@@ -1,7 +1,7 @@
 "use client";
 
 import { useList, useGetIdentity } from "@refinedev/core";
-import type { Node } from "./types";
+import type { UserNode } from "./types";
 import type { UserIdentity } from "@/lib/supabase/types";
 
 /**
@@ -15,8 +15,8 @@ export function useAvailableNodes() {
 
   // For now, we query public nodes only
   // A full implementation would use an RPC function to resolve all access types
-  const { result, query } = useList<Node>({
-    resource: "nodes",
+  const { result, query } = useList<UserNode>({
+    resource: "user_nodes",
     // This is a simplified query - production would use a view or function
     queryOptions: {
       enabled: !!identity?.id,
@@ -25,7 +25,7 @@ export function useAvailableNodes() {
 
   // Filter to only include nodes the user doesn't own
   const availableNodes = (result?.data ?? []).filter(
-    (node) => node.user_id !== identity?.id,
+    (node) => node.userId !== identity?.id,
   );
 
   return {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCreate, useGetIdentity, useInvalidate } from "@refinedev/core";
-import type { Node } from "./types";
+import { useUpdate, useGetIdentity, useInvalidate } from "@refinedev/core";
+import type { UserNode } from "./types";
 import type { UserIdentity } from "@/lib/supabase/types";
+import { createClient } from "@/lib/supabase/client";
 
 interface ClaimNodeParams {
   code: string;
@@ -11,20 +12,16 @@ interface ClaimNodeParams {
 
 /**
  * Hook to claim a node with a claim code
- *
- * Note: This is a simplified implementation. In production, this would
- * call an RPC function that atomically finds and claims the node.
  */
 export function useClaimNode() {
   const { data: identity } = useGetIdentity<UserIdentity>();
   const invalidate = useInvalidate();
-
-  const { mutateAsync, mutation } = useCreate<Node>();
+  const { mutateAsync, mutation } = useUpdate<UserNode>();
 
   const claimNode = async (
     params: ClaimNodeParams,
     options?: {
-      onSuccess?: (node: Node) => void;
+      onSuccess?: (node: UserNode) => void;
       onError?: (error: unknown) => void;
     },
   ) => {
@@ -34,23 +31,35 @@ export function useClaimNode() {
     }
 
     try {
-      // In production, this would be an RPC call like:
-      // supabase.rpc('claim_node', { code: params.code, name: params.name })
-      //
-      // For now, we simulate by creating a placeholder - the actual claim
-      // logic would be handled server-side
+      const supabase = createClient();
+
+      // Find the pending node by claim code
+      const { data: pendingNode, error: findError } = await supabase
+        .from("user_nodes")
+        .select("id")
+        .eq("claimCode", params.code.toUpperCase())
+        .eq("status", "pending")
+        .is("userId", null)
+        .single();
+
+      if (findError || !pendingNode) {
+        throw new Error("Invalid or expired claim code");
+      }
+
+      // Claim the node by setting userId and clearing claimCode
       const result = await mutateAsync({
-        resource: "nodes",
+        resource: "user_nodes",
+        id: pendingNode.id,
         values: {
-          user_id: identity.id,
+          userId: identity.id,
           name: params.name || `Node-${params.code}`,
-          status: "pending",
-          max_parallel: 4,
+          claimCode: null,
+          status: "online",
         },
       });
 
       invalidate({
-        resource: "nodes",
+        resource: "user_nodes",
         invalidates: ["list"],
       });
 

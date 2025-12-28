@@ -1,11 +1,11 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Node } from "@/hooks/nodes/types";
+import type { UserNode } from "@/hooks/nodes/types";
 import { NodeCard } from "./node-card";
 
 interface NodesListProps {
-  nodes: Node[];
+  nodes: UserNode[];
 }
 
 export function NodesList({ nodes }: NodesListProps) {

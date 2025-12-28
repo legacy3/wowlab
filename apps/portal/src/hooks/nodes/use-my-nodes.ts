@@ -1,7 +1,7 @@
 "use client";
 
 import { useList, useGetIdentity } from "@refinedev/core";
-import type { Node } from "./types";
+import type { UserNode } from "./types";
 import type { UserIdentity } from "@/lib/supabase/types";
 
 /**
@@ -10,10 +10,10 @@ import type { UserIdentity } from "@/lib/supabase/types";
 export function useMyNodes() {
   const { data: identity } = useGetIdentity<UserIdentity>();
 
-  const { result, query } = useList<Node>({
-    resource: "nodes",
-    filters: [{ field: "user_id", operator: "eq", value: identity?.id }],
-    sorters: [{ field: "created_at", order: "desc" }],
+  const { result, query } = useList<UserNode>({
+    resource: "user_nodes",
+    filters: [{ field: "userId", operator: "eq", value: identity?.id }],
+    sorters: [{ field: "createdAt", order: "desc" }],
     queryOptions: {
       enabled: !!identity?.id,
     },

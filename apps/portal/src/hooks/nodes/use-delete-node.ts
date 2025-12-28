@@ -14,9 +14,9 @@ export function useDeleteNode() {
 
   const deleteNode = async (nodeId: string) => {
     try {
-      await mutateAsync({ resource: "nodes", id: nodeId });
+      await mutateAsync({ resource: "user_nodes", id: nodeId });
       invalidate({
-        resource: "nodes",
+        resource: "user_nodes",
         invalidates: ["list"],
       });
       router.push("/account/nodes");

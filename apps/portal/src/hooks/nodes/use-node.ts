@@ -1,14 +1,14 @@
 "use client";
 
 import { useOne } from "@refinedev/core";
-import type { Node } from "./types";
+import type { UserNode } from "./types";
 
 /**
  * Hook to get a single node by ID
  */
 export function useNode(nodeId: string) {
-  const { result, query } = useOne<Node>({
-    resource: "nodes",
+  const { result, query } = useOne<UserNode>({
+    resource: "user_nodes",
     id: nodeId,
     queryOptions: {
       enabled: !!nodeId,
