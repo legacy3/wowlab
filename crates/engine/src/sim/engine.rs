@@ -102,24 +102,17 @@ fn dispatch_event(
     match event {
         SimEvent::GcdReady => {
             state.player.gcd_event_pending = false;
-            handle_gcd_ready_inline(state, rng);
+            handle_gcd_ready_inline(state, config, rng);
         }
 
         SimEvent::CooldownReady { spell_idx } => {
             handle_cooldown_ready_inline(state, spell_idx);
         }
 
-        SimEvent::AuraTick { aura_idx } => {
-            handle_aura_tick_inline(state, aura_idx, rng);
-        }
-
-        SimEvent::AuraExpire { aura_idx } => {
-            handle_aura_expire_inline(state, aura_idx);
-        }
-
-        SimEvent::AuraApply { aura_idx, stacks } => {
-            handle_aura_apply_inline(state, config, aura_idx, stacks);
-        }
+        // These events are no longer scheduled (lazy tick evaluation)
+        SimEvent::AuraTick { .. } => {}
+        SimEvent::AuraExpire { .. } => {}
+        SimEvent::AuraApply { .. } => {}
 
         SimEvent::SpellDamage { spell_idx, damage_x100 } => {
             let damage = (damage_x100 as f32) / 100.0;
@@ -127,12 +120,9 @@ fn dispatch_event(
             state.target.health -= damage;
         }
 
-        SimEvent::AutoAttack => {
-            handle_auto_attack_inline(state, config, rng);
-        }
-        SimEvent::PetAttack => {
-            handle_pet_attack_inline(state, config, rng);
-        }
+        // Auto/pet attacks are now processed lazily
+        SimEvent::AutoAttack => {}
+        SimEvent::PetAttack => {}
         SimEvent::ResourceTick => {}
 
         SimEvent::CastComplete { spell_idx } => {
@@ -150,17 +140,9 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     state.events.push(0, SimEvent::GcdReady);
     state.player.gcd_event_pending = true;
 
-    // Schedule initial auto-attack if weapon speed > 0
-    if config.player.weapon_speed > 0.0 {
-        state.events.push(0, SimEvent::AutoAttack);
-    }
-
-    // Schedule initial pet attack if pet exists
-    if let Some(ref pet) = config.pet {
-        if pet.attack_speed > 0.0 {
-            state.events.push(0, SimEvent::PetAttack);
-        }
-    }
+    // Initialize auto/pet attack times (lazy evaluation, no events)
+    state.next_auto_attack = if config.player.weapon_speed > 0.0 { 0 } else { u32::MAX };
+    state.next_pet_attack = if config.pet.as_ref().map(|p| p.attack_speed > 0.0).unwrap_or(false) { 0 } else { u32::MAX };
 
     let duration = state.duration;
 
@@ -220,6 +202,10 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
         }
     }
 
+    // Process any remaining periodic effects up to end of simulation
+    state.time = duration;
+    process_pending_ticks(state, config, duration);
+
     // Duration is in ms, convert to seconds for DPS
     let duration_secs = duration as f32 / 1000.0;
     SimResult {
@@ -249,11 +235,91 @@ pub fn run_batch(
     accum.finalize(config.duration, &spell_ids)
 }
 
+/// Process all pending periodic effects up to current time (lazy evaluation)
+#[inline(always)]
+fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time: u32) {
+    // Process DoT ticks
+    let mut active_mask = state.player.auras.active_dot_mask();
+    while active_mask != 0 {
+        let idx = active_mask.trailing_zeros() as usize;
+        active_mask &= active_mask - 1;
+
+        let next_tick = state.player.auras.next_tick_time(idx);
+        if next_tick == 0 || next_tick > current_time {
+            continue;
+        }
+
+        let remaining = state.player.auras.remaining_slot(idx, current_time);
+        if remaining == 0 {
+            state.player.auras.stop_dot(idx);
+            continue;
+        }
+
+        let runtime = &state.aura_runtime[idx];
+        let tick_interval = runtime.tick_interval_ms;
+
+        let mut tick_time = next_tick;
+        while tick_time <= current_time {
+            if state.player.auras.remaining_slot(idx, tick_time) == 0 {
+                state.player.auras.stop_dot(idx);
+                break;
+            }
+
+            if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
+                let base_damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
+                let damage = base_damage * (1.0 + state.player.stats.crit_chance) * state.player.stats.vers_mult;
+                state.results.total_damage += damage;
+                state.target.health -= damage;
+            }
+
+            tick_time += tick_interval;
+        }
+
+        if tick_time < current_time + remaining {
+            state.player.auras.set_next_tick(idx, tick_time);
+        } else {
+            state.player.auras.stop_dot(idx);
+        }
+    }
+
+    // Process auto attacks
+    let stats = &state.player.stats;
+    while state.next_auto_attack <= current_time {
+        let (min_dmg, max_dmg) = config.player.weapon_damage;
+        let weapon_damage = (min_dmg + max_dmg) * 0.5;
+        let ap_bonus = stats.ap_normalized * config.player.weapon_speed;
+        let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
+        state.results.total_damage += damage;
+        state.target.health -= damage;
+
+        let next_swing_ms = (state.weapon_speed_ms as f32 / stats.haste_mult) as u32;
+        state.next_auto_attack += next_swing_ms;
+    }
+
+    // Process pet attacks
+    if let Some(ref pet) = config.pet {
+        let pet_stats = &pet.stats;
+        while state.next_pet_attack <= current_time {
+            let (min_dmg, max_dmg) = pet.attack_damage;
+            let base_damage = (min_dmg + max_dmg) * 0.5;
+            let ap_bonus = pet_stats.ap_normalized * pet.attack_speed;
+            let damage = (base_damage + ap_bonus) * (1.0 + pet_stats.crit_chance);
+            state.results.total_damage += damage;
+            state.target.health -= damage;
+
+            state.next_pet_attack += state.pet_attack_speed_ms;
+        }
+    }
+}
+
 /// Handle GCD ready - the most frequent event, heavily optimized.
 /// Inlines rotation evaluation and spell casting for maximum performance.
 #[inline(always)]
-fn handle_gcd_ready_inline(state: &mut SimState, rng: &mut FastRng) {
+fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) {
     let current_time = state.time;
+
+    // Process pending periodic effects (lazy evaluation)
+    process_pending_ticks(state, config, current_time);
 
     // Lazy resource regeneration - only compute when needed
     let elapsed_ms = current_time - state.player.last_resource_update;
@@ -268,7 +334,7 @@ fn handle_gcd_ready_inline(state: &mut SimState, rng: &mut FastRng) {
 
     if let Some(idx) = spell_idx {
         // Cast the spell inline (uses spell_runtime)
-        cast_spell_inline(state, idx, rng, current_time);
+        cast_spell_inline(state, config, idx, rng, current_time);
     } else {
         // No spell available - compute next wake-up time (uses spell_runtime)
         schedule_next_opportunity_inline(state, current_time);
@@ -314,6 +380,7 @@ fn find_castable_spell_inline(state: &SimState, current_time: u32) -> Option<usi
 #[inline(always)]
 fn cast_spell_inline(
     state: &mut SimState,
+    config: &SimConfig,
     spell_idx: usize,
     rng: &mut FastRng,
     current_time: u32,
@@ -370,13 +437,14 @@ fn cast_spell_inline(
     }
 
     // Calculate and record damage inline
-    calculate_damage_inline(state, spell_idx, rng);
+    calculate_damage_inline(state, config, spell_idx, rng);
 }
 
 /// Calculate damage for a spell - inlined with all multipliers.
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
+    config: &SimConfig,
     spell_idx: usize,
     _rng: &mut FastRng,
 ) {
@@ -399,31 +467,57 @@ fn calculate_damage_inline(
     state.results.record_cast();
 
     // Process spell effects (apply auras, trigger spells, etc.)
-    process_spell_effects_inline(state, spell_idx);
+    process_spell_effects_inline(state, config, spell_idx);
 }
 
 /// Process spell effects - apply auras, trigger spells, etc.
 /// Uses pre-resolved aura indices (no more linear search per cast)
 #[inline(always)]
-fn process_spell_effects_inline(state: &mut SimState, spell_idx: usize) {
-    let spell_rt = &state.spell_runtime[spell_idx];
-    let current_time = state.time;
+fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_idx: usize) {
+    // Copy values to avoid borrow conflict
+    let apply_aura_count = state.spell_runtime[spell_idx].apply_aura_count;
+    let apply_aura_indices = state.spell_runtime[spell_idx].apply_aura_indices;
+    let energize_amount = state.spell_runtime[spell_idx].energize_amount;
 
-    // Apply pre-resolved auras (no linear search - O(1) per aura)
-    for i in 0..spell_rt.apply_aura_count as usize {
-        let aura_idx = spell_rt.apply_aura_indices[i];
-        state.events.push(
-            current_time,
-            SimEvent::AuraApply {
-                aura_idx,
-                stacks: 1,
-            },
-        );
+    // Apply pre-resolved auras directly (no event queue round-trip)
+    for i in 0..apply_aura_count as usize {
+        let aura_idx = apply_aura_indices[i];
+        apply_aura_inline(state, config, aura_idx);
     }
 
     // Apply pre-computed energize effect
-    if spell_rt.energize_amount > 0.0 {
-        state.player.resources.gain(spell_rt.energize_amount);
+    if energize_amount > 0.0 {
+        state.player.resources.gain(energize_amount);
+    }
+}
+
+/// Apply an aura directly (inlined, no event queue)
+#[inline(always)]
+fn apply_aura_inline(state: &mut SimState, config: &SimConfig, aura_idx: u8) {
+    let idx = aura_idx as usize;
+
+    if idx >= config.auras.len() {
+        return;
+    }
+
+    let aura_def = &config.auras[idx];
+    let runtime = &state.aura_runtime[idx];
+
+    // Check if this is a refresh (aura already active with remaining time)
+    let is_refresh = state.player.auras.remaining_slot(idx, state.time) > 0;
+
+    // Apply using slot index - O(1)
+    state.player.auras.apply_slot(
+        idx,
+        runtime.duration_ms,
+        aura_def.max_stacks,
+        state.time,
+    );
+
+    // Start DoT tracking if periodic (only on NEW application, not refresh)
+    // Refresh extends duration but existing tick schedule continues
+    if runtime.tick_interval_ms > 0 && !is_refresh {
+        state.player.auras.start_dot(idx, state.time + runtime.tick_interval_ms);
     }
 }
 
@@ -513,167 +607,4 @@ fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
     }
 }
 
-/// Handle aura tick - process DoT/HoT damage.
-#[inline(always)]
-fn handle_aura_tick_inline(
-    state: &mut SimState,
-    aura_idx: u8,
-    _rng: &mut FastRng,
-) {
-    let idx = aura_idx as usize;
-    let runtime = &state.aura_runtime[idx];
 
-    // Get remaining time in ms - also checks if aura is active (returns 0 if not)
-    let remaining = state.player.auras.remaining_slot(idx, state.time);
-    if remaining == 0 {
-        return;
-    }
-
-    // Process periodic damage with expected crit (pre-computed, no Vec iteration)
-    if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
-        let base_damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
-
-        // Expected damage: base * (1 + crit_chance) * vers_mult
-        let damage = base_damage * (1.0 + state.player.stats.crit_chance) * state.player.stats.vers_mult;
-
-        state.results.total_damage += damage;
-        state.target.health -= damage;
-    }
-
-    // Schedule next tick if aura still has duration remaining
-    let tick_interval_ms = runtime.tick_interval_ms;
-    if tick_interval_ms > 0 {
-        let next_tick = state.time + tick_interval_ms;
-        if next_tick < state.time + remaining {
-            state.events.push(next_tick, SimEvent::AuraTick { aura_idx });
-        }
-    }
-}
-
-/// Handle aura expiration.
-#[inline(always)]
-fn handle_aura_expire_inline(state: &mut SimState, aura_idx: u8) {
-    let idx = aura_idx as usize;
-    // Only remove if actually expired (handles refresh case where old expire event is stale)
-    let remaining = state.player.auras.remaining_slot(idx, state.time);
-    if remaining == 0 {
-        state.player.auras.remove_slot(idx);
-    }
-}
-
-/// Handle aura application.
-#[inline(always)]
-fn handle_aura_apply_inline(
-    state: &mut SimState,
-    config: &SimConfig,
-    aura_idx: u8,
-    stacks: u8,
-) {
-    let idx = aura_idx as usize;
-
-    if idx >= config.auras.len() {
-        return;
-    }
-
-    let aura_def = &config.auras[idx];
-    let runtime = &state.aura_runtime[idx];
-
-    #[cfg(feature = "debug_logging")]
-    eprintln!("AuraApply: {} to slot {} at time {}", aura_def.name, idx, state.time);
-
-    // Check if this is a refresh (aura already active with remaining time)
-    // has_slot alone isn't enough - at exact expiration time, slot exists but remaining=0
-    let is_refresh = state.player.auras.remaining_slot(idx, state.time) > 0;
-
-    // Apply using slot index - O(1)
-    state.player.auras.apply_slot(
-        idx,
-        runtime.duration_ms,
-        aura_def.max_stacks,
-        state.time,
-    );
-
-    #[cfg(feature = "debug_logging")]
-    eprintln!("  -> has_slot({}) = {}", idx, state.player.auras.has_slot(idx));
-
-    // Schedule expiration
-    state.events.push(
-        state.time + runtime.duration_ms,
-        SimEvent::AuraExpire { aura_idx },
-    );
-
-    // Schedule first tick if DoT/HoT (only on NEW application, not refresh)
-    // Refresh extends duration but existing tick chain continues
-    if runtime.tick_interval_ms > 0 && !is_refresh {
-        state.events.push(
-            state.time + runtime.tick_interval_ms,
-            SimEvent::AuraTick { aura_idx },
-        );
-    }
-
-    let _ = stacks;
-}
-
-/// Handle pet attack - melee swing damage and schedule next.
-#[inline(always)]
-fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mut FastRng) {
-    let current_time = state.time;
-
-    let pet = match &config.pet {
-        Some(p) => p,
-        None => return,
-    };
-
-    if pet.attack_speed <= 0.0 {
-        return;
-    }
-
-    let (min_dmg, max_dmg) = pet.attack_damage;
-    let pet_stats = &pet.stats;
-
-    // Expected pet damage
-    let base_damage = (min_dmg + max_dmg) * 0.5;
-    let ap_bonus = pet_stats.ap_normalized * pet.attack_speed;
-    let damage = (base_damage + ap_bonus) * (1.0 + pet_stats.crit_chance);
-
-    // Record damage
-    state.results.total_damage += damage;
-    state.target.health -= damage;
-
-    // Schedule next pet attack
-    let next_attack = current_time + state.pet_attack_speed_ms;
-    if next_attack < state.duration {
-        state.events.push(next_attack, SimEvent::PetAttack);
-    }
-}
-
-/// Handle auto-attack - melee swing damage and schedule next.
-#[inline(always)]
-fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mut FastRng) {
-    let current_time = state.time;
-    let weapon_speed = config.player.weapon_speed;
-
-    if weapon_speed <= 0.0 {
-        return;
-    }
-
-    let stats = &state.player.stats;
-    let (min_dmg, max_dmg) = config.player.weapon_damage;
-
-    // Expected weapon damage
-    let weapon_damage = (min_dmg + max_dmg) * 0.5;
-    let ap_bonus = stats.ap_normalized * weapon_speed;
-    let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
-
-    // Record damage
-    state.results.total_damage += damage;
-    state.target.health -= damage;
-
-    // Schedule next auto-attack (apply haste to pre-computed weapon speed)
-    let next_swing_ms = (state.weapon_speed_ms as f32 / stats.haste_mult) as u32;
-    let next_swing = current_time + next_swing_ms;
-
-    if next_swing < state.duration {
-        state.events.push(next_swing, SimEvent::AutoAttack);
-    }
-}

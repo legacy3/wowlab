@@ -21,6 +21,7 @@ pub struct AuraRuntime {
     pub tick_coefficient: f32,
 }
 
+
 /// Maximum effects per spell (auras to apply)
 const MAX_SPELL_AURAS: usize = 4;
 
@@ -79,6 +80,12 @@ pub struct SimState {
 
     /// Pre-computed pet attack speed in ms
     pub pet_attack_speed_ms: u32,
+
+    /// Next auto attack time (lazy evaluation)
+    pub next_auto_attack: u32,
+
+    /// Next pet attack time (lazy evaluation)
+    pub next_pet_attack: u32,
 
     /// Target state (warm - accessed on damage)
     pub target: TargetState,
@@ -248,18 +255,62 @@ const MAX_AURA_SLOTS: usize = 32;
 pub struct AuraTracker {
     /// Fixed slots indexed by aura_idx - None = inactive
     slots: [Option<AuraInstance>; MAX_AURA_SLOTS],
+    /// Next tick time per slot (0 = no pending tick)
+    next_tick: [u32; MAX_AURA_SLOTS],
+    /// Bitmap of active DoT auras (for fast iteration)
+    active_dots: u32,
 }
 
 impl AuraTracker {
     pub fn new() -> Self {
         Self {
             slots: [None; MAX_AURA_SLOTS],
+            next_tick: [0; MAX_AURA_SLOTS],
+            active_dots: 0,
         }
     }
 
     #[inline]
     pub fn clear(&mut self) {
         self.slots = [None; MAX_AURA_SLOTS];
+        self.next_tick = [0; MAX_AURA_SLOTS];
+        self.active_dots = 0;
+    }
+
+    /// Start DoT tracking for an aura
+    #[inline(always)]
+    pub fn start_dot(&mut self, slot: usize, first_tick_time: u32) {
+        if slot < MAX_AURA_SLOTS {
+            self.next_tick[slot] = first_tick_time;
+            self.active_dots |= 1 << slot;
+        }
+    }
+
+    /// Stop DoT tracking for an aura
+    #[inline(always)]
+    pub fn stop_dot(&mut self, slot: usize) {
+        if slot < MAX_AURA_SLOTS {
+            self.next_tick[slot] = 0;
+            self.active_dots &= !(1 << slot);
+        }
+    }
+
+    /// Get bitmap of active DoTs
+    #[inline(always)]
+    pub fn active_dot_mask(&self) -> u32 {
+        self.active_dots
+    }
+
+    /// Get next tick time for a slot
+    #[inline(always)]
+    pub fn next_tick_time(&self, slot: usize) -> u32 {
+        self.next_tick[slot]
+    }
+
+    /// Set next tick time for a slot
+    #[inline(always)]
+    pub fn set_next_tick(&mut self, slot: usize, time: u32) {
+        self.next_tick[slot] = time;
     }
 
     /// Apply aura by slot index (aura_idx from config) - O(1)
@@ -523,6 +574,8 @@ impl SimState {
             aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,
+            next_auto_attack: 0,
+            next_pet_attack: 0,
             target: TargetState::new(config.target.max_health),
             pet: None,
         };
@@ -541,6 +594,8 @@ impl SimState {
     #[inline]
     pub fn reset(&mut self) {
         self.time = 0;
+        self.next_auto_attack = 0;
+        self.next_pet_attack = 0;
         self.player.reset();
         if let Some(pet) = &mut self.pet {
             pet.reset();

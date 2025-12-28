@@ -105,6 +105,9 @@ pub struct EventQueue {
     /// Node arena - pre-allocated storage for all nodes
     arena: Vec<EventNode>,
 
+    /// Number of arena slots in use (for fast clear)
+    arena_used: u32,
+
     /// Free list head (recycled nodes)
     free_head: NodeIdx,
 
@@ -137,6 +140,7 @@ impl EventQueue {
         let arena_size = capacity.max(16384);
         Self {
             arena: Vec::with_capacity(arena_size),
+            arena_used: 0,
             free_head: NULL_IDX,
             wheel_head: vec![NULL_IDX; WHEEL_SIZE],
             wheel_tail: vec![NULL_IDX; WHEEL_SIZE],
@@ -202,15 +206,27 @@ impl EventQueue {
 
     #[inline]
     pub fn clear(&mut self) {
-        // Reset wheel
-        self.wheel_head.fill(NULL_IDX);
-        self.wheel_tail.fill(NULL_IDX);
-        self.slot_bitmap.fill(0);
-        // Put all nodes on free list
-        self.free_head = if self.arena.is_empty() { NULL_IDX } else { 0 };
-        for i in 0..self.arena.len() {
-            self.arena[i].next = if i + 1 < self.arena.len() { (i + 1) as NodeIdx } else { NULL_IDX };
+        // Lazy clear: only clear slots that were actually used (via bitmap)
+        for word_idx in 0..BITMAP_SIZE {
+            let word = self.slot_bitmap[word_idx];
+            if word == 0 { continue; }
+
+            let mut bits = word;
+            while bits != 0 {
+                let bit_pos = bits.trailing_zeros() as usize;
+                let slot_idx = (word_idx << 6) | bit_pos;
+                self.wheel_head[slot_idx] = NULL_IDX;
+                self.wheel_tail[slot_idx] = NULL_IDX;
+                bits &= bits - 1;
+            }
+            self.slot_bitmap[word_idx] = 0;
         }
+
+        // Fast arena reset: just reset the used count and free head
+        // Arena memory is reused without rebuilding free list
+        self.arena_used = 0;
+        self.free_head = NULL_IDX;
+
         self.current_slot = 0;
         self.next_seq = 0;
         self.events_processed = 0;
@@ -226,13 +242,22 @@ impl EventQueue {
     #[inline(always)]
     fn alloc_node(&mut self, event: TimedEvent) -> NodeIdx {
         if self.free_head != NULL_IDX {
+            // Reuse from free list
             let idx = self.free_head;
             self.free_head = self.arena[idx as usize].next;
             self.arena[idx as usize] = EventNode { event, next: NULL_IDX };
             idx
+        } else if (self.arena_used as usize) < self.arena.len() {
+            // Reuse existing arena slot
+            let idx = self.arena_used;
+            self.arena[idx as usize] = EventNode { event, next: NULL_IDX };
+            self.arena_used += 1;
+            idx
         } else {
+            // Grow arena
             let idx = self.arena.len() as NodeIdx;
             self.arena.push(EventNode { event, next: NULL_IDX });
+            self.arena_used = self.arena.len() as u32;
             idx
         }
     }
