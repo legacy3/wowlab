@@ -29,6 +29,8 @@ pub struct Stats {
     #[serde(skip)]
     pub attack_power: f32,
     #[serde(skip)]
+    pub ap_normalized: f32, // attack_power / 14.0 for melee normalization
+    #[serde(skip)]
     pub crit_chance: f32, // crit_pct * 0.01
     #[serde(skip)]
     pub vers_mult: f32, // 1.0 + vers_pct * 0.01
@@ -41,6 +43,7 @@ impl Stats {
     #[inline]
     pub fn finalize(&mut self) {
         self.attack_power = self.agility + self.strength;
+        self.ap_normalized = self.attack_power / 14.0;
         self.crit_chance = self.crit_pct * 0.01;
         self.vers_mult = 1.0 + self.versatility_pct * 0.01;
         self.haste_mult = 1.0 + self.haste_pct * 0.01;

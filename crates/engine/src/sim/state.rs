@@ -374,8 +374,11 @@ impl SimResultsAccum {
     #[inline(always)]
     pub fn record_damage(&mut self, spell_idx: usize, damage: f64) {
         self.total_damage += damage;
-        self.spell_damage[spell_idx] += damage;
-        self.spell_casts[spell_idx] += 1;
+        // SAFETY: spell_idx is always < spell_count (validated at config time)
+        unsafe {
+            *self.spell_damage.get_unchecked_mut(spell_idx) += damage;
+            *self.spell_casts.get_unchecked_mut(spell_idx) += 1;
+        }
     }
 
     #[inline(always)]

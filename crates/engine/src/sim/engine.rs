@@ -597,7 +597,7 @@ fn handle_pet_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut 
 
     // Calculate pet damage (use precomputed attack_power)
     let base_damage = rng.range_f32(min_dmg, max_dmg);
-    let ap_bonus = pet_stats.attack_power / 14.0 * pet.attack_speed;
+    let ap_bonus = pet_stats.ap_normalized * pet.attack_speed;
     let mut damage = base_damage + ap_bonus;
 
     // Crit check (use precomputed crit_chance)
@@ -631,7 +631,7 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, rng: &mut
 
     // Calculate weapon damage
     let weapon_damage = rng.range_f32(min_dmg, max_dmg);
-    let ap_bonus = stats.attack_power / 14.0 * weapon_speed; // normalized AP
+    let ap_bonus = stats.ap_normalized * weapon_speed; // precomputed normalized AP
     let mut damage = weapon_damage + ap_bonus;
 
     // Crit check (use precomputed crit_chance)
