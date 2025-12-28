@@ -21,7 +21,6 @@ pub struct AuraRuntime {
     pub tick_coefficient: f32,
 }
 
-
 /// Maximum effects per spell (auras to apply)
 const MAX_SPELL_AURAS: usize = 4;
 
@@ -480,85 +479,102 @@ impl Default for SimResultsAccum {
 impl SimState {
     pub fn new(config: &SimConfig) -> Self {
         let spell_count = config.spells.len();
-        let player = UnitState::new(
-            config.player.stats,
-            config.player.resources,
-            spell_count,
-        );
+        let player = UnitState::new(config.player.stats, config.player.resources, spell_count);
 
         // Convert duration from f32 seconds to u32 milliseconds
         let duration_ms = (config.duration * 1000.0) as u32;
 
         // Pre-compute aura runtime values (timing + periodic damage)
-        let aura_runtime: Vec<AuraRuntime> = config.auras.iter().map(|a| {
-            let mut runtime = AuraRuntime {
-                duration_ms: (a.duration * 1000.0) as u32,
-                tick_interval_ms: (a.tick_interval * 1000.0) as u32,
-                tick_amount: 0.0,
-                tick_coefficient: 0.0,
-            };
-            // Extract periodic damage from effects
-            for effect in &a.effects {
-                if let crate::config::AuraEffect::PeriodicDamage { amount, coefficient } = effect {
-                    runtime.tick_amount = *amount;
-                    runtime.tick_coefficient = *coefficient;
-                    break;
+        let aura_runtime: Vec<AuraRuntime> = config
+            .auras
+            .iter()
+            .map(|a| {
+                let mut runtime = AuraRuntime {
+                    duration_ms: (a.duration * 1000.0) as u32,
+                    tick_interval_ms: (a.tick_interval * 1000.0) as u32,
+                    tick_amount: 0.0,
+                    tick_coefficient: 0.0,
+                };
+                // Extract periodic damage from effects
+                for effect in &a.effects {
+                    if let crate::config::AuraEffect::PeriodicDamage {
+                        amount,
+                        coefficient,
+                    } = effect
+                    {
+                        runtime.tick_amount = *amount;
+                        runtime.tick_coefficient = *coefficient;
+                        break;
+                    }
                 }
-            }
-            runtime
-        }).collect();
+                runtime
+            })
+            .collect();
 
         // Pre-compute attack speeds
         let weapon_speed_ms = (config.player.weapon_speed * 1000.0) as u32;
-        let pet_attack_speed_ms = config.pet.as_ref()
+        let pet_attack_speed_ms = config
+            .pet
+            .as_ref()
             .map(|p| (p.attack_speed * 1000.0) as u32)
             .unwrap_or(0);
 
         // Pre-compute spell runtime data (avoids touching SpellDef in hot loop)
-        let spell_runtime: Vec<SpellRuntime> = config.spells.iter().map(|spell| {
-            let mut runtime = SpellRuntime {
-                damage_min: spell.damage.base_min,
-                damage_max: spell.damage.base_max,
-                ap_coefficient: spell.damage.ap_coefficient,
-                cost_amount: spell.cost.amount,
-                max_charges: spell.charges,
-                apply_aura_indices: [0; MAX_SPELL_AURAS],
-                apply_aura_count: 0,
-                energize_amount: 0.0,
-                _pad: [0; 2],
-            };
+        let spell_runtime: Vec<SpellRuntime> = config
+            .spells
+            .iter()
+            .map(|spell| {
+                let mut runtime = SpellRuntime {
+                    damage_min: spell.damage.base_min,
+                    damage_max: spell.damage.base_max,
+                    ap_coefficient: spell.damage.ap_coefficient,
+                    cost_amount: spell.cost.amount,
+                    max_charges: spell.charges,
+                    apply_aura_indices: [0; MAX_SPELL_AURAS],
+                    apply_aura_count: 0,
+                    energize_amount: 0.0,
+                    _pad: [0; 2],
+                };
 
-            // Pre-resolve effects
-            for effect in &spell.effects {
-                match effect {
-                    crate::config::SpellEffect::ApplyAura { aura_id, .. } => {
-                        // Resolve aura_id to aura_idx at load time (no more linear search per cast)
-                        if let Some(aura_idx) = config.auras.iter().position(|a| a.id == *aura_id) {
-                            if (runtime.apply_aura_count as usize) < MAX_SPELL_AURAS {
-                                runtime.apply_aura_indices[runtime.apply_aura_count as usize] = aura_idx as u8;
-                                runtime.apply_aura_count += 1;
+                // Pre-resolve effects
+                for effect in &spell.effects {
+                    match effect {
+                        crate::config::SpellEffect::ApplyAura { aura_id, .. } => {
+                            // Resolve aura_id to aura_idx at load time (no more linear search per cast)
+                            if let Some(aura_idx) =
+                                config.auras.iter().position(|a| a.id == *aura_id)
+                            {
+                                if (runtime.apply_aura_count as usize) < MAX_SPELL_AURAS {
+                                    runtime.apply_aura_indices[runtime.apply_aura_count as usize] =
+                                        aura_idx as u8;
+                                    runtime.apply_aura_count += 1;
+                                }
                             }
                         }
+                        crate::config::SpellEffect::Energize { amount, .. } => {
+                            runtime.energize_amount = *amount;
+                        }
+                        _ => {}
                     }
-                    crate::config::SpellEffect::Energize { amount, .. } => {
-                        runtime.energize_amount = *amount;
-                    }
-                    _ => {}
                 }
-            }
-            runtime
-        }).collect();
+                runtime
+            })
+            .collect();
 
         // Build rotation priority (map spell_id to spell index)
-        let rotation_priority: Vec<usize> = config.rotation.iter().filter_map(|action| {
-            match action {
-                crate::rotation::RotationAction::Cast { spell_id } => {
-                    config.spells.iter().position(|s| s.id == *spell_id)
+        let rotation_priority: Vec<usize> = config
+            .rotation
+            .iter()
+            .filter_map(|action| {
+                match action {
+                    crate::rotation::RotationAction::Cast { spell_id } => {
+                        config.spells.iter().position(|s| s.id == *spell_id)
+                    }
+                    // Other action types don't map to spells
+                    _ => None,
                 }
-                // Other action types don't map to spells
-                _ => None,
-            }
-        }).collect();
+            })
+            .collect();
 
         let mut state = Self {
             time: 0,

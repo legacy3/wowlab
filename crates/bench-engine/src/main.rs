@@ -1,6 +1,6 @@
 use engine::config::{
-    PlayerConfig, ResourceConfig, ResourceType, SimConfig, SpecId, SpellDef, Stats, TargetConfig,
-    DamageFormula, ResourceCost, SpellEffect, AuraDef, AuraEffect,
+    AuraDef, AuraEffect, DamageFormula, PlayerConfig, ResourceConfig, ResourceCost, ResourceType,
+    SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
 };
 use engine::rotation::RotationAction;
 use engine::sim::{run_batch, SimState};
@@ -83,7 +83,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ..Default::default()
                 },
                 effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 217200, duration: 8.0 }, // Barbed Shot bleed
+                    SpellEffect::ApplyAura {
+                        aura_id: 217200,
+                        duration: 8.0,
+                    }, // Barbed Shot bleed
                 ],
                 is_gcd: true,
                 is_harmful: true,
@@ -120,9 +123,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 cast_time: 0.0,
                 cost: ResourceCost::default(),
                 damage: DamageFormula::default(),
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 19574, duration: 15.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 19574,
+                    duration: 15.0,
+                }],
                 is_gcd: false,
                 is_harmful: false,
             },
@@ -144,9 +148,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.1,
                     ..Default::default()
                 },
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 271788, duration: 18.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 271788,
+                    duration: 18.0,
+                }],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -209,9 +214,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.2,
                     ..Default::default()
                 },
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 131894, duration: 15.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 131894,
+                    duration: 15.0,
+                }],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -225,9 +231,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 cast_time: 0.0,
                 cost: ResourceCost::default(),
                 damage: DamageFormula::default(),
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 193530, duration: 20.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 193530,
+                    duration: 20.0,
+                }],
                 is_gcd: false,
                 is_harmful: false,
             },
@@ -246,9 +253,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.8,
                     ..Default::default()
                 },
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 321530, duration: 18.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 321530,
+                    duration: 18.0,
+                }],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -352,9 +360,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.45,
                     ..Default::default()
                 },
-                effects: vec![
-                    SpellEffect::Energize { resource_type: ResourceType::Focus, amount: 10.0 },
-                ],
+                effects: vec![SpellEffect::Energize {
+                    resource_type: ResourceType::Focus,
+                    amount: 10.0,
+                }],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -373,9 +382,10 @@ fn create_bm_hunter_config() -> SimConfig {
                     ap_coefficient: 0.25,
                     ..Default::default()
                 },
-                effects: vec![
-                    SpellEffect::ApplyAura { aura_id: 162487, duration: 20.0 },
-                ],
+                effects: vec![SpellEffect::ApplyAura {
+                    aura_id: 162487,
+                    duration: 20.0,
+                }],
                 is_gcd: true,
                 is_harmful: true,
             },
@@ -387,9 +397,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Barbed Shot".to_string(),
                 duration: 8.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::PeriodicDamage { amount: 200.0, coefficient: 0.15 },
-                ],
+                effects: vec![AuraEffect::PeriodicDamage {
+                    amount: 200.0,
+                    coefficient: 0.15,
+                }],
                 pandemic: false,
                 tick_interval: 2.0,
             },
@@ -399,9 +410,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Serpent Sting".to_string(),
                 duration: 18.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::PeriodicDamage { amount: 150.0, coefficient: 0.1 },
-                ],
+                effects: vec![AuraEffect::PeriodicDamage {
+                    amount: 150.0,
+                    coefficient: 0.1,
+                }],
                 pandemic: true,
                 tick_interval: 3.0,
             },
@@ -411,9 +423,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Bestial Wrath".to_string(),
                 duration: 15.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::DamageDone { percent: 25.0, school: None },
-                ],
+                effects: vec![AuraEffect::DamageDone {
+                    percent: 25.0,
+                    school: None,
+                }],
                 pandemic: false,
                 tick_interval: 0.0,
             },
@@ -423,9 +436,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "A Murder of Crows".to_string(),
                 duration: 15.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::PeriodicDamage { amount: 250.0, coefficient: 0.12 },
-                ],
+                effects: vec![AuraEffect::PeriodicDamage {
+                    amount: 250.0,
+                    coefficient: 0.12,
+                }],
                 pandemic: false,
                 tick_interval: 1.0,
             },
@@ -435,9 +449,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Aspect of the Wild".to_string(),
                 duration: 20.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::DamageDone { percent: 10.0, school: None },
-                ],
+                effects: vec![AuraEffect::DamageDone {
+                    percent: 10.0,
+                    school: None,
+                }],
                 pandemic: false,
                 tick_interval: 0.0,
             },
@@ -447,9 +462,10 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Bloodshed".to_string(),
                 duration: 18.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::PeriodicDamage { amount: 300.0, coefficient: 0.2 },
-                ],
+                effects: vec![AuraEffect::PeriodicDamage {
+                    amount: 300.0,
+                    coefficient: 0.2,
+                }],
                 pandemic: false,
                 tick_interval: 2.0,
             },
@@ -459,31 +475,32 @@ fn create_bm_hunter_config() -> SimConfig {
                 name: "Steel Trap".to_string(),
                 duration: 20.0,
                 max_stacks: 1,
-                effects: vec![
-                    AuraEffect::PeriodicDamage { amount: 180.0, coefficient: 0.08 },
-                ],
+                effects: vec![AuraEffect::PeriodicDamage {
+                    amount: 180.0,
+                    coefficient: 0.08,
+                }],
                 pandemic: false,
                 tick_interval: 2.0,
             },
         ],
         rotation: vec![
             // Full priority APL with all spells
-            RotationAction::Cast { spell_id: 19574 },   // Bestial Wrath (off-GCD)
-            RotationAction::Cast { spell_id: 193530 },  // Aspect of the Wild (off-GCD)
-            RotationAction::Cast { spell_id: 321530 },  // Bloodshed
-            RotationAction::Cast { spell_id: 131894 },  // A Murder of Crows
-            RotationAction::Cast { spell_id: 201430 },  // Stampede
-            RotationAction::Cast { spell_id: 392060 },  // Wailing Arrow
-            RotationAction::Cast { spell_id: 375891 },  // Death Chakram
-            RotationAction::Cast { spell_id: 34026 },   // Kill Command
-            RotationAction::Cast { spell_id: 217200 },  // Barbed Shot
-            RotationAction::Cast { spell_id: 120679 },  // Dire Beast
-            RotationAction::Cast { spell_id: 212431 },  // Explosive Shot
-            RotationAction::Cast { spell_id: 53209 },   // Chimaera Shot
-            RotationAction::Cast { spell_id: 162488 },  // Steel Trap
-            RotationAction::Cast { spell_id: 271788 },  // Serpent Sting
-            RotationAction::Cast { spell_id: 2643 },    // Multi-Shot
-            RotationAction::Cast { spell_id: 193455 },  // Cobra Shot (filler)
+            RotationAction::Cast { spell_id: 19574 }, // Bestial Wrath (off-GCD)
+            RotationAction::Cast { spell_id: 193530 }, // Aspect of the Wild (off-GCD)
+            RotationAction::Cast { spell_id: 321530 }, // Bloodshed
+            RotationAction::Cast { spell_id: 131894 }, // A Murder of Crows
+            RotationAction::Cast { spell_id: 201430 }, // Stampede
+            RotationAction::Cast { spell_id: 392060 }, // Wailing Arrow
+            RotationAction::Cast { spell_id: 375891 }, // Death Chakram
+            RotationAction::Cast { spell_id: 34026 }, // Kill Command
+            RotationAction::Cast { spell_id: 217200 }, // Barbed Shot
+            RotationAction::Cast { spell_id: 120679 }, // Dire Beast
+            RotationAction::Cast { spell_id: 212431 }, // Explosive Shot
+            RotationAction::Cast { spell_id: 53209 }, // Chimaera Shot
+            RotationAction::Cast { spell_id: 162488 }, // Steel Trap
+            RotationAction::Cast { spell_id: 271788 }, // Serpent Sting
+            RotationAction::Cast { spell_id: 2643 },  // Multi-Shot
+            RotationAction::Cast { spell_id: 193455 }, // Cobra Shot (filler)
         ],
         duration: 300.0, // 5 minute fight (realistic boss fight)
         target: TargetConfig {
@@ -496,12 +513,11 @@ fn create_bm_hunter_config() -> SimConfig {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let iterations: u32 = args.get(1)
+    let iterations: u32 = args
+        .get(1)
         .and_then(|s| s.parse().ok())
         .unwrap_or(1_000_000);
-    let duration: f32 = args.get(2)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(300.0);
+    let duration: f32 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(300.0);
 
     println!("=== Engine Benchmark ===\n");
 
@@ -514,15 +530,20 @@ fn main() {
     // Single sim
     rng.reseed(0);
     let result = engine::sim::run_simulation(&mut state, &config, &mut rng);
-    println!("Single {}s sim: {} casts, {:.0} DPS", config.duration, result.casts, result.dps);
+    println!(
+        "Single {}s sim: {} casts, {:.0} DPS",
+        config.duration, result.casts, result.dps
+    );
 
     #[cfg(feature = "meta_events")]
     {
         let batches = state.events.batches_processed;
         let events = state.events.events_processed;
         let avg_batch = events as f32 / batches as f32;
-        println!("Batches: {} (avg {:.2} events/batch, max {})",
-            batches, avg_batch, state.events.max_batch_size);
+        println!(
+            "Batches: {} (avg {:.2} events/batch, max {})",
+            batches, avg_batch, state.events.max_batch_size
+        );
     }
 
     // Warmup

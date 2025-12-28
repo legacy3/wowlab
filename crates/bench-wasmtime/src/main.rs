@@ -63,24 +63,30 @@ fn main() -> anyhow::Result<()> {
     }
 
     // Load WASM module
-    let wasm_bytes = include_bytes!("../../rotation-wasm/target/wasm32-unknown-unknown/release/rotation_wasm.wasm");
+    let wasm_bytes = include_bytes!(
+        "../../rotation-wasm/target/wasm32-unknown-unknown/release/rotation_wasm.wasm"
+    );
 
     let engine = Engine::default();
     let module = Module::new(&engine, wasm_bytes)?;
     let mut store = Store::new(&engine, ());
     let instance = Instance::new(&mut store, &module, &[])?;
 
-    let rotation_wasm = instance.get_typed_func::<(f32, i32, f32, i32, i32), i32>(&mut store, "rotation")?;
+    let rotation_wasm =
+        instance.get_typed_func::<(f32, i32, f32, i32, i32), i32>(&mut store, "rotation")?;
 
     // Warmup wasmtime
     for state in states.iter().take(1_000_000) {
-        std::hint::black_box(rotation_wasm.call(&mut store, (
-            state.focus,
-            state.frenzy_stacks,
-            state.frenzy_remaining,
-            state.kill_command_charges,
-            state.barbed_shot_charges,
-        ))?);
+        std::hint::black_box(rotation_wasm.call(
+            &mut store,
+            (
+                state.focus,
+                state.frenzy_stacks,
+                state.frenzy_remaining,
+                state.kill_command_charges,
+                state.barbed_shot_charges,
+            ),
+        )?);
     }
 
     // Benchmark Rust
@@ -96,20 +102,26 @@ fn main() -> anyhow::Result<()> {
     let start = Instant::now();
     for _ in 0..(ITERATIONS as usize / BATCH_SIZE) {
         for state in &states {
-            std::hint::black_box(rotation_wasm.call(&mut store, (
-                state.focus,
-                state.frenzy_stacks,
-                state.frenzy_remaining,
-                state.kill_command_charges,
-                state.barbed_shot_charges,
-            ))?);
+            std::hint::black_box(rotation_wasm.call(
+                &mut store,
+                (
+                    state.focus,
+                    state.frenzy_stacks,
+                    state.frenzy_remaining,
+                    state.kill_command_charges,
+                    state.barbed_shot_charges,
+                ),
+            )?);
         }
     }
     let wasm_time = start.elapsed();
 
     println!("Rust:     {:?}", rust_time);
     println!("Wasmtime: {:?}", wasm_time);
-    println!("Ratio:    {:.1}x slower", wasm_time.as_secs_f64() / rust_time.as_secs_f64());
+    println!(
+        "Ratio:    {:.1}x slower",
+        wasm_time.as_secs_f64() / rust_time.as_secs_f64()
+    );
 
     Ok(())
 }

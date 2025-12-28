@@ -160,7 +160,7 @@ impl EventQueue {
     #[inline(always)]
     fn set_slot_bit(&mut self, slot: usize) {
         let word = slot >> 6; // slot / 64
-        let bit = slot & 63;  // slot % 64
+        let bit = slot & 63; // slot % 64
         self.slot_bitmap[word] |= 1u64 << bit;
     }
 
@@ -209,7 +209,9 @@ impl EventQueue {
         // Lazy clear: only clear slots that were actually used (via bitmap)
         for word_idx in 0..BITMAP_SIZE {
             let word = self.slot_bitmap[word_idx];
-            if word == 0 { continue; }
+            if word == 0 {
+                continue;
+            }
 
             let mut bits = word;
             while bits != 0 {
@@ -245,18 +247,27 @@ impl EventQueue {
             // Reuse from free list
             let idx = self.free_head;
             self.free_head = self.arena[idx as usize].next;
-            self.arena[idx as usize] = EventNode { event, next: NULL_IDX };
+            self.arena[idx as usize] = EventNode {
+                event,
+                next: NULL_IDX,
+            };
             idx
         } else if (self.arena_used as usize) < self.arena.len() {
             // Reuse existing arena slot
             let idx = self.arena_used;
-            self.arena[idx as usize] = EventNode { event, next: NULL_IDX };
+            self.arena[idx as usize] = EventNode {
+                event,
+                next: NULL_IDX,
+            };
             self.arena_used += 1;
             idx
         } else {
             // Grow arena
             let idx = self.arena.len() as NodeIdx;
-            self.arena.push(EventNode { event, next: NULL_IDX });
+            self.arena.push(EventNode {
+                event,
+                next: NULL_IDX,
+            });
             self.arena_used = self.arena.len() as u32;
             idx
         }
@@ -382,7 +393,11 @@ impl EventQueue {
 
     #[inline(always)]
     pub fn cache_next_time(&mut self) {
-        self.next_time_cache = if let Some(e) = self.peek() { e.time } else { u32::MAX };
+        self.next_time_cache = if let Some(e) = self.peek() {
+            e.time
+        } else {
+            u32::MAX
+        };
     }
 
     #[inline(always)]
@@ -417,7 +432,10 @@ impl EventQueue {
 
     #[inline]
     pub fn len(&self) -> usize {
-        self.wheel_head.iter().filter(|&&idx| idx != NULL_IDX).count()
+        self.wheel_head
+            .iter()
+            .filter(|&&idx| idx != NULL_IDX)
+            .count()
     }
 }
 

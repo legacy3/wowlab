@@ -10,10 +10,7 @@ pub enum RotationAction {
     Cast { spell_id: u32 },
 
     /// Cast a spell only if condition is met
-    CastIf {
-        spell_id: u32,
-        condition: Condition,
-    },
+    CastIf { spell_id: u32, condition: Condition },
 
     /// Wait for GCD/cast to complete (pooling)
     Wait { duration: f32 },

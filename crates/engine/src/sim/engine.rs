@@ -93,12 +93,7 @@ fn to_ms(seconds: f32) -> u32 {
 
 /// Dispatch a single event - extracted for reuse in meta_events mode
 #[inline(always)]
-fn dispatch_event(
-    state: &mut SimState,
-    config: &SimConfig,
-    rng: &mut FastRng,
-    event: SimEvent,
-) {
+fn dispatch_event(state: &mut SimState, config: &SimConfig, rng: &mut FastRng, event: SimEvent) {
     match event {
         SimEvent::GcdReady => {
             state.player.gcd_event_pending = false;
@@ -114,9 +109,12 @@ fn dispatch_event(
         SimEvent::AuraExpire { .. } => {}
         SimEvent::AuraApply { .. } => {}
 
-        SimEvent::SpellDamage { spell_idx, damage_x100 } => {
+        SimEvent::SpellDamage {
+            spell_idx,
+            damage_x100,
+        } => {
             let damage = (damage_x100 as f32) / 100.0;
-            state.results.record_damage(spell_idx as usize, damage );
+            state.results.record_damage(spell_idx as usize, damage);
             state.target.health -= damage;
         }
 
@@ -141,8 +139,21 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     state.player.gcd_event_pending = true;
 
     // Initialize auto/pet attack times (lazy evaluation, no events)
-    state.next_auto_attack = if config.player.weapon_speed > 0.0 { 0 } else { u32::MAX };
-    state.next_pet_attack = if config.pet.as_ref().map(|p| p.attack_speed > 0.0).unwrap_or(false) { 0 } else { u32::MAX };
+    state.next_auto_attack = if config.player.weapon_speed > 0.0 {
+        0
+    } else {
+        u32::MAX
+    };
+    state.next_pet_attack = if config
+        .pet
+        .as_ref()
+        .map(|p| p.attack_speed > 0.0)
+        .unwrap_or(false)
+    {
+        0
+    } else {
+        u32::MAX
+    };
 
     let duration = state.duration;
 
@@ -228,7 +239,11 @@ pub fn run_batch(
     for i in 0..iterations {
         rng.reseed(base_seed.wrapping_add(i as u64));
         let result = run_simulation(state, config, rng);
-        accum.add(&result, &state.results.spell_damage, &state.results.spell_casts);
+        accum.add(
+            &result,
+            &state.results.spell_damage,
+            &state.results.spell_casts,
+        );
     }
 
     let spell_ids: Vec<u32> = config.spells.iter().map(|s| s.id).collect();
@@ -266,8 +281,11 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
             }
 
             if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
-                let base_damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
-                let damage = base_damage * (1.0 + state.player.stats.crit_chance) * state.player.stats.vers_mult;
+                let base_damage = runtime.tick_amount
+                    + runtime.tick_coefficient * state.player.stats.attack_power;
+                let damage = base_damage
+                    * (1.0 + state.player.stats.crit_chance)
+                    * state.player.stats.vers_mult;
                 state.results.total_damage += damage;
                 state.target.health -= damage;
             }
@@ -403,7 +421,9 @@ fn cast_spell_inline(
             spell_state.cooldown_ready = current_time + cooldown_ms;
             state.events.push(
                 spell_state.cooldown_ready,
-                SimEvent::CooldownReady { spell_idx: spell_idx as u8 },
+                SimEvent::CooldownReady {
+                    spell_idx: spell_idx as u8,
+                },
             );
         }
     } else if cooldown_ms > 0 {
@@ -424,14 +444,18 @@ fn cast_spell_inline(
     if hasted_gcd_ms > 0 {
         state.player.gcd_ready = current_time + hasted_gcd_ms;
         if !state.player.gcd_event_pending {
-            state.events.push(state.player.gcd_ready, SimEvent::GcdReady);
+            state
+                .events
+                .push(state.player.gcd_ready, SimEvent::GcdReady);
             state.player.gcd_event_pending = true;
         }
     } else {
         // Off-GCD spell - immediately try to cast another
         // Use push_immediate to avoid heap operation if possible
         if !state.player.gcd_event_pending {
-            state.events.push_immediate(current_time, SimEvent::GcdReady);
+            state
+                .events
+                .push_immediate(current_time, SimEvent::GcdReady);
             state.player.gcd_event_pending = true;
         }
     }
@@ -462,7 +486,7 @@ fn calculate_damage_inline(
     let total_damage = (base_damage + ap_damage) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
     // Record damage
-    state.results.record_damage(spell_idx, total_damage );
+    state.results.record_damage(spell_idx, total_damage);
     state.target.health -= total_damage;
     state.results.record_cast();
 
@@ -507,17 +531,18 @@ fn apply_aura_inline(state: &mut SimState, config: &SimConfig, aura_idx: u8) {
     let is_refresh = state.player.auras.remaining_slot(idx, state.time) > 0;
 
     // Apply using slot index - O(1)
-    state.player.auras.apply_slot(
-        idx,
-        runtime.duration_ms,
-        aura_def.max_stacks,
-        state.time,
-    );
+    state
+        .player
+        .auras
+        .apply_slot(idx, runtime.duration_ms, aura_def.max_stacks, state.time);
 
     // Start DoT tracking if periodic (only on NEW application, not refresh)
     // Refresh extends duration but existing tick schedule continues
     if runtime.tick_interval_ms > 0 && !is_refresh {
-        state.player.auras.start_dot(idx, state.time + runtime.tick_interval_ms);
+        state
+            .player
+            .auras
+            .start_dot(idx, state.time + runtime.tick_interval_ms);
     }
 }
 
@@ -606,5 +631,3 @@ fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
         state.player.gcd_event_pending = true;
     }
 }
-
-

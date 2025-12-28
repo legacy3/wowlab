@@ -1,35 +1,6 @@
-import type { Database } from "./database.types";
-
-export type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
-
-export type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
-
-export type RotationHistory =
-  Database["public"]["Tables"]["rotations_history"]["Row"];
-
-export type MostWantedItem =
-  Database["public"]["Views"]["view_most_wanted_items"]["Row"];
-
-export type SpecRankingRow =
-  Database["public"]["Views"]["view_spec_rankings_hourly"]["Row"];
-
-export type TopSimRow =
-  Database["public"]["Views"]["view_top_sims_daily"]["Row"];
-
-export interface UserIdentity {
-  id: string;
-  email?: string;
-  handle?: string;
-  avatarUrl?: string | null;
-}
-
-export type RotationInsert =
-  Database["public"]["Tables"]["rotations"]["Insert"];
-
-export type RotationUpdate =
-  Database["public"]["Tables"]["rotations"]["Update"];
-
-// Node types (until database schema is created)
+/**
+ * Node data from the database
+ */
 export interface Node {
   id: string;
   user_id: string;
@@ -45,6 +16,9 @@ export interface Node {
   owner_name?: string;
 }
 
+/**
+ * Node access control entry
+ */
 export interface NodeAccess {
   id: string;
   node_id: string;
@@ -53,6 +27,9 @@ export interface NodeAccess {
   created_at: string;
 }
 
+/**
+ * Simulation config (content-addressed)
+ */
 export interface SimConfig {
   hash: string;
   config: unknown;
@@ -60,6 +37,9 @@ export interface SimConfig {
   last_used_at: string;
 }
 
+/**
+ * Simulation job
+ */
 export interface SimJob {
   id: string;
   user_id: string;
@@ -72,6 +52,9 @@ export interface SimJob {
   completed_at: string | null;
 }
 
+/**
+ * Simulation chunk (work unit)
+ */
 export interface SimChunk {
   id: string;
   job_id: string;

@@ -1,4 +1,4 @@
-use rhai::{Engine, Scope, OptimizationLevel};
+use rhai::{Engine, OptimizationLevel, Scope};
 use std::time::{Duration, Instant};
 
 #[derive(Clone)]
@@ -47,13 +47,17 @@ fn main() {
     let mut engine = Engine::new();
     engine.set_optimization_level(OptimizationLevel::Full);
 
-    let ast = engine.compile_expression(r#"
+    let ast = engine
+        .compile_expression(
+            r#"
         if barbed_shot_charges > 0 && frenzy_remaining < 2.0 && frenzy_stacks > 0 { 217200 }
         else if kill_command_charges > 0 && focus >= 30.0 { 34026 }
         else if barbed_shot_charges > 0 { 217200 }
         else if focus >= 35.0 { 193455 }
         else { 0 }
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
 
     let mut scope = Scope::new();
     scope.push("focus", 80.0_f32);

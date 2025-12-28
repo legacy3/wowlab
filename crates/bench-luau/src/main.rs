@@ -1,4 +1,4 @@
-use mlua::{Lua, Function, Result};
+use mlua::{Function, Lua, Result};
 use std::time::Instant;
 
 #[derive(Clone, Copy)]
@@ -121,7 +121,10 @@ fn main() -> Result<()> {
 
     println!("Rust:  {:?}", rust_time);
     println!("Luau:  {:?}", luau_time);
-    println!("Ratio: {:.1}x slower", luau_time.as_secs_f64() / rust_time.as_secs_f64());
+    println!(
+        "Ratio: {:.1}x slower",
+        luau_time.as_secs_f64() / rust_time.as_secs_f64()
+    );
 
     Ok(())
 }

@@ -24,34 +24,20 @@ pub struct AuraDef {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AuraEffect {
     /// Modify a stat by flat amount
-    FlatStat {
-        stat: StatType,
-        amount: f32,
-    },
+    FlatStat { stat: StatType, amount: f32 },
     /// Modify a stat by percentage
-    PercentStat {
-        stat: StatType,
-        percent: f32,
-    },
+    PercentStat { stat: StatType, percent: f32 },
     /// Modify damage dealt by percentage
     DamageDone {
         percent: f32,
         school: Option<DamageSchool>,
     },
     /// Modify damage taken by percentage
-    DamageTaken {
-        percent: f32,
-    },
+    DamageTaken { percent: f32 },
     /// Periodic damage
-    PeriodicDamage {
-        amount: f32,
-        coefficient: f32,
-    },
+    PeriodicDamage { amount: f32, coefficient: f32 },
     /// Periodic healing
-    PeriodicHeal {
-        amount: f32,
-        coefficient: f32,
-    },
+    PeriodicHeal { amount: f32, coefficient: f32 },
     /// Proc effect on spell cast/hit
     Proc {
         trigger: ProcTrigger,
@@ -60,10 +46,7 @@ pub enum AuraEffect {
         icd: f32, // internal cooldown
     },
     /// Reduce cooldown of spell
-    CooldownReduction {
-        spell_id: u32,
-        reduction: f32,
-    },
+    CooldownReduction { spell_id: u32, reduction: f32 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
