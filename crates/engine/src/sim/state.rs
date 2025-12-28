@@ -10,11 +10,15 @@ use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
 
 use super::EventQueue;
 
-/// Pre-computed aura timing (ms)
+/// Pre-computed aura data (timing + periodic damage)
 #[derive(Debug, Clone, Copy, Default)]
-pub struct AuraTiming {
+pub struct AuraRuntime {
     pub duration_ms: u32,
     pub tick_interval_ms: u32,
+    /// Pre-computed periodic damage base (0 if no periodic damage)
+    pub tick_amount: f32,
+    /// Pre-computed periodic damage coefficient
+    pub tick_coefficient: f32,
 }
 
 /// Main simulation state - hot fields first for cache locality.
@@ -34,8 +38,8 @@ pub struct SimState {
     /// Results accumulator (hot - written every cast)
     pub results: SimResultsAccum,
 
-    /// Pre-computed aura timing values (avoid to_ms in hot loop)
-    pub aura_timing: Vec<AuraTiming>,
+    /// Pre-computed aura runtime data (timing + periodic damage)
+    pub aura_runtime: Vec<AuraRuntime>,
 
     /// Pre-computed weapon speed in ms (base, before haste)
     pub weapon_speed_ms: u32,
@@ -398,10 +402,23 @@ impl SimState {
         // Convert duration from f32 seconds to u32 milliseconds
         let duration_ms = (config.duration * 1000.0) as u32;
 
-        // Pre-compute aura timing values
-        let aura_timing: Vec<AuraTiming> = config.auras.iter().map(|a| AuraTiming {
-            duration_ms: (a.duration * 1000.0) as u32,
-            tick_interval_ms: (a.tick_interval * 1000.0) as u32,
+        // Pre-compute aura runtime values (timing + periodic damage)
+        let aura_runtime: Vec<AuraRuntime> = config.auras.iter().map(|a| {
+            let mut runtime = AuraRuntime {
+                duration_ms: (a.duration * 1000.0) as u32,
+                tick_interval_ms: (a.tick_interval * 1000.0) as u32,
+                tick_amount: 0.0,
+                tick_coefficient: 0.0,
+            };
+            // Extract periodic damage from effects
+            for effect in &a.effects {
+                if let crate::config::AuraEffect::PeriodicDamage { amount, coefficient } = effect {
+                    runtime.tick_amount = *amount;
+                    runtime.tick_coefficient = *coefficient;
+                    break;
+                }
+            }
+            runtime
         }).collect();
 
         // Pre-compute attack speeds
@@ -419,7 +436,7 @@ impl SimState {
             #[cfg(not(feature = "large_capacity"))]
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
-            aura_timing,
+            aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,
             target: TargetState::new(config.target.max_health),

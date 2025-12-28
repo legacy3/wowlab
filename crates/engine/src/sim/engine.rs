@@ -62,7 +62,7 @@ fn dispatch_event(
         }
 
         SimEvent::AuraTick { aura_idx } => {
-            handle_aura_tick_inline(state, config, aura_idx, rng);
+            handle_aura_tick_inline(state, aura_idx, rng);
         }
 
         SimEvent::AuraExpire { aura_idx } => {
@@ -479,16 +479,11 @@ fn handle_cooldown_ready_inline(state: &mut SimState, config: &SimConfig, spell_
 #[inline(always)]
 fn handle_aura_tick_inline(
     state: &mut SimState,
-    config: &SimConfig,
     aura_idx: u8,
     rng: &mut FastRng,
 ) {
     let idx = aura_idx as usize;
-
-    // Bounds check
-    if idx >= config.auras.len() {
-        return;
-    }
+    let runtime = &state.aura_runtime[idx];
 
     // Get remaining time in ms - also checks if aura is active (returns 0 if not)
     let remaining = state.player.auras.remaining_slot(idx, state.time);
@@ -496,33 +491,26 @@ fn handle_aura_tick_inline(
         return;
     }
 
-    let aura_def = &config.auras[idx];
+    // Process periodic damage (pre-computed, no Vec iteration)
+    if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
+        let damage = runtime.tick_amount + runtime.tick_coefficient * state.player.stats.attack_power;
 
-    // Process tick effects (damage/healing)
-    for effect in &aura_def.effects {
-        match effect {
-            crate::config::AuraEffect::PeriodicDamage { amount, coefficient } => {
-                let damage = amount + coefficient * state.player.stats.attack_power;
+        // Apply crit
+        let damage = if rng.roll(state.player.stats.crit_chance) {
+            damage * 2.0
+        } else {
+            damage
+        };
 
-                // Apply crit using precomputed crit_chance
-                let damage = if rng.roll(state.player.stats.crit_chance) {
-                    damage * 2.0
-                } else {
-                    damage
-                };
+        // Apply versatility
+        let damage = damage * state.player.stats.vers_mult;
 
-                // Apply versatility using precomputed vers_mult
-                let damage = damage * state.player.stats.vers_mult;
-
-                state.results.total_damage += damage as f64;
-                state.target.health -= damage;
-            }
-            _ => {}
-        }
+        state.results.total_damage += damage as f64;
+        state.target.health -= damage;
     }
 
     // Schedule next tick if aura still has duration remaining
-    let tick_interval_ms = state.aura_timing[idx].tick_interval_ms;
+    let tick_interval_ms = runtime.tick_interval_ms;
     if tick_interval_ms > 0 {
         let next_tick = state.time + tick_interval_ms;
         if next_tick < state.time + remaining {
@@ -557,7 +545,7 @@ fn handle_aura_apply_inline(
     }
 
     let aura_def = &config.auras[idx];
-    let timing = &state.aura_timing[idx];
+    let runtime = &state.aura_runtime[idx];
 
     #[cfg(feature = "debug_logging")]
     eprintln!("AuraApply: {} to slot {} at time {}", aura_def.name, idx, state.time);
@@ -565,7 +553,7 @@ fn handle_aura_apply_inline(
     // Apply using slot index - O(1)
     state.player.auras.apply_slot(
         idx,
-        timing.duration_ms,
+        runtime.duration_ms,
         aura_def.max_stacks,
         state.time,
     );
@@ -575,14 +563,14 @@ fn handle_aura_apply_inline(
 
     // Schedule expiration
     state.events.push(
-        state.time + timing.duration_ms,
+        state.time + runtime.duration_ms,
         SimEvent::AuraExpire { aura_idx },
     );
 
     // Schedule first tick if DoT/HoT
-    if timing.tick_interval_ms > 0 {
+    if runtime.tick_interval_ms > 0 {
         state.events.push(
-            state.time + timing.tick_interval_ms,
+            state.time + runtime.tick_interval_ms,
             SimEvent::AuraTick { aura_idx },
         );
     }
