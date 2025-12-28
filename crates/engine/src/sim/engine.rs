@@ -287,8 +287,9 @@ fn find_castable_spell_inline(state: &SimState, current_time: u32) -> Option<usi
         return None;
     }
 
-    // Iterate through spells in priority order (use runtime data, not config)
-    for (idx, spell_rt) in state.spell_runtime.iter().enumerate() {
+    // Iterate through spells in ROTATION PRIORITY order
+    for &idx in &state.rotation_priority {
+        let spell_rt = &state.spell_runtime[idx];
         let spell_state = &player.spell_states[idx];
 
         // Check cooldown/charges - most common rejection
@@ -441,8 +442,9 @@ fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
     let regen_rate = player.resources.regen_per_second;
     let current_resource = player.resources.current;
 
-    // Use spell_runtime for cost_amount (avoid touching config.spells)
-    for (idx, spell_rt) in state.spell_runtime.iter().enumerate() {
+    // Use rotation priority order
+    for &idx in &state.rotation_priority {
+        let spell_rt = &state.spell_runtime[idx];
         let spell_state = &player.spell_states[idx];
 
         // Cooldown ready time
@@ -579,6 +581,10 @@ fn handle_aura_apply_inline(
     #[cfg(feature = "debug_logging")]
     eprintln!("AuraApply: {} to slot {} at time {}", aura_def.name, idx, state.time);
 
+    // Check if this is a refresh (aura already active with remaining time)
+    // has_slot alone isn't enough - at exact expiration time, slot exists but remaining=0
+    let is_refresh = state.player.auras.remaining_slot(idx, state.time) > 0;
+
     // Apply using slot index - O(1)
     state.player.auras.apply_slot(
         idx,
@@ -596,8 +602,9 @@ fn handle_aura_apply_inline(
         SimEvent::AuraExpire { aura_idx },
     );
 
-    // Schedule first tick if DoT/HoT
-    if runtime.tick_interval_ms > 0 {
+    // Schedule first tick if DoT/HoT (only on NEW application, not refresh)
+    // Refresh extends duration but existing tick chain continues
+    if runtime.tick_interval_ms > 0 && !is_refresh {
         state.events.push(
             state.time + runtime.tick_interval_ms,
             SimEvent::AuraTick { aura_idx },
@@ -658,7 +665,7 @@ fn handle_auto_attack_inline(state: &mut SimState, config: &SimConfig, _rng: &mu
     let ap_bonus = stats.ap_normalized * weapon_speed;
     let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
 
-    // Record damage (use index 255 for auto-attacks to avoid collision with spells)
+    // Record damage
     state.results.total_damage += damage;
     state.target.health -= damage;
 

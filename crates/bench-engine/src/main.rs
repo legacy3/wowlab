@@ -511,11 +511,10 @@ fn main() {
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);
 
-    // Single sim to count events
+    // Single sim
     rng.reseed(0);
     let result = engine::sim::run_simulation(&mut state, &config, &mut rng);
     println!("Single {}s sim: {} casts, {:.0} DPS", config.duration, result.casts, result.dps);
-    println!("Events processed: {}", state.events.events_processed);
 
     #[cfg(feature = "meta_events")]
     {
@@ -544,6 +543,7 @@ fn main() {
     );
 
     // Full benchmark
+    println!("\n--- Full Benchmark ---");
     let start = Instant::now();
     let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
     let elapsed = start.elapsed();

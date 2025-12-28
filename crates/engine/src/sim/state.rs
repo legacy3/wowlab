@@ -68,6 +68,9 @@ pub struct SimState {
     /// Pre-computed spell runtime data (hot - accessed every cast)
     pub spell_runtime: Vec<SpellRuntime>,
 
+    /// Rotation priority (spell indices in priority order)
+    pub rotation_priority: Vec<usize>,
+
     /// Pre-computed aura runtime data (timing + periodic damage)
     pub aura_runtime: Vec<AuraRuntime>,
 
@@ -495,6 +498,17 @@ impl SimState {
             runtime
         }).collect();
 
+        // Build rotation priority (map spell_id to spell index)
+        let rotation_priority: Vec<usize> = config.rotation.iter().filter_map(|action| {
+            match action {
+                crate::rotation::RotationAction::Cast { spell_id } => {
+                    config.spells.iter().position(|s| s.id == *spell_id)
+                }
+                // Other action types don't map to spells
+                _ => None,
+            }
+        }).collect();
+
         let mut state = Self {
             time: 0,
             duration: duration_ms,
@@ -505,6 +519,7 @@ impl SimState {
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
             spell_runtime,
+            rotation_priority,
             aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,
