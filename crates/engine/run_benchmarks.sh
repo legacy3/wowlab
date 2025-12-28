@@ -45,10 +45,10 @@ for i in "${!FEATURES[@]}"; do
     name="${NAMES[$i]}"
     if [ -z "$feat" ]; then
         echo "  Building: $name"
-        cargo build --release 2>/dev/null
+        cargo build --release --bin bench 2>/dev/null
     else
         echo "  Building: $name"
-        cargo build --release --features "$feat" 2>/dev/null
+        cargo build --release --bin bench --features "$feat" 2>/dev/null
     fi
 done
 echo ""
@@ -66,9 +66,9 @@ for i in "${!FEATURES[@]}"; do
     echo "--- $name ---"
 
     if [ -z "$feat" ]; then
-        output=$(cargo run --release -- "$ITERATIONS" 2>&1)
+        output=$(cargo run --release --bin bench -- "$ITERATIONS" 2>&1)
     else
-        output=$(cargo run --release --features "$feat" -- "$ITERATIONS" 2>&1)
+        output=$(cargo run --release --bin bench --features "$feat" -- "$ITERATIONS" 2>&1)
     fi
 
     # Extract key metrics

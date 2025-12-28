@@ -1,9 +1,9 @@
 use engine::config::{
-    AuraDef, AuraEffect, DamageFormula, PlayerConfig, ResourceConfig, ResourceCost, ResourceType,
-    SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
+    AuraDef, AuraEffect, DamageFormula, PetConfig, PlayerConfig, ResourceConfig, ResourceCost,
+    ResourceType, SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
 };
 use engine::rotation::RotationAction;
-use engine::sim::{run_batch, SimState};
+use engine::sim::{run_batch, run_simulation, SimState};
 use engine::util::FastRng;
 use std::time::Instant;
 
@@ -31,7 +31,7 @@ fn create_bm_hunter_config() -> SimConfig {
             weapon_speed: 3.0,
             weapon_damage: (500.0, 700.0),
         },
-        pet: Some(engine::config::PetConfig {
+        pet: Some(PetConfig {
             name: "Hati".to_string(),
             stats: Stats {
                 agility: 5000.0,
@@ -529,7 +529,7 @@ fn main() {
 
     // Single sim
     rng.reseed(0);
-    let result = engine::sim::run_simulation(&mut state, &config, &mut rng);
+    let result = run_simulation(&mut state, &config, &mut rng);
     println!(
         "Single {}s sim: {} casts, {:.0} DPS",
         config.duration, result.casts, result.dps
