@@ -16,10 +16,29 @@ import sys
 import os
 from collections import Counter
 from pathlib import Path
+import shutil
 
 SCRIPT_DIR = Path(__file__).parent
 BINARY = SCRIPT_DIR / "target/release/bench-engine"
 PROFILE_PATH = "/tmp/bench-engine-profile.json.gz"
+
+# Find addr2line (gaddr2line on macOS via Homebrew)
+def find_tool(names, extra_paths=None):
+    """Find a tool by trying multiple names and paths."""
+    extra_paths = extra_paths or []
+    for name in names:
+        path = shutil.which(name)
+        if path:
+            return path
+        for prefix in extra_paths:
+            full = Path(prefix) / name
+            if full.exists():
+                return str(full)
+    return None
+
+HOMEBREW_BINUTILS = ["/opt/homebrew/opt/binutils/bin", "/usr/local/opt/binutils/bin"]
+ADDR2LINE = find_tool(["addr2line", "gaddr2line"], HOMEBREW_BINUTILS)
+CXXFILT = find_tool(["c++filt", "gc++filt"], HOMEBREW_BINUTILS)
 
 def run_profiler(iterations: int):
     """Run samply and save profile."""
@@ -38,19 +57,48 @@ def resolve_symbol(addr: str, binary: Path, cache: dict) -> str:
         cache[addr] = addr
         return addr
 
-    result = subprocess.run(
-        ["addr2line", "-f", "-e", str(binary), addr],
-        capture_output=True, text=True
-    )
-    mangled = result.stdout.split("\n")[0]
+    # Try atos first (macOS native), then addr2line (Linux/GNU)
+    if sys.platform == "darwin":
+        # Add base address for Mach-O binaries (typically 0x100000000 for arm64/x86_64)
+        addr_int = int(addr, 16)
+        full_addr = hex(0x100000000 + addr_int)
+        result = subprocess.run(
+            ["atos", "-o", str(binary), full_addr],
+            capture_output=True, text=True
+        )
+        demangled = result.stdout.strip()
+        if demangled and not demangled.startswith("0x"):
+            # Keep file:line info for inlined code visibility
+            # Format: "func_name (in binary) (file.rs:123)" -> "func_name (file.rs:123)"
+            if " (in " in demangled:
+                parts = demangled.split(" (in ")
+                func = parts[0]
+                if len(parts) > 1 and ")" in parts[1]:
+                    loc = parts[1].split(") ", 1)[-1] if ") " in parts[1] else ""
+                    demangled = f"{func} {loc}".strip()
+            cache[addr] = demangled
+            return demangled
 
-    result = subprocess.run(
-        ["c++filt", mangled],
-        capture_output=True, text=True
-    )
-    demangled = result.stdout.strip() or mangled
-    cache[addr] = demangled
-    return demangled
+    if ADDR2LINE:
+        result = subprocess.run(
+            [ADDR2LINE, "-f", "-e", str(binary), addr],
+            capture_output=True, text=True
+        )
+        mangled = result.stdout.split("\n")[0]
+
+        if CXXFILT:
+            result = subprocess.run(
+                [CXXFILT, mangled],
+                capture_output=True, text=True
+            )
+            demangled = result.stdout.strip() or mangled
+        else:
+            demangled = mangled
+        cache[addr] = demangled
+        return demangled
+
+    cache[addr] = addr
+    return addr
 
 def analyze_profile():
     """Parse profile and print hot functions."""
