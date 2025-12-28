@@ -1,11 +1,11 @@
 [package]
-name = "wowlab-node"
+name = "node"
 version = "0.1.0"
 edition = "2021"
 description = "Distributed simulation node for WowLab"
 
 [[bin]]
-name = "wowlab-node"
+name = "node"
 path = "src/main.rs"
 
 [dependencies]
