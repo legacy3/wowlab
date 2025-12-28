@@ -5,6 +5,7 @@ use supabase_realtime_rs::{
     PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload, RealtimeChannelOptions,
     RealtimeClient, RealtimeClientOptions, RealtimeError as SbRealtimeError,
 };
+use tokio::runtime::Handle;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
@@ -52,12 +53,16 @@ impl SupabaseRealtime {
             + "/realtime/v1"
     }
 
-    pub fn subscribe(self: Arc<Self>, node_id: Uuid) -> mpsc::Receiver<RealtimeEvent> {
+    pub fn subscribe(
+        self: Arc<Self>,
+        node_id: Uuid,
+        handle: &Handle,
+    ) -> mpsc::Receiver<RealtimeEvent> {
         let (tx, rx) = mpsc::channel(32);
         let ws_url = self.ws_url();
         let anon_key = self.anon_key.clone();
 
-        tokio::spawn(async move {
+        handle.spawn(async move {
             run_with_reconnect(ws_url, anon_key, node_id, tx).await;
         });
 

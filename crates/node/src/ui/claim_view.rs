@@ -1,6 +1,7 @@
 use super::icons::{icon, Icon};
 use super::theme::{BORDER, GREEN_500, SURFACE, TEXT_MUTED, TEXT_PRIMARY, ZINC_700, ZINC_950};
 
+#[allow(clippy::too_many_lines)]
 pub fn show(ui: &mut egui::Ui, code: &str) {
     let full_url = format!("https://wowlab.gg/account/nodes/claim?token={code}");
     let chars: Vec<char> = code.chars().collect();

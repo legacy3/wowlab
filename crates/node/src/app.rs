@@ -1,7 +1,8 @@
 use crate::{
     claim,
     config::NodeConfig,
-    supabase::{ApiClient, ChunkPayload, NodePayload, RealtimeEvent, SupabaseRealtime},
+    logging::UiLogEntry,
+    supabase::{ApiClient, NodePayload, RealtimeEvent, SupabaseRealtime},
     ui::{
         claim_view, dashboard,
         icons::{icon, Icon},
@@ -16,6 +17,7 @@ use std::{
 };
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
+use tracing::Level;
 
 const MAX_LOGS: usize = 100;
 const MAX_EVENTS_PER_FRAME: usize = 10;
@@ -79,6 +81,7 @@ pub struct NodeApp {
     api: ApiClient,
     worker_pool: WorkerPool,
     logs: VecDeque<LogEntry>,
+    log_rx: mpsc::Receiver<UiLogEntry>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     node_id: Option<uuid::Uuid>,
@@ -92,7 +95,11 @@ pub struct NodeApp {
 }
 
 impl NodeApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>, runtime: Arc<Runtime>) -> Self {
+    pub fn new(
+        _cc: &eframe::CreationContext<'_>,
+        runtime: Arc<Runtime>,
+        log_rx: mpsc::Receiver<UiLogEntry>,
+    ) -> Self {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
         let default_cores = claim::get_default_cores().unsigned_abs();
@@ -103,12 +110,13 @@ impl NodeApp {
             AppState::Registering
         };
 
-        let mut app = Self {
+        Self {
             runtime,
             state,
             api,
             worker_pool: WorkerPool::new(default_cores as usize),
             logs: VecDeque::with_capacity(MAX_LOGS),
+            log_rx,
             register_rx: None,
             realtime_rx: None,
             node_id: config.node_id,
@@ -120,10 +128,7 @@ impl NodeApp {
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
             config,
-        };
-
-        app.log(LogLevel::Info, "WoW Lab Node started");
-        app
+        }
     }
 
     fn start_async_tasks(&mut self) {
@@ -162,18 +167,26 @@ impl NodeApp {
             self.config.api_url.clone(),
             self.config.anon_key.clone(),
         ));
-        self.realtime_rx = Some(realtime.subscribe(node_id));
+        self.realtime_rx = Some(realtime.subscribe(node_id, self.runtime.handle()));
     }
 
-    fn log(&mut self, level: LogLevel, message: impl Into<String>) {
-        if self.logs.len() >= MAX_LOGS {
-            self.logs.pop_front();
+    fn poll_log_entries(&mut self) {
+        while let Ok(entry) = self.log_rx.try_recv() {
+            if self.logs.len() >= MAX_LOGS {
+                self.logs.pop_front();
+            }
+            let level = match entry.level {
+                Level::ERROR => LogLevel::Error,
+                Level::WARN => LogLevel::Warn,
+                Level::DEBUG | Level::TRACE => LogLevel::Debug,
+                _ => LogLevel::Info,
+            };
+            self.logs.push_back(LogEntry {
+                timestamp: Instant::now(),
+                level,
+                message: entry.message,
+            });
         }
-        self.logs.push_back(LogEntry {
-            timestamp: Instant::now(),
-            level,
-            message: message.into(),
-        });
     }
 
     fn check_registration(&mut self) {
@@ -186,12 +199,12 @@ impl NodeApp {
                 self.node_id = Some(id);
                 self.config.set_node_id(id);
                 self.state = AppState::Claiming { code: code.clone() };
-                self.log(LogLevel::Info, format!("Registered! Claim code: {code}"));
+                tracing::info!("Registered! Claim code: {code}");
                 self.register_rx = None;
                 self.start_realtime(id);
             }
-            Ok(RegisterResult::Failed(err)) => {
-                self.log(LogLevel::Error, format!("Registration failed: {err}"));
+            Ok(RegisterResult::Failed(ref err)) => {
+                tracing::error!("Registration failed: {err}");
                 self.register_rx = None;
             }
             Err(mpsc::error::TryRecvError::Empty) => {}
@@ -219,51 +232,44 @@ impl NodeApp {
             }
         }
 
-        for event in events {
+        for event in &events {
             self.handle_realtime_event(event);
         }
     }
 
-    fn handle_realtime_event(&mut self, event: RealtimeEvent) {
+    fn handle_realtime_event(&mut self, event: &RealtimeEvent) {
         match event {
             RealtimeEvent::Connected => {
                 self.connection_status = ConnectionStatus::Connected;
-                self.log(LogLevel::Info, "Connected to Realtime");
+                tracing::info!("Connected to Realtime");
                 self.send_heartbeat();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
-                self.log(
-                    LogLevel::Warn,
-                    "Disconnected from Realtime, reconnecting...",
-                );
+                tracing::warn!("Disconnected from Realtime, reconnecting...");
             }
             RealtimeEvent::NodeUpdated(ref payload) => self.handle_node_update(payload),
-            RealtimeEvent::ChunkAssigned(ref payload) => self.handle_chunk_assigned(payload),
-            RealtimeEvent::Error(err) => {
-                self.log(LogLevel::Error, format!("Realtime error: {err}"));
+            RealtimeEvent::ChunkAssigned(ref payload) => {
+                tracing::info!(
+                    "Chunk assigned: {} ({} iterations)",
+                    payload.id,
+                    payload.iterations
+                );
+            }
+            RealtimeEvent::Error(ref err) => {
+                tracing::error!("Realtime error: {err}");
             }
         }
     }
 
     fn handle_node_update(&mut self, payload: &NodePayload) {
         if payload.user_id.is_some() && matches!(self.state, AppState::Claiming { .. }) {
-            self.log(LogLevel::Info, "Node claimed successfully!");
+            tracing::info!("Node claimed successfully!");
             self.state = AppState::Dashboard;
         }
 
         self.node_name.clone_from(&payload.name);
         self.max_parallel = payload.max_parallel.unsigned_abs();
-    }
-
-    fn handle_chunk_assigned(&mut self, payload: &ChunkPayload) {
-        self.log(
-            LogLevel::Info,
-            format!(
-                "Chunk assigned: {} ({} iterations)",
-                payload.id, payload.iterations
-            ),
-        );
     }
 
     fn send_heartbeat(&mut self) {
@@ -342,6 +348,7 @@ impl eframe::App for NodeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.start_async_tasks();
         self.load_logo(ctx);
+        self.poll_log_entries();
         self.check_registration();
         self.check_realtime_events();
         self.check_heartbeat();

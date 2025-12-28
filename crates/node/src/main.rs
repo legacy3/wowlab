@@ -1,6 +1,7 @@
 mod app;
 mod claim;
 mod config;
+mod logging;
 mod supabase;
 mod ui;
 mod worker;
@@ -35,14 +36,7 @@ fn load_icon() -> Option<egui::IconData> {
 }
 
 fn main() -> eframe::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("node=info".parse().unwrap())
-                .add_directive("eframe=warn".parse().unwrap())
-                .add_directive("egui=warn".parse().unwrap()),
-        )
-        .init();
+    let log_rx = logging::init();
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
 
@@ -65,7 +59,7 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(|cc| {
             setup_egui(&cc.egui_ctx);
-            Ok(Box::new(NodeApp::new(cc, runtime)))
+            Ok(Box::new(NodeApp::new(cc, runtime, log_rx)))
         }),
     )
 }

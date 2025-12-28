@@ -5,6 +5,7 @@ use super::theme::{
 };
 use crate::app::NodeStats;
 
+#[allow(clippy::too_many_lines)]
 pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
     ui.add_space(12.0);
 
