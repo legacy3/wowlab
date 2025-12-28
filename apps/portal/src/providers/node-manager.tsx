@@ -56,6 +56,13 @@ export interface NodeListItem {
 
 type UIAccessType = "owner" | "friends" | "guild" | "public";
 
+export interface PendingNodeInfo {
+  id: string;
+  proposedName: string;
+  maxParallel: number;
+  version: string | null;
+}
+
 interface NodeManagerContextValue {
   // Data
   localNode: LocalNode;
@@ -69,9 +76,13 @@ interface NodeManagerContextValue {
   setLocalConcurrency: (concurrency: number) => void;
 
   // Remote node actions
+  validateClaimCode: (
+    code: string,
+  ) => Promise<{ success: boolean; node?: PendingNodeInfo; error?: string }>;
   claimNode: (
     code: string,
-    name?: string,
+    name: string,
+    maxParallel: number,
   ) => Promise<{ success: boolean; error?: string }>;
   deleteNode: (nodeId: string) => Promise<void>;
 
@@ -215,11 +226,52 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Validate claim code and get pending node info
+  const validateClaimCode = useCallback(
+    async (
+      code: string,
+    ): Promise<{ success: boolean; node?: PendingNodeInfo; error?: string }> => {
+      try {
+        const supabase = createClient();
+
+        // Find pending node by claim code
+        const { data: pendingNode, error: findError } = await supabase
+          .from("user_nodes")
+          .select("id, name, maxParallel, version")
+          .eq("claimCode", code.toUpperCase())
+          .eq("status", "pending")
+          .is("userId", null)
+          .single();
+
+        if (findError || !pendingNode) {
+          return { success: false, error: "Invalid or expired claim code" };
+        }
+
+        return {
+          success: true,
+          node: {
+            id: pendingNode.id,
+            proposedName: pendingNode.name,
+            maxParallel: pendingNode.maxParallel,
+            version: pendingNode.version,
+          },
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    },
+    [],
+  );
+
   // Claim node
   const claimNode = useCallback(
     async (
       code: string,
-      name?: string,
+      name: string,
+      maxParallel: number,
     ): Promise<{ success: boolean; error?: string }> => {
       if (!identity?.id) {
         return { success: false, error: "Not authenticated" };
@@ -247,7 +299,8 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
           id: pendingNode.id,
           values: {
             userId: identity.id,
-            name: name || `Node-${code}`,
+            name,
+            maxParallel,
             claimCode: null,
             status: "online",
           },
@@ -335,6 +388,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
       isLoading,
       setLocalEnabled,
       setLocalConcurrency,
+      validateClaimCode,
       claimNode,
       deleteNode,
       getNodeAccess,
@@ -349,6 +403,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
       isLoading,
       setLocalEnabled,
       setLocalConcurrency,
+      validateClaimCode,
       claimNode,
       deleteNode,
       getNodeAccess,
