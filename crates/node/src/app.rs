@@ -14,6 +14,7 @@ use std::{
 };
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
+use crate::supabase::HeartbeatResponse;
 
 /// Log entry for the scrolling log view
 #[derive(Clone)]
@@ -77,6 +78,7 @@ pub struct NodeApp {
 
     // Async communication
     claim_rx: Option<mpsc::Receiver<ClaimResult>>,
+    heartbeat_rx: Option<mpsc::Receiver<HeartbeatResult>>,
     node_id: Option<uuid::Uuid>,
 
     // UI state
@@ -84,6 +86,7 @@ pub struct NodeApp {
 
     // Track if we've started async tasks
     started: bool,
+    last_heartbeat: Option<Instant>,
 
     // Logo texture
     logo: Option<egui::TextureHandle>,
@@ -103,6 +106,11 @@ pub enum Tab {
 enum ClaimResult {
     Registered { id: uuid::Uuid, code: String },
     Claimed { name: String },
+    Failed(String),
+}
+
+enum HeartbeatResult {
+    Success(HeartbeatResponse),
     Failed(String),
 }
 
@@ -141,9 +149,11 @@ impl NodeApp {
             logs: VecDeque::with_capacity(100),
             max_logs: 100,
             claim_rx: None,
+            heartbeat_rx: None,
             node_id,
             current_tab: Tab::Status,
             started: false,
+            last_heartbeat: None,
             logo: None,
             node_name: claim::get_default_name(),
             max_parallel: default_cores,
@@ -236,6 +246,8 @@ impl NodeApp {
                     };
                     self.claim_rx = None;
                     self.log(LogLevel::Info, "Node claimed successfully!");
+                    // Send initial heartbeat
+                    self.send_heartbeat();
                 }
                 Ok(ClaimResult::Failed(err)) => {
                     self.log(LogLevel::Error, format!("Error: {}", err));
@@ -247,6 +259,65 @@ impl NodeApp {
                 Err(mpsc::error::TryRecvError::Disconnected) => {
                     self.claim_rx = None;
                 }
+            }
+        }
+    }
+
+    fn send_heartbeat(&mut self) {
+        let node_id = match self.node_id {
+            Some(id) => id,
+            None => return,
+        };
+
+        let (tx, rx) = mpsc::channel(1);
+        self.heartbeat_rx = Some(rx);
+        self.last_heartbeat = Some(Instant::now());
+
+        let api = self.api.clone();
+
+        self.runtime.spawn(async move {
+            match api.heartbeat(node_id, "online").await {
+                Ok(response) => {
+                    let _ = tx.send(HeartbeatResult::Success(response)).await;
+                }
+                Err(e) => {
+                    let _ = tx.send(HeartbeatResult::Failed(e.to_string())).await;
+                }
+            }
+        });
+    }
+
+    fn check_heartbeat(&mut self) {
+        // Check for heartbeat response
+        if let Some(ref mut rx) = self.heartbeat_rx {
+            match rx.try_recv() {
+                Ok(HeartbeatResult::Success(response)) => {
+                    // Sync settings from server
+                    self.node_name = response.name;
+                    self.max_parallel = response.max_parallel as u32;
+                    self.heartbeat_rx = None;
+                }
+                Ok(HeartbeatResult::Failed(err)) => {
+                    self.log(LogLevel::Warn, format!("Heartbeat failed: {}", err));
+                    self.heartbeat_rx = None;
+                }
+                Err(mpsc::error::TryRecvError::Empty) => {
+                    // Still waiting
+                }
+                Err(mpsc::error::TryRecvError::Disconnected) => {
+                    self.heartbeat_rx = None;
+                }
+            }
+        }
+
+        // Send periodic heartbeat (every 60 seconds) when in Dashboard state
+        if matches!(self.state, AppState::Dashboard { .. }) && self.heartbeat_rx.is_none() {
+            let should_send = match self.last_heartbeat {
+                None => true,
+                Some(last) => last.elapsed() > Duration::from_secs(60),
+            };
+            if should_send {
+                self.send_heartbeat();
             }
         }
     }
@@ -291,6 +362,9 @@ impl eframe::App for NodeApp {
 
         // Check for async claim updates
         self.check_claim_status();
+
+        // Check heartbeat status and send periodic heartbeats
+        self.check_heartbeat();
 
         // Top bar with status
         egui::TopBottomPanel::top("header")
