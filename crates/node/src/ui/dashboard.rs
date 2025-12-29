@@ -3,7 +3,7 @@ use super::theme::{
     card_frame, BLUE_500, GREEN_500, RED_500, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY, YELLOW_500,
     ZINC_700, ZINC_800,
 };
-use crate::app::NodeStats;
+use node_core::NodeStats;
 
 pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
     ui.add_space(8.0);

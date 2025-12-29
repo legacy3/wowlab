@@ -2,6 +2,7 @@ use super::{
     icons::{icon, Icon},
     theme,
 };
+use uuid::Uuid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -10,7 +11,7 @@ pub enum SettingsAction {
     Unlink,
 }
 
-pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<uuid::Uuid>) -> SettingsAction {
+pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> SettingsAction {
     let mut action = SettingsAction::None;
 
     ui.add_space(8.0);
@@ -40,9 +41,7 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<uuid::Uuid>) -> 
         info_row(
             ui,
             "Node ID",
-            &node_id
-                .map(|id| id.to_string())
-                .unwrap_or_else(|| "Not registered".to_string()),
+            &node_id.map_or_else(|| "Not registered".to_string(), |id| id.to_string()),
         );
         ui.add_space(6.0);
         info_row(ui, "Version", &format!("v{VERSION}"));

@@ -1,12 +1,8 @@
 mod app;
-mod claim;
-mod config;
-mod supabase;
 mod ui;
-mod utils;
-mod worker;
 
 use app::NodeApp;
+use node_core::utils::logging;
 use std::sync::Arc;
 
 fn setup_egui(ctx: &egui::Context) {
@@ -36,7 +32,7 @@ fn load_icon() -> Option<egui::IconData> {
 }
 
 fn main() -> eframe::Result<()> {
-    let log_rx = utils::logging::init();
+    let log_rx = logging::init_with_ui();
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
 

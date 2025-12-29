@@ -1,5 +1,5 @@
 use super::runner::SimRunner;
-use crate::app::NodeStats;
+use crate::NodeStats;
 use std::sync::{
     atomic::{AtomicU32, AtomicU64, Ordering::SeqCst},
     Arc,

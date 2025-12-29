@@ -19,39 +19,36 @@ pub struct UiLogEntry {
     pub message: String,
 }
 
-pub fn init() -> mpsc::Receiver<UiLogEntry> {
+pub fn init_with_ui() -> mpsc::Receiver<UiLogEntry> {
     let (tx, rx) = mpsc::channel(100);
     UI_SENDER.set(tx).ok();
 
-    // These are compile-time constants, parse failure is a programmer error
     let env_filter = tracing_subscriber::EnvFilter::from_default_env()
         .add_directive("node=debug".parse().expect("valid directive"))
+        .add_directive("node_core=debug".parse().expect("valid directive"))
+        .add_directive("node_headless=debug".parse().expect("valid directive"))
         .add_directive("eframe=warn".parse().expect("valid directive"))
         .add_directive("egui=warn".parse().expect("valid directive"));
 
-    let console_layer = tracing_subscriber::fmt::layer().with_target(true);
-    let ui_layer = UiLayer;
-
     let registry = tracing_subscriber::registry()
         .with(env_filter)
-        .with(console_layer)
-        .with(ui_layer);
+        .with(tracing_subscriber::fmt::layer().with_target(true))
+        .with(UiLayer);
 
-    if let Some(dirs) = ProjectDirs::from("gg", "wowlab", "wowlab-node") {
-        let log_dir = dirs.data_dir().join("logs");
+    if let Some(log_dir) = log_dir() {
         if std::fs::create_dir_all(&log_dir).is_ok() {
             let file_appender = tracing_appender::rolling::daily(&log_dir, "node.log");
             let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
-
-            // Keep guard alive for program lifetime - dropping it stops the file logger
             Box::leak(Box::new(guard));
 
-            let file_layer = tracing_subscriber::fmt::layer()
-                .with_ansi(false)
-                .with_target(true)
-                .with_writer(non_blocking);
-
-            registry.with(file_layer).init();
+            registry
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_ansi(false)
+                        .with_target(true)
+                        .with_writer(non_blocking),
+                )
+                .init();
             tracing::debug!("Logging to {log_dir:?}");
             return rx;
         }
@@ -59,6 +56,37 @@ pub fn init() -> mpsc::Receiver<UiLogEntry> {
 
     registry.init();
     rx
+}
+
+pub fn init_headless() {
+    let env_filter = tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive("node_core=debug".parse().expect("valid directive"))
+        .add_directive("node_headless=info".parse().expect("valid directive"));
+
+    let registry = tracing_subscriber::registry()
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer().with_target(true));
+
+    if let Some(log_dir) = log_dir() {
+        if std::fs::create_dir_all(&log_dir).is_ok() {
+            let file_appender = tracing_appender::rolling::daily(&log_dir, "node.log");
+            let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+            Box::leak(Box::new(guard));
+
+            registry
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_ansi(false)
+                        .with_target(true)
+                        .with_writer(non_blocking),
+                )
+                .init();
+            tracing::debug!("Logging to {log_dir:?}");
+            return;
+        }
+    }
+
+    registry.init();
 }
 
 struct UiLayer;
@@ -77,12 +105,12 @@ where
         };
 
         let level = *event.metadata().level();
-
         let mut visitor = MessageVisitor::default();
         event.record(&mut visitor);
-
-        let message = visitor.message.unwrap_or_default();
-        let _ = sender.try_send(UiLogEntry { level, message });
+        let _ = sender.try_send(UiLogEntry {
+            level,
+            message: visitor.message.unwrap_or_default(),
+        });
     }
 }
 

@@ -89,9 +89,8 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
             .get_temp::<Instant>(egui::Id::new("code_copied_at"))
     });
 
-    let show_copied = copied_at
-        .map(|t| t.elapsed().as_secs_f64() < COPIED_FEEDBACK_DURATION)
-        .unwrap_or(false);
+    let show_copied =
+        copied_at.is_some_and(|t| t.elapsed().as_secs_f64() < COPIED_FEEDBACK_DURATION);
 
     let (text, color) = if show_copied {
         (format!("{} Copied!", icon(Icon::Check)), GREEN_500)

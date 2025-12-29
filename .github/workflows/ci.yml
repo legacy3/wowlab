@@ -82,7 +82,9 @@ jobs:
         with:
           workspaces: |
             crates/engine
+            crates/node-core
             crates/node
+            crates/node-headless
 
       - name: Install Linux dependencies
         if: steps.changes.outputs.rust == 'true' && runner.os == 'Linux'
@@ -94,10 +96,22 @@ jobs:
         if: steps.changes.outputs.rust == 'true'
         run: cargo build --release --manifest-path crates/engine/Cargo.toml
 
-      - name: Build node crate
+      - name: Build node-core crate
+        if: steps.changes.outputs.rust == 'true'
+        run: cargo build --release --manifest-path crates/node-core/Cargo.toml
+
+      - name: Build node GUI crate
         if: steps.changes.outputs.rust == 'true'
         run: cargo build --release --manifest-path crates/node/Cargo.toml
+
+      - name: Build node-headless crate
+        if: steps.changes.outputs.rust == 'true'
+        run: cargo build --release --manifest-path crates/node-headless/Cargo.toml
 
       - name: Run engine tests
         if: steps.changes.outputs.rust == 'true'
         run: cargo test --manifest-path crates/engine/Cargo.toml
+
+      - name: Run node-core tests
+        if: steps.changes.outputs.rust == 'true'
+        run: cargo test --manifest-path crates/node-core/Cargo.toml
