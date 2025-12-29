@@ -202,7 +202,7 @@ export function NodeSettingsModal({
                   "shrink-0",
                   effectiveEnabled
                     ? "data-[state=on]:bg-green-500/10 data-[state=on]:text-green-500 data-[state=on]:border-green-500/30"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 <Power className="h-4 w-4" />
@@ -234,7 +234,9 @@ export function NodeSettingsModal({
                     tabIndex={-1}
                     className="text-lg font-semibold bg-transparent border-none outline-none focus:ring-0 w-full truncate hover:bg-muted/50 focus:bg-muted/50 rounded px-1 -mx-1 transition-colors"
                   />
-                  {isSavingName && <FlaskInlineLoader className="h-4 w-4 shrink-0" />}
+                  {isSavingName && (
+                    <FlaskInlineLoader className="h-4 w-4 shrink-0" />
+                  )}
                 </div>
               )}
             </div>
@@ -298,7 +300,7 @@ export function NodeSettingsModal({
                       "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-xs transition-colors",
                       accessType === opt.value
                         ? "border-primary bg-primary/5 text-primary"
-                        : "border-border hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                        : "border-border hover:bg-muted/50 text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {opt.icon}
@@ -343,7 +345,9 @@ export function NodeSettingsModal({
                         </p>
                         <Input
                           value={deleteConfirmation}
-                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                          onChange={(e) =>
+                            setDeleteConfirmation(e.target.value)
+                          }
                           placeholder={node.name}
                           autoComplete="off"
                         />
@@ -352,7 +356,10 @@ export function NodeSettingsModal({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} disabled={!canDelete}>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={!canDelete}
+                    >
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
