@@ -133,6 +133,7 @@ impl WorkerPool {
             },
             busy_workers: active,
             max_workers: max,
+            total_cores: 0,
             cpu_usage: if max > 0 {
                 active as f32 / max as f32
             } else {

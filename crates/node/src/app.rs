@@ -50,6 +50,7 @@ pub struct NodeStats {
     pub sims_per_second: f64,
     pub busy_workers: u32,
     pub max_workers: u32,
+    pub total_cores: u32,
     pub cpu_usage: f32,
 }
 
@@ -96,6 +97,7 @@ pub struct NodeApp {
     logo: Option<egui::TextureHandle>,
     node_name: String,
     max_parallel: u32,
+    total_cores: u32,
     connection_status: ConnectionStatus,
     last_heartbeat: Option<Instant>,
     last_claim_poll: Option<Instant>,
@@ -110,6 +112,7 @@ impl NodeApp {
     ) -> Self {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
+        let total_cores = claim::total_cores().unsigned_abs();
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
         let state = if config.node_id.is_some() {
@@ -134,6 +137,7 @@ impl NodeApp {
             logo: None,
             node_name: claim::default_name(),
             max_parallel: enabled_cores,
+            total_cores,
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
             last_claim_poll: None,
@@ -281,6 +285,7 @@ impl NodeApp {
 
         self.node_name.clone_from(&payload.name);
         self.max_parallel = payload.max_parallel.unsigned_abs();
+        self.total_cores = payload.total_cores.unsigned_abs();
     }
 
     fn send_heartbeat(&mut self) {
@@ -399,6 +404,7 @@ impl NodeApp {
     fn stats(&self) -> NodeStats {
         let mut stats = self.worker_pool.stats();
         stats.max_workers = self.max_parallel;
+        stats.total_cores = self.total_cores;
         stats
     }
 }

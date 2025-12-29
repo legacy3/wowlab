@@ -23,7 +23,10 @@ pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
                     card_width,
                     &icon(Icon::Cpu),
                     "Workers",
-                    &format!("{}/{}", stats.busy_workers, stats.max_workers),
+                    &format!(
+                        "{}/{} ({})",
+                        stats.busy_workers, stats.max_workers, stats.total_cores
+                    ),
                     if stats.busy_workers > 0 {
                         Some(GREEN_500)
                     } else {
