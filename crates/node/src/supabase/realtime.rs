@@ -29,6 +29,8 @@ pub struct NodePayload {
     #[serde(default)]
     pub name: String,
     #[serde(default)]
+    pub total_cores: i32,
+    #[serde(default)]
     pub max_parallel: i32,
 }
 

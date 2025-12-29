@@ -25,10 +25,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Globe, Users, User, Lock, Trash2 } from "lucide-react";
+import { Globe, Users, User, Lock, Trash2, Cpu } from "lucide-react";
 import { useNodeManager, type NodeListItem } from "@/providers";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { SecretText } from "@/components/ui/secret-field";
+import { useUpdate, useInvalidate } from "@refinedev/core";
+import type { UserNode } from "@/lib/supabase/types";
 
 interface NodeSettingsSheetProps {
   node: NodeListItem | null;
@@ -84,8 +86,13 @@ export function NodeSettingsSheet({
     deleteNode,
   } = useNodeManager();
 
+  const { mutateAsync: updateNode } = useUpdate<UserNode>();
+  const invalidate = useInvalidate();
+
   const [accessType, setAccessType] = useState<AccessType>("owner");
+  const [remoteWorkers, setRemoteWorkers] = useState(node?.maxParallel ?? 1);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingWorkers, setIsSavingWorkers] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -98,12 +105,36 @@ export function NodeSettingsSheet({
     }
   }, [currentAccess]);
 
+  useEffect(() => {
+    if (node && !node.isLocal) {
+      setRemoteWorkers(node.maxParallel);
+    }
+  }, [node]);
+
   if (!node) {
     return null;
   }
 
   const maxConcurrency =
     typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 8) : 8;
+
+  const handleRemoteWorkersChange = async (newWorkers: number) => {
+    if (node.isLocal || newWorkers === node.maxParallel) {
+      return;
+    }
+    setRemoteWorkers(newWorkers);
+    setIsSavingWorkers(true);
+    try {
+      await updateNode({
+        resource: "user_nodes",
+        id: node.id,
+        values: { maxParallel: newWorkers },
+      });
+      invalidate({ resource: "user_nodes", invalidates: ["list"] });
+    } finally {
+      setIsSavingWorkers(false);
+    }
+  };
 
   const handleAccessChange = async (newAccess: AccessType) => {
     if (node.isLocal || newAccess === currentAccess) {
@@ -176,6 +207,31 @@ export function NodeSettingsSheet({
                 max={maxConcurrency}
                 step={1}
                 disabled={!localNode.enabled}
+              />
+            </div>
+          )}
+
+          {/* Workers slider (remote only) */}
+          {!node.isLocal && node.isOwner && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4" />
+                  Workers
+                  {isSavingWorkers && <FlaskInlineLoader className="h-3 w-3" />}
+                </Label>
+                <span className="text-sm font-medium">
+                  {remoteWorkers} / {node.totalCores}
+                </span>
+              </div>
+              <Slider
+                value={[remoteWorkers]}
+                onValueChange={([value]) => setRemoteWorkers(value)}
+                onValueCommit={([value]) => handleRemoteWorkersChange(value)}
+                min={1}
+                max={node.totalCores}
+                step={1}
+                disabled={isSavingWorkers}
               />
             </div>
           )}

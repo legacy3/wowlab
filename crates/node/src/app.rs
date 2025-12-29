@@ -1,8 +1,8 @@
 use crate::{
     claim,
     config::NodeConfig,
-    logging::UiLogEntry,
     supabase::{ApiClient, NodePayload, RealtimeEvent, SupabaseRealtime},
+    utils::logging::UiLogEntry,
     ui::{
         claim_view, dashboard,
         icons::{icon, Icon},
@@ -110,7 +110,7 @@ impl NodeApp {
     ) -> Self {
         let config = NodeConfig::load_or_create();
         let api = ApiClient::new(config.api_url.clone());
-        let default_cores = claim::default_cores().unsigned_abs();
+        let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
         let state = if config.node_id.is_some() {
             AppState::Dashboard
@@ -122,7 +122,7 @@ impl NodeApp {
             runtime,
             state,
             api,
-            worker_pool: WorkerPool::new(default_cores as usize),
+            worker_pool: WorkerPool::new(enabled_cores as usize),
             logs: VecDeque::with_capacity(MAX_LOGS),
             log_filter: LogFilter::default(),
             log_rx,
@@ -133,7 +133,7 @@ impl NodeApp {
             started: false,
             logo: None,
             node_name: claim::default_name(),
-            max_parallel: default_cores,
+            max_parallel: enabled_cores,
             connection_status: ConnectionStatus::Connecting,
             last_heartbeat: None,
             last_claim_poll: None,

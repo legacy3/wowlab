@@ -1,9 +1,9 @@
 mod app;
 mod claim;
 mod config;
-mod logging;
 mod supabase;
 mod ui;
+mod utils;
 mod worker;
 
 use app::NodeApp;
@@ -36,7 +36,7 @@ fn load_icon() -> Option<egui::IconData> {
 }
 
 fn main() -> eframe::Result<()> {
-    let log_rx = logging::init();
+    let log_rx = utils::logging::init();
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
 

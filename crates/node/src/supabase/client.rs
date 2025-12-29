@@ -40,14 +40,16 @@ impl ApiClient {
     pub async fn register_node(
         &self,
         hostname: &str,
-        cores: i32,
+        total_cores: i32,
+        enabled_cores: i32,
         version: &str,
     ) -> Result<RegisterResponse, ApiError> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Request<'a> {
             hostname: &'a str,
-            cores: i32,
+            total_cores: i32,
+            enabled_cores: i32,
             version: &'a str,
         }
 
@@ -57,7 +59,8 @@ impl ApiClient {
             .post(&url)
             .json(&Request {
                 hostname,
-                cores,
+                total_cores,
+                enabled_cores,
                 version,
             })
             .send()

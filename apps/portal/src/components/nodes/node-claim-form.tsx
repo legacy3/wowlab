@@ -213,14 +213,14 @@ export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
             Workers
           </Label>
           <span className="text-sm font-medium">
-            {workers} / {pendingNode?.maxParallel ?? workers}
+            {workers} / {pendingNode?.totalCores ?? workers}
           </span>
         </div>
         <Slider
           value={[workers]}
           onValueChange={([value]) => setWorkers(value)}
           min={1}
-          max={pendingNode?.maxParallel ?? workers}
+          max={pendingNode?.totalCores ?? workers}
           step={1}
         />
         <p className="text-sm text-muted-foreground">

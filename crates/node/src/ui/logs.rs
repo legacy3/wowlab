@@ -4,7 +4,7 @@ use super::theme::{
     ZINC_800, ZINC_900,
 };
 use crate::app::{LogEntry, LogLevel};
-use crate::logging;
+use crate::utils::logging;
 use std::collections::VecDeque;
 
 #[derive(Clone, PartialEq, Default)]

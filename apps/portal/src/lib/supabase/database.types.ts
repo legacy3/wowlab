@@ -238,6 +238,7 @@ export type Database = {
           maxParallel: number;
           name: string;
           status: string;
+          totalCores: number;
           userId: string | null;
           version: string | null;
         };
@@ -249,6 +250,7 @@ export type Database = {
           maxParallel?: number;
           name?: string;
           status?: string;
+          totalCores?: number;
           userId?: string | null;
           version?: string | null;
         };
@@ -260,6 +262,7 @@ export type Database = {
           maxParallel?: number;
           name?: string;
           status?: string;
+          totalCores?: number;
           userId?: string | null;
           version?: string | null;
         };
