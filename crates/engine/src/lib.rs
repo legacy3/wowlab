@@ -1,7 +1,6 @@
 pub mod config;
 pub mod rotation;
 pub mod sim;
-pub mod systems;
 pub mod util;
 
 use wasm_bindgen::prelude::*;
@@ -39,14 +38,15 @@ impl Simulator {
     }
 
     /// Run a single simulation
-    pub fn run(&mut self, seed: u64) -> JsValue {
+    pub fn run(&mut self, seed: u64) -> Result<JsValue, JsValue> {
         self.rng.reseed(seed);
         let result = run_simulation(&mut self.state, &self.config, &mut self.rng);
-        serde_wasm_bindgen::to_value(&result).unwrap()
+        serde_wasm_bindgen::to_value(&result)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {e}")))
     }
 
     /// Run a batch of simulations
-    pub fn run_batch(&mut self, iterations: u32, base_seed: u64) -> JsValue {
+    pub fn run_batch(&mut self, iterations: u32, base_seed: u64) -> Result<JsValue, JsValue> {
         let result = run_batch(
             &mut self.state,
             &self.config,
@@ -54,7 +54,8 @@ impl Simulator {
             iterations,
             base_seed,
         );
-        serde_wasm_bindgen::to_value(&result).unwrap()
+        serde_wasm_bindgen::to_value(&result)
+            .map_err(|e| JsValue::from_str(&format!("Serialization error: {e}")))
     }
 }
 

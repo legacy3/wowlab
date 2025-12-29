@@ -71,7 +71,7 @@ pub struct PetConfig {
     pub attack_damage: (f32, f32),
 }
 
-fn default_pet_attack_speed() -> f32 {
+const fn default_pet_attack_speed() -> f32 {
     2.0
 }
 
@@ -90,7 +90,7 @@ pub struct TargetConfig {
     pub armor: f32,
 }
 
-fn default_target_health() -> f32 {
+const fn default_target_health() -> f32 {
     10_000_000.0
 }
 

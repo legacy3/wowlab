@@ -51,18 +51,21 @@ impl Stats {
 
     /// Calculate spell power
     #[inline]
-    pub fn spell_power(&self) -> f32 {
+    #[must_use]
+    pub const fn spell_power(&self) -> f32 {
         self.intellect
     }
 
     /// GCD modified by haste (minimum 0.75s)
     #[inline]
+    #[must_use]
     pub fn gcd(&self, base_gcd: f32) -> f32 {
         (base_gcd / self.haste_mult).max(0.75)
     }
 
     /// Cast time modified by haste
     #[inline]
+    #[must_use]
     pub fn cast_time(&self, base_cast_time: f32) -> f32 {
         base_cast_time / self.haste_mult
     }

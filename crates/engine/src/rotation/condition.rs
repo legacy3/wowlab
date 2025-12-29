@@ -7,13 +7,13 @@ use crate::config::ResourceType;
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Condition {
     /// All conditions must be true
-    And { conditions: Vec<Condition> },
+    And { conditions: Vec<Self> },
 
     /// Any condition must be true
-    Or { conditions: Vec<Condition> },
+    Or { conditions: Vec<Self> },
 
     /// Negate a condition
-    Not { condition: Box<Condition> },
+    Not { condition: Box<Self> },
 
     /// Spell is off cooldown (or has charges)
     SpellReady { spell_id: u32 },
@@ -98,14 +98,14 @@ pub enum Comparison {
 }
 
 impl Comparison {
-    pub fn compare<T: PartialOrd>(&self, a: T, b: T) -> bool {
+    pub fn compare<T: PartialOrd>(&self, a: &T, b: &T) -> bool {
         match self {
-            Comparison::Eq => a == b,
-            Comparison::Ne => a != b,
-            Comparison::Lt => a < b,
-            Comparison::Le => a <= b,
-            Comparison::Gt => a > b,
-            Comparison::Ge => a >= b,
+            Self::Eq => a == b,
+            Self::Ne => a != b,
+            Self::Lt => a < b,
+            Self::Le => a <= b,
+            Self::Gt => a > b,
+            Self::Ge => a >= b,
         }
     }
 }

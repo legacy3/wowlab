@@ -260,13 +260,19 @@ pub struct AuraTracker {
     active_dots: u32,
 }
 
-impl AuraTracker {
-    pub fn new() -> Self {
+impl Default for AuraTracker {
+    fn default() -> Self {
         Self {
             slots: [None; MAX_AURA_SLOTS],
             next_tick: [0; MAX_AURA_SLOTS],
             active_dots: 0,
         }
+    }
+}
+
+impl AuraTracker {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     #[inline]

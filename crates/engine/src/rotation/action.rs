@@ -19,10 +19,7 @@ pub enum RotationAction {
     Pool { condition: Condition },
 
     /// Sub-action list (for organization)
-    ActionList {
-        name: String,
-        actions: Vec<RotationAction>,
-    },
+    ActionList { name: String, actions: Vec<Self> },
 
     /// Call another action list by name
     CallActionList { name: String },
