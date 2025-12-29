@@ -27,7 +27,7 @@ import { useNodeManager, type NodeListItem } from "@/providers";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { SecretText } from "@/components/ui/secret-field";
 import { NodeStatusBadge } from "./node-status-badge";
-import { NodeSettingsSheet } from "./node-settings-sheet";
+import { NodeSettingsModal } from "./node-settings-modal";
 import { formatRelativeToNow, formatInt } from "@/lib/format";
 import { env } from "@/lib/env";
 
@@ -84,7 +84,13 @@ function NodesTable({
                           </Badge>
                         )}
                         {isPublic && (
-                          <Globe className="h-3.5 w-3.5 text-amber-500" />
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-amber-500/10 text-amber-500 border-amber-500/20"
+                          >
+                            <Globe className="mr-1 h-3 w-3" />
+                            Public
+                          </Badge>
                         )}
                       </div>
                       <Link
@@ -261,7 +267,7 @@ function NodesContent() {
         </div>
       )}
 
-      <NodeSettingsSheet
+      <NodeSettingsModal
         node={selectedNode}
         open={!!selectedNode}
         onOpenChange={(open) => !open && setSelectedNode(null)}
