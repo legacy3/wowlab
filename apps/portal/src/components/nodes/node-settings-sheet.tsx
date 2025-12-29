@@ -135,10 +135,7 @@ export function NodeSettingsSheet({
             {node.isLocal ? (
               node.name
             ) : (
-              <SecretText
-                value={node.name}
-                hiddenLength={15}
-              />
+              <SecretText value={node.name} hiddenLength={15} />
             )}
           </DialogTitle>
           <DialogDescription>

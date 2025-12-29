@@ -1,6 +1,6 @@
-# WowLab MCP Server
+# WoW Lab MCP Server
 
-MCP (Model Context Protocol) server for querying World of Warcraft spell and item data from the WowLab database.
+MCP (Model Context Protocol) server for querying World of Warcraft spell and item data from the WoW Lab database.
 
 ## Features
 
@@ -8,7 +8,7 @@ MCP (Model Context Protocol) server for querying World of Warcraft spell and ite
 - **DBC Table Access**: Query 38 game data tables directly
 - **Extractor Functions**: Call 25 specialized functions to compute damage, durations, cooldowns, etc.
 - **Schema Discovery**: Introspect available tables and columns
-- **Zero Configuration**: Works out of the box with the WowLab database
+- **Zero Configuration**: Works out of the box with the WoW Lab database
 - **Efficient Batch Queries**: Retrieve multiple spells or items in a single request
 
 ## Installation

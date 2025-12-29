@@ -18,7 +18,11 @@ import { Check, ArrowLeft, Cpu } from "lucide-react";
 
 type Step = "code" | "configure";
 
-export function NodeClaimForm() {
+interface NodeClaimFormProps {
+  initialToken?: string;
+}
+
+export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
   const router = useRouter();
   const { validateClaimCode, claimNode } = useNodeManager();
 
@@ -26,7 +30,7 @@ export function NodeClaimForm() {
   const [step, setStep] = useState<Step>("code");
 
   // Code step state
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialToken?.toUpperCase() ?? "");
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 

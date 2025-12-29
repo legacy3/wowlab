@@ -1,7 +1,7 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
+import { useState, Suspense } from "react";
+import { useQueryState, parseAsString } from "nuqs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,28 +16,17 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
-import type { UserIdentity } from "@/lib/supabase/types";
 import { NodeClaimForm } from "./node-claim-form";
 import { env } from "@/lib/env";
 import { WindowsIcon, AppleIcon, LinuxIcon } from "@/lib/icons";
 
-export function NodeClaimPage() {
-  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
-  const { data: identity, isLoading: identityLoading } =
-    useGetIdentity<UserIdentity>();
-
-  if (authLoading || identityLoading) {
-    return <NodeClaimSkeleton />;
-  }
-
-  if (!auth?.authenticated || !identity) {
-    redirect("/auth/sign-in");
-  }
+function NodeClaimPageInner() {
+  const [token] = useQueryState("token", parseAsString);
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   return (
     <div className="flex flex-col items-center space-y-6">
@@ -60,7 +49,7 @@ export function NodeClaimPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <NodeClaimForm />
+          <NodeClaimForm initialToken={token ?? undefined} />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -73,16 +62,19 @@ export function NodeClaimPage() {
             </div>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Download Node
-              </Button>
-            </DialogTrigger>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setDownloadOpen(true)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download Node
+          </Button>
+
+          <Dialog open={downloadOpen} onOpenChange={setDownloadOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Download WowLab Node</DialogTitle>
+                <DialogTitle>Download WoW Lab Node</DialogTitle>
                 <DialogDescription>
                   Choose your platform to download the node application
                 </DialogDescription>
@@ -151,6 +143,14 @@ export function NodeClaimPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function NodeClaimPage() {
+  return (
+    <Suspense fallback={<NodeClaimSkeleton />}>
+      <NodeClaimPageInner />
+    </Suspense>
   );
 }
 

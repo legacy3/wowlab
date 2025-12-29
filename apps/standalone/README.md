@@ -1,6 +1,6 @@
 # Standalone Simulation CLI
 
-A standalone CLI application for running WowLab simulations using the `@wowlab/*` packages.
+A standalone CLI application for running WoW Lab simulations using the `@wowlab/*` packages.
 
 ## Purpose
 

@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { redirect } from "next/navigation";
-import { useGetIdentity, useIsAuthenticated } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,7 +22,6 @@ import {
 } from "@/components/ui/table";
 import { Plus, Server, Settings, Monitor, Globe } from "lucide-react";
 import Link from "next/link";
-import type { UserIdentity } from "@/lib/supabase/types";
 import { useNodeManager, type NodeListItem } from "@/providers";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { SecretText } from "@/components/ui/secret-field";
@@ -209,7 +206,7 @@ function NodesContent() {
             </div>
             <CardTitle>No nodes yet</CardTitle>
             <CardDescription>
-              Download the WowLab Node app and claim it to contribute compute
+              Download the WoW Lab Node app and claim it to contribute compute
               power.
             </CardDescription>
           </CardHeader>
@@ -258,18 +255,6 @@ function NodesContent() {
 }
 
 export function NodesPage() {
-  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
-  const { data: identity, isLoading: identityLoading } =
-    useGetIdentity<UserIdentity>();
-
-  if (authLoading || identityLoading) {
-    return <NodesPageSkeleton />;
-  }
-
-  if (!auth?.authenticated || !identity) {
-    redirect("/auth/sign-in");
-  }
-
   return <NodesContent />;
 }
 

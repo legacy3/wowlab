@@ -1,4 +1,4 @@
-# WowLab Simulation Daemon
+# WoW Lab Simulation Daemon
 #
 # BUILD (from repo root):
 #   docker build -f apps/standalone/Dockerfile -t wowlab-daemon .

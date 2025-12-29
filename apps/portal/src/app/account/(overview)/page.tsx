@@ -1,7 +1,6 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import { useGetIdentity, useIsAuthenticated, useList } from "@refinedev/core";
+import { useGetIdentity, useList } from "@refinedev/core";
 import { AccountTabs } from "@/components/account/account-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -30,7 +29,6 @@ function AccountSkeleton() {
 }
 
 export default function AccountPage() {
-  const { data: auth, isLoading: authLoading } = useIsAuthenticated();
   const { data: identity, isLoading: identityLoading } =
     useGetIdentity<UserIdentity>();
 
@@ -46,12 +44,8 @@ export default function AccountPage() {
     },
   });
 
-  if (authLoading || identityLoading || rotationsLoading) {
+  if (identityLoading || rotationsLoading || !identity) {
     return <AccountSkeleton />;
-  }
-
-  if (!auth?.authenticated || !identity) {
-    redirect("/auth/sign-in");
   }
 
   const rotations = rotationsResult?.data ?? [];

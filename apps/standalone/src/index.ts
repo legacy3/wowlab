@@ -15,7 +15,7 @@ const mainCommand = Command.make("wowlab-standalone", {}, () =>
 ).pipe(Command.withSubcommands(commands));
 
 const cli = Command.run(mainCommand, {
-  name: "WowLab Standalone CLI",
+  name: "WoW Lab Standalone CLI",
   version: "0.1.0",
 });
 

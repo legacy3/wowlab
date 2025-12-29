@@ -6,7 +6,7 @@ A TypeScript monorepo for World of Warcraft spell rotation simulation and analys
 
 ## Overview
 
-WowLab provides a pure functional, event-driven simulation engine for analyzing WoW spell rotations and damage output. The architecture uses Effect-TS for composable services, Immutable.js for immutable state management, and a priority queue-based event scheduler for accurate combat simulation.
+WoW Lab provides a pure functional, event-driven simulation engine for analyzing WoW spell rotations and damage output. The architecture uses Effect-TS for composable services, Immutable.js for immutable state management, and a priority queue-based event scheduler for accurate combat simulation.
 
 **Tech Stack:**
 
@@ -80,7 +80,7 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 
 ## MCP Server
 
-WowLab includes an MCP server for querying WoW spell and item data. Install it via npm:
+WoW Lab includes an MCP server for querying WoW spell and item data. Install it via npm:
 
 ```bash
 npx @wowlab/mcp-server

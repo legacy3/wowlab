@@ -8,7 +8,7 @@ export default function BlogIndexLayout({
   return (
     <PageLayout
       title="Blog"
-      description="Updates, tutorials, and insights from the WoWLab team"
+      description="Updates, tutorials, and insights from the WoW Lab team"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Blog" }]}
     >
       {children}

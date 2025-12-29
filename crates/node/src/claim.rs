@@ -5,7 +5,7 @@ pub fn default_name() -> String {
     hostname::get()
         .ok()
         .and_then(|h| h.into_string().ok())
-        .unwrap_or_else(|| "WowLab Node".to_string())
+        .unwrap_or_else(|| "WoW Lab Node".to_string())
 }
 
 pub fn default_cores() -> i32 {
