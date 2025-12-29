@@ -44,12 +44,12 @@ jobs:
       - name: Rename binary (Unix)
         if: runner.os != 'Windows'
         run: |
-          cp target/release/node ${{ matrix.artifact }}
+          cp crates/node/target/release/node ${{ matrix.artifact }}
 
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
         run: |
-          cp target/release/node.exe ${{ matrix.artifact }}
+          cp crates/node/target/release/node.exe ${{ matrix.artifact }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
