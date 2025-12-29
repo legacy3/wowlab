@@ -48,28 +48,11 @@ function NodeClaimPageInner() {
             Enter the 6-character code displayed by your node application
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <NodeClaimForm initialToken={token ?? undefined} />
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Don&apos;t have the app?
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setDownloadOpen(true)}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download Node
-          </Button>
+        <CardContent>
+          <NodeClaimForm
+            initialToken={token ?? undefined}
+            onDownload={() => setDownloadOpen(true)}
+          />
 
           <Dialog open={downloadOpen} onOpenChange={setDownloadOpen}>
             <DialogContent>

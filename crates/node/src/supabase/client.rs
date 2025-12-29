@@ -42,6 +42,7 @@ impl ApiClient {
         hostname: &str,
         total_cores: i32,
         enabled_cores: i32,
+        platform: &str,
         version: &str,
     ) -> Result<RegisterResponse, ApiError> {
         #[derive(Serialize)]
@@ -50,6 +51,7 @@ impl ApiClient {
             hostname: &'a str,
             total_cores: i32,
             enabled_cores: i32,
+            platform: &'a str,
             version: &'a str,
         }
 
@@ -61,6 +63,7 @@ impl ApiClient {
                 hostname,
                 total_cores,
                 enabled_cores,
+                platform,
                 version,
             })
             .send()

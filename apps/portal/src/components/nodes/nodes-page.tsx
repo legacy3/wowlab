@@ -21,13 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Server, Settings, Monitor, Globe } from "lucide-react";
-import Link from "next/link";
+import NextLink from "next/link";
+import { Link } from "@/components/ui/link";
 import { useNodeManager, type NodeListItem } from "@/providers";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { SecretText } from "@/components/ui/secret-field";
 import { NodeStatusBadge } from "./node-status-badge";
 import { NodeSettingsSheet } from "./node-settings-sheet";
 import { formatRelativeToNow, formatInt } from "@/lib/format";
+import { env } from "@/lib/env";
 
 function NodesTable({
   nodes,
@@ -45,6 +47,7 @@ function NodesTable({
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-[100px]">Status</TableHead>
             <TableHead>Name</TableHead>
+            <TableHead className="w-[120px]">Platform</TableHead>
             <TableHead className="w-[100px]">Workers</TableHead>
             <TableHead className="w-[140px]">Last Seen</TableHead>
             <TableHead className="w-[60px]" />
@@ -63,28 +66,42 @@ function NodesTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {node.isLocal ? (
-                      <span className="font-medium">{node.name}</span>
-                    ) : (
-                      <SecretText
-                        value={node.name}
-                        hiddenLength={15}
-                        className="font-medium"
-                      />
-                    )}
-                    {node.isLocal && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Monitor className="mr-1 h-3 w-3" />
-                        Local
-                      </Badge>
-                    )}
-                    {isPublic && (
-                      <Globe className="h-3.5 w-3.5 text-amber-500" />
-                    )}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        {node.isLocal ? (
+                          <span className="font-medium">{node.name}</span>
+                        ) : (
+                          <SecretText
+                            value={node.name}
+                            hiddenLength={15}
+                            className="font-medium"
+                          />
+                        )}
+                        {node.isLocal && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Monitor className="mr-1 h-3 w-3" />
+                            Local
+                          </Badge>
+                        )}
+                        {isPublic && (
+                          <Globe className="h-3.5 w-3.5 text-amber-500" />
+                        )}
+                      </div>
+                      <Link
+                        href={`${env.GITHUB_URL}/releases/tag/v${node.version}`}
+                        external
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        v{node.version}
+                      </Link>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell className="tabular-nums">
-                  {node.maxParallel}
+                <TableCell className="text-muted-foreground text-xs">
+                  {node.platform}
+                </TableCell>
+                <TableCell className="tabular-nums text-sm">
+                  {node.maxParallel}/{node.totalCores}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {node.isLocal
@@ -177,10 +194,10 @@ function NodesContent() {
             {formatInt(filteredNodes.length)} nodes
           </span>
           <Button asChild size="sm">
-            <Link href="/account/nodes/claim">
+            <NextLink href="/account/nodes/claim">
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Claim
-            </Link>
+            </NextLink>
           </Button>
         </div>
       </div>
@@ -212,10 +229,10 @@ function NodesContent() {
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>
-              <Link href="/account/nodes/claim">
+              <NextLink href="/account/nodes/claim">
                 <Plus className="mr-2 h-4 w-4" />
                 Claim Your First Node
-              </Link>
+              </NextLink>
             </Button>
           </CardContent>
         </Card>
@@ -226,6 +243,7 @@ function NodesContent() {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[100px]">Status</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="w-[120px]">Platform</TableHead>
                 <TableHead className="w-[100px]">Workers</TableHead>
                 <TableHead className="w-[140px]">Last Seen</TableHead>
                 <TableHead className="w-[60px]" />
@@ -234,7 +252,7 @@ function NodesContent() {
             <TableBody>
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-32 text-center text-muted-foreground"
                 >
                   No nodes match the current filter
@@ -275,6 +293,7 @@ export function NodesPageSkeleton() {
             <TableRow>
               <TableHead className="w-[100px]">Status</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead className="w-[120px]">Platform</TableHead>
               <TableHead className="w-[100px]">Workers</TableHead>
               <TableHead className="w-[140px]">Last Seen</TableHead>
               <TableHead className="w-[60px]" />
@@ -288,6 +307,9 @@ export function NodesPageSkeleton() {
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-5 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-20" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-5 w-8" />

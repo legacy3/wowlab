@@ -47,8 +47,9 @@ export interface NodeListItem {
   status: "online" | "offline" | "pending";
   totalCores: number;
   maxParallel: number;
+  platform: string;
   lastSeenAt: string | null;
-  version: string | null;
+  version: string;
   isLocal: boolean;
   isOwner: boolean;
   accessType?: AccessType;
@@ -62,7 +63,8 @@ export interface PendingNodeInfo {
   proposedName: string;
   totalCores: number;
   maxParallel: number;
-  version: string | null;
+  platform: string;
+  version: string;
 }
 
 interface NodeManagerContextValue {
@@ -174,8 +176,9 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
     status: localNode.enabled ? "online" : "offline",
     totalCores: browserCores,
     maxParallel: localNode.concurrency,
+    platform: "browser",
     lastSeenAt: new Date().toISOString(),
-    version: null,
+    version: "0.1.0",
     isLocal: true,
     isOwner: true,
   };
@@ -190,6 +193,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
         status: node.status as "online" | "offline" | "pending",
         totalCores: node.totalCores,
         maxParallel: node.maxParallel,
+        platform: node.platform,
         lastSeenAt: node.lastSeenAt,
         version: node.version,
         isLocal: false,
@@ -205,6 +209,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
       status: node.status as "online" | "offline" | "pending",
       totalCores: node.totalCores,
       maxParallel: node.maxParallel,
+      platform: node.platform ?? "unknown",
       lastSeenAt: node.lastSeenAt,
       version: node.version,
       isLocal: false,
@@ -248,7 +253,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
         // Find pending node by claim code
         const { data: pendingNode, error: findError } = await supabase
           .from("user_nodes")
-          .select("id, name, totalCores, maxParallel, version")
+          .select("id, name, totalCores, maxParallel, platform, version")
           .eq("claimCode", code.toUpperCase())
           .eq("status", "pending")
           .is("userId", null)
@@ -265,6 +270,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
             proposedName: pendingNode.name,
             totalCores: pendingNode.totalCores,
             maxParallel: pendingNode.maxParallel,
+            platform: pendingNode.platform,
             version: pendingNode.version,
           },
         };

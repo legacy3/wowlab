@@ -19,14 +19,22 @@ pub fn default_enabled_cores() -> i32 {
     i32::try_from(cpu::get_optimal_concurrency()).unwrap_or(4)
 }
 
+/// Platform identifier (os-arch), e.g. "macos-aarch64", "linux-x86_64"
+pub fn platform() -> String {
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
+    format!("{os}-{arch}")
+}
+
 pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> {
     let hostname = default_name();
     let total = total_cores();
     let enabled = default_enabled_cores();
+    let platform = platform();
     let version = env!("CARGO_PKG_VERSION");
 
     let response = client
-        .register_node(&hostname, total, enabled, version)
+        .register_node(&hostname, total, enabled, &platform, version)
         .await?;
     tracing::info!(
         "Registered node {} with code {}",
