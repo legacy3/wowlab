@@ -14,13 +14,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
             artifact: wowlab-node-linux-x64
           - os: macos-latest
-            target: aarch64-apple-darwin
             artifact: wowlab-node-macos-arm64
           - os: windows-latest
-            target: x86_64-pc-windows-msvc
             artifact: wowlab-node-windows-x64.exe
 
     steps:
@@ -29,8 +26,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
@@ -44,17 +39,17 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
 
       - name: Build node binary
-        run: cargo build --release --manifest-path crates/node/Cargo.toml --target ${{ matrix.target }}
+        run: cargo build --release --manifest-path crates/node/Cargo.toml
 
       - name: Rename binary (Unix)
         if: runner.os != 'Windows'
         run: |
-          cp target/${{ matrix.target }}/release/node ${{ matrix.artifact }}
+          cp target/release/node ${{ matrix.artifact }}
 
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
         run: |
-          cp target/${{ matrix.target }}/release/node.exe ${{ matrix.artifact }}
+          cp target/release/node.exe ${{ matrix.artifact }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
