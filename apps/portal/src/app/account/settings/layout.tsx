@@ -2,7 +2,7 @@ import { unauthorized } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageLayout } from "@/components/page";
 
-export default async function AccountSettingsLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
