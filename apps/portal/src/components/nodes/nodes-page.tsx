@@ -104,11 +104,9 @@ function NodesTable({
                   {node.maxParallel}/{node.totalCores}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {node.isLocal
-                    ? "—"
-                    : node.lastSeenAt
-                      ? formatRelativeToNow(node.lastSeenAt)
-                      : "Never"}
+                  {node.lastSeenAt
+                    ? formatRelativeToNow(node.lastSeenAt)
+                    : "Never"}
                 </TableCell>
                 <TableCell>
                   <Button
