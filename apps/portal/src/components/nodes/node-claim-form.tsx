@@ -106,6 +106,10 @@ export function NodeClaimForm() {
               setValidationError(null);
             }}
             autoFocus
+            autoComplete="one-time-code"
+            data-1p-ignore
+            data-lpignore="true"
+            data-form-type="other"
           >
             <InputOTPGroup>
               <InputOTPSlot
