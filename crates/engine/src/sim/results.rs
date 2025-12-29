@@ -45,8 +45,8 @@ pub struct BatchAccumulator {
     pub spell_casts: Vec<u64>,
 }
 
-impl Default for BatchAccumulator {
-    fn default() -> Self {
+impl BatchAccumulator {
+    pub fn new() -> Self {
         Self {
             iterations: 0,
             sum_dps: 0.0,
@@ -57,12 +57,6 @@ impl Default for BatchAccumulator {
             spell_damage: Vec::new(),
             spell_casts: Vec::new(),
         }
-    }
-}
-
-impl BatchAccumulator {
-    pub fn new() -> Self {
-        Self::default()
     }
 
     #[inline]

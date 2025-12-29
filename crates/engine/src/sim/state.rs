@@ -68,9 +68,6 @@ pub struct SimState {
     /// Pre-computed spell runtime data (hot - accessed every cast)
     pub spell_runtime: Vec<SpellRuntime>,
 
-    /// Rotation priority (spell indices in priority order)
-    pub rotation_priority: Vec<usize>,
-
     /// Pre-computed aura runtime data (timing + periodic damage)
     pub aura_runtime: Vec<AuraRuntime>,
 
@@ -260,19 +257,13 @@ pub struct AuraTracker {
     active_dots: u32,
 }
 
-impl Default for AuraTracker {
-    fn default() -> Self {
+impl AuraTracker {
+    pub fn new() -> Self {
         Self {
             slots: [None; MAX_AURA_SLOTS],
             next_tick: [0; MAX_AURA_SLOTS],
             active_dots: 0,
         }
-    }
-}
-
-impl AuraTracker {
-    pub fn new() -> Self {
-        Self::default()
     }
 
     #[inline]
@@ -373,6 +364,16 @@ impl AuraTracker {
             }
         } else {
             0
+        }
+    }
+
+    /// Get aura instance by slot index - O(1)
+    #[inline(always)]
+    pub fn get_slot(&self, slot: usize) -> Option<AuraInstance> {
+        if slot < MAX_AURA_SLOTS {
+            self.slots[slot]
+        } else {
+            None
         }
     }
 }
@@ -567,21 +568,6 @@ impl SimState {
             })
             .collect();
 
-        // Build rotation priority (map spell_id to spell index)
-        let rotation_priority: Vec<usize> = config
-            .rotation
-            .iter()
-            .filter_map(|action| {
-                match action {
-                    crate::rotation::RotationAction::Cast { spell_id } => {
-                        config.spells.iter().position(|s| s.id == *spell_id)
-                    }
-                    // Other action types don't map to spells
-                    _ => None,
-                }
-            })
-            .collect();
-
         let mut state = Self {
             time: 0,
             duration: duration_ms,
@@ -592,7 +578,6 @@ impl SimState {
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
             spell_runtime,
-            rotation_priority,
             aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,

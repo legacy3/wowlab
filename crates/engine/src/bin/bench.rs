@@ -2,10 +2,46 @@ use engine::config::{
     AuraDef, AuraEffect, DamageFormula, PetConfig, PlayerConfig, ResourceConfig, ResourceCost,
     ResourceType, SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
 };
-use engine::rotation::RotationAction;
+use engine::script::RotationScript;
 use engine::sim::{run_batch, run_simulation, SimState};
 use engine::util::FastRng;
 use std::time::Instant;
+
+/// Simple priority rotation in WAT: iterate spells, return first ready one
+const ROTATION_WAT: &str = r#"
+(module
+  (import "env" "spell_count" (func $spell_count (result i32)))
+  (import "env" "spell_ready" (func $spell_ready (param i32) (result i32)))
+
+  (func (export "get_next_action") (result i32)
+    (local $i i32)
+    (local $count i32)
+
+    ;; Get spell count
+    (local.set $count (call $spell_count))
+
+    ;; Loop through spells
+    (block $done
+      (loop $loop
+        ;; Check bounds
+        (br_if $done (i32.ge_u (local.get $i) (local.get $count)))
+
+        ;; If spell ready, return index
+        (if (call $spell_ready (local.get $i))
+          (then (return (local.get $i)))
+        )
+
+        ;; Increment and continue
+        (local.set $i (i32.add (local.get $i) (i32.const 1)))
+        (br $loop)
+      )
+    )
+
+    ;; No spell ready, return -1
+    (i32.const -1)
+  )
+)
+"#;
 
 fn create_bm_hunter_config() -> SimConfig {
     SimConfig {
@@ -483,25 +519,6 @@ fn create_bm_hunter_config() -> SimConfig {
                 tick_interval: 2.0,
             },
         ],
-        rotation: vec![
-            // Full priority APL with all spells
-            RotationAction::Cast { spell_id: 19574 }, // Bestial Wrath (off-GCD)
-            RotationAction::Cast { spell_id: 193530 }, // Aspect of the Wild (off-GCD)
-            RotationAction::Cast { spell_id: 321530 }, // Bloodshed
-            RotationAction::Cast { spell_id: 131894 }, // A Murder of Crows
-            RotationAction::Cast { spell_id: 201430 }, // Stampede
-            RotationAction::Cast { spell_id: 392060 }, // Wailing Arrow
-            RotationAction::Cast { spell_id: 375891 }, // Death Chakram
-            RotationAction::Cast { spell_id: 34026 }, // Kill Command
-            RotationAction::Cast { spell_id: 217200 }, // Barbed Shot
-            RotationAction::Cast { spell_id: 120679 }, // Dire Beast
-            RotationAction::Cast { spell_id: 212431 }, // Explosive Shot
-            RotationAction::Cast { spell_id: 53209 }, // Chimaera Shot
-            RotationAction::Cast { spell_id: 162488 }, // Steel Trap
-            RotationAction::Cast { spell_id: 271788 }, // Serpent Sting
-            RotationAction::Cast { spell_id: 2643 },  // Multi-Shot
-            RotationAction::Cast { spell_id: 193455 }, // Cobra Shot (filler)
-        ],
         duration: 300.0, // 5 minute fight (realistic boss fight)
         target: TargetConfig {
             level_diff: 3,
@@ -527,9 +544,13 @@ fn main() {
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);
 
+    // Compile WAT to WASM and create rotation script
+    let wasm_bytes = wat::parse_str(ROTATION_WAT).expect("Failed to parse WAT");
+    let mut rotation = RotationScript::new(&wasm_bytes, &config).expect("Failed to create rotation script");
+
     // Single sim
     rng.reseed(0);
-    let result = run_simulation(&mut state, &config, &mut rng);
+    let result = run_simulation(&mut state, &config, &mut rng, &mut rotation);
     println!(
         "Single {}s sim: {} casts, {:.0} DPS",
         config.duration, result.casts, result.dps
@@ -547,12 +568,12 @@ fn main() {
     }
 
     // Warmup
-    let _ = run_batch(&mut state, &config, &mut rng, 1000, 0);
+    let _ = run_batch(&mut state, &config, &mut rng, &mut rotation, 1000, 0);
 
     // Main benchmark
     let warmup_iters = iterations.min(100_000);
     let start = Instant::now();
-    let result = run_batch(&mut state, &config, &mut rng, warmup_iters, 0);
+    let result = run_batch(&mut state, &config, &mut rng, &mut rotation, warmup_iters, 0);
     let elapsed = start.elapsed();
     let sims_per_sec = warmup_iters as f64 / elapsed.as_secs_f64();
     println!(
@@ -566,7 +587,7 @@ fn main() {
     // Full benchmark
     println!("\n--- Full Benchmark ---");
     let start = Instant::now();
-    let result = run_batch(&mut state, &config, &mut rng, iterations, 0);
+    let result = run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, 0);
     let elapsed = start.elapsed();
     let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
     println!("Time: {:?}", elapsed);

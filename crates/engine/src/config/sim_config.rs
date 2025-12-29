@@ -1,9 +1,8 @@
 use serde::Deserialize;
 
 use super::{AuraDef, ResourceConfig, SpellDef, Stats};
-use crate::rotation::RotationAction;
 
-/// Complete simulation configuration (passed from JS)
+/// Complete simulation configuration
 #[derive(Debug, Clone, Deserialize)]
 pub struct SimConfig {
     /// Player configuration
@@ -18,9 +17,6 @@ pub struct SimConfig {
 
     /// All auras that can be applied
     pub auras: Vec<AuraDef>,
-
-    /// Rotation priority list
-    pub rotation: Vec<RotationAction>,
 
     /// Simulation duration in seconds
     pub duration: f32,
@@ -71,7 +67,7 @@ pub struct PetConfig {
     pub attack_damage: (f32, f32),
 }
 
-const fn default_pet_attack_speed() -> f32 {
+fn default_pet_attack_speed() -> f32 {
     2.0
 }
 
@@ -90,7 +86,7 @@ pub struct TargetConfig {
     pub armor: f32,
 }
 
-const fn default_target_health() -> f32 {
+fn default_target_health() -> f32 {
     10_000_000.0
 }
 

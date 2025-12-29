@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [[bin]]
 name = "bench"
@@ -17,11 +17,11 @@ large_capacity = [] # Preallocate 16384 events instead of default
 meta_events = []    # Batch same-time events into meta events
 
 [dependencies]
-wasm-bindgen = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde-wasm-bindgen = "0.6"
 thiserror = "2.0"
+wasmtime = "40"
+wat = "1.229"  # For parsing WAT in benchmarks
 
 [profile.release]
 opt-level = 3
