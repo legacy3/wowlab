@@ -1,7 +1,7 @@
 use super::runner::SimRunner;
 use crate::app::NodeStats;
 use std::sync::{
-    atomic::{AtomicU32, AtomicU64, Ordering},
+    atomic::{AtomicU32, AtomicU64, Ordering::SeqCst},
     Arc,
 };
 use tokio::runtime::Handle;
@@ -66,7 +66,7 @@ impl WorkerPool {
                 let result_tx = result_tx.clone();
 
                 tokio::spawn(async move {
-                    active.fetch_add(1, Ordering::Relaxed);
+                    active.fetch_add(1, SeqCst);
 
                     let start = std::time::Instant::now();
                     let config = item.config_json.clone();
@@ -78,14 +78,14 @@ impl WorkerPool {
                     })
                     .await;
 
-                    active.fetch_sub(1, Ordering::Relaxed);
+                    active.fetch_sub(1, SeqCst);
 
                     match result {
                         Ok(Ok(sim_result)) => {
                             #[allow(clippy::cast_possible_truncation)]
                             let elapsed_ms = start.elapsed().as_millis() as u64;
-                            sims.fetch_add(u64::from(item.iterations), Ordering::Relaxed);
-                            completed.fetch_add(1, Ordering::Relaxed);
+                            sims.fetch_add(u64::from(item.iterations), SeqCst);
+                            completed.fetch_add(1, SeqCst);
 
                             let _ = result_tx
                                 .send(WorkResult {
@@ -118,9 +118,9 @@ impl WorkerPool {
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
     pub fn stats(&self) -> NodeStats {
-        let completed = self.completed_chunks.load(Ordering::Relaxed);
-        let active = self.active_workers.load(Ordering::Relaxed);
-        let sims = self.sims_completed.load(Ordering::Relaxed);
+        let completed = self.completed_chunks.load(SeqCst);
+        let active = self.active_workers.load(SeqCst);
+        let sims = self.sims_completed.load(SeqCst);
         let max = self.max_workers as u32;
 
         NodeStats {

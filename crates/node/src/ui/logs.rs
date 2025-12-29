@@ -134,7 +134,12 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
     });
 }
 
-fn log_entry_row(ui: &mut egui::Ui, entry: &LogEntry, available_width: f32, is_expanded: bool) -> bool {
+fn log_entry_row(
+    ui: &mut egui::Ui,
+    entry: &LogEntry,
+    available_width: f32,
+    is_expanded: bool,
+) -> bool {
     let (level_icon, level_color) = match entry.level {
         LogLevel::Info => (icon(Icon::Info), ZINC_500),
         LogLevel::Warn => (icon(Icon::TriangleAlert), YELLOW_500),
@@ -158,7 +163,14 @@ fn log_entry_row(ui: &mut egui::Ui, entry: &LogEntry, available_width: f32, is_e
         .rounding(egui::Rounding::same(4.0))
         .inner_margin(egui::Margin::symmetric(4.0, 2.0))
         .show(ui, |ui| {
-            clicked = render_log_row(ui, entry, &level_icon, level_color, available_width, is_expanded);
+            clicked = render_log_row(
+                ui,
+                entry,
+                &level_icon,
+                level_color,
+                available_width,
+                is_expanded,
+            );
         });
 
     clicked
@@ -220,30 +232,14 @@ fn render_log_row(
             ui.add_space(6.0);
 
             if needs_truncate && !is_expanded {
-                // Binary search for truncation point (UTF-8 safe using char indices)
-                let char_indices: Vec<usize> = entry.message.char_indices().map(|(i, _)| i).collect();
-                let mut lo = 0;
-                let mut hi = char_indices.len();
-                while lo < hi {
-                    let mid = (lo + hi).div_ceil(2);
-                    let byte_idx = char_indices.get(mid).copied().unwrap_or(entry.message.len());
-                    let truncated = format!("{}...", &entry.message[..byte_idx]);
-                    let width = ui.fonts(|f| {
-                        f.layout_no_wrap(truncated, font_id.clone(), msg_color)
-                            .rect
-                            .width()
-                    });
-                    if width <= max_msg_width {
-                        lo = mid;
-                    } else {
-                        hi = mid - 1;
-                    }
-                }
-                let byte_idx = char_indices.get(lo).copied().unwrap_or(entry.message.len());
-                let msg = format!("{}...", &entry.message[..byte_idx]);
+                let msg = truncate_to_width(&entry.message, max_msg_width, ui, &font_id, msg_color);
                 ui.label(egui::RichText::new(msg).size(12.0).color(msg_color));
             } else {
-                ui.label(egui::RichText::new(&entry.message).size(12.0).color(msg_color));
+                ui.label(
+                    egui::RichText::new(&entry.message)
+                        .size(12.0)
+                        .color(msg_color),
+                );
             }
 
             if needs_truncate {
@@ -267,4 +263,36 @@ fn render_log_row(
     });
 
     clicked
+}
+
+fn truncate_to_width(
+    text: &str,
+    max_width: f32,
+    ui: &egui::Ui,
+    font_id: &egui::FontId,
+    color: egui::Color32,
+) -> String {
+    let char_indices: Vec<usize> = text.char_indices().map(|(i, _)| i).collect();
+    let mut lo = 0;
+    let mut hi = char_indices.len();
+
+    while lo < hi {
+        let mid = (lo + hi).div_ceil(2);
+        let byte_idx = char_indices.get(mid).copied().unwrap_or(text.len());
+        let truncated = format!("{}...", &text[..byte_idx]);
+        let width = ui.fonts(|f| {
+            f.layout_no_wrap(truncated, font_id.clone(), color)
+                .rect
+                .width()
+        });
+
+        if width <= max_width {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+
+    let byte_idx = char_indices.get(lo).copied().unwrap_or(text.len());
+    format!("{}...", &text[..byte_idx])
 }

@@ -119,7 +119,9 @@ fn get_linux_big_cores() -> Option<usize> {
         if !name_str.starts_with("cpu") {
             continue;
         }
-        let cpu_num = name_str.strip_prefix("cpu").and_then(|s| s.parse::<u32>().ok());
+        let cpu_num = name_str
+            .strip_prefix("cpu")
+            .and_then(|s| s.parse::<u32>().ok());
         if cpu_num.is_none() {
             continue;
         }

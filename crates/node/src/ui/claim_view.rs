@@ -85,7 +85,8 @@ fn code_display(ui: &mut egui::Ui, chars: &[char]) {
 
 fn copy_code_button(ui: &mut egui::Ui, code: &str) {
     let copied_at = ui.ctx().memory_mut(|mem| {
-        mem.data.get_temp::<Instant>(egui::Id::new("code_copied_at"))
+        mem.data
+            .get_temp::<Instant>(egui::Id::new("code_copied_at"))
     });
 
     let show_copied = copied_at

@@ -2,7 +2,6 @@ use crate::{
     claim,
     config::NodeConfig,
     supabase::{ApiClient, NodePayload, RealtimeEvent, SupabaseRealtime},
-    utils::logging::UiLogEntry,
     ui::{
         claim_view, dashboard,
         icons::{icon, Icon},
@@ -10,6 +9,7 @@ use crate::{
         settings::{self, SettingsAction},
         theme,
     },
+    utils::logging::UiLogEntry,
     worker::WorkerPool,
 };
 use std::{
@@ -338,7 +338,9 @@ impl NodeApp {
     }
 
     fn check_claim_result(&mut self) {
-        let Some(ref mut rx) = self.claim_rx else { return };
+        let Some(ref mut rx) = self.claim_rx else {
+            return;
+        };
 
         match rx.try_recv() {
             Ok(true) => {

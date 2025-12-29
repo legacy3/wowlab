@@ -1,7 +1,7 @@
 use super::icons::{icon, Icon};
 use super::theme::{
-    card_frame, BLUE_500, GREEN_500, RED_500, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY,
-    YELLOW_500, ZINC_700, ZINC_800,
+    card_frame, BLUE_500, GREEN_500, RED_500, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY, YELLOW_500,
+    ZINC_700, ZINC_800,
 };
 use crate::app::NodeStats;
 
@@ -115,11 +115,7 @@ fn cpu_bar(ui: &mut egui::Ui, usage: f32) {
                 .color(TEXT_MUTED)
                 .size(12.0),
         );
-        ui.label(
-            egui::RichText::new("CPU")
-                .color(TEXT_SECONDARY)
-                .size(11.0),
-        );
+        ui.label(egui::RichText::new("CPU").color(TEXT_SECONDARY).size(11.0));
 
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             ui.label(
@@ -140,8 +136,7 @@ fn cpu_bar(ui: &mut egui::Ui, usage: f32) {
 
     let fill_width = rect.width() * usage;
     if fill_width > 0.0 {
-        let fill_rect =
-            egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
+        let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
         let fill_color = if usage > 0.8 {
             RED_500
         } else if usage > 0.5 {
