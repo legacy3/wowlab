@@ -71,16 +71,16 @@ impl Condition {
     ///
     /// The wake time enables predictive gating - if we know when a condition will
     /// become true, we can skip evaluating it until then.
+    #[inline(always)]
     pub fn evaluate(&self, state: &SimState, duration_ms: u32) -> (bool, Option<u32>) {
         match self {
             Condition::Always => (true, None),
 
             Condition::SpellReady(idx) => {
                 let spell_state = &state.player.spell_states[*idx as usize];
-                let spell_rt = &state.spell_runtime[*idx as usize];
 
-                // Check charges for charge-based spells
-                if spell_rt.max_charges > 0 {
+                // Check charges for charge-based spells (max_charges is duplicated in SpellState)
+                if spell_state.max_charges > 0 {
                     let ready = spell_state.charges > 0;
                     let wake = if !ready {
                         Some(spell_state.cooldown_ready)

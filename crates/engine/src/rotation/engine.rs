@@ -88,6 +88,7 @@ impl PredictiveRotation {
     }
 
     /// Resets state between simulations.
+    #[inline(always)]
     pub fn reset(&mut self) {
         for rule in &mut self.rules {
             rule.status = ConditionStatus::Watching;
@@ -99,6 +100,7 @@ impl PredictiveRotation {
     ///
     /// Evaluates conditions in priority order, skipping disabled conditions.
     /// Returns `None` if no spell is currently castable.
+    #[inline(always)]
     pub fn get_next_action(&mut self, state: &SimState) -> Option<u8> {
         let current_time = state.time;
         let duration_ms = self.duration_ms;
@@ -144,18 +146,18 @@ impl PredictiveRotation {
     }
 
     /// Checks if a spell can be cast (resources, cooldown, GCD).
+    #[inline(always)]
     fn can_cast_spell(state: &SimState, spell_idx: u8) -> bool {
         let idx = spell_idx as usize;
         let spell_state = &state.player.spell_states[idx];
-        let spell_rt = &state.spell_runtime[idx];
 
-        // Check GCD
+        // Check GCD first (common rejection)
         if state.player.gcd_ready > state.time {
             return false;
         }
 
-        // Check cooldown/charges
-        if spell_rt.max_charges > 0 {
+        // Check cooldown/charges (max_charges is duplicated in SpellState)
+        if spell_state.max_charges > 0 {
             if spell_state.charges == 0 {
                 return false;
             }
@@ -163,7 +165,8 @@ impl PredictiveRotation {
             return false;
         }
 
-        // Check resources
+        // Check resources (only load spell_runtime if we pass other checks)
+        let spell_rt = &state.spell_runtime[idx];
         state.player.resources.current >= spell_rt.cost_amount
     }
 
