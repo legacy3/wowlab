@@ -10,10 +10,6 @@ crate-type = ["rlib"]
 name = "engine"
 path = "src/bin/main.rs"
 
-[[bin]]
-name = "bench"
-path = "src/bin/bench.rs"
-
 [features]
 default = []
 debug_logging = []  # Enable with --features debug_logging

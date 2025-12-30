@@ -44,7 +44,6 @@ src/
   lib.rs              # Library entry, Simulator API
   bin/
     main.rs           # CLI entry point (clap)
-    bench.rs          # Legacy benchmark binary
   cli/
     mod.rs            # TOML config loading, SpecConfig types
   config/
@@ -109,6 +108,7 @@ if cobra_shot.ready() { cast("cobra_shot") }
 ```
 
 ### Available Conditions
+
 - `spell.ready()` - Spell off cooldown and has resources
 - `aura.active()` - Aura is currently applied
 - `aura.stacks() >= N` - Aura has at least N stacks
