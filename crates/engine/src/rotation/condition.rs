@@ -1,64 +1,76 @@
 //! Condition types and evaluation for predictive rotation gating.
 //!
-//! Conditions are extracted from Rhai AST and evaluated against simulation state.
+//! Conditions are extracted from the Rhai AST and evaluated against simulation state.
+//! Each condition can optionally return a "wake time" indicating when it might become true,
+//! enabling the predictive gating optimization.
 
 use crate::sim::SimState;
 
 /// A condition that determines when a spell should be cast.
+///
+/// Conditions form an expression tree that can be evaluated against simulation state.
+/// Most conditions can predict when they will become true, enabling optimization.
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Many variants for future condition support
 pub enum Condition {
-    /// Always true - unconditional cast
+    /// Always true (unconditional cast).
     Always,
 
-    /// Spell is off cooldown and has charges (or no charges required)
+    /// Spell is off cooldown or has charges available.
     SpellReady(u8),
 
-    /// Spell has at least N charges
+    /// Spell has at least N charges.
     SpellCharges { idx: u8, min: u8 },
 
-    /// Spell cooldown is <= N ms
+    /// Spell cooldown remaining is at most N ms.
     SpellCooldownLte { idx: u8, max_ms: u32 },
 
-    /// Aura/buff is active
+    /// Aura/buff is currently active.
     AuraActive(u8),
 
-    /// Aura has at least N stacks
+    /// Aura has at least N stacks.
     AuraStacks { idx: u8, min: u8 },
 
-    /// Aura has at least N ms remaining
+    /// Aura has at least N ms remaining.
     AuraRemainingGte { idx: u8, min_ms: u32 },
 
-    /// Aura has at most N ms remaining
+    /// Aura has at most N ms remaining.
     AuraRemainingLte { idx: u8, max_ms: u32 },
 
-    /// Resource >= threshold
+    /// Resource is at least threshold.
     ResourceGte(f32),
 
-    /// Resource <= threshold
+    /// Resource is at most threshold.
     ResourceLte(f32),
 
-    /// Time >= threshold (ms)
+    /// Simulation time is at least N ms.
     TimeGte(u32),
 
-    /// Fight remaining time <= threshold (ms)
+    /// Fight remaining time is at most N ms.
     FightRemainsLte(u32),
 
-    /// Target health % < threshold
+    /// Target health percentage is below threshold.
     TargetHealthPctLt(f32),
 
-    /// Logical AND
+    /// Both conditions must be true.
     And(Box<Condition>, Box<Condition>),
 
-    /// Logical OR
+    /// Either condition must be true.
     Or(Box<Condition>, Box<Condition>),
 
-    /// Logical NOT
+    /// Condition must be false.
     Not(Box<Condition>),
 }
 
 impl Condition {
-    /// Evaluate the condition against simulation state.
-    /// Returns (result, optional_wake_time_ms) for predictive gating.
+    /// Evaluates the condition against simulation state.
+    ///
+    /// Returns a tuple of:
+    /// - `bool`: Whether the condition is currently true
+    /// - `Option<u32>`: Optional wake time in ms when this condition might become true
+    ///
+    /// The wake time enables predictive gating - if we know when a condition will
+    /// become true, we can skip evaluating it until then.
     pub fn evaluate(&self, state: &SimState, duration_ms: u32) -> (bool, Option<u32>) {
         match self {
             Condition::Always => (true, None),
@@ -132,11 +144,11 @@ impl Condition {
                 let ready = active && remaining <= *max_ms;
                 // If aura active but remaining > max_ms, wake when it drops below
                 let wake = if active && !ready {
-                    if let Some(instance) = state.player.auras.get_slot(*idx as usize) {
-                        Some(instance.expires.saturating_sub(*max_ms))
-                    } else {
-                        None
-                    }
+                    state
+                        .player
+                        .auras
+                        .get_slot(*idx as usize)
+                        .map(|instance| instance.expires.saturating_sub(*max_ms))
                 } else {
                     None
                 };
@@ -227,31 +239,35 @@ impl Condition {
     }
 }
 
-/// Condition status for predictive gating.
+/// Status of a condition for predictive gating.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConditionStatus {
-    /// Condition is disabled - skip evaluation until enable_at
+    /// Condition is disabled until `enable_at` time.
     Disabled,
-    /// Condition should be evaluated (can't predict when it becomes true)
+    /// Condition is being actively watched (can't predict when true).
     Watching,
-    /// Condition is currently true
+    /// Condition is currently true.
     Active,
 }
 
-/// A rule in the rotation: cast spell if condition is true.
+/// A rotation rule: cast a spell when a condition is true.
+///
+/// Rules are evaluated in priority order. The first rule with a true
+/// condition and a castable spell is executed.
 #[derive(Debug, Clone)]
 pub struct Rule {
-    /// Spell index to cast
+    /// Index of the spell to cast.
     pub spell_idx: u8,
-    /// Condition to evaluate
+    /// Condition that must be true to consider this rule.
     pub condition: Condition,
-    /// Current status for predictive gating
+    /// Current status for predictive gating.
     pub status: ConditionStatus,
-    /// Time when this rule should be re-enabled (if Disabled)
+    /// Time (ms) when this rule should be re-enabled if Disabled.
     pub enable_at: u32,
 }
 
 impl Rule {
+    /// Creates a new rule in the Watching state.
     pub fn new(spell_idx: u8, condition: Condition) -> Self {
         Self {
             spell_idx,

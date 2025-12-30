@@ -1,51 +1,79 @@
+//! Simulation result types.
+
 use serde::Serialize;
 
-/// Results from a single simulation run
+/// Results from a single simulation run.
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SimResult {
+    /// Total damage dealt.
     pub damage: f32,
+    /// Damage per second.
     pub dps: f32,
+    /// Total spell casts.
     pub casts: u32,
 }
 
-/// Aggregated results from a batch of simulations
+/// Aggregated results from a batch of simulations.
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct BatchResult {
+    /// Number of iterations run.
     pub iterations: u32,
+    /// Mean DPS across all iterations.
     pub mean_dps: f32,
+    /// Standard deviation of DPS.
     pub std_dps: f32,
+    /// Minimum DPS observed.
     pub min_dps: f32,
+    /// Maximum DPS observed.
     pub max_dps: f32,
+    /// Total casts across all iterations.
     pub total_casts: u64,
 
-    /// Damage breakdown by spell
+    /// Damage breakdown by spell.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub spell_breakdown: Vec<SpellBreakdown>,
 }
 
+/// Damage contribution from a single spell.
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SpellBreakdown {
+    /// Spell identifier.
     pub spell_id: u32,
+    /// Total damage dealt by this spell.
     pub total_damage: f32,
+    /// Number of casts.
     pub casts: u64,
+    /// DPS contribution from this spell.
     pub dps_contribution: f32,
+    /// Percentage of total damage.
     pub pct_of_total: f32,
 }
 
-/// Accumulator for batch statistics (index-based, no linear search)
+/// Accumulator for batch statistics.
+///
+/// Uses index-based lookup for O(1) per-spell accumulation.
 pub struct BatchAccumulator {
+    /// Number of iterations accumulated.
     pub iterations: u32,
+    /// Sum of DPS values (for mean calculation).
     pub sum_dps: f32,
+    /// Sum of squared DPS values (for std dev calculation).
     pub sum_sq_dps: f32,
+    /// Minimum DPS observed.
     pub min_dps: f32,
+    /// Maximum DPS observed.
     pub max_dps: f32,
+    /// Total casts across all iterations.
     pub total_casts: u64,
-    /// Indexed by spell position
+    /// Damage by spell index.
     pub spell_damage: Vec<f32>,
+    /// Casts by spell index.
     pub spell_casts: Vec<u64>,
 }
 
 impl BatchAccumulator {
+    /// Creates a new empty accumulator.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             iterations: 0,
@@ -59,7 +87,9 @@ impl BatchAccumulator {
         }
     }
 
+    /// Adds a simulation result to the accumulator.
     #[inline]
+    #[allow(clippy::cast_lossless)]
     pub fn add(&mut self, result: &SimResult, spell_damage: &[f32], spell_casts: &[u32]) {
         self.iterations += 1;
         self.sum_dps += result.dps;
@@ -81,6 +111,9 @@ impl BatchAccumulator {
         }
     }
 
+    /// Computes final statistics and returns the batch result.
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn finalize(self, duration: f32, spell_ids: &[u32]) -> BatchResult {
         let n = self.iterations as f32;
         let mean_dps = self.sum_dps / n;
@@ -121,5 +154,11 @@ impl BatchAccumulator {
             total_casts: self.total_casts,
             spell_breakdown,
         }
+    }
+}
+
+impl Default for BatchAccumulator {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -486,8 +486,7 @@ fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_
     let energize_amount = state.spell_runtime[spell_idx].energize_amount;
 
     // Apply pre-resolved auras directly (no event queue round-trip)
-    for i in 0..apply_aura_count as usize {
-        let aura_idx = apply_aura_indices[i];
+    for &aura_idx in apply_aura_indices.iter().take(apply_aura_count as usize) {
         apply_aura_inline(state, config, aura_idx);
     }
 
@@ -592,18 +591,16 @@ fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
 
     // Only charge-based spells trigger this event (use pre-computed max_charges)
     let max_charges = spell_rt.max_charges;
-    if max_charges > 0 {
-        if spell_state.charges < max_charges {
-            spell_state.charges += 1;
+    if max_charges > 0 && spell_state.charges < max_charges {
+        spell_state.charges += 1;
 
-            // Schedule next charge if not at max
-            if spell_state.charges < max_charges {
-                spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
-                state.events.push(
-                    spell_state.cooldown_ready,
-                    SimEvent::CooldownReady { spell_idx },
-                );
-            }
+        // Schedule next charge if not at max
+        if spell_state.charges < max_charges {
+            spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
+            state.events.push(
+                spell_state.cooldown_ready,
+                SimEvent::CooldownReady { spell_idx },
+            );
         }
     }
 

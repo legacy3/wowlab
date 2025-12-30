@@ -257,7 +257,15 @@ pub struct AuraTracker {
     active_dots: u32,
 }
 
+impl Default for AuraTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AuraTracker {
+    /// Creates a new empty aura tracker.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             slots: [None; MAX_AURA_SLOTS],

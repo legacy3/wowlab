@@ -1,8 +1,11 @@
 //! Rhai AST compiler for rotation scripts.
 //!
 //! Parses Rhai scripts and walks the AST to extract:
-//! - If statements with cast() calls in the body
+//! - If statements with `cast()` calls in the body
 //! - Condition expressions for predictive gating
+//!
+//! The compiler validates spell and aura names against the configuration,
+//! producing compile-time errors for unknown references.
 
 use std::collections::HashMap;
 
@@ -12,21 +15,26 @@ use crate::config::SimConfig;
 
 use super::condition::{Condition, Rule};
 
-/// Error during rotation compilation.
+/// Errors that can occur during rotation script compilation.
 #[derive(Debug, thiserror::Error)]
 pub enum RotationError {
+    /// Failed to parse the Rhai script.
     #[error("Parse error: {0}")]
     Parse(String),
 
+    /// Referenced a spell that doesn't exist in the configuration.
     #[error("Unknown spell: {0}")]
     UnknownSpell(String),
 
+    /// Referenced an aura that doesn't exist in the configuration.
     #[error("Unknown aura: {0}")]
     UnknownAura(String),
 
+    /// Condition expression is not supported or malformed.
     #[error("Invalid condition: {0}")]
     InvalidCondition(String),
 
+    /// If statement body doesn't contain a `cast()` call.
     #[error("No cast() call found in if body")]
     NoCastInBody,
 }
@@ -62,13 +70,15 @@ impl RotationCompiler {
 
         let mut spell_map = HashMap::new();
         for (i, spell) in config.spells.iter().enumerate() {
-            let name = spell.name.to_lowercase().replace(' ', "_").replace('-', "_");
+            let name = normalize_name(&spell.name);
+            #[allow(clippy::cast_possible_truncation)]
             spell_map.insert(name, i as u8);
         }
 
         let mut aura_map = HashMap::new();
         for (i, aura) in config.auras.iter().enumerate() {
-            let name = aura.name.to_lowercase().replace(' ', "_").replace('-', "_");
+            let name = normalize_name(&aura.name);
+            #[allow(clippy::cast_possible_truncation)]
             aura_map.insert(name, i as u8);
         }
 
@@ -99,13 +109,10 @@ impl RotationCompiler {
             // nodes[0] is the current node, rest is path to root
             // We only want top-level statements (no parent statements)
             if nodes.len() == 1 {
-                if let Some(ASTNode::Stmt(stmt)) = nodes.first() {
-                    // Check if this is an If statement
-                    if let Stmt::If(flow_control, _pos) = stmt {
-                        // Try to extract a rule from this if statement
-                        if let Ok(Some(rule)) = self.extract_rule_from_if(flow_control) {
-                            rules.push(rule);
-                        }
+                if let Some(ASTNode::Stmt(Stmt::If(flow_control, _pos))) = nodes.first() {
+                    // Try to extract a rule from this if statement
+                    if let Ok(Some(rule)) = self.extract_rule_from_if(flow_control) {
+                        rules.push(rule);
                     }
                 }
             }
@@ -160,12 +167,12 @@ impl RotationCompiler {
         if fn_call.name == "cast" && !fn_call.args.is_empty() {
             // Get the spell name from the first argument
             if let Expr::StringConstant(name, _) = &fn_call.args[0] {
-                let spell_name = name.to_string().to_lowercase().replace(' ', "_").replace('-', "_");
+                let spell_name = normalize_name(name.as_ref());
                 let idx = self
                     .spell_map
                     .get(&spell_name)
                     .copied()
-                    .ok_or_else(|| RotationError::UnknownSpell(spell_name))?;
+                    .ok_or(RotationError::UnknownSpell(spell_name))?;
                 return Ok(Some(idx));
             }
         }
@@ -376,7 +383,7 @@ impl RotationCompiler {
                 // var_info is Box<(Option<NonZeroUsize>, ImmutableString, ...)>
                 // Index 1 is the variable name (ImmutableString)
                 let name = var_info.1.as_str();
-                Ok(name.to_lowercase().replace(' ', "_").replace('-', "_"))
+                Ok(normalize_name(name))
             }
             _ => Err(RotationError::InvalidCondition(
                 "Expected variable name".into(),
@@ -386,19 +393,26 @@ impl RotationCompiler {
 
     /// Resolve spell name to index.
     fn resolve_spell(&self, name: &str) -> Result<u8, RotationError> {
-        let normalized = name.to_lowercase().replace(' ', "_").replace('-', "_");
+        let normalized = normalize_name(name);
         self.spell_map
             .get(&normalized)
             .copied()
-            .ok_or_else(|| RotationError::UnknownSpell(normalized))
+            .ok_or(RotationError::UnknownSpell(normalized))
     }
 
     /// Resolve aura name to index.
     fn resolve_aura(&self, name: &str) -> Result<u8, RotationError> {
-        let normalized = name.to_lowercase().replace(' ', "_").replace('-', "_");
+        let normalized = normalize_name(name);
         self.aura_map
             .get(&normalized)
             .copied()
-            .ok_or_else(|| RotationError::UnknownAura(normalized))
+            .ok_or(RotationError::UnknownAura(normalized))
     }
+}
+
+/// Normalizes a spell/aura name for consistent lookup.
+///
+/// Converts to lowercase and replaces spaces/hyphens with underscores.
+fn normalize_name(name: &str) -> String {
+    name.to_lowercase().replace([' ', '-'], "_")
 }

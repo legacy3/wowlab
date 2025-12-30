@@ -1,32 +1,39 @@
-//! Rotation module with Rhai AST-based condition extraction and predictive gating.
+//! Rotation scripting with Rhai AST compilation and predictive condition gating.
 //!
-//! # Rhai Rotation Script Syntax
+//! This module provides a high-performance rotation system that:
+//! - Parses Rhai scripts at compile time to extract spell priorities
+//! - Uses predictive gating to skip conditions that can't be true yet
+//! - Tracks when disabled conditions should be re-evaluated
 //!
-//! Rotation scripts use standard Rhai syntax with if statements:
+//! # Script Syntax
 //!
-//! ```rhai
-//! // Cast spell if condition is true
+//! Rotation scripts use Rhai syntax with if statements:
+//!
+//! ```text
+//! // Cooldowns first
 //! if bestial_wrath.ready() { cast("bestial_wrath") }
+//!
+//! // Priority abilities
 //! if kill_command.ready() { cast("kill_command") }
 //!
-//! // Multiple conditions
+//! // Conditional casts
 //! if hot_streak.active() && pyroblast.ready() { cast("pyroblast") }
 //!
-//! // Unconditional (always try to cast)
+//! // Filler (always try)
 //! if true { cast("fireball") }
 //! ```
 //!
-//! ## Supported Conditions
+//! # Supported Conditions
 //!
-//! - `spell_name.ready()` - Spell is off cooldown (or has charges)
+//! - `spell_name.ready()` - Spell off cooldown or has charges
 //! - `aura_name.active()` - Aura/buff is currently active
-//! - Logical operators: `&&`, `||`, `!`
+//! - `&&`, `||`, `!` - Logical operators
 //!
-//! ## Predictive Gating
+//! # Predictive Gating
 //!
-//! The compiler walks the Rhai AST to extract conditions and classify their
-//! dependencies. Conditions that can't become true until a specific time
-//! are marked as Disabled and skipped during evaluation, reducing CPU usage.
+//! When a condition evaluates to false, the compiler determines if we can
+//! predict when it will become true (e.g., cooldown ready time). If so,
+//! the condition is marked as "Disabled" until that time, saving CPU cycles.
 
 mod compiler;
 mod condition;
