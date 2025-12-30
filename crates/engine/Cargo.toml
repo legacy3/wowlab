@@ -20,8 +20,7 @@ meta_events = []    # Batch same-time events into meta events
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-wasmtime = "40"
-wat = "1.229"  # For parsing WAT in benchmarks
+rhai = { version = "1.21", features = ["sync", "internals"] }
 
 [profile.release]
 opt-level = 3

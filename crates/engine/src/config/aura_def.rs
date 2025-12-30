@@ -1,11 +1,14 @@
 use serde::Deserialize;
 
 /// Static aura/buff definition
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Default)]
 pub struct AuraDef {
     pub id: u32,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub duration: f32,
+    #[serde(default)]
     pub max_stacks: u8,
 
     #[serde(default)]
@@ -18,6 +21,10 @@ pub struct AuraDef {
     /// Tick interval for DoTs/HoTs (0 = no ticks)
     #[serde(default)]
     pub tick_interval: f32,
+
+    /// If true, this aura is triggered by procs (unpredictable timing)
+    #[serde(default)]
+    pub is_proc: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]

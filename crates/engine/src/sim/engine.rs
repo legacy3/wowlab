@@ -81,7 +81,7 @@ POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 //! - Cache-friendly access patterns
 
 use crate::config::SimConfig;
-use crate::script::RotationScript;
+use crate::rotation::PredictiveRotation;
 use crate::util::FastRng;
 
 use super::{BatchAccumulator, BatchResult, SimEvent, SimResult, SimState};
@@ -98,7 +98,7 @@ fn dispatch_event(
     state: &mut SimState,
     config: &SimConfig,
     rng: &mut FastRng,
-    rotation: &mut RotationScript,
+    rotation: &mut PredictiveRotation,
     event: SimEvent,
 ) {
     match event {
@@ -142,7 +142,7 @@ pub fn run_simulation(
     state: &mut SimState,
     config: &SimConfig,
     rng: &mut FastRng,
-    rotation: &mut RotationScript,
+    rotation: &mut PredictiveRotation,
 ) -> SimResult {
     state.reset();
 
@@ -243,7 +243,7 @@ pub fn run_batch(
     state: &mut SimState,
     config: &SimConfig,
     rng: &mut FastRng,
-    rotation: &mut RotationScript,
+    rotation: &mut PredictiveRotation,
     iterations: u32,
     base_seed: u64,
 ) -> BatchResult {
@@ -251,6 +251,7 @@ pub fn run_batch(
 
     for i in 0..iterations {
         rng.reseed(base_seed.wrapping_add(i as u64));
+        rotation.reset();
         let result = run_simulation(state, config, rng, rotation);
         accum.add(
             &result,
@@ -349,7 +350,7 @@ fn handle_gcd_ready_inline(
     state: &mut SimState,
     config: &SimConfig,
     rng: &mut FastRng,
-    rotation: &mut RotationScript,
+    rotation: &mut PredictiveRotation,
 ) {
     let current_time = state.time;
 
@@ -364,11 +365,11 @@ fn handle_gcd_ready_inline(
         state.player.last_resource_update = current_time;
     }
 
-    // Call WASM rotation script to get next spell
+    // Call rotation to get next spell (predictive condition gating)
     let spell_idx = rotation.get_next_action(state);
 
     if let Some(idx) = spell_idx {
-        cast_spell_inline(state, config, idx, rng, current_time);
+        cast_spell_inline(state, config, idx as usize, rng, current_time);
     } else {
         // No spell available - compute next wake-up time
         schedule_next_opportunity_inline(state, current_time);

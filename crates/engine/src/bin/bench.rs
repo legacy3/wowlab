@@ -2,45 +2,31 @@ use engine::config::{
     AuraDef, AuraEffect, DamageFormula, PetConfig, PlayerConfig, ResourceConfig, ResourceCost,
     ResourceType, SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
 };
-use engine::script::RotationScript;
+use engine::rotation::PredictiveRotation;
 use engine::sim::{run_batch, run_simulation, SimState};
 use engine::util::FastRng;
 use std::time::Instant;
 
-/// Simple priority rotation in WAT: iterate spells, return first ready one
-const ROTATION_WAT: &str = r#"
-(module
-  (import "env" "spell_count" (func $spell_count (result i32)))
-  (import "env" "spell_ready" (func $spell_ready (param i32) (result i32)))
+/// Beast Mastery Hunter priority rotation script (real Rhai syntax)
+const ROTATION_SCRIPT: &str = r#"
+// Cooldowns first
+if bestial_wrath.ready() { cast("bestial_wrath") }
+if aspect_of_the_wild.ready() { cast("aspect_of_the_wild") }
 
-  (func (export "get_next_action") (result i32)
-    (local $i i32)
-    (local $count i32)
+// Major abilities
+if kill_command.ready() { cast("kill_command") }
+if barbed_shot.ready() { cast("barbed_shot") }
+if bloodshed.ready() { cast("bloodshed") }
+if a_murder_of_crows.ready() { cast("a_murder_of_crows") }
+if dire_beast.ready() { cast("dire_beast") }
 
-    ;; Get spell count
-    (local.set $count (call $spell_count))
+// Maintain DoTs
+if serpent_sting.ready() { cast("serpent_sting") }
 
-    ;; Loop through spells
-    (block $done
-      (loop $loop
-        ;; Check bounds
-        (br_if $done (i32.ge_u (local.get $i) (local.get $count)))
-
-        ;; If spell ready, return index
-        (if (call $spell_ready (local.get $i))
-          (then (return (local.get $i)))
-        )
-
-        ;; Increment and continue
-        (local.set $i (i32.add (local.get $i) (i32.const 1)))
-        (br $loop)
-      )
-    )
-
-    ;; No spell ready, return -1
-    (i32.const -1)
-  )
-)
+// Fillers
+if chimaera_shot.ready() { cast("chimaera_shot") }
+if cobra_shot.ready() { cast("cobra_shot") }
+if multi_shot.ready() { cast("multi_shot") }
 "#;
 
 fn create_bm_hunter_config() -> SimConfig {
@@ -194,7 +180,7 @@ fn create_bm_hunter_config() -> SimConfig {
             // Multi-Shot
             SpellDef {
                 id: 2643,
-                name: "Multi-Shot".to_string(),
+                name: "Multi_Shot".to_string(),
                 cooldown: 0.0,
                 charges: 0,
                 gcd: 1.5,
@@ -439,6 +425,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 2.0,
+                is_proc: false,
             },
             // Serpent Sting - 18 sec duration, ticks every 3 sec (6 ticks)
             AuraDef {
@@ -452,6 +439,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: true,
                 tick_interval: 3.0,
+                is_proc: false,
             },
             // Bestial Wrath buff - damage increase
             AuraDef {
@@ -465,6 +453,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 0.0,
+                is_proc: false,
             },
             // A Murder of Crows - periodic damage
             AuraDef {
@@ -478,6 +467,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 1.0,
+                is_proc: false,
             },
             // Aspect of the Wild buff - crit increase
             AuraDef {
@@ -491,6 +481,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 0.0,
+                is_proc: false,
             },
             // Bloodshed - bleed DoT
             AuraDef {
@@ -504,6 +495,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 2.0,
+                is_proc: false,
             },
             // Steel Trap - bleed DoT
             AuraDef {
@@ -517,6 +509,7 @@ fn create_bm_hunter_config() -> SimConfig {
                 }],
                 pandemic: false,
                 tick_interval: 2.0,
+                is_proc: false,
             },
         ],
         duration: 300.0, // 5 minute fight (realistic boss fight)
@@ -536,7 +529,7 @@ fn main() {
         .unwrap_or(1_000_000);
     let duration: f32 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(300.0);
 
-    println!("=== Engine Benchmark ===\n");
+    println!("=== Engine Benchmark (Rhai + Predictive Gating) ===\n");
 
     let mut config = create_bm_hunter_config();
     config.duration = duration;
@@ -544,16 +537,30 @@ fn main() {
     let mut state = SimState::new(&config);
     let mut rng = FastRng::new(12345);
 
-    // Compile WAT to WASM and create rotation script
-    let wasm_bytes = wat::parse_str(ROTATION_WAT).expect("Failed to parse WAT");
-    let mut rotation = RotationScript::new(&wasm_bytes, &config).expect("Failed to create rotation script");
+    // Compile Rhai rotation script
+    let mut rotation = PredictiveRotation::compile(ROTATION_SCRIPT, &config)
+        .expect("Failed to compile rotation script");
+
+    println!("Rotation: {} rules, {} conditions", rotation.rule_count(), rotation.condition_count());
 
     // Single sim
     rng.reseed(0);
+    rotation.reset();
     let result = run_simulation(&mut state, &config, &mut rng, &mut rotation);
     println!(
         "Single {}s sim: {} casts, {:.0} DPS",
         config.duration, result.casts, result.dps
+    );
+
+    // Show rotation stats after a sim
+    let stats = rotation.stats();
+    println!(
+        "Condition states: {} disabled, {} watching, {} active ({:.1}% skip rate)",
+        stats.disabled, stats.watching, stats.active, stats.skip_rate()
+    );
+    println!(
+        "Evaluations: {} performed, {} skipped ({:.1}% savings)",
+        stats.evaluations, stats.skipped, stats.eval_savings()
     );
 
     #[cfg(feature = "meta_events")]
@@ -586,6 +593,7 @@ fn main() {
 
     // Full benchmark
     println!("\n--- Full Benchmark ---");
+    rotation.reset_stats();
     let start = Instant::now();
     let result = run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, 0);
     let elapsed = start.elapsed();
@@ -593,4 +601,29 @@ fn main() {
     println!("Time: {:?}", elapsed);
     println!("Throughput: {:.2}M sims/sec", sims_per_sec / 1_000_000.0);
     println!("Avg DPS: {:.0}", result.mean_dps);
+
+    // Predictive gating stats
+    let stats = rotation.stats();
+    let total_evals = stats.evaluations + stats.skipped;
+    println!("\n--- Predictive Gating Stats ---");
+    println!("Total condition checks: {}", total_evals);
+    println!(
+        "  Evaluated: {} ({:.1}%)",
+        stats.evaluations,
+        100.0 - stats.eval_savings()
+    );
+    println!(
+        "  Skipped:   {} ({:.1}%)",
+        stats.skipped,
+        stats.eval_savings()
+    );
+    println!(
+        "Without gating would need: {} evaluations",
+        total_evals
+    );
+    println!(
+        "Gating saved: {} evaluations ({:.1}% reduction)",
+        stats.skipped,
+        stats.eval_savings()
+    );
 }
