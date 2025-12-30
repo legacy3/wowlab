@@ -23,6 +23,7 @@ thiserror = "2.0"
 rhai = { version = "1.21", features = ["sync", "internals"] }
 clap = { version = "4.5", features = ["derive"] }
 toml = "0.8"
+rayon = "1.10"
 
 [profile.release]
 opt-level = 3

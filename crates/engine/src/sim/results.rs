@@ -157,6 +157,32 @@ impl BatchAccumulator {
     }
 }
 
+impl BatchAccumulator {
+    /// Merges another accumulator into this one.
+    pub fn merge(&mut self, other: &Self) {
+        if other.iterations == 0 {
+            return;
+        }
+        self.iterations += other.iterations;
+        self.sum_dps += other.sum_dps;
+        self.sum_sq_dps += other.sum_sq_dps;
+        self.min_dps = self.min_dps.min(other.min_dps);
+        self.max_dps = self.max_dps.max(other.max_dps);
+        self.total_casts += other.total_casts;
+
+        // Merge spell data
+        if self.spell_damage.is_empty() {
+            self.spell_damage = other.spell_damage.clone();
+            self.spell_casts = other.spell_casts.clone();
+        } else {
+            for (i, &dmg) in other.spell_damage.iter().enumerate() {
+                self.spell_damage[i] += dmg;
+                self.spell_casts[i] += other.spell_casts[i];
+            }
+        }
+    }
+}
+
 impl Default for BatchAccumulator {
     fn default() -> Self {
         Self::new()

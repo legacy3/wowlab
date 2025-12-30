@@ -8,11 +8,17 @@ Rust simulation core with CLI interface. High-performance combat simulation with
 # Run a simulation
 ./target/release/engine sim --spec specs/hunter/beast-mastery.toml -i 10000
 
+# Run in parallel (uses all CPU p-cores via rayon)
+./target/release/engine sim --spec specs/hunter/beast-mastery.toml -i 100000 --parallel
+
 # Validate a rotation without running
 ./target/release/engine validate --spec specs/hunter/beast-mastery.toml --rotation rotations/bm_st.rhai
 
 # Run benchmarks with detailed stats
 ./target/release/engine bench --spec specs/hunter/beast-mastery.toml -i 100000 --stats
+
+# Parallel benchmarks (~5-6x faster with 12 threads)
+./target/release/engine bench --spec specs/hunter/beast-mastery.toml -i 1000000 --parallel
 
 # List available specs
 ./target/release/engine list --dir specs

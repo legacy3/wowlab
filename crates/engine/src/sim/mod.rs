@@ -11,7 +11,7 @@ mod events;
 mod results;
 mod state;
 
-pub use engine::{run_batch, run_simulation};
+pub use engine::{run_batch, run_batch_parallel, run_simulation};
 pub use events::{EventQueue, SimEvent, TimedEvent};
 pub use results::{BatchAccumulator, BatchResult, SimResult, SpellBreakdown};
 pub use state::{

@@ -80,6 +80,8 @@ POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 //! - Smart wake-up scheduling to avoid busy-looping
 //! - Cache-friendly access patterns
 
+use rayon::prelude::*;
+
 use crate::config::SimConfig;
 use crate::rotation::PredictiveRotation;
 use crate::util::FastRng;
@@ -238,7 +240,7 @@ pub fn run_simulation(
     }
 }
 
-/// Run a batch of simulations with state reuse.
+/// Run a batch of simulations with state reuse (single-threaded).
 pub fn run_batch(
     state: &mut SimState,
     config: &SimConfig,
@@ -259,6 +261,50 @@ pub fn run_batch(
             &state.results.spell_casts,
         );
     }
+
+    let spell_ids: Vec<u32> = config.spells.iter().map(|s| s.id).collect();
+    accum.finalize(config.duration, &spell_ids)
+}
+
+/// Run a batch of simulations in parallel using rayon.
+///
+/// Each thread gets its own SimState, RNG, and rotation instance.
+/// Results are accumulated per-thread then merged at the end.
+pub fn run_batch_parallel(
+    config: &SimConfig,
+    rotation_script: &str,
+    iterations: u32,
+    base_seed: u64,
+) -> BatchResult {
+    let accum = (0..iterations)
+        .into_par_iter()
+        .fold(
+            || {
+                // Thread-local init - called once per thread chunk
+                let state = SimState::new(config);
+                let rotation = PredictiveRotation::compile(rotation_script, config)
+                    .expect("rotation already validated");
+                let rng = FastRng::new(0);
+                let accum = BatchAccumulator::new();
+                (state, rotation, rng, accum)
+            },
+            |(mut state, mut rotation, mut rng, mut accum), i| {
+                rng.reseed(base_seed.wrapping_add(i as u64));
+                rotation.reset();
+                let result = run_simulation(&mut state, config, &mut rng, &mut rotation);
+                accum.add(
+                    &result,
+                    &state.results.spell_damage,
+                    &state.results.spell_casts,
+                );
+                (state, rotation, rng, accum)
+            },
+        )
+        .map(|(_, _, _, accum)| accum)
+        .reduce(BatchAccumulator::new, |mut a, b| {
+            a.merge(&b);
+            a
+        });
 
     let spell_ids: Vec<u32> = config.spells.iter().map(|s| s.id).collect();
     accum.finalize(config.duration, &spell_ids)

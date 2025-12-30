@@ -23,8 +23,8 @@ use clap::{Parser, Subcommand};
 
 use engine::cli::{SpecConfig, load_spec_config};
 use engine::rotation::PredictiveRotation;
-use engine::sim::{run_batch, run_simulation, SimState};
-use engine::util::FastRng;
+use engine::sim::{run_batch, run_batch_parallel, run_simulation, SimState};
+use engine::util::{get_optimal_concurrency, FastRng};
 
 #[derive(Parser)]
 #[command(name = "engine")]
@@ -32,6 +32,10 @@ use engine::util::FastRng;
 #[command(version)]
 #[command(about = "WoW combat simulation engine", long_about = None)]
 struct Cli {
+    /// Number of threads for parallel execution (default: all cores)
+    #[arg(short = 't', long, global = true)]
+    threads: Option<usize>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -63,6 +67,10 @@ enum Commands {
         /// Output format (text, json)
         #[arg(short, long, default_value = "text")]
         output: String,
+
+        /// Run simulations in parallel using all CPU cores
+        #[arg(short, long)]
+        parallel: bool,
     },
 
     /// Validate a rotation script without running simulation
@@ -97,6 +105,10 @@ enum Commands {
         /// Show detailed rotation statistics
         #[arg(long)]
         stats: bool,
+
+        /// Run simulations in parallel using all CPU cores
+        #[arg(short, long)]
+        parallel: bool,
     },
 
     /// List available specs
@@ -110,6 +122,14 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
 
+    // Configure rayon thread pool
+    // Default to P-cores only on Apple Silicon, physical cores on x86
+    let threads = cli.threads.unwrap_or_else(get_optimal_concurrency);
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(threads)
+        .build_global()
+        .expect("Failed to configure thread pool");
+
     match cli.command {
         Commands::Sim {
             spec,
@@ -118,8 +138,9 @@ fn main() {
             duration,
             seed,
             output,
+            parallel,
         } => {
-            run_sim(&spec, rotation.as_deref(), iterations, duration, seed, &output);
+            run_sim(&spec, rotation.as_deref(), iterations, duration, seed, &output, parallel);
         }
 
         Commands::Validate { spec, rotation } => {
@@ -132,8 +153,9 @@ fn main() {
             iterations,
             duration,
             stats,
+            parallel,
         } => {
-            run_bench(&spec, rotation.as_deref(), iterations, duration, stats);
+            run_bench(&spec, rotation.as_deref(), iterations, duration, stats, parallel);
         }
 
         Commands::List { dir } => {
@@ -149,6 +171,7 @@ fn run_sim(
     duration: f32,
     seed: u64,
     output: &str,
+    parallel: bool,
 ) {
     // Load spec config
     let spec_config = match load_spec_config(spec_path) {
@@ -179,17 +202,12 @@ fn run_sim(
         }
     };
 
-    // Compile rotation
-    let mut rotation = match PredictiveRotation::compile(&rotation_script, &config) {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Error compiling rotation: {}", e);
-            std::process::exit(1);
-        }
-    };
+    // Validate rotation compiles (for parallel mode, each thread recompiles)
+    if let Err(e) = PredictiveRotation::compile(&rotation_script, &config) {
+        eprintln!("Error compiling rotation: {}", e);
+        std::process::exit(1);
+    }
 
-    // Create state and RNG
-    let mut state = SimState::new(&config);
     let actual_seed = if seed == 0 {
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -198,11 +216,17 @@ fn run_sim(
     } else {
         seed
     };
-    let mut rng = FastRng::new(actual_seed);
 
     // Run simulation
     let start = Instant::now();
-    let result = run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, actual_seed);
+    let result = if parallel {
+        run_batch_parallel(&config, &rotation_script, iterations, actual_seed)
+    } else {
+        let mut rotation = PredictiveRotation::compile(&rotation_script, &config).unwrap();
+        let mut state = SimState::new(&config);
+        let mut rng = FastRng::new(actual_seed);
+        run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, actual_seed)
+    };
     let elapsed = start.elapsed();
 
     // Output results
@@ -215,6 +239,9 @@ fn run_sim(
             println!("Spec: {}", spec_config.spec.name);
             println!("Duration: {}s", duration);
             println!("Iterations: {}", iterations);
+            if parallel {
+                println!("Mode: parallel ({} threads)", rayon::current_num_threads());
+            }
             println!();
             println!("DPS: {:.1} (std: {:.1})", result.mean_dps, result.std_dps);
             println!("Min: {:.1} / Max: {:.1}", result.min_dps, result.max_dps);
@@ -223,23 +250,6 @@ fn run_sim(
             println!(
                 "Throughput: {:.2}M sims/sec",
                 iterations as f64 / elapsed.as_secs_f64() / 1_000_000.0
-            );
-
-            // Rotation stats
-            let stats = rotation.stats();
-            println!();
-            println!("--- Rotation Stats ---");
-            println!(
-                "Rules: {} ({} disabled, {} watching, {} active)",
-                rotation.rule_count(),
-                stats.disabled,
-                stats.watching,
-                stats.active
-            );
-            println!(
-                "Evaluations: {} ({:.1}% skipped)",
-                stats.evaluations,
-                stats.eval_savings()
             );
         }
     }
@@ -306,6 +316,7 @@ fn run_bench(
     iterations: u32,
     duration: f32,
     show_stats: bool,
+    parallel: bool,
 ) {
     // Load spec config
     let spec_config = match load_spec_config(spec_path) {
@@ -348,6 +359,9 @@ fn run_bench(
     println!("=== Engine Benchmark ===\n");
     println!("Spec: {}", spec_config.spec.name);
     println!("Rotation: {} rules", rotation.rule_count());
+    if parallel {
+        println!("Mode: parallel ({} threads)", rayon::current_num_threads());
+    }
 
     // Create state and RNG
     let mut state = SimState::new(&config);
@@ -362,12 +376,20 @@ fn run_bench(
     );
 
     // Warmup
-    let _ = run_batch(&mut state, &config, &mut rng, &mut rotation, 1000, 0);
-    rotation.reset_stats();
+    if parallel {
+        let _ = run_batch_parallel(&config, &rotation_script, 1000, 0);
+    } else {
+        let _ = run_batch(&mut state, &config, &mut rng, &mut rotation, 1000, 0);
+        rotation.reset_stats();
+    }
 
     // Main benchmark
     let start = Instant::now();
-    let result = run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, 0);
+    let result = if parallel {
+        run_batch_parallel(&config, &rotation_script, iterations, 0)
+    } else {
+        run_batch(&mut state, &config, &mut rng, &mut rotation, iterations, 0)
+    };
     let elapsed = start.elapsed();
     let sims_per_sec = iterations as f64 / elapsed.as_secs_f64();
 
@@ -378,7 +400,7 @@ fn run_bench(
     println!("Throughput: {:.2}M sims/sec", sims_per_sec / 1_000_000.0);
     println!("Avg DPS: {:.0}", result.mean_dps);
 
-    if show_stats {
+    if show_stats && !parallel {
         let stats = rotation.stats();
         println!();
         println!("--- Predictive Gating Stats ---");
