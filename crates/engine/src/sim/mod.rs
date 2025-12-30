@@ -11,9 +11,12 @@ mod events;
 mod results;
 mod state;
 
-pub use engine::{run_batch, run_batch_parallel, run_simulation};
+pub use engine::{run_batch, run_batch_parallel, run_simulation, run_simulation_with_report};
 pub use events::{EventQueue, SimEvent, TimedEvent};
-pub use results::{BatchAccumulator, BatchResult, SimResult, SpellBreakdown};
+pub use results::{
+    ActionLog, ActionLogEntry, ActionType, BatchAccumulator, BatchResult, SimReport, SimResult,
+    SpellBreakdown,
+};
 pub use state::{
     AuraInstance, AuraRuntime, AuraTracker, Resources, SimResultsAccum, SimState, SpellRuntime,
     SpellState, TargetState, UnitState,

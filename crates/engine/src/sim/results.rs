@@ -2,6 +2,217 @@
 
 use serde::Serialize;
 
+/// A single logged action from the simulation.
+#[derive(Debug, Clone, Serialize)]
+pub struct ActionLogEntry {
+    /// Time in seconds since combat start.
+    pub time: f32,
+    /// Type of action.
+    pub action: ActionType,
+    /// Spell/aura name (if applicable).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Spell/aura ID (if applicable).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<u32>,
+    /// Damage dealt (if applicable).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub damage: Option<f32>,
+    /// Current resource after action.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource: Option<f32>,
+    /// GCD incurred (if applicable).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gcd: Option<f32>,
+    /// Extra info (aura stacks, remaining duration, etc).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra: Option<String>,
+}
+
+/// Type of action in the log.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ActionType {
+    /// Spell cast.
+    Cast,
+    /// Damage dealt (spell, dot tick, auto attack).
+    Damage,
+    /// Aura applied.
+    AuraApply,
+    /// Aura refreshed.
+    AuraRefresh,
+    /// Aura expired.
+    AuraExpire,
+    /// Resource gained.
+    ResourceGain,
+    /// Combat start.
+    CombatStart,
+    /// Combat end.
+    CombatEnd,
+}
+
+/// Detailed report from a single simulation run.
+#[derive(Debug, Clone, Serialize)]
+pub struct SimReport {
+    /// Spec name.
+    pub spec: String,
+    /// Fight duration in seconds.
+    pub duration: f32,
+    /// Final DPS.
+    pub dps: f32,
+    /// Total damage dealt.
+    pub total_damage: f32,
+    /// Total casts.
+    pub total_casts: u32,
+    /// Chronological action log.
+    pub actions: Vec<ActionLogEntry>,
+    /// Spell breakdown summary.
+    pub spell_breakdown: Vec<SpellBreakdown>,
+}
+
+/// Action log accumulator for a single simulation.
+#[derive(Debug, Clone, Default)]
+pub struct ActionLog {
+    /// Whether logging is enabled.
+    pub enabled: bool,
+    /// Logged entries.
+    pub entries: Vec<ActionLogEntry>,
+    /// Spell names by index.
+    pub spell_names: Vec<String>,
+    /// Aura names by index.
+    pub aura_names: Vec<String>,
+}
+
+impl ActionLog {
+    /// Create a new disabled action log.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Create a new enabled action log with spell/aura names.
+    pub fn with_names(spell_names: Vec<String>, aura_names: Vec<String>) -> Self {
+        Self {
+            enabled: true,
+            entries: Vec::with_capacity(1024),
+            spell_names,
+            aura_names,
+        }
+    }
+
+    /// Log a spell cast.
+    #[inline]
+    pub fn log_cast(
+        &mut self,
+        time_ms: u32,
+        spell_idx: usize,
+        spell_id: u32,
+        damage: f32,
+        resource: f32,
+        gcd_ms: u32,
+    ) {
+        if !self.enabled {
+            return;
+        }
+        let name = self.spell_names.get(spell_idx).cloned();
+        self.entries.push(ActionLogEntry {
+            time: time_ms as f32 / 1000.0,
+            action: ActionType::Cast,
+            name,
+            id: Some(spell_id),
+            damage: if damage > 0.0 { Some(damage) } else { None },
+            resource: Some(resource),
+            gcd: if gcd_ms > 0 {
+                Some(gcd_ms as f32 / 1000.0)
+            } else {
+                None
+            },
+            extra: None,
+        });
+    }
+
+    /// Log an aura application.
+    #[inline]
+    pub fn log_aura_apply(&mut self, time_ms: u32, aura_idx: usize, aura_id: u32, stacks: u8, is_refresh: bool) {
+        if !self.enabled {
+            return;
+        }
+        let name = self.aura_names.get(aura_idx).cloned();
+        self.entries.push(ActionLogEntry {
+            time: time_ms as f32 / 1000.0,
+            action: if is_refresh {
+                ActionType::AuraRefresh
+            } else {
+                ActionType::AuraApply
+            },
+            name,
+            id: Some(aura_id),
+            damage: None,
+            resource: None,
+            gcd: None,
+            extra: if stacks > 1 {
+                Some(format!("{} stacks", stacks))
+            } else {
+                None
+            },
+        });
+    }
+
+    /// Log a DoT tick.
+    #[inline]
+    pub fn log_dot_tick(&mut self, time_ms: u32, aura_idx: usize, aura_id: u32, damage: f32) {
+        if !self.enabled {
+            return;
+        }
+        let name = self.aura_names.get(aura_idx).cloned();
+        self.entries.push(ActionLogEntry {
+            time: time_ms as f32 / 1000.0,
+            action: ActionType::Damage,
+            name,
+            id: Some(aura_id),
+            damage: Some(damage),
+            resource: None,
+            gcd: None,
+            extra: Some("tick".to_string()),
+        });
+    }
+
+    /// Log combat start.
+    #[inline]
+    pub fn log_combat_start(&mut self) {
+        if !self.enabled {
+            return;
+        }
+        self.entries.push(ActionLogEntry {
+            time: 0.0,
+            action: ActionType::CombatStart,
+            name: None,
+            id: None,
+            damage: None,
+            resource: None,
+            gcd: None,
+            extra: None,
+        });
+    }
+
+    /// Log combat end.
+    #[inline]
+    pub fn log_combat_end(&mut self, time_ms: u32, total_damage: f32, dps: f32) {
+        if !self.enabled {
+            return;
+        }
+        self.entries.push(ActionLogEntry {
+            time: time_ms as f32 / 1000.0,
+            action: ActionType::CombatEnd,
+            name: None,
+            id: None,
+            damage: Some(total_damage),
+            resource: None,
+            gcd: None,
+            extra: Some(format!("{:.1} DPS", dps)),
+        });
+    }
+}
+
 /// Results from a single simulation run.
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SimResult {

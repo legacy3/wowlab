@@ -86,7 +86,7 @@ use crate::config::SimConfig;
 use crate::rotation::PredictiveRotation;
 use crate::util::FastRng;
 
-use super::{BatchAccumulator, BatchResult, SimEvent, SimResult, SimState};
+use super::{BatchAccumulator, BatchResult, SimEvent, SimReport, SimResult, SimState, SpellBreakdown};
 
 /// Convert f32 seconds to u32 milliseconds
 #[inline(always)]
@@ -240,6 +240,62 @@ pub fn run_simulation(
     }
 }
 
+/// Run a single simulation with detailed action logging.
+/// Returns a SimReport with full action log and spell breakdown.
+pub fn run_simulation_with_report(
+    state: &mut SimState,
+    config: &SimConfig,
+    rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
+    spec_name: &str,
+) -> SimReport {
+    // Enable action logging
+    state.enable_action_log(config);
+    state.action_log.log_combat_start();
+
+    // Run the simulation
+    let result = run_simulation(state, config, rng, rotation);
+
+    // Log combat end
+    state.action_log.log_combat_end(state.duration, result.damage, result.dps);
+
+    // Build spell breakdown
+    let total_damage: f32 = state.results.spell_damage.iter().sum();
+    let duration_secs = config.duration;
+    let spell_breakdown: Vec<SpellBreakdown> = state
+        .results
+        .spell_damage
+        .iter()
+        .zip(state.results.spell_casts.iter())
+        .enumerate()
+        .filter(|(_, (dmg, _))| **dmg > 0.0)
+        .map(|(idx, (damage, casts))| {
+            let spell_id = config.spells.get(idx).map(|s| s.id).unwrap_or(0);
+            SpellBreakdown {
+                spell_id,
+                total_damage: *damage,
+                casts: *casts as u64,
+                dps_contribution: *damage / duration_secs,
+                pct_of_total: if total_damage > 0.0 {
+                    *damage / total_damage * 100.0
+                } else {
+                    0.0
+                },
+            }
+        })
+        .collect();
+
+    SimReport {
+        spec: spec_name.to_string(),
+        duration: config.duration,
+        dps: result.dps,
+        total_damage: result.damage,
+        total_casts: result.casts,
+        actions: std::mem::take(&mut state.action_log.entries),
+        spell_breakdown,
+    }
+}
+
 /// Run a batch of simulations with state reuse (single-threaded).
 pub fn run_batch(
     state: &mut SimState,
@@ -332,6 +388,7 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
 
         let runtime = &state.aura_runtime[idx];
         let tick_interval = runtime.tick_interval_ms;
+        let aura_id = config.auras.get(idx).map(|a| a.id).unwrap_or(0);
 
         let mut tick_time = next_tick;
         while tick_time <= current_time {
@@ -348,6 +405,11 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
                     * state.player.stats.vers_mult;
                 state.results.total_damage += damage;
                 state.target.health -= damage;
+
+                // Log DoT tick if action logging is enabled
+                if state.action_log.enabled {
+                    state.action_log.log_dot_tick(tick_time, idx, aura_id, damage);
+                }
             }
 
             tick_time += tick_interval;
@@ -489,17 +551,31 @@ fn cast_spell_inline(
     }
 
     // Calculate and record damage inline
-    calculate_damage_inline(state, config, spell_idx, rng);
+    let damage = calculate_damage_inline(state, config, spell_idx, rng);
+
+    // Log the cast if action logging is enabled
+    if state.action_log.enabled {
+        let spell_id = config.spells[spell_idx].id;
+        state.action_log.log_cast(
+            current_time,
+            spell_idx,
+            spell_id,
+            damage,
+            state.player.resources.current,
+            hasted_gcd_ms,
+        );
+    }
 }
 
 /// Calculate damage for a spell - inlined with all multipliers.
+/// Returns the damage dealt for logging purposes.
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
     config: &SimConfig,
     spell_idx: usize,
     _rng: &mut FastRng,
-) {
+) -> f32 {
     let spell_rt = &state.spell_runtime[spell_idx];
     let stats = &state.player.stats;
 
@@ -520,6 +596,8 @@ fn calculate_damage_inline(
 
     // Process spell effects (apply auras, trigger spells, etc.)
     process_spell_effects_inline(state, config, spell_idx);
+
+    total_damage
 }
 
 /// Process spell effects - apply auras, trigger spells, etc.
@@ -562,6 +640,14 @@ fn apply_aura_inline(state: &mut SimState, config: &SimConfig, aura_idx: u8) {
         .player
         .auras
         .apply_slot(idx, runtime.duration_ms, aura_def.max_stacks, state.time);
+
+    // Get stack count after application for logging
+    let stacks = state.player.auras.stacks_slot(idx);
+
+    // Log aura application if action logging is enabled
+    if state.action_log.enabled {
+        state.action_log.log_aura_apply(state.time, idx, aura_def.id, stacks, is_refresh);
+    }
 
     // Start DoT tracking if periodic (only on NEW application, not refresh)
     // Refresh extends duration but existing tick schedule continues

@@ -23,7 +23,7 @@ use clap::{Parser, Subcommand};
 
 use engine::cli::{SpecConfig, load_spec_config};
 use engine::rotation::PredictiveRotation;
-use engine::sim::{run_batch, run_batch_parallel, run_simulation, SimState};
+use engine::sim::{run_batch, run_batch_parallel, run_simulation, run_simulation_with_report, SimState};
 use engine::util::{get_optimal_concurrency, FastRng};
 
 #[derive(Parser)]
@@ -71,6 +71,10 @@ enum Commands {
         /// Run simulations in parallel using all CPU cores
         #[arg(short, long)]
         parallel: bool,
+
+        /// Generate detailed action report (single iteration, JSON output)
+        #[arg(long)]
+        report: bool,
     },
 
     /// Validate a rotation script without running simulation
@@ -139,8 +143,9 @@ fn main() {
             seed,
             output,
             parallel,
+            report,
         } => {
-            run_sim(&spec, rotation.as_deref(), iterations, duration, seed, &output, parallel);
+            run_sim(&spec, rotation.as_deref(), iterations, duration, seed, &output, parallel, report);
         }
 
         Commands::Validate { spec, rotation } => {
@@ -172,6 +177,7 @@ fn run_sim(
     seed: u64,
     output: &str,
     parallel: bool,
+    report: bool,
 ) {
     // Load spec config
     let spec_config = match load_spec_config(spec_path) {
@@ -216,6 +222,24 @@ fn run_sim(
     } else {
         seed
     };
+
+    // Report mode: run single simulation with detailed action logging
+    if report {
+        let mut rotation = PredictiveRotation::compile(&rotation_script, &config).unwrap();
+        let mut state = SimState::new(&config);
+        let mut rng = FastRng::new(actual_seed);
+
+        let report = run_simulation_with_report(
+            &mut state,
+            &config,
+            &mut rng,
+            &mut rotation,
+            &spec_config.spec.name,
+        );
+
+        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        return;
+    }
 
     // Run simulation
     let start = Instant::now();

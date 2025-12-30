@@ -7,6 +7,7 @@ use serde::Deserialize;
 /// Stats are loaded from configuration and then [`finalize`](Stats::finalize) should be called
 /// to pre-compute derived values for efficient hot-path access.
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct Stats {
     // Primary
     pub intellect: f32,
@@ -21,13 +22,9 @@ pub struct Stats {
     pub versatility_rating: f32,
 
     // Derived (calculated from ratings)
-    #[serde(default)]
     pub crit_pct: f32,
-    #[serde(default)]
     pub haste_pct: f32,
-    #[serde(default)]
     pub mastery_pct: f32,
-    #[serde(default)]
     pub versatility_pct: f32,
 
     // Precomputed for hot path (call finalize() after loading)
@@ -80,6 +77,7 @@ impl Stats {
 
 /// Resource pool configuration (mana, focus, energy, etc.).
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct ResourceConfig {
     /// Type of resource.
     pub resource_type: ResourceType,

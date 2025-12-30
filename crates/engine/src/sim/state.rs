@@ -8,6 +8,7 @@
 
 use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
 
+use super::results::ActionLog;
 use super::EventQueue;
 
 /// Pre-computed aura data (timing + periodic damage)
@@ -88,6 +89,9 @@ pub struct SimState {
 
     /// Pet state (cold - rarely accessed)
     pub pet: Option<UnitState>,
+
+    /// Action log for detailed reporting (cold - only used in report mode)
+    pub action_log: ActionLog,
 }
 
 /// Runtime state for a unit - cache-friendly layout.
@@ -593,6 +597,7 @@ impl SimState {
             next_pet_attack: 0,
             target: TargetState::new(config.target.max_health),
             pet: None,
+            action_log: ActionLog::new(),
         };
 
         // Set initial charges and pre-compute ms values from spell defs
@@ -618,5 +623,14 @@ impl SimState {
         self.target.reset();
         self.events.clear();
         self.results.reset();
+        // Clear action log entries but keep enabled state and names
+        self.action_log.entries.clear();
+    }
+
+    /// Enable action logging with spell/aura names.
+    pub fn enable_action_log(&mut self, config: &SimConfig) {
+        let spell_names: Vec<String> = config.spells.iter().map(|s| s.name.clone()).collect();
+        let aura_names: Vec<String> = config.auras.iter().map(|a| a.name.clone()).collect();
+        self.action_log = ActionLog::with_names(spell_names, aura_names);
     }
 }

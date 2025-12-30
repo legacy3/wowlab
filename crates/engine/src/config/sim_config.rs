@@ -87,22 +87,16 @@ fn default_pet_attack_speed() -> f32 {
 
 /// Target/boss configuration.
 #[derive(Debug, Clone, Default, Deserialize)]
+#[serde(default)]
 pub struct TargetConfig {
     /// Level difference from player (0 = same, 3 = boss).
-    #[serde(default)]
     pub level_diff: i8,
 
     /// Maximum health for execute calculations.
-    #[serde(default = "default_target_health")]
     pub max_health: f32,
 
     /// Armor value for physical damage reduction.
-    #[serde(default)]
     pub armor: f32,
-}
-
-fn default_target_health() -> f32 {
-    10_000_000.0
 }
 
 impl SimConfig {

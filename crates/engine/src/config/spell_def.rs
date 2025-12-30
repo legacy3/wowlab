@@ -45,6 +45,7 @@ pub struct SpellDef {
 
 /// Resource cost for casting a spell.
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct ResourceCost {
     /// Which resource this spell consumes.
     pub resource_type: ResourceType,
@@ -54,6 +55,7 @@ pub struct ResourceCost {
 
 /// Formula for calculating damage or healing.
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct DamageFormula {
     /// Minimum base damage.
     pub base_min: f32,
