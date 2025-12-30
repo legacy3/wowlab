@@ -1,0 +1,283 @@
+# Beast Mastery Hunter Spec Configuration
+#
+# This defines all spells, auras, and default settings for BM Hunter simulation.
+
+[spec]
+id = "hunter:beast-mastery"
+name = "Beast Mastery"
+class = "Hunter"
+default_rotation = "rotations/bm_st.rhai"
+
+[player]
+primary_stat = "agility"
+resource = "focus"
+resource_max = 100
+resource_regen = 10.0
+
+[player.stats]
+agility = 10000
+stamina = 8000
+crit_pct = 25.0
+haste_pct = 20.0
+mastery_pct = 30.0
+versatility_pct = 5.0
+
+[player.weapon]
+speed = 3.0
+damage = [500, 700]
+
+[pet]
+name = "Spirit Beast"
+attack_speed = 2.0
+attack_damage = [300, 400]
+
+[pet.stats]
+agility = 5000
+strength = 1000
+crit_pct = 20.0
+haste_pct = 15.0
+
+# ============================================================================
+# SPELLS
+# ============================================================================
+
+# Core rotational abilities
+
+[[spells]]
+id = 34026
+name = "Kill Command"
+cooldown = 7.5
+gcd = 1.5
+cost = 30
+
+[spells.damage]
+base = [1000, 1200]
+ap_coeff = 0.6
+
+[[spells]]
+id = 217200
+name = "Barbed Shot"
+cooldown = 12.0
+charges = 2
+gcd = 1.5
+
+[spells.damage]
+base = [500, 600]
+ap_coeff = 0.3
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 246152  # Barbed Shot buff (Frenzy stacker)
+
+[[spells]]
+id = 193455
+name = "Cobra Shot"
+gcd = 1.5
+cost = 35
+
+[spells.damage]
+base = [800, 900]
+ap_coeff = 0.4
+
+[[spells]]
+id = 2643
+name = "Multi-Shot"
+gcd = 1.5
+cost = 40
+
+[spells.damage]
+base = [400, 500]
+ap_coeff = 0.25
+
+# Cooldowns
+
+[[spells]]
+id = 19574
+name = "Bestial Wrath"
+cooldown = 90.0
+gcd = 0.0  # Off-GCD
+cost = 0
+harmful = false
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 19574
+
+[[spells]]
+id = 193530
+name = "Aspect of the Wild"
+cooldown = 120.0
+gcd = 0.0  # Off-GCD
+cost = 0
+harmful = false
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 193530
+
+[[spells]]
+id = 359844
+name = "Call of the Wild"
+cooldown = 120.0
+gcd = 1.5
+cost = 0
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 359844
+
+# Talents
+
+[[spells]]
+id = 321530
+name = "Bloodshed"
+cooldown = 60.0
+gcd = 1.5
+cost = 0
+
+[spells.damage]
+base = [1500, 1800]
+ap_coeff = 0.8
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 321530
+
+[[spells]]
+id = 120679
+name = "Dire Beast"
+cooldown = 20.0
+gcd = 1.5
+cost = 0
+
+[spells.damage]
+base = [600, 800]
+ap_coeff = 0.4
+
+[[spells]]
+id = 131894
+name = "A Murder of Crows"
+cooldown = 60.0
+gcd = 1.5
+cost = 30
+
+[spells.damage]
+base = [300, 400]
+ap_coeff = 0.2
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 131894
+
+[[spells]]
+id = 271788
+name = "Serpent Sting"
+gcd = 1.5
+cost = 10
+
+[spells.damage]
+base = [100, 120]
+ap_coeff = 0.1
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 271788
+
+[[spells]]
+id = 53209
+name = "Chimaera Shot"
+cooldown = 15.0
+gcd = 1.5
+cost = 20
+
+[spells.damage]
+base = [700, 850]
+ap_coeff = 0.35
+
+[[spells]]
+id = 53351
+name = "Kill Shot"
+cooldown = 10.0
+gcd = 1.5
+cost = 10
+
+[spells.damage]
+base = [1200, 1500]
+ap_coeff = 0.8
+
+# ============================================================================
+# AURAS
+# ============================================================================
+
+# Buffs
+
+[[auras]]
+id = 19574
+name = "Bestial Wrath"
+duration = 15.0
+damage_mod = 25.0
+
+[[auras]]
+id = 193530
+name = "Aspect of the Wild"
+duration = 20.0
+damage_mod = 10.0
+
+[[auras]]
+id = 359844
+name = "Call of the Wild"
+duration = 20.0
+damage_mod = 10.0
+
+[[auras]]
+id = 246152
+name = "Barbed Shot"
+duration = 8.0
+max_stacks = 3
+tick_interval = 2.0
+
+[auras.periodic_damage]
+amount = 0
+ap_coeff = 0.05
+
+# DoTs
+
+[[auras]]
+id = 271788
+name = "Serpent Sting"
+duration = 18.0
+tick_interval = 3.0
+pandemic = true
+
+[auras.periodic_damage]
+amount = 150
+ap_coeff = 0.1
+
+[[auras]]
+id = 321530
+name = "Bloodshed"
+duration = 18.0
+tick_interval = 2.0
+
+[auras.periodic_damage]
+amount = 300
+ap_coeff = 0.2
+
+[[auras]]
+id = 131894
+name = "A Murder of Crows"
+duration = 15.0
+tick_interval = 1.0
+
+[auras.periodic_damage]
+amount = 250
+ap_coeff = 0.12
+
+# ============================================================================
+# TARGET
+# ============================================================================
+
+[target]
+level_diff = 3
+max_health = 10000000
+armor = 0

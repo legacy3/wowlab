@@ -7,6 +7,10 @@ edition = "2021"
 crate-type = ["rlib"]
 
 [[bin]]
+name = "engine"
+path = "src/bin/main.rs"
+
+[[bin]]
 name = "bench"
 path = "src/bin/bench.rs"
 
@@ -21,6 +25,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
 rhai = { version = "1.21", features = ["sync", "internals"] }
+clap = { version = "4.5", features = ["derive"] }
+toml = "0.8"
 
 [profile.release]
 opt-level = 3

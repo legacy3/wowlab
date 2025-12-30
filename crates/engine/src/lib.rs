@@ -26,11 +26,13 @@
 //!
 //! # Modules
 //!
+//! - [`cli`] - CLI configuration and spec loading (TOML)
 //! - [`config`] - Configuration types (spells, auras, stats)
 //! - [`rotation`] - Rotation scripting and compilation
 //! - [`sim`] - Simulation engine and state management
 //! - [`util`] - Utility types (RNG)
 
+pub mod cli;
 pub mod config;
 pub mod rotation;
 pub mod sim;
