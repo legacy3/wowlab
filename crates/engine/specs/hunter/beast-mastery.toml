@@ -1,6 +1,6 @@
 # Beast Mastery Hunter Spec Configuration
 #
-# This defines all spells, auras, and default settings for BM Hunter simulation.
+# Based on SimulationCraft APL (TWW Season 3)
 
 [spec]
 id = "hunter:beast-mastery"
@@ -67,7 +67,7 @@ ap_coeff = 0.3
 
 [[spells.effects]]
 type = "apply_aura"
-aura_id = 246152  # Barbed Shot buff (Frenzy stacker)
+aura_id = 272790  # Frenzy buff
 
 [[spells]]
 id = 193455
@@ -89,6 +89,19 @@ cost = 40
 base = [400, 500]
 ap_coeff = 0.25
 
+# Execute
+
+[[spells]]
+id = 53351
+name = "Kill Shot"
+cooldown = 10.0
+gcd = 1.5
+cost = 10
+
+[spells.damage]
+base = [1200, 1500]
+ap_coeff = 0.8
+
 # Cooldowns
 
 [[spells]]
@@ -102,18 +115,6 @@ harmful = false
 [[spells.effects]]
 type = "apply_aura"
 aura_id = 19574
-
-[[spells]]
-id = 193530
-name = "Aspect of the Wild"
-cooldown = 120.0
-gcd = 0.0  # Off-GCD
-cost = 0
-harmful = false
-
-[[spells.effects]]
-type = "apply_aura"
-aura_id = 193530
 
 [[spells]]
 id = 359844
@@ -143,68 +144,6 @@ ap_coeff = 0.8
 type = "apply_aura"
 aura_id = 321530
 
-[[spells]]
-id = 120679
-name = "Dire Beast"
-cooldown = 20.0
-gcd = 1.5
-cost = 0
-
-[spells.damage]
-base = [600, 800]
-ap_coeff = 0.4
-
-[[spells]]
-id = 131894
-name = "A Murder of Crows"
-cooldown = 60.0
-gcd = 1.5
-cost = 30
-
-[spells.damage]
-base = [300, 400]
-ap_coeff = 0.2
-
-[[spells.effects]]
-type = "apply_aura"
-aura_id = 131894
-
-[[spells]]
-id = 271788
-name = "Serpent Sting"
-gcd = 1.5
-cost = 10
-
-[spells.damage]
-base = [100, 120]
-ap_coeff = 0.1
-
-[[spells.effects]]
-type = "apply_aura"
-aura_id = 271788
-
-[[spells]]
-id = 53209
-name = "Chimaera Shot"
-cooldown = 15.0
-gcd = 1.5
-cost = 20
-
-[spells.damage]
-base = [700, 850]
-ap_coeff = 0.35
-
-[[spells]]
-id = 53351
-name = "Kill Shot"
-cooldown = 10.0
-gcd = 1.5
-cost = 10
-
-[spells.damage]
-base = [1200, 1500]
-ap_coeff = 0.8
-
 # ============================================================================
 # AURAS
 # ============================================================================
@@ -218,20 +157,14 @@ duration = 15.0
 damage_mod = 25.0
 
 [[auras]]
-id = 193530
-name = "Aspect of the Wild"
-duration = 20.0
-damage_mod = 10.0
-
-[[auras]]
 id = 359844
 name = "Call of the Wild"
 duration = 20.0
 damage_mod = 10.0
 
 [[auras]]
-id = 246152
-name = "Barbed Shot"
+id = 272790
+name = "Frenzy"
 duration = 8.0
 max_stacks = 3
 tick_interval = 2.0
@@ -243,17 +176,6 @@ ap_coeff = 0.05
 # DoTs
 
 [[auras]]
-id = 271788
-name = "Serpent Sting"
-duration = 18.0
-tick_interval = 3.0
-pandemic = true
-
-[auras.periodic_damage]
-amount = 150
-ap_coeff = 0.1
-
-[[auras]]
 id = 321530
 name = "Bloodshed"
 duration = 18.0
@@ -262,16 +184,6 @@ tick_interval = 2.0
 [auras.periodic_damage]
 amount = 300
 ap_coeff = 0.2
-
-[[auras]]
-id = 131894
-name = "A Murder of Crows"
-duration = 15.0
-tick_interval = 1.0
-
-[auras.periodic_damage]
-amount = 250
-ap_coeff = 0.12
 
 # ============================================================================
 # TARGET
