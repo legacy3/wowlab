@@ -27,6 +27,13 @@ echo ""
 echo -e "  Iterations per test: ${CYAN}$ITERATIONS${NC}"
 echo -e "  Date: $(date)"
 echo -e "  Platform: $(uname -m)"
+
+# Show CPU info on macOS
+if [[ "$(uname)" == "Darwin" ]]; then
+    p_cores=$(sysctl -n hw.perflevel0.logicalcpu 2>/dev/null || echo "?")
+    e_cores=$(sysctl -n hw.perflevel1.logicalcpu 2>/dev/null || echo "?")
+    echo -e "  CPU: ${p_cores} P-cores + ${e_cores} E-cores"
+fi
 echo ""
 
 # Build release binary
@@ -116,7 +123,7 @@ for i in "${!THREAD_COUNTS[@]}"; do
     speedup=$(echo "scale=2; $tp / $baseline" | bc)
 
     # Calculate efficiency: speedup / threads * 100
-    efficiency=$(echo "scale=1; $speedup / $threads * 100" | bc)
+    efficiency=$(echo "scale=1; ($tp / $baseline) / $threads * 100" | bc)
 
     # Color efficiency based on value
     if (( $(echo "$efficiency >= 80" | bc -l) )); then
