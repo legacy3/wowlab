@@ -2,7 +2,6 @@
 
 import {
   buildSimConfig,
-  hashSimConfig,
   type PlayerConfig,
   type SimConfig,
   type TargetConfig,
@@ -15,6 +14,7 @@ import { useCallback, useState } from "react";
 export interface RustSimConfigOptions {
   spellIds: readonly number[];
   duration: number;
+  rotationId: string; // UUID of the rotation in rotations table
   player?: Partial<PlayerConfig>;
   target?: Partial<TargetConfig>;
   onProgress?: (phase: string, progress: number) => void;
@@ -22,7 +22,6 @@ export interface RustSimConfigOptions {
 
 export interface RustSimConfigResult {
   config: SimConfig;
-  hash: string;
 }
 
 export function useRustSimConfig() {
@@ -33,7 +32,8 @@ export function useRustSimConfig() {
 
   const build = useCallback(
     async (options: RustSimConfigOptions): Promise<RustSimConfigResult> => {
-      const { spellIds, duration, player, target, onProgress } = options;
+      const { spellIds, duration, rotationId, player, target, onProgress } =
+        options;
 
       setIsLoading(true);
       setError(null);
@@ -68,21 +68,18 @@ export function useRustSimConfig() {
         );
 
         // Phase 3: Build config
-        onProgress?.("Building config", 90);
+        onProgress?.("Building config", 95);
         const config = buildSimConfig({
           spells,
           auras,
           duration,
+          rotationId,
           player,
           target,
         });
 
-        // Phase 4: Hash
-        onProgress?.("Hashing", 95);
-        const hash = await hashSimConfig(config);
-
         onProgress?.("Complete", 100);
-        return { config, hash };
+        return { config };
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         setError(error);

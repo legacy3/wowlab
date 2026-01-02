@@ -75,16 +75,14 @@ function QuickSimContentInner() {
     : null;
 
   const handleRunSim = async () => {
-    if (!selectedRotation?.script) {
+    if (!selectedRotation?.id || !selectedRotation?.script) {
       return;
     }
     const spellIds = extractSpellIds(selectedRotation.script);
     await run({
-      config: {
-        rotation: selectedRotation.script,
-        duration: fightDuration,
-        spellIds,
-      },
+      rotationId: selectedRotation.id,
+      spellIds,
+      duration: fightDuration,
       iterations,
       name: selectedRotation.name,
     });

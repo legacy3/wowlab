@@ -195,7 +195,7 @@ pub struct ClaimWorkResponse {
 }
 
 impl ApiClient {
-    /// Claim available work for this node. Returns batch of chunks + config.
+    /// Claim available work for this node. Returns batch of chunks + configHash.
     /// This is the new pull-based API - node asks for work instead of being assigned.
     pub async fn claim_work(
         &self,
@@ -224,4 +224,41 @@ impl ApiClient {
 
         Ok(response.json().await?)
     }
+
+    /// Fetch a simulation config by hash.
+    /// Returns the full config JSON (includes rotationId for fetching script).
+    pub async fn fetch_config(&self, hash: &str) -> Result<serde_json::Value, ApiError> {
+        let url = format!("{}/functions/v1/config-fetch?hash={}", self.api_url, hash);
+        let response = self.http.get(&url).send().await?;
+
+        if !response.status().is_success() {
+            let error = response.text().await.unwrap_or_default();
+            return Err(ApiError::Api(error));
+        }
+
+        Ok(response.json().await?)
+    }
+
+    /// Fetch a rotation script by ID.
+    /// Returns the script and checksum for cache validation.
+    pub async fn fetch_rotation(&self, id: &str) -> Result<RotationResponse, ApiError> {
+        let url = format!("{}/functions/v1/rotation-fetch?id={}", self.api_url, id);
+        let response = self.http.get(&url).send().await?;
+
+        if !response.status().is_success() {
+            let error = response.text().await.unwrap_or_default();
+            return Err(ApiError::Api(error));
+        }
+
+        Ok(response.json().await?)
+    }
+}
+
+/// Response from rotation-fetch edge function.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RotationResponse {
+    pub id: String,
+    pub script: String,
+    pub checksum: String,
 }

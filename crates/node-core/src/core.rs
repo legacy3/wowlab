@@ -1,9 +1,12 @@
 //! Core node logic that can be used by both GUI and headless binaries.
 
 use crate::{
-    claim, config::NodeConfig, supabase::SupabaseRealtime, ApiClient, ChunkPayload,
-    ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent, WorkItem, WorkResult,
-    WorkerPool,
+    cache::{CachedConfig, ConfigCache},
+    claim,
+    config::NodeConfig,
+    supabase::SupabaseRealtime,
+    ApiClient, ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent,
+    WorkItem, WorkResult, WorkerPool,
 };
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -51,6 +54,9 @@ pub struct NodeCore {
     max_parallel: u32,
     total_cores: u32,
 
+    // Local cache for configs and rotations
+    cache: Arc<ConfigCache>,
+
     // Async task receivers
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
@@ -92,6 +98,7 @@ impl NodeCore {
             node_name: claim::default_name(),
             max_parallel: enabled_cores,
             total_cores,
+            cache: Arc::new(ConfigCache::new()),
             connection_status: ConnectionStatus::Connecting,
             register_rx: None,
             realtime_rx: None,
@@ -469,8 +476,14 @@ impl NodeCore {
         }
 
         // Process results outside the borrow
+        let had_results = !results.is_empty();
         for result in results {
             self.handle_work_result(result);
+        }
+
+        // After completing work, try to claim more
+        if had_results {
+            self.claim_work();
         }
     }
 
@@ -496,6 +509,7 @@ impl NodeCore {
         }
 
         let api = self.api.clone();
+        let cache = Arc::clone(&self.cache);
         let work_tx = self.worker_pool.work_tx();
         let event_tx = self.event_tx.clone();
 
@@ -507,20 +521,93 @@ impl NodeCore {
                         return;
                     }
 
-                    // Get the shared config (returned once for all chunks)
-                    let Some(config) = response.config else {
-                        tracing::warn!("Claim response missing config");
+                    // Get configHash from response
+                    let Some(config_hash) = response.config_hash else {
+                        tracing::warn!("Claim response missing configHash");
                         return;
                     };
-                    let config_json = config.to_string();
 
                     tracing::info!(
-                        "Claimed {} chunks (config_hash: {:?})",
+                        "Claimed {} chunks (config_hash: {})",
                         response.chunks.len(),
-                        response.config_hash
+                        &config_hash[..8]
                     );
 
-                    // Submit each chunk to the worker pool
+                    // 1. Get config (from cache or fetch)
+                    let cached_config = match cache.get_config(&config_hash) {
+                        Some(c) => {
+                            tracing::debug!("Config cache hit: {}", &config_hash[..8]);
+                            c
+                        }
+                        None => {
+                            tracing::debug!("Config cache miss, fetching: {}", &config_hash[..8]);
+                            match api.fetch_config(&config_hash).await {
+                                Ok(config_json) => {
+                                    // Extract rotationId from config
+                                    let rotation_id = config_json
+                                        .get("rotationId")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or_default()
+                                        .to_string();
+
+                                    let cached = CachedConfig {
+                                        config_json: config_json.clone(),
+                                        rotation_id,
+                                    };
+                                    cache.insert_config(config_hash.clone(), cached.clone());
+                                    cached
+                                }
+                                Err(e) => {
+                                    tracing::error!("Failed to fetch config: {}", e);
+                                    return;
+                                }
+                            }
+                        }
+                    };
+
+                    // 2. Get rotation script (always fetch to get checksum, then check cache)
+                    let rotation_script = match api.fetch_rotation(&cached_config.rotation_id).await
+                    {
+                        Ok(rotation) => {
+                            // Check if we have it cached with matching checksum
+                            match cache
+                                .get_rotation(&cached_config.rotation_id, &rotation.checksum)
+                            {
+                                Some(script) => {
+                                    tracing::debug!("Rotation cache hit: {}", &rotation.id[..8]);
+                                    script
+                                }
+                                None => {
+                                    tracing::debug!(
+                                        "Rotation cache miss/stale, using fetched: {}",
+                                        &rotation.id[..8]
+                                    );
+                                    cache.insert_rotation(
+                                        rotation.id.clone(),
+                                        rotation.script.clone(),
+                                        rotation.checksum,
+                                    );
+                                    rotation.script
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to fetch rotation: {}", e);
+                            return;
+                        }
+                    };
+
+                    // 3. Build combined JSON (config + rotation) for SimRunner
+                    let mut combined = cached_config.config_json.clone();
+                    if let Some(obj) = combined.as_object_mut() {
+                        obj.insert(
+                            "rotation".to_string(),
+                            serde_json::Value::String(rotation_script),
+                        );
+                    }
+                    let config_json = combined.to_string();
+
+                    // 4. Submit each chunk to the worker pool
                     for chunk in response.chunks {
                         let _ = event_tx
                             .send(NodeCoreEvent::ChunkAssigned {

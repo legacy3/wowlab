@@ -135,17 +135,26 @@ function RotationEditorInner({
 
   // Handle test button - runs distributed simulation
   const handleTest = useCallback(async () => {
-    const rotationName =
-      draft?.name ?? existingRotation?.name ?? "Untitled Rotation";
+    // Must have a saved rotation to run distributed simulation
+    // (the node fetches rotation script by ID from the database)
+    if (!rotationId) {
+      toast.error("Please save the rotation first before running a simulation");
+      return;
+    }
+
+    const rotationName = existingRotation?.name ?? "Untitled Rotation";
 
     try {
+      // Save any pending script changes first
+      if (localScript && localScript !== existingRotation?.script) {
+        await updateRotation(rotationId, { script: localScript });
+      }
+
       const spellIds = extractSpellIds(script);
       await runDistributedSim({
-        config: {
-          rotation: script,
-          duration: 300,
-          spellIds,
-        },
+        rotationId,
+        spellIds,
+        duration: 300,
         iterations: 10000,
         name: rotationName,
       });
@@ -155,7 +164,15 @@ function RotationEditorInner({
         `Simulation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
-  }, [script, draft?.name, existingRotation?.name, runDistributedSim]);
+  }, [
+    script,
+    rotationId,
+    localScript,
+    existingRotation?.script,
+    existingRotation?.name,
+    updateRotation,
+    runDistributedSim,
+  ]);
 
   // Handle settings update from zen editor (only for existing rotations)
   const handleSettingsChange = async (values: SettingsValues) => {

@@ -13,6 +13,7 @@ import {
 import { computingDrawerOpenAtom } from "@/components/layout/computing-drawer";
 import { createClient } from "@/lib/supabase/client";
 import { env } from "@/lib/env";
+import { useRustSimConfig } from "./use-rust-sim-config";
 
 export interface DistributedSimulationState {
   isRunning: boolean;
@@ -26,11 +27,9 @@ export interface DistributedSimulationState {
 }
 
 export interface DistributedSimulationParams {
-  config: {
-    rotation: string;
-    duration: number;
-    spellIds: number[];
-  };
+  rotationId: string; // UUID of the rotation in rotations table
+  spellIds: readonly number[];
+  duration: number;
   iterations: number;
   name: string;
 }
@@ -44,6 +43,7 @@ export function useDistributedSimulation() {
   });
 
   const supabase = createClient();
+  const { build: buildConfig } = useRustSimConfig();
 
   const createJob = useSetAtom(createSimJobAtom);
   const updatePhase = useSetAtom(updateSimPhaseAtom);
@@ -138,20 +138,67 @@ export function useDistributedSimulation() {
 
       const localJobId = createJob({
         name: `${params.name} (Distributed)`,
-        rotationId: params.name.toLowerCase().replace(/\s+/g, "-"),
+        rotationId: params.rotationId,
         totalIterations: params.iterations,
-        code: params.config.rotation,
+        code: "", // Script is fetched by node via rotationId
       });
 
       setDrawerOpen(true);
 
-      updatePhase({
-        jobId: localJobId,
-        phase: "preparing-spells",
-        detail: "Creating distributed job...",
-      });
-
       try {
+        // Phase 1: Build SimConfig with spells/auras
+        updatePhase({
+          jobId: localJobId,
+          phase: "preparing-spells",
+          detail: "Loading spell data...",
+        });
+
+        const { config } = await buildConfig({
+          spellIds: params.spellIds,
+          duration: params.duration,
+          rotationId: params.rotationId,
+          onProgress: (phase, progress) => {
+            updatePhase({
+              jobId: localJobId,
+              phase: "preparing-spells",
+              detail: phase,
+            });
+          },
+        });
+
+        // Phase 2: Upload config to sim_configs table (server calculates hash)
+        updatePhase({
+          jobId: localJobId,
+          phase: "preparing-spells",
+          detail: "Uploading config...",
+        });
+
+        const upsertResponse = await fetch(
+          `${env.SUPABASE_URL}/functions/v1/config-upsert`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ config }),
+          },
+        );
+
+        if (!upsertResponse.ok) {
+          const error = await upsertResponse.json();
+          throw new Error(error.error || "Failed to upload config");
+        }
+
+        const { hash } = await upsertResponse.json();
+
+        // Phase 3: Create job with configHash only
+        updatePhase({
+          jobId: localJobId,
+          phase: "preparing-spells",
+          detail: "Creating job...",
+        });
+
         const response = await fetch(
           `${env.SUPABASE_URL}/functions/v1/job-create`,
           {
@@ -161,7 +208,7 @@ export function useDistributedSimulation() {
               Authorization: `Bearer ${session.access_token}`,
             },
             body: JSON.stringify({
-              config: params.config,
+              configHash: hash,
               iterations: params.iterations,
             }),
           },
@@ -184,7 +231,7 @@ export function useDistributedSimulation() {
             : `${chunks} chunks distributed`,
         });
 
-        // Job created - realtime subscription will handle updates
+        // Job created - polling will handle updates
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         failJob({ jobId: localJobId, error: err.message });
@@ -197,7 +244,7 @@ export function useDistributedSimulation() {
         throw err;
       }
     },
-    [supabase, createJob, updatePhase, failJob, setDrawerOpen],
+    [supabase, createJob, updatePhase, failJob, setDrawerOpen, buildConfig],
   );
 
   return { run, ...state };

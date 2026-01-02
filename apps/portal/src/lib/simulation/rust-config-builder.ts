@@ -173,6 +173,7 @@ export interface SimConfig {
   auras: AuraDef[];
   duration: number;
   target: TargetConfig;
+  rotationId: string; // UUID reference to rotations table
 }
 
 // ============================================================================
@@ -319,6 +320,7 @@ export interface BuildSimConfigOptions {
   spells: Schemas.Spell.SpellDataFlat[];
   auras: Schemas.Aura.AuraDataFlat[];
   duration: number; // seconds
+  rotationId: string; // UUID of the rotation in rotations table
   player?: Partial<PlayerConfig>;
   pet?: Partial<PetConfig>;
   target?: Partial<TargetConfig>;
@@ -363,7 +365,7 @@ const DEFAULT_TARGET: TargetConfig = {
  * Build a SimConfig for the Rust engine from TS spell/aura data
  */
 export function buildSimConfig(options: BuildSimConfigOptions): SimConfig {
-  const { spells, auras, duration, player, pet, target } = options;
+  const { spells, auras, duration, rotationId, player, pet, target } = options;
 
   return {
     player: {
@@ -385,6 +387,7 @@ export function buildSimConfig(options: BuildSimConfigOptions): SimConfig {
     auras: auras.map(mapAuraToRust),
     duration,
     target: { ...DEFAULT_TARGET, ...target },
+    rotationId,
   };
 }
 

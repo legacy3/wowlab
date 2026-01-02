@@ -2,6 +2,7 @@
 //!
 //! Used by both the GUI (`node`) and headless (`node-headless`) binaries.
 
+pub mod cache;
 pub mod claim;
 pub mod config;
 mod core;
@@ -14,7 +15,7 @@ pub use claim::ClaimError;
 pub use config::NodeConfig;
 pub use supabase::{
     ApiClient, ApiError, ChunkPayload, ClaimWorkResponse, ClaimedChunk, NodePayload, RealtimeEvent,
-    WorkAvailablePayload,
+    RotationResponse, WorkAvailablePayload,
 };
 pub use worker::{WorkItem, WorkResult, WorkerPool};
 
