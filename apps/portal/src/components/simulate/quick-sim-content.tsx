@@ -8,7 +8,7 @@ import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useWorkerSimulation } from "@/hooks/rotations";
+import { useDistributedSimulation, extractSpellIds } from "@/hooks/rotations";
 import {
   CharacterEquipmentPanel,
   type CharacterStats,
@@ -57,15 +57,20 @@ function QuickSimContentInner() {
     selectedRotationId ?? undefined,
   );
 
-  const { run, isRunning, stats, error } = useWorkerSimulation();
+  const {
+    run,
+    isRunning,
+    result: distResult,
+    error,
+  } = useDistributedSimulation();
 
-  const result = stats
+  const result = distResult
     ? {
-        dps: stats.avgDps,
-        totalDamage: stats.totalDamage,
+        dps: distResult.meanDps,
+        totalDamage: distResult.meanDps * fightDuration,
         durationMs: fightDuration * 1000,
         events: [],
-        casts: stats.totalCasts,
+        casts: distResult.chunksCompleted,
       }
     : null;
 
@@ -73,11 +78,15 @@ function QuickSimContentInner() {
     if (!selectedRotation?.script) {
       return;
     }
+    const spellIds = extractSpellIds(selectedRotation.script);
     await run({
-      code: selectedRotation.script,
-      name: selectedRotation.name,
+      config: {
+        rotation: selectedRotation.script,
+        duration: fightDuration,
+        spellIds,
+      },
       iterations,
-      duration: fightDuration,
+      name: selectedRotation.name,
     });
   };
 

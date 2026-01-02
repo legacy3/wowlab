@@ -88,8 +88,8 @@ export function EditorView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const editorRef = useCodeEditorRef();
 
-  const handleBeforeMount = useCallback((monaco: MonacoInstance) => {
-    monaco.typescript.typescriptDefaults.setCompilerOptions({ noLib: true });
+  const handleBeforeMount = useCallback((_monaco: MonacoInstance) => {
+    // Rhai uses Rust-like syntax, no special config needed
   }, []);
 
   const handleMount = useCallback(
@@ -126,31 +126,13 @@ export function EditorView({
   );
 
   const handleFormat = useCallback(async () => {
+    // Rhai doesn't have a standard formatter yet
+    // Just trigger Monaco's built-in format action
     const editor = editorRef.editorRef.current;
-    if (!editor) {
-      return;
+    if (editor) {
+      editor.getAction("editor.action.formatDocument")?.run();
     }
-
-    try {
-      const prettier = await import("prettier/standalone");
-      const estreePlugin = await import("prettier/plugins/estree");
-      const tsPlugin = await import("prettier/plugins/typescript");
-
-      const formatted = await prettier.format(script, {
-        parser: "typescript",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        plugins: [estreePlugin, tsPlugin] as any,
-        semi: true,
-        singleQuote: false,
-        tabWidth: 2,
-        trailingComma: "all",
-      });
-
-      onScriptChange(formatted);
-    } catch {
-      // Format failed, ignore
-    }
-  }, [script, onScriptChange, editorRef]);
+  }, [editorRef]);
 
   const handleSettingsSave = useCallback(
     (values: SettingsValues) => {
@@ -270,7 +252,7 @@ export function EditorView({
               onChange={onScriptChange}
               beforeMount={handleBeforeMount}
               onMount={handleMount}
-              language="typescript"
+              language="rust"
               height="100%"
               className="rounded-none border-0 h-full"
             />

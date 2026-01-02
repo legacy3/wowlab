@@ -67,6 +67,12 @@ fn handle_event(event: &NodeCoreEvent, core: &NodeCore) {
         NodeCoreEvent::ChunkAssigned { id, iterations } => {
             tracing::info!("Chunk assigned: {} ({} iterations)", id, iterations);
         }
+        NodeCoreEvent::ChunkCompleted { id, mean_dps } => {
+            tracing::info!("Chunk completed: {} ({:.0} DPS)", id, mean_dps);
+        }
+        NodeCoreEvent::ChunkFailed { id, error } => {
+            tracing::error!("Chunk failed: {} - {}", id, error);
+        }
         NodeCoreEvent::Error(err) => {
             tracing::error!("Error: {}", err);
         }

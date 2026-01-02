@@ -103,9 +103,12 @@ impl WorkerPool {
         });
     }
 
-    #[allow(dead_code)]
     pub fn result_rx(&mut self) -> Option<mpsc::Receiver<WorkResult>> {
         self.result_rx.take()
+    }
+
+    pub fn work_tx(&self) -> Option<mpsc::Sender<WorkItem>> {
+        self.work_tx.clone()
     }
 
     #[allow(dead_code)]

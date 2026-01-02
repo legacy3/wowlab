@@ -12,7 +12,10 @@ pub mod worker;
 pub use crate::core::{NodeCore, NodeCoreEvent};
 pub use claim::ClaimError;
 pub use config::NodeConfig;
-pub use supabase::{ApiClient, ApiError, ChunkPayload, NodePayload, RealtimeEvent};
+pub use supabase::{
+    ApiClient, ApiError, ChunkPayload, ClaimWorkResponse, ClaimedChunk, NodePayload, RealtimeEvent,
+    WorkAvailablePayload,
+};
 pub use worker::{WorkItem, WorkResult, WorkerPool};
 
 use std::time::Instant;

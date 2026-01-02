@@ -1,8 +1,9 @@
 //! Core node logic that can be used by both GUI and headless binaries.
 
 use crate::{
-    claim, config::NodeConfig, supabase::SupabaseRealtime, ApiClient, ConnectionStatus,
-    NodePayload, NodeState, NodeStats, RealtimeEvent, WorkerPool,
+    claim, config::NodeConfig, supabase::SupabaseRealtime, ApiClient, ChunkPayload,
+    ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent, WorkItem, WorkResult,
+    WorkerPool,
 };
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -24,6 +25,10 @@ pub enum NodeCoreEvent {
     Claimed,
     /// Chunk was assigned to this node.
     ChunkAssigned { id: Uuid, iterations: i32 },
+    /// Chunk simulation completed.
+    ChunkCompleted { id: Uuid, mean_dps: f32 },
+    /// Chunk simulation failed.
+    ChunkFailed { id: Uuid, error: String },
     /// Error occurred.
     Error(String),
 }
@@ -50,6 +55,7 @@ pub struct NodeCore {
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     claim_rx: Option<mpsc::Receiver<bool>>,
+    result_rx: Option<mpsc::Receiver<WorkResult>>,
 
     // Timing
     last_heartbeat: Option<Instant>,
@@ -90,6 +96,7 @@ impl NodeCore {
             register_rx: None,
             realtime_rx: None,
             claim_rx: None,
+            result_rx: None,
             last_heartbeat: None,
             last_claim_poll: None,
             event_tx,
@@ -109,6 +116,7 @@ impl NodeCore {
         self.started = true;
 
         self.worker_pool.start(self.runtime.handle());
+        self.result_rx = self.worker_pool.result_rx();
 
         match self.node_id {
             Some(id) => self.start_realtime(id),
@@ -124,6 +132,7 @@ impl NodeCore {
         self.check_heartbeat();
         self.poll_claim_status();
         self.check_claim_result();
+        self.check_work_results();
 
         // Return whether we made progress
         true
@@ -265,6 +274,8 @@ impl NodeCore {
                     .event_tx
                     .try_send(NodeCoreEvent::ConnectionChanged(self.connection_status));
                 self.send_heartbeat();
+                // Claim any available work on connect (handles orphaned chunks)
+                self.claim_work();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
@@ -284,6 +295,15 @@ impl NodeCore {
                     id: payload.id,
                     iterations: payload.iterations,
                 });
+                self.process_chunk(payload);
+            }
+            RealtimeEvent::WorkAvailable(ref payload) => {
+                tracing::info!(
+                    "Work available broadcast: reason={:?}, chunks={:?}",
+                    payload.reason,
+                    payload.chunks
+                );
+                self.claim_work();
             }
             RealtimeEvent::Error(ref err) => {
                 tracing::warn!("Connection error: {err}");
@@ -384,5 +404,185 @@ impl NodeCore {
                 self.claim_rx = None;
             }
         }
+    }
+
+    fn process_chunk(&mut self, payload: &ChunkPayload) {
+        let Some(node_id) = self.node_id else { return };
+        let chunk_id = payload.id;
+        let api = self.api.clone();
+
+        // Clone what we need for the worker pool submission
+        let work_tx = self.worker_pool.work_tx();
+
+        self.runtime.spawn(async move {
+            // 1. Claim the chunk and get config
+            match api.claim_chunk(chunk_id, node_id).await {
+                Ok(claim) => {
+                    tracing::info!(
+                        "Claimed chunk {} ({} iterations)",
+                        chunk_id,
+                        claim.iterations
+                    );
+
+                    // 2. Submit to worker pool
+                    let work_item = WorkItem {
+                        chunk_id,
+                        config_json: claim.config.to_string(),
+                        iterations: claim.iterations as u32,
+                        seed_offset: claim.seed_offset as u64,
+                    };
+
+                    if let Some(tx) = work_tx {
+                        if let Err(e) = tx.send(work_item).await {
+                            tracing::error!("Failed to submit work: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::error!("Failed to claim chunk {}: {}", chunk_id, e);
+                }
+            }
+        });
+    }
+
+    fn check_work_results(&mut self) {
+        let Some(ref mut rx) = self.result_rx else {
+            return;
+        };
+
+        // Collect up to 10 results
+        let mut results = Vec::new();
+        let mut disconnected = false;
+        for _ in 0..10 {
+            match rx.try_recv() {
+                Ok(result) => results.push(result),
+                Err(mpsc::error::TryRecvError::Empty) => break,
+                Err(mpsc::error::TryRecvError::Disconnected) => {
+                    disconnected = true;
+                    break;
+                }
+            }
+        }
+
+        if disconnected {
+            self.result_rx = None;
+        }
+
+        // Process results outside the borrow
+        for result in results {
+            self.handle_work_result(result);
+        }
+    }
+
+    /// Claim available work from the server using the pull-based API.
+    /// Called on connect and when work-available broadcasts are received.
+    fn claim_work(&mut self) {
+        // Only claim if we're fully running and connected
+        if !matches!(self.state, NodeState::Running) {
+            return;
+        }
+        if self.connection_status != ConnectionStatus::Connected {
+            return;
+        }
+
+        let Some(node_id) = self.node_id else { return };
+
+        // Calculate available capacity
+        let stats = self.worker_pool.stats();
+        let available = stats.max_workers.saturating_sub(stats.busy_workers);
+        if available == 0 {
+            tracing::debug!("No available worker capacity, skipping claim");
+            return;
+        }
+
+        let api = self.api.clone();
+        let work_tx = self.worker_pool.work_tx();
+        let event_tx = self.event_tx.clone();
+
+        self.runtime.spawn(async move {
+            match api.claim_work(node_id, available).await {
+                Ok(response) => {
+                    if response.chunks.is_empty() {
+                        tracing::debug!("No work available");
+                        return;
+                    }
+
+                    // Get the shared config (returned once for all chunks)
+                    let Some(config) = response.config else {
+                        tracing::warn!("Claim response missing config");
+                        return;
+                    };
+                    let config_json = config.to_string();
+
+                    tracing::info!(
+                        "Claimed {} chunks (config_hash: {:?})",
+                        response.chunks.len(),
+                        response.config_hash
+                    );
+
+                    // Submit each chunk to the worker pool
+                    for chunk in response.chunks {
+                        let _ = event_tx
+                            .send(NodeCoreEvent::ChunkAssigned {
+                                id: chunk.id,
+                                iterations: chunk.iterations,
+                            })
+                            .await;
+
+                        let work_item = WorkItem {
+                            chunk_id: chunk.id,
+                            config_json: config_json.clone(),
+                            iterations: chunk.iterations as u32,
+                            seed_offset: chunk.seed_offset as u64,
+                        };
+
+                        if let Some(ref tx) = work_tx {
+                            if let Err(e) = tx.send(work_item).await {
+                                tracing::error!("Failed to submit work: {}", e);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::debug!("Failed to claim work: {}", e);
+                }
+            }
+        });
+    }
+
+    fn handle_work_result(&self, result: WorkResult) {
+        let chunk_id = result.chunk_id;
+        let api = self.api.clone();
+        let event_tx = self.event_tx.clone();
+
+        // Extract mean_dps from result for the event
+        let mean_dps = result
+            .result
+            .get("mean_dps")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0) as f32;
+
+        self.runtime.spawn(async move {
+            match api.complete_chunk(chunk_id, result.result).await {
+                Ok(()) => {
+                    tracing::info!("Chunk {} completed: {:.0} DPS", chunk_id, mean_dps);
+                    let _ = event_tx
+                        .send(NodeCoreEvent::ChunkCompleted {
+                            id: chunk_id,
+                            mean_dps,
+                        })
+                        .await;
+                }
+                Err(e) => {
+                    tracing::error!("Failed to submit chunk {} result: {}", chunk_id, e);
+                    let _ = event_tx
+                        .send(NodeCoreEvent::ChunkFailed {
+                            id: chunk_id,
+                            error: e.to_string(),
+                        })
+                        .await;
+                }
+            }
+        });
     }
 }

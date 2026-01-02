@@ -10,3 +10,8 @@ export {
   extractSpellIds,
   cancelSimulation,
 } from "./use-worker-simulation";
+export { useDistributedSimulation } from "./use-distributed-simulation";
+export {
+  useRustSimConfig,
+  extractSpellIdsFromScript,
+} from "./use-rust-sim-config";
