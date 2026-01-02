@@ -1,6 +1,6 @@
 # apps/standalone
 
-CLI for running simulations with Supabase data backend.
+CLI for running simulations with Supabase data backend. Uses the Rust simulation engine via WASM.
 
 ## ⚠️ RUNNING COMMANDS - READ THIS FIRST
 
@@ -19,10 +19,19 @@ pnpm dev profile -n 100 -d 60
 
 ## WASM Engine
 
-Rust simulation core lives in `crates/engine/`. Build to `wasm/`:
+Rust simulation engine lives in `crates/engine/`. Build to `wasm/`:
 
 ```bash
 cd crates/engine && wasm-pack build --target web --out-dir ../../apps/standalone/wasm
+```
+
+For native Rust development and testing:
+
+```bash
+cd crates/engine
+cargo build --release    # Build native binary
+cargo test               # Run Rust tests
+./target/release/engine --help  # CLI usage
 ```
 
 ## CPU Profiling

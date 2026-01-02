@@ -2,6 +2,8 @@
 
 Application layer composition for running simulations.
 
+Note: The core simulation engine is now written in Rust (see `crates/engine/`). This package provides the TypeScript/Effect layer composition for orchestrating simulations.
+
 ## Purpose
 
 Combines all services from `@wowlab/services` into a ready-to-use Layer for simulation execution.

@@ -11,7 +11,7 @@ WoW Lab is a free, open-source World of Warcraft simulation toolkit. It lets you
 
 ## How it works
 
-When you hit simulate, the engine runs locally in your browser. It processes combat events the same way the game does: applying spells, tracking buffs, calculating damage over time. Spell data, item stats, and mechanics live in a database; your browser keeps a small cache so lookups stay fast. Rotations are plain JavaScript that you can edit directly on the site.
+When you hit simulate, the engine runs locally in your browser via WebAssembly. It processes combat events the same way the game does: applying spells, tracking buffs, calculating damage over time. Spell data, item stats, and mechanics live in a database; your browser keeps a small cache so lookups stay fast. Rotations are [Rhai](https://rhai.rs/) scripts that you can edit directly on the site.
 
 ## Open source
 
@@ -19,7 +19,7 @@ Everything is on [GitHub](/go/github). You can inspect how calculations work, re
 
 ## Credits
 
-WoW Lab stands on the shoulders of giants: [SimulationCraft](https://www.simulationcraft.org/) decoded WoW data and mechanics; we reuse their addon for gear imports. [wago.tools](https://wago.tools) provides spell and item data. The simulation engine is built with [Effect](https://effect.website). Thanks to everyone in the WoW theorycrafting community who shares knowledge and makes tools like this possible.
+WoW Lab stands on the shoulders of giants: [SimulationCraft](https://www.simulationcraft.org/) decoded WoW data and mechanics; we reuse their addon for gear imports. [wago.tools](https://wago.tools) provides spell and item data. The simulation engine is written in Rust and compiled to WebAssembly for browser use. Thanks to everyone in the WoW theorycrafting community who shares knowledge and makes tools like this possible.
 
 ## Questions or feedback
 

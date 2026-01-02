@@ -1,6 +1,6 @@
 # Standalone Simulation CLI
 
-A standalone CLI application for running WoW Lab simulations using the `@wowlab/*` packages.
+A standalone CLI application for running WoW Lab simulations. Uses the Rust simulation engine (`crates/engine/`) via WASM for high-performance combat simulation.
 
 ## Purpose
 
@@ -8,7 +8,6 @@ This app provides a lightweight environment to:
 
 - Develop and test rotations in isolation.
 - Verify simulation mechanics.
-- Debug Effect-TS service integration.
 - Run a simulation daemon for distributed computing.
 
 ## Setup

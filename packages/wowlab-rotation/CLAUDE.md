@@ -2,6 +2,8 @@
 
 Rotation action primitives and simulation context for spell casting logic.
 
+Note: The Rust simulation engine (`crates/engine/`) uses Rhai scripts for rotations. This TypeScript package provides complementary Effect-based rotation primitives.
+
 ## Modules
 
 - **Actions**: Spell casting, control flow (wait, loop), condition checking

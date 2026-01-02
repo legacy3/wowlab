@@ -2,6 +2,8 @@
 
 Class and specialization definitions with spell constants and modifiers.
 
+Note: The Rust simulation engine (`crates/engine/`) uses TOML spec configurations in `crates/engine/specs/`. This TypeScript package defines the TypeScript-side spec structure.
+
 ## Structure
 
 ```

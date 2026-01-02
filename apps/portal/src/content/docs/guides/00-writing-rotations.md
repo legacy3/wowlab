@@ -6,71 +6,57 @@ updatedAt: 2025-12-17
 
 # Writing Rotations
 
-Rotations are priority lists written in JavaScript. All you write is the spell priority. The framework handles everything else.
+Rotations are priority lists written in [Rhai](https://rhai.rs/), a lightweight scripting language. All you write is the spell priority. The engine handles everything else.
 
 ## What you write
 
-```typescript
-yield * tryCast(rotation, playerId, BESTIAL_WRATH);
-yield * tryCast(rotation, playerId, BARBED_SHOT, targetId);
-yield * tryCast(rotation, playerId, KILL_COMMAND, targetId);
-yield * tryCast(rotation, playerId, COBRA_SHOT, targetId);
+```rhai
+if bestial_wrath.ready() { cast("bestial_wrath") }
+if barbed_shot.ready() { cast("barbed_shot") }
+if kill_command.ready() { cast("kill_command") }
+if cobra_shot.ready() { cast("cobra_shot") }
 ```
 
 That's it - the list runs from top to bottom in priority order. The simulation handles cooldowns, GCDs, and timing.
 
-## It's just JavaScript
+## Rhai basics
 
-Your rotation runs as a closure, so you have full access to JavaScript. The `yield*` syntax comes from [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator). Think of it like `await`. The framework wraps your rotation and automatically restarts from the top after a successful GCD-consuming cast. This means your priority list is re-evaluated fresh each time.
+Rhai is a simple scripting language embedded in the Rust simulation engine. If you know JavaScript or any C-style language, you already know most of Rhai.
 
 **Only the order of casts matters.** Use any logic you want to decide what to cast:
 
-```typescript
-// Loop through enemies and multi-dot
-for (const enemy of enemies) {
-  if (!hasDebuff(enemy, CORRUPTION)) {
-    yield * tryCast(rotation, playerId, CORRUPTION, enemy.id);
-  }
-}
-
+```rhai
 // Conditional logic
-if (playerHealth < 30) {
-  yield * tryCast(rotation, playerId, HEALTHSTONE);
+if player_health < 30 {
+  cast("healthstone")
 }
 
 // Pool resources
-if (energy < 80 && !buffActive(TIGER_FURY)) {
+if energy < 80 && !buff_active("tiger_fury") {
   return; // Wait for energy
 }
 
 // Normal priority
-yield * tryCast(rotation, playerId, FEROCIOUS_BITE, targetId);
-yield * tryCast(rotation, playerId, RAKE, targetId);
+if ferocious_bite.ready() { cast("ferocious_bite") }
+if rake.ready() { cast("rake") }
 ```
 
-You can also define helper functions:
+## Available conditions
 
-```typescript
-function shouldRefreshDot(target, debuff, pandemic) {
-  return getDebuffRemaining(target, debuff) < pandemic;
-}
+Use these conditions to check spell and aura state:
 
-// Use it in your rotation
-if (shouldRefreshDot(targetId, RAKE, 4.5)) {
-  yield * tryCast(rotation, playerId, RAKE, targetId);
+- `spell.ready()` - Spell off cooldown and has resources
+- `aura.active()` - Aura is currently applied
+- `aura.stacks() >= N` - Aura has at least N stacks
+- `aura.remaining() <= N` - Aura expires within N seconds
+
+## Example: DoT refresh
+
+```rhai
+// Refresh Rake in pandemic window (4.5s remaining)
+if rake.remaining() <= 4.5 {
+  cast("rake")
 }
 ```
 
-Or even wrap `tryCast` with your own Effect generator:
-
-```typescript
-function* castOnTarget(spell) {
-  yield* tryCast(rotation, playerId, spell, targetId);
-}
-
-// Cleaner rotation code
-yield * castOnTarget(RAKE);
-yield * castOnTarget(FEROCIOUS_BITE);
-```
-
-This means you can use all normal JavaScript control structures without learning a custom DSL. Check out [existing rotations](/rotations) for examples. If you want to understand how the underlying [Effect](https://effect.website/docs/getting-started/introduction) library works, the docs are excellent, but you don't need it for writing rotations.
+Check out [existing rotations](/rotations) for more examples. The [Rhai documentation](https://rhai.rs/book/) covers the full language if you want to go deeper.
