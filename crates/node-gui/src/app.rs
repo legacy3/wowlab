@@ -19,6 +19,7 @@ use tokio::sync::mpsc;
 use tracing::Level;
 
 const MAX_LOGS: usize = 100;
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -36,6 +37,10 @@ pub struct NodeApp {
     log_rx: mpsc::Receiver<UiLogEntry>,
     current_tab: Tab,
     logo: Option<egui::TextureHandle>,
+    // Update notification
+    update_rx: mpsc::Receiver<String>,
+    update_available: Option<String>,
+    show_update_modal: bool,
 }
 
 impl NodeApp {
@@ -44,8 +49,22 @@ impl NodeApp {
         runtime: Arc<Runtime>,
         log_rx: mpsc::Receiver<UiLogEntry>,
     ) -> Self {
-        let (mut core, event_rx) = NodeCore::new(runtime);
+        let (mut core, event_rx) = NodeCore::new(Arc::clone(&runtime));
         core.start();
+
+        // Spawn background update check
+        let (update_tx, update_rx) = mpsc::channel(1);
+        std::thread::spawn(move || {
+            match node::update::check_for_update(VERSION) {
+                Ok(Some(version)) => {
+                    let _ = update_tx.blocking_send(version);
+                }
+                Ok(None) => {}
+                Err(e) => {
+                    tracing::debug!("Update check failed: {}", e);
+                }
+            }
+        });
 
         Self {
             core,
@@ -55,6 +74,9 @@ impl NodeApp {
             log_rx,
             current_tab: Tab::Status,
             logo: None,
+            update_rx,
+            update_available: None,
+            show_update_modal: false,
         }
     }
 
@@ -79,6 +101,96 @@ impl NodeApp {
 
     fn poll_core_events(&mut self) {
         while self.event_rx.try_recv().is_ok() {}
+    }
+
+    fn poll_update_check(&mut self) {
+        if let Ok(version) = self.update_rx.try_recv() {
+            self.update_available = Some(version);
+            self.show_update_modal = true;
+        }
+    }
+
+    fn show_update_modal(&mut self, ctx: &egui::Context) {
+        let Some(new_version) = &self.update_available else {
+            return;
+        };
+
+        if !self.show_update_modal {
+            return;
+        }
+
+        egui::Window::new("Update Available")
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .fixed_size([320.0, 0.0])
+            .frame(
+                egui::Frame::window(&ctx.style())
+                    .fill(theme::ZINC_900)
+                    .stroke(egui::Stroke::new(1.0, theme::GREEN_500)),
+            )
+            .show(ctx, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(8.0);
+                    ui.label(
+                        egui::RichText::new(icon(Icon::Download))
+                            .size(32.0)
+                            .color(theme::GREEN_500),
+                    );
+                    ui.add_space(8.0);
+                    ui.label(
+                        egui::RichText::new("A new version is available!")
+                            .size(16.0)
+                            .strong()
+                            .color(theme::TEXT_PRIMARY),
+                    );
+                    ui.add_space(4.0);
+                    ui.label(
+                        egui::RichText::new(format!("{} → {}", VERSION, new_version))
+                            .size(14.0)
+                            .color(theme::TEXT_MUTED),
+                    );
+                    ui.add_space(16.0);
+
+                    ui.horizontal(|ui| {
+                        if ui
+                            .add(
+                                egui::Button::new(
+                                    egui::RichText::new("Later").color(theme::TEXT_MUTED),
+                                )
+                                .fill(theme::ZINC_800)
+                                .min_size(egui::vec2(100.0, 32.0)),
+                            )
+                            .clicked()
+                        {
+                            self.show_update_modal = false;
+                        }
+
+                        ui.add_space(8.0);
+
+                        if ui
+                            .add(
+                                egui::Button::new(
+                                    egui::RichText::new(format!("{} Update", icon(Icon::Download)))
+                                        .color(theme::ZINC_950),
+                                )
+                                .fill(theme::GREEN_500)
+                                .min_size(egui::vec2(100.0, 32.0)),
+                            )
+                            .clicked()
+                        {
+                            // Open release page in browser
+                            let url = format!(
+                                "https://github.com/legacy3/wowlab/releases/tag/v{}",
+                                new_version
+                            );
+                            let _ = open::that(&url);
+                            self.show_update_modal = false;
+                        }
+                    });
+                    ui.add_space(8.0);
+                });
+            });
     }
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
@@ -126,6 +238,8 @@ impl eframe::App for NodeApp {
         self.poll_log_entries();
         self.core.poll();
         self.poll_core_events();
+        self.poll_update_check();
+        self.show_update_modal(ctx);
 
         egui::TopBottomPanel::top("header")
             .frame(
