@@ -1,17 +1,69 @@
-node_modules
-**/node_modules
-**/dist
-**/build
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Rust build artifacts
+target/
+**/target/
+
+# Logs
+*.log
 **/*.log
-.git
+
+# Git
+.git/
 .gitignore
+**/.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
+
+# Documentation
 *.md
+**/*.md
+LICENSE*
 !README.md
+
+# Environment
 .env
 .env.*
-apps/portal
-apps/cli
-apps/mcp-server
-apps/proof-of-concept
-docs
+
+# Development files
+docs/
+*.py
+*.sh
+*.html
+
+# Test fixtures
+**/tests/
+**/benches/
+**/examples/
+**/__tests__/
+
+# Profiling
+*.profdata
+*.profraw
+profiles/
+
+# Third party
+third_party/
+
+# Claude/AI
+.claude/
+**/CLAUDE.md
+
+# Misc
+*.tgz
+coverage/
+.turbo/
+.cache/

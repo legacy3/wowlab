@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import { useUpdate, useInvalidate } from "@refinedev/core";
 import type { UserNode } from "@/lib/supabase/types";
 
-const LATEST_VERSION = "0.2.4";
+const LATEST_VERSION = "0.3.0";
 
 type SortKey = "status" | "workers" | "lastSeen" | null;
 

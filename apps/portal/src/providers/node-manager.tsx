@@ -177,7 +177,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
     maxParallel: localNode.concurrency,
     platform: "browser",
     lastSeenAt: new Date().toISOString(),
-    version: "0.1.0",
+    version: "0.3.0",
     isLocal: true,
     isOwner: true,
   };
