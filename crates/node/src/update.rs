@@ -28,6 +28,7 @@ pub fn update(bin_name: &str, current_version: &str) -> Result<bool, Box<dyn std
         .repo_owner(REPO_OWNER)
         .repo_name(REPO_NAME)
         .bin_name(bin_name)
+        .identifier(bin_name) // Match asset by bin_name prefix (e.g., "node-headless-v*")
         .show_download_progress(false)
         .no_confirm(true)
         .current_version(current_version)

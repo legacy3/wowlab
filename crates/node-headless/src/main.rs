@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Parser)]
 #[command(name = "node-headless")]
 #[command(author = "wowlab")]
@@ -14,6 +16,10 @@ use std::time::Duration;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
+
+    /// Skip automatic update check on startup
+    #[arg(long, global = true)]
+    no_update: bool,
 }
 
 #[derive(Subcommand)]
@@ -29,40 +35,110 @@ enum Commands {
 }
 
 fn main() {
+    logging::init_headless();
     let cli = Cli::parse();
-
-    const VERSION: &str = env!("CARGO_PKG_VERSION");
 
     match cli.command {
         Some(Commands::Update { check }) => {
             if check {
                 match node::update::check_for_update(VERSION) {
                     Ok(Some(version)) => {
-                        println!("New version available: {}", version);
-                        println!("Run `node-headless update` to install");
+                        tracing::info!("Update available: v{VERSION} → v{version}");
+                        tracing::info!("Run `node-headless update` to install");
                     }
-                    Ok(None) => println!("Already on latest version"),
+                    Ok(None) => tracing::info!("Already on latest version (v{VERSION})"),
                     Err(e) => {
-                        eprintln!("Failed to check for updates: {}", e);
+                        tracing::error!("Failed to check for updates: {e}");
                         std::process::exit(1);
                     }
                 }
-            } else if let Err(e) = node::update::update("node-headless", VERSION) {
-                eprintln!("Update failed: {}", e);
-                std::process::exit(1);
+            } else {
+                tracing::info!("Updating node-headless...");
+                match node::update::update("node-headless", VERSION) {
+                    Ok(true) => tracing::info!("Updated successfully. Please restart."),
+                    Ok(false) => tracing::info!("Already on latest version."),
+                    Err(e) => {
+                        tracing::error!("Update failed: {e}");
+                        std::process::exit(1);
+                    }
+                }
             }
         }
         Some(Commands::Run) | None => {
+            if !cli.no_update {
+                check_and_apply_update();
+            }
             run_node();
         }
     }
 }
 
-fn run_node() {
-    logging::init_headless();
+/// Check for updates on startup and auto-apply if available.
+fn check_and_apply_update() {
+    match node::update::check_for_update(VERSION) {
+        Ok(Some(new_version)) => {
+            tracing::info!("Update available: v{VERSION} → v{new_version}");
+            tracing::info!("Downloading...");
 
-    tracing::info!("Starting WoW Lab Node (headless)");
-    tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
+            match node::update::update("node-headless", VERSION) {
+                Ok(true) => {
+                    tracing::info!("Update installed. Restarting...");
+                    restart();
+                }
+                Ok(false) => {} // Already up to date (race condition, ignore)
+                Err(e) => {
+                    tracing::warn!("Auto-update failed: {e}");
+                    tracing::warn!("Continuing with current version. Run `node-headless update` manually.");
+                }
+            }
+        }
+        Ok(None) => {} // Already on latest
+        Err(e) => {
+            tracing::debug!("Update check failed: {e}");
+        }
+    }
+}
+
+/// Restart the current process by re-executing the binary.
+fn restart() -> ! {
+    let exe = std::env::current_exe().expect("Failed to get current executable path");
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    // On Unix, use exec to replace the current process
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        let err = std::process::Command::new(&exe)
+            .args(&args)
+            .arg("--no-update") // Prevent update loop
+            .exec();
+        tracing::error!("Failed to restart: {err}");
+        std::process::exit(1);
+    }
+
+    // On Windows, spawn new process and exit
+    #[cfg(windows)]
+    {
+        let mut cmd = std::process::Command::new(&exe);
+        cmd.args(&args).arg("--no-update");
+        match cmd.spawn() {
+            Ok(_) => std::process::exit(0),
+            Err(e) => {
+                tracing::error!("Failed to restart: {e}");
+                std::process::exit(1);
+            }
+        }
+    }
+
+    #[cfg(not(any(unix, windows)))]
+    {
+        tracing::error!("Restart not supported on this platform. Please restart manually.");
+        std::process::exit(0);
+    }
+}
+
+fn run_node() {
+    tracing::info!("Starting WoW Lab Node (headless) v{VERSION}");
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create tokio runtime"));
     let (mut core, mut event_rx) = NodeCore::new(Arc::clone(&runtime));
