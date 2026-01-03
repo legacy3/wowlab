@@ -1,3 +1,5 @@
+// Rhai script snippets for the Rust simulation engine
+
 export interface Snippet {
   id: string;
   name: string;
@@ -9,94 +11,59 @@ export const SNIPPETS: Snippet[] = [
   {
     id: "rotation-template",
     name: "Rotation Template",
-    description: "Full rotation definition boilerplate",
-    code: `import * as Context from "@wowlab/rotation/Context";
-import * as Effect from "effect/Effect";
-import type { RotationDefinition } from "../framework/types.js";
-import { tryCast } from "../framework/rotation-utils.js";
-
-const SpellIds = {
-  // Add spell IDs here
-} as const;
-
-export const MyRotation: RotationDefinition = {
-  name: "My Rotation",
-
-  run: (playerId, targetId) =>
-    Effect.gen(function* () {
-      const rotation = yield* Context.RotationContext;
-
-      // Add rotation logic here
-    }),
-
-  spellIds: [
-    // Add spell IDs used by rotation
-  ],
-};`,
+    description: "Basic Rhai rotation structure",
+    code: `// Priority-based rotation: first matching rule wins
+if bestial_wrath.ready() { cast("bestial_wrath") }
+if kill_command.ready() { cast("kill_command") }
+if barbed_shot.ready() { cast("barbed_shot") }
+if cobra_shot.ready() { cast("cobra_shot") }`,
   },
   {
-    id: "try-cast-gcd",
-    name: "Try Cast (with GCD check)",
-    description: "Cast a spell and return if it consumed GCD",
-    code: `const result = yield* tryCast(rotation, playerId, SpellIds.SPELL_NAME, targetId);
-if (result.cast && result.consumedGCD) {
-  return;
-}`,
+    id: "spell-ready-check",
+    name: "Spell Ready Check",
+    description: "Check if spell is off cooldown and castable",
+    code: `if spell_name.ready() { cast("spell_name") }`,
   },
   {
-    id: "try-cast-offgcd",
-    name: "Try Cast (Off-GCD)",
-    description: "Cast an off-GCD ability without target",
-    code: `const result = yield* tryCast(rotation, playerId, SpellIds.SPELL_NAME);
-if (result.cast && result.consumedGCD) {
-  return;
-}`,
+    id: "aura-active-check",
+    name: "Aura Active Check",
+    description: "Check if an aura/buff is currently active",
+    code: `if aura_name.active() { cast("spell_name") }`,
   },
   {
-    id: "priority-list",
-    name: "Priority List",
-    description: "Simple priority list of spells",
-    code: `yield* runPriorityList(rotation, playerId, [
-  SpellIds.SPELL_1,
-  SpellIds.SPELL_2,
-  SpellIds.SPELL_3,
-], targetId);`,
+    id: "aura-stacks-check",
+    name: "Aura Stacks Check",
+    description: "Check if aura has minimum stacks",
+    code: `if aura_name.stacks() >= 3 { cast("spell_name") }`,
   },
   {
-    id: "spell-ids-block",
-    name: "Spell IDs Block",
-    description: "Spell ID constants declaration",
-    code: `const SpellIds = {
-  SPELL_NAME: 12345,
-  ANOTHER_SPELL: 67890,
-} as const;`,
+    id: "aura-remaining-check",
+    name: "Aura Remaining Check",
+    description: "Check if aura is about to expire",
+    code: `if aura_name.remaining() <= 4.0 { cast("refresh_spell") }`,
   },
   {
-    id: "conditional-cast",
-    name: "Conditional Cast",
-    description: "Cast based on a condition",
-    code: `// Example: Cast only if some condition is met
-const shouldCast = true; // Replace with actual condition
-if (shouldCast) {
-  const result = yield* tryCast(rotation, playerId, SpellIds.SPELL_NAME, targetId);
-  if (result.cast && result.consumedGCD) {
-    return;
-  }
-}`,
-  },
-  {
-    id: "cooldowns-section",
+    id: "cooldown-section",
     name: "Cooldowns Section",
-    description: "Off-GCD cooldowns at the start",
-    code: `// Cooldowns (off-GCD)
-yield* tryCast(rotation, playerId, SpellIds.MAJOR_COOLDOWN);
-yield* tryCast(rotation, playerId, SpellIds.MINOR_COOLDOWN);`,
+    description: "Major cooldowns at the start of priority",
+    code: `// Major cooldowns
+if major_cooldown.ready() { cast("major_cooldown") }
+if minor_cooldown.ready() { cast("minor_cooldown") }`,
   },
   {
     id: "filler-section",
     name: "Filler Section",
-    description: "Filler spell at the end",
-    code: `// Filler
-yield* tryCast(rotation, playerId, SpellIds.FILLER_SPELL, targetId);`,
+    description: "Filler spell at lowest priority",
+    code: `// Filler (always ready, lowest priority)
+if filler_spell.ready() { cast("filler_spell") }`,
+  },
+  {
+    id: "conditional-cast",
+    name: "Conditional Cast",
+    description: "Cast based on multiple conditions",
+    code: `// Cast only when buff is active and spell is ready
+if buff_name.active() && spell_name.ready() {
+  cast("spell_name")
+}`,
   },
 ];

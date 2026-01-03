@@ -24,7 +24,6 @@ WoW Lab provides a high-performance, event-driven simulation engine for analyzin
 - `apps/portal` - Next.js 16 web application (Supabase, shadcn/ui)
 - `apps/cli` - Effect-TS CLI tools for game data management
 - `apps/mcp-server` - MCP server for querying WoW spell and item data (`@wowlab/mcp-server` on npm)
-- `apps/standalone` - Standalone Node.js app for testing simulation
 
 ### Crates (Rust)
 
@@ -37,9 +36,7 @@ WoW Lab provides a high-performance, event-driven simulation engine for analyzin
 
 - `packages/wowlab-core` - Core entities, schemas, branded types (Immutable.js Records)
 - `packages/wowlab-services` - Effect services (state, spell, lifecycle)
-- `packages/wowlab-rotation` - Rotation context & actions API
-- `packages/wowlab-runtime` - Effect Layer composition and runtime
-- `packages/wowlab-specs` - Class and spec definitions
+- `packages/wowlab-parsers` - SimC parser, spell description parser, talent encoding
 
 ## First-Time Setup
 
@@ -87,9 +84,7 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 
 - `@wowlab/core` - Immutable.js entities, schemas, branded types
 - `@wowlab/services` - Effect services (state, spell, lifecycle)
-- `@wowlab/rotation` - Rotation context & actions API
-- `@wowlab/runtime` - Effect Layer composition
-- `@wowlab/specs` - Class and spec definitions
+- `@wowlab/parsers` - SimC parser, spell description parser, talent encoding
 
 ## MCP Server
 

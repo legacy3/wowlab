@@ -1,25 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { useDataProvider } from "@refinedev/core";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import * as Effect from "effect/Effect";
-import * as PubSub from "effect/PubSub";
-import * as Queue from "effect/Queue";
-import * as Layer from "effect/Layer";
-import { Hunter } from "@wowlab/specs";
 import {
-  getAllSupportedSpellIds,
-  getAllHandlerInfo,
-} from "@wowlab/specs/Shared";
-import {
-  ExtractorService,
-  SpecCoverageProgressService,
-} from "@wowlab/services/Data";
-import { createPortalDbcLayer } from "@/lib/services";
-import {
-  SpecCoverageProgressLive,
   type SpecCoverageData,
   type SpecCoverageProgress,
   type UntrackedSpell,
@@ -49,19 +32,15 @@ export interface UseSpecCoverageResult {
   fetch: () => Promise<void>;
 }
 
-const ALL_CLASSES = [Hunter.Hunter];
-const SUPPORTED_SPELL_IDS = getAllSupportedSpellIds(ALL_CLASSES);
-const ALL_HANDLER_INFO = getAllHandlerInfo(ALL_CLASSES);
+// TODO: Spec coverage will be reimplemented using Rust engine TOML specs
+// For now, returns empty data since the TS simulation packages were removed
 
 export function useSpecCoverage(): UseSpecCoverageResult {
-  const dataProvider = useDataProvider()();
-  const queryClient = useQueryClient();
-
   const [data, setData] = useAtom(specCoverageDataAtom);
   const [loading, setLoading] = useAtom(specCoverageLoadingAtom);
   const [error, setError] = useAtom(specCoverageErrorAtom);
   const [progress, setProgress] = useAtom(specCoverageProgressAtom);
-  const [untrackedSpells, setUntrackedSpells] = useAtom(untrackedSpellsAtom);
+  const [untrackedSpells] = useAtom(untrackedSpellsAtom);
 
   const fetch = useCallback(async () => {
     if (loading) {
@@ -71,67 +50,14 @@ export function useSpecCoverage(): UseSpecCoverageResult {
     setLoading(true);
     setError(null);
     setProgress(null);
-    setUntrackedSpells([]);
 
-    try {
-      const dbcLayer = createPortalDbcLayer(queryClient, dataProvider);
-      const progressLayer = SpecCoverageProgressLive;
-      const fullLayer = Layer.mergeAll(dbcLayer, progressLayer);
-
-      const result = await Effect.runPromise(
-        Effect.scoped(
-          Effect.gen(function* () {
-            const progressService = yield* SpecCoverageProgressService;
-
-            // Subscribe to progress updates (scoped - auto-unsubscribes)
-            const dequeue = yield* PubSub.subscribe(progressService.pubsub);
-
-            // Fork fiber to consume progress and update React state
-            yield* Effect.fork(
-              Effect.gen(function* () {
-                while (true) {
-                  const msg = yield* Queue.take(dequeue);
-
-                  yield* Effect.sync(() => setProgress(msg));
-                }
-              }),
-            );
-
-            const extractor = yield* ExtractorService;
-
-            return yield* extractor.buildSpecCoverage(SUPPORTED_SPELL_IDS);
-          }),
-        ).pipe(Effect.provide(fullLayer)),
-      );
-
-      setData(result);
-
-      const allDbcSpellIds = new Set<number>(
-        result.classes.flatMap((c) =>
-          c.specs.flatMap((s) => s.spells.map((spell) => spell.id)),
-        ),
-      );
-
-      const untracked: UntrackedSpell[] = ALL_HANDLER_INFO.filter(
-        (h) => !allDbcSpellIds.has(h.spellId),
-      );
-
-      setUntrackedSpells(untracked);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    queryClient,
-    dataProvider,
-    loading,
-    setData,
-    setLoading,
-    setError,
-    setProgress,
-    setUntrackedSpells,
-  ]);
+    // Return empty data - spec coverage needs reimplementation for Rust engine
+    setData({ classes: [] });
+    setError(
+      "Spec coverage is being migrated to the Rust simulation engine. Check back soon!",
+    );
+    setLoading(false);
+  }, [loading, setData, setLoading, setError, setProgress]);
 
   return { data, loading, error, progress, untrackedSpells, fetch };
 }

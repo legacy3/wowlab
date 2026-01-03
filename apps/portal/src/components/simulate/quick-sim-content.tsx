@@ -8,7 +8,10 @@ import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDistributedSimulation, extractSpellIds } from "@/hooks/rotations";
+import {
+  useDistributedSimulation,
+  extractSpellIdsFromScript,
+} from "@/hooks/rotations";
 import {
   CharacterEquipmentPanel,
   type CharacterStats,
@@ -78,7 +81,7 @@ function QuickSimContentInner() {
     if (!selectedRotation?.id || !selectedRotation?.script) {
       return;
     }
-    const spellIds = extractSpellIds(selectedRotation.script);
+    const spellIds = extractSpellIdsFromScript(selectedRotation.script);
     await run({
       rotationId: selectedRotation.id,
       spellIds,

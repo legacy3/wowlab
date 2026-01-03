@@ -1,28 +1,20 @@
-import type * as Errors from "@wowlab/core/Errors";
 import type * as Schemas from "@wowlab/core/Schemas";
-import type * as Context from "@wowlab/rotation/Context";
-import type * as Effect from "effect/Effect";
 import type { ResourceSnapshot } from "./transformers";
 
+// NOTE: Browser-based TS simulation has been replaced by Rust engine.
+// These types are kept for result display compatibility.
+
 /**
- * Definition for a rotation that can be run by the browser simulation.
+ * Definition for a rotation (legacy - browser simulation removed).
+ * New rotations use Rhai scripts executed by the Rust engine.
  */
 export interface RotationDefinition {
-  /** Display name for the rotation */
   readonly name: string;
-
-  /** The APL logic that decides what to cast each GCD */
-  readonly run: (
-    playerId: Schemas.Branded.UnitID,
-    targetId: Schemas.Branded.UnitID,
-  ) => Effect.Effect<void, Errors.RotationError, Context.RotationContext>;
-
-  /** All spell IDs needed by this rotation (used to load spell data) */
   readonly spellIds: readonly number[];
 }
 
 /**
- * Configuration for running a simulation.
+ * Configuration for running a simulation (legacy).
  */
 export interface SimulationConfig {
   rotation: RotationDefinition;

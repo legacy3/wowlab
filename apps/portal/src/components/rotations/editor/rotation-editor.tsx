@@ -8,7 +8,7 @@ import {
   useRotation,
   useRotationMutations,
   useDistributedSimulation,
-  extractSpellIds,
+  extractSpellIdsFromScript,
 } from "@/hooks/rotations";
 import type {
   UserIdentity,
@@ -150,7 +150,7 @@ function RotationEditorInner({
         await updateRotation(rotationId, { script: localScript });
       }
 
-      const spellIds = extractSpellIds(script);
+      const spellIds = extractSpellIdsFromScript(script);
       await runDistributedSim({
         rotationId,
         spellIds,

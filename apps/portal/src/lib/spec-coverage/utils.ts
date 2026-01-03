@@ -1,4 +1,3 @@
-import type { HandlerInfo } from "@wowlab/specs/Shared";
 import type { Spell } from "@wowlab/core/Schemas";
 
 export type SpecCoverageSpell = Spell.SpellDataFlat & { supported: boolean };
@@ -20,7 +19,15 @@ export interface SpecCoverageData {
   classes: SpecCoverageClass[];
 }
 
-export type UntrackedSpell = HandlerInfo;
+// Handler info for spells tracked in spec definitions
+// TODO: Will be populated from Rust engine TOML specs in the future
+export interface UntrackedSpell {
+  readonly className: string;
+  readonly handlerId: string;
+  readonly specId: string;
+  readonly specName: string;
+  readonly spellId: number;
+}
 
 export function calculateCoverage(spells: SpecCoverageSpell[]): number {
   if (spells.length === 0) {
