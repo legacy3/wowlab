@@ -1,11 +1,62 @@
 //! Headless simulation node for servers.
 
-use node_core::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
+use clap::{Parser, Subcommand};
+use node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
+#[derive(Parser)]
+#[command(name = "node-headless")]
+#[command(author = "wowlab")]
+#[command(version)]
+#[command(about = "Headless WoW Lab simulation node for servers", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Update to the latest version
+    Update {
+        /// Check for updates without installing
+        #[arg(long)]
+        check: bool,
+    },
+    /// Start the node (default behavior)
+    Run,
+}
+
 fn main() {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Some(Commands::Update { check }) => {
+            if check {
+                match node::update::check_for_update() {
+                    Ok(Some(version)) => {
+                        println!("New version available: {}", version);
+                        println!("Run `node-headless update` to install");
+                    }
+                    Ok(None) => println!("Already on latest version"),
+                    Err(e) => {
+                        eprintln!("Failed to check for updates: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else if let Err(e) = node::update::update("node-headless") {
+                eprintln!("Update failed: {}", e);
+                std::process::exit(1);
+            }
+        }
+        Some(Commands::Run) | None => {
+            run_node();
+        }
+    }
+}
+
+fn run_node() {
     logging::init_headless();
 
     tracing::info!("Starting WoW Lab Node (headless)");

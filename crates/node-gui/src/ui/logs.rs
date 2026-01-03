@@ -3,7 +3,7 @@ use super::theme::{
     card_frame, RED_500, TEXT_MUTED, TEXT_SECONDARY, YELLOW_500, ZINC_500, ZINC_600, ZINC_700,
     ZINC_800, ZINC_900,
 };
-use node_core::{utils::logging, LogEntry, LogLevel};
+use node::{utils::logging, LogEntry, LogLevel};
 use std::collections::VecDeque;
 
 #[derive(Clone, PartialEq, Default)]

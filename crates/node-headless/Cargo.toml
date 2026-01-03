@@ -9,10 +9,11 @@ name = "node-headless"
 path = "src/main.rs"
 
 [dependencies]
-node-core = { path = "../node-core" }
+node = { path = "../node" }
 tokio = { version = "1", features = ["full", "signal"] }
 tracing = "0.1"
 ctrlc = "3.4"
+clap = { version = "4.5", features = ["derive"] }
 
 [profile.release]
 opt-level = 3

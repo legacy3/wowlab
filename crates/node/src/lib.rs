@@ -1,12 +1,13 @@
-//! Core business logic for distributed simulation nodes.
+//! Shared library for distributed simulation nodes.
 //!
-//! Used by both the GUI (`node`) and headless (`node-headless`) binaries.
+//! Used by both the GUI (`node-gui`) and headless (`node-headless`) binaries.
 
 pub mod cache;
 pub mod claim;
 pub mod config;
 mod core;
 pub mod supabase;
+pub mod update;
 pub mod utils;
 pub mod worker;
 

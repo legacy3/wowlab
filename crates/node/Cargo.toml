@@ -2,23 +2,30 @@
 name = "node"
 version = "0.1.0"
 edition = "2021"
-description = "GUI for WoW Lab distributed simulation node"
+description = "Shared library for WoW Lab distributed simulation nodes"
 
-[[bin]]
+[lib]
 name = "node"
-path = "src/main.rs"
+path = "src/lib.rs"
 
 [dependencies]
-node-core = { path = "../node-core" }
-eframe = "0.29"
-egui = "0.29"
 tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+supabase-realtime-rs = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+config = { version = "0.14", features = ["ini"] }
+directories = "5"
+uuid = { version = "1", features = ["v4", "serde"] }
+hostname = "0.4"
+num_cpus = "1.16"
 tracing = "0.1"
-image = { version = "0.25", default-features = false, features = ["png"] }
-lucide-icons = "0.562"
-open = "5"
-uuid = { version = "1", features = ["v4"] }
-
-[profile.release]
-opt-level = 3
-lto = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+thiserror = "2.0"
+engine = { path = "../engine" }
+self_update = { version = "0.42", default-features = false, features = [
+    "archive-tar",
+    "compression-flate2",
+    "rustls",
+] }

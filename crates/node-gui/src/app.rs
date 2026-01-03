@@ -5,7 +5,7 @@ use crate::ui::{
     settings::{self, SettingsAction},
     theme,
 };
-use node_core::{
+use node::{
     utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
     NodeCoreEvent, NodeState,
 };
