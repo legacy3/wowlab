@@ -132,9 +132,8 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
   // Local node state
   const [localNode, setLocalNode] = useState<LocalNode>(DEFAULT_LOCAL_NODE);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    setLocalNode(loadLocalNode());
+    requestAnimationFrame(() => setLocalNode(loadLocalNode()));
   }, []);
 
   // My nodes from Supabase

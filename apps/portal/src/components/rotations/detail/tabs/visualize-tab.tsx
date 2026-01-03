@@ -21,7 +21,7 @@ const CANVAS_HEIGHT = calculateCanvasHeight(MOCK_PRIORITY_LIST.length);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const VisualizeTab = memo(function VisualizeTab(
-  _props: VisualizeTabProps,
+  props: VisualizeTabProps,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);

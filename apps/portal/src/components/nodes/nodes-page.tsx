@@ -30,7 +30,6 @@ import {
   Globe,
   Power,
   Cpu,
-  AlertTriangle,
 } from "lucide-react";
 import NextLink from "next/link";
 import { Link } from "@/components/ui/link";
@@ -43,13 +42,13 @@ import {
   SortableHeader,
   type SortDirection,
 } from "@/components/ui/sortable-header";
-import { formatRelativeToNow, formatInt } from "@/lib/format";
+import { formatRelativeToNow } from "@/lib/format";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useUpdate, useInvalidate } from "@refinedev/core";
 import type { UserNode } from "@/lib/supabase/types";
 
-const LATEST_VERSION = "0.1.0";
+const LATEST_VERSION = "0.2.4";
 
 type SortKey = "status" | "workers" | "lastSeen" | null;
 
@@ -178,23 +177,23 @@ function NodesTable({
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Link
-                          href={`${env.GITHUB_URL}/releases/tag/v${node.version}`}
-                          external
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          v{node.version}
-                        </Link>
-                        {isOutdated && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/20 px-1 py-0"
-                          >
-                            <AlertTriangle className="h-3 w-3" />
-                          </Badge>
+                      <Link
+                        href={`${env.GITHUB_URL}/releases/tag/v${node.version}`}
+                        external
+                        className={cn(
+                          "text-xs",
+                          isOutdated
+                            ? "text-amber-600 hover:text-amber-500"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
-                      </div>
+                        title={
+                          isOutdated
+                            ? `Update available (v${LATEST_VERSION})`
+                            : undefined
+                        }
+                      >
+                        v{node.version}
+                      </Link>
                     </div>
                   </div>
                 </TableCell>

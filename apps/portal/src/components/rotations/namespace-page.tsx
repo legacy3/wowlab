@@ -90,7 +90,7 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <p className="font-medium">User not found</p>
           <p className="text-sm text-muted-foreground">
-            @{namespace} doesn't exist
+            @{namespace} does not exist
           </p>
         </CardContent>
       </Card>
@@ -148,7 +148,7 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
               </div>
               <p className="font-medium mb-1">No public rotations</p>
               <p className="text-sm text-muted-foreground">
-                @{namespace} hasn't published any rotations yet
+                @{namespace} has not published any rotations yet
               </p>
             </CardContent>
           </Card>

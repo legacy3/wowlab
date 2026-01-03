@@ -35,5 +35,5 @@ function detectPlatform(): NodePlatform | null {
 }
 
 export function useDetectedPlatform(): NodePlatform | null {
-  return useMemo(detectPlatform, []);
+  return useMemo(() => detectPlatform(), []);
 }

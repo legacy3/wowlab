@@ -11,9 +11,7 @@ interface SpellDetailPageProps {
   spellId: string;
 }
 
-export function SpellDetailPage({ spellId }: SpellDetailPageProps) {
-  // In a real implementation, we would fetch data based on spellId
-  // For now, we use mock data
+export function SpellDetailPage({ spellId: _spellId }: SpellDetailPageProps) {
   const spell = MOCK_SPELL_AIMED_SHOT;
 
   return (

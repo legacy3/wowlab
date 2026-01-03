@@ -8,7 +8,7 @@ import {
 } from "@/lib/simulation/rust-config-builder";
 import { loadAurasById, loadSpellsById } from "@/lib/simulation/loader";
 import { useDataProvider, type DataProvider } from "@refinedev/core";
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 export interface RustSimConfigOptions {

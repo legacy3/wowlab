@@ -84,7 +84,7 @@ export function TableFieldsDialog({
 
   useEffect(() => {
     if (open) {
-      setSearch("");
+      requestAnimationFrame(() => setSearch(""));
     }
   }, [open, table]);
 

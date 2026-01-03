@@ -48,7 +48,6 @@ import {
 } from "@/components/ui/sortable-header";
 import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { formatRelativeToNow } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import type { Rotation } from "@/lib/supabase/types";
 
 type SortKey = "name" | "spec" | "updated" | null;
@@ -269,8 +268,8 @@ export function UserRotationsTable({ rotations }: UserRotationsTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete rotation?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.name}". This action
-              cannot be undone.
+              This will permanently delete &quot;{deleteTarget?.name}&quot;.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

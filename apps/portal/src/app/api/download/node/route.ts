@@ -4,8 +4,6 @@ import {
   getAssetPattern,
   isValidPlatform,
   isValidVariant,
-  type NodePlatform,
-  type NodeVariant,
 } from "@/lib/config/downloads";
 
 interface GitHubRelease {
