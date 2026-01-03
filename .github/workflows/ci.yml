@@ -8,11 +8,7 @@ on:
     branches: [main]
 
 env:
-  RUST_CRATES: |
-    crates/engine
-    crates/node
-    crates/node-gui
-    crates/node-headless
+  RUST_WORKSPACE: crates
 
 jobs:
   changes:
@@ -79,7 +75,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: ${{ env.RUST_CRATES }}
+          workspaces: ${{ env.RUST_WORKSPACE }}
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -88,16 +84,12 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
 
       - name: Build all crates
-        run: |
-          cargo build --release --manifest-path crates/engine/Cargo.toml
-          cargo build --release --manifest-path crates/node/Cargo.toml
-          cargo build --release --manifest-path crates/node-gui/Cargo.toml
-          cargo build --release --manifest-path crates/node-headless/Cargo.toml
+        working-directory: crates
+        run: cargo build --release
 
       - name: Run tests
-        run: |
-          cargo test --manifest-path crates/engine/Cargo.toml
-          cargo test --manifest-path crates/node/Cargo.toml
+        working-directory: crates
+        run: cargo test
 
       # Release artifacts (only on tags)
       - name: Get version
@@ -110,7 +102,7 @@ jobs:
         if: needs.changes.outputs.release == 'true' && runner.os != 'Windows'
         run: |
           for bin in node-gui node-headless; do
-            tar -czvf ${bin}-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/${bin}/target/release ${bin}
+            tar -czvf ${bin}-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
           done
 
       - name: Package binaries (Windows)
@@ -118,7 +110,7 @@ jobs:
         shell: pwsh
         run: |
           foreach ($bin in @("node-gui", "node-headless")) {
-            Compress-Archive -Path "crates/$bin/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.version.outputs.version }}-${{ matrix.target }}.zip"
+            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.version.outputs.version }}-${{ matrix.target }}.zip"
           }
 
       - name: Upload artifacts
