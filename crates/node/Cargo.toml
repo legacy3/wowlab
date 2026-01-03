@@ -1,6 +1,6 @@
 [package]
 name = "node"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 description = "Shared library for WoW Lab distributed simulation nodes"
 
