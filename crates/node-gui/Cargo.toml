@@ -1,6 +1,6 @@
 [package]
 name = "node-gui"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 description = "GUI for WoW Lab distributed simulation node"
 
