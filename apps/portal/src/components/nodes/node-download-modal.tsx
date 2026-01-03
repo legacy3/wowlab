@@ -99,12 +99,19 @@ export function NodeDownloadModal({
   const detectedPlatform = useDetectedPlatform();
 
   const sortedPlatforms = useMemo(() => {
-    if (!detectedPlatform) return PLATFORM_INFO;
+    if (!detectedPlatform) {
+      return PLATFORM_INFO;
+    }
+
     return [
       ...PLATFORM_INFO.filter((p) => p.id === detectedPlatform),
       ...PLATFORM_INFO.filter((p) => p.id !== detectedPlatform),
     ];
   }, [detectedPlatform]);
+
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
