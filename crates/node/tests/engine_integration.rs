@@ -1,6 +1,6 @@
 //! Integration test for engine integration.
 
-use node_core::worker::SimRunner;
+use node::worker::SimRunner;
 
 const TEST_CONFIG: &str = r#"{
     "player": {
