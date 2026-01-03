@@ -104,10 +104,8 @@ function QuickSimContentInner() {
 
   const { character, professions, gear, talents } = parsedData;
 
-  // Character loaded: show full simulation setup
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      {/* Character + Equipment Card */}
       <CharacterEquipmentPanel
         character={character}
         gear={gear}
@@ -121,19 +119,14 @@ function QuickSimContentInner() {
         onClear={() => clearCharacter()}
       />
 
-      {/* Rotation Picker */}
       <RotationPicker />
 
-      {/* Fight Profile Picker */}
       <FightProfilePicker />
 
-      {/* Divider before Advanced */}
       <Separator />
 
-      {/* Advanced Settings */}
       <AdvancedSettings />
 
-      {/* Run Button */}
       <Button
         size="lg"
         onClick={handleRunSim}
@@ -154,17 +147,14 @@ function QuickSimContentInner() {
         )}
       </Button>
 
-      {/* No rotation warning */}
       {!selectedRotation && (
         <p className="text-sm text-center text-muted-foreground">
           Select a rotation to run the simulation
         </p>
       )}
 
-      {/* Results Display */}
       {result && <SimulationResultCard result={result} resultId={null} />}
 
-      {/* Error Display */}
       {error && <SimulationErrorCard error={error} />}
     </div>
   );

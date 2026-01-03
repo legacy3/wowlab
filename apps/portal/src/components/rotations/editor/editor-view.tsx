@@ -88,9 +88,7 @@ export function EditorView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const editorRef = useCodeEditorRef();
 
-  const handleBeforeMount = useCallback((_monaco: MonacoInstance) => {
-    // Rhai uses Rust-like syntax, no special config needed
-  }, []);
+  const handleBeforeMount = useCallback((_monaco: MonacoInstance) => {}, []);
 
   const handleMount = useCallback(
     (...args: Parameters<typeof editorRef.onMount>) => {
@@ -126,8 +124,6 @@ export function EditorView({
   );
 
   const handleFormat = useCallback(async () => {
-    // Rhai doesn't have a standard formatter yet
-    // Just trigger Monaco's built-in format action
     const editor = editorRef.editorRef.current;
     if (editor) {
       editor.getAction("editor.action.formatDocument")?.run();

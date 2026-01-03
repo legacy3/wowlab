@@ -99,7 +99,6 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Profile header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <UserAvatar
@@ -136,7 +135,6 @@ export function NamespacePage({ namespace }: NamespacePageProps) {
         </div>
       </div>
 
-      {/* Rotations */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Public Rotations</h2>
 

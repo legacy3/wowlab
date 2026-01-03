@@ -356,9 +356,6 @@ verify_jwt = false
 [functions.chunk-complete]
 verify_jwt = false
 
-[functions.chunk-reaper]
-verify_jwt = false
-
 [functions.config-fetch]
 verify_jwt = false
 

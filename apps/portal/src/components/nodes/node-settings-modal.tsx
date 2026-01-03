@@ -182,7 +182,6 @@ export function NodeSettingsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        {/* Header with editable name */}
         <DialogHeader className="pr-8">
           <div className="flex items-center gap-3">
             {node.isOwner && (
@@ -247,7 +246,6 @@ export function NodeSettingsModal({
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
-          {/* Workers */}
           {node.isOwner && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -282,7 +280,6 @@ export function NodeSettingsModal({
             </div>
           )}
 
-          {/* Access (remote only) */}
           {!node.isLocal && node.isOwner && (
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
@@ -311,7 +308,6 @@ export function NodeSettingsModal({
             </div>
           )}
 
-          {/* Delete (remote only) */}
           {!node.isLocal && node.isOwner && (
             <div className="pt-2">
               <AlertDialog

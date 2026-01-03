@@ -30,7 +30,6 @@ function NodeClaimPageInner() {
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      {/* Back Navigation */}
       <div className="w-full max-w-md">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/account/nodes">
@@ -40,7 +39,6 @@ function NodeClaimPageInner() {
         </Button>
       </div>
 
-      {/* Claim Form Card */}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle>Claim Your Node</CardTitle>

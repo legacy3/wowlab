@@ -29,11 +29,7 @@ import {
   Monitor,
   Globe,
   Power,
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
   Cpu,
-  Wifi,
   AlertTriangle,
 } from "lucide-react";
 import NextLink from "next/link";
@@ -43,55 +39,19 @@ import { useFuzzySearch } from "@/hooks/use-fuzzy-search";
 import { SecretText } from "@/components/ui/secret-field";
 import { NodeStatusBadge } from "./node-status-badge";
 import { NodeSettingsModal } from "./node-settings-modal";
+import {
+  SortableHeader,
+  type SortDirection,
+} from "@/components/ui/sortable-header";
 import { formatRelativeToNow, formatInt } from "@/lib/format";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useUpdate, useInvalidate } from "@refinedev/core";
 import type { UserNode } from "@/lib/supabase/types";
 
-// Latest version - could be fetched from API/env later
 const LATEST_VERSION = "0.1.0";
 
 type SortKey = "status" | "workers" | "lastSeen" | null;
-type SortDir = "asc" | "desc";
-
-function SortableHeader({
-  children,
-  sortKey,
-  currentSort,
-  currentDir,
-  onSort,
-  className,
-}: {
-  children: React.ReactNode;
-  sortKey: SortKey;
-  currentSort: SortKey;
-  currentDir: SortDir;
-  onSort: (key: SortKey) => void;
-  className?: string;
-}) {
-  const isActive = currentSort === sortKey;
-  return (
-    <TableHead className={className}>
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className="flex items-center gap-1 hover:text-foreground transition-colors -ml-2 px-2 py-1 rounded"
-      >
-        {children}
-        {isActive ? (
-          currentDir === "asc" ? (
-            <ChevronUp className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronDown className="h-3.5 w-3.5" />
-          )
-        ) : (
-          <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-        )}
-      </button>
-    </TableHead>
-  );
-}
 
 function NodesTable({
   nodes,
@@ -113,7 +73,7 @@ function NodesTable({
   onSelectAll: (selected: boolean) => void;
   onTogglePower: (node: NodeListItem) => void;
   sortKey: SortKey;
-  sortDir: SortDir;
+  sortDir: SortDirection;
   onSort: (key: SortKey) => void;
 }) {
   const allSelected =
@@ -333,7 +293,7 @@ function NodesContent() {
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>("lastSeen");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
   const allNodes = useMemo(() => {
     return [...myNodes, ...availableNodes];
@@ -462,7 +422,6 @@ function NodesContent() {
 
   return (
     <div className="space-y-4">
-      {/* Stats + filters + actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <NodesStats nodes={allNodes} />
@@ -492,7 +451,6 @@ function NodesContent() {
         </Button>
       </div>
 
-      {/* Search and bulk actions */}
       <div className="flex items-center gap-4">
         <Input
           placeholder="Filter nodes ..."

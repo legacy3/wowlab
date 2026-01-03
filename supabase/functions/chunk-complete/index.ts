@@ -1,42 +1,23 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
+import { createHandler, jsonResponse } from "../_shared/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, apikey, x-client-info",
-};
+const createSupabaseClient = () =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json", ...corsHeaders },
-  });
-}
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
-
-  try {
+Deno.serve(
+  createHandler({ method: "POST" }, async (req) => {
     const { chunkId, result } = await req.json();
 
     if (!chunkId || !result) {
       return jsonResponse({ error: "chunkId and result required" }, 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseClient();
 
-    // Idempotent update: only complete if status is 'running' (not already completed)
     const { data, error } = await supabase
       .from("sim_chunks")
       .update({
@@ -50,7 +31,6 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (error) {
-      // Check if it's already completed (idempotency case)
       const { data: existing } = await supabase
         .from("sim_chunks")
         .select("id, status")
@@ -72,7 +52,6 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Chunk not found or not running" }, 404);
     }
 
-    // Check if all chunks for this job are complete
     const { count: pendingCount } = await supabase
       .from("sim_chunks")
       .select("id", { count: "exact", head: true })
@@ -84,7 +63,6 @@ Deno.serve(async (req: Request) => {
     if (pendingCount === 0) {
       jobComplete = true;
 
-      // All chunks done - aggregate results
       const { data: chunks } = await supabase
         .from("sim_chunks")
         .select("result, iterations")
@@ -129,11 +107,9 @@ Deno.serve(async (req: Request) => {
           })
           .eq("id", data.jobId);
 
-        // Delete all chunks for this job - no longer needed
         await supabase.from("sim_chunks").delete().eq("jobId", data.jobId);
       }
     } else {
-      // Update job status to running if it was pending
       await supabase
         .from("sim_jobs")
         .update({ status: "running" })
@@ -145,8 +121,5 @@ Deno.serve(async (req: Request) => {
       success: true,
       jobComplete,
     });
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    return jsonResponse({ error: String(err) }, 500);
-  }
-});
+  }),
+);

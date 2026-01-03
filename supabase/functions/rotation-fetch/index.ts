@@ -1,30 +1,15 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
+import { createHandler, jsonResponse } from "../_shared/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, apikey, x-client-info",
-};
+const createSupabaseClient = () =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json", ...corsHeaders },
-  });
-}
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== "GET") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
-
-  try {
+Deno.serve(
+  createHandler({ method: "GET" }, async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
@@ -32,10 +17,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "id parameter required" }, 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseClient();
 
     const { data, error } = await supabase
       .from("rotations")
@@ -52,8 +34,5 @@ Deno.serve(async (req: Request) => {
       script: data.script,
       checksum: data.checksum,
     });
-  } catch (err) {
-    console.error("rotation-fetch error:", err);
-    return jsonResponse({ error: String(err) }, 500);
-  }
-});
+  }),
+);

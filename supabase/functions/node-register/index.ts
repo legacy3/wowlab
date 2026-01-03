@@ -1,5 +1,12 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
+import { createHandler, jsonResponse } from "../_shared/mod.ts";
+
+const createSupabaseClient = () =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
 const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -19,25 +26,8 @@ interface RegisterRequest {
   version: string;
 }
 
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    });
-  }
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  try {
+Deno.serve(
+  createHandler({ method: "POST" }, async (req) => {
     const body = (await req
       .json()
       .catch(() => ({}))) as Partial<RegisterRequest>;
@@ -47,11 +37,7 @@ Deno.serve(async (req: Request) => {
     const platform = body.platform || "unknown";
     const version = body.version || null;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
+    const supabase = createSupabaseClient();
     const claimCode = generateClaimCode();
 
     const { data, error } = await supabase
@@ -69,19 +55,9 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: error.message }, 400);
     }
 
-    return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-});
+    return jsonResponse(data);
+  }),
+);

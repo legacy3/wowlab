@@ -1,59 +1,31 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
+import { createHandler, jsonResponse, validateAuth } from "../_shared/mod.ts";
+
+const createSupabaseClient = () =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
 const CHUNK_SIZE = 1000;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, apikey, x-client-info",
-};
+Deno.serve(
+  createHandler({ method: "POST" }, async (req) => {
+    const supabase = createSupabaseClient();
+    const authResult = await validateAuth(req, supabase);
 
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json", ...corsHeaders },
-  });
-}
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
-
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
+    if ("error" in authResult) {
+      return authResult.error;
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return jsonResponse({ error: "Invalid token" }, 401);
-    }
-
+    const { user } = authResult;
     const { configHash, iterations } = await req.json();
 
     if (!configHash || !iterations) {
       return jsonResponse({ error: "configHash and iterations required" }, 400);
     }
 
-    // Verify config exists in sim_configs table
     const { data: configExists, error: configError } = await supabase
       .from("sim_configs")
       .select("hash")
@@ -111,7 +83,6 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Failed to create chunks" }, 500);
     }
 
-    // Broadcast to notify listening nodes
     const channel = supabase.channel("pending-chunks");
     await channel.send({
       type: "broadcast",
@@ -131,8 +102,5 @@ Deno.serve(async (req: Request) => {
       chunks: numChunks,
       queued: true,
     });
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    return jsonResponse({ error: String(err) }, 500);
-  }
-});
+  }),
+);

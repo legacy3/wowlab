@@ -1,22 +1,20 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
+import { optionsResponse, textResponse } from "../_shared/mod.ts";
 
 const WOWHEAD_BASE = "https://wow.zamimg.com/images/wow/TextureAtlas/live";
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return optionsResponse();
+  }
+
   const url = new URL(req.url);
   const { pathname } = url;
-
-  // Supabase strips the function name, so we get: /{filename}.webp
   const pathParts = pathname.split("/").filter(Boolean);
   const filename = pathParts[1];
 
   if (!filename) {
-    return new Response("Missing filename", {
-      status: 400,
-      headers: {
-        "Content-Type": "text/plain",
-      },
-    });
+    return textResponse("Missing filename", 400);
   }
 
   try {
@@ -24,12 +22,7 @@ Deno.serve(async (req) => {
     const response = await fetch(atlasUrl);
 
     if (!response.ok) {
-      return new Response("Atlas not found", {
-        status: 404,
-        headers: {
-          "Content-Type": "text/plain",
-        },
-      });
+      return textResponse("Atlas not found", 404);
     }
 
     return new Response(response.body, {
@@ -40,11 +33,6 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    return new Response(`Failed to fetch atlas: ${error.message}`, {
-      status: 500,
-      headers: {
-        "Content-Type": "text/plain",
-      },
-    });
+    return textResponse(`Failed to fetch atlas: ${error.message}`, 500);
   }
 });

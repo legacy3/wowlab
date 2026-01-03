@@ -8,15 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserSettings } from "@/hooks/use-user-settings";
+import { formatInt } from "@/lib/format";
 
 const MIN_DURATION = 30;
 const MAX_DURATION = 600;
@@ -91,7 +87,7 @@ export function SimulationSettingsCard() {
                 className="flex-1"
               />
               <div className="w-14 text-right tabular-nums text-sm text-muted-foreground">
-                {iterations.toLocaleString()}
+                {formatInt(iterations)}
               </div>
             </div>
           </Field>
