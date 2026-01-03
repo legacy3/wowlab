@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 
+const NODE_PLATFORMS = ["linux", "linux-arm", "macos", "windows"] as const;
+
+function generateNodeRewrites() {
+  return NODE_PLATFORMS.flatMap((platform) => [
+    {
+      source: `/go/node-${platform}`,
+      destination: `/api/download/node?platform=${platform}`,
+    },
+    {
+      source: `/go/node-headless-${platform}`,
+      destination: `/api/download/node?platform=${platform}&variant=headless`,
+    },
+  ]);
+}
+
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   experimental: {
@@ -23,25 +38,10 @@ const nextConfig: NextConfig = {
         destination: "https://github.com/legacy3/wowlab",
         permanent: false,
       },
-      {
-        source: "/go/node-linux",
-        destination:
-          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-linux-x64",
-        permanent: false,
-      },
-      {
-        source: "/go/node-macos",
-        destination:
-          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-macos-arm64",
-        permanent: false,
-      },
-      {
-        source: "/go/node-windows",
-        destination:
-          "https://github.com/legacy3/wowlab/releases/latest/download/wowlab-node-windows-x64.exe",
-        permanent: false,
-      },
     ];
+  },
+  async rewrites() {
+    return generateNodeRewrites();
   },
 };
 

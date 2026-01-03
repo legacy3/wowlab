@@ -10,19 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { NodeClaimForm } from "./node-claim-form";
-import { env } from "@/lib/env";
-import { WindowsIcon, AppleIcon, LinuxIcon } from "@/lib/icons";
+import { NodeDownloadModal } from "./node-download-modal";
 
 function NodeClaimPageInner() {
   const [token] = useQueryState("token", parseAsString);
@@ -51,76 +43,10 @@ function NodeClaimPageInner() {
             initialToken={token ?? undefined}
             onDownload={() => setDownloadOpen(true)}
           />
-
-          <Dialog open={downloadOpen} onOpenChange={setDownloadOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Download WoW Lab Node</DialogTitle>
-                <DialogDescription>
-                  Choose your platform to download the node application
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-3 py-4">
-                <Button
-                  variant="outline"
-                  className="justify-start h-auto py-3"
-                  asChild
-                >
-                  <a
-                    href={`${env.APP_URL}/go/node-windows`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <WindowsIcon className="mr-3 h-5 w-5" />
-                    <div className="text-left">
-                      <div className="font-medium">Windows</div>
-                      <div className="text-xs text-muted-foreground">
-                        x64 installer
-                      </div>
-                    </div>
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start h-auto py-3"
-                  asChild
-                >
-                  <a
-                    href={`${env.APP_URL}/go/node-macos`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <AppleIcon className="mr-3 h-5 w-5" />
-                    <div className="text-left">
-                      <div className="font-medium">macOS</div>
-                      <div className="text-xs text-muted-foreground">
-                        Universal (Apple Silicon & Intel)
-                      </div>
-                    </div>
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start h-auto py-3"
-                  asChild
-                >
-                  <a
-                    href={`${env.APP_URL}/go/node-linux`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <LinuxIcon className="mr-3 h-5 w-5" />
-                    <div className="text-left">
-                      <div className="font-medium">Linux</div>
-                      <div className="text-xs text-muted-foreground">
-                        x64 AppImage
-                      </div>
-                    </div>
-                  </a>
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <NodeDownloadModal
+            open={downloadOpen}
+            onOpenChange={setDownloadOpen}
+          />
         </CardContent>
       </Card>
     </div>
