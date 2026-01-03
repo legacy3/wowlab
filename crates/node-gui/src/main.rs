@@ -57,10 +57,12 @@ fn load_icon() -> Option<egui::IconData> {
 fn main() -> eframe::Result<()> {
     let cli = Cli::parse();
 
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+
     match cli.command {
         Some(Commands::Update { check }) => {
             if check {
-                match node::update::check_for_update() {
+                match node::update::check_for_update(VERSION) {
                     Ok(Some(version)) => {
                         println!("New version available: {}", version);
                         println!("Run `node-gui update` to install");
@@ -71,7 +73,7 @@ fn main() -> eframe::Result<()> {
                         std::process::exit(1);
                     }
                 }
-            } else if let Err(e) = node::update::update("node-gui") {
+            } else if let Err(e) = node::update::update("node-gui", VERSION) {
                 eprintln!("Update failed: {}", e);
                 std::process::exit(1);
             }
