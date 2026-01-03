@@ -199,6 +199,6 @@ jobs:
           file: ./crates/node-headless/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/node-headless:latest
-            ghcr.io/${{ github.repository_owner }}/node-headless:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/wowlab-node:latest
+            ghcr.io/${{ github.repository_owner }}/wowlab-node:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64
