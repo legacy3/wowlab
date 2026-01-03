@@ -22,24 +22,23 @@ pub fn check_for_update(current_version: &str) -> Result<Option<String>, Box<dyn
 /// Check and update if a newer version is available.
 /// Returns Ok(true) if updated, Ok(false) if already on latest.
 pub fn update(bin_name: &str, current_version: &str) -> Result<bool, Box<dyn std::error::Error>> {
-    println!("Checking for updates...");
-    println!("Current version: {}", current_version);
+    tracing::info!("Checking for updates (current: {})", current_version);
 
     let status = self_update::backends::github::Update::configure()
         .repo_owner(REPO_OWNER)
         .repo_name(REPO_NAME)
         .bin_name(bin_name)
-        .show_download_progress(true)
+        .show_download_progress(false)
+        .no_confirm(true)
         .current_version(current_version)
         .build()?
         .update()?;
 
     if status.updated() {
-        println!("Updated to version {}", status.version());
-        println!("Please restart the application");
+        tracing::info!("Updated to version {}", status.version());
         Ok(true)
     } else {
-        println!("Already on latest version");
+        tracing::debug!("Already on latest version");
         Ok(false)
     }
 }
