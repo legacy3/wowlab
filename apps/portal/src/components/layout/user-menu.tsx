@@ -14,14 +14,7 @@ import {
 import { UserAvatar } from "@/components/account/user-avatar";
 import { UserHandle } from "@/components/ui/user-handle";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  User,
-  Settings,
-  LogOut,
-  FileCode,
-  History,
-  Server,
-} from "lucide-react";
+import { User, Settings, LogOut, Server } from "lucide-react";
 import type { UserIdentity } from "@/lib/supabase/types";
 
 function UserMenuInner() {
@@ -55,14 +48,6 @@ function UserMenuInner() {
           <UserHandle handle={identity.handle ?? "user"} linkTo={false} />
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/account?tab=rotations")}>
-          <FileCode className="mr-2 h-4 w-4" />
-          <span>My Rotations</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/account?tab=history")}>
-          <History className="mr-2 h-4 w-4" />
-          <span>History</span>
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push("/account/nodes")}>
           <Server className="mr-2 h-4 w-4" />
           <span>Compute Nodes</span>

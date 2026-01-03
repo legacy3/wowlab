@@ -1,8 +1,11 @@
-//! Timing wheel event queue (SimC-style): O(1) amortized insert/pop
+//! Timing wheel event queue with O(1) amortized insert/pop.
 //!
-//! - wheel_shift=5 means each slot covers 32ms
-//! - 4K slots = ~131 seconds coverage, wraps for longer sims
-//! - Benchmarked: 4K optimal across 60s/300s/600s durations
+//! Uses a SimC-style timing wheel with bitmap acceleration:
+//! - `WHEEL_SHIFT=5`: Each slot covers 32ms
+//! - `WHEEL_SIZE=4096`: ~131 seconds coverage with wrap-around
+//! - Bitmap tracking for O(1) next-slot lookup via `trailing_zeros()`
+//!
+//! This design was benchmarked as optimal across 60s/300s/600s fight durations.
 
 use std::cmp::Ordering;
 
@@ -11,48 +14,46 @@ const WHEEL_SIZE: usize = 4096; // 2^12 slots - 32KB cache footprint
 const WHEEL_MASK: usize = WHEEL_SIZE - 1;
 const BITMAP_SIZE: usize = WHEEL_SIZE / 64; // 64 u64s = 4096 bits
 
-/// Event types in the simulation - compact enum.
+/// Simulation event types.
+///
 /// Ordered by frequency for branch prediction optimization.
+/// Uses `#[repr(u8)]` for compact storage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SimEvent {
-    /// GCD has finished, evaluate rotation (most frequent)
+    /// GCD finished - evaluate rotation (most frequent).
     GcdReady = 0,
-
-    /// Cooldown/charge has finished
+    /// Spell cooldown/charge ready.
     CooldownReady { spell_idx: u8 } = 1,
-
-    /// DoT/HoT tick (periodic effects)
+    /// Periodic aura tick (DoT/HoT).
     AuraTick { aura_idx: u8 } = 2,
-
-    /// Aura has expired
+    /// Aura expired.
     AuraExpire { aura_idx: u8 } = 3,
-
-    /// Apply an aura (from spell effect)
+    /// Apply aura from spell effect.
     AuraApply { aura_idx: u8, stacks: u8 } = 4,
-
-    /// Resource regeneration tick (if using tick-based regen)
+    /// Resource regeneration tick.
     ResourceTick = 5,
-
-    /// Auto-attack (player)
+    /// Player auto-attack.
     AutoAttack = 6,
-
-    /// Pet auto-attack
+    /// Pet auto-attack.
     PetAttack = 7,
-
-    /// Delayed spell damage (for travel time/delayed effects)
+    /// Delayed spell damage (travel time).
     SpellDamage { spell_idx: u8, damage_x100: u32 } = 8,
-
-    /// A spell cast has completed (for cast-time spells)
+    /// Cast completed (for cast-time spells).
     CastComplete { spell_idx: u8 } = 9,
 }
 
-/// Compact timed event - u32 milliseconds.
+/// A timed event with millisecond precision.
+///
+/// Uses `#[repr(C)]` for cache-friendly layout.
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct TimedEvent {
+    /// Event time in milliseconds.
     pub time: u32,
+    /// Sequence number for FIFO ordering of same-time events.
     seq: u32,
+    /// The event payload.
     pub event: SimEvent,
 }
 
@@ -90,47 +91,51 @@ impl Ord for TimedEvent {
     }
 }
 
-/// Index into the node arena (u32::MAX = null)
+/// Index into the node arena (`u32::MAX` = null).
 type NodeIdx = u32;
 const NULL_IDX: NodeIdx = u32::MAX;
 
-/// Linked list node stored in arena
+/// Linked list node stored in the arena.
 #[derive(Clone, Copy)]
 struct EventNode {
     event: TimedEvent,
     next: NodeIdx,
 }
 
+/// Timing wheel event queue with O(1) amortized operations.
+///
+/// Events are stored in a timing wheel where each slot covers 32ms.
+/// A bitmap tracks non-empty slots for fast lookup of the next event.
 pub struct EventQueue {
-    /// Node arena - pre-allocated storage for all nodes
+    /// Node arena - pre-allocated storage for all nodes.
     arena: Vec<EventNode>,
-
-    /// Number of arena slots in use (for fast clear)
+    /// Number of arena slots in use (for fast clear).
     arena_used: u32,
-
-    /// Free list head (recycled nodes)
+    /// Free list head (recycled nodes).
     free_head: NodeIdx,
 
-    /// Timing wheel: each slot is (head, tail) linked list indices
+    /// Timing wheel slot heads.
     wheel_head: Vec<NodeIdx>,
+    /// Timing wheel slot tails.
     wheel_tail: Vec<NodeIdx>,
-
-    /// Bitmap tracking non-empty slots (1 bit per slot)
+    /// Bitmap tracking non-empty slots (1 bit per slot).
     slot_bitmap: [u64; BITMAP_SIZE],
-
-    /// Current wheel position
+    /// Current wheel position.
     current_slot: usize,
-
-    /// Sequence number for FIFO ordering
+    /// Next sequence number for FIFO ordering.
     next_seq: u32,
 
+    /// Total events processed (for statistics).
     pub events_processed: u32,
+    /// Total events scheduled (for statistics).
     pub events_scheduled: u32,
-
+    /// Cached next event time.
     next_time_cache: u32,
 
+    /// Batches processed (meta_events feature).
     #[cfg(feature = "meta_events")]
     pub batches_processed: u32,
+    /// Maximum batch size seen (meta_events feature).
     #[cfg(feature = "meta_events")]
     pub max_batch_size: u32,
 }

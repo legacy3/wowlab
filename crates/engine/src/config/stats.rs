@@ -1,7 +1,13 @@
+//! Player stats and resource configuration.
+
 use serde::Deserialize;
 
-/// Player primary and secondary stats
+/// Player primary and secondary stats.
+///
+/// Stats are loaded from configuration and then [`finalize`](Stats::finalize) should be called
+/// to pre-compute derived values for efficient hot-path access.
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct Stats {
     // Primary
     pub intellect: f32,
@@ -16,13 +22,9 @@ pub struct Stats {
     pub versatility_rating: f32,
 
     // Derived (calculated from ratings)
-    #[serde(default)]
     pub crit_pct: f32,
-    #[serde(default)]
     pub haste_pct: f32,
-    #[serde(default)]
     pub mastery_pct: f32,
-    #[serde(default)]
     pub versatility_pct: f32,
 
     // Precomputed for hot path (call finalize() after loading)
@@ -39,7 +41,9 @@ pub struct Stats {
 }
 
 impl Stats {
-    /// Precompute derived values - call after loading/modifying stats
+    /// Pre-compute derived values for hot-path access.
+    ///
+    /// Call this after loading or modifying stats.
     #[inline]
     pub fn finalize(&mut self) {
         self.attack_power = self.agility + self.strength;
@@ -49,36 +53,46 @@ impl Stats {
         self.haste_mult = 1.0 + self.haste_pct * 0.01;
     }
 
-    /// Calculate spell power
+    /// Returns the effective spell power.
     #[inline]
+    #[must_use]
     pub fn spell_power(&self) -> f32 {
         self.intellect
     }
 
-    /// GCD modified by haste (minimum 0.75s)
+    /// Returns the GCD modified by haste (minimum 0.75s).
     #[inline]
+    #[must_use]
     pub fn gcd(&self, base_gcd: f32) -> f32 {
         (base_gcd / self.haste_mult).max(0.75)
     }
 
-    /// Cast time modified by haste
+    /// Returns the cast time modified by haste.
     #[inline]
+    #[must_use]
     pub fn cast_time(&self, base_cast_time: f32) -> f32 {
         base_cast_time / self.haste_mult
     }
 }
 
-/// Resource configuration
+/// Resource pool configuration (mana, focus, energy, etc.).
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct ResourceConfig {
+    /// Type of resource.
     pub resource_type: ResourceType,
+    /// Maximum resource value.
     pub max: f32,
+    /// Passive regeneration per second.
     pub regen_per_second: f32,
+    /// Initial resource value at combat start.
     pub initial: f32,
 }
 
+/// Class resource types.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)] // Variants for future class support
 pub enum ResourceType {
     #[default]
     Mana,

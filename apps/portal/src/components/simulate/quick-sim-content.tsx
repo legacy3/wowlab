@@ -8,7 +8,10 @@ import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useWorkerSimulation } from "@/hooks/rotations";
+import {
+  useDistributedSimulation,
+  extractSpellIdsFromScript,
+} from "@/hooks/rotations";
 import {
   CharacterEquipmentPanel,
   type CharacterStats,
@@ -57,27 +60,34 @@ function QuickSimContentInner() {
     selectedRotationId ?? undefined,
   );
 
-  const { run, isRunning, stats, error } = useWorkerSimulation();
+  const {
+    run,
+    isRunning,
+    result: distResult,
+    error,
+  } = useDistributedSimulation();
 
-  const result = stats
+  const result = distResult
     ? {
-        dps: stats.avgDps,
-        totalDamage: stats.totalDamage,
+        dps: distResult.meanDps,
+        totalDamage: distResult.meanDps * fightDuration,
         durationMs: fightDuration * 1000,
         events: [],
-        casts: stats.totalCasts,
+        casts: distResult.chunksCompleted,
       }
     : null;
 
   const handleRunSim = async () => {
-    if (!selectedRotation?.script) {
+    if (!selectedRotation?.id || !selectedRotation?.script) {
       return;
     }
+    const spellIds = extractSpellIdsFromScript(selectedRotation.script);
     await run({
-      code: selectedRotation.script,
-      name: selectedRotation.name,
-      iterations,
+      rotationId: selectedRotation.id,
+      spellIds,
       duration: fightDuration,
+      iterations,
+      name: selectedRotation.name,
     });
   };
 
@@ -97,10 +107,8 @@ function QuickSimContentInner() {
 
   const { character, professions, gear, talents } = parsedData;
 
-  // Character loaded: show full simulation setup
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      {/* Character + Equipment Card */}
       <CharacterEquipmentPanel
         character={character}
         gear={gear}
@@ -114,19 +122,14 @@ function QuickSimContentInner() {
         onClear={() => clearCharacter()}
       />
 
-      {/* Rotation Picker */}
       <RotationPicker />
 
-      {/* Fight Profile Picker */}
       <FightProfilePicker />
 
-      {/* Divider before Advanced */}
       <Separator />
 
-      {/* Advanced Settings */}
       <AdvancedSettings />
 
-      {/* Run Button */}
       <Button
         size="lg"
         onClick={handleRunSim}
@@ -147,17 +150,14 @@ function QuickSimContentInner() {
         )}
       </Button>
 
-      {/* No rotation warning */}
       {!selectedRotation && (
         <p className="text-sm text-center text-muted-foreground">
           Select a rotation to run the simulation
         </p>
       )}
 
-      {/* Results Display */}
       {result && <SimulationResultCard result={result} resultId={null} />}
 
-      {/* Error Display */}
       {error && <SimulationErrorCard error={error} />}
     </div>
   );

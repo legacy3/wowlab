@@ -3,25 +3,25 @@ name: CI
 on:
   push:
     branches: [main]
-    tags-ignore:
-      - "v*"
+    tags: ["v*"]
   pull_request:
     branches: [main]
 
+env:
+  RUST_WORKSPACE: crates
+
 jobs:
-  build-ts:
-    name: Build TypeScript
-    runs-on: ubuntu-latest
-
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-24.04
+    outputs:
+      ts: ${{ steps.filter.outputs.ts }}
+      rust: ${{ steps.filter.outputs.rust }}
+      release: ${{ startsWith(github.ref, 'refs/tags/v') }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Check for TS changes
-        uses: dorny/paths-filter@v3
-        id: changes
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
           filters: |
             ts:
@@ -30,74 +30,175 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'package.json'
               - 'tsconfig*.json'
-
-      - name: Install pnpm
-        if: steps.changes.outputs.ts == 'true'
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        if: steps.changes.outputs.ts == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        if: steps.changes.outputs.ts == 'true'
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages only
-        if: steps.changes.outputs.ts == 'true'
-        run: pnpm -r --filter './packages/**' build
-
-  build-rust:
-    name: Build Rust (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check for Rust changes
-        uses: dorny/paths-filter@v3
-        id: changes
-        with:
-          filters: |
             rust:
               - 'crates/**'
               - 'Cargo.toml'
               - 'Cargo.lock'
 
-      - name: Install Rust toolchain
-        if: steps.changes.outputs.rust == 'true'
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Cargo
-        if: steps.changes.outputs.rust == 'true'
-        uses: Swatinem/rust-cache@v2
+  build-ts:
+    name: Build TypeScript
+    needs: changes
+    if: needs.changes.outputs.ts == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
         with:
-          workspaces: |
-            crates/engine
-            crates/node
+          submodules: true
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --filter './packages/**' build
+
+  build-rust:
+    name: Build Rust (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.release == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ env.RUST_WORKSPACE }}
 
       - name: Install Linux dependencies
-        if: steps.changes.outputs.rust == 'true' && runner.os == 'Linux'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
 
-      - name: Build engine crate
-        if: steps.changes.outputs.rust == 'true'
-        run: cargo build --release --manifest-path crates/engine/Cargo.toml
+      - name: Build all crates
+        working-directory: crates
+        run: cargo build --release
 
-      - name: Build node crate
-        if: steps.changes.outputs.rust == 'true'
-        run: cargo build --release --manifest-path crates/node/Cargo.toml
+      - name: Run tests
+        working-directory: crates
+        run: cargo test
 
-      - name: Run engine tests
-        if: steps.changes.outputs.rust == 'true'
-        run: cargo test --manifest-path crates/engine/Cargo.toml
+      # Release artifacts (only on tags)
+      - name: Get version
+        if: needs.changes.outputs.release == 'true'
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Package binaries (Unix)
+        if: needs.changes.outputs.release == 'true' && runner.os != 'Windows'
+        run: |
+          for bin in node-gui node-headless; do
+            tar -czvf ${bin}-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
+          done
+
+      - name: Package binaries (Windows)
+        if: needs.changes.outputs.release == 'true' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          foreach ($bin in @("node-gui", "node-headless")) {
+            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.version.outputs.version }}-${{ matrix.target }}.zip"
+          }
+
+      - name: Upload artifacts
+        if: needs.changes.outputs.release == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.target }}
+          path: |
+            *.tar.gz
+            *.zip
+
+  release:
+    name: Create Release
+    needs: [changes, build-rust]
+    if: needs.changes.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: binaries-*
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+
+  docker:
+    name: Build Docker Image
+    needs: [changes, build-rust]
+    if: needs.changes.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download Linux amd64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-x86_64-unknown-linux-gnu
+          path: artifacts/amd64
+
+      - name: Download Linux arm64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-aarch64-unknown-linux-gnu
+          path: artifacts/arm64
+
+      - name: Extract binaries
+        run: |
+          mkdir -p linux/amd64 linux/arm64
+          tar -xzf artifacts/amd64/node-headless-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
+          tar -xzf artifacts/arm64/node-headless-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
+          chmod +x linux/*/node-headless
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./crates/node-headless/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/wowlab-node:latest
+            ghcr.io/${{ github.repository_owner }}/wowlab-node:${{ steps.version.outputs.version }}
+          platforms: linux/amd64,linux/arm64

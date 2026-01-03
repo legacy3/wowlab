@@ -46,7 +46,7 @@ export function PortalDbcBatchProvider({ children }: PropsWithChildren) {
     unknown
   > | null>(null);
 
-  if (!runtimeRef.current) {
+  if (runtimeRef.current == null) {
     const layer = createPortalDbcLayer(queryClient, dataProvider);
     runtimeRef.current = ManagedRuntime.make(layer);
   }

@@ -45,9 +45,11 @@ export interface NodeListItem {
   id: string;
   name: string;
   status: "online" | "offline" | "pending";
+  totalCores: number;
   maxParallel: number;
+  platform: string;
   lastSeenAt: string | null;
-  version: string | null;
+  version: string;
   isLocal: boolean;
   isOwner: boolean;
   accessType?: AccessType;
@@ -59,8 +61,10 @@ type UIAccessType = "owner" | "friends" | "guild" | "public";
 export interface PendingNodeInfo {
   id: string;
   proposedName: string;
+  totalCores: number;
   maxParallel: number;
-  version: string | null;
+  platform: string;
+  version: string;
 }
 
 interface NodeManagerContextValue {
@@ -128,9 +132,8 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
   // Local node state
   const [localNode, setLocalNode] = useState<LocalNode>(DEFAULT_LOCAL_NODE);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    setLocalNode(loadLocalNode());
+    requestAnimationFrame(() => setLocalNode(loadLocalNode()));
   }, []);
 
   // My nodes from Supabase
@@ -164,13 +167,17 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
   const { mutateAsync: createPermission } = useCreate<UserNodePermission>();
 
   // Build the local node list item
+  const browserCores =
+    typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 4) : 4;
   const localNodeItem: NodeListItem = {
     id: "local",
     name: "Browser",
     status: localNode.enabled ? "online" : "offline",
+    totalCores: browserCores,
     maxParallel: localNode.concurrency,
+    platform: "browser",
     lastSeenAt: new Date().toISOString(),
-    version: null,
+    version: "0.1.0",
     isLocal: true,
     isOwner: true,
   };
@@ -183,7 +190,9 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
         id: node.id,
         name: node.name,
         status: node.status as "online" | "offline" | "pending",
+        totalCores: node.totalCores,
         maxParallel: node.maxParallel,
+        platform: node.platform,
         lastSeenAt: node.lastSeenAt,
         version: node.version,
         isLocal: false,
@@ -197,7 +206,9 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
       id: node.id,
       name: node.name,
       status: node.status as "online" | "offline" | "pending",
+      totalCores: node.totalCores,
       maxParallel: node.maxParallel,
+      platform: node.platform ?? "unknown",
       lastSeenAt: node.lastSeenAt,
       version: node.version,
       isLocal: false,
@@ -241,7 +252,7 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
         // Find pending node by claim code
         const { data: pendingNode, error: findError } = await supabase
           .from("user_nodes")
-          .select("id, name, maxParallel, version")
+          .select("id, name, totalCores, maxParallel, platform, version")
           .eq("claimCode", code.toUpperCase())
           .eq("status", "pending")
           .is("userId", null)
@@ -256,7 +267,9 @@ export function NodeManagerProvider({ children }: { children: ReactNode }) {
           node: {
             id: pendingNode.id,
             proposedName: pendingNode.name,
+            totalCores: pendingNode.totalCores,
             maxParallel: pendingNode.maxParallel,
+            platform: pendingNode.platform,
             version: pendingNode.version,
           },
         };

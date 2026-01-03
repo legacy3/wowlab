@@ -1,4 +1,4 @@
-export { AccountTabs } from "./account-tabs";
+export { AccountOverview, AccountOverviewSkeleton } from "./account-overview";
 export * from "./settings-overview";
 export * from "./user-profile";
 export * from "./cards";

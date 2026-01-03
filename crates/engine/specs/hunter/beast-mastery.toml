@@ -1,0 +1,195 @@
+# Beast Mastery Hunter Spec Configuration
+#
+# Based on SimulationCraft APL (TWW Season 3)
+
+[spec]
+id = "hunter:beast-mastery"
+name = "Beast Mastery"
+class = "Hunter"
+default_rotation = "rotations/bm_st.rhai"
+
+[player]
+primary_stat = "agility"
+resource = "focus"
+resource_max = 100
+resource_regen = 10.0
+
+[player.stats]
+agility = 10000
+stamina = 8000
+crit_pct = 25.0
+haste_pct = 20.0
+mastery_pct = 30.0
+versatility_pct = 5.0
+
+[player.weapon]
+speed = 3.0
+damage = [500, 700]
+
+[pet]
+name = "Spirit Beast"
+attack_speed = 2.0
+attack_damage = [300, 400]
+
+[pet.stats]
+agility = 5000
+strength = 1000
+crit_pct = 20.0
+haste_pct = 15.0
+
+# ============================================================================
+# SPELLS
+# ============================================================================
+
+# Core rotational abilities
+
+[[spells]]
+id = 34026
+name = "Kill Command"
+cooldown = 7.5
+gcd = 1.5
+cost = 30
+
+[spells.damage]
+base = [1000, 1200]
+ap_coeff = 0.6
+
+[[spells]]
+id = 217200
+name = "Barbed Shot"
+cooldown = 12.0
+charges = 2
+gcd = 1.5
+
+[spells.damage]
+base = [500, 600]
+ap_coeff = 0.3
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 272790  # Frenzy buff
+
+[[spells]]
+id = 193455
+name = "Cobra Shot"
+gcd = 1.5
+cost = 35
+
+[spells.damage]
+base = [800, 900]
+ap_coeff = 0.4
+
+[[spells]]
+id = 2643
+name = "Multi-Shot"
+gcd = 1.5
+cost = 40
+
+[spells.damage]
+base = [400, 500]
+ap_coeff = 0.25
+
+# Execute
+
+[[spells]]
+id = 53351
+name = "Kill Shot"
+cooldown = 10.0
+gcd = 1.5
+cost = 10
+
+[spells.damage]
+base = [1200, 1500]
+ap_coeff = 0.8
+
+# Cooldowns
+
+[[spells]]
+id = 19574
+name = "Bestial Wrath"
+cooldown = 90.0
+gcd = 0.0  # Off-GCD
+cost = 0
+harmful = false
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 19574
+
+[[spells]]
+id = 359844
+name = "Call of the Wild"
+cooldown = 120.0
+gcd = 1.5
+cost = 0
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 359844
+
+# Talents
+
+[[spells]]
+id = 321530
+name = "Bloodshed"
+cooldown = 60.0
+gcd = 1.5
+cost = 0
+
+[spells.damage]
+base = [1500, 1800]
+ap_coeff = 0.8
+
+[[spells.effects]]
+type = "apply_aura"
+aura_id = 321530
+
+# ============================================================================
+# AURAS
+# ============================================================================
+
+# Buffs
+
+[[auras]]
+id = 19574
+name = "Bestial Wrath"
+duration = 15.0
+damage_mod = 25.0
+
+[[auras]]
+id = 359844
+name = "Call of the Wild"
+duration = 20.0
+damage_mod = 10.0
+
+[[auras]]
+id = 272790
+name = "Frenzy"
+duration = 8.0
+max_stacks = 3
+tick_interval = 2.0
+
+[auras.periodic_damage]
+amount = 0
+ap_coeff = 0.05
+
+# DoTs
+
+[[auras]]
+id = 321530
+name = "Bloodshed"
+duration = 18.0
+tick_interval = 2.0
+
+[auras.periodic_damage]
+amount = 300
+ap_coeff = 0.2
+
+# ============================================================================
+# TARGET
+# ============================================================================
+
+[target]
+level_diff = 3
+max_health = 10000000
+armor = 0

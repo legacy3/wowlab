@@ -23,7 +23,6 @@ import {
   PHASE_LABELS,
   type SimulationJob,
 } from "@/atoms/computing";
-import { cancelSimulation } from "@/hooks/rotations";
 import {
   JOB_STATUS_COLORS,
   JOB_STATUS_ICONS,
@@ -66,10 +65,7 @@ function JobCard({
             variant="ghost"
             size="icon"
             className="h-7 w-7 shrink-0 -mr-1"
-            onClick={() => {
-              cancelSimulation(job.id);
-              cancelJob(job.id);
-            }}
+            onClick={() => cancelJob(job.id)}
           >
             <X className="h-4 w-4" />
           </Button>

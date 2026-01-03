@@ -237,9 +237,11 @@ export type Database = {
           lastSeenAt: string | null;
           maxParallel: number;
           name: string;
+          platform: string;
           status: string;
+          totalCores: number;
           userId: string | null;
-          version: string | null;
+          version: string;
         };
         Insert: {
           claimCode?: string | null;
@@ -248,9 +250,11 @@ export type Database = {
           lastSeenAt?: string | null;
           maxParallel?: number;
           name?: string;
+          platform?: string;
           status?: string;
+          totalCores?: number;
           userId?: string | null;
-          version?: string | null;
+          version?: string;
         };
         Update: {
           claimCode?: string | null;
@@ -259,9 +263,11 @@ export type Database = {
           lastSeenAt?: string | null;
           maxParallel?: number;
           name?: string;
+          platform?: string;
           status?: string;
+          totalCores?: number;
           userId?: string | null;
-          version?: string | null;
+          version?: string;
         };
         Relationships: [];
       };

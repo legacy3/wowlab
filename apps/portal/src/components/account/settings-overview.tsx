@@ -46,21 +46,21 @@ function SettingsOverviewInner() {
   );
 }
 
-function SettingsOverviewSkeleton() {
+export function SettingsOverviewSkeleton() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="md:col-span-2">
         <CardHeader className="space-y-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-96" />
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-64" />
         </CardHeader>
         <div className="space-y-4 p-6">
           <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
             <Skeleton className="h-10 w-full" />
           </div>
           <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-16" />
             <Skeleton className="h-10 w-full" />
           </div>
         </div>
@@ -68,20 +68,23 @@ function SettingsOverviewSkeleton() {
 
       <Card className="md:col-span-2">
         <CardHeader className="space-y-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-96" />
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-4 w-48" />
         </CardHeader>
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 p-6">
           <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 flex-1" />
-              <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-4 w-24" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-2 flex-1" />
+              <Skeleton className="h-5 w-14" />
             </div>
           </div>
           <div className="space-y-2">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-4 w-20" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-2 flex-1" />
+              <Skeleton className="h-5 w-14" />
+            </div>
           </div>
         </div>
       </Card>

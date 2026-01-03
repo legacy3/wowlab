@@ -7,7 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useRotation,
   useRotationMutations,
-  useWorkerSimulation,
+  useDistributedSimulation,
+  extractSpellIdsFromScript,
 } from "@/hooks/rotations";
 import type {
   UserIdentity,
@@ -19,9 +20,11 @@ import { MetadataSetup, type MetadataSubmitValues } from "./metadata-setup";
 import { EditorView } from "./editor-view";
 import type { SettingsValues } from "./settings-panel";
 
-const DEFAULT_SCRIPT = `const cobraShot = yield* tryCast(rotation, playerId, SpellIds.COBRA_SHOT, targetId);
-if (cobraShot.cast && cobraShot.consumedGCD) {
-  return;
+const DEFAULT_SCRIPT = `// Rhai rotation script
+// Use try_cast(spell_id) to attempt casting a spell
+
+if try_cast(COBRA_SHOT) {
+    return;
 }
 `;
 
@@ -78,18 +81,9 @@ function RotationEditorInner({
   const { createRotation, updateRotation, deleteRotation, isMutating } =
     useRotationMutations();
 
-  // Worker simulation hook
-  const { run: runWorkerSimulation, isRunning: isTesting } =
-    useWorkerSimulation({
-      onComplete: (stats) => {
-        toast.success(
-          `Simulation complete: ${stats.completedSims} iterations, ${stats.totalCasts} total casts`,
-        );
-      },
-      onError: (error) => {
-        toast.error(`Simulation failed: ${error.message}`);
-      },
-    });
+  // Distributed simulation hook
+  const { run: runDistributedSim, isRunning: isTesting } =
+    useDistributedSimulation();
 
   const isEditMode = !!rotationId;
   const isForkMode = !!forkSourceId && !rotationId;
@@ -139,21 +133,46 @@ function RotationEditorInner({
     }
   };
 
-  // Handle test button - runs simulation via worker pool
+  // Handle test button - runs distributed simulation
   const handleTest = useCallback(async () => {
-    const rotationName =
-      draft?.name ?? existingRotation?.name ?? "Untitled Rotation";
+    // Must have a saved rotation to run distributed simulation
+    // (the node fetches rotation script by ID from the database)
+    if (!rotationId) {
+      toast.error("Please save the rotation first before running a simulation");
+      return;
+    }
+
+    const rotationName = existingRotation?.name ?? "Untitled Rotation";
 
     try {
-      await runWorkerSimulation({
-        code: script,
+      // Save any pending script changes first
+      if (localScript && localScript !== existingRotation?.script) {
+        await updateRotation(rotationId, { script: localScript });
+      }
+
+      const spellIds = extractSpellIdsFromScript(script);
+      await runDistributedSim({
+        rotationId,
+        spellIds,
+        duration: 300,
+        iterations: 10000,
         name: rotationName,
-        // iterations/workerCount use defaults from hook (100k/12)
       });
-    } catch {
-      // Error already handled by onError callback
+      toast.success("Simulation job submitted");
+    } catch (error) {
+      toast.error(
+        `Simulation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
-  }, [script, draft?.name, existingRotation?.name, runWorkerSimulation]);
+  }, [
+    script,
+    rotationId,
+    localScript,
+    existingRotation?.script,
+    existingRotation?.name,
+    updateRotation,
+    runDistributedSim,
+  ]);
 
   // Handle settings update from zen editor (only for existing rotations)
   const handleSettingsChange = async (values: SettingsValues) => {

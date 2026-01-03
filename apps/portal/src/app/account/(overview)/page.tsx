@@ -1,32 +1,8 @@
 "use client";
 
 import { useGetIdentity, useList } from "@refinedev/core";
-import { AccountTabs } from "@/components/account/account-tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader } from "@/components/ui/card";
+import { AccountOverview, AccountOverviewSkeleton } from "@/components/account";
 import type { UserIdentity, Rotation } from "@/lib/supabase/types";
-
-function AccountSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <Skeleton className="h-6 w-48 mt-2" />
-          <Skeleton className="h-4 w-32" />
-        </CardHeader>
-      </Card>
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function AccountPage() {
   const { data: identity, isLoading: identityLoading } =
@@ -45,10 +21,10 @@ export default function AccountPage() {
   });
 
   if (identityLoading || rotationsLoading || !identity) {
-    return <AccountSkeleton />;
+    return <AccountOverviewSkeleton />;
   }
 
   const rotations = rotationsResult?.data ?? [];
 
-  return <AccountTabs user={identity} rotations={rotations} />;
+  return <AccountOverview user={identity} rotations={rotations} />;
 }

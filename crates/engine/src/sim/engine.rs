@@ -80,10 +80,13 @@ POTENTIAL FUTURE OPTIMIZATIONS (rough priority order):
 //! - Smart wake-up scheduling to avoid busy-looping
 //! - Cache-friendly access patterns
 
+use rayon::prelude::*;
+
 use crate::config::SimConfig;
+use crate::rotation::PredictiveRotation;
 use crate::util::FastRng;
 
-use super::{BatchAccumulator, BatchResult, SimEvent, SimResult, SimState};
+use super::{BatchAccumulator, BatchResult, SimEvent, SimReport, SimResult, SimState, SpellBreakdown};
 
 /// Convert f32 seconds to u32 milliseconds
 #[inline(always)]
@@ -93,11 +96,17 @@ fn to_ms(seconds: f32) -> u32 {
 
 /// Dispatch a single event - extracted for reuse in meta_events mode
 #[inline(always)]
-fn dispatch_event(state: &mut SimState, config: &SimConfig, rng: &mut FastRng, event: SimEvent) {
+fn dispatch_event(
+    state: &mut SimState,
+    config: &SimConfig,
+    rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
+    event: SimEvent,
+) {
     match event {
         SimEvent::GcdReady => {
             state.player.gcd_event_pending = false;
-            handle_gcd_ready_inline(state, config, rng);
+            handle_gcd_ready_inline(state, config, rng, rotation);
         }
 
         SimEvent::CooldownReady { spell_idx } => {
@@ -131,7 +140,12 @@ fn dispatch_event(state: &mut SimState, config: &SimConfig, rng: &mut FastRng, e
 
 /// Run a single simulation - the core hot loop.
 #[inline]
-pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) -> SimResult {
+pub fn run_simulation(
+    state: &mut SimState,
+    config: &SimConfig,
+    rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
+) -> SimResult {
     state.reset();
 
     // Schedule initial GCD ready (start of combat)
@@ -186,7 +200,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
             }
 
             batch_count += 1;
-            dispatch_event(state, config, rng, timed_event.event);
+            dispatch_event(state, config, rng, rotation, timed_event.event);
         }
 
         // Final batch
@@ -209,7 +223,7 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
             }
 
             state.time = event_time;
-            dispatch_event(state, config, rng, timed_event.event);
+            dispatch_event(state, config, rng, rotation, timed_event.event);
         }
     }
 
@@ -226,11 +240,68 @@ pub fn run_simulation(state: &mut SimState, config: &SimConfig, rng: &mut FastRn
     }
 }
 
-/// Run a batch of simulations with state reuse.
+/// Run a single simulation with detailed action logging.
+/// Returns a SimReport with full action log and spell breakdown.
+pub fn run_simulation_with_report(
+    state: &mut SimState,
+    config: &SimConfig,
+    rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
+    spec_name: &str,
+) -> SimReport {
+    // Enable action logging
+    state.enable_action_log(config);
+    state.action_log.log_combat_start();
+
+    // Run the simulation
+    let result = run_simulation(state, config, rng, rotation);
+
+    // Log combat end
+    state.action_log.log_combat_end(state.duration, result.damage, result.dps);
+
+    // Build spell breakdown
+    let total_damage: f32 = state.results.spell_damage.iter().sum();
+    let duration_secs = config.duration;
+    let spell_breakdown: Vec<SpellBreakdown> = state
+        .results
+        .spell_damage
+        .iter()
+        .zip(state.results.spell_casts.iter())
+        .enumerate()
+        .filter(|(_, (dmg, _))| **dmg > 0.0)
+        .map(|(idx, (damage, casts))| {
+            let spell_id = config.spells.get(idx).map(|s| s.id).unwrap_or(0);
+            SpellBreakdown {
+                spell_id,
+                total_damage: *damage,
+                casts: *casts as u64,
+                dps_contribution: *damage / duration_secs,
+                pct_of_total: if total_damage > 0.0 {
+                    *damage / total_damage * 100.0
+                } else {
+                    0.0
+                },
+            }
+        })
+        .collect();
+
+    SimReport {
+        spec: spec_name.to_string(),
+        duration: config.duration,
+        dps: result.dps,
+        total_damage: result.damage,
+        total_casts: result.casts,
+        actions: std::mem::take(&mut state.action_log.entries),
+        spell_breakdown,
+    }
+}
+
+/// Run a batch of simulations with state reuse (single-threaded).
 pub fn run_batch(
     state: &mut SimState,
     config: &SimConfig,
     rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
     iterations: u32,
     base_seed: u64,
 ) -> BatchResult {
@@ -238,13 +309,58 @@ pub fn run_batch(
 
     for i in 0..iterations {
         rng.reseed(base_seed.wrapping_add(i as u64));
-        let result = run_simulation(state, config, rng);
+        rotation.reset();
+        let result = run_simulation(state, config, rng, rotation);
         accum.add(
             &result,
             &state.results.spell_damage,
             &state.results.spell_casts,
         );
     }
+
+    let spell_ids: Vec<u32> = config.spells.iter().map(|s| s.id).collect();
+    accum.finalize(config.duration, &spell_ids)
+}
+
+/// Run a batch of simulations in parallel using rayon.
+///
+/// Each thread gets its own SimState, RNG, and rotation instance.
+/// Results are accumulated per-thread then merged at the end.
+pub fn run_batch_parallel(
+    config: &SimConfig,
+    rotation_script: &str,
+    iterations: u32,
+    base_seed: u64,
+) -> BatchResult {
+    let accum = (0..iterations)
+        .into_par_iter()
+        .fold(
+            || {
+                // Thread-local init - called once per thread chunk
+                let state = SimState::new(config);
+                let rotation = PredictiveRotation::compile(rotation_script, config)
+                    .expect("rotation already validated");
+                let rng = FastRng::new(0);
+                let accum = BatchAccumulator::new();
+                (state, rotation, rng, accum)
+            },
+            |(mut state, mut rotation, mut rng, mut accum), i| {
+                rng.reseed(base_seed.wrapping_add(i as u64));
+                rotation.reset();
+                let result = run_simulation(&mut state, config, &mut rng, &mut rotation);
+                accum.add(
+                    &result,
+                    &state.results.spell_damage,
+                    &state.results.spell_casts,
+                );
+                (state, rotation, rng, accum)
+            },
+        )
+        .map(|(_, _, _, accum)| accum)
+        .reduce(BatchAccumulator::new, |mut a, b| {
+            a.merge(&b);
+            a
+        });
 
     let spell_ids: Vec<u32> = config.spells.iter().map(|s| s.id).collect();
     accum.finalize(config.duration, &spell_ids)
@@ -272,6 +388,7 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
 
         let runtime = &state.aura_runtime[idx];
         let tick_interval = runtime.tick_interval_ms;
+        let aura_id = config.auras.get(idx).map(|a| a.id).unwrap_or(0);
 
         let mut tick_time = next_tick;
         while tick_time <= current_time {
@@ -288,6 +405,11 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
                     * state.player.stats.vers_mult;
                 state.results.total_damage += damage;
                 state.target.health -= damage;
+
+                // Log DoT tick if action logging is enabled
+                if state.action_log.enabled {
+                    state.action_log.log_dot_tick(tick_time, idx, aura_id, damage);
+                }
             }
 
             tick_time += tick_interval;
@@ -331,9 +453,13 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
 }
 
 /// Handle GCD ready - the most frequent event, heavily optimized.
-/// Inlines rotation evaluation and spell casting for maximum performance.
 #[inline(always)]
-fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut FastRng) {
+fn handle_gcd_ready_inline(
+    state: &mut SimState,
+    config: &SimConfig,
+    rng: &mut FastRng,
+    rotation: &mut PredictiveRotation,
+) {
     let current_time = state.time;
 
     // Process pending periodic effects (lazy evaluation)
@@ -347,51 +473,15 @@ fn handle_gcd_ready_inline(state: &mut SimState, config: &SimConfig, rng: &mut F
         state.player.last_resource_update = current_time;
     }
 
-    // Inline rotation evaluation - find first castable spell (uses spell_runtime)
-    let spell_idx = find_castable_spell_inline(state, current_time);
+    // Call rotation to get next spell (predictive condition gating)
+    let spell_idx = rotation.get_next_action(state);
 
     if let Some(idx) = spell_idx {
-        // Cast the spell inline (uses spell_runtime)
-        cast_spell_inline(state, config, idx, rng, current_time);
+        cast_spell_inline(state, config, idx as usize, rng, current_time);
     } else {
-        // No spell available - compute next wake-up time (uses spell_runtime)
+        // No spell available - compute next wake-up time
         schedule_next_opportunity_inline(state, current_time);
     }
-}
-
-/// Find the first castable spell - inlined rotation evaluation.
-#[inline(always)]
-fn find_castable_spell_inline(state: &SimState, current_time: u32) -> Option<usize> {
-    let player = &state.player;
-    let gcd_ready = player.gcd_ready <= current_time;
-    let current_resource = player.resources.current;
-
-    // Fast path: if GCD not ready, nothing is castable
-    if !gcd_ready {
-        return None;
-    }
-
-    // Iterate through spells in ROTATION PRIORITY order
-    for &idx in &state.rotation_priority {
-        let spell_rt = &state.spell_runtime[idx];
-        let spell_state = &player.spell_states[idx];
-
-        // Check cooldown/charges - most common rejection
-        let cd_ready = spell_state.charges > 0 || spell_state.cooldown_ready <= current_time;
-        if !cd_ready {
-            continue;
-        }
-
-        // Check resources (use pre-computed cost_amount)
-        if current_resource < spell_rt.cost_amount {
-            continue;
-        }
-
-        // Spell is castable
-        return Some(idx);
-    }
-
-    None
 }
 
 /// Cast a spell - inlined for performance.
@@ -461,17 +551,31 @@ fn cast_spell_inline(
     }
 
     // Calculate and record damage inline
-    calculate_damage_inline(state, config, spell_idx, rng);
+    let damage = calculate_damage_inline(state, config, spell_idx, rng);
+
+    // Log the cast if action logging is enabled
+    if state.action_log.enabled {
+        let spell_id = config.spells[spell_idx].id;
+        state.action_log.log_cast(
+            current_time,
+            spell_idx,
+            spell_id,
+            damage,
+            state.player.resources.current,
+            hasted_gcd_ms,
+        );
+    }
 }
 
 /// Calculate damage for a spell - inlined with all multipliers.
+/// Returns the damage dealt for logging purposes.
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
     config: &SimConfig,
     spell_idx: usize,
     _rng: &mut FastRng,
-) {
+) -> f32 {
     let spell_rt = &state.spell_runtime[spell_idx];
     let stats = &state.player.stats;
 
@@ -492,6 +596,8 @@ fn calculate_damage_inline(
 
     // Process spell effects (apply auras, trigger spells, etc.)
     process_spell_effects_inline(state, config, spell_idx);
+
+    total_damage
 }
 
 /// Process spell effects - apply auras, trigger spells, etc.
@@ -504,8 +610,7 @@ fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_
     let energize_amount = state.spell_runtime[spell_idx].energize_amount;
 
     // Apply pre-resolved auras directly (no event queue round-trip)
-    for i in 0..apply_aura_count as usize {
-        let aura_idx = apply_aura_indices[i];
+    for &aura_idx in apply_aura_indices.iter().take(apply_aura_count as usize) {
         apply_aura_inline(state, config, aura_idx);
     }
 
@@ -536,6 +641,14 @@ fn apply_aura_inline(state: &mut SimState, config: &SimConfig, aura_idx: u8) {
         .auras
         .apply_slot(idx, runtime.duration_ms, aura_def.max_stacks, state.time);
 
+    // Get stack count after application for logging
+    let stacks = state.player.auras.stacks_slot(idx);
+
+    // Log aura application if action logging is enabled
+    if state.action_log.enabled {
+        state.action_log.log_aura_apply(state.time, idx, aura_def.id, stacks, is_refresh);
+    }
+
     // Start DoT tracking if periodic (only on NEW application, not refresh)
     // Refresh extends duration but existing tick schedule continues
     if runtime.tick_interval_ms > 0 && !is_refresh {
@@ -561,8 +674,8 @@ fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
     let regen_rate = player.resources.regen_per_second;
     let current_resource = player.resources.current;
 
-    // Use rotation priority order
-    for &idx in &state.rotation_priority {
+    // Check all spells for next available time
+    for idx in 0..state.spell_runtime.len() {
         let spell_rt = &state.spell_runtime[idx];
         let spell_state = &player.spell_states[idx];
 
@@ -610,18 +723,16 @@ fn handle_cooldown_ready_inline(state: &mut SimState, spell_idx: u8) {
 
     // Only charge-based spells trigger this event (use pre-computed max_charges)
     let max_charges = spell_rt.max_charges;
-    if max_charges > 0 {
-        if spell_state.charges < max_charges {
-            spell_state.charges += 1;
+    if max_charges > 0 && spell_state.charges < max_charges {
+        spell_state.charges += 1;
 
-            // Schedule next charge if not at max
-            if spell_state.charges < max_charges {
-                spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
-                state.events.push(
-                    spell_state.cooldown_ready,
-                    SimEvent::CooldownReady { spell_idx },
-                );
-            }
+        // Schedule next charge if not at max
+        if spell_state.charges < max_charges {
+            spell_state.cooldown_ready = state.time + spell_state.cooldown_ms;
+            state.events.push(
+                spell_state.cooldown_ready,
+                SimEvent::CooldownReady { spell_idx },
+            );
         }
     }
 

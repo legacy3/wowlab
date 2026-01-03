@@ -1,75 +1,118 @@
+//! WoW combat simulation engine.
+//!
+//! This crate provides a high-performance simulation engine for World of Warcraft
+//! combat mechanics. Key features:
+//!
+//! - **Rhai-based rotation scripting** with compile-time AST analysis
+//! - **Predictive condition gating** to skip conditions that can't be true yet
+//! - **O(1) event queue** using a timing wheel with bitmap acceleration
+//! - **Zero allocations** in the hot loop (all state pre-allocated)
+//!
+//! # Usage
+//!
+//! ```rust,ignore
+//! use engine::{Simulator, config::SimConfig};
+//!
+//! let config = SimConfig { /* ... */ };
+//! let rotation = r#"
+//!     if kill_command.ready() { cast("kill_command") }
+//!     if cobra_shot.ready() { cast("cobra_shot") }
+//! "#;
+//!
+//! let mut sim = Simulator::new(config, rotation)?;
+//! let result = sim.run_batch(10_000, 0);
+//! println!("Mean DPS: {}", result.mean_dps);
+//! ```
+//!
+//! # Modules
+//!
+//! - [`cli`] - CLI configuration and spec loading (TOML)
+//! - [`config`] - Configuration types (spells, auras, stats)
+//! - [`rotation`] - Rotation scripting and compilation
+//! - [`sim`] - Simulation engine and state management
+//! - [`util`] - Utility types (RNG)
+
+pub mod cli;
 pub mod config;
 pub mod rotation;
 pub mod sim;
-pub mod systems;
 pub mod util;
 
-use wasm_bindgen::prelude::*;
-
 use config::SimConfig;
+use rotation::{PredictiveRotation, RotationError};
 use sim::{run_batch, run_simulation, SimState};
 use util::FastRng;
 
-/// WASM-exposed simulator
-#[wasm_bindgen]
+/// High-level simulator with integrated rotation scripting.
+///
+/// Wraps the low-level simulation components into a convenient API.
 pub struct Simulator {
     config: SimConfig,
     state: SimState,
     rng: FastRng,
+    rotation: PredictiveRotation,
 }
 
-#[wasm_bindgen]
 impl Simulator {
-    /// Create a new simulator from JSON config
-    #[wasm_bindgen(constructor)]
-    pub fn new(config_json: &str) -> Result<Simulator, JsValue> {
-        let mut config: SimConfig = serde_json::from_str(config_json)
-            .map_err(|e| JsValue::from_str(&format!("Failed to parse config: {}", e)))?;
-
-        // Precompute derived stats
-        config.finalize();
-
+    /// Creates a new simulator from configuration and rotation script.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the rotation script fails to compile.
+    pub fn new(config: SimConfig, rotation_script: &str) -> Result<Self, EngineError> {
         let state = SimState::new(&config);
+        let rotation = PredictiveRotation::compile(rotation_script, &config)?;
 
         Ok(Simulator {
             config,
             state,
             rng: FastRng::new(1),
+            rotation,
         })
     }
 
-    /// Run a single simulation
-    pub fn run(&mut self, seed: u64) -> JsValue {
+    /// Runs a single simulation with the given RNG seed.
+    pub fn run(&mut self, seed: u64) -> sim::SimResult {
         self.rng.reseed(seed);
-        let result = run_simulation(&mut self.state, &self.config, &mut self.rng);
-        serde_wasm_bindgen::to_value(&result).unwrap()
+        self.rotation.reset();
+        run_simulation(&mut self.state, &self.config, &mut self.rng, &mut self.rotation)
     }
 
-    /// Run a batch of simulations
-    pub fn run_batch(&mut self, iterations: u32, base_seed: u64) -> JsValue {
-        let result = run_batch(
+    /// Runs a batch of simulations for statistical analysis.
+    pub fn run_batch(&mut self, iterations: u32, base_seed: u64) -> sim::BatchResult {
+        run_batch(
             &mut self.state,
             &self.config,
             &mut self.rng,
+            &mut self.rotation,
             iterations,
             base_seed,
-        );
-        serde_wasm_bindgen::to_value(&result).unwrap()
+        )
+    }
+
+    /// Returns current rotation evaluation statistics.
+    #[must_use]
+    pub fn rotation_stats(&self) -> rotation::RotationStats {
+        self.rotation.stats()
     }
 }
 
-/// Error types for the engine
+/// Top-level errors from the simulation engine.
 #[derive(Debug, thiserror::Error)]
 pub enum EngineError {
+    /// Invalid configuration.
     #[error("Configuration error: {0}")]
     Config(String),
 
-    #[error("Simulation error: {0}")]
-    Simulation(String),
+    /// Rotation script compilation failed.
+    #[error("Rotation error: {0}")]
+    Rotation(#[from] RotationError),
 
+    /// Referenced spell not found in configuration.
     #[error("Spell not found: {0}")]
     SpellNotFound(u32),
 
+    /// Referenced aura not found in configuration.
     #[error("Aura not found: {0}")]
     AuraNotFound(u32),
 }

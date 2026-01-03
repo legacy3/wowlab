@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    "engine",
+    "node",
+    "node-gui",
+    "node-headless",
+]
+
+[workspace.package]
+version = "0.2.1"
+edition = "2021"
+authors = ["wowlab"]
+repository = "https://github.com/legacy3/wowlab"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# For profiling (no LTO for symbol resolution)
+[profile.bench-profile]
+inherits = "release"
+debug = "line-tables-only"
+lto = false
+codegen-units = 16

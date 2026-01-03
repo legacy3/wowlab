@@ -107,23 +107,6 @@ function CardGridSkeleton({
   );
 }
 
-function ProfileHeaderSkeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-6 rounded-lg border bg-card p-6",
-        className,
-      )}
-    >
-      <Skeleton className="h-24 w-24 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-    </div>
-  );
-}
-
 export {
   Skeleton,
   TabsSkeleton,
@@ -131,5 +114,4 @@ export {
   TreeSkeleton,
   SearchBarSkeleton,
   CardGridSkeleton,
-  ProfileHeaderSkeleton,
 };

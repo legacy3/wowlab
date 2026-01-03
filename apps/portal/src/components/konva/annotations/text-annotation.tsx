@@ -61,17 +61,17 @@ export const TextAnnotation = memo(function TextAnnotation({
   );
   const prevIsEditingRef = useRef(isEditing);
 
-  // Reset content and focus when editing starts (from any source)
+  // Reset content and focus when editing starts
   useEffect(() => {
     const wasEditing = prevIsEditingRef.current;
     prevIsEditingRef.current = isEditing;
 
     if (isEditing && !wasEditing) {
-      // Just started editing - reset to current content
-      setEditingContent(content);
-      setEditingHeight(Math.max(fontSize, height ?? fontSize));
-      // Focus after state update
+      // Just started editing - schedule state reset and focus together
       requestAnimationFrame(() => {
+        setEditingContent(content);
+        setEditingHeight(Math.max(fontSize, height ?? fontSize));
+
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto";
           textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -153,7 +153,7 @@ export const TextAnnotation = memo(function TextAnnotation({
       // Stop propagation to prevent canvas keyboard handlers
       e.stopPropagation();
     },
-    [editingContent, content, onChange, onStopEdit],
+    [editingContent, editingHeight, content, textHeight, onChange, onStopEdit],
   );
 
   const displayContent = isEditing ? editingContent : content;

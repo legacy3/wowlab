@@ -1,23 +1,35 @@
-/// Fast xorshift64 RNG - deterministic, no allocations
+//! Fast pseudo-random number generator.
+
+/// Fast xorshift64 RNG - deterministic and allocation-free.
+///
+/// Uses xorshift64 for high-quality pseudo-random numbers suitable
+/// for simulation work. Deterministic seeding enables reproducible runs.
 #[derive(Debug, Clone)]
 pub struct FastRng {
     state: u64,
 }
 
-// Precomputed: 1.0 / (u32::MAX as f32 + 1.0) for fast f32 conversion
-const F32_SCALE: f32 = 1.0 / 4294967296.0; // 1 / 2^32
+/// Reciprocal of 2^32 for fast f32 conversion.
+#[allow(clippy::unreadable_literal)]
+const F32_SCALE: f32 = 1.0 / 4_294_967_296.0;
 
 impl FastRng {
+    /// Creates a new RNG with the given seed.
+    ///
+    /// A seed of 0 is treated as 1 (xorshift requires non-zero state).
+    #[must_use]
     pub fn new(seed: u64) -> Self {
         Self {
             state: if seed == 0 { 1 } else { seed },
         }
     }
 
+    /// Reseeds the RNG with a new seed.
     pub fn reseed(&mut self, seed: u64) {
         self.state = if seed == 0 { 1 } else { seed };
     }
 
+    /// Returns the next 64-bit random value.
     #[inline(always)]
     pub fn next_u64(&mut self) -> u64 {
         let mut x = self.state;
@@ -28,25 +40,29 @@ impl FastRng {
         x
     }
 
-    /// Returns random f32 in [0, 1) using upper 32 bits
+    /// Returns a random f32 in `[0, 1)`.
+    ///
+    /// Uses upper 32 bits for better randomness quality.
     #[inline(always)]
+    #[allow(clippy::cast_precision_loss)]
     pub fn next_f32(&mut self) -> f32 {
-        // Use upper 32 bits (better randomness) and multiply by reciprocal
         ((self.next_u64() >> 32) as u32 as f32) * F32_SCALE
     }
 
+    /// Returns a random f64 in `[0, 1)`.
     #[inline]
+    #[allow(clippy::cast_precision_loss)]
     pub fn next_f64(&mut self) -> f64 {
         (self.next_u64() as f64) / (u64::MAX as f64)
     }
 
-    /// Returns true with probability `chance` (0.0 to 1.0)
+    /// Returns true with probability `chance` (0.0 to 1.0).
     #[inline(always)]
     pub fn roll(&mut self, chance: f32) -> bool {
         self.next_f32() < chance
     }
 
-    /// Returns a random value in [min, max)
+    /// Returns a random value in `[min, max)`.
     #[inline(always)]
     pub fn range_f32(&mut self, min: f32, max: f32) -> f32 {
         min + self.next_f32() * (max - min)

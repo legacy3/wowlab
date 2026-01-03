@@ -5,8 +5,8 @@ export {
   useRotationHistoryVersion,
 } from "./use-rotation-history";
 export { useMyRotations, useCommunityRotations } from "./use-rotations-list";
+export { useDistributedSimulation } from "./use-distributed-simulation";
 export {
-  useWorkerSimulation,
-  extractSpellIds,
-  cancelSimulation,
-} from "./use-worker-simulation";
+  useRustSimConfig,
+  extractSpellIdsFromScript,
+} from "./use-rust-sim-config";

@@ -1,4 +1,5 @@
 use crate::supabase::{ApiClient, ApiError};
+use crate::utils::cpu;
 use uuid::Uuid;
 
 pub fn default_name() -> String {
@@ -8,16 +9,33 @@ pub fn default_name() -> String {
         .unwrap_or_else(|| "WoW Lab Node".to_string())
 }
 
-pub fn default_cores() -> i32 {
-    i32::try_from(num_cpus::get()).unwrap_or(4)
+/// Total logical cores available (slider max)
+pub fn total_cores() -> i32 {
+    i32::try_from(cpu::get_total_cores()).unwrap_or(4)
+}
+
+/// Optimal cores to enable by default (P-cores on ARM, physical on x86)
+pub fn default_enabled_cores() -> i32 {
+    i32::try_from(cpu::get_optimal_concurrency()).unwrap_or(4)
+}
+
+/// Platform identifier (os-arch), e.g. "macos-aarch64", "linux-x86_64"
+pub fn platform() -> String {
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
+    format!("{os}-{arch}")
 }
 
 pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> {
     let hostname = default_name();
-    let cores = default_cores();
+    let total = total_cores();
+    let enabled = default_enabled_cores();
+    let platform = platform();
     let version = env!("CARGO_PKG_VERSION");
 
-    let response = client.register_node(&hostname, cores, version).await?;
+    let response = client
+        .register_node(&hostname, total, enabled, &platform, version)
+        .await?;
     tracing::info!(
         "Registered node {} with code {}",
         response.id,

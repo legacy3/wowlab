@@ -13,16 +13,27 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { FlaskButton } from "@/components/ui/flask-loader";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useNodeManager, type PendingNodeInfo } from "@/providers";
-import { Check, ArrowLeft, Cpu } from "lucide-react";
+import { Check, ArrowLeft, Cpu, HelpCircle, Download } from "lucide-react";
+import { Link } from "@/components/ui/link";
+import { env } from "@/lib/env";
 
 type Step = "code" | "configure";
 
 interface NodeClaimFormProps {
   initialToken?: string;
+  onDownload?: () => void;
 }
 
-export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
+export function NodeClaimForm({
+  initialToken,
+  onDownload,
+}: NodeClaimFormProps) {
   const router = useRouter();
   const { validateClaimCode, claimNode } = useNodeManager();
 
@@ -162,6 +173,31 @@ export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
           <Check className="mr-2 h-4 w-4" />
           Verify Code
         </FlaskButton>
+
+        {onDownload && (
+          <>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Don&apos;t have the app?
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full cursor-pointer"
+              onClick={onDownload}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Node
+            </Button>
+          </>
+        )}
       </form>
     );
   }
@@ -182,12 +218,16 @@ export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
         </Button>
         <span>·</span>
         <span className="font-mono">{code}</span>
-        {pendingNode?.version && (
-          <>
-            <span>·</span>
-            <span>v{pendingNode.version}</span>
-          </>
-        )}
+        <span>·</span>
+        <span>{pendingNode?.platform}</span>
+        <span>·</span>
+        <Link
+          href={`${env.GITHUB_URL}/releases/tag/v${pendingNode?.version}`}
+          external
+          className="text-muted-foreground hover:text-foreground"
+        >
+          v{pendingNode?.version}
+        </Link>
       </div>
 
       <div className="space-y-2">
@@ -208,19 +248,30 @@ export function NodeClaimForm({ initialToken }: NodeClaimFormProps) {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2">
+          <Label className="flex items-center gap-1.5">
             <Cpu className="h-4 w-4" />
             Workers
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[240px]">
+                <p>
+                  Default is optimized for your CPU: P-cores only on Apple
+                  Silicon, physical cores on x86 (no hyperthreading).
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </Label>
           <span className="text-sm font-medium">
-            {workers} / {pendingNode?.maxParallel ?? workers}
+            {workers} / {pendingNode?.totalCores ?? workers}
           </span>
         </div>
         <Slider
           value={[workers]}
           onValueChange={([value]) => setWorkers(value)}
           min={1}
-          max={pendingNode?.maxParallel ?? workers}
+          max={pendingNode?.totalCores ?? workers}
           step={1}
         />
         <p className="text-sm text-muted-foreground">

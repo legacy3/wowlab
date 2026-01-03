@@ -8,6 +8,7 @@
 
 use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
 
+use super::results::ActionLog;
 use super::EventQueue;
 
 /// Pre-computed aura data (timing + periodic damage)
@@ -68,9 +69,6 @@ pub struct SimState {
     /// Pre-computed spell runtime data (hot - accessed every cast)
     pub spell_runtime: Vec<SpellRuntime>,
 
-    /// Rotation priority (spell indices in priority order)
-    pub rotation_priority: Vec<usize>,
-
     /// Pre-computed aura runtime data (timing + periodic damage)
     pub aura_runtime: Vec<AuraRuntime>,
 
@@ -91,6 +89,9 @@ pub struct SimState {
 
     /// Pet state (cold - rarely accessed)
     pub pet: Option<UnitState>,
+
+    /// Action log for detailed reporting (cold - only used in report mode)
+    pub action_log: ActionLog,
 }
 
 /// Runtime state for a unit - cache-friendly layout.
@@ -260,7 +261,15 @@ pub struct AuraTracker {
     active_dots: u32,
 }
 
+impl Default for AuraTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AuraTracker {
+    /// Creates a new empty aura tracker.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             slots: [None; MAX_AURA_SLOTS],
@@ -367,6 +376,16 @@ impl AuraTracker {
             }
         } else {
             0
+        }
+    }
+
+    /// Get aura instance by slot index - O(1)
+    #[inline(always)]
+    pub fn get_slot(&self, slot: usize) -> Option<AuraInstance> {
+        if slot < MAX_AURA_SLOTS {
+            self.slots[slot]
+        } else {
+            None
         }
     }
 }
@@ -561,21 +580,6 @@ impl SimState {
             })
             .collect();
 
-        // Build rotation priority (map spell_id to spell index)
-        let rotation_priority: Vec<usize> = config
-            .rotation
-            .iter()
-            .filter_map(|action| {
-                match action {
-                    crate::rotation::RotationAction::Cast { spell_id } => {
-                        config.spells.iter().position(|s| s.id == *spell_id)
-                    }
-                    // Other action types don't map to spells
-                    _ => None,
-                }
-            })
-            .collect();
-
         let mut state = Self {
             time: 0,
             duration: duration_ms,
@@ -586,7 +590,6 @@ impl SimState {
             events: EventQueue::with_capacity(256),
             results: SimResultsAccum::new(spell_count),
             spell_runtime,
-            rotation_priority,
             aura_runtime,
             weapon_speed_ms,
             pet_attack_speed_ms,
@@ -594,6 +597,7 @@ impl SimState {
             next_pet_attack: 0,
             target: TargetState::new(config.target.max_health),
             pet: None,
+            action_log: ActionLog::new(),
         };
 
         // Set initial charges and pre-compute ms values from spell defs
@@ -619,5 +623,14 @@ impl SimState {
         self.target.reset();
         self.events.clear();
         self.results.reset();
+        // Clear action log entries but keep enabled state and names
+        self.action_log.entries.clear();
+    }
+
+    /// Enable action logging with spell/aura names.
+    pub fn enable_action_log(&mut self, config: &SimConfig) {
+        let spell_names: Vec<String> = config.spells.iter().map(|s| s.name.clone()).collect();
+        let aura_names: Vec<String> = config.auras.iter().map(|a| a.name.clone()).collect();
+        self.action_log = ActionLog::with_names(spell_names, aura_names);
     }
 }

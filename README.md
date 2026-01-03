@@ -2,14 +2,15 @@
 
 [![CI](https://github.com/legacy3/wowlab/actions/workflows/ci.yml/badge.svg)](https://github.com/legacy3/wowlab/actions/workflows/ci.yml)
 
-A TypeScript monorepo for World of Warcraft spell rotation simulation and analysis, built with Effect-TS and functional programming principles.
+A monorepo for World of Warcraft spell rotation simulation and analysis.
 
 ## Overview
 
-WoW Lab provides a pure functional, event-driven simulation engine for analyzing WoW spell rotations and damage output. The architecture uses Effect-TS for composable services, Immutable.js for immutable state management, and a priority queue-based event scheduler for accurate combat simulation.
+WoW Lab provides a high-performance, event-driven simulation engine for analyzing WoW spell rotations and damage output. The simulation core is written in Rust (`crates/engine/`) for speed and correctness, with WASM bindings for browser use. The web frontend and tooling use Effect-TS for composable services and Immutable.js for state management.
 
 **Tech Stack:**
 
+- **Simulation Engine:** Rust (with WASM support for browser)
 - **Runtime:** Effect-TS (functional effect system)
 - **State:** Immutable.js Records
 - **Frontend:** Next.js 16, shadcn/ui, TailwindCSS v4, Jotai
@@ -23,15 +24,19 @@ WoW Lab provides a pure functional, event-driven simulation engine for analyzing
 - `apps/portal` - Next.js 16 web application (Supabase, shadcn/ui)
 - `apps/cli` - Effect-TS CLI tools for game data management
 - `apps/mcp-server` - MCP server for querying WoW spell and item data (`@wowlab/mcp-server` on npm)
-- `apps/standalone` - Standalone Node.js app for testing simulation
+
+### Crates (Rust)
+
+- `crates/engine` - Rust simulation engine with CLI and WASM targets
+- `crates/node` - GUI for distributed simulation nodes (egui)
+- `crates/node-core` - Core logic for simulation nodes
+- `crates/node-headless` - Headless simulation node for servers
 
 ### Packages
 
 - `packages/wowlab-core` - Core entities, schemas, branded types (Immutable.js Records)
 - `packages/wowlab-services` - Effect services (state, spell, lifecycle)
-- `packages/wowlab-rotation` - Rotation context & actions API
-- `packages/wowlab-runtime` - Effect Layer composition and runtime
-- `packages/wowlab-specs` - Class and spec definitions
+- `packages/wowlab-parsers` - SimC parser, spell description parser, talent encoding
 
 ## First-Time Setup
 
@@ -68,15 +73,18 @@ If someone forgets and runs `npm install`, blow away `node_modules` and rerun `p
 
 ## Architecture
 
-**Event-driven simulation:** Priority queue (binary heap) → Dequeue → Execute → Mutate GameState → Publish snapshot → Schedule events
+**Rust simulation engine (`crates/engine/`):**
 
-**Core packages:**
+- High-performance event-driven core with timing wheel scheduler
+- Rhai-based rotation scripting with predictive condition gating
+- Parallel simulation support via rayon
+- WASM build for browser integration
+
+**TypeScript packages:**
 
 - `@wowlab/core` - Immutable.js entities, schemas, branded types
-- `@wowlab/services` - Effect services (state, spell, lifecycle, simulation)
-- `@wowlab/rotation` - Rotation context & actions API
-- `@wowlab/runtime` - Effect Layer composition
-- `@wowlab/specs` - Class and spec definitions
+- `@wowlab/services` - Effect services (state, spell, lifecycle)
+- `@wowlab/parsers` - SimC parser, spell description parser, talent encoding
 
 ## MCP Server
 

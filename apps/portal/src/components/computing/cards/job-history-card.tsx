@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { X, RotateCcw } from "lucide-react";
+import { X } from "lucide-react";
 import { CopyButton } from "@/components/ui/copy-button";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 
@@ -31,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { jobsAtom, cancelJobAtom, type SimulationJob } from "@/atoms/computing";
-import { useWorkerSimulation } from "@/hooks/rotations";
 import { formatInt, formatCompact, formatDurationMs } from "@/lib/format";
 import {
   JOB_STATUS_COLORS,
@@ -44,7 +43,6 @@ type JobStatus = SimulationJob["status"];
 export function JobHistoryCard() {
   const jobs = useAtomValue(jobsAtom);
   const cancelJob = useSetAtom(cancelJobAtom);
-  const { run: runSimulation, isRunning } = useWorkerSimulation();
 
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -177,37 +175,6 @@ export function JobHistoryCard() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Cancel</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                aria-label="Rerun simulation"
-                                disabled={
-                                  !job.codeBase64 ||
-                                  job.status === "running" ||
-                                  job.status === "queued" ||
-                                  isRunning
-                                }
-                                onClick={(e) => {
-                                  e.stopPropagation();
-
-                                  if (!job.codeBase64) {
-                                    return;
-                                  }
-
-                                  runSimulation({
-                                    code: atob(job.codeBase64),
-                                    name: job.name.replace(" (Worker Sim)", ""),
-                                  });
-                                }}
-                              >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Rerun</TooltipContent>
                           </Tooltip>
                         </div>
                       </TableCell>

@@ -1,0 +1,16 @@
+[package]
+name = "node-headless"
+version = "0.2.4"
+edition = "2021"
+description = "Headless WoW Lab simulation node for servers"
+
+[[bin]]
+name = "node-headless"
+path = "src/main.rs"
+
+[dependencies]
+node = { path = "../node" }
+tokio = { version = "1", features = ["full", "signal"] }
+tracing = "0.1"
+ctrlc = "3.4"
+clap = { version = "4.5", features = ["derive"] }
