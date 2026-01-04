@@ -89,6 +89,7 @@ pub struct SchoolModifiers {
     pub frost: f32,
     pub shadow: f32,
     pub arcane: f32,
+    pub chaos: f32,
 }
 
 impl SchoolModifiers {
@@ -105,6 +106,7 @@ impl SchoolModifiers {
             DamageSchool::Frost => self.frost,
             DamageSchool::Shadow => self.shadow,
             DamageSchool::Arcane => self.arcane,
+            DamageSchool::Chaos => self.chaos,
         }
     }
 
@@ -117,6 +119,7 @@ impl SchoolModifiers {
             DamageSchool::Frost => self.frost = value,
             DamageSchool::Shadow => self.shadow = value,
             DamageSchool::Arcane => self.arcane = value,
+            DamageSchool::Chaos => self.chaos = value,
         }
     }
 }

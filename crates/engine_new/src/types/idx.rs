@@ -18,6 +18,10 @@ pub struct UnitIdx(pub u8);
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct TargetIdx(pub u8);
 
+/// Unique index for tracking snapshotted state (for delayed damage)
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct SnapshotIdx(pub u32);
+
 impl UnitIdx {
     pub const PLAYER: UnitIdx = UnitIdx(0);
 }

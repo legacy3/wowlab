@@ -25,6 +25,22 @@ impl RatingType {
     pub const COMBAT_COUNT: usize = 4; // crit, haste, mastery, vers
 }
 
+/// Derived combat stats (percentage-based, not ratings)
+/// These are the final computed values after rating conversion
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum DerivedStat {
+    /// Crit chance percentage
+    CritChance,
+    /// Haste multiplier (1.3 = 30% haste)
+    Haste,
+    /// Versatility damage bonus
+    VersatilityDamage,
+    /// Versatility damage reduction
+    VersatilityDr,
+    /// Mastery effect value
+    Mastery,
+}
+
 /// How mastery affects damage for a spec
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MasteryEffect {

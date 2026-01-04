@@ -81,7 +81,3 @@ impl ActionState {
         }
     }
 }
-
-/// Unique ID for tracking snapshots (for delayed damage)
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct SnapshotId(pub u32);

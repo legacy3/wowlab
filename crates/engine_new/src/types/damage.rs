@@ -9,6 +9,8 @@ pub enum DamageSchool {
     Frost = 4,
     Shadow = 5,
     Arcane = 6,
+    Chaos = 7,
+    // TODO Add all schools
 }
 
 impl DamageSchool {
