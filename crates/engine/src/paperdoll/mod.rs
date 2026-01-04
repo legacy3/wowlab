@@ -66,4 +66,4 @@ pub use pet::{OwnerStats, PetCoefficients, PetStats};
 pub use rating::{apply_dr, rating_to_percent, RatingTable};
 
 // Re-export all type enums
-pub use types::{Attribute, CacheKey, ClassId, PetType, RaceId, RatingType, SpecId};
+pub use types::{Attribute, CacheKey, ClassId, MasteryEffect, PetType, RaceId, RatingType, SpecId};

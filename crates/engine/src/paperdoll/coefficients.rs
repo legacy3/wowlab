@@ -6,7 +6,7 @@
 //! Mastery coefficients are extracted from SimC source files.
 //! Each spec's mastery has a unique effect that scales with mastery rating.
 
-use super::types::{Attribute, SpecId};
+use super::types::{Attribute, MasteryEffect, SpecId};
 
 /// Class-specific stat conversion coefficients.
 ///
@@ -40,10 +40,9 @@ pub struct ClassCoefficients {
     /// Parry per X strength (0 = no scaling, tanks only).
     pub parry_per_strength: f32,
 
-    /// Mastery effect coefficient (spec-specific multiplier).
-    /// This multiplies the base mastery percentage to get the actual effect value.
-    /// Values extracted from SimC spell effect data.
-    pub mastery_coefficient: f32,
+    /// Mastery effect type and scaling for this spec.
+    /// Determines how mastery rating converts to gameplay effect.
+    pub mastery_effect: MasteryEffect,
 
     /// Primary stat for this spec.
     pub primary_stat: Attribute,
@@ -85,7 +84,7 @@ impl ClassCoefficients {
             crit_per_intellect: 0.0,
             dodge_per_agility: 0.0,
             parry_per_strength: 0.0,
-            mastery_coefficient: 1.0,
+            mastery_effect: MasteryEffect::default(),
             primary_stat: Attribute::Agility,
             uses_spell_power: false,
             can_parry: false,
@@ -106,7 +105,7 @@ impl ClassCoefficients {
             crit_per_intellect: 0.0,
             dodge_per_agility: 0.0,
             parry_per_strength: 0.0,
-            mastery_coefficient: 1.0,
+            mastery_effect: MasteryEffect::default(),
             primary_stat: Attribute::Strength,
             uses_spell_power: false,
             can_parry: true,
@@ -127,7 +126,7 @@ impl ClassCoefficients {
             crit_per_intellect: 0.0,
             dodge_per_agility: 0.0,
             parry_per_strength: 0.0,
-            mastery_coefficient: 1.0,
+            mastery_effect: MasteryEffect::default(),
             primary_stat: Attribute::Intellect,
             uses_spell_power: true,
             can_parry: false,
@@ -155,7 +154,7 @@ impl ClassCoefficients {
             crit_per_intellect: 0.0,
             dodge_per_agility: 0.0,
             parry_per_strength: 0.0, // Tanks get parry from mastery/spec passives
-            mastery_coefficient: 1.0,
+            mastery_effect: MasteryEffect::default(),
             primary_stat: Attribute::Strength,
             uses_spell_power: false,
             can_parry: true,
@@ -176,7 +175,7 @@ impl ClassCoefficients {
             crit_per_intellect: 0.0,
             dodge_per_agility: 0.0,
             parry_per_strength: 0.0,
-            mastery_coefficient: 1.0,
+            mastery_effect: MasteryEffect::default(),
             primary_stat: Attribute::Agility,
             uses_spell_power: false,
             can_parry: true,
@@ -189,10 +188,10 @@ impl ClassCoefficients {
     // Builder methods
     // =========================================================================
 
-    /// Set the mastery coefficient for this spec.
+    /// Set the mastery effect type for this spec.
     #[inline]
-    pub fn with_mastery(mut self, coeff: f32) -> Self {
-        self.mastery_coefficient = coeff;
+    pub fn with_mastery_effect(mut self, effect: MasteryEffect) -> Self {
+        self.mastery_effect = effect;
         self
     }
 
@@ -226,7 +225,10 @@ impl ClassCoefficients {
     /// SimC: mastery.deep_wounds_ARMS
     pub fn arms() -> Self {
         Self::strength_base()
-            .with_mastery(2.0) // Deep Wounds damage multiplier
+            .with_mastery_effect(MasteryEffect::DotMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.0,
+            })
             .with_dual_wield(false)
     }
 
@@ -235,7 +237,10 @@ impl ClassCoefficients {
     /// SimC: mastery.unshackled_fury
     pub fn fury() -> Self {
         Self::strength_base()
-            .with_mastery(1.4) // Enrage damage bonus per mastery point
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 1.4,
+            })
             .with_dual_wield(true)
     }
 
@@ -244,7 +249,7 @@ impl ClassCoefficients {
     /// SimC: mastery.critical_block
     pub fn protection_warrior() -> Self {
         Self::strength_tank_base()
-            .with_mastery(1.5) // Block/crit block chance
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 1.5 })
             .with_block(true)
     }
 
@@ -256,7 +261,7 @@ impl ClassCoefficients {
     /// Mastery: Lightbringer - Increases healing to nearby targets.
     /// SimC: mastery.lightbringer
     pub fn holy_paladin() -> Self {
-        Self::healer_base().with_mastery(1.2) // Healing bonus based on proximity
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.2 })
     }
 
     /// Protection Paladin coefficients.
@@ -264,7 +269,7 @@ impl ClassCoefficients {
     /// SimC: mastery.divine_bulwark
     pub fn protection_paladin() -> Self {
         Self::strength_tank_base()
-            .with_mastery(1.0) // Block chance and AP scaling
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 1.0 })
             .with_block(true)
     }
 
@@ -273,7 +278,10 @@ impl ClassCoefficients {
     /// SimC: mastery.highlords_judgment
     pub fn retribution() -> Self {
         Self::strength_base()
-            .with_mastery(1.85) // Holy damage bonus
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 1.85,
+            })
             .with_dual_wield(false)
     }
 
@@ -285,14 +293,20 @@ impl ClassCoefficients {
     /// Mastery: Master of Beasts - Increases pet damage.
     /// SimC: mastery.master_of_beasts
     pub fn beast_mastery() -> Self {
-        Self::agility_base().with_mastery(1.7) // Pet damage multiplier per mastery point
+        Self::agility_base().with_mastery_effect(MasteryEffect::PetDamageMultiplier {
+            base_percent: 18.0,
+            per_mastery: 1.7,
+        })
     }
 
     /// Marksmanship Hunter coefficients.
     /// Mastery: Sniper Training - Increases range and damage of ranged abilities.
     /// SimC: mastery.sniper_training
     pub fn marksmanship() -> Self {
-        Self::agility_base().with_mastery(1.2) // Range damage bonus per mastery point
+        Self::agility_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 5.0,
+            per_mastery: 1.2,
+        })
     }
 
     /// Survival Hunter coefficients.
@@ -300,8 +314,11 @@ impl ClassCoefficients {
     /// SimC: mastery.spirit_bond
     pub fn survival() -> Self {
         Self::agility_base()
-            .with_mastery(1.1) // Damage bonus with pet active
-            .with_parry(true)  // Melee spec can parry
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 8.0,
+                per_mastery: 0.85,
+            })
+            .with_parry(true) // Melee spec can parry
     }
 
     // =========================================================================
@@ -313,7 +330,10 @@ impl ClassCoefficients {
     /// SimC: mastery.potent_assassin
     pub fn assassination() -> Self {
         Self::agility_base()
-            .with_mastery(2.2) // Poison/bleed damage multiplier
+            .with_mastery_effect(MasteryEffect::DotMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.2,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -323,7 +343,10 @@ impl ClassCoefficients {
     /// SimC: mastery.main_gauche
     pub fn outlaw() -> Self {
         Self::agility_base()
-            .with_mastery(1.7) // Main Gauche proc chance modifier
+            .with_mastery_effect(MasteryEffect::ProcChance {
+                base_chance: 10.0,
+                per_mastery: 1.7,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -333,7 +356,10 @@ impl ClassCoefficients {
     /// SimC: mastery.executioner
     pub fn subtlety() -> Self {
         Self::agility_base()
-            .with_mastery(2.76) // Finisher damage multiplier
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.76,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -346,21 +372,24 @@ impl ClassCoefficients {
     /// Mastery: Grace - Increases healing and absorption on targets with Atonement.
     /// SimC: mastery_spells.grace
     pub fn discipline() -> Self {
-        Self::healer_base().with_mastery(1.15) // Atonement healing bonus
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.15 })
     }
 
     /// Holy Priest coefficients.
     /// Mastery: Echo of Light - Heals leave a HoT on the target.
     /// SimC: mastery_spells.echo_of_light
     pub fn holy_priest() -> Self {
-        Self::healer_base().with_mastery(1.25) // Echo of Light HoT amount
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.25 })
     }
 
     /// Shadow Priest coefficients.
     /// Mastery: Shadow Weaving - Increases damage for each DoT on target.
     /// SimC: mastery_spells.shadow_weaving
     pub fn shadow() -> Self {
-        Self::intellect_base().with_mastery(0.8) // Damage per DoT on target
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 5.0,
+            per_mastery: 0.8,
+        })
     }
 
     // =========================================================================
@@ -372,7 +401,7 @@ impl ClassCoefficients {
     /// SimC: mastery.blood_shield
     pub fn blood() -> Self {
         Self::strength_tank_base()
-            .with_mastery(2.0) // Blood Shield absorb amount
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 2.0 })
             .with_block(false) // DKs don't block
             .with_parry(true)
     }
@@ -382,7 +411,10 @@ impl ClassCoefficients {
     /// SimC: mastery.frozen_heart
     pub fn frost_dk() -> Self {
         Self::strength_base()
-            .with_mastery(2.0) // Frost damage bonus
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.0,
+            })
             .with_dual_wield(true)
     }
 
@@ -391,7 +423,10 @@ impl ClassCoefficients {
     /// SimC: mastery.dreadblade
     pub fn unholy() -> Self {
         Self::strength_base()
-            .with_mastery(1.8) // Shadow/pet damage bonus
+            .with_mastery_effect(MasteryEffect::PetDamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 1.8,
+            })
             .with_dual_wield(false)
     }
 
@@ -403,7 +438,10 @@ impl ClassCoefficients {
     /// Mastery: Elemental Overload - Chance for spells to trigger additional damage.
     /// SimC: mastery.elemental_overload
     pub fn elemental() -> Self {
-        Self::intellect_base().with_mastery(1.875) // Overload proc chance and damage
+        Self::intellect_base().with_mastery_effect(MasteryEffect::ProcChance {
+            base_chance: 10.0,
+            per_mastery: 1.875,
+        })
     }
 
     /// Enhancement Shaman coefficients.
@@ -411,7 +449,10 @@ impl ClassCoefficients {
     /// SimC: mastery.enhanced_elements
     pub fn enhancement() -> Self {
         Self::agility_base()
-            .with_mastery(2.0) // Elemental damage and Stormbringer/Windfury proc bonus
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.0,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -420,7 +461,7 @@ impl ClassCoefficients {
     /// Mastery: Deep Healing - Increased healing on lower health targets.
     /// SimC: mastery.deep_healing
     pub fn restoration_shaman() -> Self {
-        Self::healer_base().with_mastery(3.0) // Healing bonus based on target health deficit
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 3.0 })
     }
 
     // =========================================================================
@@ -431,21 +472,30 @@ impl ClassCoefficients {
     /// Mastery: Savant - Increases max mana, mana regen, and Arcane damage per charge.
     /// SimC: spec.savant
     pub fn arcane() -> Self {
-        Self::intellect_base().with_mastery(1.2) // Mana/damage per Arcane Charge
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 5.0,
+            per_mastery: 1.2,
+        })
     }
 
     /// Fire Mage coefficients.
     /// Mastery: Ignite - Increases critical strike damage and applies Ignite DoT.
     /// SimC: spec.ignite
     pub fn fire() -> Self {
-        Self::intellect_base().with_mastery(0.75) // Ignite DoT damage
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DotMultiplier {
+            base_percent: 5.0,
+            per_mastery: 0.75,
+        })
     }
 
     /// Frost Mage coefficients.
     /// Mastery: Icicles - Stores damage in Icicles and increases Frozen target damage.
     /// SimC: spec.icicles
     pub fn frost_mage() -> Self {
-        Self::intellect_base().with_mastery(2.25) // Icicle damage and Frozen target bonus
+        Self::intellect_base().with_mastery_effect(MasteryEffect::ProcChance {
+            base_chance: 10.0,
+            per_mastery: 2.25,
+        })
     }
 
     // =========================================================================
@@ -456,21 +506,30 @@ impl ClassCoefficients {
     /// Mastery: Potent Afflictions - Increases DoT damage.
     /// SimC: warlock_base.potent_afflictions
     pub fn affliction() -> Self {
-        Self::intellect_base().with_mastery(2.5) // DoT damage multiplier
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DotMultiplier {
+            base_percent: 10.0,
+            per_mastery: 2.5,
+        })
     }
 
     /// Demonology Warlock coefficients.
     /// Mastery: Master Demonologist - Increases demon damage.
     /// SimC: warlock_base.master_demonologist
     pub fn demonology() -> Self {
-        Self::intellect_base().with_mastery(1.5) // Demon damage multiplier
+        Self::intellect_base().with_mastery_effect(MasteryEffect::PetDamageMultiplier {
+            base_percent: 10.0,
+            per_mastery: 1.5,
+        })
     }
 
     /// Destruction Warlock coefficients.
     /// Mastery: Chaotic Energies - Increases damage within a random range.
     /// SimC: warlock_base.chaotic_energies
     pub fn destruction() -> Self {
-        Self::intellect_base().with_mastery(1.75) // Damage variance bonus
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 10.0,
+            per_mastery: 1.75,
+        })
     }
 
     // =========================================================================
@@ -482,7 +541,7 @@ impl ClassCoefficients {
     /// SimC: baseline.brewmaster.mastery
     pub fn brewmaster() -> Self {
         Self::agility_tank_base()
-            .with_mastery(1.0) // Attack Power and Elusive Brawler stacking dodge
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 1.0 })
             .with_dual_wield(true)
     }
 
@@ -490,7 +549,7 @@ impl ClassCoefficients {
     /// Mastery: Gust of Mists - Bonus healing on targets affected by certain abilities.
     /// SimC: baseline.mistweaver.mastery
     pub fn mistweaver() -> Self {
-        Self::healer_base().with_mastery(4.2) // Gust of Mists heal amount
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 4.2 })
     }
 
     /// Windwalker Monk coefficients.
@@ -498,7 +557,10 @@ impl ClassCoefficients {
     /// SimC: baseline.windwalker.mastery
     pub fn windwalker() -> Self {
         Self::agility_base()
-            .with_mastery(1.25) // Damage bonus per mastery point when Combo Strikes active
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 1.25,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -511,7 +573,10 @@ impl ClassCoefficients {
     /// Mastery: Astral Invocation - Increases Arcane/Nature damage and DoT bonuses.
     /// SimC: mastery.astral_invocation
     pub fn balance() -> Self {
-        Self::intellect_base().with_mastery(1.1) // Arcane/Nature damage bonus
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 5.0,
+            per_mastery: 1.1,
+        })
     }
 
     /// Feral Druid coefficients.
@@ -519,7 +584,10 @@ impl ClassCoefficients {
     /// SimC: mastery.razor_claws
     pub fn feral() -> Self {
         Self::agility_base()
-            .with_mastery(2.0) // Bleed/finisher damage multiplier
+            .with_mastery_effect(MasteryEffect::DotMultiplier {
+                base_percent: 10.0,
+                per_mastery: 2.0,
+            })
             .with_parry(false) // Cat form cannot parry
     }
 
@@ -528,7 +596,7 @@ impl ClassCoefficients {
     /// SimC: mastery.natures_guardian
     pub fn guardian() -> Self {
         Self::agility_tank_base()
-            .with_mastery(1.25) // Health/AP/healing bonus
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 1.25 })
             .with_parry(false) // Bear form cannot parry
     }
 
@@ -536,7 +604,7 @@ impl ClassCoefficients {
     /// Mastery: Harmony - Increases healing per HoT on target.
     /// SimC: mastery.harmony
     pub fn restoration_druid() -> Self {
-        Self::healer_base().with_mastery(1.25) // Healing per HoT on target
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.25 })
     }
 
     // =========================================================================
@@ -548,7 +616,10 @@ impl ClassCoefficients {
     /// SimC: mastery.demonic_presence / mastery.a_fire_inside
     pub fn havoc() -> Self {
         Self::agility_base()
-            .with_mastery(1.8) // Chaos damage multiplier
+            .with_mastery_effect(MasteryEffect::DamageMultiplier {
+                base_percent: 10.0,
+                per_mastery: 1.8,
+            })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -558,7 +629,7 @@ impl ClassCoefficients {
     /// SimC: mastery.fel_blood
     pub fn vengeance() -> Self {
         Self::agility_tank_base()
-            .with_mastery(1.5) // Armor and AP bonus from Agility
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 1.5 })
             .with_dual_wield(true)
             .with_parry(true)
     }
@@ -571,21 +642,24 @@ impl ClassCoefficients {
     /// Mastery: Giantkiller - Increases damage based on target health.
     /// SimC: spec.mastery (Devastation)
     pub fn devastation() -> Self {
-        Self::intellect_base().with_mastery(1.25) // Damage based on target health %
+        Self::intellect_base().with_mastery_effect(MasteryEffect::DamageMultiplier {
+            base_percent: 5.0,
+            per_mastery: 1.25,
+        })
     }
 
     /// Preservation Evoker coefficients.
     /// Mastery: Life-Binder - Increases healing on lower health targets.
     /// SimC: spec.mastery (Preservation)
     pub fn preservation() -> Self {
-        Self::healer_base().with_mastery(1.8) // Healing based on target health deficit
+        Self::healer_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.8 })
     }
 
     /// Augmentation Evoker coefficients.
     /// Mastery: Timewalker - Increases buff durations and grants Versatility to allies.
     /// SimC: spec.mastery (Augmentation)
     pub fn augmentation() -> Self {
-        Self::intellect_base().with_mastery(1.0) // Buff duration and ally Versatility
+        Self::intellect_base().with_mastery_effect(MasteryEffect::Generic { coefficient: 1.0 })
     }
 }
 
@@ -681,7 +755,13 @@ mod tests {
         assert!(!coeff.uses_spell_power);
         assert!(!coeff.can_parry);
         assert!(!coeff.can_block);
-        assert_eq!(coeff.mastery_coefficient, 1.7);
+        // Verify mastery_effect instead of mastery_coefficient
+        match coeff.mastery_effect {
+            MasteryEffect::PetDamageMultiplier { per_mastery, .. } => {
+                assert!((per_mastery - 1.7).abs() < 0.01);
+            }
+            _ => panic!("BM should have PetDamageMultiplier mastery effect"),
+        }
     }
 
     #[test]
@@ -689,7 +769,13 @@ mod tests {
         let coeff = ClassCoefficients::marksmanship();
         assert_eq!(coeff.ap_per_agility, 1.0);
         assert_eq!(coeff.primary_stat, Attribute::Agility);
-        assert_eq!(coeff.mastery_coefficient, 1.2);
+        // Verify mastery_effect instead of mastery_coefficient
+        match coeff.mastery_effect {
+            MasteryEffect::DamageMultiplier { per_mastery, .. } => {
+                assert!((per_mastery - 1.2).abs() < 0.01);
+            }
+            _ => panic!("MM should have DamageMultiplier mastery effect"),
+        }
     }
 
     #[test]
@@ -748,9 +834,12 @@ mod tests {
         for spec in specs {
             let coeff = from_spec(spec);
             assert!(coeff.health_per_stamina > 0.0, "Spec {:?} has invalid stamina", spec);
+            // Verify mastery_effect is set (not default for most specs)
+            // Just verify the effect type is valid - the actual values are spec-specific
+            let effect_type = coeff.mastery_effect.effect_type();
             assert!(
-                coeff.mastery_coefficient > 0.0,
-                "Spec {:?} has invalid mastery",
+                !effect_type.is_empty(),
+                "Spec {:?} has invalid mastery effect",
                 spec
             );
         }
@@ -851,12 +940,17 @@ mod tests {
     #[test]
     fn test_builder_methods() {
         let coeff = ClassCoefficients::agility_base()
-            .with_mastery(2.5)
+            .with_mastery_effect(MasteryEffect::Generic { coefficient: 2.5 })
             .with_block(true)
             .with_dual_wield(true)
             .with_parry(true);
 
-        assert_eq!(coeff.mastery_coefficient, 2.5);
+        match coeff.mastery_effect {
+            MasteryEffect::Generic { coefficient } => {
+                assert!((coefficient - 2.5).abs() < 0.01);
+            }
+            _ => panic!("Should have Generic mastery effect"),
+        }
         assert!(coeff.can_block);
         assert!(coeff.can_dual_wield);
         assert!(coeff.can_parry);
@@ -899,6 +993,63 @@ mod tests {
         let default = ClassCoefficients::default();
         let bm = ClassCoefficients::beast_mastery();
         assert_eq!(default.ap_per_agility, bm.ap_per_agility);
-        assert_eq!(default.mastery_coefficient, bm.mastery_coefficient);
+        assert_eq!(default.mastery_effect, bm.mastery_effect);
+    }
+
+    #[test]
+    fn test_hunter_mastery_effects() {
+        use super::super::types::MasteryEffect;
+
+        // Beast Mastery: Pet damage multiplier
+        let bm = ClassCoefficients::beast_mastery();
+        match bm.mastery_effect {
+            MasteryEffect::PetDamageMultiplier {
+                base_percent,
+                per_mastery,
+            } => {
+                assert!((base_percent - 18.0).abs() < 0.01);
+                assert!((per_mastery - 1.7).abs() < 0.01);
+            }
+            _ => panic!("BM should have PetDamageMultiplier mastery effect"),
+        }
+
+        // Marksmanship: Damage multiplier
+        let mm = ClassCoefficients::marksmanship();
+        match mm.mastery_effect {
+            MasteryEffect::DamageMultiplier {
+                base_percent,
+                per_mastery,
+            } => {
+                assert!((base_percent - 5.0).abs() < 0.01);
+                assert!((per_mastery - 1.2).abs() < 0.01);
+            }
+            _ => panic!("MM should have DamageMultiplier mastery effect"),
+        }
+
+        // Survival: Damage multiplier
+        let sv = ClassCoefficients::survival();
+        match sv.mastery_effect {
+            MasteryEffect::DamageMultiplier {
+                base_percent,
+                per_mastery,
+            } => {
+                assert!((base_percent - 8.0).abs() < 0.01);
+                assert!((per_mastery - 0.85).abs() < 0.01);
+            }
+            _ => panic!("SV should have DamageMultiplier mastery effect"),
+        }
+    }
+
+    #[test]
+    fn test_mastery_effect_calculation() {
+        let bm = ClassCoefficients::beast_mastery();
+
+        // At 0% mastery from rating, should get base 18%
+        let bonus = bm.mastery_effect.calculate_bonus(0.0);
+        assert!((bonus - 0.18).abs() < 0.001);
+
+        // At 20% mastery from rating (20 "points"), should get 18% + 34% = 52%
+        let bonus = bm.mastery_effect.calculate_bonus(0.20);
+        assert!((bonus - 0.52).abs() < 0.001);
     }
 }

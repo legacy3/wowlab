@@ -185,6 +185,30 @@ impl Default for ActiveModifiers {
     }
 }
 
+impl ActiveModifiers {
+    /// Get mutable reference to flat attribute modifier
+    #[inline]
+    pub fn flat_mut(&mut self, attr: Attribute) -> &mut f32 {
+        match attr {
+            Attribute::Strength => &mut self.strength_flat,
+            Attribute::Agility => &mut self.agility_flat,
+            Attribute::Intellect => &mut self.intellect_flat,
+            Attribute::Stamina => &mut self.stamina_flat,
+        }
+    }
+
+    /// Get mutable reference to percent attribute modifier
+    #[inline]
+    pub fn pct_mut(&mut self, attr: Attribute) -> &mut f32 {
+        match attr {
+            Attribute::Strength => &mut self.strength_pct,
+            Attribute::Agility => &mut self.agility_pct,
+            Attribute::Intellect => &mut self.intellect_pct,
+            Attribute::Stamina => &mut self.stamina_pct,
+        }
+    }
+}
+
 // ============================================================================
 // StatCache
 // ============================================================================
@@ -636,7 +660,8 @@ impl Paperdoll {
             gear.ratings[RatingType::Mastery as usize] + mods.mastery_rating_flat,
         );
         let mastery_pct = mastery_from_rating + mods.mastery_pct / 100.0;
-        self.cache.mastery_value = mastery_pct * coeff.mastery_coefficient;
+        // Use the new mastery effect system for proper spec-specific calculations
+        self.cache.mastery_value = coeff.mastery_effect.calculate_bonus(mastery_pct);
 
         // === Versatility ===
         let vers_from_rating = self.rating_to_percent(
@@ -740,23 +765,11 @@ impl Paperdoll {
     fn modify_aura_effect(&mut self, effect: &AuraStatEffect, sign: f32) {
         match effect {
             AuraStatEffect::FlatAttribute { attr, amount } => {
-                let delta = amount * sign;
-                match attr {
-                    Attribute::Strength => self.modifiers.strength_flat += delta,
-                    Attribute::Agility => self.modifiers.agility_flat += delta,
-                    Attribute::Intellect => self.modifiers.intellect_flat += delta,
-                    Attribute::Stamina => self.modifiers.stamina_flat += delta,
-                }
+                *self.modifiers.flat_mut(*attr) += amount * sign;
                 self.invalidate(CacheKey::from(*attr));
             }
             AuraStatEffect::PercentAttribute { attr, percent } => {
-                let delta = percent * sign;
-                match attr {
-                    Attribute::Strength => self.modifiers.strength_pct += delta,
-                    Attribute::Agility => self.modifiers.agility_pct += delta,
-                    Attribute::Intellect => self.modifiers.intellect_pct += delta,
-                    Attribute::Stamina => self.modifiers.stamina_pct += delta,
-                }
+                *self.modifiers.pct_mut(*attr) += percent * sign;
                 self.invalidate(CacheKey::from(*attr));
             }
             AuraStatEffect::FlatAttackPower(amount) => {

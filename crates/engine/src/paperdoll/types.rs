@@ -753,6 +753,124 @@ impl Default for PetType {
 }
 
 // ============================================================================
+// Mastery Effect Types
+// ============================================================================
+
+/// How a spec's mastery affects gameplay.
+///
+/// Different specs have fundamentally different mastery mechanics:
+/// some apply a flat damage multiplier, others increase proc chances,
+/// affect pet damage, or scale DoT effects.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MasteryEffect {
+    /// Simple percentage multiplier to damage done (most common).
+    /// Used by: Arms Warrior, Marksmanship Hunter, etc.
+    DamageMultiplier {
+        /// Base percentage at 0 mastery rating (e.g., 5.0 = 5%).
+        base_percent: f32,
+        /// Additional percentage per point of mastery (e.g., 1.2 = 1.2% per point).
+        per_mastery: f32,
+    },
+
+    /// Multiplier to pet damage specifically.
+    /// Used by: BM Hunter (Master of Beasts), Demonology Warlock.
+    PetDamageMultiplier {
+        /// Base percentage at 0 mastery rating.
+        base_percent: f32,
+        /// Additional percentage per point of mastery.
+        per_mastery: f32,
+    },
+
+    /// Multiplier to DoT/bleed damage.
+    /// Used by: Assassination Rogue, Feral Druid, Affliction Warlock.
+    DotMultiplier {
+        /// Base percentage at 0 mastery rating.
+        base_percent: f32,
+        /// Additional percentage per point of mastery.
+        per_mastery: f32,
+    },
+
+    /// Proc chance scaling (like Icicles, Elemental Overload).
+    /// Used by: Frost Mage, Elemental Shaman.
+    ProcChance {
+        /// Base proc chance at 0 mastery rating.
+        base_chance: f32,
+        /// Additional proc chance per point of mastery.
+        per_mastery: f32,
+    },
+
+    /// Generic multiplier with coefficient (legacy behavior).
+    /// Fallback for unimplemented specs or simple percentage scaling.
+    Generic {
+        /// Multiplier applied to mastery percentage.
+        coefficient: f32,
+    },
+}
+
+impl MasteryEffect {
+    /// Calculate the mastery bonus value given the mastery percentage from rating.
+    ///
+    /// # Arguments
+    ///
+    /// * `mastery_pct` - The mastery percentage from rating conversion (0.0 to ~0.50).
+    ///
+    /// # Returns
+    ///
+    /// The effective mastery bonus value. For multiplier types, this is the
+    /// percentage bonus (e.g., 0.25 = 25% bonus). For proc chances, this is
+    /// the proc chance as a decimal.
+    pub fn calculate_bonus(&self, mastery_pct: f32) -> f32 {
+        match self {
+            MasteryEffect::DamageMultiplier {
+                base_percent,
+                per_mastery,
+            }
+            | MasteryEffect::PetDamageMultiplier {
+                base_percent,
+                per_mastery,
+            }
+            | MasteryEffect::DotMultiplier {
+                base_percent,
+                per_mastery,
+            } => {
+                // Convert from percentage to decimal and add scaling
+                // mastery_pct is already a decimal (e.g., 0.30 for 30%)
+                // We treat mastery_pct * 100 as "mastery points" for scaling
+                (base_percent + mastery_pct * 100.0 * per_mastery) / 100.0
+            }
+            MasteryEffect::ProcChance {
+                base_chance,
+                per_mastery,
+            } => {
+                // Proc chance: base + (mastery_pct * 100) * per_mastery, as decimal
+                (base_chance + mastery_pct * 100.0 * per_mastery) / 100.0
+            }
+            MasteryEffect::Generic { coefficient } => {
+                // Legacy behavior: simple multiplication
+                mastery_pct * coefficient
+            }
+        }
+    }
+
+    /// Get the mastery effect type as a descriptive string.
+    pub const fn effect_type(&self) -> &'static str {
+        match self {
+            MasteryEffect::DamageMultiplier { .. } => "Damage Multiplier",
+            MasteryEffect::PetDamageMultiplier { .. } => "Pet Damage Multiplier",
+            MasteryEffect::DotMultiplier { .. } => "DoT Multiplier",
+            MasteryEffect::ProcChance { .. } => "Proc Chance",
+            MasteryEffect::Generic { .. } => "Generic",
+        }
+    }
+}
+
+impl Default for MasteryEffect {
+    fn default() -> Self {
+        MasteryEffect::Generic { coefficient: 1.0 }
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -837,5 +955,103 @@ mod tests {
         assert_eq!(std::mem::size_of::<SpecId>(), 2);
         assert_eq!(std::mem::size_of::<RaceId>(), 1);
         assert_eq!(std::mem::size_of::<PetType>(), 1);
+    }
+
+    #[test]
+    fn mastery_effect_default() {
+        let effect = MasteryEffect::default();
+        assert_eq!(effect, MasteryEffect::Generic { coefficient: 1.0 });
+    }
+
+    #[test]
+    fn mastery_effect_damage_multiplier() {
+        // BM Hunter: 18% base + 1.7% per mastery point
+        let effect = MasteryEffect::PetDamageMultiplier {
+            base_percent: 18.0,
+            per_mastery: 1.7,
+        };
+
+        // At 0% mastery rating, should be 18% (0.18)
+        let bonus = effect.calculate_bonus(0.0);
+        assert!((bonus - 0.18).abs() < 0.001);
+
+        // At 10% mastery rating (10 "points"), should be 18% + 17% = 35% (0.35)
+        let bonus = effect.calculate_bonus(0.10);
+        assert!((bonus - 0.35).abs() < 0.001);
+
+        // At 30% mastery rating (30 "points"), should be 18% + 51% = 69% (0.69)
+        let bonus = effect.calculate_bonus(0.30);
+        assert!((bonus - 0.69).abs() < 0.001);
+    }
+
+    #[test]
+    fn mastery_effect_proc_chance() {
+        // Frost Mage Icicles: 12% base + 1.5% per mastery
+        let effect = MasteryEffect::ProcChance {
+            base_chance: 12.0,
+            per_mastery: 1.5,
+        };
+
+        // At 0% mastery, 12% proc chance
+        let bonus = effect.calculate_bonus(0.0);
+        assert!((bonus - 0.12).abs() < 0.001);
+
+        // At 20% mastery, 12% + 30% = 42% proc chance
+        let bonus = effect.calculate_bonus(0.20);
+        assert!((bonus - 0.42).abs() < 0.001);
+    }
+
+    #[test]
+    fn mastery_effect_generic() {
+        // Generic with 1.7 coefficient (old BM behavior)
+        let effect = MasteryEffect::Generic { coefficient: 1.7 };
+
+        // At 10% mastery, should be 0.10 * 1.7 = 0.17
+        let bonus = effect.calculate_bonus(0.10);
+        assert!((bonus - 0.17).abs() < 0.001);
+
+        // At 30% mastery, should be 0.30 * 1.7 = 0.51
+        let bonus = effect.calculate_bonus(0.30);
+        assert!((bonus - 0.51).abs() < 0.001);
+    }
+
+    #[test]
+    fn mastery_effect_type_names() {
+        assert_eq!(
+            MasteryEffect::DamageMultiplier {
+                base_percent: 0.0,
+                per_mastery: 0.0
+            }
+            .effect_type(),
+            "Damage Multiplier"
+        );
+        assert_eq!(
+            MasteryEffect::PetDamageMultiplier {
+                base_percent: 0.0,
+                per_mastery: 0.0
+            }
+            .effect_type(),
+            "Pet Damage Multiplier"
+        );
+        assert_eq!(
+            MasteryEffect::DotMultiplier {
+                base_percent: 0.0,
+                per_mastery: 0.0
+            }
+            .effect_type(),
+            "DoT Multiplier"
+        );
+        assert_eq!(
+            MasteryEffect::ProcChance {
+                base_chance: 0.0,
+                per_mastery: 0.0
+            }
+            .effect_type(),
+            "Proc Chance"
+        );
+        assert_eq!(
+            MasteryEffect::Generic { coefficient: 1.0 }.effect_type(),
+            "Generic"
+        );
     }
 }
