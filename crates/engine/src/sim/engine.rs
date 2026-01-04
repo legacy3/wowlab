@@ -653,6 +653,11 @@ fn process_spell_effects_inline(state: &mut SimState, config: &SimConfig, spell_
 fn apply_aura_inline(state: &mut SimState, config: &SimConfig, aura_idx: u8) {
     let idx = aura_idx as usize;
 
+    debug_assert!(
+        idx < config.auras.len(),
+        "invalid aura index {idx}, max is {}",
+        config.auras.len()
+    );
     if idx >= config.auras.len() {
         return;
     }

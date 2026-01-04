@@ -244,6 +244,10 @@ impl AuraTracker {
     /// Start DoT tracking for an aura
     #[inline(always)]
     pub fn start_dot(&mut self, slot: usize, first_tick_time: u32) {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             self.next_tick[slot] = first_tick_time;
             self.active_dots |= 1 << slot;
@@ -253,6 +257,10 @@ impl AuraTracker {
     /// Stop DoT tracking for an aura
     #[inline(always)]
     pub fn stop_dot(&mut self, slot: usize) {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             self.next_tick[slot] = 0;
             self.active_dots &= !(1 << slot);
@@ -268,18 +276,30 @@ impl AuraTracker {
     /// Get next tick time for a slot
     #[inline(always)]
     pub fn next_tick_time(&self, slot: usize) -> u32 {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         self.next_tick[slot]
     }
 
     /// Set next tick time for a slot
     #[inline(always)]
     pub fn set_next_tick(&mut self, slot: usize, time: u32) {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         self.next_tick[slot] = time;
     }
 
     /// Apply aura by slot index (aura_idx from config) - O(1)
     #[inline(always)]
     pub fn apply_slot(&mut self, slot: usize, duration_ms: u32, max_stacks: u8, current_time: u32) {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot >= MAX_AURA_SLOTS {
             return;
         }
@@ -296,6 +316,10 @@ impl AuraTracker {
     /// Remove aura by slot index - O(1)
     #[inline(always)]
     pub fn remove_slot(&mut self, slot: usize) {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             self.slots[slot] = None;
         }
@@ -304,12 +328,20 @@ impl AuraTracker {
     /// Check if aura is active by slot index - O(1)
     #[inline(always)]
     pub fn has_slot(&self, slot: usize) -> bool {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         slot < MAX_AURA_SLOTS && self.slots[slot].is_some()
     }
 
     /// Get aura stacks by slot index - O(1)
     #[inline(always)]
     pub fn stacks_slot(&self, slot: usize) -> u8 {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             if let Some(instance) = self.slots[slot] {
                 instance.stacks
@@ -324,6 +356,10 @@ impl AuraTracker {
     /// Get remaining duration in ms by slot index - O(1)
     #[inline(always)]
     pub fn remaining_slot(&self, slot: usize, current_time: u32) -> u32 {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             if let Some(instance) = self.slots[slot] {
                 instance.expires.saturating_sub(current_time)
@@ -338,6 +374,10 @@ impl AuraTracker {
     /// Get aura instance by slot index - O(1)
     #[inline(always)]
     pub fn get_slot(&self, slot: usize) -> Option<AuraInstance> {
+        debug_assert!(
+            slot < MAX_AURA_SLOTS,
+            "invalid aura slot {slot}, max is {MAX_AURA_SLOTS}"
+        );
         if slot < MAX_AURA_SLOTS {
             self.slots[slot]
         } else {

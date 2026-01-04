@@ -34,6 +34,10 @@
 //! duration = 15.0
 //! ```
 
+pub mod error;
+
+pub use error::ConfigError;
+
 use std::fs;
 use std::path::Path;
 
@@ -359,7 +363,7 @@ fn default_health() -> f32 {
 
 impl SpecConfig {
     /// Convert to engine SimConfig.
-    pub fn to_sim_config(&self) -> Result<SimConfig, String> {
+    pub fn to_sim_config(&self) -> Result<SimConfig, ConfigError> {
         let resource_type = parse_resource_type(&self.player.resource)?;
         let paperdoll_spec = parse_paperdoll_spec_id(&self.spec.id);
 
@@ -614,7 +618,7 @@ pub fn load_spec_config(path: &Path) -> Result<SpecConfig, String> {
         .map_err(|e| format!("Failed to parse TOML '{}': {}", path.display(), e))
 }
 
-fn parse_resource_type(s: &str) -> Result<ResourceType, String> {
+fn parse_resource_type(s: &str) -> Result<ResourceType, ConfigError> {
     match s.to_lowercase().as_str() {
         "mana" => Ok(ResourceType::Mana),
         "rage" => Ok(ResourceType::Rage),
@@ -632,7 +636,9 @@ fn parse_resource_type(s: &str) -> Result<ResourceType, String> {
         "arcane_charges" | "arcanecharges" => Ok(ResourceType::ArcaneCharges),
         "chi" => Ok(ResourceType::Chi),
         "essence" => Ok(ResourceType::Essence),
-        _ => Err(format!("Unknown resource type: {}", s)),
+        _ => Err(ConfigError::UnknownResource {
+            resource: s.to_string(),
+        }),
     }
 }
 
