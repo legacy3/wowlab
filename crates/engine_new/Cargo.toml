@@ -1,0 +1,11 @@
+[package]
+name = "engine_new"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+bitflags = "2"
+
+[dev-dependencies]

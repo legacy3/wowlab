@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "engine",
+    "engine", "engine_new",
     "node",
     "node-gui",
     "node-headless",
