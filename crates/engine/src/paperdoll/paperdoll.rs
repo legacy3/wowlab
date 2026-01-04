@@ -512,6 +512,32 @@ impl Paperdoll {
         self.apply_dr(rating_type, base)
     }
 
+    /// Compute a rating-based stat with optional attribute scaling.
+    ///
+    /// This consolidates the common pattern for stats like crit, dodge, and parry:
+    /// 1. Convert rating to percentage via diminishing returns
+    /// 2. Add attribute contribution (if per_attribute > 0)
+    /// 3. Add base value
+    /// 4. Apply flat modifier
+    #[inline]
+    fn compute_rating_stat(
+        &self,
+        rating_type: RatingType,
+        rating_value: f32,
+        base_value: f32,
+        attribute_value: f32,
+        per_attribute: f32,
+        flat_modifier: f32,
+    ) -> f32 {
+        let from_rating = self.rating_to_percent(rating_type, rating_value);
+        let from_attribute = if per_attribute > 0.0 {
+            attribute_value / per_attribute / 100.0
+        } else {
+            0.0
+        };
+        base_value + from_rating + from_attribute + flat_modifier
+    }
+
     /// Apply diminishing returns curve.
     ///
     /// Formula: effective = value / (1 + value / soft_cap)
@@ -586,17 +612,14 @@ impl Paperdoll {
         self.cache.spell_power = sp_base * (1.0 + mods.spell_power_pct / 100.0);
 
         // === Crit Chance ===
-        let crit_from_rating = self.rating_to_percent(
+        self.cache.crit_chance = self.compute_rating_stat(
             RatingType::CritMelee,
             gear.ratings[RatingType::CritMelee as usize] + mods.crit_rating_flat,
+            base.base_crit,
+            self.cache.agility,
+            coeff.crit_per_agility,
+            mods.crit_pct / 100.0,
         );
-        let crit_from_agi = if coeff.crit_per_agility > 0.0 {
-            self.cache.agility / coeff.crit_per_agility / 100.0
-        } else {
-            0.0
-        };
-        self.cache.crit_chance =
-            base.base_crit + crit_from_rating + crit_from_agi + mods.crit_pct / 100.0;
         self.cache.crit_mult = 1.0 + self.cache.crit_chance;
 
         // === Haste ===
@@ -638,40 +661,39 @@ impl Paperdoll {
         self.cache.armor = gear.armor + gear.bonus_armor;
 
         // Dodge from rating + base + agility
-        let dodge_from_rating = self.rating_to_percent(
+        self.cache.dodge_chance = self.compute_rating_stat(
             RatingType::Dodge,
             gear.ratings[RatingType::Dodge as usize],
+            base.base_dodge,
+            self.cache.agility,
+            coeff.dodge_per_agility,
+            0.0,
         );
-        let dodge_from_agi = if coeff.dodge_per_agility > 0.0 {
-            self.cache.agility / coeff.dodge_per_agility / 100.0
-        } else {
-            0.0
-        };
-        self.cache.dodge_chance = base.base_dodge + dodge_from_rating + dodge_from_agi;
 
         // Parry from rating + base + strength
-        let parry_from_rating = self.rating_to_percent(
-            RatingType::Parry,
-            gear.ratings[RatingType::Parry as usize],
-        );
-        let parry_from_str = if coeff.parry_per_strength > 0.0 {
-            self.cache.strength / coeff.parry_per_strength / 100.0
-        } else {
-            0.0
-        };
         self.cache.parry_chance = if coeff.can_parry {
-            base.base_parry + parry_from_rating + parry_from_str
+            self.compute_rating_stat(
+                RatingType::Parry,
+                gear.ratings[RatingType::Parry as usize],
+                base.base_parry,
+                self.cache.strength,
+                coeff.parry_per_strength,
+                0.0,
+            )
         } else {
             0.0
         };
 
         // Block from rating + base
-        let block_from_rating = self.rating_to_percent(
-            RatingType::Block,
-            gear.ratings[RatingType::Block as usize],
-        );
         self.cache.block_chance = if coeff.can_block {
-            base.base_block + block_from_rating
+            self.compute_rating_stat(
+                RatingType::Block,
+                gear.ratings[RatingType::Block as usize],
+                base.base_block,
+                0.0,
+                0.0,
+                0.0,
+            )
         } else {
             0.0
         };
