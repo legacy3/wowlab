@@ -4,3 +4,4 @@ pub mod core;
 pub mod stats;
 pub mod resource;
 pub mod combat;
+pub mod aura;
