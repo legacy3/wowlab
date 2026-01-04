@@ -127,4 +127,10 @@ impl ChargedCooldown {
 
         base + progress.clamp(0.0, 1.0)
     }
+
+    /// Reset to full charges
+    pub fn reset(&mut self) {
+        self.current_charges = self.max_charges;
+        self.next_charge_at = SimTime::ZERO;
+    }
 }

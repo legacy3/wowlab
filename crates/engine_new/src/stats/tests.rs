@@ -41,7 +41,7 @@ fn rating_dr() {
 
 #[test]
 fn stat_cache_computation() {
-    let mut cache = StatCache::new(SpecId::BeastMastery);
+    let mut cache = StatCache::with_spec(SpecId::BeastMastery);
     cache.primary.agility = 5000.0;
     cache.ratings.crit = 500.0;
     cache.ratings.haste = 300.0;

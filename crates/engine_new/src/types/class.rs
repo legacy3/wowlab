@@ -149,10 +149,23 @@ pub enum RaceId {
     EarthenH = 27,
 }
 
+/// Hunter pet specialization
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum PetType {
     Ferocity = 0,
     Tenacity = 1,
     Cunning = 2,
+}
+
+/// Pet summon kind (permanent vs temporary)
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum PetKind {
+    /// Permanent pet (Hunter pet, Warlock demon)
+    Permanent = 0,
+    /// Guardian summon (totems, temporary guardians)
+    Guardian = 1,
+    /// Short-lived summon
+    Summon = 2,
 }

@@ -24,4 +24,18 @@ impl CombatStats {
     pub const BASE_CRIT: f32 = 0.05;
     /// Base haste (1.0 = no haste)
     pub const BASE_HASTE: f32 = 1.0;
+
+    /// Create with sensible defaults (base values)
+    pub fn new() -> Self {
+        Self {
+            crit_chance: Self::BASE_CRIT,
+            haste: Self::BASE_HASTE,
+            mastery: 0.0,
+            versatility_damage: 0.0,
+            versatility_dr: 0.0,
+            attack_power: 0.0,
+            spell_power: 0.0,
+            weapon_dps: 0.0,
+        }
+    }
 }

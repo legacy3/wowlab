@@ -6,3 +6,4 @@ pub mod resource;
 pub mod combat;
 pub mod aura;
 pub mod proc;
+pub mod actor;

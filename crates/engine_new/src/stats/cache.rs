@@ -17,7 +17,19 @@ pub struct StatCache {
 }
 
 impl StatCache {
-    pub fn new(spec: SpecId) -> Self {
+    /// Create a new StatCache with default spec
+    pub fn new() -> Self {
+        Self {
+            primary: PrimaryStats::default(),
+            ratings: Ratings::default(),
+            combat: CombatStats::new(),
+            spec: SpecId::BeastMastery, // Default
+            dirty: true,
+        }
+    }
+
+    /// Create a StatCache for a specific spec
+    pub fn with_spec(spec: SpecId) -> Self {
         Self {
             primary: PrimaryStats::default(),
             ratings: Ratings::default(),
@@ -73,7 +85,7 @@ impl StatCache {
         self.combat.versatility_dr = vers_pct / 200.0; // Half for DR
     }
 
-    // Convenience getters that ensure cache is fresh
+    // Convenience getters
     #[inline]
     pub fn crit_chance(&self) -> f32 {
         self.combat.crit_chance
@@ -102,5 +114,11 @@ impl StatCache {
     #[inline]
     pub fn versatility(&self) -> f32 {
         self.combat.versatility_damage
+    }
+}
+
+impl Default for StatCache {
+    fn default() -> Self {
+        Self::new()
     }
 }

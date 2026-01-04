@@ -5,7 +5,7 @@ use crate::stats::StatCache;
 
 #[test]
 fn action_state_snapshot() {
-    let mut cache = StatCache::new(SpecId::BeastMastery);
+    let mut cache = StatCache::with_spec(SpecId::BeastMastery);
     cache.primary.agility = 5000.0;
     cache.ratings.crit = 500.0;
     cache.update(2.0);
