@@ -9,6 +9,7 @@
 use crate::config::SimConfig;
 use crate::paperdoll::{Paperdoll, PetCoefficients, PetStats, PetType};
 use crate::resources::{UnitResources, UnitResourcesConfig};
+use crate::traits::ProcTracker;
 
 use super::results::ActionLog;
 use super::EventQueue;
@@ -94,6 +95,9 @@ pub struct SimState {
 
     /// Pet stats computed from owner paperdoll (new)
     pub pet_stats: Option<PetStats>,
+
+    /// Proc tracker for trait-based procs (warm - checked on damage/cast)
+    pub proc_tracker: ProcTracker,
 
     /// Action log for detailed reporting (cold - only used in report mode)
     pub action_log: ActionLog,
@@ -602,6 +606,7 @@ impl SimState {
             target: TargetState::new(config.target.max_health),
             pet: None,
             pet_stats,
+            proc_tracker: ProcTracker::new(),
             action_log: ActionLog::new(),
         };
 
@@ -628,6 +633,7 @@ impl SimState {
         self.target.reset();
         self.events.clear();
         self.results.reset();
+        self.proc_tracker.reset();
         // Clear action log entries but keep enabled state and names
         self.action_log.entries.clear();
     }

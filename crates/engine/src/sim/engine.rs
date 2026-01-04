@@ -84,6 +84,7 @@ use rayon::prelude::*;
 
 use crate::config::SimConfig;
 use crate::rotation::PredictiveRotation;
+use crate::traits::{ProcEffect, ProcTrigger};
 use crate::util::FastRng;
 
 use super::{BatchAccumulator, BatchResult, SimEvent, SimReport, SimResult, SimState, SpellBreakdown};
@@ -260,7 +261,7 @@ pub fn run_simulation(
 
     // Process any remaining periodic effects up to end of simulation
     state.time = duration;
-    process_pending_ticks(state, config, duration);
+    process_pending_ticks(state, config, duration, rng);
 
     // Duration is in ms, convert to seconds for DPS
     let duration_secs = duration as f32 / 1000.0;
@@ -399,7 +400,12 @@ pub fn run_batch_parallel(
 
 /// Process all pending periodic effects up to current time (lazy evaluation)
 #[inline(always)]
-fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time: u32) {
+fn process_pending_ticks(
+    state: &mut SimState,
+    config: &SimConfig,
+    current_time: u32,
+    rng: &mut FastRng,
+) {
     // Process DoT ticks using paperdoll cache
     let cache = &state.player.paperdoll.cache;
     let mut active_mask = state.player.auras.active_dot_mask();
@@ -451,31 +457,51 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
         }
     }
 
-    // Process auto attacks using paperdoll cache
-    let cache = &state.player.paperdoll.cache;
+    // Process auto attacks - copy cache values to avoid borrow conflict
+    let haste_mult = state.player.paperdoll.cache.haste_mult;
+    let attack_power = state.player.paperdoll.cache.attack_power;
+    let crit_mult = state.player.paperdoll.cache.crit_mult;
+    let damage_multiplier = state.player.paperdoll.cache.damage_multiplier;
+    let weapon_speed_ms = state.weapon_speed_ms;
+
     while state.next_auto_attack <= current_time {
         let (min_dmg, max_dmg) = config.player.weapon_damage;
-        let damage = calculate_auto_attack_damage(min_dmg, max_dmg, config.player.weapon_speed, cache);
+        // Inline auto-attack damage calculation to avoid cache borrow
+        let weapon_damage = (min_dmg + max_dmg) * 0.5;
+        let ap_bonus = (attack_power / 14.0) * config.player.weapon_speed;
+        let damage = (weapon_damage + ap_bonus) * crit_mult * damage_multiplier;
         state.results.total_damage += damage;
         state.target.health -= damage;
 
-        let next_swing_ms = (state.weapon_speed_ms as f32 / cache.haste_mult) as u32;
+        // Check for auto-attack procs (e.g., Wild Call)
+        check_and_apply_procs(state, config, ProcTrigger::OnAutoAttackHit, rng);
+
+        let next_swing_ms = (weapon_speed_ms as f32 / haste_mult) as u32;
         state.next_auto_attack += next_swing_ms;
     }
 
-    // Process pet attacks using pre-computed pet_stats
-    if config.pet.is_some() {
+    // Process pet attacks - copy pet stats to avoid borrow conflict
+    if let Some(ref pet_cfg) = config.pet {
+        // Copy pet stats values before mutable borrow
         if let Some(ref pet_stats) = state.pet_stats {
-            let pet_cfg = config.pet.as_ref().unwrap();
+            let pet_attack_speed_ms = pet_stats.attack_speed_ms;
+            let pet_attack_power = pet_stats.attack_power;
+            let pet_crit_mult = pet_stats.crit_mult;
+            let pet_damage_mult = pet_stats.damage_multiplier;
+
             while state.next_pet_attack <= current_time {
                 let (min_dmg, max_dmg) = pet_cfg.attack_damage;
-                // Use PetStats for damage calculation (already has inherited stats)
-                let damage = pet_stats.calculate_auto_attack(min_dmg, max_dmg);
+                // Inline pet damage calculation
+                let weapon_damage = (min_dmg + max_dmg) * 0.5;
+                let ap_bonus = (pet_attack_power / 14.0) * pet_cfg.attack_speed;
+                let damage = (weapon_damage + ap_bonus) * pet_crit_mult * pet_damage_mult;
                 state.results.total_damage += damage;
                 state.target.health -= damage;
 
-                // Use pet_stats.attack_speed_ms which is already haste-adjusted
-                state.next_pet_attack += pet_stats.attack_speed_ms;
+                // Check for pet attack procs
+                check_and_apply_procs(state, config, ProcTrigger::OnPetAttackHit, rng);
+
+                state.next_pet_attack += pet_attack_speed_ms;
             }
         }
     }
@@ -492,7 +518,7 @@ fn handle_gcd_ready_inline(
     let current_time = state.time;
 
     // Process pending periodic effects (lazy evaluation)
-    process_pending_ticks(state, config, current_time);
+    process_pending_ticks(state, config, current_time, rng);
 
     // Lazy resource regeneration with haste scaling
     let elapsed_ms = current_time - state.player.last_resource_update;
@@ -606,7 +632,7 @@ fn calculate_damage_inline(
     state: &mut SimState,
     config: &SimConfig,
     spell_idx: usize,
-    _rng: &mut FastRng,
+    rng: &mut FastRng,
 ) -> f32 {
     let spell_rt = &state.spell_runtime[spell_idx];
     let cache = &state.player.paperdoll.cache;
@@ -624,6 +650,19 @@ fn calculate_damage_inline(
 
     // Process spell effects (apply auras, trigger spells, etc.)
     process_spell_effects_inline(state, config, spell_idx);
+
+    // Check for procs on spell cast/hit
+    // Note: We use OnSpellHit as the primary trigger since all casts hit in sim
+    let spell_id = config.spells[spell_idx].id;
+    check_and_apply_procs(
+        state,
+        config,
+        ProcTrigger::OnSpellHitId { spell_id },
+        rng,
+    );
+
+    // Also check generic spell cast trigger
+    check_and_apply_procs(state, config, ProcTrigger::OnSpellCast, rng);
 
     total_damage
 }
@@ -746,6 +785,109 @@ fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
     if next_time < duration && next_time > current_time {
         state.events.push(next_time, SimEvent::GcdReady);
         state.player.gcd_event_pending = true;
+    }
+}
+
+/// Check and apply proc effects for a given trigger.
+///
+/// Returns the number of procs that triggered.
+#[inline]
+fn check_and_apply_procs(
+    state: &mut SimState,
+    config: &SimConfig,
+    trigger: ProcTrigger,
+    rng: &mut FastRng,
+) -> u32 {
+    if state.proc_tracker.is_empty() {
+        return 0;
+    }
+
+    let current_time = state.time;
+    let effects = state
+        .proc_tracker
+        .check_procs_multi(trigger, current_time, || rng.next_f32());
+
+    let count = effects.len() as u32;
+
+    for effect in effects {
+        apply_proc_effect(state, config, effect);
+    }
+
+    count
+}
+
+/// Apply a single proc effect.
+#[inline]
+fn apply_proc_effect(state: &mut SimState, config: &SimConfig, effect: ProcEffect) {
+    match effect {
+        ProcEffect::ResetCooldown { spell_id } => {
+            if let Some(idx) = config.spells.iter().position(|s| s.id == spell_id) {
+                let spell_state = &mut state.player.spell_states[idx];
+                let max_charges = state.spell_runtime[idx].max_charges;
+                if max_charges > 0 {
+                    // Charge-based: grant a charge
+                    if spell_state.charges < max_charges {
+                        spell_state.charges += 1;
+                    }
+                } else {
+                    // Cooldown-based: reset cooldown
+                    spell_state.cooldown_ready = 0;
+                }
+            }
+        }
+
+        ProcEffect::ReduceCooldown { spell_id, amount_ms } => {
+            if let Some(idx) = config.spells.iter().position(|s| s.id == spell_id) {
+                let spell_state = &mut state.player.spell_states[idx];
+                spell_state.cooldown_ready = spell_state.cooldown_ready.saturating_sub(amount_ms);
+            }
+        }
+
+        ProcEffect::GrantCharge { spell_id } => {
+            if let Some(idx) = config.spells.iter().position(|s| s.id == spell_id) {
+                let spell_state = &mut state.player.spell_states[idx];
+                let max_charges = state.spell_runtime[idx].max_charges;
+                if max_charges > 0 && spell_state.charges < max_charges {
+                    spell_state.charges += 1;
+                }
+            }
+        }
+
+        ProcEffect::ApplyAura { aura_id } => {
+            if let Some(idx) = config.auras.iter().position(|a| a.id == aura_id) {
+                apply_aura_inline(state, config, idx as u8);
+            }
+        }
+
+        ProcEffect::RemoveAura { aura_id } => {
+            if let Some(idx) = config.auras.iter().position(|a| a.id == aura_id) {
+                state.player.auras.remove_slot(idx);
+            }
+        }
+
+        ProcEffect::TriggerSpell { spell_id } => {
+            // For triggered spells, we'd need to cast them immediately
+            // For now, just deal the damage if it's a damage spell
+            if let Some(idx) = config.spells.iter().position(|s| s.id == spell_id) {
+                let spell_rt = &state.spell_runtime[idx];
+                let cache = &state.player.paperdoll.cache;
+                let base_damage = (spell_rt.damage_min + spell_rt.damage_max) * 0.5;
+                let damage = calculate_scaled_damage(base_damage, spell_rt.ap_coefficient, cache);
+                state.results.record_damage(idx, damage);
+                state.target.health -= damage;
+            }
+        }
+
+        ProcEffect::Energize { amount } => {
+            state.player.resources.gain(amount);
+        }
+
+        ProcEffect::Damage { base, ap_coeff } => {
+            let cache = &state.player.paperdoll.cache;
+            let damage = calculate_scaled_damage(base, ap_coeff, cache);
+            state.results.total_damage += damage;
+            state.target.health -= damage;
+        }
     }
 }
 

@@ -91,6 +91,9 @@ pub struct SpecMeta {
 
     /// Path to default rotation script
     pub default_rotation: Option<String>,
+
+    /// Base64-encoded trait loadout string from game export
+    pub traits: Option<String>,
 }
 
 /// Player configuration in TOML.

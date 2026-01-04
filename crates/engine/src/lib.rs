@@ -38,6 +38,7 @@ pub mod paperdoll;
 pub mod resources;
 pub mod rotation;
 pub mod sim;
+pub mod traits;
 pub mod util;
 
 use config::SimConfig;
