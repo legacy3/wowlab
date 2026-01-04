@@ -18,6 +18,6 @@ pub use results::{
     SpellBreakdown,
 };
 pub use state::{
-    AuraInstance, AuraRuntime, AuraTracker, Resources, SimResultsAccum, SimState, SpellRuntime,
+    AuraInstance, AuraRuntime, AuraTracker, SimResultsAccum, SimState, SpellRuntime,
     SpellState, TargetState, UnitState,
 };

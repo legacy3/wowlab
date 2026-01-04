@@ -471,11 +471,13 @@ fn handle_gcd_ready_inline(
     // Process pending periodic effects (lazy evaluation)
     process_pending_ticks(state, config, current_time);
 
-    // Lazy resource regeneration - only compute when needed
+    // Lazy resource regeneration with haste scaling
     let elapsed_ms = current_time - state.player.last_resource_update;
     if elapsed_ms > 0 {
         // Convert ms to seconds for regen calculation
-        state.player.resources.regen(elapsed_ms as f32 * 0.001);
+        // Pass haste_mult from paperdoll cache for Focus/Energy/Essence scaling
+        let haste_mult = state.player.paperdoll.cache.haste_mult;
+        state.player.resources.regen(elapsed_ms as f32 * 0.001, haste_mult);
         state.player.last_resource_update = current_time;
     }
 
@@ -568,7 +570,7 @@ fn cast_spell_inline(
             spell_idx,
             spell_id,
             damage,
-            state.player.resources.current,
+            state.player.resources.current(),
             hasted_gcd_ms,
         );
     }
@@ -684,8 +686,10 @@ fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
     let mut next_time = u32::MAX;
 
     let player = &state.player;
-    let regen_rate = player.resources.regen_per_second;
-    let current_resource = player.resources.current;
+    // Use haste-scaled effective regen rate for prediction
+    let haste_mult = player.paperdoll.cache.haste_mult;
+    let effective_regen = player.resources.effective_regen(haste_mult);
+    let current_resource = player.resources.current();
 
     // Check all spells for next available time
     for idx in 0..state.spell_runtime.len() {
@@ -702,9 +706,9 @@ fn schedule_next_opportunity_inline(state: &mut SimState, current_time: u32) {
         // Resource ready time (convert to ms) - use pre-computed cost_amount
         let resource_ready_time = if current_resource >= spell_rt.cost_amount {
             current_time
-        } else if regen_rate > 0.0 {
+        } else if effective_regen > 0.0 {
             let needed = spell_rt.cost_amount - current_resource;
-            current_time + to_ms(needed / regen_rate)
+            current_time + to_ms(needed / effective_regen)
         } else {
             u32::MAX
         };

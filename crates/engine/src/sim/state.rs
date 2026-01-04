@@ -6,9 +6,10 @@
 //! - Minimal padding between fields
 //! - Pre-allocated vectors for zero-alloc hot loop
 
-use crate::config::{ResourceConfig, ResourceType, SimConfig};
+use crate::config::SimConfig;
 use crate::paperdoll::{Paperdoll, PetCoefficients, PetStats};
 use crate::paperdoll::pet::PetType as PetPetType;
+use crate::resources::{UnitResources, UnitResourcesConfig};
 
 use super::results::ActionLog;
 use super::EventQueue;
@@ -104,8 +105,8 @@ pub struct SimState {
 #[repr(C)]
 pub struct UnitState {
     // === Hot fields (every GCD check) ===
-    /// Current resources
-    pub resources: Resources,
+    /// Unit resources (primary, secondary, runes).
+    pub resources: UnitResources,
 
     /// GCD end time in milliseconds
     pub gcd_ready: u32,
@@ -136,10 +137,10 @@ pub struct UnitState {
 
 impl UnitState {
     /// Create a new UnitState with the given paperdoll and resources.
-    pub fn new(paperdoll: Paperdoll, resources: ResourceConfig, spell_count: usize) -> Self {
+    pub fn new(paperdoll: Paperdoll, resources: UnitResourcesConfig, spell_count: usize) -> Self {
         Self {
             // Hot fields
-            resources: Resources::new(resources),
+            resources: UnitResources::new(resources),
             gcd_ready: 0,
             gcd_event_pending: false,
             last_resource_update: 0,
@@ -202,52 +203,6 @@ impl SpellState {
     }
 }
 
-/// Resource tracking - compact 16-byte struct.
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct Resources {
-    pub current: f32,
-    pub max: f32,
-    pub regen_per_second: f32,
-    pub resource_type: ResourceType,
-}
-
-impl Resources {
-    #[inline]
-    pub fn new(config: ResourceConfig) -> Self {
-        Self {
-            current: config.initial,
-            max: config.max,
-            regen_per_second: config.regen_per_second,
-            resource_type: config.resource_type,
-        }
-    }
-
-    #[inline]
-    pub fn reset(&mut self) {
-        self.current = self.max;
-    }
-
-    #[inline(always)]
-    pub fn spend(&mut self, amount: f32) -> bool {
-        if self.current >= amount {
-            self.current -= amount;
-            true
-        } else {
-            false
-        }
-    }
-
-    #[inline(always)]
-    pub fn gain(&mut self, amount: f32) {
-        self.current = (self.current + amount).min(self.max);
-    }
-
-    #[inline(always)]
-    pub fn regen(&mut self, elapsed: f32) {
-        self.gain(self.regen_per_second * elapsed);
-    }
-}
 
 /// Maximum aura slots (matches typical WoW limits)
 const MAX_AURA_SLOTS: usize = 32;
@@ -500,7 +455,7 @@ impl Default for SimResultsAccum {
 impl SimState {
     pub fn new(config: &SimConfig) -> Self {
         let spell_count = config.spells.len();
-        let player = UnitState::new(config.player.paperdoll.clone(), config.player.resources, spell_count);
+        let player = UnitState::new(config.player.paperdoll.clone(), config.player.resources.clone(), spell_count);
 
         // Convert duration from f32 seconds to u32 milliseconds
         let duration_ms = (config.duration * 1000.0) as u32;

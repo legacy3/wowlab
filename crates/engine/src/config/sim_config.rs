@@ -2,8 +2,9 @@
 
 use serde::Deserialize;
 
-use super::{AuraDef, ResourceConfig, SpellDef};
+use super::{AuraDef, SpellDef};
 use crate::paperdoll::Paperdoll;
+use crate::resources::UnitResourcesConfig;
 
 /// Complete simulation configuration.
 ///
@@ -39,8 +40,8 @@ pub struct PlayerConfig {
     pub spec: SpecId,
     /// Player paperdoll with all stats computed.
     pub paperdoll: Paperdoll,
-    /// Resource configuration.
-    pub resources: ResourceConfig,
+    /// Resource configuration (supports multi-resource classes).
+    pub resources: UnitResourcesConfig,
 
     /// Weapon swing speed in seconds (0 = no auto-attacks).
     pub weapon_speed: f32,

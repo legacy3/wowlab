@@ -40,10 +40,11 @@ use std::path::Path;
 use serde::Deserialize;
 
 use crate::config::{
-    AuraDef, AuraEffect, DamageFormula, PlayerConfig, ResourceConfig, ResourceCost, ResourceType,
+    AuraDef, AuraEffect, DamageFormula, PlayerConfig, ResourceCost,
     SimConfig, SpecId, SpellDef, SpellEffect, TargetConfig,
 };
 use crate::paperdoll::{Paperdoll, SpecId as PaperdollSpecId};
+use crate::resources::{ResourcePoolConfig, ResourceType, UnitResourcesConfig};
 
 /// Top-level spec configuration.
 #[derive(Debug, Deserialize)]
@@ -101,12 +102,19 @@ pub struct PlayerConfigToml {
     #[serde(default = "default_resource_max")]
     pub resource_max: f32,
 
-    /// Resource regeneration per second
+    /// Base resource regeneration per second (before haste).
+    /// Focus/Energy/Essence are haste-scaled automatically.
     #[serde(default)]
     pub resource_regen: f32,
 
     /// Starting resource (defaults to max)
     pub resource_initial: Option<f32>,
+
+    /// Secondary resource type (combo_points, chi, holy_power, etc.)
+    pub secondary_resource: Option<String>,
+
+    /// Secondary resource max (defaults to 5 for combo-style)
+    pub secondary_resource_max: Option<f32>,
 
     /// Base stats (optional, can be overridden)
     pub stats: Option<StatsToml>,
@@ -404,11 +412,34 @@ impl SpecConfig {
             name: self.spec.name.clone(),
             spec: parse_spec_id(&self.spec.id),
             paperdoll,
-            resources: ResourceConfig {
-                resource_type,
-                max: self.player.resource_max,
-                regen_per_second: self.player.resource_regen,
-                initial: self.player.resource_initial.unwrap_or(self.player.resource_max),
+            resources: {
+                // Build secondary resource if specified
+                let secondary = self.player.secondary_resource.as_ref().and_then(|res| {
+                    parse_resource_type(res).ok().map(|rt| ResourcePoolConfig {
+                        resource_type: rt,
+                        max: self.player.secondary_resource_max.unwrap_or(
+                            if rt.is_integer() { 5.0 } else { 100.0 }
+                        ),
+                        base_regen: 0.0, // Secondary resources don't passively regen
+                        initial: 0.0,    // Start at 0 for builder/spender
+                    })
+                });
+
+                // TODO Hacked-Junk
+                let is_dk = self.spec.class.to_lowercase() == "deathknight"
+                    || self.spec.class.to_lowercase() == "death_knight"
+                    || self.spec.class.to_lowercase() == "death knight";
+
+                UnitResourcesConfig {
+                    primary: ResourcePoolConfig {
+                        resource_type,
+                        max: self.player.resource_max,
+                        base_regen: self.player.resource_regen,
+                        initial: self.player.resource_initial.unwrap_or(self.player.resource_max),
+                    },
+                    secondary,
+                    uses_runes: is_dk,
+                }
             },
             weapon_speed,
             weapon_damage,

@@ -167,7 +167,7 @@ impl PredictiveRotation {
 
         // Check resources (only load spell_runtime if we pass other checks)
         let spell_rt = &state.spell_runtime[idx];
-        state.player.resources.current >= spell_rt.cost_amount
+        state.player.resources.current() >= spell_rt.cost_amount
     }
 
     /// Returns the number of rotation rules.

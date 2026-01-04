@@ -156,11 +156,14 @@ impl Condition {
             }
 
             Condition::ResourceGte(threshold) => {
-                let current = state.player.resources.current;
+                let current = state.player.resources.current();
                 let ready = current >= *threshold;
-                let wake = if !ready && state.player.resources.regen_per_second > 0.0 {
+                // Use haste-scaled effective regen for wake time prediction
+                let haste_mult = state.player.paperdoll.cache.haste_mult;
+                let effective_regen = state.player.resources.effective_regen(haste_mult);
+                let wake = if !ready && effective_regen > 0.0 {
                     let needed = *threshold - current;
-                    let time_needed = (needed / state.player.resources.regen_per_second * 1000.0) as u32;
+                    let time_needed = (needed / effective_regen * 1000.0) as u32;
                     Some(state.time + time_needed)
                 } else {
                     None
@@ -169,7 +172,7 @@ impl Condition {
             }
 
             Condition::ResourceLte(threshold) => {
-                let ready = state.player.resources.current <= *threshold;
+                let ready = state.player.resources.current() <= *threshold;
                 // Can't predict when resource will decrease (depends on spell usage)
                 (ready, None)
             }
