@@ -660,7 +660,6 @@ impl Paperdoll {
             gear.ratings[RatingType::Mastery as usize] + mods.mastery_rating_flat,
         );
         let mastery_pct = mastery_from_rating + mods.mastery_pct / 100.0;
-        // Use the new mastery effect system for proper spec-specific calculations
         self.cache.mastery_value = coeff.mastery_effect.calculate_bonus(mastery_pct);
 
         // === Versatility ===

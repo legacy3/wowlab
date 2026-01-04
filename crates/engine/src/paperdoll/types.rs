@@ -799,8 +799,7 @@ pub enum MasteryEffect {
         per_mastery: f32,
     },
 
-    /// Generic multiplier with coefficient (legacy behavior).
-    /// Fallback for unimplemented specs or simple percentage scaling.
+    /// Simple coefficient multiplier for specs with complex or unmodeled mastery.
     Generic {
         /// Multiplier applied to mastery percentage.
         coefficient: f32,

@@ -755,7 +755,6 @@ mod tests {
         assert!(!coeff.uses_spell_power);
         assert!(!coeff.can_parry);
         assert!(!coeff.can_block);
-        // Verify mastery_effect instead of mastery_coefficient
         match coeff.mastery_effect {
             MasteryEffect::PetDamageMultiplier { per_mastery, .. } => {
                 assert!((per_mastery - 1.7).abs() < 0.01);
@@ -769,7 +768,6 @@ mod tests {
         let coeff = ClassCoefficients::marksmanship();
         assert_eq!(coeff.ap_per_agility, 1.0);
         assert_eq!(coeff.primary_stat, Attribute::Agility);
-        // Verify mastery_effect instead of mastery_coefficient
         match coeff.mastery_effect {
             MasteryEffect::DamageMultiplier { per_mastery, .. } => {
                 assert!((per_mastery - 1.2).abs() < 0.01);
@@ -834,8 +832,6 @@ mod tests {
         for spec in specs {
             let coeff = from_spec(spec);
             assert!(coeff.health_per_stamina > 0.0, "Spec {:?} has invalid stamina", spec);
-            // Verify mastery_effect is set (not default for most specs)
-            // Just verify the effect type is valid - the actual values are spec-specific
             let effect_type = coeff.mastery_effect.effect_type();
             assert!(
                 !effect_type.is_empty(),
