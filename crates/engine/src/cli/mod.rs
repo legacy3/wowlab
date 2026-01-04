@@ -41,8 +41,9 @@ use serde::Deserialize;
 
 use crate::config::{
     AuraDef, AuraEffect, DamageFormula, PlayerConfig, ResourceConfig, ResourceCost, ResourceType,
-    SimConfig, SpecId, SpellDef, SpellEffect, Stats, TargetConfig,
+    SimConfig, SpecId, SpellDef, SpellEffect, TargetConfig,
 };
+use crate::paperdoll::{Paperdoll, SpecId as PaperdollSpecId};
 
 /// Top-level spec configuration.
 #[derive(Debug, Deserialize)]
@@ -121,14 +122,16 @@ fn default_resource_max() -> f32 {
 /// Stats configuration.
 #[derive(Debug, Deserialize, Default)]
 pub struct StatsToml {
+    // Primary attributes
     pub strength: Option<f32>,
     pub agility: Option<f32>,
     pub intellect: Option<f32>,
     pub stamina: Option<f32>,
-    pub crit_pct: Option<f32>,
-    pub haste_pct: Option<f32>,
-    pub mastery_pct: Option<f32>,
-    pub versatility_pct: Option<f32>,
+    // Secondary ratings (converted to % with DR)
+    pub crit_rating: Option<f32>,
+    pub haste_rating: Option<f32>,
+    pub mastery_rating: Option<f32>,
+    pub versatility_rating: Option<f32>,
 }
 
 /// Weapon configuration.
@@ -350,38 +353,44 @@ impl SpecConfig {
     /// Convert to engine SimConfig.
     pub fn to_sim_config(&self) -> Result<SimConfig, String> {
         let resource_type = parse_resource_type(&self.player.resource)?;
+        let paperdoll_spec = parse_paperdoll_spec_id(&self.spec.id);
 
-        // Build player stats
-        let stats = if let Some(ref s) = self.player.stats {
-            Stats {
-                strength: s.strength.unwrap_or(0.0),
-                agility: s.agility.unwrap_or(0.0),
-                intellect: s.intellect.unwrap_or(0.0),
-                stamina: s.stamina.unwrap_or(8000.0),
-                crit_pct: s.crit_pct.unwrap_or(25.0),
-                haste_pct: s.haste_pct.unwrap_or(20.0),
-                mastery_pct: s.mastery_pct.unwrap_or(30.0),
-                versatility_pct: s.versatility_pct.unwrap_or(5.0),
-                ..Default::default()
-            }
-        } else {
-            // Default stats based on primary stat
-            let mut stats = Stats {
-                stamina: 8000.0,
-                crit_pct: 25.0,
-                haste_pct: 20.0,
-                mastery_pct: 30.0,
-                versatility_pct: 5.0,
-                ..Default::default()
+        // Build player paperdoll
+        let (strength, agility, intellect, stamina, crit_rating, haste_rating, mastery_rating, versatility_rating) =
+            if let Some(ref s) = self.player.stats {
+                (
+                    s.strength.unwrap_or(0.0),
+                    s.agility.unwrap_or(0.0),
+                    s.intellect.unwrap_or(0.0),
+                    s.stamina.unwrap_or(8000.0),
+                    s.crit_rating.unwrap_or(5000.0),      // ~25% at 80
+                    s.haste_rating.unwrap_or(3500.0),     // ~20% at 80
+                    s.mastery_rating.unwrap_or(5000.0),   // ~30% at 80
+                    s.versatility_rating.unwrap_or(1500.0), // ~5% at 80
+                )
+            } else {
+                // Default stats based on primary stat
+                let (str_val, agi_val, int_val) = match self.player.primary_stat.to_lowercase().as_str() {
+                    "strength" => (10000.0, 0.0, 0.0),
+                    "agility" => (0.0, 10000.0, 0.0),
+                    "intellect" => (0.0, 0.0, 10000.0),
+                    _ => (0.0, 0.0, 0.0),
+                };
+                (str_val, agi_val, int_val, 8000.0, 5000.0, 3500.0, 5000.0, 1500.0)
             };
-            match self.player.primary_stat.to_lowercase().as_str() {
-                "strength" => stats.strength = 10000.0,
-                "agility" => stats.agility = 10000.0,
-                "intellect" => stats.intellect = 10000.0,
-                _ => {}
-            }
-            stats
-        };
+
+        let paperdoll = Paperdoll::from_config(
+            80, // level
+            paperdoll_spec,
+            agility,
+            strength,
+            intellect,
+            stamina,
+            crit_rating,
+            haste_rating,
+            mastery_rating,
+            versatility_rating,
+        );
 
         // Build weapon config
         let (weapon_speed, weapon_damage) = if let Some(ref w) = self.player.weapon {
@@ -394,7 +403,7 @@ impl SpecConfig {
         let player = PlayerConfig {
             name: self.spec.name.clone(),
             spec: parse_spec_id(&self.spec.id),
-            stats,
+            paperdoll,
             resources: ResourceConfig {
                 resource_type,
                 max: self.player.resource_max,
@@ -407,29 +416,38 @@ impl SpecConfig {
 
         // Build pet config
         let pet = self.pet.as_ref().map(|p| {
-            let pet_stats = if let Some(ref s) = p.stats {
-                Stats {
-                    strength: s.strength.unwrap_or(1000.0),
-                    agility: s.agility.unwrap_or(5000.0),
-                    intellect: s.intellect.unwrap_or(0.0),
-                    stamina: s.stamina.unwrap_or(4000.0),
-                    crit_pct: s.crit_pct.unwrap_or(20.0),
-                    haste_pct: s.haste_pct.unwrap_or(15.0),
-                    ..Default::default()
-                }
-            } else {
-                Stats {
-                    agility: 5000.0,
-                    strength: 1000.0,
-                    crit_pct: 20.0,
-                    haste_pct: 15.0,
-                    ..Default::default()
-                }
-            };
+            let (pet_strength, pet_agility, pet_intellect, pet_stamina, pet_crit_rating, pet_haste_rating, pet_mastery_rating, pet_vers_rating) =
+                if let Some(ref s) = p.stats {
+                    (
+                        s.strength.unwrap_or(1000.0),
+                        s.agility.unwrap_or(5000.0),
+                        s.intellect.unwrap_or(0.0),
+                        s.stamina.unwrap_or(4000.0),
+                        s.crit_rating.unwrap_or(3000.0),    // ~15% at 80
+                        s.haste_rating.unwrap_or(2500.0),   // ~15% at 80
+                        s.mastery_rating.unwrap_or(0.0),
+                        s.versatility_rating.unwrap_or(0.0),
+                    )
+                } else {
+                    (1000.0, 5000.0, 0.0, 4000.0, 3000.0, 2500.0, 0.0, 0.0)
+                };
+
+            let pet_paperdoll = Paperdoll::from_config(
+                80,
+                paperdoll_spec,
+                pet_agility,
+                pet_strength,
+                pet_intellect,
+                pet_stamina,
+                pet_crit_rating,
+                pet_haste_rating,
+                pet_mastery_rating,
+                pet_vers_rating,
+            );
 
             crate::config::PetConfig {
                 name: p.name.clone(),
-                stats: pet_stats,
+                paperdoll: pet_paperdoll,
                 spells: vec![],
                 attack_speed: p.attack_speed,
                 attack_damage: (p.attack_damage[0], p.attack_damage[1]),
@@ -594,5 +612,15 @@ fn parse_spec_id(id: &str) -> SpecId {
         "hunter:marksmanship" | "hunter:mm" => SpecId::Marksmanship,
         "hunter:survival" | "hunter:sv" => SpecId::Survival,
         _ => SpecId::BeastMastery, // Default fallback
+    }
+}
+
+fn parse_paperdoll_spec_id(id: &str) -> PaperdollSpecId {
+    // Parse spec ID like "hunter:beast-mastery" to paperdoll SpecId
+    match id.to_lowercase().as_str() {
+        "hunter:beast-mastery" | "hunter:bm" => PaperdollSpecId::BeastMastery,
+        "hunter:marksmanship" | "hunter:mm" => PaperdollSpecId::Marksmanship,
+        "hunter:survival" | "hunter:sv" => PaperdollSpecId::Survival,
+        _ => PaperdollSpecId::BeastMastery, // Default fallback
     }
 }

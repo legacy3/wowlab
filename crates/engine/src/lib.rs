@@ -34,6 +34,7 @@
 
 pub mod cli;
 pub mod config;
+pub mod paperdoll;
 pub mod rotation;
 pub mod sim;
 pub mod util;

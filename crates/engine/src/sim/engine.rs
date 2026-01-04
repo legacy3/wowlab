@@ -7,7 +7,7 @@ IMPLEMENTED:
 ✓ Cache-friendly struct layouts with #[repr(C)]
 ✓ Lazy resource regeneration (compute on demand)
 ✓ Smart wake-up scheduling (avoid busy-looping)
-✓ Precomputed stats (ap_normalized, crit_chance, vers_mult, haste_mult)
+✓ Paperdoll StatCache for all damage/haste calculations (attack_power, crit_mult, damage_multiplier, haste_mult)
 ✓ Unchecked array indexing in hot path (record_damage)
 ✓ SpellRuntime table - pre-computed damage/cost/aura indices, avoids touching SpellDef
 ✓ Pre-resolved aura_id → aura_idx at config load (no linear search per cast)
@@ -369,7 +369,8 @@ pub fn run_batch_parallel(
 /// Process all pending periodic effects up to current time (lazy evaluation)
 #[inline(always)]
 fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time: u32) {
-    // Process DoT ticks
+    // Process DoT ticks using paperdoll cache
+    let cache = &state.player.paperdoll.cache;
     let mut active_mask = state.player.auras.active_dot_mask();
     while active_mask != 0 {
         let idx = active_mask.trailing_zeros() as usize;
@@ -398,11 +399,13 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
             }
 
             if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
+                // Use paperdoll cache for damage calculation:
+                // - cache.attack_power for AP scaling
+                // - cache.crit_mult = 1.0 + crit_chance (expected crit multiplier)
+                // - cache.damage_multiplier = (1 + vers) * (1 + aura_damage_pct)
                 let base_damage = runtime.tick_amount
-                    + runtime.tick_coefficient * state.player.stats.attack_power;
-                let damage = base_damage
-                    * (1.0 + state.player.stats.crit_chance)
-                    * state.player.stats.vers_mult;
+                    + runtime.tick_coefficient * cache.attack_power;
+                let damage = base_damage * cache.crit_mult * cache.damage_multiplier;
                 state.results.total_damage += damage;
                 state.target.health -= damage;
 
@@ -422,32 +425,35 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
         }
     }
 
-    // Process auto attacks
-    let stats = &state.player.stats;
+    // Process auto attacks using paperdoll cache
+    let cache = &state.player.paperdoll.cache;
     while state.next_auto_attack <= current_time {
         let (min_dmg, max_dmg) = config.player.weapon_damage;
         let weapon_damage = (min_dmg + max_dmg) * 0.5;
-        let ap_bonus = stats.ap_normalized * config.player.weapon_speed;
-        let damage = (weapon_damage + ap_bonus) * (1.0 + stats.crit_chance) * stats.vers_mult;
+        // Use AP / 14 * weapon_speed for normalized AP bonus (standard WoW formula)
+        let ap_bonus = (cache.attack_power / 14.0) * config.player.weapon_speed;
+        let damage = (weapon_damage + ap_bonus) * cache.crit_mult * cache.damage_multiplier;
         state.results.total_damage += damage;
         state.target.health -= damage;
 
-        let next_swing_ms = (state.weapon_speed_ms as f32 / stats.haste_mult) as u32;
+        let next_swing_ms = (state.weapon_speed_ms as f32 / cache.haste_mult) as u32;
         state.next_auto_attack += next_swing_ms;
     }
 
-    // Process pet attacks
-    if let Some(ref pet) = config.pet {
-        let pet_stats = &pet.stats;
-        while state.next_pet_attack <= current_time {
-            let (min_dmg, max_dmg) = pet.attack_damage;
-            let base_damage = (min_dmg + max_dmg) * 0.5;
-            let ap_bonus = pet_stats.ap_normalized * pet.attack_speed;
-            let damage = (base_damage + ap_bonus) * (1.0 + pet_stats.crit_chance);
-            state.results.total_damage += damage;
-            state.target.health -= damage;
+    // Process pet attacks using pre-computed pet_stats
+    if config.pet.is_some() {
+        if let Some(ref pet_stats) = state.pet_stats {
+            let pet_cfg = config.pet.as_ref().unwrap();
+            while state.next_pet_attack <= current_time {
+                let (min_dmg, max_dmg) = pet_cfg.attack_damage;
+                // Use PetStats for damage calculation (already has inherited stats)
+                let damage = pet_stats.calculate_auto_attack(min_dmg, max_dmg);
+                state.results.total_damage += damage;
+                state.target.health -= damage;
 
-            state.next_pet_attack += state.pet_attack_speed_ms;
+                // Use pet_stats.attack_speed_ms which is already haste-adjusted
+                state.next_pet_attack += pet_stats.attack_speed_ms;
+            }
         }
     }
 }
@@ -523,10 +529,11 @@ fn cast_spell_inline(
     }
 
     // Apply GCD and schedule next check (apply haste to base GCD)
+    // Use paperdoll cache for haste multiplier
     let gcd_ms = spell_state.gcd_ms;
     let hasted_gcd_ms = if gcd_ms > 0 {
-        // Apply haste: gcd_ms / haste_mult
-        (gcd_ms as f32 / state.player.stats.haste_mult) as u32
+        // Apply haste: gcd_ms / haste_mult, with 750ms minimum
+        ((gcd_ms as f32 / state.player.paperdoll.cache.haste_mult) as u32).max(750)
     } else {
         0
     };
@@ -569,6 +576,11 @@ fn cast_spell_inline(
 
 /// Calculate damage for a spell - inlined with all multipliers.
 /// Returns the damage dealt for logging purposes.
+///
+/// Uses paperdoll.cache for all stat lookups:
+/// - cache.attack_power: Total attack power including buffs
+/// - cache.crit_mult: 1.0 + crit_chance (expected crit damage multiplier)
+/// - cache.damage_multiplier: (1 + vers) * (1 + aura_damage_pct)
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
@@ -577,17 +589,18 @@ fn calculate_damage_inline(
     _rng: &mut FastRng,
 ) -> f32 {
     let spell_rt = &state.spell_runtime[spell_idx];
-    let stats = &state.player.stats;
+    let cache = &state.player.paperdoll.cache;
 
     // Expected base damage (midpoint of range)
     let base_damage = (spell_rt.damage_min + spell_rt.damage_max) * 0.5;
 
     // Attack power contribution (use pre-computed ap_coefficient)
-    let ap_damage = spell_rt.ap_coefficient * stats.attack_power;
+    let ap_damage = spell_rt.ap_coefficient * cache.attack_power;
 
-    // Total damage with expected crit multiplier: 1 + crit_chance * (crit_mult - 1)
-    // For 2x crit multiplier: 1 + crit_chance
-    let total_damage = (base_damage + ap_damage) * (1.0 + stats.crit_chance) * stats.vers_mult;
+    // Total damage with:
+    // - cache.crit_mult = 1 + crit_chance (expected crit damage for 2x crit)
+    // - cache.damage_multiplier = (1 + vers) * (1 + aura_damage_pct)
+    let total_damage = (base_damage + ap_damage) * cache.crit_mult * cache.damage_multiplier;
 
     // Record damage
     state.results.record_damage(spell_idx, total_damage);

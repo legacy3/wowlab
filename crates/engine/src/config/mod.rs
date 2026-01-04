@@ -4,7 +4,7 @@
 //! - [`SimConfig`] - Complete simulation configuration
 //! - [`SpellDef`] - Spell definitions with damage formulas and effects
 //! - [`AuraDef`] - Aura/buff definitions with periodic effects
-//! - [`Stats`] - Player stat block with derived values
+//! - [`crate::paperdoll::Paperdoll`] - Player stat paperdoll
 
 mod aura_def;
 mod sim_config;
@@ -14,4 +14,4 @@ mod stats;
 pub use aura_def::{AuraDef, AuraEffect, DamageSchool, ProcTrigger, StatType};
 pub use sim_config::{PetConfig, PlayerConfig, SimConfig, SpecId, TargetConfig};
 pub use spell_def::{DamageFormula, ResourceCost, SpellDef, SpellEffect};
-pub use stats::{ResourceConfig, ResourceType, Stats};
+pub use stats::{ResourceConfig, ResourceType};

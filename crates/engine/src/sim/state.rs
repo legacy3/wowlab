@@ -6,7 +6,9 @@
 //! - Minimal padding between fields
 //! - Pre-allocated vectors for zero-alloc hot loop
 
-use crate::config::{ResourceConfig, ResourceType, SimConfig, Stats};
+use crate::config::{ResourceConfig, ResourceType, SimConfig};
+use crate::paperdoll::{Paperdoll, PetCoefficients, PetStats};
+use crate::paperdoll::pet::PetType as PetPetType;
 
 use super::results::ActionLog;
 use super::EventQueue;
@@ -90,6 +92,9 @@ pub struct SimState {
     /// Pet state (cold - rarely accessed)
     pub pet: Option<UnitState>,
 
+    /// Pet stats computed from owner paperdoll (new)
+    pub pet_stats: Option<PetStats>,
+
     /// Action log for detailed reporting (cold - only used in report mode)
     pub action_log: ActionLog,
 }
@@ -112,16 +117,13 @@ pub struct UnitState {
     pub last_resource_update: u32,
 
     // === Warm fields (spell casting) ===
-    /// Current stats (base + modifiers)
-    pub stats: Stats,
+    /// Paperdoll for full stat system
+    pub paperdoll: Paperdoll,
 
     /// Spell cooldown/charge states (indexed by spell position)
     pub spell_states: Vec<SpellState>,
 
     // === Cold fields (rarely accessed) ===
-    /// Base stats (without modifiers) - only used on reset
-    pub base_stats: Stats,
-
     /// Active auras
     pub auras: AuraTracker,
 
@@ -133,9 +135,8 @@ pub struct UnitState {
 }
 
 impl UnitState {
-    pub fn new(stats: Stats, resources: ResourceConfig, spell_count: usize) -> Self {
-        let mut stats = stats;
-        stats.finalize();
+    /// Create a new UnitState with the given paperdoll and resources.
+    pub fn new(paperdoll: Paperdoll, resources: ResourceConfig, spell_count: usize) -> Self {
         Self {
             // Hot fields
             resources: Resources::new(resources),
@@ -143,10 +144,9 @@ impl UnitState {
             gcd_event_pending: false,
             last_resource_update: 0,
             // Warm fields
-            stats,
+            paperdoll,
             spell_states: vec![SpellState::default(); spell_count],
             // Cold fields
-            base_stats: stats,
             auras: AuraTracker::new(),
             cast_end: 0.0,
             casting_spell: None,
@@ -155,7 +155,9 @@ impl UnitState {
 
     #[inline]
     pub fn reset(&mut self) {
-        self.stats = self.base_stats;
+        // Reset paperdoll modifiers and recompute
+        self.paperdoll.modifiers = Default::default();
+        self.paperdoll.recompute();
         self.resources.reset();
         for state in &mut self.spell_states {
             state.reset();
@@ -498,7 +500,7 @@ impl Default for SimResultsAccum {
 impl SimState {
     pub fn new(config: &SimConfig) -> Self {
         let spell_count = config.spells.len();
-        let player = UnitState::new(config.player.stats, config.player.resources, spell_count);
+        let player = UnitState::new(config.player.paperdoll.clone(), config.player.resources, spell_count);
 
         // Convert duration from f32 seconds to u32 milliseconds
         let duration_ms = (config.duration * 1000.0) as u32;
@@ -580,6 +582,14 @@ impl SimState {
             })
             .collect();
 
+        // Initialize pet stats if pet config exists
+        let pet_stats = config.pet.as_ref().map(|_| {
+            let mut stats = PetStats::new(PetPetType::HunterMainPet, PetCoefficients::hunter_main_pet());
+            // Update from owner paperdoll
+            stats.update_from_owner(&player.paperdoll.cache, 0.0);
+            stats
+        });
+
         let mut state = Self {
             time: 0,
             duration: duration_ms,
@@ -597,6 +607,7 @@ impl SimState {
             next_pet_attack: 0,
             target: TargetState::new(config.target.max_health),
             pet: None,
+            pet_stats,
             action_log: ActionLog::new(),
         };
 

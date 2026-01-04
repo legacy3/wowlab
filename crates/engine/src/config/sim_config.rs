@@ -2,18 +2,19 @@
 
 use serde::Deserialize;
 
-use super::{AuraDef, ResourceConfig, SpellDef, Stats};
+use super::{AuraDef, ResourceConfig, SpellDef};
+use crate::paperdoll::Paperdoll;
 
 /// Complete simulation configuration.
 ///
 /// Contains all data needed to run a simulation: player, pet, spells, auras, and target.
-#[derive(Debug, Clone, Deserialize)]
+/// Built programmatically from CLI's SpecConfig (TOML-based) or other sources.
+#[derive(Debug, Clone)]
 pub struct SimConfig {
     /// Player configuration.
     pub player: PlayerConfig,
 
     /// Pet configuration (if any).
-    #[serde(default)]
     pub pet: Option<PetConfig>,
 
     /// All spells available to the player.
@@ -26,28 +27,25 @@ pub struct SimConfig {
     pub duration: f32,
 
     /// Target configuration.
-    #[serde(default)]
     pub target: TargetConfig,
 }
 
 /// Player configuration.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PlayerConfig {
     /// Character name.
     pub name: String,
     /// Specialization identifier.
     pub spec: SpecId,
-    /// Player stats.
-    pub stats: Stats,
+    /// Player paperdoll with all stats computed.
+    pub paperdoll: Paperdoll,
     /// Resource configuration.
     pub resources: ResourceConfig,
 
     /// Weapon swing speed in seconds (0 = no auto-attacks).
-    #[serde(default)]
     pub weapon_speed: f32,
 
     /// Weapon damage range (min, max).
-    #[serde(default)]
     pub weapon_damage: (f32, f32),
 }
 
@@ -63,26 +61,20 @@ pub enum SpecId {
 }
 
 /// Pet configuration.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PetConfig {
     /// Pet name.
     pub name: String,
-    /// Pet stats.
-    pub stats: Stats,
+    /// Pet paperdoll with all stats computed.
+    pub paperdoll: Paperdoll,
     /// Pet abilities.
     pub spells: Vec<SpellDef>,
 
     /// Pet melee attack speed in seconds.
-    #[serde(default = "default_pet_attack_speed")]
     pub attack_speed: f32,
 
     /// Pet melee damage range (min, max).
-    #[serde(default)]
     pub attack_damage: (f32, f32),
-}
-
-fn default_pet_attack_speed() -> f32 {
-    2.0
 }
 
 /// Target/boss configuration.
@@ -100,13 +92,11 @@ pub struct TargetConfig {
 }
 
 impl SimConfig {
-    /// Pre-compute derived stat values.
+    /// Finalize the configuration.
     ///
-    /// Call this after loading configuration.
+    /// Currently a no-op since StatConfig doesn't need finalization.
+    /// Kept for API compatibility.
     pub fn finalize(&mut self) {
-        self.player.stats.finalize();
-        if let Some(ref mut pet) = self.pet {
-            pet.stats.finalize();
-        }
+        // StatConfig doesn't need finalization - stats are used directly
     }
 }
