@@ -3,3 +3,4 @@ pub mod types;
 pub mod core;
 pub mod stats;
 pub mod resource;
+pub mod combat;
