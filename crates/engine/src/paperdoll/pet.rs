@@ -14,34 +14,8 @@
 //!
 //! Secondary stats (crit, haste, versatility) are inherited at 100%.
 
-/// Pet type for inheritance coefficient lookup.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum PetType {
-    // Hunter pets
-    #[default]
-    HunterMainPet,
-    HunterAnimalCompanion,
-    HunterDireBeast,
-    HunterCallOfTheWild,
-    HunterDarkHoundBm,
-    HunterDarkHound,
-    HunterHeroPet,
-
-    // Warlock pets
-    WarlockImp,
-    WarlockVoidwalker,
-    WarlockFelhunter,
-    WarlockSuccubus,
-    WarlockFelguard,
-
-    // Death Knight
-    DKGhoul,
-    DKArmyGhoul,
-    DKApocalypseGhoul,
-
-    // Generic
-    Guardian,
-}
+// Re-export PetType from types module for use in this module and external consumers
+pub use super::types::PetType;
 
 /// Pet stat inheritance coefficients.
 ///

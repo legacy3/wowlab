@@ -87,11 +87,42 @@ use crate::rotation::PredictiveRotation;
 use crate::util::FastRng;
 
 use super::{BatchAccumulator, BatchResult, SimEvent, SimReport, SimResult, SimState, SpellBreakdown};
+use crate::paperdoll::PaperdollStatCache as StatCache;
 
 /// Convert f32 seconds to u32 milliseconds
 #[inline(always)]
 fn to_ms(seconds: f32) -> u32 {
     (seconds * 1000.0) as u32
+}
+
+/// Core damage calculation with AP scaling and multipliers.
+///
+/// Formula: (base_damage + ap_coefficient * attack_power) * crit_mult * damage_multiplier
+///
+/// Uses paperdoll.cache for all stat lookups:
+/// - cache.attack_power: Total attack power including buffs
+/// - cache.crit_mult: 1.0 + crit_chance (expected crit damage multiplier)
+/// - cache.damage_multiplier: (1 + vers) * (1 + aura_damage_pct)
+#[inline(always)]
+fn calculate_scaled_damage(base_damage: f32, ap_coefficient: f32, cache: &StatCache) -> f32 {
+    let ap_damage = ap_coefficient * cache.attack_power;
+    (base_damage + ap_damage) * cache.crit_mult * cache.damage_multiplier
+}
+
+/// Auto-attack damage calculation with normalized weapon speed.
+///
+/// Formula: (weapon_avg + AP/14 * weapon_speed) * crit_mult * damage_multiplier
+/// Uses the standard WoW normalization factor of 14 for ranged/2H weapons.
+#[inline(always)]
+fn calculate_auto_attack_damage(
+    weapon_min: f32,
+    weapon_max: f32,
+    weapon_speed: f32,
+    cache: &StatCache,
+) -> f32 {
+    let weapon_damage = (weapon_min + weapon_max) * 0.5;
+    let ap_bonus = (cache.attack_power / 14.0) * weapon_speed;
+    (weapon_damage + ap_bonus) * cache.crit_mult * cache.damage_multiplier
 }
 
 /// Dispatch a single event - extracted for reuse in meta_events mode
@@ -399,13 +430,8 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
             }
 
             if runtime.tick_amount > 0.0 || runtime.tick_coefficient > 0.0 {
-                // Use paperdoll cache for damage calculation:
-                // - cache.attack_power for AP scaling
-                // - cache.crit_mult = 1.0 + crit_chance (expected crit multiplier)
-                // - cache.damage_multiplier = (1 + vers) * (1 + aura_damage_pct)
-                let base_damage = runtime.tick_amount
-                    + runtime.tick_coefficient * cache.attack_power;
-                let damage = base_damage * cache.crit_mult * cache.damage_multiplier;
+                let damage =
+                    calculate_scaled_damage(runtime.tick_amount, runtime.tick_coefficient, cache);
                 state.results.total_damage += damage;
                 state.target.health -= damage;
 
@@ -429,10 +455,7 @@ fn process_pending_ticks(state: &mut SimState, config: &SimConfig, current_time:
     let cache = &state.player.paperdoll.cache;
     while state.next_auto_attack <= current_time {
         let (min_dmg, max_dmg) = config.player.weapon_damage;
-        let weapon_damage = (min_dmg + max_dmg) * 0.5;
-        // Use AP / 14 * weapon_speed for normalized AP bonus (standard WoW formula)
-        let ap_bonus = (cache.attack_power / 14.0) * config.player.weapon_speed;
-        let damage = (weapon_damage + ap_bonus) * cache.crit_mult * cache.damage_multiplier;
+        let damage = calculate_auto_attack_damage(min_dmg, max_dmg, config.player.weapon_speed, cache);
         state.results.total_damage += damage;
         state.target.health -= damage;
 
@@ -578,11 +601,6 @@ fn cast_spell_inline(
 
 /// Calculate damage for a spell - inlined with all multipliers.
 /// Returns the damage dealt for logging purposes.
-///
-/// Uses paperdoll.cache for all stat lookups:
-/// - cache.attack_power: Total attack power including buffs
-/// - cache.crit_mult: 1.0 + crit_chance (expected crit damage multiplier)
-/// - cache.damage_multiplier: (1 + vers) * (1 + aura_damage_pct)
 #[inline(always)]
 fn calculate_damage_inline(
     state: &mut SimState,
@@ -596,13 +614,8 @@ fn calculate_damage_inline(
     // Expected base damage (midpoint of range)
     let base_damage = (spell_rt.damage_min + spell_rt.damage_max) * 0.5;
 
-    // Attack power contribution (use pre-computed ap_coefficient)
-    let ap_damage = spell_rt.ap_coefficient * cache.attack_power;
-
-    // Total damage with:
-    // - cache.crit_mult = 1 + crit_chance (expected crit damage for 2x crit)
-    // - cache.damage_multiplier = (1 + vers) * (1 + aura_damage_pct)
-    let total_damage = (base_damage + ap_damage) * cache.crit_mult * cache.damage_multiplier;
+    // Total damage using unified damage calculation
+    let total_damage = calculate_scaled_damage(base_damage, spell_rt.ap_coefficient, cache);
 
     // Record damage
     state.results.record_damage(spell_idx, total_damage);

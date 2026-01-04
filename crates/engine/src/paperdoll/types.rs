@@ -581,12 +581,16 @@ pub enum PetType {
     HunterDireBeast = 2,
     /// Call of the Wild beasts
     HunterCallOfTheWild = 3,
-    /// Dark Hound hero talent pet (500-605% AP scaling)
-    HunterDarkHound = 4,
+    /// Dark Hound hero talent pet - Beast Mastery (500% AP scaling)
+    HunterDarkHoundBm = 4,
+    /// Dark Hound hero talent pet - other specs (605% AP scaling)
+    HunterDarkHound = 5,
+    /// Generic hero pet (200% AP scaling) - covers Fenryr/Hati style pets
+    HunterHeroPet = 6,
     /// Fenryr hero pet (200% AP scaling)
-    HunterFenryr = 5,
+    HunterFenryr = 7,
     /// Hati hero pet (200% AP scaling)
-    HunterHati = 6,
+    HunterHati = 8,
 
     // -------------------------------------------------------------------------
     // Warlock pets
@@ -654,7 +658,9 @@ impl PetType {
                 | PetType::HunterAnimalCompanion
                 | PetType::HunterDireBeast
                 | PetType::HunterCallOfTheWild
+                | PetType::HunterDarkHoundBm
                 | PetType::HunterDarkHound
+                | PetType::HunterHeroPet
                 | PetType::HunterFenryr
                 | PetType::HunterHati
         )
@@ -711,7 +717,9 @@ impl PetType {
             PetType::HunterAnimalCompanion => "Animal Companion",
             PetType::HunterDireBeast => "Dire Beast",
             PetType::HunterCallOfTheWild => "Call of the Wild Beast",
+            PetType::HunterDarkHoundBm => "Dark Hound (BM)",
             PetType::HunterDarkHound => "Dark Hound",
+            PetType::HunterHeroPet => "Hero Pet",
             PetType::HunterFenryr => "Fenryr",
             PetType::HunterHati => "Hati",
             PetType::WarlockImp => "Imp",

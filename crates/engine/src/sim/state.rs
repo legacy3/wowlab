@@ -7,8 +7,7 @@
 //! - Pre-allocated vectors for zero-alloc hot loop
 
 use crate::config::SimConfig;
-use crate::paperdoll::{Paperdoll, PetCoefficients, PetStats};
-use crate::paperdoll::pet::PetType as PetPetType;
+use crate::paperdoll::{Paperdoll, PetCoefficients, PetStats, PetType};
 use crate::resources::{UnitResources, UnitResourcesConfig};
 
 use super::results::ActionLog;
@@ -539,7 +538,7 @@ impl SimState {
 
         // Initialize pet stats if pet config exists
         let pet_stats = config.pet.as_ref().map(|_| {
-            let mut stats = PetStats::new(PetPetType::HunterMainPet, PetCoefficients::hunter_main_pet());
+            let mut stats = PetStats::new(PetType::HunterMainPet, PetCoefficients::hunter_main_pet());
             // Update from owner paperdoll
             stats.update_from_owner(&player.paperdoll.cache, 0.0);
             stats

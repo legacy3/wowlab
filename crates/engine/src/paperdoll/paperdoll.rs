@@ -704,110 +704,69 @@ impl Paperdoll {
 
     /// Apply an aura's stat effect.
     pub fn apply_aura_effect(&mut self, effect: &AuraStatEffect) {
-        match effect {
-            AuraStatEffect::FlatAttribute { attr, amount } => {
-                match attr {
-                    Attribute::Strength => self.modifiers.strength_flat += amount,
-                    Attribute::Agility => self.modifiers.agility_flat += amount,
-                    Attribute::Intellect => self.modifiers.intellect_flat += amount,
-                    Attribute::Stamina => self.modifiers.stamina_flat += amount,
-                }
-                self.invalidate(CacheKey::from(*attr));
-            }
-            AuraStatEffect::PercentAttribute { attr, percent } => {
-                match attr {
-                    Attribute::Strength => self.modifiers.strength_pct += percent,
-                    Attribute::Agility => self.modifiers.agility_pct += percent,
-                    Attribute::Intellect => self.modifiers.intellect_pct += percent,
-                    Attribute::Stamina => self.modifiers.stamina_pct += percent,
-                }
-                self.invalidate(CacheKey::from(*attr));
-            }
-            AuraStatEffect::FlatAttackPower(amount) => {
-                self.modifiers.attack_power_flat += amount;
-                self.invalidate(CacheKey::AttackPower);
-            }
-            AuraStatEffect::PercentAttackPower(percent) => {
-                self.modifiers.attack_power_pct += percent;
-                self.invalidate(CacheKey::AttackPower);
-            }
-            AuraStatEffect::DamageDone(percent) => {
-                self.modifiers.damage_done_pct += percent;
-                self.invalidate(CacheKey::DamageMultiplier);
-            }
-            AuraStatEffect::DamageTaken(percent) => {
-                self.modifiers.damage_taken_pct += percent;
-                self.invalidate(CacheKey::DamageTakenMultiplier);
-            }
-            AuraStatEffect::CritChance(percent) => {
-                self.modifiers.crit_pct += percent;
-                self.invalidate(CacheKey::CritChance);
-            }
-            AuraStatEffect::HastePercent(percent) => {
-                self.modifiers.haste_pct += percent;
-                self.invalidate(CacheKey::HastePercent);
-            }
-            AuraStatEffect::MasteryPercent(percent) => {
-                self.modifiers.mastery_pct += percent;
-                self.invalidate(CacheKey::MasteryValue);
-            }
-            AuraStatEffect::PetDamage(percent) => {
-                self.modifiers.pet_damage_pct += percent;
-            }
-        }
+        self.modify_aura_effect(effect, 1.0);
     }
 
     /// Remove an aura's stat effect.
     pub fn remove_aura_effect(&mut self, effect: &AuraStatEffect) {
+        self.modify_aura_effect(effect, -1.0);
+    }
+
+    /// Internal method to modify stats from an aura effect.
+    /// Sign should be 1.0 for apply, -1.0 for remove.
+    #[inline]
+    fn modify_aura_effect(&mut self, effect: &AuraStatEffect, sign: f32) {
         match effect {
             AuraStatEffect::FlatAttribute { attr, amount } => {
+                let delta = amount * sign;
                 match attr {
-                    Attribute::Strength => self.modifiers.strength_flat -= amount,
-                    Attribute::Agility => self.modifiers.agility_flat -= amount,
-                    Attribute::Intellect => self.modifiers.intellect_flat -= amount,
-                    Attribute::Stamina => self.modifiers.stamina_flat -= amount,
+                    Attribute::Strength => self.modifiers.strength_flat += delta,
+                    Attribute::Agility => self.modifiers.agility_flat += delta,
+                    Attribute::Intellect => self.modifiers.intellect_flat += delta,
+                    Attribute::Stamina => self.modifiers.stamina_flat += delta,
                 }
                 self.invalidate(CacheKey::from(*attr));
             }
             AuraStatEffect::PercentAttribute { attr, percent } => {
+                let delta = percent * sign;
                 match attr {
-                    Attribute::Strength => self.modifiers.strength_pct -= percent,
-                    Attribute::Agility => self.modifiers.agility_pct -= percent,
-                    Attribute::Intellect => self.modifiers.intellect_pct -= percent,
-                    Attribute::Stamina => self.modifiers.stamina_pct -= percent,
+                    Attribute::Strength => self.modifiers.strength_pct += delta,
+                    Attribute::Agility => self.modifiers.agility_pct += delta,
+                    Attribute::Intellect => self.modifiers.intellect_pct += delta,
+                    Attribute::Stamina => self.modifiers.stamina_pct += delta,
                 }
                 self.invalidate(CacheKey::from(*attr));
             }
             AuraStatEffect::FlatAttackPower(amount) => {
-                self.modifiers.attack_power_flat -= amount;
+                self.modifiers.attack_power_flat += amount * sign;
                 self.invalidate(CacheKey::AttackPower);
             }
             AuraStatEffect::PercentAttackPower(percent) => {
-                self.modifiers.attack_power_pct -= percent;
+                self.modifiers.attack_power_pct += percent * sign;
                 self.invalidate(CacheKey::AttackPower);
             }
             AuraStatEffect::DamageDone(percent) => {
-                self.modifiers.damage_done_pct -= percent;
+                self.modifiers.damage_done_pct += percent * sign;
                 self.invalidate(CacheKey::DamageMultiplier);
             }
             AuraStatEffect::DamageTaken(percent) => {
-                self.modifiers.damage_taken_pct -= percent;
+                self.modifiers.damage_taken_pct += percent * sign;
                 self.invalidate(CacheKey::DamageTakenMultiplier);
             }
             AuraStatEffect::CritChance(percent) => {
-                self.modifiers.crit_pct -= percent;
+                self.modifiers.crit_pct += percent * sign;
                 self.invalidate(CacheKey::CritChance);
             }
             AuraStatEffect::HastePercent(percent) => {
-                self.modifiers.haste_pct -= percent;
+                self.modifiers.haste_pct += percent * sign;
                 self.invalidate(CacheKey::HastePercent);
             }
             AuraStatEffect::MasteryPercent(percent) => {
-                self.modifiers.mastery_pct -= percent;
+                self.modifiers.mastery_pct += percent * sign;
                 self.invalidate(CacheKey::MasteryValue);
             }
             AuraStatEffect::PetDamage(percent) => {
-                self.modifiers.pet_damage_pct -= percent;
+                self.modifiers.pet_damage_pct += percent * sign;
             }
         }
     }
