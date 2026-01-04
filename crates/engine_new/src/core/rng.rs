@@ -1,4 +1,5 @@
 /// Fast, high-quality RNG (xoshiro256++)
+#[derive(Debug)]
 pub struct FastRng {
     state: [u64; 4],
 }

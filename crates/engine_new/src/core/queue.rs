@@ -26,7 +26,7 @@ pub struct ScheduledEvent {
 }
 
 /// Internal node in the arena-allocated linked list
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct EventNode {
     time_ms: u32,
     seq: u32,
@@ -38,6 +38,7 @@ struct EventNode {
 ///
 /// Zero allocations in the hot path via arena + free list.
 /// Deterministic FIFO ordering via sequence numbers.
+#[derive(Debug)]
 pub struct EventQueue {
     // Arena storage
     arena: Vec<EventNode>,
