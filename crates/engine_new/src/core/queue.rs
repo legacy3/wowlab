@@ -2,7 +2,7 @@
 //!
 //! Uses a SimC-style timing wheel with bitmap acceleration:
 //! - `WHEEL_SHIFT=5`: Each slot covers 32ms
-//! - `WHEEL_SIZE=4096`: ~131 seconds coverage
+//! - `WHEEL_SIZE=32768`: ~17 minutes coverage
 //! - Bitmap tracking for O(1) next-slot lookup via `trailing_zeros()`
 //! - Arena allocation with free list for zero allocations in hot path
 
@@ -10,7 +10,7 @@ use super::SimEvent;
 use crate::types::SimTime;
 
 const WHEEL_SHIFT: u32 = 5; // 32ms per slot
-const WHEEL_SIZE: usize = 4096;
+const WHEEL_SIZE: usize = 32768; // ~17 minutes coverage
 const WHEEL_MASK: usize = WHEEL_SIZE - 1;
 const BITMAP_SIZE: usize = WHEEL_SIZE / 64;
 
