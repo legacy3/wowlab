@@ -1,14 +1,14 @@
-/// Index into spell registry
+/// Spell ID (matches WoW spell IDs)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct SpellIdx(pub u16);
+pub struct SpellIdx(pub u32);
 
-/// Index into aura registry
+/// Aura ID (matches WoW spell IDs for auras)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct AuraIdx(pub u16);
+pub struct AuraIdx(pub u32);
 
-/// Index into proc registry
+/// Proc ID (internal identifier)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct ProcIdx(pub u16);
+pub struct ProcIdx(pub u32);
 
 /// Index into unit list (player=0, pets=1+, enemies after)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
