@@ -1,26 +1,22 @@
 [package]
 name = "engine"
-version = "0.3.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
 
 [lib]
-crate-type = ["rlib"]
+path = "src/lib.rs"
 
 [[bin]]
 name = "engine"
-path = "src/bin/main.rs"
-
-[features]
-default = []
-debug_logging = []  # Enable with --features debug_logging
-large_capacity = [] # Preallocate 16384 events instead of default
-meta_events = []    # Batch same-time events into meta events
+path = "src/main.rs"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-thiserror = "2.0"
-rhai = { version = "1.21", features = ["sync", "internals"] }
-clap = { version = "4.5", features = ["derive"] }
-toml = "0.8"
-rayon = "1.10"
+bitflags = "2"
+rhai = { version = "1", features = ["sync", "internals"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
