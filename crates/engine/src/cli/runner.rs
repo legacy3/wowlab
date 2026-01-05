@@ -5,6 +5,7 @@ use crate::rotation::RotationCompiler;
 use crate::results::ResultsExporter;
 use crate::specs::BeastMasteryHandler;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig};
+use tracing::{debug, info, warn, instrument};
 
 pub struct Runner;
 
@@ -49,6 +50,7 @@ impl Runner {
         }
     }
 
+    #[instrument(skip(gear_file), fields(spec = ?spec, iterations, targets, duration))]
     fn run_sim(
         spec: SpecArg,
         duration: f32,
@@ -59,10 +61,14 @@ impl Runner {
         gear_file: Option<String>,
         trace: bool,
     ) -> Result<(), String> {
+        info!(spec = ?spec, iterations, targets, duration_secs = duration, "Starting simulation");
+
         // Load gear
-        let gear = if let Some(path) = gear_file {
-            GearConfig::from_file(&path)?
+        let gear = if let Some(ref path) = gear_file {
+            debug!(path, "Loading gear configuration");
+            GearConfig::from_file(path)?
         } else {
+            debug!("Using default gear configuration");
             GearConfig::default()
         };
 
@@ -72,13 +78,22 @@ impl Runner {
 
         // Apply gear stats
         gear.apply_to(&mut player.stats, spec_id);
+        debug!(
+            attack_power = player.stats.attack_power(),
+            crit = %format!("{:.2}%", player.stats.crit_chance() * 100.0),
+            haste = %format!("{:.2}%", (player.stats.haste() - 1.0) * 100.0),
+            "Player stats configured"
+        );
 
         // Initialize spec
         match spec_id {
             SpecId::BeastMastery => {
                 BeastMasteryHandler::init_player(&mut player);
             }
-            _ => return Err("Spec not implemented".to_string()),
+            _ => {
+                warn!(spec = ?spec_id, "Spec not implemented");
+                return Err("Spec not implemented".to_string());
+            }
         }
 
         // Setup config
@@ -87,17 +102,19 @@ impl Runner {
 
         if let Some(s) = seed {
             config = config.with_seed(s);
+            debug!(seed = s, "Using fixed seed");
         }
 
         if trace {
             config = config.with_trace();
+            debug!("Event tracing enabled");
         }
 
         config.target_count = targets;
 
         // Run simulation
         if iterations == 1 {
-            // Single iteration with details
+            debug!("Running single iteration");
             let mut state = SimState::new(config, player);
 
             match spec_id {
@@ -109,10 +126,17 @@ impl Runner {
 
             SimExecutor::run(&mut state);
 
+            info!(dps = state.current_dps(), damage = state.total_damage, "Simulation complete");
             Self::output_single(&state, output)?;
         } else {
-            // Batch run with proper spec initialization
+            debug!(iterations, "Running batch simulation");
             let results = Self::run_batch(spec_id, config, player, iterations);
+            info!(
+                mean_dps = results.mean_dps,
+                std_dev = results.std_dev,
+                iterations = results.iterations,
+                "Batch simulation complete"
+            );
             Self::output_batch(&results, output, duration)?;
         }
 
@@ -143,12 +167,18 @@ impl Runner {
             }
 
             SimExecutor::run(&mut state);
-            dps_values.push(state.current_dps());
+            let dps = state.current_dps();
+            dps_values.push(dps);
 
-            // Progress
+            // Progress (CLI output, not tracing)
             let done = i + 1;
             if done % 100 == 0 || done == iterations {
                 eprint!("\rProgress: {}/{} ({:.1}%)", done, iterations, (done as f32 / iterations as f32) * 100.0);
+            }
+
+            // Debug log every 10% of iterations
+            if done % (iterations / 10).max(1) == 0 {
+                debug!(iteration = done, current_dps = dps, "Batch progress");
             }
         }
         eprintln!(); // New line after progress
@@ -221,15 +251,18 @@ impl Runner {
     }
 
     fn validate_rotation(file: &str) -> Result<(), String> {
+        debug!(file, "Validating rotation script");
         let content = std::fs::read_to_string(file)
             .map_err(|e| format!("Failed to read file: {}", e))?;
 
         match RotationCompiler::compile(&content) {
             Ok(_) => {
+                info!(file, "Rotation script is valid");
                 println!("Rotation script is valid");
                 Ok(())
             }
             Err(e) => {
+                warn!(file, error = %e, "Rotation script has errors");
                 println!("Rotation script has errors:");
                 println!("  {}", e);
                 Err(e.to_string())

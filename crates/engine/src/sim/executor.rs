@@ -2,6 +2,7 @@ use crate::types::SimTime;
 use crate::core::{SimEvent, ScheduledEvent};
 use crate::resource::ResourceRegen;
 use super::SimState;
+use tracing::debug;
 
 /// Handles event execution
 pub struct SimExecutor;
@@ -9,6 +10,14 @@ pub struct SimExecutor;
 impl SimExecutor {
     /// Run one iteration of the simulation
     pub fn run(state: &mut SimState) {
+        debug!(
+            duration_secs = state.config.duration.as_secs_f32(),
+            targets = state.config.target_count,
+            seed = state.config.seed,
+            iteration = state.iteration,
+            "Simulation iteration starting"
+        );
+
         while let Some(event) = state.events.pop() {
             if state.finished {
                 break;
@@ -19,6 +28,13 @@ impl SimExecutor {
 
             Self::handle_event(state, event);
         }
+
+        debug!(
+            iteration = state.iteration,
+            total_damage = state.total_damage,
+            dps = state.current_dps(),
+            "Simulation iteration finished"
+        );
     }
 
     /// Process a single event
@@ -30,23 +46,19 @@ impl SimExecutor {
 
             SimEvent::GcdEnd => {
                 // GCD finished, rotation can proceed
-                // The APL will be called on the next decision point
             }
 
             SimEvent::CastComplete { spell, target } => {
                 // Cast finished, apply effects
-                // This would be handled by the spec-specific logic
-                let _ = (spell, target); // Suppress unused warnings for now
+                let _ = (spell, target);
             }
 
             SimEvent::SpellDamage { spell, target, snapshot_id } => {
                 // Damage lands after travel time
-                // Apply damage using snapshotted stats
-                let _ = (spell, target, snapshot_id); // Suppress unused warnings for now
+                let _ = (spell, target, snapshot_id);
             }
 
             SimEvent::AuraExpire { aura, target } => {
-                // Remove aura from target
                 if let Some(auras) = state.auras.target_mut(target) {
                     auras.remove(aura);
                 }
@@ -54,17 +66,14 @@ impl SimExecutor {
 
             SimEvent::AuraTick { aura, target } => {
                 // Process periodic tick
-                // Calculate damage using snapshotted stats
-                let _ = (aura, target); // Suppress unused warnings for now
+                let _ = (aura, target);
             }
 
             SimEvent::CooldownReady { spell } => {
-                // Cooldown finished, can cast again
-                let _ = spell; // Suppress unused warnings for now
+                let _ = spell;
             }
 
             SimEvent::ChargeReady { spell } => {
-                // Charge regenerated
                 let haste = state.player.stats.haste();
                 let now = state.now();
                 if let Some(cd) = state.player.charged_cooldown_mut(spell) {
@@ -73,13 +82,10 @@ impl SimExecutor {
             }
 
             SimEvent::AutoAttack { unit } => {
-                // Process auto-attack
-                // Schedule next auto
-                let _ = unit; // Suppress unused warnings for now
+                let _ = unit;
             }
 
             SimEvent::PetAttack { pet } => {
-                // Process pet auto-attack
                 let now = state.now();
                 if let Some(p) = state.pets.get_mut(pet) {
                     if p.is_valid(now) {
@@ -89,10 +95,8 @@ impl SimExecutor {
             }
 
             SimEvent::ResourceTick => {
-                // Regenerate resources
                 Self::handle_resource_tick(state);
 
-                // Schedule next tick
                 if !state.finished {
                     state.schedule_in(
                         SimTime::from_millis(100),
@@ -102,8 +106,7 @@ impl SimExecutor {
             }
 
             SimEvent::ProcIcdEnd { proc } => {
-                // ICD finished, proc can trigger again
-                let _ = proc; // Suppress unused warnings for now
+                let _ = proc;
             }
         }
     }
