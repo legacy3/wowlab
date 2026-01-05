@@ -12,3 +12,4 @@ pub mod sim;
 pub mod rotation;
 pub mod results;
 pub mod specs;
+pub mod cli;
