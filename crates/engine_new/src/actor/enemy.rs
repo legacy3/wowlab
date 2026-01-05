@@ -132,7 +132,7 @@ impl EnemyManager {
         let mut manager = Self::new();
         for i in 0..count {
             manager.enemies.push(Enemy::raid_boss(
-                TargetIdx(i as u8),
+                TargetIdx(i as u16),
                 format!("Boss {}", i + 1),
             ));
         }

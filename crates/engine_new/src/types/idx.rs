@@ -12,11 +12,11 @@ pub struct ProcIdx(pub u32);
 
 /// Index into unit list (player=0, pets=1+, enemies after)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct UnitIdx(pub u8);
+pub struct UnitIdx(pub u16);
 
 /// Index into target list
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct TargetIdx(pub u8);
+pub struct TargetIdx(pub u16);
 
 /// Unique index for tracking snapshotted state (for delayed damage)
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]

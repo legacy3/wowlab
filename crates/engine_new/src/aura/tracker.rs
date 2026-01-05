@@ -152,7 +152,7 @@ impl AuraTracker {
             for aura in target.iter() {
                 if let Some(next) = aura.next_tick {
                     if next <= now && aura.is_active(now) {
-                        pending.push((TargetIdx(i as u8), aura.aura_id));
+                        pending.push((TargetIdx(i as u16), aura.aura_id));
                     }
                 }
             }

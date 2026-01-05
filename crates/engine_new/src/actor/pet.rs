@@ -122,7 +122,7 @@ impl Pet {
 #[derive(Clone, Debug, Default)]
 pub struct PetManager {
     pets: Vec<Pet>,
-    next_id: u8,
+    next_id: u16,
 }
 
 impl PetManager {
