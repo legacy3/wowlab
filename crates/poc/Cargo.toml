@@ -2,11 +2,25 @@
 name = "poc"
 version = "0.1.0"
 edition = "2021"
+description = "Rotation script compiler using Rhai with AST optimization"
+authors = ["wowlab contributors"]
+license = "MIT"
+repository = "https://github.com/wowlab/wowlab"
+keywords = ["rhai", "scripting", "compiler", "optimization"]
+categories = ["compilers", "game-development"]
 
 [dependencies]
-# internals: Access to AST types (Stmt, Expr, ASTNode)
-# sync: Thread-safe types
+# Rhai scripting engine with required features:
+# - internals: Access to AST types (Stmt, Expr, ASTNode) for optimization
+# - sync: Thread-safe types for concurrent evaluation
 rhai = { version = "1.21", features = ["sync", "internals"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
 
 [[bin]]
 name = "poc"
