@@ -1,43 +1,132 @@
 //! Simulation runner that integrates with the engine crate.
 
-use engine::{config::SimConfig, sim::BatchResult, Simulator};
+use engine::sim::{BatchResults, SimConfig, SimExecutor, SimState};
+use engine::types::SpecId;
+use engine::actor::Player;
+use engine::specs::BeastMasteryHandler;
 use serde::{Deserialize, Serialize};
 
 /// JSON request format for distributed simulation.
-///
-/// Contains both the simulation configuration and rotation script.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SimRequest {
-    /// Simulation configuration (player, spells, auras, etc.)
-    #[serde(flatten)]
-    pub config: SimConfig,
+    /// Player configuration
+    pub player: PlayerConfig,
 
-    /// Rotation script (Rhai code).
+    /// Fight duration in seconds
+    pub duration: f32,
+
+    /// Target configuration
+    pub target: TargetConfig,
+
+    /// Rotation script (Rhai code) - currently ignored until rotation system is integrated
+    #[serde(default)]
     pub rotation: String,
+
+    /// Spells - currently ignored (using spec handler definitions)
+    #[serde(default)]
+    pub spells: Vec<serde_json::Value>,
+
+    /// Auras - currently ignored (using spec handler definitions)
+    #[serde(default)]
+    pub auras: Vec<serde_json::Value>,
+}
+
+/// Player configuration from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct PlayerConfig {
+    /// Player name
+    #[serde(default)]
+    pub name: String,
+
+    /// Spec identifier (e.g., "beast_mastery")
+    pub spec: String,
+
+    /// Player stats
+    pub stats: StatsConfig,
+
+    /// Resource configuration
+    #[serde(default)]
+    pub resources: Option<ResourceConfig>,
+
+    /// Weapon speed
+    #[serde(default)]
+    pub weapon_speed: f32,
+
+    /// Weapon damage range [min, max]
+    #[serde(default)]
+    pub weapon_damage: [f32; 2],
+}
+
+/// Stats configuration from JSON
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct StatsConfig {
+    pub strength: f32,
+    pub agility: f32,
+    pub intellect: f32,
+    #[serde(default)]
+    pub stamina: f32,
+
+    // Rating-based stats
+    #[serde(default)]
+    pub crit_rating: f32,
+    #[serde(default)]
+    pub haste_rating: f32,
+    #[serde(default)]
+    pub mastery_rating: f32,
+    #[serde(default)]
+    pub versatility_rating: f32,
+
+    // Percent-based stats (for direct setting)
+    #[serde(default)]
+    pub crit_pct: Option<f32>,
+    #[serde(default)]
+    pub haste_pct: Option<f32>,
+    #[serde(default)]
+    pub mastery_pct: Option<f32>,
+    #[serde(default)]
+    pub versatility_pct: Option<f32>,
+}
+
+/// Resource configuration from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct ResourceConfig {
+    pub resource_type: String,
+    pub max: f32,
+    pub regen_per_second: f32,
+    #[serde(default)]
+    pub initial: f32,
+}
+
+/// Target configuration from JSON
+#[derive(Debug, Clone, Deserialize)]
+pub struct TargetConfig {
+    #[serde(default)]
+    pub level_diff: i32,
+    pub max_health: f32,
+    #[serde(default)]
+    pub armor: f32,
 }
 
 /// Result format returned by the simulation runner.
-///
-/// Maps the engine's BatchResult to a node-friendly format.
 #[derive(Debug, Clone, Serialize)]
 pub struct SimResponse {
     pub iterations: u32,
-    pub mean_dps: f32,
-    pub std_dps: f32,
-    pub min_dps: f32,
-    pub max_dps: f32,
+    pub mean_dps: f64,
+    pub std_dps: f64,
+    pub min_dps: f64,
+    pub max_dps: f64,
     pub total_casts: u64,
 }
 
-impl From<BatchResult> for SimResponse {
-    fn from(result: BatchResult) -> Self {
+impl From<BatchResults> for SimResponse {
+    fn from(result: BatchResults) -> Self {
         Self {
             iterations: result.iterations,
             mean_dps: result.mean_dps,
-            std_dps: result.std_dps,
+            std_dps: result.std_dev,
             min_dps: result.min_dps,
             max_dps: result.max_dps,
-            total_casts: result.total_casts,
+            total_casts: 0, // Not tracked in new engine yet
         }
     }
 }
@@ -48,7 +137,7 @@ impl SimRunner {
     /// Run a batch simulation using the engine.
     ///
     /// # Arguments
-    /// * `config_json` - JSON string containing SimRequest (config + rotation)
+    /// * `config_json` - JSON string containing SimRequest
     /// * `iterations` - Number of simulation iterations to run
     /// * `base_seed` - Base seed for RNG (offset by chunk for distribution)
     ///
@@ -60,30 +149,120 @@ impl SimRunner {
         base_seed: u64,
     ) -> Result<serde_json::Value, SimError> {
         // Parse the request
-        let mut request: SimRequest =
+        let request: SimRequest =
             serde_json::from_str(config_json).map_err(|e| SimError::Config(e.to_string()))?;
 
-        // Finalize derived stats
-        request.config.finalize();
+        // Parse spec
+        let spec_id = parse_spec(&request.player.spec)?;
 
-        // Create simulator with rotation
-        let mut simulator = Simulator::new(request.config, &request.rotation)
-            .map_err(|e| SimError::Engine(e.to_string()))?;
+        // Create player with stats
+        let mut player = create_player(spec_id, &request.player)?;
 
-        // Run the simulation batch
-        let result = simulator.run_batch(iterations, base_seed);
+        // Initialize spec-specific abilities
+        match spec_id {
+            SpecId::BeastMastery => {
+                BeastMasteryHandler::init_player(&mut player);
+            }
+            _ => return Err(SimError::Engine(format!("Spec {:?} not implemented", spec_id))),
+        }
+
+        // Create sim config
+        let config = SimConfig::default()
+            .with_duration(request.duration)
+            .with_seed(base_seed);
+
+        // Run batch simulation
+        let results = run_batch(spec_id, config, player, iterations);
 
         tracing::debug!(
             "Completed {} iterations: mean DPS = {:.0} (±{:.0})",
-            result.iterations,
-            result.mean_dps,
-            result.std_dps
+            results.iterations,
+            results.mean_dps,
+            results.std_dev
         );
 
         // Convert to response format
-        let response = SimResponse::from(result);
+        let response = SimResponse::from(results);
         serde_json::to_value(response).map_err(|e| SimError::Serialization(e.to_string()))
     }
+}
+
+/// Parse spec string to SpecId
+fn parse_spec(spec: &str) -> Result<SpecId, SimError> {
+    match spec.to_lowercase().as_str() {
+        "beast_mastery" | "beastmastery" | "bm" | "bm_hunter" => Ok(SpecId::BeastMastery),
+        "marksmanship" | "mm" | "mm_hunter" => Ok(SpecId::Marksmanship),
+        "survival" | "sv" | "sv_hunter" => Ok(SpecId::Survival),
+        _ => Err(SimError::Config(format!("Unknown spec: {}", spec))),
+    }
+}
+
+/// Create a player from config
+fn create_player(spec_id: SpecId, config: &PlayerConfig) -> Result<Player, SimError> {
+    let mut player = Player::new(spec_id);
+
+    // Set primary stats
+    player.stats.primary.strength = config.stats.strength;
+    player.stats.primary.agility = config.stats.agility;
+    player.stats.primary.intellect = config.stats.intellect;
+    player.stats.primary.stamina = config.stats.stamina;
+
+    // Set rating stats
+    player.stats.ratings.crit = config.stats.crit_rating;
+    player.stats.ratings.haste = config.stats.haste_rating;
+    player.stats.ratings.mastery = config.stats.mastery_rating;
+    player.stats.ratings.versatility = config.stats.versatility_rating;
+
+    // If percent stats are provided, use them directly in combat stats
+    // (This is a simplification - in production, you'd convert properly)
+    if let Some(crit) = config.stats.crit_pct {
+        player.stats.combat.crit_chance = crit / 100.0;
+    }
+    if let Some(haste) = config.stats.haste_pct {
+        player.stats.combat.haste = 1.0 + haste / 100.0;
+    }
+    if let Some(mastery) = config.stats.mastery_pct {
+        player.stats.combat.mastery = mastery;
+    }
+    if let Some(vers) = config.stats.versatility_pct {
+        player.stats.combat.versatility_damage = vers / 100.0;
+    }
+
+    // Recalculate combat stats from primary/ratings
+    player.stats.invalidate();
+    player.stats.update(1.0); // Default mastery coefficient
+
+    Ok(player)
+}
+
+/// Run batch simulation with proper spec initialization per iteration
+fn run_batch(
+    spec_id: SpecId,
+    config: SimConfig,
+    player_template: Player,
+    iterations: u32,
+) -> BatchResults {
+    let mut dps_values = Vec::with_capacity(iterations as usize);
+
+    for i in 0..iterations {
+        let mut iter_config = config.clone();
+        iter_config.seed = config.seed.wrapping_add(i as u64);
+
+        let mut state = SimState::new(iter_config, player_template.clone());
+
+        // Call spec-specific init
+        match spec_id {
+            SpecId::BeastMastery => {
+                BeastMasteryHandler::init_sim(&mut state);
+            }
+            _ => {}
+        }
+
+        SimExecutor::run(&mut state);
+        dps_values.push(state.current_dps());
+    }
+
+    BatchResults::from_values(dps_values)
 }
 
 #[derive(Debug, thiserror::Error)]
