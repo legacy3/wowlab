@@ -5,6 +5,7 @@ members = [
     "node",
     "node-gui",
     "node-headless",
+    "poc",
 ]
 
 [workspace.package]

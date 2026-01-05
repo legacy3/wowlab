@@ -1,0 +1,13 @@
+[package]
+name = "poc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# internals: Access to AST types (Stmt, Expr, ASTNode)
+# sync: Thread-safe types
+rhai = { version = "1.21", features = ["sync", "internals"] }
+
+[[bin]]
+name = "poc"
+path = "src/main.rs"
