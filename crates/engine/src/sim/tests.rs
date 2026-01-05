@@ -1,6 +1,16 @@
 use super::*;
 use crate::types::*;
 use crate::actor::Player;
+use crate::specs::BeastMasteryHandler;
+use std::sync::Once;
+
+static INIT_ROTATION: Once = Once::new();
+
+fn ensure_rotation() {
+    INIT_ROTATION.call_once(|| {
+        let _ = BeastMasteryHandler::init_rotation("wait_gcd()");
+    });
+}
 
 #[test]
 fn sim_config_defaults() {
@@ -105,6 +115,7 @@ fn batch_results_cv() {
 
 #[test]
 fn batch_runner_basic() {
+    ensure_rotation();
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
     let runner = BatchRunner::new(config, player)
@@ -142,6 +153,7 @@ fn decision_context_basic() {
 
 #[test]
 fn sim_executor_runs_to_completion() {
+    ensure_rotation();
     let config = SimConfig::default().with_duration(1.0); // 1 second fight
     let player = Player::new(SpecId::BeastMastery);
     let mut state = SimState::new(config, player);
@@ -166,6 +178,7 @@ fn sim_config_builders() {
 
 #[test]
 fn sim_state_current_dps() {
+    ensure_rotation();
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
     let mut state = SimState::new(config, player);
@@ -173,6 +186,6 @@ fn sim_state_current_dps() {
     // Run simulation
     SimExecutor::run(&mut state);
 
-    // At end of 10 second fight with 0 damage, DPS should be 0
+    // DPS should be 0 since wait_gcd() rotation does nothing
     assert_eq!(state.current_dps(), 0.0);
 }

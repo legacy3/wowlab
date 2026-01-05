@@ -19,7 +19,7 @@ impl Runner {
                 targets,
                 seed,
                 output,
-                rotation: _rotation,
+                rotation,
                 gear,
                 trace,
             } => {
@@ -30,6 +30,7 @@ impl Runner {
                     targets,
                     seed,
                     output,
+                    rotation,
                     gear,
                     trace,
                 )
@@ -50,7 +51,7 @@ impl Runner {
         }
     }
 
-    #[instrument(skip(gear_file), fields(spec = ?spec, iterations, targets, duration))]
+    #[instrument(skip(gear_file, rotation_file), fields(spec = ?spec, iterations, targets, duration))]
     fn run_sim(
         spec: SpecArg,
         duration: f32,
@@ -58,10 +59,22 @@ impl Runner {
         targets: usize,
         seed: Option<u64>,
         output: OutputFormat,
+        rotation_file: Option<String>,
         gear_file: Option<String>,
         trace: bool,
     ) -> Result<(), String> {
         info!(spec = ?spec, iterations, targets, duration_secs = duration, "Starting simulation");
+
+        // Load rotation script
+        let rotation_script = Self::load_rotation_script(spec, rotation_file.as_deref())?;
+
+        // Initialize rotation for this spec
+        match spec.to_spec_id() {
+            SpecId::BeastMastery => {
+                BeastMasteryHandler::init_rotation(&rotation_script)?;
+            }
+            _ => {}
+        }
 
         // Load gear
         let gear = if let Some(ref path) = gear_file {
@@ -78,6 +91,8 @@ impl Runner {
 
         // Apply gear stats
         gear.apply_to(&mut player.stats, spec_id);
+        // Compute derived combat stats
+        player.stats.update(1.0);
         debug!(
             attack_power = player.stats.attack_power(),
             crit = %format!("{:.2}%", player.stats.crit_chance() * 100.0),
@@ -248,6 +263,23 @@ impl Runner {
         println!("  bm-hunter  - Beast Mastery Hunter");
         // Add more as implemented
         Ok(())
+    }
+
+    /// Load rotation script from file or use default
+    fn load_rotation_script(spec: SpecArg, path: Option<&str>) -> Result<String, String> {
+        if let Some(p) = path {
+            debug!(path = p, "Loading rotation script");
+            std::fs::read_to_string(p)
+                .map_err(|e| format!("Failed to read rotation file: {}", e))
+        } else {
+            // Use default rotation for spec
+            let default_path = match spec {
+                SpecArg::BmHunter => "rotations/bm_hunter.rhai",
+            };
+            debug!(path = default_path, "Loading default rotation script");
+            std::fs::read_to_string(default_path)
+                .map_err(|e| format!("Failed to read default rotation '{}': {}", default_path, e))
+        }
     }
 
     fn validate_rotation(file: &str) -> Result<(), String> {

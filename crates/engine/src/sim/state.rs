@@ -127,6 +127,9 @@ impl SimState {
         // Schedule resource ticks (every 100ms for energy/focus)
         events.schedule(SimTime::from_millis(100), crate::core::SimEvent::ResourceTick);
 
+        // Schedule initial GCD end to start rotation
+        events.schedule(SimTime::ZERO, crate::core::SimEvent::GcdEnd);
+
         Self {
             rng: FastRng::new(config.seed),
             enemies: EnemyManager::with_bosses(config.target_count),
@@ -159,6 +162,7 @@ impl SimState {
         self.events.clear();
         self.events.schedule(self.config.duration, crate::core::SimEvent::SimEnd);
         self.events.schedule(SimTime::from_millis(100), crate::core::SimEvent::ResourceTick);
+        self.events.schedule(SimTime::ZERO, crate::core::SimEvent::GcdEnd);
 
         // Reset actors
         self.player.reset();

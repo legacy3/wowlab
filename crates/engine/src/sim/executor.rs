@@ -1,6 +1,7 @@
-use crate::types::SimTime;
+use crate::types::{SimTime, SpecId};
 use crate::core::{SimEvent, ScheduledEvent};
 use crate::resource::ResourceRegen;
+use crate::specs::BeastMasteryHandler;
 use super::SimState;
 use tracing::debug;
 
@@ -45,17 +46,25 @@ impl SimExecutor {
             }
 
             SimEvent::GcdEnd => {
-                // GCD finished, rotation can proceed
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_gcd(state),
+                    _ => {}
+                }
             }
 
             SimEvent::CastComplete { spell, target } => {
-                // Cast finished, apply effects
-                let _ = (spell, target);
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_cast_complete(state, spell, target),
+                    _ => {}
+                }
             }
 
             SimEvent::SpellDamage { spell, target, snapshot_id } => {
-                // Damage lands after travel time
-                let _ = (spell, target, snapshot_id);
+                let _ = snapshot_id;
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_spell_damage(state, spell, target),
+                    _ => {}
+                }
             }
 
             SimEvent::AuraExpire { aura, target } => {
@@ -65,8 +74,10 @@ impl SimExecutor {
             }
 
             SimEvent::AuraTick { aura, target } => {
-                // Process periodic tick
-                let _ = (aura, target);
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_aura_tick(state, aura, target),
+                    _ => {}
+                }
             }
 
             SimEvent::CooldownReady { spell } => {
@@ -82,15 +93,16 @@ impl SimExecutor {
             }
 
             SimEvent::AutoAttack { unit } => {
-                let _ = unit;
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_auto_attack(state, unit),
+                    _ => {}
+                }
             }
 
             SimEvent::PetAttack { pet } => {
-                let now = state.now();
-                if let Some(p) = state.pets.get_mut(pet) {
-                    if p.is_valid(now) {
-                        // Deal damage, schedule next
-                    }
+                match state.player.spec {
+                    SpecId::BeastMastery => BeastMasteryHandler::handle_pet_attack(state, pet),
+                    _ => {}
                 }
             }
 

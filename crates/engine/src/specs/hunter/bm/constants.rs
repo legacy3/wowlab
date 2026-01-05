@@ -91,3 +91,5 @@ pub const BEAST_CLEAVE_DURATION: f32 = 4.0;
 pub const WILD_CALL_CHANCE: f32 = 0.20;
 /// Cobra Shot CDR for Kill Command
 pub const COBRA_SHOT_CDR: f32 = 1.0;
+/// Player ranged attack speed (ms)
+pub const RANGED_ATTACK_SPEED: f32 = 2600.0;
