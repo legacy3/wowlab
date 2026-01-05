@@ -6,7 +6,11 @@ mod attribute;
 mod damage;
 mod snapshot;
 
-pub use idx::*;
+// Re-export all index types
+pub use idx::{
+    SpellIdx, AuraIdx, ProcIdx, UnitIdx, TargetIdx,
+    PetIdx, EnemyIdx, SnapshotIdx, ResourceIdx,
+};
 pub use time::*;
 pub use resource::*;
 pub use class::*;
