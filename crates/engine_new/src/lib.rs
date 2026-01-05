@@ -9,3 +9,4 @@ pub mod proc;
 pub mod actor;
 pub mod spec;
 pub mod sim;
+pub mod rotation;
