@@ -1,10 +1,14 @@
 use crate::types::SpecId;
-use crate::sim::{SimConfig, SimState, SimExecutor, BatchResults};
+use crate::sim::{SimConfig, Simulation, BatchResults};
+use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
 use crate::rotation::RotationCompiler;
 use crate::results::ResultsExporter;
-use crate::specs::BeastMasteryHandler;
+use crate::data::{TuningData, load_tuning};
+use crate::specs::BmHunter;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig};
+use std::path::Path;
+use std::sync::Arc;
 use tracing::{debug, info, warn, instrument};
 
 pub struct Runner;
@@ -21,6 +25,7 @@ impl Runner {
                 output,
                 rotation,
                 gear,
+                tuning,
                 trace,
             } => {
                 Self::run_sim(
@@ -32,6 +37,7 @@ impl Runner {
                     output,
                     rotation,
                     gear,
+                    tuning,
                     trace,
                 )
             }
@@ -51,7 +57,7 @@ impl Runner {
         }
     }
 
-    #[instrument(skip(gear_file, rotation_file), fields(spec = ?spec, iterations, targets, duration))]
+    #[instrument(skip(gear_file, rotation_file, tuning_files), fields(spec = ?spec, iterations, targets, duration))]
     fn run_sim(
         spec: SpecArg,
         duration: f32,
@@ -61,20 +67,26 @@ impl Runner {
         output: OutputFormat,
         rotation_file: Option<String>,
         gear_file: Option<String>,
+        tuning_files: Vec<String>,
         trace: bool,
     ) -> Result<(), String> {
         info!(spec = ?spec, iterations, targets, duration_secs = duration, "Starting simulation");
 
+        let spec_id = spec.to_spec_id();
+
+        // Load tuning data
+        let tuning = Self::load_tuning_data(&tuning_files)?;
+
+        // Get handler from registry
+        let registry = create_default_registry();
+        let handler = registry.get(spec_id)
+            .ok_or_else(|| format!("Spec {:?} not implemented", spec_id))?;
+
         // Load rotation script
         let rotation_script = Self::load_rotation_script(spec, rotation_file.as_deref())?;
 
-        // Initialize rotation for this spec
-        match spec.to_spec_id() {
-            SpecId::BeastMastery => {
-                BeastMasteryHandler::init_rotation(&rotation_script)?;
-            }
-            _ => {}
-        }
+        // Initialize rotation for this spec (with tuning)
+        Self::init_rotation(spec_id, &rotation_script, &tuning)?;
 
         // Load gear
         let gear = if let Some(ref path) = gear_file {
@@ -86,7 +98,6 @@ impl Runner {
         };
 
         // Setup player
-        let spec_id = spec.to_spec_id();
         let mut player = Player::new(spec_id);
 
         // Apply gear stats
@@ -99,17 +110,6 @@ impl Runner {
             haste = %format!("{:.2}%", (player.stats.haste() - 1.0) * 100.0),
             "Player stats configured"
         );
-
-        // Initialize spec
-        match spec_id {
-            SpecId::BeastMastery => {
-                BeastMasteryHandler::init_player(&mut player);
-            }
-            _ => {
-                warn!(spec = ?spec_id, "Spec not implemented");
-                return Err("Spec not implemented".to_string());
-            }
-        }
 
         // Setup config
         let mut config = SimConfig::default()
@@ -130,22 +130,14 @@ impl Runner {
         // Run simulation
         if iterations == 1 {
             debug!("Running single iteration");
-            let mut state = SimState::new(config, player);
+            let mut sim = Simulation::new(handler, config, player);
+            sim.run();
 
-            match spec_id {
-                SpecId::BeastMastery => {
-                    BeastMasteryHandler::init_sim(&mut state);
-                }
-                _ => {}
-            }
-
-            SimExecutor::run(&mut state);
-
-            info!(dps = state.current_dps(), damage = state.total_damage, "Simulation complete");
-            Self::output_single(&state, output)?;
+            info!(dps = sim.dps(), damage = sim.total_damage(), "Simulation complete");
+            Self::output_single(&sim, output)?;
         } else {
             debug!(iterations, "Running batch simulation");
-            let results = Self::run_batch(spec_id, config, player, iterations);
+            let results = Self::run_batch(handler, config, player, iterations);
             info!(
                 mean_dps = results.mean_dps,
                 std_dev = results.std_dev,
@@ -158,9 +150,44 @@ impl Runner {
         Ok(())
     }
 
+    /// Initialize rotation for a spec
+    fn init_rotation(spec_id: SpecId, script: &str, tuning: &TuningData) -> Result<(), String> {
+        match spec_id {
+            SpecId::BeastMastery => BmHunter::init_rotation_with_tuning(script, tuning),
+            _ => Err(format!("Spec {:?} not implemented", spec_id)),
+        }
+    }
+
+    /// Load tuning data from files
+    fn load_tuning_data(paths: &[String]) -> Result<TuningData, String> {
+        let mut tuning = TuningData::empty();
+
+        for path_str in paths {
+            let path = Path::new(path_str);
+            if !path.exists() {
+                warn!(path = %path.display(), "Tuning file not found, skipping");
+                continue;
+            }
+
+            let file_tuning = load_tuning(path)
+                .map_err(|e| format!("Failed to load tuning file '{}': {}", path_str, e))?;
+            tuning.merge(file_tuning);
+        }
+
+        if !tuning.is_empty() {
+            info!(
+                spells = tuning.spell.len(),
+                auras = tuning.aura.len(),
+                "Loaded tuning overrides"
+            );
+        }
+
+        Ok(tuning)
+    }
+
     /// Run batch simulation with proper spec initialization per iteration
     fn run_batch(
-        spec_id: SpecId,
+        handler: Arc<dyn SpecHandler>,
         config: SimConfig,
         player_template: Player,
         iterations: u32,
@@ -171,18 +198,13 @@ impl Runner {
             let mut iter_config = config.clone();
             iter_config.seed = config.seed.wrapping_add(i as u64);
 
-            let mut state = SimState::new(iter_config, player_template.clone());
-
-            // Call spec-specific init
-            match spec_id {
-                SpecId::BeastMastery => {
-                    BeastMasteryHandler::init_sim(&mut state);
-                }
-                _ => {}
-            }
-
-            SimExecutor::run(&mut state);
-            let dps = state.current_dps();
+            let mut sim = Simulation::new(
+                Arc::clone(&handler),
+                iter_config,
+                player_template.clone(),
+            );
+            sim.run();
+            let dps = sim.dps();
             dps_values.push(dps);
 
             // Progress (CLI output, not tracing)
@@ -201,21 +223,21 @@ impl Runner {
         BatchResults::from_values(dps_values)
     }
 
-    fn output_single(state: &SimState, format: OutputFormat) -> Result<(), String> {
+    fn output_single(sim: &Simulation, format: OutputFormat) -> Result<(), String> {
         match format {
             OutputFormat::Text => {
                 println!("\n=== Simulation Results ===");
-                println!("Duration: {:.1}s", state.config.duration.as_secs_f32());
-                println!("DPS: {:.2}", state.current_dps());
-                println!("Total Damage: {:.0}", state.total_damage);
+                println!("Duration: {:.1}s", sim.state.config.duration.as_secs_f32());
+                println!("DPS: {:.2}", sim.dps());
+                println!("Total Damage: {:.0}", sim.total_damage());
             }
 
             OutputFormat::Json => {
                 let json = format!(
                     r#"{{"dps": {:.2}, "damage": {:.0}, "duration": {:.2}}}"#,
-                    state.current_dps(),
-                    state.total_damage,
-                    state.config.duration.as_secs_f32(),
+                    sim.dps(),
+                    sim.total_damage(),
+                    sim.state.config.duration.as_secs_f32(),
                 );
                 println!("{}", json);
             }
@@ -223,9 +245,9 @@ impl Runner {
             OutputFormat::Csv => {
                 println!("dps,damage,duration");
                 println!("{:.2},{:.0},{:.2}",
-                    state.current_dps(),
-                    state.total_damage,
-                    state.config.duration.as_secs_f32(),
+                    sim.dps(),
+                    sim.total_damage(),
+                    sim.state.config.duration.as_secs_f32(),
                 );
             }
         }

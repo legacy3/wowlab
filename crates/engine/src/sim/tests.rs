@@ -1,14 +1,14 @@
 use super::*;
 use crate::types::*;
 use crate::actor::Player;
-use crate::specs::BeastMasteryHandler;
-use std::sync::Once;
+use crate::specs::BmHunter;
+use std::sync::{Arc, Once};
 
 static INIT_ROTATION: Once = Once::new();
 
 fn ensure_rotation() {
     INIT_ROTATION.call_once(|| {
-        let _ = BeastMasteryHandler::init_rotation("wait_gcd()");
+        let _ = BmHunter::init_rotation("wait_gcd()");
     });
 }
 
@@ -152,16 +152,17 @@ fn decision_context_basic() {
 }
 
 #[test]
-fn sim_executor_runs_to_completion() {
+fn simulation_runs_to_completion() {
     ensure_rotation();
+    let handler = Arc::new(BmHunter::new());
     let config = SimConfig::default().with_duration(1.0); // 1 second fight
     let player = Player::new(SpecId::BeastMastery);
-    let mut state = SimState::new(config, player);
 
-    SimExecutor::run(&mut state);
+    let mut sim = Simulation::new(handler, config, player);
+    sim.run();
 
-    assert!(state.finished);
-    assert!((state.now().as_secs_f32() - 1.0).abs() < 0.01);
+    assert!(sim.state.finished);
+    assert!((sim.state.now().as_secs_f32() - 1.0).abs() < 0.01);
 }
 
 #[test]
@@ -177,15 +178,15 @@ fn sim_config_builders() {
 }
 
 #[test]
-fn sim_state_current_dps() {
+fn simulation_current_dps() {
     ensure_rotation();
+    let handler = Arc::new(BmHunter::new());
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
-    let mut state = SimState::new(config, player);
 
-    // Run simulation
-    SimExecutor::run(&mut state);
+    let mut sim = Simulation::new(handler, config, player);
+    sim.run();
 
     // DPS should be 0 since wait_gcd() rotation does nothing
-    assert_eq!(state.current_dps(), 0.0);
+    assert_eq!(sim.dps(), 0.0);
 }

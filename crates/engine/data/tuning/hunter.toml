@@ -1,0 +1,7 @@
+# Hunter Class Tuning
+# Class-wide tuning that applies to all Hunter specs.
+
+[class]
+focus_regeneration = 5.0
+pet_base_damage = 1.0
+pet_attack_speed = 2.0

@@ -1,5 +1,7 @@
-use super::{SimState, SimConfig, SimExecutor};
+use super::{SimConfig, Simulation};
+use crate::handler::SpecHandler;
 use crate::actor::Player;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 /// Results from a batch of iterations
@@ -72,6 +74,7 @@ impl BatchResults {
 
 /// Runs multiple simulation iterations
 pub struct BatchRunner {
+    handler: Arc<dyn SpecHandler>,
     config: SimConfig,
     player_template: Player,
     iterations: u32,
@@ -79,7 +82,23 @@ pub struct BatchRunner {
 
 impl BatchRunner {
     pub fn new(config: SimConfig, player: Player) -> Self {
+        use crate::handler::create_default_registry;
+
+        let registry = create_default_registry();
+        let handler = registry.get(player.spec)
+            .expect("No handler registered for spec");
+
         Self {
+            handler,
+            config,
+            player_template: player,
+            iterations: 1000,
+        }
+    }
+
+    pub fn with_handler(handler: Arc<dyn SpecHandler>, config: SimConfig, player: Player) -> Self {
+        Self {
+            handler,
             config,
             player_template: player,
             iterations: 1000,
@@ -99,10 +118,14 @@ impl BatchRunner {
             let mut config = self.config.clone();
             config.seed = config.seed.wrapping_add(i as u64);
 
-            let mut state = SimState::new(config, self.player_template.clone());
-            SimExecutor::run(&mut state);
+            let mut sim = Simulation::new(
+                Arc::clone(&self.handler),
+                config,
+                self.player_template.clone(),
+            );
+            sim.run();
 
-            dps_values.push(state.current_dps());
+            dps_values.push(sim.dps());
         }
 
         BatchResults::from_values(dps_values)
@@ -119,10 +142,14 @@ impl BatchRunner {
             let mut config = self.config.clone();
             config.seed = config.seed.wrapping_add(i as u64);
 
-            let mut state = SimState::new(config, self.player_template.clone());
-            SimExecutor::run(&mut state);
+            let mut sim = Simulation::new(
+                Arc::clone(&self.handler),
+                config,
+                self.player_template.clone(),
+            );
+            sim.run();
 
-            dps_values.push(state.current_dps());
+            dps_values.push(sim.dps());
 
             callback(i + 1, self.iterations);
         }

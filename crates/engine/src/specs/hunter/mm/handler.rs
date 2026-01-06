@@ -1,49 +1,39 @@
-//! BM Hunter spec handler - uses definitions from spells.rs, auras.rs, pet.rs
+//! MM Hunter spec handler - uses definitions from spells.rs, auras.rs
 
 use crate::handler::SpecHandler;
 use crate::class::HunterClass;
-use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, PetKind, DamageSchool};
+use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, DamageSchool};
 use crate::sim::SimState;
 use crate::core::SimEvent;
 use crate::spec::{SpellDef, AuraDef, AuraEffect, GcdType, SpellFlags};
-use crate::combat::{Cooldown, ChargedCooldown, DamagePipeline};
-use crate::aura::AuraInstance;
+use crate::combat::{Cooldown, DamagePipeline};
+use crate::aura::{AuraInstance, AuraFlags};
 use crate::actor::Player;
 use crate::rotation::{Rotation, Action};
-use crate::data::{TuningData, apply_spell_overrides, apply_aura_overrides};
 use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
-use super::pet::PetDamage;
 use super::procs::setup_procs;
-use super::rotation::{BmHunterBindings, spell_name_to_idx};
+use super::rotation::{MmHunterBindings, spell_name_to_idx};
 use tracing::debug;
 
-static BM_ROTATION: std::sync::OnceLock<Rotation<BmHunterBindings>> = std::sync::OnceLock::new();
+static MM_ROTATION: std::sync::OnceLock<Rotation<MmHunterBindings>> = std::sync::OnceLock::new();
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
-fn get_rotation() -> &'static Rotation<BmHunterBindings> {
-    BM_ROTATION.get().expect("BM Hunter rotation not initialized")
+/// Hidden aura for tracking Steady Shot count for Steady Focus
+const STEADY_SHOT_TRACKER: AuraIdx = AuraIdx(999001);
+
+fn get_rotation() -> &'static Rotation<MmHunterBindings> {
+    MM_ROTATION.get().expect("MM Hunter rotation not initialized")
 }
 
 fn get_spell(id: SpellIdx) -> Option<&'static SpellDef> {
-    SPELL_DEFS.get()
-        .expect("BM Hunter spell definitions not initialized")
-        .iter()
-        .find(|s| s.id == id)
+    SPELL_DEFS.get_or_init(spell_definitions).iter().find(|s| s.id == id)
 }
 
 fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
-    AURA_DEFS.get()
-        .expect("BM Hunter aura definitions not initialized")
-        .iter()
-        .find(|a| a.id == id)
-}
-
-fn get_spell_defs() -> &'static [SpellDef] {
-    SPELL_DEFS.get()
-        .expect("BM Hunter spell definitions not initialized")
+    AURA_DEFS.get_or_init(aura_definitions).iter().find(|a| a.id == id)
 }
 
 /// Get damage multiplier from aura effects
@@ -56,49 +46,23 @@ fn aura_damage_multiplier(aura: &AuraDef) -> f32 {
     1.0
 }
 
-/// Get haste per stack from aura effects
-fn aura_haste_per_stack(aura: &AuraDef) -> f32 {
-    for effect in &aura.effects {
-        if let AuraEffect::DerivedPercent { stat: crate::types::DerivedStat::Haste, amount } = effect {
-            return *amount;
-        }
-    }
-    0.0
-}
-
-/// BM Hunter spec handler implementing the SpecHandler trait.
+/// MM Hunter spec handler implementing the SpecHandler trait.
 ///
-/// This struct enables polymorphic dispatch for BM Hunter specific logic.
-pub struct BmHunter;
+/// Marksmanship focuses on ranged damage with careful shot placement.
+/// Unlike BM, MM can operate without a pet using Lone Wolf.
+pub struct MmHunter;
 
-impl BmHunter {
-    /// Create a new BM Hunter handler.
+impl MmHunter {
+    /// Create a new MM Hunter handler.
     pub fn new() -> Self {
         Self
     }
 
     /// Initialize the rotation from a script.
     pub fn init_rotation(script: &str) -> Result<(), String> {
-        Self::init_rotation_with_tuning(script, &TuningData::empty())
-    }
-
-    /// Initialize the rotation with tuning overrides.
-    pub fn init_rotation_with_tuning(script: &str, tuning: &TuningData) -> Result<(), String> {
-        // Initialize spell definitions with tuning
-        let mut spells = spell_definitions();
-        apply_spell_overrides(&mut spells, &tuning.spell);
-        SPELL_DEFS.set(spells).map_err(|_| "Spell definitions already initialized".to_string())?;
-
-        // Initialize aura definitions with tuning
-        let mut auras = aura_definitions();
-        apply_aura_overrides(&mut auras, &tuning.aura);
-        AURA_DEFS.set(auras).map_err(|_| "Aura definitions already initialized".to_string())?;
-
-        // Compile rotation
-        let rotation = Rotation::new(script, BmHunterBindings::new())
+        let rotation = Rotation::new(script, MmHunterBindings::new())
             .map_err(|e| format!("Failed to compile rotation: {}", e))?;
-        BM_ROTATION.set(rotation).map_err(|_| "Rotation already initialized".to_string())?;
-
+        MM_ROTATION.set(rotation).map_err(|_| "Rotation already initialized".to_string())?;
         Ok(())
     }
 
@@ -108,9 +72,14 @@ impl BmHunter {
         let now = state.now();
         let haste = state.player.stats.haste();
 
-        for cost in &spell.costs {
-            if let Some(ref mut primary) = state.player.resources.primary {
-                primary.spend(cost.amount);
+        // Handle Lock and Load: free instant Aimed Shot
+        let is_free = spell_id == AIMED_SHOT && state.player.buffs.has(LOCK_AND_LOAD, now);
+
+        if !is_free {
+            for cost in &spell.costs {
+                if let Some(ref mut primary) = state.player.resources.primary {
+                    primary.spend(cost.amount);
+                }
             }
         }
 
@@ -120,11 +89,20 @@ impl BmHunter {
             }
         }
 
-        if spell.charges > 0 {
-            if let Some(cd) = state.player.charged_cooldown_mut(spell_id) {
-                cd.spend(now, haste);
-            }
-        } else if spell.cooldown > SimTime::ZERO {
+        // Track Steady Focus (two consecutive Steady Shots)
+        if spell_id == STEADY_SHOT {
+            self.track_steady_focus(state);
+        } else {
+            // Reset Steady Shot tracker if casting something other than Steady Shot
+            state.player.buffs.remove(STEADY_SHOT_TRACKER);
+        }
+
+        // Consume Lock and Load
+        if is_free {
+            state.player.buffs.remove(LOCK_AND_LOAD);
+        }
+
+        if spell.cooldown > SimTime::ZERO {
             if let Some(cd) = state.player.cooldown_mut(spell_id) {
                 cd.start(now, haste);
             }
@@ -134,7 +112,17 @@ impl BmHunter {
             self.apply_aura(state, aura_id, target);
         }
 
-        self.handle_spell_effects(state, spell_id);
+        // Consume Precise Shots on Arcane Shot or Multi-Shot
+        if (spell_id == ARCANE_SHOT || spell_id == MULTI_SHOT)
+            && state.player.buffs.has(PRECISE_SHOTS, now)
+        {
+            if let Some(aura) = state.player.buffs.get_mut(PRECISE_SHOTS) {
+                let remaining = aura.remove_stack();
+                if remaining == 0 {
+                    state.player.buffs.remove(PRECISE_SHOTS);
+                }
+            }
+        }
 
         let is_off_gcd = spell.gcd == GcdType::None || spell.flags.contains(SpellFlags::OFF_GCD);
         if is_off_gcd {
@@ -148,11 +136,30 @@ impl BmHunter {
         state.events.schedule(now, SimEvent::CastComplete { spell: spell_id, target });
     }
 
-    fn handle_spell_effects(&self, state: &mut SimState, spell_id: SpellIdx) {
-        if spell_id == COBRA_SHOT {
-            if let Some(cd) = state.player.cooldown_mut(KILL_COMMAND) {
-                cd.reduce(SimTime::from_secs_f32(COBRA_SHOT_CDR));
-            }
+    /// Track Steady Focus buff application.
+    /// Two consecutive Steady Shots apply the buff.
+    fn track_steady_focus(&self, state: &mut SimState) {
+        let now = state.now();
+
+        // Use a hidden tracking aura to count consecutive Steady Shots
+        let count = state.player.buffs.stacks(STEADY_SHOT_TRACKER, now);
+
+        if count == 0 {
+            // First Steady Shot - create tracker with 1 stack
+            let mut tracker = AuraInstance::new(
+                STEADY_SHOT_TRACKER,
+                TargetIdx(0),
+                SimTime::from_secs(5), // Short duration to reset if gap
+                now,
+                AuraFlags { is_hidden: true, refreshable: true, ..Default::default() },
+            );
+            tracker = tracker.with_stacks(2);
+            tracker.stacks = 1;
+            state.player.buffs.apply(tracker, now);
+        } else {
+            // Second Steady Shot - apply Steady Focus and reset tracker
+            self.apply_aura(state, STEADY_FOCUS, TargetIdx(0));
+            state.player.buffs.remove(STEADY_SHOT_TRACKER);
         }
     }
 
@@ -165,38 +172,43 @@ impl BmHunter {
             instance = instance.with_stacks(aura.max_stacks);
         }
 
-        let schedule_tick = aura.periodic.as_ref().map(|p| p.interval);
-
         if aura.flags.is_debuff {
             if let Some(target_auras) = state.auras.target_mut(target) {
-                if let Some(ref periodic) = aura.periodic {
-                    instance = instance.with_periodic(periodic.interval, now);
-                }
                 target_auras.apply(instance, now);
             }
         } else {
             state.player.buffs.apply(instance, now);
         }
-
-        if let Some(interval) = schedule_tick {
-            if aura.flags.is_debuff {
-                state.schedule_in(interval, SimEvent::AuraTick { aura: aura_id, target });
-            }
-        }
     }
 
-    fn do_calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
+    fn do_calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool, spell_id: Option<SpellIdx>) -> f32 {
         let ap = state.player.stats.attack_power();
         let sp = state.player.stats.spell_power();
         let crit = state.player.stats.crit_chance();
         let armor = state.enemies.primary().map(|e| e.armor).unwrap_or(0.0);
+        let now = state.now();
 
         let result = DamagePipeline::calculate(base, ap_coef, sp_coef, ap, sp, &state.multipliers, crit, school, armor, &mut state.rng);
         let mut damage = result.final_amount;
 
-        if let Some(bw) = get_aura(BESTIAL_WRATH_BUFF) {
-            if state.player.buffs.has(BESTIAL_WRATH_BUFF, state.now()) {
-                damage *= aura_damage_multiplier(bw);
+        // Trueshot: Bonus damage during cooldown
+        if state.player.buffs.has(TRUESHOT_BUFF, now) {
+            if let Some(ts) = get_aura(TRUESHOT_BUFF) {
+                damage *= aura_damage_multiplier(ts);
+            }
+        }
+
+        // Lone Wolf: 10% damage bonus when no pet active
+        if state.player.buffs.has(LONE_WOLF, now) {
+            damage *= 1.0 + LONE_WOLF_DAMAGE;
+        }
+
+        // Precise Shots: Arcane Shot and Multi-Shot deal bonus damage
+        if let Some(spell) = spell_id {
+            if (spell == ARCANE_SHOT || spell == MULTI_SHOT)
+                && state.player.buffs.has(PRECISE_SHOTS, now)
+            {
+                damage *= 1.0 + PRECISE_SHOTS_DAMAGE;
             }
         }
 
@@ -204,15 +216,15 @@ impl BmHunter {
     }
 }
 
-impl Default for BmHunter {
+impl Default for MmHunter {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl SpecHandler for BmHunter {
+impl SpecHandler for MmHunter {
     fn spec_id(&self) -> SpecId {
-        SpecId::BeastMastery
+        SpecId::Marksmanship
     }
 
     fn class_id(&self) -> ClassId {
@@ -220,21 +232,21 @@ impl SpecHandler for BmHunter {
     }
 
     fn init(&self, state: &mut SimState) {
-        let pet_id = state.pets.summon(state.player.id, PetKind::Permanent, "Pet");
+        // MM Hunter: Apply Lone Wolf (no pet by default)
+        // If pet is desired, summon it and don't apply Lone Wolf
+        self.apply_aura(state, LONE_WOLF, TargetIdx(0));
+
+        // Schedule first auto-attack
         state.events.schedule(SimTime::ZERO, SimEvent::AutoAttack { unit: state.player.id });
-        state.events.schedule(SimTime::ZERO, SimEvent::PetAttack { pet: pet_id });
     }
 
     fn init_player(&self, player: &mut Player) {
-        player.spec = SpecId::BeastMastery;
+        player.spec = SpecId::Marksmanship;
         player.resources = crate::resource::UnitResources::new()
             .with_primary(crate::types::ResourceType::Focus);
 
-        // Use tuned spell definitions
-        for spell in get_spell_defs() {
-            if spell.charges > 0 {
-                player.add_charged_cooldown(spell.id, ChargedCooldown::new(spell.charges, spell.charge_time.as_secs_f32()));
-            } else if spell.cooldown > SimTime::ZERO {
+        for spell in spell_definitions() {
+            if spell.cooldown > SimTime::ZERO {
                 player.add_cooldown(spell.id, Cooldown::new(spell.cooldown.as_secs_f32()));
             }
         }
@@ -267,28 +279,14 @@ impl SpecHandler for BmHunter {
         let Some(spell) = get_spell(spell_id) else { return };
         let Some(ref dmg) = spell.damage else { return };
 
-        let damage = self.do_calculate_damage(state, dmg.base_damage, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school);
+        let damage = self.do_calculate_damage(state, dmg.base_damage, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school, Some(spell_id));
         state.record_damage(damage);
         debug!(spell = spell_id.0, damage, "Spell damage");
     }
 
     fn on_auto_attack(&self, state: &mut SimState, unit: UnitIdx) {
-        let now = state.now();
-        let haste = state.player.stats.haste();
-
-        let damage = self.do_calculate_damage(state, 0.0, PetDamage::AUTO_ATTACK_COEF, 0.0, DamageSchool::Physical);
+        let damage = self.do_calculate_damage(state, 0.0, 0.8, 0.0, DamageSchool::Physical, None);
         state.record_damage(damage);
-
-        // Wild Call: critical auto-attacks have a chance to reset Barbed Shot
-        let crit = state.player.stats.crit_chance();
-        if state.rng.roll(crit) && state.rng.roll(WILD_CALL_CHANCE) {
-            if let Some(cd) = state.player.charged_cooldown_mut(BARBED_SHOT) {
-                if !cd.is_full() {
-                    cd.gain_charge(now, haste);
-                    debug!("Wild Call proc");
-                }
-            }
-        }
 
         // Schedule next auto-attack using class method
         if !state.finished {
@@ -298,13 +296,12 @@ impl SpecHandler for BmHunter {
     }
 
     fn on_pet_attack(&self, state: &mut SimState, pet: UnitIdx) {
-        // Use HunterClass shared pet attack behavior
+        // MM Hunter typically doesn't use a pet (Lone Wolf)
+        // But if they do, use HunterClass shared behavior
         let damage = <Self as HunterClass>::do_pet_attack(self, state, pet);
         if damage > 0.0 {
             debug!(pet = pet.0, damage, "Pet attack");
         }
-
-        // Schedule next pet attack using class method
         <Self as HunterClass>::schedule_next_pet_attack(self, state, pet);
     }
 
@@ -314,7 +311,7 @@ impl SpecHandler for BmHunter {
 
         if let Some(aura) = get_aura(aura_id) {
             if let Some(ref periodic) = aura.periodic {
-                let damage = self.do_calculate_damage(state, 0.0, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical);
+                let damage = self.do_calculate_damage(state, 0.0, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical, None);
                 state.record_damage(damage);
                 state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
             }
@@ -343,16 +340,18 @@ impl SpecHandler for BmHunter {
 
     fn aura_name_to_idx(&self, name: &str) -> Option<AuraIdx> {
         match name {
-            "bestial_wrath" => Some(BESTIAL_WRATH_BUFF),
-            "frenzy" => Some(FRENZY),
-            "barbed_shot" => Some(BARBED_SHOT_DOT),
-            "beast_cleave" => Some(BEAST_CLEAVE),
+            "trueshot" => Some(TRUESHOT_BUFF),
+            "precise_shots" => Some(PRECISE_SHOTS),
+            "steady_focus" => Some(STEADY_FOCUS),
+            "lone_wolf" => Some(LONE_WOLF),
+            "lock_and_load" => Some(LOCK_AND_LOAD),
+            "trick_shots" => Some(TRICK_SHOTS),
             _ => None,
         }
     }
 
     fn calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
-        self.do_calculate_damage(state, base, ap_coef, sp_coef, school)
+        self.do_calculate_damage(state, base, ap_coef, sp_coef, school, None)
     }
 }
 
@@ -360,34 +359,19 @@ impl SpecHandler for BmHunter {
 // HunterClass Implementation
 // ============================================================================
 
-impl HunterClass for BmHunter {
-    /// BM Hunter pet damage modifier.
+impl HunterClass for MmHunter {
+    /// MM Hunter pet damage modifier.
     ///
-    /// Bestial Wrath increases pet damage significantly.
-    fn pet_damage_modifier(&self, state: &SimState) -> f32 {
-        let base = 1.0;
-        if state.player.buffs.has(BESTIAL_WRATH_BUFF, state.now()) {
-            if let Some(bw) = get_aura(BESTIAL_WRATH_BUFF) {
-                base * aura_damage_multiplier(bw)
-            } else {
-                base
-            }
-        } else {
-            base
-        }
+    /// MM typically uses Lone Wolf (no pet), but if pet is active,
+    /// use base damage without special modifiers.
+    fn pet_damage_modifier(&self, _state: &SimState) -> f32 {
+        1.0
     }
 
-    /// BM Hunter pet attack speed modifier.
+    /// MM Hunter pet attack speed modifier.
     ///
-    /// Frenzy stacks increase pet attack speed.
-    fn pet_attack_speed_modifier(&self, state: &SimState) -> f32 {
-        let now = state.now();
-        let frenzy_stacks = state.player.buffs.stacks(FRENZY, now);
-        let frenzy_haste = get_aura(FRENZY)
-            .map(|a| aura_haste_per_stack(a))
-            .unwrap_or(0.10);
-
-        1.0 + frenzy_stacks as f32 * frenzy_haste
+    /// No special pet attack speed bonuses for MM.
+    fn pet_attack_speed_modifier(&self, _state: &SimState) -> f32 {
+        1.0
     }
 }
-

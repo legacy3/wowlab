@@ -1,4 +1,5 @@
 use super::*;
+use crate::handler::SpecHandler;
 use crate::types::*;
 use crate::sim::{SimState, SimConfig};
 use crate::actor::Player;
@@ -8,7 +9,7 @@ static INIT_ROTATION: Once = Once::new();
 
 fn ensure_rotation() {
     INIT_ROTATION.call_once(|| {
-        let _ = BeastMasteryHandler::init_rotation("wait_gcd()");
+        let _ = BmHunter::init_rotation("wait_gcd()");
     });
 }
 
@@ -33,8 +34,9 @@ fn aura_definitions_count() {
 
 #[test]
 fn player_init() {
+    let handler = BmHunter::new();
     let mut player = Player::new(SpecId::BeastMastery);
-    BeastMasteryHandler::init_player(&mut player);
+    handler.init_player(&mut player);
 
     assert_eq!(player.spec, SpecId::BeastMastery);
     assert!(player.resources.primary.is_some());
@@ -45,11 +47,12 @@ fn player_init() {
 #[test]
 fn sim_init() {
     ensure_rotation();
+    let handler = BmHunter::new();
     let config = SimConfig::default().with_duration(10.0);
-    let player = Player::new(SpecId::BeastMastery);
+    let mut player = Player::new(SpecId::BeastMastery);
+    handler.init_player(&mut player);
     let mut state = SimState::new(config, player);
-
-    BeastMasteryHandler::init_sim(&mut state);
+    handler.init(&mut state);
 
     assert_eq!(state.player.spec, SpecId::BeastMastery);
     // Pet should be summoned
