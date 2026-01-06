@@ -9,7 +9,8 @@ set -e
 
 ITERATIONS=${1:-100000}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+ENGINE_DIR="$SCRIPT_DIR/.."
+cd "$ENGINE_DIR"
 
 # Binary location (shared target directory)
 BINARY="../target/release/engine"
