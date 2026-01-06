@@ -12,6 +12,93 @@ pub fn setup_procs_with_talents(registry: &mut ProcRegistry, talents: TalentFlag
     setup_base_procs(registry);
     setup_talent_procs(registry, talents);
     setup_hero_talent_procs(registry, talents);
+    setup_remaining_talent_procs(registry, talents);
+}
+
+/// Setup tier set procs
+pub fn setup_tier_set_procs(registry: &mut ProcRegistry, tier_sets: TierSetFlags) {
+    // TWW S1 2pc: Pet melee has chance to stack Harmonize
+    if tier_sets.contains(TierSetFlags::TWW_S1_2PC) {
+        registry.register_fixed(
+            FixedProc::new(TWW_S1_2PC, TWW_S1_2PC_CHANCE),
+            ProcHandler::new(
+                TWW_S1_2PC,
+                "TWW S1 2pc",
+                ProcFlags::ON_AUTO_ATTACK,
+                ProcEffect::AddStacks {
+                    aura: HARMONIZE,
+                    stacks: 1,
+                },
+            ),
+        );
+    }
+
+    // TWW S1 4pc: Harmonize triggers bonus Barbed Shot damage
+    if tier_sets.contains(TierSetFlags::TWW_S1_4PC) {
+        registry.register_fixed(
+            FixedProc::new(TWW_S1_4PC, 1.0),
+            ProcHandler::new(
+                TWW_S1_4PC,
+                "TWW S1 4pc",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::CastSpell {
+                    spell: HARMONIZE_BARBED_SHOT,
+                },
+            ).with_spell_filter(vec![BARBED_SHOT])
+             .with_requires_aura(HARMONIZE),
+        );
+    }
+
+    // TWW S2 2pc: Bestial Wrath reduces Barbed Shot CD
+    if tier_sets.contains(TierSetFlags::TWW_S2_2PC) {
+        registry.register_fixed(
+            FixedProc::new(TWW_S2_2PC, 1.0),
+            ProcHandler::new(
+                TWW_S2_2PC,
+                "TWW S2 2pc",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::ReduceCooldown {
+                    spell: BARBED_SHOT,
+                    amount: SimTime::from_secs_f32(TWW_S2_2PC_BS_REDUCTION),
+                },
+            ).with_spell_filter(vec![BESTIAL_WRATH]),
+        );
+    }
+
+    // TWW S2 4pc: Barbed Shot applies Potent Mutagen to pet
+    if tier_sets.contains(TierSetFlags::TWW_S2_4PC) {
+        registry.register_fixed(
+            FixedProc::new(TWW_S2_4PC, 1.0),
+            ProcHandler::new(
+                TWW_S2_4PC,
+                "TWW S2 4pc",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::ApplyAura {
+                    aura: POTENT_MUTAGEN,
+                },
+            ).with_spell_filter(vec![BARBED_SHOT]),
+        );
+    }
+
+    // TWW S3 Pack Leader 2pc: Summons grant stat buffs
+    if tier_sets.contains(TierSetFlags::TWW_S3_PL_2PC) {
+        // Handled in handler since it applies random buffs
+    }
+
+    // TWW S3 Pack Leader 4pc: Summons trigger Stampede
+    if tier_sets.contains(TierSetFlags::TWW_S3_PL_4PC) {
+        registry.register_fixed(
+            FixedProc::new(TWW_S3_PL_4PC, 1.0),
+            ProcHandler::new(
+                TWW_S3_PL_4PC,
+                "TWW S3 PL 4pc",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::ApplyAura {
+                    aura: STAMPEDE_BUFF,
+                },
+            ).with_spell_filter(vec![HOWL_OF_THE_PACK_LEADER]),
+        );
+    }
 }
 
 /// Base procs always active
@@ -376,4 +463,141 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
             ).with_spell_filter(vec![BLACK_ARROW]),
         );
     }
+
+    // Sentinel hero talent procs
+    setup_sentinel_procs(registry, talents);
+}
+
+/// Sentinel hero talent procs
+fn setup_sentinel_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
+    // Sentinel: Apply debuff stacks on damage
+    if talents.contains(TalentFlags::SENTINEL) {
+        registry.register_fixed(
+            FixedProc::new(SENTINEL_STACK_PROC, SENTINEL_STACK_CHANCE),
+            ProcHandler::new(
+                SENTINEL_STACK_PROC,
+                "Sentinel",
+                ProcFlags::ON_DAMAGE | ProcFlags::ON_PERIODIC_DAMAGE,
+                ProcEffect::AddStacks {
+                    aura: SENTINEL_DEBUFF,
+                    stacks: 1,
+                },
+            ),
+        );
+    }
+
+    // Extrapolated Shots: +2 stacks on damage
+    if talents.contains(TalentFlags::EXTRAPOLATED_SHOTS) {
+        registry.register_fixed(
+            FixedProc::new(EXTRAPOLATED_SHOTS, SENTINEL_STACK_CHANCE),
+            ProcHandler::new(
+                EXTRAPOLATED_SHOTS,
+                "Extrapolated Shots",
+                ProcFlags::ON_DAMAGE,
+                ProcEffect::AddStacks {
+                    aura: SENTINEL_DEBUFF,
+                    stacks: EXTRAPOLATED_SHOTS_STACKS,
+                },
+            ),
+        );
+    }
+
+    // Release and Reload: Sentinel implosion grants additional stacks
+    if talents.contains(TalentFlags::RELEASE_AND_RELOAD) {
+        registry.register_fixed(
+            FixedProc::new(RELEASE_AND_RELOAD, 1.0),
+            ProcHandler::new(
+                RELEASE_AND_RELOAD,
+                "Release and Reload",
+                ProcFlags::ON_DAMAGE,
+                ProcEffect::AddStacks {
+                    aura: SENTINEL_DEBUFF,
+                    stacks: RELEASE_AND_RELOAD_STACKS,
+                },
+            ),
+        );
+    }
+
+    // Invigorating Pulse: Sentinel implosion grants focus
+    if talents.contains(TalentFlags::INVIGORATING_PULSE) {
+        registry.register_fixed(
+            FixedProc::new(INVIGORATING_PULSE, 1.0),
+            ProcHandler::new(
+                INVIGORATING_PULSE,
+                "Invigorating Pulse",
+                ProcFlags::ON_DAMAGE,
+                ProcEffect::Resource {
+                    resource: crate::types::ResourceType::Focus,
+                    amount: INVIGORATING_PULSE_FOCUS,
+                },
+            ),
+        );
+    }
+
+    // Symphonic Arsenal: Sentinel implosion deals bonus AoE
+    if talents.contains(TalentFlags::SYMPHONIC_ARSENAL) {
+        registry.register_fixed(
+            FixedProc::new(SYMPHONIC_ARSENAL_PROC, 1.0),
+            ProcHandler::new(
+                SYMPHONIC_ARSENAL_PROC,
+                "Symphonic Arsenal",
+                ProcFlags::ON_DAMAGE,
+                ProcEffect::CastSpell {
+                    spell: SYMPHONIC_ARSENAL,
+                },
+            ),
+        );
+    }
+
+    // Crescent Steel: Apply debuff stacks on crit
+    if talents.contains(TalentFlags::CRESCENT_STEEL) {
+        registry.register_fixed(
+            FixedProc::new(CRESCENT_STEEL_PROC, 1.0),
+            ProcHandler::new(
+                CRESCENT_STEEL_PROC,
+                "Crescent Steel",
+                ProcFlags::ON_CRIT,
+                ProcEffect::AddStacks {
+                    aura: CRESCENT_STEEL,
+                    stacks: 1,
+                },
+            ),
+        );
+    }
+}
+
+/// Setup remaining talent procs not already handled
+fn setup_remaining_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
+    // Cobra Senses: KC has chance to make next Cobra Shot special
+    if talents.contains(TalentFlags::COBRA_SENSES) {
+        registry.register_fixed(
+            FixedProc::new(COBRA_SENSES_PROC, COBRA_SENSES_CHANCE),
+            ProcHandler::new(
+                COBRA_SENSES_PROC,
+                "Cobra Senses",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::ApplyAura {
+                    aura: COBRA_SENSES_READY,
+                },
+            ).with_spell_filter(vec![KILL_COMMAND]),
+        );
+    }
+
+    // Huntmaster's Call: Barbed Shot stacks buff, at 3 summons special pet
+    if talents.contains(TalentFlags::HUNTMASTERS_CALL) {
+        registry.register_fixed(
+            FixedProc::new(HUNTSMASTERS_CALL_PROC, 1.0),
+            ProcHandler::new(
+                HUNTSMASTERS_CALL_PROC,
+                "Huntmaster's Call",
+                ProcFlags::ON_SPELL_CAST,
+                ProcEffect::AddStacks {
+                    aura: HUNTSMASTERS_CALL_BUFF,
+                    stacks: 1,
+                },
+            ).with_spell_filter(vec![BARBED_SHOT]),
+        );
+    }
+
+    // Wildspeaker: Dire Beasts cast Kill Command (handled in handler)
 }

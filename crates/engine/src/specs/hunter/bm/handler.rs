@@ -15,7 +15,7 @@ use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
 use super::pet::PetDamage;
-use super::procs::{setup_procs, setup_procs_with_talents};
+use super::procs::{setup_procs, setup_procs_with_talents, setup_tier_set_procs};
 use super::rotation::{BmHunterBindings, spell_name_to_idx};
 use tracing::debug;
 
@@ -72,6 +72,8 @@ fn aura_haste_per_stack(aura: &AuraDef) -> f32 {
 pub struct BmHunter {
     /// Enabled talents
     talents: TalentFlags,
+    /// Enabled tier sets
+    tier_sets: TierSetFlags,
     /// Animal Companion pet ID (if enabled)
     animal_companion_pet: Option<UnitIdx>,
     /// Active Dire Beasts
@@ -80,6 +82,8 @@ pub struct BmHunter {
     cotw_active: bool,
     /// Next CotW summon time
     cotw_next_summon: SimTime,
+    /// Huntmaster's Call stacks (for Fenryr/Hati summon)
+    huntsmasters_stacks: u8,
 }
 
 impl BmHunter {
@@ -87,10 +91,12 @@ impl BmHunter {
     pub fn new() -> Self {
         Self {
             talents: TalentFlags::empty(),
+            tier_sets: TierSetFlags::NONE,
             animal_companion_pet: None,
             dire_beasts: Vec::new(),
             cotw_active: false,
             cotw_next_summon: SimTime::ZERO,
+            huntsmasters_stacks: 0,
         }
     }
 
@@ -98,16 +104,43 @@ impl BmHunter {
     pub fn with_talents(talents: TalentFlags) -> Self {
         Self {
             talents,
+            tier_sets: TierSetFlags::NONE,
             animal_companion_pet: None,
             dire_beasts: Vec::new(),
             cotw_active: false,
             cotw_next_summon: SimTime::ZERO,
+            huntsmasters_stacks: 0,
+        }
+    }
+
+    /// Create a new BM Hunter handler with talents and tier sets.
+    pub fn with_talents_and_tier_sets(talents: TalentFlags, tier_sets: TierSetFlags) -> Self {
+        Self {
+            talents,
+            tier_sets,
+            animal_companion_pet: None,
+            dire_beasts: Vec::new(),
+            cotw_active: false,
+            cotw_next_summon: SimTime::ZERO,
+            huntsmasters_stacks: 0,
         }
     }
 
     /// Check if talent is enabled
     pub fn has_talent(&self, talent: TalentFlags) -> bool {
         self.talents.contains(talent)
+    }
+
+    /// Check if tier set is enabled
+    pub fn has_tier_set(&self, tier_set: TierSetFlags) -> bool {
+        self.tier_sets.contains(tier_set)
+    }
+
+    /// Get mastery bonus for pet damage (Master of Beasts)
+    fn mastery_pet_damage_bonus(&self, state: &SimState) -> f32 {
+        // BM Mastery: Master of Beasts - increases pet damage by mastery %
+        // The stat cache already computed the final mastery percentage
+        state.player.stats.mastery()
     }
 
     /// Initialize the rotation from a script.
@@ -475,6 +508,11 @@ impl SpecHandler for BmHunter {
         } else {
             setup_procs_with_talents(&mut player.procs, self.talents);
         }
+
+        // Setup tier set procs
+        if !self.tier_sets.is_empty() {
+            setup_tier_set_procs(&mut player.procs, self.tier_sets);
+        }
     }
 
     fn on_gcd(&self, state: &mut SimState) {
@@ -625,10 +663,14 @@ impl SpecHandler for BmHunter {
 impl HunterClass for BmHunter {
     /// BM Hunter pet damage modifier.
     ///
-    /// Bestial Wrath increases pet damage significantly.
+    /// Includes mastery (Master of Beasts), Bestial Wrath, talents, and tier sets.
     fn pet_damage_modifier(&self, state: &SimState) -> f32 {
         let mut modifier = 1.0;
         let now = state.now();
+
+        // Master of Beasts (Mastery): Pet damage scales with mastery
+        let mastery = self.mastery_pet_damage_bonus(state);
+        modifier *= 1.0 + mastery;
 
         // Bestial Wrath: +25% damage
         if state.player.buffs.has(BESTIAL_WRATH_BUFF, now) {
@@ -650,6 +692,15 @@ impl HunterClass for BmHunter {
         // Solitary Companion: +10% without Animal Companion
         if self.has_talent(TalentFlags::SOLITARY_COMPANION) && !self.has_talent(TalentFlags::ANIMAL_COMPANION) {
             modifier *= 1.10;
+        }
+
+        // Wild Hunt: +10% when pet focus > 50 (approximated - always active for simplicity)
+        // In WoW, this affects pets at high focus; we assume good play keeps focus high
+        modifier *= 1.0 + WILD_HUNT_DAMAGE_BONUS;
+
+        // TWW S2 4pc: Potent Mutagen pet buff
+        if self.has_tier_set(TierSetFlags::TWW_S2_4PC) && state.player.buffs.has(POTENT_MUTAGEN, now) {
+            modifier *= 1.0 + TWW_S2_4PC_DAMAGE_BONUS;
         }
 
         modifier

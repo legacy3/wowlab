@@ -29,6 +29,14 @@ pub fn spell_definitions() -> Vec<SpellDef> {
         boar_charge(),
         // Hero talent spells - Dark Ranger
         black_arrow(),
+        // Hero talent spells - Sentinel
+        sentinel_tick(),
+        lunar_storm_initial(),
+        lunar_storm_periodic(),
+        symphonic_arsenal_damage(),
+        // Tier set spells
+        harmonize_barbed_shot(),
+        stampede_damage(),
     ]
 }
 
@@ -236,5 +244,72 @@ fn black_arrow() -> SpellDef {
         .cooldown(BLACK_ARROW_COOLDOWN)
         .cost(ResourceType::Focus, 10.0)
         .apply_aura(BLACK_ARROW_DOT)
+        .build()
+}
+
+// ============================================================================
+// Hero Talent Spells - Sentinel
+// ============================================================================
+
+fn sentinel_tick() -> SpellDef {
+    SpellBuilder::new(SENTINEL_TICK, "Sentinel")
+        .school(DamageSchool::Arcane)
+        .instant()
+        .physical_damage(0.5)
+        .background()
+        .build()
+}
+
+fn lunar_storm_initial() -> SpellDef {
+    SpellBuilder::new(LUNAR_STORM_INITIAL, "Lunar Storm")
+        .school(DamageSchool::Arcane)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .spell_damage(DamageSchool::Arcane, 1.0)
+        .background()
+        .build()
+}
+
+fn lunar_storm_periodic() -> SpellDef {
+    SpellBuilder::new(LUNAR_STORM_PERIODIC, "Lunar Storm")
+        .school(DamageSchool::Arcane)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .spell_damage(DamageSchool::Arcane, LUNAR_STORM_AP_COEF)
+        .background()
+        .build()
+}
+
+fn symphonic_arsenal_damage() -> SpellDef {
+    SpellBuilder::new(SYMPHONIC_ARSENAL, "Symphonic Arsenal")
+        .school(DamageSchool::Arcane)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .spell_damage(DamageSchool::Arcane, 0.3)
+        .background()
+        .build()
+}
+
+// ============================================================================
+// Tier Set Spells
+// ============================================================================
+
+fn harmonize_barbed_shot() -> SpellDef {
+    SpellBuilder::new(HARMONIZE_BARBED_SHOT, "Harmonize Barbed Shot")
+        .school(DamageSchool::Physical)
+        .instant()
+        .physical_damage(0.3 * (1.0 + TWW_S1_4PC_DAMAGE_BONUS))
+        .background()
+        .build()
+}
+
+fn stampede_damage() -> SpellDef {
+    SpellBuilder::new(STAMPEDE_DAMAGE, "Stampede")
+        .school(DamageSchool::Physical)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .physical_damage(0.5)
+        .pet_ability()
+        .background()
         .build()
 }

@@ -23,6 +23,8 @@ pub fn aura_definitions() -> Vec<AuraDef> {
         snakeskin_quiver_buff(),
         wild_instincts_debuff(),
         brutal_companion_buff(),
+        huntsmasters_call_buff(),
+        cobra_senses_ready_buff(),
         // Hero talent buffs - Pack Leader
         wyvern_ready_buff(),
         boar_ready_buff(),
@@ -34,6 +36,21 @@ pub fn aura_definitions() -> Vec<AuraDef> {
         black_arrow_dot(),
         phantom_pain_buff(),
         withering_fire_buff(),
+        // Hero talent buffs - Sentinel
+        sentinel_debuff(),
+        eyes_closed_buff(),
+        lunar_storm_ready_buff(),
+        crescent_steel_debuff(),
+        // Tier set buffs
+        harmonize_buff(),
+        potent_mutagen_buff(),
+        hasted_hooves_buff(),
+        grizzled_fur_buff(),
+        sharpened_fangs_buff(),
+        stampede_buff(),
+        blighted_quiver_buff(),
+        boon_of_elune_2pc_buff(),
+        boon_of_elune_4pc_buff(),
     ]
 }
 
@@ -238,5 +255,116 @@ fn withering_fire_buff() -> AuraDef {
     AuraBuilder::buff(WITHERING_FIRE, "Withering Fire", 10.0)
         // Free abilities during big cooldowns
         .stacks(3)
+        .build()
+}
+
+// ============================================================================
+// Sentinel Hero Talent Buffs
+// ============================================================================
+
+fn sentinel_debuff() -> AuraDef {
+    AuraBuilder::debuff(SENTINEL_DEBUFF, "Sentinel", 18.0)
+        .stacks(SENTINEL_IMPLODE_STACKS)
+        .refreshable()
+        .build()
+}
+
+fn eyes_closed_buff() -> AuraDef {
+    AuraBuilder::buff(EYES_CLOSED, "Eyes Closed", EYES_CLOSED_DURATION)
+        // Sentinel stacks are guaranteed while active
+        .build()
+}
+
+fn lunar_storm_ready_buff() -> AuraDef {
+    AuraBuilder::buff(LUNAR_STORM_READY, "Lunar Storm Ready", 30.0)
+        .hidden()
+        .build()
+}
+
+fn crescent_steel_debuff() -> AuraDef {
+    AuraBuilder::debuff(CRESCENT_STEEL, "Crescent Steel", 10.0)
+        .stacks(CRESCENT_STEEL_STACKS)
+        .refreshable()
+        // Each stack increases damage taken
+        .build()
+}
+
+// ============================================================================
+// Tier Set Buffs
+// ============================================================================
+
+fn harmonize_buff() -> AuraDef {
+    AuraBuilder::buff(HARMONIZE, "Harmonize", 8.0)
+        .stacks(3)
+        .refreshable()
+        // Bonus Barbed Shot damage when consumed
+        .build()
+}
+
+fn potent_mutagen_buff() -> AuraDef {
+    AuraBuilder::buff(POTENT_MUTAGEN, "Potent Mutagen", TWW_S2_4PC_DURATION)
+        // Pet damage bonus
+        .damage_multiplier(1.0 + TWW_S2_4PC_DAMAGE_BONUS)
+        .build()
+}
+
+fn hasted_hooves_buff() -> AuraDef {
+    AuraBuilder::buff(HASTED_HOOVES, "Hasted Hooves", TWW_S3_PL_2PC_DURATION)
+        .haste(TWW_S3_PL_2PC_STAT_BONUS)
+        .build()
+}
+
+fn grizzled_fur_buff() -> AuraDef {
+    AuraBuilder::buff(GRIZZLED_FUR, "Grizzled Fur", TWW_S3_PL_2PC_DURATION)
+        // Mastery bonus - applied in handler
+        .build()
+}
+
+fn sharpened_fangs_buff() -> AuraDef {
+    AuraBuilder::buff(SHARPENED_FANGS, "Sharpened Fangs", TWW_S3_PL_2PC_DURATION)
+        .crit(TWW_S3_PL_2PC_STAT_BONUS)
+        .build()
+}
+
+fn stampede_buff() -> AuraDef {
+    AuraBuilder::buff(STAMPEDE_BUFF, "Stampede", TWW_S3_PL_4PC_DURATION)
+        // Damage dealt triggers additional hits
+        .build()
+}
+
+fn blighted_quiver_buff() -> AuraDef {
+    AuraBuilder::buff(BLIGHTED_QUIVER, "Blighted Quiver", TWW_S3_DR_4PC_DURATION)
+        // Summons Shadow Hounds on damage
+        .stacks(5)
+        .build()
+}
+
+fn boon_of_elune_2pc_buff() -> AuraDef {
+    AuraBuilder::buff(BOON_OF_ELUNE_2PC, "Boon of Elune", 10.0)
+        .damage_multiplier(1.0 + TWW_S3_SENTINEL_2PC_BONUS)
+        .build()
+}
+
+fn boon_of_elune_4pc_buff() -> AuraDef {
+    AuraBuilder::buff(BOON_OF_ELUNE_4PC, "Boon of Elune", 10.0)
+        .crit(TWW_S3_SENTINEL_4PC_CRIT)
+        .build()
+}
+
+// ============================================================================
+// Missing Talent Buffs
+// ============================================================================
+
+fn huntsmasters_call_buff() -> AuraDef {
+    AuraBuilder::buff(HUNTSMASTERS_CALL_BUFF, "Huntmaster's Call", 15.0)
+        .stacks(HUNTSMASTERS_STACKS_REQUIRED)
+        .refreshable()
+        // At 3 stacks, summons Fenryr/Hati
+        .build()
+}
+
+fn cobra_senses_ready_buff() -> AuraDef {
+    AuraBuilder::buff(COBRA_SENSES_READY, "Cobra Senses", 10.0)
+        // Next Cobra Shot triggers bonus effects
         .build()
 }

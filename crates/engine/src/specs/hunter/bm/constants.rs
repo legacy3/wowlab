@@ -482,3 +482,277 @@ pub const WITHERING_FIRE_THRESHOLD: f32 = 0.20;
 pub const BLEAK_POWDER_TARGETS: u8 = 2;
 /// Bleak Powder damage reduction
 pub const BLEAK_POWDER_REDUCTION: f32 = 0.30;
+
+// ============================================================================
+// Tuning Constants - Hero Talents (Sentinel)
+// ============================================================================
+
+/// Sentinel base stack chance
+pub const SENTINEL_STACK_CHANCE: f32 = 0.22;
+/// Sentinel implode threshold
+pub const SENTINEL_IMPLODE_STACKS: u8 = 10;
+/// Sentinel damage per stack
+pub const SENTINEL_DAMAGE_PER_STACK: f32 = 0.03;
+
+/// Extrapolated Shots bonus stacks
+pub const EXTRAPOLATED_SHOTS_STACKS: u8 = 2;
+
+/// Sentinel Precision crit bonus
+pub const SENTINEL_PRECISION_CRIT: f32 = 0.05;
+
+/// Release and Reload bonus stacks
+pub const RELEASE_AND_RELOAD_STACKS: u8 = 1;
+
+/// Invigorating Pulse focus gain
+pub const INVIGORATING_PULSE_FOCUS: f32 = 5.0;
+
+/// Sentinel Watch duration
+pub const SENTINEL_WATCH_DURATION: f32 = 6.0;
+
+/// Eyes Closed sentinel stack guarantee
+pub const EYES_CLOSED_DURATION: f32 = 8.0;
+
+/// Symphonic Arsenal damage bonus
+pub const SYMPHONIC_ARSENAL_BONUS: f32 = 0.15;
+
+/// Overwatch implode chance bonus
+pub const OVERWATCH_IMPLODE_CHANCE: f32 = 0.30;
+
+/// Crescent Steel damage increase per stack
+pub const CRESCENT_STEEL_DAMAGE: f32 = 0.015;
+/// Crescent Steel max stacks
+pub const CRESCENT_STEEL_STACKS: u8 = 10;
+
+/// Lunar Storm duration
+pub const LUNAR_STORM_DURATION: f32 = 6.0;
+/// Lunar Storm cooldown
+pub const LUNAR_STORM_COOLDOWN: f32 = 30.0;
+/// Lunar Storm tick interval
+pub const LUNAR_STORM_TICK: f32 = 0.5;
+/// Lunar Storm AP coefficient per tick
+pub const LUNAR_STORM_AP_COEF: f32 = 0.05;
+
+// ============================================================================
+// Tuning Constants - Tier Sets
+// ============================================================================
+
+/// TWW S1 2pc: Harmonize stack chance from pet melee
+pub const TWW_S1_2PC_CHANCE: f32 = 0.15;
+/// TWW S1 4pc: Harmonize grants bonus Barbed Shot damage
+pub const TWW_S1_4PC_DAMAGE_BONUS: f32 = 0.25;
+
+/// TWW S2 2pc: BW casts grant reduced Barbed Shot
+pub const TWW_S2_2PC_BS_REDUCTION: f32 = 4.0; // seconds
+/// TWW S2 4pc: Potent Mutagen pet buff duration
+pub const TWW_S2_4PC_DURATION: f32 = 6.0;
+/// TWW S2 4pc: Potent Mutagen damage bonus
+pub const TWW_S2_4PC_DAMAGE_BONUS: f32 = 0.30;
+
+/// TWW S3 Pack Leader 2pc: Stat buff duration
+pub const TWW_S3_PL_2PC_DURATION: f32 = 10.0;
+/// TWW S3 Pack Leader 2pc: Stat buff amount
+pub const TWW_S3_PL_2PC_STAT_BONUS: f32 = 0.05;
+/// TWW S3 Pack Leader 4pc: Stampede duration
+pub const TWW_S3_PL_4PC_DURATION: f32 = 6.0;
+
+/// TWW S3 Dark Ranger 2pc: Black Arrow damage bonus
+pub const TWW_S3_DR_2PC_DAMAGE_BONUS: f32 = 0.15;
+/// TWW S3 Dark Ranger 4pc: Blighted Quiver duration
+pub const TWW_S3_DR_4PC_DURATION: f32 = 8.0;
+/// TWW S3 Dark Ranger 4pc: Shadow Hound damage
+pub const TWW_S3_DR_4PC_DAMAGE: f32 = 0.50;
+
+/// TWW S3 Sentinel 2pc: Boon of Elune damage bonus
+pub const TWW_S3_SENTINEL_2PC_BONUS: f32 = 0.08;
+/// TWW S3 Sentinel 4pc: Boon of Elune crit bonus
+pub const TWW_S3_SENTINEL_4PC_CRIT: f32 = 0.05;
+
+// ============================================================================
+// Tuning Constants - Missing Talents
+// ============================================================================
+
+/// Cobra Senses: Extra Cobra Shot chance on KC
+pub const COBRA_SENSES_CHANCE: f32 = 0.25;
+
+/// Wildspeaker: Dire Beasts cast KC damage percent
+pub const WILDSPEAKER_KC_PERCENT: f32 = 0.50;
+
+/// Huntmaster's Call: Stacks needed to summon Fenryr/Hati
+pub const HUNTSMASTERS_STACKS_REQUIRED: u8 = 3;
+
+/// Wild Hunt: Focus threshold for damage bonus
+pub const WILD_HUNT_FOCUS_THRESHOLD: f32 = 50.0;
+/// Wild Hunt: Damage bonus when above threshold
+pub const WILD_HUNT_DAMAGE_BONUS: f32 = 0.10;
+
+// ============================================================================
+// Spell IDs - Sentinel Hero Talents
+// ============================================================================
+
+/// Sentinel (base ability)
+pub const SENTINEL_SPELL: SpellIdx = SpellIdx(450369);
+/// Sentinel damage tick
+pub const SENTINEL_TICK: SpellIdx = SpellIdx(450412);
+/// Lunar Storm initial damage
+pub const LUNAR_STORM_INITIAL: SpellIdx = SpellIdx(471040);
+/// Lunar Storm periodic damage
+pub const LUNAR_STORM_PERIODIC: SpellIdx = SpellIdx(471042);
+/// Symphonic Arsenal damage
+pub const SYMPHONIC_ARSENAL: SpellIdx = SpellIdx(471043);
+
+// ============================================================================
+// Spell IDs - Tier Set Procs
+// ============================================================================
+
+/// TWW S1 4pc Barbed Shot proc
+pub const HARMONIZE_BARBED_SHOT: SpellIdx = SpellIdx(100020);
+/// TWW S2 2pc reduced Barbed Shot
+pub const REDUCED_BARBED_SHOT: SpellIdx = SpellIdx(100021);
+/// TWW S3 Pack Leader 4pc Stampede
+pub const STAMPEDE_DAMAGE: SpellIdx = SpellIdx(100022);
+
+// ============================================================================
+// Aura IDs - Sentinel
+// ============================================================================
+
+/// Sentinel debuff on target
+pub const SENTINEL_DEBUFF: AuraIdx = AuraIdx(450387);
+/// Eyes Closed buff (guaranteed sentinel stacks)
+pub const EYES_CLOSED: AuraIdx = AuraIdx(451194);
+/// Lunar Storm ready buff
+pub const LUNAR_STORM_READY: AuraIdx = AuraIdx(471040);
+/// Lunar Storm ground effect
+pub const LUNAR_STORM_ACTIVE: AuraIdx = AuraIdx(471041);
+/// Crescent Steel debuff
+pub const CRESCENT_STEEL: AuraIdx = AuraIdx(468533);
+
+// ============================================================================
+// Aura IDs - Tier Sets
+// ============================================================================
+
+/// TWW S1 4pc Harmonize buff
+pub const HARMONIZE: AuraIdx = AuraIdx(457261);
+/// TWW S2 4pc Potent Mutagen pet buff
+pub const POTENT_MUTAGEN: AuraIdx = AuraIdx(471099);
+/// TWW S3 Pack Leader 2pc Hasted Hooves
+pub const HASTED_HOOVES: AuraIdx = AuraIdx(471100);
+/// TWW S3 Pack Leader 2pc Grizzled Fur
+pub const GRIZZLED_FUR: AuraIdx = AuraIdx(471101);
+/// TWW S3 Pack Leader 2pc Sharpened Fangs
+pub const SHARPENED_FANGS: AuraIdx = AuraIdx(471102);
+/// TWW S3 Pack Leader 4pc Stampede buff
+pub const STAMPEDE_BUFF: AuraIdx = AuraIdx(471103);
+/// TWW S3 Dark Ranger 4pc Blighted Quiver
+pub const BLIGHTED_QUIVER: AuraIdx = AuraIdx(471104);
+/// TWW S3 Sentinel 2pc Boon of Elune
+pub const BOON_OF_ELUNE_2PC: AuraIdx = AuraIdx(471105);
+/// TWW S3 Sentinel 4pc Boon of Elune
+pub const BOON_OF_ELUNE_4PC: AuraIdx = AuraIdx(471106);
+
+// ============================================================================
+// Aura IDs - Missing Talents
+// ============================================================================
+
+/// Huntmaster's Call tracking buff
+pub const HUNTSMASTERS_CALL_BUFF: AuraIdx = AuraIdx(471107);
+/// Cobra Senses ready buff (free Cobra Shot)
+pub const COBRA_SENSES_READY: AuraIdx = AuraIdx(471108);
+
+// ============================================================================
+// Proc IDs - Sentinel
+// ============================================================================
+
+/// Sentinel stack proc
+pub const SENTINEL_STACK_PROC: ProcIdx = ProcIdx(70);
+/// Extrapolated Shots
+pub const EXTRAPOLATED_SHOTS: ProcIdx = ProcIdx(71);
+/// Release and Reload
+pub const RELEASE_AND_RELOAD: ProcIdx = ProcIdx(72);
+/// Invigorating Pulse
+pub const INVIGORATING_PULSE: ProcIdx = ProcIdx(73);
+/// Symphonic Arsenal
+pub const SYMPHONIC_ARSENAL_PROC: ProcIdx = ProcIdx(74);
+/// Overwatch
+pub const OVERWATCH: ProcIdx = ProcIdx(75);
+/// Crescent Steel
+pub const CRESCENT_STEEL_PROC: ProcIdx = ProcIdx(76);
+
+// ============================================================================
+// Proc IDs - Tier Sets
+// ============================================================================
+
+/// TWW S1 2pc Harmonize stack
+pub const TWW_S1_2PC: ProcIdx = ProcIdx(80);
+/// TWW S1 4pc Harmonize Barbed Shot
+pub const TWW_S1_4PC: ProcIdx = ProcIdx(81);
+/// TWW S2 2pc
+pub const TWW_S2_2PC: ProcIdx = ProcIdx(82);
+/// TWW S2 4pc
+pub const TWW_S2_4PC: ProcIdx = ProcIdx(83);
+/// TWW S3 Pack Leader 2pc
+pub const TWW_S3_PL_2PC: ProcIdx = ProcIdx(84);
+/// TWW S3 Pack Leader 4pc
+pub const TWW_S3_PL_4PC: ProcIdx = ProcIdx(85);
+
+// ============================================================================
+// Proc IDs - Missing Talents
+// ============================================================================
+
+/// Cobra Senses proc
+pub const COBRA_SENSES_PROC: ProcIdx = ProcIdx(90);
+/// Wildspeaker KC proc
+pub const WILDSPEAKER_PROC: ProcIdx = ProcIdx(91);
+/// Huntmaster's Call proc
+pub const HUNTSMASTERS_CALL_PROC: ProcIdx = ProcIdx(92);
+
+// ============================================================================
+// Talent Flags - Additional
+// ============================================================================
+
+impl TalentFlags {
+    // Hero Talents - Sentinel
+    pub const SENTINEL: TalentFlags = TalentFlags::from_bits_truncate(1 << 52);
+    pub const EXTRAPOLATED_SHOTS: TalentFlags = TalentFlags::from_bits_truncate(1 << 53);
+    pub const SENTINEL_PRECISION: TalentFlags = TalentFlags::from_bits_truncate(1 << 54);
+    pub const RELEASE_AND_RELOAD: TalentFlags = TalentFlags::from_bits_truncate(1 << 55);
+    pub const INVIGORATING_PULSE: TalentFlags = TalentFlags::from_bits_truncate(1 << 56);
+    pub const SENTINEL_WATCH: TalentFlags = TalentFlags::from_bits_truncate(1 << 57);
+    pub const EYES_CLOSED_TALENT: TalentFlags = TalentFlags::from_bits_truncate(1 << 58);
+    pub const SYMPHONIC_ARSENAL: TalentFlags = TalentFlags::from_bits_truncate(1 << 59);
+    pub const OVERWATCH_TALENT: TalentFlags = TalentFlags::from_bits_truncate(1 << 60);
+    pub const CRESCENT_STEEL: TalentFlags = TalentFlags::from_bits_truncate(1 << 61);
+    pub const LUNAR_STORM: TalentFlags = TalentFlags::from_bits_truncate(1 << 62);
+
+    /// Tier set flags (tracked separately but can be combined)
+    pub const TWW_S1_2PC_SET: TalentFlags = TalentFlags::from_bits_truncate(1 << 63);
+}
+
+/// Extended tier set flags (separate since we ran out of bits)
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct TierSetFlags(u16);
+
+impl TierSetFlags {
+    pub const NONE: Self = Self(0);
+    pub const TWW_S1_2PC: Self = Self(1 << 0);
+    pub const TWW_S1_4PC: Self = Self(1 << 1);
+    pub const TWW_S2_2PC: Self = Self(1 << 2);
+    pub const TWW_S2_4PC: Self = Self(1 << 3);
+    pub const TWW_S3_PL_2PC: Self = Self(1 << 4);
+    pub const TWW_S3_PL_4PC: Self = Self(1 << 5);
+    pub const TWW_S3_DR_2PC: Self = Self(1 << 6);
+    pub const TWW_S3_DR_4PC: Self = Self(1 << 7);
+    pub const TWW_S3_SENTINEL_2PC: Self = Self(1 << 8);
+    pub const TWW_S3_SENTINEL_4PC: Self = Self(1 << 9);
+
+    pub fn contains(&self, other: Self) -> bool {
+        (self.0 & other.0) == other.0
+    }
+
+    pub fn insert(&mut self, other: Self) {
+        self.0 |= other.0;
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+}
