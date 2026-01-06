@@ -1,5 +1,9 @@
 # wowlab
 
+## IMPORTANT: User Authority
+
+The user is always right. If you intend to deviate IN ANY WAY from what the user tells you, ASK FIRST. Do not assume you know better. Do not "improve" on instructions. Do not add your own interpretation. Follow instructions exactly as given, and if unclear, ask for clarification.
+
 ## Commands
 
 ```bash
