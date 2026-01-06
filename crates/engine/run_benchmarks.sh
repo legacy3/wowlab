@@ -3,13 +3,16 @@
 # Tests sequential vs parallel scaling, thread efficiency, and throughput
 #
 # Usage: ./run_benchmarks.sh [iterations]
-#   iterations: number of iterations per test (default: 500000)
+#   iterations: number of iterations per test (default: 100000)
 
 set -e
 
-ITERATIONS=${1:-500000}
+ITERATIONS=${1:-100000}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+# Binary location (shared target directory)
+BINARY="../target/release/engine"
 
 # Colors for output
 RED='\033[0;31m'
@@ -26,30 +29,52 @@ echo -e "${BOLD}═════════════════════�
 echo ""
 echo -e "  Iterations per test: ${CYAN}$ITERATIONS${NC}"
 echo -e "  Date: $(date)"
-echo -e "  Platform: $(uname -m)"
+echo -e "  Platform: $(uname -s) $(uname -m)"
 
-# Show CPU info on macOS
+# Get CPU core count
 if [[ "$(uname)" == "Darwin" ]]; then
-    p_cores=$(sysctl -n hw.perflevel0.logicalcpu 2>/dev/null || echo "?")
-    e_cores=$(sysctl -n hw.perflevel1.logicalcpu 2>/dev/null || echo "?")
-    echo -e "  CPU: ${p_cores} P-cores + ${e_cores} E-cores"
+    TOTAL_CORES=$(sysctl -n hw.ncpu 2>/dev/null || echo "?")
+    p_cores=$(sysctl -n hw.perflevel0.logicalcpu 2>/dev/null || echo "")
+    e_cores=$(sysctl -n hw.perflevel1.logicalcpu 2>/dev/null || echo "")
+    if [[ -n "$p_cores" && -n "$e_cores" ]]; then
+        echo -e "  CPU: ${p_cores} P-cores + ${e_cores} E-cores (${TOTAL_CORES} total)"
+    else
+        echo -e "  CPU: ${TOTAL_CORES} cores"
+    fi
+else
+    TOTAL_CORES=$(nproc 2>/dev/null || echo "4")
+    echo -e "  CPU: ${TOTAL_CORES} cores"
 fi
 echo ""
 
 # Build release binary
 echo -e "${YELLOW}Building release binary...${NC}"
 cargo build --release --quiet
-BINARY="./target/release/engine"
-SPEC="specs/hunter/beast-mastery.toml"
-
 echo -e "${GREEN}Build complete.${NC}"
 echo ""
 
-# Get baseline info
+# Check binary exists
+if [[ ! -x "$BINARY" ]]; then
+    echo -e "${RED}Error: Binary not found at $BINARY${NC}"
+    exit 1
+fi
+
+# Show version
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
-echo -e "${BOLD}Spec Configuration${NC}"
+echo -e "${BOLD}Engine Info${NC}"
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
-$BINARY validate --spec "$SPEC" --rotation rotations/bm_st.rhai 2>&1 | head -6
+$BINARY version 2>&1 || true
+echo ""
+
+# Validate rotation
+echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
+echo -e "${BOLD}Rotation Validation${NC}"
+echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
+if [[ -f "rotations/bm_hunter.rhai" ]]; then
+    $BINARY validate -f rotations/bm_hunter.rhai 2>&1 | head -10 || true
+else
+    echo -e "  ${YELLOW}No rotation file found to validate${NC}"
+fi
 echo ""
 
 # Storage for results
@@ -57,13 +82,9 @@ declare -a THREAD_COUNTS=()
 declare -a THROUGHPUTS=()
 declare -a TIMES=()
 
-# Extract throughput from benchmark output
+# Extract throughput from sim output: "1000 iterations in 0 seconds (2851/sec) using 12 cores"
 extract_throughput() {
-    echo "$1" | grep "Throughput:" | grep -oE '[0-9]+\.[0-9]+' | head -1
-}
-
-extract_time() {
-    echo "$1" | grep "Time:" | grep -oE '[0-9]+\.[0-9]+m?s' | head -1
+    echo "$1" | grep -oE '\([0-9]+/sec\)' | grep -oE '[0-9]+' | head -1
 }
 
 # Run a single benchmark
@@ -71,22 +92,30 @@ run_benchmark() {
     local threads=$1
     local label=$2
 
-    if [ "$threads" -eq 1 ]; then
-        # Sequential mode
-        output=$($BINARY bench --spec "$SPEC" -i "$ITERATIONS" 2>&1)
-    else
-        # Parallel mode with specific thread count
-        output=$($BINARY bench --spec "$SPEC" -i "$ITERATIONS" --parallel -t "$threads" 2>&1)
-    fi
+    output=$($BINARY sim -s bm-hunter -d 60 -i "$ITERATIONS" --threads "$threads" 2>&1)
 
     tp=$(extract_throughput "$output")
-    time=$(extract_time "$output")
+
+    if [[ -z "$tp" ]]; then
+        tp="0"
+    fi
 
     THREAD_COUNTS+=("$threads")
     THROUGHPUTS+=("$tp")
-    TIMES+=("$time")
 
-    printf "  %-20s %8s threads  →  ${GREEN}%6sM sims/sec${NC}  (%s)\n" "$label" "$threads" "$tp" "$time"
+    # Format throughput nicely
+    if (( tp >= 1000000 )); then
+        tp_fmt=$(echo "scale=2; $tp / 1000000" | bc)
+        tp_unit="M"
+    elif (( tp >= 1000 )); then
+        tp_fmt=$(echo "scale=2; $tp / 1000" | bc)
+        tp_unit="K"
+    else
+        tp_fmt="$tp"
+        tp_unit=""
+    fi
+
+    printf "  %-20s %8s threads  →  ${GREEN}%8s${tp_unit} sims/sec${NC}\n" "$label" "$threads" "$tp_fmt"
 }
 
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
@@ -94,13 +123,29 @@ echo -e "${BOLD}Sequential vs Parallel Scaling${NC}"
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
 echo ""
 
+# Determine thread counts to test based on available cores
+declare -a TEST_THREADS=(1 2)
+if (( TOTAL_CORES >= 4 )); then TEST_THREADS+=(4); fi
+if (( TOTAL_CORES >= 6 )); then TEST_THREADS+=(6); fi
+if (( TOTAL_CORES >= 8 )); then TEST_THREADS+=(8); fi
+if (( TOTAL_CORES >= 12 )); then TEST_THREADS+=(12); fi
+if (( TOTAL_CORES >= 16 )); then TEST_THREADS+=(16); fi
+# Always include max cores if not already in list
+if [[ ! " ${TEST_THREADS[*]} " =~ " ${TOTAL_CORES} " ]]; then
+    TEST_THREADS+=("$TOTAL_CORES")
+fi
+
 # Run benchmarks at different thread counts
-run_benchmark 1  "Sequential"
-run_benchmark 2  "2 threads"
-run_benchmark 4  "4 threads"
-run_benchmark 6  "6 threads (P-cores)"
-run_benchmark 8  "8 threads"
-run_benchmark 12 "12 threads (all)"
+for threads in "${TEST_THREADS[@]}"; do
+    if (( threads == 1 )); then
+        label="Sequential"
+    elif (( threads == TOTAL_CORES )); then
+        label="${threads} threads (all)"
+    else
+        label="${threads} threads"
+    fi
+    run_benchmark "$threads" "$label"
+done
 
 echo ""
 
@@ -112,12 +157,26 @@ echo ""
 
 baseline=${THROUGHPUTS[0]}
 
+if [[ "$baseline" == "0" || -z "$baseline" ]]; then
+    echo -e "  ${RED}Error: Could not get baseline throughput${NC}"
+    exit 1
+fi
+
 printf "  ${BOLD}%-12s  %12s  %10s  %12s${NC}\n" "Threads" "Throughput" "Speedup" "Efficiency"
 printf "  %-12s  %12s  %10s  %12s\n" "────────────" "────────────" "──────────" "────────────"
 
 for i in "${!THREAD_COUNTS[@]}"; do
     threads=${THREAD_COUNTS[$i]}
     tp=${THROUGHPUTS[$i]}
+
+    # Format throughput
+    if (( tp >= 1000000 )); then
+        tp_fmt="$(echo "scale=1; $tp / 1000000" | bc)M"
+    elif (( tp >= 1000 )); then
+        tp_fmt="$(echo "scale=1; $tp / 1000" | bc)K"
+    else
+        tp_fmt="$tp"
+    fi
 
     # Calculate speedup: throughput / baseline
     speedup=$(echo "scale=2; $tp / $baseline" | bc)
@@ -134,12 +193,12 @@ for i in "${!THREAD_COUNTS[@]}"; do
         eff_color=$RED
     fi
 
-    printf "  %-12s  %10sM/s  %9sx  ${eff_color}%10s%%${NC}\n" "$threads" "$tp" "$speedup" "$efficiency"
+    printf "  %-12s  %10s/s  %9sx  ${eff_color}%10s%%${NC}\n" "$threads" "$tp_fmt" "$speedup" "$efficiency"
 done
 
 echo ""
 
-# P-core recommendation
+# Recommendations
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
 echo -e "${BOLD}Recommendations${NC}"
 echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
@@ -160,45 +219,31 @@ for i in "${!THREAD_COUNTS[@]}"; do
     fi
 done
 
-# Get last elements (bash 3 compatible)
-last_idx=$((${#THROUGHPUTS[@]} - 1))
-max_tp=${THROUGHPUTS[$last_idx]}
-max_threads=${THREAD_COUNTS[$last_idx]}
+# Get max throughput
+max_tp=0
+max_threads=1
+for i in "${!THREAD_COUNTS[@]}"; do
+    tp=${THROUGHPUTS[$i]}
+    if (( $(echo "$tp > $max_tp" | bc -l) )); then
+        max_tp=$tp
+        max_threads=${THREAD_COUNTS[$i]}
+    fi
+done
 
-echo -e "  • ${CYAN}Optimal for efficiency:${NC} $best_threads threads (${best_throughput}M sims/sec)"
-echo -e "  • ${CYAN}Maximum throughput:${NC} ${max_tp}M sims/sec with ${max_threads} threads"
-echo -e "  • ${CYAN}Default (P-cores):${NC} 6 threads - best balance of speed and consistency"
-echo ""
+# Format throughputs for display
+format_tp() {
+    local tp=$1
+    if (( tp >= 1000000 )); then
+        echo "$(echo "scale=1; $tp / 1000000" | bc)M"
+    elif (( tp >= 1000 )); then
+        echo "$(echo "scale=1; $tp / 1000" | bc)K"
+    else
+        echo "$tp"
+    fi
+}
 
-# Feature flags test
-echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
-echo -e "${BOLD}Feature Flags Comparison${NC}"
-echo -e "${BOLD}────────────────────────────────────────────────────────────────${NC}"
-echo ""
-
-echo -e "  Testing with 6 threads (P-cores)..."
-echo ""
-
-# Default (no special features)
-output=$($BINARY bench --spec "$SPEC" -i "$ITERATIONS" --parallel 2>&1)
-tp_default=$(extract_throughput "$output")
-printf "  %-30s  ${GREEN}%6sM sims/sec${NC}\n" "default" "$tp_default"
-
-# With meta_events
-cargo build --release --quiet --features meta_events
-output=$($BINARY bench --spec "$SPEC" -i "$ITERATIONS" --parallel 2>&1)
-tp_meta=$(extract_throughput "$output")
-printf "  %-30s  %6sM sims/sec\n" "meta_events" "$tp_meta"
-
-# With large_capacity
-cargo build --release --quiet --features large_capacity
-output=$($BINARY bench --spec "$SPEC" -i "$ITERATIONS" --parallel 2>&1)
-tp_large=$(extract_throughput "$output")
-printf "  %-30s  %6sM sims/sec\n" "large_capacity" "$tp_large"
-
-# Rebuild default for clean state
-cargo build --release --quiet
-
+echo -e "  ${CYAN}Optimal for efficiency:${NC} $best_threads threads ($(format_tp $best_throughput) sims/sec)"
+echo -e "  ${CYAN}Maximum throughput:${NC} $(format_tp $max_tp) sims/sec with ${max_threads} threads"
 echo ""
 
 # Summary
@@ -207,14 +252,10 @@ echo -e "${BOLD}                           Summary${NC}"
 echo -e "${BOLD}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-# Calculate speedup for 6 threads
-speedup_6=$(echo "scale=2; ${THROUGHPUTS[3]} / ${THROUGHPUTS[0]}" | bc)
+# Calculate max speedup
+max_speedup=$(echo "scale=2; $max_tp / $baseline" | bc)
 
-echo -e "  Sequential baseline:     ${CYAN}${THROUGHPUTS[0]}M sims/sec${NC}"
-echo -e "  Parallel (6 P-cores):    ${GREEN}${THROUGHPUTS[3]}M sims/sec${NC} (${speedup_6}x speedup)"
-echo -e "  Parallel (12 all cores): ${YELLOW}${THROUGHPUTS[5]}M sims/sec${NC}"
-echo ""
-echo -e "  ${GREEN}✓${NC} P-core scaling is near-linear (~80% efficiency)"
-echo -e "  ${YELLOW}!${NC} E-cores add diminishing returns (lower efficiency)"
+echo -e "  Sequential baseline:     ${CYAN}$(format_tp $baseline) sims/sec${NC}"
+echo -e "  Maximum parallel:        ${GREEN}$(format_tp $max_tp) sims/sec${NC} (${max_speedup}x speedup with ${max_threads} threads)"
 echo ""
 echo -e "${BOLD}Done!${NC}"

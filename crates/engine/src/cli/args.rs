@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(name = "engine")]
-#[command(about = "WoW Combat Simulation Engine", long_about = None)]
+#[command(about = "WoW Lab Engine", long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Command,
