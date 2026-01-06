@@ -39,7 +39,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 ENGINE_DIR = SCRIPT_DIR.parent
-BINARY = ENGINE_DIR / "../target/release/engine"
+BINARY = ENGINE_DIR / "../target/bench-profile/engine"
 PROFILE_PATH = Path("/tmp/engine-profile.json.gz")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -120,40 +120,49 @@ def parse_module(name: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def resolve_symbol_macos(addr: str, binary: Path) -> str | None:
+    """Resolve a single address using atos (macOS)."""
+    # macOS binaries have a base address of 0x100000000
+    full_addr = hex(0x100000000 + int(addr, 16))
+    result = run(["atos", "-o", str(binary), full_addr])
+    sym = result.stdout.strip()
+    if not sym or sym.startswith("0x"):
+        return None
+    if " (in " in sym:
+        func, rest = sym.split(" (in ", 1)
+        loc = rest.split(") ", 1)[-1] if ") " in rest else ""
+        return f"{func} {loc}".strip()
+    return sym
+
+
+def resolve_symbol_gnu(addr: str, binary: Path) -> str | None:
+    """Resolve a single address using addr2line (Linux)."""
+    addr2line = find_tool("addr2line", "gaddr2line")
+    cxxfilt = find_tool("c++filt", "gc++filt")
+    if not addr2line:
+        return None
+    result = run([addr2line, "-f", "-e", str(binary), addr])
+    mangled = result.stdout.split("\n")[0]
+    if cxxfilt:
+        result = run([cxxfilt, mangled])
+        return result.stdout.strip() or mangled
+    return mangled
+
+
 def resolve_symbols(addrs: list[str], binary: Path, quiet: bool) -> dict[str, str]:
-    """Batch resolve addresses to symbols."""
+    """Resolve addresses to symbols."""
     cache = {a: a for a in addrs if not a.startswith("0x")}
     hex_addrs = [a for a in addrs if a.startswith("0x")]
 
     if not hex_addrs:
         return cache
 
-    addr2line = find_tool("addr2line", "gaddr2line")
-    cxxfilt = find_tool("c++filt", "gc++filt")
+    resolver = resolve_symbol_macos if sys.platform == "darwin" else resolve_symbol_gnu
 
-    if not addr2line:
-        log("  (addr2line not found, using raw addresses)", quiet)
-        return {a: a for a in addrs}
-
-    # Batch addr2line (outputs 2 lines per addr: function, file:line)
-    result = run([addr2line, "-f", "-e", str(binary)] + hex_addrs)
-    lines = result.stdout.strip().split("\n")
-
-    mangled = [
-        (hex_addrs[i], lines[i * 2])
-        for i in range(len(hex_addrs))
-        if i * 2 < len(lines)
-    ]
-
-    # Batch demangle
-    if cxxfilt and mangled:
-        result = run([cxxfilt], input="\n".join(m for _, m in mangled))
-        demangled = result.stdout.strip().split("\n")
-        for i, (addr, _) in enumerate(mangled):
-            cache[addr] = demangled[i] if i < len(demangled) else addr
-    else:
-        for addr, name in mangled:
-            cache[addr] = name
+    log(f"  Resolving {len(hex_addrs)} addresses...", quiet)
+    for addr in hex_addrs:
+        resolved = resolver(addr, binary)
+        cache[addr] = resolved if resolved else addr
 
     return cache
 
@@ -363,11 +372,10 @@ def main():
 
     os.chdir(ENGINE_DIR)
 
-    # Build
-    log("Building with debug symbols...", quiet)
+    # Build with bench-profile (no LTO, has debug symbols)
+    log("Building with bench-profile (debug symbols, no LTO)...", quiet)
     result = subprocess.run(
-        ["cargo", "build", "--release"],
-        env={**os.environ, "CARGO_PROFILE_RELEASE_DEBUG": "2"},
+        ["cargo", "build", "--profile", "bench-profile"],
         capture_output=quiet,
     )
     if result.returncode != 0:
