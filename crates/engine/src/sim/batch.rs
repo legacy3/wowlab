@@ -3,6 +3,7 @@ use crate::handler::SpecHandler;
 use crate::actor::Player;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
+use statrs::statistics::{Data, Distribution, OrderStatistics, Min, Max};
 
 /// Results from a batch of iterations
 #[derive(Clone, Debug)]
@@ -23,23 +24,14 @@ pub struct BatchResults {
 
 impl BatchResults {
     pub fn from_values(values: Vec<f64>) -> Self {
-        let n = values.len() as f64;
-        let mean = values.iter().sum::<f64>() / n;
-
-        let variance = values.iter()
-            .map(|v| (v - mean).powi(2))
-            .sum::<f64>() / n;
-        let std_dev = variance.sqrt();
-
-        let min = values.iter().cloned().fold(f64::INFINITY, f64::min);
-        let max = values.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let data = Data::new(values.clone());
 
         Self {
             iterations: values.len() as u32,
-            mean_dps: mean,
-            std_dev,
-            min_dps: min,
-            max_dps: max,
+            mean_dps: data.mean().unwrap_or(0.0),
+            std_dev: data.std_dev().unwrap_or(0.0),
+            min_dps: data.min(),
+            max_dps: data.max(),
             dps_values: values,
         }
     }
@@ -49,17 +41,17 @@ impl BatchResults {
         if self.dps_values.is_empty() {
             return 0.0;
         }
-
-        let mut sorted = self.dps_values.clone();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-        let index = ((p / 100.0) * (sorted.len() - 1) as f64) as usize;
-        sorted[index.min(sorted.len() - 1)]
+        let mut data = Data::new(self.dps_values.clone());
+        data.percentile(p as usize)
     }
 
     /// Median DPS
     pub fn median(&self) -> f64 {
-        self.percentile(50.0)
+        if self.dps_values.is_empty() {
+            return 0.0;
+        }
+        let mut data = Data::new(self.dps_values.clone());
+        data.median()
     }
 
     /// Coefficient of variation (std_dev / mean)

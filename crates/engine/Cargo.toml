@@ -14,17 +14,16 @@ path = "src/main.rs"
 
 [dependencies]
 bitflags = "2"
-rhai = { version = "1", features = ["sync", "internals"] }
 clap = { version = "4", features = ["derive"] }
+console = "0.15"
+indicatif = "0.17"
+rhai = { version = "1", features = ["sync", "internals"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-toml = "0.8"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-
-# CLI output
-indicatif = "0.17"
+statrs = "0.18"
 tabled = { version = "0.15", features = ["std"] }
-console = "0.15"
+toml = "0.8"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
 
 [dev-dependencies]
