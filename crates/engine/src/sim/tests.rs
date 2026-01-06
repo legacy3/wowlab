@@ -128,16 +128,17 @@ fn batch_runner_basic() {
 
 #[test]
 fn progress_tracking() {
-    let progress = Progress::new(100);
+    let progress = ExactProgress::new(100);
 
     assert_eq!(progress.completed(), 0);
     assert_eq!(progress.total(), 100);
 
-    progress.increment();
-    progress.increment();
+    progress.record_iteration(1000.0);
+    progress.record_iteration(1100.0);
 
     assert_eq!(progress.completed(), 2);
     assert!((progress.percent() - 2.0).abs() < 0.01);
+    assert!((progress.running_mean() - 1050.0).abs() < 0.01);
 }
 
 #[test]

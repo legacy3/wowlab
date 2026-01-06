@@ -1,6 +1,11 @@
-use engine::cli::{Args, Runner};
+use engine::cli::{Args, Runner, Command};
+use engine::core::{get_optimal_concurrency, configure_thread_pool};
 use clap::Parser;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+
+// Use mimalloc for faster allocations (significant speedup for clone-heavy batch sims)
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn main() {
     // Only show warnings by default; use RUST_LOG=engine=info for more
@@ -13,6 +18,16 @@ fn main() {
         .init();
 
     let args = Args::parse();
+
+    // Configure thread pool before any rayon operations
+    let num_threads = match &args.command {
+        Command::Sim { threads, .. } => threads.unwrap_or_else(get_optimal_concurrency),
+        _ => get_optimal_concurrency(),
+    };
+
+    if let Err(e) = configure_thread_pool(num_threads) {
+        eprintln!("Warning: Failed to configure thread pool: {}", e);
+    }
 
     if let Err(e) = Runner::run(args) {
         eprintln!("Error: {}", e);

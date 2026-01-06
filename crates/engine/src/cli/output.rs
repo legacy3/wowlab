@@ -8,6 +8,11 @@ use std::time::{Duration, Instant};
 use crate::sim::{Simulation, BatchResults};
 use super::OutputFormat;
 
+/// Get number of CPU cores available for parallel simulation
+pub fn num_cores() -> usize {
+    rayon::current_num_threads()
+}
+
 /// Terminal output handler for pretty CLI display.
 pub struct Output {
     colors: ColorScheme,
@@ -83,6 +88,22 @@ impl Output {
         SimProgress::new(total)
     }
 
+    /// Create a progress bar for parallel batch simulations.
+    pub fn parallel_progress_bar(&self, total: u64, num_threads: usize) -> ProgressBar {
+        let pb = ProgressBar::new(total);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template(&format!(
+                    "{{spinner:.cyan}} [{{elapsed_precise}}] [{{bar:40.cyan/dim}}] {{pos}}/{{len}} ({{percent}}%) | {} cores | {{msg}}",
+                    num_threads
+                ))
+                .unwrap()
+                .progress_chars("━━╸")
+        );
+        pb.enable_steady_tick(Duration::from_millis(100));
+        pb
+    }
+
     /// Display single simulation results.
     pub fn single_result(&self, sim: &Simulation, format: OutputFormat) {
         match format {
@@ -156,13 +177,15 @@ impl Output {
 
         eprintln!("{}", table);
 
-        // Summary line
+        // Summary line with core count
         let iter_per_sec = results.iterations as f64 / elapsed.as_secs_f64();
+        let num_cores = rayon::current_num_threads();
         let summary = format!(
-            "{} iterations in {} ({:.0}/sec)",
+            "{} iterations in {} ({:.0}/sec) using {} cores",
             style(results.iterations).bold(),
             style(HumanDuration(elapsed)).dim(),
-            iter_per_sec
+            iter_per_sec,
+            style(num_cores).cyan().bold()
         );
         eprintln!("\n  {}", summary);
     }
@@ -176,6 +199,9 @@ impl Output {
             "max_dps": format!("{:.2}", results.max_dps).parse::<f64>().unwrap_or(0.0),
             "median_dps": format!("{:.2}", results.median()).parse::<f64>().unwrap_or(0.0),
             "cv": format!("{:.4}", results.cv()).parse::<f64>().unwrap_or(0.0),
+            "parallelism": {
+                "cores": rayon::current_num_threads(),
+            },
         });
         println!("{}", serde_json::to_string_pretty(&json).unwrap());
     }
@@ -195,6 +221,10 @@ impl Output {
         self.kv("Iterations", &iterations.to_string());
         if targets > 1 {
             self.kv("Targets", &targets.to_string());
+        }
+        if iterations > 1 {
+            let cores = rayon::current_num_threads();
+            self.kv("Parallelism", &format!("{} cores", cores));
         }
         self.blank();
     }

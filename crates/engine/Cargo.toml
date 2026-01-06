@@ -26,4 +26,12 @@ toml = "0.8"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1"
 
+# Parallelism & Performance
+rayon = "1.10"
+num_cpus = "1.16"
+parking_lot = "0.12"
+
+# Fast allocator (significant speedup for clone-heavy workloads)
+mimalloc = { version = "0.1", default-features = false }
+
 [dev-dependencies]

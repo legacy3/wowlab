@@ -1,5 +1,5 @@
 use crate::types::SpecId;
-use crate::sim::{SimConfig, Simulation, BatchResults};
+use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress};
 use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
 use crate::rotation::RotationCompiler;
@@ -9,6 +9,7 @@ use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
+use std::thread;
 use tracing::{debug, info, warn, instrument};
 
 pub struct Runner;
@@ -27,6 +28,7 @@ impl Runner {
                 gear,
                 tuning,
                 trace,
+                threads: _, // Handled in main.rs before run()
             } => {
                 Self::run_sim(
                     spec,
@@ -197,7 +199,7 @@ impl Runner {
         Ok(tuning)
     }
 
-    /// Run batch simulation with proper spec initialization per iteration
+    /// Run batch simulation in parallel across all CPU cores
     fn run_batch(
         handler: Arc<dyn SpecHandler>,
         config: SimConfig,
@@ -206,52 +208,67 @@ impl Runner {
         out: &Output,
         format: OutputFormat,
     ) -> (BatchResults, Duration) {
-        let mut dps_values = Vec::with_capacity(iterations as usize);
+        let num_threads = rayon::current_num_threads();
 
-        // Use progress bar for text output
-        let progress = if matches!(format, OutputFormat::Text) {
-            Some(out.progress_bar(iterations as u64))
+        // Create batch runner
+        let runner = BatchRunner::with_handler(handler, config, player_template)
+            .with_iterations(iterations);
+
+        // Create progress tracker
+        let progress = Arc::new(ExactProgress::new(iterations));
+
+        // Start progress display thread for text output
+        let progress_handle = if matches!(format, OutputFormat::Text) {
+            let pb = out.parallel_progress_bar(iterations as u64, num_threads);
+            let progress_clone = Arc::clone(&progress);
+
+            Some(thread::spawn(move || {
+                loop {
+                    let completed = progress_clone.completed();
+                    if completed >= progress_clone.total() {
+                        break;
+                    }
+
+                    pb.set_position(completed as u64);
+
+                    // Update message with live stats
+                    let throughput = progress_clone.throughput();
+                    let mean = progress_clone.running_mean();
+
+                    if completed > 0 {
+                        pb.set_message(format!(
+                            "~{:.0} DPS | {:.0} iter/s",
+                            mean,
+                            throughput
+                        ));
+                    }
+
+                    thread::sleep(Duration::from_millis(50));
+                }
+                pb.finish_and_clear();
+            }))
         } else {
             None
         };
 
-        for i in 0..iterations {
-            let mut iter_config = config.clone();
-            iter_config.seed = config.seed.wrapping_add(i as u64);
+        // Run parallel simulation
+        let results = runner.run_with_progress(&progress);
 
-            let mut sim = Simulation::new(
-                Arc::clone(&handler),
-                iter_config,
-                player_template.clone(),
-            );
-            sim.run();
-            let dps = sim.dps();
-            dps_values.push(dps);
-
-            // Update progress bar
-            if let Some(ref pb) = progress {
-                pb.inc();
-                // Show running average and iter/sec every 10 iterations
-                if (i + 1) % 10 == 0 {
-                    let avg: f64 = dps_values.iter().sum::<f64>() / dps_values.len() as f64;
-                    let iter_per_sec = (i + 1) as f64 / pb.elapsed().as_secs_f64();
-                    pb.set_message(format!("~{:.0} DPS | {:.0}/sec", avg, iter_per_sec));
-                }
-            }
-
-            // Debug log every 10% of iterations
-            let done = i + 1;
-            if done % (iterations / 10).max(1) == 0 {
-                debug!(iteration = done, current_dps = dps, "Batch progress");
-            }
+        // Wait for progress thread to finish
+        if let Some(handle) = progress_handle {
+            let _ = handle.join();
         }
 
-        let elapsed = progress.as_ref().map(|p| p.elapsed()).unwrap_or_default();
-        if let Some(pb) = progress {
-            pb.finish();
-        }
+        let elapsed = progress.elapsed();
 
-        (BatchResults::from_values(dps_values), elapsed)
+        info!(
+            iterations,
+            num_threads,
+            throughput = %format!("{:.0}/sec", iterations as f64 / elapsed.as_secs_f64()),
+            "Parallel batch complete"
+        );
+
+        (results, elapsed)
     }
 
     fn list_specs() -> Result<(), String> {

@@ -1,6 +1,7 @@
 pub mod prelude;
 pub mod types;
 pub mod core;
+pub mod math;
 pub mod stats;
 pub mod resource;
 pub mod combat;

@@ -16,7 +16,12 @@ repository = "https://github.com/legacy3/wowlab"
 
 [profile.release]
 opt-level = 3
-lto = true
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[profile.release.package."*"]
+opt-level = 3
 
 # For profiling (no LTO for symbol resolution)
 [profile.bench-profile]

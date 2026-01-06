@@ -28,6 +28,10 @@ pub enum Command {
         #[arg(short, long, default_value = "1")]
         targets: usize,
 
+        /// Number of threads (defaults to optimal for your CPU)
+        #[arg(long)]
+        threads: Option<usize>,
+
         /// Random seed
         #[arg(long)]
         seed: Option<u64>,
