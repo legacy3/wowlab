@@ -3,12 +3,12 @@ use crate::sim::{SimConfig, Simulation, BatchResults};
 use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
 use crate::rotation::RotationCompiler;
-use crate::results::ResultsExporter;
 use crate::data::{TuningData, load_tuning};
 use crate::specs::BmHunter;
-use super::{Args, Command, SpecArg, OutputFormat, GearConfig};
+use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 use tracing::{debug, info, warn, instrument};
 
 pub struct Runner;
@@ -64,18 +64,30 @@ impl Runner {
         iterations: u32,
         targets: usize,
         seed: Option<u64>,
-        output: OutputFormat,
+        output_format: OutputFormat,
         rotation_file: Option<String>,
         gear_file: Option<String>,
         tuning_files: Vec<String>,
         trace: bool,
     ) -> Result<(), String> {
+        let out = Output::new();
+
+        // Show banner and config for text output
+        if matches!(output_format, OutputFormat::Text) {
+            banner();
+            out.config_summary(&format!("{:?}", spec), duration, iterations, targets);
+        }
+
         info!(spec = ?spec, iterations, targets, duration_secs = duration, "Starting simulation");
 
         let spec_id = spec.to_spec_id();
 
         // Load tuning data
         let tuning = Self::load_tuning_data(&tuning_files)?;
+        if !tuning.is_empty() && matches!(output_format, OutputFormat::Text) {
+            out.tuning_loaded(tuning.spell.len(), tuning.aura.len());
+            out.blank();
+        }
 
         // Get handler from registry
         let registry = create_default_registry();
@@ -134,17 +146,17 @@ impl Runner {
             sim.run();
 
             info!(dps = sim.dps(), damage = sim.total_damage(), "Simulation complete");
-            Self::output_single(&sim, output)?;
+            out.single_result(&sim, output_format);
         } else {
             debug!(iterations, "Running batch simulation");
-            let results = Self::run_batch(handler, config, player, iterations);
+            let (results, elapsed) = Self::run_batch(handler, config, player, iterations, &out, output_format);
             info!(
                 mean_dps = results.mean_dps,
                 std_dev = results.std_dev,
                 iterations = results.iterations,
                 "Batch simulation complete"
             );
-            Self::output_batch(&results, output, duration)?;
+            out.batch_result(&results, elapsed, output_format);
         }
 
         Ok(())
@@ -191,8 +203,17 @@ impl Runner {
         config: SimConfig,
         player_template: Player,
         iterations: u32,
-    ) -> BatchResults {
+        out: &Output,
+        format: OutputFormat,
+    ) -> (BatchResults, Duration) {
         let mut dps_values = Vec::with_capacity(iterations as usize);
+
+        // Use progress bar for text output
+        let progress = if matches!(format, OutputFormat::Text) {
+            Some(out.progress_bar(iterations as u64))
+        } else {
+            None
+        };
 
         for i in 0..iterations {
             let mut iter_config = config.clone();
@@ -207,77 +228,30 @@ impl Runner {
             let dps = sim.dps();
             dps_values.push(dps);
 
-            // Progress (CLI output, not tracing)
-            let done = i + 1;
-            if done % 100 == 0 || done == iterations {
-                eprint!("\rProgress: {}/{} ({:.1}%)", done, iterations, (done as f32 / iterations as f32) * 100.0);
+            // Update progress bar
+            if let Some(ref pb) = progress {
+                pb.inc();
+                // Show running average and iter/sec every 10 iterations
+                if (i + 1) % 10 == 0 {
+                    let avg: f64 = dps_values.iter().sum::<f64>() / dps_values.len() as f64;
+                    let iter_per_sec = (i + 1) as f64 / pb.elapsed().as_secs_f64();
+                    pb.set_message(format!("~{:.0} DPS | {:.0}/sec", avg, iter_per_sec));
+                }
             }
 
             // Debug log every 10% of iterations
+            let done = i + 1;
             if done % (iterations / 10).max(1) == 0 {
                 debug!(iteration = done, current_dps = dps, "Batch progress");
             }
         }
-        eprintln!(); // New line after progress
 
-        BatchResults::from_values(dps_values)
-    }
-
-    fn output_single(sim: &Simulation, format: OutputFormat) -> Result<(), String> {
-        match format {
-            OutputFormat::Text => {
-                println!("\n=== Simulation Results ===");
-                println!("Duration: {:.1}s", sim.state.config.duration.as_secs_f32());
-                println!("DPS: {:.2}", sim.dps());
-                println!("Total Damage: {:.0}", sim.total_damage());
-            }
-
-            OutputFormat::Json => {
-                let json = format!(
-                    r#"{{"dps": {:.2}, "damage": {:.0}, "duration": {:.2}}}"#,
-                    sim.dps(),
-                    sim.total_damage(),
-                    sim.state.config.duration.as_secs_f32(),
-                );
-                println!("{}", json);
-            }
-
-            OutputFormat::Csv => {
-                println!("dps,damage,duration");
-                println!("{:.2},{:.0},{:.2}",
-                    sim.dps(),
-                    sim.total_damage(),
-                    sim.state.config.duration.as_secs_f32(),
-                );
-            }
+        let elapsed = progress.as_ref().map(|p| p.elapsed()).unwrap_or_default();
+        if let Some(pb) = progress {
+            pb.finish();
         }
 
-        Ok(())
-    }
-
-    fn output_batch(results: &BatchResults, format: OutputFormat, _duration: f32) -> Result<(), String> {
-        match format {
-            OutputFormat::Text => {
-                println!("\n=== Batch Results ===");
-                println!("Iterations: {}", results.iterations);
-                println!("Mean DPS: {:.2}", results.mean_dps);
-                println!("Std Dev: {:.2}", results.std_dev);
-                println!("Min DPS: {:.2}", results.min_dps);
-                println!("Max DPS: {:.2}", results.max_dps);
-                println!("Median: {:.2}", results.median());
-                println!("CV: {:.2}%", results.cv() * 100.0);
-            }
-
-            OutputFormat::Json => {
-                println!("{}", ResultsExporter::to_json(results));
-            }
-
-            OutputFormat::Csv => {
-                println!("{}", ResultsExporter::to_csv(results));
-            }
-        }
-
-        Ok(())
+        (BatchResults::from_values(dps_values), elapsed)
     }
 
     fn list_specs() -> Result<(), String> {

@@ -22,4 +22,9 @@ toml = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+# CLI output
+indicatif = "0.17"
+tabled = { version = "0.15", features = ["std"] }
+console = "0.15"
+
 [dev-dependencies]
