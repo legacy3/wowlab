@@ -45,12 +45,46 @@ impl RotationBindings for BmHunterBindings {
             state.set_float(slot, remaining as f64);
         }
 
+        // Aura: Frenzy stacks
+        if let Some(slot) = schema.slot("aura_frenzy_stacks") {
+            let stacks = sim.player.buffs.stacks(FRENZY, now);
+            state.set_float(slot, stacks as f64);
+        }
+
         // Aura: Bestial Wrath remaining time
         if let Some(slot) = schema.slot("aura_bestial_wrath_remaining") {
             let remaining = sim.player.buffs.get(BESTIAL_WRATH_BUFF)
                 .map(|a| a.remaining(now).as_secs_f32())
                 .unwrap_or(0.0);
             state.set_float(slot, remaining as f64);
+        }
+
+        // Aura: Beast Cleave remaining time
+        if let Some(slot) = schema.slot("aura_beast_cleave_remaining") {
+            let remaining = sim.player.buffs.get(BEAST_CLEAVE)
+                .map(|a| a.remaining(now).as_secs_f32())
+                .unwrap_or(0.0);
+            state.set_float(slot, remaining as f64);
+        }
+
+        // Aura: Call of the Wild remaining time
+        if let Some(slot) = schema.slot("aura_call_of_the_wild_remaining") {
+            let remaining = sim.player.buffs.get(CALL_OF_THE_WILD_BUFF)
+                .map(|a| a.remaining(now).as_secs_f32())
+                .unwrap_or(0.0);
+            state.set_float(slot, remaining as f64);
+        }
+
+        // Aura: Thrill of the Hunt stacks
+        if let Some(slot) = schema.slot("aura_thrill_of_the_hunt_stacks") {
+            let stacks = sim.player.buffs.stacks(THRILL_OF_THE_HUNT, now);
+            state.set_float(slot, stacks as f64);
+        }
+
+        // Aura: Serpentine Rhythm stacks
+        if let Some(slot) = schema.slot("aura_serpentine_rhythm_stacks") {
+            let stacks = sim.player.buffs.stacks(SERPENTINE_RHYTHM, now);
+            state.set_float(slot, stacks as f64);
         }
 
         // Cooldown: Kill Command remaining
@@ -67,6 +101,38 @@ impl RotationBindings for BmHunterBindings {
                 .map(|cd| cd.remaining(now).as_secs_f32())
                 .unwrap_or(0.0);
             state.set_float(slot, remaining as f64);
+        }
+
+        // Cooldown: Call of the Wild remaining
+        if let Some(slot) = schema.slot("cooldown_call_of_the_wild_remaining") {
+            let remaining = sim.player.cooldown(CALL_OF_THE_WILD)
+                .map(|cd| cd.remaining(now).as_secs_f32())
+                .unwrap_or(0.0);
+            state.set_float(slot, remaining as f64);
+        }
+
+        // Cooldown: Bloodshed remaining
+        if let Some(slot) = schema.slot("cooldown_bloodshed_remaining") {
+            let remaining = sim.player.cooldown(BLOODSHED)
+                .map(|cd| cd.remaining(now).as_secs_f32())
+                .unwrap_or(0.0);
+            state.set_float(slot, remaining as f64);
+        }
+
+        // Cooldown: Dire Beast remaining
+        if let Some(slot) = schema.slot("cooldown_dire_beast_remaining") {
+            let remaining = sim.player.cooldown(DIRE_BEAST)
+                .map(|cd| cd.remaining(now).as_secs_f32())
+                .unwrap_or(0.0);
+            state.set_float(slot, remaining as f64);
+        }
+
+        // Barbed Shot charges
+        if let Some(slot) = schema.slot("barbed_shot_charges") {
+            let charges = sim.player.charged_cooldown(BARBED_SHOT)
+                .map(|cd| cd.current_charges)
+                .unwrap_or(0);
+            state.set_float(slot, charges as f64);
         }
     }
 
@@ -110,6 +176,12 @@ fn evaluate_cooldown_ready(sim: &SimState, spell_name: &str, now: crate::types::
         "kill_command" => KILL_COMMAND,
         "bestial_wrath" => BESTIAL_WRATH,
         "kill_shot" => KILL_SHOT,
+        "call_of_the_wild" => CALL_OF_THE_WILD,
+        "bloodshed" => BLOODSHED,
+        "dire_beast" => DIRE_BEAST,
+        "murder_of_crows" => MURDER_OF_CROWS,
+        "black_arrow" => BLACK_ARROW,
+        "explosive_shot" => EXPLOSIVE_SHOT,
         _ => return false,
     };
 
@@ -136,6 +208,13 @@ fn evaluate_aura_active(sim: &SimState, aura_name: &str, now: crate::types::SimT
         "bestial_wrath" => BESTIAL_WRATH_BUFF,
         "frenzy" => FRENZY,
         "beast_cleave" => BEAST_CLEAVE,
+        "call_of_the_wild" => CALL_OF_THE_WILD_BUFF,
+        "bloodshed" => BLOODSHED_DEBUFF,
+        "thrill_of_the_hunt" => THRILL_OF_THE_HUNT,
+        "serpentine_rhythm" => SERPENTINE_RHYTHM,
+        "piercing_fangs" => PIERCING_FANGS,
+        "snakeskin_quiver" => SNAKESKIN_QUIVER_PROC,
+        "withering_fire" => WITHERING_FIRE,
         _ => return false,
     };
 
@@ -147,6 +226,8 @@ fn evaluate_aura_has_stacks(sim: &SimState, aura_name: &str, now: crate::types::
     let aura = match aura_name {
         "frenzy" => FRENZY,
         "thrill_of_the_hunt" => THRILL_OF_THE_HUNT,
+        "serpentine_rhythm" => SERPENTINE_RHYTHM,
+        "mongoose_fury" => MONGOOSE_FURY,
         _ => return false,
     };
 
@@ -156,12 +237,23 @@ fn evaluate_aura_has_stacks(sim: &SimState, aura_name: &str, now: crate::types::
 /// Convert spell name to SpellIdx
 pub fn spell_name_to_idx(name: &str) -> Option<SpellIdx> {
     match name {
+        // Core abilities
         "kill_command" => Some(KILL_COMMAND),
         "cobra_shot" => Some(COBRA_SHOT),
         "barbed_shot" => Some(BARBED_SHOT),
         "bestial_wrath" => Some(BESTIAL_WRATH),
         "multi_shot" => Some(MULTI_SHOT),
         "kill_shot" => Some(KILL_SHOT),
+        // Major cooldowns
+        "call_of_the_wild" => Some(CALL_OF_THE_WILD),
+        "bloodshed" => Some(BLOODSHED),
+        "dire_beast" => Some(DIRE_BEAST),
+        "murder_of_crows" | "a_murder_of_crows" => Some(MURDER_OF_CROWS),
+        // Talent spells
+        "explosive_shot" => Some(EXPLOSIVE_SHOT),
+        // Hero talent spells
+        "black_arrow" => Some(BLACK_ARROW),
+        "howl_of_the_pack_leader" => Some(HOWL_OF_THE_PACK_LEADER),
         _ => None,
     }
 }

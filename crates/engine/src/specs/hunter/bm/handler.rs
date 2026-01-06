@@ -2,7 +2,7 @@
 
 use crate::handler::SpecHandler;
 use crate::class::HunterClass;
-use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, PetKind, DamageSchool};
+use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, PetKind, DamageSchool, HitResult};
 use crate::sim::SimState;
 use crate::core::SimEvent;
 use crate::spec::{SpellDef, AuraDef, AuraEffect, GcdType, SpellFlags};
@@ -15,7 +15,7 @@ use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
 use super::pet::PetDamage;
-use super::procs::setup_procs;
+use super::procs::{setup_procs, setup_procs_with_talents};
 use super::rotation::{BmHunterBindings, spell_name_to_idx};
 use tracing::debug;
 
@@ -69,12 +69,45 @@ fn aura_haste_per_stack(aura: &AuraDef) -> f32 {
 /// BM Hunter spec handler implementing the SpecHandler trait.
 ///
 /// This struct enables polymorphic dispatch for BM Hunter specific logic.
-pub struct BmHunter;
+pub struct BmHunter {
+    /// Enabled talents
+    talents: TalentFlags,
+    /// Animal Companion pet ID (if enabled)
+    animal_companion_pet: Option<UnitIdx>,
+    /// Active Dire Beasts
+    dire_beasts: Vec<(UnitIdx, SimTime)>, // (pet_id, expire_time)
+    /// Call of the Wild active
+    cotw_active: bool,
+    /// Next CotW summon time
+    cotw_next_summon: SimTime,
+}
 
 impl BmHunter {
     /// Create a new BM Hunter handler.
     pub fn new() -> Self {
-        Self
+        Self {
+            talents: TalentFlags::empty(),
+            animal_companion_pet: None,
+            dire_beasts: Vec::new(),
+            cotw_active: false,
+            cotw_next_summon: SimTime::ZERO,
+        }
+    }
+
+    /// Create a new BM Hunter handler with talents.
+    pub fn with_talents(talents: TalentFlags) -> Self {
+        Self {
+            talents,
+            animal_companion_pet: None,
+            dire_beasts: Vec::new(),
+            cotw_active: false,
+            cotw_next_summon: SimTime::ZERO,
+        }
+    }
+
+    /// Check if talent is enabled
+    pub fn has_talent(&self, talent: TalentFlags) -> bool {
+        self.talents.contains(talent)
     }
 
     /// Initialize the rotation from a script.
@@ -103,14 +136,18 @@ impl BmHunter {
     }
 
     /// Internal helper to cast a spell
-    fn do_cast_spell(&self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
+    fn do_cast_spell(&mut self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
         let Some(spell) = get_spell(spell_id) else { return };
         let now = state.now();
         let haste = state.player.stats.haste();
 
-        for cost in &spell.costs {
-            if let Some(ref mut primary) = state.player.resources.primary {
-                primary.spend(cost.amount);
+        // Handle costs (check for free cast buffs)
+        let is_free = self.check_free_cast(state, spell_id);
+        if !is_free {
+            for cost in &spell.costs {
+                if let Some(ref mut primary) = state.player.resources.primary {
+                    primary.spend(cost.amount);
+                }
             }
         }
 
@@ -134,7 +171,7 @@ impl BmHunter {
             self.apply_aura(state, aura_id, target);
         }
 
-        self.handle_spell_effects(state, spell_id);
+        self.handle_spell_effects(state, spell_id, target);
 
         let is_off_gcd = spell.gcd == GcdType::None || spell.flags.contains(SpellFlags::OFF_GCD);
         if is_off_gcd {
@@ -148,11 +185,92 @@ impl BmHunter {
         state.events.schedule(now, SimEvent::CastComplete { spell: spell_id, target });
     }
 
-    fn handle_spell_effects(&self, state: &mut SimState, spell_id: SpellIdx) {
+    /// Check if current cast should be free
+    fn check_free_cast(&self, state: &mut SimState, spell_id: SpellIdx) -> bool {
+        let now = state.now();
+
+        // Snakeskin Quiver: Free Cobra Shot
+        if spell_id == COBRA_SHOT && state.player.buffs.has(SNAKESKIN_QUIVER_PROC, now) {
+            state.player.buffs.remove(SNAKESKIN_QUIVER_PROC);
+            debug!("Snakeskin Quiver consumed - free Cobra Shot");
+            return true;
+        }
+
+        // Withering Fire: Free abilities during CDs (stacks)
+        if self.has_talent(TalentFlags::WITHERING_FIRE) && state.player.buffs.has(WITHERING_FIRE, now) {
+            let stacks = state.player.buffs.stacks(WITHERING_FIRE, now);
+            if stacks > 1 {
+                // Decrement stacks by modifying the aura
+                if let Some(aura) = state.player.buffs.get_mut(WITHERING_FIRE) {
+                    aura.stacks = aura.stacks.saturating_sub(1);
+                }
+                debug!("Withering Fire consumed - free ability");
+                return true;
+            } else if stacks == 1 {
+                state.player.buffs.remove(WITHERING_FIRE);
+                debug!("Withering Fire consumed (last stack) - free ability");
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn handle_spell_effects(&mut self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
+        let now = state.now();
+
+        // Cobra Shot reduces Kill Command CD
         if spell_id == COBRA_SHOT {
             if let Some(cd) = state.player.cooldown_mut(KILL_COMMAND) {
                 cd.reduce(SimTime::from_secs_f32(COBRA_SHOT_CDR));
             }
+        }
+
+        // Kill Command effects
+        if spell_id == KILL_COMMAND {
+            // Animal Companion: Second pet also uses KC
+            if let Some(ac_pet) = self.animal_companion_pet {
+                let damage = self.calculate_pet_kc_damage(state);
+                state.record_damage(damage * 0.65); // Reduced damage for AC
+                debug!(pet = ac_pet.0, damage = damage * 0.65, "Animal Companion KC");
+            }
+
+            // Kill Cleave: KC cleaves during Beast Cleave
+            if self.has_talent(TalentFlags::KILL_CLEAVE) && state.player.buffs.has(BEAST_CLEAVE, now) {
+                let kc_damage = self.calculate_pet_kc_damage(state);
+                let cleave_damage = kc_damage * KILL_CLEAVE_DAMAGE;
+                state.record_damage(cleave_damage);
+                debug!(cleave_damage, "Kill Cleave");
+            }
+
+            // Wild Instincts: Apply debuff during Call of the Wild
+            if self.has_talent(TalentFlags::WILD_INSTINCTS) && self.cotw_active {
+                self.apply_aura(state, WILD_INSTINCTS, target);
+            }
+        }
+
+        // Bestial Wrath effects
+        if spell_id == BESTIAL_WRATH {
+            // Thundering Hooves: Cast Explosive Shot
+            if self.has_talent(TalentFlags::THUNDERING_HOOVES) {
+                state.events.schedule(now, SimEvent::CastComplete { spell: EXPLOSIVE_SHOT, target });
+            }
+        }
+
+        // Call of the Wild effects
+        if spell_id == CALL_OF_THE_WILD {
+            self.cotw_active = true;
+            self.cotw_next_summon = now;
+
+            // Bloody Frenzy: Beast Cleave active during CotW
+            if self.has_talent(TalentFlags::BLOODY_FRENZY) {
+                self.apply_aura(state, BEAST_CLEAVE, TargetIdx(0));
+            }
+        }
+
+        // Dire Beast summon
+        if spell_id == DIRE_BEAST {
+            self.summon_dire_beast(state, false);
         }
     }
 
@@ -185,22 +303,123 @@ impl BmHunter {
         }
     }
 
-    fn do_calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
+    fn do_calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool, spell_id: Option<SpellIdx>) -> f32 {
         let ap = state.player.stats.attack_power();
         let sp = state.player.stats.spell_power();
         let crit = state.player.stats.crit_chance();
         let armor = state.enemies.primary().map(|e| e.armor).unwrap_or(0.0);
+        let now = state.now();
 
         let result = DamagePipeline::calculate(base, ap_coef, sp_coef, ap, sp, &state.multipliers, crit, school, armor, &mut state.rng);
         let mut damage = result.final_amount;
+        let is_crit = result.hit_result == HitResult::Crit;
 
+        // Bestial Wrath damage bonus
         if let Some(bw) = get_aura(BESTIAL_WRATH_BUFF) {
-            if state.player.buffs.has(BESTIAL_WRATH_BUFF, state.now()) {
+            if state.player.buffs.has(BESTIAL_WRATH_BUFF, now) {
                 damage *= aura_damage_multiplier(bw);
             }
         }
 
+        // Serpentine Rhythm: Bonus damage for Cobra Shot based on stacks
+        if self.has_talent(TalentFlags::SERPENTINE_RHYTHM) {
+            if spell_id == Some(COBRA_SHOT) {
+                let stacks = state.player.buffs.stacks(SERPENTINE_RHYTHM, now);
+                if stacks > 0 {
+                    damage *= 1.0 + (stacks as f32 * SERPENTINE_RHYTHM_DAMAGE);
+                    state.player.buffs.remove(SERPENTINE_RHYTHM);
+                }
+            }
+        }
+
+        // Killer Instinct: +50% damage vs targets below 35% HP
+        if self.has_talent(TalentFlags::KILLER_INSTINCT) {
+            if let Some(enemy) = state.enemies.primary() {
+                let health_pct = enemy.current_health / enemy.max_health;
+                if health_pct < KILLER_INSTINCT_THRESHOLD {
+                    damage *= 1.0 + KILLER_INSTINCT_BONUS;
+                }
+            }
+        }
+
+        // Alpha Predator: +30% KC damage
+        if self.has_talent(TalentFlags::ALPHA_PREDATOR) && spell_id == Some(KILL_COMMAND) {
+            damage *= 1.0 + ALPHA_PREDATOR_KC_BONUS;
+        }
+
+        // Go for the Throat: KC crit damage scales with crit rating
+        if self.has_talent(TalentFlags::GO_FOR_THE_THROAT) && spell_id == Some(KILL_COMMAND) {
+            if is_crit {
+                let crit_bonus = crit * GO_FOR_THE_THROAT_SCALING;
+                damage *= 1.0 + crit_bonus;
+            }
+        }
+
+        // Pack Mentality: KC damage bonus with special pet
+        if self.has_talent(TalentFlags::PACK_MENTALITY) && spell_id == Some(KILL_COMMAND) {
+            if state.player.buffs.has(PACK_MENTALITY, now) {
+                damage *= 1.0 + PACK_MENTALITY_BONUS;
+            }
+        }
+
+        // Wild Instincts: KC bonus vs debuffed targets
+        if self.has_talent(TalentFlags::WILD_INSTINCTS) && spell_id == Some(KILL_COMMAND) {
+            if let Some(target_auras) = state.auras.target(TargetIdx(0)) {
+                if target_auras.has(WILD_INSTINCTS, now) {
+                    let stacks = target_auras.stacks(WILD_INSTINCTS, now);
+                    damage *= 1.0 + (stacks as f32 * 0.05);
+                }
+            }
+        }
+
+        // Solitary Companion: +10% damage without Animal Companion
+        if self.has_talent(TalentFlags::SOLITARY_COMPANION) && self.animal_companion_pet.is_none() {
+            damage *= 1.10;
+        }
+
+        // Training Expert: +10% pet damage (for pet abilities)
+        if self.has_talent(TalentFlags::TRAINING_EXPERT) {
+            if let Some(spell) = spell_id.and_then(get_spell) {
+                if spell.flags.contains(SpellFlags::PET_ABILITY) {
+                    damage *= 1.0 + TRAINING_EXPERT_BONUS;
+                }
+            }
+        }
+
         damage
+    }
+
+    /// Calculate pet Kill Command damage
+    fn calculate_pet_kc_damage(&self, state: &SimState) -> f32 {
+        let ap = state.player.stats.attack_power();
+        ap * PetDamage::STAT_INHERITANCE * PetDamage::KILL_COMMAND_COEF
+    }
+
+    /// Summon a Dire Beast
+    fn summon_dire_beast(&mut self, state: &mut SimState, is_special: bool) {
+        let now = state.now();
+        let name = if is_special { "Hati" } else { "Dire Beast" };
+        let pet_id = state.pets.summon(state.player.id, PetKind::Guardian, name);
+
+        let duration = if self.has_talent(TalentFlags::DIRE_FRENZY) {
+            DIRE_BEAST_DURATION + DIRE_FRENZY_EXTENSION
+        } else {
+            DIRE_BEAST_DURATION
+        };
+
+        let expire_time = now + SimTime::from_secs_f32(duration);
+        self.dire_beasts.push((pet_id, expire_time));
+
+        // Schedule attacks
+        state.events.schedule(now, SimEvent::PetAttack { pet: pet_id });
+
+        debug!(pet = pet_id.0, duration, special = is_special, "Summoned Dire Beast");
+    }
+
+    /// Clean up expired Dire Beasts
+    #[allow(dead_code)]
+    fn cleanup_dire_beasts(&mut self, now: SimTime) {
+        self.dire_beasts.retain(|(_, expire)| *expire > now);
     }
 }
 
@@ -223,6 +442,12 @@ impl SpecHandler for BmHunter {
         let pet_id = state.pets.summon(state.player.id, PetKind::Permanent, "Pet");
         state.events.schedule(SimTime::ZERO, SimEvent::AutoAttack { unit: state.player.id });
         state.events.schedule(SimTime::ZERO, SimEvent::PetAttack { pet: pet_id });
+
+        // Animal Companion: Summon second permanent pet
+        if self.has_talent(TalentFlags::ANIMAL_COMPANION) {
+            let ac_pet = state.pets.summon(state.player.id, PetKind::Permanent, "Animal Companion");
+            state.events.schedule(SimTime::ZERO, SimEvent::PetAttack { pet: ac_pet });
+        }
     }
 
     fn init_player(&self, player: &mut Player) {
@@ -233,12 +458,23 @@ impl SpecHandler for BmHunter {
         // Use tuned spell definitions
         for spell in get_spell_defs() {
             if spell.charges > 0 {
-                player.add_charged_cooldown(spell.id, ChargedCooldown::new(spell.charges, spell.charge_time.as_secs_f32()));
+                let mut charges = spell.charges;
+                // Alpha Predator: +1 Barbed Shot charge
+                if spell.id == BARBED_SHOT && self.has_talent(TalentFlags::ALPHA_PREDATOR) {
+                    charges += 1;
+                }
+                player.add_charged_cooldown(spell.id, ChargedCooldown::new(charges, spell.charge_time.as_secs_f32()));
             } else if spell.cooldown > SimTime::ZERO {
                 player.add_cooldown(spell.id, Cooldown::new(spell.cooldown.as_secs_f32()));
             }
         }
-        setup_procs(&mut player.procs);
+
+        // Setup procs based on talents
+        if self.talents.is_empty() {
+            setup_procs(&mut player.procs);
+        } else {
+            setup_procs_with_talents(&mut player.procs, self.talents);
+        }
     }
 
     fn on_gcd(&self, state: &mut SimState) {
@@ -247,7 +483,8 @@ impl SpecHandler for BmHunter {
         match get_rotation().next_action(state) {
             Action::Cast(name) => {
                 if let Some(spell) = spell_name_to_idx(&name) {
-                    self.cast_spell(state, spell, TargetIdx(0));
+                    let handler = BmHunter::with_talents(self.talents);
+                    handler.cast_spell(state, spell, TargetIdx(0));
                 } else {
                     state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
                 }
@@ -267,7 +504,7 @@ impl SpecHandler for BmHunter {
         let Some(spell) = get_spell(spell_id) else { return };
         let Some(ref dmg) = spell.damage else { return };
 
-        let damage = self.do_calculate_damage(state, dmg.base_damage, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school);
+        let damage = self.do_calculate_damage(state, dmg.base_damage, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school, Some(spell_id));
         state.record_damage(damage);
         debug!(spell = spell_id.0, damage, "Spell damage");
     }
@@ -276,7 +513,7 @@ impl SpecHandler for BmHunter {
         let now = state.now();
         let haste = state.player.stats.haste();
 
-        let damage = self.do_calculate_damage(state, 0.0, PetDamage::AUTO_ATTACK_COEF, 0.0, DamageSchool::Physical);
+        let damage = self.do_calculate_damage(state, 0.0, PetDamage::AUTO_ATTACK_COEF, 0.0, DamageSchool::Physical, None);
         state.record_damage(damage);
 
         // Wild Call: critical auto-attacks have a chance to reset Barbed Shot
@@ -304,6 +541,16 @@ impl SpecHandler for BmHunter {
             debug!(pet = pet.0, damage, "Pet attack");
         }
 
+        // Brutal Companion: Extra attack at max Frenzy
+        if self.has_talent(TalentFlags::BRUTAL_COMPANION) {
+            let frenzy_stacks = state.player.buffs.stacks(FRENZY, state.now());
+            if frenzy_stacks >= FRENZY_MAX_STACKS {
+                // Extra basic attack
+                let extra_damage = <Self as HunterClass>::do_pet_attack(self, state, pet);
+                debug!(pet = pet.0, extra_damage, "Brutal Companion extra attack");
+            }
+        }
+
         // Schedule next pet attack using class method
         <Self as HunterClass>::schedule_next_pet_attack(self, state, pet);
     }
@@ -314,15 +561,25 @@ impl SpecHandler for BmHunter {
 
         if let Some(aura) = get_aura(aura_id) {
             if let Some(ref periodic) = aura.periodic {
-                let damage = self.do_calculate_damage(state, 0.0, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical);
+                let damage = self.do_calculate_damage(state, 0.0, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical, None);
                 state.record_damage(damage);
+
+                // Master Handler: Barbed Shot ticks reduce KC CD
+                if aura_id == BARBED_SHOT_DOT && self.has_talent(TalentFlags::MASTER_HANDLER) {
+                    if let Some(cd) = state.player.cooldown_mut(KILL_COMMAND) {
+                        cd.reduce(SimTime::from_secs_f32(MASTER_HANDLER_CDR));
+                        debug!("Master Handler: KC CD reduced");
+                    }
+                }
+
                 state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
             }
         }
     }
 
     fn cast_spell(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx) {
-        self.do_cast_spell(state, spell, target);
+        let mut handler = BmHunter::with_talents(self.talents);
+        handler.do_cast_spell(state, spell, target);
     }
 
     fn next_action(&self, state: &SimState) -> Action {
@@ -347,12 +604,17 @@ impl SpecHandler for BmHunter {
             "frenzy" => Some(FRENZY),
             "barbed_shot" => Some(BARBED_SHOT_DOT),
             "beast_cleave" => Some(BEAST_CLEAVE),
+            "call_of_the_wild" => Some(CALL_OF_THE_WILD_BUFF),
+            "bloodshed" => Some(BLOODSHED_DEBUFF),
+            "thrill_of_the_hunt" => Some(THRILL_OF_THE_HUNT),
+            "serpentine_rhythm" => Some(SERPENTINE_RHYTHM),
+            "piercing_fangs" => Some(PIERCING_FANGS),
             _ => None,
         }
     }
 
     fn calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
-        self.do_calculate_damage(state, base, ap_coef, sp_coef, school)
+        self.do_calculate_damage(state, base, ap_coef, sp_coef, school, None)
     }
 }
 
@@ -365,16 +627,32 @@ impl HunterClass for BmHunter {
     ///
     /// Bestial Wrath increases pet damage significantly.
     fn pet_damage_modifier(&self, state: &SimState) -> f32 {
-        let base = 1.0;
-        if state.player.buffs.has(BESTIAL_WRATH_BUFF, state.now()) {
+        let mut modifier = 1.0;
+        let now = state.now();
+
+        // Bestial Wrath: +25% damage
+        if state.player.buffs.has(BESTIAL_WRATH_BUFF, now) {
             if let Some(bw) = get_aura(BESTIAL_WRATH_BUFF) {
-                base * aura_damage_multiplier(bw)
-            } else {
-                base
+                modifier *= aura_damage_multiplier(bw);
             }
-        } else {
-            base
         }
+
+        // Training Expert: +10% pet damage
+        if self.has_talent(TalentFlags::TRAINING_EXPERT) {
+            modifier *= 1.0 + TRAINING_EXPERT_BONUS;
+        }
+
+        // Piercing Fangs: Pet crit damage during BW
+        if self.has_talent(TalentFlags::PIERCING_FANGS) && state.player.buffs.has(PIERCING_FANGS, now) {
+            modifier *= 1.0 + PIERCING_FANGS_CRIT_DAMAGE;
+        }
+
+        // Solitary Companion: +10% without Animal Companion
+        if self.has_talent(TalentFlags::SOLITARY_COMPANION) && !self.has_talent(TalentFlags::ANIMAL_COMPANION) {
+            modifier *= 1.10;
+        }
+
+        modifier
     }
 
     /// BM Hunter pet attack speed modifier.
@@ -390,4 +668,3 @@ impl HunterClass for BmHunter {
         1.0 + frenzy_stacks as f32 * frenzy_haste
     }
 }
-

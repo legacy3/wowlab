@@ -5,14 +5,36 @@ use super::constants::*;
 /// Get all BM Hunter spell definitions
 pub fn spell_definitions() -> Vec<SpellDef> {
     vec![
+        // Core abilities
         kill_command(),
         cobra_shot(),
         barbed_shot(),
         bestial_wrath(),
         multi_shot(),
         kill_shot(),
+        // Major cooldowns
+        call_of_the_wild(),
+        bloodshed(),
+        dire_beast(),
+        murder_of_crows(),
+        // Talent spells
+        explosive_shot(),
+        // Pet abilities
+        pet_stomp(),
+        pet_basic_attack(),
+        kill_cleave(),
+        dire_beast_attack(),
+        // Hero talent spells - Pack Leader
+        howl_of_the_pack_leader(),
+        boar_charge(),
+        // Hero talent spells - Dark Ranger
+        black_arrow(),
     ]
 }
+
+// ============================================================================
+// Core Abilities
+// ============================================================================
 
 fn kill_command() -> SpellDef {
     SpellBuilder::new(KILL_COMMAND, "Kill Command")
@@ -73,7 +95,146 @@ fn kill_shot() -> SpellDef {
         .cooldown(10.0)
         .cost(ResourceType::Focus, 10.0)
         .physical_damage(4.0)
-        // Note: Only usable when target < 20% health
-        // This would be checked in the handler
+        // Only usable when target < 20% health (checked in handler)
+        .build()
+}
+
+// ============================================================================
+// Major Cooldowns
+// ============================================================================
+
+fn call_of_the_wild() -> SpellDef {
+    SpellBuilder::new(CALL_OF_THE_WILD, "Call of the Wild")
+        .instant()
+        .no_gcd()
+        .cooldown(CALL_OF_THE_WILD_COOLDOWN)
+        .apply_aura(CALL_OF_THE_WILD_BUFF)
+        .build()
+}
+
+fn bloodshed() -> SpellDef {
+    SpellBuilder::new(BLOODSHED, "Bloodshed")
+        .school(DamageSchool::Physical)
+        .instant()
+        .cooldown(BLOODSHED_COOLDOWN)
+        .apply_aura(BLOODSHED_DEBUFF)
+        .pet_ability()
+        .build()
+}
+
+fn dire_beast() -> SpellDef {
+    SpellBuilder::new(DIRE_BEAST, "Dire Beast")
+        .instant()
+        .cooldown(DIRE_BEAST_COOLDOWN)
+        .build()
+}
+
+fn murder_of_crows() -> SpellDef {
+    SpellBuilder::new(MURDER_OF_CROWS, "A Murder of Crows")
+        .school(DamageSchool::Physical)
+        .instant()
+        .cooldown(MURDER_OF_CROWS_COOLDOWN)
+        .cost(ResourceType::Focus, 30.0)
+        .apply_aura(MURDER_OF_CROWS_DEBUFF)
+        .build()
+}
+
+// ============================================================================
+// Talent Spells
+// ============================================================================
+
+fn explosive_shot() -> SpellDef {
+    SpellBuilder::new(EXPLOSIVE_SHOT, "Explosive Shot")
+        .school(DamageSchool::Fire)
+        .instant()
+        .cooldown(30.0)
+        .cost(ResourceType::Focus, 20.0)
+        .target(SpellTarget::AllEnemies)
+        .spell_damage(DamageSchool::Fire, 1.5)
+        .build()
+}
+
+// ============================================================================
+// Pet Abilities
+// ============================================================================
+
+fn pet_stomp() -> SpellDef {
+    SpellBuilder::new(PET_STOMP, "Stomp")
+        .school(DamageSchool::Physical)
+        .instant()
+        .cooldown(10.0)
+        .target(SpellTarget::AllEnemies)
+        .physical_damage(STOMP_AP_COEF)
+        .pet_ability()
+        .background()
+        .build()
+}
+
+fn pet_basic_attack() -> SpellDef {
+    SpellBuilder::new(PET_BASIC_ATTACK, "Claw")
+        .school(DamageSchool::Physical)
+        .instant()
+        .cooldown(3.0)
+        .physical_damage(0.333)
+        .pet_ability()
+        .background()
+        .build()
+}
+
+fn kill_cleave() -> SpellDef {
+    SpellBuilder::new(KILL_CLEAVE, "Kill Cleave")
+        .school(DamageSchool::Physical)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .physical_damage(KILL_CLEAVE_DAMAGE * 2.0) // 60% of KC damage
+        .pet_ability()
+        .background()
+        .build()
+}
+
+fn dire_beast_attack() -> SpellDef {
+    SpellBuilder::new(DIRE_BEAST_ATTACK, "Dire Beast Attack")
+        .school(DamageSchool::Physical)
+        .instant()
+        .physical_damage(DIRE_BEAST_AP_COEF)
+        .pet_ability()
+        .background()
+        .build()
+}
+
+// ============================================================================
+// Hero Talent Spells - Pack Leader
+// ============================================================================
+
+fn howl_of_the_pack_leader() -> SpellDef {
+    SpellBuilder::new(HOWL_OF_THE_PACK_LEADER, "Howl of the Pack Leader")
+        .instant()
+        .no_gcd()
+        .background()
+        .build()
+}
+
+fn boar_charge() -> SpellDef {
+    SpellBuilder::new(BOAR_CHARGE, "Boar Charge")
+        .school(DamageSchool::Physical)
+        .instant()
+        .target(SpellTarget::AllEnemies)
+        .physical_damage(0.8)
+        .pet_ability()
+        .background()
+        .build()
+}
+
+// ============================================================================
+// Hero Talent Spells - Dark Ranger
+// ============================================================================
+
+fn black_arrow() -> SpellDef {
+    SpellBuilder::new(BLACK_ARROW, "Black Arrow")
+        .school(DamageSchool::Shadow)
+        .instant()
+        .cooldown(BLACK_ARROW_COOLDOWN)
+        .cost(ResourceType::Focus, 10.0)
+        .apply_aura(BLACK_ARROW_DOT)
         .build()
 }
