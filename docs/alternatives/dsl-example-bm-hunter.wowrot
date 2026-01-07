@@ -1,0 +1,360 @@
+rotation "bm_hunter"
+spec beast_mastery
+version 1
+
+# ============================================================
+# DEFINITIONS
+# All spells and auras must be declared before use.
+# ============================================================
+
+spells:
+  auto_shot           75
+  kill_command        34026
+  kill_shot           53351
+  barbed_shot         217200
+  cobra_shot          193455
+  multi_shot          2643
+  bestial_wrath       19574
+  call_of_the_wild    359844
+  bloodshed           321530
+  explosive_shot      212431
+  dire_beast          120679
+
+  # Racials
+  berserking          26297
+  blood_fury          20572
+  ancestral_call      274738
+  fireblood           265221
+
+  # Consumables
+  potion              0       # Resolved at runtime
+
+auras:
+  bestial_wrath             19574
+  call_of_the_wild          359844
+  frenzy                    272790
+  beast_cleave              268877
+  thrill_of_the_hunt        257946
+  howl_of_the_pack_leader   472275
+  lead_from_the_front       503580
+  withering_fire            466991
+  hogstrider                0       # TODO: Get spell ID
+
+
+# ============================================================
+# COOLDOWNS
+# Racial abilities and consumables, shared across all lists.
+# ============================================================
+
+list "cds":
+  # External buff request (e.g., Power Infusion from healer)
+  request_power_infusion
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or (not talent.call_of_the_wild and bestial_wrath.cooldown.remains < 30)
+      or fight.remains < 16
+
+  berserking
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 13
+
+  blood_fury
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 16
+
+  ancestral_call
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 16
+
+  fireblood
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 9
+
+  potion
+    on self
+    when:
+      call_of_the_wild.active
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 31
+
+
+# ============================================================
+# TRINKETS
+# Simplified trinket logic - sync with major cooldowns.
+# (SimC's trinket logic is 500+ chars per line - we refuse.)
+# ============================================================
+
+list "trinkets":
+  use_trinket_1
+    on self
+    when:
+      call_of_the_wild.active and call_of_the_wild.remains > 14
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 20
+
+  use_trinket_2
+    on self
+    when:
+      call_of_the_wild.active and call_of_the_wild.remains > 14
+      or (not talent.call_of_the_wild and bestial_wrath.active)
+      or fight.remains < 20
+
+
+# ============================================================
+# SINGLE TARGET (Pack Leader / Standard)
+# Used when: not talent.black_arrow AND enemies < 2
+#            OR (not talent.beast_cleave AND enemies < 3)
+# ============================================================
+
+list "st":
+  # Bestial Wrath - complex timing for 4pc synergy
+  bestial_wrath
+    on self
+    when:
+      howl_of_the_pack_leader.cooldown.remains - lead_from_the_front.duration
+        < lead_from_the_front.duration / gcd * 0.5
+      or not set_bonus.tww3_4pc
+
+  # Barbed Shot - prevent capping recharge
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when recharge.full < gcd
+
+  call_of_the_wild
+    on self
+    when ready
+
+  bloodshed
+    on target
+    when ready
+
+  # Kill Command - sync with Barbed Shot charges
+  kill_command
+    on target
+    when:
+      charges.fractional >= barbed_shot.charges.fractional
+      and not (
+        lead_from_the_front.remains > gcd
+        and lead_from_the_front.remains < gcd * 2
+        and not howl_summon.ready
+        and barbed_shot.recharge.full > gcd
+      )
+
+  # Barbed Shot - use remaining charges
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when ready
+
+  # Filler
+  cobra_shot
+    on target
+    when ready
+
+
+# ============================================================
+# CLEAVE / AOE (Pack Leader / Standard)
+# Used when: not talent.black_arrow AND enemies >= 2
+#            OR (talent.beast_cleave AND enemies >= 2)
+# ============================================================
+
+list "cleave":
+  bestial_wrath
+    on self
+    when:
+      howl_of_the_pack_leader.cooldown.remains - lead_from_the_front.duration
+        < lead_from_the_front.duration / gcd * 0.5
+      or not set_bonus.tww3_4pc
+      or talent.multishot
+
+  # Barbed Shot - multiple conditions for AoE
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when:
+      recharge.full < gcd
+      or charges.fractional >= kill_command.charges.fractional
+      or (talent.call_of_the_wild and call_of_the_wild.ready)
+      or (howl_summon.ready and recharge.full < 8)
+
+  bloodshed
+    on target
+    when ready
+
+  # Multi-Shot - maintain Beast Cleave on pet
+  multi_shot
+    on target
+    when:
+      not pet.beast_cleave.active
+      and (not talent.bloody_frenzy or call_of_the_wild.cooldown.remains > 0)
+
+  call_of_the_wild
+    on self
+    when ready
+
+  explosive_shot
+    on target
+    when talent.thundering_hooves
+
+  kill_command
+    on target
+    when ready
+
+  cobra_shot
+    on target
+    when:
+      focus.time_to_max < gcd * 2
+      or hogstrider.stacks > 3
+      or not talent.multishot
+
+
+# ============================================================
+# DARK RANGER - SINGLE TARGET
+# Used when: talent.black_arrow AND enemies < 2
+#            OR (not talent.beast_cleave AND enemies < 3)
+# ============================================================
+
+list "dr_st":
+  kill_shot
+    on target
+    when ready
+
+  bestial_wrath
+    on self
+    when:
+      call_of_the_wild.cooldown.remains > 30
+      or not talent.call_of_the_wild
+      or fight.remains < call_of_the_wild.cooldown.remains
+
+  bloodshed
+    on target
+    when ready
+
+  call_of_the_wild
+    on self
+    when ready
+
+  # Kill Command - sync with Withering Fire ticks
+  kill_command
+    on target
+    when:
+      (withering_fire.tick_remains > gcd and withering_fire.tick_remains < 3)
+      or not withering_fire.active
+
+  # Barbed Shot - sync with Withering Fire ticks
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when:
+      (withering_fire.tick_remains > 0.5 and withering_fire.tick_remains < 3)
+      or not withering_fire.active
+
+  cobra_shot
+    on target
+    when not withering_fire.active
+
+
+# ============================================================
+# DARK RANGER - CLEAVE / AOE
+# Used when: talent.black_arrow AND enemies >= 2
+#            OR (talent.beast_cleave AND enemies >= 2)
+# ============================================================
+
+list "dr_cleave":
+  kill_shot
+    on target
+    when ready
+
+  bestial_wrath
+    on self
+    when:
+      call_of_the_wild.cooldown.remains > 20
+      or not talent.call_of_the_wild
+
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when:
+      recharge.full < gcd
+      or thrill_of_the_hunt.remains < gcd * 1.5
+
+  bloodshed
+    on target
+    when ready
+
+  multi_shot
+    on target
+    when:
+      not pet.beast_cleave.active
+      and (not talent.bloody_frenzy or call_of_the_wild.cooldown.remains > 0)
+
+  call_of_the_wild
+    on self
+    when ready
+
+  explosive_shot
+    on target
+    when talent.thundering_hooves
+
+  # Kill Command - sync with Withering Fire
+  kill_command
+    on target
+    when:
+      (withering_fire.tick_remains > gcd and withering_fire.tick_remains < 3)
+      or not withering_fire.active
+
+  # Barbed Shot - sync with Withering Fire
+  barbed_shot
+    on enemies | min by barbed_shot.dot.remains
+    when:
+      (withering_fire.tick_remains > 0.5 and withering_fire.tick_remains < 3)
+      or not withering_fire.active
+
+  cobra_shot
+    on target
+    when:
+      not withering_fire.active
+      and focus.time_to_max < gcd * 2
+
+  # Fallback explosive shot
+  explosive_shot
+    on target
+    when ready
+
+
+# ============================================================
+# MAIN PRIORITY
+# Entry point - dispatches to appropriate action list based
+# on talents and enemy count.
+# ============================================================
+
+priority:
+  # Always call cooldowns first
+  call cds
+
+  # Trinkets
+  call trinkets
+
+  # Dark Ranger talent tree
+  if talent.black_arrow:
+    if enemies < 2 or (not talent.beast_cleave and enemies < 3):
+      call dr_st
+    else:
+      call dr_cleave
+
+  # Pack Leader / Standard talent trees
+  else:
+    if enemies < 2 or (not talent.beast_cleave and enemies < 3):
+      call st
+    else:
+      call cleave
