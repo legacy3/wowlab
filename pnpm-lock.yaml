@@ -321,7 +321,7 @@ importers:
         version: link:../../packages/wowlab-services
       '@xyflow/react':
         specifier: ^12.10.0
-        version: 12.10.0(@types/react@19.2.2)(immer@10.2.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 12.10.0(@types/react@19.2.2)(immer@11.1.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       change-case:
         specifier: ^5.4.4
         version: 5.4.4
@@ -415,6 +415,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.2)(react@19.2.3)
+      react-querybuilder:
+        specifier: ^8.13.0
+        version: 8.13.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1)
       react-resizable-panels:
         specifier: ^4.0.15
         version: 4.0.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -2134,8 +2137,33 @@ packages:
       js-cookie:
         optional: true
 
+  '@react-querybuilder/core@8.13.0':
+    resolution: {integrity: sha512-4qubbUNGl852lkq43fYQvey8iHu477fXUoDMzQCVSazXA8K2htF4Yi382K1OzD8dOC9NtUNZ6uoIKdZEOD0ewQ==}
+    peerDependencies:
+      drizzle-orm: '>=0.38.0'
+      json-logic-js: '>=2'
+      sequelize: '>=6'
+    peerDependenciesMeta:
+      drizzle-orm:
+        optional: true
+      json-logic-js:
+        optional: true
+      sequelize:
+        optional: true
+
   '@reduxjs/toolkit@2.10.1':
     resolution: {integrity: sha512-/U17EXQ9Do9Yx4DlNGU6eVNfZvFJfYpUtRRdLf19PbPjdWBxNlxGZXywQZ1p1Nz8nMkWplTI7iD/23m07nolDA==}
+    peerDependencies:
+      react: ^16.9.0 || ^17.0.0 || ^18 || ^19
+      react-redux: ^7.2.1 || ^8.1.3 || ^9.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-redux:
+        optional: true
+
+  '@reduxjs/toolkit@2.11.2':
+    resolution: {integrity: sha512-Kd6kAHTA6/nUpp8mySPqj3en3dm0tdMIgbttnQ1xFMVpufoj+ADi8pXLBsd4xzTRHQa7t/Jv8W5UnCuW4kuWMQ==}
     peerDependencies:
       react: ^16.9.0 || ^17.0.0 || ^18 || ^19
       react-redux: ^7.2.1 || ^8.1.3 || ^9.0.0
@@ -2514,6 +2542,15 @@ packages:
   '@ts-graphviz/core@2.0.7':
     resolution: {integrity: sha512-w071DSzP94YfN6XiWhOxnLpYT3uqtxJBDYdh6Jdjzt+Ce6DNspJsPQgpC7rbts/B8tEkq0LHoYuIF/O5Jh5rPg==}
     engines: {node: '>=18'}
+
+  '@ts-jison/common@0.4.1-alpha.1':
+    resolution: {integrity: sha512-SDbHzq+UMD+V3ciKVBHwCEgVqSeyQPTCjOsd/ZNTGySUVg4x3EauR9ZcEfdVFAsYRR38XWgDI+spq5LDY46KvQ==}
+
+  '@ts-jison/lexer@0.4.1-alpha.1':
+    resolution: {integrity: sha512-5C1Wr+wixAzn2MOFtgy7KbT6N6j9mhmbjAtyvOqZKsikKtNOQj22MM5HxT+ooRexG2NbtxnDSXYdhHR1Lg58ow==}
+
+  '@ts-jison/parser@0.4.1-alpha.1':
+    resolution: {integrity: sha512-xNj+qOez/7dju44LlYiTlCjxMzW5oek9EckUAElfln/GBK9vgMSk0swWcnacMr0TYbGjUQuXvL2wEgmDf5WajQ==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -4298,6 +4335,9 @@ packages:
   immer@10.2.0:
     resolution: {integrity: sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw==}
 
+  immer@11.1.3:
+    resolution: {integrity: sha512-6jQTc5z0KJFtr1UgFpIL3N9XSC3saRaI9PwWtzM2pSqkNGtiNkYY2OSwkOGDK2XcTRcLb1pi/aNkKZz0nxVH4Q==}
+
   immutable@5.1.4:
     resolution: {integrity: sha512-p6u1bG3YSnINT5RQmx/yRZBpenIl30kVxkTLDyHLIMk0gict704Q9n+thfDI7lTRm9vXdDYutVzXhzcThxTnXA==}
 
@@ -5097,6 +5137,10 @@ packages:
     engines: {node: '>=20.0.0', npm: '>=8.12.1'}
     hasBin: true
 
+  numeric-quantity@2.1.0:
+    resolution: {integrity: sha512-oDkQ8nFuNVA+unEg1jd6dAS+O7eLXWWzsa4ViI0S0yFi6654GK0s74o8bF8uLRQdWIz/qFF1GABNFPfwAGQUsg==}
+    engines: {node: '>=16'}
+
   nuqs@2.8.6:
     resolution: {integrity: sha512-aRxeX68b4ULmhio8AADL2be1FWDy0EPqaByPvIYWrA7Pm07UjlrICp/VPlSnXJNAG0+3MQwv3OporO2sOXMVGA==}
     peerDependencies:
@@ -5407,6 +5451,11 @@ packages:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
       '@types/react': '>=18'
+      react: '>=18'
+
+  react-querybuilder@8.13.0:
+    resolution: {integrity: sha512-lwWh5SquuoRg3Pln+jb6RRapLZ5zCT9rkThi8dVmtYUIfmaH4A45S43e0J+qFriNdQMFaLoTs8Bl8ksK3FtB+Q==}
+    peerDependencies:
       react: '>=18'
 
   react-reconciler@0.33.0:
@@ -7858,11 +7907,30 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
+  '@react-querybuilder/core@8.13.0':
+    dependencies:
+      '@ts-jison/lexer': 0.4.1-alpha.1
+      '@ts-jison/parser': 0.4.1-alpha.1
+      immer: 11.1.3
+      numeric-quantity: 2.1.0
+
   '@reduxjs/toolkit@2.10.1(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1))(react@19.2.3)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@standard-schema/utils': 0.3.0
       immer: 10.2.0
+      redux: 5.0.1
+      redux-thunk: 3.1.0(redux@5.0.1)
+      reselect: 5.1.1
+    optionalDependencies:
+      react: 19.2.3
+      react-redux: 9.2.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1)
+
+  '@reduxjs/toolkit@2.11.2(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1))(react@19.2.3)':
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      '@standard-schema/utils': 0.3.0
+      immer: 11.1.3
       redux: 5.0.1
       redux-thunk: 3.1.0(redux@5.0.1)
       reselect: 5.1.1
@@ -8203,6 +8271,17 @@ snapshots:
     dependencies:
       '@ts-graphviz/ast': 2.0.7
       '@ts-graphviz/common': 2.1.5
+
+  '@ts-jison/common@0.4.1-alpha.1': {}
+
+  '@ts-jison/lexer@0.4.1-alpha.1':
+    dependencies:
+      '@ts-jison/common': 0.4.1-alpha.1
+
+  '@ts-jison/parser@0.4.1-alpha.1':
+    dependencies:
+      '@ts-jison/common': 0.4.1-alpha.1
+      '@ts-jison/lexer': 0.4.1-alpha.1
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -8794,13 +8873,13 @@ snapshots:
 
   '@vue/shared@3.5.24': {}
 
-  '@xyflow/react@12.10.0(@types/react@19.2.2)(immer@10.2.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@xyflow/react@12.10.0(@types/react@19.2.2)(immer@11.1.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@xyflow/system': 0.0.74
       classcat: 5.0.5
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-      zustand: 4.5.7(@types/react@19.2.2)(immer@10.2.0)(react@19.2.3)
+      zustand: 4.5.7(@types/react@19.2.2)(immer@11.1.3)(react@19.2.3)
     transitivePeerDependencies:
       - '@types/react'
       - immer
@@ -10378,6 +10457,8 @@ snapshots:
 
   immer@10.2.0: {}
 
+  immer@11.1.3: {}
+
   immutable@5.1.4: {}
 
   import-fresh@3.3.1:
@@ -11421,6 +11502,8 @@ snapshots:
 
   npm-check-updates@19.2.0: {}
 
+  numeric-quantity@2.1.0: {}
+
   nuqs@2.8.6(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
     dependencies:
       '@standard-schema/spec': 1.0.0
@@ -11770,6 +11853,20 @@ snapshots:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
+
+  react-querybuilder@8.13.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1):
+    dependencies:
+      '@react-querybuilder/core': 8.13.0
+      '@reduxjs/toolkit': 2.11.2(react-redux@9.2.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1))(react@19.2.3)
+      immer: 11.1.3
+      react: 19.2.3
+      react-redux: 9.2.0(@types/react@19.2.2)(react@19.2.3)(redux@5.0.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - drizzle-orm
+      - json-logic-js
+      - redux
+      - sequelize
 
   react-reconciler@0.33.0(react@19.2.3):
     dependencies:
@@ -12891,12 +12988,12 @@ snapshots:
 
   zod@4.2.1: {}
 
-  zustand@4.5.7(@types/react@19.2.2)(immer@10.2.0)(react@19.2.3):
+  zustand@4.5.7(@types/react@19.2.2)(immer@11.1.3)(react@19.2.3):
     dependencies:
       use-sync-external-store: 1.6.0(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.2
-      immer: 10.2.0
+      immer: 11.1.3
       react: 19.2.3
 
   zwitch@2.0.4: {}

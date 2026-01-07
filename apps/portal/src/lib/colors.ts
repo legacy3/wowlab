@@ -51,3 +51,20 @@ export const CLASS_COLORS: Record<string, string> = {
   Warlock: "#9482C9",
   Warrior: "#C79C6E",
 };
+
+/** Class colors keyed by kebab-case ID (e.g., "death-knight", "demon-hunter") */
+export const CLASS_COLORS_BY_ID: Record<string, string> = {
+  "death-knight": "#C41E3A",
+  "demon-hunter": "#A330C9",
+  druid: "#FF7D0A",
+  evoker: "#33937F",
+  hunter: "#ABD473",
+  mage: "#69CCF0",
+  monk: "#00FF96",
+  paladin: "#F58CBA",
+  priest: "#FFFFFF",
+  rogue: "#FFF569",
+  shaman: "#0070DE",
+  warlock: "#9482C9",
+  warrior: "#C79C6E",
+};
