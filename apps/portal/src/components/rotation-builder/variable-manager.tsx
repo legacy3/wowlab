@@ -103,7 +103,7 @@ function VariableItem({
         handleCancel();
       }
     },
-    [handleSave, handleCancel]
+    [handleSave, handleCancel],
   );
 
   if (isEditing) {
@@ -127,7 +127,7 @@ function VariableItem({
                 placeholder="burst_phase"
                 className={cn(
                   "h-8 font-mono text-sm",
-                  nameError && "border-destructive"
+                  nameError && "border-destructive",
                 )}
                 autoFocus
               />
@@ -148,9 +148,7 @@ function VariableItem({
           </div>
         </div>
 
-        {nameError && (
-          <p className="text-xs text-destructive">{nameError}</p>
-        )}
+        {nameError && <p className="text-xs text-destructive">{nameError}</p>}
 
         <div className="flex items-center justify-end gap-2">
           <Button
@@ -254,7 +252,7 @@ function AddVariableForm({
         onCancel();
       }
     },
-    [handleSubmit, onCancel]
+    [handleSubmit, onCancel],
   );
 
   return (
@@ -277,7 +275,7 @@ function AddVariableForm({
               placeholder="burst_phase"
               className={cn(
                 "h-8 font-mono text-sm",
-                nameError && "border-destructive"
+                nameError && "border-destructive",
               )}
               autoFocus
             />
@@ -301,12 +299,7 @@ function AddVariableForm({
       {nameError && <p className="text-xs text-destructive">{nameError}</p>}
 
       <div className="flex items-center justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          className="h-7"
-        >
+        <Button variant="ghost" size="sm" onClick={onCancel} className="h-7">
           <XIcon className="size-3.5 mr-1" />
           Cancel
         </Button>
@@ -338,19 +331,15 @@ export function VariableManager({ variables, onChange }: VariableManagerProps) {
       onChange([...variables, variable]);
       setIsAdding(false);
     },
-    [variables, onChange]
+    [variables, onChange],
   );
 
   const handleUpdate = useCallback(
     (id: string, updates: { name: string; expression: string }) => {
-      onChange(
-        variables.map((v) =>
-          v.id === id ? { ...v, ...updates } : v
-        )
-      );
+      onChange(variables.map((v) => (v.id === id ? { ...v, ...updates } : v)));
       setEditingId(null);
     },
-    [variables, onChange]
+    [variables, onChange],
   );
 
   const handleDelete = useCallback(
@@ -360,7 +349,7 @@ export function VariableManager({ variables, onChange }: VariableManagerProps) {
         setEditingId(null);
       }
     },
-    [variables, onChange, editingId]
+    [variables, onChange, editingId],
   );
 
   const handleStartAdd = useCallback(() => {

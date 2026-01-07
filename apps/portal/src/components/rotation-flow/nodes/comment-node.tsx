@@ -21,7 +21,7 @@ export const CommentNode = memo(function CommentNode({
         "min-w-[80px] max-w-[160px]",
         selected
           ? "border-amber-400 dark:border-amber-600 ring-2 ring-amber-200/50 dark:ring-amber-800/50 scale-[1.02]"
-          : "border-amber-300/60 dark:border-amber-700/40 hover:border-amber-400/80 hover:scale-[1.01]"
+          : "border-amber-300/60 dark:border-amber-700/40 hover:border-amber-400/80 hover:scale-[1.01]",
       )}
     >
       {/* Sticky note fold effect */}
@@ -29,9 +29,7 @@ export const CommentNode = memo(function CommentNode({
 
       {/* Header */}
       <div className="flex items-center gap-1 px-2 py-1 border-b border-dashed border-amber-300/40 dark:border-amber-700/30">
-        <StickyNote
-          className="w-3 h-3 text-amber-500 dark:text-amber-400"
-        />
+        <StickyNote className="w-3 h-3 text-amber-500 dark:text-amber-400" />
         <span className="text-[8px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
           {data.label || "Note"}
         </span>

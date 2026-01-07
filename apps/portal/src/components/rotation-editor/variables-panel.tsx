@@ -59,7 +59,7 @@ const VariableRow = memo(function VariableRow({
           "size-8 rounded flex items-center justify-center shrink-0 mt-0.5",
           variable.type === "number" && "bg-blue-500/10 text-blue-500",
           variable.type === "boolean" && "bg-amber-500/10 text-amber-500",
-          variable.type === "string" && "bg-green-500/10 text-green-500"
+          variable.type === "string" && "bg-green-500/10 text-green-500",
         )}
       >
         <TypeIcon className="size-4" />

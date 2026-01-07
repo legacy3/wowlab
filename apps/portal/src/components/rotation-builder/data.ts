@@ -37,7 +37,7 @@ export const BM_HUNTER_SPELLS = [
 
 /** Spells as react-querybuilder options */
 export const BM_HUNTER_SPELL_OPTIONS = BM_HUNTER_SPELLS.map((s) =>
-  createOption(s.name, s.label)
+  createOption(s.name, s.label),
 );
 
 // -----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ export const BM_HUNTER_AURAS = [
 
 /** Auras as react-querybuilder options */
 export const BM_HUNTER_AURA_OPTIONS = BM_HUNTER_AURAS.map((a) =>
-  createOption(a.name, a.label)
+  createOption(a.name, a.label),
 );
 
 // -----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ export const BM_HUNTER_TALENTS = [
 
 /** Talents as react-querybuilder options */
 export const BM_HUNTER_TALENT_OPTIONS = BM_HUNTER_TALENTS.map((t) =>
-  createOption(t.name, t.label)
+  createOption(t.name, t.label),
 );
 
 // -----------------------------------------------------------------------------

@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
+    "format": "prettier --write --ignore-path ../../.prettierignore .",
     "ncu": "ncu -u"
   },
   "dependencies": {

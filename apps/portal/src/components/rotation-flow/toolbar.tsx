@@ -77,7 +77,9 @@ export const Toolbar = memo(function Toolbar({
             <Undo2 className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Undo</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Undo
+        </TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -86,18 +88,27 @@ export const Toolbar = memo(function Toolbar({
             <Redo2 className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Redo</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Redo
+        </TooltipContent>
       </Tooltip>
 
       <ToolbarSeparator />
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onAutoLayout}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={onAutoLayout}
+          >
             <AlignStartVertical className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Auto Layout (L)</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Auto Layout (L)
+        </TooltipContent>
       </Tooltip>
 
       {onLayoutDirectionChange && (
@@ -108,7 +119,9 @@ export const Toolbar = memo(function Toolbar({
               size="icon"
               className="h-5 w-5"
               onClick={() =>
-                onLayoutDirectionChange(layoutDirection === "vertical" ? "horizontal" : "vertical")
+                onLayoutDirectionChange(
+                  layoutDirection === "vertical" ? "horizontal" : "vertical",
+                )
               }
             >
               {layoutDirection === "vertical" ? (
@@ -119,7 +132,9 @@ export const Toolbar = memo(function Toolbar({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-[10px]">
-            {layoutDirection === "vertical" ? "Vertical Flow" : "Horizontal Flow"}
+            {layoutDirection === "vertical"
+              ? "Vertical Flow"
+              : "Horizontal Flow"}
           </TooltipContent>
         </Tooltip>
       )}
@@ -157,7 +172,9 @@ export const Toolbar = memo(function Toolbar({
             <Grid3X3 className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Grid</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Grid
+        </TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -171,7 +188,9 @@ export const Toolbar = memo(function Toolbar({
             <LayoutGrid className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Minimap</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Minimap
+        </TooltipContent>
       </Tooltip>
 
       <ToolbarSeparator />
@@ -231,7 +250,9 @@ export const Toolbar = memo(function Toolbar({
             <Keyboard className="h-2.5 w-2.5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-[10px]">Shortcuts</TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
+          Shortcuts
+        </TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -242,7 +263,11 @@ export const Toolbar = memo(function Toolbar({
             className="h-5 w-5"
             onClick={onToggleZen}
           >
-            {zenMode ? <X className="h-2.5 w-2.5" /> : <Expand className="h-2.5 w-2.5" />}
+            {zenMode ? (
+              <X className="h-2.5 w-2.5" />
+            ) : (
+              <Expand className="h-2.5 w-2.5" />
+            )}
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-[10px]">

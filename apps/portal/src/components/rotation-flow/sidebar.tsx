@@ -57,14 +57,22 @@ export const Sidebar = memo(function Sidebar({
 }: SidebarProps) {
   const onDragStart = (event: DragEvent, nodeType: string, data: object) => {
     event.dataTransfer.setData("application/reactflow/type", nodeType);
-    event.dataTransfer.setData("application/reactflow/data", JSON.stringify(data));
+    event.dataTransfer.setData(
+      "application/reactflow/data",
+      JSON.stringify(data),
+    );
     event.dataTransfer.effectAllowed = "move";
   };
 
   // Collapsed view - just show icons
   if (collapsed) {
     return (
-      <div className={cn("flex flex-col h-full bg-muted/20 w-10 transition-all duration-200", className)}>
+      <div
+        className={cn(
+          "flex flex-col h-full bg-muted/20 w-10 transition-all duration-200",
+          className,
+        )}
+      >
         <div className="flex items-center justify-center p-1 border-b">
           <Button
             variant="ghost"
@@ -86,7 +94,9 @@ export const Sidebar = memo(function Sidebar({
                     className="flex items-center justify-center w-6 h-6 rounded cursor-grab hover:bg-accent transition-colors active:cursor-grabbing"
                     style={{ backgroundColor: item.color + "20" }}
                     draggable
-                    onDragStart={(e) => onDragStart(e, item.type, item.defaultData)}
+                    onDragStart={(e) =>
+                      onDragStart(e, item.type, item.defaultData)
+                    }
                   >
                     <Icon className="w-3 h-3" style={{ color: item.color }} />
                   </div>
@@ -103,7 +113,12 @@ export const Sidebar = memo(function Sidebar({
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-muted/20 w-44 transition-all duration-200", className)}>
+    <div
+      className={cn(
+        "flex flex-col h-full bg-muted/20 w-44 transition-all duration-200",
+        className,
+      )}
+    >
       <div className="flex items-center gap-1 p-1.5 border-b">
         <div className="relative flex-1">
           <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
@@ -128,7 +143,11 @@ export const Sidebar = memo(function Sidebar({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-0.5 mt-0.5">
               {PALETTE_ITEMS.map((item) => (
-                <PaletteNode key={item.type} item={item} onDragStart={onDragStart} />
+                <PaletteNode
+                  key={item.type}
+                  item={item}
+                  onDragStart={onDragStart}
+                />
               ))}
             </CollapsibleContent>
           </Collapsible>
@@ -140,7 +159,11 @@ export const Sidebar = memo(function Sidebar({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-0.5 mt-0.5">
               {MOCK_SPELLS.map((spell) => (
-                <SpellPaletteItem key={spell.id} spell={spell} onDragStart={onDragStart} />
+                <SpellPaletteItem
+                  key={spell.id}
+                  spell={spell}
+                  onDragStart={onDragStart}
+                />
               ))}
             </CollapsibleContent>
           </Collapsible>
@@ -149,11 +172,24 @@ export const Sidebar = memo(function Sidebar({
             <CollapsibleTrigger className="flex items-center gap-1 w-full px-1 py-0.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground">
               <ChevronDown className="w-2.5 h-2.5" />
               Groups
-              <Badge variant="secondary" className="ml-auto text-[8px] px-1 h-3">2</Badge>
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[8px] px-1 h-3"
+              >
+                2
+              </Badge>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-0.5 mt-0.5">
-              <SavedGroupItem name="Cooldowns" count={3} onDragStart={onDragStart} />
-              <SavedGroupItem name="AoE Burst" count={5} onDragStart={onDragStart} />
+              <SavedGroupItem
+                name="Cooldowns"
+                count={3}
+                onDragStart={onDragStart}
+              />
+              <SavedGroupItem
+                name="AoE Burst"
+                count={5}
+                onDragStart={onDragStart}
+              />
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -171,7 +207,10 @@ interface PaletteNodeProps {
   onDragStart: (event: DragEvent, nodeType: string, data: object) => void;
 }
 
-const PaletteNode = memo(function PaletteNode({ item, onDragStart }: PaletteNodeProps) {
+const PaletteNode = memo(function PaletteNode({
+  item,
+  onDragStart,
+}: PaletteNodeProps) {
   const Icon = ICONS[item.icon] || Zap;
 
   return (
@@ -225,7 +264,9 @@ const SpellPaletteItem = memo(function SpellPaletteItem({
       </div>
       <span className="text-[10px] flex-1 truncate">{spell.name}</span>
       {spell.cooldown && spell.cooldown > 0 && (
-        <span className="text-[8px] text-muted-foreground">{spell.cooldown / 1000}s</span>
+        <span className="text-[8px] text-muted-foreground">
+          {spell.cooldown / 1000}s
+        </span>
       )}
     </div>
   );
@@ -256,7 +297,9 @@ const SavedGroupItem = memo(function SavedGroupItem({
     >
       <FolderOpen className="w-3.5 h-3.5 text-purple-500" />
       <span className="text-[10px] flex-1">{name}</span>
-      <Badge variant="secondary" className="text-[8px] px-1 h-3">{count}</Badge>
+      <Badge variant="secondary" className="text-[8px] px-1 h-3">
+        {count}
+      </Badge>
     </div>
   );
 });

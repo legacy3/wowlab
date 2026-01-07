@@ -24,10 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { generateListId } from "@/lib/id";
 
-import {
-  SpecSelector,
-  type SpecSelectorValue,
-} from "./spec-selector";
+import { SpecSelector, type SpecSelectorValue } from "./spec-selector";
 import { VariableManager } from "./variable-manager";
 import { ActionListPanel } from "./action-list-panel";
 import { ActionList, createAction } from "./action-editor";
@@ -130,9 +127,7 @@ function createInitialState(): RotationState {
           createAction("multi_shot", {
             conditions: {
               combinator: "and",
-              rules: [
-                { field: "aura_remaining", operator: "<", value: "2" },
-              ],
+              rules: [{ field: "aura_remaining", operator: "<", value: "2" }],
             },
           }),
         ],
@@ -151,7 +146,7 @@ type ViewMode = "edit" | "preview";
 export function RotationBuilderPage() {
   const [state, setState] = useState<RotationState>(createInitialState);
   const [selectedListId, setSelectedListId] = useState<string | null>(
-    state.actionLists[0]?.id ?? null
+    state.actionLists[0]?.id ?? null,
   );
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
 
@@ -161,7 +156,7 @@ export function RotationBuilderPage() {
 
   const selectedList = useMemo(
     () => state.actionLists.find((l) => l.id === selectedListId) ?? null,
-    [state.actionLists, selectedListId]
+    [state.actionLists, selectedListId],
   );
 
   const specName = useMemo(() => {
@@ -179,7 +174,7 @@ export function RotationBuilderPage() {
         label: list.label,
         isDefault: list.id === state.defaultListId,
       })),
-    [state.actionLists, state.defaultListId]
+    [state.actionLists, state.defaultListId],
   );
 
   const rotationData = useMemo<RotationData>(
@@ -196,7 +191,7 @@ export function RotationBuilderPage() {
         actions: list.actions,
       })),
     }),
-    [specName, state.variables, state.actionLists, state.defaultListId]
+    [specName, state.variables, state.actionLists, state.defaultListId],
   );
 
   // -----------------------------------------------------------------------------
@@ -223,28 +218,25 @@ export function RotationBuilderPage() {
     setSelectedListId(id);
   }, []);
 
-  const handleAddList = useCallback(
-    (list: Omit<ActionListInfo, "id">) => {
-      const newList: ActionListWithActions = {
-        id: generateListId(),
-        name: list.name,
-        label: list.label,
-        actions: [],
-      };
-      setState((prev) => ({
-        ...prev,
-        actionLists: [...prev.actionLists, newList],
-      }));
-      setSelectedListId(newList.id);
-    },
-    []
-  );
+  const handleAddList = useCallback((list: Omit<ActionListInfo, "id">) => {
+    const newList: ActionListWithActions = {
+      id: generateListId(),
+      name: list.name,
+      label: list.label,
+      actions: [],
+    };
+    setState((prev) => ({
+      ...prev,
+      actionLists: [...prev.actionLists, newList],
+    }));
+    setSelectedListId(newList.id);
+  }, []);
 
   const handleRenameList = useCallback((id: string, label: string) => {
     setState((prev) => ({
       ...prev,
       actionLists: prev.actionLists.map((list) =>
-        list.id === id ? { ...list, label } : list
+        list.id === id ? { ...list, label } : list,
       ),
     }));
   }, []);
@@ -259,7 +251,7 @@ export function RotationBuilderPage() {
         setSelectedListId(state.actionLists[0]?.id ?? null);
       }
     },
-    [selectedListId, state.actionLists]
+    [selectedListId, state.actionLists],
   );
 
   const handleSetDefaultList = useCallback((id: string) => {
@@ -283,11 +275,11 @@ export function RotationBuilderPage() {
       setState((prev) => ({
         ...prev,
         actionLists: prev.actionLists.map((list) =>
-          list.id === selectedListId ? { ...list, actions } : list
+          list.id === selectedListId ? { ...list, actions } : list,
         ),
       }));
     },
-    [selectedListId]
+    [selectedListId],
   );
 
   // -----------------------------------------------------------------------------
@@ -318,11 +310,11 @@ export function RotationBuilderPage() {
   const stats = useMemo(() => {
     const totalActions = state.actionLists.reduce(
       (sum, list) => sum + list.actions.length,
-      0
+      0,
     );
     const enabledActions = state.actionLists.reduce(
       (sum, list) => sum + list.actions.filter((a) => a.enabled).length,
-      0
+      0,
     );
     return { totalActions, enabledActions };
   }, [state.actionLists]);
@@ -402,17 +394,13 @@ export function RotationBuilderPage() {
         <div className="flex items-center gap-4">
           <SpecSelector value={state.spec} onChange={handleSpecChange} />
           <div className="flex items-center gap-4 ml-auto text-sm text-muted-foreground">
-            <span>
-              {state.actionLists.length} lists
-            </span>
+            <span>{state.actionLists.length} lists</span>
             <Separator orientation="vertical" className="h-4" />
             <span>
               {stats.enabledActions}/{stats.totalActions} actions
             </span>
             <Separator orientation="vertical" className="h-4" />
-            <span>
-              {state.variables.length} variables
-            </span>
+            <span>{state.variables.length} variables</span>
           </div>
         </div>
       </div>
@@ -466,7 +454,12 @@ export function RotationBuilderPage() {
                   <ActionList
                     actions={selectedList.actions}
                     onChange={handleActionsChange}
-                    spells={BM_HUNTER_SPELLS as unknown as Array<{ name: string; label: string }>}
+                    spells={
+                      BM_HUNTER_SPELLS as unknown as Array<{
+                        name: string;
+                        label: string;
+                      }>
+                    }
                   />
                 ) : (
                   <div className="text-center text-muted-foreground py-12">

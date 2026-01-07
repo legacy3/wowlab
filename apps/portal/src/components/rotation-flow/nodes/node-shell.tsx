@@ -92,7 +92,7 @@ export function NodeShell({
             : "hover:shadow-lg hover:scale-[1.01]",
           variant === "compact" && "rounded-md",
           variant === "wide" && "rounded-xl",
-          className
+          className,
         )}
         style={{
           minWidth,
@@ -117,7 +117,7 @@ export function NodeShell({
             className={cn(
               "!w-2.5 !h-2.5 !border-[2.5px] !border-card !-top-[6px] !rounded-full transition-all",
               "!bg-muted-foreground/60 hover:!bg-muted-foreground",
-              selected && "!bg-muted-foreground"
+              selected && "!bg-muted-foreground",
             )}
           />
         )}
@@ -132,7 +132,7 @@ export function NodeShell({
             position={Position.Bottom}
             className={cn(
               "!w-2.5 !h-2.5 !border-[2.5px] !border-card !-bottom-[6px] !rounded-full transition-all",
-              "hover:!scale-125"
+              "hover:!scale-125",
             )}
             style={{ backgroundColor: color }}
           />
@@ -174,7 +174,7 @@ export function NodeShell({
                     id={h.id}
                     className={cn(
                       "!relative !transform-none !w-2 !h-2 !border-[2px] !border-card !rounded-full transition-all",
-                      "hover:!scale-125 !top-0"
+                      "hover:!scale-125 !top-0",
                     )}
                     style={{ backgroundColor: h.color }}
                   />
@@ -213,7 +213,7 @@ export function NodeHeader({
     <div
       className={cn(
         "flex items-center gap-1.5 px-2 border-b border-border/20",
-        compact ? "py-1" : "py-1.5"
+        compact ? "py-1" : "py-1.5",
       )}
       style={{ backgroundColor: `${color}10` }}
     >
@@ -221,7 +221,7 @@ export function NodeHeader({
       <div
         className={cn(
           "flex items-center justify-center rounded shrink-0 text-white shadow-sm",
-          compact ? "w-4 h-4" : "w-5 h-5"
+          compact ? "w-4 h-4" : "w-5 h-5",
         )}
         style={{ backgroundColor: color }}
       >
@@ -233,7 +233,7 @@ export function NodeHeader({
         <div
           className={cn(
             "font-semibold leading-tight truncate",
-            compact ? "text-[9px]" : "text-[10px]"
+            compact ? "text-[9px]" : "text-[10px]",
           )}
         >
           {title}
@@ -272,7 +272,7 @@ export function NodeBody({
         padding === "none" && "p-0",
         padding === "sm" && "px-2 py-1.5",
         padding === "md" && "px-2.5 py-2",
-        className
+        className,
       )}
     >
       {children}
@@ -294,7 +294,7 @@ export function NodeFooter({ children, className }: NodeFooterProps) {
     <div
       className={cn(
         "flex items-center gap-1 px-2 py-1 border-t border-border/20 bg-muted/30 rounded-b-lg",
-        className
+        className,
       )}
     >
       {children}
@@ -322,7 +322,7 @@ export function NodeBadge({
       className={cn(
         "inline-flex items-center px-1 py-0.5 rounded text-[7px] font-medium",
         variant === "solid" && "text-white",
-        variant === "outline" && "border"
+        variant === "outline" && "border",
       )}
       style={{
         backgroundColor: variant === "solid" ? color : `${color}15`,

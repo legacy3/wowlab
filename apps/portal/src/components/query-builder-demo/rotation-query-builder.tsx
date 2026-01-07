@@ -25,7 +25,7 @@ import {
 function formatAsRotationDSL(query: RuleGroupType): string {
   const formatRule = (
     rule: RuleGroupType["rules"][number],
-    indent: number
+    indent: number,
   ): string => {
     const spaces = "  ".repeat(indent);
 
@@ -44,9 +44,7 @@ function formatAsRotationDSL(query: RuleGroupType): string {
   };
 
   const combinator = query.combinator?.toUpperCase() || "AND";
-  return query.rules
-    .map((r) => formatRule(r, 0))
-    .join(`\n${combinator}\n`);
+  return query.rules.map((r) => formatRule(r, 0)).join(`\n${combinator}\n`);
 }
 
 /**
@@ -64,7 +62,9 @@ function formatAsTomlCondition(query: RuleGroupType): string {
 
     // Map to TOML condition format
     if (field === "cooldown_ready") {
-      return operator === "=" ? `"cooldown.ready"` : `{ not = "cooldown.ready" }`;
+      return operator === "="
+        ? `"cooldown.ready"`
+        : `{ not = "cooldown.ready" }`;
     }
     if (field === "focus") {
       const op = operator === ">=" ? "focus_ge" : "focus_lt";
@@ -208,10 +208,7 @@ export function RotationQueryBuilder() {
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {CONDITION_FIELDS.map((field) => (
-              <div
-                key={field.name}
-                className="rounded-md border p-3 space-y-1"
-              >
+              <div key={field.name} className="rounded-md border p-3 space-y-1">
                 <div className="font-medium">{field.label}</div>
                 <div className="text-sm text-muted-foreground">
                   <code className="text-xs bg-muted px-1 py-0.5 rounded">

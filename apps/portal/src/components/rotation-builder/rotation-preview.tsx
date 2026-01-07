@@ -195,11 +195,11 @@ function generateDebug(data: RotationData): string {
       listCount: data.actionLists.length,
       totalActions: data.actionLists.reduce(
         (sum, list) => sum + list.actions.length,
-        0
+        0,
       ),
       enabledActions: data.actionLists.reduce(
         (sum, list) => sum + list.actions.filter((a) => a.enabled).length,
-        0
+        0,
       ),
     },
     variables: data.variables.map((v) => ({
@@ -243,7 +243,7 @@ function CodeBlock({ content, language, onCopy }: CodeBlockProps) {
         className={cn(
           "absolute right-2 top-2 z-10",
           "opacity-0 group-hover:opacity-100 transition-opacity",
-          "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+          "text-muted-foreground hover:text-foreground hover:bg-muted/80",
         )}
         onClick={onCopy}
         title={`Copy ${language}`}

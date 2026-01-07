@@ -104,8 +104,8 @@ const ExpressionRow = memo(function ExpressionRow({
                   acc[item.category].push(item);
                   return acc;
                 },
-                {} as Record<string, typeof COMMON_SUBJECTS>
-              )
+                {} as Record<string, typeof COMMON_SUBJECTS>,
+              ),
             ).map(([category, items]) => (
               <div key={category}>
                 <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted">
@@ -223,7 +223,7 @@ const LogicalGroup = memo(function LogicalGroup({
       };
       onChange([...conditions, newGroup]);
     },
-    [conditions, onChange]
+    [conditions, onChange],
   );
 
   const updateCondition = useCallback(
@@ -232,14 +232,14 @@ const LogicalGroup = memo(function LogicalGroup({
       newConditions[index] = updated;
       onChange(newConditions);
     },
-    [conditions, onChange]
+    [conditions, onChange],
   );
 
   const removeCondition = useCallback(
     (index: number) => {
       onChange(conditions.filter((_, i) => i !== index));
     },
-    [conditions, onChange]
+    [conditions, onChange],
   );
 
   const bgColor = type === "and" ? "bg-blue-500/5" : "bg-amber-500/5";
@@ -253,7 +253,7 @@ const LogicalGroup = memo(function LogicalGroup({
         "rounded-lg border p-3 space-y-2",
         bgColor,
         borderColor,
-        depth > 0 && "ml-4"
+        depth > 0 && "ml-4",
       )}
     >
       {/* Group header */}
@@ -262,7 +262,9 @@ const LogicalGroup = memo(function LogicalGroup({
           {type}
         </Badge>
         <span className="text-xs text-muted-foreground">
-          {type === "and" ? "All conditions must match" : "Any condition can match"}
+          {type === "and"
+            ? "All conditions must match"
+            : "Any condition can match"}
         </span>
         <div className="flex-1" />
         {onRemove && (

@@ -1,6 +1,13 @@
 "use client";
 
-import { memo, useRef, useCallback, useState, useEffect, type DragEvent } from "react";
+import {
+  memo,
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+  type DragEvent,
+} from "react";
 import {
   ReactFlow,
   Background,
@@ -107,7 +114,9 @@ interface SelectionStatsProps {
   nodes: RotationNode[];
 }
 
-const SelectionStats = memo(function SelectionStats({ nodes }: SelectionStatsProps) {
+const SelectionStats = memo(function SelectionStats({
+  nodes,
+}: SelectionStatsProps) {
   const selectedNodes = nodes.filter((n) => n.selected);
   if (selectedNodes.length <= 1) return null;
 
@@ -117,7 +126,7 @@ const SelectionStats = memo(function SelectionStats({ nodes }: SelectionStatsPro
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   return (
@@ -220,12 +229,12 @@ export const FlowCanvas = memo(function FlowCanvas({
       reactFlowInstance.current?.setCenter(
         node.position.x + 60,
         node.position.y + 40,
-        { zoom: 1.5, duration: 300 }
+        { zoom: 1.5, duration: 300 },
       );
 
       onNodeDoubleClick?.(event, node);
     },
-    [onNodeDoubleClick]
+    [onNodeDoubleClick],
   );
 
   // Track zoom level for LOD
@@ -264,7 +273,7 @@ export const FlowCanvas = memo(function FlowCanvas({
 
       onAddNode(newNode);
     },
-    [onAddNode]
+    [onAddNode],
   );
 
   const handleInit = useCallback((instance: ReactFlowInstance) => {
@@ -272,14 +281,18 @@ export const FlowCanvas = memo(function FlowCanvas({
   }, []);
 
   // Zoom-based LOD class
-  const zoomClass = currentZoom < 0.5
-    ? "zoom-far"
-    : currentZoom < 0.75
-      ? "zoom-medium"
-      : "zoom-normal";
+  const zoomClass =
+    currentZoom < 0.5
+      ? "zoom-far"
+      : currentZoom < 0.75
+        ? "zoom-medium"
+        : "zoom-normal";
 
   return (
-    <div ref={reactFlowWrapper} className={`flex-1 ${zoomClass} ${compactMode ? "compact-mode" : ""}`}>
+    <div
+      ref={reactFlowWrapper}
+      className={`flex-1 ${zoomClass} ${compactMode ? "compact-mode" : ""}`}
+    >
       <ReactFlow
         nodes={nodes as any}
         edges={edges as any}

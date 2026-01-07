@@ -84,7 +84,7 @@ export const LegendPanel = memo(function LegendPanel({
       className={cn(
         "!m-2 bg-card/95 backdrop-blur-sm border rounded-lg shadow-lg overflow-hidden transition-all duration-200",
         collapsed ? "w-auto" : "w-44",
-        className
+        className,
       )}
     >
       {/* Header */}

@@ -63,7 +63,7 @@ export interface ActionEditorProps {
  */
 export function createAction(
   spell: string,
-  options?: Partial<Omit<Action, "id">>
+  options?: Partial<Omit<Action, "id">>,
 ): Action {
   return {
     id: generateActionId(),
@@ -79,7 +79,7 @@ export function createAction(
  */
 function getSpellLabel(
   spellName: string,
-  spells: Array<{ name: string; label: string }>
+  spells: Array<{ name: string; label: string }>,
 ): string {
   const spell = spells.find((s) => s.name === spellName);
   return spell?.label ?? spellName.replace(/_/g, " ");
@@ -185,14 +185,14 @@ function ActionCard({
     (conditions: RuleGroupType) => {
       onUpdate({ conditions });
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   const handleSpellChange = useCallback(
     (spell: string) => {
       onUpdate({ spell });
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   const handleToggleEnabled = useCallback(() => {
@@ -201,12 +201,12 @@ function ActionCard({
 
   const conditionSummary = useMemo(
     () => getConditionSummary(action.conditions),
-    [action.conditions]
+    [action.conditions],
   );
 
   const spellLabel = useMemo(
     () => getSpellLabel(action.spell, spells),
-    [action.spell, spells]
+    [action.spell, spells],
   );
 
   return (
@@ -214,7 +214,7 @@ function ActionCard({
       <div
         className={cn(
           "rounded-lg border bg-card transition-colors",
-          !action.enabled && "opacity-50"
+          !action.enabled && "opacity-50",
         )}
       >
         {/* Header - Always visible */}
@@ -271,7 +271,9 @@ function ActionCard({
                 ) : (
                   <>
                     <span className="text-muted-foreground/70">if </span>
-                    <span className="text-foreground/80">{conditionSummary}</span>
+                    <span className="text-foreground/80">
+                      {conditionSummary}
+                    </span>
                   </>
                 )}
               </span>
@@ -288,7 +290,7 @@ function ActionCard({
               size="icon"
               className={cn(
                 "size-7",
-                action.enabled ? "text-green-500" : "text-muted-foreground"
+                action.enabled ? "text-green-500" : "text-muted-foreground",
               )}
               onClick={handleToggleEnabled}
               title={action.enabled ? "Disable action" : "Enable action"}
@@ -339,18 +341,18 @@ export function ActionList({ actions, onChange, spells }: ActionEditorProps) {
     (actionId: string, updates: Partial<Action>) => {
       onChange(
         actions.map((action) =>
-          action.id === actionId ? { ...action, ...updates } : action
-        )
+          action.id === actionId ? { ...action, ...updates } : action,
+        ),
       );
     },
-    [actions, onChange]
+    [actions, onChange],
   );
 
   const handleRemoveAction = useCallback(
     (actionId: string) => {
       onChange(actions.filter((action) => action.id !== actionId));
     },
-    [actions, onChange]
+    [actions, onChange],
   );
 
   const handleDuplicateAction = useCallback(
@@ -368,7 +370,7 @@ export function ActionList({ actions, onChange, spells }: ActionEditorProps) {
       newActions.splice(index + 1, 0, duplicate);
       onChange(newActions);
     },
-    [actions, onChange]
+    [actions, onChange],
   );
 
   const handleAddAction = useCallback(() => {

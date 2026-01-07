@@ -47,4 +47,12 @@ export type {
 } from "./types";
 
 // Export constants
-export { NODE_COLORS, NODE_MIN_WIDTHS, FRAME_COLORS, MOCK_SPELLS, CONDITION_SUBJECTS, PALETTE_ITEMS, OPERATOR_LABELS } from "./constants";
+export {
+  NODE_COLORS,
+  NODE_MIN_WIDTHS,
+  FRAME_COLORS,
+  MOCK_SPELLS,
+  CONDITION_SUBJECTS,
+  PALETTE_ITEMS,
+  OPERATOR_LABELS,
+} from "./constants";

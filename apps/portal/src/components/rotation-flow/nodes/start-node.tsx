@@ -23,7 +23,7 @@ export const StartNode = memo(function StartNode({
         "px-3 py-1.5",
         selected
           ? "ring-2 ring-offset-2 ring-offset-background scale-105"
-          : "hover:scale-[1.02] hover:shadow-xl"
+          : "hover:scale-[1.02] hover:shadow-xl",
       )}
       style={{
         borderColor: NODE_COLORS.start,
@@ -53,7 +53,7 @@ export const StartNode = memo(function StartNode({
         position={Position.Bottom}
         className={cn(
           "!w-2.5 !h-2.5 !border-[2.5px] !border-card !-bottom-[6px] !rounded-full transition-all",
-          "hover:!scale-125"
+          "hover:!scale-125",
         )}
         style={{ backgroundColor: NODE_COLORS.start }}
       />

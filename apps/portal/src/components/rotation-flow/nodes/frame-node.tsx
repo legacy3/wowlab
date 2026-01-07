@@ -35,7 +35,7 @@ export const FrameNode = memo(function FrameNode({
         className={cn(
           "rounded-lg transition-all duration-150",
           selected && "ring-1 ring-offset-2 ring-offset-background",
-          isCollapsed ? "cursor-pointer" : ""
+          isCollapsed ? "cursor-pointer" : "",
         )}
         style={{
           width: isCollapsed ? "auto" : width,
@@ -53,7 +53,7 @@ export const FrameNode = memo(function FrameNode({
         <div
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded-t-md cursor-move",
-            isCollapsed && "rounded-b-md"
+            isCollapsed && "rounded-b-md",
           )}
           style={{ backgroundColor: `${color}20` }}
         >

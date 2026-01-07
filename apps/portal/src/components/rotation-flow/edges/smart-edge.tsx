@@ -59,7 +59,8 @@ export const SmartEdge = memo(function SmartEdge({
   });
 
   const edgeColor = (style?.stroke as string) || "#666";
-  const isConditionEdge = data?.conditionLabel === "yes" || data?.conditionLabel === "no";
+  const isConditionEdge =
+    data?.conditionLabel === "yes" || data?.conditionLabel === "no";
 
   return (
     <>
@@ -80,7 +81,8 @@ export const SmartEdge = memo(function SmartEdge({
         path={edgePath}
         style={{
           ...style,
-          strokeWidth: isHovered || selected ? 2.5 : (style?.strokeWidth as number) || 1.5,
+          strokeWidth:
+            isHovered || selected ? 2.5 : (style?.strokeWidth as number) || 1.5,
           stroke: isHovered || selected ? edgeColor : style?.stroke,
           opacity: isHovered || selected ? 1 : 0.8,
           filter: isHovered ? `drop-shadow(0 0 3px ${edgeColor})` : undefined,
@@ -103,7 +105,11 @@ export const SmartEdge = memo(function SmartEdge({
             className={cn(
               "absolute pointer-events-none px-1.5 py-0.5 rounded text-[9px] font-medium",
               "transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-150",
-              isConditionEdge ? "opacity-100" : isHovered ? "opacity-100" : "opacity-0"
+              isConditionEdge
+                ? "opacity-100"
+                : isHovered
+                  ? "opacity-100"
+                  : "opacity-0",
             )}
             style={{
               left: labelX,

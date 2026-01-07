@@ -1,4 +1,10 @@
-export { NodeShell, NodeHeader, NodeBody, NodeFooter, NodeBadge } from "./node-shell";
+export {
+  NodeShell,
+  NodeHeader,
+  NodeBody,
+  NodeFooter,
+  NodeBadge,
+} from "./node-shell";
 export { SpellNode } from "./spell-node";
 export { ConditionNode } from "./condition-node";
 export { VariableNode } from "./variable-node";

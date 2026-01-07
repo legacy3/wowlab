@@ -19,7 +19,7 @@ export const RerouteNode = memo(function RerouteNode({
       className={cn(
         "w-3 h-3 rounded-full border-2 bg-card transition-all duration-150",
         "hover:scale-125 hover:shadow-lg",
-        selected && "ring-2 ring-offset-1 ring-offset-background scale-125"
+        selected && "ring-2 ring-offset-1 ring-offset-background scale-125",
       )}
       style={{
         borderColor: NODE_COLORS.reroute,

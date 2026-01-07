@@ -33,7 +33,7 @@ export const ConditionNode = memo(function ConditionNode({
         className={cn(
           "relative w-8 h-8 transition-all",
           "hover:scale-105",
-          selected && "scale-105"
+          selected && "scale-105",
         )}
         title={label || "Condition"}
       >
@@ -41,7 +41,7 @@ export const ConditionNode = memo(function ConditionNode({
         <div
           className={cn(
             "absolute inset-0 rotate-45 rounded-sm border-2 bg-card shadow-md",
-            selected && "ring-2 ring-offset-2 ring-offset-background"
+            selected && "ring-2 ring-offset-2 ring-offset-background",
           )}
           style={{
             borderColor: NODE_COLORS.condition,
@@ -50,7 +50,10 @@ export const ConditionNode = memo(function ConditionNode({
         />
         {/* Icon centered */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <GitBranch className="w-3.5 h-3.5" style={{ color: NODE_COLORS.condition }} />
+          <GitBranch
+            className="w-3.5 h-3.5"
+            style={{ color: NODE_COLORS.condition }}
+          />
         </div>
         {/* Input handle */}
         <Handle

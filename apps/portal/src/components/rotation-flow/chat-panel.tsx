@@ -198,7 +198,7 @@ export const ChatPanel = memo(function ChatPanel({
       className={cn(
         "!m-2 !mb-14 bg-card/95 backdrop-blur-sm border rounded-xl shadow-2xl overflow-hidden transition-all duration-200",
         "w-80",
-        className
+        className,
       )}
     >
       {/* Header */}
@@ -252,7 +252,7 @@ export const ChatPanel = memo(function ChatPanel({
               key={message.id}
               className={cn(
                 "flex",
-                message.role === "user" ? "justify-end" : "justify-start"
+                message.role === "user" ? "justify-end" : "justify-start",
               )}
             >
               <div
@@ -260,7 +260,7 @@ export const ChatPanel = memo(function ChatPanel({
                   "max-w-[85%] rounded-lg px-2.5 py-1.5 text-[10px] leading-relaxed",
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    : "bg-muted",
                 )}
               >
                 {message.content}

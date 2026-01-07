@@ -33,7 +33,11 @@ export const Footer = memo(function Footer({
         <Play className="h-2.5 w-2.5" />
         Test
       </Button>
-      <Button size="sm" className="h-5 gap-1 text-[10px] px-1.5" onClick={onSave}>
+      <Button
+        size="sm"
+        className="h-5 gap-1 text-[10px] px-1.5"
+        onClick={onSave}
+      >
         <Save className="h-2.5 w-2.5" />
         Save
       </Button>

@@ -131,9 +131,7 @@ const FilterRow = memo(function FilterRow({
       {attrDef?.type === "boolean" ? (
         <Select
           value={String(filter.value)}
-          onValueChange={(v) =>
-            onChange({ ...filter, value: v === "true" })
-          }
+          onValueChange={(v) => onChange({ ...filter, value: v === "true" })}
         >
           <SelectTrigger className="w-20 h-7 text-xs">
             <SelectValue />
@@ -183,7 +181,7 @@ export const TargetSelector = memo(function TargetSelector({
 }: TargetSelectorProps) {
   const isSimple = typeof value === "string";
   const [mode, setMode] = useState<"simple" | "filtered">(
-    isSimple ? "simple" : "filtered"
+    isSimple ? "simple" : "filtered",
   );
 
   const handleModeChange = (newMode: "simple" | "filtered") => {
@@ -270,7 +268,7 @@ export const TargetSelector = memo(function TargetSelector({
               className={cn(
                 "gap-1",
                 (value as FilteredTarget).filters.length > 0 &&
-                  "bg-primary/10 border-primary/30"
+                  "bg-primary/10 border-primary/30",
               )}
             >
               <Filter className="size-3" />
@@ -286,7 +284,8 @@ export const TargetSelector = memo(function TargetSelector({
                   <span className="font-medium">
                     {
                       AGGREGATE_FUNCS.find(
-                        (f) => f.value === (value as FilteredTarget).select.func
+                        (f) =>
+                          f.value === (value as FilteredTarget).select.func,
                       )?.label
                     }
                   </span>
@@ -305,7 +304,7 @@ export const TargetSelector = memo(function TargetSelector({
                       className={cn(
                         "w-full rounded px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors",
                         (value as FilteredTarget).select.func === func.value &&
-                          "bg-accent"
+                          "bg-accent",
                       )}
                       onClick={() =>
                         onChange({
@@ -349,7 +348,7 @@ export const TargetSelector = memo(function TargetSelector({
                       </SelectTrigger>
                       <SelectContent>
                         {FILTER_ATTRIBUTES.filter(
-                          (a) => a.type === "number"
+                          (a) => a.type === "number",
                         ).map((attr) => (
                           <SelectItem key={attr.value} value={attr.value}>
                             {attr.label}
@@ -408,7 +407,7 @@ export const TargetSelector = memo(function TargetSelector({
                     }}
                     onRemove={() => {
                       const filters = (value as FilteredTarget).filters.filter(
-                        (_, i) => i !== index
+                        (_, i) => i !== index,
                       );
                       onChange({ ...(value as FilteredTarget), filters });
                     }}
@@ -427,7 +426,7 @@ export const TargetSelector = memo(function TargetSelector({
                 {(value as FilteredTarget).filters
                   .map(
                     (f) =>
-                      `${f.attribute} ${COMPARISON_OPS.find((o) => o.value === f.op)?.symbol} ${f.value}`
+                      `${f.attribute} ${COMPARISON_OPS.find((o) => o.value === f.op)?.symbol} ${f.value}`,
                   )
                   .join(" AND ")}
               </>

@@ -79,14 +79,12 @@ export function ExpressionDemo() {
   };
 
   const handleUpdateVariableName = (id: string, name: string) => {
-    setVariables((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, name } : v))
-    );
+    setVariables((prev) => prev.map((v) => (v.id === id ? { ...v, name } : v)));
   };
 
   const handleUpdateVariableExpr = (id: string, expression: Expression) => {
     setVariables((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, expression } : v))
+      prev.map((v) => (v.id === id ? { ...v, expression } : v)),
     );
   };
 
@@ -138,9 +136,7 @@ export function ExpressionDemo() {
               <span className="text-muted-foreground">=</span>
               <ExpressionSelector
                 value={variable.expression}
-                onChange={(expr) =>
-                  handleUpdateVariableExpr(variable.id, expr)
-                }
+                onChange={(expr) => handleUpdateVariableExpr(variable.id, expr)}
                 variables={variableOptions}
                 className="flex-1"
               />
@@ -246,7 +242,8 @@ export function ExpressionDemo() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            These would be Rust functions compiled via Cranelift alongside user rotations.
+            These would be Rust functions compiled via Cranelift alongside user
+            rotations.
           </p>
         </CardContent>
       </Card>

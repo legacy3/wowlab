@@ -87,12 +87,42 @@ import type {
 
 // Mock spell data
 const MOCK_SPELLS: SpellReference[] = [
-  { id: 56641, name: "Steady Shot", icon: "ability_hunter_steadyshot", color: "#4ade80" },
-  { id: 34026, name: "Kill Command", icon: "ability_hunter_killcommand", color: "#f97316" },
-  { id: 193455, name: "Cobra Shot", icon: "ability_hunter_cobrashot", color: "#22d3ee" },
-  { id: 19434, name: "Aimed Shot", icon: "ability_hunter_aimedshot", color: "#a855f7" },
-  { id: 257620, name: "Multi-Shot", icon: "ability_upgrademoonglaive", color: "#eab308" },
-  { id: 186270, name: "Raptor Strike", icon: "ability_hunter_raptorstrike", color: "#ef4444" },
+  {
+    id: 56641,
+    name: "Steady Shot",
+    icon: "ability_hunter_steadyshot",
+    color: "#4ade80",
+  },
+  {
+    id: 34026,
+    name: "Kill Command",
+    icon: "ability_hunter_killcommand",
+    color: "#f97316",
+  },
+  {
+    id: 193455,
+    name: "Cobra Shot",
+    icon: "ability_hunter_cobrashot",
+    color: "#22d3ee",
+  },
+  {
+    id: 19434,
+    name: "Aimed Shot",
+    icon: "ability_hunter_aimedshot",
+    color: "#a855f7",
+  },
+  {
+    id: 257620,
+    name: "Multi-Shot",
+    icon: "ability_upgrademoonglaive",
+    color: "#eab308",
+  },
+  {
+    id: 186270,
+    name: "Raptor Strike",
+    icon: "ability_hunter_raptorstrike",
+    color: "#ef4444",
+  },
 ];
 
 const INITIAL_ACTIONS: Action[] = [
@@ -103,7 +133,13 @@ const INITIAL_ACTIONS: Action[] = [
     target: "current_target",
     enabled: true,
     label: "Kill Command",
-    condition: { id: "c1", type: "expression", subject: "spell.is_ready", op: "eq", value: true },
+    condition: {
+      id: "c1",
+      type: "expression",
+      subject: "spell.is_ready",
+      op: "eq",
+      value: true,
+    },
   },
   {
     id: "2",
@@ -115,16 +151,41 @@ const INITIAL_ACTIONS: Action[] = [
       id: "c2",
       type: "and",
       conditions: [
-        { id: "c2a", type: "expression", subject: "player.focus", op: "gte", value: 35 },
-        { id: "c2b", type: "expression", subject: "target.debuffs.serpent_sting.remaining", op: "gt", value: 2 },
+        {
+          id: "c2a",
+          type: "expression",
+          subject: "player.focus",
+          op: "gte",
+          value: 35,
+        },
+        {
+          id: "c2b",
+          type: "expression",
+          subject: "target.debuffs.serpent_sting.remaining",
+          op: "gt",
+          value: 2,
+        },
       ],
     },
   },
-  { id: "3", type: "cast", spellId: 56641, target: "current_target", enabled: true, label: "Filler" },
+  {
+    id: "3",
+    type: "cast",
+    spellId: 56641,
+    target: "current_target",
+    enabled: true,
+    label: "Filler",
+  },
 ];
 
 const INITIAL_VARIABLES: VariableDefinition[] = [
-  { id: "v1", name: "aoe_threshold", type: "number", defaultValue: 3, description: "AoE enemy count" },
+  {
+    id: "v1",
+    name: "aoe_threshold",
+    type: "number",
+    defaultValue: 3,
+    description: "AoE enemy count",
+  },
 ];
 
 const INITIAL_GROUPS: ActionGroup[] = [
@@ -152,7 +213,8 @@ export const VisualRotationEditor = memo(function VisualRotationEditor({
   className,
 }: VisualRotationEditorProps) {
   const [actions, setActions] = useState<Action[]>(INITIAL_ACTIONS);
-  const [variables, setVariables] = useState<VariableDefinition[]>(INITIAL_VARIABLES);
+  const [variables, setVariables] =
+    useState<VariableDefinition[]>(INITIAL_VARIABLES);
   const [groups, setGroups] = useState<ActionGroup[]>(INITIAL_GROUPS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -161,7 +223,9 @@ export const VisualRotationEditor = memo(function VisualRotationEditor({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -184,16 +248,32 @@ export const VisualRotationEditor = memo(function VisualRotationEditor({
     let newAction: Action;
     switch (type) {
       case "cast":
-        newAction = { id, type: "cast", spellId: MOCK_SPELLS[0].id, target: "current_target", enabled: true } as CastAction;
+        newAction = {
+          id,
+          type: "cast",
+          spellId: MOCK_SPELLS[0].id,
+          target: "current_target",
+          enabled: true,
+        } as CastAction;
         break;
       case "wait":
         newAction = { id, type: "wait", enabled: true } as WaitAction;
         break;
       case "set_variable":
-        newAction = { id, type: "set_variable", assignment: { variableId: "", expression: "" }, enabled: true } as SetVariableAction;
+        newAction = {
+          id,
+          type: "set_variable",
+          assignment: { variableId: "", expression: "" },
+          enabled: true,
+        } as SetVariableAction;
         break;
       case "call_group":
-        newAction = { id, type: "call_group", groupId: "", enabled: true } as CallGroupAction;
+        newAction = {
+          id,
+          type: "call_group",
+          groupId: "",
+          enabled: true,
+        } as CallGroupAction;
         break;
     }
     setActions((prev) => [...prev, newAction]);
@@ -204,10 +284,13 @@ export const VisualRotationEditor = memo(function VisualRotationEditor({
     setActions((prev) => prev.map((a) => (a.id === id ? updated : a)));
   }, []);
 
-  const deleteAction = useCallback((id: string) => {
-    setActions((prev) => prev.filter((a) => a.id !== id));
-    if (selectedId === id) setSelectedId(null);
-  }, [selectedId]);
+  const deleteAction = useCallback(
+    (id: string) => {
+      setActions((prev) => prev.filter((a) => a.id !== id));
+      if (selectedId === id) setSelectedId(null);
+    },
+    [selectedId],
+  );
 
   const duplicateAction = useCallback((id: string) => {
     setActions((prev) => {
@@ -220,7 +303,10 @@ export const VisualRotationEditor = memo(function VisualRotationEditor({
     });
   }, []);
 
-  const getSpell = useCallback((spellId: number) => MOCK_SPELLS.find((s) => s.id === spellId), []);
+  const getSpell = useCallback(
+    (spellId: number) => MOCK_SPELLS.find((s) => s.id === spellId),
+    [],
+  );
 
   const activeAction = activeId ? actions.find((a) => a.id === activeId) : null;
 
@@ -230,7 +316,12 @@ try_cast(STEADY_SHOT);`;
 
   return (
     <TooltipProvider>
-      <div className={cn("flex flex-col h-[calc(100dvh-8rem)] rounded-lg border overflow-hidden bg-background", className)}>
+      <div
+        className={cn(
+          "flex flex-col h-[calc(100dvh-8rem)] rounded-lg border overflow-hidden bg-background",
+          className,
+        )}
+      >
         {/* Compact toolbar */}
         <div className="flex items-center gap-1 px-2 py-1 border-b bg-muted/30 text-xs">
           {/* Undo/Redo */}
@@ -246,26 +337,42 @@ try_cast(STEADY_SHOT);`;
           {/* Add action */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-xs px-2"
+              >
                 <Plus className="h-3 w-3" />
                 Add
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="text-xs">
-              <DropdownMenuItem onClick={() => addAction("cast")} className="text-xs">
+              <DropdownMenuItem
+                onClick={() => addAction("cast")}
+                className="text-xs"
+              >
                 <Zap className="h-3 w-3 mr-2 text-amber-500" />
                 Cast <DropdownMenuShortcut>A</DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addAction("wait")} className="text-xs">
+              <DropdownMenuItem
+                onClick={() => addAction("wait")}
+                className="text-xs"
+              >
                 <Clock className="h-3 w-3 mr-2 text-blue-500" />
                 Wait <DropdownMenuShortcut>W</DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => addAction("set_variable")} className="text-xs">
+              <DropdownMenuItem
+                onClick={() => addAction("set_variable")}
+                className="text-xs"
+              >
                 <Variable className="h-3 w-3 mr-2 text-green-500" />
                 Variable <DropdownMenuShortcut>V</DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addAction("call_group")} className="text-xs">
+              <DropdownMenuItem
+                onClick={() => addAction("call_group")}
+                className="text-xs"
+              >
                 <FolderOpen className="h-3 w-3 mr-2 text-purple-500" />
                 Group <DropdownMenuShortcut>G</DropdownMenuShortcut>
               </DropdownMenuItem>
@@ -275,7 +382,11 @@ try_cast(STEADY_SHOT);`;
           {/* Variables popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-xs px-2"
+              >
                 <Variable className="h-3 w-3" />
                 <span className="tabular-nums">{variables.length}</span>
               </Button>
@@ -288,7 +399,11 @@ try_cast(STEADY_SHOT);`;
           {/* Groups popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-xs px-2"
+              >
                 <FolderOpen className="h-3 w-3" />
                 <span className="tabular-nums">{groups.length}</span>
               </Button>
@@ -296,13 +411,25 @@ try_cast(STEADY_SHOT);`;
             <PopoverContent className="w-48 p-2" align="start">
               <div className="space-y-1">
                 {groups.map((g) => (
-                  <div key={g.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent text-xs cursor-pointer">
+                  <div
+                    key={g.id}
+                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent text-xs cursor-pointer"
+                  >
                     <FolderOpen className="h-3 w-3 text-muted-foreground" />
                     <span>{g.name}</span>
-                    <Badge variant="secondary" className="ml-auto text-[9px] px-1">{g.actions.length}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto text-[9px] px-1"
+                    >
+                      {g.actions.length}
+                    </Badge>
                   </div>
                 ))}
-                <Button variant="ghost" size="sm" className="w-full h-6 text-xs mt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-6 text-xs mt-1"
+                >
                   <Plus className="h-3 w-3 mr-1" />
                   New Group
                 </Button>
@@ -321,7 +448,9 @@ try_cast(STEADY_SHOT);`;
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-32 text-xs">
               <DropdownMenuItem className="text-xs">SimC APL</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">Rhai Script</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs">
+                Rhai Script
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-xs">JSON</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -333,7 +462,9 @@ try_cast(STEADY_SHOT);`;
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-32 text-xs">
-              <DropdownMenuItem className="text-xs">Rhai Script</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs">
+                Rhai Script
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-xs">SimC APL</DropdownMenuItem>
               <DropdownMenuItem className="text-xs">JSON</DropdownMenuItem>
             </DropdownMenuContent>
@@ -344,13 +475,19 @@ try_cast(STEADY_SHOT);`;
 
           {/* Stats */}
           <span className="text-muted-foreground tabular-nums">
-            {actions.length} actions · {actions.filter((a) => a.enabled).length} enabled
+            {actions.length} actions · {actions.filter((a) => a.enabled).length}{" "}
+            enabled
           </span>
 
           <div className="h-4 w-px bg-border mx-1" />
 
           {/* View toggle */}
-          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as "visual" | "code")} size="sm">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && setViewMode(v as "visual" | "code")}
+            size="sm"
+          >
             <ToggleGroupItem value="visual" className="h-6 w-6 p-0">
               <Eye className="h-3 w-3" />
             </ToggleGroupItem>
@@ -375,13 +512,28 @@ try_cast(STEADY_SHOT);`;
           <Button variant="ghost" size="icon" className="h-6 w-6" title="Reset">
             <RotateCcw className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="History">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="History"
+          >
             <History className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="Shortcuts">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="Shortcuts"
+          >
             <Keyboard className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="Settings">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="Settings"
+          >
             <Settings2 className="h-3 w-3" />
           </Button>
         </div>
@@ -397,23 +549,42 @@ try_cast(STEADY_SHOT);`;
                     <div className="text-center py-8 text-muted-foreground text-xs">
                       <Zap className="h-6 w-6 mx-auto mb-2 opacity-30" />
                       <p>No actions yet</p>
-                      <Button variant="ghost" size="sm" className="mt-2 h-6 text-xs" onClick={() => addAction("cast")}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 h-6 text-xs"
+                        onClick={() => addAction("cast")}
+                      >
                         <Plus className="h-3 w-3 mr-1" />
                         Add First Action
                       </Button>
                     </div>
                   ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                      <SortableContext items={actions.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={actions.map((a) => a.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
                         {actions.map((action, index) => (
                           <ActionRow
                             key={action.id}
                             action={action}
                             index={index}
-                            spell={action.type === "cast" ? getSpell(action.spellId) : undefined}
+                            spell={
+                              action.type === "cast"
+                                ? getSpell(action.spellId)
+                                : undefined
+                            }
                             isSelected={selectedId === action.id}
                             onSelect={() => setSelectedId(action.id)}
-                            onUpdate={(updated) => updateAction(action.id, updated)}
+                            onUpdate={(updated) =>
+                              updateAction(action.id, updated)
+                            }
                             onDelete={() => deleteAction(action.id)}
                             onDuplicate={() => duplicateAction(action.id)}
                           />
@@ -424,8 +595,14 @@ try_cast(STEADY_SHOT);`;
                           <div className="opacity-90 shadow-lg">
                             <ActionRow
                               action={activeAction}
-                              index={actions.findIndex((a) => a.id === activeAction.id)}
-                              spell={activeAction.type === "cast" ? getSpell(activeAction.spellId) : undefined}
+                              index={actions.findIndex(
+                                (a) => a.id === activeAction.id,
+                              )}
+                              spell={
+                                activeAction.type === "cast"
+                                  ? getSpell(activeAction.spellId)
+                                  : undefined
+                              }
                             />
                           </div>
                         )}
@@ -436,7 +613,9 @@ try_cast(STEADY_SHOT);`;
               </ScrollArea>
             ) : (
               <div className="flex-1 p-2">
-                <pre className="h-full p-3 rounded bg-muted font-mono text-xs overflow-auto">{generatedCode}</pre>
+                <pre className="h-full p-3 rounded bg-muted font-mono text-xs overflow-auto">
+                  {generatedCode}
+                </pre>
               </div>
             )}
           </div>
@@ -447,7 +626,9 @@ try_cast(STEADY_SHOT);`;
               <div className="px-2 py-1 border-b text-xs font-medium flex items-center gap-1">
                 <ListTree className="h-3 w-3" />
                 Trace
-                <Badge variant="secondary" className="ml-auto text-[9px]">125k DPS</Badge>
+                <Badge variant="secondary" className="ml-auto text-[9px]">
+                  125k DPS
+                </Badge>
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-1 space-y-0.5">
@@ -456,12 +637,23 @@ try_cast(STEADY_SHOT);`;
                       key={i}
                       className={cn(
                         "flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px]",
-                        entry.result === "cast" ? "bg-green-500/10" : "bg-muted/50"
+                        entry.result === "cast"
+                          ? "bg-green-500/10"
+                          : "bg-muted/50",
                       )}
                     >
-                      <span className="font-mono text-muted-foreground w-8">{entry.time.toFixed(1)}s</span>
+                      <span className="font-mono text-muted-foreground w-8">
+                        {entry.time.toFixed(1)}s
+                      </span>
                       <span className="flex-1 truncate">{entry.action}</span>
-                      <span className={cn("text-[9px]", entry.result === "cast" ? "text-green-600" : "text-muted-foreground")}>
+                      <span
+                        className={cn(
+                          "text-[9px]",
+                          entry.result === "cast"
+                            ? "text-green-600"
+                            : "text-muted-foreground",
+                        )}
+                      >
                         {entry.result}
                       </span>
                     </div>
@@ -484,14 +676,25 @@ try_cast(STEADY_SHOT);`;
                     style={{ backgroundColor: spell.color }}
                     onClick={() => {
                       const id = generateId();
-                      setActions((prev) => [...prev, { id, type: "cast", spellId: spell.id, target: "current_target", enabled: true } as CastAction]);
+                      setActions((prev) => [
+                        ...prev,
+                        {
+                          id,
+                          type: "cast",
+                          spellId: spell.id,
+                          target: "current_target",
+                          enabled: true,
+                        } as CastAction,
+                      ]);
                       setSelectedId(id);
                     }}
                   >
                     {spell.name.charAt(0)}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">{spell.name}</TooltipContent>
+                <TooltipContent side="top" className="text-xs">
+                  {spell.name}
+                </TooltipContent>
               </Tooltip>
             ))}
             <Button variant="ghost" size="icon" className="h-5 w-5">
@@ -501,7 +704,11 @@ try_cast(STEADY_SHOT);`;
 
           <div className="flex-1" />
 
-          <Button variant="outline" size="sm" className="h-6 gap-1 text-xs px-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 gap-1 text-xs px-2"
+          >
             <Play className="h-3 w-3" />
             Test
           </Button>

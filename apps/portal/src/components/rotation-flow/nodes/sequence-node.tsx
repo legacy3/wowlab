@@ -24,7 +24,7 @@ export const SequenceNode = memo(function SequenceNode({
       <div
         className={cn(
           "flex items-center justify-center w-8 h-8 rounded-lg border-2 bg-card shadow-md transition-all",
-          selected && "ring-2 ring-offset-2 ring-offset-background"
+          selected && "ring-2 ring-offset-2 ring-offset-background",
         )}
         style={{
           borderColor: NODE_COLORS.sequence,
@@ -36,7 +36,10 @@ export const SequenceNode = memo(function SequenceNode({
           position={Position.Top}
           className="!w-2 !h-2 !border-2 !border-card !-top-[5px] !rounded-full !bg-muted-foreground/60"
         />
-        <ListOrdered className="w-4 h-4" style={{ color: NODE_COLORS.sequence }} />
+        <ListOrdered
+          className="w-4 h-4"
+          style={{ color: NODE_COLORS.sequence }}
+        />
         <Handle
           type="source"
           position={Position.Bottom}
@@ -51,10 +54,12 @@ export const SequenceNode = memo(function SequenceNode({
     <div
       className={cn(
         "rounded-lg border-2 bg-card shadow-md transition-all duration-150 min-w-[140px] max-w-[200px]",
-        selected && "shadow-xl ring-2 ring-offset-2 ring-offset-background"
+        selected && "shadow-xl ring-2 ring-offset-2 ring-offset-background",
       )}
       style={{
-        borderColor: selected ? NODE_COLORS.sequence : `${NODE_COLORS.sequence}40`,
+        borderColor: selected
+          ? NODE_COLORS.sequence
+          : `${NODE_COLORS.sequence}40`,
         ["--tw-ring-color" as string]: `${NODE_COLORS.sequence}60`,
       }}
     >
@@ -104,7 +109,7 @@ export const SequenceNode = memo(function SequenceNode({
               key={`${item.spellId}-${index}`}
               className={cn(
                 "flex items-center gap-1 px-1 py-0.5 rounded text-[9px]",
-                item.enabled ? "bg-muted/30" : "bg-muted/10 opacity-50"
+                item.enabled ? "bg-muted/30" : "bg-muted/10 opacity-50",
               )}
             >
               <GripVertical className="w-2.5 h-2.5 text-muted-foreground/50 shrink-0 cursor-grab" />
@@ -116,7 +121,9 @@ export const SequenceNode = memo(function SequenceNode({
                 style={{ backgroundColor: item.color || NODE_COLORS.spell }}
               >
                 {item.icon ? (
-                  <span className="text-[6px] font-bold text-white">{item.icon}</span>
+                  <span className="text-[6px] font-bold text-white">
+                    {item.icon}
+                  </span>
                 ) : (
                   <Zap className="w-2 h-2 text-white" />
                 )}

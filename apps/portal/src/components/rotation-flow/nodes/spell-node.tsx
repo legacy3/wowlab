@@ -47,7 +47,7 @@ export const SpellNode = memo(function SpellNode({
           "flex items-center justify-center w-8 h-8 rounded-lg border-2 bg-card shadow-md transition-all",
           "hover:scale-105",
           selected && "ring-2 ring-offset-2 ring-offset-background scale-105",
-          !enabled && "opacity-40 grayscale"
+          !enabled && "opacity-40 grayscale",
         )}
         style={{
           borderColor: color,

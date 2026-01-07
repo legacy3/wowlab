@@ -47,13 +47,47 @@ import { TargetSelector } from "./target-selector";
 import { SpellPicker } from "./spell-picker";
 
 // Mock spell metadata
-const SPELL_META: Record<number, { cooldown: string; cost: string; range: string; description: string }> = {
-  56641: { cooldown: "None", cost: "None", range: "40 yd", description: "A steady shot that causes Physical damage." },
-  34026: { cooldown: "7.5s", cost: "30 Focus", range: "50 yd", description: "Give the command to kill, causing your pet to savagely deal damage." },
-  193455: { cooldown: "None", cost: "35 Focus", range: "40 yd", description: "A quick shot causing Nature damage." },
-  19434: { cooldown: "12s", cost: "35 Focus", range: "40 yd", description: "A powerful aimed shot that deals Physical damage." },
-  257620: { cooldown: "None", cost: "40 Focus", range: "40 yd", description: "Fires several missiles, hitting all nearby enemies." },
-  186270: { cooldown: "None", cost: "30 Focus", range: "Melee", description: "A vicious slash dealing Physical damage." },
+const SPELL_META: Record<
+  number,
+  { cooldown: string; cost: string; range: string; description: string }
+> = {
+  56641: {
+    cooldown: "None",
+    cost: "None",
+    range: "40 yd",
+    description: "A steady shot that causes Physical damage.",
+  },
+  34026: {
+    cooldown: "7.5s",
+    cost: "30 Focus",
+    range: "50 yd",
+    description:
+      "Give the command to kill, causing your pet to savagely deal damage.",
+  },
+  193455: {
+    cooldown: "None",
+    cost: "35 Focus",
+    range: "40 yd",
+    description: "A quick shot causing Nature damage.",
+  },
+  19434: {
+    cooldown: "12s",
+    cost: "35 Focus",
+    range: "40 yd",
+    description: "A powerful aimed shot that deals Physical damage.",
+  },
+  257620: {
+    cooldown: "None",
+    cost: "40 Focus",
+    range: "40 yd",
+    description: "Fires several missiles, hitting all nearby enemies.",
+  },
+  186270: {
+    cooldown: "None",
+    cost: "30 Focus",
+    range: "Melee",
+    description: "A vicious slash dealing Physical damage.",
+  },
 };
 
 interface ActionRowProps {
@@ -80,7 +114,7 @@ function SpellIcon({
       <div
         className={cn(
           "rounded bg-muted flex items-center justify-center",
-          className
+          className,
         )}
       >
         <Zap className="size-4 text-muted-foreground" />
@@ -194,14 +228,14 @@ export const ActionRow = memo(function ActionRow({
         "group rounded-lg border bg-card transition-all",
         isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
         isSelected && "ring-2 ring-primary",
-        !action.enabled && "opacity-60"
+        !action.enabled && "opacity-60",
       )}
     >
       {/* Main row - always visible */}
       <div
         className={cn(
           "flex items-center gap-2 p-2 cursor-pointer hover:bg-accent/50 transition-colors",
-          isExpanded && "border-b"
+          isExpanded && "border-b",
         )}
         onClick={onSelect}
       >
@@ -271,11 +305,17 @@ export const ActionRow = memo(function ActionRow({
             {hasCondition && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] px-1 py-0 cursor-help">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1 py-0 cursor-help"
+                  >
                     if
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-sm font-mono text-xs">
+                <TooltipContent
+                  side="top"
+                  className="max-w-sm font-mono text-xs"
+                >
                   {formatCondition(action.condition!)}
                 </TooltipContent>
               </Tooltip>
@@ -415,7 +455,9 @@ export const ActionRow = memo(function ActionRow({
                 </div>
                 <SpellPicker
                   value={action.spellId}
-                  onChange={(spellId) => onUpdate?.({ ...action, spellId } as Action)}
+                  onChange={(spellId) =>
+                    onUpdate?.({ ...action, spellId } as Action)
+                  }
                   className="shrink-0"
                 />
               </div>
@@ -448,7 +490,9 @@ export const ActionRow = memo(function ActionRow({
                       <Info className="size-3 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent side="right" className="max-w-sm">
-                      <p className="font-mono text-xs">{formatCondition(action.condition)}</p>
+                      <p className="font-mono text-xs">
+                        {formatCondition(action.condition)}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 )}

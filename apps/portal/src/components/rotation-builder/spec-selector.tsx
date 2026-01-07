@@ -221,7 +221,7 @@ function ClassBadge({ classId, size = "md", className }: ClassBadgeProps) {
       className={cn(
         "flex items-center justify-center rounded-md font-bold text-black shrink-0",
         size === "sm" ? "h-6 w-6 text-xs" : "h-8 w-8 text-sm",
-        className
+        className,
       )}
       style={{ backgroundColor: bgColor }}
     >
@@ -288,7 +288,7 @@ export function SpecSelector({
       className={cn(
         "flex items-center gap-3 rounded-lg border bg-card p-3",
         disabled && "opacity-50 pointer-events-none",
-        className
+        className,
       )}
     >
       {/* Class Badge */}
@@ -424,7 +424,7 @@ export function SpecSelectorCompact({
       className={cn(
         "flex items-center gap-2",
         disabled && "opacity-50 pointer-events-none",
-        className
+        className,
       )}
     >
       <ClassBadge classId={selectedClass} size="sm" />

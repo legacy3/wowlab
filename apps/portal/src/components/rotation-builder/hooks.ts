@@ -44,10 +44,10 @@ export function useVariableValidation({
       return existingNames.some(
         (n) =>
           n.toLowerCase() === trimmed &&
-          (!currentName || n.toLowerCase() !== currentName.toLowerCase())
+          (!currentName || n.toLowerCase() !== currentName.toLowerCase()),
       );
     },
-    [existingNames, currentName]
+    [existingNames, currentName],
   );
 
   const isValidName = useCallback((name: string) => {
@@ -77,7 +77,7 @@ export function useVariableValidation({
 
       return null;
     },
-    [isDuplicate]
+    [isDuplicate],
   );
 
   return { validate, isValidName, isDuplicate };
@@ -113,7 +113,7 @@ export function useListNameValidation({
     (name: string) => {
       return existingNames.includes(name.toLowerCase());
     },
-    [existingNames]
+    [existingNames],
   );
 
   return { toInternalName, isDuplicate };
@@ -175,10 +175,7 @@ export function useEditingState<T = string>(): UseEditingStateResult<T> {
     setEditingId(null);
   }, []);
 
-  const isEditing = useCallback(
-    (id: T) => editingId === id,
-    [editingId]
-  );
+  const isEditing = useCallback((id: T) => editingId === id, [editingId]);
 
   return { editingId, startEdit, stopEdit, isEditing };
 }

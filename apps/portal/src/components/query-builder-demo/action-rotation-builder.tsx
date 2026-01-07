@@ -108,14 +108,14 @@ function ActionEntryCard({
     (q: RuleGroupType) => {
       onUpdate(action.id, { conditions: q });
     },
-    [action.id, onUpdate]
+    [action.id, onUpdate],
   );
 
   const handleSpellChange = useCallback(
     (spell: string) => {
       onUpdate(action.id, { spell });
     },
-    [action.id, onUpdate]
+    [action.id, onUpdate],
   );
 
   const handleToggleEnabled = useCallback(() => {
@@ -129,7 +129,7 @@ function ActionEntryCard({
       <div
         className={cn(
           "rounded-lg border bg-card transition-colors",
-          !action.enabled && "opacity-50"
+          !action.enabled && "opacity-50",
         )}
       >
         {/* Header - Always visible */}
@@ -140,7 +140,10 @@ function ActionEntryCard({
           </div>
 
           {/* Priority number */}
-          <Badge variant="secondary" className="w-6 h-6 p-0 justify-center text-xs font-mono">
+          <Badge
+            variant="secondary"
+            className="w-6 h-6 p-0 justify-center text-xs font-mono"
+          >
             {index + 1}
           </Badge>
 
@@ -180,7 +183,9 @@ function ActionEntryCard({
                 ) : (
                   <>
                     <span className="text-muted-foreground/70">if </span>
-                    <span className="text-foreground/80">{conditionSummary}</span>
+                    <span className="text-foreground/80">
+                      {conditionSummary}
+                    </span>
                   </>
                 )}
               </span>
@@ -192,7 +197,10 @@ function ActionEntryCard({
             <Button
               variant="ghost"
               size="icon"
-              className={cn("size-7", action.enabled ? "text-green-500" : "text-muted-foreground")}
+              className={cn(
+                "size-7",
+                action.enabled ? "text-green-500" : "text-muted-foreground",
+              )}
               onClick={handleToggleEnabled}
               title={action.enabled ? "Disable action" : "Enable action"}
             >
@@ -346,12 +354,12 @@ export function ActionRotationBuilder() {
         actionLists: prev.actionLists.map((list) => ({
           ...list,
           actions: list.actions.map((action) =>
-            action.id === actionId ? { ...action, ...updates } : action
+            action.id === actionId ? { ...action, ...updates } : action,
           ),
         })),
       }));
     },
-    []
+    [],
   );
 
   const handleRemoveAction = useCallback((actionId: string) => {
@@ -397,7 +405,7 @@ export function ActionRotationBuilder() {
       actionLists: prev.actionLists.map((list) =>
         list.id === listId
           ? { ...list, actions: [...list.actions, newAction] }
-          : list
+          : list,
       ),
     }));
   }, []);
@@ -419,7 +427,10 @@ export function ActionRotationBuilder() {
         if (action.conditions.rules.length === 0) {
           lines.push(`${prefix} Cast ${spellLabel}`);
         } else {
-          const conditionText = formatQuery(action.conditions, "natural_language");
+          const conditionText = formatQuery(
+            action.conditions,
+            "natural_language",
+          );
           lines.push(`${prefix} Cast ${spellLabel} when ${conditionText}`);
         }
       }

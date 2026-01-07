@@ -74,7 +74,9 @@
    ============================================================================= */
 
 .react-flow__edge-path {
-  transition: stroke-width 0.15s ease, opacity 0.15s ease;
+  transition:
+    stroke-width 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
@@ -86,7 +88,9 @@
    ============================================================================= */
 
 .react-flow__node {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .react-flow__node.selected {
@@ -98,7 +102,9 @@
    ============================================================================= */
 
 .react-flow__handle {
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .react-flow__handle:hover {

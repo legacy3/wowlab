@@ -72,8 +72,12 @@ function getRuleGroupSummary(ruleGroup: RuleGroupProps["ruleGroup"]): string {
   if (!ruleGroup?.rules) {
     return "Empty";
   }
-  const ruleCount = ruleGroup.rules.filter((r) => typeof r === "object" && r !== null && "field" in r).length;
-  const groupCount = ruleGroup.rules.filter((r) => typeof r === "object" && r !== null && "rules" in r).length;
+  const ruleCount = ruleGroup.rules.filter(
+    (r) => typeof r === "object" && r !== null && "field" in r,
+  ).length;
+  const groupCount = ruleGroup.rules.filter(
+    (r) => typeof r === "object" && r !== null && "rules" in r,
+  ).length;
 
   const parts: string[] = [];
   if (ruleCount > 0) {
@@ -86,12 +90,19 @@ function getRuleGroupSummary(ruleGroup: RuleGroupProps["ruleGroup"]): string {
 }
 
 /** Get a label for the first rule to show in summary */
-function getFirstRuleLabel(ruleGroup: RuleGroupProps["ruleGroup"]): string | null {
+function getFirstRuleLabel(
+  ruleGroup: RuleGroupProps["ruleGroup"],
+): string | null {
   if (!ruleGroup?.rules?.length) {
     return null;
   }
   const firstRule = ruleGroup.rules[0];
-  if (typeof firstRule === "object" && firstRule !== null && "field" in firstRule && firstRule.field) {
+  if (
+    typeof firstRule === "object" &&
+    firstRule !== null &&
+    "field" in firstRule &&
+    firstRule.field
+  ) {
     // Try to make it readable
     const field = String(firstRule.field).replace(/_/g, " ");
     const value = firstRule.value ? ` = ${firstRule.value}` : "";
@@ -256,7 +267,10 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
               <ChevronRightIcon className="size-4 text-muted-foreground shrink-0" />
             )}
 
-            <Badge variant="outline" className="uppercase text-[10px] font-semibold">
+            <Badge
+              variant="outline"
+              className="uppercase text-[10px] font-semibold"
+            >
               {combinator}
             </Badge>
 
@@ -271,7 +285,10 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
             )}
 
             {isOpen && (
-              <div className="flex items-center gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center gap-1 flex-1"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <CombinatorSelector
                   {...commonProps}
                   options={schema.combinators}
@@ -296,19 +313,40 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
             )}
 
             {/* Actions - always visible */}
-            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="size-7" onClick={handleAddRule}>
+            <div
+              className="flex items-center gap-1 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={handleAddRule}
+              >
                 <PlusIcon className="size-3.5" />
               </Button>
               {schema.showCloneButtons && (
-                <Button variant="ghost" size="icon" className="size-7" onClick={() => {
-                  const newPath = [...path.slice(0, -1), path[path.length - 1] + 1];
-                  actions.moveRule(path, newPath, true);
-                }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => {
+                    const newPath = [
+                      ...path.slice(0, -1),
+                      path[path.length - 1] + 1,
+                    ];
+                    actions.moveRule(path, newPath, true);
+                  }}
+                >
                   <CopyIcon className="size-3.5" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={handleRemoveGroup}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-destructive hover:text-destructive"
+                onClick={handleRemoveGroup}
+              >
                 <XIcon className="size-3.5" />
               </Button>
             </div>
@@ -380,7 +418,10 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
         <SelectGroup key={group.label}>
           <SelectLabel>{group.label}</SelectLabel>
           {group.options.map((opt) => (
-            <SelectItem key={opt.value ?? opt.name} value={String(opt.value ?? opt.name)}>
+            <SelectItem
+              key={opt.value ?? opt.name}
+              value={String(opt.value ?? opt.name)}
+            >
               {opt.label}
             </SelectItem>
           ))}
@@ -388,7 +429,10 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
       ));
     }
     return (options as OptionItem[]).map((opt) => (
-      <SelectItem key={opt.value ?? opt.name} value={String(opt.value ?? opt.name)}>
+      <SelectItem
+        key={opt.value ?? opt.name}
+        value={String(opt.value ?? opt.name)}
+      >
         {opt.label}
       </SelectItem>
     ));
@@ -450,40 +494,53 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
   const placeholder = fieldData?.placeholder ?? "";
 
   // Handle between/notBetween
-  if ((operator === "between" || operator === "notBetween") && (type === "select" || type === "text")) {
+  if (
+    (operator === "between" || operator === "notBetween") &&
+    (type === "select" || type === "text")
+  ) {
     return (
-      <span data-testid={testID} className={cn("flex items-center gap-2", className)} title={title}>
-        {["from", "to"].map((key, i) =>
-          type === "text" ? (
-            <Input
-              key={key}
-              type={inputTypeCoerced}
-              placeholder={placeholder}
-              value={valueAsArray[i] ?? ""}
-              className={cn("h-8 w-[80px]", valueListItemClassName)}
-              disabled={disabled}
-              onChange={(e) => multiValueHandler(e.target.value, i)}
-            />
-          ) : (
-            <SelectorComponent
-              key={key}
-              {...propsForValueSelector}
-              schema={schema as Schema<FullField, string>}
-              className={cn("w-[100px]", valueListItemClassName)}
-              handleOnChange={(v) => multiValueHandler(v, i)}
-              disabled={disabled}
-              value={valueAsArray[i] ?? getFirstOption(values)}
-              options={values}
-              listsAsArrays={listsAsArrays}
-            />
+      <span
+        data-testid={testID}
+        className={cn("flex items-center gap-2", className)}
+        title={title}
+      >
+        {["from", "to"]
+          .map((key, i) =>
+            type === "text" ? (
+              <Input
+                key={key}
+                type={inputTypeCoerced}
+                placeholder={placeholder}
+                value={valueAsArray[i] ?? ""}
+                className={cn("h-8 w-[80px]", valueListItemClassName)}
+                disabled={disabled}
+                onChange={(e) => multiValueHandler(e.target.value, i)}
+              />
+            ) : (
+              <SelectorComponent
+                key={key}
+                {...propsForValueSelector}
+                schema={schema as Schema<FullField, string>}
+                className={cn("w-[100px]", valueListItemClassName)}
+                handleOnChange={(v) => multiValueHandler(v, i)}
+                disabled={disabled}
+                value={valueAsArray[i] ?? getFirstOption(values)}
+                options={values}
+                listsAsArrays={listsAsArrays}
+              />
+            ),
           )
-        ).reduce<React.ReactNode[]>((acc, el, i) => {
-          if (i === 1) {
-            acc.push(<span key="sep" className="text-muted-foreground text-xs">{separator ?? "–"}</span>);
-          }
-          acc.push(el);
-          return acc;
-        }, [])}
+          .reduce<React.ReactNode[]>((acc, el, i) => {
+            if (i === 1) {
+              acc.push(
+                <span key="sep" className="text-muted-foreground text-xs">
+                  {separator ?? "–"}
+                </span>,
+              );
+            }
+            acc.push(el);
+            return acc;
+          }, [])}
       </span>
     );
   }
@@ -591,7 +648,9 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
       className={cn("h-8 w-[100px]", className)}
       disabled={disabled}
       onChange={(e) =>
-        handleOnChange(parseNumber(e.target.value, { parseNumbers: parseNumberMethod }))
+        handleOnChange(
+          parseNumber(e.target.value, { parseNumbers: parseNumberMethod }),
+        )
       }
     />
   );
@@ -658,21 +717,22 @@ export function ShadcnNotToggle({
 // Drag Handle
 // -----------------------------------------------------------------------------
 
-export const ShadcnDragHandle = React.forwardRef<HTMLSpanElement, DragHandleProps>(
-  ({ className, title, disabled }, ref) => (
-    <span
-      ref={ref}
-      className={cn(
-        "cursor-grab text-muted-foreground hover:text-foreground",
-        disabled && "cursor-not-allowed opacity-50",
-        className
-      )}
-      title={title}
-    >
-      <GripVerticalIcon className="size-4" />
-    </span>
-  )
-);
+export const ShadcnDragHandle = React.forwardRef<
+  HTMLSpanElement,
+  DragHandleProps
+>(({ className, title, disabled }, ref) => (
+  <span
+    ref={ref}
+    className={cn(
+      "cursor-grab text-muted-foreground hover:text-foreground",
+      disabled && "cursor-not-allowed opacity-50",
+      className,
+    )}
+    title={title}
+  >
+    <GripVerticalIcon className="size-4" />
+  </span>
+));
 ShadcnDragHandle.displayName = "ShadcnDragHandle";
 
 // -----------------------------------------------------------------------------

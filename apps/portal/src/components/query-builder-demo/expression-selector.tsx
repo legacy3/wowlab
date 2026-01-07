@@ -116,8 +116,16 @@ export const EXPRESSION_SCHEMA: Record<ExpressionCategory, CategorySchema> = {
       { name: "ready", label: "Ready", type: "boolean" },
       { name: "remains", label: "Remaining (sec)", type: "duration" },
       { name: "charges", label: "Charges", type: "number" },
-      { name: "charges_fractional", label: "Charges (fractional)", type: "number" },
-      { name: "full_recharge_time", label: "Full Recharge Time", type: "duration" },
+      {
+        name: "charges_fractional",
+        label: "Charges (fractional)",
+        type: "number",
+      },
+      {
+        name: "full_recharge_time",
+        label: "Full Recharge Time",
+        type: "duration",
+      },
       { name: "max_charges", label: "Max Charges", type: "number" },
     ],
   },
@@ -190,9 +198,7 @@ export const EXPRESSION_SCHEMA: Record<ExpressionCategory, CategorySchema> = {
     label: "Variable",
     names: [], // Variables are user-defined, would be dynamic
     requiresName: true,
-    properties: [
-      { name: "value", label: "Value", type: "number" },
-    ],
+    properties: [{ name: "value", label: "Value", type: "number" }],
   },
 };
 
@@ -233,7 +239,9 @@ export function ExpressionSelector({
     return schema.names;
   }, [value.category, schema.names, variables]);
 
-  const selectedProperty = schema.properties.find((p) => p.name === value.property);
+  const selectedProperty = schema.properties.find(
+    (p) => p.name === value.property,
+  );
   const needsComparison = selectedProperty?.type !== "boolean";
 
   const handleCategoryChange = useCallback(
@@ -248,14 +256,14 @@ export function ExpressionSelector({
         value: firstProperty?.type !== "boolean" ? "0" : undefined,
       });
     },
-    [onChange]
+    [onChange],
   );
 
   const handleNameChange = useCallback(
     (name: string) => {
       onChange({ ...value, name });
     },
-    [value, onChange]
+    [value, onChange],
   );
 
   const handlePropertyChange = useCallback(
@@ -269,27 +277,30 @@ export function ExpressionSelector({
         value: needsComp ? (value.value ?? "0") : undefined,
       });
     },
-    [value, schema.properties, onChange]
+    [value, schema.properties, onChange],
   );
 
   const handleOperatorChange = useCallback(
     (operator: ComparisonOperator) => {
       onChange({ ...value, operator });
     },
-    [value, onChange]
+    [value, onChange],
   );
 
   const handleValueChange = useCallback(
     (newValue: string) => {
       onChange({ ...value, value: newValue });
     },
-    [value, onChange]
+    [value, onChange],
   );
 
   return (
     <div className={cn("flex items-center gap-1.5 flex-wrap", className)}>
       {/* Category */}
-      <Select value={value.category} onValueChange={(v) => handleCategoryChange(v as ExpressionCategory)}>
+      <Select
+        value={value.category}
+        onValueChange={(v) => handleCategoryChange(v as ExpressionCategory)}
+      >
         <SelectTrigger className="w-[100px] h-8 text-xs">
           <SelectValue />
         </SelectTrigger>
@@ -340,7 +351,10 @@ export function ExpressionSelector({
       {/* Comparison (if not boolean) */}
       {needsComparison && (
         <>
-          <Select value={value.operator} onValueChange={(v) => handleOperatorChange(v as ComparisonOperator)}>
+          <Select
+            value={value.operator}
+            onValueChange={(v) => handleOperatorChange(v as ComparisonOperator)}
+          >
             <SelectTrigger className="w-[60px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>

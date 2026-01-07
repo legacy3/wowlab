@@ -71,7 +71,7 @@ const selectField = (
   name: ConditionFieldName,
   label: string,
   values: ReturnType<typeof createOption>[],
-  defaultValue: string
+  defaultValue: string,
 ): Field => ({
   name,
   value: name,
@@ -86,7 +86,7 @@ const numberField = (
   name: ConditionFieldName,
   label: string,
   defaultOperator: string,
-  defaultValue: string
+  defaultValue: string,
 ): Field => ({
   name,
   value: name,
@@ -124,7 +124,12 @@ export const CONDITION_FIELDS: Field[] = [
   // Combo points (for other specs)
   numberField("combo_points", "Combo Points", ">=", "5"),
   // Talent checks
-  selectField("talent_enabled", "Talent Enabled", [...TALENTS], "killer_instinct"),
+  selectField(
+    "talent_enabled",
+    "Talent Enabled",
+    [...TALENTS],
+    "killer_instinct",
+  ),
 ];
 
 // -----------------------------------------------------------------------------
@@ -203,9 +208,7 @@ export const INITIAL_ROTATION: RotationConfig = {
           enabled: true,
           conditions: {
             combinator: "and",
-            rules: [
-              { field: "focus", operator: ">=", value: "30" },
-            ],
+            rules: [{ field: "focus", operator: ">=", value: "30" }],
           },
         },
         {
@@ -214,9 +217,7 @@ export const INITIAL_ROTATION: RotationConfig = {
           enabled: true,
           conditions: {
             combinator: "and",
-            rules: [
-              { field: "charges", operator: ">=", value: "1" },
-            ],
+            rules: [{ field: "charges", operator: ">=", value: "1" }],
           },
         },
         {
@@ -225,9 +226,7 @@ export const INITIAL_ROTATION: RotationConfig = {
           enabled: true,
           conditions: {
             combinator: "and",
-            rules: [
-              { field: "focus", operator: ">=", value: "35" },
-            ],
+            rules: [{ field: "focus", operator: ">=", value: "35" }],
           },
         },
       ],

@@ -87,7 +87,8 @@ export const ACTION_LIST_TEMPLATES = [
   { name: "cleave", label: "Cleave" },
 ] as const;
 
-export type ActionListTemplateName = (typeof ACTION_LIST_TEMPLATES)[number]["name"];
+export type ActionListTemplateName =
+  (typeof ACTION_LIST_TEMPLATES)[number]["name"];
 
 // -----------------------------------------------------------------------------
 // Helper Functions
@@ -151,7 +152,7 @@ function ActionListItem({
         handleCancelEdit();
       }
     },
-    [handleSaveEdit, handleCancelEdit]
+    [handleSaveEdit, handleCancelEdit],
   );
 
   return (
@@ -174,7 +175,7 @@ function ActionListItem({
             "group relative flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors cursor-pointer",
             "hover:bg-accent hover:text-accent-foreground",
             isSelected && "bg-accent text-accent-foreground",
-            !isSelected && "text-muted-foreground"
+            !isSelected && "text-muted-foreground",
           )}
         >
           {/* Drag handle placeholder */}
@@ -182,7 +183,7 @@ function ActionListItem({
             className={cn(
               "cursor-grab text-muted-foreground/50 opacity-0 transition-opacity",
               "group-hover:opacity-100",
-              isSelected && "opacity-100"
+              isSelected && "opacity-100",
             )}
           >
             <GripVerticalIcon className="size-4" />
@@ -248,7 +249,7 @@ function ActionListItem({
                 className={cn(
                   "size-6 opacity-0 transition-opacity",
                   "group-hover:opacity-100",
-                  isSelected && "opacity-100"
+                  isSelected && "opacity-100",
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -315,7 +316,7 @@ function AddListDialog({
   const [customLabel, setCustomLabel] = useState("");
 
   const availableTemplates = ACTION_LIST_TEMPLATES.filter(
-    (t) => !existingNames.includes(t.name)
+    (t) => !existingNames.includes(t.name),
   );
 
   const handleSubmit = useCallback(() => {
@@ -609,9 +610,7 @@ export function ActionListPanel({
       />
       <DeleteListDialog
         open={deleteDialog.open}
-        onOpenChange={(open) =>
-          setDeleteDialog((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
         listLabel={deleteDialog.listLabel}
         onConfirm={handleDeleteConfirm}
       />

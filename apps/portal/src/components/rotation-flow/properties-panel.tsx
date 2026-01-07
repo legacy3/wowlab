@@ -60,7 +60,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   // Collapsed view
   if (collapsed) {
     return (
-      <div className={cn("flex flex-col h-full bg-muted/20 w-10 transition-all duration-200", className)}>
+      <div
+        className={cn(
+          "flex flex-col h-full bg-muted/20 w-10 transition-all duration-200",
+          className,
+        )}
+      >
         <div className="flex items-center justify-center p-1 border-b">
           <Button
             variant="ghost"
@@ -106,9 +111,16 @@ export const PropertiesPanel = memo(function PropertiesPanel({
 
   if (!selectedNode) {
     return (
-      <div className={cn("flex flex-col h-full bg-muted/20 w-48 transition-all duration-200", className)}>
+      <div
+        className={cn(
+          "flex flex-col h-full bg-muted/20 w-48 transition-all duration-200",
+          className,
+        )}
+      >
         <div className="flex items-center justify-between p-1 border-b">
-          <span className="text-[10px] text-muted-foreground px-1">Properties</span>
+          <span className="text-[10px] text-muted-foreground px-1">
+            Properties
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -126,16 +138,31 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-muted/20 w-48 transition-all duration-200", className)}>
+    <div
+      className={cn(
+        "flex flex-col h-full bg-muted/20 w-48 transition-all duration-200",
+        className,
+      )}
+    >
       <div className="flex items-center gap-1.5 px-2 py-1 border-b">
         <NodeIcon type={selectedNode.type} />
         <span className="flex-1 text-[10px] font-semibold capitalize">
           {selectedNode.type}
         </span>
-        <Button variant="ghost" size="icon" className="h-4 w-4" onClick={onToggleCollapse}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-4 w-4"
+          onClick={onToggleCollapse}
+        >
           <ChevronRight className="w-2.5 h-2.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-4 w-4" onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-4 w-4"
+          onClick={onClose}
+        >
           <X className="w-2.5 h-2.5" />
         </Button>
       </div>
@@ -243,7 +270,11 @@ function SpellProperties({ node, onUpdate }: PropertyProps<any>) {
           onValueChange={(value) => {
             const spell = MOCK_SPELLS.find((s) => s.id === Number(value));
             if (spell) {
-              onUpdate({ spellId: spell.id, spellName: spell.name, color: spell.color });
+              onUpdate({
+                spellId: spell.id,
+                spellName: spell.name,
+                color: spell.color,
+              });
             }
           }}
         >
@@ -252,9 +283,16 @@ function SpellProperties({ node, onUpdate }: PropertyProps<any>) {
           </SelectTrigger>
           <SelectContent>
             {MOCK_SPELLS.map((spell) => (
-              <SelectItem key={spell.id} value={String(spell.id)} className="text-[10px]">
+              <SelectItem
+                key={spell.id}
+                value={String(spell.id)}
+                className="text-[10px]"
+              >
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: spell.color }} />
+                  <div
+                    className="w-2.5 h-2.5 rounded-sm"
+                    style={{ backgroundColor: spell.color }}
+                  />
                   {spell.name}
                 </div>
               </SelectItem>
@@ -265,15 +303,26 @@ function SpellProperties({ node, onUpdate }: PropertyProps<any>) {
 
       <div className="space-y-1">
         <Label className="text-[10px]">Target</Label>
-        <Select value={data.target} onValueChange={(value) => onUpdate({ target: value })}>
+        <Select
+          value={data.target}
+          onValueChange={(value) => onUpdate({ target: value })}
+        >
           <SelectTrigger className="h-6 text-[10px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="current_target" className="text-[10px]">Target</SelectItem>
-            <SelectItem value="self" className="text-[10px]">Self</SelectItem>
-            <SelectItem value="focus" className="text-[10px]">Focus</SelectItem>
-            <SelectItem value="pet" className="text-[10px]">Pet</SelectItem>
+            <SelectItem value="current_target" className="text-[10px]">
+              Target
+            </SelectItem>
+            <SelectItem value="self" className="text-[10px]">
+              Self
+            </SelectItem>
+            <SelectItem value="focus" className="text-[10px]">
+              Focus
+            </SelectItem>
+            <SelectItem value="pet" className="text-[10px]">
+              Pet
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -308,15 +357,26 @@ function ConditionProperties({ node, onUpdate }: PropertyProps<any>) {
 
       <div className="space-y-1">
         <Label className="text-[10px]">Type</Label>
-        <Select value={data.conditionType} onValueChange={(value) => onUpdate({ conditionType: value })}>
+        <Select
+          value={data.conditionType}
+          onValueChange={(value) => onUpdate({ conditionType: value })}
+        >
           <SelectTrigger className="h-6 text-[10px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="if" className="text-[10px]">If</SelectItem>
-            <SelectItem value="and" className="text-[10px]">AND</SelectItem>
-            <SelectItem value="or" className="text-[10px]">OR</SelectItem>
-            <SelectItem value="not" className="text-[10px]">NOT</SelectItem>
+            <SelectItem value="if" className="text-[10px]">
+              If
+            </SelectItem>
+            <SelectItem value="and" className="text-[10px]">
+              AND
+            </SelectItem>
+            <SelectItem value="or" className="text-[10px]">
+              OR
+            </SelectItem>
+            <SelectItem value="not" className="text-[10px]">
+              NOT
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -325,13 +385,20 @@ function ConditionProperties({ node, onUpdate }: PropertyProps<any>) {
         <>
           <div className="space-y-1">
             <Label className="text-[10px]">Subject</Label>
-            <Select value={data.subject} onValueChange={(value) => onUpdate({ subject: value })}>
+            <Select
+              value={data.subject}
+              onValueChange={(value) => onUpdate({ subject: value })}
+            >
               <SelectTrigger className="h-6 text-[10px]">
                 <SelectValue placeholder="Select..." />
               </SelectTrigger>
               <SelectContent>
                 {CONDITION_SUBJECTS.map((s) => (
-                  <SelectItem key={s.value} value={s.value} className="text-[10px]">
+                  <SelectItem
+                    key={s.value}
+                    value={s.value}
+                    className="text-[10px]"
+                  >
                     {s.label}
                   </SelectItem>
                 ))}
@@ -342,17 +409,32 @@ function ConditionProperties({ node, onUpdate }: PropertyProps<any>) {
           <div className="grid grid-cols-2 gap-1">
             <div className="space-y-1">
               <Label className="text-[10px]">Op</Label>
-              <Select value={data.operator} onValueChange={(value) => onUpdate({ operator: value })}>
+              <Select
+                value={data.operator}
+                onValueChange={(value) => onUpdate({ operator: value })}
+              >
                 <SelectTrigger className="h-6 text-[10px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="eq" className="text-[10px]">=</SelectItem>
-                  <SelectItem value="neq" className="text-[10px]">!=</SelectItem>
-                  <SelectItem value="gt" className="text-[10px]">&gt;</SelectItem>
-                  <SelectItem value="gte" className="text-[10px]">&gt;=</SelectItem>
-                  <SelectItem value="lt" className="text-[10px]">&lt;</SelectItem>
-                  <SelectItem value="lte" className="text-[10px]">&lt;=</SelectItem>
+                  <SelectItem value="eq" className="text-[10px]">
+                    =
+                  </SelectItem>
+                  <SelectItem value="neq" className="text-[10px]">
+                    !=
+                  </SelectItem>
+                  <SelectItem value="gt" className="text-[10px]">
+                    &gt;
+                  </SelectItem>
+                  <SelectItem value="gte" className="text-[10px]">
+                    &gt;=
+                  </SelectItem>
+                  <SelectItem value="lt" className="text-[10px]">
+                    &lt;
+                  </SelectItem>
+                  <SelectItem value="lte" className="text-[10px]">
+                    &lt;=
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -390,14 +472,23 @@ function VariableProperties({ node, onUpdate }: PropertyProps<any>) {
 
       <div className="space-y-1">
         <Label className="text-[10px]">Type</Label>
-        <Select value={data.variableType} onValueChange={(value) => onUpdate({ variableType: value })}>
+        <Select
+          value={data.variableType}
+          onValueChange={(value) => onUpdate({ variableType: value })}
+        >
           <SelectTrigger className="h-6 text-[10px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="number" className="text-[10px]">Number</SelectItem>
-            <SelectItem value="boolean" className="text-[10px]">Boolean</SelectItem>
-            <SelectItem value="string" className="text-[10px]">String</SelectItem>
+            <SelectItem value="number" className="text-[10px]">
+              Number
+            </SelectItem>
+            <SelectItem value="boolean" className="text-[10px]">
+              Boolean
+            </SelectItem>
+            <SelectItem value="string" className="text-[10px]">
+              String
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

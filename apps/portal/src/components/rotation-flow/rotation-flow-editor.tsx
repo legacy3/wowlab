@@ -1,7 +1,13 @@
 "use client";
 
 import { memo, useState, useCallback, useMemo } from "react";
-import { useNodesState, useEdgesState, addEdge, type Connection, MarkerType } from "@xyflow/react";
+import {
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  type Connection,
+  MarkerType,
+} from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -358,7 +364,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#22c55e15" },
     style: { stroke: "#22c55e", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#22c55e",
+      width: 12,
+      height: 12,
+    },
   },
 
   // CDs condition -> Enemy count (no)
@@ -371,7 +382,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#ef444415" },
     style: { stroke: "#ef4444", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#ef4444", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#ef4444",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Bestial Wrath -> Enemy count
@@ -393,7 +409,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#3b82f615" },
     style: { stroke: "#3b82f6", strokeWidth: 1.5, strokeDasharray: "4 2" },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#3b82f6",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Execute condition -> Kill Shot (yes)
@@ -406,7 +427,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#22c55e15" },
     style: { stroke: "#22c55e", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#22c55e",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Enemy count -> Cleave group (yes, >= 3)
@@ -419,7 +445,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#8b5cf615" },
     style: { stroke: "#8b5cf6", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#8b5cf6", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#8b5cf6",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Enemy count -> ST group (no, < 3)
@@ -432,7 +463,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#3b82f615" },
     style: { stroke: "#3b82f6", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#3b82f6",
+      width: 12,
+      height: 12,
+    },
   },
 
   // =========== CLEAVE CHAIN ===========
@@ -465,7 +501,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#22c55e15" },
     style: { stroke: "#22c55e", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#22c55e",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Barbed Shot -> Kill Command (Cleave)
@@ -507,7 +548,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#22c55e15" },
     style: { stroke: "#22c55e", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#22c55e",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Barbed Shot (ST) -> KC condition
@@ -529,7 +575,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#ef444415" },
     style: { stroke: "#ef4444", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#ef4444", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#ef4444",
+      width: 12,
+      height: 12,
+    },
   },
 
   // KC condition -> Kill Command (ST)
@@ -542,7 +593,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#22c55e15" },
     style: { stroke: "#22c55e", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#22c55e",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Kill Command (ST) -> Barbed Shot (fill)
@@ -564,7 +620,12 @@ const INITIAL_EDGES: RotationEdge[] = [
     labelStyle: { fontSize: 9 },
     labelBgStyle: { fill: "#ef444415" },
     style: { stroke: "#ef4444", strokeWidth: 1.5 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#ef4444", width: 12, height: 12 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#ef4444",
+      width: 12,
+      height: 12,
+    },
   },
 
   // Barbed Shot (fill) -> Cobra Shot (ST)
@@ -598,13 +659,15 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
-  const [layoutDirection, setLayoutDirection] = useState<LayoutDirection>("vertical");
+  const [layoutDirection, setLayoutDirection] =
+    useState<LayoutDirection>("vertical");
 
   const { isZen, toggleZen } = useZenMode();
 
   const selectedNode = useMemo(
-    () => nodes.find((n) => n.id === selectedNodeId) as RotationNode | undefined,
-    [nodes, selectedNodeId]
+    () =>
+      nodes.find((n) => n.id === selectedNodeId) as RotationNode | undefined,
+    [nodes, selectedNodeId],
   );
 
   const onConnect = useCallback(
@@ -621,7 +684,11 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
             label: isCondition ? (isTrue ? "yes" : "no") : undefined,
             labelStyle: { fontSize: 9 },
             labelBgStyle: {
-              fill: isCondition ? (isTrue ? "#22c55e15" : "#ef444415") : undefined,
+              fill: isCondition
+                ? isTrue
+                  ? "#22c55e15"
+                  : "#ef444415"
+                : undefined,
             },
             style: {
               stroke: isCondition ? (isTrue ? "#22c55e" : "#ef4444") : "#666",
@@ -634,11 +701,11 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
               height: 12,
             },
           },
-          eds
-        )
+          eds,
+        ),
       );
     },
-    [nodes, setEdges]
+    [nodes, setEdges],
   );
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: RotationNode) => {
@@ -654,18 +721,18 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
       setNodes((nds) => nds.concat(node as any));
       setSelectedNodeId(node.id);
     },
-    [setNodes]
+    [setNodes],
   );
 
   const updateNode = useCallback(
     (id: string, data: Partial<RotationNode["data"]>) => {
       setNodes((nds) =>
         nds.map((node) =>
-          node.id === id ? { ...node, data: { ...node.data, ...data } } : node
-        )
+          node.id === id ? { ...node, data: { ...node.data, ...data } } : node,
+        ),
       );
     },
-    [setNodes]
+    [setNodes],
   );
 
   const deleteNode = useCallback(
@@ -674,7 +741,7 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
       setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
       setSelectedNodeId(null);
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges],
   );
 
   const duplicateNode = useCallback(
@@ -692,7 +759,7 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
       setNodes((nds) => nds.concat(newNode as any));
       setSelectedNodeId(newNode.id);
     },
-    [nodes, setNodes]
+    [nodes, setNodes],
   );
 
   const toggleMinimize = useCallback(
@@ -715,10 +782,10 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
             };
           }
           return node;
-        })
+        }),
       );
     },
-    [setNodes]
+    [setNodes],
   );
 
   const autoLayout = useCallback(() => {
@@ -744,7 +811,10 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
     });
 
     // Estimate node dimensions based on type
-    const getNodeDimensions = (node: { type?: string; data?: { minimized?: boolean } }) => {
+    const getNodeDimensions = (node: {
+      type?: string;
+      data?: { minimized?: boolean };
+    }) => {
       const minimized = (node.data as { minimized?: boolean })?.minimized;
       if (minimized) {
         return { width: 40, height: 40 };
@@ -759,11 +829,20 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
         case "frame":
           return { width: 200, height: 150 };
         case "condition":
-          return { width: compactMode ? 120 : 160, height: compactMode ? 80 : 100 };
+          return {
+            width: compactMode ? 120 : 160,
+            height: compactMode ? 80 : 100,
+          };
         case "sequence":
-          return { width: compactMode ? 150 : 180, height: compactMode ? 120 : 160 };
+          return {
+            width: compactMode ? 150 : 180,
+            height: compactMode ? 120 : 160,
+          };
         default:
-          return { width: compactMode ? 120 : 160, height: compactMode ? 70 : 90 };
+          return {
+            width: compactMode ? 120 : 160,
+            height: compactMode ? 70 : 90,
+          };
       }
     };
 
@@ -809,7 +888,7 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
       if (nodeWithPosition) {
         // Dagre gives us center positions, adjust to top-left for React Flow
         const { width, height } = getNodeDimensions(
-          nodes.find((n) => n.id === nodeId) || {}
+          nodes.find((n) => n.id === nodeId) || {},
         );
         positions[nodeId] = {
           x: nodeWithPosition.x - width / 2,
@@ -850,7 +929,7 @@ export const RotationFlowEditor = memo(function RotationFlowEditor({
       nds.map((node) => ({
         ...node,
         position: positions[node.id] || node.position,
-      }))
+      })),
     );
   }, [nodes, edges, setNodes, layoutDirection, compactMode]);
 
@@ -916,7 +995,7 @@ fn rotation() {
           isZen
             ? "fixed inset-0 z-50 bg-background animate-in fade-in duration-200"
             : "h-[calc(100dvh-8rem)]",
-          className
+          className,
         )}
       >
         {/* Left Sidebar */}
