@@ -1,13 +1,11 @@
 "use client";
 
-import * as React from "react";
 import { useState, useCallback, memo } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   GripVerticalIcon,
   ListIcon,
-  MoreHorizontalIcon,
   PencilIcon,
   PlayIcon,
   PlusIcon,
@@ -33,14 +31,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -55,18 +45,27 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import { VariableEditor } from "./variable-editor";
 import type { Variable, ListType, ListInfo } from "./types";
 import { toInternalName } from "./utils";
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function generateDefaultListName(existingNames: string[]): string {
+  const baseName = "New List";
+  if (!existingNames.includes(toInternalName(baseName))) {
+    return baseName;
+  }
+  let counter = 2;
+  while (existingNames.includes(toInternalName(`${baseName} ${counter}`))) {
+    counter++;
+  }
+  return `${baseName} ${counter}`;
+}
 
 // =============================================================================
 // Types
@@ -94,23 +93,6 @@ interface ActionListManagerProps {
 }
 
 // =============================================================================
-// Action List Templates
-// =============================================================================
-
-const ACTION_LIST_TEMPLATES: Array<{
-  name: string;
-  label: string;
-  listType: ListType;
-}> = [
-  { name: "precombat", label: "Precombat", listType: "precombat" },
-  { name: "main", label: "Main", listType: "main" },
-  { name: "cooldowns", label: "Cooldowns", listType: "sub" },
-  { name: "aoe", label: "AoE", listType: "sub" },
-  { name: "st", label: "Single Target", listType: "sub" },
-  { name: "cleave", label: "Cleave", listType: "sub" },
-];
-
-// =============================================================================
 // List Item
 // =============================================================================
 
@@ -133,6 +115,11 @@ const ListItem = memo(function ListItem({
 }: ListItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(list.label);
+
+  const handleStartEdit = useCallback(() => {
+    setEditValue(list.label);
+    setIsEditing(true);
+  }, [list.label]);
 
   const handleSave = useCallback(() => {
     const trimmed = editValue.trim();
@@ -202,8 +189,10 @@ const ListItem = memo(function ListItem({
           role="button"
           tabIndex={0}
           onClick={onSelect}
+          onDoubleClick={handleStartEdit}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") onSelect();
+            if (e.key === "F2") handleStartEdit();
           }}
           className={cn(
             "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors",
@@ -236,12 +225,7 @@ const ListItem = memo(function ListItem({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        <ContextMenuItem
-          onClick={() => {
-            setEditValue(list.label);
-            setIsEditing(true);
-          }}
-        >
+        <ContextMenuItem onClick={handleStartEdit}>
           <PencilIcon className="mr-2 size-3" />
           Rename
         </ContextMenuItem>
@@ -306,144 +290,6 @@ const VariableItem = memo(function VariableItem({
     </div>
   );
 });
-
-// =============================================================================
-// Add List Dialog
-// =============================================================================
-
-interface AddListDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  existingNames: string[];
-  onAdd: (list: { name: string; label: string; listType: ListType }) => void;
-}
-
-function AddListDialog({
-  open,
-  onOpenChange,
-  existingNames,
-  onAdd,
-}: AddListDialogProps) {
-  const [mode, setMode] = useState<"template" | "custom">("template");
-  const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [customLabel, setCustomLabel] = useState("");
-
-  const availableTemplates = ACTION_LIST_TEMPLATES.filter(
-    (t) => !existingNames.includes(t.name),
-  );
-
-  const handleSubmit = useCallback(() => {
-    if (mode === "template" && selectedTemplate) {
-      const template = ACTION_LIST_TEMPLATES.find(
-        (t) => t.name === selectedTemplate,
-      );
-      if (template) {
-        onAdd({
-          name: template.name,
-          label: template.label,
-          listType: template.listType,
-        });
-      }
-    } else if (mode === "custom" && customLabel.trim()) {
-      onAdd({
-        name: toInternalName(customLabel),
-        label: customLabel.trim(),
-        listType: "sub",
-      });
-    }
-    setSelectedTemplate("");
-    setCustomLabel("");
-    onOpenChange(false);
-  }, [mode, selectedTemplate, customLabel, onAdd, onOpenChange]);
-
-  React.useEffect(() => {
-    if (open) {
-      setMode(availableTemplates.length > 0 ? "template" : "custom");
-      setSelectedTemplate("");
-      setCustomLabel("");
-    }
-  }, [open, availableTemplates.length]);
-
-  const isValid =
-    (mode === "template" && selectedTemplate) ||
-    (mode === "custom" && customLabel.trim());
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-base">Add Action List</DialogTitle>
-          <DialogDescription className="text-xs">
-            Choose a template or create a custom list.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="flex gap-1">
-            <Button
-              variant={mode === "template" ? "default" : "outline"}
-              size="sm"
-              className="flex-1 h-7 text-xs"
-              onClick={() => setMode("template")}
-              disabled={availableTemplates.length === 0}
-            >
-              Template
-            </Button>
-            <Button
-              variant={mode === "custom" ? "default" : "outline"}
-              size="sm"
-              className="flex-1 h-7 text-xs"
-              onClick={() => setMode("custom")}
-            >
-              Custom
-            </Button>
-          </div>
-          {mode === "template" ? (
-            <Select
-              value={selectedTemplate}
-              onValueChange={setSelectedTemplate}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Select template..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTemplates.map((t) => (
-                  <SelectItem key={t.name} value={t.name} className="text-xs">
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              value={customLabel}
-              onChange={(e) => setCustomLabel(e.target.value)}
-              placeholder="List name..."
-              className="h-8 text-xs"
-            />
-          )}
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            className="h-7 text-xs"
-            onClick={handleSubmit}
-            disabled={!isValid}
-          >
-            Add
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // =============================================================================
 // Collapsed Sidebar
@@ -519,7 +365,6 @@ export function ActionListManager({
 }: ActionListManagerProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("lists");
-  const [addListOpen, setAddListOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     id: string;
@@ -532,6 +377,15 @@ export function ActionListManager({
 
   const existingListNames = lists.map((l) => l.name);
   const existingVarNames = variables.map((v) => v.name);
+
+  const handleAddList = useCallback(() => {
+    const label = generateDefaultListName(existingListNames);
+    onAddList({
+      name: toInternalName(label),
+      label,
+      listType: "sub",
+    });
+  }, [existingListNames, onAddList]);
 
   const handleSaveVariable = useCallback(
     (data: { name: string; expression: string }) => {
@@ -615,7 +469,7 @@ export function ActionListManager({
               variant="ghost"
               size="icon"
               className="size-6 hover:bg-accent"
-              onClick={() => setAddListOpen(true)}
+              onClick={handleAddList}
             >
               <PlusIcon className="size-3.5" />
             </Button>
@@ -646,7 +500,7 @@ export function ActionListManager({
                     variant="link"
                     size="sm"
                     className="h-6 text-xs mt-1"
-                    onClick={() => setAddListOpen(true)}
+                    onClick={handleAddList}
                   >
                     Add your first list
                   </Button>
@@ -711,12 +565,6 @@ export function ActionListManager({
       </Tabs>
 
       {/* Dialogs */}
-      <AddListDialog
-        open={addListOpen}
-        onOpenChange={setAddListOpen}
-        existingNames={existingListNames}
-        onAdd={onAddList}
-      />
       <AlertDialog
         open={deleteDialog.open}
         onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
