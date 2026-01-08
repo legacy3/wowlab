@@ -1,6 +1,10 @@
 import { PageLayout } from "@/components/layout";
 
-export default function DemoLayout({ children }: { children: React.ReactNode }) {
+export default function DemoLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Components"

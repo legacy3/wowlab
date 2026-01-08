@@ -27,7 +27,11 @@ components/page/feature/
 ```tsx
 import { PageLayout } from "@/components/layout";
 
-export default function FeatureLayout({ children }: { children: React.ReactNode }) {
+export default function FeatureLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <PageLayout
       title="Feature"

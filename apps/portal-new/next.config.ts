@@ -9,6 +9,25 @@ const nextConfig: NextConfig = {
       "if-function",
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/go/discord",
+        destination: "https://discord.gg/bWWYBAvF3W",
+        permanent: false,
+      },
+      {
+        source: "/go/github/:path*",
+        destination: "https://github.com/legacy3/wowlab/:path*",
+        permanent: false,
+      },
+      {
+        source: "/go/github",
+        destination: "https://github.com/legacy3/wowlab",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
