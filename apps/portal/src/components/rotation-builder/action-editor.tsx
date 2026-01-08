@@ -35,11 +35,9 @@ import {
   shadcnInlineControlElements,
   shadcnControlClassnames,
   shadcnTranslations,
-} from "@/components/query-builder-demo/shadcn-controls";
-import {
   CONDITION_FIELDS,
   COMPARISON_OPERATORS,
-} from "@/components/query-builder-demo/types";
+} from "./query-builder-controls";
 
 import type { Action } from "./types";
 
