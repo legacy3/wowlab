@@ -4,12 +4,13 @@ import type { RuleGroupType } from "react-querybuilder";
 // Action Types
 // -----------------------------------------------------------------------------
 
-export type ActionType = "spell" | "call_action_list";
+export type ActionType = "spell" | "item" | "call_action_list";
 
 export interface Action {
   id: string;
   type: ActionType;
   spellId?: number; // For type="spell" - references spell_base.spell_id
+  itemId?: number; // For type="item" - references item.ID
   listId?: string; // For type="call_action_list" - references ActionList.id
   enabled: boolean;
   condition: RuleGroupType; // react-querybuilder condition tree

@@ -48,6 +48,7 @@ import {
 import { ActionListManager } from "./action-list-manager";
 import { ActionEditor } from "./action-editor";
 import { RotationPreview } from "./rotation-preview";
+import { BM_HUNTER_ALLOWED_SPELLS } from "./data";
 import type { Rotation, RotationDraft } from "./types";
 
 // -----------------------------------------------------------------------------
@@ -246,6 +247,7 @@ export function RotationEditor({
                 <ActionEditor
                   list={selectedList}
                   callableLists={callableLists}
+                  allowedSpells={BM_HUNTER_ALLOWED_SPELLS}
                   onActionsChange={(actions) =>
                     reorderActions({ listId: selectedList.id, actions })
                   }

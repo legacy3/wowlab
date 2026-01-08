@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo } from "react";
+import NextLink from "next/link";
 import type { RuleGroupType } from "react-querybuilder";
 import {
   ChevronDownIcon,
@@ -12,8 +13,16 @@ import {
   TrashIcon,
 } from "lucide-react";
 
+import { FlaskInlineLoader } from "@/components/ui/flask-loader";
+
 import { GameIcon } from "@/components/game/game-icon";
-import { SpellTooltip } from "@/components/game/game-tooltip";
+import {
+  ItemTooltip,
+  SpellTooltip,
+  type ItemTooltipData,
+  type ItemQuality,
+  type SpellTooltipData,
+} from "@/components/game/game-tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,12 +38,50 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useItem } from "@/hooks/use-item";
+import { useSpell } from "@/hooks/use-spell";
+import type { Item, Spell } from "@wowlab/core/Schemas";
 
 import { ConditionBuilder } from "./condition-builder";
-import { SpellPicker } from "./spell-picker";
-import { getSpellById, toTooltipData } from "./data";
+import { ItemPicker } from "./item-picker";
+import { SpellPicker, type AllowedSpell } from "./spell-picker";
 import type { Action, ActionType } from "./types";
 import { getConditionSummary } from "./utils";
+
+// Transform DBC spell data to tooltip format
+function toSpellTooltipData(spell: Spell.SpellDataFlat): SpellTooltipData {
+  return {
+    id: spell.id,
+    name: spell.name,
+    castTime: spell.castTime === 0 ? "Instant" : `${spell.castTime / 1000} sec`,
+    cooldown:
+      spell.recoveryTime > 0 ? `${spell.recoveryTime / 1000} sec` : undefined,
+    cost:
+      spell.powerCost > 0
+        ? `${spell.powerCost} ${spell.powerType === 2 ? "Focus" : ""}`.trim()
+        : undefined,
+    range: spell.rangeMax0 > 0 ? `${spell.rangeMax0} yd range` : undefined,
+    description: spell.description,
+    iconName: spell.fileName,
+  };
+}
+
+// Transform DBC item data to tooltip format
+function toItemTooltipData(item: Item.ItemDataFlat): ItemTooltipData {
+  return {
+    name: item.name,
+    quality: item.quality as ItemQuality,
+    itemLevel: item.itemLevel,
+    slot: item.classification?.inventoryTypeName,
+    effects:
+      item.description && item.effects.length > 0
+        ? [{ text: item.description, isUse: true }]
+        : item.description
+          ? [{ text: item.description }]
+          : undefined,
+    iconName: item.fileName,
+  };
+}
 
 // -----------------------------------------------------------------------------
 // Types
@@ -44,6 +91,7 @@ interface ActionCardProps {
   action: Action;
   index: number;
   callableLists: Array<{ id: string; name: string; label: string }>;
+  allowedSpells: ReadonlyArray<AllowedSpell>;
   onUpdate: (updates: Partial<Omit<Action, "id">>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -57,18 +105,25 @@ export const ActionCard = memo(function ActionCard({
   action,
   index,
   callableLists,
+  allowedSpells,
   onUpdate,
   onDelete,
   onDuplicate,
 }: ActionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isCallList = action.type === "call_action_list";
+  const isItem = action.type === "item";
+  const isSpell = action.type === "spell";
 
-  // Get spell data for icon display
-  const spell = useMemo(() => {
-    if (isCallList || !action.spellId) return undefined;
-    return getSpellById(action.spellId);
-  }, [action.spellId, isCallList]);
+  // Fetch spell data from DBC
+  const { data: spell, isLoading: isSpellLoading } = useSpell(
+    isSpell ? action.spellId : null,
+  );
+
+  // Fetch item data from DBC
+  const { data: item, isLoading: isItemLoading } = useItem(
+    isItem ? action.itemId : null,
+  );
 
   const handleConditionChange = useCallback(
     (condition: RuleGroupType) => {
@@ -80,26 +135,79 @@ export const ActionCard = memo(function ActionCard({
   const conditionSummary = getConditionSummary(action.condition);
 
   // Icon element based on action type
-  const actionIcon = isCallList ? (
-    <div className="flex size-9 items-center justify-center rounded-md border bg-blue-500/10 text-blue-500">
-      <ListIcon className="size-5" />
-    </div>
-  ) : spell ? (
-    <SpellTooltip spell={toTooltipData(spell)}>
-      <div className="shrink-0 overflow-hidden rounded-md border">
-        <GameIcon
-          iconName={spell.iconName}
-          size="medium"
-          width={36}
-          height={36}
-        />
+  const renderActionIcon = () => {
+    // Call action list icon
+    if (isCallList) {
+      return (
+        <div className="flex size-9 items-center justify-center rounded-md border bg-blue-500/10 text-blue-500">
+          <ListIcon className="size-5" />
+        </div>
+      );
+    }
+
+    // Item icon
+    if (isItem) {
+      if (isItemLoading) {
+        return (
+          <div className="flex size-9 items-center justify-center rounded-md border bg-muted text-primary">
+            <FlaskInlineLoader className="size-5" />
+          </div>
+        );
+      }
+      if (item) {
+        return (
+          <ItemTooltip item={toItemTooltipData(item)}>
+            <NextLink
+              href={`/lab/inspector/item/${item.id}`}
+              className="shrink-0 overflow-hidden rounded-md border hover:ring-2 hover:ring-primary/50 transition-shadow"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GameIcon
+                iconName={item.fileName}
+                size="medium"
+                width={36}
+                height={36}
+              />
+            </NextLink>
+          </ItemTooltip>
+        );
+      }
+    }
+
+    // Spell icon (default)
+    if (isSpellLoading) {
+      return (
+        <div className="flex size-9 items-center justify-center rounded-md border bg-muted text-primary">
+          <FlaskInlineLoader className="size-5" />
+        </div>
+      );
+    }
+    if (spell) {
+      return (
+        <SpellTooltip spell={toSpellTooltipData(spell)}>
+          <NextLink
+            href={`/lab/inspector/spell/${spell.id}`}
+            className="shrink-0 overflow-hidden rounded-md border hover:ring-2 hover:ring-primary/50 transition-shadow"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GameIcon
+              iconName={spell.fileName}
+              size="medium"
+              width={36}
+              height={36}
+            />
+          </NextLink>
+        </SpellTooltip>
+      );
+    }
+
+    // Fallback
+    return (
+      <div className="flex size-9 items-center justify-center rounded-md border bg-muted text-muted-foreground text-xs">
+        ?
       </div>
-    </SpellTooltip>
-  ) : (
-    <div className="flex size-9 items-center justify-center rounded-md border bg-muted text-muted-foreground text-xs">
-      ?
-    </div>
-  );
+    );
+  };
 
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -122,8 +230,8 @@ export const ActionCard = memo(function ActionCard({
             {index + 1}
           </Badge>
 
-          {/* Spell/List Icon */}
-          {actionIcon}
+          {/* Action Icon (Spell/Item/List) */}
+          {renderActionIcon()}
 
           {/* Expand toggle */}
           <CollapsibleTrigger asChild>
@@ -146,11 +254,12 @@ export const ActionCard = memo(function ActionCard({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="spell">Spell</SelectItem>
+              <SelectItem value="item">Item</SelectItem>
               <SelectItem value="call_action_list">Call List</SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Spell/List selector */}
+          {/* Spell/Item/List selector */}
           {isCallList ? (
             <Select
               value={action.listId}
@@ -173,10 +282,16 @@ export const ActionCard = memo(function ActionCard({
                 )}
               </SelectContent>
             </Select>
+          ) : isItem ? (
+            <ItemPicker
+              value={action.itemId}
+              onSelect={(itemId) => onUpdate({ itemId })}
+            />
           ) : (
             <SpellPicker
               value={action.spellId}
               onSelect={(spellId) => onUpdate({ spellId })}
+              allowedSpells={allowedSpells}
             />
           )}
 

@@ -104,21 +104,15 @@ export type {
 } from "./hooks";
 
 // -----------------------------------------------------------------------------
-// Shared Data
+// Shared Data (condition builder options)
 // -----------------------------------------------------------------------------
 
 export {
-  BM_HUNTER_SPELLS,
   BM_HUNTER_SPELL_OPTIONS,
-  BM_HUNTER_AURAS,
   BM_HUNTER_AURA_OPTIONS,
-  BM_HUNTER_TALENTS,
   BM_HUNTER_TALENT_OPTIONS,
   createOption,
-  createSpell,
 } from "./data";
-
-export type { SpellInfo, SpellOption } from "./data";
 
 // -----------------------------------------------------------------------------
 // Utilities

@@ -1,20 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { PlusIcon, ListTreeIcon } from "lucide-react";
+import { ListTreeIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { ActionCard } from "./action-card";
-import { SpellPicker } from "./spell-picker";
+import { ActionPicker } from "./action-picker";
+import type { AllowedSpell } from "./spell-picker";
 import type { ActionList, Action } from "./types";
 import { generateId } from "./utils";
 
@@ -25,6 +18,7 @@ import { generateId } from "./utils";
 interface ActionEditorProps {
   list: ActionList;
   callableLists: Array<{ id: string; name: string; label: string }>;
+  allowedSpells: ReadonlyArray<AllowedSpell>;
   onActionsChange: (actions: Action[]) => void;
 }
 
@@ -34,12 +28,16 @@ interface ActionEditorProps {
 
 function EmptyState({
   onAddSpell,
+  onAddItem,
   onAddCallList,
   callableLists,
+  allowedSpells,
 }: {
   onAddSpell: (spellId: number) => void;
+  onAddItem: (itemId: number) => void;
   onAddCallList: (listId: string) => void;
   callableLists: Array<{ id: string; name: string; label: string }>;
+  allowedSpells: ReadonlyArray<AllowedSpell>;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -48,36 +46,15 @@ function EmptyState({
       </div>
       <h3 className="text-sm font-medium mb-1">No actions yet</h3>
       <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
-        Add spells or call other action lists to build your rotation.
+        Add spells, items, or call other action lists to build your rotation.
       </p>
-      <div className="flex gap-2">
-        <SpellPicker onSelect={onAddSpell}>
-          <Button variant="outline" size="sm">
-            <PlusIcon className="size-4 mr-1.5" />
-            Add Spell
-          </Button>
-        </SpellPicker>
-        {callableLists.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ListTreeIcon className="size-4 mr-1.5" />
-                Call List
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {callableLists.map((list) => (
-                <DropdownMenuItem
-                  key={list.id}
-                  onClick={() => onAddCallList(list.id)}
-                >
-                  {list.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+      <ActionPicker
+        allowedSpells={allowedSpells}
+        callableLists={callableLists}
+        onAddSpell={onAddSpell}
+        onAddItem={onAddItem}
+        onAddCallList={onAddCallList}
+      />
     </div>
   );
 }
@@ -89,6 +66,7 @@ function EmptyState({
 export function ActionEditor({
   list,
   callableLists,
+  allowedSpells,
   onActionsChange,
 }: ActionEditorProps) {
   const handleAddSpell = useCallback(
@@ -97,6 +75,20 @@ export function ActionEditor({
         id: generateId("action"),
         type: "spell",
         spellId,
+        enabled: true,
+        condition: { combinator: "and", rules: [] },
+      };
+      onActionsChange([...list.actions, newAction]);
+    },
+    [list.actions, onActionsChange],
+  );
+
+  const handleAddItem = useCallback(
+    (itemId: number) => {
+      const newAction: Action = {
+        id: generateId("action"),
+        type: "item",
+        itemId,
         enabled: true,
         condition: { combinator: "and", rules: [] },
       };
@@ -181,8 +173,10 @@ export function ActionEditor({
         {list.actions.length === 0 ? (
           <EmptyState
             onAddSpell={handleAddSpell}
+            onAddItem={handleAddItem}
             onAddCallList={handleAddCallList}
             callableLists={callableLists}
+            allowedSpells={allowedSpells}
           />
         ) : (
           <div className="space-y-2">
@@ -192,6 +186,7 @@ export function ActionEditor({
                 action={action}
                 index={index}
                 callableLists={callableLists}
+                allowedSpells={allowedSpells}
                 onUpdate={(updates) => handleUpdateAction(action.id, updates)}
                 onDelete={() => handleDeleteAction(action.id)}
                 onDuplicate={() => handleDuplicateAction(action.id)}
@@ -202,33 +197,16 @@ export function ActionEditor({
 
         {/* Add action button */}
         {list.actions.length > 0 && (
-          <div className="mt-4 flex gap-2">
-            <SpellPicker onSelect={handleAddSpell}>
-              <Button variant="outline" className="flex-1 border-dashed">
-                <PlusIcon className="size-4 mr-2" />
-                Add Spell
-              </Button>
-            </SpellPicker>
-            {callableLists.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-dashed">
-                    <ListTreeIcon className="size-4 mr-2" />
-                    Call List
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {callableLists.map((clist) => (
-                    <DropdownMenuItem
-                      key={clist.id}
-                      onClick={() => handleAddCallList(clist.id)}
-                    >
-                      {clist.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+          <div className="mt-4">
+            <ActionPicker
+              allowedSpells={allowedSpells}
+              callableLists={callableLists}
+              onAddSpell={handleAddSpell}
+              onAddItem={handleAddItem}
+              onAddCallList={handleAddCallList}
+              variant="dashed"
+              className="w-full"
+            />
           </div>
         )}
       </div>

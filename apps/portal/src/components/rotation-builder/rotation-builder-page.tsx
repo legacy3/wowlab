@@ -54,9 +54,23 @@ import { SpecPicker } from "@/components/ui/spec-picker";
 import { RotationSidebar } from "./rotation-sidebar";
 import { ActionList } from "./action-editor";
 import { RotationPreview } from "./rotation-preview";
-import { BM_HUNTER_SPELLS, type SpellInfo } from "./data";
 import type { Action, ActionListInfo, Variable, ListType } from "./types";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Spell options for the action editor dropdown (simplified list for demo)
+type SpellInfo = { name: string; label: string };
+const DEFAULT_SPELL_OPTIONS: SpellInfo[] = [
+  { name: "kill_command", label: "Kill Command" },
+  { name: "bestial_wrath", label: "Bestial Wrath" },
+  { name: "barbed_shot", label: "Barbed Shot" },
+  { name: "cobra_shot", label: "Cobra Shot" },
+  { name: "call_of_the_wild", label: "Call of the Wild" },
+  { name: "kill_shot", label: "Kill Shot" },
+  { name: "dire_beast", label: "Dire Beast" },
+  { name: "bloodshed", label: "Bloodshed" },
+  { name: "multi_shot", label: "Multi-Shot" },
+  { name: "aspect_of_the_wild", label: "Aspect of the Wild" },
+];
 
 // =============================================================================
 // Main Component
@@ -168,10 +182,7 @@ export function RotationBuilderPage() {
   });
 
   // Memoize spells array to prevent unnecessary re-renders
-  const spells = useMemo<SpellInfo[]>(
-    () => BM_HUNTER_SPELLS.map((s) => ({ name: s.name, label: s.label })),
-    [],
-  );
+  const spells = useMemo<SpellInfo[]>(() => DEFAULT_SPELL_OPTIONS, []);
 
   // Memoize action lists for call_action_list selector (only sub lists can be called)
   const callableActionLists = useMemo(

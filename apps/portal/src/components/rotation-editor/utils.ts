@@ -1,8 +1,7 @@
 import { capitalCase, snakeCase, kebabCase } from "change-case";
 import type { RuleGroupType, RuleType } from "react-querybuilder";
 
-import { getSpellById } from "./data";
-import type { RotationDraft, Variable } from "./types";
+import type { RotationDraft } from "./types";
 
 // =============================================================================
 // Name Conversion
@@ -105,19 +104,21 @@ export function generateDSL(draft: RotationDraft, specName: string): string {
   for (const list of draft.lists) {
     lines.push(`actions.${list.name}:`);
     for (const action of list.actions) {
-      if (!action.enabled) continue;
-      let spell: string;
+      if (!action.enabled) {
+        continue;
+      }
+      let actionStr: string;
       if (action.type === "call_action_list") {
         const targetList = draft.lists.find((l) => l.id === action.listId);
-        spell = `call_action_list,name=${targetList?.name ?? action.listId}`;
+        actionStr = `call_action_list,name=${targetList?.name ?? action.listId}`;
+      } else if (action.type === "item") {
+        actionStr = `use_item,item_id=${action.itemId ?? 0}`;
       } else {
-        const spellData = action.spellId
-          ? getSpellById(action.spellId)
-          : undefined;
-        spell = spellData?.name ?? `spell_${action.spellId}`;
+        // Spell action - use spell ID in DSL format
+        actionStr = `spell_${action.spellId ?? 0}`;
       }
       const cond = formatConditionForDSL(action.condition);
-      lines.push(cond ? `  ${spell},if=${cond}` : `  ${spell}`);
+      lines.push(cond ? `  ${actionStr},if=${cond}` : `  ${actionStr}`);
     }
     lines.push("");
   }
@@ -191,24 +192,25 @@ export function generateNatural(
 
     let priority = 1;
     for (const action of list.actions) {
-      if (!action.enabled) continue;
+      if (!action.enabled) {
+        continue;
+      }
 
-      let spellName: string;
+      let actionName: string;
       if (action.type === "call_action_list") {
         const targetList = draft.lists.find((l) => l.id === action.listId);
-        spellName = `Call ${targetList?.label ?? "Unknown"}`;
+        actionName = `Call ${targetList?.label ?? "Unknown"}`;
+      } else if (action.type === "item") {
+        actionName = `Use Item #${action.itemId}`;
       } else {
-        const spellData = action.spellId
-          ? getSpellById(action.spellId)
-          : undefined;
-        spellName = spellData?.label ?? `Spell #${action.spellId}`;
+        actionName = `Spell #${action.spellId}`;
       }
 
       const conditionStr = formatConditionsForNatural(action.condition);
       if (conditionStr) {
-        lines.push(`  ${priority}. ${spellName} - when ${conditionStr}`);
+        lines.push(`  ${priority}. ${actionName} - when ${conditionStr}`);
       } else {
-        lines.push(`  ${priority}. ${spellName}`);
+        lines.push(`  ${priority}. ${actionName}`);
       }
       priority++;
     }

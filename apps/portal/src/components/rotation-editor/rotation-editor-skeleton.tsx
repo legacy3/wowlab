@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { CardLoader } from "@/components/ui/flask-loader";
 
 export function RotationEditorSkeleton() {
   return (
@@ -21,10 +22,8 @@ export function RotationEditorSkeleton() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-5 space-y-2">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
+        <div className="flex-1 flex items-center justify-center">
+          <CardLoader message="Loading rotation..." />
         </div>
       </div>
     </div>
