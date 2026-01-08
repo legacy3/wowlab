@@ -12,6 +12,7 @@ export {
   BM_HUNTER_TALENT_OPTIONS,
   getSpellById,
   getSpellByName,
+  toTooltipData,
   createOption,
   createSpell,
   type SpellData,

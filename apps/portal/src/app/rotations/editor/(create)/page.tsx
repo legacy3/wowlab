@@ -14,10 +14,6 @@ export default async function CreateRotationPage({ searchParams }: Props) {
   }
 
   return (
-    <RotationEditor
-      rotation={null}
-      specId={specIdNum}
-      onSave={handleSave}
-    />
+    <RotationEditor rotation={null} specId={specIdNum} onSave={handleSave} />
   );
 }

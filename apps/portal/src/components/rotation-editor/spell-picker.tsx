@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-import { BM_HUNTER_SPELL_DATA, type SpellData } from "./data";
+import { BM_HUNTER_SPELL_DATA, toTooltipData, type SpellData } from "./data";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -38,19 +38,6 @@ interface SpellPickerProps {
   placeholder?: string;
   /** Additional className for trigger */
   className?: string;
-}
-
-/** Convert SpellData to tooltip format */
-function toTooltipData(spell: SpellData) {
-  return {
-    name: spell.label,
-    castTime: "Instant",
-    cooldown: spell.cooldown ? `${spell.cooldown} sec` : undefined,
-    cost: spell.cost ? `${spell.cost} ${spell.costType ?? "Focus"}` : undefined,
-    range: spell.range ? `${spell.range} yd range` : undefined,
-    description: spell.description,
-    iconName: spell.iconName,
-  };
 }
 
 // -----------------------------------------------------------------------------
@@ -133,7 +120,10 @@ export function SpellPicker({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("h-7 w-40 justify-between gap-1.5 px-2 text-xs", className)}
+          className={cn(
+            "h-7 w-40 justify-between gap-1.5 px-2 text-xs",
+            className,
+          )}
         >
           {selectedSpell ? (
             <SpellTooltip spell={toTooltipData(selectedSpell)}>
@@ -147,7 +137,9 @@ export function SpellPicker({
               </span>
             </SpellTooltip>
           ) : (
-            <span className="truncate text-muted-foreground">{placeholder}</span>
+            <span className="truncate text-muted-foreground">
+              {placeholder}
+            </span>
           )}
           <ChevronsUpDownIcon className="size-3 shrink-0 opacity-50" />
         </Button>

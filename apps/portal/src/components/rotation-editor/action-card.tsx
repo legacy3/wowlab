@@ -32,22 +32,9 @@ import { cn } from "@/lib/utils";
 
 import { ConditionBuilder } from "./condition-builder";
 import { SpellPicker } from "./spell-picker";
-import { getSpellById, type SpellData } from "./data";
+import { getSpellById, toTooltipData } from "./data";
 import type { Action, ActionType } from "./types";
 import { getConditionSummary } from "./utils";
-
-/** Convert SpellData to tooltip format */
-function toTooltipData(spell: SpellData) {
-  return {
-    name: spell.label,
-    castTime: "Instant",
-    cooldown: spell.cooldown ? `${spell.cooldown} sec` : undefined,
-    cost: spell.cost ? `${spell.cost} ${spell.costType ?? "Focus"}` : undefined,
-    range: spell.range ? `${spell.range} yd range` : undefined,
-    description: spell.description,
-    iconName: spell.iconName,
-  };
-}
 
 // -----------------------------------------------------------------------------
 // Types
@@ -100,7 +87,12 @@ export const ActionCard = memo(function ActionCard({
   ) : spell ? (
     <SpellTooltip spell={toTooltipData(spell)}>
       <div className="shrink-0 overflow-hidden rounded-md border">
-        <GameIcon iconName={spell.iconName} size="medium" width={36} height={36} />
+        <GameIcon
+          iconName={spell.iconName}
+          size="medium"
+          width={36}
+          height={36}
+        />
       </div>
     </SpellTooltip>
   ) : (
@@ -123,7 +115,10 @@ export const ActionCard = memo(function ActionCard({
           <GripVerticalIcon className="size-4 text-muted-foreground/40 cursor-grab" />
 
           {/* Priority */}
-          <Badge variant="secondary" className="size-6 p-0 justify-center text-xs">
+          <Badge
+            variant="secondary"
+            className="size-6 p-0 justify-center text-xs"
+          >
             {index + 1}
           </Badge>
 

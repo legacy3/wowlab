@@ -22,10 +22,5 @@ export default async function EditRotationPage({ params }: Props) {
     // TODO: Update in DB
   }
 
-  return (
-    <RotationEditor
-      rotation={rotation}
-      onSave={handleSave}
-    />
-  );
+  return <RotationEditor rotation={rotation} onSave={handleSave} />;
 }

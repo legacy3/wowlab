@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useZenMode } from "@/hooks/use-zen-mode";
+import { useJsonExport } from "@/hooks/use-json-export";
 
 import {
   // State atoms
@@ -156,16 +157,15 @@ export function RotationBuilderPage() {
     resetBuilder();
   }, [resetBuilder]);
 
-  const handleExport = useCallback(() => {
-    const json = JSON.stringify(rotationData, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rotation-${specId ?? "unknown"}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [rotationData, specId]);
+  // Export hook
+  const { downloadJson } = useJsonExport({
+    data: rotationData,
+    filenamePrefix: "rotation",
+    filenameTag: specId?.toString(),
+    patchVersion: "11.1",
+    label: "rotation",
+    resetKey: specId,
+  });
 
   // Memoize spells array to prevent unnecessary re-renders
   const spells = useMemo<SpellInfo[]>(
@@ -277,7 +277,7 @@ export function RotationBuilderPage() {
                 variant="ghost"
                 size="icon"
                 className="size-7"
-                onClick={handleExport}
+                onClick={downloadJson}
               >
                 <DownloadIcon className="size-3.5" />
               </Button>

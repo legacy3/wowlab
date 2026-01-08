@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useVariableValidation } from "@/hooks/rotations/use-variable-validation";
 
 import type { Variable } from "./types";
 
@@ -45,6 +46,11 @@ export function VariableEditor({
   const [error, setError] = useState<string | null>(null);
   const isEditing = !!variable;
 
+  const { validate } = useVariableValidation({
+    existingNames,
+    currentName: variable?.name,
+  });
+
   useEffect(() => {
     if (open) {
       setName(variable?.name ?? "");
@@ -54,41 +60,30 @@ export function VariableEditor({
   }, [open, variable]);
 
   const handleSave = useCallback(() => {
-    const trimmedName = name.trim();
-    const trimmedExpr = expression.trim();
-
-    if (!trimmedName) {
-      setError("Name is required");
-      return;
-    }
-    if (!trimmedExpr) {
-      setError("Expression is required");
-      return;
-    }
-    if (!/^[a-z_][a-z0-9_]*$/i.test(trimmedName)) {
-      setError("Invalid name format");
-      return;
-    }
-    const otherNames = existingNames.filter((n) => n !== variable?.name);
-    if (otherNames.includes(trimmedName)) {
-      setError("Name already exists");
+    const validationError = validate(name, expression);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
-    onSave({ name: trimmedName, expression: trimmedExpr });
+    onSave({ name: name.trim(), expression: expression.trim() });
     onOpenChange(false);
-  }, [name, expression, existingNames, variable, onSave, onOpenChange]);
+  }, [name, expression, validate, onSave, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Variable" : "New Variable"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Variable" : "New Variable"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Name</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Name
+            </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-mono">
                 $
@@ -107,7 +102,9 @@ export function VariableEditor({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Expression</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Expression
+            </label>
             <Input
               value={expression}
               onChange={(e) => {
@@ -143,9 +140,7 @@ export function VariableEditor({
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {isEditing ? "Save" : "Add"}
-            </Button>
+            <Button onClick={handleSave}>{isEditing ? "Save" : "Add"}</Button>
           </div>
         </DialogFooter>
       </DialogContent>

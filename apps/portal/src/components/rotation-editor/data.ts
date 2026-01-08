@@ -50,7 +50,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cost: 30,
     costType: "focus",
     range: 50,
-    description: "Give the command to kill, causing your pet to savagely deal Physical damage to the enemy.",
+    description:
+      "Give the command to kill, causing your pet to savagely deal Physical damage to the enemy.",
   },
   {
     id: 19574,
@@ -60,7 +61,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cooldown: 90,
     duration: 15,
     range: 100,
-    description: "Sends you and your pet into a rage, increasing all damage you both deal by 25% for 15 sec.",
+    description:
+      "Sends you and your pet into a rage, increasing all damage you both deal by 25% for 15 sec.",
   },
   {
     id: 217200,
@@ -71,7 +73,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     charges: 2,
     duration: 12,
     range: 40,
-    description: "Fire a shot that tears through your enemy, causing them to bleed and sending your pet into a frenzy.",
+    description:
+      "Fire a shot that tears through your enemy, causing them to bleed and sending your pet into a frenzy.",
   },
   {
     id: 193455,
@@ -81,7 +84,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cost: 35,
     costType: "focus",
     range: 40,
-    description: "A quick shot causing Physical damage. Reduces the cooldown of Kill Command.",
+    description:
+      "A quick shot causing Physical damage. Reduces the cooldown of Kill Command.",
   },
   {
     id: 359844,
@@ -91,7 +95,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cooldown: 120,
     duration: 20,
     range: 40,
-    description: "Sound the call of the wild, summoning your active pets to assault your target.",
+    description:
+      "Sound the call of the wild, summoning your active pets to assault your target.",
   },
   {
     id: 53351,
@@ -103,14 +108,16 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cost: 10,
     costType: "focus",
     range: 40,
-    description: "Attempt to finish off a wounded target. Only usable on enemies with less than 20% health.",
+    description:
+      "Attempt to finish off a wounded target. Only usable on enemies with less than 20% health.",
   },
   {
     id: 120679,
     name: "dire_beast",
     label: "Dire Beast",
     iconName: "ability_hunter_longevity",
-    description: "Damage from your bleed effects has a chance of attracting a powerful wild beast.",
+    description:
+      "Damage from your bleed effects has a chance of attracting a powerful wild beast.",
   },
   {
     id: 321530,
@@ -119,7 +126,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     iconName: "ability_druid_primaltenacity",
     cooldown: 60,
     range: 50,
-    description: "Command your pets to tear into your target, causing your target to bleed.",
+    description:
+      "Command your pets to tear into your target, causing your target to bleed.",
   },
   {
     id: 2643,
@@ -129,7 +137,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cost: 40,
     costType: "focus",
     range: 40,
-    description: "Fires several missiles, hitting all nearby enemies and triggering Beast Cleave.",
+    description:
+      "Fires several missiles, hitting all nearby enemies and triggering Beast Cleave.",
   },
   {
     id: 193530,
@@ -139,7 +148,8 @@ export const BM_HUNTER_SPELL_DATA: SpellData[] = [
     cooldown: 120,
     duration: 20,
     range: 40,
-    description: "Fire off a Cobra Shot at your current target and nearby enemies. Reduces Cobra Shot Focus cost.",
+    description:
+      "Fire off a Cobra Shot at your current target and nearby enemies. Reduces Cobra Shot Focus cost.",
   },
 ];
 
@@ -153,11 +163,24 @@ export function getSpellByName(name: string): SpellData | undefined {
   return BM_HUNTER_SPELL_DATA.find((s) => s.name === name);
 }
 
+/** Convert SpellData to tooltip format for SpellTooltip component */
+export function toTooltipData(spell: SpellData) {
+  return {
+    name: spell.label,
+    castTime: "Instant",
+    cooldown: spell.cooldown ? `${spell.cooldown} sec` : undefined,
+    cost: spell.cost ? `${spell.cost} ${spell.costType ?? "Focus"}` : undefined,
+    range: spell.range ? `${spell.range} yd range` : undefined,
+    description: spell.description,
+    iconName: spell.iconName,
+  };
+}
+
 // -----------------------------------------------------------------------------
-// Legacy exports for backward compatibility
+// Spell Options (simplified formats for UI components)
 // -----------------------------------------------------------------------------
 
-/** Canonical list of BM Hunter spells (legacy format) */
+/** BM Hunter spells as name/label pairs */
 export const BM_HUNTER_SPELLS: ReadonlyArray<{ name: string; label: string }> =
   BM_HUNTER_SPELL_DATA.map((s) => ({
     name: s.name,

@@ -111,7 +111,9 @@ export function generateDSL(draft: RotationDraft, specName: string): string {
         const targetList = draft.lists.find((l) => l.id === action.listId);
         spell = `call_action_list,name=${targetList?.name ?? action.listId}`;
       } else {
-        const spellData = action.spellId ? getSpellById(action.spellId) : undefined;
+        const spellData = action.spellId
+          ? getSpellById(action.spellId)
+          : undefined;
         spell = spellData?.name ?? `spell_${action.spellId}`;
       }
       const cond = formatConditionForDSL(action.condition);
@@ -156,7 +158,7 @@ function formatRuleForNatural(rule: RuleType | RuleGroupType): string {
   return parts.join(separator);
 }
 
-function formatConditionsForNatural(conditions: RuleGroupType): string {
+export function formatConditionsForNatural(conditions: RuleGroupType): string {
   if (!conditions.rules || conditions.rules.length === 0) return "";
 
   const parts = conditions.rules.map(formatRuleForNatural).filter(Boolean);
@@ -166,7 +168,10 @@ function formatConditionsForNatural(conditions: RuleGroupType): string {
   return parts.join(separator);
 }
 
-export function generateNatural(draft: RotationDraft, specName: string): string {
+export function generateNatural(
+  draft: RotationDraft,
+  specName: string,
+): string {
   const lines: string[] = [];
   lines.push(specName + " Rotation");
   lines.push("");
@@ -193,7 +198,9 @@ export function generateNatural(draft: RotationDraft, specName: string): string 
         const targetList = draft.lists.find((l) => l.id === action.listId);
         spellName = `Call ${targetList?.label ?? "Unknown"}`;
       } else {
-        const spellData = action.spellId ? getSpellById(action.spellId) : undefined;
+        const spellData = action.spellId
+          ? getSpellById(action.spellId)
+          : undefined;
         spellName = spellData?.label ?? `Spell #${action.spellId}`;
       }
 
@@ -217,12 +224,15 @@ export function generateJSON(draft: RotationDraft): string {
 }
 
 // =============================================================================
-// ID Generation
+// ID Generation (re-export from @/lib/id)
 // =============================================================================
 
-export function generateId(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
-}
+export {
+  generateId,
+  generateActionId,
+  generateListId,
+  generateVariableId,
+} from "@/lib/id";
 
 // =============================================================================
 // Export Utilities

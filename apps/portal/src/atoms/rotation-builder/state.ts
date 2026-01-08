@@ -43,7 +43,7 @@ export interface ActionListWithActions {
   id: string;
   name: string;
   label: string;
-  /** @deprecated Use listType instead */
+  /** Whether this is the default entry point list (computed from rotationDefaultListIdAtom) */
   isDefault?: boolean;
   /** The type of list - determines execution behavior */
   listType: ListType;

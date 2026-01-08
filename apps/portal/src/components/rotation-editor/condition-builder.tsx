@@ -27,7 +27,10 @@ interface ConditionBuilderProps {
 // Component
 // -----------------------------------------------------------------------------
 
-export function ConditionBuilder({ condition, onChange }: ConditionBuilderProps) {
+export function ConditionBuilder({
+  condition,
+  onChange,
+}: ConditionBuilderProps) {
   return (
     <div className="space-y-1.5">
       <QueryBuilderDnD dnd={{ ...ReactDnD, ...ReactDnDHTML5Backend }}>

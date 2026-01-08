@@ -83,12 +83,19 @@ interface ActionListManagerProps {
   selectedListId: string | null;
   variables: Variable[];
   onSelectList: (id: string | null) => void;
-  onAddList: (input: { name: string; label: string; listType: ListType }) => void;
+  onAddList: (input: {
+    name: string;
+    label: string;
+    listType: ListType;
+  }) => void;
   onUpdateList: (input: { id: string; updates: { label?: string } }) => void;
   onDeleteList: (id: string) => void;
   onSetDefaultList: (id: string) => void;
   onAddVariable: (input: Omit<Variable, "id">) => void;
-  onUpdateVariable: (input: { id: string; updates: Partial<Omit<Variable, "id">> }) => void;
+  onUpdateVariable: (input: {
+    id: string;
+    updates: Partial<Omit<Variable, "id">>;
+  }) => void;
   onDeleteVariable: (id: string) => void;
 }
 
@@ -482,7 +489,9 @@ export function ActionListManager({
                   list={list}
                   isSelected={list.id === selectedListId}
                   onSelect={() => onSelectList(list.id)}
-                  onRename={(label) => onUpdateList({ id: list.id, updates: { label } })}
+                  onRename={(label) =>
+                    onUpdateList({ id: list.id, updates: { label } })
+                  }
                   onDelete={() =>
                     setDeleteDialog({
                       open: true,

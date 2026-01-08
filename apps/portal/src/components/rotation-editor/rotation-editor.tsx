@@ -12,7 +12,11 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { SpecPicker } from "@/components/ui/spec-picker";
 import { useZenMode } from "@/hooks/use-zen-mode";
 import { cn } from "@/lib/utils";
@@ -63,7 +67,11 @@ interface RotationEditorProps {
 // Component
 // -----------------------------------------------------------------------------
 
-export function RotationEditor({ rotation, specId, onSave }: RotationEditorProps) {
+export function RotationEditor({
+  rotation,
+  specId,
+  onSave,
+}: RotationEditorProps) {
   // State
   const draft = useAtomValue(rotationDraftAtom);
   const viewMode = useAtomValue(viewModeAtom);

@@ -2,12 +2,15 @@
 
 import { Code2Icon, BracesIcon, TextIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { RuleGroupType, RuleType } from "react-querybuilder";
 
 import { CodeBlock } from "@/components/ui/code-block";
 import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
 import { cn } from "@/lib/utils";
 
+import {
+  formatConditionForDSL,
+  formatConditionsForNatural,
+} from "../rotation-editor/utils";
 import type { RotationData } from "./types";
 
 // -----------------------------------------------------------------------------
@@ -19,51 +22,15 @@ export interface RotationPreviewProps {
 }
 
 // -----------------------------------------------------------------------------
-// Format Generators
+// Format Generators (using shared utilities from rotation-editor)
 // -----------------------------------------------------------------------------
-
-function isRuleType(rule: RuleType | RuleGroupType): rule is RuleType {
-  return "field" in rule && "operator" in rule;
-}
-
-function formatConditionForDSL(rule: RuleType | RuleGroupType): string {
-  if (isRuleType(rule)) {
-    const { field, operator, value } = rule;
-    // Format field names nicely
-    const fieldName = String(field).replace(/_/g, ".");
-    return `${fieldName}${operator}${value}`;
-  }
-
-  // It's a group
-  const group = rule as RuleGroupType;
-  if (!group.rules || group.rules.length === 0) return "";
-
-  const parts = group.rules.map(formatConditionForDSL).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0];
-
-  const separator = group.combinator === "and" ? "&" : "|";
-  return `(${parts.join(separator)})`;
-}
-
-function formatConditionsForDSL(conditions: RuleGroupType): string {
-  if (!conditions.rules || conditions.rules.length === 0) return "";
-
-  const parts = conditions.rules.map(formatConditionForDSL).filter(Boolean);
-  if (parts.length === 0) return "";
-
-  const separator = conditions.combinator === "and" ? "&" : "|";
-  return parts.join(separator);
-}
 
 function generateDSL(data: RotationData, specName: string): string {
   const lines: string[] = [];
 
-  // Header
   lines.push(`# ${specName} Rotation`);
   lines.push("");
 
-  // Variables
   if (data.variables.length > 0) {
     lines.push("variables:");
     for (const variable of data.variables) {
@@ -72,14 +39,15 @@ function generateDSL(data: RotationData, specName: string): string {
     lines.push("");
   }
 
-  // Action lists
   for (const list of data.actionLists) {
     lines.push(`actions.${list.name}:`);
 
     for (const action of list.actions) {
-      if (!action.enabled) continue;
+      if (!action.enabled) {
+        continue;
+      }
 
-      const conditionStr = formatConditionsForDSL(action.conditions);
+      const conditionStr = formatConditionForDSL(action.conditions);
       if (conditionStr) {
         lines.push(`  ${action.spell},if=${conditionStr}`);
       } else {
@@ -91,45 +59,6 @@ function generateDSL(data: RotationData, specName: string): string {
   }
 
   return lines.join("\n").trim();
-}
-
-function formatConditionForNatural(rule: RuleType | RuleGroupType): string {
-  if (isRuleType(rule)) {
-    const { field, operator, value } = rule;
-    const fieldName = String(field).replace(/_/g, " ");
-
-    const opMap: Record<string, string> = {
-      "=": "equals",
-      "!=": "does not equal",
-      ">": "is greater than",
-      ">=": "is at least",
-      "<": "is less than",
-      "<=": "is at most",
-    };
-
-    const opText = opMap[String(operator)] || String(operator);
-    return `${fieldName} ${opText} ${value}`;
-  }
-
-  const group = rule as RuleGroupType;
-  if (!group.rules || group.rules.length === 0) return "";
-
-  const parts = group.rules.map(formatConditionForNatural).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0];
-
-  const separator = group.combinator === "and" ? " AND " : " OR ";
-  return parts.join(separator);
-}
-
-function formatConditionsForNatural(conditions: RuleGroupType): string {
-  if (!conditions.rules || conditions.rules.length === 0) return "";
-
-  const parts = conditions.rules.map(formatConditionForNatural).filter(Boolean);
-  if (parts.length === 0) return "";
-
-  const separator = conditions.combinator === "and" ? " AND " : " OR ";
-  return parts.join(separator);
 }
 
 function generateNatural(data: RotationData, specName: string): string {
@@ -153,7 +82,9 @@ function generateNatural(data: RotationData, specName: string): string {
 
     let priority = 1;
     for (const action of list.actions) {
-      if (!action.enabled) continue;
+      if (!action.enabled) {
+        continue;
+      }
 
       const spellName = action.spell
         .split("_")

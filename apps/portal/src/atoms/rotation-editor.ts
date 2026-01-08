@@ -1,6 +1,7 @@
 "use client";
 
 import { atom } from "jotai";
+import { generateActionId, generateListId, generateVariableId } from "@/lib/id";
 import type {
   Rotation,
   RotationDraft,
@@ -82,7 +83,10 @@ export const callableListsAtom = atom((get) => {
 export const statsAtom = atom((get) => {
   const draft = get(rotationDraftAtom);
   if (!draft) return { lists: 0, actions: 0, variables: 0 };
-  const totalActions = draft.lists.reduce((sum, l) => sum + l.actions.length, 0);
+  const totalActions = draft.lists.reduce(
+    (sum, l) => sum + l.actions.length,
+    0,
+  );
   return {
     lists: draft.lists.length,
     actions: totalActions,
@@ -103,7 +107,7 @@ export const initRotationAtom = atom(
     set(rotationDraftAtom, rotation ? { ...rotation } : createEmptyDraft());
     set(selectedListIdAtom, rotation?.defaultListId ?? null);
     set(viewModeAtom, "edit");
-  }
+  },
 );
 
 export const initNewRotationAtom = atom(null, (get, set, specId: number) => {
@@ -126,16 +130,19 @@ export const setNameAtom = atom(null, (get, set, name: string) => {
   set(rotationDraftAtom, (prev) => (prev ? { ...prev, name } : null));
 });
 
-export const setDescriptionAtom = atom(null, (get, set, description: string) => {
-  set(rotationDraftAtom, (prev) => (prev ? { ...prev, description } : null));
-});
+export const setDescriptionAtom = atom(
+  null,
+  (get, set, description: string) => {
+    set(rotationDraftAtom, (prev) => (prev ? { ...prev, description } : null));
+  },
+);
 
 // --- Lists ---
 
 export const addListAtom = atom(
   null,
   (get, set, input: { name: string; label: string; listType: ListType }) => {
-    const id = generateId("list");
+    const id = generateListId();
     const newList: ActionList = {
       id,
       name: input.name,
@@ -149,7 +156,7 @@ export const addListAtom = atom(
     });
     set(selectedListIdAtom, id);
     return id;
-  }
+  },
 );
 
 export const updateListAtom = atom(
@@ -157,7 +164,10 @@ export const updateListAtom = atom(
   (
     get,
     set,
-    { id, updates }: { id: string; updates: Partial<Pick<ActionList, "name" | "label">> }
+    {
+      id,
+      updates,
+    }: { id: string; updates: Partial<Pick<ActionList, "name" | "label">> },
   ) => {
     set(rotationDraftAtom, (prev) => {
       if (!prev) return null;
@@ -166,7 +176,7 @@ export const updateListAtom = atom(
         lists: prev.lists.map((l) => (l.id === id ? { ...l, ...updates } : l)),
       };
     });
-  }
+  },
 );
 
 export const deleteListAtom = atom(null, (get, set, id: string) => {
@@ -177,7 +187,7 @@ export const deleteListAtom = atom(null, (get, set, id: string) => {
     if (!prev) return null;
     const newLists = prev.lists.filter((l) => l.id !== id);
     const newDefaultId =
-      prev.defaultListId === id ? newLists[0]?.id ?? "" : prev.defaultListId;
+      prev.defaultListId === id ? (newLists[0]?.id ?? "") : prev.defaultListId;
     return { ...prev, lists: newLists, defaultListId: newDefaultId };
   });
 
@@ -189,7 +199,7 @@ export const deleteListAtom = atom(null, (get, set, id: string) => {
 
 export const setDefaultListAtom = atom(null, (get, set, id: string) => {
   set(rotationDraftAtom, (prev) =>
-    prev ? { ...prev, defaultListId: id } : null
+    prev ? { ...prev, defaultListId: id } : null,
   );
 });
 
@@ -202,7 +212,7 @@ export const selectListAtom = atom(null, (get, set, id: string | null) => {
 export const addActionAtom = atom(
   null,
   (get, set, { listId, spellId }: { listId: string; spellId: number }) => {
-    const id = generateId("action");
+    const id = generateActionId();
     const newAction: Action = {
       id,
       type: "spell",
@@ -215,12 +225,12 @@ export const addActionAtom = atom(
       return {
         ...prev,
         lists: prev.lists.map((l) =>
-          l.id === listId ? { ...l, actions: [...l.actions, newAction] } : l
+          l.id === listId ? { ...l, actions: [...l.actions, newAction] } : l,
         ),
       };
     });
     return id;
-  }
+  },
 );
 
 export const addCallListActionAtom = atom(
@@ -228,9 +238,9 @@ export const addCallListActionAtom = atom(
   (
     get,
     set,
-    { listId, targetListId }: { listId: string; targetListId: string }
+    { listId, targetListId }: { listId: string; targetListId: string },
   ) => {
-    const id = generateId("action");
+    const id = generateActionId();
     const newAction: Action = {
       id,
       type: "call_action_list",
@@ -243,12 +253,12 @@ export const addCallListActionAtom = atom(
       return {
         ...prev,
         lists: prev.lists.map((l) =>
-          l.id === listId ? { ...l, actions: [...l.actions, newAction] } : l
+          l.id === listId ? { ...l, actions: [...l.actions, newAction] } : l,
         ),
       };
     });
     return id;
-  }
+  },
 );
 
 export const updateActionAtom = atom(
@@ -264,7 +274,7 @@ export const updateActionAtom = atom(
       listId: string;
       actionId: string;
       updates: Partial<Omit<Action, "id">>;
-    }
+    },
   ) => {
     set(rotationDraftAtom, (prev) => {
       if (!prev) return null;
@@ -275,14 +285,14 @@ export const updateActionAtom = atom(
             ? {
                 ...l,
                 actions: l.actions.map((a) =>
-                  a.id === actionId ? { ...a, ...updates } : a
+                  a.id === actionId ? { ...a, ...updates } : a,
                 ),
               }
-            : l
+            : l,
         ),
       };
     });
-  }
+  },
 );
 
 export const deleteActionAtom = atom(
@@ -295,11 +305,11 @@ export const deleteActionAtom = atom(
         lists: prev.lists.map((l) =>
           l.id === listId
             ? { ...l, actions: l.actions.filter((a) => a.id !== actionId) }
-            : l
+            : l,
         ),
       };
     });
-  }
+  },
 );
 
 export const reorderActionsAtom = atom(
@@ -309,12 +319,10 @@ export const reorderActionsAtom = atom(
       if (!prev) return null;
       return {
         ...prev,
-        lists: prev.lists.map((l) =>
-          l.id === listId ? { ...l, actions } : l
-        ),
+        lists: prev.lists.map((l) => (l.id === listId ? { ...l, actions } : l)),
       };
     });
-  }
+  },
 );
 
 export const duplicateActionAtom = atom(
@@ -332,7 +340,7 @@ export const duplicateActionAtom = atom(
     const original = list.actions[actionIndex];
     const duplicate: Action = {
       ...structuredClone(original),
-      id: generateId("action"),
+      id: generateActionId(),
     };
 
     set(rotationDraftAtom, (prev) => {
@@ -347,7 +355,7 @@ export const duplicateActionAtom = atom(
         }),
       };
     });
-  }
+  },
 );
 
 // --- Variables ---
@@ -355,14 +363,14 @@ export const duplicateActionAtom = atom(
 export const addVariableAtom = atom(
   null,
   (get, set, input: Omit<Variable, "id">) => {
-    const id = generateId("var");
+    const id = generateVariableId();
     const newVar: Variable = { id, ...input };
     set(rotationDraftAtom, (prev) => {
       if (!prev) return null;
       return { ...prev, variables: [...prev.variables, newVar] };
     });
     return id;
-  }
+  },
 );
 
 export const updateVariableAtom = atom(
@@ -370,18 +378,18 @@ export const updateVariableAtom = atom(
   (
     get,
     set,
-    { id, updates }: { id: string; updates: Partial<Omit<Variable, "id">> }
+    { id, updates }: { id: string; updates: Partial<Omit<Variable, "id">> },
   ) => {
     set(rotationDraftAtom, (prev) => {
       if (!prev) return null;
       return {
         ...prev,
         variables: prev.variables.map((v) =>
-          v.id === id ? { ...v, ...updates } : v
+          v.id === id ? { ...v, ...updates } : v,
         ),
       };
     });
-  }
+  },
 );
 
 export const deleteVariableAtom = atom(null, (get, set, id: string) => {
@@ -405,12 +413,8 @@ export const toggleSidebarAtom = atom(null, (get, set) => {
 // Helpers
 // =============================================================================
 
-function generateId(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
-}
-
 function createEmptyDraft(specId?: number): RotationDraft {
-  const mainListId = generateId("list");
+  const mainListId = generateListId();
   return {
     specId: specId ?? 0,
     name: "",

@@ -10,3 +10,7 @@ export {
   useRustSimConfig,
   extractSpellIdsFromScript,
 } from "./use-rust-sim-config";
+export {
+  useVariableValidation,
+  isValidVariableName,
+} from "./use-variable-validation";

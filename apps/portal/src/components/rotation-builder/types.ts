@@ -40,7 +40,7 @@ export interface ActionListInfo {
   id: string;
   name: string; // internal: "cooldowns"
   label: string; // display: "Cooldowns"
-  /** @deprecated Use listType instead */
+  /** Whether this is the default entry point list */
   isDefault?: boolean;
   /** The type of list - determines execution behavior */
   listType: ListType;
