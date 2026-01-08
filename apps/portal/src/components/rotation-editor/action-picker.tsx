@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   PlusIcon,
   SparklesIcon,
@@ -36,7 +36,7 @@ import type { AllowedSpell } from "./spell-picker";
 // Types
 // -----------------------------------------------------------------------------
 
-type PickerView = "menu" | "spell" | "item";
+type PickerView = "menu" | "spell" | "item" | "list";
 
 interface ActionPickerProps {
   /** Allowed spells for this spec */
@@ -175,6 +175,18 @@ export function ActionPicker({
         : allowedSpells
       : [];
 
+  // Filter lists by search query
+  const filteredLists = useMemo(() => {
+    if (view !== "list") return [];
+    if (!searchQuery.trim()) return callableLists;
+    const query = searchQuery.toLowerCase();
+    return callableLists.filter(
+      (list) =>
+        list.name.toLowerCase().includes(query) ||
+        list.label.toLowerCase().includes(query),
+    );
+  }, [view, searchQuery, callableLists]);
+
   const trigger = children || (
     <Button
       variant={variant === "dashed" ? "outline" : variant}
@@ -189,41 +201,32 @@ export function ActionPicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        className="p-0"
-        align="start"
-        style={{ width: "var(--radix-popover-trigger-width)" }}
-      >
+      <PopoverContent className="p-0 w-72" align="start">
         {view === "menu" ? (
-          // Main menu - horizontal tiles
+          // Main menu - 3 fixed categories
           <div className="p-2">
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setView("spell")}
-                className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
               >
                 <SparklesIcon className="size-5 text-amber-500" />
                 <span className="text-xs font-medium">Spell</span>
               </button>
               <button
                 onClick={() => setView("item")}
-                className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
               >
                 <PackageIcon className="size-5 text-purple-500" />
                 <span className="text-xs font-medium">Item</span>
               </button>
-              {callableLists.map((list) => (
-                <button
-                  key={list.id}
-                  onClick={() => handleCallListSelect(list.id)}
-                  className="flex-1 flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
-                >
-                  <ListTreeIcon className="size-5 text-blue-500" />
-                  <span className="text-xs font-medium truncate max-w-full">
-                    {list.label}
-                  </span>
-                </button>
-              ))}
+              <button
+                onClick={() => setView("list")}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-transparent hover:border-border hover:bg-accent/50 transition-colors"
+              >
+                <ListTreeIcon className="size-5 text-blue-500" />
+                <span className="text-xs font-medium">List</span>
+              </button>
             </div>
           </div>
         ) : view === "spell" ? (
@@ -261,7 +264,7 @@ export function ActionPicker({
               )}
             </CommandList>
           </Command>
-        ) : (
+        ) : view === "item" ? (
           // Item picker
           <Command shouldFilter={false}>
             <div className="flex items-center border-b px-2">
@@ -302,6 +305,47 @@ export function ActionPicker({
                       <span className="truncate">
                         {item.Display_lang ?? `Item ${item.ID}`}
                       </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        ) : (
+          // List picker
+          <Command shouldFilter={false}>
+            <div className="flex items-center border-b px-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0"
+                onClick={goBack}
+              >
+                <ArrowLeftIcon className="size-4" />
+              </Button>
+              <CommandInput
+                placeholder="Search lists..."
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                className="border-0 focus:ring-0"
+              />
+            </div>
+            <CommandList>
+              {callableLists.length === 0 ? (
+                <CommandEmpty>No lists available.</CommandEmpty>
+              ) : filteredLists.length === 0 ? (
+                <CommandEmpty>No lists found.</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {filteredLists.map((list) => (
+                    <CommandItem
+                      key={list.id}
+                      value={list.label}
+                      onSelect={() => handleCallListSelect(list.id)}
+                      className="flex items-center gap-2"
+                    >
+                      <ListTreeIcon className="size-4 text-blue-500" />
+                      <span className="truncate">{list.label}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
