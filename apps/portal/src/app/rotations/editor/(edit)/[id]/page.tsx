@@ -1,22 +1,31 @@
-import { unauthorized } from "next/navigation";
-import { RotationEditor } from "@/components/rotations/editor";
-import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { RotationEditor } from "@/components/rotation-editor";
 
-type Props = {
+interface Props {
   params: Promise<{ id: string }>;
-};
+}
 
 export default async function EditRotationPage({ params }: Props) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // TODO: Fetch rotation from DB
+  // const rotation = await getRotation(id);
+  // if (!rotation) {
+  //   notFound();
+  // }
 
-  if (!user) {
-    unauthorized();
+  // For now, just render with null (will be new rotation mode)
+  const rotation = null;
+
+  async function handleSave() {
+    "use server";
+    // TODO: Update in DB
   }
 
-  return <RotationEditor rotationId={id} />;
+  return (
+    <RotationEditor
+      rotation={rotation}
+      onSave={handleSave}
+    />
+  );
 }

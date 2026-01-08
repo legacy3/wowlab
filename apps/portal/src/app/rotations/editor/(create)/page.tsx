@@ -1,22 +1,23 @@
-import { unauthorized } from "next/navigation";
-import { RotationEditor } from "@/components/rotations/editor";
-import { createClient } from "@/lib/supabase/server";
+import { RotationEditor } from "@/components/rotation-editor";
 
-type Props = {
-  searchParams: Promise<{ fork?: string }>;
-};
+interface Props {
+  searchParams: Promise<{ specId?: string }>;
+}
 
-export default async function RotationEditorPage({ searchParams }: Props) {
-  const { fork } = await searchParams;
+export default async function CreateRotationPage({ searchParams }: Props) {
+  const { specId } = await searchParams;
+  const specIdNum = specId ? parseInt(specId, 10) : 253; // Default to BM Hunter
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    unauthorized();
+  async function handleSave() {
+    "use server";
+    // TODO: Save to DB
   }
 
-  return <RotationEditor forkSourceId={fork} />;
+  return (
+    <RotationEditor
+      rotation={null}
+      specId={specIdNum}
+      onSave={handleSave}
+    />
+  );
 }
