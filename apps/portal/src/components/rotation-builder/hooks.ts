@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { toInternalName } from "./utils";
 
 // -----------------------------------------------------------------------------
 // Variable Validation Hook
@@ -105,10 +106,6 @@ export interface UseListNameValidationResult {
 export function useListNameValidation({
   existingNames,
 }: UseListNameValidationOptions): UseListNameValidationResult {
-  const toInternalName = useCallback((label: string): string => {
-    return label.toLowerCase().replace(/\s+/g, "_");
-  }, []);
-
   const isDuplicate = useCallback(
     (name: string) => {
       return existingNames.includes(name.toLowerCase());

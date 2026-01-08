@@ -112,3 +112,16 @@ export {
 } from "./data";
 
 export type { SpellInfo, SpellOption } from "./data";
+
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+
+export {
+  toInternalName,
+  toDisplayLabel,
+  getSpellLabel,
+  getConditionSummary,
+  formatConditionForDSL,
+  toFilename,
+} from "./utils";

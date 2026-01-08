@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, memo } from "react";
 import {
   PlusIcon,
   PencilIcon,
@@ -51,7 +51,7 @@ interface VariableItemProps {
   existingNames: string[];
 }
 
-function VariableItem({
+const VariableItem = memo(function VariableItem({
   variable,
   isEditing,
   onStartEdit,
@@ -207,7 +207,7 @@ function VariableItem({
       </div>
     </div>
   );
-}
+});
 
 // -----------------------------------------------------------------------------
 // Add Variable Form Component

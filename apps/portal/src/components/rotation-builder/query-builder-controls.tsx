@@ -14,12 +14,9 @@ import type {
 } from "react-querybuilder";
 import {
   getFirstOption,
-  getOption,
   isOptionGroupArray,
   parseNumber,
   useValueEditor,
-  useValueSelector,
-  TestID,
 } from "react-querybuilder";
 import {
   ChevronDownIcon,
@@ -72,8 +69,12 @@ function getRuleGroupSummary(ruleGroup: RuleGroupProps["ruleGroup"]): string {
   if (!ruleGroup?.rules) {
     return "Empty";
   }
-  const ruleCount = ruleGroup.rules.filter((r) => typeof r === "object" && r !== null && "field" in r).length;
-  const groupCount = ruleGroup.rules.filter((r) => typeof r === "object" && r !== null && "rules" in r).length;
+  const ruleCount = ruleGroup.rules.filter(
+    (r) => typeof r === "object" && r !== null && "field" in r,
+  ).length;
+  const groupCount = ruleGroup.rules.filter(
+    (r) => typeof r === "object" && r !== null && "rules" in r,
+  ).length;
 
   const parts: string[] = [];
   if (ruleCount > 0) {
@@ -82,19 +83,29 @@ function getRuleGroupSummary(ruleGroup: RuleGroupProps["ruleGroup"]): string {
   if (groupCount > 0) {
     parts.push(`${groupCount} group${groupCount !== 1 ? "s" : ""}`);
   }
+
   return parts.length > 0 ? parts.join(", ") : "Empty";
 }
 
 /** Get a label for the first rule to show in summary */
-function getFirstRuleLabel(ruleGroup: RuleGroupProps["ruleGroup"]): string | null {
+function getFirstRuleLabel(
+  ruleGroup: RuleGroupProps["ruleGroup"],
+): string | null {
   if (!ruleGroup?.rules?.length) {
     return null;
   }
   const firstRule = ruleGroup.rules[0];
-  if (typeof firstRule === "object" && firstRule !== null && "field" in firstRule && firstRule.field) {
+  if (
+    typeof firstRule === "object" &&
+    firstRule !== null &&
+    "field" in firstRule &&
+    firstRule.field
+  ) {
+
     // Try to make it readable
     const field = String(firstRule.field).replace(/_/g, " ");
     const value = firstRule.value ? ` = ${firstRule.value}` : "";
+
     return `${field}${value}`;
   }
   return null;
@@ -256,7 +267,10 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
               <ChevronRightIcon className="size-4 text-muted-foreground shrink-0" />
             )}
 
-            <Badge variant="outline" className="uppercase text-[10px] font-semibold">
+            <Badge
+              variant="outline"
+              className="uppercase text-[10px] font-semibold"
+            >
               {combinator}
             </Badge>
 
@@ -271,7 +285,10 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
             )}
 
             {isOpen && (
-              <div className="flex items-center gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center gap-1 flex-1"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <CombinatorSelector
                   {...commonProps}
                   options={schema.combinators}
@@ -296,19 +313,40 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
             )}
 
             {/* Actions - always visible */}
-            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="size-7" onClick={handleAddRule}>
+            <div
+              className="flex items-center gap-1 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={handleAddRule}
+              >
                 <PlusIcon className="size-3.5" />
               </Button>
               {schema.showCloneButtons && (
-                <Button variant="ghost" size="icon" className="size-7" onClick={() => {
-                  const newPath = [...path.slice(0, -1), path[path.length - 1] + 1];
-                  actions.moveRule(path, newPath, true);
-                }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => {
+                    const newPath = [
+                      ...path.slice(0, -1),
+                      path[path.length - 1] + 1,
+                    ];
+                    actions.moveRule(path, newPath, true);
+                  }}
+                >
                   <CopyIcon className="size-3.5" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={handleRemoveGroup}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-destructive hover:text-destructive"
+                onClick={handleRemoveGroup}
+              >
                 <XIcon className="size-3.5" />
               </Button>
             </div>
@@ -366,13 +404,28 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
 // -----------------------------------------------------------------------------
 
 export function ShadcnValueSelector(props: VersatileSelectorProps) {
-  const { val, onChange } = useValueSelector(props);
-  const { className, options, title, disabled } = props;
+  const { className, options, title, disabled, value, handleOnChange } = props;
 
-  const currentValue = Array.isArray(val) ? (val[0] ?? "") : (val ?? "");
-  const selectedOption = Array.isArray(val)
-    ? null
-    : getOption(options, val ?? "");
+  // Normalize value to string
+  const currentValue = Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
+
+  // Find option label for display
+  const getLabel = (val: string): string => {
+    if (isOptionGroupArray(options)) {
+      for (const group of options as OptionGroup[]) {
+        const opt = group.options.find((o) => (o.value ?? o.name) === val);
+        if (opt) {
+          return opt.label;
+        }
+      }
+
+      return val;
+    }
+    const opt = (options as OptionItem[]).find(
+      (o) => (o.value ?? o.name) === val,
+    );
+    return opt?.label ?? val;
+  };
 
   const renderOptions = () => {
     if (isOptionGroupArray(options)) {
@@ -380,7 +433,10 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
         <SelectGroup key={group.label}>
           <SelectLabel>{group.label}</SelectLabel>
           {group.options.map((opt) => (
-            <SelectItem key={opt.value ?? opt.name} value={String(opt.value ?? opt.name)}>
+            <SelectItem
+              key={opt.value ?? opt.name}
+              value={String(opt.value ?? opt.name)}
+            >
               {opt.label}
             </SelectItem>
           ))}
@@ -388,7 +444,10 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
       ));
     }
     return (options as OptionItem[]).map((opt) => (
-      <SelectItem key={opt.value ?? opt.name} value={String(opt.value ?? opt.name)}>
+      <SelectItem
+        key={opt.value ?? opt.name}
+        value={String(opt.value ?? opt.name)}
+      >
         {opt.label}
       </SelectItem>
     ));
@@ -397,15 +456,18 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
   return (
     <Select
       value={String(currentValue)}
-      onValueChange={onChange}
+      onValueChange={handleOnChange}
       disabled={disabled}
     >
-      <SelectTrigger className={cn("h-8", className)} title={title}>
+      <SelectTrigger
+        className={cn("h-8 min-w-[120px]", className)}
+        title={title}
+      >
         <SelectValue placeholder="Select...">
-          {selectedOption?.label ?? currentValue}
+          {currentValue ? getLabel(String(currentValue)) : "Select..."}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>{renderOptions()}</SelectContent>
+      <SelectContent className="max-h-[300px]">{renderOptions()}</SelectContent>
     </Select>
   );
 }
@@ -450,40 +512,53 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
   const placeholder = fieldData?.placeholder ?? "";
 
   // Handle between/notBetween
-  if ((operator === "between" || operator === "notBetween") && (type === "select" || type === "text")) {
+  if (
+    (operator === "between" || operator === "notBetween") &&
+    (type === "select" || type === "text")
+  ) {
     return (
-      <span data-testid={testID} className={cn("flex items-center gap-2", className)} title={title}>
-        {["from", "to"].map((key, i) =>
-          type === "text" ? (
-            <Input
-              key={key}
-              type={inputTypeCoerced}
-              placeholder={placeholder}
-              value={valueAsArray[i] ?? ""}
-              className={cn("h-8 w-[80px]", valueListItemClassName)}
-              disabled={disabled}
-              onChange={(e) => multiValueHandler(e.target.value, i)}
-            />
-          ) : (
-            <SelectorComponent
-              key={key}
-              {...propsForValueSelector}
-              schema={schema as Schema<FullField, string>}
-              className={cn("w-[100px]", valueListItemClassName)}
-              handleOnChange={(v) => multiValueHandler(v, i)}
-              disabled={disabled}
-              value={valueAsArray[i] ?? getFirstOption(values)}
-              options={values}
-              listsAsArrays={listsAsArrays}
-            />
+      <span
+        data-testid={testID}
+        className={cn("flex items-center gap-2", className)}
+        title={title}
+      >
+        {["from", "to"]
+          .map((key, i) =>
+            type === "text" ? (
+              <Input
+                key={key}
+                type={inputTypeCoerced}
+                placeholder={placeholder}
+                value={valueAsArray[i] ?? ""}
+                className={cn("h-8 w-[80px]", valueListItemClassName)}
+                disabled={disabled}
+                onChange={(e) => multiValueHandler(e.target.value, i)}
+              />
+            ) : (
+              <SelectorComponent
+                key={key}
+                {...propsForValueSelector}
+                schema={schema as Schema<FullField, string>}
+                className={cn("w-[100px]", valueListItemClassName)}
+                handleOnChange={(v) => multiValueHandler(v, i)}
+                disabled={disabled}
+                value={valueAsArray[i] ?? getFirstOption(values)}
+                options={values}
+                listsAsArrays={listsAsArrays}
+              />
+            ),
           )
-        ).reduce<React.ReactNode[]>((acc, el, i) => {
-          if (i === 1) {
-            acc.push(<span key="sep" className="text-muted-foreground text-xs">{separator ?? "–"}</span>);
-          }
-          acc.push(el);
-          return acc;
-        }, [])}
+          .reduce<React.ReactNode[]>((acc, el, i) => {
+            if (i === 1) {
+              acc.push(
+                <span key="sep" className="text-muted-foreground text-xs">
+                  {separator ?? "–"}
+                </span>,
+              );
+            }
+            acc.push(el);
+            return acc;
+          }, [])}
       </span>
     );
   }
@@ -591,7 +666,9 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
       className={cn("h-8 w-[100px]", className)}
       disabled={disabled}
       onChange={(e) =>
-        handleOnChange(parseNumber(e.target.value, { parseNumbers: parseNumberMethod }))
+        handleOnChange(
+          parseNumber(e.target.value, { parseNumbers: parseNumberMethod }),
+        )
       }
     />
   );
@@ -610,17 +687,41 @@ export function ShadcnActionElement({
   disabledTranslation,
 }: ActionProps) {
   const isDisabledWithTranslation = disabled && disabledTranslation;
+  const displayLabel = isDisabledWithTranslation
+    ? disabledTranslation.label
+    : label;
+  const displayTitle = isDisabledWithTranslation
+    ? disabledTranslation.title
+    : title;
+
+  // Check if label is a string (for add buttons) vs React element (for icons)
+  const isTextLabel = typeof displayLabel === "string";
+
+  if (isTextLabel) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn("h-7 text-xs", className)}
+        title={displayTitle}
+        onClick={handleOnClick}
+        disabled={disabled && !disabledTranslation}
+      >
+        {displayLabel}
+      </Button>
+    );
+  }
 
   return (
     <Button
       variant="ghost"
       size="icon"
       className={cn("size-7", className)}
-      title={isDisabledWithTranslation ? disabledTranslation.title : title}
+      title={displayTitle}
       onClick={handleOnClick}
       disabled={disabled && !disabledTranslation}
     >
-      {isDisabledWithTranslation ? disabledTranslation.label : label}
+      {displayLabel}
     </Button>
   );
 }
@@ -658,21 +759,22 @@ export function ShadcnNotToggle({
 // Drag Handle
 // -----------------------------------------------------------------------------
 
-export const ShadcnDragHandle = React.forwardRef<HTMLSpanElement, DragHandleProps>(
-  ({ className, title, disabled }, ref) => (
-    <span
-      ref={ref}
-      className={cn(
-        "cursor-grab text-muted-foreground hover:text-foreground",
-        disabled && "cursor-not-allowed opacity-50",
-        className
-      )}
-      title={title}
-    >
-      <GripVerticalIcon className="size-4" />
-    </span>
-  )
-);
+export const ShadcnDragHandle = React.forwardRef<
+  HTMLSpanElement,
+  DragHandleProps
+>(({ className, title, disabled }, ref) => (
+  <span
+    ref={ref}
+    className={cn(
+      "cursor-grab text-muted-foreground hover:text-foreground",
+      disabled && "cursor-not-allowed opacity-50",
+      className,
+    )}
+    title={title}
+  >
+    <GripVerticalIcon className="size-4" />
+  </span>
+));
 ShadcnDragHandle.displayName = "ShadcnDragHandle";
 
 // -----------------------------------------------------------------------------
@@ -699,10 +801,21 @@ export const shadcnInlineControlElements = {
 };
 
 export const shadcnTranslations = {
-  removeGroup: { label: <XIcon className="size-3.5" /> },
-  removeRule: { label: <XIcon className="size-3.5" /> },
-  cloneRuleGroup: { label: <CopyIcon className="size-3.5" /> },
-  cloneRule: { label: <CopyIcon className="size-3.5" /> },
+  addRule: { label: "+ Rule", title: "Add condition" },
+  addGroup: { label: "+ Group", title: "Add condition group" },
+  removeGroup: { label: <XIcon className="size-3.5" />, title: "Remove group" },
+  removeRule: {
+    label: <XIcon className="size-3.5" />,
+    title: "Remove condition",
+  },
+  cloneRuleGroup: {
+    label: <CopyIcon className="size-3.5" />,
+    title: "Clone group",
+  },
+  cloneRule: {
+    label: <CopyIcon className="size-3.5" />,
+    title: "Clone condition",
+  },
   lockGroup: { label: <UnlockIcon className="size-3.5" /> },
   lockRule: { label: <UnlockIcon className="size-3.5" /> },
   lockGroupDisabled: { label: <LockIcon className="size-3.5" /> },
@@ -710,10 +823,11 @@ export const shadcnTranslations = {
 };
 
 export const shadcnControlClassnames = {
-  rule: "flex items-center gap-2 rounded-md border bg-background px-2 py-1.5",
-  fields: "w-[140px]",
-  operators: "w-[80px]",
-  value: "flex-1",
+  rule: "flex flex-wrap items-center gap-2 rounded-md border bg-background px-2 py-1.5",
+  ruleGroup: "space-y-2",
+  fields: "min-w-[160px]",
+  operators: "w-[70px]",
+  value: "min-w-[120px] flex-1",
 };
 
 // -----------------------------------------------------------------------------
@@ -743,7 +857,7 @@ const selectField = (
   name: ConditionFieldName,
   label: string,
   values: ReturnType<typeof createOption>[],
-  defaultValue: string
+  defaultValue: string,
 ): Field => ({
   name,
   value: name,
@@ -758,7 +872,7 @@ const numberField = (
   name: ConditionFieldName,
   label: string,
   defaultOperator: string,
-  defaultValue: string
+  defaultValue: string,
 ): Field => ({
   name,
   value: name,
@@ -769,15 +883,30 @@ const numberField = (
 });
 
 export const CONDITION_FIELDS: Field[] = [
-  selectField("cooldown_ready", "Cooldown Ready", [...BM_HUNTER_SPELL_OPTIONS], "kill_command"),
+  selectField(
+    "cooldown_ready",
+    "Cooldown Ready",
+    [...BM_HUNTER_SPELL_OPTIONS],
+    "kill_command",
+  ),
   numberField("focus", "Focus", ">=", "30"),
-  selectField("aura_active", "Aura Active", [...BM_HUNTER_AURA_OPTIONS], "bestial_wrath"),
+  selectField(
+    "aura_active",
+    "Aura Active",
+    [...BM_HUNTER_AURA_OPTIONS],
+    "bestial_wrath",
+  ),
   numberField("aura_stacks", "Frenzy Stacks", ">=", "3"),
   numberField("aura_remaining", "Buff Remaining (sec)", ">=", "5"),
   numberField("target_health", "Target Health %", "<", "20"),
   numberField("charges", "Barbed Shot Charges", ">=", "1"),
   numberField("combo_points", "Combo Points", ">=", "5"),
-  selectField("talent_enabled", "Talent Enabled", [...BM_HUNTER_TALENT_OPTIONS], "killer_instinct"),
+  selectField(
+    "talent_enabled",
+    "Talent Enabled",
+    [...BM_HUNTER_TALENT_OPTIONS],
+    "killer_instinct",
+  ),
 ];
 
 export const COMPARISON_OPERATORS = [

@@ -59,6 +59,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import type { ActionListInfo } from "./types";
+import { toInternalName } from "./utils";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -96,10 +97,6 @@ export type ActionListTemplateName =
 
 function getTemplateByName(name: string) {
   return ACTION_LIST_TEMPLATES.find((t) => t.name === name);
-}
-
-function toInternalName(label: string): string {
-  return label.toLowerCase().replace(/\s+/g, "_");
 }
 
 // -----------------------------------------------------------------------------

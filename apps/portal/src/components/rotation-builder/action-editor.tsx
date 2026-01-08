@@ -1,8 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, memo } from "react";
 import { QueryBuilder } from "react-querybuilder";
+import { QueryBuilderDnD } from "@react-querybuilder/dnd";
+import * as ReactDnD from "react-dnd";
+import * as ReactDnDHTML5Backend from "react-dnd-html5-backend";
 import type { RuleGroupType } from "react-querybuilder";
 import {
   ChevronDownIcon,
@@ -32,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { generateActionId } from "@/lib/id";
 
 import {
-  shadcnInlineControlElements,
+  shadcnControlElements,
   shadcnControlClassnames,
   shadcnTranslations,
   CONDITION_FIELDS,
@@ -40,6 +43,7 @@ import {
 } from "./query-builder-controls";
 
 import type { Action } from "./types";
+import { getSpellLabel, getConditionSummary } from "./utils";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -72,45 +76,6 @@ export function createAction(
   };
 }
 
-/**
- * Returns a human-readable label for a spell.
- */
-function getSpellLabel(
-  spellName: string,
-  spells: Array<{ name: string; label: string }>,
-): string {
-  const spell = spells.find((s) => s.name === spellName);
-  return spell?.label ?? spellName.replace(/_/g, " ");
-}
-
-/**
- * Generates a brief summary of conditions for collapsed view.
- */
-function getConditionSummary(conditions: RuleGroupType): string {
-  if (!conditions.rules.length) {
-    return "Always";
-  }
-
-  const summaryParts: string[] = [];
-  for (const rule of conditions.rules.slice(0, 2)) {
-    if ("field" in rule) {
-      const field = String(rule.field).replace(/_/g, " ");
-      summaryParts.push(`${field} ${rule.operator} ${rule.value}`);
-    } else if ("rules" in rule) {
-      // Nested group
-      const nestedCount = rule.rules.length;
-      summaryParts.push(`(${nestedCount} nested)`);
-    }
-  }
-
-  const remaining = conditions.rules.length - summaryParts.length;
-  if (remaining > 0) {
-    summaryParts.push(`+${remaining} more`);
-  }
-
-  return summaryParts.join(` ${conditions.combinator.toUpperCase()} `);
-}
-
 // -----------------------------------------------------------------------------
 // ActionEditor - Condition builder for a single action
 // -----------------------------------------------------------------------------
@@ -129,24 +94,23 @@ function ActionEditorInternal({
       <div className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
         Conditions (if)
       </div>
-      <QueryBuilder
-        fields={CONDITION_FIELDS}
-        query={action.conditions}
-        onQueryChange={onConditionsChange}
-        controlElements={shadcnInlineControlElements}
-        controlClassnames={{
-          ...shadcnControlClassnames,
-          queryBuilder: "space-y-2",
-        }}
-        translations={shadcnTranslations}
-        operators={COMPARISON_OPERATORS}
-        combinators={[
-          { name: "and", label: "AND" },
-          { name: "or", label: "OR" },
-        ]}
-        showCloneButtons
-        resetOnFieldChange
-      />
+      <QueryBuilderDnD dnd={{ ...ReactDnD, ...ReactDnDHTML5Backend }}>
+        <QueryBuilder
+          fields={CONDITION_FIELDS}
+          query={action.conditions}
+          onQueryChange={onConditionsChange}
+          controlElements={shadcnControlElements}
+          controlClassnames={shadcnControlClassnames}
+          translations={shadcnTranslations}
+          operators={COMPARISON_OPERATORS}
+          combinators={[
+            { name: "and", label: "AND" },
+            { name: "or", label: "OR" },
+          ]}
+          showCloneButtons
+          resetOnFieldChange
+        />
+      </QueryBuilderDnD>
       {action.conditions.rules.length === 0 && (
         <div className="text-sm text-muted-foreground py-3 text-center border rounded-md bg-muted/30">
           No conditions - action will always execute when able
@@ -169,7 +133,7 @@ interface ActionCardProps {
   onDuplicate: () => void;
 }
 
-function ActionCard({
+const ActionCard = memo(function ActionCard({
   action,
   index,
   spells,
@@ -328,7 +292,7 @@ function ActionCard({
       </div>
     </Collapsible>
   );
-}
+});
 
 // -----------------------------------------------------------------------------
 // ActionList - Shows all actions in priority order
