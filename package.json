@@ -5,7 +5,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "cli": "pnpm --filter @apps/cli dev",
-    "dev": "pnpm -r --filter portal --parallel dev",
+    "dev": "pnpm -r --filter portal-new --parallel dev",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r --if-present --no-bail lint",
