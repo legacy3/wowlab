@@ -14,6 +14,7 @@ import * as Select from "@/components/ui/select";
 import * as Switch from "@/components/ui/switch";
 import * as Tabs from "@/components/ui/tabs";
 import * as Tooltip from "@/components/ui/tooltip";
+import { ChevronDown, Minus, Plus } from "lucide-react";
 
 export default function DemoPage() {
   return (
@@ -31,15 +32,23 @@ export default function DemoPage() {
             <NavigationMenu.Item>
               <NavigationMenu.Trigger>
                 Products
-                <NavigationMenu.Icon>▼</NavigationMenu.Icon>
+                <NavigationMenu.Icon>
+                  <ChevronDown size={14} />
+                </NavigationMenu.Icon>
               </NavigationMenu.Trigger>
               <NavigationMenu.Portal>
                 <NavigationMenu.Positioner>
                   <NavigationMenu.Popup>
                     <NavigationMenu.Content>
-                      <NavigationMenu.Link href="#">Analytics</NavigationMenu.Link>
-                      <NavigationMenu.Link href="#">Reporting</NavigationMenu.Link>
-                      <NavigationMenu.Link href="#">Dashboard</NavigationMenu.Link>
+                      <NavigationMenu.Link href="#">
+                        Analytics
+                      </NavigationMenu.Link>
+                      <NavigationMenu.Link href="#">
+                        Reporting
+                      </NavigationMenu.Link>
+                      <NavigationMenu.Link href="#">
+                        Dashboard
+                      </NavigationMenu.Link>
                     </NavigationMenu.Content>
                   </NavigationMenu.Popup>
                 </NavigationMenu.Positioner>
@@ -59,7 +68,9 @@ export default function DemoPage() {
             <Field.Label>Username</Field.Label>
             <Input.Root placeholder="Enter username" required />
             <Field.Description>Choose a unique username.</Field.Description>
-            <Field.Error match="valueMissing">Username is required.</Field.Error>
+            <Field.Error match="valueMissing">
+              Username is required.
+            </Field.Error>
           </Field.Root>
 
           <Field.Root>
@@ -73,14 +84,25 @@ export default function DemoPage() {
             <Fieldset.Legend>Preferences</Fieldset.Legend>
             <Field.Root>
               <Field.Label>Iterations</Field.Label>
-              <NumberField.Root defaultValue={10000} min={1000} max={100000} step={1000}>
+              <NumberField.Root
+                defaultValue={10000}
+                min={1000}
+                max={100000}
+                step={1000}
+              >
                 <NumberField.Group>
-                  <NumberField.Decrement>−</NumberField.Decrement>
+                  <NumberField.Decrement>
+                    <Minus size={14} />
+                  </NumberField.Decrement>
                   <NumberField.Input />
-                  <NumberField.Increment>+</NumberField.Increment>
+                  <NumberField.Increment>
+                    <Plus size={14} />
+                  </NumberField.Increment>
                 </NumberField.Group>
               </NumberField.Root>
-              <Field.Description>Number of simulation iterations.</Field.Description>
+              <Field.Description>
+                Number of simulation iterations.
+              </Field.Description>
             </Field.Root>
           </Fieldset.Root>
 
@@ -97,9 +119,13 @@ export default function DemoPage() {
         <h2>Number Field</h2>
         <NumberField.Root defaultValue={50} min={0} max={100}>
           <NumberField.Group>
-            <NumberField.Decrement>−</NumberField.Decrement>
+            <NumberField.Decrement>
+              <Minus size={14} />
+            </NumberField.Decrement>
             <NumberField.Input />
-            <NumberField.Increment>+</NumberField.Increment>
+            <NumberField.Increment>
+              <Plus size={14} />
+            </NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
       </section>

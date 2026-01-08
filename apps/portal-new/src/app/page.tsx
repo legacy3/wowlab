@@ -6,12 +6,22 @@ export default function Home() {
       <header>
         <nav>
           <ul>
-            <li><Link href="/"><strong>WowLab</strong></Link></li>
+            <li>
+              <Link href="/">
+                <strong>WowLab</strong>
+              </Link>
+            </li>
           </ul>
           <ul>
-            <li><Link href="/simulate">Simulate</Link></li>
-            <li><Link href="/talents">Talents</Link></li>
-            <li><Link href="/demo">Components</Link></li>
+            <li>
+              <Link href="/simulate">Simulate</Link>
+            </li>
+            <li>
+              <Link href="/talents">Talents</Link>
+            </li>
+            <li>
+              <Link href="/demo">Components</Link>
+            </li>
           </ul>
         </nav>
       </header>
@@ -25,20 +35,34 @@ export default function Home() {
         <div className="grid">
           <article>
             <h3>Simulate</h3>
-            <p>Run DPS simulations with customizable parameters and rotation configurations.</p>
-            <Link href="/simulate" role="button">Get Started</Link>
+            <p>
+              Run DPS simulations with customizable parameters and rotation
+              configurations.
+            </p>
+            <Link href="/simulate" role="button">
+              Get Started
+            </Link>
           </article>
 
           <article>
             <h3>Talents</h3>
-            <p>Explore and compare talent builds across all classes and specializations.</p>
-            <Link href="/talents" role="button" className="secondary">Browse Talents</Link>
+            <p>
+              Explore and compare talent builds across all classes and
+              specializations.
+            </p>
+            <Link href="/talents" role="button" className="secondary">
+              Browse Talents
+            </Link>
           </article>
 
           <article>
             <h3>Rotations</h3>
-            <p>Build and share rotation profiles for simulation and optimization.</p>
-            <Link href="/rotations" role="button" className="secondary">View Rotations</Link>
+            <p>
+              Build and share rotation profiles for simulation and optimization.
+            </p>
+            <Link href="/rotations" role="button" className="secondary">
+              View Rotations
+            </Link>
           </article>
         </div>
       </section>
@@ -48,7 +72,10 @@ export default function Home() {
         <div className="grid">
           <div>
             <h4>Accurate Simulations</h4>
-            <p>High-fidelity combat simulation engine written in Rust for speed and accuracy.</p>
+            <p>
+              High-fidelity combat simulation engine written in Rust for speed
+              and accuracy.
+            </p>
           </div>
           <div>
             <h4>Distributed Computing</h4>
@@ -62,7 +89,9 @@ export default function Home() {
       </section>
 
       <footer>
-        <p><small>WowLab &copy; 2025</small></p>
+        <p>
+          <small>WowLab &copy; 2025</small>
+        </p>
       </footer>
     </main>
   );
