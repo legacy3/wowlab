@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { Sparkles } from "lucide-react";
+import * as Accordion from "@/components/ui/accordion";
 
 export default function Home() {
   return (
@@ -22,6 +23,27 @@ export default function Home() {
         <h1>Hello World</h1>
         <p>Welcome to portal-new</p>
       </motion.div>
+
+      <div style={{ maxWidth: "500px", margin: "2rem auto" }}>
+        <Accordion.Root>
+          <Accordion.Item>
+            <Accordion.Header>
+              <Accordion.Trigger>What is Base UI?</Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Panel>
+              Base UI is a library of high-quality unstyled React components.
+            </Accordion.Panel>
+          </Accordion.Item>
+          <Accordion.Item>
+            <Accordion.Header>
+              <Accordion.Trigger>How do I get started?</Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Panel>
+              Head to the quick start guide in the docs.
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>
+      </div>
     </main>
   );
 }
