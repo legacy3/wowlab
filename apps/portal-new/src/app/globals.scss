@@ -5,13 +5,55 @@
 );
 
 :root {
+  // Typography
   --pico-font-size: 87.5%; // 14px base
-  --pico-spacing: 0.75rem;
-  --pico-typography-spacing-vertical: 0.75rem;
-  --pico-block-spacing-vertical: 0.75rem;
+  --pico-line-height: 1.4;
+  --pico-font-weight: 400;
+  --pico-typography-spacing-vertical: 0.5rem;
+
+  // General spacing
+  --pico-spacing: 0.5rem;
+  --pico-block-spacing-vertical: 0.5rem;
   --pico-block-spacing-horizontal: 0.75rem;
-  --pico-form-element-spacing-vertical: 0.5rem;
-  --pico-form-element-spacing-horizontal: 0.75rem;
-  --pico-nav-element-spacing-vertical: 0.5rem;
+
+  // Grid
+  --pico-grid-column-gap: 0.5rem;
+  --pico-grid-row-gap: 0.5rem;
+
+  // Form elements
+  --pico-form-element-spacing-vertical: 0.4rem;
+  --pico-form-element-spacing-horizontal: 0.6rem;
+
+  // Buttons
+  --pico-button-spacing-vertical: 0.4rem;
+  --pico-button-spacing-horizontal: 0.75rem;
+
+  // Navigation
+  --pico-nav-element-spacing-vertical: 0.4rem;
   --pico-nav-element-spacing-horizontal: 0.5rem;
+  --pico-nav-link-spacing-vertical: 0.4rem;
+  --pico-nav-link-spacing-horizontal: 0.5rem;
+
+  // Card/Article
+  --pico-card-spacing-vertical: 0.75rem;
+  --pico-card-spacing-horizontal: 0.75rem;
+
+  // Modal/Dialog
+  --pico-modal-overlay-backdrop-filter: blur(0.125rem);
+
+  // Accordion
+  --pico-accordion-border-radius: 0.25rem;
+  --pico-accordion-open-summary-spacing-bottom: 0.5rem;
+
+  // Group
+  --pico-group-box-shadow-focus-with-button: none;
+
+  // Border radius
+  --pico-border-radius: 0.25rem;
+
+  // Outline
+  --pico-outline-width: 2px;
+
+  // Transitions
+  --pico-transition: 0.15s ease-in-out;
 }
