@@ -23,18 +23,26 @@ src/components/ui/
 2. **Wrap parts that need styling** with `clsx` for className merging
 
 ```tsx
-import { ComponentName } from '@base-ui/react/component-name';
-import { clsx } from 'clsx';
-import type { ComponentProps } from 'react';
-import styles from './index.module.css';
+import { ComponentName } from "@base-ui/react/component-name";
+import { clsx } from "clsx";
+import type { ComponentProps } from "react";
+import styles from "./index.module.css";
 
 // Re-export unstyled parts directly
 export const Root = ComponentName.Root;
 export const Item = ComponentName.Item;
 
 // Wrap parts that need styling
-export function Trigger({ className, ...props }: ComponentProps<typeof ComponentName.Trigger>) {
-  return <ComponentName.Trigger className={clsx(styles.trigger, className)} {...props} />;
+export function Trigger({
+  className,
+  ...props
+}: ComponentProps<typeof ComponentName.Trigger>) {
+  return (
+    <ComponentName.Trigger
+      className={clsx(styles.trigger, className)}
+      {...props}
+    />
+  );
 }
 ```
 
@@ -85,6 +93,7 @@ mkdir -p src/components/ui/<component-name>
 Visit: `https://base-ui.com/react/components/<component-name>.md`
 
 Example parts for Dialog:
+
 - `Dialog.Root`
 - `Dialog.Trigger`
 - `Dialog.Portal`
@@ -97,10 +106,10 @@ Example parts for Dialog:
 ### 3. Create index.tsx
 
 ```tsx
-import { Dialog } from '@base-ui/react/dialog';
-import { clsx } from 'clsx';
-import type { ComponentProps } from 'react';
-import styles from './index.module.css';
+import { Dialog } from "@base-ui/react/dialog";
+import { clsx } from "clsx";
+import type { ComponentProps } from "react";
+import styles from "./index.module.css";
 
 // Re-export parts that don't need custom styles
 export const Root = Dialog.Root;
@@ -111,11 +120,19 @@ export const Description = Dialog.Description;
 export const Close = Dialog.Close;
 
 // Wrap parts that need styling
-export function Backdrop({ className, ...props }: ComponentProps<typeof Dialog.Backdrop>) {
-  return <Dialog.Backdrop className={clsx(styles.backdrop, className)} {...props} />;
+export function Backdrop({
+  className,
+  ...props
+}: ComponentProps<typeof Dialog.Backdrop>) {
+  return (
+    <Dialog.Backdrop className={clsx(styles.backdrop, className)} {...props} />
+  );
 }
 
-export function Popup({ className, ...props }: ComponentProps<typeof Dialog.Popup>) {
+export function Popup({
+  className,
+  ...props
+}: ComponentProps<typeof Dialog.Popup>) {
   return <Dialog.Popup className={clsx(styles.popup, className)} {...props} />;
 }
 ```
@@ -145,7 +162,7 @@ Keep styles minimal - let Pico handle typography and base styles:
 ### 5. Usage
 
 ```tsx
-import * as Dialog from '@/components/ui/dialog';
+import * as Dialog from "@/components/ui/dialog";
 
 <Dialog.Root>
   <Dialog.Trigger>Open</Dialog.Trigger>
@@ -157,7 +174,7 @@ import * as Dialog from '@/components/ui/dialog';
       <Dialog.Close>Close</Dialog.Close>
     </Dialog.Popup>
   </Dialog.Portal>
-</Dialog.Root>
+</Dialog.Root>;
 ```
 
 ## Available Base UI Components
@@ -165,6 +182,7 @@ import * as Dialog from '@/components/ui/dialog';
 Reference: https://base-ui.com/react/components
 
 Common ones to add:
+
 - `dialog` - Modals
 - `popover` - Floating content
 - `menu` - Dropdown menus

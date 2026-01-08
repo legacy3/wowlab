@@ -60,9 +60,13 @@ export default function Home() {
           <Menu.Portal>
             <Menu.Popup>
               <Menu.Item onSelect={() => console.log("Edit")}>Edit</Menu.Item>
-              <Menu.Item onSelect={() => console.log("Duplicate")}>Duplicate</Menu.Item>
+              <Menu.Item onSelect={() => console.log("Duplicate")}>
+                Duplicate
+              </Menu.Item>
               <Menu.Separator />
-              <Menu.Item onSelect={() => console.log("Delete")}>Delete</Menu.Item>
+              <Menu.Item onSelect={() => console.log("Delete")}>
+                Delete
+              </Menu.Item>
             </Menu.Popup>
           </Menu.Portal>
         </Menu.Root>
