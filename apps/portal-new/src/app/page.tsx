@@ -1,30 +1,21 @@
 "use client";
 
-import { motion } from "motion/react";
-import { Sparkles } from "lucide-react";
 import * as Accordion from "@/components/ui/accordion";
+import * as Checkbox from "@/components/ui/checkbox";
+import * as Dialog from "@/components/ui/dialog";
+import * as Menu from "@/components/ui/menu";
+import * as Select from "@/components/ui/select";
+import * as Switch from "@/components/ui/switch";
+import * as Tabs from "@/components/ui/tabs";
+import * as Tooltip from "@/components/ui/tooltip";
 
 export default function Home() {
   return (
     <main className="container">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        style={{ textAlign: "center", paddingTop: "4rem" }}
-      >
-        <motion.div
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{ display: "inline-block", marginBottom: "1rem" }}
-        >
-          <Sparkles size={48} />
-        </motion.div>
-        <h1>Hello World</h1>
-        <p>Welcome to portal-new</p>
-      </motion.div>
+      <h1>Base UI Components</h1>
 
-      <div style={{ maxWidth: "500px", margin: "2rem auto" }}>
+      <section>
+        <h2>Accordion</h2>
         <Accordion.Root>
           <Accordion.Item>
             <Accordion.Header>
@@ -43,7 +34,111 @@ export default function Home() {
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion.Root>
-      </div>
+      </section>
+
+      <section>
+        <h2>Dialog</h2>
+        <Dialog.Root>
+          <Dialog.Trigger>Open Dialog</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Backdrop />
+            <Dialog.Popup>
+              <Dialog.Title>Dialog Title</Dialog.Title>
+              <Dialog.Description>
+                This is a dialog description. You can put any content here.
+              </Dialog.Description>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </section>
+
+      <section>
+        <h2>Menu</h2>
+        <Menu.Root>
+          <Menu.Trigger>Open Menu</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Popup>
+              <Menu.Item onSelect={() => console.log("Edit")}>Edit</Menu.Item>
+              <Menu.Item onSelect={() => console.log("Duplicate")}>Duplicate</Menu.Item>
+              <Menu.Separator />
+              <Menu.Item onSelect={() => console.log("Delete")}>Delete</Menu.Item>
+            </Menu.Popup>
+          </Menu.Portal>
+        </Menu.Root>
+      </section>
+
+      <section>
+        <h2>Select</h2>
+        <Select.Root>
+          <Select.Trigger>
+            <Select.Value placeholder="Select a fruit..." />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Popup>
+              <Select.Item value="apple">
+                <Select.ItemText>Apple</Select.ItemText>
+              </Select.Item>
+              <Select.Item value="banana">
+                <Select.ItemText>Banana</Select.ItemText>
+              </Select.Item>
+              <Select.Item value="orange">
+                <Select.ItemText>Orange</Select.ItemText>
+              </Select.Item>
+            </Select.Popup>
+          </Select.Portal>
+        </Select.Root>
+      </section>
+
+      <section>
+        <h2>Tabs</h2>
+        <Tabs.Root defaultValue="tab1">
+          <Tabs.List>
+            <Tabs.Tab value="tab1">Account</Tabs.Tab>
+            <Tabs.Tab value="tab2">Settings</Tabs.Tab>
+            <Tabs.Tab value="tab3">Billing</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="tab1">
+            <p>Account settings and profile information.</p>
+          </Tabs.Panel>
+          <Tabs.Panel value="tab2">
+            <p>Application settings and preferences.</p>
+          </Tabs.Panel>
+          <Tabs.Panel value="tab3">
+            <p>Billing information and invoices.</p>
+          </Tabs.Panel>
+        </Tabs.Root>
+      </section>
+
+      <section>
+        <h2>Switch</h2>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Switch.Root defaultChecked>
+            <Switch.Thumb />
+          </Switch.Root>
+          Enable notifications
+        </label>
+      </section>
+
+      <section>
+        <h2>Checkbox</h2>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Checkbox.Root defaultChecked>
+            <Checkbox.Indicator />
+          </Checkbox.Root>
+          Accept terms and conditions
+        </label>
+      </section>
+
+      <section>
+        <h2>Tooltip</h2>
+        <Tooltip.Root>
+          <Tooltip.Trigger>Hover me</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Popup>This is a tooltip!</Tooltip.Popup>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </section>
     </main>
   );
 }

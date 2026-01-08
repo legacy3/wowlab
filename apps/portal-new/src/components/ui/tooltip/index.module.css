@@ -1,0 +1,8 @@
+.popup {
+  background: var(--pico-color);
+  color: var(--pico-background-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--pico-border-radius);
+  font-size: 0.875rem;
+  z-index: 100;
+}

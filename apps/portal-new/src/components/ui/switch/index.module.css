@@ -1,0 +1,29 @@
+.root {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  width: 42px;
+  height: 24px;
+  padding: 2px;
+  background: var(--pico-form-element-border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.root[data-checked] {
+  background: var(--pico-primary);
+}
+
+.thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--pico-background-color);
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+
+.root[data-checked] .thumb {
+  transform: translateX(18px);
+}

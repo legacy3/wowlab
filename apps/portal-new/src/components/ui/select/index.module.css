@@ -1,0 +1,49 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--pico-form-element-background-color);
+  border: 1px solid var(--pico-form-element-border-color);
+  border-radius: var(--pico-border-radius);
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.trigger:hover {
+  border-color: var(--pico-form-element-active-border-color);
+}
+
+.popup {
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 0.25rem;
+  z-index: 100;
+}
+
+.item {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: calc(var(--pico-border-radius) - 2px);
+  cursor: pointer;
+}
+
+.item:hover,
+.item[data-highlighted] {
+  background: var(--pico-secondary-background);
+}
+
+.itemIndicator {
+  width: 1rem;
+}
+
+.separator {
+  height: 1px;
+  background: var(--pico-muted-border-color);
+  margin: 0.25rem 0;
+}
