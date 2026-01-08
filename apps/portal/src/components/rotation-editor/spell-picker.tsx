@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckIcon, ChevronsUpDownIcon, SearchIcon } from "lucide-react";
+import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
 
+import { GameIcon } from "@/components/game/game-icon";
+import { SpellTooltip } from "@/components/game/game-tooltip";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -19,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-import { BM_HUNTER_SPELLS } from "./data";
+import { BM_HUNTER_SPELL_DATA, type SpellData } from "./data";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -38,13 +40,18 @@ interface SpellPickerProps {
   className?: string;
 }
 
-// TODO: Replace with actual spell data from DBC
-// For now, use mock spell data with IDs
-const MOCK_SPELLS = BM_HUNTER_SPELLS.map((spell, index) => ({
-  id: 100000 + index,
-  name: spell.name,
-  label: spell.label,
-}));
+/** Convert SpellData to tooltip format */
+function toTooltipData(spell: SpellData) {
+  return {
+    name: spell.label,
+    castTime: "Instant",
+    cooldown: spell.cooldown ? `${spell.cooldown} sec` : undefined,
+    cost: spell.cost ? `${spell.cost} ${spell.costType ?? "Focus"}` : undefined,
+    range: spell.range ? `${spell.range} yd range` : undefined,
+    description: spell.description,
+    iconName: spell.iconName,
+  };
+}
 
 // -----------------------------------------------------------------------------
 // Component
@@ -61,47 +68,55 @@ export function SpellPicker({
 
   const selectedSpell = useMemo(() => {
     if (typeof value === "number") {
-      return MOCK_SPELLS.find((s) => s.id === value);
+      return BM_HUNTER_SPELL_DATA.find((s) => s.id === value);
     }
     if (typeof value === "string") {
-      return MOCK_SPELLS.find((s) => s.name === value);
+      return BM_HUNTER_SPELL_DATA.find((s) => s.name === value);
     }
     return undefined;
   }, [value]);
 
-  const handleSelect = (spell: (typeof MOCK_SPELLS)[0]) => {
+  const handleSelect = (spell: SpellData) => {
     onSelect(spell.id);
     setOpen(false);
   };
+
+  // Render spell item with icon
+  const renderSpellItem = (spell: SpellData) => (
+    <CommandItem
+      key={spell.id}
+      value={spell.label}
+      onSelect={() => handleSelect(spell)}
+      className="flex items-center gap-2"
+    >
+      <CheckIcon
+        className={cn(
+          "size-4 shrink-0",
+          selectedSpell?.id === spell.id ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <GameIcon iconName={spell.iconName} size="small" className="shrink-0" />
+      <span className="truncate">{spell.label}</span>
+      {spell.cooldown && (
+        <span className="ml-auto text-[10px] text-muted-foreground">
+          {spell.cooldown}s
+        </span>
+      )}
+    </CommandItem>
+  );
 
   // If children provided, use as trigger
   if (children) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent className="w-64 p-0" align="start">
+        <PopoverContent className="w-72 p-0" align="start">
           <Command>
             <CommandInput placeholder="Search spells..." />
             <CommandList>
               <CommandEmpty>No spells found.</CommandEmpty>
               <CommandGroup>
-                {MOCK_SPELLS.map((spell) => (
-                  <CommandItem
-                    key={spell.id}
-                    value={spell.label}
-                    onSelect={() => handleSelect(spell)}
-                  >
-                    <CheckIcon
-                      className={cn(
-                        "mr-2 size-4",
-                        selectedSpell?.id === spell.id
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                    {spell.label}
-                  </CommandItem>
-                ))}
+                {BM_HUNTER_SPELL_DATA.map(renderSpellItem)}
               </CommandGroup>
             </CommandList>
           </Command>
@@ -110,7 +125,7 @@ export function SpellPicker({
     );
   }
 
-  // Default inline trigger
+  // Default inline trigger with icon
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -118,37 +133,32 @@ export function SpellPicker({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("h-7 w-32 justify-between text-xs", className)}
+          className={cn("h-7 w-40 justify-between gap-1.5 px-2 text-xs", className)}
         >
-          <span className="truncate">
-            {selectedSpell?.label ?? placeholder}
-          </span>
-          <ChevronsUpDownIcon className="ml-1 size-3 shrink-0 opacity-50" />
+          {selectedSpell ? (
+            <SpellTooltip spell={toTooltipData(selectedSpell)}>
+              <span className="flex items-center gap-1.5 truncate">
+                <GameIcon
+                  iconName={selectedSpell.iconName}
+                  size="small"
+                  className="shrink-0"
+                />
+                <span className="truncate">{selectedSpell.label}</span>
+              </span>
+            </SpellTooltip>
+          ) : (
+            <span className="truncate text-muted-foreground">{placeholder}</span>
+          )}
+          <ChevronsUpDownIcon className="size-3 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-0" align="start">
+      <PopoverContent className="w-72 p-0" align="start">
         <Command>
           <CommandInput placeholder="Search spells..." />
           <CommandList>
             <CommandEmpty>No spells found.</CommandEmpty>
             <CommandGroup>
-              {MOCK_SPELLS.map((spell) => (
-                <CommandItem
-                  key={spell.id}
-                  value={spell.label}
-                  onSelect={() => handleSelect(spell)}
-                >
-                  <CheckIcon
-                    className={cn(
-                      "mr-2 size-4",
-                      selectedSpell?.id === spell.id
-                        ? "opacity-100"
-                        : "opacity-0",
-                    )}
-                  />
-                  {spell.label}
-                </CommandItem>
-              ))}
+              {BM_HUNTER_SPELL_DATA.map(renderSpellItem)}
             </CommandGroup>
           </CommandList>
         </Command>

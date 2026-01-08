@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import type { RuleGroupType } from "react-querybuilder";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
   CopyIcon,
   GripVerticalIcon,
+  ListIcon,
   PowerIcon,
   TrashIcon,
 } from "lucide-react";
 
+import { GameIcon } from "@/components/game/game-icon";
+import { SpellTooltip } from "@/components/game/game-tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,8 +32,22 @@ import { cn } from "@/lib/utils";
 
 import { ConditionBuilder } from "./condition-builder";
 import { SpellPicker } from "./spell-picker";
+import { getSpellById, type SpellData } from "./data";
 import type { Action, ActionType } from "./types";
 import { getConditionSummary } from "./utils";
+
+/** Convert SpellData to tooltip format */
+function toTooltipData(spell: SpellData) {
+  return {
+    name: spell.label,
+    castTime: "Instant",
+    cooldown: spell.cooldown ? `${spell.cooldown} sec` : undefined,
+    cost: spell.cost ? `${spell.cost} ${spell.costType ?? "Focus"}` : undefined,
+    range: spell.range ? `${spell.range} yd range` : undefined,
+    description: spell.description,
+    iconName: spell.iconName,
+  };
+}
 
 // -----------------------------------------------------------------------------
 // Types
@@ -60,6 +77,12 @@ export const ActionCard = memo(function ActionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const isCallList = action.type === "call_action_list";
 
+  // Get spell data for icon display
+  const spell = useMemo(() => {
+    if (isCallList || !action.spellId) return undefined;
+    return getSpellById(action.spellId);
+  }, [action.spellId, isCallList]);
+
   const handleConditionChange = useCallback(
     (condition: RuleGroupType) => {
       onUpdate({ condition });
@@ -68,6 +91,23 @@ export const ActionCard = memo(function ActionCard({
   );
 
   const conditionSummary = getConditionSummary(action.condition);
+
+  // Icon element based on action type
+  const actionIcon = isCallList ? (
+    <div className="flex size-9 items-center justify-center rounded-md border bg-blue-500/10 text-blue-500">
+      <ListIcon className="size-5" />
+    </div>
+  ) : spell ? (
+    <SpellTooltip spell={toTooltipData(spell)}>
+      <div className="shrink-0 overflow-hidden rounded-md border">
+        <GameIcon iconName={spell.iconName} size="medium" width={36} height={36} />
+      </div>
+    </SpellTooltip>
+  ) : (
+    <div className="flex size-9 items-center justify-center rounded-md border bg-muted text-muted-foreground text-xs">
+      ?
+    </div>
+  );
 
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -86,6 +126,9 @@ export const ActionCard = memo(function ActionCard({
           <Badge variant="secondary" className="size-6 p-0 justify-center text-xs">
             {index + 1}
           </Badge>
+
+          {/* Spell/List Icon */}
+          {actionIcon}
 
           {/* Expand toggle */}
           <CollapsibleTrigger asChild>

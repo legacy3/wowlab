@@ -1,5 +1,7 @@
 import { capitalCase, snakeCase, kebabCase } from "change-case";
 import type { RuleGroupType, RuleType } from "react-querybuilder";
+
+import { getSpellById } from "./data";
 import type { RotationDraft, Variable } from "./types";
 
 // =============================================================================
@@ -109,7 +111,8 @@ export function generateDSL(draft: RotationDraft, specName: string): string {
         const targetList = draft.lists.find((l) => l.id === action.listId);
         spell = `call_action_list,name=${targetList?.name ?? action.listId}`;
       } else {
-        spell = `spell_${action.spellId}`;
+        const spellData = action.spellId ? getSpellById(action.spellId) : undefined;
+        spell = spellData?.name ?? `spell_${action.spellId}`;
       }
       const cond = formatConditionForDSL(action.condition);
       lines.push(cond ? `  ${spell},if=${cond}` : `  ${spell}`);
@@ -190,7 +193,8 @@ export function generateNatural(draft: RotationDraft, specName: string): string 
         const targetList = draft.lists.find((l) => l.id === action.listId);
         spellName = `Call ${targetList?.label ?? "Unknown"}`;
       } else {
-        spellName = `Spell #${action.spellId}`;
+        const spellData = action.spellId ? getSpellById(action.spellId) : undefined;
+        spellName = spellData?.label ?? `Spell #${action.spellId}`;
       }
 
       const conditionStr = formatConditionsForNatural(action.condition);
