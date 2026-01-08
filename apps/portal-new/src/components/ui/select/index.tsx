@@ -7,6 +7,7 @@ export const Root = Select.Root;
 export const Value = Select.Value;
 export const Icon = Select.Icon;
 export const Portal = Select.Portal;
+export const Positioner = Select.Positioner;
 export const ScrollUpArrow = Select.ScrollUpArrow;
 export const ScrollDownArrow = Select.ScrollDownArrow;
 export const Group = Select.Group;

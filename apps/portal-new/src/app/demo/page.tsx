@@ -139,17 +139,19 @@ export default function DemoPage() {
             </Select.Value>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Popup>
-              <Select.Item value="apple">
-                <Select.ItemText>Apple</Select.ItemText>
-              </Select.Item>
-              <Select.Item value="banana">
-                <Select.ItemText>Banana</Select.ItemText>
-              </Select.Item>
-              <Select.Item value="orange">
-                <Select.ItemText>Orange</Select.ItemText>
-              </Select.Item>
-            </Select.Popup>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="apple">
+                  <Select.ItemText>Apple</Select.ItemText>
+                </Select.Item>
+                <Select.Item value="banana">
+                  <Select.ItemText>Banana</Select.ItemText>
+                </Select.Item>
+                <Select.Item value="orange">
+                  <Select.ItemText>Orange</Select.ItemText>
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
           </Select.Portal>
         </Select.Root>
       </section>
@@ -238,16 +240,18 @@ export default function DemoPage() {
         <Menu.Root>
           <Menu.Trigger>Open Menu</Menu.Trigger>
           <Menu.Portal>
-            <Menu.Popup>
-              <Menu.Item onSelect={() => console.log("Edit")}>Edit</Menu.Item>
-              <Menu.Item onSelect={() => console.log("Duplicate")}>
-                Duplicate
-              </Menu.Item>
-              <Menu.Separator />
-              <Menu.Item onSelect={() => console.log("Delete")}>
-                Delete
-              </Menu.Item>
-            </Menu.Popup>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item onSelect={() => console.log("Edit")}>Edit</Menu.Item>
+                <Menu.Item onSelect={() => console.log("Duplicate")}>
+                  Duplicate
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item onSelect={() => console.log("Delete")}>
+                  Delete
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
       </section>

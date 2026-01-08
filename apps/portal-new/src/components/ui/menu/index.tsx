@@ -6,6 +6,7 @@ import styles from "./index.module.css";
 export const Root = Menu.Root;
 export const Trigger = Menu.Trigger;
 export const Portal = Menu.Portal;
+export const Positioner = Menu.Positioner;
 export const Arrow = Menu.Arrow;
 export const Group = Menu.Group;
 export const GroupLabel = Menu.GroupLabel;

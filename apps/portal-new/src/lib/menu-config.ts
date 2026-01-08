@@ -1,11 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  BookOpen,
-  Calculator,
-  FlaskConical,
-  Play,
-  Swords,
-} from "lucide-react";
+import { BookOpen, Calculator, FlaskConical, Play, Swords } from "lucide-react";
 
 type Icon = LucideIcon;
 
