@@ -1,0 +1,17 @@
+@use "@picocss/pico/scss" with (
+  $enable-responsive-typography: false,
+  $enable-semantic-container: true,
+  $semantic-root-element: "body"
+);
+
+:root {
+  --pico-font-size: 87.5%; // 14px base
+  --pico-spacing: 0.75rem;
+  --pico-typography-spacing-vertical: 0.75rem;
+  --pico-block-spacing-vertical: 0.75rem;
+  --pico-block-spacing-horizontal: 0.75rem;
+  --pico-form-element-spacing-vertical: 0.5rem;
+  --pico-form-element-spacing-horizontal: 0.75rem;
+  --pico-nav-element-spacing-vertical: 0.5rem;
+  --pico-nav-element-spacing-horizontal: 0.5rem;
+}
