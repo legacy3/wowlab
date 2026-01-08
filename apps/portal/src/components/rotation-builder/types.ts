@@ -61,7 +61,7 @@ export interface ActionListExport {
  * Full rotation data for export and preview.
  */
 export interface RotationData {
-  specName: string;
+  specId: number | null;
   variables: Variable[];
   defaultList: string;
   actionLists: ActionListExport[];

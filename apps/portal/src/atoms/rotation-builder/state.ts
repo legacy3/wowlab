@@ -8,15 +8,6 @@ import type { RuleGroupType } from "react-querybuilder";
 // Types
 // =============================================================================
 
-export interface SpecSelectorValue {
-  class: string;
-  spec: {
-    class: string;
-    spec: string;
-    label: string;
-  };
-}
-
 export interface Variable {
   id: string;
   name: string;
@@ -143,24 +134,17 @@ function createDefaultVariables(): Variable[] {
   ];
 }
 
-function createDefaultSpec(): SpecSelectorValue {
-  return {
-    class: "hunter",
-    spec: {
-      class: "hunter",
-      spec: "beast-mastery",
-      label: "Beast Mastery",
-    },
-  };
-}
+// Beast Mastery Hunter spec ID
+const DEFAULT_SPEC_ID = 253;
 
 // =============================================================================
 // Core State Atoms (persisted to localStorage)
 // =============================================================================
 
-export const rotationSpecAtom = atomWithStorage<SpecSelectorValue | null>(
-  "rotation-builder-spec-v1",
-  createDefaultSpec(),
+/** Selected spec ID (number from chr_specialization table) */
+export const rotationSpecIdAtom = atomWithStorage<number | null>(
+  "rotation-builder-spec-id-v2",
+  DEFAULT_SPEC_ID,
 );
 
 export const rotationVariablesAtom = atomWithStorage<Variable[]>(
@@ -197,13 +181,6 @@ export const selectedListAtom = atom((get) => {
   return lists.find((l) => l.id === selectedId) ?? null;
 });
 
-export const specNameAtom = atom((get) => {
-  const spec = get(rotationSpecAtom);
-  if (!spec) return "Rotation";
-  const className = spec.class.charAt(0).toUpperCase() + spec.class.slice(1);
-  return `${spec.spec.label} ${className}`;
-});
-
 export const actionListInfosAtom = atom((get) => {
   const lists = get(rotationActionListsAtom);
   const defaultListId = get(rotationDefaultListIdAtom);
@@ -226,13 +203,13 @@ export const rotationStatsAtom = atom((get) => {
 });
 
 export const rotationDataAtom = atom((get) => {
-  const specName = get(specNameAtom);
+  const specId = get(rotationSpecIdAtom);
   const variables = get(rotationVariablesAtom);
   const actionLists = get(rotationActionListsAtom);
   const defaultListId = get(rotationDefaultListIdAtom);
 
   return {
-    specName,
+    specId,
     variables,
     defaultList:
       actionLists.find((l) => l.id === defaultListId)?.name ?? "default",

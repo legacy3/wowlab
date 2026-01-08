@@ -3,28 +3,27 @@
 import { atom } from "jotai";
 import { generateListId, generateActionId, generateVariableId } from "@/lib/id";
 import {
-  rotationSpecAtom,
+  rotationSpecIdAtom,
   rotationVariablesAtom,
   rotationActionListsAtom,
   rotationDefaultListIdAtom,
   selectedListIdAtom,
   viewModeAtom,
-  type SpecSelectorValue,
   type Variable,
   type Action,
   type ActionListWithActions,
 } from "./state";
 
+// Beast Mastery Hunter spec ID (default)
+const DEFAULT_SPEC_ID = 253;
+
 // =============================================================================
 // Spec Actions
 // =============================================================================
 
-export const setSpecAtom = atom(
-  null,
-  (_, set, spec: SpecSelectorValue | null) => {
-    set(rotationSpecAtom, spec);
-  },
-);
+export const setSpecIdAtom = atom(null, (_, set, specId: number | null) => {
+  set(rotationSpecIdAtom, specId);
+});
 
 // =============================================================================
 // Variable Actions
@@ -251,15 +250,8 @@ export const setViewModeAtom = atom(
 // =============================================================================
 
 export const resetRotationBuilderAtom = atom(null, (_, set) => {
-  // Reset to default spec
-  set(rotationSpecAtom, {
-    class: "hunter",
-    spec: {
-      class: "hunter",
-      spec: "beast-mastery",
-      label: "Beast Mastery",
-    },
-  });
+  // Reset to default spec (Beast Mastery Hunter)
+  set(rotationSpecIdAtom, DEFAULT_SPEC_ID);
 
   // Reset variables
   set(rotationVariablesAtom, [

@@ -101,7 +101,6 @@ function getFirstRuleLabel(
     "field" in firstRule &&
     firstRule.field
   ) {
-
     // Try to make it readable
     const field = String(firstRule.field).replace(/_/g, " ");
     const value = firstRule.value ? ` = ${firstRule.value}` : "";
@@ -182,16 +181,15 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
   // Root group - no collapse, just show header + body
   if (isRoot) {
     return (
-      <div className="rounded-lg border bg-card p-4 space-y-3">
+      <div className="rounded-md border bg-card/50 p-2 space-y-1.5">
         {/* Root header */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <CombinatorSelector
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <ShadcnCombinatorToggle
             {...commonProps}
             options={schema.combinators}
             value={combinator}
             handleOnChange={handleCombinatorChange}
-            title={translations.combinators.title}
-            className="w-24"
+            title="Click to toggle AND/OR"
             rules={ruleGroup.rules}
             ruleGroup={ruleGroup}
           />
@@ -206,18 +204,28 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
             />
           )}
           <div className="flex-1" />
-          <Button variant="outline" size="sm" onClick={handleAddRule}>
-            <PlusIcon className="size-3.5 mr-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 px-1.5 text-[10px]"
+            onClick={handleAddRule}
+          >
+            <PlusIcon className="size-3 mr-0.5" />
             Rule
           </Button>
-          <Button variant="outline" size="sm" onClick={handleAddGroup}>
-            <PlusIcon className="size-3.5 mr-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 px-1.5 text-[10px]"
+            onClick={handleAddGroup}
+          >
+            <PlusIcon className="size-3 mr-0.5" />
             Group
           </Button>
         </div>
 
         {/* Rules */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {ruleGroup.rules.map((rule, idx) => {
             const rulePath = [...path, idx];
             // Skip string rules (shouldn't happen in normal use)
@@ -289,13 +297,12 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
                 className="flex items-center gap-1 flex-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <CombinatorSelector
+                <ShadcnCombinatorToggle
                   {...commonProps}
                   options={schema.combinators}
                   value={combinator}
                   handleOnChange={handleCombinatorChange}
-                  title={translations.combinators.title}
-                  className="w-20 h-7"
+                  title="Click to toggle AND/OR"
                   rules={ruleGroup.rules}
                   ruleGroup={ruleGroup}
                 />
@@ -400,6 +407,41 @@ export function ShadcnRuleGroup(props: RuleGroupProps) {
 }
 
 // -----------------------------------------------------------------------------
+// Combinator Toggle (AND/OR clickable badge instead of dropdown)
+// -----------------------------------------------------------------------------
+
+export function ShadcnCombinatorToggle(props: VersatileSelectorProps) {
+  const { value, handleOnChange, disabled, className } = props;
+  const currentValue = String(value ?? "and").toLowerCase();
+  const isAnd = currentValue === "and";
+
+  const toggle = () => {
+    if (disabled) return;
+    handleOnChange(isAnd ? "or" : "and");
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={disabled}
+      className={cn(
+        "inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+        "border hover:bg-accent cursor-pointer",
+        isAnd
+          ? "bg-muted text-foreground"
+          : "bg-amber-500/20 text-amber-600 border-amber-500/30",
+        disabled && "opacity-50 cursor-not-allowed",
+        className,
+      )}
+      title={`Click to switch to ${isAnd ? "OR" : "AND"}`}
+    >
+      {currentValue}
+    </button>
+  );
+}
+
+// -----------------------------------------------------------------------------
 // Value Selector
 // -----------------------------------------------------------------------------
 
@@ -460,7 +502,7 @@ export function ShadcnValueSelector(props: VersatileSelectorProps) {
       disabled={disabled}
     >
       <SelectTrigger
-        className={cn("h-8 min-w-[120px]", className)}
+        className={cn("h-6 min-w-[80px] text-xs", className)}
         title={title}
       >
         <SelectValue placeholder="Select...">
@@ -519,7 +561,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
     return (
       <span
         data-testid={testID}
-        className={cn("flex items-center gap-2", className)}
+        className={cn("flex items-center gap-1", className)}
         title={title}
       >
         {["from", "to"]
@@ -530,7 +572,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
                 type={inputTypeCoerced}
                 placeholder={placeholder}
                 value={valueAsArray[i] ?? ""}
-                className={cn("h-8 w-[80px]", valueListItemClassName)}
+                className={cn("h-6 w-[60px] text-xs", valueListItemClassName)}
                 disabled={disabled}
                 onChange={(e) => multiValueHandler(e.target.value, i)}
               />
@@ -539,7 +581,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
                 key={key}
                 {...propsForValueSelector}
                 schema={schema as Schema<FullField, string>}
-                className={cn("w-[100px]", valueListItemClassName)}
+                className={cn("w-[80px]", valueListItemClassName)}
                 handleOnChange={(v) => multiValueHandler(v, i)}
                 disabled={disabled}
                 value={valueAsArray[i] ?? getFirstOption(values)}
@@ -551,7 +593,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
           .reduce<React.ReactNode[]>((acc, el, i) => {
             if (i === 1) {
               acc.push(
-                <span key="sep" className="text-muted-foreground text-xs">
+                <span key="sep" className="text-muted-foreground text-[10px]">
                   {separator ?? "–"}
                 </span>,
               );
@@ -589,7 +631,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
           placeholder={placeholder}
           value={value}
           title={title}
-          className={cn("min-h-[60px] w-[200px]", className)}
+          className={cn("min-h-[40px] w-[160px] text-xs", className)}
           disabled={disabled}
           onChange={(e) => handleOnChange(e.target.value)}
         />
@@ -649,7 +691,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
         placeholder={placeholder}
         value={`${value}`}
         title={title}
-        className={cn("h-8 w-[100px]", className)}
+        className={cn("h-6 w-[70px] text-xs", className)}
         disabled={disabled}
         onChange={(e) => bigIntValueHandler(e.target.value)}
       />
@@ -663,7 +705,7 @@ export function ShadcnValueEditor(allProps: ValueEditorProps) {
       placeholder={placeholder}
       value={value}
       title={title}
-      className={cn("h-8 w-[100px]", className)}
+      className={cn("h-6 w-[70px] text-xs", className)}
       disabled={disabled}
       onChange={(e) =>
         handleOnChange(
@@ -700,9 +742,9 @@ export function ShadcnActionElement({
   if (isTextLabel) {
     return (
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
-        className={cn("h-7 text-xs", className)}
+        className={cn("h-6 px-2 text-xs", className)}
         title={displayTitle}
         onClick={handleOnClick}
         disabled={disabled && !disabledTranslation}
@@ -716,7 +758,7 @@ export function ShadcnActionElement({
     <Button
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      className={cn("size-6", className)}
       title={displayTitle}
       onClick={handleOnClick}
       disabled={disabled && !disabledTranslation}
@@ -772,7 +814,7 @@ export const ShadcnDragHandle = React.forwardRef<
     )}
     title={title}
   >
-    <GripVerticalIcon className="size-4" />
+    <GripVerticalIcon className="size-3" />
   </span>
 ));
 ShadcnDragHandle.displayName = "ShadcnDragHandle";
@@ -784,6 +826,7 @@ ShadcnDragHandle.displayName = "ShadcnDragHandle";
 /** Full control elements with collapsible rule groups (for standalone use) */
 export const shadcnControlElements = {
   ruleGroup: ShadcnRuleGroup,
+  combinatorSelector: ShadcnCombinatorToggle,
   actionElement: ShadcnActionElement,
   valueSelector: ShadcnValueSelector,
   valueEditor: ShadcnValueEditor,
@@ -793,6 +836,7 @@ export const shadcnControlElements = {
 
 /** Simpler controls without custom rule group (for inline/embedded use) */
 export const shadcnInlineControlElements = {
+  combinatorSelector: ShadcnCombinatorToggle,
   actionElement: ShadcnActionElement,
   valueSelector: ShadcnValueSelector,
   valueEditor: ShadcnValueEditor,
@@ -803,31 +847,31 @@ export const shadcnInlineControlElements = {
 export const shadcnTranslations = {
   addRule: { label: "+ Rule", title: "Add condition" },
   addGroup: { label: "+ Group", title: "Add condition group" },
-  removeGroup: { label: <XIcon className="size-3.5" />, title: "Remove group" },
+  removeGroup: { label: <XIcon className="size-3" />, title: "Remove group" },
   removeRule: {
-    label: <XIcon className="size-3.5" />,
+    label: <XIcon className="size-3" />,
     title: "Remove condition",
   },
   cloneRuleGroup: {
-    label: <CopyIcon className="size-3.5" />,
+    label: <CopyIcon className="size-3" />,
     title: "Clone group",
   },
   cloneRule: {
-    label: <CopyIcon className="size-3.5" />,
+    label: <CopyIcon className="size-3" />,
     title: "Clone condition",
   },
-  lockGroup: { label: <UnlockIcon className="size-3.5" /> },
-  lockRule: { label: <UnlockIcon className="size-3.5" /> },
-  lockGroupDisabled: { label: <LockIcon className="size-3.5" /> },
-  lockRuleDisabled: { label: <LockIcon className="size-3.5" /> },
+  lockGroup: { label: <UnlockIcon className="size-3" /> },
+  lockRule: { label: <UnlockIcon className="size-3" /> },
+  lockGroupDisabled: { label: <LockIcon className="size-3" /> },
+  lockRuleDisabled: { label: <LockIcon className="size-3" /> },
 };
 
 export const shadcnControlClassnames = {
-  rule: "flex flex-wrap items-center gap-2 rounded-md border bg-background px-2 py-1.5",
-  ruleGroup: "space-y-2",
-  fields: "min-w-[160px]",
-  operators: "w-[70px]",
-  value: "min-w-[120px] flex-1",
+  rule: "flex flex-wrap items-center gap-1.5 rounded border bg-background px-2 py-1",
+  ruleGroup: "space-y-1.5",
+  fields: "min-w-[120px]",
+  operators: "w-[50px]",
+  value: "min-w-[100px] flex-1",
 };
 
 // -----------------------------------------------------------------------------

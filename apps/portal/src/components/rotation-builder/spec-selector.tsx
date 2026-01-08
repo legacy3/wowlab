@@ -48,6 +48,7 @@ export interface SpecSelectorProps {
   onChange: (value: SpecSelectorValue | null) => void;
   className?: string;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -239,7 +240,19 @@ export function SpecSelector({
   onChange,
   className,
   disabled = false,
+  compact = false,
 }: SpecSelectorProps) {
+  // Use compact variant if requested
+  if (compact) {
+    return (
+      <SpecSelectorCompact
+        value={value}
+        onChange={onChange}
+        className={className}
+        disabled={disabled}
+      />
+    );
+  }
   const selectedClass = value?.class ?? null;
   const selectedSpec = value?.spec ?? null;
   const classData = selectedClass ? getClassById(selectedClass) : null;

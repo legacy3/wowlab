@@ -90,10 +90,7 @@ function ActionEditorInternal({
   onConditionsChange,
 }: ActionEditorInternalProps) {
   return (
-    <div className="space-y-2">
-      <div className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-        Conditions (if)
-      </div>
+    <div className="space-y-1.5">
       <QueryBuilderDnD dnd={{ ...ReactDnD, ...ReactDnDHTML5Backend }}>
         <QueryBuilder
           fields={CONDITION_FIELDS}
@@ -112,8 +109,8 @@ function ActionEditorInternal({
         />
       </QueryBuilderDnD>
       {action.conditions.rules.length === 0 && (
-        <div className="text-sm text-muted-foreground py-3 text-center border rounded-md bg-muted/30">
-          No conditions - action will always execute when able
+        <div className="text-xs text-muted-foreground py-2 text-center border rounded bg-muted/30">
+          No conditions - action will always execute
         </div>
       )}
     </div>
@@ -180,37 +177,37 @@ const ActionCard = memo(function ActionCard({
         )}
       >
         {/* Header - Always visible */}
-        <div className="flex items-center gap-2 px-3 py-2">
+        <div className="flex items-center gap-1.5 px-2 py-1.5">
           {/* Drag handle (placeholder) */}
           <div
             className="cursor-grab text-muted-foreground hover:text-foreground"
             title="Drag to reorder"
           >
-            <GripVerticalIcon className="size-4" />
+            <GripVerticalIcon className="size-3.5" />
           </div>
 
           {/* Priority number */}
           <Badge
             variant="secondary"
-            className="w-6 h-6 p-0 justify-center text-xs font-mono shrink-0"
+            className="w-5 h-5 p-0 justify-center text-[10px] font-mono shrink-0"
           >
             {index + 1}
           </Badge>
 
           {/* Expand/collapse toggle */}
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7 shrink-0">
+            <Button variant="ghost" size="icon" className="size-6 shrink-0">
               {isExpanded ? (
-                <ChevronDownIcon className="size-4" />
+                <ChevronDownIcon className="size-3.5" />
               ) : (
-                <ChevronRightIcon className="size-4" />
+                <ChevronRightIcon className="size-3.5" />
               )}
             </Button>
           </CollapsibleTrigger>
 
           {/* Spell selector */}
           <Select value={action.spell} onValueChange={handleSpellChange}>
-            <SelectTrigger className="w-[180px] h-8 font-medium shrink-0">
+            <SelectTrigger className="w-[140px] h-6 text-xs font-medium shrink-0">
               <SelectValue>{spellLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -246,43 +243,43 @@ const ActionCard = memo(function ActionCard({
           {isExpanded && <div className="flex-1" />}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               className={cn(
-                "size-7",
+                "size-6",
                 action.enabled ? "text-green-500" : "text-muted-foreground",
               )}
               onClick={handleToggleEnabled}
               title={action.enabled ? "Disable action" : "Enable action"}
             >
-              <PowerIcon className="size-3.5" />
+              <PowerIcon className="size-3" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="size-6"
               onClick={onDuplicate}
               title="Duplicate action"
             >
-              <CopyIcon className="size-3.5" />
+              <CopyIcon className="size-3" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="size-7 text-destructive hover:text-destructive"
+              className="size-6 text-destructive hover:text-destructive"
               onClick={onRemove}
               title="Remove action"
             >
-              <TrashIcon className="size-3.5" />
+              <TrashIcon className="size-3" />
             </Button>
           </div>
         </div>
 
         {/* Expanded content - Condition builder */}
         <CollapsibleContent>
-          <div className="px-3 pb-3 pt-1 border-t">
+          <div className="px-3 pb-2 pt-2 border-t">
             <ActionEditorInternal
               action={action}
               onConditionsChange={handleConditionsChange}

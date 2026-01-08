@@ -42,7 +42,14 @@ export { VariableManager } from "./variable-manager";
 export type { VariableManagerProps } from "./variable-manager";
 
 // -----------------------------------------------------------------------------
-// Action List Panel
+// Rotation Sidebar (unified lists + variables)
+// -----------------------------------------------------------------------------
+
+export { RotationSidebar } from "./rotation-sidebar";
+export type { RotationSidebarProps } from "./rotation-sidebar";
+
+// -----------------------------------------------------------------------------
+// Action List Panel (legacy - use RotationSidebar instead)
 // -----------------------------------------------------------------------------
 
 export { ActionListPanel, ACTION_LIST_TEMPLATES } from "./action-list-panel";
