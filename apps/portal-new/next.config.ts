@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  sassOptions: {
+    silenceDeprecations: [
+      "import",
+      "global-builtin",
+      "color-functions",
+      "if-function",
+    ],
+  },
 };
 
 export default nextConfig;
