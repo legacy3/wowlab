@@ -1,0 +1,16 @@
+.container {
+  width: 100%;
+  max-width: var(--container-max-width, 1200px);
+  margin-inline: auto;
+  padding: 1.5rem 1rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem 1.5rem;
+  }
+}
+
+.separator {
+  margin: 0 0 1.5rem;
+  border: none;
+  border-top: 1px solid var(--pico-muted-border-color);
+}

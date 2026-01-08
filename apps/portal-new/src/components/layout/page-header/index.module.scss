@@ -1,0 +1,57 @@
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumbs {
+  margin-bottom: 0.75rem;
+
+  ol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  a {
+    color: var(--pico-muted-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+
+    &:hover {
+      color: var(--pico-color);
+      text-decoration: underline;
+    }
+  }
+
+  span[aria-current="page"] {
+    color: var(--pico-color);
+    font-size: 0.875rem;
+  }
+}
+
+.separator {
+  color: var(--pico-muted-color);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.description {
+  margin: 0.5rem 0 0;
+  color: var(--pico-muted-color);
+  font-size: 0.9375rem;
+}

@@ -4,6 +4,9 @@ import styles from "./index.module.scss";
 export function Navbar() {
   return (
     <header className={styles.navbar}>
+      <Link href="/" className={styles.logo}>
+        <strong>WoW Lab</strong>
+      </Link>
       <nav className={styles.nav}>
         <ul>
           <li>

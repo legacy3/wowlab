@@ -4,10 +4,25 @@
   z-index: 50;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: var(--navbar-height);
   padding: 0 1rem;
   background: var(--pico-card-background-color);
   border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.logo {
+  display: none;
+  text-decoration: none;
+  color: var(--pico-color);
+
+  strong {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    display: block;
+  }
 }
 
 .nav {
