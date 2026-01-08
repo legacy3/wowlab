@@ -1,20 +1,27 @@
 {
-  "name": "portal-new",
+  "name": "@apps/portal-new",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write --ignore-path ../../.prettierignore .",
+    "ncu": "ncu -u"
   },
   "dependencies": {
+    "@picocss/pico": "^2.1.1",
+    "lucide-react": "^0.562.0",
+    "motion": "^12.24.12",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
