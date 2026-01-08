@@ -1,0 +1,63 @@
+.list {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trigger {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--pico-border-radius);
+  cursor: pointer;
+}
+
+.trigger:hover {
+  background: var(--pico-secondary-background);
+}
+
+.trigger[data-popup-open] {
+  background: var(--pico-secondary-background);
+}
+
+.icon {
+  transition: transform 0.2s;
+}
+
+.trigger[data-popup-open] .icon {
+  transform: rotate(180deg);
+}
+
+.content {
+  padding: 0.5rem;
+}
+
+.link {
+  all: unset;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--pico-border-radius);
+  cursor: pointer;
+}
+
+.link:hover {
+  background: var(--pico-secondary-background);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.3);
+}
+
+.popup {
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  z-index: 100;
+}

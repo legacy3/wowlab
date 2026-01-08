@@ -1,0 +1,22 @@
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--pico-form-element-background-color);
+  border: 1px solid var(--pico-form-element-border-color);
+  border-radius: var(--pico-border-radius);
+  color: var(--pico-color);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--pico-form-element-active-border-color);
+}
+
+.input[data-invalid] {
+  border-color: var(--pico-del-color);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

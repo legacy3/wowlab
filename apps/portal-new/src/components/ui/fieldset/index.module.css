@@ -1,0 +1,11 @@
+.root {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: var(--pico-spacing);
+  margin: 0;
+}
+
+.legend {
+  font-weight: 600;
+  padding: 0 0.5rem;
+}

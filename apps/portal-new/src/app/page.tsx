@@ -76,7 +76,9 @@ export default function Home() {
         <h2>Select</h2>
         <Select.Root>
           <Select.Trigger>
-            <Select.Value placeholder="Select a fruit..." />
+            <Select.Value>
+              {(value) => value || "Select a fruit..."}
+            </Select.Value>
           </Select.Trigger>
           <Select.Portal>
             <Select.Popup>
