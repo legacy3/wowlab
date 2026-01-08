@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { BookOpen, Calculator, FlaskConical, Play, Swords } from "lucide-react";
+import { routes } from "./routes";
 
 type Icon = LucideIcon;
 
@@ -25,40 +26,40 @@ type SubItem = {
 export const navMain: NavItem[] = [
   {
     label: "Simulate",
-    href: "/simulate",
+    href: routes.simulate.index,
     icon: Play,
     items: [
-      { label: "Quick Sim", href: "/simulate" },
-      { label: "Optimize", href: "/optimize" },
-      { label: "Rankings", href: "/rankings" },
+      { label: "Quick Sim", href: routes.simulate.index },
+      { label: "Optimize", href: routes.optimize },
+      { label: "Rankings", href: routes.rankings },
     ],
   },
   {
     label: "Plan",
-    href: "/talents",
+    href: routes.talents,
     icon: Calculator,
-    items: [{ label: "Talents", href: "/talents" }],
+    items: [{ label: "Talents", href: routes.talents }],
   },
   {
     label: "Rotations",
-    href: "/rotations",
+    href: routes.rotations.index,
     icon: Swords,
     items: [
-      { label: "Browse", href: "/rotations" },
-      { label: "Create", href: "/rotations/editor" },
+      { label: "Browse", href: routes.rotations.index },
+      { label: "Create", href: routes.rotations.editor },
     ],
   },
   {
     label: "Lab",
-    href: "/lab",
+    href: routes.lab.index,
     icon: FlaskConical,
     items: [
-      { label: "Overview", href: "/lab" },
-      { label: "Data Inspector", href: "/lab/inspector/search" },
+      { label: "Overview", href: routes.lab.index },
+      { label: "Data Inspector", href: routes.lab.inspector },
     ],
   },
 ];
 
 export const navSecondary: MenuItem[] = [
-  { label: "Docs", href: "/docs", icon: BookOpen },
+  { label: "Docs", href: routes.docs, icon: BookOpen },
 ];

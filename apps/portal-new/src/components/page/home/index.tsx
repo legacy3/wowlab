@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { routes } from "@/lib/routes";
 
 export function HomeContent() {
   return (
@@ -10,7 +11,7 @@ export function HomeContent() {
             Run DPS simulations with customizable parameters and rotation
             configurations.
           </p>
-          <Link href="/simulate" role="button">
+          <Link href={routes.simulate.index} role="button">
             Get Started
           </Link>
         </article>
@@ -21,7 +22,7 @@ export function HomeContent() {
             Explore and compare talent builds across all classes and
             specializations.
           </p>
-          <Link href="/talents" role="button" className="secondary">
+          <Link href={routes.talents} role="button" className="secondary">
             Browse Talents
           </Link>
         </article>
@@ -31,7 +32,11 @@ export function HomeContent() {
           <p>
             Build and share rotation profiles for simulation and optimization.
           </p>
-          <Link href="/rotations" role="button" className="secondary">
+          <Link
+            href={routes.rotations.index}
+            role="button"
+            className="secondary"
+          >
             View Rotations
           </Link>
         </article>

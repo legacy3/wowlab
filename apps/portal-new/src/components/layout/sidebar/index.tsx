@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navMain, navSecondary } from "@/lib/menu-config";
+import { routes } from "@/lib/routes";
 import styles from "./index.module.scss";
 
 export function Sidebar() {
@@ -11,7 +12,7 @@ export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.header}>
-        <Link href="/" className={styles.logo}>
+        <Link href={routes.home} className={styles.logo}>
           <strong>WoW Lab</strong>
         </Link>
       </div>

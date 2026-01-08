@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { routes } from "@/lib/routes";
 
 export function SimulateContent() {
   return (
@@ -8,7 +9,7 @@ export function SimulateContent() {
           <strong>Quick Sim</strong>
         </header>
         <p>Run a quick simulation with default settings for your character.</p>
-        <Link href="/simulate/quick" role="button">
+        <Link href={routes.simulate.quick} role="button">
           Start Quick Sim
         </Link>
       </article>
@@ -18,7 +19,11 @@ export function SimulateContent() {
           <strong>Advanced Sim</strong>
         </header>
         <p>Configure detailed simulation parameters for in-depth analysis.</p>
-        <Link href="/simulate/advanced" role="button" className="secondary">
+        <Link
+          href={routes.simulate.advanced}
+          role="button"
+          className="secondary"
+        >
           Configure Simulation
         </Link>
       </article>
