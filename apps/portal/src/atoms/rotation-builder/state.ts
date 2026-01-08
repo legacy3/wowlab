@@ -14,18 +14,39 @@ export interface Variable {
   expression: string;
 }
 
+/**
+ * Action type discriminator.
+ * - "spell": Cast a spell
+ * - "call_action_list": Execute another action list
+ */
+export type ActionType = "spell" | "call_action_list";
+
 export interface Action {
   id: string;
+  /** Action type - "spell" for abilities, "call_action_list" for sub-list execution */
+  type: ActionType;
+  /** For type="spell": the spell identifier. For type="call_action_list": the list name */
   spell: string;
   enabled: boolean;
   conditions: RuleGroupType;
 }
 
+/**
+ * List type for special handling.
+ * - "precombat": Runs once before combat, non-harmful actions only
+ * - "main": The entry point for the rotation (root list)
+ * - "sub": A callable sub-list invoked via call_action_list
+ */
+export type ListType = "precombat" | "main" | "sub";
+
 export interface ActionListWithActions {
   id: string;
   name: string;
   label: string;
+  /** @deprecated Use listType instead */
   isDefault?: boolean;
+  /** The type of list - determines execution behavior */
+  listType: ListType;
   actions: Action[];
 }
 
@@ -35,54 +56,88 @@ export interface ActionListWithActions {
 
 function createDefaultActionLists(): ActionListWithActions[] {
   return [
+    // Precombat - runs once before pull
     {
-      id: "list-default",
-      name: "default",
-      label: "Default",
-      isDefault: true,
+      id: "list-precombat",
+      name: "precombat",
+      label: "Precombat",
+      listType: "precombat",
       actions: [
         {
-          id: "action-init-1",
-          spell: "bestial_wrath",
+          id: "action-pre-1",
+          type: "spell",
+          spell: "aspect_of_the_wild",
           enabled: true,
           conditions: { combinator: "and", rules: [] },
         },
+      ],
+    },
+    // Main rotation - entry point that calls sub-lists
+    {
+      id: "list-main",
+      name: "main",
+      label: "Main",
+      listType: "main",
+      isDefault: true,
+      actions: [
+        // Call cooldowns list when burst conditions are met
         {
-          id: "action-init-2",
-          spell: "kill_command",
+          id: "action-main-1",
+          type: "call_action_list",
+          spell: "cooldowns",
           enabled: true,
           conditions: {
             combinator: "and",
-            rules: [{ field: "focus", operator: ">=", value: "30" }],
+            rules: [{ field: "variable", operator: "=", value: "burst_phase" }],
           },
         },
+        // Call AoE list when multiple targets
         {
-          id: "action-init-3",
-          spell: "barbed_shot",
+          id: "action-main-2",
+          type: "call_action_list",
+          spell: "aoe",
           enabled: true,
           conditions: {
             combinator: "and",
-            rules: [{ field: "charges", operator: ">=", value: "1" }],
+            rules: [{ field: "active_enemies", operator: ">=", value: "3" }],
           },
         },
+        // Call ST list for single target
         {
-          id: "action-init-4",
-          spell: "cobra_shot",
+          id: "action-main-3",
+          type: "call_action_list",
+          spell: "st",
           enabled: true,
-          conditions: {
-            combinator: "and",
-            rules: [{ field: "focus", operator: ">=", value: "35" }],
-          },
+          conditions: { combinator: "and", rules: [] },
         },
       ],
     },
+    // Cooldowns sub-list
     {
       id: "list-cooldowns",
       name: "cooldowns",
       label: "Cooldowns",
+      listType: "sub",
       actions: [
         {
-          id: "action-init-5",
+          id: "action-cd-1",
+          type: "spell",
+          spell: "bestial_wrath",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [
+              {
+                field: "cooldown_ready",
+                operator: "=",
+                value: "bestial_wrath",
+              },
+            ],
+          },
+        },
+        {
+          id: "action-cd-2",
+          type: "spell",
           spell: "call_of_the_wild",
           enabled: true,
           conditions: {
@@ -93,25 +148,101 @@ function createDefaultActionLists(): ActionListWithActions[] {
           },
         },
         {
-          id: "action-init-6",
+          id: "action-cd-3",
+          type: "spell",
           spell: "bloodshed",
           enabled: true,
           conditions: { combinator: "and", rules: [] },
         },
       ],
     },
+    // AoE sub-list
     {
       id: "list-aoe",
       name: "aoe",
       label: "AoE",
+      listType: "sub",
       actions: [
         {
-          id: "action-init-7",
+          id: "action-aoe-1",
+          type: "spell",
           spell: "multi_shot",
           enabled: true,
           conditions: {
             combinator: "and",
             rules: [{ field: "aura_remaining", operator: "<", value: "2" }],
+          },
+        },
+        {
+          id: "action-aoe-2",
+          type: "spell",
+          spell: "barbed_shot",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "charges", operator: ">=", value: "1" }],
+          },
+        },
+        {
+          id: "action-aoe-3",
+          type: "spell",
+          spell: "kill_command",
+          enabled: true,
+          conditions: { combinator: "and", rules: [] },
+        },
+      ],
+    },
+    // Single Target sub-list
+    {
+      id: "list-st",
+      name: "st",
+      label: "Single Target",
+      listType: "sub",
+      actions: [
+        {
+          id: "action-st-1",
+          type: "spell",
+          spell: "kill_command",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "focus", operator: ">=", value: "30" }],
+          },
+        },
+        {
+          id: "action-st-2",
+          type: "spell",
+          spell: "barbed_shot",
+          enabled: true,
+          conditions: {
+            combinator: "or",
+            rules: [
+              { field: "charges", operator: ">=", value: "2" },
+              { field: "aura_remaining", operator: "<", value: "2" },
+            ],
+          },
+        },
+        {
+          id: "action-st-3",
+          type: "spell",
+          spell: "cobra_shot",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [
+              { field: "focus", operator: ">=", value: "50" },
+              { field: "variable", operator: "=", value: "pooling" },
+            ],
+          },
+        },
+        {
+          id: "action-st-4",
+          type: "spell",
+          spell: "cobra_shot",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "focus", operator: ">=", value: "35" }],
           },
         },
       ],
@@ -159,14 +290,14 @@ export const rotationActionListsAtom = atomWithStorage<ActionListWithActions[]>(
 
 export const rotationDefaultListIdAtom = atomWithStorage<string>(
   "rotation-builder-default-list-v1",
-  "list-default",
+  "list-main",
 );
 
 // =============================================================================
 // UI State Atoms (not persisted)
 // =============================================================================
 
-export const selectedListIdAtom = atom<string | null>("list-default");
+export const selectedListIdAtom = atom<string | null>("list-main");
 
 export type ViewMode = "edit" | "preview";
 export const viewModeAtom = atom<ViewMode>("edit");
@@ -188,6 +319,7 @@ export const actionListInfosAtom = atom((get) => {
     id: list.id,
     name: list.name,
     label: list.label,
+    listType: list.listType,
     isDefault: list.id === defaultListId,
   }));
 });

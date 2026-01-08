@@ -9,12 +9,15 @@ import {
   ListIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  PlayIcon,
   PlusIcon,
   StarIcon,
   TrashIcon,
   VariableIcon,
   CheckIcon,
   XIcon,
+  ZapIcon,
+  ListTreeIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,9 +65,8 @@ import {
 import { cn } from "@/lib/utils";
 import { generateVariableId } from "@/lib/id";
 
-import type { ActionListInfo, Variable } from "./types";
+import type { ActionListInfo, Variable, ListType } from "./types";
 import { toInternalName } from "./utils";
-import { useVariableValidation } from "./hooks";
 
 // =============================================================================
 // Types
@@ -82,7 +84,11 @@ export interface RotationSidebarProps {
   lists: ActionListInfo[];
   selectedListId: string | null;
   onSelectList: (id: string) => void;
-  onAddList: (list: Omit<ActionListInfo, "id">) => void;
+  onAddList: (list: {
+    name: string;
+    label: string;
+    listType: ListType;
+  }) => void;
   onRenameList: (id: string, label: string) => void;
   onDeleteList: (id: string) => void;
   onSetDefaultList: (id: string) => void;
@@ -97,14 +103,18 @@ export interface RotationSidebarProps {
 // Action List Templates
 // =============================================================================
 
-const ACTION_LIST_TEMPLATES = [
-  { name: "default", label: "Default" },
-  { name: "precombat", label: "Precombat" },
-  { name: "cooldowns", label: "Cooldowns" },
-  { name: "aoe", label: "AoE" },
-  { name: "st", label: "Single Target" },
-  { name: "cleave", label: "Cleave" },
-] as const;
+const ACTION_LIST_TEMPLATES: Array<{
+  name: string;
+  label: string;
+  listType: ListType;
+}> = [
+  { name: "precombat", label: "Precombat", listType: "precombat" },
+  { name: "main", label: "Main", listType: "main" },
+  { name: "cooldowns", label: "Cooldowns", listType: "sub" },
+  { name: "aoe", label: "AoE", listType: "sub" },
+  { name: "st", label: "Single Target", listType: "sub" },
+  { name: "cleave", label: "Cleave", listType: "sub" },
+];
 
 // =============================================================================
 // Action List Item
@@ -148,34 +158,49 @@ const ListItem = memo(function ListItem({
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-1 px-1 py-0.5">
+      <div className="flex items-center gap-1.5 px-2 py-1">
         <Input
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          className="h-6 text-xs flex-1"
+          className="h-7 text-sm flex-1"
           autoFocus
         />
         <Button
           variant="ghost"
           size="icon"
-          className="size-5"
+          className="size-6"
           onClick={handleSave}
         >
-          <CheckIcon className="size-3" />
+          <CheckIcon className="size-3.5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="size-5"
+          className="size-6"
           onClick={() => setIsEditing(false)}
         >
-          <XIcon className="size-3" />
+          <XIcon className="size-3.5" />
         </Button>
       </div>
     );
   }
+
+  // Get icon and styling based on list type
+  const listType = list.listType ?? "sub";
+  const ListTypeIcon =
+    listType === "precombat"
+      ? ZapIcon
+      : listType === "main"
+        ? PlayIcon
+        : ListTreeIcon;
+  const listTypeColor =
+    listType === "precombat"
+      ? "text-amber-500"
+      : listType === "main"
+        ? "text-green-500"
+        : "text-muted-foreground";
 
   return (
     <ContextMenu>
@@ -188,30 +213,41 @@ const ListItem = memo(function ListItem({
             if (e.key === "Enter" || e.key === " ") onSelect();
           }}
           className={cn(
-            "group flex items-center gap-1.5 rounded px-1.5 py-1 text-xs cursor-pointer transition-colors",
+            "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors",
             "hover:bg-accent",
             isSelected && "bg-accent",
           )}
         >
-          <GripVerticalIcon className="size-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 cursor-grab" />
-          <ListIcon className="size-3 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate">{list.label}</span>
-          {list.isDefault && (
-            <Badge variant="secondary" className="h-4 px-1 text-[9px]">
-              Default
+          <GripVerticalIcon className="size-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 cursor-grab shrink-0" />
+          <ListTypeIcon className={cn("size-4 shrink-0", listTypeColor)} />
+          <span className="flex-1 truncate font-medium">{list.label}</span>
+          {listType === "precombat" && (
+            <Badge
+              variant="outline"
+              className="h-5 px-1.5 text-[10px] border-amber-500/40 text-amber-500 font-medium"
+            >
+              Pre
+            </Badge>
+          )}
+          {listType === "main" && (
+            <Badge
+              variant="outline"
+              className="h-5 px-1.5 text-[10px] border-green-500/40 text-green-500 font-medium"
+            >
+              Main
             </Badge>
           )}
           <Button
             variant="ghost"
             size="icon"
-            className="size-5 opacity-0 group-hover:opacity-100"
+            className="size-6 opacity-0 group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <MoreHorizontalIcon className="size-3" />
+            <MoreHorizontalIcon className="size-3.5" />
           </Button>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-40">
+      <ContextMenuContent className="w-44">
         <ContextMenuItem
           onClick={() => {
             setEditValue(list.label);
@@ -242,120 +278,188 @@ const ListItem = memo(function ListItem({
 });
 
 // =============================================================================
-// Variable Item
+// Variable Dialog (for add/edit)
+// =============================================================================
+
+interface VariableDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  variable?: Variable | null;
+  existingNames: string[];
+  onSave: (data: { name: string; expression: string }) => void;
+  onDelete?: () => void;
+}
+
+function VariableDialog({
+  open,
+  onOpenChange,
+  variable,
+  existingNames,
+  onSave,
+  onDelete,
+}: VariableDialogProps) {
+  const [name, setName] = useState("");
+  const [expression, setExpression] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!variable;
+
+  // Reset form when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      setName(variable?.name ?? "");
+      setExpression(variable?.expression ?? "");
+      setError(null);
+    }
+  }, [open, variable]);
+
+  const handleSave = useCallback(() => {
+    const trimmedName = name.trim();
+    const trimmedExpr = expression.trim();
+
+    if (!trimmedName) {
+      setError("Name is required");
+      return;
+    }
+    if (!trimmedExpr) {
+      setError("Expression is required");
+      return;
+    }
+    if (!/^[a-z_][a-z0-9_]*$/i.test(trimmedName)) {
+      setError("Invalid name format");
+      return;
+    }
+    // Check for duplicate names (excluding current variable if editing)
+    const otherNames = existingNames.filter((n) => n !== variable?.name);
+    if (otherNames.includes(trimmedName)) {
+      setError("Name already exists");
+      return;
+    }
+
+    onSave({ name: trimmedName, expression: trimmedExpr });
+    onOpenChange(false);
+  }, [name, expression, existingNames, variable, onSave, onOpenChange]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[420px] gap-0">
+        <DialogHeader className="pb-4">
+          <DialogTitle>
+            {isEditing ? "Edit Variable" : "New Variable"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Name field with $ prefix inside */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              Name
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-mono text-sm">
+                $
+              </span>
+              <Input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError(null);
+                }}
+                placeholder="variable_name"
+                className="pl-7 font-mono"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* Expression field */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">
+              Expression
+            </label>
+            <Input
+              value={expression}
+              onChange={(e) => {
+                setExpression(e.target.value);
+                setError(null);
+              }}
+              placeholder="condition expression"
+              className="font-mono"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+
+        <DialogFooter className="flex-row justify-between sm:justify-between pt-6">
+          {isEditing && onDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 -ml-2"
+              onClick={() => {
+                onDelete();
+                onOpenChange(false);
+              }}
+            >
+              <TrashIcon className="size-4 mr-1.5" />
+              Delete
+            </Button>
+          ) : (
+            <div />
+          )}
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              {isEditing ? "Save Changes" : "Add Variable"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// Variable Item (simplified - just display, click to edit)
 // =============================================================================
 
 interface VariableItemProps {
   variable: Variable;
-  onUpdate: (updates: { name: string; expression: string }) => void;
-  onDelete: () => void;
-  existingNames: string[];
+  onClick: () => void;
 }
 
 const VariableItem = memo(function VariableItem({
   variable,
-  onUpdate,
-  onDelete,
-  existingNames,
+  onClick,
 }: VariableItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(variable.name);
-  const [editExpr, setEditExpr] = useState(variable.expression);
-
-  const { validate } = useVariableValidation({
-    existingNames,
-    currentName: variable.name,
-  });
-
-  const handleSave = useCallback(() => {
-    const error = validate(editName, editExpr);
-    if (error) return;
-    onUpdate({ name: editName.trim(), expression: editExpr.trim() });
-    setIsEditing(false);
-  }, [editName, editExpr, validate, onUpdate]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSave();
-      } else if (e.key === "Escape") {
-        setIsEditing(false);
-      }
-    },
-    [handleSave],
-  );
-
-  if (isEditing) {
-    return (
-      <div className="rounded border bg-muted/30 p-2 space-y-2">
-        <div className="flex items-center gap-1">
-          <span className="text-muted-foreground text-xs">$</span>
-          <Input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="name"
-            className="h-6 text-xs font-mono flex-1"
-            autoFocus
-          />
-        </div>
-        <Input
-          value={editExpr}
-          onChange={(e) => setEditExpr(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="expression"
-          className="h-6 text-xs font-mono"
-        />
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-5 px-2 text-xs"
-            onClick={() => setIsEditing(false)}
-          >
-            Cancel
-          </Button>
-          <Button size="sm" className="h-5 px-2 text-xs" onClick={handleSave}>
-            Save
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="group flex items-center gap-1.5 rounded px-1.5 py-1 text-xs hover:bg-muted/50 transition-colors">
-      <VariableIcon className="size-3 text-muted-foreground shrink-0" />
-      <Badge variant="secondary" className="h-4 px-1 text-[9px] font-mono">
-        ${variable.name}
-      </Badge>
-      <span className="text-muted-foreground">=</span>
-      <code className="flex-1 truncate text-[10px] text-foreground/70">
-        {variable.expression}
-      </code>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-5"
-          onClick={() => {
-            setEditName(variable.name);
-            setEditExpr(variable.expression);
-            setIsEditing(true);
-          }}
-        >
-          <PencilIcon className="size-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-5 text-destructive hover:text-destructive"
-          onClick={onDelete}
-        >
-          <TrashIcon className="size-3" />
-        </Button>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick();
+      }}
+      className="group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-accent cursor-pointer transition-colors"
+    >
+      <VariableIcon className="size-4 text-muted-foreground shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="secondary"
+            className="h-5 px-1.5 text-[11px] font-mono shrink-0"
+          >
+            ${variable.name}
+          </Badge>
+        </div>
+        <code className="block truncate text-xs text-muted-foreground font-mono mt-0.5">
+          {variable.expression}
+        </code>
       </div>
+      <PencilIcon className="size-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
     </div>
   );
 });
@@ -368,7 +472,7 @@ interface AddListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingNames: string[];
-  onAdd: (list: Omit<ActionListInfo, "id">) => void;
+  onAdd: (list: { name: string; label: string; listType: ListType }) => void;
 }
 
 function AddListDialog({
@@ -391,12 +495,17 @@ function AddListDialog({
         (t) => t.name === selectedTemplate,
       );
       if (template) {
-        onAdd({ name: template.name, label: template.label });
+        onAdd({
+          name: template.name,
+          label: template.label,
+          listType: template.listType,
+        });
       }
     } else if (mode === "custom" && customLabel.trim()) {
       onAdd({
         name: toInternalName(customLabel),
         label: customLabel.trim(),
+        listType: "sub", // Custom lists default to sub
       });
     }
     setSelectedTemplate("");
@@ -572,43 +681,45 @@ export function RotationSidebar({
     id: string;
     label: string;
   }>({ open: false, id: "", label: "" });
-  const [isAddingVariable, setIsAddingVariable] = useState(false);
-  const [newVarName, setNewVarName] = useState("");
-  const [newVarExpr, setNewVarExpr] = useState("");
+  const [variableDialog, setVariableDialog] = useState<{
+    open: boolean;
+    variable: Variable | null;
+  }>({ open: false, variable: null });
 
   const existingListNames = lists.map((l) => l.name);
   const existingVarNames = variables.map((v) => v.name);
 
-  const handleAddVariable = useCallback(() => {
-    if (!newVarName.trim() || !newVarExpr.trim()) return;
-    onVariablesChange([
-      ...variables,
-      {
-        id: generateVariableId(),
-        name: newVarName.trim(),
-        expression: newVarExpr.trim(),
-      },
-    ]);
-    setNewVarName("");
-    setNewVarExpr("");
-    setIsAddingVariable(false);
-  }, [newVarName, newVarExpr, variables, onVariablesChange]);
+  const handleSaveVariable = useCallback(
+    (data: { name: string; expression: string }) => {
+      if (variableDialog.variable) {
+        // Update existing
+        onVariablesChange(
+          variables.map((v) =>
+            v.id === variableDialog.variable!.id ? { ...v, ...data } : v,
+          ),
+        );
+      } else {
+        // Add new
+        onVariablesChange([
+          ...variables,
+          {
+            id: generateVariableId(),
+            name: data.name,
+            expression: data.expression,
+          },
+        ]);
+      }
+    },
+    [variableDialog.variable, variables, onVariablesChange],
+  );
 
-  const handleUpdateVariable = useCallback(
-    (id: string, updates: { name: string; expression: string }) => {
+  const handleDeleteVariable = useCallback(() => {
+    if (variableDialog.variable) {
       onVariablesChange(
-        variables.map((v) => (v.id === id ? { ...v, ...updates } : v)),
+        variables.filter((v) => v.id !== variableDialog.variable!.id),
       );
-    },
-    [variables, onVariablesChange],
-  );
-
-  const handleDeleteVariable = useCallback(
-    (id: string) => {
-      onVariablesChange(variables.filter((v) => v.id !== id));
-    },
-    [variables, onVariablesChange],
-  );
+    }
+  }, [variableDialog.variable, variables, onVariablesChange]);
 
   if (collapsed) {
     return (
@@ -626,26 +737,24 @@ export function RotationSidebar({
   }
 
   return (
-    <div className="flex flex-col border-r bg-muted/30 w-56 h-full overflow-hidden">
+    <div className="flex flex-col border-r bg-muted/30 w-60 h-full overflow-hidden">
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as TabId)}
         className="flex flex-col h-full overflow-hidden"
       >
         {/* Header with tabs */}
-        <div className="flex items-center justify-between border-b px-1.5 py-1 shrink-0">
-          <TabsList className="h-7 bg-transparent p-0 gap-0.5">
+        <div className="flex items-center justify-between border-b px-2 py-1.5 shrink-0">
+          <TabsList className="h-8 bg-transparent p-0 gap-1">
             {SIDEBAR_TABS.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="h-6 px-2 text-xs data-[state=active]:bg-background gap-1"
+                className="h-7 px-2.5 text-xs data-[state=active]:bg-background gap-1.5 rounded-md"
               >
-                <tab.icon className="size-3" />
-                <span className="hidden sm:inline">
-                  {tab.id === "lists" ? "Lists" : "Vars"}
-                </span>
-                <span className="text-[10px] text-muted-foreground tabular-nums">
+                <tab.icon className="size-3.5" />
+                <span>{tab.id === "lists" ? "Lists" : "Vars"}</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums ml-0.5">
                   {tab.id === "lists" ? lists.length : variables.length}
                 </span>
               </TabsTrigger>
@@ -654,10 +763,10 @@ export function RotationSidebar({
           <Button
             variant="ghost"
             size="icon"
-            className="size-6"
+            className="size-7"
             onClick={() => setCollapsed(true)}
           >
-            <ChevronLeftIcon className="size-3.5" />
+            <ChevronLeftIcon className="size-4" />
           </Button>
         </div>
 
@@ -666,21 +775,21 @@ export function RotationSidebar({
           value="lists"
           className="flex-1 mt-0 overflow-hidden flex flex-col"
         >
-          <div className="flex items-center justify-between px-2 py-1.5 border-b">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="flex items-center justify-between px-3 py-2 border-b">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Action Lists
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="size-5"
+              className="size-6 hover:bg-accent"
               onClick={() => setAddListOpen(true)}
             >
-              <PlusIcon className="size-3" />
+              <PlusIcon className="size-3.5" />
             </Button>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-1.5 space-y-0.5">
+            <div className="p-2 space-y-0.5">
               {lists.map((list) => (
                 <ListItem
                   key={list.id}
@@ -699,15 +808,15 @@ export function RotationSidebar({
                 />
               ))}
               {lists.length === 0 && (
-                <div className="text-center py-4 text-xs text-muted-foreground">
+                <div className="text-center py-8 text-sm text-muted-foreground">
                   <p>No lists yet.</p>
                   <Button
                     variant="link"
                     size="sm"
-                    className="h-5 text-xs"
+                    className="h-6 text-xs mt-1"
                     onClick={() => setAddListOpen(true)}
                   >
-                    Add first list
+                    Add your first list
                   </Button>
                 </div>
               )}
@@ -720,82 +829,48 @@ export function RotationSidebar({
           value="variables"
           className="flex-1 mt-0 overflow-hidden flex flex-col"
         >
-          <div className="flex items-center justify-between px-2 py-1.5 border-b">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="flex items-center justify-between px-3 py-2 border-b">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Variables
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="size-5"
-              onClick={() => setIsAddingVariable(true)}
-              disabled={isAddingVariable}
+              className="size-6 hover:bg-accent"
+              onClick={() => setVariableDialog({ open: true, variable: null })}
             >
-              <PlusIcon className="size-3" />
+              <PlusIcon className="size-3.5" />
             </Button>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-1.5 space-y-1">
-              {isAddingVariable && (
-                <div className="rounded border bg-muted/30 p-2 space-y-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground text-xs">$</span>
-                    <Input
-                      value={newVarName}
-                      onChange={(e) => setNewVarName(e.target.value)}
-                      placeholder="name"
-                      className="h-6 text-xs font-mono flex-1"
-                      autoFocus
-                    />
-                  </div>
-                  <Input
-                    value={newVarExpr}
-                    onChange={(e) => setNewVarExpr(e.target.value)}
-                    placeholder="expression"
-                    className="h-6 text-xs font-mono"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddVariable();
-                      else if (e.key === "Escape") setIsAddingVariable(false);
-                    }}
-                  />
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 px-2 text-xs"
-                      onClick={() => setIsAddingVariable(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-5 px-2 text-xs"
-                      onClick={handleAddVariable}
-                      disabled={!newVarName.trim() || !newVarExpr.trim()}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-              )}
+            <div className="p-2 space-y-1">
               {variables.map((variable) => (
                 <VariableItem
                   key={variable.id}
                   variable={variable}
-                  onUpdate={(updates) =>
-                    handleUpdateVariable(variable.id, updates)
-                  }
-                  onDelete={() => handleDeleteVariable(variable.id)}
-                  existingNames={existingVarNames}
+                  onClick={() => setVariableDialog({ open: true, variable })}
                 />
               ))}
-              {variables.length === 0 && !isAddingVariable && (
-                <div className="text-center py-4 text-xs text-muted-foreground">
+              {variables.length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">
                   <p>No variables yet.</p>
-                  <p className="text-[10px] mt-1">
-                    Use <code className="bg-muted px-1 rounded">$name</code> in
-                    conditions
+                  <p className="text-xs mt-2 text-muted-foreground/70">
+                    Use{" "}
+                    <code className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-mono">
+                      $name
+                    </code>{" "}
+                    in conditions
                   </p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-6 text-xs mt-2"
+                    onClick={() =>
+                      setVariableDialog({ open: true, variable: null })
+                    }
+                  >
+                    Add your first variable
+                  </Button>
                 </div>
               )}
             </div>
@@ -836,6 +911,16 @@ export function RotationSidebar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <VariableDialog
+        open={variableDialog.open}
+        onOpenChange={(open) =>
+          setVariableDialog((prev) => ({ ...prev, open }))
+        }
+        variable={variableDialog.variable}
+        existingNames={existingVarNames}
+        onSave={handleSaveVariable}
+        onDelete={handleDeleteVariable}
+      />
     </div>
   );
 }

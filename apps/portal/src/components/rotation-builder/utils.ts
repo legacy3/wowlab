@@ -50,22 +50,37 @@ export function getConditionSummary(conditions: RuleGroupType): string {
 
   const summaryParts: string[] = [];
   for (const rule of conditions.rules.slice(0, 2)) {
-    if ("field" in rule) {
+    if ("field" in rule && rule.field) {
       const field = String(rule.field).replace(/_/g, " ");
-      summaryParts.push(`${field} ${rule.operator} ${rule.value}`);
+      const op = rule.operator ?? "=";
+      const val = rule.value ?? "";
+      // For variable checks, show as "$varname"
+      if (rule.field === "variable") {
+        summaryParts.push(`$${val}`);
+      } else {
+        summaryParts.push(`${field} ${op} ${val}`);
+      }
     } else if ("rules" in rule) {
-      // Nested group
+      // Nested group - show count if non-empty
       const nestedCount = rule.rules.length;
-      summaryParts.push(`(${nestedCount} nested)`);
+      if (nestedCount > 0) {
+        summaryParts.push(`(${nestedCount} nested)`);
+      }
     }
   }
 
-  const remaining = conditions.rules.length - summaryParts.length;
-  if (remaining > 0) {
-    summaryParts.push(`+${remaining} more`);
+  // Filter out empty parts
+  const validParts = summaryParts.filter((p) => p.trim());
+  if (validParts.length === 0) {
+    return "Always";
   }
 
-  return summaryParts.join(` ${conditions.combinator.toUpperCase()} `);
+  const remaining = conditions.rules.length - 2;
+  if (remaining > 0) {
+    validParts.push(`+${remaining} more`);
+  }
+
+  return validParts.join(` ${conditions.combinator.toUpperCase()} `);
 }
 
 /**

@@ -1,12 +1,12 @@
 "use client";
 
-import { FileCode, FileJson, FileText, Bug } from "lucide-react";
+import { Code2Icon, BracesIcon, TextIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { RuleGroupType, RuleType } from "react-querybuilder";
 
 import { CodeBlock } from "@/components/ui/code-block";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClassesAndSpecs } from "@/hooks/use-classes-and-specs";
+import { cn } from "@/lib/utils";
 
 import type { RotationData } from "./types";
 
@@ -98,7 +98,6 @@ function formatConditionForNatural(rule: RuleType | RuleGroupType): string {
     const { field, operator, value } = rule;
     const fieldName = String(field).replace(/_/g, " ");
 
-    // Make operator more readable
     const opMap: Record<string, string> = {
       "=": "equals",
       "!=": "does not equal",
@@ -112,7 +111,6 @@ function formatConditionForNatural(rule: RuleType | RuleGroupType): string {
     return `${fieldName} ${opText} ${value}`;
   }
 
-  // It's a group
   const group = rule as RuleGroupType;
   if (!group.rules || group.rules.length === 0) return "";
 
@@ -137,23 +135,20 @@ function formatConditionsForNatural(conditions: RuleGroupType): string {
 function generateNatural(data: RotationData, specName: string): string {
   const lines: string[] = [];
 
-  // Header
   lines.push(specName + " Rotation");
   lines.push("");
 
-  // Variables
   if (data.variables.length > 0) {
     lines.push("Variables:");
     for (const variable of data.variables) {
-      lines.push(`- ${variable.name}: ${variable.expression}`);
+      lines.push(`  • ${variable.name}: ${variable.expression}`);
     }
     lines.push("");
   }
 
-  // Action lists
   for (const list of data.actionLists) {
     const isDefault = list.name === data.defaultList;
-    const title = isDefault ? `${list.label} Priority:` : `${list.label}:`;
+    const title = isDefault ? `${list.label} (default):` : `${list.label}:`;
     lines.push(title);
 
     let priority = 1;
@@ -167,9 +162,9 @@ function generateNatural(data: RotationData, specName: string): string {
 
       const conditionStr = formatConditionsForNatural(action.conditions);
       if (conditionStr) {
-        lines.push(`${priority}. Cast ${spellName} when ${conditionStr}`);
+        lines.push(`  ${priority}. ${spellName} — when ${conditionStr}`);
       } else {
-        lines.push(`${priority}. Cast ${spellName} (always)`);
+        lines.push(`  ${priority}. ${spellName}`);
       }
       priority++;
     }
@@ -184,53 +179,14 @@ function generateJSON(data: RotationData): string {
   return JSON.stringify(data, null, 2);
 }
 
-function generateDebug(data: RotationData, specName: string): string {
-  const debug = {
-    summary: {
-      specId: data.specId,
-      specName,
-      defaultList: data.defaultList,
-      variableCount: data.variables.length,
-      listCount: data.actionLists.length,
-      totalActions: data.actionLists.reduce(
-        (sum, list) => sum + list.actions.length,
-        0,
-      ),
-      enabledActions: data.actionLists.reduce(
-        (sum, list) => sum + list.actions.filter((a) => a.enabled).length,
-        0,
-      ),
-    },
-    variables: data.variables.map((v) => ({
-      id: v.id,
-      name: v.name,
-      expressionLength: v.expression.length,
-    })),
-    lists: data.actionLists.map((list) => ({
-      id: list.id,
-      name: list.name,
-      isDefault: list.name === data.defaultList,
-      actions: list.actions.map((action) => ({
-        id: action.id,
-        spell: action.spell,
-        enabled: action.enabled,
-        conditionCount: action.conditions.rules?.length ?? 0,
-        combinator: action.conditions.combinator,
-      })),
-    })),
-  };
-
-  return JSON.stringify(debug, null, 2);
-}
-
 // -----------------------------------------------------------------------------
 // Main Component
 // -----------------------------------------------------------------------------
 
-type TabValue = "dsl" | "natural" | "json" | "debug";
+type ViewMode = "natural" | "dsl" | "json";
 
 export function RotationPreview({ data }: RotationPreviewProps) {
-  const [activeTab, setActiveTab] = useState<TabValue>("dsl");
+  const [viewMode, setViewMode] = useState<ViewMode>("natural");
   const { classes, specs } = useClassesAndSpecs();
 
   // Derive spec name from specId
@@ -246,77 +202,79 @@ export function RotationPreview({ data }: RotationPreviewProps) {
     return "Unknown";
   }, [data.specId, classes.result?.data, specs.result?.data]);
 
-  const dslContent = useMemo(
-    () => generateDSL(data, specName),
-    [data, specName],
-  );
   const naturalContent = useMemo(
     () => generateNatural(data, specName),
     [data, specName],
   );
-  const jsonContent = useMemo(() => generateJSON(data), [data]);
-  const debugContent = useMemo(
-    () => generateDebug(data, specName),
+  const dslContent = useMemo(
+    () => generateDSL(data, specName),
     [data, specName],
   );
+  const jsonContent = useMemo(() => generateJSON(data), [data]);
+
+  const currentContent =
+    viewMode === "natural"
+      ? naturalContent
+      : viewMode === "dsl"
+        ? dslContent
+        : jsonContent;
 
   return (
-    <div className="flex flex-col gap-2">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as TabValue)}
-      >
-        <TabsList>
-          <TabsTrigger value="dsl" className="gap-1.5">
-            <FileCode className="size-4" />
-            DSL
-          </TabsTrigger>
-          <TabsTrigger value="natural" className="gap-1.5">
-            <FileText className="size-4" />
-            Natural
-          </TabsTrigger>
-          <TabsTrigger value="json" className="gap-1.5">
-            <FileJson className="size-4" />
-            JSON
-          </TabsTrigger>
-          <TabsTrigger value="debug" className="gap-1.5">
-            <Bug className="size-4" />
-            Debug
-          </TabsTrigger>
-        </TabsList>
+    <div className="flex flex-col h-full">
+      {/* View toggle */}
+      <div className="flex items-center rounded-lg border bg-muted/40 p-0.5 w-fit mb-3">
+        <button
+          onClick={() => setViewMode("natural")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            viewMode === "natural"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <TextIcon className="size-3.5" />
+          Natural
+        </button>
+        <button
+          onClick={() => setViewMode("dsl")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            viewMode === "dsl"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Code2Icon className="size-3.5" />
+          DSL
+        </button>
+        <button
+          onClick={() => setViewMode("json")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            viewMode === "json"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <BracesIcon className="size-3.5" />
+          JSON
+        </button>
+      </div>
 
-        <TabsContent value="dsl">
-          <CodeBlock
-            code={dslContent}
-            language="yaml"
-            maxHeight="max-h-[400px]"
-          />
-        </TabsContent>
-
-        <TabsContent value="natural">
-          <CodeBlock
-            code={naturalContent}
-            language="markdown"
-            maxHeight="max-h-[400px]"
-          />
-        </TabsContent>
-
-        <TabsContent value="json">
-          <CodeBlock
-            code={jsonContent}
-            language="json"
-            maxHeight="max-h-[400px]"
-          />
-        </TabsContent>
-
-        <TabsContent value="debug">
-          <CodeBlock
-            code={debugContent}
-            language="json"
-            maxHeight="max-h-[400px]"
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Code display */}
+      <div className="flex-1 min-h-0">
+        <CodeBlock
+          code={currentContent}
+          language={
+            viewMode === "json"
+              ? "json"
+              : viewMode === "dsl"
+                ? "yaml"
+                : "markdown"
+          }
+          maxHeight="max-h-[calc(100vh-16rem)]"
+        />
+      </div>
     </div>
   );
 }

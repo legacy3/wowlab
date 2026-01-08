@@ -12,6 +12,7 @@ import {
   type Variable,
   type Action,
   type ActionListWithActions,
+  type ListType,
 } from "./state";
 
 // Beast Mastery Hunter spec ID (default)
@@ -68,11 +69,12 @@ export const setVariablesAtom = atom(null, (_, set, variables: Variable[]) => {
 
 export const addActionListAtom = atom(
   null,
-  (_, set, input: { name: string; label: string }) => {
+  (_, set, input: { name: string; label: string; listType: ListType }) => {
     const newList: ActionListWithActions = {
       id: generateListId(),
       name: input.name,
       label: input.label,
+      listType: input.listType,
       actions: [],
     };
     set(rotationActionListsAtom, (prev) => [...prev, newList]);
@@ -131,9 +133,18 @@ export const selectListAtom = atom(null, (_, set, id: string | null) => {
 
 export const addActionAtom = atom(
   null,
-  (get, set, input: { listId: string; spell: string }) => {
+  (
+    get,
+    set,
+    input: {
+      listId: string;
+      spell: string;
+      type?: "spell" | "call_action_list";
+    },
+  ) => {
     const newAction: Action = {
       id: generateActionId(),
+      type: input.type ?? "spell",
       spell: input.spell,
       enabled: true,
       conditions: { combinator: "and", rules: [] },
@@ -207,6 +218,7 @@ export const duplicateActionAtom = atom(
     const original = list.actions[actionIndex];
     const duplicate: Action = {
       id: generateActionId(),
+      type: original.type ?? "spell",
       spell: original.spell,
       enabled: original.enabled,
       conditions: structuredClone(original.conditions),
@@ -267,23 +279,94 @@ export const resetRotationBuilderAtom = atom(null, (_, set) => {
     },
   ]);
 
-  // Reset action lists
-  const defaultListId = generateListId();
+  // Reset action lists with proper structure
+  const precombatListId = generateListId();
+  const mainListId = generateListId();
+  const cooldownsListId = generateListId();
+  const stListId = generateListId();
+
   set(rotationActionListsAtom, [
+    // Precombat
     {
-      id: defaultListId,
-      name: "default",
-      label: "Default",
+      id: precombatListId,
+      name: "precombat",
+      label: "Precombat",
+      listType: "precombat" as ListType,
+      actions: [
+        {
+          id: generateActionId(),
+          type: "spell" as const,
+          spell: "aspect_of_the_wild",
+          enabled: true,
+          conditions: { combinator: "and", rules: [] },
+        },
+      ],
+    },
+    // Main rotation
+    {
+      id: mainListId,
+      name: "main",
+      label: "Main",
+      listType: "main" as ListType,
       isDefault: true,
       actions: [
         {
           id: generateActionId(),
+          type: "call_action_list" as const,
+          spell: "cooldowns",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "variable", operator: "=", value: "burst_phase" }],
+          },
+        },
+        {
+          id: generateActionId(),
+          type: "call_action_list" as const,
+          spell: "st",
+          enabled: true,
+          conditions: { combinator: "and", rules: [] },
+        },
+      ],
+    },
+    // Cooldowns sub-list
+    {
+      id: cooldownsListId,
+      name: "cooldowns",
+      label: "Cooldowns",
+      listType: "sub" as ListType,
+      actions: [
+        {
+          id: generateActionId(),
+          type: "spell" as const,
           spell: "bestial_wrath",
           enabled: true,
           conditions: { combinator: "and", rules: [] },
         },
         {
           id: generateActionId(),
+          type: "spell" as const,
+          spell: "call_of_the_wild",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [
+              { field: "aura_active", operator: "=", value: "bestial_wrath" },
+            ],
+          },
+        },
+      ],
+    },
+    // Single Target sub-list
+    {
+      id: stListId,
+      name: "st",
+      label: "Single Target",
+      listType: "sub" as ListType,
+      actions: [
+        {
+          id: generateActionId(),
+          type: "spell" as const,
           spell: "kill_command",
           enabled: true,
           conditions: {
@@ -291,11 +374,31 @@ export const resetRotationBuilderAtom = atom(null, (_, set) => {
             rules: [{ field: "focus", operator: ">=", value: "30" }],
           },
         },
+        {
+          id: generateActionId(),
+          type: "spell" as const,
+          spell: "barbed_shot",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "charges", operator: ">=", value: "1" }],
+          },
+        },
+        {
+          id: generateActionId(),
+          type: "spell" as const,
+          spell: "cobra_shot",
+          enabled: true,
+          conditions: {
+            combinator: "and",
+            rules: [{ field: "focus", operator: ">=", value: "35" }],
+          },
+        },
       ],
     },
   ]);
 
-  set(rotationDefaultListIdAtom, defaultListId);
-  set(selectedListIdAtom, defaultListId);
+  set(rotationDefaultListIdAtom, mainListId);
+  set(selectedListIdAtom, mainListId);
   set(viewModeAtom, "edit");
 });

@@ -895,7 +895,9 @@ type ConditionFieldName =
   | "target_health"
   | "charges"
   | "combo_points"
-  | "talent_enabled";
+  | "talent_enabled"
+  | "variable"
+  | "active_enemies";
 
 const selectField = (
   name: ConditionFieldName,
@@ -926,25 +928,44 @@ const numberField = (
   defaultValue,
 });
 
+// Variable options will be dynamically populated, but we need defaults
+const DEFAULT_VARIABLE_OPTIONS = [
+  createOption("burst_phase", "$burst_phase"),
+  createOption("pooling", "$pooling"),
+];
+
 export const CONDITION_FIELDS: Field[] = [
+  // Variables - check if a variable evaluates to true
+  selectField(
+    "variable",
+    "Variable",
+    [...DEFAULT_VARIABLE_OPTIONS],
+    "burst_phase",
+  ),
+  // Target conditions
+  numberField("active_enemies", "Active Enemies", ">=", "3"),
+  numberField("target_health", "Target Health %", "<", "20"),
+  // Resource conditions
+  numberField("focus", "Focus", ">=", "30"),
+  numberField("combo_points", "Combo Points", ">=", "5"),
+  // Cooldown conditions
   selectField(
     "cooldown_ready",
     "Cooldown Ready",
     [...BM_HUNTER_SPELL_OPTIONS],
     "kill_command",
   ),
-  numberField("focus", "Focus", ">=", "30"),
+  numberField("charges", "Charges", ">=", "1"),
+  // Buff/aura conditions
   selectField(
     "aura_active",
     "Aura Active",
     [...BM_HUNTER_AURA_OPTIONS],
     "bestial_wrath",
   ),
-  numberField("aura_stacks", "Frenzy Stacks", ">=", "3"),
-  numberField("aura_remaining", "Buff Remaining (sec)", ">=", "5"),
-  numberField("target_health", "Target Health %", "<", "20"),
-  numberField("charges", "Barbed Shot Charges", ">=", "1"),
-  numberField("combo_points", "Combo Points", ">=", "5"),
+  numberField("aura_stacks", "Aura Stacks", ">=", "3"),
+  numberField("aura_remaining", "Aura Remaining (sec)", "<", "5"),
+  // Talent conditions
   selectField(
     "talent_enabled",
     "Talent Enabled",

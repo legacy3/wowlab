@@ -54,7 +54,7 @@ import { RotationSidebar } from "./rotation-sidebar";
 import { ActionList } from "./action-editor";
 import { RotationPreview } from "./rotation-preview";
 import { BM_HUNTER_SPELLS, type SpellInfo } from "./data";
-import type { Action, ActionListInfo, Variable } from "./types";
+import type { Action, ActionListInfo, Variable, ListType } from "./types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // =============================================================================
@@ -117,8 +117,8 @@ export function RotationBuilderPage() {
   );
 
   const handleAddList = useCallback(
-    (list: Omit<ActionListInfo, "id">) => {
-      addList({ name: list.name, label: list.label });
+    (list: { name: string; label: string; listType: ListType }) => {
+      addList({ name: list.name, label: list.label, listType: list.listType });
     },
     [addList],
   );
@@ -173,6 +173,15 @@ export function RotationBuilderPage() {
     [],
   );
 
+  // Memoize action lists for call_action_list selector (only sub lists can be called)
+  const callableActionLists = useMemo(
+    () =>
+      actionListInfos
+        .filter((list) => list.listType === "sub")
+        .map((list) => ({ name: list.name, label: list.label })),
+    [actionListInfos],
+  );
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -186,45 +195,50 @@ export function RotationBuilderPage() {
           : "h-[calc(100vh-4rem)]",
       )}
     >
-      {/* Compact Header - spec + stats + actions all in one row */}
-      <header className="flex items-center gap-2 border-b px-3 py-1.5 bg-background shrink-0">
+      {/* Header */}
+      <header className="flex items-center gap-3 border-b px-4 py-2 bg-background shrink-0">
         {/* Left: Sidebar toggle + Title */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={showSidebar ? "secondary" : "ghost"}
                 size="icon"
-                className="size-6"
+                className="size-7"
                 onClick={() => setShowSidebar(!showSidebar)}
               >
-                <PanelLeftIcon className="size-3.5" />
+                <PanelLeftIcon className="size-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="bottom">
               {showSidebar ? "Hide sidebar" : "Show sidebar"}
             </TooltipContent>
           </Tooltip>
 
-          <h1 className="text-sm font-semibold">Rotation Builder</h1>
-          <Badge variant="secondary" className="text-[10px] h-4 px-1">
+          <h1 className="text-sm font-semibold tracking-tight">
+            Rotation Builder
+          </h1>
+          <Badge
+            variant="secondary"
+            className="text-[10px] h-5 px-1.5 font-medium"
+          >
             Demo
           </Badge>
         </div>
 
-        <Separator orientation="vertical" className="h-4 mx-1" />
+        <Separator orientation="vertical" className="h-5" />
 
         {/* Center: Spec selector (compact) using existing components */}
         <SpecPicker specId={specId} onSpecSelect={handleSpecChange} compact />
 
         {/* Stats inline */}
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
           <span>{actionListInfos.length} lists</span>
-          <span className="opacity-40">·</span>
+          <span className="text-muted-foreground/40">·</span>
           <span>
             {stats.enabledActions}/{stats.totalActions} actions
           </span>
-          <span className="opacity-40">·</span>
+          <span className="text-muted-foreground/40">·</span>
           <span>{variables.length} vars</span>
         </div>
 
@@ -232,52 +246,52 @@ export function RotationBuilderPage() {
         <div className="flex-1" />
 
         {/* Right: View toggle + actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {/* View toggle */}
-          <div className="flex items-center rounded-md border bg-muted/30 p-0.5">
+          <div className="flex items-center rounded-lg border bg-muted/40 p-0.5">
             <Button
               variant={viewMode === "edit" ? "secondary" : "ghost"}
               size="sm"
-              className="h-5 gap-1 text-[10px] px-1.5"
+              className="h-6 gap-1.5 text-xs px-2.5 rounded-md"
               onClick={() => setViewModeLocal("edit")}
             >
-              <PencilIcon className="size-3" />
+              <PencilIcon className="size-3.5" />
               Edit
             </Button>
             <Button
               variant={viewMode === "preview" ? "secondary" : "ghost"}
               size="sm"
-              className="h-5 gap-1 text-[10px] px-1.5"
+              className="h-6 gap-1.5 text-xs px-2.5 rounded-md"
               onClick={() => setViewModeLocal("preview")}
             >
-              <EyeIcon className="size-3" />
+              <EyeIcon className="size-3.5" />
               Preview
             </Button>
           </div>
 
-          <Separator orientation="vertical" className="h-4 mx-1" />
+          <Separator orientation="vertical" className="h-5 mx-1" />
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-6"
+                className="size-7"
                 onClick={handleExport}
               >
-                <DownloadIcon className="size-3" />
+                <DownloadIcon className="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Export</TooltipContent>
+            <TooltipContent side="bottom">Export</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-6" disabled>
-                <UploadIcon className="size-3" />
+              <Button variant="ghost" size="icon" className="size-7" disabled>
+                <UploadIcon className="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Import (coming soon)</TooltipContent>
+            <TooltipContent side="bottom">Import (coming soon)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -285,13 +299,13 @@ export function RotationBuilderPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-6"
+                className="size-7"
                 onClick={handleReset}
               >
-                <RotateCcwIcon className="size-3" />
+                <RotateCcwIcon className="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Reset</TooltipContent>
+            <TooltipContent side="bottom">Reset</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -299,17 +313,17 @@ export function RotationBuilderPage() {
               <Button
                 variant={isZen ? "secondary" : "ghost"}
                 size="icon"
-                className="size-6"
+                className="size-7"
                 onClick={toggleZen}
               >
                 {isZen ? (
-                  <XIcon className="size-3" />
+                  <XIcon className="size-3.5" />
                 ) : (
-                  <ExpandIcon className="size-3" />
+                  <ExpandIcon className="size-3.5" />
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="bottom">
               {isZen ? "Exit fullscreen (ESC)" : "Fullscreen"}
             </TooltipContent>
           </Tooltip>
@@ -344,15 +358,16 @@ export function RotationBuilderPage() {
               />
 
               {/* Actions */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-5">
                 {selectedList ? (
                   <ActionList
                     actions={selectedList.actions}
                     onChange={handleActionsChange}
                     spells={spells}
+                    actionLists={callableActionLists}
                   />
                 ) : (
-                  <div className="text-center text-muted-foreground py-12 text-sm">
+                  <div className="text-center text-muted-foreground py-16 text-sm">
                     Select an action list from the sidebar to edit its actions.
                   </div>
                 )}
@@ -361,7 +376,7 @@ export function RotationBuilderPage() {
           </>
         ) : (
           /* Preview mode */
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-5">
             <div className="max-w-4xl mx-auto">
               <RotationPreview data={rotationData} />
             </div>
@@ -386,18 +401,21 @@ const ListHeader = memo(function ListHeader({
   isDefault,
 }: ListHeaderProps) {
   return (
-    <div className="flex items-center justify-between border-b px-4 py-1.5 bg-background shrink-0">
+    <div className="flex items-center justify-between border-b px-4 py-2.5 bg-background shrink-0">
       {selectedList ? (
         <>
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-medium">{selectedList.label}</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-sm font-semibold">{selectedList.label}</h2>
             {isDefault && (
-              <Badge variant="outline" className="text-[9px] h-4 px-1">
+              <Badge
+                variant="outline"
+                className="text-[10px] h-5 px-1.5 font-normal"
+              >
                 Default
               </Badge>
             )}
           </div>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground tabular-nums">
             {selectedList.actions.length} action
             {selectedList.actions.length !== 1 ? "s" : ""}
           </span>
@@ -419,28 +437,29 @@ export function RotationBuilderSkeleton() {
   return (
     <div className="flex flex-col h-full animate-pulse">
       {/* Header skeleton */}
-      <header className="flex items-center gap-2 border-b px-3 py-1.5 shrink-0">
-        <Skeleton className="h-6 w-6 rounded" />
-        <Skeleton className="h-4 w-28 rounded" />
-        <Skeleton className="h-4 w-10 rounded" />
+      <header className="flex items-center gap-3 border-b px-4 py-2 shrink-0">
+        <Skeleton className="size-7 rounded" />
+        <Skeleton className="h-5 w-32 rounded" />
+        <Skeleton className="h-5 w-12 rounded" />
         <div className="flex-1" />
-        <Skeleton className="h-5 w-20 rounded" />
+        <Skeleton className="h-6 w-24 rounded-lg" />
       </header>
 
       {/* Main content skeleton */}
       <div className="flex-1 flex">
         {/* Sidebar */}
-        <div className="w-56 border-r bg-muted/30 p-2 space-y-1">
-          <Skeleton className="h-6 w-full rounded" />
-          <Skeleton className="h-6 w-full rounded" />
-          <Skeleton className="h-6 w-full rounded" />
+        <div className="w-60 border-r bg-muted/30 p-2 space-y-1.5">
+          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-8 w-full rounded-md" />
+          <Skeleton className="h-8 w-full rounded-md" />
         </div>
 
         {/* Center */}
-        <div className="flex-1 p-4 space-y-2">
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-lg" />
+        <div className="flex-1 p-5 space-y-2">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
         </div>
       </div>
     </div>

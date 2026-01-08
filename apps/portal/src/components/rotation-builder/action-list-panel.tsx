@@ -58,7 +58,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-import type { ActionListInfo } from "./types";
+import type { ActionListInfo, ListType } from "./types";
 import { toInternalName } from "./utils";
 
 // -----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ export interface ActionListPanelProps {
   lists: ActionListInfo[];
   selectedListId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (list: Omit<ActionListInfo, "id">) => void;
+  onAdd: (list: { name: string; label: string; listType: ListType }) => void;
   onRename: (id: string, label: string) => void;
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
@@ -79,14 +79,18 @@ export interface ActionListPanelProps {
 // Predefined List Templates
 // -----------------------------------------------------------------------------
 
-export const ACTION_LIST_TEMPLATES = [
-  { name: "default", label: "Default" },
-  { name: "precombat", label: "Precombat" },
-  { name: "cooldowns", label: "Cooldowns" },
-  { name: "aoe", label: "AoE" },
-  { name: "st", label: "Single Target" },
-  { name: "cleave", label: "Cleave" },
-] as const;
+export const ACTION_LIST_TEMPLATES: Array<{
+  name: string;
+  label: string;
+  listType: ListType;
+}> = [
+  { name: "precombat", label: "Precombat", listType: "precombat" },
+  { name: "main", label: "Main", listType: "main" },
+  { name: "cooldowns", label: "Cooldowns", listType: "sub" },
+  { name: "aoe", label: "AoE", listType: "sub" },
+  { name: "st", label: "Single Target", listType: "sub" },
+  { name: "cleave", label: "Cleave", listType: "sub" },
+];
 
 export type ActionListTemplateName =
   (typeof ACTION_LIST_TEMPLATES)[number]["name"];
@@ -298,7 +302,7 @@ interface AddListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingNames: string[];
-  onAdd: (list: Omit<ActionListInfo, "id">) => void;
+  onAdd: (list: { name: string; label: string; listType: ListType }) => void;
 }
 
 function AddListDialog({
@@ -323,6 +327,7 @@ function AddListDialog({
         onAdd({
           name: template.name,
           label: template.label,
+          listType: template.listType,
         });
       }
     } else if (mode === "custom" && customLabel.trim()) {
@@ -330,6 +335,7 @@ function AddListDialog({
       onAdd({
         name,
         label: customLabel.trim(),
+        listType: "sub", // Custom lists default to sub
       });
     }
     // Reset form
@@ -435,7 +441,7 @@ function AddListDialog({
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Used in SimC exports. Auto-generated from display name if left
+                  Internal identifier. Auto-generated from display name if left
                   empty.
                 </p>
               </div>
