@@ -1,7 +1,6 @@
 @use "@picocss/pico/scss" with (
   $enable-responsive-typography: false,
-  $enable-semantic-container: true,
-  $semantic-root-element: "body"
+  $enable-semantic-container: false
 );
 
 :root {
@@ -58,4 +57,18 @@
 
   // Transitions
   --pico-transition: 0.15s ease-in-out;
+}
+
+// Layout
+:root {
+  --sidebar-width: 220px;
+  --navbar-height: 3rem;
+  --container-max-width: 1200px;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding-inline: var(--pico-spacing);
 }

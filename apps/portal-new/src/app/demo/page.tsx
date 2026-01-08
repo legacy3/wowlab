@@ -18,7 +18,7 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 
 export default function DemoPage() {
   return (
-    <main className="container">
+    <>
       <h1>UI Components</h1>
       <p>Base UI components wrapped with Pico CSS styling.</p>
 
@@ -261,6 +261,6 @@ export default function DemoPage() {
           </Tooltip.Portal>
         </Tooltip.Root>
       </section>
-    </main>
+    </>
   );
 }

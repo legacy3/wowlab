@@ -2,33 +2,10 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="container">
-      <header>
-        <nav>
-          <ul>
-            <li>
-              <Link href="/">
-                <strong>WowLab</strong>
-              </Link>
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <Link href="/simulate">Simulate</Link>
-            </li>
-            <li>
-              <Link href="/talents">Talents</Link>
-            </li>
-            <li>
-              <Link href="/demo">Components</Link>
-            </li>
-          </ul>
-        </nav>
-      </header>
-
+    <>
       <section>
         <hgroup>
-          <h1>WowLab Portal</h1>
+          <h1>WoW Lab Portal</h1>
           <p>Simulation and theorycrafting tools for World of Warcraft</p>
         </hgroup>
 
@@ -90,9 +67,9 @@ export default function Home() {
 
       <footer>
         <p>
-          <small>WowLab &copy; 2025</small>
+          <small>WoW Lab &copy; 2025</small>
         </p>
       </footer>
-    </main>
+    </>
   );
 }
