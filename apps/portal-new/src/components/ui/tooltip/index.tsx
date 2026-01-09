@@ -6,6 +6,7 @@ import styles from "./index.module.css";
 export const Root = Tooltip.Root;
 export const Trigger = Tooltip.Trigger;
 export const Portal = Tooltip.Portal;
+export const Positioner = Tooltip.Positioner;
 export const Arrow = Tooltip.Arrow;
 export const Provider = Tooltip.Provider;
 

@@ -7,8 +7,8 @@ export default function DemoLayout({
 }) {
   return (
     <PageLayout
-      title="Components"
-      description="UI component demos"
+      title="UI Components"
+      description="Component library reference for contributors"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "Components" }]}
     >
       {children}
