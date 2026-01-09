@@ -1,7 +1,15 @@
 "use client";
 
-import { Bold, Italic, Link, Redo, Undo, Underline } from "lucide-react";
+import {
+  Bold,
+  Italic,
+  Link as LinkIcon,
+  Redo,
+  Undo,
+  Underline,
+} from "lucide-react";
 import * as Avatar from "@/components/ui/avatar";
+import { Link } from "@/components/ui/link";
 import * as ScrollArea from "@/components/ui/scroll-area";
 import * as Separator from "@/components/ui/separator";
 import * as Toolbar from "@/components/ui/toolbar";
@@ -121,9 +129,27 @@ export function Content() {
               </Toolbar.Group>
               <Toolbar.Separator />
               <Toolbar.Link href="#">
-                <Link size={16} />
+                <LinkIcon size={16} />
               </Toolbar.Link>
             </Toolbar.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Link</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <Link href="/demo">Default</Link>
+            <Link href="/demo" muted>
+              Muted
+            </Link>
+            <Link href="https://base-ui.com" external>
+              External
+            </Link>
+            <Link href="https://base-ui.com" external muted>
+              Muted External
+            </Link>
           </div>
         </div>
       </div>

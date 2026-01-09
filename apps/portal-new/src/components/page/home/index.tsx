@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/ui/link";
 import { routes } from "@/lib/routes";
 
 export function HomeContent() {
@@ -11,7 +11,7 @@ export function HomeContent() {
             Run DPS simulations with customizable parameters and rotation
             configurations.
           </p>
-          <Link href={routes.simulate.index} role="button">
+          <Link href={routes.simulate.index} role="button" muted>
             Get Started
           </Link>
         </article>
@@ -22,7 +22,7 @@ export function HomeContent() {
             Explore and compare talent builds across all classes and
             specializations.
           </p>
-          <Link href={routes.talents} role="button" className="secondary">
+          <Link href={routes.talents} role="button" className="secondary" muted>
             Browse Talents
           </Link>
         </article>
@@ -36,6 +36,7 @@ export function HomeContent() {
             href={routes.rotations.index}
             role="button"
             className="secondary"
+            muted
           >
             View Rotations
           </Link>

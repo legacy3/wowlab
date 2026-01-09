@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/ui/link";
 import { routes } from "@/lib/routes";
 
 export function SimulateContent() {
@@ -9,7 +9,7 @@ export function SimulateContent() {
           <strong>Quick Sim</strong>
         </header>
         <p>Run a quick simulation with default settings for your character.</p>
-        <Link href={routes.simulate.quick} role="button">
+        <Link href={routes.simulate.quick} role="button" muted>
           Start Quick Sim
         </Link>
       </article>
@@ -23,6 +23,7 @@ export function SimulateContent() {
           href={routes.simulate.advanced}
           role="button"
           className="secondary"
+          muted
         >
           Configure Simulation
         </Link>

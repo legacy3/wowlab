@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { Link } from "@/components/ui/link";
 import styles from "./index.module.scss";
 
 export interface Breadcrumb {
@@ -34,7 +34,9 @@ export function PageHeader({
                   />
                 )}
                 {crumb.href ? (
-                  <Link href={crumb.href}>{crumb.label}</Link>
+                  <Link href={crumb.href} muted>
+                    {crumb.label}
+                  </Link>
                 ) : (
                   <span aria-current="page">{crumb.label}</span>
                 )}

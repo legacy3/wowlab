@@ -118,7 +118,7 @@ export function Content() {
         <div className={styles.demoRow}>
           <div className={styles.demoContent}>
             <PreviewCard.Root>
-              <PreviewCard.Trigger href="https://base-ui.com">
+              <PreviewCard.Trigger>
                 Hover to preview Base UI
               </PreviewCard.Trigger>
               <PreviewCard.Portal>
