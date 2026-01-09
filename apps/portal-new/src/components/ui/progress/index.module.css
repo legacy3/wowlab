@@ -1,0 +1,13 @@
+.track {
+  height: 0.5rem;
+  background: var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  overflow: hidden;
+}
+
+.indicator {
+  height: 100%;
+  background: var(--pico-primary);
+  border-radius: var(--pico-border-radius);
+  transition: width 0.2s ease-out;
+}

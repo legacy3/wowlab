@@ -6,9 +6,13 @@ import * as Fieldset from "@/components/ui/fieldset";
 import * as Form from "@/components/ui/form";
 import * as Input from "@/components/ui/input";
 import * as NumberField from "@/components/ui/number-field";
+import * as Radio from "@/components/ui/radio";
 import * as Select from "@/components/ui/select";
+import * as Slider from "@/components/ui/slider";
 import * as Switch from "@/components/ui/switch";
-import { Minus, Plus } from "lucide-react";
+import * as Toggle from "@/components/ui/toggle";
+import * as ToggleGroup from "@/components/ui/toggle-group";
+import { Bold, Italic, Minus, Plus, Underline } from "lucide-react";
 import styles from "../index.module.scss";
 
 export const id = "forms";
@@ -99,6 +103,80 @@ export function Content() {
               </Switch.Root>
               Enable notifications
             </label>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Radio</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <Radio.Group defaultValue="option1">
+              <label className={styles.inlineLabel}>
+                <Radio.Root value="option1">
+                  <Radio.Indicator />
+                </Radio.Root>
+                Option 1
+              </label>
+              <label className={styles.inlineLabel}>
+                <Radio.Root value="option2">
+                  <Radio.Indicator />
+                </Radio.Root>
+                Option 2
+              </label>
+              <label className={styles.inlineLabel}>
+                <Radio.Root value="option3">
+                  <Radio.Indicator />
+                </Radio.Root>
+                Option 3
+              </label>
+            </Radio.Group>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Slider</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent} style={{ maxWidth: "20rem" }}>
+            <Slider.Root defaultValue={50}>
+              <Slider.Control>
+                <Slider.Track>
+                  <Slider.Indicator />
+                  <Slider.Thumb />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Toggle</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <Toggle.Root aria-label="Toggle bold">
+              <Bold size={16} />
+            </Toggle.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Toggle Group</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <ToggleGroup.Root>
+              <Toggle.Root aria-label="Bold">
+                <Bold size={16} />
+              </Toggle.Root>
+              <Toggle.Root aria-label="Italic">
+                <Italic size={16} />
+              </Toggle.Root>
+              <Toggle.Root aria-label="Underline">
+                <Underline size={16} />
+              </Toggle.Root>
+            </ToggleGroup.Root>
           </div>
         </div>
       </div>
