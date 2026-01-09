@@ -1,6 +1,8 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import * as Accordion from "@/components/ui/accordion";
+import * as Collapsible from "@/components/ui/collapsible";
 import styles from "../index.module.scss";
 
 export const id = "disclosure";
@@ -32,6 +34,26 @@ export function Content() {
                 </Accordion.Panel>
               </Accordion.Item>
             </Accordion.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Collapsible</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent} style={{ maxWidth: "20rem" }}>
+            <Collapsible.Root>
+              <Collapsible.Trigger>
+                <ChevronDown size={16} />
+                Show more details
+              </Collapsible.Trigger>
+              <Collapsible.Panel>
+                <p style={{ padding: "0.5rem 0.75rem", margin: 0 }}>
+                  This is the collapsible content. It can contain any elements
+                  you want to show or hide.
+                </p>
+              </Collapsible.Panel>
+            </Collapsible.Root>
           </div>
         </div>
       </div>

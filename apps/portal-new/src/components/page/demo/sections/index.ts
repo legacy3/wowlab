@@ -5,6 +5,7 @@ import * as Navigation from "./navigation";
 import * as Overlays from "./overlays";
 import * as Disclosure from "./disclosure";
 import * as Feedback from "./feedback";
+import * as Layout from "./layout";
 
 export const sections = [
   Loaders,
@@ -14,4 +15,5 @@ export const sections = [
   Overlays,
   Disclosure,
   Feedback,
+  Layout,
 ];
