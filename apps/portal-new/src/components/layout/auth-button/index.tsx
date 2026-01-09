@@ -3,8 +3,10 @@
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useGetIdentity, useLogout } from "@refinedev/core";
+import * as Avatar from "@/components/ui/avatar";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import * as Menu from "@/components/ui/menu";
+import { formatHandleInitials } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import type { UserIdentity } from "@/lib/supabase";
 import styles from "./index.module.scss";
@@ -18,7 +20,13 @@ function AuthButtonInner() {
     return (
       <Menu.Root>
         <Menu.Trigger className={styles.trigger}>
-          {user.handle || user.email || "Account"}
+          <Avatar.Root className={styles.avatar}>
+            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} alt="" />}
+            <Avatar.Fallback>
+              {formatHandleInitials(user.handle)}
+            </Avatar.Fallback>
+          </Avatar.Root>
+          {user.handle && <span className={styles.name}>{user.handle}</span>}
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner align="end">
