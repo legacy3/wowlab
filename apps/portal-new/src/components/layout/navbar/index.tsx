@@ -1,5 +1,6 @@
 import { Link } from "@/components/ui/link";
 import { routes } from "@/lib/routes";
+import { AuthButton } from "../auth-button";
 import styles from "./index.module.scss";
 
 export function Navbar() {
@@ -27,6 +28,7 @@ export function Navbar() {
           </li>
         </ul>
       </nav>
+      <AuthButton />
     </header>
   );
 }

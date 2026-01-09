@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    authInterrupts: true,
+  },
+
   sassOptions: {
     silenceDeprecations: [
       "import",
@@ -9,6 +13,7 @@ const nextConfig: NextConfig = {
       "if-function",
     ],
   },
+
   async redirects() {
     return [
       {

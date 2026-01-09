@@ -10,11 +10,12 @@ type LinkProps = {
   muted?: boolean;
   className?: string;
   title?: string;
+  role?: string;
   children: React.ReactNode;
 };
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, external, muted, className, title, children }, ref) => {
+  ({ href, external, muted, className, title, role, children }, ref) => {
     const linkClass = clsx(
       styles.link,
       muted && styles.muted,
@@ -30,6 +31,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
           target="_blank"
           rel="noopener noreferrer"
           title={title}
+          role={role}
           className={linkClass}
         >
           {children}
@@ -39,7 +41,13 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     return (
-      <NextLink ref={ref} href={href} title={title} className={linkClass}>
+      <NextLink
+        ref={ref}
+        href={href}
+        title={title}
+        role={role}
+        className={linkClass}
+      >
         {children}
       </NextLink>
     );

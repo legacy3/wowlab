@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { clsx } from "clsx";
 import { SiteShell } from "@/components/layout";
+import { RefineProvider } from "@/providers";
 import "@/styles/globals.scss";
 
 const fontMono = JetBrains_Mono({
@@ -39,7 +40,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={clsx(fontMono.variable, fontSans.variable)}>
-        <SiteShell>{children}</SiteShell>
+        <RefineProvider>
+          <SiteShell>{children}</SiteShell>
+        </RefineProvider>
       </body>
     </html>
   );
