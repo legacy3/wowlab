@@ -4,7 +4,7 @@
   z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   height: var(--navbar-height);
   padding: 0 1rem;
   background: var(--pico-card-background-color);
@@ -26,6 +26,8 @@
 }
 
 .nav {
+  flex: 1;
+
   ul {
     display: flex;
     gap: 0.5rem;
