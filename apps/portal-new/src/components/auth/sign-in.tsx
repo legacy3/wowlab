@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { useLogin } from "@refinedev/core";
-import { CardLoader } from "@/components/ui/flask-loader";
-import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
-import { Link } from "@/components/ui/link";
-import { routes } from "@/lib/routes";
+import { useState } from "react";
+
 import type { OAuthProvider } from "@/lib/refine/auth-provider";
+
+import { CardLoader } from "@/components/ui/flask-loader";
+import { Link } from "@/components/ui/link";
+import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
+import { routes } from "@/lib/routes";
+
 import styles from "./sign-in.module.scss";
 
 interface SignInProps {

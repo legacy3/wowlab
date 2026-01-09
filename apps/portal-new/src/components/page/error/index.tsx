@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useEffect } from "react";
+
 import styles from "./index.module.scss";
 
 interface ErrorPageProps {
-  error: Error & { digest?: string };
+  error: { digest?: string } & Error;
   reset: () => void;
 }
 

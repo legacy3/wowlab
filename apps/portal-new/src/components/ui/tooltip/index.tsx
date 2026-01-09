@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { Tooltip } from "@base-ui/react/tooltip";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = Tooltip.Root;

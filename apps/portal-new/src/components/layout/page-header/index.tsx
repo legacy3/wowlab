@@ -1,22 +1,24 @@
 import { ChevronRight } from "lucide-react";
+
 import { Link } from "@/components/ui/link";
+
 import styles from "./index.module.scss";
 
 export interface Breadcrumb {
-  readonly label: string;
   readonly href?: string;
+  readonly label: string;
 }
 
 export interface PageHeaderProps {
-  readonly title: string;
-  readonly description?: string;
   readonly breadcrumbs?: Breadcrumb[];
+  readonly description?: string;
+  readonly title: string;
 }
 
 export function PageHeader({
-  title,
-  description,
   breadcrumbs,
+  description,
+  title,
 }: PageHeaderProps) {
   return (
     <header className={styles.header}>

@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export function Root({

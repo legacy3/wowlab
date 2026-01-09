@@ -1,18 +1,18 @@
-import { PageHeader, type Breadcrumb } from "../page-header";
+import { type Breadcrumb, PageHeader } from "../page-header";
 import styles from "./index.module.scss";
 
 export interface PageLayoutProps {
-  readonly title: string;
-  readonly description?: string;
   readonly breadcrumbs?: Breadcrumb[];
   readonly children: React.ReactNode;
+  readonly description?: string;
+  readonly title: string;
 }
 
 export function PageLayout({
-  title,
-  description,
   breadcrumbs,
   children,
+  description,
+  title,
 }: PageLayoutProps) {
   return (
     <div className={styles.container}>

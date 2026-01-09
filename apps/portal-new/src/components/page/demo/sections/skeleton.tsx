@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+
 import styles from "../index.module.scss";
 
 export const id = "skeleton";

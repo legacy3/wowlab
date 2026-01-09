@@ -1,8 +1,9 @@
-import { get, set, del } from "idb-keyval";
 import type {
   PersistedClient,
   Persister,
 } from "@tanstack/react-query-persist-client";
+
+import { del, get, set } from "idb-keyval";
 
 export function createPersister(key: IDBValidKey = "wowlab-cache"): Persister {
   return {
@@ -10,12 +11,12 @@ export function createPersister(key: IDBValidKey = "wowlab-cache"): Persister {
       await set(key, client);
     },
 
-    restoreClient: async () => {
-      return await get<PersistedClient>(key);
-    },
-
     removeClient: async () => {
       await del(key);
+    },
+
+    restoreClient: async () => {
+      return await get<PersistedClient>(key);
     },
   };
 }

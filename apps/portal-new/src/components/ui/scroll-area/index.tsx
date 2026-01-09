@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { ScrollArea } from "@base-ui/react/scroll-area";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export function Root({
@@ -26,6 +28,15 @@ export function Viewport({
 
 export const Content = ScrollArea.Content;
 
+export function Corner({
+  className,
+  ...props
+}: ComponentProps<typeof ScrollArea.Corner>) {
+  return (
+    <ScrollArea.Corner className={clsx(styles.corner, className)} {...props} />
+  );
+}
+
 export function Scrollbar({
   className,
   ...props
@@ -44,14 +55,5 @@ export function Thumb({
 }: ComponentProps<typeof ScrollArea.Thumb>) {
   return (
     <ScrollArea.Thumb className={clsx(styles.thumb, className)} {...props} />
-  );
-}
-
-export function Corner({
-  className,
-  ...props
-}: ComponentProps<typeof ScrollArea.Corner>) {
-  return (
-    <ScrollArea.Corner className={clsx(styles.corner, className)} {...props} />
   );
 }

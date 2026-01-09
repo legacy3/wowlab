@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { NavigationMenu } from "@base-ui/react/navigation-menu";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = NavigationMenu.Root;
@@ -10,33 +12,15 @@ export const Positioner = NavigationMenu.Positioner;
 export const Viewport = NavigationMenu.Viewport;
 export const Arrow = NavigationMenu.Arrow;
 
-export function List({
+export function Backdrop({
   className,
   ...props
-}: ComponentProps<typeof NavigationMenu.List>) {
+}: ComponentProps<typeof NavigationMenu.Backdrop>) {
   return (
-    <NavigationMenu.List className={clsx(styles.list, className)} {...props} />
-  );
-}
-
-export function Trigger({
-  className,
-  ...props
-}: ComponentProps<typeof NavigationMenu.Trigger>) {
-  return (
-    <NavigationMenu.Trigger
-      className={clsx(styles.trigger, className)}
+    <NavigationMenu.Backdrop
+      className={clsx(styles.backdrop, className)}
       {...props}
     />
-  );
-}
-
-export function Icon({
-  className,
-  ...props
-}: ComponentProps<typeof NavigationMenu.Icon>) {
-  return (
-    <NavigationMenu.Icon className={clsx(styles.icon, className)} {...props} />
   );
 }
 
@@ -52,6 +36,15 @@ export function Content({
   );
 }
 
+export function Icon({
+  className,
+  ...props
+}: ComponentProps<typeof NavigationMenu.Icon>) {
+  return (
+    <NavigationMenu.Icon className={clsx(styles.icon, className)} {...props} />
+  );
+}
+
 export function Link({
   className,
   ...props
@@ -61,15 +54,12 @@ export function Link({
   );
 }
 
-export function Backdrop({
+export function List({
   className,
   ...props
-}: ComponentProps<typeof NavigationMenu.Backdrop>) {
+}: ComponentProps<typeof NavigationMenu.List>) {
   return (
-    <NavigationMenu.Backdrop
-      className={clsx(styles.backdrop, className)}
-      {...props}
-    />
+    <NavigationMenu.List className={clsx(styles.list, className)} {...props} />
   );
 }
 
@@ -80,6 +70,18 @@ export function Popup({
   return (
     <NavigationMenu.Popup
       className={clsx(styles.popup, className)}
+      {...props}
+    />
+  );
+}
+
+export function Trigger({
+  className,
+  ...props
+}: ComponentProps<typeof NavigationMenu.Trigger>) {
+  return (
+    <NavigationMenu.Trigger
+      className={clsx(styles.trigger, className)}
       {...props}
     />
   );

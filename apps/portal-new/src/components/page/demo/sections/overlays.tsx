@@ -5,6 +5,7 @@ import * as ContextMenu from "@/components/ui/context-menu";
 import * as Dialog from "@/components/ui/dialog";
 import * as PreviewCard from "@/components/ui/preview-card";
 import * as Tooltip from "@/components/ui/tooltip";
+
 import styles from "../index.module.scss";
 
 export const id = "overlays";
@@ -90,9 +91,9 @@ export function Content() {
             <ContextMenu.Root>
               <ContextMenu.Trigger
                 style={{
-                  padding: "2rem 3rem",
                   border: "1px dashed var(--pico-muted-border-color)",
                   borderRadius: "var(--pico-border-radius)",
+                  padding: "2rem 3rem",
                 }}
               >
                 Right-click here
@@ -125,7 +126,7 @@ export function Content() {
                 <PreviewCard.Positioner>
                   <PreviewCard.Popup>
                     <strong>Base UI</strong>
-                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.875rem" }}>
+                    <p style={{ fontSize: "0.875rem", margin: "0.5rem 0 0" }}>
                       A library of high-quality unstyled React components.
                     </p>
                   </PreviewCard.Popup>

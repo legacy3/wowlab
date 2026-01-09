@@ -2,11 +2,11 @@ import type { ResourceProps } from "@refinedev/core";
 
 export const resources: ResourceProps[] = [
   {
-    name: "rotations",
-    list: "/rotations",
-    show: "/rotations/:namespace/:slug",
     create: "/rotations/new",
     edit: "/rotations/editor",
+    list: "/rotations",
+    name: "rotations",
+    show: "/rotations/:namespace/:slug",
   },
   {
     name: "user_profiles",

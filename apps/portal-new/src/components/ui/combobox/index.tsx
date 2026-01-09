@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { Combobox } from "@base-ui/react/combobox";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = Combobox.Root;
@@ -19,6 +21,15 @@ export const Chip = Combobox.Chip;
 export const ChipRemove = Combobox.ChipRemove;
 export const Status = Combobox.Status;
 
+export function Empty({
+  className,
+  ...props
+}: ComponentProps<typeof Combobox.Empty>) {
+  return (
+    <Combobox.Empty className={clsx(styles.empty, className)} {...props} />
+  );
+}
+
 export function Input({
   className,
   ...props
@@ -28,13 +39,18 @@ export function Input({
   );
 }
 
-export function Trigger({
+export function Item({
   className,
   ...props
-}: ComponentProps<typeof Combobox.Trigger>) {
-  return (
-    <Combobox.Trigger className={clsx(styles.trigger, className)} {...props} />
-  );
+}: ComponentProps<typeof Combobox.Item>) {
+  return <Combobox.Item className={clsx(styles.item, className)} {...props} />;
+}
+
+export function List({
+  className,
+  ...props
+}: ComponentProps<typeof Combobox.List>) {
+  return <Combobox.List className={clsx(styles.list, className)} {...props} />;
 }
 
 export function Popup({
@@ -46,25 +62,11 @@ export function Popup({
   );
 }
 
-export function List({
+export function Trigger({
   className,
   ...props
-}: ComponentProps<typeof Combobox.List>) {
-  return <Combobox.List className={clsx(styles.list, className)} {...props} />;
-}
-
-export function Item({
-  className,
-  ...props
-}: ComponentProps<typeof Combobox.Item>) {
-  return <Combobox.Item className={clsx(styles.item, className)} {...props} />;
-}
-
-export function Empty({
-  className,
-  ...props
-}: ComponentProps<typeof Combobox.Empty>) {
+}: ComponentProps<typeof Combobox.Trigger>) {
   return (
-    <Combobox.Empty className={clsx(styles.empty, className)} {...props} />
+    <Combobox.Trigger className={clsx(styles.trigger, className)} {...props} />
   );
 }

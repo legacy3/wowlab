@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { ContextMenu } from "@base-ui/react/context-menu";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = ContextMenu.Root;
@@ -17,21 +19,21 @@ export const CheckboxItemIndicator = ContextMenu.CheckboxItemIndicator;
 export const SubmenuRoot = ContextMenu.SubmenuRoot;
 export const SubmenuTrigger = ContextMenu.SubmenuTrigger;
 
-export function Popup({
-  className,
-  ...props
-}: ComponentProps<typeof ContextMenu.Popup>) {
-  return (
-    <ContextMenu.Popup className={clsx(styles.popup, className)} {...props} />
-  );
-}
-
 export function Item({
   className,
   ...props
 }: ComponentProps<typeof ContextMenu.Item>) {
   return (
     <ContextMenu.Item className={clsx(styles.item, className)} {...props} />
+  );
+}
+
+export function Popup({
+  className,
+  ...props
+}: ComponentProps<typeof ContextMenu.Popup>) {
+  return (
+    <ContextMenu.Popup className={clsx(styles.popup, className)} {...props} />
   );
 }
 

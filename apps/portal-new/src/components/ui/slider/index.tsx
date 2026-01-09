@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { Slider } from "@base-ui/react/slider";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = Slider.Root;
@@ -13,13 +15,6 @@ export function Control({
   return (
     <Slider.Control className={clsx(styles.control, className)} {...props} />
   );
-}
-
-export function Track({
-  className,
-  ...props
-}: ComponentProps<typeof Slider.Track>) {
-  return <Slider.Track className={clsx(styles.track, className)} {...props} />;
 }
 
 export function Indicator({
@@ -39,4 +34,11 @@ export function Thumb({
   ...props
 }: ComponentProps<typeof Slider.Thumb>) {
   return <Slider.Thumb className={clsx(styles.thumb, className)} {...props} />;
+}
+
+export function Track({
+  className,
+  ...props
+}: ComponentProps<typeof Slider.Track>) {
+  return <Slider.Track className={clsx(styles.track, className)} {...props} />;
 }

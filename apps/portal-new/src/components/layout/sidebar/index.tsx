@@ -1,9 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+
 import { Link } from "@/components/ui/link";
 import { navMain, navSecondary } from "@/lib/menu-config";
 import { routes } from "@/lib/routes";
+
 import styles from "./index.module.scss";
 
 export function Sidebar() {

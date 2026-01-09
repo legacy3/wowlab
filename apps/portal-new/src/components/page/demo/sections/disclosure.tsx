@@ -1,8 +1,10 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+
 import * as Accordion from "@/components/ui/accordion";
 import * as Collapsible from "@/components/ui/collapsible";
+
 import styles from "../index.module.scss";
 
 export const id = "disclosure";
@@ -48,7 +50,7 @@ export function Content() {
                 Show more details
               </Collapsible.Trigger>
               <Collapsible.Panel>
-                <p style={{ padding: "0.5rem 0.75rem", margin: 0 }}>
+                <p style={{ margin: 0, padding: "0.5rem 0.75rem" }}>
                   This is the collapsible content. It can contain any elements
                   you want to show or hide.
                 </p>

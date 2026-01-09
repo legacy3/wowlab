@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { PreviewCard } from "@base-ui/react/preview-card";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = PreviewCard.Root;

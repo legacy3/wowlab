@@ -1,5 +1,7 @@
 "use client";
 
+import { Bold, Italic, Minus, Plus, Underline } from "lucide-react";
+
 import * as Autocomplete from "@/components/ui/autocomplete";
 import * as Button from "@/components/ui/button";
 import * as Checkbox from "@/components/ui/checkbox";
@@ -16,7 +18,7 @@ import * as Slider from "@/components/ui/slider";
 import * as Switch from "@/components/ui/switch";
 import * as Toggle from "@/components/ui/toggle";
 import * as ToggleGroup from "@/components/ui/toggle-group";
-import { Bold, Italic, Minus, Plus, Underline } from "lucide-react";
+
 import styles from "../index.module.scss";
 
 const fruits = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig"];

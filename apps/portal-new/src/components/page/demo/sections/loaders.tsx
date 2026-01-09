@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+
 import {
-  FlaskLoader,
   FlaskInlineLoader,
+  FlaskLoader,
   type FlaskVariant,
 } from "@/components/ui/flask-loader";
+
 import styles from "../index.module.scss";
 
 export const id = "loaders";

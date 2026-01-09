@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = AlertDialog.Root;

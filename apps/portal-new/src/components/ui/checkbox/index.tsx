@@ -1,14 +1,9 @@
+import type { ComponentProps } from "react";
+
 import { Checkbox } from "@base-ui/react/checkbox";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
-import styles from "./index.module.css";
 
-export function Root({
-  className,
-  ...props
-}: ComponentProps<typeof Checkbox.Root>) {
-  return <Checkbox.Root className={clsx(styles.root, className)} {...props} />;
-}
+import styles from "./index.module.css";
 
 export function Indicator({
   className,
@@ -20,4 +15,11 @@ export function Indicator({
       {...props}
     />
   );
+}
+
+export function Root({
+  className,
+  ...props
+}: ComponentProps<typeof Checkbox.Root>) {
+  return <Checkbox.Root className={clsx(styles.root, className)} {...props} />;
 }

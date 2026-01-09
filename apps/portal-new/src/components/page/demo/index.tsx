@@ -1,7 +1,7 @@
 "use client";
 
-import { sections } from "./sections";
 import styles from "./index.module.scss";
+import { sections } from "./sections";
 
 export function DemoContent() {
   return (

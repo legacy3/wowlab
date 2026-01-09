@@ -1,7 +1,8 @@
-import { forwardRef } from "react";
-import NextLink from "next/link";
-import { ExternalLink } from "lucide-react";
 import { clsx } from "clsx";
+import { ExternalLink } from "lucide-react";
+import NextLink from "next/link";
+import { forwardRef } from "react";
+
 import styles from "./index.module.css";
 
 type LinkProps = {
@@ -15,7 +16,7 @@ type LinkProps = {
 };
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, external, muted, className, title, role, children }, ref) => {
+  ({ children, className, external, href, muted, role, title }, ref) => {
     const linkClass = clsx(
       styles.link,
       muted && styles.muted,

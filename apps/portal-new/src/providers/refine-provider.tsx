@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, Suspense, type ReactNode } from "react";
 import { Refine } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { type ReactNode, Suspense, useState } from "react";
+
 import {
   createAccessControlProvider,
   createAuthProvider,
@@ -17,9 +18,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: Infinity,
-      staleTime: Infinity,
       refetchOnWindowFocus: false,
       retry: 3,
+      staleTime: Infinity,
     },
   },
 });
@@ -35,13 +36,13 @@ export function RefineProvider({ children }: { children: ReactNode }) {
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{
-        persister,
-        maxAge: 1000 * 60 * 60 * 24 * 7,
         buster: "11.2", // TODO wire this up
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             query.state.status === "success" && query.meta?.persist === true,
         },
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        persister,
       }}
     >
       <Suspense>
@@ -52,9 +53,9 @@ export function RefineProvider({ children }: { children: ReactNode }) {
           routerProvider={routerProvider}
           resources={resources}
           options={{
+            disableTelemetry: true,
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
-            disableTelemetry: true,
           }}
         >
           {children}

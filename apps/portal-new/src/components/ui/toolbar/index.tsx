@@ -1,14 +1,9 @@
+import type { ComponentProps } from "react";
+
 import { Toolbar } from "@base-ui/react/toolbar";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
-import styles from "./index.module.css";
 
-export function Root({
-  className,
-  ...props
-}: ComponentProps<typeof Toolbar.Root>) {
-  return <Toolbar.Root className={clsx(styles.root, className)} {...props} />;
-}
+import styles from "./index.module.css";
 
 export function Button({
   className,
@@ -24,6 +19,13 @@ export function Link({
   ...props
 }: ComponentProps<typeof Toolbar.Link>) {
   return <Toolbar.Link className={clsx(styles.link, className)} {...props} />;
+}
+
+export function Root({
+  className,
+  ...props
+}: ComponentProps<typeof Toolbar.Root>) {
+  return <Toolbar.Root className={clsx(styles.root, className)} {...props} />;
 }
 
 export const Input = Toolbar.Input;

@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { Menu } from "@base-ui/react/menu";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = Menu.Root;
@@ -17,18 +19,18 @@ export const CheckboxItem = Menu.CheckboxItem;
 export const CheckboxItemIndicator = Menu.CheckboxItemIndicator;
 export const SubmenuTrigger = Menu.SubmenuTrigger;
 
-export function Popup({
-  className,
-  ...props
-}: ComponentProps<typeof Menu.Popup>) {
-  return <Menu.Popup className={clsx(styles.popup, className)} {...props} />;
-}
-
 export function Item({
   className,
   ...props
 }: ComponentProps<typeof Menu.Item>) {
   return <Menu.Item className={clsx(styles.item, className)} {...props} />;
+}
+
+export function Popup({
+  className,
+  ...props
+}: ComponentProps<typeof Menu.Popup>) {
+  return <Menu.Popup className={clsx(styles.popup, className)} {...props} />;
 }
 
 export function Separator({

@@ -1,1 +1,1 @@
-export { RefineProvider, queryClient } from "./refine-provider";
+export { queryClient, RefineProvider } from "./refine-provider";

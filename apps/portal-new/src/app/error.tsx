@@ -6,7 +6,7 @@ export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: { digest?: string } & Error;
   reset: () => void;
 }) {
   return <ErrorPage error={error} reset={reset} />;

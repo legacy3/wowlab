@@ -1,15 +1,26 @@
 "use client";
 
-import { Suspense } from "react";
-import { useRouter } from "next/navigation";
 import { useGetIdentity, useLogout } from "@refinedev/core";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+
+import type { UserIdentity } from "@/lib/supabase";
+
 import * as Avatar from "@/components/ui/avatar";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import * as Menu from "@/components/ui/menu";
 import { formatHandleInitials } from "@/lib/format";
 import { routes } from "@/lib/routes";
-import type { UserIdentity } from "@/lib/supabase";
+
 import styles from "./index.module.scss";
+
+export function AuthButton() {
+  return (
+    <Suspense fallback={<FlaskInlineLoader />}>
+      <AuthButtonInner />
+    </Suspense>
+  );
+}
 
 function AuthButtonInner() {
   const router = useRouter();
@@ -43,13 +54,5 @@ function AuthButtonInner() {
 
   return (
     <button onClick={() => router.push(routes.auth.signIn)}>Sign In</button>
-  );
-}
-
-export function AuthButton() {
-  return (
-    <Suspense fallback={<FlaskInlineLoader />}>
-      <AuthButtonInner />
-    </Suspense>
   );
 }

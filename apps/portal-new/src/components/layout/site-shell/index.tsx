@@ -1,5 +1,5 @@
-import { Sidebar } from "../sidebar";
 import { Navbar } from "../navbar";
+import { Sidebar } from "../sidebar";
 import styles from "./index.module.scss";
 
 export interface SiteShellProps {

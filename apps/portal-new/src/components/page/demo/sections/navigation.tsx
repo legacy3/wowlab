@@ -1,11 +1,12 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { Link } from "@/components/ui/link";
+
 import * as Menu from "@/components/ui/menu";
 import * as Menubar from "@/components/ui/menubar";
 import * as NavigationMenu from "@/components/ui/navigation-menu";
 import * as Tabs from "@/components/ui/tabs";
+
 import styles from "../index.module.scss";
 
 export const id = "navigation";

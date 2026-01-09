@@ -1,13 +1,17 @@
+import type { ComponentProps } from "react";
+
 import { Avatar } from "@base-ui/react/avatar";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
-export function Root({
+export function Fallback({
   className,
   ...props
-}: ComponentProps<typeof Avatar.Root>) {
-  return <Avatar.Root className={clsx(styles.root, className)} {...props} />;
+}: ComponentProps<typeof Avatar.Fallback>) {
+  return (
+    <Avatar.Fallback className={clsx(styles.fallback, className)} {...props} />
+  );
 }
 
 export function Image({
@@ -17,11 +21,9 @@ export function Image({
   return <Avatar.Image className={clsx(styles.image, className)} {...props} />;
 }
 
-export function Fallback({
+export function Root({
   className,
   ...props
-}: ComponentProps<typeof Avatar.Fallback>) {
-  return (
-    <Avatar.Fallback className={clsx(styles.fallback, className)} {...props} />
-  );
+}: ComponentProps<typeof Avatar.Root>) {
+  return <Avatar.Root className={clsx(styles.root, className)} {...props} />;
 }

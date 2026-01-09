@@ -1,55 +1,14 @@
 import type { AuthProvider } from "@refinedev/core";
-import { createClient } from "@/lib/supabase/client";
+
 import { env } from "@/lib/env";
+import { createClient } from "@/lib/supabase/client";
 
 export type OAuthProvider = "discord" | "github" | "google" | "twitch";
-
-function buildCallbackUrl(redirectTo?: string): string {
-  const url = new URL("/auth/callback", env.APP_URL);
-
-  if (redirectTo) {
-    url.searchParams.set("next", redirectTo);
-  }
-
-  return url.toString();
-}
 
 export function createAuthProvider(): AuthProvider {
   const supabase = createClient();
 
   return {
-    login: async ({
-      provider,
-      redirectTo,
-    }: {
-      provider: OAuthProvider;
-      redirectTo?: string;
-    }) => {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: buildCallbackUrl(redirectTo) },
-      });
-
-      if (error) {
-        return { success: false, error };
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-
-      return { success: true };
-    },
-
-    logout: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        return { success: false, error };
-      }
-
-      return { success: true, redirectTo: "/" };
-    },
-
     check: async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -75,11 +34,43 @@ export function createAuthProvider(): AuthProvider {
         .single();
 
       return {
-        id: user.id,
+        avatarUrl: profile?.avatarUrl,
         email: user.email,
         handle: profile?.handle,
-        avatarUrl: profile?.avatarUrl,
+        id: user.id,
       };
+    },
+
+    login: async ({
+      provider,
+      redirectTo,
+    }: {
+      provider: OAuthProvider;
+      redirectTo?: string;
+    }) => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        options: { redirectTo: buildCallbackUrl(redirectTo) },
+        provider,
+      });
+
+      if (error) {
+        return { error, success: false };
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+
+      return { success: true };
+    },
+
+    logout: async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        return { error, success: false };
+      }
+
+      return { redirectTo: "/", success: true };
     },
 
     onError: async (error) => {
@@ -90,4 +81,14 @@ export function createAuthProvider(): AuthProvider {
       return { error };
     },
   };
+}
+
+function buildCallbackUrl(redirectTo?: string): string {
+  const url = new URL("/auth/callback", env.APP_URL);
+
+  if (redirectTo) {
+    url.searchParams.set("next", redirectTo);
+  }
+
+  return url.toString();
 }

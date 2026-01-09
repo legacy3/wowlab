@@ -5,6 +5,26 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
 
+  async redirects() {
+    return [
+      {
+        destination: "https://discord.gg/bWWYBAvF3W",
+        permanent: false,
+        source: "/go/discord",
+      },
+      {
+        destination: "https://github.com/legacy3/wowlab/:path*",
+        permanent: false,
+        source: "/go/github/:path*",
+      },
+      {
+        destination: "https://github.com/legacy3/wowlab",
+        permanent: false,
+        source: "/go/github",
+      },
+    ];
+  },
+
   sassOptions: {
     silenceDeprecations: [
       "import",
@@ -12,26 +32,6 @@ const nextConfig: NextConfig = {
       "color-functions",
       "if-function",
     ],
-  },
-
-  async redirects() {
-    return [
-      {
-        source: "/go/discord",
-        destination: "https://discord.gg/bWWYBAvF3W",
-        permanent: false,
-      },
-      {
-        source: "/go/github/:path*",
-        destination: "https://github.com/legacy3/wowlab/:path*",
-        permanent: false,
-      },
-      {
-        source: "/go/github",
-        destination: "https://github.com/legacy3/wowlab",
-        permanent: false,
-      },
-    ];
   },
 };
 

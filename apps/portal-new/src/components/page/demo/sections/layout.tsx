@@ -5,14 +5,16 @@ import {
   Italic,
   Link as LinkIcon,
   Redo,
-  Undo,
   Underline,
+  Undo,
 } from "lucide-react";
+
 import * as Avatar from "@/components/ui/avatar";
 import { Link } from "@/components/ui/link";
 import * as ScrollArea from "@/components/ui/scroll-area";
 import * as Separator from "@/components/ui/separator";
 import * as Toolbar from "@/components/ui/toolbar";
+
 import styles from "../index.module.scss";
 
 export const id = "layout";
@@ -51,7 +53,7 @@ export function Content() {
         <div className={styles.demoRow}>
           <div
             className={styles.demoContent}
-            style={{ flexDirection: "column", alignItems: "stretch" }}
+            style={{ alignItems: "stretch", flexDirection: "column" }}
           >
             <span>Content above</span>
             <Separator.Root />
@@ -71,7 +73,7 @@ export function Content() {
         <h3>Scroll Area</h3>
         <div className={styles.demoRow}>
           <div className={styles.demoContent}>
-            <ScrollArea.Root style={{ width: "15rem", height: "8rem" }}>
+            <ScrollArea.Root style={{ height: "8rem", width: "15rem" }}>
               <ScrollArea.Viewport>
                 <ScrollArea.Content>
                   <div style={{ padding: "0.5rem" }}>

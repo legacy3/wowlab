@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react";
-import { BookOpen, Calculator, FlaskConical, Play, Swords } from "lucide-react";
-import { routes } from "./routes";
 
-type Icon = LucideIcon;
+import { BookOpen, Calculator, FlaskConical, Play, Swords } from "lucide-react";
+
+import { routes } from "./routes";
 
 export type MenuItem = {
   label: string;
@@ -18,6 +18,8 @@ export type NavItem = {
   items: SubItem[];
 };
 
+type Icon = LucideIcon;
+
 type SubItem = {
   label: string;
   href: string;
@@ -25,41 +27,41 @@ type SubItem = {
 
 export const navMain: NavItem[] = [
   {
-    label: "Simulate",
     href: routes.simulate.index,
     icon: Play,
     items: [
-      { label: "Quick Sim", href: routes.simulate.index },
-      { label: "Optimize", href: routes.optimize },
-      { label: "Rankings", href: routes.rankings },
+      { href: routes.simulate.index, label: "Quick Sim" },
+      { href: routes.optimize, label: "Optimize" },
+      { href: routes.rankings, label: "Rankings" },
     ],
+    label: "Simulate",
   },
   {
-    label: "Plan",
     href: routes.talents,
     icon: Calculator,
-    items: [{ label: "Talents", href: routes.talents }],
+    items: [{ href: routes.talents, label: "Talents" }],
+    label: "Plan",
   },
   {
-    label: "Rotations",
     href: routes.rotations.index,
     icon: Swords,
     items: [
-      { label: "Browse", href: routes.rotations.index },
-      { label: "Create", href: routes.rotations.editor },
+      { href: routes.rotations.index, label: "Browse" },
+      { href: routes.rotations.editor, label: "Create" },
     ],
+    label: "Rotations",
   },
   {
-    label: "Lab",
     href: routes.lab.index,
     icon: FlaskConical,
     items: [
-      { label: "Overview", href: routes.lab.index },
-      { label: "Data Inspector", href: routes.lab.inspector },
+      { href: routes.lab.index, label: "Overview" },
+      { href: routes.lab.inspector, label: "Data Inspector" },
     ],
+    label: "Lab",
   },
 ];
 
 export const navSecondary: MenuItem[] = [
-  { label: "Docs", href: routes.docs, icon: BookOpen },
+  { href: routes.docs, icon: BookOpen, label: "Docs" },
 ];

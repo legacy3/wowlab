@@ -1,5 +1,4 @@
 export const routes = {
-  home: "/",
   about: {
     index: "/about",
     privacy: "/about?tab=privacy",
@@ -10,6 +9,7 @@ export const routes = {
   },
   demo: "/demo",
   docs: "/docs",
+  home: "/",
   lab: {
     index: "/lab",
     inspector: "/lab/inspector/search",
@@ -17,13 +17,13 @@ export const routes = {
   optimize: "/optimize",
   rankings: "/rankings",
   rotations: {
-    index: "/rotations",
     editor: "/rotations/editor",
+    index: "/rotations",
   },
   simulate: {
+    advanced: "/simulate/advanced",
     index: "/simulate",
     quick: "/simulate/quick",
-    advanced: "/simulate/advanced",
   },
   talents: "/talents",
 } as const;

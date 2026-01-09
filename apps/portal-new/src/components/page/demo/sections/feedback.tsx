@@ -3,41 +3,11 @@
 import * as Meter from "@/components/ui/meter";
 import * as Progress from "@/components/ui/progress";
 import * as Toast from "@/components/ui/toast";
+
 import styles from "../index.module.scss";
 
 export const id = "feedback";
 export const title = "Feedback";
-
-function ToastTrigger() {
-  const toastManager = Toast.useToastManager();
-
-  return (
-    <button
-      onClick={() =>
-        toastManager.add({
-          title: "Notification",
-          description: "This is a toast message!",
-        })
-      }
-    >
-      Show Toast
-    </button>
-  );
-}
-
-function ToastRenderer() {
-  const { toasts } = Toast.useToastManager();
-
-  return toasts.map((toast) => (
-    <Toast.Root key={toast.id} toast={toast}>
-      <Toast.Content>
-        <Toast.Title />
-        <Toast.Description />
-      </Toast.Content>
-      <Toast.Close>Dismiss</Toast.Close>
-    </Toast.Root>
-  ));
-}
 
 export function Content() {
   return (
@@ -97,5 +67,36 @@ export function Content() {
         </Toast.Provider>
       </div>
     </>
+  );
+}
+
+function ToastRenderer() {
+  const { toasts } = Toast.useToastManager();
+
+  return toasts.map((toast) => (
+    <Toast.Root key={toast.id} toast={toast}>
+      <Toast.Content>
+        <Toast.Title />
+        <Toast.Description />
+      </Toast.Content>
+      <Toast.Close>Dismiss</Toast.Close>
+    </Toast.Root>
+  ));
+}
+
+function ToastTrigger() {
+  const toastManager = Toast.useToastManager();
+
+  return (
+    <button
+      onClick={() =>
+        toastManager.add({
+          description: "This is a toast message!",
+          title: "Notification",
+        })
+      }
+    >
+      Show Toast
+    </button>
   );
 }

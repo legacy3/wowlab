@@ -9,7 +9,7 @@ export default function SignInLayout({
     <PageLayout
       title="Sign In"
       description="Sign in to your account"
-      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Sign In" }]}
+      breadcrumbs={[{ href: "/", label: "Home" }, { label: "Sign In" }]}
     >
       {children}
     </PageLayout>

@@ -9,7 +9,7 @@ export default function SimulateLayout({
     <PageLayout
       title="Simulate"
       description="Run character simulations to optimize your performance"
-      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Simulate" }]}
+      breadcrumbs={[{ href: "/", label: "Home" }, { label: "Simulate" }]}
     >
       {children}
     </PageLayout>

@@ -9,7 +9,7 @@ export default function DemoLayout({
     <PageLayout
       title="UI Components"
       description="Component library reference for contributors"
-      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Components" }]}
+      breadcrumbs={[{ href: "/", label: "Home" }, { label: "Components" }]}
     >
       {children}
     </PageLayout>

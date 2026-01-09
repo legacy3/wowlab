@@ -1,6 +1,8 @@
+import type { ComponentProps } from "react";
+
 import { Dialog } from "@base-ui/react/dialog";
 import { clsx } from "clsx";
-import type { ComponentProps } from "react";
+
 import styles from "./index.module.css";
 
 export const Root = Dialog.Root;
