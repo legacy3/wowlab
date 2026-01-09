@@ -1,7 +1,9 @@
 "use client";
 
 import * as AlertDialog from "@/components/ui/alert-dialog";
+import * as ContextMenu from "@/components/ui/context-menu";
 import * as Dialog from "@/components/ui/dialog";
+import * as PreviewCard from "@/components/ui/preview-card";
 import * as Tooltip from "@/components/ui/tooltip";
 import styles from "../index.module.scss";
 
@@ -77,6 +79,59 @@ export function Content() {
                 </Tooltip.Positioner>
               </Tooltip.Portal>
             </Tooltip.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Context Menu</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <ContextMenu.Root>
+              <ContextMenu.Trigger
+                style={{
+                  padding: "2rem 3rem",
+                  border: "1px dashed var(--pico-muted-border-color)",
+                  borderRadius: "var(--pico-border-radius)",
+                }}
+              >
+                Right-click here
+              </ContextMenu.Trigger>
+              <ContextMenu.Portal>
+                <ContextMenu.Positioner>
+                  <ContextMenu.Popup>
+                    <ContextMenu.Item>Cut</ContextMenu.Item>
+                    <ContextMenu.Item>Copy</ContextMenu.Item>
+                    <ContextMenu.Item>Paste</ContextMenu.Item>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Item>Delete</ContextMenu.Item>
+                  </ContextMenu.Popup>
+                </ContextMenu.Positioner>
+              </ContextMenu.Portal>
+            </ContextMenu.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Preview Card</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <PreviewCard.Root>
+              <PreviewCard.Trigger href="https://base-ui.com">
+                Hover to preview Base UI
+              </PreviewCard.Trigger>
+              <PreviewCard.Portal>
+                <PreviewCard.Positioner>
+                  <PreviewCard.Popup>
+                    <strong>Base UI</strong>
+                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.875rem" }}>
+                      A library of high-quality unstyled React components.
+                    </p>
+                  </PreviewCard.Popup>
+                </PreviewCard.Positioner>
+              </PreviewCard.Portal>
+            </PreviewCard.Root>
           </div>
         </div>
       </div>

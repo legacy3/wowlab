@@ -1,5 +1,6 @@
 "use client";
 
+import * as Meter from "@/components/ui/meter";
 import * as Progress from "@/components/ui/progress";
 import * as Toast from "@/components/ui/toast";
 import styles from "../index.module.scss";
@@ -61,6 +62,21 @@ export function Content() {
               </Progress.Track>
               <Progress.Value>{(value) => `${value}%`}</Progress.Value>
             </Progress.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Meter</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent} style={{ maxWidth: "20rem" }}>
+            <Meter.Root value={75}>
+              <Meter.Label>Storage usage</Meter.Label>
+              <Meter.Track>
+                <Meter.Indicator />
+              </Meter.Track>
+              <Meter.Value>{(value) => `${value}%`}</Meter.Value>
+            </Meter.Root>
           </div>
         </div>
       </div>

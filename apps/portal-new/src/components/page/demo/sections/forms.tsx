@@ -1,6 +1,10 @@
 "use client";
 
+import * as Autocomplete from "@/components/ui/autocomplete";
+import * as Button from "@/components/ui/button";
 import * as Checkbox from "@/components/ui/checkbox";
+import * as CheckboxGroup from "@/components/ui/checkbox-group";
+import * as Combobox from "@/components/ui/combobox";
 import * as Field from "@/components/ui/field";
 import * as Fieldset from "@/components/ui/fieldset";
 import * as Form from "@/components/ui/form";
@@ -14,6 +18,8 @@ import * as Toggle from "@/components/ui/toggle";
 import * as ToggleGroup from "@/components/ui/toggle-group";
 import { Bold, Italic, Minus, Plus, Underline } from "lucide-react";
 import styles from "../index.module.scss";
+
+const fruits = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig"];
 
 export const id = "forms";
 export const title = "Forms";
@@ -177,6 +183,94 @@ export function Content() {
                 <Underline size={16} />
               </Toggle.Root>
             </ToggleGroup.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Button</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <Button.Root>Primary</Button.Root>
+            <Button.Root disabled>Disabled</Button.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Checkbox Group</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <CheckboxGroup.Root defaultValue={["notifications"]}>
+              <label className={styles.inlineLabel}>
+                <Checkbox.Root value="notifications">
+                  <Checkbox.Indicator />
+                </Checkbox.Root>
+                Notifications
+              </label>
+              <label className={styles.inlineLabel}>
+                <Checkbox.Root value="marketing">
+                  <Checkbox.Indicator />
+                </Checkbox.Root>
+                Marketing emails
+              </label>
+              <label className={styles.inlineLabel}>
+                <Checkbox.Root value="updates">
+                  <Checkbox.Indicator />
+                </Checkbox.Root>
+                Product updates
+              </label>
+            </CheckboxGroup.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Autocomplete</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent} style={{ maxWidth: "15rem" }}>
+            <Autocomplete.Root items={fruits}>
+              <Autocomplete.Input placeholder="Search fruits..." />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      {fruits.map((fruit) => (
+                        <Autocomplete.Item key={fruit} value={fruit}>
+                          {fruit}
+                        </Autocomplete.Item>
+                      ))}
+                    </Autocomplete.List>
+                    <Autocomplete.Empty>No results found</Autocomplete.Empty>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Combobox</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent} style={{ maxWidth: "15rem" }}>
+            <Combobox.Root items={fruits}>
+              <Combobox.Input placeholder="Select a fruit..." />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {fruits.map((fruit) => (
+                        <Combobox.Item key={fruit} value={fruit}>
+                          {fruit}
+                        </Combobox.Item>
+                      ))}
+                    </Combobox.List>
+                    <Combobox.Empty>No results found</Combobox.Empty>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
           </div>
         </div>
       </div>

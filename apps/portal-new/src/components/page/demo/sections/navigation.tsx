@@ -1,6 +1,7 @@
 "use client";
 
 import * as Menu from "@/components/ui/menu";
+import * as Menubar from "@/components/ui/menubar";
 import * as NavigationMenu from "@/components/ui/navigation-menu";
 import * as Tabs from "@/components/ui/tabs";
 import { ChevronDown } from "lucide-react";
@@ -102,6 +103,57 @@ export function Content() {
                 </Menu.Positioner>
               </Menu.Portal>
             </Menu.Root>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.subsection}>
+        <h3>Menubar</h3>
+        <div className={styles.demoRow}>
+          <div className={styles.demoContent}>
+            <Menubar.Root>
+              <Menubar.MenuRoot>
+                <Menubar.Trigger>File</Menubar.Trigger>
+                <Menubar.Portal>
+                  <Menubar.Positioner>
+                    <Menubar.Popup>
+                      <Menubar.Item>New</Menubar.Item>
+                      <Menubar.Item>Open</Menubar.Item>
+                      <Menubar.Item>Save</Menubar.Item>
+                      <Menubar.Separator />
+                      <Menubar.Item>Exit</Menubar.Item>
+                    </Menubar.Popup>
+                  </Menubar.Positioner>
+                </Menubar.Portal>
+              </Menubar.MenuRoot>
+              <Menubar.MenuRoot>
+                <Menubar.Trigger>Edit</Menubar.Trigger>
+                <Menubar.Portal>
+                  <Menubar.Positioner>
+                    <Menubar.Popup>
+                      <Menubar.Item>Undo</Menubar.Item>
+                      <Menubar.Item>Redo</Menubar.Item>
+                      <Menubar.Separator />
+                      <Menubar.Item>Cut</Menubar.Item>
+                      <Menubar.Item>Copy</Menubar.Item>
+                      <Menubar.Item>Paste</Menubar.Item>
+                    </Menubar.Popup>
+                  </Menubar.Positioner>
+                </Menubar.Portal>
+              </Menubar.MenuRoot>
+              <Menubar.MenuRoot>
+                <Menubar.Trigger>View</Menubar.Trigger>
+                <Menubar.Portal>
+                  <Menubar.Positioner>
+                    <Menubar.Popup>
+                      <Menubar.Item>Zoom In</Menubar.Item>
+                      <Menubar.Item>Zoom Out</Menubar.Item>
+                      <Menubar.Item>Reset Zoom</Menubar.Item>
+                    </Menubar.Popup>
+                  </Menubar.Positioner>
+                </Menubar.Portal>
+              </Menubar.MenuRoot>
+            </Menubar.Root>
           </div>
         </div>
       </div>

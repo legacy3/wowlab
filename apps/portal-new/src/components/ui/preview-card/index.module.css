@@ -1,0 +1,13 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+}
+
+.popup {
+  max-width: 20rem;
+  padding: var(--pico-spacing);
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
