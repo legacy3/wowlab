@@ -1,29 +1,19 @@
 export const routes = {
   about: {
     index: "/about",
-    privacy: "/about?tab=privacy",
-    terms: "/about?tab=terms",
+    privacy: "/about?tab=privacy-policy",
+    terms: "/about?tab=terms-of-service",
+  },
+  account: {
+    index: "/account",
+    settings: "/account/settings",
   },
   auth: {
     signIn: "/auth/sign-in",
   },
-  demo: "/demo",
-  docs: "/docs",
+  dev: {
+    ui: "/dev/ui",
+  },
   home: "/",
-  lab: {
-    index: "/lab",
-    inspector: "/lab/inspector/search",
-  },
-  optimize: "/optimize",
-  rankings: "/rankings",
-  rotations: {
-    editor: "/rotations/editor",
-    index: "/rotations",
-  },
-  simulate: {
-    advanced: "/simulate/advanced",
-    index: "/simulate",
-    quick: "/simulate/quick",
-  },
-  talents: "/talents",
+  simulate: "/simulate",
 } as const;

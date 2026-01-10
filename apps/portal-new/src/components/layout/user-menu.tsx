@@ -1,0 +1,83 @@
+"use client";
+
+import { LogOut, Settings, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Flex } from "styled-system/jsx";
+
+import { Avatar, Menu, Skeleton } from "@/components/ui";
+import { routes } from "@/lib/routes";
+import { useUser } from "@/lib/state";
+
+export function UserMenu() {
+  const router = useRouter();
+  const { data: user, isLoading, logout } = useUser();
+
+  const handleSignOut = () => {
+    logout();
+    router.push(routes.auth.signIn);
+    router.refresh();
+  };
+
+  if (isLoading) {
+    return <Skeleton borderRadius="full" h="8" w="8" />;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <Flex
+          as="button"
+          align="center"
+          justify="center"
+          rounded="full"
+          cursor="pointer"
+          bg="transparent"
+          border="none"
+          p="0"
+        >
+          <Avatar.Root size="sm">
+            {user.avatarUrl ? (
+              <Avatar.Image src={user.avatarUrl} alt={user.handle ?? "User"} />
+            ) : null}
+            <Avatar.Fallback>{user.initials}</Avatar.Fallback>
+          </Avatar.Root>
+        </Flex>
+      </Menu.Trigger>
+      <Menu.Positioner>
+        <Menu.Content minW="48">
+          <Menu.ItemGroup>
+            <Menu.ItemGroupLabel fontWeight="medium">
+              {user.handle ?? user.email ?? "User"}
+            </Menu.ItemGroupLabel>
+          </Menu.ItemGroup>
+          <Menu.Separator />
+          <Menu.ItemGroup>
+            <Menu.Item
+              value="account"
+              onClick={() => router.push(routes.account.index)}
+            >
+              <User size={16} />
+              Account
+            </Menu.Item>
+            <Menu.Item
+              value="settings"
+              onClick={() => router.push(routes.account.settings)}
+            >
+              <Settings size={16} />
+              Settings
+            </Menu.Item>
+          </Menu.ItemGroup>
+          <Menu.Separator />
+          <Menu.Item value="logout" onClick={handleSignOut}>
+            <LogOut size={16} />
+            Sign out
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Positioner>
+    </Menu.Root>
+  );
+}

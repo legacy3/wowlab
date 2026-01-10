@@ -1,8 +1,9 @@
 "use client";
 
-import { useGetIdentity, useLogout } from "@refinedev/core";
+import { useGetIdentity, useLogin, useLogout } from "@refinedev/core";
 import { useMemo } from "react";
 
+import type { OAuthProvider } from "@/lib/refine";
 import type { UserIdentity } from "@/lib/supabase";
 
 import type { StateResult } from "./types";
@@ -12,11 +13,16 @@ export interface User extends UserIdentity {
 }
 
 export interface UserState extends StateResult<User> {
+  login: (provider: OAuthProvider, redirectTo?: string) => void;
   logout: () => void;
 }
 
 export function useUser(): UserState {
   const { data, error, isLoading } = useGetIdentity<UserIdentity>();
+  const { mutate: loginMutation } = useLogin<{
+    provider: OAuthProvider;
+    redirectTo?: string;
+  }>();
   const { mutate: logoutMutation } = useLogout();
 
   const user = useMemo(() => {
@@ -35,6 +41,7 @@ export function useUser(): UserState {
     error: error instanceof Error ? error : null,
     isLoading,
 
+    login: (provider, redirectTo) => loginMutation({ provider, redirectTo }),
     logout: () => logoutMutation(),
     set: () => {
       throw new Error("User state is read-only");

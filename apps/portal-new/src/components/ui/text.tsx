@@ -1,9 +1,10 @@
-import type { ComponentProps } from 'react'
-import { styled } from 'styled-system/jsx'
-import { type TextVariantProps, text } from 'styled-system/recipes'
-import type { StyledComponent } from 'styled-system/types'
+import type { ComponentProps } from "react";
+import type { StyledComponent } from "styled-system/types";
 
-type Props = TextVariantProps & { as?: React.ElementType }
+import { styled } from "styled-system/jsx";
+import { text, type TextVariantProps } from "styled-system/recipes";
 
-export type TextProps = ComponentProps<typeof Text>
-export const Text = styled('p', text) as StyledComponent<'p', Props>
+export type TextProps = ComponentProps<typeof Text>;
+
+type Props = { as?: React.ElementType } & TextVariantProps;
+export const Text = styled("p", text) as StyledComponent<"p", Props>;

@@ -1,5 +1,6 @@
-import { defineTokens } from '@pandacss/dev'
+import { defineTokens } from "@pandacss/dev";
 
+/* eslint-disable */
 export const zIndex = defineTokens.zIndex({
   hide: {
     value: -1,
@@ -37,4 +38,4 @@ export const zIndex = defineTokens.zIndex({
   tooltip: {
     value: 1800,
   },
-})
+});

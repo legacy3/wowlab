@@ -1,64 +1,64 @@
-import { defineRecipe } from '@pandacss/dev'
+import { defineRecipe } from "@pandacss/dev";
 
 export const skeleton = defineRecipe({
-  className: 'skeleton',
-  jsx: ['Skeleton', 'SkeletonCircle', 'SkeletonText'],
   base: {},
+  className: "skeleton",
+  defaultVariants: {
+    loading: true,
+    variant: "pulse",
+  },
+  jsx: ["Skeleton", "SkeletonCircle", "SkeletonText"],
+
   variants: {
-    loading: {
+    circle: {
       true: {
-        borderRadius: 'l2',
-        boxShadow: 'none',
-        backgroundClip: 'padding-box',
-        cursor: 'default',
-        color: 'transparent',
-        pointerEvents: 'none',
-        userSelect: 'none',
-        flexShrink: '0',
-        '&::before, &::after, *': {
-          visibility: 'hidden',
-        },
-      },
-      false: {
-        background: 'unset',
-        animation: 'fade-in var(--fade-duration, 0.1s) ease-out !important',
+        alignItems: "center",
+        borderRadius: "9999px",
+        display: "flex",
+        flex: "0 0 auto",
+        justifyContent: "center",
       },
     },
 
-    circle: {
+    loading: {
+      false: {
+        animation: "fade-in var(--fade-duration, 0.1s) ease-out !important",
+        background: "unset",
+      },
       true: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: '0 0 auto',
-        borderRadius: '9999px',
+        "&::before, &::after, *": {
+          visibility: "hidden",
+        },
+        backgroundClip: "padding-box",
+        borderRadius: "l2",
+        boxShadow: "none",
+        color: "transparent",
+        cursor: "default",
+        flexShrink: "0",
+        pointerEvents: "none",
+        userSelect: "none",
       },
     },
 
     variant: {
+      none: {
+        animation: "none",
+      },
       pulse: {
-        background: 'gray.subtle.bg.active',
-        animation: 'pulse',
-        animationDuration: 'var(--duration, 1.2s)',
+        animation: "pulse",
+        animationDuration: "var(--duration, 1.2s)",
+        background: "gray.subtle.bg.active",
       },
       shine: {
-        '--animate-from': '200%',
-        '--animate-to': '-200%',
-        '--start-color': 'colors.gray.subtle.bg',
-        '--end-color': 'colors.gray.subtle.bg.active',
+        "--animate-from": "200%",
+        "--animate-to": "-200%",
+        "--end-color": "colors.gray.subtle.bg.active",
+        "--start-color": "colors.gray.subtle.bg",
+        animation: "bg-position var(--duration, 5s) ease-in-out infinite",
         backgroundImage:
-          'linear-gradient(270deg,var(--start-color),var(--end-color),var(--end-color),var(--start-color))',
-        backgroundSize: '400% 100%',
-        animation: 'bg-position var(--duration, 5s) ease-in-out infinite',
-      },
-      none: {
-        animation: 'none',
+          "linear-gradient(270deg,var(--start-color),var(--end-color),var(--end-color),var(--start-color))",
+        backgroundSize: "400% 100%",
       },
     },
   },
-
-  defaultVariants: {
-    variant: 'pulse',
-    loading: true,
-  },
-})
+});

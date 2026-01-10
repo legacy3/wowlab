@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { SiteShell } from "@/components/layout";
 import { RefineProvider } from "@/providers";
 import "@/styles/globals.css";
 
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <RefineProvider>{children}</RefineProvider>
+        <RefineProvider>
+          <SiteShell>{children}</SiteShell>
+        </RefineProvider>
       </body>
     </html>
   );

@@ -27,41 +27,41 @@ type SubItem = {
 
 export const navMain: NavItem[] = [
   {
-    href: routes.simulate.index,
+    href: routes.simulate,
     icon: Play,
     items: [
-      { href: routes.simulate.index, label: "Quick Sim" },
-      { href: routes.optimize, label: "Optimize" },
-      { href: routes.rankings, label: "Rankings" },
+      { href: "/TBD1", label: "Quick Sim" },
+      { href: "/TBD2", label: "Optimize" },
+      { href: "/TBD3", label: "Rankings" },
     ],
     label: "Simulate",
   },
   {
-    href: routes.talents,
+    href: "/TBD4",
     icon: Calculator,
-    items: [{ href: routes.talents, label: "Talents" }],
+    items: [{ href: "/TBD5", label: "Talents" }],
     label: "Plan",
   },
   {
-    href: routes.rotations.index,
+    href: "/TBD6",
     icon: Swords,
     items: [
-      { href: routes.rotations.index, label: "Browse" },
-      { href: routes.rotations.editor, label: "Create" },
+      { href: "/TBD7", label: "Browse" },
+      { href: "/TBD8", label: "Create" },
     ],
     label: "Rotations",
   },
   {
-    href: routes.lab.index,
+    href: "/TBD8",
     icon: FlaskConical,
     items: [
-      { href: routes.lab.index, label: "Overview" },
-      { href: routes.lab.inspector, label: "Data Inspector" },
+      { href: "/TBD10", label: "Overview" },
+      { href: "/TBD11", label: "Data Inspector" },
     ],
     label: "Lab",
   },
 ];
 
 export const navSecondary: MenuItem[] = [
-  { href: routes.docs, icon: BookOpen, label: "Docs" },
+  { href: "/TBD12", icon: BookOpen, label: "Docs" },
 ];

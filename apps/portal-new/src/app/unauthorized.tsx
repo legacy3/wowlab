@@ -1,18 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Flex } from "styled-system/jsx";
+
+import { SignInForm } from "@/components/auth";
 
 export default function Unauthorized() {
   const pathname = usePathname();
 
   return (
-    <div>
-      <h2>Unauthorized</h2>
-      <p>Please sign in to access this page.</p>
-      <Link href={`/auth/sign-in?next=${encodeURIComponent(pathname)}`}>
-        Sign In
-      </Link>
-    </div>
+    <Flex justify="center" py="12">
+      <SignInForm redirectTo={pathname} />
+    </Flex>
   );
 }

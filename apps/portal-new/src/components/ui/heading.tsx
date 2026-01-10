@@ -1,9 +1,10 @@
-import type { ComponentProps } from 'react'
-import { styled } from 'styled-system/jsx'
-import { type HeadingVariantProps, heading } from 'styled-system/recipes'
-import type { StyledComponent } from 'styled-system/types'
+import type { ComponentProps } from "react";
+import type { StyledComponent } from "styled-system/types";
 
-type Props = HeadingVariantProps & { as?: React.ElementType }
+import { styled } from "styled-system/jsx";
+import { heading, type HeadingVariantProps } from "styled-system/recipes";
 
-export type HeadingProps = ComponentProps<typeof Heading>
-export const Heading = styled('h2', heading) as StyledComponent<'h2', Props>
+export type HeadingProps = ComponentProps<typeof Heading>;
+
+type Props = { as?: React.ElementType } & HeadingVariantProps;
+export const Heading = styled("h2", heading) as StyledComponent<"h2", Props>;
