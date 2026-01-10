@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "rm -rf .next && next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write --ignore-path ../../.prettierignore .",
     "ncu": "ncu -u",
-     "prepare": "panda codegen"
+    "prepare": "panda codegen"
   },
   "dependencies": {
     "@refinedev/core": "^5.0.8",
