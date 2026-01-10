@@ -92,3 +92,7 @@ third_party/*
 
 # PEM files (certificates)
 *.pem
+
+## Panda
+styled-system
+styled-system-studio
