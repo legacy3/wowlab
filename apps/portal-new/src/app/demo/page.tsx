@@ -1,5 +1,3 @@
-import { DemoContent } from "@/components/page/demo";
-
 export default function DemoPage() {
-  return <DemoContent />;
+  return <div>Demo Page</div>;
 }

@@ -1,15 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-import { SignIn } from "@/components/auth";
 
 export default function Unauthorized() {
   const pathname = usePathname();
 
   return (
-    <div style={{ padding: "3rem 1rem" }}>
-      <SignIn redirectTo={pathname} />
+    <div>
+      <h2>Unauthorized</h2>
+      <p>Please sign in to access this page.</p>
+      <Link href={`/auth/sign-in?next=${encodeURIComponent(pathname)}`}>
+        Sign In
+      </Link>
     </div>
   );
 }
