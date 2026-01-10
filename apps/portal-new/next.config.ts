@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
+import createMDX from "@next/mdx";
+
 const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
   },
+
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 
   async redirects() {
     return [
@@ -35,4 +39,24 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  extension: /\.mdx?$/,
+
+  options: {
+    rehypePlugins: [
+      "rehype-slug",
+      "@stefanprobst/rehype-extract-toc",
+      "@stefanprobst/rehype-extract-toc/mdx",
+    ],
+
+    remarkPlugins: [
+      "remark-gfm",
+      "remark-frontmatter",
+      ["remark-mdx-frontmatter", { name: "meta" }],
+      "remark-reading-time",
+      "remark-reading-time/mdx",
+    ],
+  },
+});
+
+export default withMDX(nextConfig);

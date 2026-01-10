@@ -1,6 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 
-import { BookOpen, Calculator, FlaskConical, Play, Swords } from "lucide-react";
+import {
+  BookOpen,
+  Calculator,
+  FlaskConical,
+  Newspaper,
+  Play,
+  Swords,
+} from "lucide-react";
 
 import { routes } from "./routes";
 
@@ -11,7 +18,7 @@ export type MenuItem = {
   external?: boolean;
 };
 
-export type NavItem = {
+export type MenuNavItem = {
   label: string;
   href: string;
   icon: Icon;
@@ -25,7 +32,7 @@ type SubItem = {
   href: string;
 };
 
-export const navMain: NavItem[] = [
+export const navMain: MenuNavItem[] = [
   {
     href: routes.simulate,
     icon: Play,
@@ -63,5 +70,6 @@ export const navMain: NavItem[] = [
 ];
 
 export const navSecondary: MenuItem[] = [
-  { href: "/TBD12", icon: BookOpen, label: "Docs" },
+  { href: routes.docs.index, icon: BookOpen, label: "Docs" },
+  { href: routes.blog.index, icon: Newspaper, label: "Blog" },
 ];

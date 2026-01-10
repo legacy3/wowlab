@@ -1,0 +1,61 @@
+import { Box, Flex, VStack } from "styled-system/jsx";
+
+import { ArticleSidebar } from "@/components/content/article-sidebar";
+import { ContentArticle } from "@/components/content/content-article";
+import { ContentNav } from "@/components/content/content-nav";
+import { DocMeta } from "@/components/docs";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { docsIndex, docSlugs } from "@/lib/docs";
+import { getDocPageData } from "@/lib/docs/data";
+
+type Props = {
+  params: Promise<{ slug: string[] }>;
+};
+
+export default async function DocPage({ params }: Props) {
+  const { slug } = await params;
+  const { Content, fullSlug, meta, next, prev, tableOfContents } =
+    await getDocPageData(slug);
+
+  return (
+    <Flex gap="8">
+      <Box flex="1" minW="0" maxW="3xl">
+        <ContentArticle footer={<ContentNav prev={prev} next={next} />}>
+          <VStack
+            gap="3"
+            alignItems="flex-start"
+            mb="6"
+            pb="6"
+            borderBottomWidth="1px"
+            borderColor="border.muted"
+          >
+            <Heading as="h1" size="4xl">
+              {meta.title}
+            </Heading>
+            {meta.description && (
+              <Text color="fg.muted" mt="-1">
+                {meta.description}
+              </Text>
+            )}
+            <DocMeta date={meta.updatedAt} slug={fullSlug} />
+          </VStack>
+          <Content />
+        </ContentArticle>
+      </Box>
+
+      <ArticleSidebar
+        toc={tableOfContents}
+        nav={{
+          basePath: "/docs",
+          currentSlug: fullSlug,
+          items: docsIndex,
+        }}
+      />
+    </Flex>
+  );
+}
+
+export function generateStaticParams() {
+  return docSlugs.map((slug) => ({ slug: slug.split("/") }));
+}

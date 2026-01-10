@@ -1,0 +1,26 @@
+"use client";
+import type { ComponentProps } from "react";
+
+import { ark } from "@ark-ui/react/factory";
+import { createStyleContext } from "styled-system/jsx";
+import { table } from "styled-system/recipes";
+
+const { withContext, withProvider } = createStyleContext(table);
+
+export const Root = withProvider(ark.table, "root");
+export const Body = withContext(ark.tbody, "body");
+export const Caption = withContext(ark.caption, "caption");
+export const Cell = withContext(ark.td, "cell");
+export const Foot = withContext(ark.tfoot, "foot");
+export const Head = withContext(ark.thead, "head");
+export const Header = withContext(ark.th, "header");
+export const Row = withContext(ark.tr, "row");
+
+export type BodyProps = ComponentProps<typeof Body>;
+export type CaptionProps = ComponentProps<typeof Caption>;
+export type CellProps = ComponentProps<typeof Cell>;
+export type FootProps = ComponentProps<typeof Foot>;
+export type HeaderProps = ComponentProps<typeof Header>;
+export type HeadProps = ComponentProps<typeof Head>;
+export type RootProps = ComponentProps<typeof Root>;
+export type RowProps = ComponentProps<typeof Row>;

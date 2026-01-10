@@ -11,8 +11,16 @@ export const routes = {
   auth: {
     signIn: "/auth/sign-in",
   },
+  blog: {
+    index: "/blog",
+    post: (slug: string) => `/blog/${slug}`,
+  },
   dev: {
     ui: "/dev/ui",
+  },
+  docs: {
+    index: "/docs",
+    page: (slug: string) => `/docs/${slug}`,
   },
   home: "/",
   simulate: "/simulate",

@@ -9,7 +9,7 @@ import { Box, Flex, Stack, styled } from "styled-system/jsx";
 import { Collapsible, Text } from "@/components/ui";
 import {
   type MenuItem,
-  type NavItem,
+  type MenuNavItem,
   navMain,
   navSecondary,
 } from "@/lib/menu-config";
@@ -124,7 +124,7 @@ export function AppSidebar() {
   );
 }
 
-function NavGroup({ item }: { item: NavItem }) {
+function NavGroup({ item }: { item: MenuNavItem }) {
   const pathname = usePathname();
   const Icon = item.icon;
   const isActive =

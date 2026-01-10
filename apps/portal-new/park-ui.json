@@ -1,0 +1,7 @@
+{
+  "jsFramework": "react",
+  "cssFramework": "panda",
+  "components": "./src/components/ui",
+  "utils": "./src/lib/utils",
+  "recipes": "./src/theme/recipes"
+}

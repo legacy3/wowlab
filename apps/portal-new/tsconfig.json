@@ -22,11 +22,13 @@
     "paths": {
       "@/*": ["./*"],
       "styled-system/*": ["../styled-system/*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./@types"]
   },
   "include": [
     "src",
     "styled-system",
+    "@types/**/*.d.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
