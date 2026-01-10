@@ -1,16 +1,13 @@
 "use client";
 
-import { useGetIdentity, useLogout } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
-
-import type { UserIdentity } from "@/lib/supabase";
 
 import * as Avatar from "@/components/ui/avatar";
 import { FlaskInlineLoader } from "@/components/ui/flask-loader";
 import * as Menu from "@/components/ui/menu";
-import { formatHandleInitials } from "@/lib/format";
 import { routes } from "@/lib/routes";
+import { useUser } from "@/lib/state";
 
 import styles from "./index.module.scss";
 
@@ -24,25 +21,22 @@ export function AuthButton() {
 
 function AuthButtonInner() {
   const router = useRouter();
-  const { data: user } = useGetIdentity<UserIdentity>();
-  const { mutate: logout } = useLogout();
+  const { data, logout } = useUser();
 
-  if (user) {
+  if (data) {
     return (
       <Menu.Root>
         <Menu.Trigger className={styles.trigger}>
           <Avatar.Root className={styles.avatar}>
-            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} alt="" />}
-            <Avatar.Fallback>
-              {formatHandleInitials(user.handle)}
-            </Avatar.Fallback>
+            {data.avatarUrl && <Avatar.Image src={data.avatarUrl} alt="" />}
+            <Avatar.Fallback>{data.initials}</Avatar.Fallback>
           </Avatar.Root>
-          {user.handle && <span className={styles.name}>{user.handle}</span>}
+          {data.handle && <span className={styles.name}>{data.handle}</span>}
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner align="end">
             <Menu.Popup className={styles.popup}>
-              <Menu.Item className={styles.item} onClick={() => logout()}>
+              <Menu.Item className={styles.item} onClick={logout}>
                 Sign Out
               </Menu.Item>
             </Menu.Popup>

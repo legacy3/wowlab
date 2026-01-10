@@ -16,6 +16,9 @@
     "@base-ui/react": "^1.0.0",
     "@picocss/pico": "^2.1.1",
     "@refinedev/core": "^5.0.8",
+    "@wowlab/core": "workspace:*",
+    "@wowlab/services": "workspace:*",
+    "effect": "^3.19.4",
     "@refinedev/nextjs-router": "^7.0.4",
     "@refinedev/supabase": "^6.0.1",
     "@supabase/ssr": "^0.8.0",
@@ -28,7 +31,8 @@
     "motion": "^12.24.12",
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@types/node": "^25",

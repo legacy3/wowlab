@@ -14,6 +14,8 @@ import {
   resources,
 } from "@/lib/refine";
 
+import { DbcProvider } from "./dbc-provider";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -36,7 +38,7 @@ export function RefineProvider({ children }: { children: ReactNode }) {
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{
-        buster: "11.2", // TODO wire this up
+        buster: "11.2.5",
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             query.state.status === "success" && query.meta?.persist === true,
@@ -54,11 +56,14 @@ export function RefineProvider({ children }: { children: ReactNode }) {
           resources={resources}
           options={{
             disableTelemetry: true,
+            reactQuery: {
+              clientConfig: queryClient,
+            },
             syncWithLocation: true,
             warnWhenUnsavedChanges: true,
           }}
         >
-          {children}
+          <DbcProvider>{children}</DbcProvider>
         </Refine>
       </Suspense>
     </PersistQueryClientProvider>
