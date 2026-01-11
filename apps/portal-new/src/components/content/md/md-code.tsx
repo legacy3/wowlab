@@ -1,18 +1,27 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { Box } from "styled-system/jsx";
 
 import { Code } from "@/components/ui/code";
 
+import { MdMermaid } from "./md-mermaid";
+
 type MdCodeProps = {
   className?: string;
   children: ReactNode;
 };
 
-export function MdCode({ children, className }: MdCodeProps) {
-  const isCodeBlock = /language-(\w+)/.test(className || "");
+export function MdCode({ children, className = "" }: MdCodeProps) {
+  const language = className.replace("language-", "") || undefined;
+  const code = String(children).trimEnd();
 
-  if (isCodeBlock) {
+  if (language === "mermaid") {
+    return <MdMermaid chart={code} />;
+  }
+
+  if (language) {
     return (
       <Box
         as="pre"

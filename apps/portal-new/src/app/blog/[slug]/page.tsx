@@ -1,5 +1,6 @@
 import { Box, Flex, VStack } from "styled-system/jsx";
 
+import { ArticleMeta } from "@/components/content/article-meta";
 import { ArticleSidebar } from "@/components/content/article-sidebar";
 import { ContentArticle } from "@/components/content/content-article";
 import { ContentNav } from "@/components/content/content-nav";
@@ -38,18 +39,17 @@ export default async function BlogPostPage({ params }: Props) {
                 {entry.description}
               </Text>
             )}
+            <ArticleMeta
+              date={entry.publishedAt}
+              author={entry.author}
+              readingTime={entry.readingTime?.minutes ?? 0}
+            />
           </VStack>
           <Content />
         </ContentArticle>
       </Box>
 
-      <ArticleSidebar
-        toc={entry.tableOfContents}
-        meta={{
-          date: entry.publishedAt,
-          readingTime: Math.max(1, Math.round(entry.readingTime?.minutes ?? 0)),
-        }}
-      />
+      <ArticleSidebar toc={entry.tableOfContents} />
     </Flex>
   );
 }

@@ -7,9 +7,11 @@ import { card } from "./card";
 import { code } from "./code";
 import { collapsible } from "./collapsible";
 import { drawer } from "./drawer";
+import { expandable } from "./expandable";
 import { group } from "./group";
 import { heading } from "./heading";
 import { icon } from "./icon";
+import { image } from "./image";
 import { input } from "./input";
 import { link } from "./link";
 import { loader } from "./loader";
@@ -28,6 +30,7 @@ export const recipes = {
   group,
   heading,
   icon,
+  image,
   input,
   link,
   loader,
@@ -43,6 +46,7 @@ export const slotRecipes = {
   card,
   collapsible,
   drawer,
+  expandable,
   menu,
   table,
 };

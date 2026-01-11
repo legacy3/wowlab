@@ -1,9 +1,9 @@
 import { Box, Flex, VStack } from "styled-system/jsx";
 
+import { ArticleMeta } from "@/components/content/article-meta";
 import { ArticleSidebar } from "@/components/content/article-sidebar";
 import { ContentArticle } from "@/components/content/content-article";
 import { ContentNav } from "@/components/content/content-nav";
-import { DocMeta } from "@/components/docs";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { docsIndex, docSlugs } from "@/lib/docs";
@@ -38,7 +38,10 @@ export default async function DocPage({ params }: Props) {
                 {meta.description}
               </Text>
             )}
-            <DocMeta date={meta.updatedAt} slug={fullSlug} />
+            <ArticleMeta
+              date={meta.updatedAt}
+              editPath={`apps/portal-new/src/content/docs/${fullSlug}.md`}
+            />
           </VStack>
           <Content />
         </ContentArticle>
