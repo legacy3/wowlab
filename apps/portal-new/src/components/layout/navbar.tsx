@@ -7,6 +7,7 @@ import { IconButton } from "@/components/ui";
 
 import { AuthButton } from "./auth-button";
 import { useSidebar } from "./sidebar-context";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Navbar() {
   const { isOpen, toggle } = useSidebar();
@@ -32,7 +33,8 @@ export function Navbar() {
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </IconButton>
         <Box display={{ base: "none", lg: "block" }} />
-        <Flex align="center" gap="3">
+        <Flex align="center" gap="2">
+          <ThemeToggle />
           <AuthButton />
         </Flex>
       </Flex>

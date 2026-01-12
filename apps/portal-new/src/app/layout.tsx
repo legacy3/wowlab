@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { ThemeProvider } from "next-themes";
+
 import { SiteShell } from "@/components/layout";
 import { RefineProvider } from "@/providers";
 import "@/styles/globals.css";
@@ -15,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <RefineProvider>
-          <SiteShell>{children}</SiteShell>
-        </RefineProvider>
+        <ThemeProvider attribute="class">
+          <RefineProvider>
+            <SiteShell>{children}</SiteShell>
+          </RefineProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

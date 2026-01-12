@@ -26,5 +26,5 @@ export {
 } from "./game-data-search";
 export { useLoadRotation, useSaveRotation } from "./rotation";
 export type { StateResult } from "./types";
-export { useCardExpanded, useSidebar, useTheme } from "./ui";
+export { useCardExpanded, useSidebar } from "./ui";
 export { type User, type UserState, useUser } from "./user";
