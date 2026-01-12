@@ -132,6 +132,15 @@ function NavGroup({ item }: { item: MenuNavItem }) {
   const isActive =
     pathname === routePath || pathname.startsWith(routePath + "/");
 
+  if (item.items.length === 0) {
+    return (
+      <SidebarLink href={routePath} active={isActive} variant="plain">
+        <Icon size={18} />
+        {item.route.label}
+      </SidebarLink>
+    );
+  }
+
   return (
     <Collapsible.Root defaultOpen={isActive}>
       <Collapsible.Trigger asChild>
@@ -161,7 +170,9 @@ function NavGroup({ item }: { item: MenuNavItem }) {
       <Collapsible.Content>
         <Stack gap="0.5" pl="9" mt="1">
           {item.items.map((subItem) => {
+            const SubIcon = getIcon(subItem.icon);
             const subPath = href(subItem);
+
             return (
               <SidebarLink
                 key={subPath}
@@ -169,6 +180,7 @@ function NavGroup({ item }: { item: MenuNavItem }) {
                 active={pathname === subPath}
                 variant="plain"
               >
+                <SubIcon size={16} />
                 {subItem.label}
               </SidebarLink>
             );
