@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { PageContainer } from "@/components/common";
+import { routes } from "@/lib/routing";
 
 interface BlogPostLayoutProps {
   breadcrumb: ReactNode;
@@ -12,11 +13,7 @@ export default function BlogPostLayout({
   children,
 }: BlogPostLayoutProps) {
   return (
-    <PageContainer
-      title="Blog"
-      description="Updates, announcements, and insights from the WoW Lab team"
-      breadcrumbs={breadcrumb}
-    >
+    <PageContainer route={routes.blog.index} breadcrumbs={breadcrumb}>
       {children}
     </PageContainer>
   );

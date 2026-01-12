@@ -1,5 +1,5 @@
 import { hasLocale } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, getTimeZone, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { SiteShell } from "@/components/layout";
@@ -27,10 +27,13 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
 
-  const messages = await getMessages();
+  const [messages, timeZone] = await Promise.all([
+    getMessages(),
+    getTimeZone(),
+  ]);
 
   return (
-    <AppProviders locale={locale} messages={messages}>
+    <AppProviders locale={locale} messages={messages} timeZone={timeZone}>
       <SiteShell>{children}</SiteShell>
     </AppProviders>
   );

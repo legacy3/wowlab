@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
-import { Collapsible, Link, Text } from "@/components/ui";
+import { Collapsible, Link, Text, Tooltip } from "@/components/ui";
 import { usePathname } from "@/i18n/navigation";
 import {
   getIcon,
@@ -134,10 +134,15 @@ function NavGroup({ item }: { item: MenuNavItem }) {
 
   if (item.items.length === 0) {
     return (
-      <SidebarLink href={routePath} active={isActive} variant="plain">
-        <Icon size={18} />
-        {item.route.label}
-      </SidebarLink>
+      <Tooltip
+        content={item.route.description}
+        positioning={{ placement: "right" }}
+      >
+        <SidebarLink href={routePath} active={isActive} variant="plain">
+          <Icon size={18} />
+          {item.route.label}
+        </SidebarLink>
+      </Tooltip>
     );
   }
 
@@ -174,15 +179,20 @@ function NavGroup({ item }: { item: MenuNavItem }) {
             const subPath = href(subItem);
 
             return (
-              <SidebarLink
+              <Tooltip
                 key={subPath}
-                href={subPath}
-                active={pathname === subPath}
-                variant="plain"
+                content={subItem.description}
+                positioning={{ placement: "right" }}
               >
-                <SubIcon size={16} />
-                {subItem.label}
-              </SidebarLink>
+                <SidebarLink
+                  href={subPath}
+                  active={pathname === subPath}
+                  variant="plain"
+                >
+                  <SubIcon size={16} />
+                  {subItem.label}
+                </SidebarLink>
+              </Tooltip>
             );
           })}
         </Stack>
@@ -197,15 +207,20 @@ function NavLink({ item }: { item: MenuItem }) {
   const routePath = href(item.route);
 
   return (
-    <SidebarLink
-      href={routePath}
-      active={pathname === routePath || pathname.startsWith(routePath + "/")}
-      variant="plain"
-      target={item.external ? "_blank" : undefined}
-      rel={item.external ? "noopener noreferrer" : undefined}
+    <Tooltip
+      content={item.route.description}
+      positioning={{ placement: "right" }}
     >
-      <Icon size={18} />
-      {item.route.label}
-    </SidebarLink>
+      <SidebarLink
+        href={routePath}
+        active={pathname === routePath || pathname.startsWith(routePath + "/")}
+        variant="plain"
+        target={item.external ? "_blank" : undefined}
+        rel={item.external ? "noopener noreferrer" : undefined}
+      >
+        <Icon size={18} />
+        {item.route.label}
+      </SidebarLink>
+    </Tooltip>
   );
 }

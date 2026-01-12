@@ -1,7 +1,10 @@
 "use client";
 
-import { PageContainer } from "@/components/common";
+import { Container } from "styled-system/jsx";
+
+import { PageHeader } from "@/components/common";
 import { Button, Group, Text } from "@/components/ui";
+import { routes } from "@/lib/routing";
 
 export default function Error({
   error,
@@ -11,11 +14,14 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <PageContainer title="Error" description="Something went wrong">
-      <Group direction="column" gap="4">
-        <Text color="fg.muted">{error.message}</Text>
-        <Button onClick={reset}>Try again</Button>
+    <Container maxW="7xl" py="8">
+      <Group direction="column" gap="6">
+        <PageHeader route={routes.error} />
+        <Group direction="column" gap="4">
+          <Text color="fg.muted">{error.message}</Text>
+          <Button onClick={reset}>Try again</Button>
+        </Group>
       </Group>
-    </PageContainer>
+    </Container>
   );
 }

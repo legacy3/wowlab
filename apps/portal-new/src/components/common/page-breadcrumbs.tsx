@@ -16,18 +16,14 @@ interface PageBreadcrumbsProps {
  *
  * @example
  * // In a @breadcrumb/page.tsx parallel route
- * import { href, routes } from "@/lib/routing";
+ * import { breadcrumb, routes } from "@/lib/routing";
  *
  * export default async function BlogBreadcrumb({ params }) {
  *   const { slug } = await params;
  *   const { entry } = await getBlogPageData(slug);
  *   return (
  *     <PageBreadcrumbs
- *       items={[
- *         { label: "Home", href: href(routes.home) },
- *         { label: "Blog", href: href(routes.blog.index) },
- *         { label: entry.title },
- *       ]}
+ *       items={breadcrumb(routes.home, routes.blog.index, entry.title)}
  *     />
  *   );
  * }

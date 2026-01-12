@@ -1,6 +1,6 @@
 import { PageBreadcrumbs } from "@/components/common";
 import { getDocPageData } from "@/lib/docs/data";
-import { href, routes } from "@/lib/routing";
+import { breadcrumb, routes } from "@/lib/routing";
 
 type Props = {
   params: Promise<{ slug: string[] }>;
@@ -12,11 +12,7 @@ export default async function DocBreadcrumb({ params }: Props) {
 
   return (
     <PageBreadcrumbs
-      items={[
-        { href: href(routes.home), label: "Home" },
-        { href: href(routes.dev.docs.index), label: "Docs" },
-        { label: meta.title },
-      ]}
+      items={breadcrumb(routes.home, routes.dev.docs.index, meta.title)}
     />
   );
 }

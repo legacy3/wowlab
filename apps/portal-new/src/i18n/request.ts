@@ -10,11 +10,13 @@ async function loadMessages(locale: string) {
       import(`../messages/${locale}/${ns}.json`).then((m) => m.default),
     ),
   );
+
   return Object.assign({}, ...messages);
 }
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const locale = (await requestLocale) ?? routing.defaultLocale;
+
   return {
     locale,
     messages: await loadMessages(locale),
