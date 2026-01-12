@@ -17,8 +17,8 @@ Next.js 16 / React 19 app. Panda CSS + Park UI.
 /auth/sign-in        Auth
 /blog                Blog index
 /blog/[slug]         Blog post
-/docs                Docs index
-/docs/[...slug]      Doc page
+/dev/docs            Docs index
+/dev/docs/[...slug]  Doc page
 /simulate            Simulation
 /rotations           Rotation browser
 /rotations/editor    New rotation

@@ -1,4 +1,4 @@
-import { DocsIndex } from "@/components/docs";
+import { DocsIndex } from "@/components/dev/docs";
 
 export default function DocsIndexPage() {
   return <DocsIndex />;

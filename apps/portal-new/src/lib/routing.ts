@@ -147,20 +147,19 @@ export const routes = {
     inspector: route("/lab/inspector", "Data Inspector", "Search"),
   }).main("overview", "inspector"),
 
-  docs: group({
-    index: route("/docs", "Docs", "BookOpen"),
-    page: dynamic("/docs/:slug", ["slug"], "Doc Page", "FileText"),
-  }).secondary(),
-
   blog: group({
     index: route("/blog", "Blog", "Newspaper"),
     post: dynamic("/blog/:slug", ["slug"], "Blog Post", "FileText"),
   }).secondary(),
 
   dev: group({
-    index: route("/dev", "Dev", "Code"),
+    index: route("/dev", "Developer", "Code"),
     ui: route("/dev/ui", "UI Showcase", "Sparkles"),
     data: route("/dev/data", "Data Lab", "FlaskConical"),
+    docs: {
+      index: route("/dev/docs", "Docs", "BookOpen"),
+      page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"),
+    },
   }).secondary(),
 } as const;
 
@@ -226,4 +225,30 @@ export function href(route: AnyRoute, params?: Record<string, string>): string {
   }
 
   return route.path;
+}
+
+function isRoute(value: unknown): value is Route {
+  return typeof value === "object" && value !== null && "path" in value;
+}
+
+export function getGroupRoutes(group: RouteGroup): Route[] {
+  return Object.entries(group)
+    .filter(([key]) => key !== "index" && key !== "_nav")
+    .map(([, value]) => {
+      if (isRoute(value)) {
+        return value;
+      }
+
+      if (typeof value === "object" && value !== null && "index" in value) {
+        const nested = value as { index: unknown };
+
+        if (isRoute(nested.index)) {
+          return nested.index;
+        }
+      }
+
+      return null;
+    })
+    .filter((route): route is Route => route !== null)
+    .sort((a, b) => a.label.localeCompare(b.label));
 }

@@ -18,7 +18,7 @@ export function DocsIndex() {
         </Card.Header>
         <Card.Footer>
           <Button asChild>
-            <a href={href(routes.docs.page, { slug: getFirstSlug() })}>
+            <a href={href(routes.dev.docs.page, { slug: getFirstSlug() })}>
               Read the Overview
             </a>
           </Button>

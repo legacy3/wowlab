@@ -158,7 +158,7 @@ function HelpTextDemo() {
         <Text textStyle="sm" color="fg.muted">
           <HelpText
             content="Browsers may limit reported cores for privacy"
-            href={href(routes.docs.page, {
+            href={href(routes.dev.docs.page, {
               slug: "reference/03-browser-cpu-limits",
             })}
           >

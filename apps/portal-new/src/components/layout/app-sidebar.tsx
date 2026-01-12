@@ -72,7 +72,7 @@ export function AppSidebar() {
             px="3"
             mb="1"
           >
-            Dev
+            Developer
           </Text>
           {navSecondary.map((item) => (
             <NavLink key={href(item.route)} item={item} />

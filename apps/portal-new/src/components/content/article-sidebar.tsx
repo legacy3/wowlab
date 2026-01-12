@@ -140,7 +140,7 @@ function NavGroup({
             return (
               <Link
                 key={child.slug}
-                href={href(routes.docs.page, { slug: child.slug })}
+                href={href(routes.dev.docs.page, { slug: child.slug })}
                 variant="plain"
                 textStyle="xs"
                 color={isActive ? "fg.default" : "fg.muted"}
@@ -197,7 +197,7 @@ function Navigation({
           return (
             <Link
               key={item.slug}
-              href={href(routes.docs.page, { slug: item.slug })}
+              href={href(routes.dev.docs.page, { slug: item.slug })}
               variant="plain"
               textStyle="xs"
               color={isActive ? "fg.default" : "fg.muted"}

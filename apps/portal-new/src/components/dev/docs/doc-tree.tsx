@@ -86,7 +86,7 @@ function DocGroup({
 function DocLeaf({ isActive, item }: { item: DocEntry; isActive: boolean }) {
   return (
     <Link
-      href={href(routes.docs.page, { slug: item.slug })}
+      href={href(routes.dev.docs.page, { slug: item.slug })}
       variant="plain"
       textDecoration="none"
     >

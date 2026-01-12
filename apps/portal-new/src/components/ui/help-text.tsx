@@ -1,53 +1,40 @@
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
 
 import { ark } from "@ark-ui/react/factory";
 import { styled } from "styled-system/jsx";
 import { helpText } from "styled-system/recipes";
 
+import { Link } from "./link";
 import { Tooltip } from "./tooltip";
 
 const StyledSpan = styled(ark.span, helpText);
-const StyledAnchor = styled(ark.a, helpText);
 
-export type HelpTextProps = SpanProps | AnchorProps;
-
-type AnchorProps = {
-  href: string;
-} & BaseProps &
-  Omit<ComponentProps<typeof StyledAnchor>, "content">;
-
-type BaseProps = {
-  /** Tooltip content shown on hover */
+type HelpTextProps = {
+  children: ReactNode;
   content: string;
+  href?: string;
 };
 
-type SpanProps = {
-  href?: undefined;
-} & BaseProps &
-  Omit<ComponentProps<typeof StyledSpan>, "content">;
-
-export function HelpText({ children, content, href, ...props }: HelpTextProps) {
+export function HelpText({ children, content, href }: HelpTextProps) {
   if (href) {
     return (
       <Tooltip content={content}>
-        <StyledAnchor
+        <Link
           href={href}
-          variant="link"
-          {...(props as Omit<ComponentProps<typeof StyledAnchor>, "content">)}
+          variant="plain"
+          className={helpText({ variant: "link" })}
         >
           {children}
-        </StyledAnchor>
+        </Link>
       </Tooltip>
     );
   }
 
   return (
     <Tooltip content={content}>
-      <StyledSpan
-        {...(props as Omit<ComponentProps<typeof StyledSpan>, "content">)}
-      >
-        {children}
-      </StyledSpan>
+      <StyledSpan>{children}</StyledSpan>
     </Tooltip>
   );
 }
+
+export type { HelpTextProps };

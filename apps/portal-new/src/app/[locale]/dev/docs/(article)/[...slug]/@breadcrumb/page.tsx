@@ -14,7 +14,7 @@ export default async function DocBreadcrumb({ params }: Props) {
     <PageBreadcrumbs
       items={[
         { href: href(routes.home), label: "Home" },
-        { href: href(routes.docs.index), label: "Docs" },
+        { href: href(routes.dev.docs.index), label: "Docs" },
         { label: meta.title },
       ]}
     />

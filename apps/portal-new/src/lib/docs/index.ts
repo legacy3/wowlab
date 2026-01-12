@@ -1,6 +1,7 @@
 import type { NavItem } from "@/lib/content/types";
 
 import { createNavItem } from "@/lib/content";
+import { routes } from "@/lib/routing";
 
 import type { Doc, DocEntry } from "./types";
 
@@ -64,5 +65,5 @@ export function getNavMeta(slug: string): NavItem {
     return null;
   }
 
-  return createNavItem(slug, doc.meta.title, "/docs");
+  return createNavItem(slug, doc.meta.title, routes.dev.docs.index.path);
 }
