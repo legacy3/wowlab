@@ -34,9 +34,7 @@ export const NavLink = styled("a", {
 
 interface PageLayoutProps {
   children: React.ReactNode;
-  description: React.ReactNode;
   nav: Array<{ id: string; label: string }>;
-  title: string;
 }
 
 export function ComponentCard({
@@ -131,42 +129,19 @@ export function JsonOutput({
   }
 
   return (
-    <Box
-      bg="gray.2"
-      rounded="l2"
-      p="3"
-      overflow="auto"
-      maxH="400px"
-      fontFamily="mono"
-      textStyle="sm"
-    >
-      <styled.pre whiteSpace="pre-wrap" wordBreak="break-word">
-        {JSON.stringify(data, null, 2)}
-      </styled.pre>
+    <Box overflow="auto" maxH="400px">
+      <Code language="json">{JSON.stringify(data, null, 2)}</Code>
     </Box>
   );
 }
 
-export function PageLayout({
-  children,
-  description,
-  nav,
-  title,
-}: PageLayoutProps) {
+export function PageLayout({ children, nav }: PageLayoutProps) {
   const headingIds = useMemo(() => nav.map((item) => item.id), [nav]);
   const activeId = useActiveHeading(headingIds);
 
   return (
     <Flex gap="8">
       <Box flex="1" minW="0">
-        <styled.header mb="8">
-          <Heading as="h1" size="3xl" mb="2">
-            {title}
-          </Heading>
-          <Text color="fg.muted" textStyle="lg">
-            {description}
-          </Text>
-        </styled.header>
         {children}
       </Box>
 

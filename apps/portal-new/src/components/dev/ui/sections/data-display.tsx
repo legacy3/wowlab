@@ -8,12 +8,13 @@ import {
   Button,
   Card,
   Code,
+  HelpText,
   Kbd,
   Table,
   Text,
 } from "@/components/ui";
 
-import { Section, Subsection } from "../../shared";
+import { fixtures, Section, Subsection } from "../../shared";
 
 export function DataDisplaySection() {
   return (
@@ -21,6 +22,7 @@ export function DataDisplaySection() {
       <Stack gap="8">
         <CodeDemo />
         <KbdDemo />
+        <HelpTextDemo />
         <TableDemo />
         {/* Cards */}
         <Subsection title="Cards">
@@ -105,19 +107,7 @@ export function DataDisplaySection() {
 }
 
 function CodeBlockDemo() {
-  const exampleCode = `import { useSpell } from "@/lib/state";
-
-export function SpellInfo({ id }: { id: number }) {
-  const { data: spell } = useSpell(id);
-
-  if (!spell) {
-    return null;
-  }
-
-  return <div>{spell.name}</div>;
-}`;
-
-  return <Code language="tsx">{exampleCode}</Code>;
+  return <Code language="tsx">{fixtures.code.reactHook}</Code>;
 }
 
 function CodeDemo() {
@@ -149,6 +139,46 @@ function CodeDemo() {
   );
 }
 
+function HelpTextDemo() {
+  return (
+    <Subsection title="HelpText">
+      <Stack gap="4">
+        <Text>
+          The{" "}
+          <HelpText content="Central Processing Unit - the main processor in your computer">
+            CPU
+          </HelpText>{" "}
+          handles most calculations, while the{" "}
+          <HelpText content="Graphics Processing Unit - specialized for rendering">
+            GPU
+          </HelpText>{" "}
+          handles graphics rendering.
+        </Text>
+        <Text textStyle="sm" color="fg.muted">
+          <HelpText
+            content="Browsers may limit reported cores for privacy"
+            href="/docs/reference/03-browser-cpu-limits"
+          >
+            CPU Cores
+          </HelpText>{" "}
+          can be limited by browser settings.
+        </Text>
+        <HStack gap="6">
+          <Text textStyle="xs">
+            <HelpText content="Damage per second">DPS</HelpText>
+          </Text>
+          <Text textStyle="xs">
+            <HelpText content="Healing per second">HPS</HelpText>
+          </Text>
+          <Text textStyle="xs">
+            <HelpText content="Time to kill">TTK</HelpText>
+          </Text>
+        </HStack>
+      </Stack>
+    </Subsection>
+  );
+}
+
 function KbdDemo() {
   return (
     <Subsection title="Kbd">
@@ -175,13 +205,6 @@ function KbdDemo() {
   );
 }
 
-const tableData = [
-  { id: 1, name: "Alice", role: "Tank", score: "125,432" },
-  { id: 2, name: "Bob", role: "Healer", score: "118,291" },
-  { id: 3, name: "Carol", role: "DPS", score: "112,847" },
-  { id: 4, name: "Dave", role: "DPS", score: "109,523" },
-];
-
 function TableDemo() {
   return (
     <Subsection title="Table">
@@ -194,7 +217,7 @@ function TableDemo() {
           </Table.Row>
         </Table.Head>
         <Table.Body>
-          {tableData.map((row) => (
+          {fixtures.table.leaderboard.map((row) => (
             <Table.Row key={row.id}>
               <Table.Cell fontWeight="medium">{row.name}</Table.Cell>
               <Table.Cell>{row.role}</Table.Cell>

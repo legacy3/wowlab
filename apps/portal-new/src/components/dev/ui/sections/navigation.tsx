@@ -1,10 +1,12 @@
 "use client";
 
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
+import NextLink from "next/link";
 import { HStack, Stack } from "styled-system/jsx";
 
 import {
   Accordion,
+  Breadcrumb,
   Collapsible,
   Expandable,
   Link,
@@ -18,6 +20,7 @@ export function NavigationSection() {
   return (
     <Section id="navigation" title="Navigation">
       <Stack gap="8">
+        <BreadcrumbDemo />
         <LinkDemo />
         <TabsDemo />
         <AccordionDemo />
@@ -48,6 +51,40 @@ function AccordionDemo() {
           </Accordion.Item>
         ))}
       </Accordion.Root>
+    </Subsection>
+  );
+}
+
+function BreadcrumbDemo() {
+  return (
+    <Subsection title="Breadcrumb">
+      <Stack gap="4">
+        <Breadcrumb.Root>
+          <Breadcrumb.List>
+            <Breadcrumb.Item>
+              <Link asChild textStyle="sm">
+                <NextLink href="/">Home</NextLink>
+              </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Separator />
+            <Breadcrumb.Item>
+              <Link asChild textStyle="sm">
+                <NextLink href="/dev">Dev</NextLink>
+              </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Separator />
+            <Breadcrumb.Item>
+              <Text textStyle="sm" color="fg.muted">
+                UI
+              </Text>
+            </Breadcrumb.Item>
+          </Breadcrumb.List>
+        </Breadcrumb.Root>
+        <Text color="fg.muted" textStyle="sm">
+          Pass explicit breadcrumbs to PageContainer. Last item has no href
+          (current page).
+        </Text>
+      </Stack>
     </Subsection>
   );
 }

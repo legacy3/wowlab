@@ -1,6 +1,6 @@
 "use client";
 
-import { ImportPath, PageLayout } from "../shared";
+import { PageLayout } from "../shared";
 import {
   ClassesAndSpecsSection,
   ClassesListSection,
@@ -27,11 +27,7 @@ const NAV = [
 
 export function DataDemo() {
   return (
-    <PageLayout
-      title="Game Data Hooks"
-      description={<ImportPath path="@/lib/state" />}
-      nav={NAV}
-    >
+    <PageLayout nav={NAV}>
       <SpellSection />
       <ItemSection />
       <ClassSection />

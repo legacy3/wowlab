@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Center } from "styled-system/jsx";
 
 import { EditorPage } from "@/components/editor";
 import { Loader, Text } from "@/components/ui";
@@ -24,29 +23,19 @@ export default function EditRotationPage() {
   }, [rotation, loadIntoEditor]);
 
   if (isLoading) {
-    return (
-      <Center h="100vh">
-        <Loader size="lg" />
-      </Center>
-    );
+    return <Loader size="lg" />;
   }
 
   if (isError) {
     return (
-      <Center h="100vh">
-        <Text color="fg.error">
-          Failed to load rotation: {error?.message ?? "Unknown error"}
-        </Text>
-      </Center>
+      <Text color="fg.error">
+        Failed to load rotation: {error?.message ?? "Unknown error"}
+      </Text>
     );
   }
 
   if (!rotation) {
-    return (
-      <Center h="100vh">
-        <Text color="fg.muted">Rotation not found</Text>
-      </Center>
-    );
+    return <Text color="fg.muted">Rotation not found</Text>;
   }
 
   return <EditorPage />;

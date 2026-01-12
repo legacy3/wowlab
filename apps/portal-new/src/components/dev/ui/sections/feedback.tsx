@@ -4,6 +4,7 @@ import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
   CardLoader,
+  ErrorBox,
   InlineLoader,
   Loader,
   Skeleton,
@@ -12,12 +13,20 @@ import {
   Text,
 } from "@/components/ui";
 
-import { ComponentCard, Section, Subsection } from "../../shared";
+import { ComponentCard, fixtures, Section, Subsection } from "../../shared";
 
 export function FeedbackSection() {
   return (
     <Section id="feedback" title="Feedback">
       <Stack gap="8">
+        {/* ErrorBox */}
+        <Subsection title="ErrorBox">
+          <Stack gap="4">
+            <ErrorBox>{fixtures.error.simple}</ErrorBox>
+            <ErrorBox variant="subtle">{fixtures.error.stackTrace}</ErrorBox>
+          </Stack>
+        </Subsection>
+
         {/* Loaders */}
         <Subsection title="Loaders">
           <Stack gap="6">

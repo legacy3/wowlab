@@ -22,14 +22,7 @@ export default async function DocPage({ params }: Props) {
     <Flex gap="8">
       <Box flex="1" minW="0" maxW="3xl">
         <ContentArticle footer={<ContentNav prev={prev} next={next} />}>
-          <VStack
-            gap="3"
-            alignItems="flex-start"
-            mb="6"
-            pb="6"
-            borderBottomWidth="1px"
-            borderColor="border.muted"
-          >
+          <VStack gap="3" alignItems="flex-start" mb="8">
             <Heading as="h1" size="4xl">
               {meta.title}
             </Heading>

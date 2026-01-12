@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { Box, Flex } from "styled-system/jsx";
 
 import { AppSidebar } from "./app-sidebar";
+import { ComputingDrawer } from "./computing-drawer";
 import { Navbar } from "./navbar";
 import { SidebarProvider } from "./sidebar-context";
 
@@ -24,6 +25,7 @@ export function SiteShell({ children }: SiteShellProps) {
           </Box>
         </Box>
       </Flex>
+      <ComputingDrawer />
     </SidebarProvider>
   );
 }

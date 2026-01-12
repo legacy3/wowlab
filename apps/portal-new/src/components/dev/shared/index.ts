@@ -1,3 +1,4 @@
+export { fixtures } from "./fixtures";
 export {
   ComponentCard,
   DataCard,

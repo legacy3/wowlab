@@ -1,6 +1,6 @@
 "use client";
 
-import { ImportPath, PageLayout } from "../shared";
+import { PageLayout } from "../shared";
 import {
   ActionsSection,
   DataDisplaySection,
@@ -25,11 +25,7 @@ const NAV = [
 
 export function UiDemo() {
   return (
-    <PageLayout
-      title="UI Components"
-      description={<ImportPath path="@/components/ui" />}
-      nav={NAV}
-    >
+    <PageLayout nav={NAV}>
       <FormsSection />
       <OverlaysSection />
       <NavigationSection />

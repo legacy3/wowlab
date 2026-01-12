@@ -1,11 +1,23 @@
 import type { ReactNode } from "react";
 
-import { Container } from "styled-system/jsx";
+import { PageContainer } from "@/components/common";
 
-export default function BlogPostLayout({ children }: { children: ReactNode }) {
+interface BlogPostLayoutProps {
+  breadcrumb: ReactNode;
+  children: ReactNode;
+}
+
+export default function BlogPostLayout({
+  breadcrumb,
+  children,
+}: BlogPostLayoutProps) {
   return (
-    <Container maxW="5xl" py="12">
+    <PageContainer
+      title="Blog"
+      description="Updates, announcements, and insights from the WoW Lab team"
+      breadcrumbs={breadcrumb}
+    >
       {children}
-    </Container>
+    </PageContainer>
   );
 }

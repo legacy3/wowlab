@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 
-import { Container } from "styled-system/jsx";
+import { PageContainer } from "@/components/common";
 
 export default function DocsIndexLayout({ children }: { children: ReactNode }) {
   return (
-    <Container maxW="3xl" py="12">
+    <PageContainer
+      title="Documentation"
+      description="Learn how to use WoW Lab for theorycrafting and simulation."
+      breadcrumbs={[{ href: "/", label: "Home" }, { label: "Docs" }]}
+    >
       {children}
-    </Container>
+    </PageContainer>
   );
 }

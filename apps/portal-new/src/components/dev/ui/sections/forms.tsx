@@ -19,60 +19,11 @@ import {
   Text,
 } from "@/components/ui";
 
-import { Section, Subsection } from "../../shared";
+import { fixtures, Section, Subsection } from "../../shared";
 
 const selectCollection = createListCollection({
-  items: [
-    { label: "React", value: "react" },
-    { label: "Vue", value: "vue" },
-    { label: "Svelte", value: "svelte" },
-    { label: "Angular", value: "angular" },
-  ],
+  items: fixtures.frameworks.slice(0, 4),
 });
-
-function SelectDemo() {
-  return (
-    <Subsection title="Select">
-      <HStack gap="4" flexWrap="wrap" alignItems="flex-start">
-        {(["sm", "md", "lg"] as const).map((size) => (
-          <Select.Root
-            key={size}
-            collection={selectCollection}
-            size={size}
-            positioning={{ sameWidth: true }}
-            w="44"
-          >
-            <Select.Label>Size: {size}</Select.Label>
-            <Select.Control>
-              <Select.Trigger>
-                <Select.ValueText placeholder="Select..." />
-                <Select.Indicator />
-              </Select.Trigger>
-            </Select.Control>
-            <Select.Positioner>
-              <Select.Content>
-                {selectCollection.items.map((item) => (
-                  <Select.Item key={item.value} item={item}>
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Select.Root>
-        ))}
-      </HStack>
-    </Subsection>
-  );
-}
-
-const frameworks = [
-  { label: "React", value: "react" },
-  { label: "Vue", value: "vue" },
-  { label: "Svelte", value: "svelte" },
-  { label: "Angular", value: "angular" },
-  { label: "Solid", value: "solid" },
-];
 
 export function FormsSection() {
   return (
@@ -92,7 +43,7 @@ function ComboboxDemo() {
   const { contains } = useFilter({ sensitivity: "base" });
   const { collection, filter } = useListCollection({
     filter: contains,
-    initialItems: frameworks,
+    initialItems: fixtures.frameworks,
     itemToString: (item) => item.label,
     itemToValue: (item) => item.value,
   });
@@ -194,6 +145,42 @@ function NumberInputDemo() {
             <NumberInput.Input />
             <NumberInput.Control />
           </NumberInput.Root>
+        ))}
+      </HStack>
+    </Subsection>
+  );
+}
+
+function SelectDemo() {
+  return (
+    <Subsection title="Select">
+      <HStack gap="4" flexWrap="wrap" alignItems="flex-start">
+        {(["sm", "md", "lg"] as const).map((size) => (
+          <Select.Root
+            key={size}
+            collection={selectCollection}
+            size={size}
+            positioning={{ sameWidth: true }}
+            w="44"
+          >
+            <Select.Label>Size: {size}</Select.Label>
+            <Select.Control>
+              <Select.Trigger>
+                <Select.ValueText placeholder="Select..." />
+                <Select.Indicator />
+              </Select.Trigger>
+            </Select.Control>
+            <Select.Positioner>
+              <Select.Content>
+                {selectCollection.items.map((item) => (
+                  <Select.Item key={item.value} item={item}>
+                    <Select.ItemText>{item.label}</Select.ItemText>
+                    <Select.ItemIndicator />
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Select.Root>
         ))}
       </HStack>
     </Subsection>

@@ -23,14 +23,7 @@ export default async function BlogPostPage({ params }: Props) {
         <ContentArticle
           footer={<ContentNav prev={prev} next={next} showSubtitle />}
         >
-          <VStack
-            gap="3"
-            alignItems="flex-start"
-            mb="6"
-            pb="6"
-            borderBottomWidth="1px"
-            borderColor="border.muted"
-          >
+          <VStack gap="3" alignItems="flex-start" mb="8">
             <Heading as="h1" size="4xl">
               {entry.title}
             </Heading>

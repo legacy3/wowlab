@@ -1,16 +1,19 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Flex } from "styled-system/jsx";
 
 import { SignInForm } from "@/components/auth";
+import { PageContainer } from "@/components/common";
 
 export default function Unauthorized() {
   const pathname = usePathname();
 
   return (
-    <Flex justify="center" py="12">
+    <PageContainer
+      title="Sign In Required"
+      description="Please sign in to continue"
+    >
       <SignInForm redirectTo={pathname} />
-    </Flex>
+    </PageContainer>
   );
 }

@@ -1,7 +1,4 @@
-import { Box, styled } from "styled-system/jsx";
-
 import { CardCollection } from "@/components/common";
-import { Heading, Text } from "@/components/ui";
 import { routes } from "@/lib/routes";
 
 const sections = [
@@ -18,18 +15,5 @@ const sections = [
 ];
 
 export function DevIndex() {
-  return (
-    <Box>
-      <styled.header mb="8">
-        <Heading as="h1" size="3xl" mb="2">
-          Developer Tools
-        </Heading>
-        <Text color="fg.muted" textStyle="lg">
-          Component showcases and data inspection tools
-        </Text>
-      </styled.header>
-
-      <CardCollection items={sections} />
-    </Box>
-  );
+  return <CardCollection items={sections} />;
 }
