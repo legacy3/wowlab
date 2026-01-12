@@ -13,7 +13,7 @@ import { createListCollection } from "@ark-ui/react/combobox";
 import { PlusIcon, XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Button, Combobox, IconButton, Input } from "../../ui";
+import { Button, Combobox, Empty, IconButton, Input } from "../../ui";
 import { SelectField, type SelectOption } from "../common/select-field";
 import { CONDITION_FIELDS, FIELD_CATEGORIES } from "./condition-builder";
 
@@ -158,7 +158,11 @@ export function FieldSelector({
       <Combobox.Positioner>
         <Combobox.Content maxH="80" overflow="auto">
           {filteredItems.length === 0 ? (
-            <Combobox.Empty>No fields found</Combobox.Empty>
+            <Combobox.Empty>
+              <Empty.Root variant="plain" size="sm">
+                <Empty.Title>No fields found</Empty.Title>
+              </Empty.Root>
+            </Combobox.Empty>
           ) : (
             Array.from(groupedItems.entries()).map(([categoryId, items]) => (
               <Combobox.ItemGroup key={categoryId}>

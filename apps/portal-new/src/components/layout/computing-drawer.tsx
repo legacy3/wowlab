@@ -11,6 +11,7 @@ import {
   Badge,
   Button,
   Drawer,
+  Empty,
   IconButton,
   InlineLoader,
   Link,
@@ -112,19 +113,17 @@ export function ComputingDrawer() {
 
             {jobs.length === 0 && (
               <AbsoluteCenter axis="both">
-                <Stack alignItems="center" textAlign="center" color="fg.muted">
-                  <Cpu
-                    style={{
-                      height: 56,
-                      opacity: 0.4,
-                      width: 56,
-                    }}
-                  />
-                  <Text textStyle="base">No simulations yet</Text>
-                  <Text textStyle="sm">
-                    Run a simulation to see progress here
-                  </Text>
-                </Stack>
+                <Empty.Root variant="plain">
+                  <Empty.Icon>
+                    <Cpu />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>No simulations yet</Empty.Title>
+                    <Empty.Description>
+                      Run a simulation to see progress here
+                    </Empty.Description>
+                  </Empty.Content>
+                </Empty.Root>
               </AbsoluteCenter>
             )}
           </Drawer.Body>

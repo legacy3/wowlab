@@ -5,6 +5,7 @@ import { Box, Flex, VStack } from "styled-system/jsx";
 
 import type { BlogEntry } from "@/lib/blog/types";
 
+import { Empty } from "@/components/ui";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { formatDate } from "@/lib/utils/date";
@@ -16,9 +17,11 @@ type BlogListProps = {
 export function BlogList({ posts }: BlogListProps) {
   if (posts.length === 0) {
     return (
-      <Text color="fg.muted" py="12" textAlign="center">
-        No posts found.
-      </Text>
+      <Empty.Root size="md" variant="plain">
+        <Empty.Content>
+          <Empty.Title>No posts found</Empty.Title>
+        </Empty.Content>
+      </Empty.Root>
     );
   }
 

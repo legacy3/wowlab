@@ -3,7 +3,7 @@
 import { createListCollection } from "@ark-ui/react/select";
 import { useMemo } from "react";
 
-import { Select, Text } from "../../ui";
+import { Empty, Select } from "../../ui";
 
 export interface SelectFieldProps {
   disabled?: boolean;
@@ -41,9 +41,9 @@ export function SelectField({
 
   if (options.length === 0) {
     return (
-      <Text textStyle="sm" color="fg.muted">
-        {emptyMessage}
-      </Text>
+      <Empty.Root variant="plain" size="sm">
+        <Empty.Title>{emptyMessage}</Empty.Title>
+      </Empty.Root>
     );
   }
 

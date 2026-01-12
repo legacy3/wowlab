@@ -10,6 +10,7 @@ import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
 import { dialog } from "./dialog";
 import { drawer } from "./drawer";
+import { empty } from "./empty";
 import { errorBox } from "./error-box";
 import { expandable } from "./expandable";
 import { field } from "./field";
@@ -64,6 +65,7 @@ export const slotRecipes = {
   combobox,
   dialog,
   drawer,
+  empty,
   expandable,
   field,
   menu,

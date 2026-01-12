@@ -11,12 +11,12 @@ import { HStack, Stack } from "styled-system/jsx";
 
 import {
   Combobox,
+  Empty,
   Field,
   Input,
   NumberInput,
   Select,
   Switch,
-  Text,
 } from "@/components/ui";
 
 import { fixtures, Section, Subsection } from "../../shared";
@@ -81,9 +81,9 @@ function ComboboxDemo() {
                   ))}
                 </Combobox.List>
                 <Combobox.Empty>
-                  <Text color="fg.muted" textStyle="sm" p="2">
-                    No results
-                  </Text>
+                  <Empty.Root variant="plain" size="sm">
+                    <Empty.Title>No results</Empty.Title>
+                  </Empty.Root>
                 </Combobox.Empty>
               </Combobox.Content>
             </Combobox.Positioner>

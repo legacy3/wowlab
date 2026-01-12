@@ -26,6 +26,7 @@ import { useClassesAndSpecs } from "@/lib/state";
 import {
   Badge,
   Button,
+  Empty,
   IconButton,
   Input,
   Loader,
@@ -221,7 +222,25 @@ export function RotationBrowser({ userId }: RotationBrowserProps) {
           <Loader />
         </Flex>
       ) : rotations.length === 0 ? (
-        <EmptyState filter={filter} />
+        <Empty.Root size="lg" variant="outline">
+          <Empty.Content>
+            <Empty.Title>
+              {filter === "mine"
+                ? "You haven't created any rotations yet"
+                : "No rotations found"}
+            </Empty.Title>
+          </Empty.Content>
+          {filter === "mine" && (
+            <Empty.Action>
+              <Button asChild size="sm">
+                <NextLink href={routes.rotations.editor.new}>
+                  <PlusIcon size={16} />
+                  Create rotation
+                </NextLink>
+              </Button>
+            </Empty.Action>
+          )}
+        </Empty.Root>
       ) : (
         <Box borderWidth="1" rounded="lg" overflow="hidden">
           <TableHeader />
@@ -295,36 +314,6 @@ function ClassFilter({ classes, onChange, value }: ClassFilterProps) {
         </Select.Content>
       </Select.Positioner>
     </Select.Root>
-  );
-}
-
-function EmptyState({ filter }: { filter: VisibilityFilter }) {
-  const message =
-    filter === "mine"
-      ? "You haven't created any rotations yet"
-      : "No rotations found";
-
-  return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      py="16"
-      gap="4"
-      borderWidth="1"
-      borderStyle="dashed"
-      rounded="lg"
-    >
-      <Text color="fg.muted">{message}</Text>
-      {filter === "mine" && (
-        <Button asChild size="sm">
-          <NextLink href={routes.rotations.editor.new}>
-            <PlusIcon size={16} />
-            Create rotation
-          </NextLink>
-        </Button>
-      )}
-    </Flex>
   );
 }
 

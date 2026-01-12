@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   Dialog,
+  Empty,
   ErrorBox,
   IconButton,
   InlineLoader,
@@ -149,15 +150,16 @@ export function JobHistoryCard() {
               <Table.Body>
                 {filteredJobs.length === 0 ? (
                   <Table.Row>
-                    <Table.Cell
-                      colSpan={5}
-                      h="32"
-                      textAlign="center"
-                      color="fg.muted"
-                    >
-                      {jobs.length === 0
-                        ? "No simulations yet"
-                        : "No jobs match the current filter"}
+                    <Table.Cell colSpan={5} h="32">
+                      <Empty.Root variant="plain" size="sm">
+                        <Empty.Content>
+                          <Empty.Title>
+                            {jobs.length === 0
+                              ? "No simulations yet"
+                              : "No jobs match the current filter"}
+                          </Empty.Title>
+                        </Empty.Content>
+                      </Empty.Root>
                     </Table.Cell>
                   </Table.Row>
                 ) : (

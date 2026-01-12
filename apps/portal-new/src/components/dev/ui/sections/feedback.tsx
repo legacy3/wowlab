@@ -1,9 +1,12 @@
 "use client";
 
+import { Cpu, Inbox, Search } from "lucide-react";
 import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
+  Button,
   CardLoader,
+  Empty,
   ErrorBox,
   InlineLoader,
   Loader,
@@ -96,6 +99,82 @@ export function FeedbackSection() {
               </HStack>
             </ComponentCard>
           </Grid>
+        </Subsection>
+
+        {/* Empty States */}
+        <Subsection title="Empty States">
+          <Stack gap="6">
+            <Grid columns={{ base: 1, md: 3 }} gap="6">
+              <ComponentCard title="Outline (default)">
+                <Empty.Root variant="outline" size="sm">
+                  <Empty.Icon>
+                    <Inbox />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>No items</Empty.Title>
+                    <Empty.Description>
+                      Add items to get started
+                    </Empty.Description>
+                  </Empty.Content>
+                </Empty.Root>
+              </ComponentCard>
+              <ComponentCard title="Subtle">
+                <Empty.Root variant="subtle" size="sm">
+                  <Empty.Icon>
+                    <Search />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>No results</Empty.Title>
+                    <Empty.Description>
+                      Try a different search
+                    </Empty.Description>
+                  </Empty.Content>
+                </Empty.Root>
+              </ComponentCard>
+              <ComponentCard title="Plain">
+                <Empty.Root variant="plain" size="sm">
+                  <Empty.Icon>
+                    <Cpu />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>No simulations</Empty.Title>
+                    <Empty.Description>
+                      Run one to see results
+                    </Empty.Description>
+                  </Empty.Content>
+                </Empty.Root>
+              </ComponentCard>
+            </Grid>
+            <Grid columns={{ base: 1, md: 2 }} gap="6">
+              <ComponentCard title="With Action">
+                <Empty.Root size="md">
+                  <Empty.Icon>
+                    <Inbox />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>No rotations yet</Empty.Title>
+                    <Empty.Description>
+                      Create your first rotation to get started
+                    </Empty.Description>
+                  </Empty.Content>
+                  <Empty.Action>
+                    <Button size="sm">Create rotation</Button>
+                  </Empty.Action>
+                </Empty.Root>
+              </ComponentCard>
+              <ComponentCard title="Sizes">
+                <HStack gap="4" alignItems="start">
+                  {(["sm", "md", "lg"] as const).map((size) => (
+                    <Empty.Root key={size} variant="outline" size={size}>
+                      <Empty.Content>
+                        <Empty.Title>{size}</Empty.Title>
+                      </Empty.Content>
+                    </Empty.Root>
+                  ))}
+                </HStack>
+              </ComponentCard>
+            </Grid>
+          </Stack>
         </Subsection>
       </Stack>
     </Section>

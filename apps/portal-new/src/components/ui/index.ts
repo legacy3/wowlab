@@ -23,6 +23,7 @@ export * as Collapsible from "./collapsible";
 export * as Combobox from "./combobox";
 export * as Dialog from "./dialog";
 export * as Drawer from "./drawer";
+export * as Empty from "./empty";
 export { Expandable } from "./expandable";
 export * as Field from "./field";
 export { Icon, type IconProps } from "./icon";

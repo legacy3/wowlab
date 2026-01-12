@@ -11,7 +11,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
 import { GameIcon } from "../../game";
-import { Button, Combobox, Loader, Text } from "../../ui";
+import { Button, Combobox, Empty, Loader, Text } from "../../ui";
 
 export interface GameObjectPickerConfig<TSearchResult, TData> {
   emptyMessage: string;
@@ -189,16 +189,16 @@ export function GameObjectPicker<TSearchResult, TData>({
               !isLoading &&
               inputValue.length >= 2 && (
                 <Combobox.Empty>
-                  <Text textStyle="sm" color="fg.muted" p="2">
-                    {config.emptyMessage}
-                  </Text>
+                  <Empty.Root variant="plain" size="sm">
+                    <Empty.Title>{config.emptyMessage}</Empty.Title>
+                  </Empty.Root>
                 </Combobox.Empty>
               )}
             {collection.items.length === 0 && inputValue.length < 2 && (
               <Combobox.Empty>
-                <Text textStyle="sm" color="fg.muted" p="2">
-                  Type at least 2 characters
-                </Text>
+                <Empty.Root variant="plain" size="sm">
+                  <Empty.Title>Type at least 2 characters</Empty.Title>
+                </Empty.Root>
               </Combobox.Empty>
             )}
           </Combobox.Content>
@@ -257,16 +257,16 @@ export function GameObjectPicker<TSearchResult, TData>({
             !isLoading &&
             inputValue.length >= 2 && (
               <Combobox.Empty>
-                <Text textStyle="sm" color="fg.muted" p="2">
-                  {config.emptyMessage}
-                </Text>
+                <Empty.Root variant="plain" size="sm">
+                  <Empty.Title>{config.emptyMessage}</Empty.Title>
+                </Empty.Root>
               </Combobox.Empty>
             )}
           {collection.items.length === 0 && inputValue.length < 2 && (
             <Combobox.Empty>
-              <Text textStyle="sm" color="fg.muted" p="2">
-                Type at least 2 characters to search
-              </Text>
+              <Empty.Root variant="plain" size="sm">
+                <Empty.Title>Type at least 2 characters to search</Empty.Title>
+              </Empty.Root>
             </Combobox.Empty>
           )}
         </Combobox.Content>
