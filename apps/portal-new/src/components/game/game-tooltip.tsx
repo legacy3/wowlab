@@ -7,7 +7,7 @@ import { Box, Flex, VStack } from "styled-system/jsx";
 
 import { Text, Tooltip } from "../ui";
 import { GameIcon } from "./game-icon";
-import { TOOLTIP_COLORS } from "./tooltip-colors";
+import { tooltipColors } from "./tooltip-colors";
 
 export type ItemQuality = Enums.ItemQuality;
 
@@ -32,6 +32,8 @@ export interface SpellTooltipData {
   rank?: string;
 }
 
+type ColorToken = { _dark: string; _light: string };
+
 interface ItemTooltipProps {
   children: ReactNode;
   item: ItemTooltipData;
@@ -45,7 +47,7 @@ interface SpellTooltipProps {
 interface TooltipHeaderProps {
   iconName?: string | null;
   subtitle?: string;
-  subtitleColor?: string;
+  subtitleColor?: ColorToken;
   title: string;
   titleColor?: string;
 }
@@ -83,12 +85,12 @@ function ItemTooltipContent({ item }: { item: ItemTooltipData }) {
         iconName={item.iconName}
         title={item.name}
         titleColor={qualityColor}
+        subtitleColor={tooltipColors.itemLevel}
         subtitle={`Item Level ${item.itemLevel}`}
-        subtitleColor={TOOLTIP_COLORS.itemLevel}
       />
 
       {item.slot && (
-        <Text textStyle="xs" style={{ color: TOOLTIP_COLORS.subtle }}>
+        <Text textStyle="xs" color={tooltipColors.subtle}>
           {item.slot}
         </Text>
       )}
@@ -96,11 +98,7 @@ function ItemTooltipContent({ item }: { item: ItemTooltipData }) {
       {item.effects && item.effects.length > 0 && (
         <VStack gap="0.5" alignItems="stretch">
           {item.effects.map((effect, i) => (
-            <Text
-              key={i}
-              textStyle="xs"
-              style={{ color: TOOLTIP_COLORS.effect }}
-            >
+            <Text key={i} textStyle="xs" color={tooltipColors.effect}>
               {effect.isUse && "Use: "}
               {effect.text}
             </Text>
@@ -122,22 +120,22 @@ function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
 
       <Flex flexWrap="wrap" gap="3" alignItems="center">
         {spell.cost && (
-          <Text textStyle="xs" style={{ color: TOOLTIP_COLORS.cost }}>
+          <Text textStyle="xs" color={tooltipColors.cost}>
             {spell.cost}
           </Text>
         )}
-        <Text textStyle="xs" style={{ color: TOOLTIP_COLORS.subtle }}>
+        <Text textStyle="xs" color={tooltipColors.subtle}>
           {spell.castTime}
         </Text>
         {spell.range && (
-          <Text textStyle="xs" style={{ color: TOOLTIP_COLORS.subtle }}>
+          <Text textStyle="xs" color={tooltipColors.subtle}>
             {spell.range}
           </Text>
         )}
       </Flex>
 
       {spell.cooldown && (
-        <Text textStyle="xs" style={{ color: TOOLTIP_COLORS.subtle }}>
+        <Text textStyle="xs" color={tooltipColors.subtle}>
           {spell.cooldown} cooldown
         </Text>
       )}
@@ -145,7 +143,7 @@ function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
       <Text
         textStyle="xs"
         lineHeight="relaxed"
-        style={{ color: TOOLTIP_COLORS.description }}
+        color={tooltipColors.description}
       >
         {spell.description || "No description available"}
       </Text>
@@ -156,9 +154,9 @@ function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
 function TooltipHeader({
   iconName,
   subtitle,
-  subtitleColor = TOOLTIP_COLORS.muted,
+  subtitleColor = tooltipColors.muted,
   title,
-  titleColor = TOOLTIP_COLORS.text,
+  titleColor,
 }: TooltipHeaderProps) {
   return (
     <Flex gap="2" alignItems="start">
@@ -168,17 +166,21 @@ function TooltipHeader({
           overflow="hidden"
           rounded="md"
           borderWidth="1"
-          borderColor={TOOLTIP_COLORS.border}
+          borderColor={tooltipColors.border}
         >
           <GameIcon iconName={iconName} size="lg" />
         </Box>
       )}
       <VStack gap="0" alignItems="start">
-        <Text fontWeight="semibold" style={{ color: titleColor }}>
+        <Text
+          fontWeight="semibold"
+          color={titleColor ? undefined : tooltipColors.text}
+          style={titleColor ? { color: titleColor } : undefined}
+        >
           {title}
         </Text>
         {subtitle && (
-          <Text textStyle="xs" style={{ color: subtitleColor }}>
+          <Text textStyle="xs" color={subtitleColor}>
             {subtitle}
           </Text>
         )}

@@ -7,4 +7,4 @@ export {
   type SpellTooltipData,
 } from "./game-tooltip";
 export { SpecPicker, SpecPickerSkeleton } from "./spec-picker";
-export { TOOLTIP_COLORS } from "./tooltip-colors";
+export { tooltipColors } from "./tooltip-colors";
