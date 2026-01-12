@@ -1,0 +1,9 @@
+{
+  "Common": {
+    "loading": "Wird geladen...",
+    "error": "Ein Fehler ist aufgetreten",
+    "notFound": "Nicht gefunden",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden"
+  }
+}

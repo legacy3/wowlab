@@ -26,6 +26,16 @@ const sortClassGroups = [
   "unknown",
 ];
 
+const routingRules = {
+  "no-restricted-syntax": [
+    "warn",
+    {
+      message: "Use href={href(routes.xxx)} instead of string literals.",
+      selector: 'JSXAttribute[name.name="href"][value.type="Literal"]',
+    },
+  ],
+};
+
 const perfectionistRules = {
   "perfectionist/sort-array-includes": ["warn"],
   "perfectionist/sort-classes": ["warn", { groups: sortClassGroups }],
@@ -59,7 +69,7 @@ const eslintConfig = defineConfig([
   ]),
   {
     plugins: { perfectionist },
-    rules: perfectionistRules,
+    rules: { ...perfectionistRules, ...routingRules },
   },
 ]);
 

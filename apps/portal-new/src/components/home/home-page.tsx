@@ -1,26 +1,30 @@
 "use client";
 
-import { CardCollection } from "@/components/common";
-import { routes } from "@/lib/routes";
+import { useTranslations } from "next-intl";
 
-const features = [
-  {
-    description: "Run quick simulations for your character",
-    href: routes.simulate,
-    title: "Simulate",
-  },
-  {
-    description: "Build and share rotation priority lists",
-    href: routes.rotations.index,
-    title: "Rotations",
-  },
-  {
-    description: "Explore game data and inspect spells",
-    href: routes.dev.data,
-    title: "Data Lab",
-  },
-];
+import { CardCollection } from "@/components/common";
+import { routes } from "@/lib/routing";
 
 export function HomePage() {
+  const t = useTranslations("Home");
+
+  const features = [
+    {
+      description: t("simulate.description"),
+      route: routes.simulate.index,
+      title: t("simulate.title"),
+    },
+    {
+      description: t("rotations.description"),
+      route: routes.rotations.index,
+      title: t("rotations.title"),
+    },
+    {
+      description: t("dataLab.description"),
+      route: routes.dev.data,
+      title: t("dataLab.title"),
+    },
+  ];
+
   return <CardCollection items={features} />;
 }

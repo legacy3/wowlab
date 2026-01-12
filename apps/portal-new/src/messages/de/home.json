@@ -1,0 +1,18 @@
+{
+  "Home": {
+    "title": "WoW Lab",
+    "description": "Simulations- und Theorycrafting-Tools für World of Warcraft",
+    "simulate": {
+      "title": "Simulieren",
+      "description": "Führe schnelle Simulationen für deinen Charakter durch"
+    },
+    "rotations": {
+      "title": "Rotationen",
+      "description": "Erstelle und teile Rotations-Prioritätslisten"
+    },
+    "dataLab": {
+      "title": "Datenlabor",
+      "description": "Erkunde Spieldaten und inspiziere Zauber"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+"use client";
+
+import { GlobeIcon } from "lucide-react";
+import { useLocale } from "next-intl";
+
+import { IconButton, Menu } from "@/components/ui";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { type Locale, routing } from "@/i18n/routing";
+
+const localeLabels: Record<Locale, string> = {
+  de: "Deutsch",
+  en: "English",
+};
+
+export function LocaleSwitcher() {
+  const currentLocale = useLocale() as Locale;
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLocaleChange = (newLocale: Locale) => {
+    router.replace(pathname, { locale: newLocale });
+  };
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <IconButton variant="plain" size="sm" aria-label="Change language">
+          <GlobeIcon />
+        </IconButton>
+      </Menu.Trigger>
+      <Menu.Positioner>
+        <Menu.Content minW="36">
+          <Menu.ItemGroup>
+            <Menu.ItemGroupLabel>Language</Menu.ItemGroupLabel>
+          </Menu.ItemGroup>
+          {routing.locales.map((loc) => {
+            const isActive = currentLocale === loc;
+
+            return (
+              <Menu.Item
+                key={loc}
+                value={loc}
+                onClick={() => handleLocaleChange(loc)}
+                fontWeight={isActive ? "medium" : "normal"}
+                color={isActive ? "fg" : "fg.muted"}
+              >
+                {localeLabels[loc]}
+              </Menu.Item>
+            );
+          })}
+        </Menu.Content>
+      </Menu.Positioner>
+    </Menu.Root>
+  );
+}

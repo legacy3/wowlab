@@ -1,7 +1,6 @@
 "use client";
 
 import { Cpu, X } from "lucide-react";
-import NextLink from "next/link";
 import { useMemo } from "react";
 import { HStack, Stack, styled } from "styled-system/jsx";
 
@@ -17,6 +16,7 @@ import {
   Link,
   Text,
 } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 import {
   PHASE_LABELS,
   selectActiveJobs,
@@ -58,10 +58,12 @@ export function ComputingDrawer() {
                     ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
                     : "No active simulations"}
                 </span>
-                <Link asChild textStyle="xs">
-                  <NextLink href="/computing" onClick={handleClose}>
-                    Dashboard
-                  </NextLink>
+                <Link
+                  href={href(routes.computing)}
+                  textStyle="xs"
+                  onClick={handleClose}
+                >
+                  Dashboard
                 </Link>
               </HStack>
             </Drawer.Description>
@@ -212,7 +214,9 @@ function JobCard({
 
       {job.status === "completed" && job.result && (
         <Button variant="outline" size="sm" w="full" asChild onClick={onClose}>
-          <NextLink href={`/simulate/results/${job.id}`}>View Results</NextLink>
+          <Link href={href(routes.simulate.results, { id: job.id })}>
+            View Results
+          </Link>
         </Button>
       )}
     </styled.div>

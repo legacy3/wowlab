@@ -14,13 +14,13 @@ import {
   UserIcon,
   XIcon,
 } from "lucide-react";
-import NextLink from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/components/editor/types";
 
-import { routes } from "@/lib/routes";
+import { Link as IntlLink } from "@/i18n/navigation";
+import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs } from "@/lib/state";
 
 import {
@@ -176,10 +176,10 @@ export function RotationBrowser({ userId }: RotationBrowserProps) {
             />
           </Box>
           <Button asChild size="sm">
-            <NextLink href={routes.rotations.editor.new}>
+            <IntlLink href={href(routes.rotations.editor.new)}>
               <PlusIcon size={16} />
               New
-            </NextLink>
+            </IntlLink>
           </Button>
         </HStack>
       </Flex>
@@ -233,10 +233,10 @@ export function RotationBrowser({ userId }: RotationBrowserProps) {
           {filter === "mine" && (
             <Empty.Action>
               <Button asChild size="sm">
-                <NextLink href={routes.rotations.editor.new}>
+                <IntlLink href={href(routes.rotations.editor.new)}>
                   <PlusIcon size={16} />
                   Create rotation
-                </NextLink>
+                </IntlLink>
               </Button>
             </Empty.Action>
           )}
@@ -332,7 +332,7 @@ function RotationRow({
   const classColor = getClassColor(rotation.specId);
 
   return (
-    <NextLink href={routes.rotations.editor.edit(rotation.id)}>
+    <IntlLink href={href(routes.rotations.editor.edit, { id: rotation.id })}>
       <Flex
         px="4"
         py="3"
@@ -416,10 +416,14 @@ function RotationRow({
               <Menu.Positioner>
                 <Menu.Content>
                   <Menu.Item value="edit" asChild>
-                    <NextLink href={routes.rotations.editor.edit(rotation.id)}>
+                    <IntlLink
+                      href={href(routes.rotations.editor.edit, {
+                        id: rotation.id,
+                      })}
+                    >
                       <PencilIcon size={14} />
                       Edit
-                    </NextLink>
+                    </IntlLink>
                   </Menu.Item>
                   <Menu.Separator />
                   <Menu.Item
@@ -439,7 +443,7 @@ function RotationRow({
           )}
         </Box>
       </Flex>
-    </NextLink>
+    </IntlLink>
   );
 }
 

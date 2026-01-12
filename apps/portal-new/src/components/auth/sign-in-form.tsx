@@ -8,7 +8,7 @@ import type { OAuthProvider } from "@/lib/refine";
 
 import { Button, Card, CardLoader, Link, Text } from "@/components/ui";
 import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
-import { routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 interface SignInFormProps {
@@ -104,8 +104,8 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
 
             <Text textAlign="center" fontSize="xs" color="fg.muted">
               By continuing, you agree to our{" "}
-              <Link href={routes.about.terms}>Terms of Service</Link> and{" "}
-              <Link href={routes.about.privacy}>Privacy Policy</Link>
+              <Link href={href(routes.about.terms)}>Terms of Service</Link> and{" "}
+              <Link href={href(routes.about.privacy)}>Privacy Policy</Link>
             </Text>
           </Stack>
         </Card.Body>

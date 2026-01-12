@@ -5,9 +5,10 @@ import { env } from "@/lib/env";
 
 import type { Database } from "./database.types";
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-
+export async function updateSession(
+  request: NextRequest,
+  response: NextResponse,
+) {
   const supabase = createServerClient<Database>(
     env.SUPABASE_URL,
     env.SUPABASE_ANON_KEY,
@@ -22,10 +23,8 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value),
           );
 
-          supabaseResponse = NextResponse.next({ request });
-
           cookiesToSet.forEach(({ name, options, value }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            response.cookies.set(name, value, options),
           );
         },
       },
@@ -34,5 +33,5 @@ export async function updateSession(request: NextRequest) {
 
   await supabase.auth.getUser();
 
-  return supabaseResponse;
+  return response;
 }

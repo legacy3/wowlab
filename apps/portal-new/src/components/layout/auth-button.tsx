@@ -4,7 +4,7 @@ import { useBoolean, useMount } from "ahooks";
 import { useRouter } from "next/navigation";
 
 import { Button, Skeleton } from "@/components/ui";
-import { routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 import { UserMenu } from "./user-menu";
@@ -25,7 +25,7 @@ export function AuthButton() {
   }
 
   return (
-    <Button size="sm" onClick={() => router.push(routes.auth.signIn)}>
+    <Button size="sm" onClick={() => router.push(href(routes.auth.signIn))}>
       Sign In
     </Button>
   );

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Flex } from "styled-system/jsx";
 
 import { Avatar, Menu, Skeleton } from "@/components/ui";
-import { routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 export function UserMenu() {
@@ -14,7 +14,7 @@ export function UserMenu() {
 
   const handleSignOut = () => {
     logout();
-    router.push(routes.auth.signIn);
+    router.push(href(routes.auth.signIn));
     router.refresh();
   };
 
@@ -58,14 +58,14 @@ export function UserMenu() {
           <Menu.ItemGroup>
             <Menu.Item
               value="account"
-              onClick={() => router.push(routes.account.index)}
+              onClick={() => router.push(href(routes.account.index))}
             >
               <User size={16} />
               Account
             </Menu.Item>
             <Menu.Item
               value="settings"
-              onClick={() => router.push(routes.account.settings)}
+              onClick={() => router.push(href(routes.account.settings))}
             >
               <Settings size={16} />
               Settings

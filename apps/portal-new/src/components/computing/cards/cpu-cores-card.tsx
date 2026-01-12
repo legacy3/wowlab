@@ -5,6 +5,7 @@ import { HStack } from "styled-system/jsx";
 
 import { Card, HelpText, Text } from "@/components/ui";
 import { useClientHardware } from "@/hooks/use-client-hardware";
+import { href, routes } from "@/lib/routing";
 
 export function CpuCoresCard() {
   const { cores } = useClientHardware();
@@ -22,7 +23,9 @@ export function CpuCoresCard() {
           <Cpu style={{ height: 14, width: 14 }} />
           <HelpText
             content="Browsers may limit reported cores"
-            href="/docs/reference/03-browser-cpu-limits"
+            href={href(routes.docs.page, {
+              slug: "reference/03-browser-cpu-limits",
+            })}
           >
             CPU Cores
           </HelpText>

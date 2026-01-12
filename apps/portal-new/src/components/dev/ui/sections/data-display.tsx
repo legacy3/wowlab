@@ -13,6 +13,7 @@ import {
   Table,
   Text,
 } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 
 import { fixtures, Section, Subsection } from "../../shared";
 
@@ -157,7 +158,9 @@ function HelpTextDemo() {
         <Text textStyle="sm" color="fg.muted">
           <HelpText
             content="Browsers may limit reported cores for privacy"
-            href="/docs/reference/03-browser-cpu-limits"
+            href={href(routes.docs.page, {
+              slug: "reference/03-browser-cpu-limits",
+            })}
           >
             CPU Cores
           </HelpText>{" "}

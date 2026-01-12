@@ -6,7 +6,7 @@ import { useCallback } from "react";
 
 import type { RotationsRow } from "@/components/editor/types";
 
-import { routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routing";
 
 import { useEditor } from "./editor";
 
@@ -93,7 +93,7 @@ export function useSaveRotation() {
       // Only mark clean after successful save
       if (result?.data?.id) {
         markClean();
-        router.push(routes.rotations.editor.edit(result.data.id));
+        router.push(href(routes.rotations.editor.edit, { id: result.data.id }));
       }
 
       return result;

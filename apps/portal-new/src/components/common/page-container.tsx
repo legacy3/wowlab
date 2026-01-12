@@ -2,26 +2,20 @@ import type { ReactNode } from "react";
 
 import { Container, Stack } from "styled-system/jsx";
 
-import type { BreadcrumbItem } from "./page-header";
+import type { BreadcrumbItem } from "./page-breadcrumbs";
 
+import { PageBreadcrumbs } from "./page-breadcrumbs";
 import { PageHeader } from "./page-header";
 
 type MaxWidth = "3xl" | "4xl" | "5xl" | "6xl" | "7xl" | "8xl";
 
 interface PageContainerProps {
-  /** Breadcrumb items array, or a ReactNode (e.g., from a parallel route slot) */
   breadcrumbs?: BreadcrumbItem[] | ReactNode;
-  /** Page content */
   children: ReactNode;
-  /** Optional page description shown in header */
   description?: string;
-  /** Header action buttons */
   headerActions?: ReactNode;
-  /** Max width of the container. Defaults to "5xl" */
   maxW?: MaxWidth;
-  /** Vertical padding. Defaults to "8" */
   py?: "4" | "6" | "8" | "10" | "12";
-  /** Optional page title - renders a PageHeader when provided */
   title?: string;
 }
 
@@ -66,17 +60,29 @@ export function PageContainer({
   py = "8",
   title,
 }: PageContainerProps) {
+  const breadcrumbContent = Array.isArray(breadcrumbs) ? (
+    <PageBreadcrumbs items={breadcrumbs} />
+  ) : (
+    breadcrumbs
+  );
+
+  const hasHeader = title || breadcrumbContent;
+
   return (
     <Container maxW={maxW} py={py}>
-      {title ? (
+      {hasHeader ? (
         <Stack gap="6">
-          <PageHeader
-            title={title}
-            description={description}
-            breadcrumbs={breadcrumbs}
-          >
-            {headerActions}
-          </PageHeader>
+          {title ? (
+            <PageHeader
+              title={title}
+              description={description}
+              breadcrumbs={breadcrumbs}
+            >
+              {headerActions}
+            </PageHeader>
+          ) : (
+            breadcrumbContent
+          )}
           {children}
         </Stack>
       ) : (

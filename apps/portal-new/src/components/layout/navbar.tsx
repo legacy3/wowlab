@@ -12,6 +12,7 @@ import {
 } from "@/lib/state";
 
 import { AuthButton } from "./auth-button";
+import { LocaleSwitcher } from "./locale-switcher";
 import { useSidebar } from "./sidebar-context";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -71,6 +72,7 @@ export function Navbar() {
               </styled.span>
             </IconButton>
           </Tooltip>
+          <LocaleSwitcher />
           <ThemeToggle />
           <AuthButton />
         </Flex>

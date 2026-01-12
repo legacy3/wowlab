@@ -1,9 +1,9 @@
 "use client";
 
-import NextLink from "next/link";
 import { Stack, styled } from "styled-system/jsx";
 
-import { Card } from "@/components/ui";
+import { Card, Link } from "@/components/ui";
+import { href, type RouteDef } from "@/lib/routing";
 
 const StyledCard = styled(Card.Root, {
   base: {
@@ -17,7 +17,7 @@ const StyledCard = styled(Card.Root, {
 
 export interface CardItem {
   description: string;
-  href: string;
+  route: RouteDef;
   title: string;
 }
 
@@ -29,14 +29,20 @@ export function CardCollection({ items }: CardCollectionProps) {
   return (
     <Stack direction={{ base: "column", md: "row" }} gap="4">
       {items.map((item) => (
-        <NextLink key={item.href} href={item.href} style={{ flex: 1 }}>
+        <Link
+          key={href(item.route)}
+          href={href(item.route)}
+          variant="plain"
+          textDecoration="none"
+          flex="1"
+        >
           <StyledCard h="full">
             <Card.Header>
               <Card.Title>{item.title}</Card.Title>
               <Card.Description>{item.description}</Card.Description>
             </Card.Header>
           </StyledCard>
-        </NextLink>
+        </Link>
       ))}
     </Stack>
   );

@@ -1,8 +1,19 @@
 import type { ComponentProps } from "react";
 
-import { ark } from "@ark-ui/react/factory";
-import { styled } from "styled-system/jsx";
-import { link } from "styled-system/recipes";
+import { css, cx } from "styled-system/css";
+import { splitCssProps } from "styled-system/jsx";
+import { link, type LinkVariantProps } from "styled-system/recipes";
 
-export type LinkProps = ComponentProps<typeof Link>;
-export const Link = styled(ark.a, link);
+import { Link as IntlLink } from "@/i18n/navigation";
+
+export type LinkProps = ComponentProps<typeof IntlLink> & LinkVariantProps;
+
+export function Link({ className, variant, ...props }: LinkProps) {
+  const [cssProps, restProps] = splitCssProps(props);
+  return (
+    <IntlLink
+      className={cx(link({ variant }), css(cssProps), className)}
+      {...restProps}
+    />
+  );
+}

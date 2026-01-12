@@ -7,8 +7,8 @@ type MdLinkProps = {
   children: ReactNode;
 };
 
-export function MdLink({ children, href }: MdLinkProps) {
-  const isExternal = href?.startsWith("http");
+export function MdLink({ children, href = "#" }: MdLinkProps) {
+  const isExternal = href.startsWith("http");
 
   return (
     <Link

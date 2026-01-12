@@ -1,4 +1,3 @@
-import NextLink from "next/link";
 import { Fragment } from "react";
 
 import { Breadcrumb, Link, Text } from "@/components/ui";
@@ -17,14 +16,16 @@ interface PageBreadcrumbsProps {
  *
  * @example
  * // In a @breadcrumb/page.tsx parallel route
+ * import { href, routes } from "@/lib/routing";
+ *
  * export default async function BlogBreadcrumb({ params }) {
  *   const { slug } = await params;
  *   const { entry } = await getBlogPageData(slug);
  *   return (
  *     <PageBreadcrumbs
  *       items={[
- *         { label: "Home", href: "/" },
- *         { label: "Blog", href: "/blog" },
+ *         { label: "Home", href: href(routes.home) },
+ *         { label: "Blog", href: href(routes.blog.index) },
  *         { label: entry.title },
  *       ]}
  *     />
@@ -43,8 +44,8 @@ export function PageBreadcrumbs({ items }: PageBreadcrumbsProps) {
             <Fragment key={item.label}>
               <Breadcrumb.Item>
                 {item.href ? (
-                  <Link asChild textStyle="sm">
-                    <NextLink href={item.href}>{item.label}</NextLink>
+                  <Link href={item.href} textStyle="sm">
+                    {item.label}
                   </Link>
                 ) : (
                   <Text textStyle="sm" color="fg.muted">

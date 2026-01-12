@@ -2,48 +2,21 @@
 
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
-import NextLink from "next/link";
-import { usePathname } from "next/navigation";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
 import { Collapsible, Link, Text } from "@/components/ui";
+import { usePathname } from "@/i18n/navigation";
 import {
+  getIcon,
+  href,
   type MenuItem,
   type MenuNavItem,
   navMain,
   navSecondary,
-} from "@/lib/menu-config";
-import { routes } from "@/lib/routes";
+  routes,
+} from "@/lib/routing";
 
 import { useSidebar } from "./sidebar-context";
-
-const SidebarLink = styled(NextLink, {
-  base: {
-    _hover: {
-      bg: "gray.3",
-      color: "fg.default",
-    },
-    alignItems: "center",
-    color: "fg.muted",
-    cursor: "pointer",
-    display: "flex",
-    fontSize: "sm",
-    fontWeight: "medium",
-    gap: "3",
-    px: "3",
-    py: "2",
-    rounded: "l2",
-    transition: "colors",
-  },
-  variants: {
-    active: {
-      true: {
-        bg: "gray.3",
-        color: "fg.default",
-      },
-    },
-  },
-});
 
 export function AppSidebar() {
   const { isOpen } = useSidebar();
@@ -71,25 +44,23 @@ export function AppSidebar() {
         borderBottomWidth="1px"
         borderColor="border"
       >
-        <Link asChild variant="plain">
-          <NextLink href={routes.home}>
-            <Flex align="center" gap="3">
-              <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
-              <Stack gap="0">
-                <Text fontWeight="bold">WoW Lab</Text>
-                <Text fontSize="xs" color="fg.muted">
-                  Toolkit
-                </Text>
-              </Stack>
-            </Flex>
-          </NextLink>
+        <Link href={href(routes.home)} variant="plain">
+          <Flex align="center" gap="3">
+            <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
+            <Stack gap="0">
+              <Text fontWeight="bold">WoW Lab</Text>
+              <Text fontSize="xs" color="fg.muted">
+                Toolkit
+              </Text>
+            </Stack>
+          </Flex>
         </Link>
       </Flex>
 
       <Stack gap="6" flex="1" overflow="auto" px="3" py="4">
         <Stack gap="1">
           {navMain.map((item) => (
-            <NavGroup key={item.href} item={item} />
+            <NavGroup key={href(item.route)} item={item} />
           ))}
         </Stack>
 
@@ -104,7 +75,7 @@ export function AppSidebar() {
             Dev
           </Text>
           {navSecondary.map((item) => (
-            <NavLink key={item.href} item={item} />
+            <NavLink key={href(item.route)} item={item} />
           ))}
         </Stack>
       </Stack>
@@ -125,11 +96,41 @@ export function AppSidebar() {
   );
 }
 
+const SidebarLink = styled(Link, {
+  base: {
+    _hover: {
+      bg: "gray.3",
+      color: "fg.default",
+    },
+    alignItems: "center",
+    color: "fg.muted",
+    cursor: "pointer",
+    display: "flex",
+    fontSize: "sm",
+    fontWeight: "medium",
+    gap: "3",
+    px: "3",
+    py: "2",
+    rounded: "l2",
+    textDecoration: "none",
+    transition: "colors",
+  },
+  variants: {
+    active: {
+      true: {
+        bg: "gray.3",
+        color: "fg.default",
+      },
+    },
+  },
+});
+
 function NavGroup({ item }: { item: MenuNavItem }) {
   const pathname = usePathname();
-  const Icon = item.icon;
+  const Icon = getIcon(item.route.icon);
+  const routePath = href(item.route);
   const isActive =
-    pathname === item.href || pathname.startsWith(item.href + "/");
+    pathname === routePath || pathname.startsWith(routePath + "/");
 
   return (
     <Collapsible.Root defaultOpen={isActive}>
@@ -149,7 +150,7 @@ function NavGroup({ item }: { item: MenuNavItem }) {
           <Flex align="center" gap="3">
             <Icon size={18} />
             <Text fontSize="sm" fontWeight="medium">
-              {item.label}
+              {item.route.label}
             </Text>
           </Flex>
           <Collapsible.Indicator>
@@ -159,15 +160,19 @@ function NavGroup({ item }: { item: MenuNavItem }) {
       </Collapsible.Trigger>
       <Collapsible.Content>
         <Stack gap="0.5" pl="9" mt="1">
-          {item.items.map((subItem) => (
-            <SidebarLink
-              key={subItem.href}
-              href={subItem.href}
-              active={pathname === subItem.href}
-            >
-              {subItem.label}
-            </SidebarLink>
-          ))}
+          {item.items.map((subItem) => {
+            const subPath = href(subItem);
+            return (
+              <SidebarLink
+                key={subPath}
+                href={subPath}
+                active={pathname === subPath}
+                variant="plain"
+              >
+                {subItem.label}
+              </SidebarLink>
+            );
+          })}
         </Stack>
       </Collapsible.Content>
     </Collapsible.Root>
@@ -176,17 +181,19 @@ function NavGroup({ item }: { item: MenuNavItem }) {
 
 function NavLink({ item }: { item: MenuItem }) {
   const pathname = usePathname();
-  const Icon = item.icon;
+  const Icon = getIcon(item.route.icon);
+  const routePath = href(item.route);
 
   return (
     <SidebarLink
-      href={item.href}
-      active={pathname === item.href || pathname.startsWith(item.href + "/")}
+      href={routePath}
+      active={pathname === routePath || pathname.startsWith(routePath + "/")}
+      variant="plain"
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noopener noreferrer" : undefined}
     >
       <Icon size={18} />
-      {item.label}
+      {item.route.label}
     </SidebarLink>
   );
 }

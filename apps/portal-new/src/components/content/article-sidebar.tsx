@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarIcon, ChevronDown, ChevronRight, Clock } from "lucide-react";
-import NextLink from "next/link";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
@@ -14,6 +13,7 @@ import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 import { flattenToc } from "@/lib/content/toc";
+import { href, routes } from "@/lib/routing";
 import { formatDate } from "@/lib/utils/date";
 
 type ArticleMeta = {
@@ -27,7 +27,6 @@ type ArticleSidebarProps = {
   nav?: {
     items: SidebarNavItem[];
     currentSlug: string;
-    basePath: string;
   };
 };
 
@@ -70,11 +69,7 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
       >
         {hasMeta && <Meta meta={meta} />}
         {hasNav && (
-          <Navigation
-            items={nav.items}
-            currentSlug={nav.currentSlug}
-            basePath={nav.basePath}
-          />
+          <Navigation items={nav.items} currentSlug={nav.currentSlug} />
         )}
         {hasToc && <TableOfContents headings={headings} activeId={activeId} />}
       </VStack>
@@ -108,14 +103,12 @@ function Meta({ meta }: { meta: ArticleMeta }) {
 }
 
 function NavGroup({
-  basePath,
   currentSlug,
   defaultOpen,
   item,
 }: {
   item: SidebarNavItem;
   currentSlug: string;
-  basePath: string;
   defaultOpen: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -147,7 +140,7 @@ function NavGroup({
             return (
               <Link
                 key={child.slug}
-                asChild
+                href={href(routes.docs.page, { slug: child.slug })}
                 variant="plain"
                 textStyle="xs"
                 color={isActive ? "fg.default" : "fg.muted"}
@@ -155,9 +148,7 @@ function NavGroup({
                 _hover={{ color: "fg.default" }}
                 py="0.5"
               >
-                <NextLink href={`${basePath}/${child.slug}`}>
-                  {child.title}
-                </NextLink>
+                {child.title}
               </Link>
             );
           })}
@@ -168,13 +159,11 @@ function NavGroup({
 }
 
 function Navigation({
-  basePath,
   currentSlug,
   items,
 }: {
   items: SidebarNavItem[];
   currentSlug: string;
-  basePath: string;
 }) {
   return (
     <Box>
@@ -199,7 +188,6 @@ function Navigation({
                 key={item.slug}
                 item={item}
                 currentSlug={currentSlug}
-                basePath={basePath}
                 defaultOpen={containsActive}
               />
             );
@@ -209,7 +197,7 @@ function Navigation({
           return (
             <Link
               key={item.slug}
-              asChild
+              href={href(routes.docs.page, { slug: item.slug })}
               variant="plain"
               textStyle="xs"
               color={isActive ? "fg.default" : "fg.muted"}
@@ -217,9 +205,7 @@ function Navigation({
               _hover={{ color: "fg.default" }}
               py="0.5"
             >
-              <NextLink href={`${basePath}/${item.slug}`}>
-                {item.title}
-              </NextLink>
+              {item.title}
             </Link>
           );
         })}

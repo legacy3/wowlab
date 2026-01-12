@@ -1,0 +1,18 @@
+{
+  "Home": {
+    "title": "WoW Lab",
+    "description": "Simulation and theorycrafting tools for World of Warcraft",
+    "simulate": {
+      "title": "Simulate",
+      "description": "Run quick simulations for your character"
+    },
+    "rotations": {
+      "title": "Rotations",
+      "description": "Build and share rotation priority lists"
+    },
+    "dataLab": {
+      "title": "Data Lab",
+      "description": "Explore game data and inspect spells"
+    }
+  }
+}

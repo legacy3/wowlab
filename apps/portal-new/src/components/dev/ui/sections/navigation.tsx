@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
-import NextLink from "next/link";
 import { HStack, Stack } from "styled-system/jsx";
 
 import {
@@ -13,6 +12,7 @@ import {
   Tabs,
   Text,
 } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 
 import { Section, Subsection } from "../../shared";
 
@@ -62,14 +62,14 @@ function BreadcrumbDemo() {
         <Breadcrumb.Root>
           <Breadcrumb.List>
             <Breadcrumb.Item>
-              <Link asChild textStyle="sm">
-                <NextLink href="/">Home</NextLink>
+              <Link href={href(routes.home)} textStyle="sm">
+                Home
               </Link>
             </Breadcrumb.Item>
             <Breadcrumb.Separator />
             <Breadcrumb.Item>
-              <Link asChild textStyle="sm">
-                <NextLink href="/dev">Dev</NextLink>
+              <Link href={href(routes.dev.index)} textStyle="sm">
+                Dev
               </Link>
             </Breadcrumb.Item>
             <Breadcrumb.Separator />
