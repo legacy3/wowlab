@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   Calculator,
+  Code,
   FlaskConical,
   Newspaper,
   Play,
@@ -50,11 +51,11 @@ export const navMain: MenuNavItem[] = [
     label: "Plan",
   },
   {
-    href: "/TBD6",
+    href: routes.rotations.index,
     icon: Swords,
     items: [
-      { href: "/TBD7", label: "Browse" },
-      { href: "/TBD8", label: "Create" },
+      { href: routes.rotations.index, label: "Browse" },
+      { href: routes.rotations.editor.new, label: "Create" },
     ],
     label: "Rotations",
   },
@@ -72,4 +73,5 @@ export const navMain: MenuNavItem[] = [
 export const navSecondary: MenuItem[] = [
   { href: routes.docs.index, icon: BookOpen, label: "Docs" },
   { href: routes.blog.index, icon: Newspaper, label: "Blog" },
+  { href: routes.dev.index, icon: Code, label: "Dev" },
 ];

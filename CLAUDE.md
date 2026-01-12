@@ -1,8 +1,10 @@
 # wowlab
 
-## IMPORTANT: User Authority
+## Rules
 
-The user is always right. If you intend to deviate IN ANY WAY from what the user tells you, ASK FIRST. Do not assume you know better. Do not "improve" on instructions. Do not add your own interpretation. Follow instructions exactly as given, and if unclear, ask for clarification.
+1. **User is always right.** Do not deviate from instructions. Do not "improve" or interpret. Ask if unclear.
+2. **Tree before creating files.** Always run `tree` on the containing directory first. Match existing naming and structure patterns exactly. One file per domain concept.
+3. **Read skills before related work.** Skills in `.claude/skills/` have required patterns. Load with `/game-data`, `/park-ui`, etc.
 
 ## Commands
 
@@ -18,32 +20,27 @@ Never use `pnpm --filter` or `pnpm typecheck`.
 
 ## Rust Engine
 
-Simulation engine is written in Rust (in `crates/engine/`). Build and test:
-
 ```bash
 cd crates/engine
-cargo build --release    # Release build (optimized)
-cargo test               # Run tests
-./target/release/engine --help  # CLI usage
+cargo build --release
+cargo test
 ```
 
-WASM build for web integration:
-
-```bash
-cd crates/engine
-wasm-pack build --target web --out-dir ../../packages/wowlab-engine/wasm
-```
-
-Additional crates:
-- `crates/node-core/` - Distributed simulation node logic
-- `crates/node/` - Node binary with UI
-- `crates/node-headless/` - Headless node binary
+WASM: `wasm-pack build --target web --out-dir ../../packages/wowlab-engine/wasm`
 
 ## MCP Servers
 
 Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
 
+## Skills
+
+| Skill | When |
+|-------|------|
+| `game-data` | Spells, items, DBC data |
+| `park-ui` | UI components |
+| `engine-content` | Rust engine spells/talents |
+| `effect-service` | Effect-TS services |
+
 ## More Context
 
-- Each package/app has its own `CLAUDE.md` (loads on-demand)
-- Skills in `.claude/skills/` for code patterns
+Each package/app has its own `CLAUDE.md` (loads on-demand)

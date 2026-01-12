@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { useBoolean } from "ahooks";
+import { createContext, type ReactNode, useContext } from "react";
 
 interface SidebarContextValue {
   close: () => void;
@@ -12,13 +13,14 @@ interface SidebarContextValue {
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, { setFalse: close, setTrue: open, toggle }] =
+    useBoolean(false);
 
   const value: SidebarContextValue = {
-    close: () => setIsOpen(false),
+    close,
     isOpen,
-    open: () => setIsOpen(true),
-    toggle: () => setIsOpen((prev) => !prev),
+    open,
+    toggle,
   };
 
   return (

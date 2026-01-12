@@ -2,8 +2,6 @@
 
 import type { ReactNode } from "react";
 
-import { Box } from "styled-system/jsx";
-
 import { Code } from "@/components/ui/code";
 
 import { MdMermaid } from "./md-mermaid";
@@ -21,26 +19,7 @@ export function MdCode({ children, className = "" }: MdCodeProps) {
     return <MdMermaid chart={code} />;
   }
 
-  if (language) {
-    return (
-      <Box
-        as="pre"
-        my="6"
-        p="4"
-        bg="gray.subtle.bg"
-        borderRadius="md"
-        overflow="auto"
-        fontFamily="mono"
-        textStyle="sm"
-        lineHeight="relaxed"
-        whiteSpace="pre"
-      >
-        <code>{children}</code>
-      </Box>
-    );
-  }
-
-  return <Code>{children}</Code>;
+  return <Code language={language}>{children}</Code>;
 }
 
 export function MdPre({ children }: MdCodeProps) {

@@ -24,7 +24,9 @@ export function DocTree({
 }: DocTreeProps) {
   const defaultOpenGroups = items
     .filter((item) => {
-      if (!item.children) return false;
+      if (!item.children) {
+        return false;
+      }
       return item.children.some((child) => child.slug === activeSlug);
     })
     .map((item) => item.slug);
@@ -71,7 +73,9 @@ function DocGroup({
   basePath: string;
   activeSlug?: string;
 }) {
-  if (!item.children) return null;
+  if (!item.children) {
+    return null;
+  }
 
   return (
     <Accordion.Item value={item.slug}>

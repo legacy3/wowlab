@@ -1,5 +1,6 @@
 "use client";
 
+import { useBoolean } from "ahooks";
 import { useState } from "react";
 import { Box, Flex, Grid, Stack, styled } from "styled-system/jsx";
 
@@ -23,19 +24,14 @@ const IconButton = styled(Button, {
 
 export function SignInForm({ redirectTo }: SignInFormProps) {
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, { setFalse: stopLoading, setTrue: startLoading }] =
+    useBoolean(false);
   const { login } = useUser();
 
   const handleOAuthSignIn = (provider: OAuthProvider) => {
     setError(null);
-    setLoading(true);
-
-    try {
-      login(provider, redirectTo);
-    } catch {
-      setError("An unexpected error occurred");
-      setLoading(false);
-    }
+    startLoading();
+    login(provider, redirectTo);
   };
 
   if (loading) {

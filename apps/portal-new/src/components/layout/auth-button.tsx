@@ -1,5 +1,6 @@
 "use client";
 
+import { useBoolean, useMount } from "ahooks";
 import { useRouter } from "next/navigation";
 
 import { Button, Skeleton } from "@/components/ui";
@@ -11,8 +12,11 @@ import { UserMenu } from "./user-menu";
 export function AuthButton() {
   const router = useRouter();
   const { data: user, isLoading } = useUser();
+  const [mounted, { setTrue: setMounted }] = useBoolean(false);
 
-  if (isLoading) {
+  useMount(setMounted);
+
+  if (!mounted || isLoading) {
     return <Skeleton h="9" w="20" borderRadius="l2" />;
   }
 

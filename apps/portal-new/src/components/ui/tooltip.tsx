@@ -43,7 +43,9 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
       ...rootProps
     } = props;
 
-    if (disabled) return children;
+    if (disabled) {
+      return children;
+    }
 
     return (
       <Root {...rootProps}>

@@ -1,105 +1,43 @@
 "use client";
 
-import { Box, Flex, Stack, styled } from "styled-system/jsx";
-
-import { Heading, Text } from "@/components/ui";
-
+import { ImportPath, PageLayout } from "../shared";
 import {
-  AccordionSection,
-  AvatarSection,
-  BadgesSection,
-  ButtonsSection,
-  CardsSection,
-  CollapsibleSection,
-  ColorsSection,
-  LoadersSection,
-  MenuSection,
-  SkeletonsSection,
-  TypographySection,
+  ActionsSection,
+  DataDisplaySection,
+  FeedbackSection,
+  FormsSection,
+  NavigationSection,
+  OverlaysSection,
+  SpecPickerSection,
+  TokensSection,
 } from "./sections";
 
-const sections = [
-  { id: "loaders", label: "Loaders" },
-  { id: "buttons", label: "Buttons" },
-  { id: "typography", label: "Typography" },
-  { id: "badges", label: "Badges" },
-  { id: "cards", label: "Cards" },
-  { id: "avatar", label: "Avatar" },
-  { id: "menu", label: "Menu" },
-  { id: "accordion", label: "Accordion" },
-  { id: "collapsible", label: "Collapsible" },
-  { id: "skeletons", label: "Skeletons" },
-  { id: "colors", label: "Colors" },
+const NAV = [
+  { id: "forms", label: "Forms" },
+  { id: "overlays", label: "Overlays" },
+  { id: "navigation", label: "Navigation" },
+  { id: "feedback", label: "Feedback" },
+  { id: "data-display", label: "Data Display" },
+  { id: "actions", label: "Actions" },
+  { id: "spec-picker", label: "Spec Picker" },
+  { id: "tokens", label: "Tokens" },
 ];
-
-const NavLink = styled("a", {
-  base: {
-    _hover: {
-      bg: "gray.3",
-      color: "fg.default",
-    },
-    color: "fg.muted",
-    display: "block",
-    fontSize: "sm",
-    px: "3",
-    py: "1.5",
-    rounded: "l2",
-  },
-});
 
 export function UiDemo() {
   return (
-    <Flex gap="8">
-      <Box flex="1" minW="0">
-        <styled.header mb="12">
-          <Heading as="h1" size="3xl" mb="2">
-            UI Components
-          </Heading>
-          <Text color="fg.muted" textStyle="lg">
-            Component reference for contributors. Import from{" "}
-            <code>@/components/ui</code>.
-          </Text>
-        </styled.header>
-
-        <LoadersSection />
-        <ButtonsSection />
-        <TypographySection />
-        <BadgesSection />
-        <CardsSection />
-        <AvatarSection />
-        <MenuSection />
-        <AccordionSection />
-        <CollapsibleSection />
-        <SkeletonsSection />
-        <ColorsSection />
-      </Box>
-
-      <SideNav />
-    </Flex>
-  );
-}
-
-function SideNav() {
-  return (
-    <Box
-      as="nav"
-      position="sticky"
-      top="20"
-      w="44"
-      flexShrink={0}
-      display={{ base: "none", xl: "block" }}
-      alignSelf="flex-start"
+    <PageLayout
+      title="UI Components"
+      description={<ImportPath path="@/components/ui" />}
+      nav={NAV}
     >
-      <Text fontSize="xs" fontWeight="semibold" color="fg.subtle" mb="3" px="3">
-        On this page
-      </Text>
-      <Stack gap="0.5">
-        {sections.map((s) => (
-          <NavLink key={s.id} href={`#${s.id}`}>
-            {s.label}
-          </NavLink>
-        ))}
-      </Stack>
-    </Box>
+      <FormsSection />
+      <OverlaysSection />
+      <NavigationSection />
+      <FeedbackSection />
+      <DataDisplaySection />
+      <ActionsSection />
+      <SpecPickerSection />
+      <TokensSection />
+    </PageLayout>
   );
 }

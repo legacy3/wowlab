@@ -1,9 +1,9 @@
 "use client";
 
+import { useKeyPress } from "ahooks";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
 import type { NavItem } from "@/lib/content/types";
@@ -27,18 +27,8 @@ export function ContentNav({
 }: ContentNavProps) {
   const router = useRouter();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft" && prev) {
-        router.push(prev.href);
-      } else if (e.key === "ArrowRight" && next) {
-        router.push(next.href);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [prev, next, router]);
+  useKeyPress("leftarrow", () => prev && router.push(prev.href));
+  useKeyPress("rightarrow", () => next && router.push(next.href));
 
   return (
     <Flex

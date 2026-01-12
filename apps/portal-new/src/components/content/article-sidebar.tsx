@@ -120,7 +120,9 @@ function NavGroup({
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
-  if (!item.children) return null;
+  if (!item.children) {
+    return null;
+  }
 
   return (
     <Box>

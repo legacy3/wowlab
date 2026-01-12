@@ -1,0 +1,259 @@
+"use client";
+
+import { useMemo } from "react";
+import { Box, Flex, Stack, styled } from "styled-system/jsx";
+
+import { Card, Code, Heading, Skeleton, Text } from "@/components/ui";
+import { useActiveHeading } from "@/hooks/use-active-heading";
+
+// =============================================================================
+// Layout
+// =============================================================================
+
+export const NavLink = styled("a", {
+  base: {
+    _hover: { bg: "gray.3", color: "fg.default" },
+    color: "fg.muted",
+    display: "block",
+    fontSize: "sm",
+    px: "3",
+    py: "1.5",
+    rounded: "l2",
+    transition: "colors",
+  },
+  variants: {
+    active: {
+      true: {
+        bg: "gray.3",
+        color: "fg.default",
+        fontWeight: "medium",
+      },
+    },
+  },
+});
+
+interface PageLayoutProps {
+  children: React.ReactNode;
+  description: React.ReactNode;
+  nav: Array<{ id: string; label: string }>;
+  title: string;
+}
+
+export function ComponentCard({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>{title}</Card.Title>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card.Root>
+  );
+}
+
+// =============================================================================
+// Sections
+// =============================================================================
+
+export function DataCard({
+  children,
+  description,
+  title,
+}: {
+  children: React.ReactNode;
+  description?: string;
+  title: string;
+}) {
+  return (
+    <Card.Root>
+      <Card.Header>
+        <Card.Title fontFamily="mono">{title}</Card.Title>
+        {description && <Card.Description>{description}</Card.Description>}
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card.Root>
+  );
+}
+
+export function ImportPath({ path }: { path: string }) {
+  return (
+    <>
+      Import from <Code>{path}</Code>
+    </>
+  );
+}
+
+// =============================================================================
+// Cards
+// =============================================================================
+
+export function JsonOutput({
+  data,
+  error,
+  isLoading,
+}: {
+  data: unknown;
+  error: Error | null;
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <Stack gap="2">
+        <Skeleton h="4" w="80%" />
+        <Skeleton h="4" w="60%" />
+        <Skeleton h="4" w="70%" />
+        <Skeleton h="4" w="50%" />
+      </Stack>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box bg="red.2" border="1px solid" borderColor="red.6" rounded="l2" p="3">
+        <Text color="red.11" fontFamily="mono" textStyle="sm">
+          Error: {error.message}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (data === null || data === undefined) {
+    return (
+      <Text color="fg.muted" fontStyle="italic">
+        No data
+      </Text>
+    );
+  }
+
+  return (
+    <Box
+      bg="gray.2"
+      rounded="l2"
+      p="3"
+      overflow="auto"
+      maxH="400px"
+      fontFamily="mono"
+      textStyle="sm"
+    >
+      <styled.pre whiteSpace="pre-wrap" wordBreak="break-word">
+        {JSON.stringify(data, null, 2)}
+      </styled.pre>
+    </Box>
+  );
+}
+
+export function PageLayout({
+  children,
+  description,
+  nav,
+  title,
+}: PageLayoutProps) {
+  const headingIds = useMemo(() => nav.map((item) => item.id), [nav]);
+  const activeId = useActiveHeading(headingIds);
+
+  return (
+    <Flex gap="8">
+      <Box flex="1" minW="0">
+        <styled.header mb="8">
+          <Heading as="h1" size="3xl" mb="2">
+            {title}
+          </Heading>
+          <Text color="fg.muted" textStyle="lg">
+            {description}
+          </Text>
+        </styled.header>
+        {children}
+      </Box>
+
+      <Box
+        as="nav"
+        position="sticky"
+        top="20"
+        w="44"
+        flexShrink={0}
+        display={{ base: "none", xl: "block" }}
+        alignSelf="flex-start"
+      >
+        <Text
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg.subtle"
+          mb="3"
+          px="3"
+        >
+          On this page
+        </Text>
+        <Stack gap="0.5">
+          {nav.map((item) => (
+            <NavLink
+              key={item.id}
+              href={`#${item.id}`}
+              active={activeId === item.id}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </Stack>
+      </Box>
+    </Flex>
+  );
+}
+
+// =============================================================================
+// Data Display
+// =============================================================================
+
+export function Section({
+  children,
+  id,
+  title,
+}: {
+  children: React.ReactNode;
+  id: string;
+  title: string;
+}) {
+  return (
+    <styled.section id={id} mb="12" scrollMarginTop="24">
+      <Heading
+        as="h2"
+        size="xl"
+        mb="6"
+        pb="2"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        {title}
+      </Heading>
+      {children}
+    </styled.section>
+  );
+}
+
+export function Subsection({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <styled.div mb="8">
+      <Text
+        fontWeight="semibold"
+        color="fg.muted"
+        mb="4"
+        textTransform="uppercase"
+        letterSpacing="wide"
+        textStyle="xs"
+      >
+        {title}
+      </Text>
+      {children}
+    </styled.div>
+  );
+}

@@ -2,8 +2,9 @@
 
 import type { ReactNode } from "react";
 
+import { useBoolean, useKeyPress } from "ahooks";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Center } from "styled-system/jsx";
 import { expandable } from "styled-system/recipes";
@@ -21,33 +22,40 @@ export function Expandable({
   title,
   variant = "image",
 }: ExpandableProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, { setFalse: close, setTrue: open }] = useBoolean(false);
   const classes = expandable({ variant });
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
+
+  const handleClose = useCallback(() => {
+    close();
+  }, [close]);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      closeButtonRef.current?.focus();
 
       return () => {
         document.body.style.overflow = "";
+        triggerRef.current?.focus();
       };
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-    
-    if (isOpen) {
-      window.addEventListener("keydown", handleEsc);
-      return () => window.removeEventListener("keydown", handleEsc);
-    }
-  }, [isOpen]);
+  useKeyPress("Escape", handleClose, {
+    target: () => (isOpen ? window : null),
+  });
 
-  // Use span for image variant to avoid hydration errors (images are inside <p> tags in MDX)
+  useKeyPress(
+    "Tab",
+    (e) => {
+      e.preventDefault();
+      closeButtonRef.current?.focus();
+    },
+    { target: () => (isOpen ? window : null) },
+  );
+
   const isInline = variant === "image";
   const RootElement = isInline ? "span" : "div";
   const ContentElement = isInline ? "span" : "div";
@@ -55,30 +63,43 @@ export function Expandable({
   return (
     <>
       <RootElement
+        ref={triggerRef as React.RefObject<HTMLDivElement & HTMLSpanElement>}
         className={classes.root}
-        onClick={() => setIsOpen(true)}
+        onClick={open}
         title={title}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        }}
       >
         <ContentElement className={classes.content}>{children}</ContentElement>
       </RootElement>
 
       {isOpen &&
-        typeof document !== "undefined" &&
         createPortal(
           <Center
             className={classes.modalBackdrop}
-            onClick={() => setIsOpen(false)}
+            onClick={handleClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title ?? "Expanded view"}
           >
-            <Box
-              as="button"
+            <button
+              ref={closeButtonRef}
               className={classes.modalClose}
               onClick={(e) => {
                 e.stopPropagation();
-                setIsOpen(false);
+                handleClose();
               }}
+              aria-label="Close"
+              type="button"
             >
               <X size={24} color="white" />
-            </Box>
+            </button>
             <Box
               className={classes.modalContent}
               onClick={(e) => e.stopPropagation()}

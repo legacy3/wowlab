@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Box } from "styled-system/jsx";
 
 import { Expandable } from "@/components/ui/expandable";
+import { Text } from "@/components/ui/text";
 
 // TODO: Add dark theme support - detect color mode and re-render on theme change
 mermaid.initialize({
@@ -59,7 +60,7 @@ export function MdMermaid({ chart }: MdMermaidProps) {
         color="red.11"
         textStyle="sm"
       >
-        <Box fontWeight="medium">Diagram Error</Box>
+        <Text fontWeight="medium">Diagram Error</Text>
         <Box
           as="pre"
           mt="2"

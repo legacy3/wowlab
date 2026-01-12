@@ -16,6 +16,8 @@ export const routes = {
     post: (slug: string) => `/blog/${slug}`,
   },
   dev: {
+    data: "/dev/data",
+    index: "/dev",
     ui: "/dev/ui",
   },
   docs: {
@@ -23,5 +25,13 @@ export const routes = {
     page: (slug: string) => `/docs/${slug}`,
   },
   home: "/",
+  rotations: {
+    editor: {
+      edit: (id: string) => `/rotations/editor/${id}`,
+      new: "/rotations/editor",
+    },
+    index: "/rotations",
+    view: (id: string) => `/rotations/${id}`,
+  },
   simulate: "/simulate",
 } as const;

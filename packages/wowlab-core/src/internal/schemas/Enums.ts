@@ -108,6 +108,23 @@ export enum ItemQuality {
 
 export const ItemQualitySchema = Schema.Enums(ItemQuality);
 
+// Colors from global_color DBC (ITEM_*_COLOR entries)
+export const ITEM_QUALITY_COLORS: Record<ItemQuality, string> = {
+  [ItemQuality.Poor]: "#9d9d9d",
+  [ItemQuality.Common]: "#ffffff",
+  [ItemQuality.Uncommon]: "#1eff00",
+  [ItemQuality.Rare]: "#0070dd",
+  [ItemQuality.Epic]: "#a335ee",
+  [ItemQuality.Legendary]: "#ff8000",
+  [ItemQuality.Artifact]: "#e6cc80",
+  [ItemQuality.Heirloom]: "#00ccff",
+  [ItemQuality.WoWToken]: "#00ccff",
+};
+
+export function getItemQualityColor(quality: number): string {
+  return ITEM_QUALITY_COLORS[quality as ItemQuality] ?? "#ffffff";
+}
+
 export enum InventoryType {
   IndexNonEquipType = 0,
   IndexHeadType = 1,

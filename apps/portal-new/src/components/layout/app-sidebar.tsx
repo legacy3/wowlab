@@ -2,11 +2,11 @@
 
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
-import { Collapsible, Text } from "@/components/ui";
+import { Collapsible, Link, Text } from "@/components/ui";
 import {
   type MenuItem,
   type MenuNavItem,
@@ -17,7 +17,7 @@ import { routes } from "@/lib/routes";
 
 import { useSidebar } from "./sidebar-context";
 
-const SidebarLink = styled(Link, {
+const SidebarLink = styled(NextLink, {
   base: {
     _hover: {
       bg: "gray.3",
@@ -71,17 +71,18 @@ export function AppSidebar() {
         borderBottomWidth="1px"
         borderColor="border"
       >
-        <Link
-          href={routes.home}
-          style={{ alignItems: "center", display: "flex", gap: "12px" }}
-        >
-          <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
-          <Stack gap="0">
-            <Text fontWeight="bold">WoW Lab</Text>
-            <Text fontSize="xs" color="fg.muted">
-              Toolkit
-            </Text>
-          </Stack>
+        <Link asChild variant="plain">
+          <NextLink href={routes.home}>
+            <Flex align="center" gap="3">
+              <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
+              <Stack gap="0">
+                <Text fontWeight="bold">WoW Lab</Text>
+                <Text fontSize="xs" color="fg.muted">
+                  Toolkit
+                </Text>
+              </Stack>
+            </Flex>
+          </NextLink>
         </Link>
       </Flex>
 

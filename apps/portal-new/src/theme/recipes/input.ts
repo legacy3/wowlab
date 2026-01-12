@@ -1,6 +1,6 @@
-import { defineRecipe } from "@pandacss/dev";
+import type { RecipeConfig } from "@pandacss/dev";
 
-export const input = defineRecipe({
+export const input = {
   base: {
     _disabled: {
       layerStyle: "disabled",
@@ -86,4 +86,4 @@ export const input = defineRecipe({
       },
     },
   },
-});
+} satisfies RecipeConfig;
