@@ -41,6 +41,7 @@ export {
   useItemSearch,
   useSpellSearch,
 } from "./game-data-search";
+export { type Profile, type Rotation, useUserProfile } from "./profile";
 export { useLoadRotation, useSaveRotation } from "./rotation";
 export type { StateResult } from "./types";
 export { useCardExpanded, useSidebar } from "./ui";

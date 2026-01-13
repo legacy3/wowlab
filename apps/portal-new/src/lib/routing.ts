@@ -62,10 +62,10 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 export type SitemapConfig =
   | { indexed: false }
   | {
-    indexed: true;
-    changeFrequency: SitemapEntry["changeFrequency"];
-    priority: SitemapEntry["priority"];
-  };
+      indexed: true;
+      changeFrequency: SitemapEntry["changeFrequency"];
+      priority: SitemapEntry["priority"];
+    };
 
 const sitemap = {
   daily: { indexed: true, changeFrequency: "daily", priority: 0.8 },
@@ -144,6 +144,10 @@ export const routes = {
     index: route("/account", "Account", "Your account", "User"),
     settings: route("/account/settings", "Settings", "Account settings", "Settings"),
   }).standalone(),
+
+  users: {
+    profile: dynamic("/users/:handle", ["handle"], "User Profile", "User"),
+  },
 
   about: group({
     index: route("/about", "About", "About WoW Lab", "Info", sitemap.monthly),
@@ -333,6 +337,8 @@ export function getDisallowedPaths(): string[] {
     .sort((a, b) => a.length - b.length);
 
   return paths
-    .filter((path, _, all) => !all.some((p) => p !== path && path.startsWith(p)))
+    .filter(
+      (path, _, all) => !all.some((p) => p !== path && path.startsWith(p)),
+    )
     .map((p) => `${p}/`);
 }

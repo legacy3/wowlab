@@ -50,9 +50,15 @@ export function UserMenu() {
       <Menu.Positioner>
         <Menu.Content minW="48">
           <Menu.ItemGroup>
-            <Menu.ItemGroupLabel fontWeight="medium">
-              {user.handle ?? user.email ?? "User"}
-            </Menu.ItemGroupLabel>
+            <Menu.Item
+              value="profile"
+              fontWeight="medium"
+              onClick={() =>
+                router.push(href(routes.users.profile, { handle: user.handle }))
+              }
+            >
+              @{user.handle}
+            </Menu.Item>
           </Menu.ItemGroup>
           <Menu.Separator />
           <Menu.ItemGroup>

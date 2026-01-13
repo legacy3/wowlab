@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Flex, Grid, Stack } from "styled-system/jsx";
+import { Box, Flex, Grid, HStack, Stack } from "styled-system/jsx";
 
+import { GameIcon } from "@/components/game/game-icon";
 import { Badge, Card, Skeleton, Text } from "@/components/ui";
 import { useClassesAndSpecs } from "@/lib/state";
 
@@ -12,6 +13,7 @@ export function ClassesAndSpecsSection() {
   const {
     classes,
     getClassColor,
+    getSpecIcon,
     getSpecIdsForClass,
     getSpecLabel,
     isLoading,
@@ -95,6 +97,27 @@ export function ClassesAndSpecsSection() {
                   {getSpecLabel(selectedSpec)}
                   &quot;
                 </Text>
+              )}
+            </Card.Body>
+          </Card.Root>
+
+          <Card.Root>
+            <Card.Header>
+              <Card.Title fontFamily="mono">getSpecIcon(specId)</Card.Title>
+              <Card.Description>
+                Returns the icon name for a given spec ID
+              </Card.Description>
+            </Card.Header>
+            <Card.Body>
+              {selectedSpec && (
+                <HStack gap="4">
+                  <GameIcon iconName={getSpecIcon(selectedSpec)} size="lg" />
+                  <Text fontFamily="mono" textStyle="sm">
+                    getSpecIcon({selectedSpec}) = &quot;
+                    {getSpecIcon(selectedSpec)}
+                    &quot;
+                  </Text>
+                </HStack>
               )}
             </Card.Body>
           </Card.Root>

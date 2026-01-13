@@ -158,9 +158,14 @@ export function useClassesAndSpecs() {
     return specsByClassId.get(classId)?.map((s) => s.id) ?? [];
   };
 
+  const getSpecIcon = (specId: number): string | null => {
+    return specs.find((s) => s.id === specId)?.iconName ?? null;
+  };
+
   return {
     classes,
     getClassColor,
+    getSpecIcon,
     getSpecIdsForClass,
     getSpecLabel,
     isLoading: classesLoading || specsLoading,
