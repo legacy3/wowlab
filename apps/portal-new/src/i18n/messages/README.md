@@ -53,7 +53,7 @@ Keys can be nested: `t("section.subsection.key")`. See the [next-intl docs](http
 ## Guidelines
 
 - Native speakers preferred
-- Gaming terminology matters — this is a WoW theorycrafting app
+- Gaming terminology matters (this is a WoW theorycrafting app)
 - Match the tone of existing translations
 - A few keys done well beats everything done poorly
 
