@@ -9,7 +9,6 @@ import {
   Home,
   Info,
   KeyRound,
-  ListTree,
   LogIn,
   Newspaper,
   PenLine,
@@ -35,7 +34,6 @@ const icons = {
   Home,
   Info,
   KeyRound,
-  ListTree,
   LogIn,
   Newspaper,
   PenLine,
@@ -112,50 +110,45 @@ function group<T extends RouteGroup>(routes: T) {
 
 // prettier-ignore
 export const routes = {
-  home: route("/", "Home", "WoW Lab theorycrafting and simulation tools", "Home"),
+  home: route("/", "Home", "Theorycrafting and simulation tools", "Home"),
 
-  computing: route("/computing", "Computing", "Simulation compute resources and job queue", "Cpu"),
+  computing: route("/computing", "Computing", "Compute resources and job queue", "Cpu"),
 
   auth: group({
-    index: route("/auth", "Auth", "Authentication and authorization", "KeyRound"),
-    signIn: route("/auth/sign-in", "Sign In", "Sign in to your account", "LogIn"),
+    index: route("/auth", "Auth", "Authentication", "KeyRound"),
+    signIn: route("/auth/sign-in", "Sign In", "Sign in", "LogIn"),
   }).standalone(),
 
   account: group({
-    index: route("/account", "Account", "Manage your account", "User"),
-    settings: route("/account/settings", "Settings", "Account settings and preferences", "Settings"),
+    index: route("/account", "Account", "Your account", "User"),
+    settings: route("/account/settings", "Settings", "Account settings", "Settings"),
   }).standalone(),
 
   about: group({
     index: route("/about", "About", "About WoW Lab", "Info"),
-    privacy: route("/about?tab=privacy-policy", "Privacy Policy", "Privacy policy and data handling", "Shield"),
-    terms: route("/about?tab=terms-of-service", "Terms of Service", "Terms of service and usage", "FileText"),
+    privacy: route("/about?tab=privacy-policy", "Privacy Policy", "Privacy policy", "Shield"),
+    terms: route("/about?tab=terms-of-service", "Terms of Service", "Terms of service", "FileText"),
   }).standalone(),
 
   simulate: group({
-    index: route("/simulate", "Simulate", "Run DPS and HPS simulations", "Play"),
+    index: route("/simulate", "Simulate", "Run simulations", "Play"),
     results: dynamic("/simulate/results/:id", ["id"], "Results", "ChartBar"),
   }).main(),
 
   rotations: group({
-    index: route("/rotations", "Rotations", "Browse and manage rotation priorities", "Swords"),
+    index: route("/rotations", "Rotations", "Rotation priorities", "Swords"),
+    browse: route("/rotations/browse", "Browse", "Community rotations", "Search"),
     view: dynamic("/rotations/:id", ["id"], "View Rotation", "Swords"),
     editor: {
-      new: route("/rotations/editor", "New Rotation", "Create a new rotation priority", "PenLine"),
+      index: route("/rotations/editor", "New Rotation", "Create rotation", "PenLine"),
       edit: dynamic("/rotations/editor/:id", ["id"], "Edit Rotation", "PenLine"),
     },
-  }).main("editor.new"),
+  }).main("browse", "editor"),
 
   plan: group({
-    index: route("/plan", "Plan", "Character planning tools", "Calculator"),
-    talents: route("/plan/talents", "Talents", "Talent tree builder and optimizer", "Sparkles"),
+    index: route("/plan", "Plan", "Character planning", "Calculator"),
+    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles"),
   }).main("talents"),
-
-  lab: group({
-    index: route("/lab", "Lab", "Development and testing tools", "FlaskConical"),
-    overview: route("/lab/overview", "Overview", "System overview and status", "ListTree"),
-    inspector: route("/lab/inspector", "Data Inspector", "Inspect game data and spell mechanics", "Search"),
-  }).main("overview", "inspector"),
 
   blog: group({
     index: route("/blog", "Blog", "News and updates", "Newspaper"),
@@ -163,18 +156,18 @@ export const routes = {
   }).secondary(),
 
   dev: group({
-    index: route("/dev", "Developer", "Internal tools and component showcases", "Code"),
-    ui: route("/dev/ui", "UI Showcase", "Park UI components with Panda CSS recipes", "Sparkles"),
-    data: route("/dev/data", "Data Lab", "Game data hooks for spells, items, classes, and specs", "FlaskConical"),
+    index: route("/dev", "Developer", "Developer tools", "Code"),
     docs: {
-      index: route("/dev/docs", "Docs", "Technical documentation and guides", "BookOpen"),
+      index: route("/dev/docs", "Docs", "Documentation", "BookOpen"),
       page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"),
     },
-  }).secondary(),
+    hooks: route("/dev/hooks", "Hooks", "Game data hooks", "FlaskConical"),
+    ui: route("/dev/ui", "UI Showcase", "UI components", "Sparkles"),
+  }).main("docs", "hooks", "ui"),
 
   error: route("/error", "Error", "Something went wrong", "Info"),
-  notFound: route("/404", "Not Found", "The page you're looking for doesn't exist", "Info"),
-  unauthorized: route("/unauthorized", "Sign In Required", "Please sign in to continue", "LogIn"),
+  notFound: route("/404", "Not Found", "Page not found", "Info"),
+  unauthorized: route("/unauthorized", "Sign In Required", "Sign in required", "LogIn"),
 } as const;
 
 function hasNav(obj: unknown): obj is RouteGroup & NavMeta {
@@ -188,6 +181,11 @@ function getByPath(obj: RouteGroup, path: string): Route {
 
   for (const key of path.split(".")) {
     current = (current as Record<string, unknown>)[key];
+  }
+
+  // If result is a nested group, return its index
+  if (typeof current === "object" && current !== null && "index" in current) {
+    return (current as { index: Route }).index;
   }
 
   return current as Route;

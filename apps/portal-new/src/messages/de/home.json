@@ -10,9 +10,9 @@
       "title": "Rotationen",
       "description": "Erstelle und teile Rotations-Prioritätslisten"
     },
-    "dataLab": {
-      "title": "Datenlabor",
-      "description": "Erkunde Spieldaten und inspiziere Zauber"
+    "hooks": {
+      "title": "Hooks",
+      "description": "Erkunde Spieldaten-Hooks für Zauber und Items"
     }
   }
 }

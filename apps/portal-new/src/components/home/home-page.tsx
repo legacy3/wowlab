@@ -20,9 +20,9 @@ export function HomePage() {
       title: t("rotations.title"),
     },
     {
-      description: t("dataLab.description"),
-      route: routes.dev.data,
-      title: t("dataLab.title"),
+      description: t("hooks.description"),
+      route: routes.dev.hooks,
+      title: t("hooks.title"),
     },
   ];
 

@@ -25,7 +25,7 @@ const NAV = [
   { id: "item-search", label: "useItemSearch" },
 ];
 
-export function DataDemo() {
+export function HooksDemo() {
   return (
     <PageLayout nav={NAV}>
       <SpellSection />

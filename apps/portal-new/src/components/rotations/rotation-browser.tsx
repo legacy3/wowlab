@@ -21,7 +21,7 @@ import type { RotationsRow } from "@/components/editor/types";
 
 import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
-import { useClassesAndSpecs } from "@/lib/state";
+import { useClassesAndSpecs, useUser } from "@/lib/state";
 
 import {
   Badge,
@@ -42,9 +42,6 @@ interface ClassFilterProps {
   value: number | null;
 }
 
-interface RotationBrowserProps {
-  userId?: string;
-}
 
 interface RotationRowProps {
   getClassColor: (specId: number) => string;
@@ -56,10 +53,13 @@ interface RotationRowProps {
 
 type VisibilityFilter = "all" | "public" | "mine";
 
-export function RotationBrowser({ userId }: RotationBrowserProps) {
+export function RotationBrowser() {
   const [filter, setFilter] = useState<VisibilityFilter>("all");
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState<number | null>(null);
+
+  const { data: user } = useUser();
+  const userId = user?.id;
 
   const { classes, getClassColor, getSpecIdsForClass, getSpecLabel } =
     useClassesAndSpecs();
@@ -176,7 +176,7 @@ export function RotationBrowser({ userId }: RotationBrowserProps) {
             />
           </Box>
           <Button asChild size="sm">
-            <IntlLink href={href(routes.rotations.editor.new)}>
+            <IntlLink href={href(routes.rotations.editor.index)}>
               <PlusIcon size={16} />
               New
             </IntlLink>
@@ -233,7 +233,7 @@ export function RotationBrowser({ userId }: RotationBrowserProps) {
           {filter === "mine" && (
             <Empty.Action>
               <Button asChild size="sm">
-                <IntlLink href={href(routes.rotations.editor.new)}>
+                <IntlLink href={href(routes.rotations.editor.index)}>
                   <PlusIcon size={16} />
                   Create rotation
                 </IntlLink>

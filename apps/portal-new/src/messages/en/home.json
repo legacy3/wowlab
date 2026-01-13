@@ -10,9 +10,9 @@
       "title": "Rotations",
       "description": "Build and share rotation priority lists"
     },
-    "dataLab": {
-      "title": "Data Lab",
-      "description": "Explore game data and inspect spells"
+    "hooks": {
+      "title": "Hooks",
+      "description": "Explore game data hooks for spells and items"
     }
   }
 }
