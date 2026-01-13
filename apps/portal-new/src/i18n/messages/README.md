@@ -4,21 +4,24 @@ Want to help translate WoW Lab? Contributions for any language are welcome.
 
 ## Editing translations
 
-Each locale has a JSON file (`en.json`, `de.json`, etc). Just edit the values:
+Each locale has a PO file (`en.po`, `de.po`, etc). Edit the `msgstr` values:
 
-```json
-{
-  "MgvB1f": "Run quick simulations for your character",
-  "eZSeUm": "Simulate"
-}
+```po
+#: src/components/home/home-page.tsx:13
+msgid "MgvB1f"
+msgstr "Run quick simulations for your character"
+
+#: src/components/home/home-page.tsx:15
+msgid "eZSeUm"
+msgstr "Simulate"
 ```
 
-Keys are auto-generated hashes. Match them to `en.json` and translate the values.
+The `#:` comments show where each string is used. Keys are auto-generated hashes. Match them to `en.po` and translate the `msgstr` values.
 
 ## Adding a new language
 
-1. Copy `en.json` to `{locale}.json` (e.g. `fr.json`)
-2. Translate the values
+1. Copy `en.po` to `{locale}.po` (e.g. `fr.po`)
+2. Translate the `msgstr` values
 3. Register the locale in `src/i18n/routing.ts`:
 
 ```ts

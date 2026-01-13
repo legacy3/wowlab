@@ -68,7 +68,7 @@ const withNextIntl = createNextIntlPlugin({
       sourceLocale: "en",
     },
     messages: {
-      format: "json",
+      format: "po",
       locales: Object.keys(locales) as (keyof typeof locales)[],
       path: "./src/i18n/messages",
     },

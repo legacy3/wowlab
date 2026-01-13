@@ -13,14 +13,14 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   // Always load default locale as base
   const defaultMessages: Messages = (
-    await import(`./messages/${routing.defaultLocale}.json`)
+    await import(`./messages/${routing.defaultLocale}.po`)
   ).default;
 
   if (locale === routing.defaultLocale) {
     return { locale, messages: defaultMessages, timeZone: "UTC" };
   }
 
-  const localeMessages: Messages = (await import(`./messages/${locale}.json`))
+  const localeMessages: Messages = (await import(`./messages/${locale}.po`))
     .default;
 
   return {

@@ -1,0 +1,873 @@
+msgid ""
+msgstr ""
+"Language: de\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: next-intl\n"
+"X-Crowdin-SourceKey: msgstr\n"
+
+#: src/app/[locale]/dev/ui/loading.tsx:10
+#: src/components/dev/hooks/sections/entity-display.tsx:80
+#: src/components/dev/hooks/sections/search-display.tsx:68
+#: src/components/editor/pickers/game-object-picker.tsx:294
+msgid "gjBiyj"
+msgstr ""
+
+#: src/app/[locale]/error.tsx:25
+#: src/app/error.tsx:25
+msgid "FazwRl"
+msgstr ""
+
+#: src/app/[locale]/not-found.tsx:16
+#: src/app/not-found.tsx:16
+msgid "FZrV9p"
+msgstr ""
+
+#: src/app/[locale]/plan/talents/page.tsx:11
+msgid "TBcwz7"
+msgstr ""
+
+#: src/app/[locale]/plan/talents/page.tsx:13
+msgid "sANaE7"
+msgstr ""
+
+#: src/app/[locale]/rotations/editor/[id]/page.tsx:34
+msgid "K5pRrS"
+msgstr ""
+
+#: src/app/[locale]/rotations/editor/[id]/page.tsx:34
+msgid "qDwvZ4"
+msgstr ""
+
+#: src/app/[locale]/rotations/editor/[id]/page.tsx:40
+msgid "uqwRlB"
+msgstr ""
+
+#: src/app/[locale]/simulate/page.tsx:8
+msgid "451sw2"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:50
+msgid "wxbLaE"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:60
+msgid "szo7Rq"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:62
+msgid "fR1Dfg"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:75
+msgid "FvmV6q"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:82
+msgid "wO9wb5"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:90
+msgid "lzgH40"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:98
+msgid "3LuP+7"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:105
+msgid "Z4OFLN"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:111
+msgid "n/KLku"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:113
+msgid "32rBNK"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:115
+msgid "3mvL2Q"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:117
+msgid "vx0nkZ"
+msgstr ""
+
+#: src/components/auth/sign-in-form.tsx:125
+msgid "pA/0it"
+msgstr ""
+
+#: src/components/blog/blog-list.tsx:23
+msgid "s6RK5S"
+msgstr ""
+
+#: src/components/computing/cards/cpu-cores-card.tsx:27
+msgid "jNS6IG"
+msgstr ""
+
+#: src/components/computing/cards/cpu-cores-card.tsx:32
+msgid "RB2CER"
+msgstr ""
+
+#: src/components/computing/cards/iterations-card.tsx:31
+msgid "6YNH3R"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:67
+#: src/components/rotations/rotation-browser.tsx:148
+msgid "zQvVDJ"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:68
+msgid "3wsVWF"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:69
+msgid "95stPq"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:70
+msgid "vXCeIi"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:71
+msgid "C2iTEH"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:72
+msgid "Cnm0QA"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:73
+msgid "nDyaq/"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:87
+msgid "ONunLl"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:96
+msgid "AlWtQ/"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:132
+msgid "GJ2/jZ"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:148
+#: src/components/computing/cards/status-card.tsx:31
+msgid "tzMNF3"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:150
+#: src/components/editor/variable-editor-dialog.tsx:65
+#: src/components/rotations/rotation-browser.tsx:262
+msgid "HAlOn1"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:152
+#: src/components/computing/cards/job-history-card.tsx:276
+msgid "+yzdej"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:155
+#: src/components/computing/cards/job-history-card.tsx:288
+msgid "LMmqvq"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:158
+#: src/components/editor/common/item-actions-menu.tsx:73
+#: src/components/rotations/rotation-browser.tsx:277
+msgid "wL7VAE"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:170
+#: src/components/layout/computing-drawer.tsx:140
+msgid "skgauK"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:171
+msgid "MZEZ0h"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:206
+#: src/components/editor/actions/action-picker.tsx:132
+#: src/components/editor/variable-editor-dialog.tsx:97
+#: src/components/layout/computing-drawer.tsx:100
+#: src/components/layout/computing-drawer.tsx:125
+msgid "47FYwb"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:210
+msgid "iAcOL5"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:258
+msgid "yaTuP6"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:300
+msgid "8kqClZ"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:312
+msgid "IuFETn"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:328
+#: src/components/computing/cards/status-card.tsx:39
+msgid "KN7zKn"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:336
+msgid "6WjAAf"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:340
+msgid "KFzyh+"
+msgstr ""
+
+#: src/components/computing/cards/job-history-card.tsx:350
+#: src/components/layout/computing-drawer.tsx:76
+msgid "rbrahO"
+msgstr ""
+
+#: src/components/computing/cards/memory-card.tsx:17
+msgid "dVx3yz"
+msgstr ""
+
+#: src/components/computing/cards/simulations-card.tsx:18
+msgid "JerYOj"
+msgstr ""
+
+#: src/components/computing/cards/status-card.tsx:39
+msgid "kAEQyV"
+msgstr ""
+
+#: src/components/computing/cards/workers-card.tsx:14
+msgid "t6RYbw"
+msgstr ""
+
+#: src/components/content/md/md-heading.tsx:91
+msgid "H0dq7D"
+msgstr ""
+
+#: src/components/dev/hooks/sections/entity-display.tsx:62
+msgid "5dsizS"
+msgstr ""
+
+#: src/components/dev/hooks/sections/entity-display.tsx:71
+msgid "rELDbB"
+msgstr ""
+
+#: src/components/dev/hooks/sections/search-display.tsx:57
+#: src/components/editor/pickers/game-object-picker.tsx:152
+#: src/components/rotations/rotation-browser.tsx:186
+msgid "0BUTMv"
+msgstr ""
+
+#: src/components/dev/hooks/sections/search-display.tsx:63
+msgid "4PQ9vQ"
+msgstr ""
+
+#: src/components/dev/hooks/sections/search-display.tsx:65
+msgid "REPmkQ"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:184
+msgid "5GICP3"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:186
+msgid "a/Zp/4"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:281
+msgid "oLT0VI"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:281
+msgid "h6/HKO"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:289
+msgid "Rw7iI7"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:289
+msgid "TqSTI0"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:294
+#: src/components/editor/actions/action-card.tsx:299
+msgid "4fHiNl"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:304
+#: src/components/editor/actions/action-card.tsx:310
+#: src/components/editor/common/item-actions-menu.tsx:55
+#: src/components/editor/sidebar/sortable-list-item.tsx:190
+#: src/components/rotations/rotation-browser.tsx:279
+msgid "K3r6DQ"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:328
+msgid "+U6ozc"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:343
+msgid "SJ6ecF"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:345
+msgid "5ujeDa"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:346
+msgid "sERRm1"
+msgstr ""
+
+#: src/components/editor/actions/action-card.tsx:372
+msgid "S8kqP9"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:75
+msgid "OHHYcm"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:122
+msgid "wxj7d0"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:127
+msgid "bmwO3m"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:132
+#: src/components/editor/layout/editor-header.tsx:114
+msgid "lLiHiw"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:145
+msgid "keM5cz"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:152
+msgid "9VXvD7"
+msgstr ""
+
+#: src/components/editor/actions/action-list.tsx:159
+#: src/components/editor/actions/action-list.tsx:210
+msgid "U8CnSL"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:61
+msgid "fxGe+G"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:90
+msgid "FZ1DiC"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:99
+msgid "48UpcY"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:108
+msgid "4zRkKP"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:112
+msgid "2jwyIJ"
+msgstr ""
+
+#: src/components/editor/actions/action-picker.tsx:121
+msgid "1z8Mvf"
+msgstr ""
+
+#: src/components/editor/common/item-actions-menu.tsx:48
+msgid "iNmDtb"
+msgstr ""
+
+#: src/components/editor/common/item-actions-menu.tsx:50
+#: src/components/editor/layout/editor-header.tsx:155
+#: src/components/rotations/rotation-browser.tsx:278
+msgid "wEQDC6"
+msgstr ""
+
+#: src/components/editor/common/select-field.tsx:39
+msgid "Z+95A6"
+msgstr ""
+
+#: src/components/editor/common/select-field.tsx:40
+msgid "724CrE"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:50
+msgid "HpoDwk"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:69
+msgid "XTdAcD"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:92
+msgid "Oo+0sJ"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:159
+msgid "Ln/gLL"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:170
+msgid "DcB1x4"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:212
+msgid "e3oUSp"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:233
+msgid "G/yZLu"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:257
+msgid "H/qfPC"
+msgstr ""
+
+#: src/components/editor/conditions/condition-controls.tsx:270
+msgid "vla+dM"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:169
+msgid "gl1NeW"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:182
+msgid "8G03hx"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:214
+msgid "JHS1aN"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:216
+msgid "Niabrx"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:271
+msgid "K288p5"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:279
+msgid "HdFi0G"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:307
+msgid "tr0YPg"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:309
+msgid "jKGzI/"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:329
+msgid "ZC1MSn"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:332
+msgid "Ub8f2S"
+msgstr ""
+
+#: src/components/editor/editor-sidebar.tsx:340
+msgid "vlmG6J"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:72
+msgid "xl1g66"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:79
+msgid "MSfRX9"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:86
+msgid "djNL6D"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:92
+msgid "oL0rU6"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:97
+msgid "BfrgHC"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:102
+#: src/components/rotations/rotation-browser.tsx:196
+msgid "bW7B87"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:108
+msgid "4SNynG"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:120
+msgid "QIPVlE"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:128
+msgid "GgHmZg"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:128
+msgid "udnOYL"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:134
+msgid "qXCbgZ"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:134
+msgid "Zl4/y9"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:148
+#: src/components/rotations/rotation-browser.tsx:152
+#: src/components/rotations/rotation-browser.tsx:275
+msgid "uhu5aG"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:160
+msgid "FcWFm7"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:166
+msgid "TJo5E6"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:171
+msgid "xpod2V"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:179
+#: src/components/rotations/rotation-browser.tsx:253
+msgid "XAbrnv"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:179
+msgid "X0ha1a"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:186
+msgid "VzzYJk"
+msgstr ""
+
+#: src/components/editor/layout/editor-header.tsx:186
+#: src/components/editor/variable-editor-dialog.tsx:100
+msgid "jvo0vs"
+msgstr ""
+
+#: src/components/editor/pickers/game-object-picker.tsx:202
+#: src/components/editor/pickers/game-object-picker.tsx:270
+msgid "+6SWAQ"
+msgstr ""
+
+#: src/components/editor/preview.tsx:121
+msgid "0oL1zz"
+msgstr ""
+
+#: src/components/editor/preview.tsx:121
+msgid "pwBrQ5"
+msgstr ""
+
+#: src/components/editor/preview.tsx:124
+msgid "p556q3"
+msgstr ""
+
+#: src/components/editor/preview.tsx:124
+msgid "4l6vz1"
+msgstr ""
+
+#: src/components/editor/preview.tsx:406
+msgid "ZeUxmf"
+msgstr ""
+
+#: src/components/editor/preview.tsx:409
+msgid "UnSAxO"
+msgstr ""
+
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:40
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:47
+msgid "1JgBls"
+msgstr ""
+
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:55
+msgid "lZAOlR"
+msgstr ""
+
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:77
+msgid "DdSZRI"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:149
+msgid "hMX10J"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:154
+msgid "EFTSMc"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:158
+msgid "fANfxt"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:171
+msgid "eeOjuF"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:175
+msgid "iXNbPf"
+msgstr ""
+
+#: src/components/editor/sidebar/sortable-list-item.tsx:182
+msgid "z+Zrln"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:57
+msgid "sBFawb"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:57
+msgid "OUSBrT"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:68
+msgid "y1T3ef"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:74
+msgid "34Ni8e"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:81
+msgid "JjaEd5"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:84
+msgid "D1vW+P"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:90
+msgid "Y08d4C"
+msgstr ""
+
+#: src/components/editor/variable-editor-dialog.tsx:100
+msgid "2/2yg+"
+msgstr ""
+
+#: src/components/home/home-page.tsx:13
+msgid "MgvB1f"
+msgstr ""
+
+#: src/components/home/home-page.tsx:15
+msgid "eZSeUm"
+msgstr ""
+
+#: src/components/home/home-page.tsx:18
+msgid "V0REQj"
+msgstr ""
+
+#: src/components/home/home-page.tsx:20
+msgid "8OBNNA"
+msgstr ""
+
+#: src/components/home/home-page.tsx:23
+msgid "dhcTE2"
+msgstr ""
+
+#: src/components/home/home-page.tsx:25
+msgid "7OaBnb"
+msgstr ""
+
+#: src/components/layout/app-sidebar.tsx:51
+#: src/components/layout/app-sidebar.tsx:53
+msgid "ExxXVP"
+msgstr ""
+
+#: src/components/layout/app-sidebar.tsx:55
+msgid "+wGuCf"
+msgstr ""
+
+#: src/components/layout/app-sidebar.tsx:77
+msgid "xs6vm4"
+msgstr ""
+
+#: src/components/layout/app-sidebar.tsx:94
+msgid "xwaG/H"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:54
+#: src/components/layout/navbar.tsx:41
+msgid "toOs7L"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:61
+msgid "oYRAle"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:64
+msgid "5c/8Cz"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:71
+msgid "hzSNj4"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:92
+msgid "3a5wL8"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:101
+#: src/components/layout/computing-drawer.tsx:126
+msgid "5h8YH2"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:117
+msgid "iXpep1"
+msgstr ""
+
+#: src/components/layout/computing-drawer.tsx:142
+msgid "XJuS04"
+msgstr ""
+
+#: src/components/layout/locale-switcher.tsx:23
+msgid "jOuyTp"
+msgstr ""
+
+#: src/components/layout/locale-switcher.tsx:30
+msgid "y1Z3or"
+msgstr ""
+
+#: src/components/layout/navbar.tsx:35
+msgid "dg8ZEb"
+msgstr ""
+
+#: src/components/layout/navbar.tsx:35
+msgid "bdcMGy"
+msgstr ""
+
+#: src/components/layout/navbar.tsx:46
+msgid "kSfNUr"
+msgstr ""
+
+#: src/components/layout/theme-toggle.tsx:30
+msgid "tOdNiY"
+msgstr ""
+
+#: src/components/layout/theme-toggle.tsx:31
+msgid "3cc4Ct"
+msgstr ""
+
+#: src/components/layout/theme-toggle.tsx:32
+msgid "+CwN9C"
+msgstr ""
+
+#: src/components/layout/theme-toggle.tsx:48
+#: src/components/layout/theme-toggle.tsx:58
+msgid "EQpyb8"
+msgstr ""
+
+#: src/components/layout/theme-toggle.tsx:59
+msgid "deU3q5"
+msgstr ""
+
+#: src/components/layout/user-menu.tsx:72
+msgid "TwyMau"
+msgstr ""
+
+#: src/components/layout/user-menu.tsx:79
+msgid "D3idYv"
+msgstr ""
+
+#: src/components/layout/user-menu.tsx:85
+msgid "xXbJso"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:127
+msgid "NT27VP"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:157
+msgid "snC7V6"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:168
+msgid "HwTqox"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:212
+msgid "lOsU8p"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:226
+msgid "4YJHut"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:244
+msgid "XJF590"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:245
+msgid "gSiLuH"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:263
+msgid "EPvBR+"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:264
+msgid "JAkIqb"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:265
+msgid "xrk6zg"
+msgstr ""
+
+#: src/components/rotations/rotation-browser.tsx:276
+msgid "viXE32"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:31
+msgid "INrbJL"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:33
+msgid "5dCxe3"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:55
+msgid "ljZIVj"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:76
+msgid "1SOHfy"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:76
+msgid "ZEvKGE"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:84
+msgid "Pt4JXd"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:103
+msgid "Ugp3/t"
+msgstr ""
+
+#: src/components/users/user-profile-page.tsx:105
+msgid "rgqYsp"
+msgstr ""
