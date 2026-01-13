@@ -1,3 +1,5 @@
+import type { MetadataRoute } from "next";
+
 import {
   BookOpen,
   Calculator,
@@ -55,11 +57,29 @@ type RouteGroup = { index: Route } & Record<
   AnyRoute | Record<string, AnyRoute>
 >;
 
+type SitemapEntry = MetadataRoute.Sitemap[number];
+
+export type SitemapConfig =
+  | { indexed: false }
+  | {
+    indexed: true;
+    changeFrequency: SitemapEntry["changeFrequency"];
+    priority: SitemapEntry["priority"];
+  };
+
+const sitemap = {
+  daily: { indexed: true, changeFrequency: "daily", priority: 0.8 },
+  weekly: { indexed: true, changeFrequency: "weekly", priority: 0.7 },
+  monthly: { indexed: true, changeFrequency: "monthly", priority: 0.6 },
+  disabled: { indexed: false },
+} as const satisfies Record<string, SitemapConfig>;
+
 export type Route = {
   path: string;
   label: string;
   description: string;
   icon: IconName;
+  sitemap: SitemapConfig;
 };
 export type DynamicRoute = {
   template: string;
@@ -81,8 +101,9 @@ function route(
   label: string,
   description: string,
   icon: IconName,
+  sitemapConfig: SitemapConfig = sitemap.disabled,
 ): Route {
-  return { path, label, description, icon };
+  return { path, label, description, icon, sitemap: sitemapConfig };
 }
 
 function dynamic(
@@ -110,7 +131,7 @@ function group<T extends RouteGroup>(routes: T) {
 
 // prettier-ignore
 export const routes = {
-  home: route("/", "Home", "Theorycrafting and simulation tools", "Home"),
+  home: route("/", "Home", "Theorycrafting and simulation tools", "Home", sitemap.weekly),
 
   computing: route("/computing", "Computing", "Compute resources and job queue", "Cpu"),
 
@@ -125,19 +146,19 @@ export const routes = {
   }).standalone(),
 
   about: group({
-    index: route("/about", "About", "About WoW Lab", "Info"),
-    privacy: route("/about?tab=privacy-policy", "Privacy Policy", "Privacy policy", "Shield"),
-    terms: route("/about?tab=terms-of-service", "Terms of Service", "Terms of service", "FileText"),
+    index: route("/about", "About", "About WoW Lab", "Info", sitemap.monthly),
+    privacy: route("/about?tab=privacy-policy", "Privacy Policy", "Privacy policy", "Shield", sitemap.monthly),
+    terms: route("/about?tab=terms-of-service", "Terms of Service", "Terms of service", "FileText", sitemap.monthly),
   }).standalone(),
 
   simulate: group({
-    index: route("/simulate", "Simulate", "Run simulations", "Play"),
+    index: route("/simulate", "Simulate", "Run simulations", "Play", sitemap.weekly),
     results: dynamic("/simulate/results/:id", ["id"], "Results", "ChartBar"),
   }).main(),
 
   rotations: group({
-    index: route("/rotations", "Rotations", "Rotation priorities", "Swords"),
-    browse: route("/rotations/browse", "Browse", "Community rotations", "Search"),
+    index: route("/rotations", "Rotations", "Rotation priorities", "Swords", sitemap.weekly),
+    browse: route("/rotations/browse", "Browse", "Community rotations", "Search", sitemap.weekly),
     view: dynamic("/rotations/:id", ["id"], "View Rotation", "Swords"),
     editor: {
       index: route("/rotations/editor", "New Rotation", "Create rotation", "PenLine"),
@@ -146,20 +167,20 @@ export const routes = {
   }).main("browse", "editor"),
 
   plan: group({
-    index: route("/plan", "Plan", "Character planning", "Calculator"),
-    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles"),
+    index: route("/plan", "Plan", "Character planning", "Calculator", sitemap.monthly),
+    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles", sitemap.monthly),
   }).main("talents"),
 
   blog: group({
-    index: route("/blog", "Blog", "News and updates", "Newspaper"),
-    post: dynamic("/blog/:slug", ["slug"], "Blog Post", "FileText"),
+    index: route("/blog", "Blog", "News and updates", "Newspaper", sitemap.weekly),
+    post: dynamic("/blog/:slug", ["slug"], "Blog Post", "FileText"), // sitemap: lib/blog
   }).secondary(),
 
   dev: group({
-    index: route("/dev", "Developer", "Developer tools", "Code"),
+    index: route("/dev", "Developer", "Developer tools", "Code", sitemap.monthly),
     docs: {
-      index: route("/dev/docs", "Docs", "Documentation", "BookOpen"),
-      page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"),
+      index: route("/dev/docs", "Docs", "Documentation", "BookOpen", sitemap.weekly),
+      page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"), // sitemap: lib/docs
     },
     hooks: route("/dev/hooks", "Hooks", "Game data hooks", "FlaskConical"),
     ui: route("/dev/ui", "UI Showcase", "UI components", "Sparkles"),
@@ -275,4 +296,43 @@ export function getGroupRoutes(group: Record<string, unknown>): Route[] {
     })
     .filter((route): route is Route => route !== null)
     .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function collectRoutes(obj: unknown): Route[] {
+  if (!obj || typeof obj !== "object") {
+    return [];
+  }
+
+  if (isRoute(obj)) {
+    return [obj];
+  }
+
+  return Object.entries(obj)
+    .filter(([key]) => key !== "_nav")
+    .flatMap(([, value]) => collectRoutes(value));
+}
+
+export type IndexedRoute = Route & {
+  sitemap: {
+    indexed: true;
+    changeFrequency: SitemapEntry["changeFrequency"];
+    priority: SitemapEntry["priority"];
+  };
+};
+
+export function getSitemapRoutes(): IndexedRoute[] {
+  return collectRoutes(routes).filter(
+    (r): r is IndexedRoute => r.sitemap.indexed,
+  );
+}
+
+export function getDisallowedPaths(): string[] {
+  const paths = collectRoutes(routes)
+    .filter((r) => !r.sitemap.indexed)
+    .map((r) => r.path)
+    .sort((a, b) => a.length - b.length);
+
+  return paths
+    .filter((path, _, all) => !all.some((p) => p !== path && path.startsWith(p)))
+    .map((p) => `${p}/`);
 }
