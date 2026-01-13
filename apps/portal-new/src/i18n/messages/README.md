@@ -57,8 +57,4 @@ Keys can be nested: `t("section.subsection.key")`. See the [next-intl docs](http
 - Match the tone of existing translations
 - A few keys done well beats everything done poorly
 
-Skip the machine translation. Google Translate and ChatGPT produce awkward results, especially for gaming terms. If you're not fluent, that's fine — someone else will pick it up.
-
-## Questions
-
-Open an issue on [GitHub](/go/github/issues) or ask on [Discord](/go/discord).
+Skip the machine translation. Google Translate and ChatGPT produce awkward results, especially for gaming terms. If you're not fluent, that's fine. Someone else will pick it up.
