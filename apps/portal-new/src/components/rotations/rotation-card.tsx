@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
+import { useFormatter } from "next-intl";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { GameIcon } from "@/components/game/game-icon";
@@ -23,9 +23,8 @@ export function RotationCard({
   specLabel,
   updatedAt,
 }: RotationCardProps) {
-  const relativeTime = formatDistanceToNow(new Date(updatedAt), {
-    addSuffix: true,
-  });
+  const format = useFormatter();
+  const relativeTime = format.relativeTime(new Date(updatedAt));
 
   return (
     <IntlLink href={href(routes.rotations.editor.edit, { id })}>

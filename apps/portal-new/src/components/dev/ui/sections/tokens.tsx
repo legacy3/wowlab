@@ -1,13 +1,12 @@
 "use client";
 
 import { FlameIcon, SettingsIcon, UserIcon } from "lucide-react";
-import { Box, Grid, HStack, Stack } from "styled-system/jsx";
+import { Box, Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
   AbsoluteCenter,
   Badge,
   Button,
-  Card,
   Group,
   Heading,
   Icon,
@@ -16,161 +15,189 @@ import {
   Text,
 } from "@/components/ui";
 
-import { Section, Subsection } from "../../shared";
+import { ComponentCard, Section, Subsection } from "../../shared";
 
 export function TokensSection() {
   return (
     <Section id="tokens" title="Tokens">
       <Stack gap="8">
-        {/* Typography */}
         <Subsection title="Typography">
-          <Grid columns={{ base: 1, md: 2 }} gap="6">
-            <Stack gap="3">
-              {(["3xl", "2xl", "xl", "lg", "md", "sm"] as const).map((size) => (
-                <Heading key={size} size={size}>
-                  Heading {size}
-                </Heading>
-              ))}
-            </Stack>
-            <Stack gap="3">
-              {(["lg", "md", "sm", "xs"] as const).map((size) => (
-                <Text key={size} textStyle={size}>
-                  Text {size}
-                </Text>
-              ))}
-              <Stack gap="1" mt="2">
-                <Text color="fg.default">fg.default</Text>
-                <Text color="fg.muted">fg.muted</Text>
-                <Text color="fg.subtle">fg.subtle</Text>
+          <Grid columns={{ base: 1, md: 2 }} gap="4">
+            <ComponentCard title="Heading">
+              <VStack gap="2" alignItems="stretch">
+                {(["3xl", "2xl", "xl", "lg", "md", "sm"] as const).map(
+                  (size) => (
+                    <HStack key={size} justify="space-between" py="0.5">
+                      <Heading size={size}>Heading</Heading>
+                      <Text color="fg.muted" textStyle="xs">
+                        {size}
+                      </Text>
+                    </HStack>
+                  ),
+                )}
+              </VStack>
+            </ComponentCard>
+            <ComponentCard title="Text">
+              <VStack gap="2" alignItems="stretch">
+                {(["lg", "md", "sm", "xs"] as const).map((size) => (
+                  <HStack key={size} justify="space-between" py="0.5">
+                    <Text textStyle={size}>Text {size}</Text>
+                    <Text color="fg.muted" textStyle="xs">
+                      {size}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+            </ComponentCard>
+            <ComponentCard title="Colors">
+              <Stack gap="0" divideY="1px" divideColor="border.muted">
+                <HStack justify="space-between" py="1.5">
+                  <Text color="fg.default">fg.default</Text>
+                  <Text color="fg.muted" textStyle="xs">
+                    default
+                  </Text>
+                </HStack>
+                <HStack justify="space-between" py="1.5">
+                  <Text color="fg.muted">fg.muted</Text>
+                  <Text color="fg.muted" textStyle="xs">
+                    muted
+                  </Text>
+                </HStack>
+                <HStack justify="space-between" py="1.5">
+                  <Text color="fg.subtle">fg.subtle</Text>
+                  <Text color="fg.muted" textStyle="xs">
+                    subtle
+                  </Text>
+                </HStack>
               </Stack>
-              <HStack gap="4" mt="2">
-                <Link href="#">Link</Link>
-                <Link href="#" colorPalette="amber">
-                  Amber
-                </Link>
-                <Link href="#" colorPalette="red">
-                  Red
-                </Link>
-              </HStack>
-            </Stack>
+            </ComponentCard>
+            <ComponentCard title="Link">
+              <VStack gap="2" alignItems="stretch">
+                <HStack justify="space-between" py="0.5">
+                  <Link href="#">Default Link</Link>
+                  <Text color="fg.muted" textStyle="xs">
+                    default
+                  </Text>
+                </HStack>
+                <HStack justify="space-between" py="0.5">
+                  <Link href="#" colorPalette="amber">
+                    Amber Link
+                  </Link>
+                  <Text color="fg.muted" textStyle="xs">
+                    amber
+                  </Text>
+                </HStack>
+                <HStack justify="space-between" py="0.5">
+                  <Link href="#" colorPalette="red">
+                    Red Link
+                  </Link>
+                  <Text color="fg.muted" textStyle="xs">
+                    red
+                  </Text>
+                </HStack>
+              </VStack>
+            </ComponentCard>
           </Grid>
         </Subsection>
 
-        {/* Color Palettes */}
         <Subsection title="Color Palettes">
-          <Grid columns={{ base: 1, lg: 4, sm: 2 }} gap="6">
+          <Grid columns={{ base: 1, lg: 4, sm: 2 }} gap="4">
             {(["amber", "green", "red", "gray"] as const).map((color) => (
-              <Card.Root key={color}>
-                <Card.Header>
-                  <Card.Title textTransform="capitalize">{color}</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  <Stack gap="3">
-                    <Button colorPalette={color} size="sm">
-                      Button
-                    </Button>
-                    <Button colorPalette={color} variant="outline" size="sm">
-                      Outline
-                    </Button>
+              <ComponentCard key={color} title={color}>
+                <VStack gap="3" alignItems="stretch">
+                  <Button colorPalette={color} size="sm">
+                    Button
+                  </Button>
+                  <Button colorPalette={color} variant="outline" size="sm">
+                    Outline
+                  </Button>
+                  <HStack justify="space-between">
                     <Badge colorPalette={color}>Badge</Badge>
                     <Box color={`${color}.solid.bg`}>
                       <Loader size="sm" />
                     </Box>
-                  </Stack>
-                </Card.Body>
-              </Card.Root>
+                  </HStack>
+                </VStack>
+              </ComponentCard>
             ))}
           </Grid>
         </Subsection>
 
-        {/* Icon */}
         <Subsection title="Icon">
-          <Stack gap="4">
-            <Text color="fg.muted">
-              Wrapper for lucide-react icons with consistent sizing.
-            </Text>
-            <HStack gap="4" alignItems="end">
-              {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-                <Stack key={size} gap="1" alignItems="center">
-                  <Icon size={size}>
-                    <FlameIcon />
-                  </Icon>
-                  <Text textStyle="xs" color="fg.muted">
-                    {size}
-                  </Text>
-                </Stack>
-              ))}
-            </HStack>
-            <HStack gap="4">
-              <Icon size="lg" color="amber.solid.bg">
-                <FlameIcon />
-              </Icon>
-              <Icon size="lg" color="green.solid.bg">
-                <UserIcon />
-              </Icon>
-              <Icon size="lg" color="red.solid.bg">
-                <SettingsIcon />
-              </Icon>
-            </HStack>
-          </Stack>
+          <Grid columns={{ base: 1, md: 2 }} gap="4">
+            <ComponentCard title="sizes">
+              <HStack gap="4" alignItems="end" justify="center" py="2">
+                {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+                  <VStack key={size} gap="1" alignItems="center">
+                    <Icon size={size}>
+                      <FlameIcon />
+                    </Icon>
+                    <Text textStyle="xs" color="fg.muted">
+                      {size}
+                    </Text>
+                  </VStack>
+                ))}
+              </HStack>
+            </ComponentCard>
+            <ComponentCard title="colors">
+              <HStack gap="4" justify="center" py="2">
+                <Icon size="lg" color="amber.solid.bg">
+                  <FlameIcon />
+                </Icon>
+                <Icon size="lg" color="green.solid.bg">
+                  <UserIcon />
+                </Icon>
+                <Icon size="lg" color="red.solid.bg">
+                  <SettingsIcon />
+                </Icon>
+              </HStack>
+            </ComponentCard>
+          </Grid>
         </Subsection>
 
-        {/* Group */}
         <Subsection title="Group">
-          <Stack gap="4">
-            <Text color="fg.muted">
-              Groups elements together with consistent spacing and optional
-              attached styling.
-            </Text>
-            <HStack gap="6" flexWrap="wrap">
-              <Stack gap="2">
-                <Text textStyle="sm" fontWeight="medium">
-                  Default
-                </Text>
-                <Group>
-                  <Button variant="outline">One</Button>
-                  <Button variant="outline">Two</Button>
-                  <Button variant="outline">Three</Button>
-                </Group>
-              </Stack>
-              <Stack gap="2">
-                <Text textStyle="sm" fontWeight="medium">
-                  Attached
-                </Text>
-                <Group attached>
-                  <Button variant="outline">One</Button>
-                  <Button variant="outline">Two</Button>
-                  <Button variant="outline">Three</Button>
-                </Group>
-              </Stack>
-            </HStack>
-          </Stack>
+          <Grid columns={{ base: 1, md: 2 }} gap="4">
+            <ComponentCard title="default">
+              <Group>
+                <Button variant="outline">One</Button>
+                <Button variant="outline">Two</Button>
+                <Button variant="outline">Three</Button>
+              </Group>
+            </ComponentCard>
+            <ComponentCard title="attached">
+              <Group attached>
+                <Button variant="outline">One</Button>
+                <Button variant="outline">Two</Button>
+                <Button variant="outline">Three</Button>
+              </Group>
+            </ComponentCard>
+          </Grid>
         </Subsection>
 
-        {/* AbsoluteCenter */}
         <Subsection title="AbsoluteCenter">
-          <Stack gap="4">
-            <Text color="fg.muted">
-              Centers content absolutely within a relative parent.
-            </Text>
-            <HStack gap="6">
-              <Box position="relative" w="32" h="32" bg="gray.3" rounded="lg">
+          <Grid columns={{ base: 1, md: 3 }} gap="4">
+            <ComponentCard title="both axes">
+              <Box position="relative" h="24" bg="gray.3" rounded="md">
                 <AbsoluteCenter>
                   <Loader size="md" />
                 </AbsoluteCenter>
               </Box>
-              <Box position="relative" w="32" h="32" bg="gray.3" rounded="lg">
+            </ComponentCard>
+            <ComponentCard title="horizontal">
+              <Box position="relative" h="24" bg="gray.3" rounded="md">
                 <AbsoluteCenter axis="horizontal">
                   <Badge>Centered X</Badge>
                 </AbsoluteCenter>
               </Box>
-              <Box position="relative" w="32" h="32" bg="gray.3" rounded="lg">
+            </ComponentCard>
+            <ComponentCard title="vertical">
+              <Box position="relative" h="24" bg="gray.3" rounded="md">
                 <AbsoluteCenter axis="vertical">
                   <Badge>Centered Y</Badge>
                 </AbsoluteCenter>
               </Box>
-            </HStack>
-          </Stack>
+            </ComponentCard>
+          </Grid>
         </Subsection>
       </Stack>
     </Section>

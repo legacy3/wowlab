@@ -84,7 +84,7 @@ msgid "6YNH3R"
 msgstr "Iterations"
 
 #: src/components/computing/cards/job-history-card.tsx:67
-#: src/components/rotations/rotation-browser.tsx:148
+#: src/components/rotations/rotation-browser.tsx:147
 msgid "zQvVDJ"
 msgstr "All"
 
@@ -131,7 +131,7 @@ msgstr "Status"
 
 #: src/components/computing/cards/job-history-card.tsx:154
 #: src/components/editor/variable-editor-dialog.tsx:65
-#: src/components/rotations/rotation-browser.tsx:262
+#: src/components/rotations/rotation-browser.tsx:261
 msgid "HAlOn1"
 msgstr "Name"
 
@@ -147,7 +147,7 @@ msgstr "Casts"
 
 #: src/components/computing/cards/job-history-card.tsx:162
 #: src/components/editor/common/item-actions-menu.tsx:73
-#: src/components/rotations/rotation-browser.tsx:277
+#: src/components/rotations/rotation-browser.tsx:276
 msgid "wL7VAE"
 msgstr "Actions"
 
@@ -206,9 +206,14 @@ msgstr "Close"
 msgid "dVx3yz"
 msgstr "Memory"
 
-#: src/components/computing/cards/simulations-card.tsx:18
+#: src/components/computing/cards/simulations-card.tsx:17
 msgid "JerYOj"
 msgstr "Simulations"
+
+#: src/components/computing/cards/simulations-card.tsx:18
+#: src/components/dev/ui/sections/i18n.tsx:232
+msgid "ly9PN0"
+msgstr "{value, number}"
 
 #: src/components/computing/cards/status-card.tsx:39
 msgid "kAEQyV"
@@ -217,6 +222,30 @@ msgstr "OK"
 #: src/components/computing/cards/workers-card.tsx:14
 msgid "t6RYbw"
 msgstr "Workers"
+
+#: src/components/content/article-meta.tsx:62
+#: src/components/content/article-sidebar.tsx:106
+msgid "0KAbwr"
+msgstr "{count, plural, other {# min read}}"
+
+#: src/components/content/article-meta.tsx:82
+#: src/components/editor/common/item-actions-menu.tsx:50
+#: src/components/editor/layout/editor-header.tsx:161
+#: src/components/rotations/rotation-browser.tsx:277
+msgid "wEQDC6"
+msgstr "Edit"
+
+#: src/components/content/article-sidebar.tsx:191
+msgid "fBg+7V"
+msgstr "Navigation"
+
+#: src/components/content/article-sidebar.tsx:253
+msgid "TM7OHi"
+msgstr "On this page"
+
+#: src/components/content/article-sidebar.tsx:259
+msgid "gjyzc7"
+msgstr "Table of contents"
 
 #: src/components/content/md/md-heading.tsx:91
 msgid "H0dq7D"
@@ -232,7 +261,7 @@ msgstr "Refresh"
 
 #: src/components/dev/hooks/sections/search-display.tsx:57
 #: src/components/editor/pickers/game-object-picker.tsx:152
-#: src/components/rotations/rotation-browser.tsx:186
+#: src/components/rotations/rotation-browser.tsx:185
 msgid "0BUTMv"
 msgstr "Search..."
 
@@ -243,6 +272,66 @@ msgstr "(empty)"
 #: src/components/dev/hooks/sections/search-display.tsx:65
 msgid "24tjE1"
 msgstr "{count, plural, =1 {# result} other {# results}}"
+
+#: src/components/dev/ui/sections/i18n.tsx:182
+#: src/components/dev/ui/sections/i18n.tsx:188
+#: src/components/dev/ui/sections/i18n.tsx:194
+msgid "Y1osJw"
+msgstr "{count, plural, =0 {No items} =1 {One item} other {# items}}"
+
+#: src/components/dev/ui/sections/i18n.tsx:204
+#: src/components/dev/ui/sections/i18n.tsx:210
+#: src/components/dev/ui/sections/i18n.tsx:216
+msgid "t5mISx"
+msgstr "{status, select, online {Online} offline {Offline} other {Unknown}}"
+
+#: src/components/dev/ui/sections/i18n.tsx:223
+msgid "tBFOH1"
+msgstr "Hello, {name}!"
+
+#: src/components/dev/ui/sections/i18n.tsx:224
+msgid "/vBDCB"
+msgstr "You have {count} new messages"
+
+#: src/components/dev/ui/sections/i18n.tsx:225
+msgid "KhKQjV"
+msgstr "Price: {price}"
+
+#: src/components/dev/ui/sections/i18n.tsx:236
+msgid "lnlbAn"
+msgstr "{value, number, percent}"
+
+#: src/components/dev/ui/sections/i18n.tsx:248
+msgid "MgJcFD"
+msgstr "This is <b>bold</b> text"
+
+#: src/components/dev/ui/sections/i18n.tsx:253
+msgid "DOAeJb"
+msgstr "This is <i>italic</i> text"
+
+#: src/components/dev/ui/sections/i18n.tsx:258
+msgid "04VGuM"
+msgstr "This has <code>inline code</code>"
+
+#: src/components/dev/ui/sections/i18n.tsx:267
+msgid "yYGAHf"
+msgstr "Click <b>here</b> to <i>continue</i>"
+
+#: src/components/dev/ui/sections/i18n.tsx:273
+msgid "P8nrf0"
+msgstr "Status: <badge>{status}</badge>"
+
+#: src/components/dev/ui/sections/i18n.tsx:287
+msgid "jnJNX5"
+msgstr "Welcome back, <b>{name}</b>!"
+
+#: src/components/dev/ui/sections/i18n.tsx:293
+msgid "/dbr93"
+msgstr "You have <b>{count}</b> notifications"
+
+#: src/components/dev/ui/sections/i18n.tsx:307
+msgid "diRIFs"
+msgstr "Read our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
 
 #: src/components/editor/actions/action-card.tsx:184
 msgid "5GICP3"
@@ -277,7 +366,7 @@ msgstr "Duplicate"
 #: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
 #: src/components/editor/sidebar/sortable-list-item.tsx:190
-#: src/components/rotations/rotation-browser.tsx:279
+#: src/components/rotations/rotation-browser.tsx:278
 msgid "K3r6DQ"
 msgstr "Delete"
 
@@ -355,12 +444,6 @@ msgstr "Select a list..."
 #: src/components/editor/common/item-actions-menu.tsx:48
 msgid "iNmDtb"
 msgstr "Item actions"
-
-#: src/components/editor/common/item-actions-menu.tsx:50
-#: src/components/editor/layout/editor-header.tsx:161
-#: src/components/rotations/rotation-browser.tsx:278
-msgid "wEQDC6"
-msgstr "Edit"
 
 #: src/components/editor/common/select-field.tsx:39
 msgid "Z+95A6"
@@ -471,7 +554,7 @@ msgid "BfrgHC"
 msgstr "Unsaved"
 
 #: src/components/editor/layout/editor-header.tsx:102
-#: src/components/rotations/rotation-browser.tsx:196
+#: src/components/rotations/rotation-browser.tsx:195
 msgid "bW7B87"
 msgstr "New"
 
@@ -500,8 +583,8 @@ msgid "Zl4/y9"
 msgstr "Lock"
 
 #: src/components/editor/layout/editor-header.tsx:154
-#: src/components/rotations/rotation-browser.tsx:152
-#: src/components/rotations/rotation-browser.tsx:275
+#: src/components/rotations/rotation-browser.tsx:151
+#: src/components/rotations/rotation-browser.tsx:274
 msgid "uhu5aG"
 msgstr "Public"
 
@@ -518,7 +601,7 @@ msgid "xpod2V"
 msgstr "Preview mode"
 
 #: src/components/editor/layout/editor-header.tsx:185
-#: src/components/rotations/rotation-browser.tsx:253
+#: src/components/rotations/rotation-browser.tsx:252
 msgid "XAbrnv"
 msgstr "Create rotation"
 
@@ -752,47 +835,47 @@ msgstr "Settings"
 msgid "xXbJso"
 msgstr "Sign out"
 
-#: src/components/rotations/rotation-browser.tsx:127
+#: src/components/rotations/rotation-browser.tsx:126
 msgid "NT27VP"
 msgstr "Are you sure you want to delete this rotation?"
 
-#: src/components/rotations/rotation-browser.tsx:157
+#: src/components/rotations/rotation-browser.tsx:156
 msgid "snC7V6"
 msgstr "Mine"
 
-#: src/components/rotations/rotation-browser.tsx:168
+#: src/components/rotations/rotation-browser.tsx:167
 msgid "HwTqox"
 msgstr "All Classes"
 
-#: src/components/rotations/rotation-browser.tsx:212
+#: src/components/rotations/rotation-browser.tsx:211
 msgid "lOsU8p"
 msgstr "Clear class filter"
 
-#: src/components/rotations/rotation-browser.tsx:226
+#: src/components/rotations/rotation-browser.tsx:225
 msgid "4YJHut"
 msgstr "Clear search"
 
-#: src/components/rotations/rotation-browser.tsx:244
+#: src/components/rotations/rotation-browser.tsx:243
 msgid "XJF590"
 msgstr "You haven't created any rotations yet"
 
-#: src/components/rotations/rotation-browser.tsx:245
+#: src/components/rotations/rotation-browser.tsx:244
 msgid "gSiLuH"
 msgstr "No rotations found"
 
-#: src/components/rotations/rotation-browser.tsx:263
+#: src/components/rotations/rotation-browser.tsx:262
 msgid "EPvBR+"
 msgstr "Spec"
 
-#: src/components/rotations/rotation-browser.tsx:264
+#: src/components/rotations/rotation-browser.tsx:263
 msgid "JAkIqb"
 msgstr "Visibility"
 
-#: src/components/rotations/rotation-browser.tsx:265
+#: src/components/rotations/rotation-browser.tsx:264
 msgid "xrk6zg"
 msgstr "Updated"
 
-#: src/components/rotations/rotation-browser.tsx:276
+#: src/components/rotations/rotation-browser.tsx:275
 msgid "viXE32"
 msgstr "Private"
 

@@ -4,7 +4,6 @@ import { Activity } from "lucide-react";
 import { useExtracted } from "next-intl";
 
 import { useWorkerSystem } from "@/lib/state";
-import { formatInt } from "@/lib/utils";
 
 import { StatCard } from "./stat-card";
 
@@ -16,7 +15,7 @@ export function SimulationsCard() {
     <StatCard
       icon={Activity}
       label={t("Simulations")}
-      value={formatInt(totalSimulations)}
+      value={t("{value, number}", { value: totalSimulations })}
     />
   );
 }

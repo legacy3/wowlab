@@ -6,6 +6,7 @@ import {
   DataDisplaySection,
   FeedbackSection,
   FormsSection,
+  I18nSection,
   NavigationSection,
   OverlaysSection,
   SimulateSection,
@@ -22,6 +23,7 @@ const NAV = [
   { id: "actions", label: "Actions" },
   { id: "simulate", label: "Simulate" },
   { id: "spec-picker", label: "Spec Picker" },
+  { id: "i18n", label: "i18n" },
   { id: "tokens", label: "Tokens" },
 ];
 
@@ -36,6 +38,7 @@ export function UiDemo() {
       <ActionsSection />
       <SimulateSection />
       <SpecPickerSection />
+      <I18nSection />
       <TokensSection />
     </PageLayout>
   );

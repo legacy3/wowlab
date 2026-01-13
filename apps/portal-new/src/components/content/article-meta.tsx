@@ -1,11 +1,13 @@
+"use client";
+
 import { Calendar, Clock, Pencil, User } from "lucide-react";
+import { useExtracted, useFormatter } from "next-intl";
 import { Flex } from "styled-system/jsx";
 
 import { Icon } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { env } from "@/lib/env";
-import { formatDate } from "@/lib/utils/date";
 
 type ArticleMetaProps = {
   author?: string;
@@ -20,7 +22,15 @@ export function ArticleMeta({
   editPath,
   readingTime,
 }: ArticleMetaProps) {
-  const formatted = date ? formatDate(date, "MMM d, yyyy") : null;
+  const t = useExtracted();
+  const format = useFormatter();
+  const formatted = date
+    ? format.dateTime(new Date(date), {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
   const editUrl = editPath ? `${env.GITHUB_URL}/edit/main/${editPath}` : null;
   const computedReadingTime = readingTime
     ? Math.max(1, Math.round(readingTime))
@@ -46,9 +56,13 @@ export function ArticleMeta({
           <Text textStyle="xs">{author}</Text>
         </MetaItem>
       )}
-      {readingTime !== undefined && readingTime > 0 && (
+      {computedReadingTime !== undefined && (
         <MetaItem icon={Clock}>
-          <Text textStyle="xs">{computedReadingTime} min read</Text>
+          <Text textStyle="xs">
+            {t("{count, plural, other {# min read}}", {
+              count: computedReadingTime,
+            })}
+          </Text>
         </MetaItem>
       )}
       {editUrl && (
@@ -65,7 +79,7 @@ export function ArticleMeta({
             <Icon size="xs">
               <Pencil />
             </Icon>
-            Edit
+            {t("Edit")}
           </Flex>
         </Link>
       )}

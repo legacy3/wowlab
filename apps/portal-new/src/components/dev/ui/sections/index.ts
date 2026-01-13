@@ -2,6 +2,7 @@ export { ActionsSection } from "./actions";
 export { DataDisplaySection } from "./data-display";
 export { FeedbackSection } from "./feedback";
 export { FormsSection } from "./forms";
+export { I18nSection } from "./i18n";
 export { NavigationSection } from "./navigation";
 export { OverlaysSection } from "./overlays";
 export { SimulateSection } from "./simulate";

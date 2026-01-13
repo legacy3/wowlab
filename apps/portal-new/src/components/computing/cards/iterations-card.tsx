@@ -1,15 +1,15 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useExtracted, useFormatter } from "next-intl";
 import { Box, HStack, Stack } from "styled-system/jsx";
 
 import { Card, InlineLoader, Text } from "@/components/ui";
 import { useJobs, useWorkerSystem } from "@/lib/state";
-import { formatCompact } from "@/lib/utils";
 
 export function IterationsCard() {
   const t = useExtracted();
+  const format = useFormatter();
   const totalIterations = useWorkerSystem((s) => s.totalIterationsRun);
   const runningJob = useJobs((s) => s.jobs.find((j) => j.status === "running"));
 
@@ -63,7 +63,7 @@ export function IterationsCard() {
             mt="1"
             fontVariantNumeric="tabular-nums"
           >
-            {formatCompact(totalIterations)}
+            {format.number(totalIterations, { notation: "compact" })}
           </Text>
         )}
       </Card.Body>

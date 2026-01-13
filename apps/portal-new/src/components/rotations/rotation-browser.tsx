@@ -2,7 +2,6 @@
 
 import { createListCollection } from "@ark-ui/react/select";
 import { type CrudFilter, useDelete, useList } from "@refinedev/core";
-import { formatDistanceToNow } from "date-fns";
 import {
   GlobeIcon,
   LockIcon,
@@ -14,7 +13,7 @@ import {
   UserIcon,
   XIcon,
 } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useExtracted, useFormatter } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
@@ -359,9 +358,8 @@ function RotationRow({
   publicLabel,
   rotation,
 }: RotationRowProps) {
-  const updatedAt = formatDistanceToNow(new Date(rotation.updatedAt), {
-    addSuffix: true,
-  });
+  const format = useFormatter();
+  const updatedAt = format.relativeTime(new Date(rotation.updatedAt));
 
   const specLabel = getSpecLabel(rotation.specId);
   const classColor = getClassColor(rotation.specId);

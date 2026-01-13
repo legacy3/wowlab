@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarIcon, ChevronDown, ChevronRight, Clock } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useExtracted, useFormatter } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
@@ -15,7 +15,6 @@ import { Text } from "@/components/ui/text";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 import { flattenToc } from "@/lib/content/toc";
 import { href, routes } from "@/lib/routing";
-import { formatDate } from "@/lib/utils/date";
 
 type ArticleMeta = {
   date?: string;
@@ -37,10 +36,7 @@ type SidebarNavItem = {
   children?: SidebarNavItem[];
 };
 
-type TranslateFunction = ReturnType<typeof useExtracted>;
-
 export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
-  const t = useExtracted();
   const headings = flattenToc(toc ?? []);
   const headingIds = headings.map((h) => h.id);
   const activeId = useActiveHeading(headingIds);
@@ -71,19 +67,20 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
         maxH="calc(100vh - 8rem)"
         overflowY="auto"
       >
-        {hasMeta && <Meta meta={meta} t={t} />}
+        {hasMeta && <Meta meta={meta} />}
         {hasNav && (
-          <Navigation items={nav.items} currentSlug={nav.currentSlug} t={t} />
+          <Navigation items={nav.items} currentSlug={nav.currentSlug} />
         )}
-        {hasToc && (
-          <TableOfContents headings={headings} activeId={activeId} t={t} />
-        )}
+        {hasToc && <TableOfContents headings={headings} activeId={activeId} />}
       </VStack>
     </Box>
   );
 }
 
-function Meta({ meta, t }: { meta: ArticleMeta; t: TranslateFunction }) {
+function Meta({ meta }: { meta: ArticleMeta }) {
+  const t = useExtracted();
+  const format = useFormatter();
+
   return (
     <VStack alignItems="flex-start" gap="1.5">
       {meta.date && (
@@ -92,7 +89,11 @@ function Meta({ meta, t }: { meta: ArticleMeta; t: TranslateFunction }) {
             <CalendarIcon />
           </Icon>
           <Text as="time" textStyle="xs">
-            {formatDate(meta.date)}
+            {format.dateTime(new Date(meta.date), {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
           </Text>
         </Flex>
       )}
@@ -171,12 +172,12 @@ function NavGroup({
 function Navigation({
   currentSlug,
   items,
-  t,
 }: {
   items: SidebarNavItem[];
   currentSlug: string;
-  t: TranslateFunction;
 }) {
+  const t = useExtracted();
+
   return (
     <Box>
       <Heading
@@ -229,12 +230,12 @@ function Navigation({
 function TableOfContents({
   activeId,
   headings,
-  t,
 }: {
   headings: TocHeading[];
   activeId: string;
-  t: TranslateFunction;
 }) {
+  const t = useExtracted();
+
   if (headings.length === 0) {
     return null;
   }

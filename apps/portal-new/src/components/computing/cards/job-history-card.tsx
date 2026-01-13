@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useExtracted, useFormatter } from "next-intl";
 import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
 import { Box, Grid, HStack, Stack } from "styled-system/jsx";
@@ -23,7 +23,6 @@ import {
   Tooltip,
 } from "@/components/ui";
 import { useJobs } from "@/lib/state";
-import { formatCompact, formatDurationMs, formatInt } from "@/lib/utils";
 
 import {
   JOB_STATUS_COLORS,
@@ -43,6 +42,7 @@ const statuses: (JobStatus | "all")[] = [
 
 export function JobHistoryCard() {
   const t = useExtracted();
+  const format = useFormatter();
   const jobs = useJobs((s) => s.jobs);
   const cancelJob = useJobs((s) => s.cancelJob);
 
@@ -196,7 +196,9 @@ export function JobHistoryCard() {
                         fontVariantNumeric="tabular-nums"
                       >
                         {job.result?.dps
-                          ? formatCompact(job.result.dps)
+                          ? format.number(job.result.dps, {
+                              notation: "compact",
+                            })
                           : "\u2014"}
                       </Table.Cell>
                       <Table.Cell
@@ -284,7 +286,7 @@ export function JobHistoryCard() {
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {formatInt(selectedJob.result.dps)}
+                          {format.number(selectedJob.result.dps)}
                         </Text>
                       </Box>
                       <Box>
@@ -296,7 +298,7 @@ export function JobHistoryCard() {
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {formatInt(selectedJob.result.casts)}
+                          {format.number(selectedJob.result.casts)}
                         </Text>
                       </Box>
                       <Box>
@@ -308,7 +310,9 @@ export function JobHistoryCard() {
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {formatCompact(selectedJob.result.totalDamage)}
+                          {format.number(selectedJob.result.totalDamage, {
+                            notation: "compact",
+                          })}
                         </Text>
                       </Box>
                       <Box>
@@ -320,7 +324,11 @@ export function JobHistoryCard() {
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {formatDurationMs(selectedJob.result.durationMs)}
+                          {format.number(selectedJob.result.durationMs / 1000, {
+                            maximumFractionDigits: 1,
+                            style: "unit",
+                            unit: "second",
+                          })}
                         </Text>
                       </Box>
                     </Grid>
