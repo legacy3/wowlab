@@ -42,7 +42,6 @@ interface ClassFilterProps {
   value: number | null;
 }
 
-
 interface RotationRowProps {
   getClassColor: (specId: number) => string;
   getSpecLabel: (specId: number) => string | null;

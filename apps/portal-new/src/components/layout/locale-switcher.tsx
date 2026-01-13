@@ -5,12 +5,7 @@ import { useLocale } from "next-intl";
 
 import { IconButton, Menu } from "@/components/ui";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { type Locale, routing } from "@/i18n/routing";
-
-const localeLabels: Record<Locale, string> = {
-  de: "Deutsch",
-  en: "English",
-};
+import { type Locale, locales, routing } from "@/i18n/routing";
 
 export function LocaleSwitcher() {
   const currentLocale = useLocale() as Locale;
@@ -44,7 +39,7 @@ export function LocaleSwitcher() {
                 fontWeight={isActive ? "medium" : "normal"}
                 color={isActive ? "fg" : "fg.muted"}
               >
-                {localeLabels[loc]}
+                {locales[loc]}
               </Menu.Item>
             );
           })}

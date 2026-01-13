@@ -11,7 +11,11 @@ export default function RotationsBrowseLayout({
   return (
     <PageContainer
       route={routes.rotations.browse}
-      breadcrumbs={breadcrumb(routes.home, routes.rotations.index, routes.rotations.browse)}
+      breadcrumbs={breadcrumb(
+        routes.home,
+        routes.rotations.index,
+        routes.rotations.browse,
+      )}
     >
       {children}
     </PageContainer>

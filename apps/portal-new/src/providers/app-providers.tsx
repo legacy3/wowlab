@@ -19,7 +19,11 @@ export function AppProviders({
   timeZone,
 }: AppProvidersProps) {
   return (
-    <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      timeZone={timeZone}
+    >
       <ThemeProvider attribute="class">
         <RefineProvider>{children}</RefineProvider>
       </ThemeProvider>
