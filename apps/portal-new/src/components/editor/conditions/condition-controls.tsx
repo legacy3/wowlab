@@ -11,6 +11,7 @@ import type {
 
 import { createListCollection } from "@ark-ui/react/combobox";
 import { PlusIcon, XIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { Button, Combobox, Empty, IconButton, Input } from "../../ui";
@@ -36,6 +37,8 @@ export function AddGroupButton({
   disabled,
   handleOnClick,
 }: ActionWithRulesAndAddersProps) {
+  const t = useExtracted();
+
   return (
     <Button
       size="xs"
@@ -44,7 +47,7 @@ export function AddGroupButton({
       onClick={handleOnClick}
     >
       <PlusIcon size={12} />
-      Group
+      {t("Group")}
     </Button>
   );
 }
@@ -53,6 +56,8 @@ export function AddRuleButton({
   disabled,
   handleOnClick,
 }: ActionWithRulesAndAddersProps) {
+  const t = useExtracted();
+
   return (
     <Button
       size="xs"
@@ -61,7 +66,7 @@ export function AddRuleButton({
       onClick={handleOnClick}
     >
       <PlusIcon size={12} />
-      Rule
+      {t("Rule")}
     </Button>
   );
 }
@@ -72,6 +77,7 @@ export function CombinatorSelector({
   options,
   value,
 }: CombinatorSelectorProps) {
+  const t = useExtracted();
   const selectOptions = useMemo(
     () => toSelectOptions(options as FullOption[], true),
     [options],
@@ -83,7 +89,7 @@ export function CombinatorSelector({
       minW="20"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder="..."
+      placeholder={t("...")}
       value={value}
     />
   );
@@ -94,6 +100,7 @@ export function FieldSelector({
   handleOnChange,
   value,
 }: FieldSelectorProps) {
+  const t = useExtracted();
   const [inputValue, setInputValue] = useState("");
 
   const allItems: FieldItem[] = useMemo(
@@ -149,7 +156,7 @@ export function FieldSelector({
       allowCustomValue={false}
     >
       <Combobox.Control minW="44">
-        <Combobox.Input placeholder="Search fields..." />
+        <Combobox.Input placeholder={t("Search fields...")} />
         <Combobox.IndicatorGroup>
           {value && <Combobox.ClearTrigger />}
           <Combobox.Trigger />
@@ -160,7 +167,7 @@ export function FieldSelector({
           {filteredItems.length === 0 ? (
             <Combobox.Empty>
               <Empty.Root variant="plain" size="sm">
-                <Empty.Title>No fields found</Empty.Title>
+                <Empty.Title>{t("No fields found")}</Empty.Title>
               </Empty.Root>
             </Combobox.Empty>
           ) : (
@@ -190,6 +197,7 @@ export function OperatorSelector({
   options,
   value,
 }: OperatorSelectorProps) {
+  const t = useExtracted();
   const selectOptions = useMemo(
     () => toSelectOptions(options as FullOption[]),
     [options],
@@ -201,7 +209,7 @@ export function OperatorSelector({
       minW="32"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder="Operator..."
+      placeholder={t("Operator...")}
       value={value}
     />
   );
@@ -214,13 +222,15 @@ export function RemoveButton({
   handleOnClick: () => void;
   disabled?: boolean;
 }) {
+  const t = useExtracted();
+
   return (
     <IconButton
       size="xs"
       variant="plain"
       disabled={disabled}
       onClick={handleOnClick}
-      aria-label="Remove"
+      aria-label={t("Remove")}
     >
       <XIcon size={14} />
     </IconButton>
@@ -234,6 +244,8 @@ export function ValueEditor({
   value,
   values,
 }: ValueEditorProps) {
+  const t = useExtracted();
+
   if (values && values.length > 0) {
     const selectOptions = toSelectOptions(values as FullOption[]);
     return (
@@ -242,7 +254,7 @@ export function ValueEditor({
         minW="32"
         onChange={handleOnChange}
         options={selectOptions}
-        placeholder="Select value..."
+        placeholder={t("Select value...")}
         value={value ? String(value) : undefined}
       />
     );
@@ -255,7 +267,7 @@ export function ValueEditor({
       value={value ?? ""}
       disabled={disabled}
       onChange={(e) => handleOnChange(e.target.value)}
-      placeholder="Value..."
+      placeholder={t("Value...")}
       w={inputType === "number" ? "24" : "32"}
     />
   );

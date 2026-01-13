@@ -1,6 +1,7 @@
 "use client";
 
 import { Code2Icon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { RotationCard } from "@/components/rotations";
@@ -15,6 +16,7 @@ interface UserProfilePageProps {
 }
 
 export function UserProfilePage({ handle }: UserProfilePageProps) {
+  const t = useExtracted();
   const { isLoading, notFound, profile, rotations } = useUserProfile(handle);
   const { getSpecIcon, getSpecLabel } = useClassesAndSpecs();
 
@@ -26,8 +28,10 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
     return (
       <Empty.Root size="lg" variant="outline">
         <Empty.Content>
-          <Empty.Title>User not found</Empty.Title>
-          <Empty.Description>@{handle} does not exist</Empty.Description>
+          <Empty.Title>{t("User not found")}</Empty.Title>
+          <Empty.Description>
+            {t("@{handle} does not exist", { handle })}
+          </Empty.Description>
         </Empty.Content>
       </Empty.Root>
     );
@@ -48,7 +52,7 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             {profile.avatarUrl && (
               <Avatar.Image
                 src={profile.avatarUrl}
-                alt={`${profile.handle}'s avatar`}
+                alt={t("{handle}'s avatar", { handle: profile.handle })}
               />
             )}
             <Avatar.Fallback initials={initials} />
@@ -68,14 +72,16 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             <Text fontWeight="medium" fontVariantNumeric="tabular-nums">
               {rotations.length}
             </Text>
-            <Text>{rotations.length === 1 ? "rotation" : "rotations"}</Text>
+            <Text>
+              {rotations.length === 1 ? t("rotation") : t("rotations")}
+            </Text>
           </HStack>
         </HStack>
       </Flex>
 
       <VStack gap="4" alignItems="stretch">
         <Text textStyle="lg" fontWeight="semibold">
-          Public Rotations
+          {t("Public Rotations")}
         </Text>
 
         {rotations.length > 0 ? (
@@ -94,9 +100,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
         ) : (
           <Empty.Root size="lg" variant="outline">
             <Empty.Content>
-              <Empty.Title>No public rotations</Empty.Title>
+              <Empty.Title>{t("No public rotations")}</Empty.Title>
               <Empty.Description>
-                @{handle} has not published any rotations yet
+                {t("@{handle} has not published any rotations yet", { handle })}
               </Empty.Description>
             </Empty.Content>
           </Empty.Root>

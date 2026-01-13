@@ -8,6 +8,7 @@ import {
   MoreVerticalIcon,
   TrashIcon,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 
 import { IconButton, Menu } from "../../ui";
 
@@ -35,21 +36,23 @@ export interface MenuAction {
 }
 
 export function EditDeleteMenu({
-  ariaLabel = "Item actions",
+  ariaLabel,
   canDelete = true,
   onDelete,
   onEdit,
 }: EditDeleteMenuProps) {
+  const t = useExtracted();
+
   return (
     <ItemActionsMenu
-      ariaLabel={ariaLabel}
+      ariaLabel={ariaLabel ?? t("Item actions")}
       actions={[
-        { icon: EditIcon, label: "Edit", onClick: onEdit, value: "edit" },
+        { icon: EditIcon, label: t("Edit"), onClick: onEdit, value: "edit" },
         {
           destructive: true,
           disabled: !canDelete,
           icon: TrashIcon,
-          label: "Delete",
+          label: t("Delete"),
           onClick: onDelete,
           value: "delete",
         },
@@ -60,12 +63,14 @@ export function EditDeleteMenu({
 
 export function ItemActionsMenu({
   actions,
-  ariaLabel = "Actions",
+  ariaLabel,
   size = "xs",
   trigger,
 }: ItemActionsMenuProps) {
+  const t = useExtracted();
   const regularActions = actions.filter((a) => !a.destructive);
   const destructiveActions = actions.filter((a) => a.destructive);
+  const resolvedAriaLabel = ariaLabel ?? t("Actions");
 
   return (
     <Menu.Root>
@@ -74,7 +79,7 @@ export function ItemActionsMenu({
           <IconButton
             variant="plain"
             size={size}
-            aria-label={ariaLabel}
+            aria-label={resolvedAriaLabel}
             onClick={(e) => e.stopPropagation()}
           >
             <MoreVerticalIcon size={14} />

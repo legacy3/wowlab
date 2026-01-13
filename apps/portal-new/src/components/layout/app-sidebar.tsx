@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+import { useExtracted } from "next-intl";
 import Image from "next/image";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
@@ -19,6 +20,7 @@ import {
 import { useSidebar } from "./sidebar-context";
 
 export function AppSidebar() {
+  const t = useExtracted();
   const { isOpen } = useSidebar();
 
   return (
@@ -46,11 +48,11 @@ export function AppSidebar() {
       >
         <Link href={href(routes.home)} variant="plain">
           <Flex align="center" gap="3">
-            <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
+            <Image src="/logo.svg" alt={t("WoW Lab")} width={32} height={32} />
             <Stack gap="0">
-              <Text fontWeight="bold">WoW Lab</Text>
+              <Text fontWeight="bold">{t("WoW Lab")}</Text>
               <Text fontSize="xs" color="fg.muted">
-                Toolkit
+                {t("Toolkit")}
               </Text>
             </Stack>
           </Flex>
@@ -72,7 +74,7 @@ export function AppSidebar() {
             px="3"
             mb="1"
           >
-            Misc
+            {t("Misc")}
           </Text>
           {navSecondary.map((item) => (
             <NavLink key={href(item.route)} item={item} />
@@ -89,7 +91,7 @@ export function AppSidebar() {
         gap="2"
       >
         <Text fontSize="xs" color="fg.subtle">
-          © 2025 WoW Lab
+          {t("© 2025 WoW Lab")}
         </Text>
       </Flex>
     </Box>

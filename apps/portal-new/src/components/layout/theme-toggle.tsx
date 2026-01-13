@@ -1,25 +1,24 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { IconButton } from "@/components/ui";
 
-const themes = [
-  { icon: Sun, key: "light", label: "Light" },
-  { icon: Moon, key: "dark", label: "Dark" },
-  { icon: Monitor, key: "system", label: "System" },
-] as const;
+// TODO Refactor this file to single source of truth
+const themeIcons = {
+  dark: Moon,
+  light: Sun,
+  system: Monitor,
+} as const;
 
-type ThemeKey = (typeof themes)[number]["key"];
-
-const themeMap = Object.fromEntries(themes.map((t) => [t.key, t])) as Record<
-  ThemeKey,
-  (typeof themes)[number]
->;
+type ThemeKey = keyof typeof themeIcons;
+const themeKeys: ThemeKey[] = ["light", "dark", "system"];
 
 export function ThemeToggle() {
+  const t = useExtracted();
   const { setTheme, theme = "system" } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -27,19 +26,26 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  const current = themeMap[theme as ThemeKey] ?? themeMap.system;
-  const Icon = current.icon;
+  const themeLabels: Record<ThemeKey, string> = {
+    dark: t("Dark"),
+    light: t("Light"),
+    system: t("System"),
+  };
+
+  const currentKey =
+    (theme as ThemeKey) in themeIcons ? (theme as ThemeKey) : "system";
+  const Icon = themeIcons[currentKey];
 
   const cycle = () => {
-    const idx = themes.findIndex((t) => t.key === theme);
-    const next = themes[(idx + 1) % themes.length];
+    const idx = themeKeys.indexOf(currentKey);
+    const next = themeKeys[(idx + 1) % themeKeys.length];
 
-    setTheme(next.key);
+    setTheme(next);
   };
 
   if (!mounted) {
     return (
-      <IconButton variant="plain" size="sm" aria-label="Toggle theme">
+      <IconButton variant="plain" size="sm" aria-label={t("Toggle theme")}>
         <Monitor size={18} />
       </IconButton>
     );
@@ -49,8 +55,8 @@ export function ThemeToggle() {
     <IconButton
       variant="plain"
       size="sm"
-      aria-label="Toggle theme"
-      title={`Theme: ${current.label}`}
+      aria-label={t("Toggle theme")}
+      title={t("Theme: {theme}", { theme: themeLabels[currentKey] })}
       onClick={cycle}
     >
       <Icon size={18} />

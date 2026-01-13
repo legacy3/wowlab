@@ -1,6 +1,7 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
+import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
@@ -29,6 +30,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
   result,
   title,
 }: EntityDisplayProps<T>) {
+  const t = useExtracted();
   const name = result.data?.[nameField];
   const [inputValue, setInputValue] = useState(String(inputId));
 
@@ -57,7 +59,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
                 type="number"
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder="Enter ID"
+                placeholder={t("Enter ID")}
                 w="32"
               />
               {result.refresh && (
@@ -66,7 +68,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
                   variant="outline"
                   onClick={() => result.refresh?.()}
                 >
-                  Refresh
+                  {t("Refresh")}
                 </Button>
               )}
             </Flex>
@@ -75,7 +77,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
               <Badge variant="outline">ID: {inputId}</Badge>
               {name && <Badge colorPalette="green">{String(name)}</Badge>}
               {result.isLoading && (
-                <Badge colorPalette="amber">Loading...</Badge>
+                <Badge colorPalette="amber">{t("Loading...")}</Badge>
               )}
             </Flex>
 

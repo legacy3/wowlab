@@ -11,6 +11,7 @@ import {
   LayoutGridIcon,
   TextIcon,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
@@ -40,10 +41,15 @@ interface GeneratorContext {
   defaultListId: string;
   description: string;
   name: string;
+  t: TranslationFn;
   variables: Variable[];
 }
 
+// TODO Why is this here?
+type TranslationFn = (key: string, values?: Record<string, string>) => string;
+
 export function Preview() {
+  const t = useExtracted();
   const name = useEditor((s) => s.name);
   const description = useEditor((s) => s.description);
   const variables = useEditor((s) => s.variables);
@@ -60,9 +66,10 @@ export function Preview() {
       defaultListId,
       description,
       name,
+      t,
       variables,
     }),
-    [name, description, variables, actionLists, defaultListId],
+    [name, description, variables, actionLists, defaultListId, t],
   );
 
   const content = useMemo(() => {
@@ -111,10 +118,10 @@ export function Preview() {
             ))}
           </HStack>
 
-          <Tooltip content={copied ? "Copied!" : "Copy as DSL"}>
+          <Tooltip content={copied ? t("Copied!") : t("Copy as DSL")}>
             <Button variant="outline" size="sm" onClick={handleCopy}>
               {copied ? <CheckIcon size={16} /> : <ClipboardIcon size={16} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("Copied") : t("Copy")}
             </Button>
           </Tooltip>
         </Flex>
@@ -183,12 +190,17 @@ function formatConditionForDSL(condition: RuleGroupType): string {
   return condition.not ? `!(${result})` : result;
 }
 
-function formatConditionForNatural(condition: RuleGroupType): string {
+function formatConditionForNatural(
+  condition: RuleGroupType,
+  t: TranslationFn,
+): string {
   if (!condition.rules || condition.rules.length === 0) {
     return "";
   }
 
-  const parts = condition.rules.map(formatRuleForNatural).filter(Boolean);
+  const parts = condition.rules
+    .map((rule) => formatRuleForNatural(rule, t))
+    .filter(Boolean);
   if (parts.length === 0) {
     return "";
   }
@@ -221,18 +233,21 @@ function formatRuleForDSL(rule: RuleType | RuleGroupType): string {
   return `(${parts.join(separator)})`;
 }
 
-function formatRuleForNatural(rule: RuleType | RuleGroupType): string {
+function formatRuleForNatural(
+  rule: RuleType | RuleGroupType,
+  t: TranslationFn,
+): string {
   if (isRuleType(rule)) {
     const { field, operator, value } = rule;
     const fieldName = String(field).replace(/_/g, " ");
 
     const opMap: Record<string, string> = {
-      "!=": "does not equal",
-      "<": "is less than",
-      "<=": "is at most",
-      "=": "equals",
-      ">": "is greater than",
-      ">=": "is at least",
+      "!=": t("does not equal"),
+      "<": t("is less than"),
+      "<=": t("is at most"),
+      "=": t("equals"),
+      ">": t("is greater than"),
+      ">=": t("is at least"),
     };
 
     const opText = opMap[String(operator)] || String(operator);
@@ -244,22 +259,27 @@ function formatRuleForNatural(rule: RuleType | RuleGroupType): string {
     return "";
   }
 
-  const parts = group.rules.map(formatRuleForNatural).filter(Boolean);
+  const parts = group.rules
+    .map((r) => formatRuleForNatural(r, t))
+    .filter(Boolean);
+
   if (parts.length === 0) {
     return "";
   }
+
   if (parts.length === 1) {
     return parts[0];
   }
 
   const separator = group.combinator === "and" ? " AND " : " OR ";
+
   return parts.join(separator);
 }
 
 function generateDSL(ctx: GeneratorContext): string {
   const lines: string[] = [];
 
-  lines.push(`# ${ctx.name || "Untitled Rotation"}`);
+  lines.push(`# ${ctx.name || ctx.t("Untitled Rotation")}`);
   if (ctx.description) {
     lines.push(`# ${ctx.description}`);
   }
@@ -318,14 +338,14 @@ function generateJSON(ctx: GeneratorContext): string {
 function generateNatural(ctx: GeneratorContext): string {
   const lines: string[] = [];
 
-  lines.push(ctx.name || "Untitled Rotation");
+  lines.push(ctx.name || ctx.t("Untitled Rotation"));
   if (ctx.description) {
     lines.push(ctx.description);
   }
   lines.push("");
 
   if (ctx.variables.length > 0) {
-    lines.push("Variables:");
+    lines.push(ctx.t("Variables:"));
     for (const variable of ctx.variables) {
       lines.push(`  - ${variable.name}: ${variable.expression}`);
     }
@@ -346,14 +366,16 @@ function generateNatural(ctx: GeneratorContext): string {
       let actionName: string;
       if (action.type === "call_action_list") {
         const targetList = ctx.actionLists.find((l) => l.id === action.listId);
-        actionName = `Call ${targetList?.label ?? "Unknown"}`;
+        actionName = ctx.t("Call {list}", {
+          list: targetList?.label ?? ctx.t("Unknown"),
+        });
       } else if (action.type === "item") {
-        actionName = `Use Item #${action.itemId}`;
+        actionName = ctx.t("Use Item #{id}", { id: String(action.itemId) });
       } else {
-        actionName = `Spell #${action.spellId}`;
+        actionName = ctx.t("Spell #{id}", { id: String(action.spellId) });
       }
 
-      const conditionStr = formatConditionForNatural(action.condition);
+      const conditionStr = formatConditionForNatural(action.condition, ctx.t);
       if (conditionStr) {
         lines.push(`  ${priority}. ${actionName} - when ${conditionStr}`);
       } else {
@@ -373,16 +395,18 @@ function isRuleType(rule: RuleType | RuleGroupType): rule is RuleType {
 }
 
 function VisualPreview() {
+  const t = useExtracted();
+
   return (
     <Card.Root>
       <Card.Body py="12">
         <VStack gap="2">
           <LayoutGridIcon size={32} strokeWidth={1.5} />
           <Text color="fg.muted" textAlign="center">
-            Visual preview coming soon
+            {t("Visual preview coming soon")}
           </Text>
           <Text color="fg.subtle" textStyle="sm" textAlign="center">
-            Use the DSL or Natural tabs to preview your rotation
+            {t("Use the DSL or Natural tabs to preview your rotation")}
           </Text>
         </VStack>
       </Card.Body>

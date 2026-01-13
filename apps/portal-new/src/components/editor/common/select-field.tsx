@@ -1,6 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
+import { useExtracted } from "next-intl";
 import { useMemo } from "react";
 
 import { Empty, Select } from "../../ui";
@@ -25,15 +26,18 @@ export interface SelectOption {
 
 export function SelectField({
   disabled = false,
-  emptyMessage = "No options available",
+  emptyMessage,
   minW,
   onChange,
   options,
-  placeholder = "Select...",
+  placeholder,
   size = "sm",
   value,
   w,
 }: SelectFieldProps) {
+  const t = useExtracted();
+  const resolvedEmptyMessage = emptyMessage ?? t("No options available");
+  const resolvedPlaceholder = placeholder ?? t("Select...");
   const collection = useMemo(
     () => createListCollection({ items: options }),
     [options],
@@ -42,7 +46,7 @@ export function SelectField({
   if (options.length === 0) {
     return (
       <Empty.Root variant="plain" size="sm">
-        <Empty.Title>{emptyMessage}</Empty.Title>
+        <Empty.Title>{resolvedEmptyMessage}</Empty.Title>
       </Empty.Root>
     );
   }
@@ -61,7 +65,7 @@ export function SelectField({
     >
       <Select.Control>
         <Select.Trigger minW={minW} w={w}>
-          <Select.ValueText placeholder={placeholder} />
+          <Select.ValueText placeholder={resolvedPlaceholder} />
           <Select.Indicator />
         </Select.Trigger>
       </Select.Control>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useExtracted } from "next-intl";
 import { useEffect, useState } from "react";
 import { Box, VStack } from "styled-system/jsx";
 
@@ -20,6 +21,7 @@ export function VariableEditorDialog({
   open,
   variable,
 }: VariableEditorDialogProps) {
+  const t = useExtracted();
   const [name, setName] = useState("");
   const [expression, setExpression] = useState("");
 
@@ -52,7 +54,7 @@ export function VariableEditorDialog({
         <Dialog.Content>
           <Dialog.Header>
             <Dialog.Title>
-              {isEdit ? "Edit Variable" : "Add Variable"}
+              {isEdit ? t("Edit Variable") : t("Add Variable")}
             </Dialog.Title>
             <Dialog.CloseTrigger />
           </Dialog.Header>
@@ -60,41 +62,42 @@ export function VariableEditorDialog({
             <VStack gap="4" alignItems="stretch">
               <Box>
                 <Text textStyle="sm" fontWeight="medium" mb="1">
-                  Name
+                  {t("Name")}
                 </Text>
                 <Input
-                  placeholder="variable_name"
+                  placeholder={t("variable_name")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={handleKeyDown}
                 />
                 <Text textStyle="xs" color="fg.muted" mt="1">
-                  Use snake_case. Referenced as <Code>$name</Code> in
-                  conditions.
+                  {t("Use snake_case. Referenced as {code} in conditions.", {
+                    code: "$name",
+                  })}
                 </Text>
               </Box>
               <Box>
                 <Text textStyle="sm" fontWeight="medium" mb="1">
-                  Expression
+                  {t("Expression")}
                 </Text>
                 <Input
-                  placeholder="target.health.pct < 20"
+                  placeholder={t("target.health.pct < 20")}
                   value={expression}
                   onChange={(e) => setExpression(e.target.value)}
                   onKeyDown={handleKeyDown}
                 />
                 <Text textStyle="xs" color="fg.muted" mt="1">
-                  Expression evaluated at runtime.
+                  {t("Expression evaluated at runtime.")}
                 </Text>
               </Box>
             </VStack>
           </Dialog.Body>
           <Dialog.Footer>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={handleSave} disabled={!name.trim()}>
-              {isEdit ? "Save" : "Add"}
+              {isEdit ? t("Save") : t("Add")}
             </Button>
           </Dialog.Footer>
         </Dialog.Content>

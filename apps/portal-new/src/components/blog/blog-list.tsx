@@ -1,5 +1,6 @@
 "use client";
 
+import { useExtracted } from "next-intl";
 import { Stack, VStack } from "styled-system/jsx";
 
 import type { BlogEntry } from "@/lib/blog/types";
@@ -13,11 +14,13 @@ type BlogListProps = {
 };
 
 export function BlogList({ posts }: BlogListProps) {
+  const t = useExtracted();
+
   if (posts.length === 0) {
     return (
       <Empty.Root size="md" variant="plain">
         <Empty.Content>
-          <Empty.Title>No posts yet</Empty.Title>
+          <Empty.Title>{t("No posts yet")}</Empty.Title>
         </Empty.Content>
       </Empty.Root>
     );

@@ -7,6 +7,7 @@ import {
 import { useFilter } from "@ark-ui/react/locale";
 import { useBoolean } from "ahooks";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
@@ -69,6 +70,7 @@ export function GameObjectPicker<TSearchResult, TData>({
   value,
   variant = "input",
 }: GameObjectPickerProps<TSearchResult, TData>) {
+  const t = useExtracted();
   const [inputValue, setInputValue] = useState("");
   const [open, { set: setOpen, setFalse: closeDropdown }] = useBoolean(false);
   const { data: searchResults, isLoading } = config.useSearch({
@@ -147,7 +149,7 @@ export function GameObjectPicker<TSearchResult, TData>({
             </Button>
           </Combobox.Trigger>
           <Combobox.Input
-            placeholder="Search..."
+            placeholder={t("Search...")}
             style={{ opacity: 0, pointerEvents: "none", position: "absolute" }}
           />
         </Combobox.Control>
@@ -197,7 +199,7 @@ export function GameObjectPicker<TSearchResult, TData>({
             {collection.items.length === 0 && inputValue.length < 2 && (
               <Combobox.Empty>
                 <Empty.Root variant="plain" size="sm">
-                  <Empty.Title>Type at least 2 characters</Empty.Title>
+                  <Empty.Title>{t("Type at least 2 characters")}</Empty.Title>
                 </Empty.Root>
               </Combobox.Empty>
             )}
@@ -265,7 +267,7 @@ export function GameObjectPicker<TSearchResult, TData>({
           {collection.items.length === 0 && inputValue.length < 2 && (
             <Combobox.Empty>
               <Empty.Root variant="plain" size="sm">
-                <Empty.Title>Type at least 2 characters to search</Empty.Title>
+                <Empty.Title>{t("Type at least 2 characters")}</Empty.Title>
               </Empty.Root>
             </Combobox.Empty>
           )}
@@ -281,6 +283,7 @@ function DropdownItem<TData>({
   id,
   useData,
 }: DropdownItemProps<TData>) {
+  const t = useExtracted();
   const { data } = useData(id);
 
   if (!data) {
@@ -288,7 +291,7 @@ function DropdownItem<TData>({
       <HStack gap="2">
         <Loader size="xs" />
         <Text textStyle="sm" color="fg.muted">
-          Loading...
+          {t("Loading...")}
         </Text>
       </HStack>
     );

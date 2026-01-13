@@ -1,6 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { Link as LinkIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { Flex } from "styled-system/jsx";
 
 import { Icon } from "@/components/ui/icon";
@@ -61,6 +64,7 @@ export function MdH6({ children, id }: Omit<MdHeadingProps, "level">) {
 }
 
 function MdHeading({ children, id, level }: MdHeadingProps) {
+  const t = useExtracted();
   const HeadingTag = Tag[level];
 
   return (
@@ -84,7 +88,7 @@ function MdHeading({ children, id, level }: MdHeadingProps) {
           color="fg.muted"
           _hover={{ color: "fg.default" }}
           transition="opacity"
-          aria-label="Link to this section"
+          aria-label={t("Link to this section")}
         >
           <Icon size="sm">
             <LinkIcon />

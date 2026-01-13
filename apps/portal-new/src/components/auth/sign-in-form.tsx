@@ -1,12 +1,20 @@
 "use client";
 
 import { useBoolean } from "ahooks";
+import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, Grid, Stack, styled } from "styled-system/jsx";
 
 import type { OAuthProvider } from "@/lib/refine";
 
-import { Button, Card, CardLoader, Link, Text } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CardLoader,
+  ErrorBox,
+  Link,
+  Text,
+} from "@/components/ui";
 import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
 import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
@@ -23,6 +31,7 @@ const IconButton = styled(Button, {
 });
 
 export function SignInForm({ redirectTo }: SignInFormProps) {
+  const t = useExtracted();
   const [error, setError] = useState<string | null>(null);
   const [loading, { setFalse: stopLoading, setTrue: startLoading }] =
     useBoolean(false);
@@ -38,7 +47,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
     return (
       <Card.Root w="full" maxW="md">
         <Card.Body>
-          <CardLoader message="Signing you in..." />
+          <CardLoader message={t("Signing you in...")} />
         </Card.Body>
       </Card.Root>
     );
@@ -48,18 +57,14 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
     <Stack gap="6" w="full" maxW="md">
       <Card.Root>
         <Card.Header textAlign="center">
-          <Card.Title fontSize="2xl">Sign in to continue</Card.Title>
+          <Card.Title fontSize="2xl">{t("Sign in to continue")}</Card.Title>
           <Card.Description>
-            Choose your preferred authentication method
+            {t("Choose your preferred authentication method")}
           </Card.Description>
         </Card.Header>
         <Card.Body>
           <Stack gap="4">
-            {error && (
-              <Box bg="red.3" color="red.11" p="3" rounded="l2" fontSize="sm">
-                {error}
-              </Box>
-            )}
+            {error && <ErrorBox>{error}</ErrorBox>}
 
             <Grid columns={2} gap="2">
               <IconButton
@@ -67,14 +72,14 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 onClick={() => handleOAuthSignIn("discord")}
               >
                 <DiscordIcon width={16} height={16} />
-                Discord
+                {t("Discord")}
               </IconButton>
               <IconButton
                 variant="outline"
                 onClick={() => handleOAuthSignIn("github")}
               >
                 <GitHubIcon width={16} height={16} />
-                GitHub
+                {t("GitHub")}
               </IconButton>
               <IconButton
                 variant="outline"
@@ -82,7 +87,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 disabled
               >
                 <GoogleIcon width={16} height={16} />
-                Google
+                {t("Google")}
               </IconButton>
               <IconButton
                 variant="outline"
@@ -90,29 +95,34 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 disabled
               >
                 <TwitchIcon width={16} height={16} />
-                Twitch
+                {t("Twitch")}
               </IconButton>
             </Grid>
 
             <Flex align="center" gap="3">
               <Box flex="1" h="1px" bg="border" />
               <Text fontSize="xs" color="fg.subtle" textTransform="uppercase">
-                Secure authentication
+                {t("Secure authentication")}
               </Text>
               <Box flex="1" h="1px" bg="border" />
             </Flex>
 
             <Text textAlign="center" fontSize="xs" color="fg.muted">
-              By continuing, you agree to our{" "}
-              <Link href={href(routes.about.terms)}>Terms of Service</Link> and{" "}
-              <Link href={href(routes.about.privacy)}>Privacy Policy</Link>
+              {t("By continuing, you agree to our")}{" "}
+              <Link href={href(routes.about.terms)}>
+                {t("Terms of Service")}
+              </Link>{" "}
+              {t("and")}{" "}
+              <Link href={href(routes.about.privacy)}>
+                {t("Privacy Policy")}
+              </Link>
             </Text>
           </Stack>
         </Card.Body>
       </Card.Root>
 
       <Text textAlign="center" fontSize="xs" color="fg.subtle">
-        New here? Signing in creates an account automatically.
+        {t("New here? Signing in creates an account automatically.")}
       </Text>
     </Stack>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Cpu, X } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useMemo } from "react";
 import { HStack, Stack, styled } from "styled-system/jsx";
 
@@ -11,6 +12,7 @@ import {
   Button,
   Drawer,
   Empty,
+  ErrorBox,
   IconButton,
   InlineLoader,
   Link,
@@ -27,6 +29,7 @@ import {
 } from "@/lib/state";
 
 export function ComputingDrawer() {
+  const t = useExtracted();
   const { open, setOpen } = useComputingDrawer();
   const jobs = useJobs((s) => s.jobs);
 
@@ -48,27 +51,29 @@ export function ComputingDrawer() {
             <Drawer.Title>
               <HStack gap="2.5">
                 <Cpu style={{ height: 20, width: 20 }} />
-                Computing
+                {t("Computing")}
               </HStack>
             </Drawer.Title>
             <Drawer.Description>
               <HStack justifyContent="space-between">
                 <span>
                   {activeJobs.length > 0
-                    ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
-                    : "No active simulations"}
+                    ? t("{count} simulation running", {
+                        count: String(activeJobs.length),
+                      })
+                    : t("No active simulations")}
                 </span>
                 <Link
                   href={href(routes.computing)}
                   textStyle="xs"
                   onClick={handleClose}
                 >
-                  Dashboard
+                  {t("Dashboard")}
                 </Link>
               </HStack>
             </Drawer.Description>
             <Drawer.CloseTrigger asChild pos="absolute" top="3" right="3">
-              <IconButton variant="plain" size="sm" aria-label="Close">
+              <IconButton variant="plain" size="sm" aria-label={t("Close")}>
                 <X />
               </IconButton>
             </Drawer.CloseTrigger>
@@ -84,11 +89,17 @@ export function ComputingDrawer() {
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  Active
+                  {t("Active")}
                 </Text>
                 <Stack gap="3">
                   {activeJobs.map((job) => (
-                    <JobCard key={job.id} job={job} onClose={handleClose} />
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClose={handleClose}
+                      cancelLabel={t("Cancel")}
+                      viewResultsLabel={t("View Results")}
+                    />
                   ))}
                 </Stack>
               </Stack>
@@ -103,11 +114,17 @@ export function ComputingDrawer() {
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  Recent
+                  {t("Recent")}
                 </Text>
                 <Stack gap="3">
                   {completedJobs.slice(0, 5).map((job) => (
-                    <JobCard key={job.id} job={job} onClose={handleClose} />
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClose={handleClose}
+                      cancelLabel={t("Cancel")}
+                      viewResultsLabel={t("View Results")}
+                    />
                   ))}
                 </Stack>
               </Stack>
@@ -120,9 +137,9 @@ export function ComputingDrawer() {
                     <Cpu />
                   </Empty.Icon>
                   <Empty.Content>
-                    <Empty.Title>No simulations yet</Empty.Title>
+                    <Empty.Title>{t("No simulations yet")}</Empty.Title>
                     <Empty.Description>
-                      Run a simulation to see progress here
+                      {t("Run a simulation to see progress here")}
                     </Empty.Description>
                   </Empty.Content>
                 </Empty.Root>
@@ -136,11 +153,15 @@ export function ComputingDrawer() {
 }
 
 function JobCard({
+  cancelLabel,
   job,
   onClose,
+  viewResultsLabel,
 }: {
+  cancelLabel: string;
   job: SimulationJob;
   onClose: () => void;
+  viewResultsLabel: string;
 }) {
   const cancelJob = useJobs((s) => s.cancelJob);
   const StatusIcon = JOB_STATUS_ICONS[job.status];
@@ -160,7 +181,7 @@ function JobCard({
           <IconButton
             variant="plain"
             size="sm"
-            aria-label="Cancel"
+            aria-label={cancelLabel}
             onClick={() => cancelJob(job.id)}
           >
             <X style={{ height: 16, width: 16 }} />
@@ -206,16 +227,12 @@ function JobCard({
         </Stack>
       )}
 
-      {job.status === "failed" && job.error && (
-        <Text textStyle="sm" color="red.11">
-          {job.error}
-        </Text>
-      )}
+      {job.status === "failed" && job.error && <ErrorBox>{job.error}</ErrorBox>}
 
       {job.status === "completed" && job.result && (
         <Button variant="outline" size="sm" w="full" asChild onClick={onClose}>
           <Link href={href(routes.simulate.results, { id: job.id })}>
-            View Results
+            {viewResultsLabel}
           </Link>
         </Button>
       )}

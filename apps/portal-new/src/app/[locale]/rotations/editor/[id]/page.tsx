@@ -1,13 +1,15 @@
 "use client";
 
+import { useExtracted } from "next-intl";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { EditorPage } from "@/components/editor";
-import { Loader, Text } from "@/components/ui";
+import { ErrorBox, Loader, Text } from "@/components/ui";
 import { useLoadRotation } from "@/lib/state/rotation";
 
 export default function EditRotationPage() {
+  const t = useExtracted();
   const params = useParams<{ id: string }>();
   const id = params.id;
   const loadedIdRef = useRef<string | null>(null);
@@ -28,14 +30,14 @@ export default function EditRotationPage() {
 
   if (isError) {
     return (
-      <Text color="fg.error">
-        Failed to load rotation: {error?.message ?? "Unknown error"}
-      </Text>
+      <ErrorBox>
+        {t("Failed to load rotation:")} {error?.message ?? t("Unknown error")}
+      </ErrorBox>
     );
   }
 
   if (!rotation) {
-    return <Text color="fg.muted">Rotation not found</Text>;
+    return <Text color="fg.muted">{t("Rotation not found")}</Text>;
   }
 
   return <EditorPage />;

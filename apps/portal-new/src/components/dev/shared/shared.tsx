@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
-import { Card, Code, Heading, Skeleton, Text } from "@/components/ui";
+import { Card, Code, ErrorBox, Heading, Skeleton, Text } from "@/components/ui";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 
 // =============================================================================
@@ -111,13 +111,7 @@ export function JsonOutput({
   }
 
   if (error) {
-    return (
-      <Box bg="red.2" border="1px solid" borderColor="red.6" rounded="l2" p="3">
-        <Text color="red.11" fontFamily="mono" textStyle="sm">
-          Error: {error.message}
-        </Text>
-      </Box>
-    );
+    return <ErrorBox>Error: {error.message}</ErrorBox>;
   }
 
   if (data === null || data === undefined) {

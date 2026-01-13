@@ -14,6 +14,7 @@ import {
   SparklesIcon,
   TrashIcon,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { memo, useMemo, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
@@ -126,19 +127,21 @@ const ActionIcon = memo(function ActionIcon({
   );
 });
 
-function useActionName(action: Action): string {
+function useActionName(action: Action, t: (key: string) => string): string {
   const { data: spell } = useSpell(
     action.type === "spell" ? action.spellId : null,
   );
   const { data: item } = useItem(action.type === "item" ? action.itemId : null);
 
   if (action.type === "spell") {
-    return spell?.name ?? "Select spell...";
+    return spell?.name ?? t("Select spell...");
   }
+
   if (action.type === "item") {
-    return item?.name ?? "Select item...";
+    return item?.name ?? t("Select item...");
   }
-  return "Call action list";
+
+  return t("Call action list");
 }
 
 const ACTION_TYPE_OPTIONS = ACTION_TYPES.map((t) => ({
@@ -164,6 +167,7 @@ function ListSelector({
   listId: string;
   onChange: (listId: string) => void;
 }) {
+  const t = useExtracted();
   const actionLists = useEditor((s) => s.actionLists);
   const availableLists = actionLists.filter((l) => l.id !== listId);
 
@@ -177,9 +181,9 @@ function ListSelector({
       value={value}
       options={options}
       onChange={onChange}
-      placeholder="Select list..."
+      placeholder={t("Select list...")}
       minW="32"
-      emptyMessage="No other lists"
+      emptyMessage={t("No other lists")}
     />
   );
 }
@@ -207,6 +211,7 @@ export const ActionCard = memo(function ActionCard({
   index,
   listId,
 }: ActionCardProps) {
+  const t = useExtracted();
   const { ref: dragRef, ...dragListeners } = dragHandleProps ?? {};
   const updateAction = useEditor((s) => s.updateAction);
   const deleteAction = useEditor((s) => s.deleteAction);
@@ -221,7 +226,7 @@ export const ActionCard = memo(function ActionCard({
   const handleItemChange = (itemId: number, _name: string) =>
     update("itemId", itemId);
 
-  const actionName = useActionName(action);
+  const actionName = useActionName(action, t);
 
   return (
     <Collapsible.Root
@@ -272,35 +277,37 @@ export const ActionCard = memo(function ActionCard({
             <Box flex="1" />
 
             <Tooltip
-              content={action.enabled ? "Disable action" : "Enable action"}
+              content={
+                action.enabled ? t("Disable action") : t("Enable action")
+              }
             >
               <IconButton
                 variant="plain"
                 size="xs"
                 onClick={() => update("enabled", !action.enabled)}
                 color={action.enabled ? "green.500" : "fg.muted"}
-                aria-label={action.enabled ? "Disable" : "Enable"}
+                aria-label={action.enabled ? t("Disable") : t("Enable")}
               >
                 <SparklesIcon size={14} />
               </IconButton>
             </Tooltip>
-            <Tooltip content="Duplicate">
+            <Tooltip content={t("Duplicate")}>
               <IconButton
                 variant="plain"
                 size="xs"
                 onClick={() => duplicateAction(listId, action.id)}
-                aria-label="Duplicate"
+                aria-label={t("Duplicate")}
               >
                 <CopyIcon size={14} />
               </IconButton>
             </Tooltip>
-            <Tooltip content="Delete">
+            <Tooltip content={t("Delete")}>
               <IconButton
                 variant="plain"
                 size="xs"
                 onClick={() => deleteAction(listId, action.id)}
                 _hover={{ color: "red.500" }}
-                aria-label="Delete"
+                aria-label={t("Delete")}
               >
                 <TrashIcon size={14} />
               </IconButton>
@@ -318,7 +325,7 @@ export const ActionCard = memo(function ActionCard({
                   color="fg.muted"
                   mb="1"
                 >
-                  Type
+                  {t("Type")}
                 </Text>
                 <TypeSelector
                   value={action.type}
@@ -333,10 +340,10 @@ export const ActionCard = memo(function ActionCard({
                   mb="1"
                 >
                   {action.type === "spell"
-                    ? "Spell"
+                    ? t("Spell")
                     : action.type === "item"
-                      ? "Item"
-                      : "Target List"}
+                      ? t("Item")
+                      : t("Target List")}
                 </Text>
                 {action.type === "spell" && (
                   <SpellPicker
@@ -362,7 +369,7 @@ export const ActionCard = memo(function ActionCard({
 
             <Box>
               <Text textStyle="xs" fontWeight="medium" color="fg.muted" mb="2">
-                Conditions
+                {t("Conditions")}
               </Text>
               <ConditionBuilder
                 query={action.condition}

@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 import createNextIntlPlugin from "next-intl/plugin";
 
+import { locales } from "./src/i18n/routing";
+
 const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
@@ -61,18 +63,18 @@ const withMDX = createMDX({
 });
 
 const withNextIntl = createNextIntlPlugin({
-  requestConfig: "./src/i18n/request.ts",
   experimental: {
-    srcPath: "./src",
     extract: {
       sourceLocale: "en",
     },
     messages: {
-      path: "./src/i18n/messages",
       format: "json",
-      locales: "infer",
+      locales: Object.keys(locales) as (keyof typeof locales)[],
+      path: "./src/i18n/messages",
     },
+    srcPath: "./src",
   },
+  requestConfig: "./src/i18n/request.ts",
 });
 
 export default withNextIntl(withMDX(nextConfig));

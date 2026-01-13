@@ -5,6 +5,7 @@ import mermaid from "mermaid";
 import { useEffect, useRef, useState } from "react";
 import { Box } from "styled-system/jsx";
 
+import { ErrorBox } from "@/components/ui/error-box";
 import { Expandable } from "@/components/ui/expandable";
 import { Text } from "@/components/ui/text";
 
@@ -50,16 +51,7 @@ export function MdMermaid({ chart }: MdMermaidProps) {
 
   if (error) {
     return (
-      <Box
-        my="6"
-        p="4"
-        borderRadius="lg"
-        bg="red.a3"
-        borderWidth="1px"
-        borderColor="red.a6"
-        color="red.11"
-        textStyle="sm"
-      >
+      <ErrorBox my="6">
         <Text fontWeight="medium">Diagram Error</Text>
         <Box
           as="pre"
@@ -70,7 +62,7 @@ export function MdMermaid({ chart }: MdMermaidProps) {
         >
           {error}
         </Box>
-      </Box>
+      </ErrorBox>
     );
   }
 

@@ -12,6 +12,7 @@ import {
   XIcon,
   ZapIcon,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useCallback, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
@@ -40,6 +41,7 @@ export function SortableListItem({
   onSelect,
   onSetDefault,
 }: SortableListItemProps) {
+  const t = useExtracted();
   const [isEditing, { setFalse: stopEditing, setTrue: startEditing }] =
     useBoolean(false);
   const [editValue, setEditValue] = useState(list.label);
@@ -144,16 +146,16 @@ export function SortableListItem({
         </Text>
         {list.listType === "precombat" && (
           <Badge size="sm" variant="outline" colorPalette="amber">
-            Pre
+            {t("Pre")}
           </Badge>
         )}
         {list.listType === "main" && (
           <Badge size="sm" variant="outline" colorPalette="green">
-            Main
+            {t("Main")}
           </Badge>
         )}
         {isDefault && (
-          <Tooltip content="Default list">
+          <Tooltip content={t("Default list")}>
             <Box color="amber.500">
               <StarIcon size={12} fill="currentColor" />
             </Box>
@@ -166,18 +168,18 @@ export function SortableListItem({
           {list.actions.length}
         </Text>
         <ItemActionsMenu
-          ariaLabel="List actions"
+          ariaLabel={t("List actions")}
           actions={[
             {
               icon: EditIcon,
-              label: "Rename",
+              label: t("Rename"),
               onClick: handleStartEdit,
               value: "rename",
             },
             {
               disabled: isDefault,
               icon: StarIcon,
-              label: "Set as default",
+              label: t("Set as default"),
               onClick: onSetDefault,
               value: "default",
             },
@@ -185,7 +187,7 @@ export function SortableListItem({
               destructive: true,
               disabled: !canDelete,
               icon: TrashIcon,
-              label: "Delete",
+              label: t("Delete"),
               onClick: onDelete,
               value: "delete",
             },

@@ -7,6 +7,7 @@ import {
   SaveIcon,
   UnlockIcon,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
 import { useEditor } from "@/lib/state/editor";
@@ -26,6 +27,7 @@ import { useCanEdit, useIsOwner } from "../hooks";
 import { countTotalActions } from "../utils";
 
 export function EditorHeader() {
+  const t = useExtracted();
   const name = useEditor((s) => s.name);
   const setName = useEditor((s) => s.setName);
   const viewMode = useEditor((s) => s.viewMode);
@@ -67,67 +69,69 @@ export function EditorHeader() {
       <HStack gap="3" flex="1">
         {canEdit ? (
           <Input
-            placeholder="Rotation name..."
+            placeholder={t("Rotation name...")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             w="64"
           />
         ) : (
           <Text fontWeight="medium" fontSize="lg">
-            {name || "Untitled Rotation"}
+            {name || t("Untitled Rotation")}
           </Text>
         )}
 
         {isLocked && !isOwner && (
           <Badge size="sm" variant="subtle" colorPalette="amber">
             <LockIcon size={12} />
-            Read-only
+            {t("Read-only")}
           </Badge>
         )}
         {isLocked && isOwner && (
           <Badge size="sm" variant="outline">
             <LockIcon size={12} />
-            Locked
+            {t("Locked")}
           </Badge>
         )}
         {isDirty && canEdit && (
           <Badge size="sm" variant="outline">
-            Unsaved
+            {t("Unsaved")}
           </Badge>
         )}
         {isNew && (
           <Badge size="sm" variant="subtle">
-            New
+            {t("New")}
           </Badge>
         )}
 
         <HStack gap="2" color="fg.muted" display={{ base: "none", md: "flex" }}>
           <Text textStyle="xs" fontFamily="mono">
-            {listCount} list{listCount !== 1 ? "s" : ""}
+            {t("{count} lists", { count: String(listCount) })}
           </Text>
           <Text textStyle="xs" color="fg.subtle">
             -
           </Text>
           <Text textStyle="xs" fontFamily="mono">
-            {actionCount} action{actionCount !== 1 ? "s" : ""}
+            {t("{count} actions", { count: String(actionCount) })}
           </Text>
           <Text textStyle="xs" color="fg.subtle">
             -
           </Text>
           <Text textStyle="xs" fontFamily="mono">
-            {varCount} var{varCount !== 1 ? "s" : ""}
+            {t("{count} vars", { count: String(varCount) })}
           </Text>
         </HStack>
       </HStack>
 
       <HStack gap="3">
         {isOwner && rotationId && (
-          <Tooltip content={isLocked ? "Unlock to edit" : "Lock rotation"}>
+          <Tooltip
+            content={isLocked ? t("Unlock to edit") : t("Lock rotation")}
+          >
             <IconButton
               variant={isLocked ? "outline" : "plain"}
               size="sm"
               onClick={() => setLocked(!isLocked)}
-              aria-label={isLocked ? "Unlock" : "Lock"}
+              aria-label={isLocked ? t("Unlock") : t("Lock")}
             >
               {isLocked ? <LockIcon size={16} /> : <UnlockIcon size={16} />}
             </IconButton>
@@ -141,30 +145,30 @@ export function EditorHeader() {
               onCheckedChange={(details) => setIsPublic(details.checked)}
             >
               <Switch.Control />
-              <Switch.Label>Public</Switch.Label>
+              <Switch.Label>{t("Public")}</Switch.Label>
               <Switch.HiddenInput />
             </Switch.Root>
           </HStack>
         )}
 
         <HStack gap="1" bg="bg.muted" p="1" rounded="md">
-          <Tooltip content="Edit">
+          <Tooltip content={t("Edit")}>
             <IconButton
               variant={viewMode === "edit" ? "solid" : "plain"}
               size="sm"
               onClick={() => setViewMode("edit")}
-              aria-label="Edit mode"
+              aria-label={t("Edit mode")}
               disabled={!canEdit && viewMode !== "edit"}
             >
               <PencilIcon size={16} />
             </IconButton>
           </Tooltip>
-          <Tooltip content="Preview">
+          <Tooltip content={t("Preview")}>
             <IconButton
               variant={viewMode === "preview" ? "solid" : "plain"}
               size="sm"
               onClick={() => setViewMode("preview")}
-              aria-label="Preview mode"
+              aria-label={t("Preview mode")}
             >
               <EyeIcon size={16} />
             </IconButton>
@@ -172,14 +176,14 @@ export function EditorHeader() {
         </HStack>
 
         {canEdit && (
-          <Tooltip content={isNew ? "Create rotation" : "Save changes"}>
+          <Tooltip content={isNew ? t("Create rotation") : t("Save changes")}>
             <Button
               size="sm"
               disabled={!isDirty || isSaving}
               onClick={handleSave}
             >
               {isSaving ? <Loader size="sm" /> : <SaveIcon size={16} />}
-              {isNew ? "Create" : "Save"}
+              {isNew ? t("Create") : t("Save")}
             </Button>
           </Tooltip>
         )}

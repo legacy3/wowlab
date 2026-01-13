@@ -1,5 +1,9 @@
+import { getExtracted } from "next-intl/server";
+
 import { Text } from "@/components/ui/text";
 
-export default function SimulatePage() {
-  return <Text>Simulate page content coming soon.</Text>;
+export default async function SimulatePage() {
+  const t = await getExtracted();
+
+  return <Text>{t("Simulate page content coming soon.")}</Text>;
 }

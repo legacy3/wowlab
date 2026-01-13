@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
 import { Box, Grid, HStack, Stack } from "styled-system/jsx";
@@ -34,11 +35,14 @@ const statuses: (JobStatus | "all")[] = [
   "all",
   "running",
   "queued",
+  "paused",
   "completed",
   "failed",
+  "cancelled",
 ];
 
 export function JobHistoryCard() {
+  const t = useExtracted();
   const jobs = useJobs((s) => s.jobs);
   const cancelJob = useJobs((s) => s.cancelJob);
 
@@ -59,6 +63,16 @@ export function JobHistoryCard() {
     });
   }, [jobs, filter, statusFilter]);
 
+  const statusLabels: Record<JobStatus | "all", string> = {
+    all: t("All"),
+    cancelled: t("Cancelled"),
+    completed: t("Completed"),
+    failed: t("Failed"),
+    paused: t("Paused"),
+    queued: t("Queued"),
+    running: t("Running"),
+  };
+
   return (
     <>
       <Card.Root>
@@ -70,7 +84,7 @@ export function JobHistoryCard() {
             justifyContent="space-between"
           >
             <Card.Title textStyle="base" fontWeight="medium">
-              Simulation History
+              {t("Simulation History")}
               <Text
                 as="span"
                 ml="2"
@@ -79,7 +93,7 @@ export function JobHistoryCard() {
                 color="fg.muted"
                 fontVariantNumeric="tabular-nums"
               >
-                ({formatInt(filteredJobs.length)} jobs)
+                ({t("{count} jobs", { count: formatInt(filteredJobs.length) })})
               </Text>
             </Card.Title>
             <HStack gap="1.5" flexWrap="wrap">
@@ -106,9 +120,7 @@ export function JobHistoryCard() {
                         : undefined,
                     })}
                   >
-                    {status === "all"
-                      ? "All"
-                      : status.charAt(0).toUpperCase() + status.slice(1)}
+                    {statusLabels[status]}
                   </Badge>
                 );
               })}
@@ -117,7 +129,7 @@ export function JobHistoryCard() {
         </Card.Header>
         <Card.Body spaceY="4" pt="0">
           <Input
-            placeholder="Filter jobs ..."
+            placeholder={t("Filter jobs...")}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             maxW="sm"
@@ -133,17 +145,17 @@ export function JobHistoryCard() {
               >
                 <Table.Row>
                   <Table.Header w="100px" fontWeight="medium">
-                    Status
+                    {t("Status")}
                   </Table.Header>
-                  <Table.Header fontWeight="medium">Name</Table.Header>
+                  <Table.Header fontWeight="medium">{t("Name")}</Table.Header>
                   <Table.Header w="120px" fontWeight="medium">
-                    DPS
+                    {t("DPS")}
                   </Table.Header>
                   <Table.Header w="100px" fontWeight="medium">
-                    Casts
+                    {t("Casts")}
                   </Table.Header>
                   <Table.Header w="80px" fontWeight="medium">
-                    Actions
+                    {t("Actions")}
                   </Table.Header>
                 </Table.Row>
               </Table.Head>
@@ -155,8 +167,8 @@ export function JobHistoryCard() {
                         <Empty.Content>
                           <Empty.Title>
                             {jobs.length === 0
-                              ? "No simulations yet"
-                              : "No jobs match the current filter"}
+                              ? t("No simulations yet")
+                              : t("No jobs match the current filter")}
                           </Empty.Title>
                         </Empty.Content>
                       </Empty.Root>
@@ -191,11 +203,11 @@ export function JobHistoryCard() {
                         {job.result?.casts ?? "\u2014"}
                       </Table.Cell>
                       <Table.Cell>
-                        <Tooltip content="Cancel">
+                        <Tooltip content={t("Cancel")}>
                           <IconButton
                             variant="plain"
                             size="xs"
-                            aria-label="Cancel simulation"
+                            aria-label={t("Cancel simulation")}
                             disabled={
                               job.status !== "running" &&
                               job.status !== "queued"
@@ -242,7 +254,9 @@ export function JobHistoryCard() {
                   {selectedJob?.name}
                 </HStack>
               </Dialog.Title>
-              <Dialog.Description>Job ID: {selectedJob?.id}</Dialog.Description>
+              <Dialog.Description>
+                {t("Job ID: {id}", { id: selectedJob?.id ?? "" })}
+              </Dialog.Description>
             </Dialog.Header>
 
             <Dialog.Body>
@@ -259,7 +273,7 @@ export function JobHistoryCard() {
                     <Grid columns={2} gap="4" p="4" rounded="lg" bg="bg.muted">
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          DPS
+                          {t("DPS")}
                         </Text>
                         <Text
                           textStyle="lg"
@@ -271,7 +285,7 @@ export function JobHistoryCard() {
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          Casts
+                          {t("Casts")}
                         </Text>
                         <Text
                           textStyle="lg"
@@ -283,7 +297,7 @@ export function JobHistoryCard() {
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          Total Damage
+                          {t("Total Damage")}
                         </Text>
                         <Text
                           textStyle="lg"
@@ -295,7 +309,7 @@ export function JobHistoryCard() {
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          Duration
+                          {t("Duration")}
                         </Text>
                         <Text
                           textStyle="lg"
@@ -311,16 +325,20 @@ export function JobHistoryCard() {
                   {selectedJob.error && (
                     <Stack gap="2">
                       <Text textStyle="sm" fontWeight="medium" color="red.11">
-                        Error
+                        {t("Error")}
                       </Text>
                       <ErrorBox>{selectedJob.error}</ErrorBox>
                     </Stack>
                   )}
 
                   <Stack gap="1" textStyle="xs" color="fg.muted">
-                    <Text>Rotation ID: {selectedJob.rotationId}</Text>
+                    <Text>
+                      {t("Rotation ID: {id}", { id: selectedJob.rotationId })}
+                    </Text>
                     {selectedJob.resultId && (
-                      <Text>Result ID: {selectedJob.resultId}</Text>
+                      <Text>
+                        {t("Result ID: {id}", { id: selectedJob.resultId })}
+                      </Text>
                     )}
                   </Stack>
                 </Stack>
@@ -329,7 +347,7 @@ export function JobHistoryCard() {
 
             <Dialog.Footer>
               <Dialog.CloseTrigger asChild>
-                <Button variant="outline">Close</Button>
+                <Button variant="outline">{t("Close")}</Button>
               </Dialog.CloseTrigger>
             </Dialog.Footer>
           </Dialog.Content>

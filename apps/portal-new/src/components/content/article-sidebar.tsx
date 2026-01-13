@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarIcon, ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
@@ -36,7 +37,10 @@ type SidebarNavItem = {
   children?: SidebarNavItem[];
 };
 
+type TranslateFunction = ReturnType<typeof useExtracted>;
+
 export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
+  const t = useExtracted();
   const headings = flattenToc(toc ?? []);
   const headingIds = headings.map((h) => h.id);
   const activeId = useActiveHeading(headingIds);
@@ -67,17 +71,19 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
         maxH="calc(100vh - 8rem)"
         overflowY="auto"
       >
-        {hasMeta && <Meta meta={meta} />}
+        {hasMeta && <Meta meta={meta} t={t} />}
         {hasNav && (
-          <Navigation items={nav.items} currentSlug={nav.currentSlug} />
+          <Navigation items={nav.items} currentSlug={nav.currentSlug} t={t} />
         )}
-        {hasToc && <TableOfContents headings={headings} activeId={activeId} />}
+        {hasToc && (
+          <TableOfContents headings={headings} activeId={activeId} t={t} />
+        )}
       </VStack>
     </Box>
   );
 }
 
-function Meta({ meta }: { meta: ArticleMeta }) {
+function Meta({ meta, t }: { meta: ArticleMeta; t: TranslateFunction }) {
   return (
     <VStack alignItems="flex-start" gap="1.5">
       {meta.date && (
@@ -95,7 +101,9 @@ function Meta({ meta }: { meta: ArticleMeta }) {
           <Icon size="xs">
             <Clock />
           </Icon>
-          <Text textStyle="xs">{meta.readingTime} min read</Text>
+          <Text textStyle="xs">
+            {t("{count} min read", { count: String(meta.readingTime) })}
+          </Text>
         </Flex>
       )}
     </VStack>
@@ -161,9 +169,11 @@ function NavGroup({
 function Navigation({
   currentSlug,
   items,
+  t,
 }: {
   items: SidebarNavItem[];
   currentSlug: string;
+  t: TranslateFunction;
 }) {
   return (
     <Box>
@@ -175,7 +185,7 @@ function Navigation({
         color="fg.muted"
         mb="3"
       >
-        Navigation
+        {t("Navigation")}
       </Heading>
       <VStack alignItems="stretch" gap="1">
         {items.map((item) => {
@@ -217,9 +227,11 @@ function Navigation({
 function TableOfContents({
   activeId,
   headings,
+  t,
 }: {
   headings: TocHeading[];
   activeId: string;
+  t: TranslateFunction;
 }) {
   if (headings.length === 0) {
     return null;
@@ -235,13 +247,13 @@ function TableOfContents({
         color="fg.muted"
         mb="3"
       >
-        On this page
+        {t("On this page")}
       </Heading>
       <VStack
         as="nav"
         alignItems="stretch"
         gap="1"
-        aria-label="Table of contents"
+        aria-label={t("Table of contents")}
       >
         {headings.map((heading) => (
           <Link

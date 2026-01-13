@@ -1,6 +1,7 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
+import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
@@ -27,6 +28,7 @@ export function SearchDisplay({
   result,
   title,
 }: SearchDisplayProps) {
+  const t = useExtracted();
   const [inputValue, setInputValue] = useState(query);
 
   const { run: debouncedOnChange } = useDebounceFn(
@@ -52,16 +54,18 @@ export function SearchDisplay({
               <Input
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder="Search..."
+                placeholder={t("Search...")}
                 w="64"
               />
             </Flex>
 
             <Flex gap="2" flexWrap="wrap">
-              <Badge variant="outline">Query: {query || "(empty)"}</Badge>
-              <Badge colorPalette="gray">{result.data.length} results</Badge>
+              <Badge variant="outline">Query: {query || t("(empty)")}</Badge>
+              <Badge colorPalette="gray">
+                {t("{count} results", { count: String(result.data.length) })}
+              </Badge>
               {result.isLoading && (
-                <Badge colorPalette="amber">Loading...</Badge>
+                <Badge colorPalette="amber">{t("Loading...")}</Badge>
               )}
             </Flex>
 
