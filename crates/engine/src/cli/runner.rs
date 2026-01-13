@@ -2,7 +2,7 @@ use crate::types::SpecId;
 use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress};
 use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
-use crate::rotation::RotationCompiler;
+use crate::rotation::{Rotation, CompiledRotation};
 use crate::data::{TuningData, load_tuning};
 use crate::specs::BmHunter;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
@@ -278,37 +278,44 @@ impl Runner {
         Ok(())
     }
 
-    /// Load rotation script from file or use default
+    /// Load rotation JSON from file or use default
     fn load_rotation_script(spec: SpecArg, path: Option<&str>) -> Result<String, String> {
         if let Some(p) = path {
-            debug!(path = p, "Loading rotation script");
+            debug!(path = p, "Loading rotation file");
             std::fs::read_to_string(p)
                 .map_err(|e| format!("Failed to read rotation file: {}", e))
         } else {
             // Use default rotation for spec
             let default_path = match spec {
-                SpecArg::BmHunter => "rotations/bm_hunter.rhai",
+                SpecArg::BmHunter => "rotations/bm_hunter.json",
             };
-            debug!(path = default_path, "Loading default rotation script");
+            debug!(path = default_path, "Loading default rotation file");
             std::fs::read_to_string(default_path)
                 .map_err(|e| format!("Failed to read default rotation '{}': {}", default_path, e))
         }
     }
 
     fn validate_rotation(file: &str) -> Result<(), String> {
-        debug!(file, "Validating rotation script");
+        debug!(file, "Validating rotation file");
         let content = std::fs::read_to_string(file)
             .map_err(|e| format!("Failed to read file: {}", e))?;
 
-        match RotationCompiler::compile(&content) {
+        // Parse JSON rotation
+        let rotation = Rotation::from_json(&content)
+            .map_err(|e| format!("Failed to parse rotation: {}", e))?;
+
+        info!(name = %rotation.name, actions = rotation.actions.len(), "Parsed rotation");
+
+        // Try to compile it
+        match CompiledRotation::compile(&rotation) {
             Ok(_) => {
-                info!(file, "Rotation script is valid");
-                println!("Rotation script is valid");
+                info!(file, "Rotation is valid and compilable");
+                println!("Rotation '{}' is valid ({} actions)", rotation.name, rotation.actions.len());
                 Ok(())
             }
             Err(e) => {
-                warn!(file, error = %e, "Rotation script has errors");
-                println!("Rotation script has errors:");
+                warn!(file, error = %e, "Rotation compilation failed");
+                println!("Rotation compilation failed:");
                 println!("  {}", e);
                 Err(e.to_string())
             }

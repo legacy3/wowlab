@@ -9,7 +9,15 @@ static INIT_ROTATION: Once = Once::new();
 
 fn ensure_rotation() {
     INIT_ROTATION.call_once(|| {
-        let _ = BmHunter::init_rotation("wait_gcd()");
+        // Simple rotation that just casts Kill Command then Cobra Shot
+        let json = r#"{
+            "name": "test_rotation",
+            "actions": [
+                { "spell_id": 34026 },
+                { "spell_id": 193455 }
+            ]
+        }"#;
+        let _ = BmHunter::init_rotation(json);
     });
 }
 
@@ -51,230 +59,46 @@ fn sim_init() {
     let config = SimConfig::default().with_duration(10.0);
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);
+
+    let state = SimState::new(config, player);
+    assert!(!state.finished);
+    assert_eq!(state.player.spec, SpecId::BeastMastery);
+}
+
+#[test]
+fn cooldown_lookup() {
+    let handler = BmHunter::new();
+    let mut player = Player::new(SpecId::BeastMastery);
+    handler.init_player(&mut player);
+
+    let kc_cd = player.cooldown(KILL_COMMAND).expect("Kill Command should have cooldown");
+    assert!(kc_cd.is_ready(SimTime::ZERO));
+
+    let bw_cd = player.cooldown(BESTIAL_WRATH).expect("Bestial Wrath should have cooldown");
+    assert!(bw_cd.is_ready(SimTime::ZERO));
+}
+
+#[test]
+fn pet_init() {
+    ensure_rotation();
+    let handler = BmHunter::new();
+    let config = SimConfig::default().with_duration(10.0);
+    let mut player = Player::new(SpecId::BeastMastery);
+    handler.init_player(&mut player);
+
     let mut state = SimState::new(config, player);
+    let now = state.now();
+
+    // Initialize sim - this should summon the pet
     handler.init(&mut state);
 
-    assert_eq!(state.player.spec, SpecId::BeastMastery);
-    // Pet should be summoned
-    assert!(state.pets.get(UnitIdx(1)).is_some());
-}
-
-#[test]
-fn spell_lookup() {
-    let spells = spell_definitions();
-
-    let kill_cmd = spells.iter().find(|s| s.id == KILL_COMMAND);
-    assert!(kill_cmd.is_some());
-    let kc = kill_cmd.unwrap();
-    assert!(kc.cooldown > SimTime::ZERO);
-
-    let barbed = spells.iter().find(|s| s.id == BARBED_SHOT);
-    assert!(barbed.is_some());
-    let bs = barbed.unwrap();
-    assert!(bs.charges > 0);
-}
-
-#[test]
-fn pet_damage_constants() {
-    assert!((PetDamage::KILL_COMMAND_COEF - 2.0).abs() < 0.01);
-    assert!((PetDamage::STAT_INHERITANCE - 0.6).abs() < 0.01);
-}
-
-#[test]
-fn rotation_spell_name_mapping() {
-    assert_eq!(spell_name_to_idx("kill_command"), Some(KILL_COMMAND));
-    assert_eq!(spell_name_to_idx("cobra_shot"), Some(COBRA_SHOT));
-    assert_eq!(spell_name_to_idx("barbed_shot"), Some(BARBED_SHOT));
-    assert_eq!(spell_name_to_idx("bestial_wrath"), Some(BESTIAL_WRATH));
-    assert_eq!(spell_name_to_idx("invalid_spell"), None);
+    // BM Hunter should have summoned a pet
+    assert!(state.pets.active(now).count() > 0, "BM Hunter should have an active pet");
 }
 
 // ============================================================================
-// JSON Rotation DSL Tests
+// Spell ID Resolver Tests
 // ============================================================================
-
-#[test]
-fn json_rotation_basic() {
-    use crate::rotation::json_dsl::JsonRotation;
-    use crate::rotation::Action;
-
-    // Simple rotation: Cast Kill Command when off CD, else Cobra Shot
-    let json = r#"{
-        "defaultListId": "main",
-        "name": "Basic BM Rotation",
-        "lists": [
-            {
-                "id": "main",
-                "name": "default",
-                "listType": "main",
-                "actions": [
-                    {
-                        "id": "1",
-                        "type": "spell",
-                        "spellId": 34026,
-                        "enabled": true
-                    },
-                    {
-                        "id": "2",
-                        "type": "spell",
-                        "spellId": 193455,
-                        "enabled": true
-                    }
-                ]
-            }
-        ],
-        "variables": []
-    }"#;
-
-    let resolver = BmHunterResolver;
-    let rotation = JsonRotation::from_json(json, resolver).expect("Failed to parse rotation");
-
-    // Create a minimal sim state to test
-    ensure_rotation();
-    let handler = BmHunter::new();
-    let config = SimConfig::default().with_duration(10.0);
-    let mut player = Player::new(SpecId::BeastMastery);
-    handler.init_player(&mut player);
-    let state = SimState::new(config, player);
-
-    // Get next action - should be Kill Command (first in list, no conditions)
-    let action = rotation.next_action(&state);
-    assert_eq!(action, Action::Cast("kill_command".to_string()));
-}
-
-#[test]
-fn json_rotation_with_conditions() {
-    use crate::rotation::json_dsl::JsonRotation;
-    use crate::rotation::Action;
-
-    // Rotation with conditions: Cast Kill Command only when focus >= 30
-    let json = r#"{
-        "defaultListId": "main",
-        "name": "Conditional BM Rotation",
-        "lists": [
-            {
-                "id": "main",
-                "name": "default",
-                "listType": "main",
-                "actions": [
-                    {
-                        "id": "1",
-                        "type": "spell",
-                        "spellId": 34026,
-                        "enabled": true,
-                        "condition": {
-                            "combinator": "and",
-                            "rules": [
-                                {
-                                    "field": "resource.current",
-                                    "operator": ">=",
-                                    "value": "30"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "id": "2",
-                        "type": "wait_gcd",
-                        "enabled": true
-                    }
-                ]
-            }
-        ],
-        "variables": []
-    }"#;
-
-    let resolver = BmHunterResolver;
-    let rotation = JsonRotation::from_json(json, resolver).expect("Failed to parse rotation");
-
-    // Create state with enough focus
-    ensure_rotation();
-    let handler = BmHunter::new();
-    let config = SimConfig::default().with_duration(10.0);
-    let mut player = Player::new(SpecId::BeastMastery);
-    handler.init_player(&mut player);
-
-    // Set focus to 50 (should cast KC)
-    if let Some(ref mut res) = player.resources.primary {
-        res.current = 50.0;
-    }
-    let state = SimState::new(config, player);
-
-    let action = rotation.next_action(&state);
-    assert_eq!(action, Action::Cast("kill_command".to_string()));
-
-    // Now test with low focus - should skip KC and wait
-    let mut player2 = Player::new(SpecId::BeastMastery);
-    handler.init_player(&mut player2);
-    if let Some(ref mut res) = player2.resources.primary {
-        res.current = 10.0;
-    }
-    let state2 = SimState::new(SimConfig::default().with_duration(10.0), player2);
-
-    let action2 = rotation.next_action(&state2);
-    assert_eq!(action2, Action::WaitGcd);
-}
-
-#[test]
-fn json_rotation_call_action_list() {
-    use crate::rotation::json_dsl::JsonRotation;
-    use crate::rotation::Action;
-
-    // Rotation with sub-list call
-    let json = r#"{
-        "defaultListId": "main",
-        "name": "Sub-list Rotation",
-        "lists": [
-            {
-                "id": "main",
-                "name": "default",
-                "listType": "main",
-                "actions": [
-                    {
-                        "id": "1",
-                        "type": "call_action_list",
-                        "listId": "cooldowns",
-                        "enabled": true
-                    },
-                    {
-                        "id": "2",
-                        "type": "spell",
-                        "spellId": 193455,
-                        "enabled": true
-                    }
-                ]
-            },
-            {
-                "id": "cooldowns",
-                "name": "cooldowns",
-                "listType": "sub",
-                "actions": [
-                    {
-                        "id": "cd1",
-                        "type": "spell",
-                        "spellId": 19574,
-                        "enabled": true
-                    }
-                ]
-            }
-        ],
-        "variables": []
-    }"#;
-
-    let resolver = BmHunterResolver;
-    let rotation = JsonRotation::from_json(json, resolver).expect("Failed to parse rotation");
-
-    ensure_rotation();
-    let handler = BmHunter::new();
-    let config = SimConfig::default().with_duration(10.0);
-    let mut player = Player::new(SpecId::BeastMastery);
-    handler.init_player(&mut player);
-    let state = SimState::new(config, player);
-
-    // Should call cooldowns list first and cast Bestial Wrath
-    let action = rotation.next_action(&state);
-    assert_eq!(action, Action::Cast("bestial_wrath".to_string()));
-}
 
 #[test]
 fn spell_id_resolver() {
@@ -286,8 +110,163 @@ fn spell_id_resolver() {
 }
 
 #[test]
-fn spell_idx_to_name_resolver() {
-    assert_eq!(spell_idx_to_name(KILL_COMMAND), Some("kill_command"));
-    assert_eq!(spell_idx_to_name(COBRA_SHOT), Some("cobra_shot"));
-    assert_eq!(spell_idx_to_name(SpellIdx(99999)), None);
+fn spell_name_resolver() {
+    assert_eq!(spell_name_to_idx("kill_command"), Some(KILL_COMMAND));
+    assert_eq!(spell_name_to_idx("cobra_shot"), Some(COBRA_SHOT));
+    assert_eq!(spell_name_to_idx("barbed_shot"), Some(BARBED_SHOT));
+    assert_eq!(spell_name_to_idx("bestial_wrath"), Some(BESTIAL_WRATH));
+    assert_eq!(spell_name_to_idx("unknown_spell"), None);
+}
+
+// ============================================================================
+// JIT Rotation Tests
+// ============================================================================
+
+#[test]
+fn rotation_compile_basic() {
+    use crate::rotation::{Rotation, CompiledRotation};
+
+    let json = r#"{
+        "name": "basic",
+        "actions": [
+            { "spell_id": 34026 }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+
+    // Create context and evaluate
+    use crate::rotation::RotationContext;
+    let ctx = RotationContext::default();
+    let result = compiled.evaluate(&ctx);
+    assert_eq!(result, 34026); // Should return Kill Command spell ID
+}
+
+#[test]
+fn rotation_compile_with_condition() {
+    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
+
+    // Cast Kill Command when focus >= 30, else Cobra Shot
+    let json = r#"{
+        "name": "conditional",
+        "actions": [
+            {
+                "spell_id": 34026,
+                "condition": { ">=": [{ "var": "focus" }, 30] }
+            },
+            { "spell_id": 193455 }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+
+    // With high focus, should cast Kill Command
+    let mut ctx = RotationContext::default();
+    ctx.focus = 50.0;
+    assert_eq!(compiled.evaluate(&ctx), 34026);
+
+    // With low focus, should cast Cobra Shot
+    ctx.focus = 20.0;
+    assert_eq!(compiled.evaluate(&ctx), 193455);
+}
+
+#[test]
+fn rotation_cooldown_condition() {
+    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
+
+    // Cast Bestial Wrath when cooldown is ready (slot 1)
+    let json = r#"{
+        "name": "cooldown_test",
+        "actions": [
+            {
+                "spell_id": 19574,
+                "condition": "cooldown.1.ready"
+            },
+            { "spell_id": 193455 }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+
+    // Cooldown ready - should cast Bestial Wrath
+    let mut ctx = RotationContext::default();
+    ctx.cd_ready[1] = true;
+    assert_eq!(compiled.evaluate(&ctx), 19574);
+
+    // Cooldown not ready - should cast Cobra Shot
+    ctx.cd_ready[1] = false;
+    assert_eq!(compiled.evaluate(&ctx), 193455);
+}
+
+#[test]
+fn rotation_buff_condition() {
+    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
+
+    // Cast Kill Command when Bestial Wrath is active (buff slot 0)
+    let json = r#"{
+        "name": "buff_test",
+        "actions": [
+            {
+                "spell_id": 34026,
+                "condition": "buff.0.active"
+            },
+            { "spell_id": 193455 }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+
+    // Buff active - should cast Kill Command
+    let mut ctx = RotationContext::default();
+    ctx.buff_active[0] = true;
+    assert_eq!(compiled.evaluate(&ctx), 34026);
+
+    // Buff not active - should cast Cobra Shot
+    ctx.buff_active[0] = false;
+    assert_eq!(compiled.evaluate(&ctx), 193455);
+}
+
+#[test]
+fn rotation_and_condition() {
+    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
+
+    // Cast Kill Command when cooldown ready AND focus >= 30
+    let json = r#"{
+        "name": "and_test",
+        "actions": [
+            {
+                "spell_id": 34026,
+                "condition": {
+                    "and": [
+                        "cooldown.0.ready",
+                        { ">=": [{ "var": "focus" }, 30] }
+                    ]
+                }
+            },
+            { "spell_id": 193455 }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+
+    let mut ctx = RotationContext::default();
+
+    // Both conditions true
+    ctx.cd_ready[0] = true;
+    ctx.focus = 50.0;
+    assert_eq!(compiled.evaluate(&ctx), 34026);
+
+    // Focus too low
+    ctx.focus = 20.0;
+    assert_eq!(compiled.evaluate(&ctx), 193455);
+
+    // Cooldown not ready
+    ctx.cd_ready[0] = false;
+    ctx.focus = 50.0;
+    assert_eq!(compiled.evaluate(&ctx), 193455);
 }

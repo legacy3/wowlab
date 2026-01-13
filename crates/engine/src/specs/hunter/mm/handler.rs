@@ -9,22 +9,23 @@ use crate::spec::{SpellDef, AuraDef, AuraEffect, GcdType, SpellFlags};
 use crate::combat::{Cooldown, DamagePipeline};
 use crate::aura::{AuraInstance, AuraFlags};
 use crate::actor::Player;
-use crate::rotation::{Rotation, Action};
+use crate::rotation::{CompiledRotation, Action, ContextBuilder};
 use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
 use super::procs::setup_procs;
-use super::rotation::{MmHunterBindings, spell_name_to_idx};
+use super::rotation::{MmHunterContext, spell_name_to_idx, spell_id_to_idx};
 use tracing::debug;
 
-static MM_ROTATION: std::sync::OnceLock<Rotation<MmHunterBindings>> = std::sync::OnceLock::new();
+static MM_ROTATION: std::sync::OnceLock<CompiledRotation> = std::sync::OnceLock::new();
+static MM_CONTEXT: MmHunterContext = MmHunterContext;
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
 /// Hidden aura for tracking Steady Shot count for Steady Focus
 const STEADY_SHOT_TRACKER: AuraIdx = AuraIdx(999001);
 
-fn get_rotation() -> &'static Rotation<MmHunterBindings> {
+fn get_rotation() -> &'static CompiledRotation {
     MM_ROTATION.get().expect("MM Hunter rotation not initialized")
 }
 
@@ -58,11 +59,15 @@ impl MmHunter {
         Self
     }
 
-    /// Initialize the rotation from a script.
-    pub fn init_rotation(script: &str) -> Result<(), String> {
-        let rotation = Rotation::new(script, MmHunterBindings::new())
+    /// Initialize the rotation from JSON.
+    pub fn init_rotation(json: &str) -> Result<(), String> {
+        use crate::rotation::Rotation;
+
+        let rotation = Rotation::from_json(json)
+            .map_err(|e| format!("Failed to parse rotation: {}", e))?;
+        let compiled = CompiledRotation::compile(&rotation)
             .map_err(|e| format!("Failed to compile rotation: {}", e))?;
-        MM_ROTATION.set(rotation).map_err(|_| "Rotation already initialized".to_string())?;
+        MM_ROTATION.set(compiled).map_err(|_| "Rotation already initialized".to_string())?;
         Ok(())
     }
 
@@ -256,18 +261,17 @@ impl SpecHandler for MmHunter {
     fn on_gcd(&self, state: &mut SimState) {
         if state.finished { return; }
 
-        match get_rotation().next_action(state) {
-            Action::Cast(name) => {
-                if let Some(spell) = spell_name_to_idx(&name) {
-                    self.cast_spell(state, spell, TargetIdx(0));
-                } else {
-                    state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
-                }
+        let ctx = MM_CONTEXT.build_context(state);
+        let spell_id = get_rotation().evaluate(&ctx);
+
+        if spell_id > 0 {
+            if let Some(spell) = spell_id_to_idx(spell_id) {
+                self.cast_spell(state, spell, TargetIdx(0));
+            } else {
+                state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
             }
-            Action::Wait(secs) => {
-                state.schedule_in(SimTime::from_secs_f32(secs as f32), SimEvent::GcdEnd);
-            }
-            _ => state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd),
+        } else {
+            state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
         }
     }
 
@@ -323,7 +327,15 @@ impl SpecHandler for MmHunter {
     }
 
     fn next_action(&self, state: &SimState) -> Action {
-        get_rotation().next_action(state)
+        let ctx = MM_CONTEXT.build_context(state);
+        let spell_id = get_rotation().evaluate(&ctx);
+        if spell_id == 0 {
+            Action::WaitGcd
+        } else if let Some(spell_idx) = spell_id_to_idx(spell_id) {
+            Action::Cast(spell_idx)
+        } else {
+            Action::WaitGcd
+        }
     }
 
     fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef> {

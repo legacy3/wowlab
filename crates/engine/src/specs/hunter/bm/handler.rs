@@ -9,21 +9,22 @@ use crate::spec::{SpellDef, AuraDef, AuraEffect, GcdType, SpellFlags};
 use crate::combat::{Cooldown, ChargedCooldown, DamagePipeline};
 use crate::aura::AuraInstance;
 use crate::actor::Player;
-use crate::rotation::{Rotation, Action};
+use crate::rotation::{Action, CompiledRotation, ContextBuilder, Rotation};
 use crate::data::{TuningData, apply_spell_overrides, apply_aura_overrides};
 use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
 use super::pet::PetDamage;
 use super::procs::{setup_procs, setup_procs_with_talents, setup_tier_set_procs};
-use super::rotation::{BmHunterBindings, spell_name_to_idx};
+use super::rotation::{BmHunterContext, spell_id_to_idx, spell_name_to_idx};
 use tracing::debug;
 
-static BM_ROTATION: std::sync::OnceLock<Rotation<BmHunterBindings>> = std::sync::OnceLock::new();
+static BM_ROTATION: std::sync::OnceLock<CompiledRotation> = std::sync::OnceLock::new();
+static BM_CONTEXT: BmHunterContext = BmHunterContext;
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
-fn get_rotation() -> &'static Rotation<BmHunterBindings> {
+fn get_rotation() -> &'static CompiledRotation {
     BM_ROTATION.get().expect("BM Hunter rotation not initialized")
 }
 
@@ -143,13 +144,13 @@ impl BmHunter {
         state.player.stats.mastery()
     }
 
-    /// Initialize the rotation from a script.
-    pub fn init_rotation(script: &str) -> Result<(), String> {
-        Self::init_rotation_with_tuning(script, &TuningData::empty())
+    /// Initialize the rotation from a JSON string.
+    pub fn init_rotation(json: &str) -> Result<(), String> {
+        Self::init_rotation_with_tuning(json, &TuningData::empty())
     }
 
     /// Initialize the rotation with tuning overrides.
-    pub fn init_rotation_with_tuning(script: &str, tuning: &TuningData) -> Result<(), String> {
+    pub fn init_rotation_with_tuning(json: &str, tuning: &TuningData) -> Result<(), String> {
         // Initialize spell definitions with tuning
         let mut spells = spell_definitions();
         apply_spell_overrides(&mut spells, &tuning.spell);
@@ -160,10 +161,12 @@ impl BmHunter {
         apply_aura_overrides(&mut auras, &tuning.aura);
         AURA_DEFS.set(auras).map_err(|_| "Aura definitions already initialized".to_string())?;
 
-        // Compile rotation
-        let rotation = Rotation::new(script, BmHunterBindings::new())
+        // Parse and compile rotation
+        let rotation = Rotation::from_json(json)
+            .map_err(|e| format!("Failed to parse rotation: {}", e))?;
+        let compiled = CompiledRotation::compile(&rotation)
             .map_err(|e| format!("Failed to compile rotation: {}", e))?;
-        BM_ROTATION.set(rotation).map_err(|_| "Rotation already initialized".to_string())?;
+        BM_ROTATION.set(compiled).map_err(|_| "Rotation already initialized".to_string())?;
 
         Ok(())
     }
@@ -518,19 +521,22 @@ impl SpecHandler for BmHunter {
     fn on_gcd(&self, state: &mut SimState) {
         if state.finished { return; }
 
-        match get_rotation().next_action(state) {
-            Action::Cast(name) => {
-                if let Some(spell) = spell_name_to_idx(&name) {
-                    let handler = BmHunter::with_talents(self.talents);
-                    handler.cast_spell(state, spell, TargetIdx(0));
-                } else {
-                    state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
-                }
+        // Build context and evaluate JIT-compiled rotation
+        let ctx = BM_CONTEXT.build_context(state);
+        let spell_id = get_rotation().evaluate(&ctx);
+
+        if spell_id > 0 {
+            // Map game spell ID to internal index
+            if let Some(spell) = spell_id_to_idx(spell_id) {
+                let handler = BmHunter::with_talents(self.talents);
+                handler.cast_spell(state, spell, TargetIdx(0));
+            } else {
+                debug!(spell_id, "Unknown spell ID from rotation");
+                state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
             }
-            Action::Wait(secs) => {
-                state.schedule_in(SimTime::from_secs_f32(secs as f32), SimEvent::GcdEnd);
-            }
-            _ => state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd),
+        } else {
+            // Rotation returned 0 = wait
+            state.schedule_in(SimTime::from_millis(100), SimEvent::GcdEnd);
         }
     }
 
@@ -621,7 +627,15 @@ impl SpecHandler for BmHunter {
     }
 
     fn next_action(&self, state: &SimState) -> Action {
-        get_rotation().next_action(state)
+        let ctx = BM_CONTEXT.build_context(state);
+        let spell_id = get_rotation().evaluate(&ctx);
+        if spell_id == 0 {
+            Action::WaitGcd
+        } else if let Some(spell_idx) = spell_id_to_idx(spell_id) {
+            Action::Cast(spell_idx)
+        } else {
+            Action::WaitGcd
+        }
     }
 
     fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef> {

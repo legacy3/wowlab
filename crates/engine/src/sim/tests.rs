@@ -8,7 +8,12 @@ static INIT_ROTATION: Once = Once::new();
 
 fn ensure_rotation() {
     INIT_ROTATION.call_once(|| {
-        let _ = BmHunter::init_rotation("wait_gcd()");
+        // Simple rotation that just waits (no actions)
+        let json = r#"{
+            "name": "wait_rotation",
+            "actions": []
+        }"#;
+        let _ = BmHunter::init_rotation(json);
     });
 }
 

@@ -1,184 +1,372 @@
-//! Rotation script compiler with AST optimization.
-//!
-//! Compiles rotation scripts and manages AST optimization for
-//! high-performance evaluation.
-//!
-//! # Method Call Extraction
-//!
-//! Since scripts are pure (no `$state` mutation), method calls return the same
-//! value throughout one tick. We extract them during preprocessing:
-//!
-//! ```text
-//! $spell.bar.ready()  ->  __m0  (extracted, evaluated once per tick)
-//! ```
-//!
-//! At runtime: evaluate extracted calls, inject as constants, optimize AST.
+//! Cranelift JIT compiler for rotations.
 
-use crate::rotation::action::{self, encoding, Action};
-use crate::rotation::preprocess::{self, NamespaceConfig};
-use crate::rotation::schema::{GameState, StateSchema};
-use rhai::{ASTNode, Dynamic, Engine, Expr, OptimizationLevel, AST};
+use cranelift::prelude::*;
+use cranelift::codegen::ir::BlockArg;
+use cranelift_jit::{JITBuilder, JITModule};
+use cranelift_module::{Linkage, Module};
 
-/// Rotation script compiler using AST optimization caching.
+use super::ast::{Condition, Operand, Rotation, RotationNode, VarId};
+use super::context::RotationContext;
+use super::error::{Error, Result};
+
+/// Function signature: fn(*const RotationContext) -> u32
+type RotationFn = unsafe extern "C" fn(*const RotationContext) -> u32;
+
+/// A Send+Sync wrapper for the function pointer.
+#[derive(Clone, Copy)]
+struct SyncFnPtr(RotationFn);
+
+// SAFETY: The function pointer points to JIT-compiled code that only reads
+// from the RotationContext passed to it. The underlying memory is leaked
+// and remains valid for the lifetime of the program.
+unsafe impl Send for SyncFnPtr {}
+unsafe impl Sync for SyncFnPtr {}
+
+/// A JIT-compiled rotation ready for execution.
 ///
-/// # Workflow
-///
-/// 1. [`compile()`](Self::compile) - Parse script, extract schema and method calls
-/// 2. [`optimize()`](Self::optimize) - Re-optimize AST when state changes (~8 us)
-/// 3. [`evaluate_optimized()`](Self::evaluate_optimized) - Walk cached AST for action (~0.07 us)
-///
-/// # Method Call Handling
-///
-/// Method calls like `$spell.bar.ready()` are extracted during preprocessing.
-/// Use [`schema().method_calls()`](StateSchema::method_calls) to get them,
-/// evaluate each once per tick, then inject results into [`GameState`] before
-/// calling [`optimize()`](Self::optimize).
-pub struct RotationCompiler {
-    engine: Engine,
-    base_ast: AST,
-    schema: StateSchema,
+/// This is safe to share between threads because:
+/// - The JIT module memory is leaked (never deallocated)
+/// - The function pointer only reads from the passed context
+pub struct CompiledRotation {
+    func_ptr: SyncFnPtr,
 }
 
-impl RotationCompiler {
-    /// Compiles a rotation script with the default namespace configuration.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the script fails to parse.
-    pub fn compile(script: &str) -> Result<Self, Box<rhai::EvalAltResult>> {
-        Self::compile_with(script, &NamespaceConfig::default())
+impl CompiledRotation {
+    /// Compile a rotation to native code.
+    pub fn compile(rotation: &Rotation) -> Result<Self> {
+        let ast = rotation.to_ast();
+        Self::compile_ast(&ast)
     }
 
-    /// Compiles a rotation script with a custom namespace configuration.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the script fails to parse.
-    pub fn compile_with(
-        script: &str,
-        config: &NamespaceConfig,
-    ) -> Result<Self, Box<rhai::EvalAltResult>> {
-        let result = preprocess::transform(script, config);
-        let mut engine = create_engine();
+    /// Compile a raw AST node.
+    pub fn compile_ast(ast: &RotationNode) -> Result<Self> {
+        let mut flag_builder = settings::builder();
+        flag_builder.set("opt_level", "speed").map_err(|e| {
+            Error::Compilation(format!("failed to set opt_level: {}", e))
+        })?;
+        let flags = settings::Flags::new(flag_builder);
 
-        // Compile with optimization OFF to preserve AST structure
-        engine.set_optimization_level(OptimizationLevel::None);
-        let base_ast = engine.compile(&result.script)?;
+        let isa = cranelift_native::builder()
+            .map_err(|e| Error::Compilation(format!("failed to create ISA builder: {}", e)))?
+            .finish(flags)
+            .map_err(|e| Error::Compilation(format!("failed to finish ISA: {}", e)))?;
 
-        // Extract schema from AST and store method calls
-        let mut schema = extract_schema(&base_ast);
+        let builder = JITBuilder::with_isa(isa, cranelift_module::default_libcall_names());
+        let mut module = JITModule::new(builder);
 
-        // Register method call variables in schema
-        for call in &result.method_calls {
-            schema.register(&call.var);
+        let ptr_ty = module.target_config().pointer_type();
+
+        // Signature: fn(*const RotationContext) -> u32
+        let mut sig = module.make_signature();
+        sig.params.push(AbiParam::new(ptr_ty));
+        sig.returns.push(AbiParam::new(types::I32));
+
+        let func_id = module
+            .declare_function("rotation", Linkage::Local, &sig)
+            .map_err(|e| Error::Compilation(format!("failed to declare function: {}", e)))?;
+
+        let mut ctx = module.make_context();
+        ctx.func.signature = sig;
+
+        {
+            let mut fn_builder_ctx = FunctionBuilderContext::new();
+            let mut builder = FunctionBuilder::new(&mut ctx.func, &mut fn_builder_ctx);
+
+            let entry_block = builder.create_block();
+            builder.append_block_params_for_function_params(entry_block);
+            builder.switch_to_block(entry_block);
+            builder.seal_block(entry_block);
+
+            let ctx_ptr = builder.block_params(entry_block)[0];
+
+            let result = compile_node(&mut builder, ast, ctx_ptr, ptr_ty)?;
+            builder.ins().return_(&[result]);
+
+            builder.finalize();
         }
-        schema.set_method_calls(result.method_calls);
+
+        module
+            .define_function(func_id, &mut ctx)
+            .map_err(|e| Error::Compilation(format!("failed to define function: {}", e)))?;
+        module.clear_context(&mut ctx);
+        module
+            .finalize_definitions()
+            .map_err(|e| Error::Compilation(format!("failed to finalize: {}", e)))?;
+
+        let func_ptr = module.get_finalized_function(func_id);
+        let func_ptr: RotationFn = unsafe { std::mem::transmute(func_ptr) };
+
+        // Leak the module to keep the JIT memory alive forever.
+        // This is intentional - rotations are compiled once at startup.
+        Box::leak(Box::new(module));
 
         Ok(Self {
-            engine,
-            base_ast,
-            schema,
+            func_ptr: SyncFnPtr(func_ptr),
         })
     }
 
-    /// Returns the schema for this compiled rotation.
-    #[must_use]
-    pub fn schema(&self) -> &StateSchema {
-        &self.schema
-    }
-
-    /// Creates a new state instance for this rotation.
-    #[must_use]
-    pub fn new_state(&self) -> GameState {
-        GameState::new(&self.schema)
-    }
-
-    /// Returns a reference to the Rhai engine.
-    #[must_use]
-    pub fn engine(&self) -> &Engine {
-        &self.engine
-    }
-
-    /// Returns a reference to the base (unoptimized) AST.
-    #[must_use]
-    pub fn base_ast(&self) -> &AST {
-        &self.base_ast
-    }
-
-    /// Optimizes the AST with the current state values (~8 us).
-    ///
-    /// The optimizer performs constant folding and dead code elimination
-    /// based on the injected state values.
-    #[must_use]
-    pub fn optimize(&self, state: &GameState) -> AST {
-        let scope = state.to_scope(&self.schema);
-        self.engine
-            .optimize_ast(&scope, self.base_ast.clone(), OptimizationLevel::Full)
-    }
-
-    /// Extracts the action from an optimized AST (~0.07 us).
-    ///
-    /// The optimized AST should be reduced to a single action string.
-    #[must_use]
-    pub fn evaluate_optimized(&self, optimized: &AST) -> Action {
-        action::extract(optimized)
-    }
-
-    /// Performs full evaluation: optimize and then extract.
-    ///
-    /// This is a convenience method that combines [`optimize()`](Self::optimize)
-    /// and [`evaluate_optimized()`](Self::evaluate_optimized).
-    #[must_use]
-    pub fn evaluate(&self, state: &GameState) -> Action {
-        action::extract(&self.optimize(state))
-    }
-
-    /// Creates a partial AST with static state baked in.
-    ///
-    /// Use for two-pass optimization:
-    /// 1. Bake in static state (talents, config) once
-    /// 2. Optimize from partial with dynamic state at runtime
-    #[must_use]
-    pub fn optimize_partial(&self, static_state: &GameState) -> AST {
-        let scope = static_state.to_scope(&self.schema);
-        self.engine
-            .optimize_ast(&scope, self.base_ast.clone(), OptimizationLevel::Full)
-    }
-
-    /// Optimizes from a partial AST with additional state values.
-    ///
-    /// Use with [`optimize_partial()`](Self::optimize_partial) for two-pass optimization.
-    #[must_use]
-    pub fn optimize_from_partial(&self, partial: &AST, state: &GameState) -> AST {
-        let scope = state.to_scope(&self.schema);
-        self.engine
-            .optimize_ast(&scope, partial.clone(), OptimizationLevel::Full)
+    /// Execute the compiled rotation.
+    #[inline]
+    pub fn evaluate(&self, ctx: &RotationContext) -> u32 {
+        unsafe { (self.func_ptr.0)(ctx as *const RotationContext) }
     }
 }
 
-/// Creates a Rhai engine with action functions registered.
-fn create_engine() -> Engine {
-    let mut engine = Engine::new();
-
-    engine.register_fn("cast", |spell: &str| {
-        Dynamic::from(format!("{}{}", encoding::CAST, spell))
-    });
-    engine.register_fn("wait", |secs: f64| {
-        Dynamic::from(format!("{}{}", encoding::WAIT, secs))
-    });
-    engine.register_fn("wait_gcd", || Dynamic::from(encoding::WAIT_GCD.to_string()));
-
-    engine
-}
-
-/// Extracts all variable names from an AST into a schema.
-fn extract_schema(ast: &AST) -> StateSchema {
-    let mut schema = StateSchema::new();
-    ast.walk(&mut |nodes: &[ASTNode]| {
-        if let Some(ASTNode::Expr(Expr::Variable(var, _, _))) = nodes.last() {
-            schema.register(var.1.as_str());
+fn compile_node(
+    builder: &mut FunctionBuilder,
+    node: &RotationNode,
+    ctx_ptr: Value,
+    ptr_ty: Type,
+) -> Result<Value> {
+    match node {
+        RotationNode::Cast(spell_id) => {
+            Ok(builder.ins().iconst(types::I32, *spell_id as i64))
         }
-        true
-    });
-    schema
+        RotationNode::Wait => Ok(builder.ins().iconst(types::I32, 0)),
+        RotationNode::If { cond, then, else_ } => {
+            let cond_val = compile_condition(builder, cond, ctx_ptr, ptr_ty)?;
+
+            let then_block = builder.create_block();
+            let else_block = builder.create_block();
+            let merge_block = builder.create_block();
+            builder.append_block_param(merge_block, types::I32);
+
+            builder.ins().brif(cond_val, then_block, &[], else_block, &[]);
+
+            builder.switch_to_block(then_block);
+            builder.seal_block(then_block);
+            let then_val = compile_node(builder, then, ctx_ptr, ptr_ty)?;
+            let then_arg = BlockArg::from(then_val);
+            builder.ins().jump(merge_block, &[then_arg]);
+
+            builder.switch_to_block(else_block);
+            builder.seal_block(else_block);
+            let else_val = compile_node(builder, else_, ctx_ptr, ptr_ty)?;
+            let else_arg = BlockArg::from(else_val);
+            builder.ins().jump(merge_block, &[else_arg]);
+
+            builder.switch_to_block(merge_block);
+            builder.seal_block(merge_block);
+            Ok(builder.block_params(merge_block)[0])
+        }
+    }
+}
+
+fn compile_condition(
+    builder: &mut FunctionBuilder,
+    cond: &Condition,
+    ctx_ptr: Value,
+    ptr_ty: Type,
+) -> Result<Value> {
+    match cond {
+        Condition::And(a, b) => {
+            let a_val = compile_condition(builder, a, ctx_ptr, ptr_ty)?;
+            let b_val = compile_condition(builder, b, ctx_ptr, ptr_ty)?;
+            Ok(builder.ins().band(a_val, b_val))
+        }
+
+        Condition::Or(a, b) => {
+            let a_val = compile_condition(builder, a, ctx_ptr, ptr_ty)?;
+            let b_val = compile_condition(builder, b, ctx_ptr, ptr_ty)?;
+            Ok(builder.ins().bor(a_val, b_val))
+        }
+
+        Condition::Not(inner) => {
+            let inner_val = compile_condition(builder, inner, ctx_ptr, ptr_ty)?;
+            let one = builder.ins().iconst(types::I8, 1);
+            Ok(builder.ins().bxor(inner_val, one))
+        }
+
+        Condition::Gte(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::GreaterThanOrEqual, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, a_val, b_val))
+            }
+        }
+
+        Condition::Gt(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::GreaterThan, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::SignedGreaterThan, a_val, b_val))
+            }
+        }
+
+        Condition::Lte(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::LessThanOrEqual, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::SignedLessThanOrEqual, a_val, b_val))
+            }
+        }
+
+        Condition::Lt(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::LessThan, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::SignedLessThan, a_val, b_val))
+            }
+        }
+
+        Condition::Eq(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::Equal, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::Equal, a_val, b_val))
+            }
+        }
+
+        Condition::Ne(a, b) => {
+            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
+            if is_float {
+                Ok(builder.ins().fcmp(FloatCC::NotEqual, a_val, b_val))
+            } else {
+                Ok(builder.ins().icmp(IntCC::NotEqual, a_val, b_val))
+            }
+        }
+
+        Condition::Var(var_id) => {
+            let val = load_var(builder, *var_id, ctx_ptr)?;
+            Ok(builder.ins().icmp_imm(IntCC::NotEqual, val, 0))
+        }
+
+        Condition::Literal(b) => {
+            Ok(builder.ins().iconst(types::I8, if *b { 1 } else { 0 }))
+        }
+    }
+}
+
+fn compile_operand_pair(
+    builder: &mut FunctionBuilder,
+    a: &Operand,
+    b: &Operand,
+    ctx_ptr: Value,
+    _ptr_ty: Type,
+) -> Result<(Value, Value, bool)> {
+    let (a_val, a_float) = compile_operand(builder, a, ctx_ptr)?;
+    let (b_val, b_float) = compile_operand(builder, b, ctx_ptr)?;
+
+    let is_float = a_float || b_float;
+
+    let a_val = if is_float && !a_float {
+        builder.ins().fcvt_from_sint(types::F64, a_val)
+    } else {
+        a_val
+    };
+
+    let b_val = if is_float && !b_float {
+        builder.ins().fcvt_from_sint(types::F64, b_val)
+    } else {
+        b_val
+    };
+
+    Ok((a_val, b_val, is_float))
+}
+
+fn compile_operand(
+    builder: &mut FunctionBuilder,
+    op: &Operand,
+    ctx_ptr: Value,
+) -> Result<(Value, bool)> {
+    match op {
+        Operand::Float(f) => Ok((builder.ins().f64const(*f), true)),
+        Operand::Int(i) => Ok((builder.ins().iconst(types::I32, *i as i64), false)),
+        Operand::Var(var_id) => {
+            let val = load_var(builder, *var_id, ctx_ptr)?;
+            Ok((val, var_id.is_float()))
+        }
+    }
+}
+
+fn load_var(
+    builder: &mut FunctionBuilder,
+    var_id: VarId,
+    ctx_ptr: Value,
+) -> Result<Value> {
+    let (offset, ty) = var_offset_and_type(var_id)?;
+    let addr = builder.ins().iadd_imm(ctx_ptr, offset as i64);
+    let flags = MemFlags::trusted();
+
+    if ty == types::I8 {
+        let val = builder.ins().load(types::I8, flags, addr, 0);
+        Ok(builder.ins().uextend(types::I32, val))
+    } else {
+        Ok(builder.ins().load(ty, flags, addr, 0))
+    }
+}
+
+fn var_offset_and_type(var_id: VarId) -> Result<(usize, Type)> {
+    use std::mem::offset_of;
+
+    match var_id {
+        VarId::Focus => Ok((offset_of!(RotationContext, focus), types::F64)),
+        VarId::FocusMax => Ok((offset_of!(RotationContext, focus_max), types::F64)),
+        VarId::FocusDeficit => {
+            Err(Error::Compilation("focus_deficit requires special handling".into()))
+        }
+        VarId::Time => Ok((offset_of!(RotationContext, time), types::F64)),
+        VarId::GcdRemains => Ok((offset_of!(RotationContext, gcd_remains), types::F64)),
+        VarId::TargetHealthPct => Ok((offset_of!(RotationContext, target_health_pct), types::F64)),
+        VarId::TargetTimeToDie => Ok((offset_of!(RotationContext, target_time_to_die), types::F64)),
+        VarId::TargetCount => Ok((offset_of!(RotationContext, target_count), types::I32)),
+
+        // Cooldowns - slot-indexed arrays
+        VarId::CooldownReady(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, cd_ready);
+            Ok((base + slot as usize, types::I8))
+        }
+        VarId::CooldownRemains(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, cd_remains);
+            Ok((base + (slot as usize) * 8, types::F64))
+        }
+        VarId::CooldownCharges(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, cd_charges);
+            Ok((base + (slot as usize) * 4, types::I32))
+        }
+
+        // Buffs - slot-indexed arrays
+        VarId::BuffActive(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, buff_active);
+            Ok((base + slot as usize, types::I8))
+        }
+        VarId::BuffStacks(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, buff_stacks);
+            Ok((base + (slot as usize) * 4, types::I32))
+        }
+        VarId::BuffRemains(slot) => {
+            if slot >= 16 {
+                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
+            }
+            let base = offset_of!(RotationContext, buff_remains);
+            Ok((base + (slot as usize) * 8, types::F64))
+        }
+
+        // Debuffs - for now, error (need to add to context)
+        VarId::DebuffActive(_) | VarId::DebuffStacks(_) | VarId::DebuffRemains(_) => {
+            Err(Error::Compilation("debuff vars not yet implemented".into()))
+        }
+
+        VarId::PetActive => Ok((offset_of!(RotationContext, pet_active), types::I8)),
+    }
 }
