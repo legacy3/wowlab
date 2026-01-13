@@ -1,16 +1,8 @@
 {
-  "Home": {
-    "simulate": {
-      "title": "Simulate",
-      "description": "Run quick simulations for your character"
-    },
-    "rotations": {
-      "title": "Rotations",
-      "description": "Build and share rotation priority lists"
-    },
-    "hooks": {
-      "title": "Hooks",
-      "description": "Explore game data hooks for spells and items"
-    }
-  }
+  "MgvB1f": "Run quick simulations for your character",
+  "eZSeUm": "Simulate",
+  "V0REQj": "Build and share rotation priority lists",
+  "8OBNNA": "Rotations",
+  "dhcTE2": "Explore game data hooks for spells and items",
+  "7OaBnb": "Hooks"
 }

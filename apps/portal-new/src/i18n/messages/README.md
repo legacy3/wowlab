@@ -8,16 +8,12 @@ Each locale has a JSON file (`en.json`, `de.json`, etc). Just edit the values:
 
 ```json
 {
-  "Home": {
-    "simulate": {
-      "title": "Simulate",
-      "description": "Run quick simulations for your character"
-    }
-  }
+  "MgvB1f": "Run quick simulations for your character",
+  "eZSeUm": "Simulate"
 }
 ```
 
-Keys stay in English. Only translate the values.
+Keys are auto-generated hashes. Match them to `en.json` and translate the values.
 
 ## Adding a new language
 
@@ -37,18 +33,18 @@ The language picker updates automatically.
 
 ## Adding new keys (for devs)
 
-Use `useTranslations` to render messages in components:
+Use `useExtracted` to render messages in components:
 
 ```tsx
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 function MyComponent() {
-  const t = useTranslations("Namespace");
-  return <h1>{t("key")}</h1>;
+  const t = useExtracted();
+  return <h1>{t("Hello world")}</h1>;
 }
 ```
 
-Keys can be nested: `t("section.subsection.key")`. See the [next-intl docs](https://next-intl.dev/docs/usage/translations) for interpolation, plurals, and more.
+See the [next-intl docs](https://next-intl.dev/docs/usage/extraction) for interpolation, plurals, and more.
 
 ## Guidelines
 

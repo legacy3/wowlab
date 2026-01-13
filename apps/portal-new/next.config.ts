@@ -60,6 +60,19 @@ const withMDX = createMDX({
   },
 });
 
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+const withNextIntl = createNextIntlPlugin({
+  requestConfig: "./src/i18n/request.ts",
+  experimental: {
+    srcPath: "./src",
+    extract: {
+      sourceLocale: "en",
+    },
+    messages: {
+      path: "./src/i18n/messages",
+      format: "json",
+      locales: "infer",
+    },
+  },
+});
 
 export default withNextIntl(withMDX(nextConfig));
