@@ -1,96 +1,39 @@
-//! MM Hunter rotation bindings.
+//! MM Hunter rotation support.
+//!
+//! Provides name resolution for MM Hunter rotations.
 
-use crate::rotation::{ContextBuilder, RotationContext};
-use crate::sim::SimState;
-use crate::types::{AuraIdx, SpellIdx};
+use crate::rotation::SpecResolver;
+use crate::types::SpellIdx;
 use super::constants::*;
 
-/// MM Hunter context builder.
-#[derive(Debug, Clone, Default)]
-pub struct MmHunterContext;
+/// Create a spec resolver for MM Hunter.
+pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
+    let resolver = SpecResolver::new("mm_hunter")
+        .resource("focus")
+        // Core spells
+        .spell("aimed_shot", AIMED_SHOT.0)
+        .spell("rapid_fire", RAPID_FIRE.0)
+        .spell("steady_shot", STEADY_SHOT.0)
+        .spell("arcane_shot", ARCANE_SHOT.0)
+        .spell("kill_shot", KILL_SHOT.0)
+        .spell("trueshot", TRUESHOT.0)
+        .spell("multi_shot", MULTI_SHOT.0)
+        // Core buffs
+        .aura("trueshot", TRUESHOT_BUFF.0)
+        .aura("precise_shots", PRECISE_SHOTS.0)
+        .aura("steady_focus", STEADY_FOCUS.0)
+        .aura("trick_shots", TRICK_SHOTS.0)
+        .aura("lock_and_load", LOCK_AND_LOAD.0)
+        // Talents
+        .talent("trueshot", talents.contains(TalentFlags::TRUESHOT))
+        .talent("lock_and_load", talents.contains(TalentFlags::LOCK_AND_LOAD));
 
-impl MmHunterContext {
-    pub fn new() -> Self {
-        Self
-    }
+    resolver
 }
 
-impl ContextBuilder for MmHunterContext {
-    fn build_context(&self, sim: &SimState) -> RotationContext {
-        let mut ctx = RotationContext::from_sim_state(sim);
-        let now = sim.now();
-
-        // Map cooldowns to slots
-        // Slot 0: Aimed Shot
-        if let Some(cd) = sim.player.cooldown(AIMED_SHOT) {
-            ctx.cd_ready[0] = cd.is_ready(now);
-            ctx.cd_remains[0] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 1: Rapid Fire
-        if let Some(cd) = sim.player.cooldown(RAPID_FIRE) {
-            ctx.cd_ready[1] = cd.is_ready(now);
-            ctx.cd_remains[1] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 2: Trueshot
-        if let Some(cd) = sim.player.cooldown(TRUESHOT) {
-            ctx.cd_ready[2] = cd.is_ready(now);
-            ctx.cd_remains[2] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 3: Kill Shot
-        if let Some(cd) = sim.player.cooldown(KILL_SHOT) {
-            ctx.cd_ready[3] = cd.is_ready(now);
-            ctx.cd_remains[3] = cd.remaining(now).as_secs_f32() as f64;
-        }
-
-        // Map buffs to slots
-        // Slot 0: Trueshot
-        ctx.buff_active[0] = sim.player.buffs.has(TRUESHOT_BUFF, now);
-        ctx.buff_remains[0] = sim.player.buffs.get(TRUESHOT_BUFF)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 1: Precise Shots
-        ctx.buff_active[1] = sim.player.buffs.has(PRECISE_SHOTS, now);
-        ctx.buff_stacks[1] = sim.player.buffs.stacks(PRECISE_SHOTS, now) as i32;
-        ctx.buff_remains[1] = sim.player.buffs.get(PRECISE_SHOTS)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 2: Steady Focus
-        ctx.buff_active[2] = sim.player.buffs.has(STEADY_FOCUS, now);
-        ctx.buff_remains[2] = sim.player.buffs.get(STEADY_FOCUS)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 3: Trick Shots
-        ctx.buff_active[3] = sim.player.buffs.has(TRICK_SHOTS, now);
-        ctx.buff_remains[3] = sim.player.buffs.get(TRICK_SHOTS)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 4: Lock and Load
-        ctx.buff_active[4] = sim.player.buffs.has(LOCK_AND_LOAD, now);
-        ctx.buff_stacks[4] = sim.player.buffs.stacks(LOCK_AND_LOAD, now) as i32;
-
-        ctx
-    }
-
-    fn cooldown_slot(&self, spell: SpellIdx) -> Option<usize> {
-        match spell {
-            x if x == AIMED_SHOT => Some(0),
-            x if x == RAPID_FIRE => Some(1),
-            x if x == TRUESHOT => Some(2),
-            x if x == KILL_SHOT => Some(3),
-            _ => None,
-        }
-    }
-
-    fn buff_slot(&self, aura: AuraIdx) -> Option<usize> {
-        match aura {
-            x if x == TRUESHOT_BUFF => Some(0),
-            x if x == PRECISE_SHOTS => Some(1),
-            x if x == STEADY_FOCUS => Some(2),
-            x if x == TRICK_SHOTS => Some(3),
-            x if x == LOCK_AND_LOAD => Some(4),
-            _ => None,
-        }
-    }
+/// Default spec resolver (no talents).
+pub fn default_resolver() -> SpecResolver {
+    spec_resolver(TalentFlags::empty())
 }
 
 /// Convert game spell ID to internal SpellIdx.
@@ -120,3 +63,12 @@ pub fn spell_name_to_idx(name: &str) -> Option<SpellIdx> {
         _ => None,
     }
 }
+
+/// Minimal rotation for testing.
+pub const MINIMAL_ROTATION_JSON: &str = r#"{
+  "name": "MM Hunter Minimal",
+  "actions": [
+    { "cast": "aimed_shot", "if": "cd.aimed_shot.ready" },
+    { "cast": "arcane_shot" }
+  ]
+}"#;

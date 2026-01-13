@@ -1,4 +1,5 @@
 use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool};
+use super::effect::SpellEffect;
 
 /// Target type for spells
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -140,6 +141,8 @@ pub struct SpellDef {
     pub requires_aura: Option<AuraIdx>,
     /// Consumes aura on cast
     pub consumes_aura: Option<AuraIdx>,
+    /// Effects that fire when this spell is cast
+    pub effects: Vec<SpellEffect>,
     /// Travel time in ms (for projectiles)
     pub travel_time: u32,
     /// Whether this can be cast while moving
@@ -188,6 +191,7 @@ impl SpellDef {
             apply_auras: Vec::new(),
             requires_aura: None,
             consumes_aura: None,
+            effects: Vec::new(),
             travel_time: 0,
             castable_while_moving: true,
             flags: SpellFlags::ON_GCD,

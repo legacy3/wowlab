@@ -1,0 +1,36 @@
+{
+  "name": "BM Hunter ST",
+  "variables": {
+    "in_opener": { "<": ["combat.time", 10] },
+    "pool_for_bw": { "and": [
+      { "<": ["cd.bestial_wrath.remaining", 3] },
+      { "<": ["resource.focus", 70] }
+    ]},
+    "need_frenzy_refresh": { "and": [
+      "buff.frenzy.active",
+      { "<": ["buff.frenzy.remaining", 2] }
+    ]}
+  },
+  "lists": {
+    "cooldowns": [
+      { "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" },
+      { "cast": "call_of_the_wild", "if": { "and": [
+        "cd.call_of_the_wild.ready",
+        "buff.bestial_wrath.active"
+      ]}}
+    ],
+    "st": [
+      { "cast": "barbed_shot", "if": { "or": [
+        { "not": "buff.frenzy.active" },
+        "need_frenzy_refresh",
+        { ">=": ["cd.barbed_shot.charges", 2] }
+      ]}},
+      { "cast": "kill_command", "if": "cd.kill_command.ready" },
+      { "cast": "cobra_shot", "if": { ">=": ["resource.focus", 50] }}
+    ]
+  },
+  "actions": [
+    { "call": "cooldowns" },
+    { "call": "st" }
+  ]
+}

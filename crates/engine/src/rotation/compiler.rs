@@ -1,372 +1,796 @@
 //! Cranelift JIT compiler for rotations.
+//!
+//! Compiles rotation AST to native code via Cranelift.
+
+use std::collections::HashMap;
 
 use cranelift::prelude::*;
 use cranelift::codegen::ir::BlockArg;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{Linkage, Module};
 
-use super::ast::{Condition, Operand, Rotation, RotationNode, VarId};
-use super::context::RotationContext;
-use super::error::{Error, Result};
+use crate::sim::SimState;
+use crate::types::SpellIdx;
 
-/// Function signature: fn(*const RotationContext) -> u32
-type RotationFn = unsafe extern "C" fn(*const RotationContext) -> u32;
+use super::ast::{Action as AstAction, Expr, Rotation};
+use super::context::{populate_context, ContextSchema, FieldType, SchemaBuilder};
+use super::error::{Error, Result};
+use super::resolver::{resolve_var, ResolvedVar, SpecResolver};
+
+/// Rotation evaluation result.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[repr(C)]
+pub struct EvalResult {
+    /// Action kind: 0=none, 1=cast, 2=wait
+    pub kind: u8,
+    /// Spell ID (for cast) or 0
+    pub spell_id: u32,
+    /// Wait duration in seconds (for wait)
+    pub wait_time: f32,
+}
+
+impl EvalResult {
+    pub const NONE: Self = Self {
+        kind: 0,
+        spell_id: 0,
+        wait_time: 0.0,
+    };
+
+    pub fn cast(spell: SpellIdx) -> Self {
+        Self {
+            kind: 1,
+            spell_id: spell.0,
+            wait_time: 0.0,
+        }
+    }
+
+    pub fn wait(seconds: f32) -> Self {
+        Self {
+            kind: 2,
+            spell_id: 0,
+            wait_time: seconds,
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        self.kind == 0
+    }
+
+    pub fn is_cast(&self) -> bool {
+        self.kind == 1
+    }
+
+    pub fn is_wait(&self) -> bool {
+        self.kind == 2
+    }
+}
+
+/// Function signature: fn(*const u8) -> u64 (packed EvalResult)
+type RotationFn = unsafe extern "C" fn(*const u8) -> u64;
 
 /// A Send+Sync wrapper for the function pointer.
 #[derive(Clone, Copy)]
 struct SyncFnPtr(RotationFn);
 
-// SAFETY: The function pointer points to JIT-compiled code that only reads
-// from the RotationContext passed to it. The underlying memory is leaked
-// and remains valid for the lifetime of the program.
 unsafe impl Send for SyncFnPtr {}
 unsafe impl Sync for SyncFnPtr {}
 
-/// A JIT-compiled rotation ready for execution.
-///
-/// This is safe to share between threads because:
-/// - The JIT module memory is leaked (never deallocated)
-/// - The function pointer only reads from the passed context
+/// A compiled rotation ready for execution.
 pub struct CompiledRotation {
     func_ptr: SyncFnPtr,
+    schema: ContextSchema,
+    user_vars: HashMap<String, Expr>,
 }
 
 impl CompiledRotation {
-    /// Compile a rotation to native code.
-    pub fn compile(rotation: &Rotation) -> Result<Self> {
-        let ast = rotation.to_ast();
-        Self::compile_ast(&ast)
-    }
+    /// Compile a rotation with a spec resolver.
+    pub fn compile(rotation: &Rotation, resolver: &SpecResolver) -> Result<Self> {
+        // Build context schema by walking all expressions
+        let mut schema_builder = SchemaBuilder::new();
+        let mut user_var_exprs = HashMap::new();
 
-    /// Compile a raw AST node.
-    pub fn compile_ast(ast: &RotationNode) -> Result<Self> {
-        let mut flag_builder = settings::builder();
-        flag_builder.set("opt_level", "speed").map_err(|e| {
-            Error::Compilation(format!("failed to set opt_level: {}", e))
-        })?;
-        let flags = settings::Flags::new(flag_builder);
-
-        let isa = cranelift_native::builder()
-            .map_err(|e| Error::Compilation(format!("failed to create ISA builder: {}", e)))?
-            .finish(flags)
-            .map_err(|e| Error::Compilation(format!("failed to finish ISA: {}", e)))?;
-
-        let builder = JITBuilder::with_isa(isa, cranelift_module::default_libcall_names());
-        let mut module = JITModule::new(builder);
-
-        let ptr_ty = module.target_config().pointer_type();
-
-        // Signature: fn(*const RotationContext) -> u32
-        let mut sig = module.make_signature();
-        sig.params.push(AbiParam::new(ptr_ty));
-        sig.returns.push(AbiParam::new(types::I32));
-
-        let func_id = module
-            .declare_function("rotation", Linkage::Local, &sig)
-            .map_err(|e| Error::Compilation(format!("failed to declare function: {}", e)))?;
-
-        let mut ctx = module.make_context();
-        ctx.func.signature = sig;
-
-        {
-            let mut fn_builder_ctx = FunctionBuilderContext::new();
-            let mut builder = FunctionBuilder::new(&mut ctx.func, &mut fn_builder_ctx);
-
-            let entry_block = builder.create_block();
-            builder.append_block_params_for_function_params(entry_block);
-            builder.switch_to_block(entry_block);
-            builder.seal_block(entry_block);
-
-            let ctx_ptr = builder.block_params(entry_block)[0];
-
-            let result = compile_node(&mut builder, ast, ctx_ptr, ptr_ty)?;
-            builder.ins().return_(&[result]);
-
-            builder.finalize();
+        // Collect user variables
+        for (name, expr) in &rotation.variables {
+            user_var_exprs.insert(name.clone(), expr.clone());
         }
 
-        module
-            .define_function(func_id, &mut ctx)
-            .map_err(|e| Error::Compilation(format!("failed to define function: {}", e)))?;
-        module.clear_context(&mut ctx);
-        module
-            .finalize_definitions()
-            .map_err(|e| Error::Compilation(format!("failed to finalize: {}", e)))?;
+        // Walk all actions and expressions to find variables
+        for action in &rotation.actions {
+            collect_vars_from_action(action, resolver, &mut schema_builder)?;
+        }
+        for actions in rotation.lists.values() {
+            for action in actions {
+                collect_vars_from_action(action, resolver, &mut schema_builder)?;
+            }
+        }
+        for expr in rotation.variables.values() {
+            collect_vars_from_expr(expr, resolver, &mut schema_builder)?;
+        }
 
-        let func_ptr = module.get_finalized_function(func_id);
-        let func_ptr: RotationFn = unsafe { std::mem::transmute(func_ptr) };
+        let schema = schema_builder.build();
 
-        // Leak the module to keep the JIT memory alive forever.
-        // This is intentional - rotations are compiled once at startup.
-        Box::leak(Box::new(module));
+        // Compile to native code
+        let func_ptr = compile_rotation(rotation, resolver, &schema)?;
 
         Ok(Self {
             func_ptr: SyncFnPtr(func_ptr),
+            schema,
+            user_vars: user_var_exprs,
         })
     }
 
-    /// Execute the compiled rotation.
-    #[inline]
-    pub fn evaluate(&self, ctx: &RotationContext) -> u32 {
-        unsafe { (self.func_ptr.0)(ctx as *const RotationContext) }
+    /// Evaluate the rotation.
+    pub fn evaluate(&self, state: &SimState) -> EvalResult {
+        let mut buffer = vec![0u8; self.schema.size.max(8)];
+        populate_context(&mut buffer, &self.schema, state);
+        let packed = unsafe { (self.func_ptr.0)(buffer.as_ptr()) };
+        // Unpack: bits 0-31 = wait_time, bits 32-55 = spell_id, bits 56-63 = kind
+        EvalResult {
+            kind: (packed >> 56) as u8,
+            spell_id: ((packed >> 32) & 0x00FFFFFF) as u32,
+            wait_time: f32::from_bits(packed as u32),
+        }
+    }
+
+    /// Get the context schema.
+    pub fn schema(&self) -> &ContextSchema {
+        &self.schema
     }
 }
 
-fn compile_node(
-    builder: &mut FunctionBuilder,
-    node: &RotationNode,
+fn collect_vars_from_action(
+    action: &AstAction,
+    resolver: &SpecResolver,
+    schema: &mut SchemaBuilder,
+) -> Result<()> {
+    match action {
+        AstAction::Cast { condition, .. }
+        | AstAction::Call { condition, .. }
+        | AstAction::Run { condition, .. }
+        | AstAction::Wait { condition, .. }
+        | AstAction::Pool { condition, .. }
+        | AstAction::UseTrinket { condition, .. }
+        | AstAction::UseItem { condition, .. } => {
+            if let Some(cond) = condition {
+                collect_vars_from_expr(cond, resolver, schema)?;
+            }
+        }
+        AstAction::SetVar {
+            value, condition, ..
+        } => {
+            collect_vars_from_expr(value, resolver, schema)?;
+            if let Some(cond) = condition {
+                collect_vars_from_expr(cond, resolver, schema)?;
+            }
+        }
+        AstAction::ModifyVar {
+            value, condition, ..
+        } => {
+            collect_vars_from_expr(value, resolver, schema)?;
+            if let Some(cond) = condition {
+                collect_vars_from_expr(cond, resolver, schema)?;
+            }
+        }
+        AstAction::WaitUntil { condition } => {
+            collect_vars_from_expr(condition, resolver, schema)?;
+        }
+    }
+    Ok(())
+}
+
+fn collect_vars_from_expr(
+    expr: &Expr,
+    resolver: &SpecResolver,
+    schema: &mut SchemaBuilder,
+) -> Result<()> {
+    match expr {
+        Expr::Bool(_) | Expr::Int(_) | Expr::Float(_) | Expr::UserVar(_) => {}
+
+        Expr::Var(path) => {
+            let resolved = resolve_var(path, resolver)?;
+            schema.add(resolved);
+        }
+
+        Expr::And(exprs) | Expr::Or(exprs) => {
+            for e in exprs {
+                collect_vars_from_expr(e, resolver, schema)?;
+            }
+        }
+
+        Expr::Not(inner)
+        | Expr::Floor(inner)
+        | Expr::Ceil(inner)
+        | Expr::Abs(inner) => {
+            collect_vars_from_expr(inner, resolver, schema)?;
+        }
+
+        Expr::Gt(a, b)
+        | Expr::Gte(a, b)
+        | Expr::Lt(a, b)
+        | Expr::Lte(a, b)
+        | Expr::Eq(a, b)
+        | Expr::Ne(a, b)
+        | Expr::Add(a, b)
+        | Expr::Sub(a, b)
+        | Expr::Mul(a, b)
+        | Expr::Div(a, b)
+        | Expr::Mod(a, b)
+        | Expr::Min(a, b)
+        | Expr::Max(a, b) => {
+            collect_vars_from_expr(a, resolver, schema)?;
+            collect_vars_from_expr(b, resolver, schema)?;
+        }
+    }
+    Ok(())
+}
+
+fn compile_rotation(
+    rotation: &Rotation,
+    resolver: &SpecResolver,
+    schema: &ContextSchema,
+) -> Result<RotationFn> {
+    let mut flag_builder = settings::builder();
+    flag_builder
+        .set("opt_level", "speed")
+        .map_err(|e| Error::Compilation(format!("failed to set opt_level: {}", e)))?;
+    let flags = settings::Flags::new(flag_builder);
+
+    let isa = cranelift_native::builder()
+        .map_err(|e| Error::Compilation(format!("failed to create ISA builder: {}", e)))?
+        .finish(flags)
+        .map_err(|e| Error::Compilation(format!("failed to finish ISA: {}", e)))?;
+
+    let builder = JITBuilder::with_isa(isa, cranelift_module::default_libcall_names());
+    let mut module = JITModule::new(builder);
+
+    let ptr_ty = module.target_config().pointer_type();
+
+    // Signature: fn(*const u8) -> EvalResult (packed as i64)
+    let mut sig = module.make_signature();
+    sig.params.push(AbiParam::new(ptr_ty));
+    sig.returns.push(AbiParam::new(types::I64)); // EvalResult packed
+
+    let func_id = module
+        .declare_function("rotation", Linkage::Local, &sig)
+        .map_err(|e| Error::Compilation(format!("failed to declare function: {}", e)))?;
+
+    let mut ctx = module.make_context();
+    ctx.func.signature = sig;
+
+    {
+        let mut fn_builder_ctx = FunctionBuilderContext::new();
+        let mut builder = FunctionBuilder::new(&mut ctx.func, &mut fn_builder_ctx);
+
+        let entry_block = builder.create_block();
+        builder.append_block_params_for_function_params(entry_block);
+        builder.switch_to_block(entry_block);
+        builder.seal_block(entry_block);
+
+        let ctx_ptr = builder.block_params(entry_block)[0];
+
+        // Compile the rotation
+        let result = {
+            let mut compiler = ExprCompiler {
+                builder: &mut builder,
+                resolver,
+                schema,
+                variables: &rotation.variables,
+                ctx_ptr,
+                ptr_ty,
+            };
+            compiler.compile_actions(&rotation.actions, &rotation.lists)?
+        };
+
+        // Return the result and finalize
+        builder.ins().return_(&[result]);
+        builder.finalize();
+    }
+
+    module
+        .define_function(func_id, &mut ctx)
+        .map_err(|e| Error::Compilation(format!("failed to define function: {}", e)))?;
+    module.clear_context(&mut ctx);
+    module
+        .finalize_definitions()
+        .map_err(|e| Error::Compilation(format!("failed to finalize: {}", e)))?;
+
+    let func_ptr = module.get_finalized_function(func_id);
+    let func_ptr: RotationFn = unsafe { std::mem::transmute(func_ptr) };
+
+    // Leak the module to keep JIT memory alive
+    Box::leak(Box::new(module));
+
+    Ok(func_ptr)
+}
+
+struct ExprCompiler<'a, 'b> {
+    builder: &'a mut FunctionBuilder<'b>,
+    resolver: &'a SpecResolver,
+    schema: &'a ContextSchema,
+    variables: &'a HashMap<String, Expr>,
     ctx_ptr: Value,
     ptr_ty: Type,
-) -> Result<Value> {
-    match node {
-        RotationNode::Cast(spell_id) => {
-            Ok(builder.ins().iconst(types::I32, *spell_id as i64))
+}
+
+impl<'a, 'b> ExprCompiler<'a, 'b> {
+    fn compile_actions(
+        &mut self,
+        actions: &[AstAction],
+        lists: &HashMap<String, Vec<AstAction>>,
+    ) -> Result<Value> {
+        // Build chain: if cond1 then action1 else if cond2 then action2 else ...
+        self.compile_action_chain(actions, 0, lists)
+    }
+
+    fn compile_action_chain(
+        &mut self,
+        actions: &[AstAction],
+        idx: usize,
+        lists: &HashMap<String, Vec<AstAction>>,
+    ) -> Result<Value> {
+        if idx >= actions.len() {
+            // No action found - return NONE
+            return Ok(self.pack_result(0, 0, 0.0));
         }
-        RotationNode::Wait => Ok(builder.ins().iconst(types::I32, 0)),
-        RotationNode::If { cond, then, else_ } => {
-            let cond_val = compile_condition(builder, cond, ctx_ptr, ptr_ty)?;
 
-            let then_block = builder.create_block();
-            let else_block = builder.create_block();
-            let merge_block = builder.create_block();
-            builder.append_block_param(merge_block, types::I32);
+        let action = &actions[idx];
+        let next = |s: &mut Self| s.compile_action_chain(actions, idx + 1, lists);
 
-            builder.ins().brif(cond_val, then_block, &[], else_block, &[]);
+        match action {
+            AstAction::Cast { spell, condition } => {
+                let spell_id = self.resolver.resolve_spell(spell)?;
+                let result = self.pack_result(1, spell_id.0, 0.0);
 
-            builder.switch_to_block(then_block);
-            builder.seal_block(then_block);
-            let then_val = compile_node(builder, then, ctx_ptr, ptr_ty)?;
-            let then_arg = BlockArg::from(then_val);
-            builder.ins().jump(merge_block, &[then_arg]);
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |_| Ok(result), |s| next(s))
+                } else {
+                    Ok(result)
+                }
+            }
 
-            builder.switch_to_block(else_block);
-            builder.seal_block(else_block);
-            let else_val = compile_node(builder, else_, ctx_ptr, ptr_ty)?;
-            let else_arg = BlockArg::from(else_val);
-            builder.ins().jump(merge_block, &[else_arg]);
+            AstAction::Call { list, condition } => {
+                let list_actions = lists
+                    .get(list)
+                    .ok_or_else(|| Error::UnknownList(list.clone()))?;
 
-            builder.switch_to_block(merge_block);
-            builder.seal_block(merge_block);
-            Ok(builder.block_params(merge_block)[0])
+                let call_list = |s: &mut Self| -> Result<Value> {
+                    let list_result = s.compile_action_chain(list_actions, 0, lists)?;
+                    // If list returned NONE, continue to next action; otherwise return the result
+                    let kind = s.builder.ins().ushr_imm(list_result, 56);
+                    let is_none = s.builder.ins().icmp_imm(IntCC::Equal, kind, 0);
+                    s.compile_if_then_else(is_none, |s| next(s), |_| Ok(list_result))
+                };
+
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |s| call_list(s), |s| next(s))
+                } else {
+                    call_list(self)
+                }
+            }
+
+            AstAction::Run { list, condition } => {
+                let list_actions = lists
+                    .get(list)
+                    .ok_or_else(|| Error::UnknownList(list.clone()))?;
+
+                let run_list =
+                    |s: &mut Self| -> Result<Value> { s.compile_action_chain(list_actions, 0, lists) };
+
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |s| run_list(s), |s| next(s))
+                } else {
+                    run_list(self)
+                }
+            }
+
+            AstAction::Wait { seconds, condition } => {
+                let result = self.pack_result(2, 0, *seconds as f32);
+
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |_| Ok(result), |s| next(s))
+                } else {
+                    Ok(result)
+                }
+            }
+
+            AstAction::WaitUntil { condition } => {
+                let cond_val = self.compile_bool_expr(condition)?;
+                let wait_result = self.pack_result(2, 0, 0.1); // Short wait
+                self.compile_if_then_else(cond_val, |s| next(s), |_| Ok(wait_result))
+            }
+
+            // For now, skip variable operations and continue
+            AstAction::SetVar { condition, .. } | AstAction::ModifyVar { condition, .. } => {
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |s| next(s), |s| next(s))
+                } else {
+                    next(self)
+                }
+            }
+
+            AstAction::Pool { condition, .. }
+            | AstAction::UseTrinket { condition, .. }
+            | AstAction::UseItem { condition, .. } => {
+                // Skip for now
+                if let Some(cond) = condition {
+                    let cond_val = self.compile_bool_expr(cond)?;
+                    self.compile_if_then_else(cond_val, |s| next(s), |s| next(s))
+                } else {
+                    next(self)
+                }
+            }
+        }
+    }
+
+    fn compile_if_then_else<T, E>(
+        &mut self,
+        cond: Value,
+        then_val: T,
+        else_val: E,
+    ) -> Result<Value>
+    where
+        T: FnOnce(&mut Self) -> Result<Value>,
+        E: FnOnce(&mut Self) -> Result<Value>,
+    {
+        let then_block = self.builder.create_block();
+        let else_block = self.builder.create_block();
+        let merge_block = self.builder.create_block();
+        self.builder.append_block_param(merge_block, types::I64);
+
+        self.builder.ins().brif(cond, then_block, &[], else_block, &[]);
+
+        self.builder.switch_to_block(then_block);
+        self.builder.seal_block(then_block);
+        let then_result = then_val(self)?;
+        let then_args = [BlockArg::Value(then_result)];
+        self.builder.ins().jump(merge_block, &then_args);
+
+        self.builder.switch_to_block(else_block);
+        self.builder.seal_block(else_block);
+        let else_result = else_val(self)?;
+        let else_args = [BlockArg::Value(else_result)];
+        self.builder.ins().jump(merge_block, &else_args);
+
+        self.builder.switch_to_block(merge_block);
+        self.builder.seal_block(merge_block);
+        Ok(self.builder.block_params(merge_block)[0])
+    }
+
+    fn pack_result(&mut self, kind: u8, spell_id: u32, wait_time: f32) -> Value {
+        // Pack EvalResult into i64:
+        // bits 0-31: wait_time as u32
+        // bits 32-55: spell_id (lower 24 bits)
+        // bits 56-63: kind
+        let wait_bits = wait_time.to_bits() as i64;
+        let spell_bits = (spell_id as i64) << 32;
+        let kind_bits = (kind as i64) << 56;
+        self.builder.ins().iconst(types::I64, wait_bits | spell_bits | kind_bits)
+    }
+
+    fn compile_bool_expr(&mut self, expr: &Expr) -> Result<Value> {
+        match expr {
+            Expr::Bool(b) => {
+                Ok(self.builder.ins().iconst(types::I8, if *b { 1 } else { 0 }))
+            }
+
+            Expr::Var(path) => {
+                let resolved = resolve_var(path, self.resolver)?;
+                self.load_bool_var(&resolved)
+            }
+
+            Expr::UserVar(name) => {
+                let expr = self
+                    .variables
+                    .get(name)
+                    .ok_or_else(|| Error::UnknownUserVar(name.clone()))?
+                    .clone();
+                self.compile_bool_expr(&expr)
+            }
+
+            Expr::And(exprs) => {
+                // Logical AND (all expressions evaluated - no short-circuit for JIT simplicity)
+                if exprs.is_empty() {
+                    return Ok(self.builder.ins().iconst(types::I8, 1));
+                }
+                let mut result = self.compile_bool_expr(&exprs[0])?;
+                for expr in &exprs[1..] {
+                    let next = self.compile_bool_expr(expr)?;
+                    result = self.builder.ins().band(result, next);
+                }
+                Ok(result)
+            }
+
+            Expr::Or(exprs) => {
+                // Logical OR (all expressions evaluated - no short-circuit for JIT simplicity)
+                if exprs.is_empty() {
+                    return Ok(self.builder.ins().iconst(types::I8, 0));
+                }
+                let mut result = self.compile_bool_expr(&exprs[0])?;
+                for expr in &exprs[1..] {
+                    let next = self.compile_bool_expr(expr)?;
+                    result = self.builder.ins().bor(result, next);
+                }
+                Ok(result)
+            }
+
+            Expr::Not(inner) => {
+                let val = self.compile_bool_expr(inner)?;
+                let one = self.builder.ins().iconst(types::I8, 1);
+                Ok(self.builder.ins().bxor(val, one))
+            }
+
+            Expr::Gt(a, b) => self.compile_comparison(FloatCC::GreaterThan, IntCC::SignedGreaterThan, a, b),
+            Expr::Gte(a, b) => self.compile_comparison(FloatCC::GreaterThanOrEqual, IntCC::SignedGreaterThanOrEqual, a, b),
+            Expr::Lt(a, b) => self.compile_comparison(FloatCC::LessThan, IntCC::SignedLessThan, a, b),
+            Expr::Lte(a, b) => self.compile_comparison(FloatCC::LessThanOrEqual, IntCC::SignedLessThanOrEqual, a, b),
+            Expr::Eq(a, b) => self.compile_comparison(FloatCC::Equal, IntCC::Equal, a, b),
+            Expr::Ne(a, b) => self.compile_comparison(FloatCC::NotEqual, IntCC::NotEqual, a, b),
+
+            _ => Err(Error::TypeError {
+                expected: "bool",
+                got: "number",
+            }),
+        }
+    }
+
+    fn compile_comparison(
+        &mut self,
+        float_cc: FloatCC,
+        int_cc: IntCC,
+        a: &Expr,
+        b: &Expr,
+    ) -> Result<Value> {
+        let (a_val, a_float) = self.compile_numeric_expr(a)?;
+        let (b_val, b_float) = self.compile_numeric_expr(b)?;
+
+        let is_float = a_float || b_float;
+
+        let (a_val, b_val) = if is_float {
+            let a_val = if a_float {
+                a_val
+            } else {
+                self.builder.ins().fcvt_from_sint(types::F64, a_val)
+            };
+            let b_val = if b_float {
+                b_val
+            } else {
+                self.builder.ins().fcvt_from_sint(types::F64, b_val)
+            };
+            (a_val, b_val)
+        } else {
+            (a_val, b_val)
+        };
+
+        if is_float {
+            Ok(self.builder.ins().fcmp(float_cc, a_val, b_val))
+        } else {
+            Ok(self.builder.ins().icmp(int_cc, a_val, b_val))
+        }
+    }
+
+    fn compile_numeric_expr(&mut self, expr: &Expr) -> Result<(Value, bool)> {
+        match expr {
+            Expr::Int(i) => {
+                Ok((self.builder.ins().iconst(types::I32, *i), false))
+            }
+
+            Expr::Float(f) => {
+                Ok((self.builder.ins().f64const(*f), true))
+            }
+
+            Expr::Var(path) => {
+                let resolved = resolve_var(path, self.resolver)?;
+                self.load_numeric_var(&resolved)
+            }
+
+            Expr::UserVar(name) => {
+                let expr = self
+                    .variables
+                    .get(name)
+                    .ok_or_else(|| Error::UnknownUserVar(name.clone()))?
+                    .clone();
+                self.compile_numeric_expr(&expr)
+            }
+
+            Expr::Add(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fadd(a, c), |b, a, c| b.ins().iadd(a, c)),
+            Expr::Sub(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fsub(a, c), |b, a, c| b.ins().isub(a, c)),
+            Expr::Mul(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fmul(a, c), |b, a, c| b.ins().imul(a, c)),
+            Expr::Div(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fdiv(a, c), |b, a, c| b.ins().sdiv(a, c)),
+            Expr::Mod(a, b) => {
+                // Modulo: convert to float if needed, then compute f % g = f - g * floor(f / g)
+                let (a_val, a_float) = self.compile_numeric_expr(a)?;
+                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+                let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };
+                let b_f = if b_float { b_val } else { self.builder.ins().fcvt_from_sint(types::F64, b_val) };
+                let div = self.builder.ins().fdiv(a_f, b_f);
+                let floored = self.builder.ins().floor(div);
+                let prod = self.builder.ins().fmul(b_f, floored);
+                Ok((self.builder.ins().fsub(a_f, prod), true))
+            }
+
+            Expr::Floor(inner) => {
+                let (val, is_float) = self.compile_numeric_expr(inner)?;
+                let float_val = if is_float { val } else { self.builder.ins().fcvt_from_sint(types::F64, val) };
+                Ok((self.builder.ins().floor(float_val), true))
+            }
+
+            Expr::Ceil(inner) => {
+                let (val, is_float) = self.compile_numeric_expr(inner)?;
+                let float_val = if is_float { val } else { self.builder.ins().fcvt_from_sint(types::F64, val) };
+                Ok((self.builder.ins().ceil(float_val), true))
+            }
+
+            Expr::Abs(inner) => {
+                let (val, is_float) = self.compile_numeric_expr(inner)?;
+                if is_float {
+                    Ok((self.builder.ins().fabs(val), true))
+                } else {
+                    // Integer abs
+                    let neg = self.builder.ins().ineg(val);
+                    let zero = self.builder.ins().iconst(types::I32, 0);
+                    let is_neg = self.builder.ins().icmp(IntCC::SignedLessThan, val, zero);
+                    Ok((self.builder.ins().select(is_neg, neg, val), false))
+                }
+            }
+
+            Expr::Min(a, b) => {
+                let (a_val, a_float) = self.compile_numeric_expr(a)?;
+                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+                let is_float = a_float || b_float;
+                if is_float {
+                    let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };
+                    let b_f = if b_float { b_val } else { self.builder.ins().fcvt_from_sint(types::F64, b_val) };
+                    Ok((self.builder.ins().fmin(a_f, b_f), true))
+                } else {
+                    let cmp = self.builder.ins().icmp(IntCC::SignedLessThan, a_val, b_val);
+                    Ok((self.builder.ins().select(cmp, a_val, b_val), false))
+                }
+            }
+
+            Expr::Max(a, b) => {
+                let (a_val, a_float) = self.compile_numeric_expr(a)?;
+                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+                let is_float = a_float || b_float;
+                if is_float {
+                    let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };
+                    let b_f = if b_float { b_val } else { self.builder.ins().fcvt_from_sint(types::F64, b_val) };
+                    Ok((self.builder.ins().fmax(a_f, b_f), true))
+                } else {
+                    let cmp = self.builder.ins().icmp(IntCC::SignedGreaterThan, a_val, b_val);
+                    Ok((self.builder.ins().select(cmp, a_val, b_val), false))
+                }
+            }
+
+            _ => Err(Error::TypeError {
+                expected: "number",
+                got: "bool",
+            }),
+        }
+    }
+
+    fn compile_binop<F, I>(
+        &mut self,
+        a: &Expr,
+        b: &Expr,
+        float_op: F,
+        int_op: I,
+    ) -> Result<(Value, bool)>
+    where
+        F: FnOnce(&mut FunctionBuilder, Value, Value) -> Value,
+        I: FnOnce(&mut FunctionBuilder, Value, Value) -> Value,
+    {
+        let (a_val, a_float) = self.compile_numeric_expr(a)?;
+        let (b_val, b_float) = self.compile_numeric_expr(b)?;
+
+        let is_float = a_float || b_float;
+
+        if is_float {
+            let a_f = if a_float {
+                a_val
+            } else {
+                self.builder.ins().fcvt_from_sint(types::F64, a_val)
+            };
+            let b_f = if b_float {
+                b_val
+            } else {
+                self.builder.ins().fcvt_from_sint(types::F64, b_val)
+            };
+            Ok((float_op(self.builder, a_f, b_f), true))
+        } else {
+            Ok((int_op(self.builder, a_val, b_val), false))
+        }
+    }
+
+    fn load_bool_var(&mut self, var: &ResolvedVar) -> Result<Value> {
+        // Talents are compile-time constants
+        if let ResolvedVar::Talent(enabled) = var {
+            return Ok(self.builder.ins().iconst(types::I8, if *enabled { 1 } else { 0 }));
+        }
+
+        let offset = self
+            .schema
+            .offset(var)
+            .ok_or_else(|| Error::Compilation(format!("variable not in schema: {:?}", var)))?;
+
+        let addr = self.builder.ins().iadd_imm(self.ctx_ptr, offset as i64);
+        let val = self.builder.ins().load(types::I8, MemFlags::trusted(), addr, 0);
+        Ok(val)
+    }
+
+    fn load_numeric_var(&mut self, var: &ResolvedVar) -> Result<(Value, bool)> {
+        let offset = self
+            .schema
+            .offset(var)
+            .ok_or_else(|| Error::Compilation(format!("variable not in schema: {:?}", var)))?;
+        let field_type = self
+            .schema
+            .field_type(var)
+            .ok_or_else(|| Error::Compilation(format!("variable not in schema: {:?}", var)))?;
+
+        let addr = self.builder.ins().iadd_imm(self.ctx_ptr, offset as i64);
+
+        match field_type {
+            FieldType::Bool => {
+                let val = self.builder.ins().load(types::I8, MemFlags::trusted(), addr, 0);
+                let extended = self.builder.ins().uextend(types::I32, val);
+                Ok((extended, false))
+            }
+            FieldType::Int => {
+                let val = self.builder.ins().load(types::I32, MemFlags::trusted(), addr, 0);
+                Ok((val, false))
+            }
+            FieldType::Float => {
+                let val = self.builder.ins().load(types::F64, MemFlags::trusted(), addr, 0);
+                Ok((val, true))
+            }
         }
     }
 }
 
-fn compile_condition(
-    builder: &mut FunctionBuilder,
-    cond: &Condition,
-    ctx_ptr: Value,
-    ptr_ty: Type,
-) -> Result<Value> {
-    match cond {
-        Condition::And(a, b) => {
-            let a_val = compile_condition(builder, a, ctx_ptr, ptr_ty)?;
-            let b_val = compile_condition(builder, b, ctx_ptr, ptr_ty)?;
-            Ok(builder.ins().band(a_val, b_val))
-        }
-
-        Condition::Or(a, b) => {
-            let a_val = compile_condition(builder, a, ctx_ptr, ptr_ty)?;
-            let b_val = compile_condition(builder, b, ctx_ptr, ptr_ty)?;
-            Ok(builder.ins().bor(a_val, b_val))
-        }
-
-        Condition::Not(inner) => {
-            let inner_val = compile_condition(builder, inner, ctx_ptr, ptr_ty)?;
-            let one = builder.ins().iconst(types::I8, 1);
-            Ok(builder.ins().bxor(inner_val, one))
-        }
-
-        Condition::Gte(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::GreaterThanOrEqual, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, a_val, b_val))
+// Helper to allow immediate values in if_then_else
+impl<'a, 'b> ExprCompiler<'a, 'b> {
+    fn compile_if_then_else_val<T, E>(
+        &mut self,
+        cond: Value,
+        then_val: T,
+        else_fn: E,
+    ) -> Result<Value>
+    where
+        T: Into<ImmediateOrFn<'a, 'b>>,
+        E: FnOnce(&mut Self) -> Result<Value>,
+    {
+        match then_val.into() {
+            ImmediateOrFn::Immediate(v) => {
+                self.compile_if_then_else(cond, |_| Ok(v), else_fn)
             }
-        }
-
-        Condition::Gt(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::GreaterThan, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::SignedGreaterThan, a_val, b_val))
+            ImmediateOrFn::Fn(f) => {
+                self.compile_if_then_else(cond, f, else_fn)
             }
-        }
-
-        Condition::Lte(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::LessThanOrEqual, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::SignedLessThanOrEqual, a_val, b_val))
-            }
-        }
-
-        Condition::Lt(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::LessThan, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::SignedLessThan, a_val, b_val))
-            }
-        }
-
-        Condition::Eq(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::Equal, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::Equal, a_val, b_val))
-            }
-        }
-
-        Condition::Ne(a, b) => {
-            let (a_val, b_val, is_float) = compile_operand_pair(builder, a, b, ctx_ptr, ptr_ty)?;
-            if is_float {
-                Ok(builder.ins().fcmp(FloatCC::NotEqual, a_val, b_val))
-            } else {
-                Ok(builder.ins().icmp(IntCC::NotEqual, a_val, b_val))
-            }
-        }
-
-        Condition::Var(var_id) => {
-            let val = load_var(builder, *var_id, ctx_ptr)?;
-            Ok(builder.ins().icmp_imm(IntCC::NotEqual, val, 0))
-        }
-
-        Condition::Literal(b) => {
-            Ok(builder.ins().iconst(types::I8, if *b { 1 } else { 0 }))
         }
     }
 }
 
-fn compile_operand_pair(
-    builder: &mut FunctionBuilder,
-    a: &Operand,
-    b: &Operand,
-    ctx_ptr: Value,
-    _ptr_ty: Type,
-) -> Result<(Value, Value, bool)> {
-    let (a_val, a_float) = compile_operand(builder, a, ctx_ptr)?;
-    let (b_val, b_float) = compile_operand(builder, b, ctx_ptr)?;
-
-    let is_float = a_float || b_float;
-
-    let a_val = if is_float && !a_float {
-        builder.ins().fcvt_from_sint(types::F64, a_val)
-    } else {
-        a_val
-    };
-
-    let b_val = if is_float && !b_float {
-        builder.ins().fcvt_from_sint(types::F64, b_val)
-    } else {
-        b_val
-    };
-
-    Ok((a_val, b_val, is_float))
+enum ImmediateOrFn<'a, 'b> {
+    Immediate(Value),
+    Fn(Box<dyn FnOnce(&mut ExprCompiler<'a, 'b>) -> Result<Value> + 'a>),
 }
 
-fn compile_operand(
-    builder: &mut FunctionBuilder,
-    op: &Operand,
-    ctx_ptr: Value,
-) -> Result<(Value, bool)> {
-    match op {
-        Operand::Float(f) => Ok((builder.ins().f64const(*f), true)),
-        Operand::Int(i) => Ok((builder.ins().iconst(types::I32, *i as i64), false)),
-        Operand::Var(var_id) => {
-            let val = load_var(builder, *var_id, ctx_ptr)?;
-            Ok((val, var_id.is_float()))
-        }
+impl<'a, 'b> From<Value> for ImmediateOrFn<'a, 'b> {
+    fn from(v: Value) -> Self {
+        ImmediateOrFn::Immediate(v)
     }
 }
 
-fn load_var(
-    builder: &mut FunctionBuilder,
-    var_id: VarId,
-    ctx_ptr: Value,
-) -> Result<Value> {
-    let (offset, ty) = var_offset_and_type(var_id)?;
-    let addr = builder.ins().iadd_imm(ctx_ptr, offset as i64);
-    let flags = MemFlags::trusted();
-
-    if ty == types::I8 {
-        let val = builder.ins().load(types::I8, flags, addr, 0);
-        Ok(builder.ins().uextend(types::I32, val))
-    } else {
-        Ok(builder.ins().load(ty, flags, addr, 0))
-    }
-}
-
-fn var_offset_and_type(var_id: VarId) -> Result<(usize, Type)> {
-    use std::mem::offset_of;
-
-    match var_id {
-        VarId::Focus => Ok((offset_of!(RotationContext, focus), types::F64)),
-        VarId::FocusMax => Ok((offset_of!(RotationContext, focus_max), types::F64)),
-        VarId::FocusDeficit => {
-            Err(Error::Compilation("focus_deficit requires special handling".into()))
-        }
-        VarId::Time => Ok((offset_of!(RotationContext, time), types::F64)),
-        VarId::GcdRemains => Ok((offset_of!(RotationContext, gcd_remains), types::F64)),
-        VarId::TargetHealthPct => Ok((offset_of!(RotationContext, target_health_pct), types::F64)),
-        VarId::TargetTimeToDie => Ok((offset_of!(RotationContext, target_time_to_die), types::F64)),
-        VarId::TargetCount => Ok((offset_of!(RotationContext, target_count), types::I32)),
-
-        // Cooldowns - slot-indexed arrays
-        VarId::CooldownReady(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, cd_ready);
-            Ok((base + slot as usize, types::I8))
-        }
-        VarId::CooldownRemains(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, cd_remains);
-            Ok((base + (slot as usize) * 8, types::F64))
-        }
-        VarId::CooldownCharges(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("cooldown slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, cd_charges);
-            Ok((base + (slot as usize) * 4, types::I32))
-        }
-
-        // Buffs - slot-indexed arrays
-        VarId::BuffActive(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, buff_active);
-            Ok((base + slot as usize, types::I8))
-        }
-        VarId::BuffStacks(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, buff_stacks);
-            Ok((base + (slot as usize) * 4, types::I32))
-        }
-        VarId::BuffRemains(slot) => {
-            if slot >= 16 {
-                return Err(Error::Compilation(format!("buff slot {} out of range", slot)));
-            }
-            let base = offset_of!(RotationContext, buff_remains);
-            Ok((base + (slot as usize) * 8, types::F64))
-        }
-
-        // Debuffs - for now, error (need to add to context)
-        VarId::DebuffActive(_) | VarId::DebuffStacks(_) | VarId::DebuffRemains(_) => {
-            Err(Error::Compilation("debuff vars not yet implemented".into()))
-        }
-
-        VarId::PetActive => Ok((offset_of!(RotationContext, pet_active), types::I8)),
+impl<'a, 'b, F> From<F> for ImmediateOrFn<'a, 'b>
+where
+    F: FnOnce(&mut ExprCompiler<'a, 'b>) -> Result<Value> + 'a,
+{
+    fn from(f: F) -> Self {
+        ImmediateOrFn::Fn(Box::new(f))
     }
 }

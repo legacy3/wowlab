@@ -116,3 +116,19 @@ pub const LOCK_AND_LOAD_CHANCE: f32 = 0.08;
 pub const MULTI_SHOT_COST: f32 = 20.0;
 /// Multi-Shot AP coefficient
 pub const MULTI_SHOT_AP_COEF: f32 = 0.40;
+
+// ============================================================================
+// Talent Flags
+// ============================================================================
+
+bitflags::bitflags! {
+    /// MM Hunter talent flags
+    #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+    pub struct TalentFlags: u64 {
+        const TRUESHOT = 1 << 0;
+        const LOCK_AND_LOAD = 1 << 1;
+        const STEADY_FOCUS = 1 << 2;
+        const TRICK_SHOTS = 1 << 3;
+        const VOLLEY = 1 << 4;
+    }
+}

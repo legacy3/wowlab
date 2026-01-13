@@ -2,7 +2,7 @@ use crate::types::SpecId;
 use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress};
 use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
-use crate::rotation::{Rotation, CompiledRotation};
+use crate::rotation::Rotation;
 use crate::data::{TuningData, load_tuning};
 use crate::specs::BmHunter;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
@@ -306,19 +306,14 @@ impl Runner {
 
         info!(name = %rotation.name, actions = rotation.actions.len(), "Parsed rotation");
 
-        // Try to compile it
-        match CompiledRotation::compile(&rotation) {
-            Ok(_) => {
-                info!(file, "Rotation is valid and compilable");
-                println!("Rotation '{}' is valid ({} actions)", rotation.name, rotation.actions.len());
-                Ok(())
-            }
-            Err(e) => {
-                warn!(file, error = %e, "Rotation compilation failed");
-                println!("Rotation compilation failed:");
-                println!("  {}", e);
-                Err(e.to_string())
-            }
-        }
+        // Validation is parsing-only for now, as compilation requires spec-specific resolver
+        println!("Rotation '{}' is valid ({} actions)", rotation.name, rotation.actions.len());
+        println!("  Variables: {}", rotation.variables.len());
+        println!("  Lists: {}", rotation.lists.len());
+
+        // Note: Full compilation validation requires a spec resolver
+        // Use `engine sim -s <spec> --rotation <file>` to test with a specific spec
+
+        Ok(())
     }
 }

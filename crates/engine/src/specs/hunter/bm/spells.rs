@@ -1,8 +1,12 @@
-use crate::spec::{SpellBuilder, SpellDef, SpellTarget};
-use crate::types::{ResourceType, DamageSchool};
+//! BM Hunter spell definitions with declarative effects.
+//!
+//! Each spell defines its behavior inline - costs, damage, and effects.
+
+use crate::spec::{SpellBuilder, SpellDef, SpellTarget, SpellEffect, EffectCondition};
+use crate::types::{ResourceType, DamageSchool, PetKind};
 use super::constants::*;
 
-/// Get all BM Hunter spell definitions
+/// Get all BM Hunter spell definitions.
 pub fn spell_definitions() -> Vec<SpellDef> {
     vec![
         // Core abilities
@@ -50,8 +54,26 @@ fn kill_command() -> SpellDef {
         .instant()
         .cooldown(7.5)
         .cost(ResourceType::Focus, KILL_COMMAND_COST)
-        .physical_damage(2.0) // AP coefficient
+        .physical_damage(2.0)
         .pet_ability()
+        // Animal Companion: Pet mirrors the cast at 65% damage
+        .with_talent("animal_companion", SpellEffect::PetMirrorCast { damage_pct: 0.65 })
+        // Kill Cleave: Cleave during Beast Cleave
+        .on_cast_if(
+            EffectCondition::And(vec![
+                EffectCondition::TalentEnabled("kill_cleave"),
+                EffectCondition::BuffActive(BEAST_CLEAVE),
+            ]),
+            SpellEffect::Cleave { damage_pct: KILL_CLEAVE_DAMAGE, max_targets: 5 },
+        )
+        // Wild Instincts: Apply debuff during Call of the Wild
+        .on_cast_if(
+            EffectCondition::And(vec![
+                EffectCondition::TalentEnabled("wild_instincts"),
+                EffectCondition::BuffActive(CALL_OF_THE_WILD_BUFF),
+            ]),
+            SpellEffect::ApplyDebuff { aura: WILD_INSTINCTS, stacks: 1 },
+        )
         .build()
 }
 
@@ -61,6 +83,10 @@ fn cobra_shot() -> SpellDef {
         .instant()
         .cost(ResourceType::Focus, COBRA_SHOT_COST)
         .spell_damage(DamageSchool::Nature, 0.4)
+        // Cobra Shot reduces Kill Command cooldown
+        .reduces_cooldown(KILL_COMMAND, COBRA_SHOT_CDR)
+        // Serpentine Rhythm: Build stacks on cast (consumed for damage)
+        .with_talent("serpentine_rhythm", SpellEffect::ApplyBuff { aura: SERPENTINE_RHYTHM, stacks: 1 })
         .build()
 }
 
@@ -69,10 +95,13 @@ fn barbed_shot() -> SpellDef {
         .school(DamageSchool::Physical)
         .instant()
         .charges(BARBED_SHOT_CHARGES, BARBED_SHOT_RECHARGE)
-        .gain(ResourceType::Focus, 5.0) // Focus regen from Frenzy
         .physical_damage(0.3)
+        // Apply DoT to target
         .apply_aura(BARBED_SHOT_DOT)
-        .apply_aura(FRENZY)
+        // Apply/refresh Frenzy on pet (buff on player in sim)
+        .applies_buff(FRENZY)
+        // Focus regeneration from Frenzy
+        .gain(ResourceType::Focus, 5.0)
         .build()
 }
 
@@ -82,6 +111,10 @@ fn bestial_wrath() -> SpellDef {
         .no_gcd()
         .cooldown(BESTIAL_WRATH_COOLDOWN)
         .apply_aura(BESTIAL_WRATH_BUFF)
+        // Thundering Hooves: Cast Explosive Shot
+        .with_talent("thundering_hooves", SpellEffect::TriggerSpell { spell: EXPLOSIVE_SHOT })
+        // Piercing Fangs: Apply crit buff
+        .with_talent("piercing_fangs", SpellEffect::ApplyBuff { aura: PIERCING_FANGS, stacks: 1 })
         .build()
 }
 
@@ -92,6 +125,7 @@ fn multi_shot() -> SpellDef {
         .cost(ResourceType::Focus, 40.0)
         .target(SpellTarget::AllEnemies)
         .physical_damage(0.5)
+        // Applies Beast Cleave
         .apply_aura(BEAST_CLEAVE)
         .build()
 }
@@ -103,7 +137,7 @@ fn kill_shot() -> SpellDef {
         .cooldown(10.0)
         .cost(ResourceType::Focus, 10.0)
         .physical_damage(4.0)
-        // Only usable when target < 20% health (checked in handler)
+        // Only usable when target < 20% health (checked in rotation)
         .build()
 }
 
@@ -117,6 +151,8 @@ fn call_of_the_wild() -> SpellDef {
         .no_gcd()
         .cooldown(CALL_OF_THE_WILD_COOLDOWN)
         .apply_aura(CALL_OF_THE_WILD_BUFF)
+        // Bloody Frenzy: Beast Cleave active during CotW
+        .with_talent("bloody_frenzy", SpellEffect::ApplyBuff { aura: BEAST_CLEAVE, stacks: 1 })
         .build()
 }
 
@@ -125,7 +161,7 @@ fn bloodshed() -> SpellDef {
         .school(DamageSchool::Physical)
         .instant()
         .cooldown(BLOODSHED_COOLDOWN)
-        .apply_aura(BLOODSHED_DEBUFF)
+        .applies_debuff(BLOODSHED_DEBUFF)
         .pet_ability()
         .build()
 }
@@ -134,6 +170,13 @@ fn dire_beast() -> SpellDef {
     SpellBuilder::new(DIRE_BEAST, "Dire Beast")
         .instant()
         .cooldown(DIRE_BEAST_COOLDOWN)
+        // Summon a guardian pet
+        .summons_pet(PetKind::Guardian, DIRE_BEAST_DURATION, "Dire Beast")
+        // Dire Frenzy: Extend duration
+        .with_talent("dire_frenzy", SpellEffect::ExtendAura {
+            aura: FRENZY,
+            amount: DIRE_FRENZY_EXTENSION,
+        })
         .build()
 }
 
@@ -143,7 +186,7 @@ fn murder_of_crows() -> SpellDef {
         .instant()
         .cooldown(MURDER_OF_CROWS_COOLDOWN)
         .cost(ResourceType::Focus, 30.0)
-        .apply_aura(MURDER_OF_CROWS_DEBUFF)
+        .applies_debuff(MURDER_OF_CROWS_DEBUFF)
         .build()
 }
 
@@ -194,7 +237,7 @@ fn kill_cleave() -> SpellDef {
         .school(DamageSchool::Physical)
         .instant()
         .target(SpellTarget::AllEnemies)
-        .physical_damage(KILL_CLEAVE_DAMAGE * 2.0) // 60% of KC damage
+        .physical_damage(KILL_CLEAVE_DAMAGE * 2.0)
         .pet_ability()
         .background()
         .build()

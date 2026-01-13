@@ -5,6 +5,7 @@ mod procs;
 mod pet;
 mod handler;
 mod rotation;
+mod talents;
 
 pub use constants::*;
 pub use spells::*;
@@ -13,6 +14,7 @@ pub use procs::*;
 pub use pet::*;
 pub use handler::BmHunter;
 pub use rotation::*;
+pub use talents::{talent_definitions, active_talents, collect_damage_mods};
 
 #[cfg(test)]
 mod tests;

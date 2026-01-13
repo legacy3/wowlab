@@ -1,93 +1,72 @@
-//! BM Hunter rotation bindings.
+//! BM Hunter rotation support.
+//!
+//! Provides name resolution for BM Hunter rotations and context building.
 
-use crate::rotation::{ContextBuilder, RotationContext};
-use crate::sim::SimState;
-use crate::types::{AuraIdx, SpellIdx};
+use crate::rotation::SpecResolver;
+use crate::types::SpellIdx;
 use super::constants::*;
 
-/// BM Hunter context builder.
-#[derive(Debug, Clone, Default)]
-pub struct BmHunterContext;
+/// Create a spec resolver for BM Hunter.
+///
+/// This maps human-readable spell/aura names to game IDs.
+pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
+    let resolver = SpecResolver::new("bm_hunter")
+        .resource("focus")
+        // Core spells
+        .spell("kill_command", KILL_COMMAND.0)
+        .spell("cobra_shot", COBRA_SHOT.0)
+        .spell("barbed_shot", BARBED_SHOT.0)
+        .spell("bestial_wrath", BESTIAL_WRATH.0)
+        .spell("multi_shot", MULTI_SHOT.0)
+        .spell("kill_shot", KILL_SHOT.0)
+        // Major cooldowns
+        .spell("call_of_the_wild", CALL_OF_THE_WILD.0)
+        .spell("bloodshed", BLOODSHED.0)
+        .spell("dire_beast", DIRE_BEAST.0)
+        .spell("murder_of_crows", MURDER_OF_CROWS.0)
+        .spell("explosive_shot", EXPLOSIVE_SHOT.0)
+        // Hero talents
+        .spell("black_arrow", BLACK_ARROW.0)
+        // Core buffs
+        .aura("bestial_wrath", BESTIAL_WRATH_BUFF.0)
+        .aura("frenzy", FRENZY.0)
+        .aura("beast_cleave", BEAST_CLEAVE.0)
+        .aura("call_of_the_wild", CALL_OF_THE_WILD_BUFF.0)
+        // Talent buffs
+        .aura("thrill_of_the_hunt", THRILL_OF_THE_HUNT.0)
+        .aura("serpentine_rhythm", SERPENTINE_RHYTHM.0)
+        .aura("piercing_fangs", PIERCING_FANGS.0)
+        .aura("snakeskin_quiver", SNAKESKIN_QUIVER_PROC.0)
+        // DoTs
+        .dot("barbed_shot", BARBED_SHOT_DOT.0)
+        .dot("serpent_sting", SERPENT_STING.0)
+        .dot("laceration", LACERATION.0)
+        .dot("black_arrow", BLACK_ARROW_DOT.0)
+        // Debuffs
+        .aura("bloodshed", BLOODSHED_DEBUFF.0)
+        .aura("wild_instincts", WILD_INSTINCTS.0)
+        // Charged cooldowns
+        .charged_cooldown("barbed_shot")
+        // Talents
+        .talent("animal_companion", talents.contains(TalentFlags::ANIMAL_COMPANION))
+        .talent("solitary_companion", talents.contains(TalentFlags::SOLITARY_COMPANION))
+        .talent("thrill_of_the_hunt", talents.contains(TalentFlags::THRILL_OF_THE_HUNT))
+        .talent("go_for_the_throat", talents.contains(TalentFlags::GO_FOR_THE_THROAT))
+        .talent("alpha_predator", talents.contains(TalentFlags::ALPHA_PREDATOR))
+        .talent("killer_instinct", talents.contains(TalentFlags::KILLER_INSTINCT))
+        .talent("killer_cobra", talents.contains(TalentFlags::KILLER_COBRA))
+        .talent("bloodshed", talents.contains(TalentFlags::BLOODSHED))
+        .talent("call_of_the_wild", talents.contains(TalentFlags::CALL_OF_THE_WILD))
+        .talent("dire_beast", talents.contains(TalentFlags::DIRE_BEAST))
+        .talent("murder_of_crows", talents.contains(TalentFlags::MURDER_OF_CROWS))
+        .talent("black_arrow", talents.contains(TalentFlags::BLACK_ARROW));
 
-impl BmHunterContext {
-    pub fn new() -> Self {
-        Self
-    }
+    resolver
 }
 
-impl ContextBuilder for BmHunterContext {
-    fn build_context(&self, sim: &SimState) -> RotationContext {
-        let mut ctx = RotationContext::from_sim_state(sim);
-        let now = sim.now();
-
-        // Map cooldowns to slots
-        // Slot 0: Kill Command
-        if let Some(cd) = sim.player.cooldown(KILL_COMMAND) {
-            ctx.cd_ready[0] = cd.is_ready(now);
-            ctx.cd_remains[0] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 1: Bestial Wrath
-        if let Some(cd) = sim.player.cooldown(BESTIAL_WRATH) {
-            ctx.cd_ready[1] = cd.is_ready(now);
-            ctx.cd_remains[1] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 2: Barbed Shot (charged)
-        if let Some(cd) = sim.player.charged_cooldown(BARBED_SHOT) {
-            ctx.cd_ready[2] = cd.has_charge();
-            ctx.cd_charges[2] = cd.current_charges as i32;
-            ctx.cd_remains[2] = cd.time_until_charge(now).as_secs_f32() as f64;
-        }
-        // Slot 3: Call of the Wild
-        if let Some(cd) = sim.player.cooldown(CALL_OF_THE_WILD) {
-            ctx.cd_ready[3] = cd.is_ready(now);
-            ctx.cd_remains[3] = cd.remaining(now).as_secs_f32() as f64;
-        }
-        // Slot 4: Kill Shot
-        if let Some(cd) = sim.player.cooldown(KILL_SHOT) {
-            ctx.cd_ready[4] = cd.is_ready(now);
-            ctx.cd_remains[4] = cd.remaining(now).as_secs_f32() as f64;
-        }
-
-        // Map buffs to slots
-        // Slot 0: Bestial Wrath
-        ctx.buff_active[0] = sim.player.buffs.has(BESTIAL_WRATH_BUFF, now);
-        ctx.buff_remains[0] = sim.player.buffs.get(BESTIAL_WRATH_BUFF)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 1: Frenzy
-        ctx.buff_active[1] = sim.player.buffs.has(FRENZY, now);
-        ctx.buff_stacks[1] = sim.player.buffs.stacks(FRENZY, now) as i32;
-        ctx.buff_remains[1] = sim.player.buffs.get(FRENZY)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-        // Slot 2: Beast Cleave
-        ctx.buff_active[2] = sim.player.buffs.has(BEAST_CLEAVE, now);
-        ctx.buff_remains[2] = sim.player.buffs.get(BEAST_CLEAVE)
-            .map(|a| a.remaining(now).as_secs_f32() as f64)
-            .unwrap_or(0.0);
-
-        ctx
-    }
-
-    fn cooldown_slot(&self, spell: SpellIdx) -> Option<usize> {
-        match spell {
-            x if x == KILL_COMMAND => Some(0),
-            x if x == BESTIAL_WRATH => Some(1),
-            x if x == BARBED_SHOT => Some(2),
-            x if x == CALL_OF_THE_WILD => Some(3),
-            x if x == KILL_SHOT => Some(4),
-            _ => None,
-        }
-    }
-
-    fn buff_slot(&self, aura: AuraIdx) -> Option<usize> {
-        match aura {
-            x if x == BESTIAL_WRATH_BUFF => Some(0),
-            x if x == FRENZY => Some(1),
-            x if x == BEAST_CLEAVE => Some(2),
-            _ => None,
-        }
-    }
+/// Default spec resolver (no talents).
+pub fn default_resolver() -> SpecResolver {
+    spec_resolver(TalentFlags::empty())
 }
 
 /// Convert game spell ID to internal SpellIdx.
@@ -127,3 +106,52 @@ pub fn spell_name_to_idx(name: &str) -> Option<SpellIdx> {
         _ => None,
     }
 }
+
+/// BM Hunter example rotation JSON.
+///
+/// This demonstrates the new rotation DSL with proper namespaced variables.
+pub const EXAMPLE_ROTATION_JSON: &str = r#"{
+  "name": "BM Hunter ST",
+  "variables": {
+    "in_opener": { "<": ["combat.time", 10] },
+    "pool_for_bw": { "and": [
+      { "<": ["cd.bestial_wrath.remaining", 3] },
+      { "<": ["resource.focus", 70] }
+    ]},
+    "need_frenzy_refresh": { "and": [
+      "buff.frenzy.active",
+      { "<": ["buff.frenzy.remaining", 2] }
+    ]}
+  },
+  "lists": {
+    "cooldowns": [
+      { "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" },
+      { "cast": "call_of_the_wild", "if": { "and": [
+        "cd.call_of_the_wild.ready",
+        "buff.bestial_wrath.active"
+      ]}}
+    ],
+    "st": [
+      { "cast": "barbed_shot", "if": { "or": [
+        { "not": "buff.frenzy.active" },
+        "need_frenzy_refresh",
+        { ">=": ["cd.barbed_shot.charges", 2] }
+      ]}},
+      { "cast": "kill_command", "if": "cd.kill_command.ready" },
+      { "cast": "cobra_shot", "if": { ">=": ["resource.focus", 50] }}
+    ]
+  },
+  "actions": [
+    { "call": "cooldowns" },
+    { "call": "st" }
+  ]
+}"#;
+
+/// Minimal rotation for testing.
+pub const MINIMAL_ROTATION_JSON: &str = r#"{
+  "name": "BM Hunter Minimal",
+  "actions": [
+    { "cast": "kill_command", "if": "cd.kill_command.ready" },
+    { "cast": "cobra_shot" }
+  ]
+}"#;

@@ -1,5 +1,6 @@
 use super::{SpellDef, AuraDef, CastType, GcdType, SpellTarget, SpellFlags, DamageEffect, ResourceCost, AuraEffect};
-use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool, DerivedStat};
+use super::effect::{SpellEffect, EffectCondition};
+use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool, DerivedStat, PetKind};
 use crate::aura::PeriodicEffect;
 
 /// Builder for spell definitions
@@ -161,6 +162,97 @@ impl SpellBuilder {
 
     pub fn background(mut self) -> Self {
         self.spell.flags.insert(SpellFlags::BACKGROUND);
+        self
+    }
+
+    // ========================================================================
+    // Effect methods - define spell behavior declaratively
+    // ========================================================================
+
+    /// Add an effect that fires when this spell is cast.
+    pub fn on_cast(mut self, effect: SpellEffect) -> Self {
+        self.spell.effects.push(effect);
+        self
+    }
+
+    /// Reduce another spell's cooldown when this spell is cast.
+    pub fn reduces_cooldown(mut self, spell: SpellIdx, amount: f32) -> Self {
+        self.spell.effects.push(SpellEffect::ReduceCooldown { spell, amount });
+        self
+    }
+
+    /// Trigger another spell when this spell is cast.
+    pub fn triggers(mut self, spell: SpellIdx) -> Self {
+        self.spell.effects.push(SpellEffect::TriggerSpell { spell });
+        self
+    }
+
+    /// Summon a pet/guardian when cast.
+    pub fn summons_pet(mut self, kind: PetKind, duration: f32, name: &'static str) -> Self {
+        self.spell.effects.push(SpellEffect::SummonPet { kind, duration, name });
+        self
+    }
+
+    /// Apply a buff to the player.
+    pub fn applies_buff(mut self, aura: AuraIdx) -> Self {
+        self.spell.effects.push(SpellEffect::ApplyBuff { aura, stacks: 1 });
+        self
+    }
+
+    /// Apply a buff with specific stack count.
+    pub fn applies_buff_stacks(mut self, aura: AuraIdx, stacks: u8) -> Self {
+        self.spell.effects.push(SpellEffect::ApplyBuff { aura, stacks });
+        self
+    }
+
+    /// Apply a debuff to the target.
+    pub fn applies_debuff(mut self, aura: AuraIdx) -> Self {
+        self.spell.effects.push(SpellEffect::ApplyDebuff { aura, stacks: 1 });
+        self
+    }
+
+    /// Extend an aura's duration.
+    pub fn extends_aura(mut self, aura: AuraIdx, amount: f32) -> Self {
+        self.spell.effects.push(SpellEffect::ExtendAura { aura, amount });
+        self
+    }
+
+    /// Pet mirrors this cast (like Animal Companion).
+    pub fn pet_mirrors(mut self, damage_pct: f32) -> Self {
+        self.spell.effects.push(SpellEffect::PetMirrorCast { damage_pct });
+        self
+    }
+
+    /// Cleave damage to nearby targets.
+    pub fn cleaves(mut self, damage_pct: f32, max_targets: u8) -> Self {
+        self.spell.effects.push(SpellEffect::Cleave { damage_pct, max_targets });
+        self
+    }
+
+    /// Add conditional effect (only fires when condition is met).
+    pub fn on_cast_if(mut self, condition: EffectCondition, effect: SpellEffect) -> Self {
+        self.spell.effects.push(SpellEffect::Conditional {
+            condition,
+            effect: Box::new(effect),
+        });
+        self
+    }
+
+    /// Add effect that only fires when a talent is enabled.
+    pub fn with_talent(mut self, talent: &'static str, effect: SpellEffect) -> Self {
+        self.spell.effects.push(SpellEffect::Conditional {
+            condition: EffectCondition::TalentEnabled(talent),
+            effect: Box::new(effect),
+        });
+        self
+    }
+
+    /// Add effect that only fires during a buff.
+    pub fn during_buff(mut self, aura: AuraIdx, effect: SpellEffect) -> Self {
+        self.spell.effects.push(SpellEffect::Conditional {
+            condition: EffectCondition::DuringBuff(aura),
+            effect: Box::new(effect),
+        });
         self
     }
 

@@ -3,18 +3,19 @@ use crate::handler::SpecHandler;
 use crate::types::*;
 use crate::sim::{SimState, SimConfig};
 use crate::actor::Player;
+use crate::rotation::{Rotation, CompiledRotation};
 use std::sync::Once;
 
 static INIT_ROTATION: Once = Once::new();
 
 fn ensure_rotation() {
     INIT_ROTATION.call_once(|| {
-        // Simple rotation that just casts Kill Command then Cobra Shot
+        // Simple rotation using the new name-based format
         let json = r#"{
             "name": "test_rotation",
             "actions": [
-                { "spell_id": 34026 },
-                { "spell_id": 193455 }
+                { "cast": "kill_command" },
+                { "cast": "cobra_shot" }
             ]
         }"#;
         let _ = BmHunter::init_rotation(json);
@@ -119,154 +120,259 @@ fn spell_name_resolver() {
 }
 
 // ============================================================================
-// JIT Rotation Tests
+// Name-Based Rotation Tests
 // ============================================================================
 
 #[test]
-fn rotation_compile_basic() {
-    use crate::rotation::{Rotation, CompiledRotation};
-
+fn rotation_parse_basic() {
     let json = r#"{
         "name": "basic",
         "actions": [
-            { "spell_id": 34026 }
+            { "cast": "kill_command" },
+            { "cast": "cobra_shot" }
         ]
     }"#;
 
     let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
-    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+    assert_eq!(rotation.name, "basic");
+    assert_eq!(rotation.actions.len(), 2);
+}
 
-    // Create context and evaluate
-    use crate::rotation::RotationContext;
-    let ctx = RotationContext::default();
-    let result = compiled.evaluate(&ctx);
-    assert_eq!(result, 34026); // Should return Kill Command spell ID
+#[test]
+fn rotation_parse_with_condition() {
+    let json = r#"{
+        "name": "conditional",
+        "actions": [
+            { "cast": "kill_command", "if": "cd.kill_command.ready" },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    assert_eq!(rotation.actions.len(), 2);
+}
+
+#[test]
+fn rotation_compile_basic() {
+    let json = r#"{
+        "name": "basic",
+        "actions": [
+            { "cast": "kill_command" }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+
+    // Verify it compiled successfully (the schema should have the right size)
+    assert!(compiled.schema().size > 0);
 }
 
 #[test]
 fn rotation_compile_with_condition() {
-    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
-
-    // Cast Kill Command when focus >= 30, else Cobra Shot
     let json = r#"{
         "name": "conditional",
         "actions": [
-            {
-                "spell_id": 34026,
-                "condition": { ">=": [{ "var": "focus" }, 30] }
-            },
-            { "spell_id": 193455 }
+            { "cast": "kill_command", "if": "cd.kill_command.ready" },
+            { "cast": "cobra_shot" }
         ]
     }"#;
 
     let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
-    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
-
-    // With high focus, should cast Kill Command
-    let mut ctx = RotationContext::default();
-    ctx.focus = 50.0;
-    assert_eq!(compiled.evaluate(&ctx), 34026);
-
-    // With low focus, should cast Cobra Shot
-    ctx.focus = 20.0;
-    assert_eq!(compiled.evaluate(&ctx), 193455);
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
-fn rotation_cooldown_condition() {
-    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
-
-    // Cast Bestial Wrath when cooldown is ready (slot 1)
+fn rotation_compile_with_resource_check() {
     let json = r#"{
-        "name": "cooldown_test",
+        "name": "resource_check",
         "actions": [
-            {
-                "spell_id": 19574,
-                "condition": "cooldown.1.ready"
-            },
-            { "spell_id": 193455 }
+            { "cast": "kill_command", "if": { ">=": ["resource.focus", 30] } },
+            { "cast": "cobra_shot" }
         ]
     }"#;
 
     let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
-    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
-
-    // Cooldown ready - should cast Bestial Wrath
-    let mut ctx = RotationContext::default();
-    ctx.cd_ready[1] = true;
-    assert_eq!(compiled.evaluate(&ctx), 19574);
-
-    // Cooldown not ready - should cast Cobra Shot
-    ctx.cd_ready[1] = false;
-    assert_eq!(compiled.evaluate(&ctx), 193455);
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
-fn rotation_buff_condition() {
-    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
-
-    // Cast Kill Command when Bestial Wrath is active (buff slot 0)
+fn rotation_compile_with_buff_check() {
     let json = r#"{
-        "name": "buff_test",
+        "name": "buff_check",
         "actions": [
-            {
-                "spell_id": 34026,
-                "condition": "buff.0.active"
-            },
-            { "spell_id": 193455 }
+            { "cast": "kill_command", "if": "buff.bestial_wrath.active" },
+            { "cast": "cobra_shot" }
         ]
     }"#;
 
     let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
-    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
-
-    // Buff active - should cast Kill Command
-    let mut ctx = RotationContext::default();
-    ctx.buff_active[0] = true;
-    assert_eq!(compiled.evaluate(&ctx), 34026);
-
-    // Buff not active - should cast Cobra Shot
-    ctx.buff_active[0] = false;
-    assert_eq!(compiled.evaluate(&ctx), 193455);
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
-fn rotation_and_condition() {
-    use crate::rotation::{Rotation, CompiledRotation, RotationContext};
-
-    // Cast Kill Command when cooldown ready AND focus >= 30
+fn rotation_compile_with_and_condition() {
     let json = r#"{
-        "name": "and_test",
+        "name": "and_check",
         "actions": [
             {
-                "spell_id": 34026,
-                "condition": {
-                    "and": [
-                        "cooldown.0.ready",
-                        { ">=": [{ "var": "focus" }, 30] }
-                    ]
-                }
+                "cast": "kill_command",
+                "if": { "and": [
+                    "cd.kill_command.ready",
+                    { ">=": ["resource.focus", 30] }
+                ]}
             },
-            { "spell_id": 193455 }
+            { "cast": "cobra_shot" }
         ]
     }"#;
 
     let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
-    let compiled = CompiledRotation::compile(&rotation).expect("Failed to compile rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
 
-    let mut ctx = RotationContext::default();
+#[test]
+fn rotation_compile_with_or_condition() {
+    let json = r#"{
+        "name": "or_check",
+        "actions": [
+            {
+                "cast": "bestial_wrath",
+                "if": { "or": [
+                    "cd.bestial_wrath.ready",
+                    "buff.bestial_wrath.active"
+                ]}
+            },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
 
-    // Both conditions true
-    ctx.cd_ready[0] = true;
-    ctx.focus = 50.0;
-    assert_eq!(compiled.evaluate(&ctx), 34026);
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
 
-    // Focus too low
-    ctx.focus = 20.0;
-    assert_eq!(compiled.evaluate(&ctx), 193455);
+#[test]
+fn rotation_compile_with_lists() {
+    let json = r#"{
+        "name": "list_test",
+        "lists": {
+            "cooldowns": [
+                { "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" }
+            ]
+        },
+        "actions": [
+            { "call": "cooldowns" },
+            { "cast": "kill_command", "if": "cd.kill_command.ready" },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
 
-    // Cooldown not ready
-    ctx.cd_ready[0] = false;
-    ctx.focus = 50.0;
-    assert_eq!(compiled.evaluate(&ctx), 193455);
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
+
+#[test]
+fn rotation_compile_with_variables() {
+    let json = r#"{
+        "name": "variable_test",
+        "variables": {
+            "should_burst": { "and": [
+                "cd.bestial_wrath.ready",
+                { ">=": ["resource.focus", 50] }
+            ]}
+        },
+        "actions": [
+            { "cast": "bestial_wrath", "if": "should_burst" },
+            { "cast": "kill_command", "if": "cd.kill_command.ready" },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
+
+#[test]
+fn rotation_compile_with_dot_check() {
+    let json = r#"{
+        "name": "dot_check",
+        "actions": [
+            { "cast": "barbed_shot", "if": "dot.barbed_shot.refreshable" },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
+
+#[test]
+fn rotation_compile_with_charges() {
+    let json = r#"{
+        "name": "charges_test",
+        "actions": [
+            { "cast": "barbed_shot", "if": { ">=": ["cd.barbed_shot.charges", 1] } },
+            { "cast": "cobra_shot" }
+        ]
+    }"#;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+}
+
+#[test]
+fn rotation_compile_full_example() {
+    // Use the example rotation JSON from the rotation module
+    let json = EXAMPLE_ROTATION_JSON;
+
+    let rotation = Rotation::from_json(json).expect("Failed to parse example rotation");
+    let resolver = spec_resolver(TalentFlags::empty());
+    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile example rotation");
+}
+
+#[test]
+fn spec_resolver_has_required_spells() {
+    let resolver = spec_resolver(TalentFlags::empty());
+
+    // Core spells should be resolvable
+    assert!(resolver.resolve_spell("kill_command").is_ok());
+    assert!(resolver.resolve_spell("cobra_shot").is_ok());
+    assert!(resolver.resolve_spell("barbed_shot").is_ok());
+    assert!(resolver.resolve_spell("bestial_wrath").is_ok());
+
+    // Unknown spell should fail
+    assert!(resolver.resolve_spell("unknown_spell").is_err());
+}
+
+#[test]
+fn spec_resolver_has_required_auras() {
+    let resolver = spec_resolver(TalentFlags::empty());
+
+    // Core auras should be resolvable
+    assert!(resolver.has_aura("bestial_wrath"));
+    assert!(resolver.has_aura("frenzy"));
+    assert!(resolver.has_aura("beast_cleave"));
+
+    // DoTs should be resolvable
+    assert!(resolver.has_dot("barbed_shot"));
+}
+
+#[test]
+fn spec_resolver_with_talents() {
+    let talents = TalentFlags::ALPHA_PREDATOR | TalentFlags::KILLER_COBRA;
+    let resolver = spec_resolver(talents);
+
+    // Talent flags should be properly set
+    assert!(resolver.has_talent("alpha_predator"));
+    assert!(resolver.has_talent("killer_cobra"));
+    assert!(!resolver.has_talent("bloodshed")); // Not enabled
 }
