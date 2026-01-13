@@ -93,7 +93,11 @@ export function JobHistoryCard() {
                 color="fg.muted"
                 fontVariantNumeric="tabular-nums"
               >
-                ({t("{count} jobs", { count: formatInt(filteredJobs.length) })})
+                (
+                {t("{count, plural, =1 {# job} other {# jobs}}", {
+                  count: filteredJobs.length,
+                })}
+                )
               </Text>
             </Card.Title>
             <HStack gap="1.5" flexWrap="wrap">

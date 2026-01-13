@@ -62,7 +62,9 @@ export function SearchDisplay({
             <Flex gap="2" flexWrap="wrap">
               <Badge variant="outline">Query: {query || t("(empty)")}</Badge>
               <Badge colorPalette="gray">
-                {t("{count} results", { count: String(result.data.length) })}
+                {t("{count, plural, =1 {# result} other {# results}}", {
+                  count: result.data.length,
+                })}
               </Badge>
               {result.isLoading && (
                 <Badge colorPalette="amber">{t("Loading...")}</Badge>

@@ -41,12 +41,8 @@ interface GeneratorContext {
   defaultListId: string;
   description: string;
   name: string;
-  t: TranslationFn;
   variables: Variable[];
 }
-
-// TODO Why is this here?
-type TranslationFn = (key: string, values?: Record<string, string>) => string;
 
 export function Preview() {
   const t = useExtracted();
@@ -66,10 +62,9 @@ export function Preview() {
       defaultListId,
       description,
       name,
-      t,
       variables,
     }),
-    [name, description, variables, actionLists, defaultListId, t],
+    [name, description, variables, actionLists, defaultListId],
   );
 
   const content = useMemo(() => {
@@ -190,17 +185,12 @@ function formatConditionForDSL(condition: RuleGroupType): string {
   return condition.not ? `!(${result})` : result;
 }
 
-function formatConditionForNatural(
-  condition: RuleGroupType,
-  t: TranslationFn,
-): string {
+function formatConditionForNatural(condition: RuleGroupType): string {
   if (!condition.rules || condition.rules.length === 0) {
     return "";
   }
 
-  const parts = condition.rules
-    .map((rule) => formatRuleForNatural(rule, t))
-    .filter(Boolean);
+  const parts = condition.rules.map(formatRuleForNatural).filter(Boolean);
   if (parts.length === 0) {
     return "";
   }
@@ -233,21 +223,18 @@ function formatRuleForDSL(rule: RuleType | RuleGroupType): string {
   return `(${parts.join(separator)})`;
 }
 
-function formatRuleForNatural(
-  rule: RuleType | RuleGroupType,
-  t: TranslationFn,
-): string {
+function formatRuleForNatural(rule: RuleType | RuleGroupType): string {
   if (isRuleType(rule)) {
     const { field, operator, value } = rule;
     const fieldName = String(field).replace(/_/g, " ");
 
     const opMap: Record<string, string> = {
-      "!=": t("does not equal"),
-      "<": t("is less than"),
-      "<=": t("is at most"),
-      "=": t("equals"),
-      ">": t("is greater than"),
-      ">=": t("is at least"),
+      "!=": "does not equal",
+      "<": "is less than",
+      "<=": "is at most",
+      "=": "equals",
+      ">": "is greater than",
+      ">=": "is at least",
     };
 
     const opText = opMap[String(operator)] || String(operator);
@@ -259,9 +246,7 @@ function formatRuleForNatural(
     return "";
   }
 
-  const parts = group.rules
-    .map((r) => formatRuleForNatural(r, t))
-    .filter(Boolean);
+  const parts = group.rules.map(formatRuleForNatural).filter(Boolean);
 
   if (parts.length === 0) {
     return "";
@@ -279,7 +264,7 @@ function formatRuleForNatural(
 function generateDSL(ctx: GeneratorContext): string {
   const lines: string[] = [];
 
-  lines.push(`# ${ctx.name || ctx.t("Untitled Rotation")}`);
+  lines.push(`# ${ctx.name || "Untitled Rotation"}`);
   if (ctx.description) {
     lines.push(`# ${ctx.description}`);
   }
@@ -338,14 +323,14 @@ function generateJSON(ctx: GeneratorContext): string {
 function generateNatural(ctx: GeneratorContext): string {
   const lines: string[] = [];
 
-  lines.push(ctx.name || ctx.t("Untitled Rotation"));
+  lines.push(ctx.name || "Untitled Rotation");
   if (ctx.description) {
     lines.push(ctx.description);
   }
   lines.push("");
 
   if (ctx.variables.length > 0) {
-    lines.push(ctx.t("Variables:"));
+    lines.push("Variables:");
     for (const variable of ctx.variables) {
       lines.push(`  - ${variable.name}: ${variable.expression}`);
     }
@@ -366,16 +351,14 @@ function generateNatural(ctx: GeneratorContext): string {
       let actionName: string;
       if (action.type === "call_action_list") {
         const targetList = ctx.actionLists.find((l) => l.id === action.listId);
-        actionName = ctx.t("Call {list}", {
-          list: targetList?.label ?? ctx.t("Unknown"),
-        });
+        actionName = `Call ${targetList?.label ?? "Unknown"}`;
       } else if (action.type === "item") {
-        actionName = ctx.t("Use Item #{id}", { id: String(action.itemId) });
+        actionName = `Use Item #${action.itemId}`;
       } else {
-        actionName = ctx.t("Spell #{id}", { id: String(action.spellId) });
+        actionName = `Spell #${action.spellId}`;
       }
 
-      const conditionStr = formatConditionForNatural(action.condition, ctx.t);
+      const conditionStr = formatConditionForNatural(action.condition);
       if (conditionStr) {
         lines.push(`  ${priority}. ${actionName} - when ${conditionStr}`);
       } else {
@@ -406,7 +389,7 @@ function VisualPreview() {
             {t("Visual preview coming soon")}
           </Text>
           <Text color="fg.subtle" textStyle="sm" textAlign="center">
-            {t("Use the DSL or Natural tabs to preview your rotation")}
+            {t("Use the DSL or Natural tabs to preview your rotation.")}
           </Text>
         </VStack>
       </Card.Body>

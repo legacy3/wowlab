@@ -59,7 +59,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
         <Card.Header textAlign="center">
           <Card.Title fontSize="2xl">{t("Sign in to continue")}</Card.Title>
           <Card.Description>
-            {t("Choose your preferred authentication method")}
+            {t("Choose your preferred authentication method.")}
           </Card.Description>
         </Card.Header>
         <Card.Body>
@@ -72,14 +72,14 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 onClick={() => handleOAuthSignIn("discord")}
               >
                 <DiscordIcon width={16} height={16} />
-                {t("Discord")}
+                Discord
               </IconButton>
               <IconButton
                 variant="outline"
                 onClick={() => handleOAuthSignIn("github")}
               >
                 <GitHubIcon width={16} height={16} />
-                {t("GitHub")}
+                GitHub
               </IconButton>
               <IconButton
                 variant="outline"
@@ -87,7 +87,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 disabled
               >
                 <GoogleIcon width={16} height={16} />
-                {t("Google")}
+                Google
               </IconButton>
               <IconButton
                 variant="outline"
@@ -95,7 +95,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
                 disabled
               >
                 <TwitchIcon width={16} height={16} />
-                {t("Twitch")}
+                Twitch
               </IconButton>
             </Grid>
 
@@ -108,14 +108,17 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
             </Flex>
 
             <Text textAlign="center" fontSize="xs" color="fg.muted">
-              {t("By continuing, you agree to our")}{" "}
-              <Link href={href(routes.about.terms)}>
-                {t("Terms of Service")}
-              </Link>{" "}
-              {t("and")}{" "}
-              <Link href={href(routes.about.privacy)}>
-                {t("Privacy Policy")}
-              </Link>
+              {t.rich(
+                "By continuing, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+                {
+                  privacy: (chunks) => (
+                    <Link href={href(routes.about.privacy)}>{chunks}</Link>
+                  ),
+                  terms: (chunks) => (
+                    <Link href={href(routes.about.terms)}>{chunks}</Link>
+                  ),
+                },
+              )}
             </Text>
           </Stack>
         </Card.Body>

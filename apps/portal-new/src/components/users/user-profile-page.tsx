@@ -102,7 +102,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             <Empty.Content>
               <Empty.Title>{t("No public rotations")}</Empty.Title>
               <Empty.Description>
-                {t("@{handle} has not published any rotations yet", { handle })}
+                {t("@{handle} has not published any rotations yet.", {
+                  handle,
+                })}
               </Empty.Description>
             </Empty.Content>
           </Empty.Root>

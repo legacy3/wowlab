@@ -52,7 +52,9 @@ export function CollapsedSidebar({
 
       <VStack gap="1" mt="2">
         <Tooltip
-          content={t("Action Lists ({count})", { count: String(listCount) })}
+          content={t("{count, plural, other {Action Lists (#)}}", {
+            count: listCount,
+          })}
           positioning={{ placement: "right" }}
         >
           <Flex
@@ -74,7 +76,9 @@ export function CollapsedSidebar({
         </Tooltip>
 
         <Tooltip
-          content={t("Variables ({count})", { count: String(variableCount) })}
+          content={t("{count, plural, other {Variables (#)}}", {
+            count: variableCount,
+          })}
           positioning={{ placement: "right" }}
         >
           <Flex

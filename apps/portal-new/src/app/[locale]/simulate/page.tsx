@@ -1,9 +1,5 @@
-import { getExtracted } from "next-intl/server";
+import { SimcPasteArea } from "@/components/simulate";
 
-import { Text } from "@/components/ui/text";
-
-export default async function SimulatePage() {
-  const t = await getExtracted();
-
-  return <Text>{t("Simulate page content coming soon.")}</Text>;
+export default function SimulatePage() {
+  return <SimcPasteArea />;
 }

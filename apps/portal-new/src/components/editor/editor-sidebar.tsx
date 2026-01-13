@@ -268,7 +268,7 @@ export function EditorSidebar() {
             {actionLists.length === 0 && (
               <Box textAlign="center" py="8">
                 <Text textStyle="sm" color="fg.muted">
-                  {t("No lists yet.")}
+                  {t("No lists yet")}
                 </Text>
                 <Button
                   variant="plain"
@@ -326,7 +326,7 @@ export function EditorSidebar() {
             {variables.length === 0 && (
               <Box textAlign="center" py="8">
                 <Text textStyle="sm" color="fg.muted">
-                  {t("No variables yet.")}
+                  {t("No variables yet")}
                 </Text>
                 <Text textStyle="xs" color="fg.muted" mt="2">
                   {t("Use {code} in conditions", { code: "$name" })}

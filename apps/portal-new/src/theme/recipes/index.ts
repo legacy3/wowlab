@@ -1,5 +1,6 @@
 import { absoluteCenter } from "./absolute-center";
 import { accordion } from "./accordion";
+import { alert } from "./alert";
 import { avatar } from "./avatar";
 import { badge } from "./badge";
 import { breadcrumb } from "./breadcrumb";
@@ -17,6 +18,7 @@ import { field } from "./field";
 import { group } from "./group";
 import { heading } from "./heading";
 import { helpText } from "./help-text";
+import { hoverCard } from "./hover-card";
 import { icon } from "./icon";
 import { image } from "./image";
 import { input } from "./input";
@@ -26,6 +28,7 @@ import { loader } from "./loader";
 import { menu } from "./menu";
 import { numberInput } from "./number-input";
 import { popover } from "./popover";
+import { progress } from "./progress";
 import { prose } from "./prose";
 import { select } from "./select";
 import { skeleton } from "./skeleton";
@@ -33,10 +36,12 @@ import { switchRecipe } from "./switch";
 import { table } from "./table";
 import { tabs } from "./tabs";
 import { text } from "./text";
+import { textarea } from "./textarea";
 import { tooltip } from "./tooltip";
 
 export const recipes = {
   absoluteCenter,
+  alert,
   badge,
   breadcrumb,
   button,
@@ -45,6 +50,7 @@ export const recipes = {
   group,
   heading,
   helpText,
+  hoverCard,
   icon,
   image,
   input,
@@ -52,9 +58,11 @@ export const recipes = {
   link,
   loader,
   numberInput,
+  progress,
   prose,
   skeleton,
   text,
+  textarea,
 };
 
 export const slotRecipes = {

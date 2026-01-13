@@ -17,6 +17,7 @@ import {
   NumberInput,
   Select,
   Switch,
+  Textarea,
 } from "@/components/ui";
 
 import { fixtures, Section, Subsection } from "../../shared";
@@ -30,6 +31,7 @@ export function FormsSection() {
     <Section id="forms" title="Forms">
       <Stack gap="8">
         <InputDemo />
+        <TextareaDemo />
         <NumberInputDemo />
         <SelectDemo />
         <ComboboxDemo />
@@ -219,6 +221,54 @@ function SwitchDemo() {
           </Switch.Root>
         </HStack>
       </Stack>
+    </Subsection>
+  );
+}
+
+function TextareaDemo() {
+  return (
+    <Subsection title="Textarea">
+      <HStack gap="6" flexWrap="wrap" alignItems="flex-start">
+        {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+          <Field.Root key={size} w="56">
+            <Field.Label>Size: {size}</Field.Label>
+            <Textarea size={size} placeholder="Enter text..." rows={3} />
+          </Field.Root>
+        ))}
+      </HStack>
+      <HStack gap="6" flexWrap="wrap" alignItems="flex-start" mt="6">
+        {(["outline", "surface", "subtle", "flushed"] as const).map(
+          (variant) => (
+            <Field.Root key={variant} w="56">
+              <Field.Label>Variant: {variant}</Field.Label>
+              <Textarea
+                variant={variant}
+                placeholder="Enter text..."
+                rows={3}
+              />
+            </Field.Root>
+          ),
+        )}
+      </HStack>
+      <HStack gap="6" flexWrap="wrap" alignItems="flex-start" mt="6">
+        <Field.Root w="56" invalid>
+          <Field.Label>Invalid</Field.Label>
+          <Textarea placeholder="Invalid textarea" rows={3} />
+          <Field.ErrorText>This field has an error</Field.ErrorText>
+        </Field.Root>
+        <Field.Root w="56" disabled>
+          <Field.Label>Disabled</Field.Label>
+          <Textarea placeholder="Disabled textarea" rows={3} />
+        </Field.Root>
+        <Field.Root w="56" readOnly>
+          <Field.Label>Read Only</Field.Label>
+          <Textarea
+            placeholder="Read only textarea"
+            rows={3}
+            defaultValue="Cannot edit this"
+          />
+        </Field.Root>
+      </HStack>
     </Subsection>
   );
 }

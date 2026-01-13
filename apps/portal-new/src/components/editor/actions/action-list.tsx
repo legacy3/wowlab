@@ -129,8 +129,8 @@ export function ActionList() {
             )}
           </Box>
           <Text textStyle="xs" color="fg.muted" fontFamily="mono">
-            {t("{count} actions", {
-              count: String(selectedList.actions.length),
+            {t("{count, plural, =1 {# action} other {# actions}}", {
+              count: selectedList.actions.length,
             })}
           </Text>
         </Box>

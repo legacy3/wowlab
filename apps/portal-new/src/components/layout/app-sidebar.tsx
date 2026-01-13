@@ -48,9 +48,9 @@ export function AppSidebar() {
       >
         <Link href={href(routes.home)} variant="plain">
           <Flex align="center" gap="3">
-            <Image src="/logo.svg" alt={t("WoW Lab")} width={32} height={32} />
+            <Image src="/logo.svg" alt="WoW Lab" width={32} height={32} />
             <Stack gap="0">
-              <Text fontWeight="bold">{t("WoW Lab")}</Text>
+              <Text fontWeight="bold">WoW Lab</Text>
               <Text fontSize="xs" color="fg.muted">
                 {t("Toolkit")}
               </Text>
@@ -91,7 +91,7 @@ export function AppSidebar() {
         gap="2"
       >
         <Text fontSize="xs" color="fg.subtle">
-          {t("© 2025 WoW Lab")}
+          © 2025 WoW Lab
         </Text>
       </Flex>
     </Box>

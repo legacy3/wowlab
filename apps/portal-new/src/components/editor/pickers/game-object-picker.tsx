@@ -199,7 +199,11 @@ export function GameObjectPicker<TSearchResult, TData>({
             {collection.items.length === 0 && inputValue.length < 2 && (
               <Combobox.Empty>
                 <Empty.Root variant="plain" size="sm">
-                  <Empty.Title>{t("Type at least 2 characters")}</Empty.Title>
+                  <Empty.Title>
+                    {t("{n, plural, other {Type at least # characters}}", {
+                      n: 2,
+                    })}
+                  </Empty.Title>
                 </Empty.Root>
               </Combobox.Empty>
             )}
@@ -267,7 +271,11 @@ export function GameObjectPicker<TSearchResult, TData>({
           {collection.items.length === 0 && inputValue.length < 2 && (
             <Combobox.Empty>
               <Empty.Root variant="plain" size="sm">
-                <Empty.Title>{t("Type at least 2 characters")}</Empty.Title>
+                <Empty.Title>
+                  {t("{n, plural, other {Type at least # characters}}", {
+                    n: 2,
+                  })}
+                </Empty.Title>
               </Empty.Root>
             </Combobox.Empty>
           )}

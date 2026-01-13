@@ -105,19 +105,25 @@ export function EditorHeader() {
 
         <HStack gap="2" color="fg.muted" display={{ base: "none", md: "flex" }}>
           <Text textStyle="xs" fontFamily="mono">
-            {t("{count} lists", { count: String(listCount) })}
+            {t("{count, plural, =1 {# list} other {# lists}}", {
+              count: listCount,
+            })}
           </Text>
           <Text textStyle="xs" color="fg.subtle">
             -
           </Text>
           <Text textStyle="xs" fontFamily="mono">
-            {t("{count} actions", { count: String(actionCount) })}
+            {t("{count, plural, =1 {# action} other {# actions}}", {
+              count: actionCount,
+            })}
           </Text>
           <Text textStyle="xs" color="fg.subtle">
             -
           </Text>
           <Text textStyle="xs" fontFamily="mono">
-            {t("{count} vars", { count: String(varCount) })}
+            {t("{count, plural, =1 {# variable} other {# variables}}", {
+              count: varCount,
+            })}
           </Text>
         </HStack>
       </HStack>

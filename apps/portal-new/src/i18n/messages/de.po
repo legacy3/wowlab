@@ -8,8 +8,8 @@ msgstr ""
 
 #: src/app/[locale]/dev/ui/loading.tsx:10
 #: src/components/dev/hooks/sections/entity-display.tsx:80
-#: src/components/dev/hooks/sections/search-display.tsx:68
-#: src/components/editor/pickers/game-object-picker.tsx:294
+#: src/components/dev/hooks/sections/search-display.tsx:70
+#: src/components/editor/pickers/game-object-picker.tsx:302
 msgid "gjBiyj"
 msgstr ""
 
@@ -43,10 +43,6 @@ msgstr ""
 msgid "uqwRlB"
 msgstr ""
 
-#: src/app/[locale]/simulate/page.tsx:8
-msgid "451sw2"
-msgstr ""
-
 #: src/components/auth/sign-in-form.tsx:50
 msgid "wxbLaE"
 msgstr ""
@@ -56,23 +52,7 @@ msgid "szo7Rq"
 msgstr ""
 
 #: src/components/auth/sign-in-form.tsx:62
-msgid "fR1Dfg"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:75
-msgid "FvmV6q"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:82
-msgid "wO9wb5"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:90
-msgid "lzgH40"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:98
-msgid "3LuP+7"
+msgid "Vdd5U6"
 msgstr ""
 
 #: src/components/auth/sign-in-form.tsx:105
@@ -80,22 +60,10 @@ msgid "Z4OFLN"
 msgstr ""
 
 #: src/components/auth/sign-in-form.tsx:111
-msgid "n/KLku"
+msgid "V3Izs2"
 msgstr ""
 
-#: src/components/auth/sign-in-form.tsx:113
-msgid "32rBNK"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:115
-msgid "3mvL2Q"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:117
-msgid "vx0nkZ"
-msgstr ""
-
-#: src/components/auth/sign-in-form.tsx:125
+#: src/components/auth/sign-in-form.tsx:128
 msgid "pA/0it"
 msgstr ""
 
@@ -104,7 +72,7 @@ msgid "s6RK5S"
 msgstr ""
 
 #: src/components/computing/cards/cpu-cores-card.tsx:27
-msgid "jNS6IG"
+msgid "MLZoUU"
 msgstr ""
 
 #: src/components/computing/cards/cpu-cores-card.tsx:32
@@ -148,89 +116,89 @@ msgstr ""
 msgid "ONunLl"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:96
-msgid "AlWtQ/"
+#: src/components/computing/cards/job-history-card.tsx:97
+msgid "X3zwRN"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:132
+#: src/components/computing/cards/job-history-card.tsx:136
 msgid "GJ2/jZ"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:148
+#: src/components/computing/cards/job-history-card.tsx:152
 #: src/components/computing/cards/status-card.tsx:31
 msgid "tzMNF3"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:150
+#: src/components/computing/cards/job-history-card.tsx:154
 #: src/components/editor/variable-editor-dialog.tsx:65
 #: src/components/rotations/rotation-browser.tsx:262
 msgid "HAlOn1"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:152
-#: src/components/computing/cards/job-history-card.tsx:276
+#: src/components/computing/cards/job-history-card.tsx:156
+#: src/components/computing/cards/job-history-card.tsx:280
 msgid "+yzdej"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:155
-#: src/components/computing/cards/job-history-card.tsx:288
+#: src/components/computing/cards/job-history-card.tsx:159
+#: src/components/computing/cards/job-history-card.tsx:292
 msgid "LMmqvq"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:158
+#: src/components/computing/cards/job-history-card.tsx:162
 #: src/components/editor/common/item-actions-menu.tsx:73
 #: src/components/rotations/rotation-browser.tsx:277
 msgid "wL7VAE"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:170
-#: src/components/layout/computing-drawer.tsx:140
+#: src/components/computing/cards/job-history-card.tsx:174
+#: src/components/layout/computing-drawer.tsx:143
 msgid "skgauK"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:171
+#: src/components/computing/cards/job-history-card.tsx:175
 msgid "MZEZ0h"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:206
+#: src/components/computing/cards/job-history-card.tsx:210
 #: src/components/editor/actions/action-picker.tsx:132
 #: src/components/editor/variable-editor-dialog.tsx:97
-#: src/components/layout/computing-drawer.tsx:100
-#: src/components/layout/computing-drawer.tsx:125
+#: src/components/layout/computing-drawer.tsx:103
+#: src/components/layout/computing-drawer.tsx:128
 msgid "47FYwb"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:210
+#: src/components/computing/cards/job-history-card.tsx:214
 msgid "iAcOL5"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:258
+#: src/components/computing/cards/job-history-card.tsx:262
 msgid "yaTuP6"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:300
+#: src/components/computing/cards/job-history-card.tsx:304
 msgid "8kqClZ"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:312
+#: src/components/computing/cards/job-history-card.tsx:316
 msgid "IuFETn"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:328
+#: src/components/computing/cards/job-history-card.tsx:332
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:336
+#: src/components/computing/cards/job-history-card.tsx:340
 msgid "6WjAAf"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:340
+#: src/components/computing/cards/job-history-card.tsx:344
 msgid "KFzyh+"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:350
-#: src/components/layout/computing-drawer.tsx:76
+#: src/components/computing/cards/job-history-card.tsx:354
+#: src/components/layout/computing-drawer.tsx:79
 msgid "rbrahO"
 msgstr ""
 
@@ -273,7 +241,7 @@ msgid "4PQ9vQ"
 msgstr ""
 
 #: src/components/dev/hooks/sections/search-display.tsx:65
-msgid "REPmkQ"
+msgid "24tjE1"
 msgstr ""
 
 #: src/components/editor/actions/action-card.tsx:184
@@ -346,8 +314,8 @@ msgid "bmwO3m"
 msgstr ""
 
 #: src/components/editor/actions/action-list.tsx:132
-#: src/components/editor/layout/editor-header.tsx:114
-msgid "lLiHiw"
+#: src/components/editor/layout/editor-header.tsx:116
+msgid "Ua8Hyg"
 msgstr ""
 
 #: src/components/editor/actions/action-list.tsx:145
@@ -360,23 +328,20 @@ msgstr ""
 
 #: src/components/editor/actions/action-list.tsx:159
 #: src/components/editor/actions/action-list.tsx:210
+#: src/components/editor/actions/action-picker.tsx:61
 msgid "U8CnSL"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:61
-msgid "fxGe+G"
-msgstr ""
-
 #: src/components/editor/actions/action-picker.tsx:90
-msgid "FZ1DiC"
+msgid "pbPjxY"
 msgstr ""
 
 #: src/components/editor/actions/action-picker.tsx:99
-msgid "48UpcY"
+msgid "gSBur4"
 msgstr ""
 
 #: src/components/editor/actions/action-picker.tsx:108
-msgid "4zRkKP"
+msgid "VCnQc6"
 msgstr ""
 
 #: src/components/editor/actions/action-picker.tsx:112
@@ -392,7 +357,7 @@ msgid "iNmDtb"
 msgstr ""
 
 #: src/components/editor/common/item-actions-menu.tsx:50
-#: src/components/editor/layout/editor-header.tsx:155
+#: src/components/editor/layout/editor-header.tsx:161
 #: src/components/rotations/rotation-browser.tsx:278
 msgid "wEQDC6"
 msgstr ""
@@ -458,7 +423,7 @@ msgid "Niabrx"
 msgstr ""
 
 #: src/components/editor/editor-sidebar.tsx:271
-msgid "K288p5"
+msgid "M2k2Z/"
 msgstr ""
 
 #: src/components/editor/editor-sidebar.tsx:279
@@ -474,7 +439,7 @@ msgid "jKGzI/"
 msgstr ""
 
 #: src/components/editor/editor-sidebar.tsx:329
-msgid "ZC1MSn"
+msgid "Tvbx5g"
 msgstr ""
 
 #: src/components/editor/editor-sidebar.tsx:332
@@ -511,92 +476,92 @@ msgid "bW7B87"
 msgstr ""
 
 #: src/components/editor/layout/editor-header.tsx:108
-msgid "4SNynG"
+msgid "qFiQhW"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:120
-msgid "QIPVlE"
+#: src/components/editor/layout/editor-header.tsx:124
+msgid "jd73nN"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:128
+#: src/components/editor/layout/editor-header.tsx:134
 msgid "GgHmZg"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:128
+#: src/components/editor/layout/editor-header.tsx:134
 msgid "udnOYL"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:134
+#: src/components/editor/layout/editor-header.tsx:140
 msgid "qXCbgZ"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:134
+#: src/components/editor/layout/editor-header.tsx:140
 msgid "Zl4/y9"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:148
+#: src/components/editor/layout/editor-header.tsx:154
 #: src/components/rotations/rotation-browser.tsx:152
 #: src/components/rotations/rotation-browser.tsx:275
 msgid "uhu5aG"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:160
+#: src/components/editor/layout/editor-header.tsx:166
 msgid "FcWFm7"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:166
+#: src/components/editor/layout/editor-header.tsx:172
 msgid "TJo5E6"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:171
+#: src/components/editor/layout/editor-header.tsx:177
 msgid "xpod2V"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:179
+#: src/components/editor/layout/editor-header.tsx:185
 #: src/components/rotations/rotation-browser.tsx:253
 msgid "XAbrnv"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:179
+#: src/components/editor/layout/editor-header.tsx:185
 msgid "X0ha1a"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:186
-msgid "VzzYJk"
-msgstr ""
-
-#: src/components/editor/layout/editor-header.tsx:186
+#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr ""
 
-#: src/components/editor/pickers/game-object-picker.tsx:202
-#: src/components/editor/pickers/game-object-picker.tsx:270
-msgid "+6SWAQ"
+#: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
 msgstr ""
 
-#: src/components/editor/preview.tsx:121
+#: src/components/editor/pickers/game-object-picker.tsx:203
+#: src/components/editor/pickers/game-object-picker.tsx:275
+msgid "dmO9XI"
+msgstr ""
+
+#: src/components/editor/preview.tsx:116
 msgid "0oL1zz"
 msgstr ""
 
-#: src/components/editor/preview.tsx:121
+#: src/components/editor/preview.tsx:116
 msgid "pwBrQ5"
 msgstr ""
 
-#: src/components/editor/preview.tsx:124
+#: src/components/editor/preview.tsx:119
 msgid "p556q3"
 msgstr ""
 
-#: src/components/editor/preview.tsx:124
+#: src/components/editor/preview.tsx:119
 msgid "4l6vz1"
 msgstr ""
 
-#: src/components/editor/preview.tsx:406
+#: src/components/editor/preview.tsx:389
 msgid "ZeUxmf"
 msgstr ""
 
-#: src/components/editor/preview.tsx:409
-msgid "UnSAxO"
+#: src/components/editor/preview.tsx:392
+msgid "IIrBOL"
 msgstr ""
 
 #: src/components/editor/sidebar/collapsed-sidebar.tsx:40
@@ -605,11 +570,11 @@ msgid "1JgBls"
 msgstr ""
 
 #: src/components/editor/sidebar/collapsed-sidebar.tsx:55
-msgid "lZAOlR"
+msgid "XdmvRX"
 msgstr ""
 
-#: src/components/editor/sidebar/collapsed-sidebar.tsx:77
-msgid "DdSZRI"
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:79
+msgid "iXw1Vf"
 msgstr ""
 
 #: src/components/editor/sidebar/sortable-list-item.tsx:149
@@ -669,7 +634,7 @@ msgid "2/2yg+"
 msgstr ""
 
 #: src/components/home/home-page.tsx:13
-msgid "MgvB1f"
+msgid "hqznGy"
 msgstr ""
 
 #: src/components/home/home-page.tsx:15
@@ -677,7 +642,7 @@ msgid "eZSeUm"
 msgstr ""
 
 #: src/components/home/home-page.tsx:18
-msgid "V0REQj"
+msgid "7hzyUI"
 msgstr ""
 
 #: src/components/home/home-page.tsx:20
@@ -685,16 +650,11 @@ msgid "8OBNNA"
 msgstr ""
 
 #: src/components/home/home-page.tsx:23
-msgid "dhcTE2"
+msgid "P8lPg4"
 msgstr ""
 
 #: src/components/home/home-page.tsx:25
 msgid "7OaBnb"
-msgstr ""
-
-#: src/components/layout/app-sidebar.tsx:51
-#: src/components/layout/app-sidebar.tsx:53
-msgid "ExxXVP"
 msgstr ""
 
 #: src/components/layout/app-sidebar.tsx:55
@@ -705,42 +665,38 @@ msgstr ""
 msgid "xs6vm4"
 msgstr ""
 
-#: src/components/layout/app-sidebar.tsx:94
-msgid "xwaG/H"
-msgstr ""
-
 #: src/components/layout/computing-drawer.tsx:54
 #: src/components/layout/navbar.tsx:41
 msgid "toOs7L"
 msgstr ""
 
 #: src/components/layout/computing-drawer.tsx:61
-msgid "oYRAle"
+msgid "Fq7XbW"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:64
+#: src/components/layout/computing-drawer.tsx:67
 msgid "5c/8Cz"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:71
+#: src/components/layout/computing-drawer.tsx:74
 msgid "hzSNj4"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:92
+#: src/components/layout/computing-drawer.tsx:95
 msgid "3a5wL8"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:101
-#: src/components/layout/computing-drawer.tsx:126
+#: src/components/layout/computing-drawer.tsx:104
+#: src/components/layout/computing-drawer.tsx:129
 msgid "5h8YH2"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:117
+#: src/components/layout/computing-drawer.tsx:120
 msgid "iXpep1"
 msgstr ""
 
-#: src/components/layout/computing-drawer.tsx:142
-msgid "XJuS04"
+#: src/components/layout/computing-drawer.tsx:145
+msgid "9OdBFr"
 msgstr ""
 
 #: src/components/layout/locale-switcher.tsx:23
@@ -840,6 +796,105 @@ msgstr ""
 msgid "viXE32"
 msgstr ""
 
+#: src/components/simulate/character-card.tsx:48
+msgid "y++pfq"
+msgstr ""
+
+#: src/components/simulate/character-panel.tsx:59
+msgid "B2xSl2"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:19
+msgid "cyR7Kh"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:22
+msgid "UJdYjD"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:25
+msgid "j/jRiB"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:28
+#: src/components/simulate/equipment-slot.tsx:31
+msgid "9CCQzr"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:34
+msgid "fjpaMl"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:37
+msgid "WVm8le"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:40
+msgid "r82eD8"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:43
+msgid "oq5pgx"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:46
+msgid "X9q3/O"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:49
+msgid "ta8Rbw"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:52
+msgid "l9AOqK"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:55
+#: src/components/simulate/equipment-slot.tsx:58
+msgid "EImcXz"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:61
+msgid "+VhK3D"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:64
+msgid "oxhhd3"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:200
+#: src/components/simulate/equipment-slot.tsx:204
+msgid "Zq5tfh"
+msgstr ""
+
+#: src/components/simulate/equipment-slot.tsx:221
+msgid "+RhnH+"
+msgstr ""
+
+#: src/components/simulate/parse-status.tsx:33
+msgid "86fONW"
+msgstr ""
+
+#: src/components/simulate/parse-status.tsx:48
+msgid "oXvncc"
+msgstr ""
+
+#: src/components/simulate/parse-status.tsx:65
+msgid "6BWhfW"
+msgstr ""
+
+#: src/components/simulate/simc-input.tsx:43
+msgid "agfmcf"
+msgstr ""
+
+#: src/components/simulate/simc-paste-area.tsx:29
+msgid "Qu1V80"
+msgstr ""
+
+#: src/components/simulate/simc-paste-area.tsx:33
+msgid "lBCJxl"
+msgstr ""
+
 #: src/components/users/user-profile-page.tsx:31
 msgid "INrbJL"
 msgstr ""
@@ -869,5 +924,5 @@ msgid "Ugp3/t"
 msgstr ""
 
 #: src/components/users/user-profile-page.tsx:105
-msgid "rgqYsp"
+msgid "PHwGU3"
 msgstr ""

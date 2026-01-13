@@ -47,7 +47,38 @@ function MyComponent() {
 }
 ```
 
-See the [next-intl docs](https://next-intl.dev/docs/usage/extraction) for interpolation, plurals, and more.
+### Numbers
+
+Always use ICU plural format for numbers. Plain `{count}` won't pass type checks:
+
+```tsx
+// bad - type error
+t("{count} items", { count: 5 });
+
+// good - use plural format (# renders the number)
+t("{count, plural, other {# items}}", { count: 5 });
+
+// with singular/plural variants
+t("{count, plural, =1 {# item} other {# items}}", { count });
+```
+
+### Rich text
+
+Use `t.rich()` to embed components like links or icons:
+
+```tsx
+t.rich("Read our <link>terms</link>.", {
+  link: (chunks) => <Link href="/terms">{chunks}</Link>,
+});
+```
+
+### What not to translate
+
+- Brand names (`WoW Lab`, `Discord`, etc.)
+- Code/syntax examples
+- Proper nouns
+
+See the [next-intl docs](https://next-intl.dev/docs/usage/extraction) for more.
 
 ## Guidelines
 

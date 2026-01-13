@@ -24,7 +24,7 @@ export function CpuCoresCard() {
         <HStack gap="1.5" color="fg.muted" textStyle="xs">
           <Cpu style={{ height: 14, width: 14 }} />
           <HelpText
-            content={t("Browsers may limit reported cores")}
+            content={t("Browsers may limit reported cores.")}
             href={href(routes.dev.docs.page, {
               slug: "reference/03-browser-cpu-limits",
             })}

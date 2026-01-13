@@ -4,5 +4,6 @@ export { FeedbackSection } from "./feedback";
 export { FormsSection } from "./forms";
 export { NavigationSection } from "./navigation";
 export { OverlaysSection } from "./overlays";
+export { SimulateSection } from "./simulate";
 export { SpecPickerSection } from "./spec-picker";
 export { TokensSection } from "./tokens";

@@ -102,7 +102,9 @@ function Meta({ meta, t }: { meta: ArticleMeta; t: TranslateFunction }) {
             <Clock />
           </Icon>
           <Text textStyle="xs">
-            {t("{count} min read", { count: String(meta.readingTime) })}
+            {t("{count, plural, other {# min read}}", {
+              count: meta.readingTime,
+            })}
           </Text>
         </Flex>
       )}

@@ -58,9 +58,12 @@ export function ComputingDrawer() {
               <HStack justifyContent="space-between">
                 <span>
                   {activeJobs.length > 0
-                    ? t("{count} simulation running", {
-                        count: String(activeJobs.length),
-                      })
+                    ? t(
+                        "{count, plural, =1 {# simulation running} other {# simulations running}}",
+                        {
+                          count: activeJobs.length,
+                        },
+                      )
                     : t("No active simulations")}
                 </span>
                 <Link
@@ -139,7 +142,7 @@ export function ComputingDrawer() {
                   <Empty.Content>
                     <Empty.Title>{t("No simulations yet")}</Empty.Title>
                     <Empty.Description>
-                      {t("Run a simulation to see progress here")}
+                      {t("Run a simulation to see progress here.")}
                     </Empty.Description>
                   </Empty.Content>
                 </Empty.Root>

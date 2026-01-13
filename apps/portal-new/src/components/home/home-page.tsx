@@ -10,17 +10,17 @@ export function HomePage() {
 
   const features = [
     {
-      description: t("Run quick simulations for your character"),
+      description: t("Run quick simulations for your character."),
       route: routes.simulate.index,
       title: t("Simulate"),
     },
     {
-      description: t("Build and share rotation priority lists"),
+      description: t("Build and share rotation priority lists."),
       route: routes.rotations.index,
       title: t("Rotations"),
     },
     {
-      description: t("Explore game data hooks for spells and items"),
+      description: t("Explore game data hooks for spells and items."),
       route: routes.dev.hooks,
       title: t("Hooks"),
     },

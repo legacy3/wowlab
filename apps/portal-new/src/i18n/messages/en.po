@@ -8,8 +8,8 @@ msgstr ""
 
 #: src/app/[locale]/dev/ui/loading.tsx:10
 #: src/components/dev/hooks/sections/entity-display.tsx:80
-#: src/components/dev/hooks/sections/search-display.tsx:68
-#: src/components/editor/pickers/game-object-picker.tsx:294
+#: src/components/dev/hooks/sections/search-display.tsx:70
+#: src/components/editor/pickers/game-object-picker.tsx:302
 msgid "gjBiyj"
 msgstr "Loading..."
 
@@ -43,10 +43,6 @@ msgstr "Unknown error"
 msgid "uqwRlB"
 msgstr "Rotation not found"
 
-#: src/app/[locale]/simulate/page.tsx:8
-msgid "451sw2"
-msgstr "Simulate page content coming soon."
-
 #: src/components/auth/sign-in-form.tsx:50
 msgid "wxbLaE"
 msgstr "Signing you in..."
@@ -56,46 +52,18 @@ msgid "szo7Rq"
 msgstr "Sign in to continue"
 
 #: src/components/auth/sign-in-form.tsx:62
-msgid "fR1Dfg"
-msgstr "Choose your preferred authentication method"
-
-#: src/components/auth/sign-in-form.tsx:75
-msgid "FvmV6q"
-msgstr "Discord"
-
-#: src/components/auth/sign-in-form.tsx:82
-msgid "wO9wb5"
-msgstr "GitHub"
-
-#: src/components/auth/sign-in-form.tsx:90
-msgid "lzgH40"
-msgstr "Google"
-
-#: src/components/auth/sign-in-form.tsx:98
-msgid "3LuP+7"
-msgstr "Twitch"
+msgid "Vdd5U6"
+msgstr "Choose your preferred authentication method."
 
 #: src/components/auth/sign-in-form.tsx:105
 msgid "Z4OFLN"
 msgstr "Secure authentication"
 
 #: src/components/auth/sign-in-form.tsx:111
-msgid "n/KLku"
-msgstr "By continuing, you agree to our"
+msgid "V3Izs2"
+msgstr "By continuing, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
 
-#: src/components/auth/sign-in-form.tsx:113
-msgid "32rBNK"
-msgstr "Terms of Service"
-
-#: src/components/auth/sign-in-form.tsx:115
-msgid "3mvL2Q"
-msgstr "and"
-
-#: src/components/auth/sign-in-form.tsx:117
-msgid "vx0nkZ"
-msgstr "Privacy Policy"
-
-#: src/components/auth/sign-in-form.tsx:125
+#: src/components/auth/sign-in-form.tsx:128
 msgid "pA/0it"
 msgstr "New here? Signing in creates an account automatically."
 
@@ -104,8 +72,8 @@ msgid "s6RK5S"
 msgstr "No posts yet"
 
 #: src/components/computing/cards/cpu-cores-card.tsx:27
-msgid "jNS6IG"
-msgstr "Browsers may limit reported cores"
+msgid "MLZoUU"
+msgstr "Browsers may limit reported cores."
 
 #: src/components/computing/cards/cpu-cores-card.tsx:32
 msgid "RB2CER"
@@ -148,89 +116,89 @@ msgstr "Running"
 msgid "ONunLl"
 msgstr "Simulation History"
 
-#: src/components/computing/cards/job-history-card.tsx:96
-msgid "AlWtQ/"
-msgstr "{count} jobs"
+#: src/components/computing/cards/job-history-card.tsx:97
+msgid "X3zwRN"
+msgstr "{count, plural, =1 {# job} other {# jobs}}"
 
-#: src/components/computing/cards/job-history-card.tsx:132
+#: src/components/computing/cards/job-history-card.tsx:136
 msgid "GJ2/jZ"
 msgstr "Filter jobs..."
 
-#: src/components/computing/cards/job-history-card.tsx:148
+#: src/components/computing/cards/job-history-card.tsx:152
 #: src/components/computing/cards/status-card.tsx:31
 msgid "tzMNF3"
 msgstr "Status"
 
-#: src/components/computing/cards/job-history-card.tsx:150
+#: src/components/computing/cards/job-history-card.tsx:154
 #: src/components/editor/variable-editor-dialog.tsx:65
 #: src/components/rotations/rotation-browser.tsx:262
 msgid "HAlOn1"
 msgstr "Name"
 
-#: src/components/computing/cards/job-history-card.tsx:152
-#: src/components/computing/cards/job-history-card.tsx:276
+#: src/components/computing/cards/job-history-card.tsx:156
+#: src/components/computing/cards/job-history-card.tsx:280
 msgid "+yzdej"
 msgstr "DPS"
 
-#: src/components/computing/cards/job-history-card.tsx:155
-#: src/components/computing/cards/job-history-card.tsx:288
+#: src/components/computing/cards/job-history-card.tsx:159
+#: src/components/computing/cards/job-history-card.tsx:292
 msgid "LMmqvq"
 msgstr "Casts"
 
-#: src/components/computing/cards/job-history-card.tsx:158
+#: src/components/computing/cards/job-history-card.tsx:162
 #: src/components/editor/common/item-actions-menu.tsx:73
 #: src/components/rotations/rotation-browser.tsx:277
 msgid "wL7VAE"
 msgstr "Actions"
 
-#: src/components/computing/cards/job-history-card.tsx:170
-#: src/components/layout/computing-drawer.tsx:140
+#: src/components/computing/cards/job-history-card.tsx:174
+#: src/components/layout/computing-drawer.tsx:143
 msgid "skgauK"
 msgstr "No simulations yet"
 
-#: src/components/computing/cards/job-history-card.tsx:171
+#: src/components/computing/cards/job-history-card.tsx:175
 msgid "MZEZ0h"
 msgstr "No jobs match the current filter"
 
-#: src/components/computing/cards/job-history-card.tsx:206
+#: src/components/computing/cards/job-history-card.tsx:210
 #: src/components/editor/actions/action-picker.tsx:132
 #: src/components/editor/variable-editor-dialog.tsx:97
-#: src/components/layout/computing-drawer.tsx:100
-#: src/components/layout/computing-drawer.tsx:125
+#: src/components/layout/computing-drawer.tsx:103
+#: src/components/layout/computing-drawer.tsx:128
 msgid "47FYwb"
 msgstr "Cancel"
 
-#: src/components/computing/cards/job-history-card.tsx:210
+#: src/components/computing/cards/job-history-card.tsx:214
 msgid "iAcOL5"
 msgstr "Cancel simulation"
 
-#: src/components/computing/cards/job-history-card.tsx:258
+#: src/components/computing/cards/job-history-card.tsx:262
 msgid "yaTuP6"
 msgstr "Job ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:300
+#: src/components/computing/cards/job-history-card.tsx:304
 msgid "8kqClZ"
 msgstr "Total Damage"
 
-#: src/components/computing/cards/job-history-card.tsx:312
+#: src/components/computing/cards/job-history-card.tsx:316
 msgid "IuFETn"
 msgstr "Duration"
 
-#: src/components/computing/cards/job-history-card.tsx:328
+#: src/components/computing/cards/job-history-card.tsx:332
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"
 msgstr "Error"
 
-#: src/components/computing/cards/job-history-card.tsx:336
+#: src/components/computing/cards/job-history-card.tsx:340
 msgid "6WjAAf"
 msgstr "Rotation ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:340
+#: src/components/computing/cards/job-history-card.tsx:344
 msgid "KFzyh+"
 msgstr "Result ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:350
-#: src/components/layout/computing-drawer.tsx:76
+#: src/components/computing/cards/job-history-card.tsx:354
+#: src/components/layout/computing-drawer.tsx:79
 msgid "rbrahO"
 msgstr "Close"
 
@@ -273,8 +241,8 @@ msgid "4PQ9vQ"
 msgstr "(empty)"
 
 #: src/components/dev/hooks/sections/search-display.tsx:65
-msgid "REPmkQ"
-msgstr "{count} results"
+msgid "24tjE1"
+msgstr "{count, plural, =1 {# result} other {# results}}"
 
 #: src/components/editor/actions/action-card.tsx:184
 msgid "5GICP3"
@@ -346,9 +314,9 @@ msgid "bmwO3m"
 msgstr "Precombat"
 
 #: src/components/editor/actions/action-list.tsx:132
-#: src/components/editor/layout/editor-header.tsx:114
-msgid "lLiHiw"
-msgstr "{count} actions"
+#: src/components/editor/layout/editor-header.tsx:116
+msgid "Ua8Hyg"
+msgstr "{count, plural, =1 {# action} other {# actions}}"
 
 #: src/components/editor/actions/action-list.tsx:145
 msgid "keM5cz"
@@ -360,24 +328,21 @@ msgstr "Add spells, items, or call other action lists to build your rotation."
 
 #: src/components/editor/actions/action-list.tsx:159
 #: src/components/editor/actions/action-list.tsx:210
+#: src/components/editor/actions/action-picker.tsx:61
 msgid "U8CnSL"
 msgstr "Add action"
 
-#: src/components/editor/actions/action-picker.tsx:61
-msgid "fxGe+G"
-msgstr "Add Action"
-
 #: src/components/editor/actions/action-picker.tsx:90
-msgid "FZ1DiC"
-msgstr "Search for a spell to add to the rotation"
+msgid "pbPjxY"
+msgstr "Search for a spell to add to the rotation."
 
 #: src/components/editor/actions/action-picker.tsx:99
-msgid "48UpcY"
-msgstr "Search for an item to use in the rotation"
+msgid "gSBur4"
+msgstr "Search for an item to use in the rotation."
 
 #: src/components/editor/actions/action-picker.tsx:108
-msgid "4zRkKP"
-msgstr "Select an action list to call"
+msgid "VCnQc6"
+msgstr "Select an action list to call."
 
 #: src/components/editor/actions/action-picker.tsx:112
 msgid "2jwyIJ"
@@ -392,7 +357,7 @@ msgid "iNmDtb"
 msgstr "Item actions"
 
 #: src/components/editor/common/item-actions-menu.tsx:50
-#: src/components/editor/layout/editor-header.tsx:155
+#: src/components/editor/layout/editor-header.tsx:161
 #: src/components/rotations/rotation-browser.tsx:278
 msgid "wEQDC6"
 msgstr "Edit"
@@ -458,8 +423,8 @@ msgid "Niabrx"
 msgstr "Add list"
 
 #: src/components/editor/editor-sidebar.tsx:271
-msgid "K288p5"
-msgstr "No lists yet."
+msgid "M2k2Z/"
+msgstr "No lists yet"
 
 #: src/components/editor/editor-sidebar.tsx:279
 msgid "HdFi0G"
@@ -474,8 +439,8 @@ msgid "jKGzI/"
 msgstr "Add variable"
 
 #: src/components/editor/editor-sidebar.tsx:329
-msgid "ZC1MSn"
-msgstr "No variables yet."
+msgid "Tvbx5g"
+msgstr "No variables yet"
 
 #: src/components/editor/editor-sidebar.tsx:332
 msgid "Ub8f2S"
@@ -511,93 +476,93 @@ msgid "bW7B87"
 msgstr "New"
 
 #: src/components/editor/layout/editor-header.tsx:108
-msgid "4SNynG"
-msgstr "{count} lists"
+msgid "qFiQhW"
+msgstr "{count, plural, =1 {# list} other {# lists}}"
 
-#: src/components/editor/layout/editor-header.tsx:120
-msgid "QIPVlE"
-msgstr "{count} vars"
+#: src/components/editor/layout/editor-header.tsx:124
+msgid "jd73nN"
+msgstr "{count, plural, =1 {# variable} other {# variables}}"
 
-#: src/components/editor/layout/editor-header.tsx:128
+#: src/components/editor/layout/editor-header.tsx:134
 msgid "GgHmZg"
 msgstr "Unlock to edit"
 
-#: src/components/editor/layout/editor-header.tsx:128
+#: src/components/editor/layout/editor-header.tsx:134
 msgid "udnOYL"
 msgstr "Lock rotation"
 
-#: src/components/editor/layout/editor-header.tsx:134
+#: src/components/editor/layout/editor-header.tsx:140
 msgid "qXCbgZ"
 msgstr "Unlock"
 
-#: src/components/editor/layout/editor-header.tsx:134
+#: src/components/editor/layout/editor-header.tsx:140
 msgid "Zl4/y9"
 msgstr "Lock"
 
-#: src/components/editor/layout/editor-header.tsx:148
+#: src/components/editor/layout/editor-header.tsx:154
 #: src/components/rotations/rotation-browser.tsx:152
 #: src/components/rotations/rotation-browser.tsx:275
 msgid "uhu5aG"
 msgstr "Public"
 
-#: src/components/editor/layout/editor-header.tsx:160
+#: src/components/editor/layout/editor-header.tsx:166
 msgid "FcWFm7"
 msgstr "Edit mode"
 
-#: src/components/editor/layout/editor-header.tsx:166
+#: src/components/editor/layout/editor-header.tsx:172
 msgid "TJo5E6"
 msgstr "Preview"
 
-#: src/components/editor/layout/editor-header.tsx:171
+#: src/components/editor/layout/editor-header.tsx:177
 msgid "xpod2V"
 msgstr "Preview mode"
 
-#: src/components/editor/layout/editor-header.tsx:179
+#: src/components/editor/layout/editor-header.tsx:185
 #: src/components/rotations/rotation-browser.tsx:253
 msgid "XAbrnv"
 msgstr "Create rotation"
 
-#: src/components/editor/layout/editor-header.tsx:179
+#: src/components/editor/layout/editor-header.tsx:185
 msgid "X0ha1a"
 msgstr "Save changes"
 
-#: src/components/editor/layout/editor-header.tsx:186
-msgid "VzzYJk"
-msgstr "Create"
-
-#: src/components/editor/layout/editor-header.tsx:186
+#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr "Save"
 
-#: src/components/editor/pickers/game-object-picker.tsx:202
-#: src/components/editor/pickers/game-object-picker.tsx:270
-msgid "+6SWAQ"
-msgstr "Type at least 2 characters"
+#: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
+msgstr "Create"
 
-#: src/components/editor/preview.tsx:121
+#: src/components/editor/pickers/game-object-picker.tsx:203
+#: src/components/editor/pickers/game-object-picker.tsx:275
+msgid "dmO9XI"
+msgstr "{n, plural, other {Type at least # characters}}"
+
+#: src/components/editor/preview.tsx:116
 msgid "0oL1zz"
 msgstr "Copied!"
 
-#: src/components/editor/preview.tsx:121
+#: src/components/editor/preview.tsx:116
 msgid "pwBrQ5"
 msgstr "Copy as DSL"
 
-#: src/components/editor/preview.tsx:124
+#: src/components/editor/preview.tsx:119
 msgid "p556q3"
 msgstr "Copied"
 
-#: src/components/editor/preview.tsx:124
+#: src/components/editor/preview.tsx:119
 msgid "4l6vz1"
 msgstr "Copy"
 
-#: src/components/editor/preview.tsx:406
+#: src/components/editor/preview.tsx:389
 msgid "ZeUxmf"
 msgstr "Visual preview coming soon"
 
-#: src/components/editor/preview.tsx:409
-msgid "UnSAxO"
-msgstr "Use the DSL or Natural tabs to preview your rotation"
+#: src/components/editor/preview.tsx:392
+msgid "IIrBOL"
+msgstr "Use the DSL or Natural tabs to preview your rotation."
 
 #: src/components/editor/sidebar/collapsed-sidebar.tsx:40
 #: src/components/editor/sidebar/collapsed-sidebar.tsx:47
@@ -605,12 +570,12 @@ msgid "1JgBls"
 msgstr "Expand sidebar"
 
 #: src/components/editor/sidebar/collapsed-sidebar.tsx:55
-msgid "lZAOlR"
-msgstr "Action Lists ({count})"
+msgid "XdmvRX"
+msgstr "{count, plural, other {Action Lists (#)}}"
 
-#: src/components/editor/sidebar/collapsed-sidebar.tsx:77
-msgid "DdSZRI"
-msgstr "Variables ({count})"
+#: src/components/editor/sidebar/collapsed-sidebar.tsx:79
+msgid "iXw1Vf"
+msgstr "{count, plural, other {Variables (#)}}"
 
 #: src/components/editor/sidebar/sortable-list-item.tsx:149
 msgid "hMX10J"
@@ -669,33 +634,28 @@ msgid "2/2yg+"
 msgstr "Add"
 
 #: src/components/home/home-page.tsx:13
-msgid "MgvB1f"
-msgstr "Run quick simulations for your character"
+msgid "hqznGy"
+msgstr "Run quick simulations for your character."
 
 #: src/components/home/home-page.tsx:15
 msgid "eZSeUm"
 msgstr "Simulate"
 
 #: src/components/home/home-page.tsx:18
-msgid "V0REQj"
-msgstr "Build and share rotation priority lists"
+msgid "7hzyUI"
+msgstr "Build and share rotation priority lists."
 
 #: src/components/home/home-page.tsx:20
 msgid "8OBNNA"
 msgstr "Rotations"
 
 #: src/components/home/home-page.tsx:23
-msgid "dhcTE2"
-msgstr "Explore game data hooks for spells and items"
+msgid "P8lPg4"
+msgstr "Explore game data hooks for spells and items."
 
 #: src/components/home/home-page.tsx:25
 msgid "7OaBnb"
 msgstr "Hooks"
-
-#: src/components/layout/app-sidebar.tsx:51
-#: src/components/layout/app-sidebar.tsx:53
-msgid "ExxXVP"
-msgstr "WoW Lab"
 
 #: src/components/layout/app-sidebar.tsx:55
 msgid "+wGuCf"
@@ -705,43 +665,39 @@ msgstr "Toolkit"
 msgid "xs6vm4"
 msgstr "Misc"
 
-#: src/components/layout/app-sidebar.tsx:94
-msgid "xwaG/H"
-msgstr "© 2025 WoW Lab"
-
 #: src/components/layout/computing-drawer.tsx:54
 #: src/components/layout/navbar.tsx:41
 msgid "toOs7L"
 msgstr "Computing"
 
 #: src/components/layout/computing-drawer.tsx:61
-msgid "oYRAle"
-msgstr "{count} simulation running"
+msgid "Fq7XbW"
+msgstr "{count, plural, =1 {# simulation running} other {# simulations running}}"
 
-#: src/components/layout/computing-drawer.tsx:64
+#: src/components/layout/computing-drawer.tsx:67
 msgid "5c/8Cz"
 msgstr "No active simulations"
 
-#: src/components/layout/computing-drawer.tsx:71
+#: src/components/layout/computing-drawer.tsx:74
 msgid "hzSNj4"
 msgstr "Dashboard"
 
-#: src/components/layout/computing-drawer.tsx:92
+#: src/components/layout/computing-drawer.tsx:95
 msgid "3a5wL8"
 msgstr "Active"
 
-#: src/components/layout/computing-drawer.tsx:101
-#: src/components/layout/computing-drawer.tsx:126
+#: src/components/layout/computing-drawer.tsx:104
+#: src/components/layout/computing-drawer.tsx:129
 msgid "5h8YH2"
 msgstr "View Results"
 
-#: src/components/layout/computing-drawer.tsx:117
+#: src/components/layout/computing-drawer.tsx:120
 msgid "iXpep1"
 msgstr "Recent"
 
-#: src/components/layout/computing-drawer.tsx:142
-msgid "XJuS04"
-msgstr "Run a simulation to see progress here"
+#: src/components/layout/computing-drawer.tsx:145
+msgid "9OdBFr"
+msgstr "Run a simulation to see progress here."
 
 #: src/components/layout/locale-switcher.tsx:23
 msgid "jOuyTp"
@@ -840,6 +796,105 @@ msgstr "Updated"
 msgid "viXE32"
 msgstr "Private"
 
+#: src/components/simulate/character-card.tsx:48
+msgid "y++pfq"
+msgstr "{level, plural, other {Level #}}"
+
+#: src/components/simulate/character-panel.tsx:59
+msgid "B2xSl2"
+msgstr "Import different character"
+
+#: src/components/simulate/equipment-slot.tsx:19
+msgid "cyR7Kh"
+msgstr "Back"
+
+#: src/components/simulate/equipment-slot.tsx:22
+msgid "UJdYjD"
+msgstr "Chest"
+
+#: src/components/simulate/equipment-slot.tsx:25
+msgid "j/jRiB"
+msgstr "Feet"
+
+#: src/components/simulate/equipment-slot.tsx:28
+#: src/components/simulate/equipment-slot.tsx:31
+msgid "9CCQzr"
+msgstr "{n, plural, other {Finger #}}"
+
+#: src/components/simulate/equipment-slot.tsx:34
+msgid "fjpaMl"
+msgstr "Hands"
+
+#: src/components/simulate/equipment-slot.tsx:37
+msgid "WVm8le"
+msgstr "Head"
+
+#: src/components/simulate/equipment-slot.tsx:40
+msgid "r82eD8"
+msgstr "Legs"
+
+#: src/components/simulate/equipment-slot.tsx:43
+msgid "oq5pgx"
+msgstr "Main Hand"
+
+#: src/components/simulate/equipment-slot.tsx:46
+msgid "X9q3/O"
+msgstr "Neck"
+
+#: src/components/simulate/equipment-slot.tsx:49
+msgid "ta8Rbw"
+msgstr "Off Hand"
+
+#: src/components/simulate/equipment-slot.tsx:52
+msgid "l9AOqK"
+msgstr "Shoulder"
+
+#: src/components/simulate/equipment-slot.tsx:55
+#: src/components/simulate/equipment-slot.tsx:58
+msgid "EImcXz"
+msgstr "{n, plural, other {Trinket #}}"
+
+#: src/components/simulate/equipment-slot.tsx:61
+msgid "+VhK3D"
+msgstr "Waist"
+
+#: src/components/simulate/equipment-slot.tsx:64
+msgid "oxhhd3"
+msgstr "Wrist"
+
+#: src/components/simulate/equipment-slot.tsx:200
+#: src/components/simulate/equipment-slot.tsx:204
+msgid "Zq5tfh"
+msgstr "iLvl {ilvl, plural, other {#}}"
+
+#: src/components/simulate/equipment-slot.tsx:221
+msgid "+RhnH+"
+msgstr "Empty"
+
+#: src/components/simulate/parse-status.tsx:33
+msgid "86fONW"
+msgstr "Failed to parse"
+
+#: src/components/simulate/parse-status.tsx:48
+msgid "oXvncc"
+msgstr "Parsing..."
+
+#: src/components/simulate/parse-status.tsx:65
+msgid "6BWhfW"
+msgstr "Parsed successfully"
+
+#: src/components/simulate/simc-input.tsx:43
+msgid "agfmcf"
+msgstr "Paste your SimulationCraft export here..."
+
+#: src/components/simulate/simc-paste-area.tsx:29
+msgid "Qu1V80"
+msgstr "Parsing SimC data..."
+
+#: src/components/simulate/simc-paste-area.tsx:33
+msgid "lBCJxl"
+msgstr "Failed to parse SimC export"
+
 #: src/components/users/user-profile-page.tsx:31
 msgid "INrbJL"
 msgstr "User not found"
@@ -869,5 +924,5 @@ msgid "Ugp3/t"
 msgstr "No public rotations"
 
 #: src/components/users/user-profile-page.tsx:105
-msgid "rgqYsp"
-msgstr "@{handle} has not published any rotations yet"
+msgid "PHwGU3"
+msgstr "@{handle} has not published any rotations yet."
