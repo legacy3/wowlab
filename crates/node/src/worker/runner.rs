@@ -1,10 +1,11 @@
 //! Simulation runner that integrates with the engine crate.
 
-use engine::sim::{BatchResults, SimConfig, SimExecutor, SimState};
+use engine::sim::{BatchResults, SimConfig, SimState, Simulation};
 use engine::types::SpecId;
 use engine::actor::Player;
-use engine::specs::BeastMasteryHandler;
+use engine::specs::BmHunter;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 /// JSON request format for distributed simulation.
 #[derive(Debug, Clone, Deserialize)]
@@ -158,13 +159,14 @@ impl SimRunner {
         // Create player with stats
         let mut player = create_player(spec_id, &request.player)?;
 
-        // Initialize spec-specific abilities
-        match spec_id {
-            SpecId::BeastMastery => {
-                BeastMasteryHandler::init_player(&mut player);
-            }
+        // Get spec handler
+        let handler: Arc<dyn engine::handler::SpecHandler> = match spec_id {
+            SpecId::BeastMastery => Arc::new(BmHunter::new()),
             _ => return Err(SimError::Engine(format!("Spec {:?} not implemented", spec_id))),
-        }
+        };
+
+        // Initialize spec-specific abilities
+        handler.init_player(&mut player);
 
         // Create sim config
         let config = SimConfig::default()
@@ -172,7 +174,7 @@ impl SimRunner {
             .with_seed(base_seed);
 
         // Run batch simulation
-        let results = run_batch(spec_id, config, player, iterations);
+        let results = run_batch(handler, config, player, iterations);
 
         tracing::debug!(
             "Completed {} iterations: mean DPS = {:.0} (±{:.0})",
@@ -237,7 +239,7 @@ fn create_player(spec_id: SpecId, config: &PlayerConfig) -> Result<Player, SimEr
 
 /// Run batch simulation with proper spec initialization per iteration
 fn run_batch(
-    spec_id: SpecId,
+    handler: Arc<dyn engine::handler::SpecHandler>,
     config: SimConfig,
     player_template: Player,
     iterations: u32,
@@ -248,18 +250,13 @@ fn run_batch(
         let mut iter_config = config.clone();
         iter_config.seed = config.seed.wrapping_add(i as u64);
 
-        let mut state = SimState::new(iter_config, player_template.clone());
-
-        // Call spec-specific init
-        match spec_id {
-            SpecId::BeastMastery => {
-                BeastMasteryHandler::init_sim(&mut state);
-            }
-            _ => {}
-        }
-
-        SimExecutor::run(&mut state);
-        dps_values.push(state.current_dps());
+        let mut sim = Simulation::new(
+            Arc::clone(&handler),
+            iter_config,
+            player_template.clone(),
+        );
+        sim.run();
+        dps_values.push(sim.dps());
     }
 
     BatchResults::from_values(dps_values)

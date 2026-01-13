@@ -136,12 +136,12 @@ msgid "HAlOn1"
 msgstr ""
 
 #: src/components/computing/cards/job-history-card.tsx:156
-#: src/components/computing/cards/job-history-card.tsx:280
+#: src/components/computing/cards/job-history-card.tsx:282
 msgid "+yzdej"
 msgstr ""
 
 #: src/components/computing/cards/job-history-card.tsx:159
-#: src/components/computing/cards/job-history-card.tsx:292
+#: src/components/computing/cards/job-history-card.tsx:294
 msgid "LMmqvq"
 msgstr ""
 
@@ -160,7 +160,7 @@ msgstr ""
 msgid "MZEZ0h"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:210
+#: src/components/computing/cards/job-history-card.tsx:212
 #: src/components/editor/actions/action-picker.tsx:132
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
@@ -168,36 +168,36 @@ msgstr ""
 msgid "47FYwb"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:214
+#: src/components/computing/cards/job-history-card.tsx:216
 msgid "iAcOL5"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:262
+#: src/components/computing/cards/job-history-card.tsx:264
 msgid "yaTuP6"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:304
+#: src/components/computing/cards/job-history-card.tsx:306
 msgid "8kqClZ"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:316
+#: src/components/computing/cards/job-history-card.tsx:320
 msgid "IuFETn"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:332
+#: src/components/computing/cards/job-history-card.tsx:340
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:340
+#: src/components/computing/cards/job-history-card.tsx:348
 msgid "6WjAAf"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:344
+#: src/components/computing/cards/job-history-card.tsx:352
 msgid "KFzyh+"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:354
+#: src/components/computing/cards/job-history-card.tsx:362
 #: src/components/layout/computing-drawer.tsx:79
 msgid "rbrahO"
 msgstr ""
@@ -211,7 +211,7 @@ msgid "JerYOj"
 msgstr ""
 
 #: src/components/computing/cards/simulations-card.tsx:18
-#: src/components/dev/ui/sections/i18n.tsx:232
+#: src/components/dev/ui/sections/i18n.tsx:241
 msgid "ly9PN0"
 msgstr ""
 
@@ -273,63 +273,63 @@ msgstr ""
 msgid "24tjE1"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:182
-#: src/components/dev/ui/sections/i18n.tsx:188
-#: src/components/dev/ui/sections/i18n.tsx:194
+#: src/components/dev/ui/sections/i18n.tsx:171
+#: src/components/dev/ui/sections/i18n.tsx:180
+#: src/components/dev/ui/sections/i18n.tsx:189
 msgid "Y1osJw"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:204
-#: src/components/dev/ui/sections/i18n.tsx:210
-#: src/components/dev/ui/sections/i18n.tsx:216
+#: src/components/dev/ui/sections/i18n.tsx:202
+#: src/components/dev/ui/sections/i18n.tsx:211
+#: src/components/dev/ui/sections/i18n.tsx:220
 msgid "t5mISx"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:223
+#: src/components/dev/ui/sections/i18n.tsx:230
 msgid "tBFOH1"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:224
+#: src/components/dev/ui/sections/i18n.tsx:232
 msgid "/vBDCB"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:225
+#: src/components/dev/ui/sections/i18n.tsx:234
 msgid "KhKQjV"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:236
+#: src/components/dev/ui/sections/i18n.tsx:245
 msgid "lnlbAn"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:248
+#: src/components/dev/ui/sections/i18n.tsx:257
 msgid "MgJcFD"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:253
+#: src/components/dev/ui/sections/i18n.tsx:262
 msgid "DOAeJb"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:258
+#: src/components/dev/ui/sections/i18n.tsx:267
 msgid "04VGuM"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:267
+#: src/components/dev/ui/sections/i18n.tsx:276
 msgid "yYGAHf"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:273
+#: src/components/dev/ui/sections/i18n.tsx:282
 msgid "P8nrf0"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:287
+#: src/components/dev/ui/sections/i18n.tsx:296
 msgid "jnJNX5"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:293
+#: src/components/dev/ui/sections/i18n.tsx:302
 msgid "/dbr93"
 msgstr ""
 
-#: src/components/dev/ui/sections/i18n.tsx:307
+#: src/components/dev/ui/sections/i18n.tsx:316
 msgid "diRIFs"
 msgstr ""
 

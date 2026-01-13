@@ -132,6 +132,7 @@
 pub mod action;
 pub mod bindings;
 pub mod compiler;
+pub mod json_dsl;
 pub mod preprocess;
 pub mod schema;
 
@@ -142,5 +143,6 @@ mod tests;
 pub use action::Action;
 pub use bindings::{NoOpBindings, Rotation, RotationBindings};
 pub use compiler::RotationCompiler;
+pub use json_dsl::{JsonRotation, RotationDef, SpellResolver};
 pub use preprocess::{MethodCall, NamespaceConfig};
 pub use schema::{GameState, StateSchema};

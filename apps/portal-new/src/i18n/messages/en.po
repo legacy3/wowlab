@@ -136,12 +136,12 @@ msgid "HAlOn1"
 msgstr "Name"
 
 #: src/components/computing/cards/job-history-card.tsx:156
-#: src/components/computing/cards/job-history-card.tsx:280
+#: src/components/computing/cards/job-history-card.tsx:282
 msgid "+yzdej"
 msgstr "DPS"
 
 #: src/components/computing/cards/job-history-card.tsx:159
-#: src/components/computing/cards/job-history-card.tsx:292
+#: src/components/computing/cards/job-history-card.tsx:294
 msgid "LMmqvq"
 msgstr "Casts"
 
@@ -160,7 +160,7 @@ msgstr "No simulations yet"
 msgid "MZEZ0h"
 msgstr "No jobs match the current filter"
 
-#: src/components/computing/cards/job-history-card.tsx:210
+#: src/components/computing/cards/job-history-card.tsx:212
 #: src/components/editor/actions/action-picker.tsx:132
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
@@ -168,36 +168,36 @@ msgstr "No jobs match the current filter"
 msgid "47FYwb"
 msgstr "Cancel"
 
-#: src/components/computing/cards/job-history-card.tsx:214
+#: src/components/computing/cards/job-history-card.tsx:216
 msgid "iAcOL5"
 msgstr "Cancel simulation"
 
-#: src/components/computing/cards/job-history-card.tsx:262
+#: src/components/computing/cards/job-history-card.tsx:264
 msgid "yaTuP6"
 msgstr "Job ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:304
+#: src/components/computing/cards/job-history-card.tsx:306
 msgid "8kqClZ"
 msgstr "Total Damage"
 
-#: src/components/computing/cards/job-history-card.tsx:316
+#: src/components/computing/cards/job-history-card.tsx:320
 msgid "IuFETn"
 msgstr "Duration"
 
-#: src/components/computing/cards/job-history-card.tsx:332
+#: src/components/computing/cards/job-history-card.tsx:340
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"
 msgstr "Error"
 
-#: src/components/computing/cards/job-history-card.tsx:340
+#: src/components/computing/cards/job-history-card.tsx:348
 msgid "6WjAAf"
 msgstr "Rotation ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:344
+#: src/components/computing/cards/job-history-card.tsx:352
 msgid "KFzyh+"
 msgstr "Result ID: {id}"
 
-#: src/components/computing/cards/job-history-card.tsx:354
+#: src/components/computing/cards/job-history-card.tsx:362
 #: src/components/layout/computing-drawer.tsx:79
 msgid "rbrahO"
 msgstr "Close"
@@ -211,7 +211,7 @@ msgid "JerYOj"
 msgstr "Simulations"
 
 #: src/components/computing/cards/simulations-card.tsx:18
-#: src/components/dev/ui/sections/i18n.tsx:232
+#: src/components/dev/ui/sections/i18n.tsx:241
 msgid "ly9PN0"
 msgstr "{value, number}"
 
@@ -273,63 +273,63 @@ msgstr "(empty)"
 msgid "24tjE1"
 msgstr "{count, plural, =1 {# result} other {# results}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:182
-#: src/components/dev/ui/sections/i18n.tsx:188
-#: src/components/dev/ui/sections/i18n.tsx:194
+#: src/components/dev/ui/sections/i18n.tsx:171
+#: src/components/dev/ui/sections/i18n.tsx:180
+#: src/components/dev/ui/sections/i18n.tsx:189
 msgid "Y1osJw"
 msgstr "{count, plural, =0 {No items} =1 {One item} other {# items}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:204
-#: src/components/dev/ui/sections/i18n.tsx:210
-#: src/components/dev/ui/sections/i18n.tsx:216
+#: src/components/dev/ui/sections/i18n.tsx:202
+#: src/components/dev/ui/sections/i18n.tsx:211
+#: src/components/dev/ui/sections/i18n.tsx:220
 msgid "t5mISx"
 msgstr "{status, select, online {Online} offline {Offline} other {Unknown}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:223
+#: src/components/dev/ui/sections/i18n.tsx:230
 msgid "tBFOH1"
 msgstr "Hello, {name}!"
 
-#: src/components/dev/ui/sections/i18n.tsx:224
+#: src/components/dev/ui/sections/i18n.tsx:232
 msgid "/vBDCB"
 msgstr "You have {count} new messages"
 
-#: src/components/dev/ui/sections/i18n.tsx:225
+#: src/components/dev/ui/sections/i18n.tsx:234
 msgid "KhKQjV"
 msgstr "Price: {price}"
 
-#: src/components/dev/ui/sections/i18n.tsx:236
+#: src/components/dev/ui/sections/i18n.tsx:245
 msgid "lnlbAn"
 msgstr "{value, number, percent}"
 
-#: src/components/dev/ui/sections/i18n.tsx:248
+#: src/components/dev/ui/sections/i18n.tsx:257
 msgid "MgJcFD"
 msgstr "This is <b>bold</b> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:253
+#: src/components/dev/ui/sections/i18n.tsx:262
 msgid "DOAeJb"
 msgstr "This is <i>italic</i> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:258
+#: src/components/dev/ui/sections/i18n.tsx:267
 msgid "04VGuM"
 msgstr "This has <code>inline code</code>"
 
-#: src/components/dev/ui/sections/i18n.tsx:267
+#: src/components/dev/ui/sections/i18n.tsx:276
 msgid "yYGAHf"
 msgstr "Click <b>here</b> to <i>continue</i>"
 
-#: src/components/dev/ui/sections/i18n.tsx:273
+#: src/components/dev/ui/sections/i18n.tsx:282
 msgid "P8nrf0"
 msgstr "Status: <badge>{status}</badge>"
 
-#: src/components/dev/ui/sections/i18n.tsx:287
+#: src/components/dev/ui/sections/i18n.tsx:296
 msgid "jnJNX5"
 msgstr "Welcome back, <b>{name}</b>!"
 
-#: src/components/dev/ui/sections/i18n.tsx:293
+#: src/components/dev/ui/sections/i18n.tsx:302
 msgid "/dbr93"
 msgstr "You have <b>{count}</b> notifications"
 
-#: src/components/dev/ui/sections/i18n.tsx:307
+#: src/components/dev/ui/sections/i18n.tsx:316
 msgid "diRIFs"
 msgstr "Read our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
 

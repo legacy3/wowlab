@@ -1,9 +1,10 @@
 //! BM Hunter rotation bindings for the Rhai rotation system.
 
 use crate::rotation::bindings::RotationBindings;
+use crate::rotation::json_dsl::SpellResolver;
 use crate::rotation::schema::{GameState, StateSchema};
 use crate::sim::SimState;
-use crate::types::SpellIdx;
+use crate::types::{AuraIdx, SpellIdx};
 use super::constants::*;
 
 /// BM Hunter rotation bindings implementation.
@@ -255,5 +256,89 @@ pub fn spell_name_to_idx(name: &str) -> Option<SpellIdx> {
         "black_arrow" => Some(BLACK_ARROW),
         "howl_of_the_pack_leader" => Some(HOWL_OF_THE_PACK_LEADER),
         _ => None,
+    }
+}
+
+/// Convert spell ID to internal SpellIdx
+pub fn spell_id_to_idx(id: u32) -> Option<SpellIdx> {
+    // Map known spell IDs
+    match id {
+        34026 => Some(KILL_COMMAND),
+        193455 => Some(COBRA_SHOT),
+        217200 => Some(BARBED_SHOT),
+        19574 => Some(BESTIAL_WRATH),
+        2643 => Some(MULTI_SHOT),
+        53351 => Some(KILL_SHOT),
+        359844 => Some(CALL_OF_THE_WILD),
+        321530 => Some(BLOODSHED),
+        120679 => Some(DIRE_BEAST),
+        131894 => Some(MURDER_OF_CROWS),
+        212431 => Some(EXPLOSIVE_SHOT),
+        467902 => Some(BLACK_ARROW),
+        471878 => Some(HOWL_OF_THE_PACK_LEADER),
+        _ => None,
+    }
+}
+
+/// Convert aura name to AuraIdx
+pub fn aura_name_to_idx(name: &str) -> Option<AuraIdx> {
+    match name {
+        "bestial_wrath" => Some(BESTIAL_WRATH_BUFF),
+        "frenzy" => Some(FRENZY),
+        "barbed_shot" | "barbed_shot_dot" => Some(BARBED_SHOT_DOT),
+        "beast_cleave" => Some(BEAST_CLEAVE),
+        "call_of_the_wild" => Some(CALL_OF_THE_WILD_BUFF),
+        "bloodshed" => Some(BLOODSHED_DEBUFF),
+        "thrill_of_the_hunt" => Some(THRILL_OF_THE_HUNT),
+        "serpentine_rhythm" => Some(SERPENTINE_RHYTHM),
+        "piercing_fangs" => Some(PIERCING_FANGS),
+        "snakeskin_quiver" => Some(SNAKESKIN_QUIVER_PROC),
+        "withering_fire" => Some(WITHERING_FIRE),
+        "wild_instincts" => Some(WILD_INSTINCTS),
+        "pack_mentality" => Some(PACK_MENTALITY),
+        "mongoose_fury" => Some(MONGOOSE_FURY),
+        _ => None,
+    }
+}
+
+/// Convert SpellIdx to spell name
+pub fn spell_idx_to_name(idx: SpellIdx) -> Option<&'static str> {
+    match idx {
+        x if x == KILL_COMMAND => Some("kill_command"),
+        x if x == COBRA_SHOT => Some("cobra_shot"),
+        x if x == BARBED_SHOT => Some("barbed_shot"),
+        x if x == BESTIAL_WRATH => Some("bestial_wrath"),
+        x if x == MULTI_SHOT => Some("multi_shot"),
+        x if x == KILL_SHOT => Some("kill_shot"),
+        x if x == CALL_OF_THE_WILD => Some("call_of_the_wild"),
+        x if x == BLOODSHED => Some("bloodshed"),
+        x if x == DIRE_BEAST => Some("dire_beast"),
+        x if x == MURDER_OF_CROWS => Some("murder_of_crows"),
+        x if x == EXPLOSIVE_SHOT => Some("explosive_shot"),
+        x if x == BLACK_ARROW => Some("black_arrow"),
+        x if x == HOWL_OF_THE_PACK_LEADER => Some("howl_of_the_pack_leader"),
+        _ => None,
+    }
+}
+
+// ============================================================================
+// SpellResolver for JSON Rotation DSL
+// ============================================================================
+
+/// BM Hunter spell resolver for JSON rotations.
+#[derive(Debug, Clone, Default)]
+pub struct BmHunterResolver;
+
+impl SpellResolver for BmHunterResolver {
+    fn resolve_spell(&self, spell_id: u32) -> Option<SpellIdx> {
+        spell_id_to_idx(spell_id)
+    }
+
+    fn resolve_aura(&self, name: &str) -> Option<AuraIdx> {
+        aura_name_to_idx(name)
+    }
+
+    fn spell_name(&self, idx: SpellIdx) -> Option<&str> {
+        spell_idx_to_name(idx)
     }
 }
