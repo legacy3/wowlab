@@ -1,0 +1,16 @@
+{
+  "Home": {
+    "simulate": {
+      "title": "Simulieren",
+      "description": "Schnelle Simulationen für deinen Charakter"
+    },
+    "rotations": {
+      "title": "Rotationen",
+      "description": "Rotations-Prioritätslisten erstellen und teilen"
+    },
+    "hooks": {
+      "title": "Hooks",
+      "description": "Spieldaten-Hooks für Zauber und Items erkunden"
+    }
+  }
+}

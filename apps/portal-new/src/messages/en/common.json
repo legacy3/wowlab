@@ -1,9 +1,0 @@
-{
-  "Common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "notFound": "Not found",
-    "signIn": "Sign In",
-    "signOut": "Sign Out"
-  }
-}

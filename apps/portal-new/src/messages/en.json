@@ -1,7 +1,5 @@
 {
   "Home": {
-    "title": "WoW Lab",
-    "description": "Simulation and theorycrafting tools for World of Warcraft",
     "simulate": {
       "title": "Simulate",
       "description": "Run quick simulations for your character"
