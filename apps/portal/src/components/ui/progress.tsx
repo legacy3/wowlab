@@ -1,31 +1,20 @@
 "use client";
+import type { ComponentProps } from "react";
 
-import * as React from "react";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
+import { Progress } from "@ark-ui/react/progress";
+import { createStyleContext } from "styled-system/jsx";
+import { progress } from "styled-system/recipes";
 
-import { cn } from "@/lib/utils";
+const { withContext, withProvider } = createStyleContext(progress);
 
-function Progress({
-  className,
-  value,
-  ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
-  return (
-    <ProgressPrimitive.Root
-      data-slot="progress"
-      className={cn(
-        "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
-        className,
-      )}
-      {...props}
-    >
-      <ProgressPrimitive.Indicator
-        data-slot="progress-indicator"
-        className="bg-primary h-full w-full flex-1 transition-transform duration-300 ease-out"
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-      />
-    </ProgressPrimitive.Root>
-  );
-}
-
-export { Progress };
+export type RootProps = ComponentProps<typeof Root>;
+export const Root = withProvider(Progress.Root, "root");
+export const RootProvider = withProvider(Progress.RootProvider, "root");
+export const Circle = withContext(Progress.Circle, "circle");
+export const CircleRange = withContext(Progress.CircleRange, "circleRange");
+export const CircleTrack = withContext(Progress.CircleTrack, "circleTrack");
+export const Label = withContext(Progress.Label, "label");
+export const Range = withContext(Progress.Range, "range");
+export const Track = withContext(Progress.Track, "track");
+export const ValueText = withContext(Progress.ValueText, "valueText");
+export const View = withContext(Progress.View, "view");

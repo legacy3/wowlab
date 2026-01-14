@@ -1,53 +1,42 @@
 "use client";
 
-import * as React from "react";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { Avatar } from "@ark-ui/react/avatar";
+import { UserIcon } from "lucide-react";
+import { type ComponentProps, forwardRef } from "react";
+import { createStyleContext } from "styled-system/jsx";
+import { avatar } from "styled-system/recipes";
 
-import { cn } from "@/lib/utils";
+const { withContext, withProvider } = createStyleContext(avatar);
 
-function Avatar({
-  className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
-  return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
-        className,
-      )}
-      {...props}
-    />
-  );
+export type RootProps = ComponentProps<typeof Root>;
+export const Root = withProvider(Avatar.Root, "root");
+export const RootProvider = withProvider(Avatar.RootProvider, "root");
+export const Image = withContext(Avatar.Image, "image", {
+  defaultProps: {
+    draggable: "false",
+    referrerPolicy: "no-referrer",
+  },
+});
+
+export { AvatarContext as Context } from "@ark-ui/react/avatar";
+
+export interface FallbackProps extends ComponentProps<typeof StyledFallback> {
+  initials?: string | undefined;
 }
 
-function AvatarImage({
-  className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
-  return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
-      {...props}
-    />
-  );
-}
+const StyledFallback = withContext(Avatar.Fallback, "fallback");
 
-function AvatarFallback({
-  className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
-  return (
-    <AvatarPrimitive.Fallback
-      data-slot="avatar-fallback"
-      className={cn(
-        "bg-muted flex size-full items-center justify-center rounded-full",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+export const Fallback = forwardRef<HTMLDivElement, FallbackProps>(
+  function Fallback(props, ref) {
+    const { asChild, children, initials, ...rest } = props;
 
-export { Avatar, AvatarImage, AvatarFallback };
+    const fallbackContent =
+      children || asChild ? children : initials ? initials : <UserIcon />;
+
+    return (
+      <StyledFallback ref={ref} {...rest}>
+        {fallbackContent}
+      </StyledFallback>
+    );
+  },
+);

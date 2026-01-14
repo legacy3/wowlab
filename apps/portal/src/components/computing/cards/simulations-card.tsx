@@ -1,19 +1,21 @@
 "use client";
 
-import { useAtomValue } from "jotai";
 import { Activity } from "lucide-react";
-import { workerSystemAtom } from "@/atoms/computing";
-import { formatInt } from "@/lib/format";
+import { useExtracted } from "next-intl";
+
+import { useWorkerSystem } from "@/lib/state";
+
 import { StatCard } from "./stat-card";
 
 export function SimulationsCard() {
-  const system = useAtomValue(workerSystemAtom);
+  const t = useExtracted();
+  const totalSimulations = useWorkerSystem((s) => s.totalSimulationsRun);
 
   return (
     <StatCard
       icon={Activity}
-      label="Simulations"
-      value={formatInt(system.totalSimulationsRun)}
+      label={t("Simulations")}
+      value={t("{value, number}", { value: totalSimulations })}
     />
   );
 }

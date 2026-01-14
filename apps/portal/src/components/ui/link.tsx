@@ -1,41 +1,22 @@
-import { forwardRef } from "react";
-import NextLink from "next/link";
-import { ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import type { ComponentProps } from "react";
+import type { HTMLStyledProps } from "styled-system/jsx";
 
-type LinkProps = {
-  href: string;
-  external?: boolean;
-  className?: string;
-  title?: string;
-  children: React.ReactNode;
-};
+import { css, cx } from "styled-system/css";
+import { splitCssProps } from "styled-system/jsx";
+import { link, type LinkVariantProps } from "styled-system/recipes";
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, external, className, title, children }, ref) => {
-    const styles = cn("text-primary hover:underline", className);
+import { Link as IntlLink } from "@/i18n/navigation";
 
-    if (external) {
-      return (
-        <a
-          ref={ref}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={title}
-          className={cn(styles, "inline-flex items-center gap-1")}
-        >
-          {children}
-          <ExternalLink className="h-3 w-3 opacity-50" />
-        </a>
-      );
-    }
+export type LinkProps = ComponentProps<typeof IntlLink> &
+  LinkVariantProps &
+  Omit<HTMLStyledProps<"a">, keyof ComponentProps<typeof IntlLink>>;
 
-    return (
-      <NextLink ref={ref} href={href} title={title} className={styles}>
-        {children}
-      </NextLink>
-    );
-  },
-);
-Link.displayName = "Link";
+export function Link({ className, variant, ...props }: LinkProps) {
+  const [cssProps, restProps] = splitCssProps(props);
+  return (
+    <IntlLink
+      className={cx(link({ variant }), css(cssProps), className)}
+      {...restProps}
+    />
+  );
+}

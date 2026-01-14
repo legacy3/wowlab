@@ -1,23 +1,26 @@
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
+
+import { Box } from "styled-system/jsx";
+import { prose } from "styled-system/recipes";
 
 type ContentArticleProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  footer?: React.ReactNode;
-  afterContent?: React.ReactNode;
+  footer?: ReactNode;
+  afterContent?: ReactNode;
 };
 
 export function ContentArticle({
+  afterContent,
   children,
   className,
   footer,
-  afterContent,
 }: ContentArticleProps) {
   return (
-    <article className={cn("prose prose-invert max-w-none", className)}>
+    <Box as="article" className={`${prose()} ${className ?? ""}`}>
       {children}
       {afterContent}
       {footer}
-    </article>
+    </Box>
   );
 }

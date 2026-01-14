@@ -1,8 +1,12 @@
 import { compareDesc, parseISO } from "date-fns";
-import type { BlogEntry, BlogPost } from "./types";
+
 import type { NavItem } from "@/lib/content/types";
-import { blogPostEntries } from "./posts";
+
 import { createNavItem } from "@/lib/content";
+
+import type { BlogEntry, BlogPost } from "./types";
+
+import { blogPostEntries } from "./posts";
 
 export const blogPosts: Record<string, BlogPost> = {};
 export const blogIndex: BlogEntry[] = [];
@@ -12,8 +16,8 @@ for (const [slug, post] of blogPostEntries) {
   blogIndex.push({
     slug,
     ...post.meta,
-    tableOfContents: post.tableOfContents,
     readingTime: post.readingTime,
+    tableOfContents: post.tableOfContents,
   });
 }
 
@@ -23,24 +27,12 @@ blogIndex.sort((a, b) =>
 
 export const blogSlugs = blogIndex.map((entry) => entry.slug);
 
-export const blogTags = Array.from(
-  new Set(blogIndex.flatMap((entry) => entry.tags ?? [])),
-).sort();
-
-export function getBlogPost(slug: string): BlogPost | undefined {
-  return blogPosts[slug];
-}
-
 export function getBlogEntry(slug: string): BlogEntry | undefined {
   return blogIndex.find((entry) => entry.slug === slug);
 }
 
-export function filterPostsByTag(tag: string | null): BlogEntry[] {
-  if (!tag) {
-    return blogIndex;
-  }
-
-  return blogIndex.filter((entry) => entry.tags?.includes(tag));
+export function getBlogPost(slug: string): BlogPost | undefined {
+  return blogPosts[slug];
 }
 
 export function getNavMeta(slug: string): NavItem {

@@ -5,18 +5,6 @@ export type DocPage = {
   doc: Doc;
 };
 
-function docEntry(slug: string, doc: Doc): DocEntry {
-  return { slug, ...doc.meta };
-}
-
-function docGroup(slug: string, title: string, children: DocEntry[]): DocEntry {
-  return { slug, title, children };
-}
-
-export function docPage(slug: string, doc: Doc): DocPage {
-  return { slug, doc };
-}
-
 export function defineDocsSection(options: {
   group?: { slug: string; title: string };
   pages: readonly DocPage[];
@@ -41,4 +29,16 @@ export function defineDocsSection(options: {
   }
 
   return { docs, index: entries };
+}
+
+export function docPage(slug: string, doc: Doc): DocPage {
+  return { doc, slug };
+}
+
+function docEntry(slug: string, doc: Doc): DocEntry {
+  return { slug, ...doc.meta };
+}
+
+function docGroup(slug: string, title: string, children: DocEntry[]): DocEntry {
+  return { children, slug, title };
 }

@@ -1,18 +1,14 @@
 import type { MetadataRoute } from "next";
+
 import { env } from "@/lib/env";
+import { getDisallowedPaths } from "@/lib/routing";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
-      userAgent: "*",
       allow: "/",
-      disallow: [
-        "/account/",
-        "/auth/",
-        "/api/",
-        "/rotations/editor/",
-        "/simulate/results/",
-      ],
+      disallow: [...getDisallowedPaths(), "/api/"],
+      userAgent: "*",
     },
     sitemap: `${env.APP_URL}/sitemap.xml`,
   };

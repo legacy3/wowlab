@@ -1,11 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useKeyboardEvent } from "@react-hookz/web";
+import { useKeyPress } from "ahooks";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Box, Flex, VStack } from "styled-system/jsx";
+
 import type { NavItem } from "@/lib/content/types";
+
+import { Icon } from "@/components/ui/icon";
+import { Link } from "@/components/ui/link";
+import { Text } from "@/components/ui/text";
+import { useRouter } from "@/i18n/navigation";
 
 type ContentNavProps = {
   prev: NavItem;
@@ -15,72 +19,79 @@ type ContentNavProps = {
 };
 
 export function ContentNav({
-  prev,
-  next,
-  showSubtitle = false,
   className,
+  next,
+  prev,
+  showSubtitle = false,
 }: ContentNavProps) {
   const router = useRouter();
 
-  useKeyboardEvent(
-    true,
-    (e) => {
-      if (e.key === "ArrowLeft" && prev) {
-        router.push(prev.href);
-      } else if (e.key === "ArrowRight" && next) {
-        router.push(next.href);
-      }
-    },
-    [],
-    { eventOptions: { passive: true } },
-  );
+  useKeyPress("leftarrow", () => prev && router.push(prev.href));
+  useKeyPress("rightarrow", () => next && router.push(next.href));
 
   return (
-    <nav
-      className={cn(
-        "not-prose mt-12 pt-6 border-t border-border flex justify-between",
-        className,
-      )}
+    <Flex
+      as="nav"
+      mt="12"
+      pt="6"
+      borderTopWidth="1px"
+      borderColor="border.default"
+      justifyContent="space-between"
+      className={className}
     >
       {prev ? (
         <Link
           href={prev.href}
-          className="group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          variant="plain"
+          color="fg.muted"
+          _hover={{ color: "fg.default" }}
         >
-          <ChevronLeft className="h-4 w-4" />
-          {showSubtitle ? (
-            <div className="flex flex-col">
-              <span className="text-xs">Previous</span>
-              <span className="font-medium">{prev.title}</span>
-            </div>
-          ) : (
-            <span>{prev.title}</span>
-          )}
+          <Flex alignItems="center" gap="2">
+            <Icon size="sm">
+              <ChevronLeft />
+            </Icon>
+            {showSubtitle ? (
+              <VStack alignItems="flex-start" gap="0">
+                <Text textStyle="xs" color="fg.subtle">
+                  Previous
+                </Text>
+                <Text fontWeight="medium">{prev.title}</Text>
+              </VStack>
+            ) : (
+              <Text>{prev.title}</Text>
+            )}
+          </Flex>
         </Link>
       ) : (
-        <div />
+        <Box />
       )}
       {next ? (
         <Link
           href={next.href}
-          className={cn(
-            "group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors",
-            showSubtitle && "text-right",
-          )}
+          variant="plain"
+          color="fg.muted"
+          _hover={{ color: "fg.default" }}
+          textAlign={showSubtitle ? "right" : undefined}
         >
-          {showSubtitle ? (
-            <div className="flex flex-col">
-              <span className="text-xs">Next</span>
-              <span className="font-medium">{next.title}</span>
-            </div>
-          ) : (
-            <span>{next.title}</span>
-          )}
-          <ChevronRight className="h-4 w-4" />
+          <Flex alignItems="center" gap="2">
+            {showSubtitle ? (
+              <VStack alignItems="flex-end" gap="0">
+                <Text textStyle="xs" color="fg.subtle">
+                  Next
+                </Text>
+                <Text fontWeight="medium">{next.title}</Text>
+              </VStack>
+            ) : (
+              <Text>{next.title}</Text>
+            )}
+            <Icon size="sm">
+              <ChevronRight />
+            </Icon>
+          </Flex>
         </Link>
       ) : (
-        <div />
+        <Box />
       )}
-    </nav>
+    </Flex>
   );
 }

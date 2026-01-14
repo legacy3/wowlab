@@ -1,53 +1,57 @@
 import type { NextConfig } from "next";
+
 import createMDX from "@next/mdx";
+import createNextIntlPlugin from "next-intl/plugin";
 
-const NODE_PLATFORMS = ["linux", "linux-arm", "macos", "windows"] as const;
-
-function generateNodeRewrites() {
-  return NODE_PLATFORMS.flatMap((platform) => [
-    {
-      source: `/go/node-${platform}`,
-      destination: `/api/download/node?platform=${platform}`,
-    },
-    {
-      source: `/go/node-headless-${platform}`,
-      destination: `/api/download/node?platform=${platform}&variant=headless`,
-    },
-  ]);
-}
+import { locales } from "./src/i18n/routing";
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   experimental: {
     authInterrupts: true,
   },
+
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+
   async redirects() {
     return [
       {
-        source: "/go/discord",
         destination: "https://discord.gg/bWWYBAvF3W",
         permanent: false,
+        source: "/go/discord",
       },
       {
-        source: "/go/github/:path*",
         destination: "https://github.com/legacy3/wowlab/:path*",
         permanent: false,
+        source: "/go/github/:path*",
       },
       {
-        source: "/go/github",
         destination: "https://github.com/legacy3/wowlab",
         permanent: false,
+        source: "/go/github",
       },
     ];
   },
-  async rewrites() {
-    return generateNodeRewrites();
+
+  sassOptions: {
+    silenceDeprecations: [
+      "import",
+      "global-builtin",
+      "color-functions",
+      "if-function",
+    ],
   },
 };
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
+
   options: {
+    rehypePlugins: [
+      "rehype-slug",
+      "@stefanprobst/rehype-extract-toc",
+      "@stefanprobst/rehype-extract-toc/mdx",
+    ],
+
     remarkPlugins: [
       "remark-gfm",
       "remark-frontmatter",
@@ -55,12 +59,22 @@ const withMDX = createMDX({
       "remark-reading-time",
       "remark-reading-time/mdx",
     ],
-    rehypePlugins: [
-      "rehype-slug",
-      "@stefanprobst/rehype-extract-toc",
-      "@stefanprobst/rehype-extract-toc/mdx",
-    ],
   },
 });
 
-export default withMDX(nextConfig);
+const withNextIntl = createNextIntlPlugin({
+  experimental: {
+    extract: {
+      sourceLocale: "en",
+    },
+    messages: {
+      format: "po",
+      locales: Object.keys(locales) as (keyof typeof locales)[],
+      path: "./src/i18n/messages",
+    },
+    srcPath: "./src",
+  },
+  requestConfig: "./src/i18n/request.ts",
+});
+
+export default withNextIntl(withMDX(nextConfig));

@@ -15,11 +15,17 @@ If you want to explore the raw WoW data tables yourself, [wago.tools/db2](https:
 Need every detail about a spell or item? Most tools hand you a canned encyclopedia entry someone generated hours or patches ago. WoW Lab instead keeps the original data files close at hand, grabs only the pieces you ask for, and plates them on demand.
 
 ```mermaid
+---
+title: Traditional Pre-parsed Approach
+---
 flowchart LR
     A1[Data Files] --> A2[Build Script] --> A3[Giant JSON] --> A4[App]
 ```
 
 ```mermaid
+---
+title: WoW Lab Runtime Assembly
+---
 flowchart LR
     B1[Data Files] --> B2[Supabase] --> B3[Query] --> B4[Assemble] --> B5[App]
 ```
@@ -44,6 +50,9 @@ Picture spell data as LEGO instructions:
 A request flows through three passes: base info, reference lookups, and optional extras. Each pass simply grabs the next table and follows the pointers.
 
 ```mermaid
+---
+title: Spell Assembly Pipeline
+---
 flowchart TD
     Request["Request: Spell #12345"] --> Base
 
@@ -104,6 +113,9 @@ WoW spreads spell knowledge across a web of normalized tables. WoW Lab simply mi
 References in these tables are numeric breadcrumbs. If `spell_misc` lists `CastingTimeIndex = 42`, that number is just a pointer to `spell_cast_times`. We follow the pointer, pull row 42, and now we know the actual milliseconds.
 
 ```mermaid
+---
+title: Reference Resolution Example
+---
 flowchart LR
     A["spell_misc: CastingTimeIndex = 42"] --> B["spell_cast_times: ID 42, Base 2500ms"] --> C["2.5 sec cast"]
 ```
@@ -119,6 +131,9 @@ Fetching a dozen tables per spell sounds expensive, so we layer caching, batchin
 3. **Parallel fetching** - Independent lookups run side by side, so we do not wait for `spell_duration` before checking `spell_range`.
 
 ```mermaid
+---
+title: Caching Strategy
+---
 flowchart TD
     Request["Spell Request"] --> Cache{"In IndexedDB?"}
     Cache -->|Yes| Return["Return Cached"]

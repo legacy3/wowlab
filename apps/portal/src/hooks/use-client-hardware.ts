@@ -14,7 +14,7 @@ function getHardwareInfo(): HardwareInfo {
   if (cachedInfo === null) {
     const cores = navigator.hardwareConcurrency || 4;
     const memory =
-      (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null;
+      (navigator as { deviceMemory?: number } & Navigator).deviceMemory ?? null;
     const workers = Math.max(2, Math.floor(cores / 2));
     cachedInfo = { cores, memory, workers };
   }
@@ -26,12 +26,14 @@ const serverSnapshot: HardwareInfo = {
   memory: null,
   workers: null,
 };
+
 const emptySubscribe = () => () => {};
+const getServerSnapshot = () => serverSnapshot;
 
 export function useClientHardware(): HardwareInfo {
   return useSyncExternalStore(
     emptySubscribe,
     getHardwareInfo,
-    () => serverSnapshot,
+    getServerSnapshot,
   );
 }

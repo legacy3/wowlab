@@ -1,39 +1,32 @@
 "use client";
 
-import { Suspense } from "react";
+import { useBoolean, useMount } from "ahooks";
 import { useRouter } from "next/navigation";
-import { useIsAuthenticated } from "@refinedev/core";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+
+import { Button, Skeleton } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
+import { useUser } from "@/lib/state";
+
 import { UserMenu } from "./user-menu";
 
-function AuthButtonInner() {
+export function AuthButton() {
   const router = useRouter();
-  const { data: authData } = useIsAuthenticated();
+  const { data: user, isLoading } = useUser();
+  const [mounted, { setTrue: setMounted }] = useBoolean(false);
 
-  if (authData?.authenticated) {
+  useMount(setMounted);
+
+  if (!mounted || isLoading) {
+    return <Skeleton h="9" w="20" borderRadius="l2" />;
+  }
+
+  if (user) {
     return <UserMenu />;
   }
 
   return (
-    <Button
-      variant="default"
-      size="sm"
-      onClick={() => router.push("/auth/sign-in")}
-    >
+    <Button size="sm" onClick={() => router.push(href(routes.auth.signIn))}>
       Sign In
     </Button>
-  );
-}
-
-function AuthButtonSkeleton() {
-  return <Skeleton className="h-9 w-20" />;
-}
-
-export function AuthButton() {
-  return (
-    <Suspense fallback={<AuthButtonSkeleton />}>
-      <AuthButtonInner />
-    </Suspense>
   );
 }

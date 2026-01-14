@@ -1,33 +1,17 @@
 "use client";
+import type { ComponentProps } from "react";
 
-import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
+import { Collapsible } from "@ark-ui/react/collapsible";
+import { createStyleContext } from "styled-system/jsx";
+import { collapsible } from "styled-system/recipes";
 
-function Collapsible({
-  ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
-  return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
-}
+const { withContext, withProvider } = createStyleContext(collapsible);
 
-function CollapsibleTrigger({
-  ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
-  return (
-    <CollapsiblePrimitive.CollapsibleTrigger
-      data-slot="collapsible-trigger"
-      {...props}
-    />
-  );
-}
+export type RootProps = ComponentProps<typeof Root>;
+export const Root = withProvider(Collapsible.Root, "root");
+export const RootProvider = withProvider(Collapsible.RootProvider, "root");
+export const Content = withContext(Collapsible.Content, "content");
+export const Indicator = withContext(Collapsible.Indicator, "indicator");
+export const Trigger = withContext(Collapsible.Trigger, "trigger");
 
-function CollapsibleContent({
-  ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleContent>) {
-  return (
-    <CollapsiblePrimitive.CollapsibleContent
-      data-slot="collapsible-content"
-      {...props}
-    />
-  );
-}
-
-export { Collapsible, CollapsibleTrigger, CollapsibleContent };
+export { CollapsibleContext as Context } from "@ark-ui/react/collapsible";

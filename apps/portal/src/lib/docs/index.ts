@@ -1,11 +1,11 @@
-import { development } from "./section.development";
-import { guides } from "./section.guides";
-import { overview } from "./section.overview";
-import { reference } from "./section.reference";
+import type { NavItem } from "@/lib/content/types";
+
+import { createNavItem } from "@/lib/content";
+import { routes } from "@/lib/routing";
 
 import type { Doc, DocEntry } from "./types";
-import type { NavItem } from "@/lib/content/types";
-import { createNavItem } from "@/lib/content";
+
+import { development, guides, overview, reference } from "./sections";
 
 function mergeDocs(parts: Array<Record<string, Doc>>): Record<string, Doc> {
   const merged: Record<string, Doc> = {};
@@ -55,11 +55,15 @@ export function getDoc(slug: string): Doc | undefined {
   return docs[slug];
 }
 
+export function getFirstSlug(): string {
+  return docSlugs[0] ?? "00-overview";
+}
+
 export function getNavMeta(slug: string): NavItem {
   const doc = docs[slug];
   if (!doc) {
     return null;
   }
 
-  return createNavItem(slug, doc.meta.title, "/docs");
+  return createNavItem(slug, doc.meta.title, routes.dev.docs.index.path);
 }

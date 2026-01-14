@@ -1,51 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { useExtracted } from "next-intl";
+import { Container } from "styled-system/jsx";
+
+import { PageHeader } from "@/components/common";
+import { Button, ErrorBox, Group } from "@/components/ui";
+import { routes } from "@/lib/routing";
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: { digest?: string } & Error;
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error("Application error:", error);
-  }, [error]);
+  const t = useExtracted();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="mx-auto max-w-md space-y-6 text-center">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-destructive/10 p-4">
-            <AlertTriangle className="h-10 w-10 text-destructive" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Something went wrong
-          </h1>
-          <p className="text-muted-foreground">
-            An unexpected error occurred. Please try again.
-          </p>
-          {error.digest && (
-            <p className="text-xs text-muted-foreground">
-              Error ID: {error.digest}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button onClick={() => reset()}>Try again</Button>
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = "/")}
-          >
-            Go Home
-          </Button>
-        </div>
-      </div>
-    </div>
+    <Container maxW="7xl" py="8">
+      <Group direction="column" gap="6">
+        <PageHeader route={routes.error} />
+        <Group direction="column" gap="4">
+          <ErrorBox>{error.message}</ErrorBox>
+          <Button onClick={reset}>{t("Try again")}</Button>
+        </Group>
+      </Group>
+    </Container>
   );
 }

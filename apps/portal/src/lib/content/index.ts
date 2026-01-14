@@ -6,37 +6,23 @@ export function createNavItem(
   basePath: string,
 ): NonNullable<NavItem> {
   return {
+    href: `${basePath}/${slug}`,
     slug,
     title,
-    href: `${basePath}/${slug}`,
   };
 }
 
-export function getAdjacentItems<T extends { slug: string; title?: string }>(
-  items: T[],
+export function getAdjacentItems(
+  slugs: string[],
   currentSlug: string,
-  basePath: string,
-  getTitle: (item: T) => string,
+  getNavMeta: (slug: string) => NavItem,
 ): { prev: NavItem; next: NavItem } {
-  const currentIndex = items.findIndex((item) => item.slug === currentSlug);
-
-  const prev =
-    currentIndex > 0
-      ? createNavItem(
-          items[currentIndex - 1].slug,
-          getTitle(items[currentIndex - 1]),
-          basePath,
-        )
-      : null;
-
+  const currentIndex = slugs.indexOf(currentSlug);
+  const prev = currentIndex > 0 ? getNavMeta(slugs[currentIndex - 1]) : null;
   const next =
-    currentIndex < items.length - 1
-      ? createNavItem(
-          items[currentIndex + 1].slug,
-          getTitle(items[currentIndex + 1]),
-          basePath,
-        )
+    currentIndex < slugs.length - 1
+      ? getNavMeta(slugs[currentIndex + 1])
       : null;
 
-  return { prev, next };
+  return { next, prev };
 }

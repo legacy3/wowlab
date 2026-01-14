@@ -1,9 +1,10 @@
 declare module "*.md" {
   import type { ComponentType } from "react";
+
   import type {
     ContentMeta,
-    TocEntry,
     ReadingTime,
+    TocEntry,
   } from "../src/lib/content/types";
 
   export const meta: ContentMeta;
@@ -15,10 +16,11 @@ declare module "*.md" {
 
 declare module "*.mdx" {
   import type { ComponentType } from "react";
+
   import type {
     ContentMeta,
-    TocEntry,
     ReadingTime,
+    TocEntry,
   } from "../src/lib/content/types";
 
   export const meta: ContentMeta;

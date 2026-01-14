@@ -1,40 +1,76 @@
+"use client";
+
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { css, cx } from "styled-system/css";
+
 import { env } from "@/lib/env";
 
 interface GameIconProps {
-  iconName: string;
-  size?: "small" | "medium" | "large";
   alt?: string;
   className?: string;
-  width?: number;
-  height?: number;
+  iconName: string | null | undefined;
+  size?: "sm" | "md" | "lg";
 }
 
 const SIZE_DIMENSIONS = {
-  small: 18,
-  medium: 36,
-  large: 56,
+  lg: 56,
+  md: 36,
+  sm: 18,
+} as const;
+
+const SIZE_URLS = {
+  lg: "large",
+  md: "medium",
+  sm: "small",
 } as const;
 
 export function GameIcon({
-  iconName,
-  size = "medium",
   alt,
   className,
-  width,
-  height,
+  iconName,
+  size = "md",
 }: GameIconProps) {
-  const url = `${env.SUPABASE_URL}/functions/v1/icons/${size}/${iconName}.jpg`;
-  const dimension = width || height || SIZE_DIMENSIONS[size];
+  if (!iconName) {
+    return (
+      <div
+        className={cx(
+          css({
+            alignItems: "center",
+            bg: "bg.muted",
+            color: "fg.muted",
+            display: "flex",
+            fontSize: "xs",
+            justifyContent: "center",
+            rounded: "sm",
+          }),
+          className,
+        )}
+        style={{
+          height: SIZE_DIMENSIONS[size],
+          width: SIZE_DIMENSIONS[size],
+        }}
+      >
+        ?
+      </div>
+    );
+  }
+
+  const url = `${env.SUPABASE_URL}/functions/v1/icons/${SIZE_URLS[size]}/${iconName}.jpg`;
+  const dimension = SIZE_DIMENSIONS[size];
 
   return (
     <Image
       src={url}
       alt={alt || iconName}
-      width={width || dimension}
-      height={height || dimension}
-      className={cn("rounded bg-accent", className)}
+      width={dimension}
+      height={dimension}
+      className={cx(
+        css({
+          bg: "bg.muted",
+          rounded: "sm",
+        }),
+        className,
+      )}
       unoptimized
     />
   );

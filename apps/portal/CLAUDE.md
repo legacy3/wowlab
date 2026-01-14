@@ -1,118 +1,75 @@
-# apps/portal
+# portal-new
 
-Next.js 16 app with shadcn/ui components and Jotai state management.
+Next.js 16 / React 19 app. Panda CSS + Park UI.
 
-## File Structure
+## Stack
+
+- **Styling**: Panda CSS (not Tailwind) - recipes in `src/theme/recipes/`
+- **Components**: Park UI in `src/components/ui/`
+- **Data**: Refine + Supabase, React Query with persistence
+- **State**: Zustand for editor, React Query for server state
+- **Content**: MDX for docs/blog in `src/content/`
+
+## Routes
+
+```
+/                    Home
+/auth/sign-in        Auth
+/blog                Blog index
+/blog/[slug]         Blog post
+/dev/docs            Docs index
+/dev/docs/[...slug]  Doc page
+/simulate            Simulation
+/rotations           Rotation browser
+/rotations/editor    New rotation
+/rotations/editor/[id]  Edit rotation
+/dev/ui              Component showcase
+```
+
+## State Hooks
+
+```ts
+// Game data (see game-data skill)
+useSpell(id); // SpellDataFlat
+useItem(id); // ItemDataFlat
+useSpellSearch(); // Search spells
+useItemSearch(); // Search items
+
+// Editor
+useEditor(); // Zustand store for rotation editor
+useLoadRotation(id); // Load rotation from DB
+useSaveRotation(); // Save rotation to DB
+
+// UI
+useUser(); // Auth state
+useSidebar(); // Sidebar open/close
+useTheme(); // Theme preference
+```
+
+## Structure
 
 ```
 src/
-  app/               # Next.js App Router pages
-    lab/
-      (overview)/    # Route groups for layouts
-      inspector/
-        spell/[id]/
-          page.tsx   # Minimal: renders component
-          loading.tsx # Uses *Skeleton component
+  app/               Next.js routes
   components/
-    lab/
-      inspector/
-        spell/
-          index.ts           # Barrel exports
-          spell-detail-page.tsx
-          spell-detail-content.tsx
-    ui/              # shadcn components
-  atoms/             # Jotai state
-    lab/
-    settings/
-    utils/
+    ui/              Park UI components
+    editor/          Rotation editor
+    game/            GameIcon, tooltips
+    layout/          Shell, navbar, sidebar
+    content/         MDX components
+  lib/
+    state/           Zustand stores, React Query hooks
+    dbc/             DBC fetcher, batcher, Effect layer
+    refine/          Data provider, auth, resources
+    supabase/        Client setup
+  theme/
+    recipes/         Component styles (Panda CSS)
+    tokens/          Design tokens
+  content/           MDX files (docs, blog)
+  providers/         React context providers
 ```
 
-## Page Pattern
+## Skills
 
-Pages are minimal - just render a component:
-
-```tsx
-// app/lab/inspector/spell/[id]/page.tsx
-import { SpellDetailPage } from "@/components/lab/inspector/spell";
-
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export default async function SpellInspectorPage({ params }: Props) {
-  const { id } = await params;
-  return <SpellDetailPage spellId={id} />;
-}
-```
-
-## Loading States
-
-Use `loading.tsx` with Skeleton components:
-
-```tsx
-// app/lab/inspector/spell/[id]/loading.tsx
-import { SpellDetailSkeleton } from "@/components/lab/inspector/spell";
-
-export default function SpellInspectorLoading() {
-  return <SpellDetailSkeleton />;
-}
-```
-
-## Component Naming
-
-Export both `Feature` and `FeatureSkeleton` from same file:
-
-```tsx
-// spell-detail-page.tsx
-"use client";
-
-export function SpellDetailPage({ spellId }: Props) {
-  const spell = useSpellData(spellId);
-  return (
-    <SpellProvider spell={spell}>
-      <SpellDetailContent />
-    </SpellProvider>
-  );
-}
-
-export function SpellDetailSkeleton() {
-  return <Skeleton className="..." />;
-}
-```
-
-## Barrel Exports
-
-Use `index.ts` for clean imports:
-
-```ts
-// components/lab/inspector/spell/index.ts
-export { SpellDetailPage, SpellDetailSkeleton } from "./spell-detail-page";
-export { SpellProvider, useSpellData } from "./spell-context";
-```
-
-## Jotai Atoms
-
-Atoms live in domain folders under `atoms/`. Mark with `"use client"`:
-
-```ts
-// atoms/lab/state.ts
-"use client";
-
-import { createPersistedOrderAtom } from "../utils";
-
-export type LabCardId = "data-inspector" | "spec-coverage" | "table-coverage";
-
-export const labOrderAtom = createPersistedOrderAtom<LabCardId>(
-  "lab-order-v4",
-  ["data-inspector", "spec-coverage", "table-coverage"],
-);
-```
-
-## Key Conventions
-
-- **Server components**: Default for pages, fetch data
-- **Client components**: `"use client"` for interactivity
-- **Jotai hooks**: `useAtom`, `useAtomValue`, `useSetAtom` as needed
-- **Suspense**: Wrap async atoms, use Skeleton components
-- **shadcn**: Use MCP server for component docs, don't guess APIs
-- **Imports**: Use `@/` alias for src/ paths
+- **game-data** - How spell/item data works. Read before touching game data.
+- **park-ui** - Component patterns. Check before adding UI.

@@ -1,28 +1,46 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
+
+import { HStack } from "styled-system/jsx";
+
+import { Card, Text } from "@/components/ui";
 
 interface StatCardProps {
   icon: LucideIcon;
+  iconClassName?: string;
   label: string;
   value: string | number | null;
-  iconClassName?: string;
 }
 
 export function StatCard({
   icon: Icon,
+  iconClassName,
   label,
   value,
-  iconClassName,
 }: StatCardProps) {
   return (
-    <Card className="h-full p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <Icon className={iconClassName ?? "h-3.5 w-3.5"} />
-        {label}
-      </div>
-      <p className="text-2xl font-bold mt-1 tabular-nums">{value ?? "—"}</p>
-    </Card>
+    <Card.Root h="full">
+      <Card.Body
+        p="4"
+        display="flex"
+        flexDir="column"
+        alignItems="center"
+        textAlign="center"
+      >
+        <HStack gap="2" color="fg.muted">
+          <Icon className={iconClassName} style={{ height: 14, width: 14 }} />
+          <Text textStyle="xs">{label}</Text>
+        </HStack>
+        <Text
+          textStyle="2xl"
+          fontWeight="bold"
+          mt="1"
+          fontVariantNumeric="tabular-nums"
+        >
+          {value ?? "\u2014"}
+        </Text>
+      </Card.Body>
+    </Card.Root>
   );
 }

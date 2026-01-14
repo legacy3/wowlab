@@ -1,63 +1,67 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { CheckCircle2, XCircle, Clock, Ban } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { FlaskInlineLoader } from "@/components/ui/flask-loader";
-import type { SimulationJob } from "@/atoms/computing";
-import { cn } from "@/lib/utils";
+import { Ban, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { css } from "styled-system/css";
+import { HStack } from "styled-system/jsx";
 
-export type JobStatus = SimulationJob["status"];
+import type { JobStatus } from "@/lib/state";
 
-export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
-  running: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  queued: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-  completed: "bg-green-500/20 text-green-400 border-green-500/30",
-  failed: "bg-red-500/20 text-red-400 border-red-500/30",
-  paused: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  cancelled: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+import { Badge, InlineLoader } from "@/components/ui";
+
+export const JOB_STATUS_COLORS: Record<
+  JobStatus,
+  { bg: string; text: string; border: string }
+> = {
+  cancelled: { bg: "orange.3", border: "orange.6", text: "orange.11" },
+  completed: { bg: "green.3", border: "green.6", text: "green.11" },
+  failed: { bg: "red.3", border: "red.6", text: "red.11" },
+  paused: { bg: "yellow.3", border: "yellow.6", text: "yellow.11" },
+  queued: { bg: "gray.3", border: "gray.6", text: "gray.11" },
+  running: { bg: "blue.3", border: "blue.6", text: "blue.11" },
 };
 
 export const JOB_STATUS_ICONS: Record<JobStatus, LucideIcon | null> = {
-  running: null, // Uses FlaskInlineLoader instead
-  queued: Clock,
+  cancelled: Ban,
   completed: CheckCircle2,
   failed: XCircle,
   paused: Clock,
-  cancelled: Ban,
+  queued: Clock,
+  running: null,
 };
 
 interface JobStatusBadgeProps {
-  status: JobStatus;
-  className?: string;
   showIcon?: boolean;
+  status: JobStatus;
 }
 
 export function JobStatusBadge({
-  status,
-  className,
   showIcon = true,
+  status,
 }: JobStatusBadgeProps) {
   const StatusIcon = JOB_STATUS_ICONS[status];
+  const colors = JOB_STATUS_COLORS[status];
 
   return (
     <Badge
       variant="outline"
-      className={cn(
-        "inline-flex items-center gap-1 capitalize",
-        JOB_STATUS_COLORS[status],
-        className,
-      )}
+      className={css({
+        bg: colors.bg,
+        borderColor: colors.border,
+        color: colors.text,
+        textTransform: "capitalize",
+      })}
     >
-      {showIcon ? (
-        status === "running" ? (
-          <FlaskInlineLoader className="h-3.5 w-3.5" variant="processing" />
-        ) : StatusIcon ? (
-          <StatusIcon className="h-3.5 w-3.5" />
-        ) : null
-      ) : null}
-      <span>{status}</span>
+      <HStack gap="1">
+        {showIcon &&
+          (status === "running" ? (
+            <InlineLoader variant="processing" />
+          ) : StatusIcon ? (
+            <StatusIcon style={{ height: 14, width: 14 }} />
+          ) : null)}
+        <span>{status}</span>
+      </HStack>
     </Badge>
   );
 }

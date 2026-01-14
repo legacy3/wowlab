@@ -1,21 +1,21 @@
 import type {
-  ContentItem,
   ContentEntry,
+  ContentItem,
   ContentMeta,
-  TocEntry,
   ReadingTime,
+  TocEntry,
 } from "@/lib/content/types";
 
+export type BlogEntry = {
+  tableOfContents?: TocEntry[];
+  readingTime?: ReadingTime;
+} & ContentEntry<BlogMeta>;
+
 export interface BlogMeta extends ContentMeta {
+  author: string;
   description: string;
   publishedAt: string;
-  author: string;
   tags?: string[];
 }
 
 export type BlogPost = ContentItem<BlogMeta>;
-
-export type BlogEntry = ContentEntry<BlogMeta> & {
-  tableOfContents?: TocEntry[];
-  readingTime?: ReadingTime;
-};

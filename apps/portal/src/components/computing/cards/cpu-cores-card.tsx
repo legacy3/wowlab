@@ -1,38 +1,46 @@
 "use client";
 
-import Link from "next/link";
-import { Cpu, HelpCircle } from "lucide-react";
+import { Cpu } from "lucide-react";
+import { useExtracted } from "next-intl";
+import { HStack } from "styled-system/jsx";
+
+import { Card, HelpText, Text } from "@/components/ui";
 import { useClientHardware } from "@/hooks/use-client-hardware";
-import { Card } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { href, routes } from "@/lib/routing";
 
 export function CpuCoresCard() {
+  const t = useExtracted();
   const { cores } = useClientHardware();
 
   return (
-    <Card className="h-full p-4">
-      <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-        <Cpu className="h-3.5 w-3.5" />
-        <span>CPU Cores</span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href="/docs/reference/03-browser-cpu-limits"
-              className="hover:text-foreground transition-colors"
-            >
-              <HelpCircle className="h-3 w-3" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[200px]">
-            Browsers may limit this. Click to learn more.
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <p className="text-2xl font-bold mt-1 tabular-nums">{cores ?? "—"}</p>
-    </Card>
+    <Card.Root h="full">
+      <Card.Body
+        p="4"
+        display="flex"
+        flexDir="column"
+        alignItems="center"
+        textAlign="center"
+      >
+        <HStack gap="1.5" color="fg.muted" textStyle="xs">
+          <Cpu style={{ height: 14, width: 14 }} />
+          <HelpText
+            content={t("Browsers may limit reported cores.")}
+            href={href(routes.dev.docs.page, {
+              slug: "reference/03-browser-cpu-limits",
+            })}
+          >
+            {t("CPU Cores")}
+          </HelpText>
+        </HStack>
+        <Text
+          textStyle="2xl"
+          fontWeight="bold"
+          mt="1"
+          fontVariantNumeric="tabular-nums"
+        >
+          {cores ?? "\u2014"}
+        </Text>
+      </Card.Body>
+    </Card.Root>
   );
 }

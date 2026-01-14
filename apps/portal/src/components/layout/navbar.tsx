@@ -1,60 +1,84 @@
 "use client";
 
-import * as React from "react";
-import { useAtom, useAtomValue } from "jotai";
-import { Cpu } from "lucide-react";
-import { FlaskInlineLoader } from "@/components/ui/flask-loader";
+import { Cpu, Menu, X } from "lucide-react";
+import { useExtracted } from "next-intl";
+import { useMemo } from "react";
+import { Box, Flex, styled } from "styled-system/jsx";
 
-import { MobileMenu } from "./mobile-menu";
-import { ThemeToggle } from "./theme-toggle";
+import { IconButton, InlineLoader, Tooltip } from "@/components/ui";
+import {
+  selectRunningJobsCount,
+  useComputingDrawer,
+  useJobs,
+} from "@/lib/state";
+
 import { AuthButton } from "./auth-button";
-import { computingDrawerOpenAtom } from "./computing-drawer";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { activeJobsCountAtom } from "@/atoms/computing";
-
-function ComputingTrigger() {
-  const [, setOpen] = useAtom(computingDrawerOpenAtom);
-  const activeCount = useAtomValue(activeJobsCountAtom);
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative"
-      onClick={() => setOpen(true)}
-    >
-      {activeCount > 0 ? (
-        <FlaskInlineLoader className="h-4 w-4" variant="processing" />
-      ) : (
-        <Cpu className="h-4 w-4" />
-      )}
-      {activeCount > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-          {activeCount}
-        </span>
-      )}
-    </Button>
-  );
-}
+import { LocaleSwitcher } from "./locale-switcher";
+import { useSidebar } from "./sidebar-context";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Navbar() {
+  const t = useExtracted();
+  const { isOpen, toggle } = useSidebar();
+  const { setOpen: openDrawer } = useComputingDrawer();
+  const jobs = useJobs((s) => s.jobs);
+  const runningCount = useMemo(() => selectRunningJobsCount(jobs), [jobs]);
+
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex w-full items-center gap-2 px-4">
-        <MobileMenu />
-        <SidebarTrigger className="-ml-1 hidden lg:flex" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 h-4 hidden lg:block"
-        />
-        <div className="flex flex-1 items-center justify-end gap-2">
-          <ComputingTrigger />
+    <Box as="header" position="sticky" top="0" zIndex="40" bg="bg.canvas">
+      <Flex align="center" justify="space-between" h="14" px="4">
+        <IconButton
+          variant="plain"
+          size="sm"
+          display={{ base: "flex", lg: "none" }}
+          onClick={toggle}
+          aria-label={isOpen ? t("Close menu") : t("Open menu")}
+        >
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
+        </IconButton>
+        <Box display={{ base: "none", lg: "block" }} />
+        <Flex align="center" gap="2">
+          <Tooltip content={t("Computing")}>
+            <IconButton
+              variant="plain"
+              size="sm"
+              onClick={() => openDrawer(true)}
+              aria-label={t("Open computing drawer")}
+            >
+              <styled.span pos="relative">
+                {runningCount > 0 ? (
+                  <>
+                    <InlineLoader variant="processing" />
+                    <styled.span
+                      pos="absolute"
+                      top="-1"
+                      right="-1"
+                      minW="4"
+                      h="4"
+                      px="1"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      bg="colorPalette.solid"
+                      color="colorPalette.solid.fg"
+                      textStyle="2xs"
+                      fontWeight="bold"
+                      rounded="full"
+                    >
+                      {runningCount}
+                    </styled.span>
+                  </>
+                ) : (
+                  <Cpu size={18} />
+                )}
+              </styled.span>
+            </IconButton>
+          </Tooltip>
+          <LocaleSwitcher />
           <ThemeToggle />
           <AuthButton />
-        </div>
-      </div>
-    </header>
+        </Flex>
+      </Flex>
+    </Box>
   );
 }

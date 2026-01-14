@@ -1,71 +1,36 @@
-# Portal App
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Next.js 16 web application for WoW spell rotation simulation.
+## Getting Started
 
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router)
-- **UI:** shadcn/ui, TailwindCSS v4, Radix UI
-- **State:** Jotai
-- **Auth/DB:** Supabase
-- **Library:** Effect-TS, Immutable.js
-
-## Local Development
+First, run the development server:
 
 ```bash
-# From repository root
+npm run dev
+# or
+yarn dev
+# or
 pnpm dev
+# or
+bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Environment Variables
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Copy `.env.example` to `.env` and fill in your Supabase credentials:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-```bash
-NEXT_PUBLIC_APP_URL=https://wowlab.gg
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+## Learn More
 
-Get these from: Supabase Dashboard → Project Settings → API
+To learn more about Next.js, take a look at the following resources:
 
-## Deployment (Vercel)
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### 1. Import from GitHub
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-In Vercel dashboard:
+## Deploy on Vercel
 
-- **Framework Preset:** Next.js
-- **Root Directory:** `apps/portal`
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### 2. Add Environment Variables
-
-Project Settings → Environment Variables:
-
-```bash
-NEXT_PUBLIC_APP_URL
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-Set for: Production, Preview, Development
-
-### 3. Deploy
-
-The `vercel.json` config handles the monorepo build automatically:
-
-- Installs all workspace dependencies
-- Builds internal packages first
-- Builds Next.js app
-- Deploys
-
-## Architecture
-
-See `CLAUDE.md` in repository root for:
-
-- Component naming conventions
-- State management patterns
-- Page structure guidelines
-- Effect-TS patterns
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

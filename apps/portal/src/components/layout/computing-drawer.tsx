@@ -1,205 +1,244 @@
 "use client";
 
-import { useAtom, useSetAtom } from "jotai";
-import { atom } from "jotai";
-import Link from "next/link";
 import { Cpu, X } from "lucide-react";
-import { FlaskInlineLoader } from "@/components/ui/flask-loader";
+import { useExtracted } from "next-intl";
+import { useMemo } from "react";
+import { HStack, Stack, styled } from "styled-system/jsx";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { JOB_STATUS_ICONS } from "@/components/computing";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-
+  AbsoluteCenter,
+  Badge,
+  Button,
+  Drawer,
+  Empty,
+  ErrorBox,
+  IconButton,
+  InlineLoader,
+  Link,
+  Text,
+} from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 import {
-  jobsAtom,
-  cancelJobAtom,
   PHASE_LABELS,
+  selectActiveJobs,
+  selectCompletedJobs,
   type SimulationJob,
-} from "@/atoms/computing";
-import {
-  JOB_STATUS_COLORS,
-  JOB_STATUS_ICONS,
-} from "@/components/computing/job-status";
+  useComputingDrawer,
+  useJobs,
+} from "@/lib/state";
 
-// Drawer open state - can be controlled from anywhere
-export const computingDrawerOpenAtom = atom(false);
+export function ComputingDrawer() {
+  const t = useExtracted();
+  const { open, setOpen } = useComputingDrawer();
+  const jobs = useJobs((s) => s.jobs);
 
-function JobCard({
-  job,
-  onClose,
-}: {
-  job: SimulationJob;
-  onClose: () => void;
-}) {
-  const cancelJob = useSetAtom(cancelJobAtom);
+  const activeJobs = useMemo(() => selectActiveJobs(jobs), [jobs]);
+  const completedJobs = useMemo(() => selectCompletedJobs(jobs), [jobs]);
 
-  const StatusIcon = JOB_STATUS_ICONS[job.status];
-  const statusTextClass =
-    JOB_STATUS_COLORS[job.status]
-      .split(" ")
-      .find((cls) => cls.startsWith("text-")) ?? "text-muted-foreground";
+  const handleClose = () => setOpen(false);
 
   return (
-    <div className="rounded-xl border bg-card/50 p-5 space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          {job.status === "running" ? (
-            <FlaskInlineLoader
-              className={`h-5 w-5 ${statusTextClass}`}
-              variant="processing"
-            />
-          ) : StatusIcon ? (
-            <StatusIcon className={`h-5 w-5 ${statusTextClass}`} />
-          ) : null}
-          <span className="font-medium">{job.name}</span>
-        </div>
-        {(job.status === "running" || job.status === "queued") && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 -mr-1"
-            onClick={() => cancelJob(job.id)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+    <Drawer.Root
+      open={open}
+      onOpenChange={(details) => setOpen(details.open)}
+      placement="end"
+    >
+      <Drawer.Backdrop />
+      <Drawer.Positioner>
+        <Drawer.Content w={{ base: "full", md: "480px", sm: "420px" }}>
+          <Drawer.Header>
+            <Drawer.Title>
+              <HStack gap="2.5">
+                <Cpu style={{ height: 20, width: 20 }} />
+                {t("Computing")}
+              </HStack>
+            </Drawer.Title>
+            <Drawer.Description>
+              <HStack justifyContent="space-between">
+                <span>
+                  {activeJobs.length > 0
+                    ? t(
+                        "{count, plural, =1 {# simulation running} other {# simulations running}}",
+                        {
+                          count: activeJobs.length,
+                        },
+                      )
+                    : t("No active simulations")}
+                </span>
+                <Link
+                  href={href(routes.computing)}
+                  textStyle="xs"
+                  onClick={handleClose}
+                >
+                  {t("Dashboard")}
+                </Link>
+              </HStack>
+            </Drawer.Description>
+            <Drawer.CloseTrigger asChild pos="absolute" top="3" right="3">
+              <IconButton variant="plain" size="sm" aria-label={t("Close")}>
+                <X />
+              </IconButton>
+            </Drawer.CloseTrigger>
+          </Drawer.Header>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Badge variant="outline">{PHASE_LABELS[job.phase]}</Badge>
-          {job.status !== "completed" && job.status !== "failed" && (
-            <span className="text-sm text-muted-foreground">{job.eta}</span>
-          )}
-        </div>
-        {job.status !== "completed" && job.phaseDetail && (
-          <p className="text-sm text-muted-foreground">{job.phaseDetail}</p>
-        )}
-      </div>
+          <Drawer.Body display="flex" flexDir="column" gap="8">
+            {activeJobs.length > 0 && (
+              <Stack gap="4">
+                <Text
+                  textStyle="sm"
+                  fontWeight="medium"
+                  color="fg.muted"
+                  textTransform="uppercase"
+                  letterSpacing="wide"
+                >
+                  {t("Active")}
+                </Text>
+                <Stack gap="3">
+                  {activeJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClose={handleClose}
+                      cancelLabel={t("Cancel")}
+                      viewResultsLabel={t("View Results")}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            )}
 
-      {job.status !== "completed" && job.status !== "failed" && (
-        <div className="space-y-2">
-          <Progress value={job.progress} className="h-2" />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{job.progress}%</span>
-            <span>{job.current}</span>
-          </div>
-        </div>
-      )}
+            {completedJobs.length > 0 && (
+              <Stack gap="4">
+                <Text
+                  textStyle="sm"
+                  fontWeight="medium"
+                  color="fg.muted"
+                  textTransform="uppercase"
+                  letterSpacing="wide"
+                >
+                  {t("Recent")}
+                </Text>
+                <Stack gap="3">
+                  {completedJobs.slice(0, 5).map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClose={handleClose}
+                      cancelLabel={t("Cancel")}
+                      viewResultsLabel={t("View Results")}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            )}
 
-      {job.status === "failed" && job.error && (
-        <p className="text-sm text-red-500">{job.error}</p>
-      )}
-
-      {job.status === "completed" && job.result && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          asChild
-          onClick={onClose}
-        >
-          <Link href={`/simulate/results/${job.id}`}>View Results</Link>
-        </Button>
-      )}
-    </div>
+            {jobs.length === 0 && (
+              <AbsoluteCenter axis="both">
+                <Empty.Root variant="plain">
+                  <Empty.Icon>
+                    <Cpu />
+                  </Empty.Icon>
+                  <Empty.Content>
+                    <Empty.Title>{t("No simulations yet")}</Empty.Title>
+                    <Empty.Description>
+                      {t("Run a simulation to see progress here.")}
+                    </Empty.Description>
+                  </Empty.Content>
+                </Empty.Root>
+              </AbsoluteCenter>
+            )}
+          </Drawer.Body>
+        </Drawer.Content>
+      </Drawer.Positioner>
+    </Drawer.Root>
   );
 }
 
-export function ComputingDrawer() {
-  const [open, setOpen] = useAtom(computingDrawerOpenAtom);
-  const [jobs] = useAtom(jobsAtom);
-
-  const activeJobs = jobs.filter(
-    (j) => j.status === "running" || j.status === "queued",
-  );
-  const completedJobs = jobs.filter(
-    (j) =>
-      j.status === "completed" ||
-      j.status === "failed" ||
-      j.status === "cancelled",
-  );
+function JobCard({
+  cancelLabel,
+  job,
+  onClose,
+  viewResultsLabel,
+}: {
+  cancelLabel: string;
+  job: SimulationJob;
+  onClose: () => void;
+  viewResultsLabel: string;
+}) {
+  const cancelJob = useJobs((s) => s.cancelJob);
+  const StatusIcon = JOB_STATUS_ICONS[job.status];
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent className="w-[420px] sm:w-[480px] overflow-y-auto p-0">
-        <SheetHeader className="p-6 pb-4">
-          <SheetTitle className="flex items-center gap-2.5 text-lg">
-            <Cpu className="h-5 w-5" />
-            Computing
-          </SheetTitle>
-          <SheetDescription className="flex items-center justify-between">
-            <span>
-              {activeJobs.length > 0
-                ? `${activeJobs.length} simulation${activeJobs.length > 1 ? "s" : ""} running`
-                : "No active simulations"}
-            </span>
-            <Link
-              href="/computing"
-              onClick={() => setOpen(false)}
-              className="text-xs text-primary hover:underline"
-            >
-              Dashboard
-            </Link>
-          </SheetDescription>
-        </SheetHeader>
+    <styled.div rounded="xl" borderWidth="1" bg="bg.subtle" p="5" spaceY="4">
+      <HStack justifyContent="space-between" gap="3">
+        <HStack gap="3" minW="0">
+          {job.status === "running" ? (
+            <InlineLoader variant="processing" />
+          ) : StatusIcon ? (
+            <StatusIcon style={{ height: 20, width: 20 }} />
+          ) : null}
+          <Text fontWeight="medium">{job.name}</Text>
+        </HStack>
+        {(job.status === "running" || job.status === "queued") && (
+          <IconButton
+            variant="plain"
+            size="sm"
+            aria-label={cancelLabel}
+            onClick={() => cancelJob(job.id)}
+          >
+            <X style={{ height: 16, width: 16 }} />
+          </IconButton>
+        )}
+      </HStack>
 
-        <div className="px-6 pb-6 space-y-8">
-          {/* Active Jobs */}
-          {activeJobs.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Active
-              </h3>
-              <div className="space-y-3">
-                {activeJobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onClose={() => setOpen(false)}
-                  />
-                ))}
-              </div>
-            </div>
+      <Stack gap="2">
+        <HStack justifyContent="space-between">
+          <Badge variant="outline">{PHASE_LABELS[job.phase]}</Badge>
+          {job.status !== "completed" && job.status !== "failed" && (
+            <Text textStyle="sm" color="fg.muted">
+              {job.eta}
+            </Text>
           )}
+        </HStack>
+        {job.status !== "completed" && job.phaseDetail && (
+          <Text textStyle="sm" color="fg.muted">
+            {job.phaseDetail}
+          </Text>
+        )}
+      </Stack>
 
-          {/* Completed Jobs */}
-          {completedJobs.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Recent
-              </h3>
-              <div className="space-y-3">
-                {completedJobs.slice(0, 5).map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onClose={() => setOpen(false)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+      {job.status !== "completed" && job.status !== "failed" && (
+        <Stack gap="2">
+          <styled.div h="2" bg="bg.emphasized" rounded="full" overflow="hidden">
+            <styled.div
+              h="full"
+              bg="colorPalette.solid"
+              rounded="full"
+              transition="width 0.3s"
+              style={{ width: `${job.progress}%` }}
+            />
+          </styled.div>
+          <HStack
+            justifyContent="space-between"
+            textStyle="sm"
+            color="fg.muted"
+          >
+            <span>{job.progress}%</span>
+            <span>{job.current}</span>
+          </HStack>
+        </Stack>
+      )}
 
-          {/* Empty State */}
-          {jobs.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Cpu className="h-14 w-14 mx-auto mb-4 opacity-40" />
-              <p className="text-base">No simulations yet</p>
-              <p className="text-sm mt-1.5">
-                Run a simulation to see progress here
-              </p>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+      {job.status === "failed" && job.error && <ErrorBox>{job.error}</ErrorBox>}
+
+      {job.status === "completed" && job.result && (
+        <Button variant="outline" size="sm" w="full" asChild onClick={onClose}>
+          <Link href={href(routes.simulate.results, { id: job.id })}>
+            {viewResultsLabel}
+          </Link>
+        </Button>
+      )}
+    </styled.div>
   );
 }

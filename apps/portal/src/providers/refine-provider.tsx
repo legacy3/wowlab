@@ -1,39 +1,35 @@
 "use client";
 
-import { useState, Suspense, type ReactNode } from "react";
 import { Refine } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { type ReactNode, Suspense, useState } from "react";
 
-import { createDataProvider } from "@/lib/refine/data-provider";
-import { createAuthProvider } from "@/lib/refine/auth-provider";
-import { createAccessControlProvider } from "@/lib/refine/access-control";
-import { createPersister } from "@/lib/refine/persister";
-import { GAME_CONFIG } from "@/lib/config/game";
-import { PortalDbcBatchProvider } from "./portal-batch-provider";
+import {
+  createAccessControlProvider,
+  createAuthProvider,
+  createDataProvider,
+  createPersister,
+  resources,
+} from "@/lib/refine";
 
-const DAY = 1000 * 60 * 60 * 24;
-const MAX_SAFE_TIMEOUT = 24 * DAY;
+import { DbcProvider } from "./dbc-provider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: Infinity,
-      staleTime: Infinity,
       refetchOnWindowFocus: false,
       retry: 3,
+      staleTime: Infinity,
     },
   },
 });
 
-const persister = createPersister("wowlab-refine-cache");
+const persister = createPersister("wowlab-cache");
 
-interface RefineProviderProps {
-  children: ReactNode;
-}
-
-export function RefineProvider({ children }: RefineProviderProps) {
+export function RefineProvider({ children }: { children: ReactNode }) {
   const [dataProvider] = useState(createDataProvider);
   const [authProvider] = useState(createAuthProvider);
   const [accessControlProvider] = useState(createAccessControlProvider);
@@ -42,13 +38,13 @@ export function RefineProvider({ children }: RefineProviderProps) {
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{
-        persister,
-        maxAge: MAX_SAFE_TIMEOUT,
-        buster: GAME_CONFIG.patchVersion,
+        buster: "11.2.5",
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             query.state.status === "success" && query.meta?.persist === true,
         },
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        persister,
       }}
     >
       <Suspense>
@@ -57,42 +53,17 @@ export function RefineProvider({ children }: RefineProviderProps) {
           authProvider={authProvider}
           accessControlProvider={accessControlProvider}
           routerProvider={routerProvider}
-          resources={[
-            {
-              name: "rotations",
-              list: "/rotations",
-              show: "/rotations/:namespace/:slug",
-              create: "/rotations/new",
-              edit: "/rotations/editor",
-            },
-            {
-              name: "user_profiles",
-              show: "/users/:handle",
-            },
-            {
-              name: "user_settings",
-            },
-            {
-              name: "rotation_sim_results",
-            },
-            {
-              name: "fight_profiles",
-              list: "/api/fight-profiles",
-            },
-            {
-              name: "view_most_wanted_items",
-            },
-          ]}
+          resources={resources}
           options={{
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
             disableTelemetry: true,
             reactQuery: {
               clientConfig: queryClient,
             },
+            syncWithLocation: true,
+            warnWhenUnsavedChanges: true,
           }}
         >
-          <PortalDbcBatchProvider>{children}</PortalDbcBatchProvider>
+          <DbcProvider>{children}</DbcProvider>
         </Refine>
       </Suspense>
     </PersistQueryClientProvider>

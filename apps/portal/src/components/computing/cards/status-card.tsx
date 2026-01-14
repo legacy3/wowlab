@@ -1,25 +1,44 @@
 "use client";
 
-import { useAtomValue } from "jotai";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { jobsAtom } from "@/atoms/computing";
+import { AlertTriangle } from "lucide-react";
+import { useExtracted } from "next-intl";
+import { HStack } from "styled-system/jsx";
+
+import { Card, Text } from "@/components/ui";
+import { useJobs } from "@/lib/state";
 
 export function StatusCard() {
-  const jobs = useAtomValue(jobsAtom);
-  const lastError = jobs.find((j) => j.status === "failed")?.error;
+  const t = useExtracted();
+  const lastError = useJobs(
+    (s) => s.jobs.find((j) => j.status === "failed")?.error,
+  );
 
   return (
-    <Card className="h-full p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        {lastError ? (
-          <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-        ) : (
-          <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-        )}
-        Status
-      </div>
-      <p className="text-2xl font-bold mt-1">{lastError ? "Error" : "OK"}</p>
-    </Card>
+    <Card.Root h="full">
+      <Card.Body
+        p="4"
+        display="flex"
+        flexDir="column"
+        alignItems="center"
+        textAlign="center"
+      >
+        <HStack gap="2" color="fg.muted">
+          {lastError && (
+            <AlertTriangle
+              style={{ color: "var(--colors-red-10)", height: 14, width: 14 }}
+            />
+          )}
+          <Text textStyle="xs">{t("Status")}</Text>
+        </HStack>
+        <Text
+          textStyle="2xl"
+          fontWeight="bold"
+          mt="1"
+          color={lastError ? "red.10" : "green.10"}
+        >
+          {lastError ? t("Error") : t("OK")}
+        </Text>
+      </Card.Body>
+    </Card.Root>
   );
 }

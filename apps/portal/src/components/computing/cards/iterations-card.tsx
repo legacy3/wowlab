@@ -1,43 +1,72 @@
 "use client";
 
-import { useAtomValue } from "jotai";
 import { Activity } from "lucide-react";
-import { FlaskInlineLoader } from "@/components/ui/flask-loader";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { workerSystemAtom, jobsAtom } from "@/atoms/computing";
-import { formatCompact } from "@/lib/format";
+import { useExtracted, useFormatter } from "next-intl";
+import { Box, HStack, Stack } from "styled-system/jsx";
+
+import { Card, InlineLoader, Text } from "@/components/ui";
+import { useJobs, useWorkerSystem } from "@/lib/state";
 
 export function IterationsCard() {
-  const system = useAtomValue(workerSystemAtom);
-  const jobs = useAtomValue(jobsAtom);
-  const runningJob = jobs.find((j) => j.status === "running");
+  const t = useExtracted();
+  const format = useFormatter();
+  const totalIterations = useWorkerSystem((s) => s.totalIterationsRun);
+  const runningJob = useJobs((s) => s.jobs.find((j) => j.status === "running"));
 
   return (
-    <Card className="h-full p-4">
-      <div className="flex items-center justify-between text-muted-foreground text-xs">
-        <div className="flex items-center gap-2">
+    <Card.Root h="full">
+      <Card.Body
+        p="4"
+        display="flex"
+        flexDir="column"
+        alignItems="center"
+        textAlign="center"
+      >
+        <HStack gap="2" color="fg.muted">
           {runningJob ? (
-            <FlaskInlineLoader className="h-3.5 w-3.5" variant="processing" />
+            <InlineLoader variant="processing" />
           ) : (
-            <Activity className="h-3.5 w-3.5" />
+            <Activity style={{ height: 14, width: 14 }} />
           )}
-          Iterations
-        </div>
-        {runningJob && (
-          <span className="text-muted-foreground">{runningJob.eta}</span>
+          <Text textStyle="xs">{t("Iterations")}</Text>
+        </HStack>
+        {runningJob ? (
+          <Stack mt="1" gap="1.5" w="full">
+            <HStack
+              justifyContent="space-between"
+              textStyle="xs"
+              color="fg.muted"
+            >
+              <Text
+                as="span"
+                fontWeight="bold"
+                fontVariantNumeric="tabular-nums"
+              >
+                {runningJob.current}
+              </Text>
+              <Text as="span">{runningJob.eta}</Text>
+            </HStack>
+            <Box h="1.5" bg="bg.emphasized" rounded="full" overflow="hidden">
+              <Box
+                h="full"
+                bg="colorPalette.solid"
+                rounded="full"
+                transition="width 0.3s"
+                style={{ width: `${runningJob.progress}%` }}
+              />
+            </Box>
+          </Stack>
+        ) : (
+          <Text
+            textStyle="2xl"
+            fontWeight="bold"
+            mt="1"
+            fontVariantNumeric="tabular-nums"
+          >
+            {format.number(totalIterations, { notation: "compact" })}
+          </Text>
         )}
-      </div>
-      {runningJob ? (
-        <div className="mt-1 space-y-1.5">
-          <p className="text-lg font-bold tabular-nums">{runningJob.current}</p>
-          <Progress value={runningJob.progress} className="h-1.5" />
-        </div>
-      ) : (
-        <p className="text-2xl font-bold mt-1 tabular-nums">
-          {formatCompact(system.totalIterationsRun)}
-        </p>
-      )}
-    </Card>
+      </Card.Body>
+    </Card.Root>
   );
 }
