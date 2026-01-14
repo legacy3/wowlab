@@ -33,7 +33,7 @@ export default async function DocPage({ params }: Props) {
             )}
             <ArticleMeta
               date={meta.updatedAt}
-              editPath={`apps/portal-new/src/content/docs/${fullSlug}.md`}
+              editPath={`apps/portal/src/content/docs/${fullSlug}.md`}
             />
           </VStack>
           <Content />

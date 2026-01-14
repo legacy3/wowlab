@@ -24,7 +24,7 @@ Raw DBC CSVs (data/)
 │ Supabase       │   │ crates/engine      │   │ packages/wowlab    │
 │ Storage        │   │ (native dep)       │   │ (WASM wrapper)     │
 │ snapshots/     │   │ - Simulation       │   │ - apps/cli         │
-│                │   │ - DPS calc         │   │ - apps/portal-new  │
+│                │   │ - DPS calc         │   │ - apps/portal  │
 └────────────────┘   └────────────────────┘   └────────────────────┘
 ```
 
@@ -496,7 +496,7 @@ export type {
 ### Portal (Web)
 
 ```typescript
-// apps/portal-new/src/hooks/use-talents.ts
+// apps/portal/src/hooks/use-talents.ts
 import { useEffect, useState } from 'react';
 import { initWasm, loadTalents, decodeTalentString, resolveTalents } from '@wowlab/wowlab';
 
@@ -652,7 +652,7 @@ export const generate = Command.make('generate', { patch, types, specs, output }
 
 ### Phase 6: Portal Migration
 
-1. Update portal-new to use `@wowlab/wowlab`
+1. Update portal to use `@wowlab/wowlab`
 2. Remove Effect service dependencies
 3. Update hooks to use WASM
 
@@ -730,5 +730,5 @@ pnpm cli snapshot upload --patch 11.2.0
 - [ ] Delete `packages/wowlab-engine/`
 - [ ] Delete `packages/wowlab-gamedata/`
 - [ ] Update CLI commands
-- [ ] Update portal-new imports
+- [ ] Update portal imports
 - [ ] Update engine to use gamedata crate

@@ -1,6 +1,6 @@
 ---
 name: game-data
-description: Work with WoW spell, item, and DBC data in portal-new. Use when fetching, displaying, or adding new game data types.
+description: Work with WoW spell, item, and DBC data in portal. Use when fetching, displaying, or adding new game data types.
 ---
 
 # Game Data - READ THIS FIRST
@@ -135,7 +135,7 @@ Transformers use `DbcService` to fetch from multiple DBC tables and assemble the
 
 ## App Hooks
 
-In `apps/portal-new/src/lib/state/dbc.ts`:
+In `apps/portal/src/lib/state/dbc.ts`:
 
 ```tsx
 import { useSpell, useItem } from "@/lib/state";

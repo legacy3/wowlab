@@ -1,18 +1,18 @@
 ---
 name: park-ui
-description: Use Park UI components in portal-new. Check this skill before implementing UI to find the right component.
+description: Use Park UI components in portal. Check this skill before implementing UI to find the right component.
 ---
 
 # Park UI Components
 
-Components live in `apps/portal-new/src/components/ui/`.
+Components live in `apps/portal/src/components/ui/`.
 
 ## Examples
 
 **Read the demo files for working examples:**
 
 ```
-apps/portal-new/src/components/dev/ui/sections/
+apps/portal/src/components/dev/ui/sections/
 ├── forms.tsx        # Input, Field, Select, Combobox, Switch, NumberInput
 ├── overlays.tsx     # Tooltip, Dialog, Drawer, Popover, Menu
 ├── navigation.tsx   # Link, Tabs, Accordion, Collapsible, Expandable

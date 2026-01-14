@@ -25,7 +25,7 @@ pnpm install
 
 ## Environment
 
-Copy [apps/portal-new/.env.example](/go/github/blob/main/apps/portal-new/.env.example) to `.env.local`.
+Copy [apps/portal/.env.example](/go/github/blob/main/apps/portal/.env.example) to `.env.local`.
 
 ## Commands
 
@@ -42,7 +42,7 @@ We lean on [Effect-TS](https://effect.website/) for effectful code in the core p
 
 ## Editing docs
 
-Docs live in `apps/portal-new/src/content/`. Register new pages in `src/lib/docs/` (the relevant `section.*` module).
+Docs live in `apps/portal/src/content/`. Register new pages in `src/lib/docs/` (the relevant `section.*` module).
 
 ## Questions
 

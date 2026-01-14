@@ -1,4 +1,4 @@
-# portal-new
+# portal
 
 Next.js 16 / React 19 app. Panda CSS + Park UI.
 
