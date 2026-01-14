@@ -1,0 +1,6483 @@
+---
+source: snapshot-parser/tests/snapshots_test.rs
+expression: tree
+info: "nodes: 210, edges: 303"
+---
+{
+  "specId": 62,
+  "specName": "Arcane",
+  "className": "Mage",
+  "treeId": 658,
+  "allNodeIds": [
+    62084,
+    62085,
+    62086,
+    62087,
+    62088,
+    62091,
+    62092,
+    62094,
+    62096,
+    62098,
+    62100,
+    62102,
+    62104,
+    62105,
+    62107,
+    62110,
+    62112,
+    62114,
+    62115,
+    62116,
+    62117,
+    62119,
+    62121,
+    62122,
+    62123,
+    62124,
+    62125,
+    62127,
+    62129,
+    62150,
+    62151,
+    62153,
+    62157,
+    62163,
+    62164,
+    62170,
+    62173,
+    62174,
+    62176,
+    62177,
+    62178,
+    62179,
+    62180,
+    62181,
+    62182,
+    62184,
+    62185,
+    81468,
+    93524,
+    94632,
+    94633,
+    94634,
+    94635,
+    94636,
+    94637,
+    94638,
+    94639,
+    94640,
+    94641,
+    94642,
+    94643,
+    94644,
+    94645,
+    94646,
+    94647,
+    94648,
+    94649,
+    94650,
+    94651,
+    94652,
+    94653,
+    94654,
+    94655,
+    94656,
+    94657,
+    94658,
+    94659,
+    94660,
+    94661,
+    94662,
+    94663,
+    94664,
+    99828,
+    99829,
+    99830,
+    100989,
+    100995,
+    100998,
+    100999,
+    101004,
+    101007,
+    101009,
+    101015,
+    101016,
+    101019,
+    101021,
+    101024,
+    101027,
+    101029,
+    101883,
+    102013,
+    102438,
+    102439,
+    102440,
+    102441,
+    102445,
+    102446,
+    102449,
+    102451,
+    102453,
+    102454,
+    102460,
+    102462,
+    102465,
+    102467,
+    102468,
+    102469,
+    102470,
+    102471,
+    102472,
+    102473,
+    102474,
+    102475,
+    102476,
+    102480,
+    103771,
+    104113,
+    108535,
+    108536,
+    108537,
+    108538,
+    108539,
+    108541,
+    108551,
+    108653,
+    108654,
+    108655,
+    108656,
+    108657,
+    108658,
+    108659,
+    108660,
+    108661,
+    108662,
+    108664,
+    108665,
+    108849,
+    108850,
+    108851,
+    108852,
+    108853,
+    108854,
+    108855,
+    108856,
+    108857,
+    108858,
+    108859,
+    108860,
+    108861,
+    108863,
+    108864,
+    109002,
+    109393,
+    109394,
+    109395,
+    109396,
+    109397,
+    109398,
+    109399,
+    109400,
+    109401,
+    109402,
+    109403,
+    109404,
+    109405,
+    109406,
+    109407,
+    109408,
+    109409,
+    109411,
+    109412,
+    109471,
+    109472,
+    109473,
+    109478,
+    109479,
+    109480,
+    109481,
+    109667,
+    109668,
+    109669,
+    109670,
+    109671,
+    109672,
+    109673,
+    109674,
+    109675,
+    109912,
+    109913,
+    109914,
+    109915,
+    109916,
+    109956,
+    109978,
+    110078,
+    110079,
+    110080,
+    110081,
+    110082,
+    110086,
+    110087,
+    110088,
+    110089
+  ],
+  "nodes": [
+    {
+      "id": 62084,
+      "posX": 2100,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80140,
+          "definitionId": 85143,
+          "spellId": 30449,
+          "name": "Spellsteal",
+          "description": "Steals $?s198100[all beneficial magic effects from the target. These effects lasts a maximum of 2 min][a beneficial magic effect from the target. This effect lasts a maximum of 2 min].",
+          "iconFileName": "spell_arcane_arcane02"
+        }
+      ]
+    },
+    {
+      "id": 62085,
+      "posX": 2700,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 33,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80141,
+          "definitionId": 85144,
+          "spellId": 414659,
+          "name": "Ice Cold",
+          "description": "Ice Block now reduces all damage taken by $414658s8% for $414658d but no longer grants Immunity, prevents movement, attacks, or casting spells. Does not incur the Global Cooldown.",
+          "iconFileName": "spell_fire_bluefire"
+        }
+      ]
+    },
+    {
+      "id": 62086,
+      "posX": 2100,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 34,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80142,
+          "definitionId": 85145,
+          "spellId": 1265517,
+          "name": "Permafrost Bauble",
+          "description": "The cooldown of Ice Block and Ice Cold are reduced by ${-$s1/1000} sec.",
+          "iconFileName": "inv_10_dungeonjewelry_primalist_necklace_2_frost"
+        }
+      ]
+    },
+    {
+      "id": 62087,
+      "posX": 2700,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80143,
+          "definitionId": 85146,
+          "spellId": 386763,
+          "name": "Freezing Cold",
+          "description": "Enemies hit by Cone of Cold are frozen in place for $386770d instead of snared.\r\n\r\nWhen your roots expire or are dispelled, your target is snared by $394255s1%, decaying over $394255d.",
+          "iconFileName": "spell_frost_glacier"
+        },
+        {
+          "id": 134199,
+          "definitionId": 138979,
+          "spellId": 157997,
+          "name": "Ice Nova",
+          "description": "Causes a whirl of icy wind around the enemy, dealing $s1 Frost damage to the target and all other enemies within $a2 yds, freezing them in place for $d. Damage reduced beyond $s3 targets.",
+          "iconFileName": "spell_mage_icenova"
+        }
+      ]
+    },
+    {
+      "id": 62088,
+      "posX": 3900,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80144,
+          "definitionId": 85147,
+          "spellId": 113724,
+          "name": "Ring of Frost",
+          "description": "Summons a Ring of Frost for $d at the target location. Enemies entering the ring are incapacitated for $82691d. Limit 10 targets.\r\n\r\nWhen the incapacitate expires, enemies are slowed by $321329s1% for $321329d.",
+          "iconFileName": "spell_frost_ring of frost"
+        },
+        {
+          "id": 134198,
+          "definitionId": 138978,
+          "spellId": 383121,
+          "name": "Mass Polymorph",
+          "description": "Transforms all enemies within $a yards into sheep, wandering around incapacitated for $d. While affected, the victims cannot take actions but will regenerate health very quickly. Damage will cancel the effect.\r\n\r\nOnly works on Beasts, Humanoids and Critters.",
+          "iconFileName": "spell_nature_doublepolymorph1"
+        }
+      ]
+    },
+    {
+      "id": 62091,
+      "posX": 5700,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 28,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80147,
+          "definitionId": 85150,
+          "spellId": 455428,
+          "name": "Barrier Diffusion",
+          "description": "When your Barrier is removed, reduce its cooldown by ${$s1/1000} sec.",
+          "iconFileName": "spell_mage_evanesce"
+        }
+      ]
+    },
+    {
+      "id": 62092,
+      "posX": 5100,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 115878,
+          "definitionId": 120890,
+          "spellId": 414664,
+          "name": "Mass Invisibility",
+          "description": "You and your allies within $A1 yards instantly become invisible for $d. Taking any action will cancel the effect.\r\n\r\n$?a415945[]\r\n\r\n[Does not affect allies in combat.]",
+          "iconFileName": "ability_mage_massinvisibility"
+        }
+      ]
+    },
+    {
+      "id": 62094,
+      "posX": 3900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": 31,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126060,
+          "definitionId": 130892,
+          "spellId": 1244031,
+          "name": "Spatial Manipulation",
+          "description": "Blink gains an additional charge.",
+          "iconFileName": "spell_mage_overpowered"
+        },
+        {
+          "id": 136580,
+          "definitionId": 141353,
+          "spellId": 1270829,
+          "name": "Reflection",
+          "description": "After casting Blink, it is replaced with Reflection for $389714d.\r\n\r\n$@spellicon389713 $@spellname389713\r\n$@spelldesc389713",
+          "iconFileName": "ability_hunter_displacement"
+        }
+      ]
+    },
+    {
+      "id": 62096,
+      "posX": 3900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 37,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80153,
+          "definitionId": 85156,
+          "spellId": 382268,
+          "name": "Flow of Time",
+          "description": "The cooldowns of Blink and Shimmer are reduced by ${$s1/-1000} sec.",
+          "iconFileName": "spell_arcane_blink"
+        }
+      ]
+    },
+    {
+      "id": 62098,
+      "posX": 4500,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 21,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80155,
+          "definitionId": 85158,
+          "spellId": 382490,
+          "name": "Tome of Antonidas",
+          "description": "Increases Haste by $s1%. ",
+          "iconFileName": "inv_misc_book_18"
+        }
+      ]
+    },
+    {
+      "id": 62100,
+      "posX": 4500,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 30,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80157,
+          "definitionId": 85160,
+          "spellId": 386828,
+          "name": "Energized Barriers",
+          "description": "Casting your barrier removes all snare effects.",
+          "iconFileName": "spell_mage_temporalshield"
+        }
+      ]
+    },
+    {
+      "id": 62102,
+      "posX": 3300,
+      "posY": 2700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 6,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80159,
+          "definitionId": 85162,
+          "spellId": 342249,
+          "name": "Master of Time",
+          "description": "Reduces the cooldown of $?a1244090[Temporal Realignment][Alter Time] by ${$s1/-1000} sec. ",
+          "iconFileName": "inv_belt_armor_waistoftime_d_01"
+        }
+      ]
+    },
+    {
+      "id": 62104,
+      "posX": 3300,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 15,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80161,
+          "definitionId": 85164,
+          "spellId": 382297,
+          "name": "Quick Witted",
+          "description": "Counterspell's cooldown is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "ability_priest_surgeofdarkness"
+        }
+      ]
+    },
+    {
+      "id": 62105,
+      "posX": 2700,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 1,
+      "orderIndex": 16,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80163,
+          "definitionId": 85166,
+          "spellId": 212653,
+          "name": "Shimmer",
+          "description": "Teleports you $A1 yds forward, unless something is in the way. Unaffected by the global cooldown and castable while casting.$?a382289[\r\n\r\nGain a shield that absorbs $382289s1% of your maximum health for $382290d after you Shimmer.][]",
+          "iconFileName": "spell_arcane_massdispel"
+        },
+        {
+          "id": 134197,
+          "definitionId": 138977,
+          "spellId": 1244340,
+          "name": "Improved Blink",
+          "description": "Blink's cooldown is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_arcane_blink"
+        }
+      ]
+    },
+    {
+      "id": 62107,
+      "posX": 5100,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80165,
+          "definitionId": 85168,
+          "spellId": 1250315,
+          "name": "Frost Conditioning",
+          "description": "Hypothermia's duration is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_frost_icefloes"
+        }
+      ]
+    },
+    {
+      "id": 62110,
+      "posX": 2100,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80168,
+          "definitionId": 85171,
+          "spellId": 343183,
+          "name": "Improved Frost Nova",
+          "description": "Frost Nova duration is increased by ${$s1/1000} sec.",
+          "iconFileName": "spell_frost_frostnova"
+        },
+        {
+          "id": 136466,
+          "definitionId": 141239,
+          "spellId": 205036,
+          "name": "Ice Ward",
+          "description": "Frost Nova now has ${1+$m1} charges.",
+          "iconFileName": "spell_frost_frostward"
+        }
+      ]
+    },
+    {
+      "id": 62112,
+      "posX": 5100,
+      "posY": 5100,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 36,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80170,
+          "definitionId": 85173,
+          "spellId": 382293,
+          "name": "Incantation of Swiftness",
+          "description": "$?s110959[Greater ][]Invisibility increases your movement speed by $s1% for $337278d.",
+          "iconFileName": "rogue_burstofspeed"
+        }
+      ]
+    },
+    {
+      "id": 62114,
+      "posX": 2700,
+      "posY": 3300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 9,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80173,
+          "definitionId": 85176,
+          "spellId": 383092,
+          "name": "Arcane Warding",
+          "description": "Reduces magic damage taken by $s1%.",
+          "iconFileName": "spell_arcane_arcaneresilience"
+        }
+      ]
+    },
+    {
+      "id": 62115,
+      "posX": 3300,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80174,
+          "definitionId": 85177,
+          "spellId": 342245,
+          "name": "Alter Time",
+          "description": "Alters the fabric of time, returning you to your current location and health when cast a second time, or after ${$110909d+$s3} sec. Effect negated by long distance or death.",
+          "iconFileName": "spell_mage_altertime"
+        }
+      ]
+    },
+    {
+      "id": 62116,
+      "posX": 4500,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80175,
+          "definitionId": 85178,
+          "spellId": 475,
+          "name": "Remove Curse",
+          "description": "Removes all Curses from a friendly target. $?s115700[If any Curses are successfully removed, you deal $115701s1% additional damage for $115701d.][]",
+          "iconFileName": "spell_nature_removecurse"
+        }
+      ]
+    },
+    {
+      "id": 62117,
+      "posX": 3900,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80176,
+          "definitionId": 85179,
+          "spellId": 11426,
+          "name": "Ice Barrier",
+          "description": "Shields you with ice, absorbing $<shield> damage$?s235297[ and increasing your armor by $s3%][] for $d.\r\n\r\nMelee attacks against you reduce the attacker's movement speed by $205708s1%.",
+          "iconFileName": "spell_ice_lament"
+        }
+      ]
+    },
+    {
+      "id": 62119,
+      "posX": 3900,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80178,
+          "definitionId": 85181,
+          "spellId": 235313,
+          "name": "Blazing Barrier",
+          "description": "Shields you in flame, absorbing $<shield> damage$?s194315[ and reducing Physical damage taken by $s3%][] for $d.\r\n\r\nMelee attacks against you cause the attacker to take $235314s1 Fire damage.",
+          "iconFileName": "ability_mage_moltenarmor"
+        }
+      ]
+    },
+    {
+      "id": 62121,
+      "posX": 3900,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80180,
+          "definitionId": 85183,
+          "spellId": 235450,
+          "name": "Prismatic Barrier",
+          "description": "Shields you with an arcane force, absorbing $<shield> damage and reducing magic damage taken by $s3% for $d.\r\n\r\nThe duration of harmful Magic effects against you is reduced by $s4%.",
+          "iconFileName": "spell_magearmor"
+        }
+      ]
+    },
+    {
+      "id": 62122,
+      "posX": 4500,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 2,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80181,
+          "definitionId": 85184,
+          "spellId": 45438,
+          "name": "Ice Block",
+          "description": "Encases you in a block of ice, protecting you from all attacks and damage for $d, but during that time you cannot attack, move, or cast spells.$?a382292[\r\n\r\nWhile inside Ice Block, you heal for ${$382292s1*10}% of your maximum health over the duration.][]\r\n\r\nCauses Hypothermia, preventing you from recasting Ice Block for $41425d.",
+          "iconFileName": "spell_frost_frost"
+        }
+      ]
+    },
+    {
+      "id": 62123,
+      "posX": 4500,
+      "posY": 2700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 4,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80182,
+          "definitionId": 85185,
+          "spellId": 382424,
+          "name": "Winter's Protection",
+          "description": "The cooldown of Ice Block is reduced by ${$s1/-1000} sec.",
+          "iconFileName": "spell_ice_rune"
+        }
+      ]
+    },
+    {
+      "id": 62124,
+      "posX": 5100,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 12,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80183,
+          "definitionId": 85186,
+          "spellId": 55342,
+          "name": "Mirror Image",
+          "description": "Creates $s2 copies of you nearby for $55342d, which cast spells and attack your enemies. While active, you generate significantly reduced threat.\r\n\r\nTaking direct damage will cause one of your images to dissipate",
+          "iconFileName": "spell_magic_lesserinvisibilty"
+        }
+      ]
+    },
+    {
+      "id": 62125,
+      "posX": 2700,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 23,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134184,
+          "definitionId": 138964,
+          "spellId": 1270872,
+          "name": "Captured Thoughts",
+          "description": "The duration of $?a137019[Hot Streak]?a137020[Brain Freeze][Clearcasting] is increased by $?a137021[${$s1/1000}][${$s2/1000}] sec.",
+          "iconFileName": "spell_nature_elementalabsorption"
+        }
+      ]
+    },
+    {
+      "id": 62127,
+      "posX": 3300,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 22,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80187,
+          "definitionId": 85190,
+          "spellId": 382493,
+          "name": "Tome of Rhonin",
+          "description": "Increases Critical Strike chance by $s1%.",
+          "iconFileName": "inv_misc_book_04"
+        }
+      ]
+    },
+    {
+      "id": 62129,
+      "posX": 3300,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 32,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80189,
+          "definitionId": 85192,
+          "spellId": 387807,
+          "name": "Time Manipulation",
+          "description": "The cooldown of your loss of control spells are reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_nature_timestop"
+        }
+      ]
+    },
+    {
+      "id": 62150,
+      "posX": 12900,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134540,
+          "definitionId": 139308,
+          "spellId": 378406,
+          "name": "Wintertide",
+          "description": "Damage from Frozen Orb has a $h% chance to apply Freezing.",
+          "iconFileName": "ability_deathknight_frozencenter"
+        }
+      ]
+    },
+    {
+      "id": 62151,
+      "posX": 11100,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80214,
+          "definitionId": 85217,
+          "spellId": 378448,
+          "name": "Fractured Frost",
+          "description": "Your Ice Lances fracture on impact, dealing $228598s2 Frost damage to up to $s1 additional Freezing $Lenemy:enemies;. Damage from Fractured Frost Shatters.",
+          "iconFileName": "spell_fire_frostresistancetotem"
+        }
+      ]
+    },
+    {
+      "id": 62153,
+      "posX": 12300,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80216,
+          "definitionId": 85219,
+          "spellId": 205021,
+          "name": "Ray of Frost",
+          "description": "Channel an icy beam at the enemy for $d, dealing $s1 Frost damage every ${$t1}.2 sec.\r\n\r\n|CFFffffffApplies ${$d/$t1} $lstack:stacks; of Freezing over its duration.|R",
+          "iconFileName": "ability_mage_rayoffrost"
+        }
+      ]
+    },
+    {
+      "id": 62157,
+      "posX": 11700,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80220,
+          "definitionId": 85223,
+          "spellId": 1248825,
+          "name": "Frostbite",
+          "description": "When Frostbolt critically strikes, it applies $s1 additional $Lstack:stacks; of Freezing.\r\n\r\nDamage from Blizzard has a $h% chance to apply $s2 $Lstack:stacks; of Freezing.",
+          "iconFileName": "spell_frost_frostarmor"
+        }
+      ]
+    },
+    {
+      "id": 62163,
+      "posX": 11100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80226,
+          "definitionId": 85229,
+          "spellId": 56377,
+          "name": "Splitting Ice",
+          "description": "Your Flurry and Frostbolt spells strike $s1 additional target at $s2% effectiveness.",
+          "iconFileName": "spell_frost_ice shards"
+        }
+      ]
+    },
+    {
+      "id": 62164,
+      "posX": 12900,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80227,
+          "definitionId": 85230,
+          "spellId": 112965,
+          "name": "Fingers of Frost",
+          "description": "Frostbolt has a $s1% chance to grant a charge of Fingers of Frost.\r\n\r\nFingers of Frost causes your next Ice Lance to deal Shatter damage equal to $1246769s4 stacks of Freezing and does not consume Freezing stacks.\r\n\r\nMaximum $44544u $Lcharge:charges;.",
+          "iconFileName": "ability_mage_wintersgrasp"
+        }
+      ]
+    },
+    {
+      "id": 62170,
+      "posX": 14100,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80234,
+          "definitionId": 85237,
+          "spellId": 270233,
+          "name": "Freezing Rain",
+          "description": "Frozen Orb makes Blizzard instant cast.\r\n\r\nBlizzard damage increased by $s2%.",
+          "iconFileName": "spell_frost_frozenorb"
+        }
+      ]
+    },
+    {
+      "id": 62173,
+      "posX": 13500,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80237,
+          "definitionId": 85240,
+          "spellId": 0,
+          "name": "Unknown Talent",
+          "description": "",
+          "iconFileName": "inv_misc_questionmark"
+        }
+      ]
+    },
+    {
+      "id": 62174,
+      "posX": 14100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80239,
+          "definitionId": 85242,
+          "spellId": 1247090,
+          "name": "Cone of Frost",
+          "description": "$?a157997[Ice Nova][Cone of Cold] now applies $s1 $Lstack:stacks; of Freezing to up to $s2 enemies.",
+          "iconFileName": "ability_mage_chilledtothebone"
+        }
+      ]
+    },
+    {
+      "id": 62176,
+      "posX": 12300,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80241,
+          "definitionId": 85244,
+          "spellId": 30455,
+          "name": "Ice Lance",
+          "description": "Quickly fling a shard of ice at the target, dealing $228598s1 Frost damage$?a378448[ and $228598s2 Frost damage to up to $378448s1 nearby Freezing enemies][].\r\n\r\n|CFFffffffShatters $1246769s4 stacks of Freezing.|R",
+          "iconFileName": "spell_frost_frostblast"
+        }
+      ]
+    },
+    {
+      "id": 62177,
+      "posX": 13500,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80242,
+          "definitionId": 85245,
+          "spellId": 84714,
+          "name": "Frozen Orb",
+          "description": "Launches an orb of swirling ice that slowly pursues your target, dealing up to ${20*$84721s1} Frost damage to all enemies it passes through over $d. Deals reduced damage beyond $84721s2 targets.\r\n\r\nEnemies damaged by the Frozen Orb are slowed by $289308s1% for $289308d.",
+          "iconFileName": "spell_frost_frozenorb"
+        }
+      ]
+    },
+    {
+      "id": 62178,
+      "posX": 11100,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80243,
+          "definitionId": 85246,
+          "spellId": 44614,
+          "name": "Flurry",
+          "description": "Unleash a flurry of ice, striking the target $s1 times for a total of ${$228354s2*$m1} Frost damage.\r\n\r\n|CFFffffffApplies ${$1246769s2*$s1} $lstack:stacks; of Freezing.|R",
+          "iconFileName": "ability_warlock_burningembersblue"
+        }
+      ]
+    },
+    {
+      "id": 62179,
+      "posX": 10500,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80244,
+          "definitionId": 85247,
+          "spellId": 190447,
+          "name": "Brain Freeze",
+          "description": "Frostbolt has a $m1% chance to reset the remaining cooldown on Flurry and cause your next Flurry to deal $190446s2% increased damage.",
+          "iconFileName": "ability_mage_brainfreeze"
+        }
+      ]
+    },
+    {
+      "id": 62180,
+      "posX": 10500,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80245,
+          "definitionId": 85248,
+          "spellId": 205030,
+          "name": "Frozen Touch",
+          "description": "Frostbolt grants you Fingers of Frost $s1% more often and Brain Freeze $s2% more often.",
+          "iconFileName": "ability_mage_burstofcold"
+        }
+      ]
+    },
+    {
+      "id": 62181,
+      "posX": 11700,
+      "posY": 3900,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80247,
+          "definitionId": 85250,
+          "spellId": 1247775,
+          "name": "Icy Hand",
+          "description": "Increases the maximum charges of Fingers of Frost by $s1.",
+          "iconFileName": "spell_frost_iceclaw"
+        }
+      ]
+    },
+    {
+      "id": 62182,
+      "posX": 11100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80248,
+          "definitionId": 85251,
+          "spellId": 1247777,
+          "name": "Comet Storm",
+          "description": "Casting Ray of Frost replaces your Blizzard with Comet Storm, calling down a series of 7 icy comets on and around the target, that deals up to ${7*$153596s1} Frost damage to all enemies within $228601A1 yds of its impacts.\r\n\r\n|CFFffffffEach Comet Shatters $1246769s5 $Lstack:stacks; of Freezing.|R",
+          "iconFileName": "spell_mage_cometstorm2"
+        }
+      ]
+    },
+    {
+      "id": 62184,
+      "posX": 12300,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80250,
+          "definitionId": 85253,
+          "spellId": 1247729,
+          "name": "Master Lancer",
+          "description": "Ice Lance increases Shatter's damage by $1247730s1% for $1247730d. Multiple applications may overlap.",
+          "iconFileName": "spell_frost_frostblast"
+        }
+      ]
+    },
+    {
+      "id": 62185,
+      "posX": 13500,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 80251,
+          "definitionId": 85254,
+          "spellId": 1247798,
+          "name": "Glaciate",
+          "description": "Over its duration, Ray of Frost generates $s1 Icicles and reduces the cooldown of Flurry and Frozen Orb by ${$s2/1000*($205021d/$205021t1)} sec.",
+          "iconFileName": "spell_frost_frozencore"
+        }
+      ]
+    },
+    {
+      "id": 81468,
+      "posX": 12900,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 102429,
+          "definitionId": 107434,
+          "spellId": 385167,
+          "name": "Everlasting Frost",
+          "description": "Damage from Frozen Orb has a $s1% chance to grant Fingers of Frost.",
+          "iconFileName": "spell_frost_chillingbolt"
+        }
+      ]
+    },
+    {
+      "id": 93524,
+      "posX": 5100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 19,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 115877,
+          "definitionId": 120889,
+          "spellId": 110959,
+          "name": "Greater Invisibility",
+          "description": "Makes you invisible and untargetable for $110960d, removing all threat. Any action taken cancels this effect.\r\n$?a382293[\r\n\r\nIncreases your movement speed by ${$382293s1}% for $337278d.][]",
+          "iconFileName": "ability_mage_greaterinvisibility"
+        }
+      ]
+    },
+    {
+      "id": 94632,
+      "posX": 8100,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117235,
+          "definitionId": 122247,
+          "spellId": 431178,
+          "name": "Flash Freezeburn",
+          "description": "$?a137020[Gaining 5 Icicles,]?a137019[Combustion][Gaining 5 Icicles or Combustion] grants you Frostfire Empowerment.",
+          "iconFileName": "spell_fire_elementaldevastation"
+        }
+      ]
+    },
+    {
+      "id": 94633,
+      "posX": 8700,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117236,
+          "definitionId": 122248,
+          "spellId": 431067,
+          "name": "Elemental Affinity",
+          "description": "$?c2[The cooldown of Frost spells with a base cooldown shorter than $s4 minutes is reduced by $s1%.]?c3[The cooldown of Fire spells is reduced by $s3%.][]",
+          "iconFileName": "inv_10_dungeonjewelry_dragon_trinket_5_red"
+        },
+        {
+          "id": 117775,
+          "definitionId": 122787,
+          "spellId": 431112,
+          "name": "Flame and Frost",
+          "description": "$?a137020[Ice Block and Ice Cold reset the cooldowns of your Fire spells]?a137019[Cauterize resets the cooldown of your Frost spells with a base cooldown shorter than $s1 minutes when it activates.][Ice Block and Ice Cold reset the cooldowns of your Fire spells.\r\n\r\nCauterize resets the cooldown of your Frost spells with a base cooldown shorter than $s1 minutes when it activates.]",
+          "iconFileName": "spell_firefrost orb"
+        }
+      ]
+    },
+    {
+      "id": 94634,
+      "posX": 8700,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117237,
+          "definitionId": 122249,
+          "spellId": 1248014,
+          "name": "Dualcasting Adept",
+          "description": "Your $?a137020[Fire]?a137019[Frost][Frost and Fire] spells deal $?a137020[$s1]?a137019[$s2][$s1]% increased critical strike damage.\r\n\r\n$?a137020[Ice Lance damage increased by $s3%.\r\n\r\nBlizzard damage increased by $s6%.]?a137019[Pyroblast damage increased by $s4%.\r\n\r\nFlamestrike damage increased by $s5%.][Ice Lance and Pyroblast  have their damage increased by $s3%.]",
+          "iconFileName": "ability_dualwieldspecialization"
+        }
+      ]
+    },
+    {
+      "id": 94635,
+      "posX": 8400,
+      "posY": 3600,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117238,
+          "definitionId": 122250,
+          "spellId": 431095,
+          "name": "Isothermic Core",
+          "description": "$?a137019[Meteor now also calls down a Comet Storm, dealing ${$438609s1*7} Frost damage to nearby enemies]?a137020[Comet Storm now also calls down a Meteor, dealing $351140s1 Fire damage to nearby enemies. The enemy closest to the center of the Meteor's impact takes $153561s2% increased damage. Damage reduced beyond 8 targets.\r\n\r\nDamage from Meteor Shatters $1246769s5 stacks of Freezing][Meteor now also calls down a Comet Storm, dealing ${$438609s1*7} Frost damage to nearby enemies.\r\n\r\nComet Storm now also calls down a Meteor, dealing $351140s1 Fire damage to nearby enemies].",
+          "iconFileName": "inv12_ability_mage_isothermiccore"
+        }
+      ]
+    },
+    {
+      "id": 94636,
+      "posX": 8400,
+      "posY": 1200,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117239,
+          "definitionId": 122251,
+          "spellId": 431044,
+          "name": "Frostfire Bolt",
+          "description": "Launches a bolt of frostfire at the enemy, causing $468655s1 Frostfire damage, slowing movement speed by $468655s3%, and causing an additional $468655o2 Frostfire damage over $468655d.$?a1246769[\r\n\r\n|CFFffffffApplies $1246769s1 $lstack:stacks; of Freezing.|R][]",
+          "iconFileName": "inv_ability_frostfiremage_frostfirebolt"
+        }
+      ]
+    },
+    {
+      "id": 94637,
+      "posX": 8700,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117240,
+          "definitionId": 122252,
+          "spellId": 1248016,
+          "name": "Blast Radius",
+          "description": "$?a137020[Comet Storm damage increased by $s2%.\r\n\r\nMeteor damage increased by $s1%.]?a137019[Meteor damage increased by $s3%.\r\n\r\nComet Storm damage increased by $s4%.][The damage of Meteor and Comet Storm is increased.]",
+          "iconFileName": "spell_frostresistancetotem_01"
+        }
+      ]
+    },
+    {
+      "id": 94638,
+      "posX": 7500,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117241,
+          "definitionId": 122253,
+          "spellId": 1248002,
+          "name": "Heat Sink",
+          "description": "$?a137020[Flurry]?a137019[Fire Blast][Flurry and Fire Blast] now $?a137020[deals]?a137019[deals][deal] Frostfire damage and $?a137020[its]?a137019[its][their] damage is increased by $?a137020[$s2%]?a137019[$s3%][$s2%].",
+          "iconFileName": "spell_fire_masterofelements"
+        }
+      ]
+    },
+    {
+      "id": 94639,
+      "posX": 7500,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117242,
+          "definitionId": 122254,
+          "spellId": 431166,
+          "name": "Frostfire Infusion",
+          "description": "$?a137020[Frostfire Bolt has an additional $s1% chance to grant Brain Freeze]?a137019[Frostfire Bolt's critical strike chance is increased by $s2%.][Frostfire Bolt has and additional $s1% chance to grant Brain Freeze and its critical strike chance is increased by $s2%.]\r\n\r\nThe damage of your Frost spells and Fire spells are increased by $s3%.",
+          "iconFileName": "inv_10_blacksmithing_craftedbar_frostfirealloy"
+        }
+      ]
+    },
+    {
+      "id": 94640,
+      "posX": 8100,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117243,
+          "definitionId": 122255,
+          "spellId": 431117,
+          "name": "Thermal Conditioning",
+          "description": "Frostfire Bolt's cast time is reduced by $s1%.",
+          "iconFileName": "spell_fireresistancetotem_01"
+        },
+        {
+          "id": 134441,
+          "definitionId": 139212,
+          "spellId": 431189,
+          "name": "Severe Temperatures",
+          "description": "Frostfire Empowerment stacks $s1 additional $Ltime:times; and it causes Frostfire Bolt to explode for an additional $s2% of its damage.",
+          "iconFileName": "inv_magemount_fire"
+        }
+      ]
+    },
+    {
+      "id": 94641,
+      "posX": 8100,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117244,
+          "definitionId": 122256,
+          "spellId": 431176,
+          "name": "Frostfire Empowerment",
+          "description": "The direct damage of your Frostfire spells has a $s3% chance to activate Frostfire Empowerment, causing your next Frostfire Bolt to be instant cast, deal $431177s3% increased damage, explode for $s2% of its damage to nearby enemies.$?c2[][\r\n\r\nDamage from Frostfire Empowerment applies $s4 $Lstack:stacks; of Freezing.]",
+          "iconFileName": "spell_frostfire orb"
+        }
+      ]
+    },
+    {
+      "id": 94642,
+      "posX": 7500,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 117245,
+          "definitionId": 122257,
+          "spellId": 431066,
+          "name": "Imbued Warding",
+          "description": "$?c2[Blazing Barrier also casts an Ice Barrier at $s1% effectiveness.]?c3[Ice Barrier also casts a Blazing Barrier at $s2% effectiveness.][]",
+          "iconFileName": "inv_10_jewelcrafting_gem3primal_fire_cut_blue"
+        },
+        {
+          "id": 117776,
+          "definitionId": 122788,
+          "spellId": 431131,
+          "name": "Meltdown",
+          "description": "You melt slightly out of your Ice Block and Ice Cold, allowing you to move slowly during Ice Block and increasing your movement speed over time.\r\n\r\nIce Block and Ice Cold trigger a Blazing Barrier when they end.",
+          "iconFileName": "spell_frost_arcticwinds"
+        }
+      ]
+    },
+    {
+      "id": 94643,
+      "posX": 8100,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117246,
+          "definitionId": 122258,
+          "spellId": 1260272,
+          "name": "Ashes of Inspiration",
+          "description": "When your Arcane Phoenix expires, it grants you Lesser Time Warp for $1260277d.\r\n\r\n$@spellicon1260277 $@spellname1260277\r\n$@spelldesc1260277",
+          "iconFileName": "inv_misc_powder_copper"
+        }
+      ]
+    },
+    {
+      "id": 94644,
+      "posX": 8700,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117247,
+          "definitionId": 122259,
+          "spellId": 451035,
+          "name": "Burden of Power",
+          "description": "$?c1[Arcane Blast damage increased by $s3%.\r\n\r\nArcane Pulse damage increased by $s4%][Pyroblast damage increased by $s1%.\r\n\r\nFlamestrike damage increased by $s2%].",
+          "iconFileName": "inv_ragnaros_heart"
+        }
+      ]
+    },
+    {
+      "id": 94645,
+      "posX": 8100,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117248,
+          "definitionId": 122260,
+          "spellId": 449382,
+          "name": "Codex of the Sunstriders",
+          "description": "When your Arcane Phoenix is summoned, it consumes all your Spellfire Spheres.\r\n\r\nEach Sphere consumed increases your spell damage during $?c1[Arcane Surge][Combustion] by $?c1[$s1][$s2]% and causes your Arcane Phoenix to cast an exceptional Arcane or Fire spell over its duration.",
+          "iconFileName": "inv_10_inscription2_book3_color1"
+        }
+      ]
+    },
+    {
+      "id": 94646,
+      "posX": 8400,
+      "posY": 3600,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117249,
+          "definitionId": 122261,
+          "spellId": 449619,
+          "name": "Memory of Al'ar",
+          "description": "During $?c1[Arcane Surge][Combustion], you gain twice as many stacks of Mana Cascade.\r\n\r\nWhen your Arcane Phoenix expires, it empowers you, granting $?c1[Arcane Soul][Hyperthermia] for $?c1[${$s1/1000}.1][${$s2/1000}.1] sec.\r\n\r\n$?c1[$@spellicon451038$@spellname451038:\r\n$@spelldesc451038][$@spellicon383874 $@spellname383874:\r\n$@spellaura383874]",
+          "iconFileName": "inv_ability_sunfurymage_spellfirespheres"
+        }
+      ]
+    },
+    {
+      "id": 94647,
+      "posX": 8400,
+      "posY": 1200,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117250,
+          "definitionId": 122262,
+          "spellId": 448601,
+          "name": "Spellfire Spheres",
+          "description": "$?c1[Casting a damaging spell][Consuming Hot Streak] has a $s1% chance to conjure a Spellfire Sphere.\r\n\r\nWhile you're out of combat, you will slowly conjure Spellfire Spheres over time.\r\n\r\n$@spellicon448604 $@spellname448604\r\n$@spelldesc448604",
+          "iconFileName": "inv_1115_mage_spellfirespheresgeneration"
+        }
+      ]
+    },
+    {
+      "id": 94648,
+      "posX": 8700,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117251,
+          "definitionId": 122263,
+          "spellId": 449596,
+          "name": "Rondurmancy",
+          "description": "Spellfire Spheres can now stack up to $s2 times.",
+          "iconFileName": "spell_arcane_focusedpower"
+        }
+      ]
+    },
+    {
+      "id": 94649,
+      "posX": 7500,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117252,
+          "definitionId": 122264,
+          "spellId": 449330,
+          "name": "Merely a Setback",
+          "description": "The bonuses provided by your Barrier spells persist an additional $?c1[$449336d][$1246023d] after your Barrier is removed.$?c1[][\r\n\r\nAdditionally, Cauterize no longer deals damage to you.]",
+          "iconFileName": "inv_helm_robe_raidmage_i_01"
+        },
+        {
+          "id": 135598,
+          "definitionId": 140354,
+          "spellId": 1255166,
+          "name": "Time Twist",
+          "description": "The cooldown of $?a1244090[Temporal Realignment][Alter Time] is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_holy_borrowedtime"
+        }
+      ]
+    },
+    {
+      "id": 94650,
+      "posX": 7500,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117253,
+          "definitionId": 122265,
+          "spellId": 449412,
+          "name": "Savor the Moment",
+          "description": "When you cast $?c1[Arcane Surge][Combustion], its duration is extended by ${$s1/1000}.1 sec for each Spellfire Sphere you have, up to ${$s2/1000}.1 sec.",
+          "iconFileName": "spell_fire_masterofelements"
+        },
+        {
+          "id": 123867,
+          "definitionId": 128705,
+          "spellId": 449349,
+          "name": "Sunfury Execution",
+          "description": "$?c2[Pyroclasm's damage bonus is increased by $s1% and Meteor grants Pyroclasm if talented.][Arcane Barrage deals $s2% increased damage to enemies affected by your Touch of the Magi.]",
+          "iconFileName": "spell_shadow_shadowandflame"
+        }
+      ]
+    },
+    {
+      "id": 94651,
+      "posX": 8700,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117254,
+          "definitionId": 122266,
+          "spellId": 449627,
+          "name": "Lessons in Debilitation",
+          "description": "Your Arcane Phoenix has picked up a few tricks, and will Spellsteal when it is summoned and when it expires.",
+          "iconFileName": "ability_paladin_handoflight"
+        },
+        {
+          "id": 134249,
+          "definitionId": 139025,
+          "spellId": 1246030,
+          "name": "Explosive Potential",
+          "description": "After casting $?c1[Arcane Surge][Combustion], your next Blink will cause a Blast Wave at your previous location, dealing $157981s1 Fire damage, knocking enemies back $s1 yds, and slowing them by $157981s2% for $157981d.",
+          "iconFileName": "6bf_explosive_shard"
+        }
+      ]
+    },
+    {
+      "id": 94652,
+      "posX": 8100,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117255,
+          "definitionId": 122267,
+          "spellId": 448658,
+          "name": "Invocation: Arcane Phoenix",
+          "description": "When you cast $?c1[Arcane Surge][Combustion], summon an Arcane Phoenix to aid you in battle.\r\n\r\n$@spellicon448659  $@spellname448659\r\nYour Arcane Phoenix aids you for the duration of your $?c1[Arcane Surge][Combustion], casting random Arcane and Fire spells.",
+          "iconFileName": "inv_misc_phoenixegg"
+        }
+      ]
+    },
+    {
+      "id": 94653,
+      "posX": 7500,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 117256,
+          "definitionId": 122268,
+          "spellId": 449293,
+          "name": "Mana Cascade",
+          "description": "$?c1[Casting Arcane Blast or Arcane Barrage][Consuming Hot Streak] grants you $?c1[${$449322s2/10}.1][${$449314s2/10}.1]% Haste for $449322d1. Stacks up to $449314u times. Multiple instances may overlap.",
+          "iconFileName": "spell_frost_manarecharge"
+        }
+      ]
+    },
+    {
+      "id": 94654,
+      "posX": 8400,
+      "posY": 3600,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117257,
+          "definitionId": 122269,
+          "spellId": 443742,
+          "name": "Splinterstorm",
+          "description": "Whenever you have $s1 or more active Embedded $?c1[Arcane][Frost] Splinters, you automatically cast a Splinterstorm at your target.\r\n\r\n$@spellicon443742$@spellname443742:\r\nShatter all Embedded $?c1[Arcane][Frost] Splinters, dealing their remaining periodic damage instantly.\r\n\r\nConjure $?c1[an Arcane][a Frost] Splinter for each Splinter shattered, then unleash them all in a devastating barrage, dealing $?c1[$443763s1 Arcane][$443722s1 Frost] damage to your target for each Splinter in the Splinterstorm.\r\n\r\nSplinterstorm has a $?c1[$s4% chance to grant Clearcasting][$s5% chance to grant Brain Freeze].",
+          "iconFileName": "ability_mage_burstofcold"
+        }
+      ]
+    },
+    {
+      "id": 94655,
+      "posX": 8700,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117258,
+          "definitionId": 122270,
+          "spellId": 444986,
+          "name": "Spellfrost Teachings",
+          "description": "Direct damage from $?c1[Arcane][Frost] Splinters reduces the cooldown of $?c1[Arcane][Frozen] Orb by $?c1[${$s1/1000}.2][${$s2/1000}.2] sec.",
+          "iconFileName": "70_inscription_vantus_rune_azure"
+        }
+      ]
+    },
+    {
+      "id": 94656,
+      "posX": 8100,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117259,
+          "definitionId": 122271,
+          "spellId": 444483,
+          "name": "Controlled Instincts",
+          "description": "$?c1[For 8 seconds after being struck by an Arcane Orb][While a target is under the effects of Blizzard], $?c1[$s1%][$s4%] of the direct damage dealt by $?c1[an Arcane Splinter][a Frost Splinter] is also dealt to nearby enemies. Damage reduced beyond $s5 targets.",
+          "iconFileName": "spell_frost_ice shards"
+        }
+      ]
+    },
+    {
+      "id": 94657,
+      "posX": 7500,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 128267,
+          "definitionId": 133074,
+          "spellId": 470021,
+          "name": "Signature Spell",
+          "description": "$?c1[Arcane Blast and Arcane Pulse damage increased by $s3%.\r\n\r\nCasting Touch of the Magi conjures $s1 Arcane Splinters][Frostbolt and Blizzard damage increased by $s4%.\r\n\r\nGlacial Spike conjures $s2 additional Frost Splinters].",
+          "iconFileName": "inv_enchanting_815_drustwand"
+        }
+      ]
+    },
+    {
+      "id": 94658,
+      "posX": 8700,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117261,
+          "definitionId": 122273,
+          "spellId": 444968,
+          "name": "Volatile Magic",
+          "description": "Whenever an Embedded $?c1[Arcane][Frost] Splinter is removed, it explodes, dealing $?c1[$444966s1 Arcane][$444967s1 Frost] damage to nearby enemies. Deals reduced damage beyond $s2 targets.",
+          "iconFileName": "spell_mage_flameorb_blue"
+        }
+      ]
+    },
+    {
+      "id": 94659,
+      "posX": 7500,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117262,
+          "definitionId": 122274,
+          "spellId": 444752,
+          "name": "Slippery Slinging",
+          "description": "You have $s1% increased movement speed during Alter Time$?a236457[ and Evocation][].\r\n",
+          "iconFileName": "ability_mage_icyfeet"
+        },
+        {
+          "id": 123418,
+          "definitionId": 128256,
+          "spellId": 444756,
+          "name": "Look Again",
+          "description": "While in combat, Blink summons a Mirror Image at your previous location.",
+          "iconFileName": "achievement_bg_tophealer_av"
+        }
+      ]
+    },
+    {
+      "id": 94660,
+      "posX": 8100,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117263,
+          "definitionId": 122275,
+          "spellId": 444827,
+          "name": "Reactive Barrier",
+          "description": "Your $?c1[Prismatic][Ice] Barrier can absorb up to $s1% more damage based on your missing Health.\r\n\r\nMax effectiveness when under $s1% health.",
+          "iconFileName": "ability_racial_forceshield"
+        },
+        {
+          "id": 123417,
+          "definitionId": 128255,
+          "spellId": 444784,
+          "name": "Phantasmal Image",
+          "description": "Your Mirror Image summons $s2 extra $Lclone:clones;.",
+          "iconFileName": "spell_arcane_prismaticcloak"
+        }
+      ]
+    },
+    {
+      "id": 94661,
+      "posX": 8700,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117264,
+          "definitionId": 122276,
+          "spellId": 444256,
+          "name": "Splintering Orbs",
+          "description": "Enemies damaged by your $?c1[Arcane Orb][Frozen Orb] conjure $?c1[$s4 Arcane][$s5 Frost] $LSplinter:Splinters;, up to $?c1[$s1][$s6].\r\n\r\n$?c1[Arcane Orb][Frozen Orb] damage is increased by $s3%.",
+          "iconFileName": "item_azereansphere"
+        }
+      ]
+    },
+    {
+      "id": 94662,
+      "posX": 7500,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117265,
+          "definitionId": 122277,
+          "spellId": 443783,
+          "name": "Augury Abounds",
+          "description": "$?c1[Casting Arcane Surge generates $s1 Arcane Splinters][Each time Ray of Frost damages one or more enemies, it generates $s3 Frost $LSplinter:Splinters;].\r\n\r\n$?c1[During Arcane Surge, whenever you conjure an Arcane Splinter, you have a $s2% chance to conjure an additional Arcane Splinter][For $1247908d after casting Ray of Frost, conjuring a Frost Splinter has a $s2% chance to conjure an additional Frost Splinter].",
+          "iconFileName": "spell_arcane_arcanepotency"
+        }
+      ]
+    },
+    {
+      "id": 94663,
+      "posX": 8100,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117266,
+          "definitionId": 122278,
+          "spellId": 444719,
+          "name": "Force of Will",
+          "description": "$?c1[Casting Arcane Barrage conjures an Arcane Splinter for every $s1 Arcane Salvo stacks consumed][Ice Lance conjures a Frost Splinter for every $s3 Freezing stacks Shattered from its primary target].",
+          "iconFileName": "spell_mage_overpowered"
+        }
+      ]
+    },
+    {
+      "id": 94664,
+      "posX": 8400,
+      "posY": 1200,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 117267,
+          "definitionId": 122279,
+          "spellId": 443739,
+          "name": "Splintering Sorcery",
+          "description": "$?c1[Casting Arcane Blast or Arcane Pulse][Casting Frostbolt or Flurry] conjures $?c1[an Arcane][a Frost] Splinter.\r\n$?c1[\r\n$@spellicon443763$@spellname443763:\r\n$@spelldesc443763\r\n]\r\n[\r\n$@spellicon443722$@spellname443722:\r\n$@spelldesc443722\r\n]",
+          "iconFileName": "achievement_dungeon_arcanevaults"
+        }
+      ]
+    },
+    {
+      "id": 100989,
+      "posX": 11700,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124750,
+          "definitionId": 129588,
+          "spellId": 108853,
+          "name": "Fire Blast",
+          "description": "Blasts the enemy for $s1 Fire damage.$?a137019[\r\n\r\nCastable while casting other spells. Always deals a critical strike.][|cFFFFFFFFFire:|r Castable while casting other spells. Always deals a critical strike.]",
+          "iconFileName": "spell_fire_fireball"
+        }
+      ]
+    },
+    {
+      "id": 100995,
+      "posX": 12300,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124756,
+          "definitionId": 129594,
+          "spellId": 190319,
+          "name": "Combustion",
+          "description": "Engulfs you in flames for $d, increasing your spells' critical strike chance by $s1%.$?a383967[\r\n\r\nAdditionally, increases your Mastery by $383967s1% of your critical strike chance.]?a1254512[\r\n\r\nAdditionally, increases your spell damage by $s3% plus an additional $1254512s1% of your critical strike chance.]?449382[\r\n\r\nAdditionally, increases your spell damage by $s3%.][]\r\n\r\nCastable while casting other spells.",
+          "iconFileName": "spell_fire_sealoffire"
+        }
+      ]
+    },
+    {
+      "id": 100998,
+      "posX": 12300,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124759,
+          "definitionId": 129597,
+          "spellId": 11366,
+          "name": "Pyroblast",
+          "description": "Hurls an immense fiery boulder that causes $s1 Fire damage$?a321711[ and an additional $321712o2 Fire damage over $321712d][].",
+          "iconFileName": "spell_fire_fireball02"
+        }
+      ]
+    },
+    {
+      "id": 100999,
+      "posX": 11700,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124760,
+          "definitionId": 129598,
+          "spellId": 342344,
+          "name": "From the Ashes",
+          "description": "Fire Blast damage increased by $s2%. \r\n\r\nYour direct damage spells reduce the cooldown of Fire Blast by ${$s1/-1000}.2 sec.",
+          "iconFileName": "inv_misc_phoenixegg"
+        }
+      ]
+    },
+    {
+      "id": 101004,
+      "posX": 13500,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124765,
+          "definitionId": 129603,
+          "spellId": 450831,
+          "name": "Fire's Ire",
+          "description": "Your spell critical strike chance is increased by ${$s3/1000}.1%.\r\n\r\nCombustion increases your critical strike damage by ${$s3/1000}.1%.",
+          "iconFileName": "achievement_boss_lordanthricyst"
+        }
+      ]
+    },
+    {
+      "id": 101007,
+      "posX": 12300,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124769,
+          "definitionId": 129607,
+          "spellId": 383967,
+          "name": "Slow Burn",
+          "description": "Combustion grants mastery equal to $s1% of your Critical Strike stat.\r\n\r\nCombustion causes your spells to apply Ignite at $s2% increased effectiveness.",
+          "iconFileName": "spell_fire_sealoffire"
+        },
+        {
+          "id": 135618,
+          "definitionId": 140374,
+          "spellId": 1254512,
+          "name": "Burn It All",
+          "description": "Combustion grants you $s2% increased spell damage plus an additional $s1% of your critical strike chance as spell damage.",
+          "iconFileName": "ability_mage_fierypayback"
+        }
+      ]
+    },
+    {
+      "id": 101009,
+      "posX": 11700,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124771,
+          "definitionId": 129609,
+          "spellId": 205029,
+          "name": "Flame On",
+          "description": "Fire Blast gains $s1 additional charge and its cooldown is reduced by ${-$s2/1000}.1 sec.",
+          "iconFileName": "inv_helm_circlet_firelands_d_01"
+        }
+      ]
+    },
+    {
+      "id": 101015,
+      "posX": 12900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124778,
+          "definitionId": 129616,
+          "spellId": 269650,
+          "name": "Pyroclasm",
+          "description": "Consuming Hot Streak has a $s1% chance to make your next non-instant Pyroblast or Flamestrike cast within $269651d deal $269651s1% additional damage.\r\n\r\nMaximum $269651u stacks.",
+          "iconFileName": "spell_shaman_lavasurge"
+        }
+      ]
+    },
+    {
+      "id": 101016,
+      "posX": 13500,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124779,
+          "definitionId": 129617,
+          "spellId": 1254857,
+          "name": "Deep Impact",
+          "description": "The enemy closest to the center of Meteor's impact takes $s3% increased damage. ",
+          "iconFileName": "spell_fire_moltenblood"
+        }
+      ]
+    },
+    {
+      "id": 101019,
+      "posX": 12300,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124783,
+          "definitionId": 129621,
+          "spellId": 383810,
+          "name": "Fevered Incantation",
+          "description": "Each consecutive critical strike you deal increases critical strike damage you deal by $s1%, up to ${ $s1*$383811u}% for $383811d.",
+          "iconFileName": "inv_misc_enchantedpearld"
+        }
+      ]
+    },
+    {
+      "id": 101021,
+      "posX": 13500,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124786,
+          "definitionId": 129624,
+          "spellId": 153561,
+          "name": "Meteor",
+          "description": "Calls down a meteor which lands at the target location after $177345d, dealing $351140s1 Fire damage to all enemies, and burns the ground, dealing ${8*$155158s1} Fire damage over $175396d to all enemies in the area.\r\n\r\n$?a1254857[The enemy closest to the center of the Meteor's impact takes $1254857s1% increased damage. ][]Damage reduced beyond 8 targets.",
+          "iconFileName": "spell_mage_meteor"
+        }
+      ]
+    },
+    {
+      "id": 101024,
+      "posX": 12300,
+      "posY": 3900,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124789,
+          "definitionId": 129627,
+          "spellId": 1254194,
+          "name": "Kindling",
+          "description": "Combustion's cooldown is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_mage_kindling"
+        }
+      ]
+    },
+    {
+      "id": 101027,
+      "posX": 11100,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124793,
+          "definitionId": 129631,
+          "spellId": 387044,
+          "name": "Fervent Flickering",
+          "description": "Fire Blast gains $s1 additional charge and its damage is increased by $s2%.",
+          "iconFileName": "ability_warlock_burningembers"
+        }
+      ]
+    },
+    {
+      "id": 101029,
+      "posX": 12900,
+      "posY": 3900,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 124795,
+          "definitionId": 129633,
+          "spellId": 117216,
+          "name": "Critical Mass",
+          "description": "Your spells have a $s1% increased chance to deal a critical strike.\r\n\r\nYou gain $s2% more of the Critical Strike stat from all sources.",
+          "iconFileName": "spell_fire_volcano"
+        }
+      ]
+    },
+    {
+      "id": 101883,
+      "posX": 3900,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 1,
+      "orderIndex": 11,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 125819,
+          "definitionId": 130651,
+          "spellId": 31661,
+          "name": "Dragon's Breath",
+          "description": "Enemies in a cone in front of you take $s2 Fire damage and are disoriented for $d. Damage will cancel the effect.$?a235870[\r\n\r\nAlways deals a critical strike and contributes to Hot Streak.][]",
+          "iconFileName": "inv_misc_head_dragon_01"
+        },
+        {
+          "id": 125818,
+          "definitionId": 130650,
+          "spellId": 157980,
+          "name": "Supernova",
+          "description": "Pulses arcane energy around the target enemy or ally, dealing $s2 Arcane damage to all enemies within $A2 yds, and knocking them upward. A primary enemy target will take $s1% increased damage.",
+          "iconFileName": "spell_mage_supernova"
+        }
+      ]
+    },
+    {
+      "id": 102013,
+      "posX": 11700,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126022,
+          "definitionId": 130853,
+          "spellId": 417467,
+          "name": "Inflame",
+          "description": "Hot Streak increases the amount of Ignite damage from Pyroblast or Flamestrike by an additional $s1%.",
+          "iconFileName": "spell_fire_ragnaros_lavabolt"
+        }
+      ]
+    },
+    {
+      "id": 102438,
+      "posX": 12900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126508,
+          "definitionId": 131334,
+          "spellId": 1243435,
+          "name": "Orb Mastery",
+          "description": "Casting Arcane Orb while you have Clearcasting causes you to fire $s1 additional Arcane $lOrb:Orbs; at $s2% effectiveness.\r\n\r\nCasting Arcane Orb now consumes Clearcasting.",
+          "iconFileName": "ability_evoker_powerswell"
+        }
+      ]
+    },
+    {
+      "id": 102439,
+      "posX": 11100,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 44,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126509,
+          "definitionId": 131335,
+          "spellId": 1241462,
+          "name": "Arcane Pulse",
+          "description": "A pulse of Arcane magic erupts from underneath your target, dealing $s1 Arcane damage to all enemies within $A1 yds. Damage reduced beyond $s3 targets.\r\n\r\nEach Arcane Charge increases damage by $36032s1%, radius by $36032s6 yds, and mana cost by $36032s5%.$?a137021[\r\n\r\n|cFFFFFFFFGenerates $s2 Arcane $LCharge:Charges;.|r][]",
+          "iconFileName": "spell_arcane_arcanetorrent"
+        }
+      ]
+    },
+    {
+      "id": 102440,
+      "posX": 12300,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126510,
+          "definitionId": 131336,
+          "spellId": 457521,
+          "name": "Mana Bomb",
+          "description": "Arcane Surge's damage is increased by an additional $s1% based on your mana spent.",
+          "iconFileName": "spell_holy_surgeoflight_shadow"
+        }
+      ]
+    },
+    {
+      "id": 102441,
+      "posX": 12900,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126511,
+          "definitionId": 131337,
+          "spellId": 452997,
+          "name": "Energized Familiar",
+          "description": "During Arcane Surge, your Familiar fires $s1 bolts instead of 1.\r\n\r\nDamage from your Arcane Familiar has a $s2% chance to grant you up to $454020s1% of your maximum mana.",
+          "iconFileName": "spell_lightning_lightningbolt01"
+        }
+      ]
+    },
+    {
+      "id": 102445,
+      "posX": 12300,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 42,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126515,
+          "definitionId": 131341,
+          "spellId": 321420,
+          "name": "Improved Clearcasting",
+          "description": "Clearcasting can stack up to $s1 additional times.",
+          "iconFileName": "spell_shadow_manaburn"
+        }
+      ]
+    },
+    {
+      "id": 102446,
+      "posX": 11100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 52,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126516,
+          "definitionId": 131342,
+          "spellId": 383980,
+          "name": "Arcane Tempo",
+          "description": "Your Haste is increased by $s1%.",
+          "iconFileName": "ability_socererking_arcaneacceleration"
+        }
+      ]
+    },
+    {
+      "id": 102449,
+      "posX": 12300,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 45,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126519,
+          "definitionId": 131345,
+          "spellId": 365350,
+          "name": "Arcane Surge",
+          "description": "Expend all of your current mana to annihilate your enemy target and nearby enemies for up to $?a457521[${$s1*$s2*($457521s1/100+1)}][${$s1*$s2}] Arcane damage based on Mana spent. Deals reduced damage beyond $s3 targets.\r\n\r\nFor the next $365362d, your Mana regeneration is increased by $365362s3% and spell damage is increased by $365362s1%.\r\n\r\n|cFFFFFFFFGenerates Clearcasting.|r",
+          "iconFileName": "ability_mage_arcanesurge"
+        }
+      ]
+    },
+    {
+      "id": 102451,
+      "posX": 12900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 58,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126521,
+          "definitionId": 131347,
+          "spellId": 384060,
+          "name": "Illuminated Thoughts",
+          "description": "Clearcasting has a $s1% increased chance to proc.",
+          "iconFileName": "spell_arcane_focusedpower"
+        }
+      ]
+    },
+    {
+      "id": 102453,
+      "posX": 14100,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 56,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126523,
+          "definitionId": 131349,
+          "spellId": 383676,
+          "name": "Impetus",
+          "description": "Arcane Blast and Arcane Pulse generate an additional Arcane Charge.",
+          "iconFileName": "spell_arcane_arcanetorrent"
+        }
+      ]
+    },
+    {
+      "id": 102454,
+      "posX": 11100,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": 60,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126524,
+          "definitionId": 131350,
+          "spellId": 12051,
+          "name": "Evocation",
+          "description": "Increases your mana regeneration by $s1% for $d.",
+          "iconFileName": "spell_nature_purge"
+        },
+        {
+          "id": 136465,
+          "definitionId": 141238,
+          "spellId": 321526,
+          "name": "Mana Adept",
+          "description": "Arcane Barrage grants you ${$s1/100}.1% of your maximum mana per Arcane Charge spent.",
+          "iconFileName": "spell_arcane_arcanepotency"
+        }
+      ]
+    },
+    {
+      "id": 102460,
+      "posX": 11700,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": 48,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126530,
+          "definitionId": 131356,
+          "spellId": 205025,
+          "name": "Presence of Mind",
+          "description": "Causes your next $n Arcane $LBlast:Blasts; to be instant cast$?a134735[ and deal $s2% of normal damage][].",
+          "iconFileName": "spell_nature_enchantarmor"
+        },
+        {
+          "id": 134025,
+          "definitionId": 138808,
+          "spellId": 236457,
+          "name": "Slipstream",
+          "description": "Arcane Missiles and Evocation can now be channeled while moving.",
+          "iconFileName": "spell_holy_mindsooth"
+        }
+      ]
+    },
+    {
+      "id": 102462,
+      "posX": 10500,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 47,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126532,
+          "definitionId": 131358,
+          "spellId": 281482,
+          "name": "Reverberate",
+          "description": "Arcane Pulse has a $s1% chance to repeat its explosion at $s2% effectiveness.",
+          "iconFileName": "spell_arcane_arcane04"
+        }
+      ]
+    },
+    {
+      "id": 102465,
+      "posX": 12300,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": 54,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134020,
+          "definitionId": 138803,
+          "spellId": 1243507,
+          "name": "Aegwynn's Technique",
+          "description": "Casting Touch of the Magi grants Clearcasting.",
+          "iconFileName": "inv_misc_scrollrolled03d"
+        },
+        {
+          "id": 135699,
+          "definitionId": 140454,
+          "spellId": 342231,
+          "name": "Arcane Echo",
+          "description": "Direct damage you deal to enemies affected by $?s461264[Nether Flux][Touch of the Magi], causes an explosion that deals $?s461264[${$342232s1*$s3}][$342232s1] Arcane damage to all nearby enemies. Deals reduced damage beyond $s1 targets.",
+          "iconFileName": "ability_socererking_arcanewrath"
+        }
+      ]
+    },
+    {
+      "id": 102467,
+      "posX": 12300,
+      "posY": 1500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 38,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126537,
+          "definitionId": 131363,
+          "spellId": 5143,
+          "name": "Arcane Missiles",
+          "description": "|cFFFFFFFFRequires Clearcasting|r\r\nLaunches ${($d/$t1)+1} waves of Arcane Missiles at the enemy over $5143d, causing a total of ${($d/$t1)*$7268s1} Arcane damage.",
+          "iconFileName": "spell_nature_starfall"
+        }
+      ]
+    },
+    {
+      "id": 102468,
+      "posX": 12300,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 51,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126538,
+          "definitionId": 131364,
+          "spellId": 321507,
+          "name": "Touch of the Magi",
+          "description": "Applies Touch of the Magi to your current target, accumulating $s1% of the damage you deal to the target for $210824d, and then exploding for that amount of Arcane damage to the target and reduced damage to all nearby enemies.\r\n\r\n|cFFFFFFFFGenerates $s2 Arcane Charges.|r",
+          "iconFileName": "inv_ability_mage_radiantspark"
+        }
+      ]
+    },
+    {
+      "id": 102469,
+      "posX": 12900,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 49,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126539,
+          "definitionId": 131365,
+          "spellId": 205022,
+          "name": "Arcane Familiar",
+          "description": "Casting Arcane Intellect summons a Familiar that attacks your enemies and increases your maximum mana by $210126s1% for $210126d.",
+          "iconFileName": "ability_socererking_arcanemines"
+        }
+      ]
+    },
+    {
+      "id": 102470,
+      "posX": 11700,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 59,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126540,
+          "definitionId": 131366,
+          "spellId": 321387,
+          "name": "Enlightened",
+          "description": "Arcane damage dealt is increased based on your current mana, up to $1217242s2% at full mana.$?a1243926[][\r\n\r\nMana Regen is increased based on your current mana, up to $1217242s3% when out of mana.]",
+          "iconFileName": "ability_socererking_arcanefortification"
+        }
+      ]
+    },
+    {
+      "id": 102471,
+      "posX": 13500,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 41,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126541,
+          "definitionId": 131367,
+          "spellId": 231564,
+          "name": "Arcing Cleave",
+          "description": "For each Arcane Charge, Arcane Barrage hits $s1 additional nearby $Ltarget:targets; for $s2% damage.",
+          "iconFileName": "ability_mage_arcanebarrage"
+        }
+      ]
+    },
+    {
+      "id": 102472,
+      "posX": 10500,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": 70,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126542,
+          "definitionId": 131368,
+          "spellId": 461248,
+          "name": "High Voltage",
+          "description": "Damage from Arcane Missiles has a $s1% chance to grant you $461524s1 Arcane Charge.\r\n\r\nArcane Missiles damage increased by $s2%.",
+          "iconFileName": "spell_shaman_maelstromweapon"
+        },
+        {
+          "id": 134022,
+          "definitionId": 138805,
+          "spellId": 461251,
+          "name": "Charged Missiles",
+          "description": "Each wave of Arcane Missiles will consume an Arcane Charge to increase its damage by $s1%.",
+          "iconFileName": "ability_mage_missilebarrage"
+        }
+      ]
+    },
+    {
+      "id": 102473,
+      "posX": 11100,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 43,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126543,
+          "definitionId": 131369,
+          "spellId": 236628,
+          "name": "Amplification",
+          "description": "Arcane Missiles fires $s2 additional $lmissile:missiles;.",
+          "iconFileName": "spell_arcane_invocation"
+        }
+      ]
+    },
+    {
+      "id": 102474,
+      "posX": 14100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 74,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126544,
+          "definitionId": 131370,
+          "spellId": 384858,
+          "name": "Orb Barrage",
+          "description": "Arcane Barrage has a $s1% chance per stack of Arcane Salvo to launch an Arcane Orb in front of you at $s2% effectiveness.",
+          "iconFileName": "spell_mage_arcaneorb_nightborne"
+        }
+      ]
+    },
+    {
+      "id": 102475,
+      "posX": 14100,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126545,
+          "definitionId": 131371,
+          "spellId": 384651,
+          "name": "Charged Orb",
+          "description": "Arcane Orb gains $s1 additional charge. Arcane Orb damage increased by $s2%.",
+          "iconFileName": "spell_mage_arcaneorb"
+        }
+      ]
+    },
+    {
+      "id": 102476,
+      "posX": 11700,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 75,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126546,
+          "definitionId": 131372,
+          "spellId": 1243542,
+          "name": "Overflowing Insight",
+          "description": "The damage of Arcane Blast and Arcane Pulse are increased by $s1%, but their mana costs are increased by $s2%.",
+          "iconFileName": "inv_offhand_pvealliance_d_01"
+        }
+      ]
+    },
+    {
+      "id": 102480,
+      "posX": 11100,
+      "posY": 6300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 69,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 126550,
+          "definitionId": 131376,
+          "spellId": 384612,
+          "name": "Prodigious Savant",
+          "description": "Arcane Charges increase the damage of Arcane Blast, Arcane Pulse, and Arcane Barrage by an additional $s1%.",
+          "iconFileName": "ability_mage_studentofthemind"
+        }
+      ]
+    },
+    {
+      "id": 103771,
+      "posX": 12300,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 128077,
+          "definitionId": 132886,
+          "spellId": 418733,
+          "name": "Splintering Ray",
+          "description": "Ray of Frost deals $s1% of its damage to $s2 nearby enemies.",
+          "iconFileName": "spell_fire_blueflamestrike"
+        },
+        {
+          "id": 134418,
+          "definitionId": 139190,
+          "spellId": 1247055,
+          "name": "Frigid Focus",
+          "description": "Ray of Frost damage increased by $s1%.",
+          "iconFileName": "ability_deathknight_shroudofwinter"
+        }
+      ]
+    },
+    {
+      "id": 104113,
+      "posX": 13500,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 46,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 128689,
+          "definitionId": 133492,
+          "spellId": 153626,
+          "name": "Arcane Orb",
+          "description": "Launches an Arcane Orb forward from your position, traveling up to 40 yds, dealing $153640s1 Arcane damage to enemies it passes through.\r\n\r\n|cFFFFFFFFGrants 1 Arcane Charge when cast and every time it deals damage.|r",
+          "iconFileName": "spell_mage_arcaneorb"
+        }
+      ]
+    },
+    {
+      "id": 108535,
+      "posX": 11700,
+      "posY": 5100,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 57,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134023,
+          "definitionId": 138806,
+          "spellId": 1243307,
+          "name": "Aether Attunement",
+          "description": "Arcane Missiles now damages ${$s2} additional targets at $s1% effectiveness.",
+          "iconFileName": "inv_enchant_essencearcanelarge"
+        }
+      ]
+    },
+    {
+      "id": 108536,
+      "posX": 10500,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 53,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134024,
+          "definitionId": 138807,
+          "spellId": 461260,
+          "name": "Consortium's Bauble",
+          "description": "Reduces Arcane Blast's mana cost by $s1% and increases its damage by $s2%.",
+          "iconFileName": "inv_6_2raid_trinket_1b"
+        }
+      ]
+    },
+    {
+      "id": 108537,
+      "posX": 13500,
+      "posY": 6300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 73,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134026,
+          "definitionId": 138809,
+          "spellId": 461257,
+          "name": "Electrostatic Orb",
+          "description": "Damage from Arcane Orb has a $s1% chance to grant $s3 $lstack:stacks; of Arcane Salvo, up to $s2 times.\r\n\r\n$@spellicon1242974 $@spellname1242974:\r\nIncreases the damage of your next Arcane Barrage by $1242974s1%.",
+          "iconFileName": "achievement_bg_wineos"
+        }
+      ]
+    },
+    {
+      "id": 108538,
+      "posX": 11700,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 39,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134027,
+          "definitionId": 138810,
+          "spellId": 414379,
+          "name": "Concentrated Power",
+          "description": "Arcane Missiles channels $s1% faster.",
+          "iconFileName": "spell_mage_overpowered"
+        }
+      ]
+    },
+    {
+      "id": 108539,
+      "posX": 12900,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 40,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134028,
+          "definitionId": 138811,
+          "spellId": 384452,
+          "name": "Arcane Salvo",
+          "description": "Casting a damaging spell increases the damage of Arcane Barrage by $1242974s1%, up to ${$1242974s1*$1242974u}%.",
+          "iconFileName": "inv12_ability_mage_arcanesalvo"
+        }
+      ]
+    },
+    {
+      "id": 108541,
+      "posX": 12900,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 55,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134030,
+          "definitionId": 138813,
+          "spellId": 205028,
+          "name": "Resonance",
+          "description": "Arcane Barrage deals $s1% increased damage per target it hits beyond the first.",
+          "iconFileName": "spell_arcane_arcane01"
+        }
+      ]
+    },
+    {
+      "id": 108551,
+      "posX": 13500,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 71,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134047,
+          "definitionId": 138830,
+          "spellId": 1244001,
+          "name": "Arcane Singularity",
+          "description": "Arcane Salvo damage bonus increased by $s1%.\r\n\r\n$@spellicon1242974 $@spellname1242974:\r\nIncreases the damage of your next Arcane Barrage by $1242974s1%.",
+          "iconFileName": "spell_nature_wispheal"
+        }
+      ]
+    },
+    {
+      "id": 108653,
+      "posX": 12300,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134181,
+          "definitionId": 138961,
+          "spellId": 235219,
+          "name": "Cold Snap",
+          "description": "Resets the cooldown of your Ice Barrier, Frost Nova, $?a417493[][Cone of Cold, ]Ice Cold, and Ice Block.",
+          "iconFileName": "spell_frost_wizardmark"
+        },
+        {
+          "id": 134180,
+          "definitionId": 138960,
+          "spellId": 1244110,
+          "name": "Glacial Bulwark",
+          "description": "Ice Block and Ice Barrier now have an additional charge.",
+          "iconFileName": "spell_frost_chillingarmor"
+        }
+      ]
+    },
+    {
+      "id": 108654,
+      "posX": 2700,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 1,
+      "orderIndex": 7,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134183,
+          "definitionId": 138963,
+          "spellId": 1244087,
+          "name": "Time Walk",
+          "description": "Alter Time resets the cooldown of Blink and Shimmer when you return to your original location.",
+          "iconFileName": "warrior_doubletime"
+        },
+        {
+          "id": 134182,
+          "definitionId": 138962,
+          "spellId": 1244090,
+          "name": "Temporal Realignment",
+          "description": "Upon dropping below $s1% health, your past self corrects your timeline, casting Alter Time and instantly returning $1244092s1% of your maximum health.",
+          "iconFileName": "ability_evoker_timedilation"
+        }
+      ]
+    },
+    {
+      "id": 108655,
+      "posX": 5100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134185,
+          "definitionId": 138965,
+          "spellId": 1244069,
+          "name": "Improved Ice Barrier",
+          "description": "Ice Barrier reduces your physical damage taken by ${-$s1}% and absorbs an additional $s2% of your maximum health.",
+          "iconFileName": "spell_ice_lament"
+        }
+      ]
+    },
+    {
+      "id": 108656,
+      "posX": 5100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134186,
+          "definitionId": 138966,
+          "spellId": 321708,
+          "name": "Improved Blazing Barrier",
+          "description": "Blazing Barrier's damage is increased by $s1% and it now cauterizes your wounds, healing you for $s2% of the damage it absorbs.",
+          "iconFileName": "ability_mage_moltenarmor"
+        }
+      ]
+    },
+    {
+      "id": 108657,
+      "posX": 5100,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 26,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134187,
+          "definitionId": 138967,
+          "spellId": 1244107,
+          "name": "Charm of Medivh",
+          "description": "Your Mastery is increased by $s1%.",
+          "iconFileName": "inv_nerubian_necklace_02_color1"
+        }
+      ]
+    },
+    {
+      "id": 108658,
+      "posX": 2700,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 24,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134188,
+          "definitionId": 138968,
+          "spellId": 1244105,
+          "name": "Charm of Aegwynn",
+          "description": "The critical strike damage of your spells is  increased by $s1%.",
+          "iconFileName": "inv_nerubian_necklace_02_color5"
+        }
+      ]
+    },
+    {
+      "id": 108659,
+      "posX": 5700,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 20,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134189,
+          "definitionId": 138969,
+          "spellId": 210476,
+          "name": "Master of Escape",
+          "description": "Reduces the cooldown of Invisibility by ${-$s1/1000} sec.",
+          "iconFileName": "ability_mage_invisibility"
+        }
+      ]
+    },
+    {
+      "id": 108660,
+      "posX": 3900,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 10,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134190,
+          "definitionId": 138970,
+          "spellId": 458437,
+          "name": "Inspired Intellect",
+          "description": "Arcane Intellect grants you an additional $s1% Intellect.",
+          "iconFileName": "spell_holy_arcaneintellect"
+        }
+      ]
+    },
+    {
+      "id": 108661,
+      "posX": 3900,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 18,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134191,
+          "definitionId": 138971,
+          "spellId": 390218,
+          "name": "Overflowing Energy",
+          "description": "Each time your $?a137021[Arcane Barrage]?a137019[Fireball]?a137020[Frostbolt][Arcane Barrage, Fireball, or Frostbolt] fails to critically strike, it gains $s1% increased critical strike chance.\r\n\r\nCritical strike bonus is removed when the affected spell critically strikes.",
+          "iconFileName": "spell_arcane_manatap"
+        }
+      ]
+    },
+    {
+      "id": 108662,
+      "posX": 5700,
+      "posY": 3900,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 14,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134192,
+          "definitionId": 138972,
+          "spellId": 1244025,
+          "name": "Improved Conjuration",
+          "description": "Mirror Image's cooldown is reduced by ${-$s1/1000} sec.",
+          "iconFileName": "spell_arcane_focusedpower"
+        }
+      ]
+    },
+    {
+      "id": 108664,
+      "posX": 5100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 29,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134194,
+          "definitionId": 138974,
+          "spellId": 321745,
+          "name": "Improved Prismatic Barrier",
+          "description": "Prismatic Barrier further reduces magical damage taken by an additional $s1% and duration of harmful Magic effects by $s2%.",
+          "iconFileName": "spell_magearmor"
+        }
+      ]
+    },
+    {
+      "id": 108665,
+      "posX": 12300,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 62,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134196,
+          "definitionId": 138976,
+          "spellId": 452198,
+          "name": "Eureka",
+          "description": "When a spell consumes Clearcasting, its damage is increased by $s1%.",
+          "iconFileName": "spell_mage_presenceofmind"
+        }
+      ]
+    },
+    {
+      "id": 108849,
+      "posX": 11700,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134405,
+          "definitionId": 139177,
+          "spellId": 1216953,
+          "name": "Freezing Winds",
+          "description": "Blizzard has a $s1% increased chance to apply Freezing.\r\n\r\nBlizzard applies $s2 additional $Lstack:stacks; of Freezing.",
+          "iconFileName": "spell_fire_blueflamering"
+        }
+      ]
+    },
+    {
+      "id": 108850,
+      "posX": 12900,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134406,
+          "definitionId": 139178,
+          "spellId": 379993,
+          "name": "Flash Freeze",
+          "description": "Casting Glacial Spike has a $s1% chance to grant you Fingers of Frost.",
+          "iconFileName": "spell_hunter_icetrap"
+        }
+      ]
+    },
+    {
+      "id": 108851,
+      "posX": 13500,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134407,
+          "definitionId": 139179,
+          "spellId": 1247544,
+          "name": "Crystalline Refraction",
+          "description": "Ray of Frost generates $s1 $Lstack:stacks; of Fingers of Frost over its duration.",
+          "iconFileName": "inv_10_enchanting_crystal_color3"
+        }
+      ]
+    },
+    {
+      "id": 108852,
+      "posX": 13500,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134408,
+          "definitionId": 139180,
+          "spellId": 1247743,
+          "name": "Rimecaster",
+          "description": "Frostbolt and Glacial Spike damage increased by $s1%.",
+          "iconFileName": "spell_frost_manarecharge"
+        }
+      ]
+    },
+    {
+      "id": 108853,
+      "posX": 10500,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134409,
+          "definitionId": 139181,
+          "spellId": 378947,
+          "name": "Glacial Assault",
+          "description": "Flurry has a $s1% chance each hit to call down an icy comet, crashing into your target and nearby enemies for $379029s1 Frost damage and applying $s2 $Lstack:stacks; of Freezing.",
+          "iconFileName": "inv_staff_15"
+        }
+      ]
+    },
+    {
+      "id": 108854,
+      "posX": 12300,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134410,
+          "definitionId": 139182,
+          "spellId": 1247799,
+          "name": "Heart of Ice",
+          "description": "Ice Lance Shatters $s1 additional $Lstack:stacks; of Freezing.",
+          "iconFileName": "inv_10_dungeonjewelry_primalist_necklace_1_frost"
+        }
+      ]
+    },
+    {
+      "id": 108855,
+      "posX": 11100,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134411,
+          "definitionId": 139183,
+          "spellId": 1247769,
+          "name": "Winter's Whisper",
+          "description": "Ice Lance damage increased by $s2%. Fractured Frost now causes your Ice Lance to damage $s1 additional Freezing $Lenemy:enemies;.",
+          "iconFileName": "inv_misc_herb_winterskiss"
+        }
+      ]
+    },
+    {
+      "id": 108856,
+      "posX": 12300,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134412,
+          "definitionId": 139184,
+          "spellId": 417489,
+          "name": "Winter's Blessing",
+          "description": "Your Haste is increased by $s1%.\r\n\r\nYou gain $s2% more Haste from all sources of Haste.",
+          "iconFileName": "spell_frost_wisp"
+        }
+      ]
+    },
+    {
+      "id": 108857,
+      "posX": 14100,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134413,
+          "definitionId": 139185,
+          "spellId": 1247742,
+          "name": "Hailstones",
+          "description": "The time it takes to generate an Icicle is reduced by ${-$s1/1000}.1 sec.",
+          "iconFileName": "artifactability_frostmage_blackicicles"
+        }
+      ]
+    },
+    {
+      "id": 108858,
+      "posX": 11100,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134414,
+          "definitionId": 139186,
+          "spellId": 1247759,
+          "name": "Glacial Attunement",
+          "description": "Flurry and Ice Lance damage increased by $s1%.",
+          "iconFileName": "ability_hunter_glacialtrap"
+        }
+      ]
+    },
+    {
+      "id": 108859,
+      "posX": 11700,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134415,
+          "definitionId": 139187,
+          "spellId": 378919,
+          "name": "Piercing Cold",
+          "description": "Frostbolt and Ice Lance critical strike damage increased by $s1%.",
+          "iconFileName": "spell_frost_frostbolt"
+        }
+      ]
+    },
+    {
+      "id": 108860,
+      "posX": 13500,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134416,
+          "definitionId": 139188,
+          "spellId": 460590,
+          "name": "Permafrost Lances",
+          "description": "Frozen Orb increases Ice Lance's damage by $455122s1% for $455122d.",
+          "iconFileName": "spell_fire_bluerainoffire"
+        }
+      ]
+    },
+    {
+      "id": 108861,
+      "posX": 12900,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134417,
+          "definitionId": 139189,
+          "spellId": 31687,
+          "name": "Summon Water Elemental",
+          "description": "Summons a Water Elemental to follow and fight for you.",
+          "iconFileName": "spell_frost_summonwaterelemental_2"
+        }
+      ]
+    },
+    {
+      "id": 108863,
+      "posX": 11700,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134420,
+          "definitionId": 139192,
+          "spellId": 1246811,
+          "name": "Improved Shatter",
+          "description": "Shatter damage has a $s1% increased chance to critically strike.",
+          "iconFileName": "spell_frost_frostshock"
+        }
+      ]
+    },
+    {
+      "id": 108864,
+      "posX": 11700,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134421,
+          "definitionId": 139193,
+          "spellId": 190356,
+          "name": "Blizzard",
+          "description": "Ice shards pelt the target area, dealing ${$190357m1*8} Frost damage over $d and reducing movement speed by $12486s1% for $12486d.\r\n\r\n|cFFFFFFFFThis spell is cast at a selected location",
+          "iconFileName": "spell_frost_icestorm"
+        },
+        {
+          "id": 134538,
+          "definitionId": 139306,
+          "spellId": 1248829,
+          "name": "Blizzard",
+          "description": "Ice shards pelt the target area, dealing ${$190357m1*8} Frost damage over $d and reducing movement speed by $12486s1% for $12486d.\r\n\r\n|cFFFFFFFFThis spell is cast at your target.|r",
+          "iconFileName": "spell_frost_icestorm"
+        }
+      ]
+    },
+    {
+      "id": 109002,
+      "posX": 13500,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 50,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 134834,
+          "definitionId": 139602,
+          "spellId": 1243557,
+          "name": "Expanded Mind",
+          "description": "Gain $s1 additional $Lstack:stacks; of Arcane Salvo from casting a damaging spell.",
+          "iconFileName": "inv_helmet_101"
+        }
+      ]
+    },
+    {
+      "id": 109393,
+      "posX": 11700,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135600,
+          "definitionId": 140356,
+          "spellId": 383391,
+          "name": "Feel the Burn",
+          "description": "Fire Blast increases your mastery by ${$383395s1}% for $383395d. Multiple applications may overlap.",
+          "iconFileName": "spell_fire_fireball"
+        }
+      ]
+    },
+    {
+      "id": 109394,
+      "posX": 12900,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135601,
+          "definitionId": 140357,
+          "spellId": 453282,
+          "name": "Flame Accelerant",
+          "description": "The cast time of Pyroblast and Flamestrike is reduced by $s1%.",
+          "iconFileName": "inv_ember"
+        }
+      ]
+    },
+    {
+      "id": 109395,
+      "posX": 10500,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135603,
+          "definitionId": 140359,
+          "spellId": 384174,
+          "name": "Master of Flame",
+          "description": "Ignite deals $s1% more damage when Combustion is not active.\r\n\r\nFire Blast now spreads an additional $s2% of your Ignite.",
+          "iconFileName": "inv_trinket_firelands_02"
+        }
+      ]
+    },
+    {
+      "id": 109396,
+      "posX": 12300,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135604,
+          "definitionId": 140360,
+          "spellId": 383634,
+          "name": "Fiery Rush",
+          "description": "While Combustion is active, Fire Blast recharges $383637s2% faster.",
+          "iconFileName": "inv_summerfest_firespirit"
+        }
+      ]
+    },
+    {
+      "id": 109397,
+      "posX": 14100,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135605,
+          "definitionId": 140361,
+          "spellId": 1254865,
+          "name": "Cinderstorm",
+          "description": "Casting Pyroblast or Flamestrike has a $s1% chance to summon a storm of $s4 cinders that pursue your target. Upon reaching your target, each cinder deals $1254024s1 Fire damage, applies Ignite at $s5% effectiveness, and spreads $s2% of your Ignite to up to $s3 nearby $Ltarget:targets;.",
+          "iconFileName": "spell_fire_flare"
+        }
+      ]
+    },
+    {
+      "id": 109398,
+      "posX": 12900,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135606,
+          "definitionId": 140362,
+          "spellId": 457803,
+          "name": "Molten Fury",
+          "description": "Damage dealt to targets below $s1% health is increased by $458910s1%.",
+          "iconFileName": "warrior_talent_icon_furyintheblood"
+        }
+      ]
+    },
+    {
+      "id": 109399,
+      "posX": 12900,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135607,
+          "definitionId": 140363,
+          "spellId": 343230,
+          "name": "Mote of Flame",
+          "description": "All Fire damage dealt increased by $s1%.",
+          "iconFileName": "inv_10_elementalcombinedfoozles_fire"
+        }
+      ]
+    },
+    {
+      "id": 109400,
+      "posX": 14100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135608,
+          "definitionId": 140364,
+          "spellId": 416719,
+          "name": "Blast Zone",
+          "description": "Meteor's cooldown is reduced by ${$s1/-1000} sec.",
+          "iconFileName": "spell_fire_elementaldevastation"
+        }
+      ]
+    },
+    {
+      "id": 109401,
+      "posX": 12300,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135609,
+          "definitionId": 140365,
+          "spellId": 383669,
+          "name": "Controlled Destruction",
+          "description": "Damaging an enemy with Fireball, Pyroblast, or Flamestrike increases the damage it receives from Ignite by ${$s2/100}.1%. Stacks up to $453268u times.",
+          "iconFileName": "spell_fire_playingwithfire"
+        }
+      ]
+    },
+    {
+      "id": 109402,
+      "posX": 11700,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135610,
+          "definitionId": 140366,
+          "spellId": 416714,
+          "name": "Intensifying Flame",
+          "description": "While Ignite is on $s1 or fewer enemies it flares up dealing an additional $s2% of its damage to affected targets.",
+          "iconFileName": "spell_fire_incinerate"
+        }
+      ]
+    },
+    {
+      "id": 109403,
+      "posX": 12300,
+      "posY": 3300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135612,
+          "definitionId": 140368,
+          "spellId": 86949,
+          "name": "Cauterize",
+          "description": "Fatal damage instead brings you to $86949s2% health and then burns you for $87023o1% of your maximum health over $87023d.\r\n\r\nWhile burning, movement slowing effects are suppressed and your movement speed is increased by $108843s1%.\r\n\r\nThis effect cannot occur more than once every $87024d.",
+          "iconFileName": "spell_fire_rune"
+        }
+      ]
+    },
+    {
+      "id": 109404,
+      "posX": 11100,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135613,
+          "definitionId": 140369,
+          "spellId": 1254828,
+          "name": "Wildfire",
+          "description": "Fire Blast damage increased by $s2% and it now spreads Ignite to $s1 additional $Ltarget:targets;.",
+          "iconFileName": "ability_warlock_inferno"
+        }
+      ]
+    },
+    {
+      "id": 109405,
+      "posX": 11100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135614,
+          "definitionId": 140370,
+          "spellId": 236058,
+          "name": "Frenetic Speed",
+          "description": "When Fireball damages an enemy below $1254311s2% health, it increases your movement speed by $236060s1% for $236060d.",
+          "iconFileName": "spell_fire_burningspeed"
+        }
+      ]
+    },
+    {
+      "id": 109406,
+      "posX": 13500,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135615,
+          "definitionId": 140371,
+          "spellId": 416094,
+          "name": "Fuel the Fire",
+          "description": "Flamestrike has a chance equal to $s1% of your spell critical strike chance to build up to a Hot Streak.\r\n\r\nFlamestrike deals $s2% increased damage for each enemy it damages, up to ${$s2*$s3}%.",
+          "iconFileName": "ability_warlock_inferno"
+        }
+      ]
+    },
+    {
+      "id": 109407,
+      "posX": 11100,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135616,
+          "definitionId": 140372,
+          "spellId": 1254756,
+          "name": "Ignition",
+          "description": "Fire Blast now spreads $s3% of your target's Ignite to $s1 $Lenemy:enemies;.\r\n\r\nFlamestrike applies $s2% more Ignite.",
+          "iconFileName": "item_sparkofragnoros"
+        }
+      ]
+    },
+    {
+      "id": 109408,
+      "posX": 11100,
+      "posY": 3900,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135617,
+          "definitionId": 140373,
+          "spellId": 1254311,
+          "name": "Scorch",
+          "description": "Fireball always critically strikes when it damages an enemy below $s2% health.",
+          "iconFileName": "spell_fire_soulburn"
+        },
+        {
+          "id": 135599,
+          "definitionId": 140355,
+          "spellId": 205026,
+          "name": "Firestarter",
+          "description": "Your Fireball and Pyroblast spells always deal a critical strike when the target is above $s1% health.",
+          "iconFileName": "spell_fire_fire"
+        }
+      ]
+    },
+    {
+      "id": 109409,
+      "posX": 12900,
+      "posY": 2100,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135619,
+          "definitionId": 140375,
+          "spellId": 2120,
+          "name": "Flamestrike",
+          "description": "Calls down a pillar of fire, burning all enemies within the area for $s1 Fire damage. Deals reduced damage beyond $s2 targets.$?a205037[\r\n\r\nLeaves behind a patch of flames that burns enemies within it for ${$205470d*$205472s1} Fire damage over $205470d.][]\r\n\r\n|cFFFFFFFFThis spell is cast at a selected location.|r",
+          "iconFileName": "spell_fire_selfdestruct"
+        },
+        {
+          "id": 135602,
+          "definitionId": 140358,
+          "spellId": 1254851,
+          "name": "Flamestrike",
+          "description": "Calls down a pillar of fire on your target, burning all enemies within the area for $s1 Fire damage. Deals reduced damage beyond $s2 targets.$?a205037[\r\n\r\nLeaves behind a patch of flames that burns enemies within it for ${$205470d*$205472s1} Fire damage over $205470d.][]\r\n\r\n|cFFFFFFFFThis spell is cast at your target.|r",
+          "iconFileName": "spell_fire_selfdestruct"
+        }
+      ]
+    },
+    {
+      "id": 109411,
+      "posX": 10500,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135621,
+          "definitionId": 140377,
+          "spellId": 450746,
+          "name": "Scald",
+          "description": "When Fireball damages an enemy below $1254311s2% health, it deals $s1% increased damage.",
+          "iconFileName": "ability_racial_foregedinflames"
+        }
+      ]
+    },
+    {
+      "id": 109412,
+      "posX": 12300,
+      "posY": 5100,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135622,
+          "definitionId": 140378,
+          "spellId": 451875,
+          "name": "Spontaneous Combustion",
+          "description": "Casting Combustion refreshes up to $s1 $Lcharge:charges; of Fire Blast.",
+          "iconFileName": "ability_mage_worldinflames"
+        }
+      ]
+    },
+    {
+      "id": 109471,
+      "posX": 9900,
+      "posY": 6300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135690,
+          "definitionId": 140446,
+          "spellId": 1257349,
+          "name": "Fired Up",
+          "description": "Gaining Fired Up reduces the cooldown of Fire Blast by ${$s1/1000}.1 sec.\r\n\r\nAll Fire damage dealt is increased by $s2%.",
+          "iconFileName": "ability_warlock_backdraft"
+        }
+      ]
+    },
+    {
+      "id": 109472,
+      "posX": 9900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135691,
+          "definitionId": 140447,
+          "spellId": 1257348,
+          "name": "Fired Up",
+          "description": "Combustion significantly increases your chance of gaining Fired Up, reducing each time you gain Fired Up.\r\n\r\nAdditionally Fired Up now extends Combustion's duration by ${$s2/1000}.1 sec.",
+          "iconFileName": "ability_warlock_burningembers"
+        }
+      ]
+    },
+    {
+      "id": 109473,
+      "posX": 9900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135692,
+          "definitionId": 140448,
+          "spellId": 1257343,
+          "name": "Fired Up",
+          "description": "Consuming Hot Streak has a $s1% chance to grant you a stack of Fired Up, increasing your Fire damage by $1257350s1% for $1257350d. Multiple applications may overlap.",
+          "iconFileName": "spell_fire_incinerate"
+        }
+      ]
+    },
+    {
+      "id": 109478,
+      "posX": 12300,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 63,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135698,
+          "definitionId": 140453,
+          "spellId": 1244329,
+          "name": "Focusing Crystal",
+          "description": "Each wave of Arcane Missiles grants $s1 $Lstack:stacks; of Arcane Salvo.\r\n\r\nArcane Missiles damage increased by $s2%.",
+          "iconFileName": "ability_racial_arcaneaffinity"
+        }
+      ]
+    },
+    {
+      "id": 109479,
+      "posX": 9900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 67,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135700,
+          "definitionId": 140455,
+          "spellId": 1257950,
+          "name": "Touch of the Archmage",
+          "description": "When Touch of the Magi explodes, it leaves behind a pulsing rune on its target, dealing $s1% of its damage over $1258134d to nearby enemies. Damage is increased by $s2% on your initial Touch of the Magi target.",
+          "iconFileName": "spell_arcane_invocation"
+        }
+      ]
+    },
+    {
+      "id": 109480,
+      "posX": 9900,
+      "posY": 6300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 66,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135701,
+          "definitionId": 140456,
+          "spellId": 1257947,
+          "name": "Touch of the Archmage",
+          "description": "Arcane Charges further increase the damage of Arcane Blast, Arcane Pulse, and Arcane Barrage by $s1%.",
+          "iconFileName": "spell_holy_arcaneintellect"
+        }
+      ]
+    },
+    {
+      "id": 109481,
+      "posX": 9900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": 64,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 135702,
+          "definitionId": 140457,
+          "spellId": 1257942,
+          "name": "Touch of the Archmage",
+          "description": "Touch of the Magi accumulates an additional $s1% damage and has $s2 additional $Lcharge:charges;",
+          "iconFileName": "ability_mage_netherwindpresence"
+        }
+      ]
+    },
+    {
+      "id": 109667,
+      "posX": 9300,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 135918,
+          "definitionId": 140673,
+          "spellId": 1261082,
+          "name": "Polished Focus",
+          "description": "$?c1[Casting Arcane Barrage while at $s1 or more Arcane Salvo stacks refunds $s2 Arcane Salvo $Lstack:stacks;.\r\n\r\nArcane Barrage damage increased by $s4%.][Ice Lance Shatters $s3 additional Freezing $Lstack:stacks;\r\n\r\nShatter damage increased by $s5%.]",
+          "iconFileName": "inv_misc_orb_blue"
+        }
+      ]
+    },
+    {
+      "id": 109668,
+      "posX": 9300,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 135919,
+          "definitionId": 140674,
+          "spellId": 1261080,
+          "name": "Infused Splinters",
+          "description": "Direct damage from $?c1[Arcane][Frost] Splinters have a $?c1[$s1][$s2]% chance to $?c1[grant $s3 $Lstack:stacks; Arcane Salvo][apply $s4 $Lstack:stacks; of Freezing].\r\n\r\n$?c1[$@spellicon1242974 $@spellname1242974\r\n$@spellaura1242974][$@spellicon1221389 $@spellname1221389\r\n$@spellaura1221389]",
+          "iconFileName": "spell_mage_focusingcrystal"
+        }
+      ]
+    },
+    {
+      "id": 109669,
+      "posX": 9300,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 40,
+      "entries": [
+        {
+          "id": 135920,
+          "definitionId": 140675,
+          "spellId": 1261106,
+          "name": "Attuned Familiar",
+          "description": "$?c1[Your Arcane Familiar has a $s1% chance to conjure a Splinter alongside its Arcane Assault][Your Water Elemental has a $s2% chance to conjure a Splinter alongside its Waterbolt].",
+          "iconFileName": "ability_socererking_arcanemines"
+        },
+        {
+          "id": 135946,
+          "definitionId": 140701,
+          "spellId": 444675,
+          "name": "Shifting Shards",
+          "description": "Gaining $?c1[Clearcasting][Brain Freeze] conjures $s1 $?c1[Arcane][Frost] $lSplinter:Splinters;.",
+          "iconFileName": "ability_mage_freeze"
+        }
+      ]
+    },
+    {
+      "id": 109670,
+      "posX": 9300,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 135921,
+          "definitionId": 140676,
+          "spellId": 1262845,
+          "name": "Elemental Conduit",
+          "description": "$?c2[Comet Storm and Glacial Spike now apply Ignite][Meteor and Pyroblast now apply Ignite].\r\n\r\nYour Haste is increased by $s2%.",
+          "iconFileName": "inv_ability_shaman_primordialwave"
+        }
+      ]
+    },
+    {
+      "id": 109671,
+      "posX": 9300,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 135922,
+          "definitionId": 140677,
+          "spellId": 1262844,
+          "name": "Molten Chill",
+          "description": "$?c3[Your Frostfire spells apply Ignite, dealing an additional $s1% of their damage over $1262887d][Your Frostfire spells apply Ignite at $s2% increased effectiveness].",
+          "iconFileName": "spell_fire_incinerate"
+        }
+      ]
+    },
+    {
+      "id": 109672,
+      "posX": 9300,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 135923,
+          "definitionId": 140678,
+          "spellId": 1262843,
+          "name": "Duality",
+          "description": "$?c2[Casting Pyroblast has a $s2% chance to also cast a Glacial Spike, dealing $1262862s1 Frost damage][Casting Glacial Spike also casts a Pyroblast, dealing $1262863s1 Fire damage].",
+          "iconFileName": "ability_mage_frostfirebolt"
+        }
+      ]
+    },
+    {
+      "id": 109673,
+      "posX": 9300,
+      "posY": 3000,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 135924,
+          "definitionId": 140679,
+          "spellId": 1260616,
+          "name": "Spellfire Salvo",
+          "description": "$?c1[Arcane Salvo can stack $s1 additional times][Fire Blast cooldown reduced by ${-$s2/1000}.1 sec].\r\n\r\nMeteorite damage increased by $s3%.",
+          "iconFileName": "shaman_talent_elementalblast"
+        }
+      ]
+    },
+    {
+      "id": 109674,
+      "posX": 9300,
+      "posY": 2400,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 135925,
+          "definitionId": 140680,
+          "spellId": 1260673,
+          "name": "Pyrocosm",
+          "description": "Damage from $?c1[Arcane Missiles][Fireball] has a $?c1[$s1][$s2]% chance to summon a Meteorite.\r\n\r\nWhen a Meteorite lands, $?c1[gain $s3 $Lstack:stacks; of Arcane Salvo][the cooldown of Fire Blast is reduced by ${$s4/1000}.1 sec].",
+          "iconFileName": "spell_fire_meteorstorm"
+        }
+      ]
+    },
+    {
+      "id": 109675,
+      "posX": 9300,
+      "posY": 1800,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 39,
+      "entries": [
+        {
+          "id": 135926,
+          "definitionId": 140681,
+          "spellId": 449394,
+          "name": "Glorious Incandescence",
+          "description": "Generating a Spellfire Sphere causes your next cast of $?c1[Arcane Barrage][Fire Blast] to call down a storm of $s1 Meteorites on its target.\r\n\r\n$@spellicon449559 $@spellname449559\r\n$@spelldesc449559",
+          "iconFileName": "spell_burningsoul"
+        }
+      ]
+    },
+    {
+      "id": 109912,
+      "posX": 9900,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136179,
+          "definitionId": 140952,
+          "spellId": 1263249,
+          "name": "Hand of Frost",
+          "description": "Ray of Frost summons $s1 Hands of Frost over its duration.\r\n\r\nAdditionally, Ray of Frost gains an additional charge and its damage is increased by $s3%.",
+          "iconFileName": "ability_mage_rayoffrost"
+        }
+      ]
+    },
+    {
+      "id": 109913,
+      "posX": 9900,
+      "posY": 6300,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136180,
+          "definitionId": 140953,
+          "spellId": 1262981,
+          "name": "Hand of Frost",
+          "description": "Each stack of Freezing you Shatter increases your chance to summon a Hand of Frost by an additional ${$s1/10}.1%.\r\n\r\nDamage from Hand of Frost increases your spell damage by $s2% for $1263263d. Multiple applications may overlap.",
+          "iconFileName": "spell_frost_piercing chill"
+        }
+      ]
+    },
+    {
+      "id": 109914,
+      "posX": 9900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136181,
+          "definitionId": 140954,
+          "spellId": 1262935,
+          "name": "Hand of Frost",
+          "description": "Shattering an enemy has a $s1% chance to summon a Hand of Frost to pursue your target, dealing $1262769s1 Frost damage and applying $s2 $Lstack:stacks; of Freezing on contact.",
+          "iconFileName": "spell_frost_frostbolt"
+        }
+      ]
+    },
+    {
+      "id": 109915,
+      "posX": 12900,
+      "posY": 2700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136182,
+          "definitionId": 140955,
+          "spellId": 1246832,
+          "name": "Icicles",
+          "description": "Frost crystallizes around you, generating an Icicle every ${$t1}.1 sec. Upon generating $s2 Icicles, Frostbolt upgrades to Glacial Spike for its next cast.\r\n\r\n$@spellicon199786 $@spellname199786\r\n$@spelldesc199786\r\n\r\nIcicles generate more rapidly out of combat.",
+          "iconFileName": "ability_mage_glacialspike"
+        }
+      ]
+    },
+    {
+      "id": 109916,
+      "posX": 12300,
+      "posY": 5700,
+      "maxRanks": 2,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136183,
+          "definitionId": 140956,
+          "spellId": 1247025,
+          "name": "Deep Shatter",
+          "description": "Shatter's critical strike damage is increased by $s1% of your critical strike chance.",
+          "iconFileName": "inv_misc_frostemblem_01"
+        }
+      ]
+    },
+    {
+      "id": 109956,
+      "posX": 8400,
+      "posY": 1200,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 3,
+      "orderIndex": -1,
+      "subTreeId": 41,
+      "entries": [
+        {
+          "id": 136441,
+          "definitionId": 141214,
+          "spellId": 431044,
+          "name": "Frostfire Bolt",
+          "description": "Launches a bolt of frostfire at the enemy, causing $468655s1 Frostfire damage, slowing movement speed by $468655s3%, and causing an additional $468655o2 Frostfire damage over $468655d.$?a1246769[\r\n\r\n|CFFffffffApplies $1246769s1 $lstack:stacks; of Freezing.|R][]",
+          "iconFileName": "inv_ability_frostfiremage_frostfirebolt"
+        }
+      ]
+    },
+    {
+      "id": 109978,
+      "posX": 12900,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136464,
+          "definitionId": 141237,
+          "spellId": 0,
+          "name": "Unknown Talent",
+          "description": "",
+          "iconFileName": "inv_misc_questionmark"
+        }
+      ]
+    },
+    {
+      "id": 110078,
+      "posX": 4500,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136576,
+          "definitionId": 141349,
+          "spellId": 1270847,
+          "name": "Improved Remove Curse",
+          "description": "Casting Remove Curse on a friendly target also casts it on yourself, but its cooldown is increased by ${$s2/1000} sec.",
+          "iconFileName": "spell_nature_removecurse"
+        }
+      ]
+    },
+    {
+      "id": 110079,
+      "posX": 3300,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 17,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136577,
+          "definitionId": 141350,
+          "spellId": 1270865,
+          "name": "Improved Counterspell",
+          "description": "Counterspell prevents casting for an additional ${$s1/1000}.1 sec.",
+          "iconFileName": "inv_1115_mage_counterspell"
+        }
+      ]
+    },
+    {
+      "id": 110080,
+      "posX": 4500,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 27,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136578,
+          "definitionId": 141351,
+          "spellId": 1270845,
+          "name": "Mana Confluence",
+          "description": "Your mana costs are reduced by ${-$s1}%.",
+          "iconFileName": "spell_shaman_blessingoftheeternals"
+        }
+      ]
+    },
+    {
+      "id": 110081,
+      "posX": 3300,
+      "posY": 5700,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": 25,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136579,
+          "definitionId": 141352,
+          "spellId": 461261,
+          "name": "Brainstorm",
+          "description": "Gaining $?a137021[Clearcasting]?a137020[Brain Freeze][Hot Streak] increases your Intellect by $461531s1% for $461531d. Multiple instances may overlap.",
+          "iconFileName": "ability_kaztik_dominatemind"
+        }
+      ]
+    },
+    {
+      "id": 110082,
+      "posX": 2100,
+      "posY": 4500,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 1,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136581,
+          "definitionId": 141354,
+          "spellId": 1270827,
+          "name": "Improved Spellsteal",
+          "description": "Spellsteal repeats its effect after $1270828d, but it now has a cooldown of ${$s1/1000}.1 sec.",
+          "iconFileName": "spell_arcane_arcane02"
+        }
+      ]
+    },
+    {
+      "id": 110086,
+      "posX": 13500,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 2,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136587,
+          "definitionId": 141360,
+          "spellId": 1238171,
+          "name": "Pyromastery",
+          "description": "Pyroblast damage increased by $s1% and its size is increased by $s2%.",
+          "iconFileName": "spell_shadow_destructivesoul"
+        },
+        {
+          "id": 136586,
+          "definitionId": 141359,
+          "spellId": 450325,
+          "name": "Mark of the Firelord",
+          "description": "Meteor and Flamestrike deal $s1% increased damage.",
+          "iconFileName": "achievement_firelands raid_ragnaros"
+        }
+      ]
+    },
+    {
+      "id": 110087,
+      "posX": 11100,
+      "posY": 5100,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136588,
+          "definitionId": 141361,
+          "spellId": 1271171,
+          "name": "Conflagration",
+          "description": "Fire Blast deals $1271173s1 additional Fire damage to up to $s2 nearby enemies.",
+          "iconFileName": "spell_shaman_firenova"
+        }
+      ]
+    },
+    {
+      "id": 110088,
+      "posX": 10500,
+      "posY": 6900,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136589,
+          "definitionId": 141362,
+          "spellId": 1271177,
+          "name": "Burnout",
+          "description": "When Combustion expires, all of your active Ignites explode, dealing $s1% of their remaining damage.",
+          "iconFileName": "ability_mage_burnout"
+        }
+      ]
+    },
+    {
+      "id": 110089,
+      "posX": 14100,
+      "posY": 6300,
+      "maxRanks": 1,
+      "type": 0,
+      "treeIndex": 2,
+      "orderIndex": -1,
+      "subTreeId": 0,
+      "entries": [
+        {
+          "id": 136590,
+          "definitionId": 141363,
+          "spellId": 451466,
+          "name": "Pyromaniac",
+          "description": "Casting Pyroblast or Flamestrike while Hot Streak is active has a $s1% chance to repeat the spell cast at $s2% effectiveness.\r\n\r\nThis effect counts as consuming Hot Streak (NYI).",
+          "iconFileName": "inv_misc_volatilefire"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": 114739,
+      "fromNodeId": 94643,
+      "toNodeId": 94646,
+      "visualStyle": 1
+    },
+    {
+      "id": 114740,
+      "fromNodeId": 94647,
+      "toNodeId": 94652,
+      "visualStyle": 1
+    },
+    {
+      "id": 114741,
+      "fromNodeId": 94647,
+      "toNodeId": 94644,
+      "visualStyle": 1
+    },
+    {
+      "id": 114742,
+      "fromNodeId": 94647,
+      "toNodeId": 94653,
+      "visualStyle": 1
+    },
+    {
+      "id": 114743,
+      "fromNodeId": 94650,
+      "toNodeId": 94646,
+      "visualStyle": 1
+    },
+    {
+      "id": 114744,
+      "fromNodeId": 94649,
+      "toNodeId": 94650,
+      "visualStyle": 1
+    },
+    {
+      "id": 114748,
+      "fromNodeId": 94653,
+      "toNodeId": 94649,
+      "visualStyle": 1
+    },
+    {
+      "id": 114750,
+      "fromNodeId": 94656,
+      "toNodeId": 94654,
+      "visualStyle": 1
+    },
+    {
+      "id": 114751,
+      "fromNodeId": 94660,
+      "toNodeId": 94656,
+      "visualStyle": 1
+    },
+    {
+      "id": 114752,
+      "fromNodeId": 94663,
+      "toNodeId": 94660,
+      "visualStyle": 1
+    },
+    {
+      "id": 114753,
+      "fromNodeId": 94664,
+      "toNodeId": 94663,
+      "visualStyle": 1
+    },
+    {
+      "id": 114754,
+      "fromNodeId": 94664,
+      "toNodeId": 94661,
+      "visualStyle": 1
+    },
+    {
+      "id": 114755,
+      "fromNodeId": 94661,
+      "toNodeId": 94658,
+      "visualStyle": 1
+    },
+    {
+      "id": 114758,
+      "fromNodeId": 94657,
+      "toNodeId": 94654,
+      "visualStyle": 1
+    },
+    {
+      "id": 114759,
+      "fromNodeId": 94659,
+      "toNodeId": 94657,
+      "visualStyle": 1
+    },
+    {
+      "id": 114760,
+      "fromNodeId": 94662,
+      "toNodeId": 94659,
+      "visualStyle": 1
+    },
+    {
+      "id": 114761,
+      "fromNodeId": 94664,
+      "toNodeId": 94662,
+      "visualStyle": 1
+    },
+    {
+      "id": 115581,
+      "fromNodeId": 94633,
+      "toNodeId": 94634,
+      "visualStyle": 1
+    },
+    {
+      "id": 115582,
+      "fromNodeId": 94636,
+      "toNodeId": 94633,
+      "visualStyle": 1
+    },
+    {
+      "id": 115583,
+      "fromNodeId": 94632,
+      "toNodeId": 94635,
+      "visualStyle": 1
+    },
+    {
+      "id": 115584,
+      "fromNodeId": 94640,
+      "toNodeId": 94632,
+      "visualStyle": 1
+    },
+    {
+      "id": 115585,
+      "fromNodeId": 94641,
+      "toNodeId": 94640,
+      "visualStyle": 1
+    },
+    {
+      "id": 115586,
+      "fromNodeId": 94636,
+      "toNodeId": 94641,
+      "visualStyle": 1
+    },
+    {
+      "id": 115587,
+      "fromNodeId": 94639,
+      "toNodeId": 94635,
+      "visualStyle": 1
+    },
+    {
+      "id": 115588,
+      "fromNodeId": 94638,
+      "toNodeId": 94639,
+      "visualStyle": 1
+    },
+    {
+      "id": 115589,
+      "fromNodeId": 94642,
+      "toNodeId": 94638,
+      "visualStyle": 1
+    },
+    {
+      "id": 115590,
+      "fromNodeId": 94636,
+      "toNodeId": 94642,
+      "visualStyle": 1
+    },
+    {
+      "id": 117776,
+      "fromNodeId": 94648,
+      "toNodeId": 94646,
+      "visualStyle": 1
+    },
+    {
+      "id": 117778,
+      "fromNodeId": 94655,
+      "toNodeId": 94654,
+      "visualStyle": 1
+    },
+    {
+      "id": 117779,
+      "fromNodeId": 94658,
+      "toNodeId": 94655,
+      "visualStyle": 1
+    },
+    {
+      "id": 117780,
+      "fromNodeId": 94637,
+      "toNodeId": 94635,
+      "visualStyle": 1
+    },
+    {
+      "id": 117781,
+      "fromNodeId": 94634,
+      "toNodeId": 94637,
+      "visualStyle": 1
+    },
+    {
+      "id": 124356,
+      "fromNodeId": 102449,
+      "toNodeId": 102469,
+      "visualStyle": 1
+    },
+    {
+      "id": 124357,
+      "fromNodeId": 102449,
+      "toNodeId": 102460,
+      "visualStyle": 1
+    },
+    {
+      "id": 126342,
+      "fromNodeId": 102439,
+      "toNodeId": 102460,
+      "visualStyle": 1
+    },
+    {
+      "id": 126345,
+      "fromNodeId": 102473,
+      "toNodeId": 102439,
+      "visualStyle": 1
+    },
+    {
+      "id": 126346,
+      "fromNodeId": 108538,
+      "toNodeId": 102473,
+      "visualStyle": 1
+    },
+    {
+      "id": 126356,
+      "fromNodeId": 108538,
+      "toNodeId": 102445,
+      "visualStyle": 1
+    },
+    {
+      "id": 126357,
+      "fromNodeId": 102467,
+      "toNodeId": 108538,
+      "visualStyle": 1
+    },
+    {
+      "id": 126366,
+      "fromNodeId": 104113,
+      "toNodeId": 102469,
+      "visualStyle": 1
+    },
+    {
+      "id": 126367,
+      "fromNodeId": 102471,
+      "toNodeId": 104113,
+      "visualStyle": 1
+    },
+    {
+      "id": 126368,
+      "fromNodeId": 108539,
+      "toNodeId": 102471,
+      "visualStyle": 1
+    },
+    {
+      "id": 126369,
+      "fromNodeId": 108539,
+      "toNodeId": 102445,
+      "visualStyle": 1
+    },
+    {
+      "id": 126370,
+      "fromNodeId": 102467,
+      "toNodeId": 108539,
+      "visualStyle": 1
+    },
+    {
+      "id": 126371,
+      "fromNodeId": 102445,
+      "toNodeId": 102449,
+      "visualStyle": 1
+    },
+    {
+      "id": 126463,
+      "fromNodeId": 108551,
+      "toNodeId": 108537,
+      "visualStyle": 1
+    },
+    {
+      "id": 126485,
+      "fromNodeId": 102480,
+      "toNodeId": 102472,
+      "visualStyle": 1
+    },
+    {
+      "id": 126486,
+      "fromNodeId": 102480,
+      "toNodeId": 102476,
+      "visualStyle": 1
+    },
+    {
+      "id": 126489,
+      "fromNodeId": 108537,
+      "toNodeId": 102474,
+      "visualStyle": 1
+    },
+    {
+      "id": 126497,
+      "fromNodeId": 102439,
+      "toNodeId": 102462,
+      "visualStyle": 1
+    },
+    {
+      "id": 126498,
+      "fromNodeId": 104113,
+      "toNodeId": 102475,
+      "visualStyle": 1
+    },
+    {
+      "id": 126501,
+      "fromNodeId": 108537,
+      "toNodeId": 102438,
+      "visualStyle": 1
+    },
+    {
+      "id": 127165,
+      "fromNodeId": 62092,
+      "toNodeId": 108664,
+      "visualStyle": 1
+    },
+    {
+      "id": 127166,
+      "fromNodeId": 62121,
+      "toNodeId": 62122,
+      "visualStyle": 1
+    },
+    {
+      "id": 127173,
+      "fromNodeId": 62092,
+      "toNodeId": 108655,
+      "visualStyle": 1
+    },
+    {
+      "id": 127174,
+      "fromNodeId": 62117,
+      "toNodeId": 62122,
+      "visualStyle": 1
+    },
+    {
+      "id": 127176,
+      "fromNodeId": 62088,
+      "toNodeId": 62094,
+      "visualStyle": 1
+    },
+    {
+      "id": 127177,
+      "fromNodeId": 62129,
+      "toNodeId": 62094,
+      "visualStyle": 1
+    },
+    {
+      "id": 127178,
+      "fromNodeId": 62096,
+      "toNodeId": 62129,
+      "visualStyle": 1
+    },
+    {
+      "id": 127179,
+      "fromNodeId": 108658,
+      "toNodeId": 62129,
+      "visualStyle": 1
+    },
+    {
+      "id": 127181,
+      "fromNodeId": 62092,
+      "toNodeId": 108656,
+      "visualStyle": 1
+    },
+    {
+      "id": 127182,
+      "fromNodeId": 62096,
+      "toNodeId": 62088,
+      "visualStyle": 1
+    },
+    {
+      "id": 127183,
+      "fromNodeId": 108657,
+      "toNodeId": 62092,
+      "visualStyle": 1
+    },
+    {
+      "id": 127184,
+      "fromNodeId": 62087,
+      "toNodeId": 62085,
+      "visualStyle": 1
+    },
+    {
+      "id": 127185,
+      "fromNodeId": 108658,
+      "toNodeId": 62087,
+      "visualStyle": 1
+    },
+    {
+      "id": 127186,
+      "fromNodeId": 62112,
+      "toNodeId": 108657,
+      "visualStyle": 1
+    },
+    {
+      "id": 127187,
+      "fromNodeId": 62086,
+      "toNodeId": 62085,
+      "visualStyle": 1
+    },
+    {
+      "id": 127188,
+      "fromNodeId": 62100,
+      "toNodeId": 62094,
+      "visualStyle": 1
+    },
+    {
+      "id": 127190,
+      "fromNodeId": 108658,
+      "toNodeId": 62086,
+      "visualStyle": 1
+    },
+    {
+      "id": 127191,
+      "fromNodeId": 62110,
+      "toNodeId": 108658,
+      "visualStyle": 1
+    },
+    {
+      "id": 127192,
+      "fromNodeId": 62127,
+      "toNodeId": 108658,
+      "visualStyle": 1
+    },
+    {
+      "id": 127193,
+      "fromNodeId": 108657,
+      "toNodeId": 62100,
+      "visualStyle": 1
+    },
+    {
+      "id": 127194,
+      "fromNodeId": 62096,
+      "toNodeId": 62100,
+      "visualStyle": 1
+    },
+    {
+      "id": 127195,
+      "fromNodeId": 108659,
+      "toNodeId": 108657,
+      "visualStyle": 1
+    },
+    {
+      "id": 127196,
+      "fromNodeId": 62098,
+      "toNodeId": 108657,
+      "visualStyle": 1
+    },
+    {
+      "id": 127197,
+      "fromNodeId": 62098,
+      "toNodeId": 62096,
+      "visualStyle": 1
+    },
+    {
+      "id": 127198,
+      "fromNodeId": 62127,
+      "toNodeId": 62096,
+      "visualStyle": 1
+    },
+    {
+      "id": 127201,
+      "fromNodeId": 62105,
+      "toNodeId": 62110,
+      "visualStyle": 1
+    },
+    {
+      "id": 127202,
+      "fromNodeId": 62105,
+      "toNodeId": 62127,
+      "visualStyle": 1
+    },
+    {
+      "id": 127203,
+      "fromNodeId": 108661,
+      "toNodeId": 62098,
+      "visualStyle": 1
+    },
+    {
+      "id": 127204,
+      "fromNodeId": 108661,
+      "toNodeId": 62127,
+      "visualStyle": 1
+    },
+    {
+      "id": 127205,
+      "fromNodeId": 62116,
+      "toNodeId": 108661,
+      "visualStyle": 1
+    },
+    {
+      "id": 127207,
+      "fromNodeId": 62104,
+      "toNodeId": 108661,
+      "visualStyle": 1
+    },
+    {
+      "id": 127208,
+      "fromNodeId": 93524,
+      "toNodeId": 62098,
+      "visualStyle": 1
+    },
+    {
+      "id": 127209,
+      "fromNodeId": 93524,
+      "toNodeId": 62112,
+      "visualStyle": 1
+    },
+    {
+      "id": 127210,
+      "fromNodeId": 93524,
+      "toNodeId": 108659,
+      "visualStyle": 1
+    },
+    {
+      "id": 127213,
+      "fromNodeId": 108660,
+      "toNodeId": 62116,
+      "visualStyle": 1
+    },
+    {
+      "id": 127214,
+      "fromNodeId": 62104,
+      "toNodeId": 62105,
+      "visualStyle": 1
+    },
+    {
+      "id": 127217,
+      "fromNodeId": 108660,
+      "toNodeId": 62104,
+      "visualStyle": 1
+    },
+    {
+      "id": 127218,
+      "fromNodeId": 62114,
+      "toNodeId": 62104,
+      "visualStyle": 1
+    },
+    {
+      "id": 127226,
+      "fromNodeId": 62122,
+      "toNodeId": 62107,
+      "visualStyle": 1
+    },
+    {
+      "id": 127229,
+      "fromNodeId": 62122,
+      "toNodeId": 62123,
+      "visualStyle": 1
+    },
+    {
+      "id": 127230,
+      "fromNodeId": 62119,
+      "toNodeId": 62122,
+      "visualStyle": 1
+    },
+    {
+      "id": 127232,
+      "fromNodeId": 62123,
+      "toNodeId": 108660,
+      "visualStyle": 1
+    },
+    {
+      "id": 127239,
+      "fromNodeId": 62116,
+      "toNodeId": 93524,
+      "visualStyle": 1
+    },
+    {
+      "id": 127263,
+      "fromNodeId": 62091,
+      "toNodeId": 108655,
+      "visualStyle": 1
+    },
+    {
+      "id": 127264,
+      "fromNodeId": 108657,
+      "toNodeId": 62091,
+      "visualStyle": 1
+    },
+    {
+      "id": 127359,
+      "fromNodeId": 62091,
+      "toNodeId": 108664,
+      "visualStyle": 1
+    },
+    {
+      "id": 127360,
+      "fromNodeId": 62091,
+      "toNodeId": 108656,
+      "visualStyle": 1
+    },
+    {
+      "id": 127750,
+      "fromNodeId": 108854,
+      "toNodeId": 62184,
+      "visualStyle": 1
+    },
+    {
+      "id": 127760,
+      "fromNodeId": 108863,
+      "toNodeId": 108859,
+      "visualStyle": 1
+    },
+    {
+      "id": 127764,
+      "fromNodeId": 103771,
+      "toNodeId": 108861,
+      "visualStyle": 1
+    },
+    {
+      "id": 127765,
+      "fromNodeId": 103771,
+      "toNodeId": 108859,
+      "visualStyle": 1
+    },
+    {
+      "id": 127775,
+      "fromNodeId": 62170,
+      "toNodeId": 62174,
+      "visualStyle": 1
+    },
+    {
+      "id": 127776,
+      "fromNodeId": 62180,
+      "toNodeId": 62151,
+      "visualStyle": 1
+    },
+    {
+      "id": 127777,
+      "fromNodeId": 108863,
+      "toNodeId": 62151,
+      "visualStyle": 1
+    },
+    {
+      "id": 127782,
+      "fromNodeId": 62163,
+      "toNodeId": 62151,
+      "visualStyle": 1
+    },
+    {
+      "id": 127783,
+      "fromNodeId": 62181,
+      "toNodeId": 62163,
+      "visualStyle": 1
+    },
+    {
+      "id": 127784,
+      "fromNodeId": 62179,
+      "toNodeId": 62163,
+      "visualStyle": 1
+    },
+    {
+      "id": 127785,
+      "fromNodeId": 62179,
+      "toNodeId": 62180,
+      "visualStyle": 1
+    },
+    {
+      "id": 127787,
+      "fromNodeId": 62153,
+      "toNodeId": 103771,
+      "visualStyle": 1
+    },
+    {
+      "id": 127788,
+      "fromNodeId": 62153,
+      "toNodeId": 108863,
+      "visualStyle": 1
+    },
+    {
+      "id": 127790,
+      "fromNodeId": 108653,
+      "toNodeId": 62153,
+      "visualStyle": 1
+    },
+    {
+      "id": 127793,
+      "fromNodeId": 62177,
+      "toNodeId": 62170,
+      "visualStyle": 1
+    },
+    {
+      "id": 127794,
+      "fromNodeId": 62181,
+      "toNodeId": 108863,
+      "visualStyle": 1
+    },
+    {
+      "id": 127795,
+      "fromNodeId": 62178,
+      "toNodeId": 62181,
+      "visualStyle": 1
+    },
+    {
+      "id": 127796,
+      "fromNodeId": 62178,
+      "toNodeId": 62179,
+      "visualStyle": 1
+    },
+    {
+      "id": 127797,
+      "fromNodeId": 62177,
+      "toNodeId": 81468,
+      "visualStyle": 1
+    },
+    {
+      "id": 127798,
+      "fromNodeId": 62157,
+      "toNodeId": 62178,
+      "visualStyle": 1
+    },
+    {
+      "id": 127801,
+      "fromNodeId": 62157,
+      "toNodeId": 108653,
+      "visualStyle": 1
+    },
+    {
+      "id": 127803,
+      "fromNodeId": 108864,
+      "toNodeId": 62157,
+      "visualStyle": 1
+    },
+    {
+      "id": 127804,
+      "fromNodeId": 62176,
+      "toNodeId": 108864,
+      "visualStyle": 1
+    },
+    {
+      "id": 127805,
+      "fromNodeId": 62176,
+      "toNodeId": 62164,
+      "visualStyle": 1
+    },
+    {
+      "id": 127808,
+      "fromNodeId": 62150,
+      "toNodeId": 108861,
+      "visualStyle": 1
+    },
+    {
+      "id": 127809,
+      "fromNodeId": 62153,
+      "toNodeId": 62150,
+      "visualStyle": 1
+    },
+    {
+      "id": 127810,
+      "fromNodeId": 81468,
+      "toNodeId": 62150,
+      "visualStyle": 1
+    },
+    {
+      "id": 127974,
+      "fromNodeId": 103771,
+      "toNodeId": 108856,
+      "visualStyle": 1
+    },
+    {
+      "id": 127976,
+      "fromNodeId": 102449,
+      "toNodeId": 102440,
+      "visualStyle": 1
+    },
+    {
+      "id": 127993,
+      "fromNodeId": 102469,
+      "toNodeId": 102441,
+      "visualStyle": 1
+    },
+    {
+      "id": 127995,
+      "fromNodeId": 102475,
+      "toNodeId": 109002,
+      "visualStyle": 1
+    },
+    {
+      "id": 127997,
+      "fromNodeId": 102469,
+      "toNodeId": 109002,
+      "visualStyle": 1
+    },
+    {
+      "id": 128868,
+      "fromNodeId": 109403,
+      "toNodeId": 101024,
+      "visualStyle": 1
+    },
+    {
+      "id": 128869,
+      "fromNodeId": 109403,
+      "toNodeId": 101029,
+      "visualStyle": 1
+    },
+    {
+      "id": 128870,
+      "fromNodeId": 109403,
+      "toNodeId": 101009,
+      "visualStyle": 1
+    },
+    {
+      "id": 128888,
+      "fromNodeId": 100998,
+      "toNodeId": 109409,
+      "visualStyle": 1
+    },
+    {
+      "id": 128889,
+      "fromNodeId": 100998,
+      "toNodeId": 100989,
+      "visualStyle": 1
+    },
+    {
+      "id": 128981,
+      "fromNodeId": 109471,
+      "toNodeId": 109472,
+      "visualStyle": 1
+    },
+    {
+      "id": 128982,
+      "fromNodeId": 109473,
+      "toNodeId": 109471,
+      "visualStyle": 1
+    },
+    {
+      "id": 128983,
+      "fromNodeId": 108665,
+      "toNodeId": 109478,
+      "visualStyle": 1
+    },
+    {
+      "id": 128988,
+      "fromNodeId": 102441,
+      "toNodeId": 108541,
+      "visualStyle": 1
+    },
+    {
+      "id": 128989,
+      "fromNodeId": 102451,
+      "toNodeId": 108665,
+      "visualStyle": 1
+    },
+    {
+      "id": 128991,
+      "fromNodeId": 102468,
+      "toNodeId": 102465,
+      "visualStyle": 1
+    },
+    {
+      "id": 128992,
+      "fromNodeId": 102465,
+      "toNodeId": 102451,
+      "visualStyle": 1
+    },
+    {
+      "id": 128994,
+      "fromNodeId": 102446,
+      "toNodeId": 108535,
+      "visualStyle": 1
+    },
+    {
+      "id": 128995,
+      "fromNodeId": 102446,
+      "toNodeId": 108536,
+      "visualStyle": 1
+    },
+    {
+      "id": 128996,
+      "fromNodeId": 102468,
+      "toNodeId": 108541,
+      "visualStyle": 1
+    },
+    {
+      "id": 128997,
+      "fromNodeId": 102468,
+      "toNodeId": 108535,
+      "visualStyle": 1
+    },
+    {
+      "id": 128998,
+      "fromNodeId": 102460,
+      "toNodeId": 102446,
+      "visualStyle": 1
+    },
+    {
+      "id": 128999,
+      "fromNodeId": 102462,
+      "toNodeId": 102446,
+      "visualStyle": 1
+    },
+    {
+      "id": 129000,
+      "fromNodeId": 102469,
+      "toNodeId": 102468,
+      "visualStyle": 1
+    },
+    {
+      "id": 129001,
+      "fromNodeId": 102460,
+      "toNodeId": 102468,
+      "visualStyle": 1
+    },
+    {
+      "id": 129004,
+      "fromNodeId": 102451,
+      "toNodeId": 108537,
+      "visualStyle": 1
+    },
+    {
+      "id": 129005,
+      "fromNodeId": 108541,
+      "toNodeId": 102451,
+      "visualStyle": 1
+    },
+    {
+      "id": 129006,
+      "fromNodeId": 108541,
+      "toNodeId": 108551,
+      "visualStyle": 1
+    },
+    {
+      "id": 129007,
+      "fromNodeId": 102453,
+      "toNodeId": 108551,
+      "visualStyle": 1
+    },
+    {
+      "id": 129008,
+      "fromNodeId": 109002,
+      "toNodeId": 108541,
+      "visualStyle": 1
+    },
+    {
+      "id": 129009,
+      "fromNodeId": 109002,
+      "toNodeId": 102453,
+      "visualStyle": 1
+    },
+    {
+      "id": 129010,
+      "fromNodeId": 109480,
+      "toNodeId": 109479,
+      "visualStyle": 1
+    },
+    {
+      "id": 129011,
+      "fromNodeId": 109481,
+      "toNodeId": 109480,
+      "visualStyle": 1
+    },
+    {
+      "id": 129179,
+      "fromNodeId": 94645,
+      "toNodeId": 94643,
+      "visualStyle": 1
+    },
+    {
+      "id": 129180,
+      "fromNodeId": 94652,
+      "toNodeId": 94645,
+      "visualStyle": 1
+    },
+    {
+      "id": 129181,
+      "fromNodeId": 94651,
+      "toNodeId": 94648,
+      "visualStyle": 1
+    },
+    {
+      "id": 129182,
+      "fromNodeId": 94644,
+      "toNodeId": 94651,
+      "visualStyle": 1
+    },
+    {
+      "id": 129213,
+      "fromNodeId": 109667,
+      "toNodeId": 94654,
+      "visualStyle": 1
+    },
+    {
+      "id": 129214,
+      "fromNodeId": 109668,
+      "toNodeId": 109667,
+      "visualStyle": 1
+    },
+    {
+      "id": 129215,
+      "fromNodeId": 109669,
+      "toNodeId": 109668,
+      "visualStyle": 1
+    },
+    {
+      "id": 129216,
+      "fromNodeId": 94664,
+      "toNodeId": 109669,
+      "visualStyle": 1
+    },
+    {
+      "id": 129217,
+      "fromNodeId": 109670,
+      "toNodeId": 94635,
+      "visualStyle": 1
+    },
+    {
+      "id": 129218,
+      "fromNodeId": 109671,
+      "toNodeId": 109670,
+      "visualStyle": 1
+    },
+    {
+      "id": 129219,
+      "fromNodeId": 109672,
+      "toNodeId": 109671,
+      "visualStyle": 1
+    },
+    {
+      "id": 129220,
+      "fromNodeId": 94636,
+      "toNodeId": 109672,
+      "visualStyle": 1
+    },
+    {
+      "id": 129221,
+      "fromNodeId": 109673,
+      "toNodeId": 94646,
+      "visualStyle": 1
+    },
+    {
+      "id": 129222,
+      "fromNodeId": 109674,
+      "toNodeId": 109673,
+      "visualStyle": 1
+    },
+    {
+      "id": 129223,
+      "fromNodeId": 109675,
+      "toNodeId": 109674,
+      "visualStyle": 1
+    },
+    {
+      "id": 129224,
+      "fromNodeId": 94647,
+      "toNodeId": 109675,
+      "visualStyle": 1
+    },
+    {
+      "id": 129289,
+      "fromNodeId": 102470,
+      "toNodeId": 108665,
+      "visualStyle": 1
+    },
+    {
+      "id": 129290,
+      "fromNodeId": 102470,
+      "toNodeId": 102480,
+      "visualStyle": 1
+    },
+    {
+      "id": 129291,
+      "fromNodeId": 102454,
+      "toNodeId": 102480,
+      "visualStyle": 1
+    },
+    {
+      "id": 129292,
+      "fromNodeId": 108535,
+      "toNodeId": 102454,
+      "visualStyle": 1
+    },
+    {
+      "id": 129293,
+      "fromNodeId": 108536,
+      "toNodeId": 102454,
+      "visualStyle": 1
+    },
+    {
+      "id": 129294,
+      "fromNodeId": 108535,
+      "toNodeId": 102470,
+      "visualStyle": 1
+    },
+    {
+      "id": 129295,
+      "fromNodeId": 102465,
+      "toNodeId": 102470,
+      "visualStyle": 1
+    },
+    {
+      "id": 129763,
+      "fromNodeId": 109913,
+      "toNodeId": 109912,
+      "visualStyle": 1
+    },
+    {
+      "id": 129764,
+      "fromNodeId": 109914,
+      "toNodeId": 109913,
+      "visualStyle": 1
+    },
+    {
+      "id": 129765,
+      "fromNodeId": 62173,
+      "toNodeId": 108852,
+      "visualStyle": 1
+    },
+    {
+      "id": 129766,
+      "fromNodeId": 62174,
+      "toNodeId": 62173,
+      "visualStyle": 1
+    },
+    {
+      "id": 129767,
+      "fromNodeId": 108860,
+      "toNodeId": 62173,
+      "visualStyle": 1
+    },
+    {
+      "id": 129768,
+      "fromNodeId": 62170,
+      "toNodeId": 108860,
+      "visualStyle": 1
+    },
+    {
+      "id": 129769,
+      "fromNodeId": 81468,
+      "toNodeId": 108860,
+      "visualStyle": 1
+    },
+    {
+      "id": 129770,
+      "fromNodeId": 62150,
+      "toNodeId": 62173,
+      "visualStyle": 1
+    },
+    {
+      "id": 129771,
+      "fromNodeId": 109915,
+      "toNodeId": 62177,
+      "visualStyle": 1
+    },
+    {
+      "id": 129772,
+      "fromNodeId": 109915,
+      "toNodeId": 108653,
+      "visualStyle": 1
+    },
+    {
+      "id": 129773,
+      "fromNodeId": 62164,
+      "toNodeId": 109915,
+      "visualStyle": 1
+    },
+    {
+      "id": 129774,
+      "fromNodeId": 108856,
+      "toNodeId": 109916,
+      "visualStyle": 1
+    },
+    {
+      "id": 129775,
+      "fromNodeId": 108855,
+      "toNodeId": 62182,
+      "visualStyle": 1
+    },
+    {
+      "id": 129776,
+      "fromNodeId": 108853,
+      "toNodeId": 62182,
+      "visualStyle": 1
+    },
+    {
+      "id": 129777,
+      "fromNodeId": 108857,
+      "toNodeId": 62185,
+      "visualStyle": 1
+    },
+    {
+      "id": 129778,
+      "fromNodeId": 108851,
+      "toNodeId": 62185,
+      "visualStyle": 1
+    },
+    {
+      "id": 129779,
+      "fromNodeId": 108852,
+      "toNodeId": 108851,
+      "visualStyle": 1
+    },
+    {
+      "id": 129780,
+      "fromNodeId": 108852,
+      "toNodeId": 108857,
+      "visualStyle": 1
+    },
+    {
+      "id": 129781,
+      "fromNodeId": 108852,
+      "toNodeId": 108850,
+      "visualStyle": 1
+    },
+    {
+      "id": 129782,
+      "fromNodeId": 109916,
+      "toNodeId": 108854,
+      "visualStyle": 1
+    },
+    {
+      "id": 129783,
+      "fromNodeId": 108854,
+      "toNodeId": 62184,
+      "visualStyle": 1
+    },
+    {
+      "id": 129784,
+      "fromNodeId": 108849,
+      "toNodeId": 62184,
+      "visualStyle": 1
+    },
+    {
+      "id": 129785,
+      "fromNodeId": 108850,
+      "toNodeId": 62184,
+      "visualStyle": 1
+    },
+    {
+      "id": 129786,
+      "fromNodeId": 109916,
+      "toNodeId": 108850,
+      "visualStyle": 1
+    },
+    {
+      "id": 129787,
+      "fromNodeId": 108861,
+      "toNodeId": 108852,
+      "visualStyle": 1
+    },
+    {
+      "id": 129788,
+      "fromNodeId": 108858,
+      "toNodeId": 108855,
+      "visualStyle": 1
+    },
+    {
+      "id": 129789,
+      "fromNodeId": 108858,
+      "toNodeId": 108853,
+      "visualStyle": 1
+    },
+    {
+      "id": 129790,
+      "fromNodeId": 108858,
+      "toNodeId": 108849,
+      "visualStyle": 1
+    },
+    {
+      "id": 129791,
+      "fromNodeId": 109916,
+      "toNodeId": 108849,
+      "visualStyle": 1
+    },
+    {
+      "id": 129792,
+      "fromNodeId": 108861,
+      "toNodeId": 109916,
+      "visualStyle": 1
+    },
+    {
+      "id": 129793,
+      "fromNodeId": 108859,
+      "toNodeId": 109916,
+      "visualStyle": 1
+    },
+    {
+      "id": 129794,
+      "fromNodeId": 108859,
+      "toNodeId": 108858,
+      "visualStyle": 1
+    },
+    {
+      "id": 129795,
+      "fromNodeId": 62151,
+      "toNodeId": 108858,
+      "visualStyle": 1
+    },
+    {
+      "id": 130058,
+      "fromNodeId": 109956,
+      "toNodeId": 109672,
+      "visualStyle": 1
+    },
+    {
+      "id": 130059,
+      "fromNodeId": 109956,
+      "toNodeId": 94633,
+      "visualStyle": 1
+    },
+    {
+      "id": 130060,
+      "fromNodeId": 109956,
+      "toNodeId": 94641,
+      "visualStyle": 1
+    },
+    {
+      "id": 130061,
+      "fromNodeId": 109956,
+      "toNodeId": 94642,
+      "visualStyle": 1
+    },
+    {
+      "id": 130123,
+      "fromNodeId": 108861,
+      "toNodeId": 109978,
+      "visualStyle": 1
+    },
+    {
+      "id": 130124,
+      "fromNodeId": 62121,
+      "toNodeId": 62115,
+      "visualStyle": 1
+    },
+    {
+      "id": 130125,
+      "fromNodeId": 62119,
+      "toNodeId": 62115,
+      "visualStyle": 1
+    },
+    {
+      "id": 130126,
+      "fromNodeId": 62102,
+      "toNodeId": 108660,
+      "visualStyle": 1
+    },
+    {
+      "id": 130127,
+      "fromNodeId": 62102,
+      "toNodeId": 62114,
+      "visualStyle": 1
+    },
+    {
+      "id": 130128,
+      "fromNodeId": 108654,
+      "toNodeId": 62114,
+      "visualStyle": 1
+    },
+    {
+      "id": 130129,
+      "fromNodeId": 62115,
+      "toNodeId": 108654,
+      "visualStyle": 1
+    },
+    {
+      "id": 130130,
+      "fromNodeId": 62115,
+      "toNodeId": 62102,
+      "visualStyle": 1
+    },
+    {
+      "id": 130131,
+      "fromNodeId": 62117,
+      "toNodeId": 62115,
+      "visualStyle": 1
+    },
+    {
+      "id": 130133,
+      "fromNodeId": 108662,
+      "toNodeId": 93524,
+      "visualStyle": 1
+    },
+    {
+      "id": 130134,
+      "fromNodeId": 62124,
+      "toNodeId": 108662,
+      "visualStyle": 1
+    },
+    {
+      "id": 130136,
+      "fromNodeId": 62124,
+      "toNodeId": 62116,
+      "visualStyle": 1
+    },
+    {
+      "id": 130137,
+      "fromNodeId": 62107,
+      "toNodeId": 62124,
+      "visualStyle": 1
+    },
+    {
+      "id": 130138,
+      "fromNodeId": 62123,
+      "toNodeId": 62124,
+      "visualStyle": 1
+    },
+    {
+      "id": 130488,
+      "fromNodeId": 101883,
+      "toNodeId": 108661,
+      "visualStyle": 1
+    },
+    {
+      "id": 130489,
+      "fromNodeId": 108660,
+      "toNodeId": 101883,
+      "visualStyle": 1
+    },
+    {
+      "id": 130490,
+      "fromNodeId": 110080,
+      "toNodeId": 62100,
+      "visualStyle": 1
+    },
+    {
+      "id": 130491,
+      "fromNodeId": 62098,
+      "toNodeId": 110080,
+      "visualStyle": 1
+    },
+    {
+      "id": 130492,
+      "fromNodeId": 62125,
+      "toNodeId": 108658,
+      "visualStyle": 1
+    },
+    {
+      "id": 130493,
+      "fromNodeId": 62105,
+      "toNodeId": 62125,
+      "visualStyle": 1
+    },
+    {
+      "id": 130494,
+      "fromNodeId": 110078,
+      "toNodeId": 62098,
+      "visualStyle": 1
+    },
+    {
+      "id": 130495,
+      "fromNodeId": 62116,
+      "toNodeId": 110078,
+      "visualStyle": 1
+    },
+    {
+      "id": 130496,
+      "fromNodeId": 110079,
+      "toNodeId": 62127,
+      "visualStyle": 1
+    },
+    {
+      "id": 130497,
+      "fromNodeId": 62104,
+      "toNodeId": 110079,
+      "visualStyle": 1
+    },
+    {
+      "id": 130498,
+      "fromNodeId": 110081,
+      "toNodeId": 62129,
+      "visualStyle": 1
+    },
+    {
+      "id": 130499,
+      "fromNodeId": 62127,
+      "toNodeId": 110081,
+      "visualStyle": 1
+    },
+    {
+      "id": 130500,
+      "fromNodeId": 62129,
+      "toNodeId": 62085,
+      "visualStyle": 1
+    },
+    {
+      "id": 130501,
+      "fromNodeId": 62100,
+      "toNodeId": 108664,
+      "visualStyle": 1
+    },
+    {
+      "id": 130502,
+      "fromNodeId": 110082,
+      "toNodeId": 62110,
+      "visualStyle": 1
+    },
+    {
+      "id": 130503,
+      "fromNodeId": 62084,
+      "toNodeId": 110082,
+      "visualStyle": 1
+    },
+    {
+      "id": 130504,
+      "fromNodeId": 62084,
+      "toNodeId": 62105,
+      "visualStyle": 1
+    },
+    {
+      "id": 130505,
+      "fromNodeId": 62114,
+      "toNodeId": 62084,
+      "visualStyle": 1
+    },
+    {
+      "id": 130548,
+      "fromNodeId": 109394,
+      "toNodeId": 101007,
+      "visualStyle": 1
+    },
+    {
+      "id": 130549,
+      "fromNodeId": 109393,
+      "toNodeId": 101007,
+      "visualStyle": 1
+    },
+    {
+      "id": 130550,
+      "fromNodeId": 101019,
+      "toNodeId": 109394,
+      "visualStyle": 1
+    },
+    {
+      "id": 130551,
+      "fromNodeId": 101019,
+      "toNodeId": 109393,
+      "visualStyle": 1
+    },
+    {
+      "id": 130552,
+      "fromNodeId": 109393,
+      "toNodeId": 100999,
+      "visualStyle": 1
+    },
+    {
+      "id": 130553,
+      "fromNodeId": 101004,
+      "toNodeId": 109394,
+      "visualStyle": 1
+    },
+    {
+      "id": 130554,
+      "fromNodeId": 109404,
+      "toNodeId": 109393,
+      "visualStyle": 1
+    },
+    {
+      "id": 130555,
+      "fromNodeId": 110089,
+      "toNodeId": 109397,
+      "visualStyle": 1
+    },
+    {
+      "id": 130556,
+      "fromNodeId": 101004,
+      "toNodeId": 110089,
+      "visualStyle": 1
+    },
+    {
+      "id": 130557,
+      "fromNodeId": 109395,
+      "toNodeId": 110088,
+      "visualStyle": 1
+    },
+    {
+      "id": 130558,
+      "fromNodeId": 109404,
+      "toNodeId": 109395,
+      "visualStyle": 1
+    },
+    {
+      "id": 130559,
+      "fromNodeId": 109398,
+      "toNodeId": 101004,
+      "visualStyle": 1
+    },
+    {
+      "id": 130560,
+      "fromNodeId": 109402,
+      "toNodeId": 109404,
+      "visualStyle": 1
+    },
+    {
+      "id": 130561,
+      "fromNodeId": 110087,
+      "toNodeId": 109404,
+      "visualStyle": 1
+    },
+    {
+      "id": 130562,
+      "fromNodeId": 110086,
+      "toNodeId": 101004,
+      "visualStyle": 1
+    },
+    {
+      "id": 130563,
+      "fromNodeId": 109399,
+      "toNodeId": 110086,
+      "visualStyle": 1
+    },
+    {
+      "id": 130564,
+      "fromNodeId": 109400,
+      "toNodeId": 110086,
+      "visualStyle": 1
+    },
+    {
+      "id": 130565,
+      "fromNodeId": 109405,
+      "toNodeId": 110087,
+      "visualStyle": 1
+    },
+    {
+      "id": 130566,
+      "fromNodeId": 102013,
+      "toNodeId": 110087,
+      "visualStyle": 1
+    },
+    {
+      "id": 130567,
+      "fromNodeId": 109411,
+      "toNodeId": 110087,
+      "visualStyle": 1
+    },
+    {
+      "id": 130568,
+      "fromNodeId": 109408,
+      "toNodeId": 109405,
+      "visualStyle": 1
+    },
+    {
+      "id": 130569,
+      "fromNodeId": 101029,
+      "toNodeId": 109399,
+      "visualStyle": 1
+    },
+    {
+      "id": 130570,
+      "fromNodeId": 109399,
+      "toNodeId": 109398,
+      "visualStyle": 1
+    },
+    {
+      "id": 130571,
+      "fromNodeId": 109399,
+      "toNodeId": 109412,
+      "visualStyle": 1
+    },
+    {
+      "id": 130572,
+      "fromNodeId": 101016,
+      "toNodeId": 109399,
+      "visualStyle": 1
+    },
+    {
+      "id": 130573,
+      "fromNodeId": 101016,
+      "toNodeId": 109400,
+      "visualStyle": 1
+    },
+    {
+      "id": 130574,
+      "fromNodeId": 101021,
+      "toNodeId": 101016,
+      "visualStyle": 1
+    },
+    {
+      "id": 130575,
+      "fromNodeId": 101024,
+      "toNodeId": 109401,
+      "visualStyle": 1
+    },
+    {
+      "id": 130576,
+      "fromNodeId": 109398,
+      "toNodeId": 101019,
+      "visualStyle": 1
+    },
+    {
+      "id": 130577,
+      "fromNodeId": 109401,
+      "toNodeId": 109412,
+      "visualStyle": 1
+    },
+    {
+      "id": 130578,
+      "fromNodeId": 100995,
+      "toNodeId": 109403,
+      "visualStyle": 1
+    },
+    {
+      "id": 130579,
+      "fromNodeId": 109409,
+      "toNodeId": 100995,
+      "visualStyle": 1
+    },
+    {
+      "id": 130580,
+      "fromNodeId": 100989,
+      "toNodeId": 100995,
+      "visualStyle": 1
+    },
+    {
+      "id": 130581,
+      "fromNodeId": 101021,
+      "toNodeId": 101029,
+      "visualStyle": 1
+    },
+    {
+      "id": 130582,
+      "fromNodeId": 101027,
+      "toNodeId": 101009,
+      "visualStyle": 1
+    },
+    {
+      "id": 130583,
+      "fromNodeId": 101027,
+      "toNodeId": 109408,
+      "visualStyle": 1
+    },
+    {
+      "id": 130584,
+      "fromNodeId": 109407,
+      "toNodeId": 101027,
+      "visualStyle": 1
+    },
+    {
+      "id": 130585,
+      "fromNodeId": 109406,
+      "toNodeId": 101021,
+      "visualStyle": 1
+    },
+    {
+      "id": 130586,
+      "fromNodeId": 109412,
+      "toNodeId": 101019,
+      "visualStyle": 1
+    },
+    {
+      "id": 130587,
+      "fromNodeId": 109402,
+      "toNodeId": 101019,
+      "visualStyle": 1
+    },
+    {
+      "id": 130588,
+      "fromNodeId": 102013,
+      "toNodeId": 109402,
+      "visualStyle": 1
+    },
+    {
+      "id": 130589,
+      "fromNodeId": 102013,
+      "toNodeId": 109412,
+      "visualStyle": 1
+    },
+    {
+      "id": 130590,
+      "fromNodeId": 101009,
+      "toNodeId": 102013,
+      "visualStyle": 1
+    },
+    {
+      "id": 130591,
+      "fromNodeId": 101029,
+      "toNodeId": 109401,
+      "visualStyle": 1
+    },
+    {
+      "id": 130592,
+      "fromNodeId": 101009,
+      "toNodeId": 109401,
+      "visualStyle": 1
+    },
+    {
+      "id": 130593,
+      "fromNodeId": 109408,
+      "toNodeId": 102013,
+      "visualStyle": 1
+    },
+    {
+      "id": 130594,
+      "fromNodeId": 109408,
+      "toNodeId": 109411,
+      "visualStyle": 1
+    },
+    {
+      "id": 130595,
+      "fromNodeId": 100989,
+      "toNodeId": 109407,
+      "visualStyle": 1
+    },
+    {
+      "id": 130596,
+      "fromNodeId": 109396,
+      "toNodeId": 101007,
+      "visualStyle": 1
+    },
+    {
+      "id": 130597,
+      "fromNodeId": 101019,
+      "toNodeId": 109396,
+      "visualStyle": 1
+    },
+    {
+      "id": 130598,
+      "fromNodeId": 109409,
+      "toNodeId": 109406,
+      "visualStyle": 1
+    },
+    {
+      "id": 130599,
+      "fromNodeId": 109394,
+      "toNodeId": 101015,
+      "visualStyle": 1
+    }
+  ],
+  "subTrees": [
+    {
+      "id": 39,
+      "name": "Sunfury",
+      "description": "By embracing arcane flames, Sunfury mages enhance their most devastating incantations, even calling on the aid of a spellfire phoenix.",
+      "iconFileName": "talents-heroclass-mage-sunfury"
+    },
+    {
+      "id": 40,
+      "name": "Spellslinger",
+      "description": "Mastering the inherently unstable nature of magic allows Spellslingers to splinter their magic, creating powerful and volatile new effects.",
+      "iconFileName": "talents-heroclass-mage-spellslinger"
+    }
+  ],
+  "pointLimits": {
+    "class": 37,
+    "spec": 38,
+    "hero": 26
+  }
+}

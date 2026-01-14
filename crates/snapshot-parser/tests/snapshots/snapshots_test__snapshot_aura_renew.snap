@@ -1,0 +1,19 @@
+---
+source: snapshot-parser/tests/snapshots_test.rs
+expression: aura
+---
+{
+  "spellId": 139,
+  "baseDurationMs": 15000,
+  "maxDurationMs": 15000,
+  "maxStacks": 1,
+  "periodicType": "heal",
+  "tickPeriodMs": 3000,
+  "refreshBehavior": "pandemic",
+  "durationHasted": false,
+  "hastedTicks": false,
+  "pandemicRefresh": false,
+  "rollingPeriodic": false,
+  "tickMayCrit": false,
+  "tickOnApplication": false
+}

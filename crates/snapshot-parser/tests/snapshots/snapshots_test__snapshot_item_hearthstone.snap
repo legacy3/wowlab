@@ -1,0 +1,60 @@
+---
+source: snapshot-parser/tests/snapshots_test.rs
+expression: item
+---
+{
+  "id": 6948,
+  "name": "Hearthstone",
+  "description": "",
+  "fileName": "inv_misc_rune_01",
+  "itemLevel": 1,
+  "quality": 1,
+  "requiredLevel": 0,
+  "binding": 1,
+  "buyPrice": 0,
+  "sellPrice": 0,
+  "maxCount": 1,
+  "stackable": 1,
+  "speed": 0,
+  "classId": 15,
+  "subclassId": 0,
+  "inventoryType": 0,
+  "classification": {
+    "classId": 15,
+    "className": "Miscellaneous",
+    "subclassId": 0,
+    "subclassName": "Junk",
+    "inventoryType": 0,
+    "inventoryTypeName": "Non-equippable",
+    "expansionId": 0,
+    "expansionName": "Classic"
+  },
+  "stats": [],
+  "effects": [
+    {
+      "spellId": 8690,
+      "triggerType": 0,
+      "charges": 0,
+      "cooldown": -1,
+      "categoryCooldown": -1
+    }
+  ],
+  "sockets": [],
+  "socketBonusEnchantId": 0,
+  "flags": [
+    64,
+    40960,
+    0,
+    0,
+    0
+  ],
+  "allowableClass": -1,
+  "allowableRace": -1,
+  "expansionId": 0,
+  "itemSetId": 0,
+  "setInfo": null,
+  "dropSources": [],
+  "dmgVariance": 0.0,
+  "gemProperties": 0,
+  "modifiedCraftingReagentItemId": 0
+}
