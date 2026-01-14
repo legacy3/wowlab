@@ -18,5 +18,6 @@ anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 indicatif = "0.17"
+serde = "1"
 serde_json = "1"
 dotenvy = "0.15"

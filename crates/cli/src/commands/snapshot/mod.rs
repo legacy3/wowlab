@@ -1,7 +1,14 @@
 //! Snapshot processing commands
 //!
 //! Commands for loading, transforming, and syncing DBC snapshot data.
+//!
+//! Structure:
+//! - `sync.rs` - Main sync command orchestration
+//! - `db.rs` - Database operations (bulk insert, cleanup)
+//! - `dump_spell.rs` - Debug utility for single spell
+//! - `dump_talent.rs` - Debug utility for single talent tree
 
+mod db;
 mod dump_spell;
 mod dump_talent;
 mod sync;
