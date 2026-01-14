@@ -5,7 +5,7 @@
 Flat Postgres tables in Supabase. Transformation runs once (CLI sync), not at query time.
 
 ```
-DBC CSVs (local data/)
+DBC CSVs (~/Source/wowlab-data)
     │
     ▼
 snapshot-parser (Rust crate)
@@ -29,13 +29,13 @@ Supabase Postgres (flat tables)
 
 ## Phases
 
-| Phase | Focus |
-|-------|-------|
-| 1 | Parser: Port extraction logic to Rust |
-| 2 | CLI: Sync to Postgres |
-| 3 | Client: Rust PostgREST reader |
-| 4 | Engine: Resolver trait + integration |
-| 5 | Portal: Query flat tables |
+| Phase | Focus                                 |
+| ----- | ------------------------------------- |
+| 1     | Parser: Port extraction logic to Rust |
+| 2     | CLI: Sync to Postgres                 |
+| 3     | Client: Rust PostgREST reader         |
+| 4     | Engine: Resolver trait + integration  |
+| 5     | Portal: Query flat tables             |
 
 ## Phase Dependencies
 
@@ -106,16 +106,18 @@ CREATE TABLE aura_data_flat (
 ## Query Patterns
 
 ### Portal (Supabase JS)
+
 ```typescript
 const { data } = await supabase
-  .from('spell_data_flat')
-  .select('*')
-  .eq('id', 53351)
+  .from("spell_data_flat")
+  .select("*")
+  .eq("id", 53351)
   .single();
 ```
 
 ### Engine (Rust)
+
 ```rust
-let resolver = LocalResolver::new("./data".into());
+let resolver = LocalResolver::new("~/Source/wowlab-data".into());
 let spell = resolver.get_spell(53351).await?;
 ```

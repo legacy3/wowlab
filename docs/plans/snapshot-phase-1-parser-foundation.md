@@ -10,22 +10,22 @@ You are building a Rust crate (`crates/snapshot-parser`) that ports the TypeScri
 
 The extraction logic lives in `old/packages/wowlab-services/src/internal/data/transformer/`:
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `extractors.ts` | ~1370 | 30+ extraction functions (ExtractorService) |
-| `spell-impl.ts` | ~350 | SpellDataFlat assembly (transformSpellWith) |
-| `talent.ts` | ~765 | Talent tree transformation (transformTalentTree) |
-| `item.ts` | ~345 | Item transformation (transformItem) |
-| `aura.ts` | ~120 | Aura transformation (transformAura) |
+| File            | Lines | Purpose                                          |
+| --------------- | ----- | ------------------------------------------------ |
+| `extractors.ts` | ~1370 | 30+ extraction functions (ExtractorService)      |
+| `spell-impl.ts` | ~350  | SpellDataFlat assembly (transformSpellWith)      |
+| `talent.ts`     | ~765  | Talent tree transformation (transformTalentTree) |
+| `item.ts`       | ~345  | Item transformation (transformItem)              |
+| `aura.ts`       | ~120  | Aura transformation (transformAura)              |
 
 Schemas live in `old/packages/wowlab-core/src/internal/schemas/`:
 
-| File | Purpose |
-|------|---------|
+| File       | Purpose                          |
+| ---------- | -------------------------------- |
 | `Spell.ts` | SpellDataFlatSchema (60+ fields) |
-| `Item.ts` | ItemDataFlatSchema |
-| `Aura.ts` | AuraDataFlatSchema |
-| `Spec.ts` | SpecDataFlatSchema |
+| `Item.ts`  | ItemDataFlatSchema               |
+| `Aura.ts`  | AuraDataFlatSchema               |
+| `Spec.ts`  | SpecDataFlatSchema               |
 
 Talent string decoding lives in `old/packages/wowlab-parsers/src/internal/simc/talents.ts`.
 
@@ -45,7 +45,7 @@ wowlab/
 │           ├── flat/        # Flat output types (SpellDataFlat, etc.)
 │           ├── talents/     # Talent string encode/decode
 │           └── errors.rs
-├── data/                    # Raw DBC CSV files (input)
+~/Source/wowlab-data/        # Raw DBC CSV files (input)
 └── old/packages/            # TypeScript reference (READ ONLY)
 ```
 
@@ -493,41 +493,42 @@ pub enum RefreshBehavior {
 
 Port ALL of these from `extractors.ts`:
 
-| Function | Priority | Input | Output |
-|----------|----------|-------|--------|
-| `extractName` | P0 | spell_id | String |
-| `extractDescription` | P0 | spell_id | { description, aura_description } |
-| `extractCastTime` | P0 | SpellMisc | Option<{ base, min }> |
-| `extractCooldown` | P0 | spell_id | Option<{ category, gcd, recovery }> |
-| `extractDuration` | P0 | SpellMisc | Option<{ duration, max }> |
-| `extractCharges` | P0 | spell_id | Option<{ max_charges, recharge_time }> |
-| `extractPower` | P0 | spell_id | Option<{ power_cost, power_cost_pct, power_type }> |
-| `extractRange` | P0 | SpellMisc | Option<{ ally: {min,max}, enemy: {min,max} }> |
-| `extractRadius` | P1 | SpellEffect[] | Vec<{ min, max, radius }> |
-| `extractScaling` | P0 | SpellEffect[] | { attack_power, spell_power } |
-| `extractManaCost` | P1 | SpellEffect[] | i32 |
-| `extractClassOptions` | P0 | spell_id | Option<{ mask1-4, class_set }> |
-| `extractInterrupts` | P1 | spell_id | Option<{ aura_flags, channel_flags, interrupt_flags }> |
-| `extractEmpower` | P1 | spell_id | Option<{ can_empower, stages }> |
-| `extractTargetRestrictions` | P1 | spell_id | Option<{ cone_degrees, max_targets, ... }> |
-| `extractAuraRestrictions` | P0 | spell_id | Option<{ caster_aura_spell, ... }> |
-| `extractLevels` | P1 | spell_id | Option<{ base_level, max_level, ... }> |
-| `extractLearnSpells` | P1 | spell_id | Vec<{ learn_spell_id, overrides_spell_id }> |
-| `extractReplacement` | P1 | spell_id | Option<{ replacement_spell_id }> |
-| `extractShapeshift` | P1 | spell_id | Option<{ exclude, mask, stance_bar_order }> |
-| `extractTotems` | P1 | spell_id | Option<{ required_categories, totems }> |
-| `extractDescriptionVariables` | P1 | spell_id | Option<String> |
-| `extractAuraFlags` | P0 | attributes[] | { duration_hasted, hasted_ticks, ... } |
-| `extractPeriodicInfo` | P0 | SpellEffect[] | { periodic_type, tick_period_ms } |
-| `extractTalentName` | P0 | TraitDefinition | String |
-| `extractTalentDescription` | P0 | TraitDefinition | String |
-| `extractTalentIcon` | P0 | TraitDefinition | String |
-| `getEffectsForDifficulty` | P1 | SpellEffect[], effect_type, difficulty_id | SpellEffect[] |
-| `hasAoeDamageEffect` | P2 | SpellEffect[], difficulty_id | bool |
-| `getVarianceForDifficulty` | P2 | SpellEffect[], difficulty_id | f64 |
-| `getDamage` | P2 | SpellEffect, DamageConfig | i32 |
+| Function                      | Priority | Input                                     | Output                                                 |
+| ----------------------------- | -------- | ----------------------------------------- | ------------------------------------------------------ |
+| `extractName`                 | P0       | spell_id                                  | String                                                 |
+| `extractDescription`          | P0       | spell_id                                  | { description, aura_description }                      |
+| `extractCastTime`             | P0       | SpellMisc                                 | Option<{ base, min }>                                  |
+| `extractCooldown`             | P0       | spell_id                                  | Option<{ category, gcd, recovery }>                    |
+| `extractDuration`             | P0       | SpellMisc                                 | Option<{ duration, max }>                              |
+| `extractCharges`              | P0       | spell_id                                  | Option<{ max_charges, recharge_time }>                 |
+| `extractPower`                | P0       | spell_id                                  | Option<{ power_cost, power_cost_pct, power_type }>     |
+| `extractRange`                | P0       | SpellMisc                                 | Option<{ ally: {min,max}, enemy: {min,max} }>          |
+| `extractRadius`               | P1       | SpellEffect[]                             | Vec<{ min, max, radius }>                              |
+| `extractScaling`              | P0       | SpellEffect[]                             | { attack_power, spell_power }                          |
+| `extractManaCost`             | P1       | SpellEffect[]                             | i32                                                    |
+| `extractClassOptions`         | P0       | spell_id                                  | Option<{ mask1-4, class_set }>                         |
+| `extractInterrupts`           | P1       | spell_id                                  | Option<{ aura_flags, channel_flags, interrupt_flags }> |
+| `extractEmpower`              | P1       | spell_id                                  | Option<{ can_empower, stages }>                        |
+| `extractTargetRestrictions`   | P1       | spell_id                                  | Option<{ cone_degrees, max_targets, ... }>             |
+| `extractAuraRestrictions`     | P0       | spell_id                                  | Option<{ caster_aura_spell, ... }>                     |
+| `extractLevels`               | P1       | spell_id                                  | Option<{ base_level, max_level, ... }>                 |
+| `extractLearnSpells`          | P1       | spell_id                                  | Vec<{ learn_spell_id, overrides_spell_id }>            |
+| `extractReplacement`          | P1       | spell_id                                  | Option<{ replacement_spell_id }>                       |
+| `extractShapeshift`           | P1       | spell_id                                  | Option<{ exclude, mask, stance_bar_order }>            |
+| `extractTotems`               | P1       | spell_id                                  | Option<{ required_categories, totems }>                |
+| `extractDescriptionVariables` | P1       | spell_id                                  | Option<String>                                         |
+| `extractAuraFlags`            | P0       | attributes[]                              | { duration_hasted, hasted_ticks, ... }                 |
+| `extractPeriodicInfo`         | P0       | SpellEffect[]                             | { periodic_type, tick_period_ms }                      |
+| `extractTalentName`           | P0       | TraitDefinition                           | String                                                 |
+| `extractTalentDescription`    | P0       | TraitDefinition                           | String                                                 |
+| `extractTalentIcon`           | P0       | TraitDefinition                           | String                                                 |
+| `getEffectsForDifficulty`     | P1       | SpellEffect[], effect_type, difficulty_id | SpellEffect[]                                          |
+| `hasAoeDamageEffect`          | P2       | SpellEffect[], difficulty_id              | bool                                                   |
+| `getVarianceForDifficulty`    | P2       | SpellEffect[], difficulty_id              | f64                                                    |
+| `getDamage`                   | P2       | SpellEffect, DamageConfig                 | i32                                                    |
 
 **Priority:**
+
 - P0: Required for basic spell/talent display
 - P1: Required for complete data
 - P2: Advanced features, can skip initially
@@ -694,13 +695,13 @@ fn test_talent_tree_253_bm_hunter() {
 
 Use these known spells for verification:
 
-| ID | Name | Why |
-|----|------|-----|
-| 53351 | Kill Shot | BM Hunter, has charges, damage, cooldown |
-| 34026 | Kill Command | Focus cost, pet spell |
-| 193455 | Bestial Wrath | Buff with duration, cooldown |
-| 2643 | Multi-Shot | AoE, no target cap |
-| 19574 | Bloodlust (pet) | External buff reference |
+| ID     | Name            | Why                                      |
+| ------ | --------------- | ---------------------------------------- |
+| 53351  | Kill Shot       | BM Hunter, has charges, damage, cooldown |
+| 34026  | Kill Command    | Focus cost, pet spell                    |
+| 193455 | Bestial Wrath   | Buff with duration, cooldown             |
+| 2643   | Multi-Shot      | AoE, no target cap                       |
+| 19574  | Bloodlust (pet) | External buff reference                  |
 
 ### Comparison Script
 
@@ -721,12 +722,14 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 ## Checklist
 
 ### Setup
+
 - [ ] Create `crates/snapshot-parser/Cargo.toml`
 - [ ] Create `src/lib.rs` with public API
 - [ ] Create `src/errors.rs` with thiserror types
 - [ ] Add to workspace `Cargo.toml`
 
 ### Flat Types (must match TS exactly)
+
 - [ ] Create `src/flat/mod.rs`
 - [ ] Create `src/flat/spell.rs` with SpellDataFlat (60+ fields)
 - [ ] Create `src/flat/talent.rs` with TalentTreeFlat
@@ -735,6 +738,7 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 - [ ] Create `src/flat/shared.rs` with KnowledgeSource, etc.
 
 ### DBC Parsing
+
 - [ ] Create `src/dbc/mod.rs`
 - [ ] Create `src/dbc/loader.rs` with DbcData struct
 - [ ] Create DBC structs for all spell tables (~15 tables)
@@ -743,6 +747,7 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 - [ ] Create DBC structs for shared tables (~10 tables)
 
 ### Extractors (P0 - required)
+
 - [ ] Port `extractName`
 - [ ] Port `extractDescription`
 - [ ] Port `extractCastTime`
@@ -761,6 +766,7 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 - [ ] Port `extractTalentIcon`
 
 ### Extractors (P1 - complete data)
+
 - [ ] Port `extractRadius`
 - [ ] Port `extractManaCost`
 - [ ] Port `extractInterrupts`
@@ -775,6 +781,7 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 - [ ] Port `getEffectsForDifficulty`
 
 ### Transformation
+
 - [ ] Port `transformSpellWith` from spell-impl.ts
 - [ ] Port `transformTalentTree` from talent.ts
 - [ ] Port `transformItem` from item.ts
@@ -784,12 +791,14 @@ diff /tmp/ts_53351.json /tmp/rs_53351.json
 - [ ] Implement `transform_all_items`
 
 ### Talent String Codec
+
 - [ ] Create `src/talents/mod.rs`
 - [ ] Port `decodeTalentLoadout` from talents.ts
 - [ ] Port `encodeTalentLoadout` from talents.ts
 - [ ] Port `applyDecodedTalents` from talent.ts
 
 ### Testing
+
 - [ ] Create test fixture with sample CSVs
 - [ ] Create golden file tests for known spells
 - [ ] Create golden file tests for talent trees

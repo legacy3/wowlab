@@ -10,6 +10,7 @@ You are integrating data loading into `crates/engine` with a **resolver trait** 
 This design ensures the engine is **portable** and doesn't depend on any specific server. If Supabase goes away, the engine still works with local CSV files.
 
 **Why this matters:**
+
 - Development: No network required, fast iteration
 - Portability: Engine works standalone with just CSV files
 - Resilience: Not dependent on external services
@@ -38,7 +39,7 @@ wowlab/
 │           │   ├── supabase.rs   # SupabaseResolver (PostgREST)
 │           │   └── talent.rs     # Talent string decoding
 │           └── ...
-├── data/                    # Local CSV files for LocalResolver
+~/Source/wowlab-data/        # Local CSV files for LocalResolver
 ```
 
 ## Objectives
@@ -790,7 +791,7 @@ cargo run -p engine -- sim \
     --spec 253 \
     --talents "BYGAAAAAAAAAAAAAAAAAAAAAAIRSSLJJRSSSCAAAAAAgSAAAAAAA" \
     --data-source local \
-    --data-dir ./data
+    --data-dir ~/Source/wowlab-data
 
 # Supabase mode (requires feature + env vars)
 cargo run -p engine --features supabase -- sim \
@@ -845,7 +846,7 @@ cargo run -p engine -- sim \
     --spec 253 \
     --talents "BYGAAAAAAAAAAAAAAAAAAAAAAIRSSLJJRSSSCAAAAAAgSAAAAAAA" \
     --data-source local \
-    --data-dir ./data
+    --data-dir ~/Source/wowlab-data
 
 # Build with supabase support
 cargo build -p engine --features supabase

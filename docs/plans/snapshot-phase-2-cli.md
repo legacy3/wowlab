@@ -5,12 +5,14 @@
 You are adding a `snapshot sync` command to the existing CLI (`crates/cli`) that writes transformed flat data from Phase 1 to Supabase Postgres. This uses **direct Postgres connection** (sqlx) for writes, not PostgREST.
 
 **Prerequisites:**
+
 - Phase 1 complete (`crates/snapshot-parser` with all transformation logic)
 - Supabase project created
 
 ## Objective
 
-Implement `wowlab snapshot sync --patch 11.2.0 --data-dir ./data` that:
+Implement `wowlab snapshot sync --patch 11.2.0 --data-dir ~/Source/wowlab-data` that:
+
 1. Loads DBC CSV files using snapshot-parser
 2. Transforms all data (spells, talents, items, auras, specs)
 3. Writes to Supabase Postgres flat tables in a single transaction
@@ -776,16 +778,16 @@ export SUPABASE_DB_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[re
 
 ```bash
 # Sync all data for patch 11.2.0
-wowlab snapshot sync --patch 11.2.0 --data-dir ./data
+wowlab snapshot sync --patch 11.2.0 --data-dir ~/Source/wowlab-data
 
 # Dry run (transform only, no database write)
 wowlab snapshot sync --patch 11.2.0 --dry-run
 
 # Debug: dump a single spell to JSON
-wowlab snapshot dump-spell 53351 --data-dir ./data | jq
+wowlab snapshot dump-spell 53351 --data-dir ~/Source/wowlab-data | jq
 
 # Debug: dump a talent tree to JSON
-wowlab snapshot dump-talent 253 --data-dir ./data | jq
+wowlab snapshot dump-talent 253 --data-dir ~/Source/wowlab-data | jq
 ```
 
 ## Version Management
@@ -806,17 +808,20 @@ DELETE FROM aura_data_flat WHERE patch_version != '11.2.0';
 ## Checklist
 
 ### Setup
+
 - [ ] Add dependencies to `crates/cli/Cargo.toml` (sqlx, indicatif, snapshot-parser)
 - [ ] Create `commands/snapshot/mod.rs` with SnapshotCommand enum
 - [ ] Add SnapshotCommand to main CLI parser
 
 ### Database
+
 - [ ] Create migration file with all 5 tables (spell, talent, item, aura, spec)
 - [ ] Apply migration: `supabase db push`
 - [ ] Verify tables exist in Supabase dashboard
 - [ ] Verify RLS policies are correct (public read, no public write)
 
 ### Sync Command
+
 - [ ] Implement database connection with error message for missing env var
 - [ ] Implement `cleanup_patch` function
 - [ ] Implement `insert_spells` with all 72 columns
@@ -828,11 +833,13 @@ DELETE FROM aura_data_flat WHERE patch_version != '11.2.0';
 - [ ] Wrap all inserts in transaction
 
 ### Debug Commands
+
 - [ ] Implement `dump-spell` command (transform single spell, print JSON)
 - [ ] Implement `dump-talent` command (transform single tree, print JSON)
 - [ ] Verify JSON output matches TypeScript
 
 ### Testing
+
 - [ ] Test sync with small dataset (10 spells)
 - [ ] Test sync with full dataset (~100k spells)
 - [ ] Test rollback on failure (Ctrl+C during sync)

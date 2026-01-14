@@ -236,18 +236,18 @@ export interface ItemSummary {
 
 ```typescript
 // apps/portal/src/hooks/use-spell.ts
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import type { SpellDataFlat, SpellSummary } from '@/types/flat';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import type { SpellDataFlat, SpellSummary } from "@/types/flat";
 
 export function useSpell(id: number) {
   return useQuery({
-    queryKey: ['spell', id],
+    queryKey: ["spell", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('spell_data_flat')
-        .select('*')
-        .eq('id', id)
+        .from("spell_data_flat")
+        .select("*")
+        .eq("id", id)
         .single();
       if (error) throw error;
       return data as SpellDataFlat;
@@ -257,12 +257,12 @@ export function useSpell(id: number) {
 
 export function useSpellSummary(id: number) {
   return useQuery({
-    queryKey: ['spell-summary', id],
+    queryKey: ["spell-summary", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('spell_data_flat')
-        .select('id, name, icon_file_data_id')
-        .eq('id', id)
+        .from("spell_data_flat")
+        .select("id, name, icon_file_data_id")
+        .eq("id", id)
         .single();
       if (error) throw error;
       return data as SpellSummary;
@@ -272,13 +272,13 @@ export function useSpellSummary(id: number) {
 
 export function useSpells(ids: number[]) {
   return useQuery({
-    queryKey: ['spells', ids],
+    queryKey: ["spells", ids],
     queryFn: async () => {
       if (ids.length === 0) return [];
       const { data, error } = await supabase
-        .from('spell_data_flat')
-        .select('*')
-        .in('id', ids);
+        .from("spell_data_flat")
+        .select("*")
+        .in("id", ids);
       if (error) throw error;
       return data as SpellDataFlat[];
     },
@@ -288,12 +288,12 @@ export function useSpells(ids: number[]) {
 
 export function useSpellSearch(query: string) {
   return useQuery({
-    queryKey: ['spell-search', query],
+    queryKey: ["spell-search", query],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('spell_data_flat')
-        .select('id, name, icon_file_data_id')
-        .ilike('name', `%${query}%`)
+        .from("spell_data_flat")
+        .select("id, name, icon_file_data_id")
+        .ilike("name", `%${query}%`)
         .limit(20);
       if (error) throw error;
       return data as SpellSummary[];
@@ -305,18 +305,18 @@ export function useSpellSearch(query: string) {
 
 ```typescript
 // apps/portal/src/hooks/use-talent-tree.ts
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import type { TalentTreeFlat } from '@/types/flat';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import type { TalentTreeFlat } from "@/types/flat";
 
 export function useTalentTree(specId: number) {
   return useQuery({
-    queryKey: ['talent-tree', specId],
+    queryKey: ["talent-tree", specId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('talent_tree_flat')
-        .select('*')
-        .eq('spec_id', specId)
+        .from("talent_tree_flat")
+        .select("*")
+        .eq("spec_id", specId)
         .single();
       if (error) throw error;
       return data as TalentTreeFlat;
@@ -326,12 +326,12 @@ export function useTalentTree(specId: number) {
 
 export function useClassTalentTrees(classId: number) {
   return useQuery({
-    queryKey: ['talent-trees', classId],
+    queryKey: ["talent-trees", classId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('talent_tree_flat')
-        .select('*')
-        .eq('class_id', classId);
+        .from("talent_tree_flat")
+        .select("*")
+        .eq("class_id", classId);
       if (error) throw error;
       return data as TalentTreeFlat[];
     },
@@ -341,18 +341,18 @@ export function useClassTalentTrees(classId: number) {
 
 ```typescript
 // apps/portal/src/hooks/use-item.ts
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import type { ItemDataFlat, ItemSummary } from '@/types/flat';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import type { ItemDataFlat, ItemSummary } from "@/types/flat";
 
 export function useItem(id: number) {
   return useQuery({
-    queryKey: ['item', id],
+    queryKey: ["item", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('item_data_flat')
-        .select('*')
-        .eq('id', id)
+        .from("item_data_flat")
+        .select("*")
+        .eq("id", id)
         .single();
       if (error) throw error;
       return data as ItemDataFlat;
@@ -362,14 +362,14 @@ export function useItem(id: number) {
 
 export function useItemsByLevel(minLevel: number, maxLevel: number) {
   return useQuery({
-    queryKey: ['items-by-level', minLevel, maxLevel],
+    queryKey: ["items-by-level", minLevel, maxLevel],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('item_data_flat')
-        .select('id, name, item_level, quality, icon_file_data_id')
-        .gte('item_level', minLevel)
-        .lte('item_level', maxLevel)
-        .order('item_level', { ascending: false })
+        .from("item_data_flat")
+        .select("id, name, item_level, quality, icon_file_data_id")
+        .gte("item_level", minLevel)
+        .lte("item_level", maxLevel)
+        .order("item_level", { ascending: false })
         .limit(100);
       if (error) throw error;
       return data as ItemSummary[];
@@ -379,12 +379,12 @@ export function useItemsByLevel(minLevel: number, maxLevel: number) {
 
 export function useItemSearch(query: string) {
   return useQuery({
-    queryKey: ['item-search', query],
+    queryKey: ["item-search", query],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('item_data_flat')
-        .select('id, name, item_level, quality, icon_file_data_id')
-        .ilike('name', `%${query}%`)
+        .from("item_data_flat")
+        .select("id, name, item_level, quality, icon_file_data_id")
+        .ilike("name", `%${query}%`)
         .limit(20);
       if (error) throw error;
       return data as ItemSummary[];
@@ -396,18 +396,18 @@ export function useItemSearch(query: string) {
 
 ```typescript
 // apps/portal/src/hooks/use-aura.ts
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import type { AuraDataFlat } from '@/types/flat';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import type { AuraDataFlat } from "@/types/flat";
 
 export function useAura(spellId: number) {
   return useQuery({
-    queryKey: ['aura', spellId],
+    queryKey: ["aura", spellId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('aura_data_flat')
-        .select('*')
-        .eq('spell_id', spellId)
+        .from("aura_data_flat")
+        .select("*")
+        .eq("spell_id", spellId)
         .single();
       if (error) throw error;
       return data as AuraDataFlat;

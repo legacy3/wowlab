@@ -5,7 +5,7 @@ Pre-computed WoW game data in Supabase Postgres flat tables.
 ## Architecture
 
 ```
-Raw DBC CSVs (data/)
+Raw DBC CSVs (~/Source/wowlab-data)
     │
     ▼
 crates/snapshot-parser (Rust)
@@ -27,13 +27,13 @@ Supabase Postgres
 
 ## Phases
 
-| Phase | Focus | Depends On |
-|-------|-------|------------|
-| 1 | Parser: CSV → flat types | None |
-| 2 | CLI: sync to Postgres | Phase 1 |
-| 3 | Client: Rust PostgREST | Phase 2 |
-| 4 | Engine: DataResolver trait | Phase 1, 3 |
-| 5 | Portal: React Query hooks | Phase 2 |
+| Phase | Focus                      | Depends On |
+| ----- | -------------------------- | ---------- |
+| 1     | Parser: CSV → flat types   | None       |
+| 2     | CLI: sync to Postgres      | Phase 1    |
+| 3     | Client: Rust PostgREST     | Phase 2    |
+| 4     | Engine: DataResolver trait | Phase 1, 3 |
+| 5     | Portal: React Query hooks  | Phase 2    |
 
 ## Phase Prompts
 
@@ -53,7 +53,7 @@ Reference implementation (TypeScript to port):
 - old/packages/wowlab-core/src/internal/schemas/Spell.ts
 - old/packages/wowlab-parsers/src/internal/simc/talents.ts
 
-CSV files are in data/ directory.
+CSV files are in ~/Source/wowlab-data directory.
 
 Build:
 1. CSV loader with lazy loading
@@ -84,7 +84,7 @@ Build:
 
 Env vars: SUPABASE_DB_URL (postgres connection string)
 
-Success: `wowlab snapshot sync --patch 11.2.0` populates all 4 tables.
+Success: `wowlab snapshot sync --patch 11.2.0 --data-dir ~/Source/wowlab-data` populates all 4 tables.
 ```
 
 ### Phase 3: Client
@@ -152,11 +152,11 @@ Success: `pnpm build` succeeds, hooks return correct data.
 
 ## Reference
 
-| Path | Purpose |
-|------|---------|
-| docs/plans/snapshot-phase-1-parser-foundation.md | Parser spec |
-| docs/plans/snapshot-phase-2-cli.md | CLI spec |
-| docs/plans/snapshot-phase-3-loaders-wasm.md | Client spec |
-| docs/plans/snapshot-phase-4-engine-integration.md | Engine spec |
-| docs/plans/snapshot-phase-5-portal-migration.md | Portal spec |
-| docs/plans/snapshot-data-flow-options.md | Architecture overview |
+| Path                                              | Purpose               |
+| ------------------------------------------------- | --------------------- |
+| docs/plans/snapshot-phase-1-parser-foundation.md  | Parser spec           |
+| docs/plans/snapshot-phase-2-cli.md                | CLI spec              |
+| docs/plans/snapshot-phase-3-loaders-wasm.md       | Client spec           |
+| docs/plans/snapshot-phase-4-engine-integration.md | Engine spec           |
+| docs/plans/snapshot-phase-5-portal-migration.md   | Portal spec           |
+| docs/plans/snapshot-data-flow-options.md          | Architecture overview |
