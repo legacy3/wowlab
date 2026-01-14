@@ -1,226 +1,160 @@
-# Phase 5: Portal Data Layer
+# Phase 5: Portal Data Layer Migration
 
 ## Context
 
-You are building the portal data layer to query flat tables (`spell_data_flat`, `talent_tree_flat`, `item_data_flat`, `aura_data_flat`) via Supabase JS client.
+Migrate portal from Refine to TanStack Query + direct Supabase client. The streamlined `game` schema tables eliminate the need for Refine's abstraction layer.
 
 ## Prerequisites
 
-- Phase 1-2 completed: Flat tables exist and have data
-- Portal exists at `apps/portal/`
+- Flat tables exist in `game` schema: `spells`, `items`, `auras`, `specs`, `specs_traits`
+- Database types generated at `src/lib/supabase/database.types.ts`
 
-## Project Structure
+## Goals
+
+1. Remove Refine (`@refinedev/*`) entirely
+2. Replace with TanStack Query + Supabase client
+3. Simplify hooks in `src/lib/state/`
+4. Remove Effect-TS DBC layer (no longer needed)
+
+## Part 1: Remove Refine
+
+### Delete Files
 
 ```
-apps/portal/
-└── src/
-    ├── hooks/       # Query hooks
-    ├── types/       # Flat types
-    └── components/  # Use hooks
+src/lib/refine/access-control.ts
+src/lib/refine/auth-provider.ts
+src/lib/refine/data-provider.ts
+src/lib/refine/index.ts
+src/lib/refine/persister.ts
+src/lib/refine/resources.ts
+src/providers/refine-provider.tsx
 ```
 
-## Objectives
+### Delete DBC Layer (no longer needed)
 
-1. Create query hooks for flat tables
-2. Add TypeScript types matching flat table schemas
-3. Optional: Generate types from database schema
+```
+src/lib/dbc/fetcher.ts
+src/lib/dbc/layer.ts
+src/lib/dbc/batcher.ts
+src/lib/dbc/keys.ts
+src/lib/dbc/index.ts
+src/providers/dbc-provider.tsx
+```
 
-## TypeScript Types
+### Remove Dependencies
+
+```bash
+pnpm remove @refinedev/core @refinedev/nextjs-router @refinedev/supabase
+```
+
+## Part 2: New Provider Setup
+
+### Query Provider
 
 ```typescript
-// apps/portal/src/types/flat.ts
+// src/providers/query-provider.tsx
+"use client";
 
-export interface SpellEffect {
-  effect_index: number;
-  effect_type: number;
-  effect_aura: number;
-  mechanic: number;
-  implicit_target_a: number;
-  implicit_target_b: number;
-  radius_min: number;
-  radius_max: number;
-  chain_targets: number;
-  base_points: number;
-  misc_value_a: number;
-  misc_value_b: number;
-  trigger_spell_id: number | null;
-  amplitude_ms: number;
-  coefficient: number;
-  variance: number;
-  resource_coefficient: number;
-  bonus_coefficient: number;
-  chain_amplitude: number;
-  ap_coefficient: number;
-  sp_coefficient: number;
-  pvp_coefficient: number;
-  pos_facing: number | null;
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { type ReactNode, useState } from "react";
+
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      },
+    },
+  });
 }
 
-export interface RppmModifier {
-  type: number;
-  param: number;
-  coefficient: number;
+let browserQueryClient: QueryClient | undefined;
+
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+  if (!browserQueryClient) {
+    browserQueryClient = makeQueryClient();
+  }
+  return browserQueryClient;
 }
 
-export interface SpellDataFlat {
-  id: number;
-  name: string;
-  description: string | null;
-  tooltip: string | null;
-  aura_description: string | null;
-  cast_time_ms: number;
-  gcd_ms: number;
-  gcd_category: number;
-  cooldown_ms: number;
-  cooldown_category: number;
-  charges: number;
-  charge_cooldown_ms: number;
-  power_type: number;
-  power_cost: number;
-  power_cost_per_second: number;
-  power_cost_pct: number;
-  optional_power_type: number | null;
-  optional_power_cost: number | null;
-  min_range: number;
-  max_range: number;
-  effects: SpellEffect[];
-  spell_school_mask: number;
-  mechanic: number;
-  attributes: number[];
-  duration_ms: number;
-  max_stacks: number;
-  proc_chance: number;
-  proc_charges: number;
-  proc_flags: number;
-  internal_cooldown_ms: number;
-  rppm_base: number;
-  rppm_modifiers: RppmModifier[];
-  scaling_type: number;
-  scaling_class: number;
-  spell_class_set: number;
-  spell_class_mask: number[];
-  icon_file_data_id: number;
-  active_icon_file_data_id: number | null;
-  rank_text: string | null;
-  spell_family: number;
-  base_damage: number;
-  ap_coefficient: number;
-  sp_coefficient: number;
-  patch_version: string;
-  updated_at: string;
-}
+export function QueryProvider({ children }: { children: ReactNode }) {
+  const queryClient = getQueryClient();
 
-export interface ChoiceEntry {
-  choice_index: number;
-  spell_id: number;
-  spell_name: string;
-}
+  const [persister] = useState(() =>
+    typeof window !== "undefined"
+      ? createSyncStoragePersister({
+          storage: window.localStorage,
+          key: "wowlab-query-cache",
+        })
+      : null
+  );
 
-export interface TalentNodeFlat {
-  node_id: number;
-  row: number;
-  col: number;
-  max_ranks: number;
-  node_type: number;
-  spell_id: number;
-  spell_name: string;
-  unlocks: number[];
-  locked_by: number[];
-  sub_tree_id: number | null;
-  pos_x: number;
-  pos_y: number;
-  choice_entries: ChoiceEntry[] | null;
-}
+  if (!persister) {
+    return <>{children}</>;
+  }
 
-export interface SubTreeFlat {
-  sub_tree_id: number;
-  name: string;
-  icon_file_data_id: number;
-  trait_currency_id: number;
+  return (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}
+    >
+      {children}
+    </PersistQueryClientProvider>
+  );
 }
+```
 
-export interface TalentTreeFlat {
-  id: number;
-  spec_id: number;
-  spec_name: string;
-  class_id: number;
-  class_name: string;
-  tree_id: number;
-  nodes: TalentNodeFlat[];
-  sub_trees: SubTreeFlat[];
-  class_nodes: TalentNodeFlat[];
-  patch_version: string;
-  updated_at: string;
+### Update App Providers
+
+```typescript
+// src/providers/app-providers.tsx
+import { QueryProvider } from "./query-provider";
+// Remove: RefineProvider import
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    <QueryProvider>
+      {children}
+    </QueryProvider>
+  );
 }
+```
 
-export interface ItemStat {
-  stat_type: number;
-  value: number;
-  allocation: number;
-  socket_multiplier: number;
-}
+## Part 3: Supabase Types
 
-export interface ItemEffect {
-  spell_id: number;
-  trigger_type: number;
-  cooldown_ms: number;
-  cooldown_category: number;
-  charges: number;
-}
+```typescript
+// src/lib/supabase/types.ts
+import type { Database } from "./database.types";
 
-export interface ItemDataFlat {
-  id: number;
-  name: string;
-  description: string | null;
-  item_level: number;
-  required_level: number;
-  quality: number;
-  inventory_type: number;
-  class_id: number;
-  subclass_id: number;
-  class_mask: number;
-  race_mask: number;
-  stats: ItemStat[];
-  effects: ItemEffect[];
-  socket_count: number;
-  socket_bonus_stat: number | null;
-  gem_properties: number | null;
-  icon_file_data_id: number;
-  max_count: number;
-  stackable: number;
-  vendor_price: number;
-  flags: number[];
-  patch_version: string;
-  updated_at: string;
-}
+// Existing types (keep)
+export type Row<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+export type Insert<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Insert"];
+export type Update<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Update"];
 
-export interface AuraDataFlat {
-  spell_id: number;
-  name: string;
-  description: string | null;
-  duration_ms: number;
-  max_stacks: number;
-  proc_chance: number;
-  proc_charges: number;
-  proc_flags: number;
-  internal_cooldown_ms: number;
-  rppm_base: number;
-  rppm_modifiers: RppmModifier[];
-  effects: SpellEffect[];
-  is_buff: boolean;
-  is_debuff: boolean;
-  is_passive: boolean;
-  dispel_type: number;
-  mechanic: number;
-  icon_file_data_id: number;
-  patch_version: string;
-  updated_at: string;
-}
+// Game schema types (add)
+export type GameRow<T extends keyof Database["game"]["Tables"]> =
+  Database["game"]["Tables"][T]["Row"];
 
+export type Spell = GameRow<"spells">;
+export type Item = GameRow<"items">;
+export type Aura = GameRow<"auras">;
+export type Spec = GameRow<"specs">;
+export type SpecTraits = GameRow<"specs_traits">;
+
+// Summary types for lists/search
 export interface SpellSummary {
   id: number;
   name: string;
-  icon_file_data_id: number;
+  file_name: string;
 }
 
 export interface ItemSummary {
@@ -228,218 +162,504 @@ export interface ItemSummary {
   name: string;
   item_level: number;
   quality: number;
-  icon_file_data_id: number;
+  file_name: string;
+}
+
+export interface SpecSummary {
+  id: number;
+  name: string;
+  class_name: string;
+  class_id: number;
+  icon_file_id: number;
 }
 ```
 
-## Hooks
+## Part 4: Game Data Hooks
 
 ```typescript
-// apps/portal/src/hooks/use-spell.ts
+// src/lib/state/game.ts
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { SpellDataFlat, SpellSummary } from "@/types/flat";
 
-export function useSpell(id: number) {
+import { createClient } from "@/lib/supabase";
+import type {
+  Aura,
+  Item,
+  ItemSummary,
+  Spec,
+  SpecSummary,
+  SpecTraits,
+  Spell,
+  SpellSummary,
+} from "@/lib/supabase/types";
+
+// --- Spells ---
+
+export function useSpell(id: number | null | undefined) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["spell", id],
+    queryKey: ["game", "spell", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("spell_data_flat")
+        .from("spells")
         .select("*")
-        .eq("id", id)
+        .eq("id", id!)
         .single();
       if (error) throw error;
-      return data as SpellDataFlat;
+      return data as Spell;
     },
-  });
-}
-
-export function useSpellSummary(id: number) {
-  return useQuery({
-    queryKey: ["spell-summary", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("spell_data_flat")
-        .select("id, name, icon_file_data_id")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as SpellSummary;
-    },
+    enabled: id != null,
   });
 }
 
 export function useSpells(ids: number[]) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["spells", ids],
+    queryKey: ["game", "spells", ids],
     queryFn: async () => {
-      if (ids.length === 0) return [];
       const { data, error } = await supabase
-        .from("spell_data_flat")
+        .from("spells")
         .select("*")
         .in("id", ids);
       if (error) throw error;
-      return data as SpellDataFlat[];
+      return (data ?? []) as Spell[];
     },
     enabled: ids.length > 0,
   });
 }
 
 export function useSpellSearch(query: string) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["spell-search", query],
+    queryKey: ["game", "spell-search", query],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("spell_data_flat")
-        .select("id, name, icon_file_data_id")
+        .from("spells")
+        .select("id, name, file_name")
         .ilike("name", `%${query}%`)
         .limit(20);
       if (error) throw error;
-      return data as SpellSummary[];
+      return (data ?? []) as SpellSummary[];
     },
     enabled: query.length > 2,
   });
 }
-```
 
-```typescript
-// apps/portal/src/hooks/use-talent-tree.ts
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { TalentTreeFlat } from "@/types/flat";
+// --- Items ---
 
-export function useTalentTree(specId: number) {
+export function useItem(id: number | null | undefined) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["talent-tree", specId],
+    queryKey: ["game", "item", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("talent_tree_flat")
+        .from("items")
         .select("*")
-        .eq("spec_id", specId)
+        .eq("id", id!)
         .single();
       if (error) throw error;
-      return data as TalentTreeFlat;
+      return data as Item;
     },
+    enabled: id != null,
   });
 }
 
-export function useClassTalentTrees(classId: number) {
+export function useItems(ids: number[]) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["talent-trees", classId],
+    queryKey: ["game", "items", ids],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("talent_tree_flat")
+        .from("items")
         .select("*")
-        .eq("class_id", classId);
+        .in("id", ids);
       if (error) throw error;
-      return data as TalentTreeFlat[];
+      return (data ?? []) as Item[];
     },
-  });
-}
-```
-
-```typescript
-// apps/portal/src/hooks/use-item.ts
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { ItemDataFlat, ItemSummary } from "@/types/flat";
-
-export function useItem(id: number) {
-  return useQuery({
-    queryKey: ["item", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("item_data_flat")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as ItemDataFlat;
-    },
-  });
-}
-
-export function useItemsByLevel(minLevel: number, maxLevel: number) {
-  return useQuery({
-    queryKey: ["items-by-level", minLevel, maxLevel],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("item_data_flat")
-        .select("id, name, item_level, quality, icon_file_data_id")
-        .gte("item_level", minLevel)
-        .lte("item_level", maxLevel)
-        .order("item_level", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return data as ItemSummary[];
-    },
+    enabled: ids.length > 0,
   });
 }
 
 export function useItemSearch(query: string) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["item-search", query],
+    queryKey: ["game", "item-search", query],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("item_data_flat")
-        .select("id, name, item_level, quality, icon_file_data_id")
+        .from("items")
+        .select("id, name, item_level, quality, file_name")
         .ilike("name", `%${query}%`)
         .limit(20);
       if (error) throw error;
-      return data as ItemSummary[];
+      return (data ?? []) as ItemSummary[];
     },
     enabled: query.length > 2,
   });
 }
-```
 
-```typescript
-// apps/portal/src/hooks/use-aura.ts
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { AuraDataFlat } from "@/types/flat";
+// --- Auras ---
 
-export function useAura(spellId: number) {
+export function useAura(spellId: number | null | undefined) {
+  const supabase = createClient();
+
   return useQuery({
-    queryKey: ["aura", spellId],
+    queryKey: ["game", "aura", spellId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("aura_data_flat")
+        .from("auras")
         .select("*")
-        .eq("spell_id", spellId)
+        .eq("spell_id", spellId!)
         .single();
       if (error) throw error;
-      return data as AuraDataFlat;
+      return data as Aura;
+    },
+    enabled: spellId != null,
+  });
+}
+
+// --- Specs ---
+
+export function useSpec(id: number | null | undefined) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["game", "spec", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("specs")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data as Spec;
+    },
+    enabled: id != null,
+  });
+}
+
+export function useSpecs() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["game", "specs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("specs")
+        .select("id, name, class_name, class_id, icon_file_id")
+        .order("class_name")
+        .order("order_index");
+      if (error) throw error;
+      return (data ?? []) as SpecSummary[];
+    },
+  });
+}
+
+export function useSpecsByClass(classId: number) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["game", "specs", "class", classId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("specs")
+        .select("*")
+        .eq("class_id", classId)
+        .order("order_index");
+      if (error) throw error;
+      return (data ?? []) as Spec[];
+    },
+  });
+}
+
+export function useSpecTraits(specId: number | null | undefined) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["game", "spec-traits", specId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("specs_traits")
+        .select("*")
+        .eq("spec_id", specId!)
+        .single();
+      if (error) throw error;
+      return data as SpecTraits;
+    },
+    enabled: specId != null,
+  });
+}
+```
+
+## Part 5: Auth Hooks
+
+```typescript
+// src/lib/state/user.ts
+"use client";
+
+import type { OAuthResponse, User } from "@supabase/supabase-js";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
+
+import { createClient } from "@/lib/supabase";
+
+export interface UserProfile {
+  id: string;
+  email: string | null;
+  handle: string | null;
+  avatarUrl: string | null;
+}
+
+export function useUser() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["auth", "user"],
+    queryFn: async (): Promise<UserProfile | null> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("handle, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      return {
+        id: user.id,
+        email: user.email ?? null,
+        handle: profile?.handle ?? null,
+        avatarUrl: profile?.avatar_url ?? null,
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase, queryClient]);
+
+  const login = useCallback(
+    (provider: "discord" | "github"): Promise<OAuthResponse> => {
+      return supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    },
+    [supabase],
+  );
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+  }, [supabase, queryClient]);
+
+  return {
+    user: user ?? null,
+    isLoading,
+    isLoggedIn: !!user,
+    login,
+    logout,
+  };
+}
+```
+
+## Part 6: Rotation Hooks
+
+```typescript
+// src/lib/state/rotation.ts
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+
+import { createClient } from "@/lib/supabase";
+import type { Row, Insert, Update } from "@/lib/supabase/types";
+
+type Rotation = Row<"rotations">;
+type RotationInsert = Insert<"rotations">;
+type RotationUpdate = Update<"rotations">;
+
+export function useRotation(id: string | null | undefined) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["rotations", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data as Rotation;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useRotations(options?: {
+  specId?: number;
+  userId?: string;
+  isPublic?: boolean;
+}) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ["rotations", "list", options],
+    queryFn: async () => {
+      let query = supabase.from("rotations").select("*");
+
+      if (options?.specId) query = query.eq("spec_id", options.specId);
+      if (options?.userId) query = query.eq("user_id", options.userId);
+      if (options?.isPublic !== undefined) query = query.eq("is_public", options.isPublic);
+
+      const { data, error } = await query.order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Rotation[];
+    },
+  });
+}
+
+export function useCreateRotation() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (values: RotationInsert) => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .insert(values)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Rotation;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
+      router.push(`/rotations/editor/${data.id}`);
+    },
+  });
+}
+
+export function useUpdateRotation() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...values }: RotationUpdate & { id: string }) => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .update(values)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Rotation;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
+      queryClient.setQueryData(["rotations", data.id], data);
+    },
+  });
+}
+
+export function useDeleteRotation() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("rotations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
     },
   });
 }
 ```
 
-## Type Generation (Optional)
+## Part 7: Update Exports
 
-```bash
-supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.ts
+```typescript
+// src/lib/state/index.ts
+export {
+  useAura,
+  useItem,
+  useItems,
+  useItemSearch,
+  useSpec,
+  useSpecs,
+  useSpecsByClass,
+  useSpecTraits,
+  useSpell,
+  useSpells,
+  useSpellSearch,
+} from "./game";
+
+export {
+  useCreateRotation,
+  useDeleteRotation,
+  useRotation,
+  useRotations,
+  useUpdateRotation,
+} from "./rotation";
+
+export { useUser, type UserProfile } from "./user";
+
+export { useCardExpanded, useSidebar } from "./ui";
+export { useEditor, useDefaultList, useListsByType, useSelectedList } from "./editor";
 ```
 
 ## Checklist
 
-- [ ] Create `src/types/flat.ts` with all types
-- [ ] Create `useSpell` hook
-- [ ] Create `useSpells` batch hook
-- [ ] Create `useSpellSearch` hook
-- [ ] Create `useTalentTree` hook
-- [ ] Create `useClassTalentTrees` hook
-- [ ] Create `useItem` hook
-- [ ] Create `useItemsByLevel` hook
-- [ ] Create `useItemSearch` hook
-- [ ] Create `useAura` hook
-- [ ] Test all hooks
-- [ ] Set up type generation (optional)
+### Remove
+- [ ] Delete `src/lib/refine/` directory (6 files)
+- [ ] Delete `src/providers/refine-provider.tsx`
+- [ ] Delete `src/lib/dbc/` directory (5 files)
+- [ ] Delete `src/providers/dbc-provider.tsx`
+- [ ] Remove `@refinedev/*` dependencies
+- [ ] Remove unused imports from components
+
+### Create
+- [ ] Create `src/providers/query-provider.tsx`
+- [ ] Update `src/providers/app-providers.tsx`
+
+### Update
+- [ ] Update `src/lib/supabase/types.ts` with game types
+- [ ] Rewrite `src/lib/state/game.ts` (new file, replaces dbc.ts + game-data-search.ts)
+- [ ] Rewrite `src/lib/state/user.ts`
+- [ ] Rewrite `src/lib/state/rotation.ts`
+- [ ] Rewrite `src/lib/state/profile.ts` (if still needed)
+- [ ] Update `src/lib/state/index.ts` exports
+- [ ] Update components using old hooks
+
+### Verify
+- [ ] `pnpm build` succeeds
+- [ ] Auth flow works (login/logout)
+- [ ] Game data queries work
+- [ ] Rotation CRUD works
+- [ ] Search works
 
 ## Success Criteria
 
-1. `pnpm build` succeeds
-2. All hooks return correct data
-3. Search works
-4. Types match database schema
+1. No `@refinedev/*` imports anywhere
+2. No `src/lib/refine/` or `src/lib/dbc/` directories
+3. All hooks use TanStack Query + Supabase directly
+4. `pnpm build` succeeds
+5. All existing functionality preserved
