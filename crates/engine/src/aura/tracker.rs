@@ -1,15 +1,16 @@
 use crate::types::{AuraIdx, TargetIdx, SimTime};
+use smallvec::SmallVec;
 use super::AuraInstance;
 
-/// Per-target aura tracking
+/// Per-target aura tracking (stack-allocated for typical aura counts)
 #[derive(Clone, Debug, Default)]
 pub struct TargetAuras {
-    auras: Vec<AuraInstance>,
+    auras: SmallVec<[AuraInstance; 16]>,
 }
 
 impl TargetAuras {
     pub fn new() -> Self {
-        Self { auras: Vec::with_capacity(16) }
+        Self { auras: SmallVec::new() }
     }
 
     /// Get aura by ID

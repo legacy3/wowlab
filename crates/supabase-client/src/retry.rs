@@ -1,11 +1,14 @@
-//! Retry logic with exponential backoff
+//! Retry logic with exponential backoff using the backoff crate
 
 use crate::SupabaseError;
+use backoff::backoff::Backoff;
+use backoff::ExponentialBackoff;
 use std::future::Future;
 use std::time::Duration;
 use tokio::time::sleep;
 
 /// Retry configuration
+#[derive(Clone)]
 pub struct RetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -28,6 +31,20 @@ impl Default for RetryConfig {
     }
 }
 
+impl RetryConfig {
+    /// Create a backoff strategy from this config
+    fn to_backoff(&self) -> ExponentialBackoff {
+        ExponentialBackoff {
+            current_interval: Duration::from_millis(self.initial_delay_ms),
+            initial_interval: Duration::from_millis(self.initial_delay_ms),
+            max_interval: Duration::from_millis(self.max_delay_ms),
+            multiplier: self.backoff_factor,
+            max_elapsed_time: None, // We handle max attempts separately
+            ..ExponentialBackoff::default()
+        }
+    }
+}
+
 /// Check if an error is retryable
 fn is_retryable(err: &SupabaseError) -> bool {
     match err {
@@ -44,8 +61,8 @@ where
     F: FnMut() -> Fut,
     Fut: Future<Output = Result<T, SupabaseError>>,
 {
+    let mut backoff = config.to_backoff();
     let mut attempts = 0;
-    let mut delay_ms = config.initial_delay_ms;
 
     loop {
         attempts += 1;
@@ -56,22 +73,22 @@ where
                     return Err(e);
                 }
 
-                if let SupabaseError::RateLimited { retry_after_ms } = &e {
-                    delay_ms = *retry_after_ms;
-                }
+                // Get next delay from backoff, or use rate limit delay
+                let delay = if let SupabaseError::RateLimited { retry_after_ms } = &e {
+                    Duration::from_millis(*retry_after_ms)
+                } else {
+                    backoff.next_backoff().unwrap_or(Duration::from_millis(config.max_delay_ms))
+                };
 
                 tracing::warn!(
-                    "Request failed (attempt {}/{}), retrying in {}ms: {}",
+                    "Request failed (attempt {}/{}), retrying in {:?}: {}",
                     attempts,
                     config.max_attempts,
-                    delay_ms,
+                    delay,
                     e
                 );
 
-                sleep(Duration::from_millis(delay_ms)).await;
-
-                delay_ms = ((delay_ms as f64) * config.backoff_factor) as u64;
-                delay_ms = delay_ms.min(config.max_delay_ms);
+                sleep(delay).await;
             }
         }
     }

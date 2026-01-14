@@ -33,16 +33,24 @@ pub struct DecodedTalentNode {
     pub choice_index: Option<u8>,
 }
 
-const BASE64_STANDARD: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_URL_SAFE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-fn build_char_map() -> [u8; 256] {
+/// Pre-computed char map for base64 decoding (built at compile time)
+const BASE64_CHAR_MAP: [u8; 256] = build_char_map();
+
+const fn build_char_map() -> [u8; 256] {
+    let standard = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let url_safe = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
     let mut map = [255u8; 256];
-    for (i, &c) in BASE64_STANDARD.iter().enumerate() {
-        map[c as usize] = i as u8;
+    let mut i = 0;
+    while i < standard.len() {
+        map[standard[i] as usize] = i as u8;
+        i += 1;
     }
-    for (i, &c) in BASE64_URL_SAFE.iter().enumerate() {
-        map[c as usize] = i as u8;
+    i = 0;
+    while i < url_safe.len() {
+        map[url_safe[i] as usize] = i as u8;
+        i += 1;
     }
     map
 }
@@ -54,7 +62,6 @@ fn build_char_map() -> [u8; 256] {
 /// Reads bits from a base64-encoded string, LSB first within each 6-bit character.
 struct BitReader<'a> {
     data: &'a str,
-    char_map: [u8; 256],
     position: usize,
     total_bits: usize,
 }
@@ -63,7 +70,6 @@ impl<'a> BitReader<'a> {
     fn new(data: &'a str) -> Self {
         Self {
             data,
-            char_map: build_char_map(),
             position: 0,
             total_bits: data.len() * 6,
         }
@@ -80,7 +86,7 @@ impl<'a> BitReader<'a> {
             let bit_offset = self.position % 6;
 
             let byte = self.data.as_bytes().get(char_idx).copied().unwrap_or(0);
-            let char_value = self.char_map[byte as usize];
+            let char_value = BASE64_CHAR_MAP[byte as usize];
             if char_value == 255 {
                 return Err(TalentError::InvalidCharacters);
             }

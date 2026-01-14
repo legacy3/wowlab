@@ -3,7 +3,7 @@
 //! These tests require SUPABASE_URL and SUPABASE_ANON_KEY environment variables.
 //! Run with: cargo test -p supabase-client --test integration -- --ignored
 
-use supabase_client::{CacheConfig, CachedClient, RetryConfig, SpellTiming, SupabaseClient, with_retry};
+use supabase_client::{GameDataCache, RetryConfig, SpellTiming, SupabaseClient, with_retry};
 
 fn get_client() -> Option<SupabaseClient> {
     SupabaseClient::from_env().ok()
@@ -73,36 +73,49 @@ async fn test_search_spells_special_chars_real() {
 }
 
 // ============================================================================
-// Cache Tests
+// GameDataCache Tests
 // ============================================================================
 
 #[tokio::test]
 #[ignore = "requires SUPABASE_URL and SUPABASE_ANON_KEY"]
-async fn test_cached_client_real() {
+async fn test_game_cache_real() {
     let client = get_client().expect("SUPABASE_URL and SUPABASE_ANON_KEY must be set");
-    let cached = CachedClient::new(client, CacheConfig::default());
+    let temp_dir = std::env::temp_dir().join("supabase_integration_test");
+    let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone())
+        .expect("Failed to create cache");
 
     let start = std::time::Instant::now();
-    let result1 = cached.get_spell(133).await;
+    let result1 = cache.get_spell(133).await;
     let first_duration = start.elapsed();
 
     match result1 {
         Ok(spell) => {
             let start = std::time::Instant::now();
-            let result2 = cached.get_spell(133).await;
+            let result2 = cache.get_spell(133).await;
             let second_duration = start.elapsed();
 
             assert!(result2.is_ok());
             assert_eq!(result2.unwrap().id, spell.id);
 
             println!("First: {:?}, Second (cached): {:?}", first_duration, second_duration);
+            // Cached access should be much faster
             assert!(second_duration < first_duration / 2);
         }
         Err(e) => println!("Spell not found or error: {}", e),
     }
 
-    let (spells, talents, items) = cached.cache_sizes();
-    println!("Cache sizes: spells={}, talents={}, items={}", spells, talents, items);
+    let stats = cache.stats();
+    println!(
+        "Memory: spells={}, talents={}, items={}, auras={}",
+        stats.memory.spells, stats.memory.talents, stats.memory.items, stats.memory.auras
+    );
+    println!(
+        "Disk: spells={}, talents={}, items={}, auras={}",
+        stats.disk.spells, stats.disk.talents, stats.disk.items, stats.disk.auras
+    );
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
 }
 
 // ============================================================================

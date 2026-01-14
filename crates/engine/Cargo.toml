@@ -37,6 +37,11 @@ rayon = "1.10"
 num_cpus = "1.16"
 parking_lot = "0.12"
 
+# Fast RNG and data structures
+fastrand = "2"
+ahash = "0.8"
+smallvec = "1"
+
 # Fast allocator (significant speedup for clone-heavy workloads)
 mimalloc = { version = "0.1", default-features = false }
 

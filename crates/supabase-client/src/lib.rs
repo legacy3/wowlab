@@ -3,18 +3,16 @@
 //! This library provides a Rust client for reading spell, talent, item, and aura data
 //! from Supabase via the PostgREST API.
 
-pub mod cache;
 pub mod client;
-pub mod disk_cache;
 pub mod errors;
+pub mod game_cache;
 pub mod partial;
 pub mod queries;
 pub mod retry;
 
-pub use cache::{CacheConfig, CachedClient};
 pub use client::SupabaseClient;
-pub use disk_cache::{CacheStats, DiskCache, DiskCacheConfig};
 pub use errors::SupabaseError;
+pub use game_cache::{CacheStats, DiskStats, GameDataCache, MemoryStats};
 pub use partial::{
     ItemSummary, SpellCost, SpellDamage, SpellRange, SpellSummary, SpellTiming, TalentNodeSummary,
 };

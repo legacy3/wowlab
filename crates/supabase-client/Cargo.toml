@@ -13,8 +13,10 @@ serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["time"] }
 tracing = "0.1"
-dashmap = "6"
 urlencoding = "2"
+backoff = { version = "0.4", features = ["tokio"] }
+moka = { version = "0.12", features = ["sync"] }
+directories = "5"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

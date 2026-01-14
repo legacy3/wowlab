@@ -26,6 +26,9 @@ pub enum SupabaseError {
 
     #[error("Environment variable '{name}' not set")]
     EnvVar { name: String },
+
+    #[error("IO error: {message}")]
+    Io { message: String },
 }
 
 impl From<std::env::VarError> for SupabaseError {

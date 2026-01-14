@@ -2,11 +2,10 @@
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
 
 use supabase_client::{
-    CacheConfig, DiskCache, DiskCacheConfig, ItemSummary, RetryConfig, SpellCost, SpellTiming,
-    SupabaseClient, SupabaseError, with_retry,
+    GameDataCache, ItemSummary, RetryConfig, SpellCost, SpellTiming, SupabaseClient,
+    SupabaseError, with_retry,
 };
 use wiremock::matchers::{header, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -17,25 +16,12 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[test]
 fn test_new_client() {
-    // Just verify construction doesn't panic
     let _client = SupabaseClient::new("https://example.supabase.co", "test_key");
 }
 
 #[test]
 fn test_new_client_trailing_slash() {
-    // Trailing slash should be handled gracefully
     let _client = SupabaseClient::new("https://example.supabase.co/", "test_key");
-}
-
-// ============================================================================
-// Cache Tests
-// ============================================================================
-
-#[test]
-fn test_cache_config_default() {
-    let config = CacheConfig::default();
-    assert_eq!(config.ttl, Duration::from_secs(300));
-    assert_eq!(config.max_entries, 10_000);
 }
 
 // ============================================================================
@@ -303,71 +289,121 @@ async fn test_search_spells_url_encoding() {
 }
 
 // ============================================================================
-// Disk Cache Tests
+// GameDataCache Tests
 // ============================================================================
 
 #[test]
-fn test_disk_cache_set_get() {
-    let temp_dir = std::env::temp_dir().join(format!("supabase_test_{}", std::process::id()));
-    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
-    let cache = DiskCache::new(config).unwrap();
+fn test_game_cache_creation() {
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_test_{}", std::process::id()));
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
-    // Set and get a value
-    cache.set("spells", 12345, &"test_value").unwrap();
-    let value: String = cache.get("spells", 12345).unwrap();
-    assert_eq!(value, "test_value");
-
-    // Cleanup
-    let _ = std::fs::remove_dir_all(&temp_dir);
-}
-
-#[test]
-fn test_disk_cache_contains() {
-    let temp_dir = std::env::temp_dir().join(format!("supabase_test_contains_{}", std::process::id()));
-    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
-    let cache = DiskCache::new(config).unwrap();
-
-    assert!(!cache.contains("spells", 99999));
-    cache.set("spells", 99999, &42i32).unwrap();
-    assert!(cache.contains("spells", 99999));
+    // Verify stats work
+    let stats = cache.stats();
+    assert_eq!(stats.memory.spells, 0);
+    assert_eq!(stats.disk.spells, 0);
 
     // Cleanup
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
 
 #[test]
-fn test_disk_cache_remove() {
-    let temp_dir = std::env::temp_dir().join(format!("supabase_test_remove_{}", std::process::id()));
-    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
-    let cache = DiskCache::new(config).unwrap();
-
-    cache.set("spells", 111, &"to_remove").unwrap();
-    assert!(cache.contains("spells", 111));
-    cache.remove("spells", 111).unwrap();
-    assert!(!cache.contains("spells", 111));
-
-    // Cleanup
-    let _ = std::fs::remove_dir_all(&temp_dir);
-}
-
-#[test]
-fn test_disk_cache_patch_version_change() {
-    let temp_dir = std::env::temp_dir().join(format!("supabase_test_patch_{}", std::process::id()));
+fn test_game_cache_patch_version_change() {
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_patch_{}", std::process::id()));
 
     // Create cache with version 11.0.0
     {
-        let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
-        let cache = DiskCache::new(config).unwrap();
-        cache.set("spells", 1, &"old_data").unwrap();
-        assert!(cache.contains("spells", 1));
+        let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+        let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
+
+        // Write something to disk (simulating cached data)
+        let spell_dir = temp_dir.join("spells");
+        std::fs::create_dir_all(&spell_dir).unwrap();
+        std::fs::write(spell_dir.join("12345.json"), r#"{"id":12345}"#).unwrap();
+
+        let stats = cache.stats();
+        assert_eq!(stats.disk.spells, 1);
     }
 
     // Create cache with different version - should clear
     {
-        let config = DiskCacheConfig::new(&temp_dir, "11.0.5");
-        let cache = DiskCache::new(config).unwrap();
+        let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+        let cache = GameDataCache::with_cache_dir(client, "11.0.5", temp_dir.clone()).unwrap();
+
         // Old data should be gone
-        assert!(!cache.contains("spells", 1));
+        let stats = cache.stats();
+        assert_eq!(stats.disk.spells, 0);
+    }
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[tokio::test]
+async fn test_game_cache_get_spell_caches() {
+    let mock_server = MockServer::start().await;
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_spell_{}", std::process::id()));
+
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/rest/v1/spell_data_flat.*"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_string(mock_spell_json())
+                .insert_header("content-type", "application/json"),
+        )
+        .expect(1) // Should only hit network once
+        .mount(&mock_server)
+        .await;
+
+    let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+    let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
+
+    // First call - hits network
+    let spell1 = cache.get_spell(53351).await.unwrap();
+    assert_eq!(spell1.name, "Kill Shot");
+
+    // Second call - should come from memory cache
+    let spell2 = cache.get_spell(53351).await.unwrap();
+    assert_eq!(spell2.name, "Kill Shot");
+
+    // Verify disk cache populated (memory count may be eventually consistent)
+    let stats = cache.stats();
+    assert_eq!(stats.disk.spells, 1);
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[tokio::test]
+async fn test_game_cache_disk_persistence() {
+    let mock_server = MockServer::start().await;
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_persist_{}", std::process::id()));
+
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/rest/v1/spell_data_flat.*"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_string(mock_spell_json())
+                .insert_header("content-type", "application/json"),
+        )
+        .expect(1) // Should only hit network once across both cache instances
+        .mount(&mock_server)
+        .await;
+
+    // First cache instance - fetches from network
+    {
+        let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+        let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
+        let spell = cache.get_spell(53351).await.unwrap();
+        assert_eq!(spell.name, "Kill Shot");
+    }
+
+    // Second cache instance - should load from disk, not network
+    {
+        let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+        let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
+        let spell = cache.get_spell(53351).await.unwrap();
+        assert_eq!(spell.name, "Kill Shot");
     }
 
     // Cleanup
@@ -375,20 +411,52 @@ fn test_disk_cache_patch_version_change() {
 }
 
 #[test]
-fn test_disk_cache_stats() {
-    let temp_dir = std::env::temp_dir().join(format!("supabase_test_stats_{}", std::process::id()));
-    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
-    let cache = DiskCache::new(config).unwrap();
+fn test_game_cache_invalidate() {
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_inv_{}", std::process::id()));
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
-    cache.set("spells", 1, &"spell1").unwrap();
-    cache.set("spells", 2, &"spell2").unwrap();
-    cache.set("items", 1, &"item1").unwrap();
+    // Write something to disk
+    let spell_dir = temp_dir.join("spells");
+    std::fs::create_dir_all(&spell_dir).unwrap();
+    std::fs::write(spell_dir.join("12345.json"), r#"{"id":12345}"#).unwrap();
+
+    assert_eq!(cache.stats().disk.spells, 1);
+
+    // Invalidate
+    cache.invalidate_spell(12345);
+
+    assert_eq!(cache.stats().disk.spells, 0);
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_game_cache_clear_all() {
+    let temp_dir = std::env::temp_dir().join(format!("game_cache_clear_{}", std::process::id()));
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
+
+    // Write data to multiple categories
+    for (category, id) in [("spells", 1), ("items", 2), ("talents", 3)] {
+        let dir = temp_dir.join(category);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(format!("{}.json", id)), "{}").unwrap();
+    }
 
     let stats = cache.stats();
-    assert_eq!(stats.spells, 2);
-    assert_eq!(stats.items, 1);
-    assert_eq!(stats.talents, 0);
-    assert_eq!(stats.total(), 3);
+    assert_eq!(stats.disk.spells, 1);
+    assert_eq!(stats.disk.items, 1);
+    assert_eq!(stats.disk.talents, 1);
+
+    // Clear all
+    cache.clear_all().unwrap();
+
+    let stats = cache.stats();
+    assert_eq!(stats.disk.spells, 0);
+    assert_eq!(stats.disk.items, 0);
+    assert_eq!(stats.disk.talents, 0);
 
     // Cleanup
     let _ = std::fs::remove_dir_all(&temp_dir);

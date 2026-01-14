@@ -1,5 +1,10 @@
 use egui::{Color32, Rounding, Stroke, Vec2};
 
+/// Detect system theme preference
+pub fn system_prefers_dark() -> bool {
+    matches!(dark_light::detect(), dark_light::Mode::Dark | dark_light::Mode::Default)
+}
+
 pub const ZINC_950: Color32 = Color32::from_rgb(9, 9, 11);
 pub const ZINC_900: Color32 = Color32::from_rgb(24, 24, 27);
 pub const ZINC_800: Color32 = Color32::from_rgb(39, 39, 42);
@@ -20,6 +25,24 @@ pub const BORDER: Color32 = ZINC_800;
 pub const SURFACE: Color32 = ZINC_900;
 
 pub fn apply_theme(ctx: &egui::Context) {
+    if system_prefers_dark() {
+        apply_dark_theme(ctx);
+    } else {
+        apply_light_theme(ctx);
+    }
+}
+
+fn apply_light_theme(ctx: &egui::Context) {
+    ctx.set_visuals(egui::Visuals::light());
+    ctx.style_mut(|style| {
+        style.spacing.item_spacing = Vec2::new(8.0, 6.0);
+        style.spacing.button_padding = Vec2::new(12.0, 6.0);
+        style.spacing.window_margin = egui::Margin::same(16.0);
+        style.interaction.selectable_labels = false;
+    });
+}
+
+fn apply_dark_theme(ctx: &egui::Context) {
     use egui::{style::Selection, Visuals};
 
     ctx.set_visuals(Visuals {

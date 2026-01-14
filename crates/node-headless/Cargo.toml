@@ -12,5 +12,9 @@ path = "src/main.rs"
 node = { path = "../node" }
 tokio = { version = "1", features = ["full", "signal"] }
 tracing = "0.1"
-ctrlc = "3.4"
 clap = { version = "4.5", features = ["derive"] }
+
+# Signal handling (supports SIGTERM for containers)
+signal-hook = "0.3"
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
+tokio-stream = "0.1"
