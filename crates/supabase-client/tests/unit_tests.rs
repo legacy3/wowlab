@@ -5,8 +5,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use supabase_client::{
-    CacheConfig, ItemSummary, RetryConfig, SpellCost, SpellTiming, SupabaseClient, SupabaseError,
-    with_retry,
+    CacheConfig, DiskCache, DiskCacheConfig, ItemSummary, RetryConfig, SpellCost, SpellTiming,
+    SupabaseClient, SupabaseError, with_retry,
 };
 use wiremock::matchers::{header, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -300,4 +300,96 @@ async fn test_search_spells_url_encoding() {
     let client = SupabaseClient::new(&mock_server.uri(), "test_key");
     let result = client.search_spells("Death's Advance", 10).await.unwrap();
     assert!(result.is_empty());
+}
+
+// ============================================================================
+// Disk Cache Tests
+// ============================================================================
+
+#[test]
+fn test_disk_cache_set_get() {
+    let temp_dir = std::env::temp_dir().join(format!("supabase_test_{}", std::process::id()));
+    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
+    let cache = DiskCache::new(config).unwrap();
+
+    // Set and get a value
+    cache.set("spells", 12345, &"test_value").unwrap();
+    let value: String = cache.get("spells", 12345).unwrap();
+    assert_eq!(value, "test_value");
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_disk_cache_contains() {
+    let temp_dir = std::env::temp_dir().join(format!("supabase_test_contains_{}", std::process::id()));
+    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
+    let cache = DiskCache::new(config).unwrap();
+
+    assert!(!cache.contains("spells", 99999));
+    cache.set("spells", 99999, &42i32).unwrap();
+    assert!(cache.contains("spells", 99999));
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_disk_cache_remove() {
+    let temp_dir = std::env::temp_dir().join(format!("supabase_test_remove_{}", std::process::id()));
+    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
+    let cache = DiskCache::new(config).unwrap();
+
+    cache.set("spells", 111, &"to_remove").unwrap();
+    assert!(cache.contains("spells", 111));
+    cache.remove("spells", 111).unwrap();
+    assert!(!cache.contains("spells", 111));
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_disk_cache_patch_version_change() {
+    let temp_dir = std::env::temp_dir().join(format!("supabase_test_patch_{}", std::process::id()));
+
+    // Create cache with version 11.0.0
+    {
+        let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
+        let cache = DiskCache::new(config).unwrap();
+        cache.set("spells", 1, &"old_data").unwrap();
+        assert!(cache.contains("spells", 1));
+    }
+
+    // Create cache with different version - should clear
+    {
+        let config = DiskCacheConfig::new(&temp_dir, "11.0.5");
+        let cache = DiskCache::new(config).unwrap();
+        // Old data should be gone
+        assert!(!cache.contains("spells", 1));
+    }
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_disk_cache_stats() {
+    let temp_dir = std::env::temp_dir().join(format!("supabase_test_stats_{}", std::process::id()));
+    let config = DiskCacheConfig::new(&temp_dir, "11.0.0");
+    let cache = DiskCache::new(config).unwrap();
+
+    cache.set("spells", 1, &"spell1").unwrap();
+    cache.set("spells", 2, &"spell2").unwrap();
+    cache.set("items", 1, &"item1").unwrap();
+
+    let stats = cache.stats();
+    assert_eq!(stats.spells, 2);
+    assert_eq!(stats.items, 1);
+    assert_eq!(stats.talents, 0);
+    assert_eq!(stats.total(), 3);
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp_dir);
 }

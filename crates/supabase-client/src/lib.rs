@@ -5,6 +5,7 @@
 
 pub mod cache;
 pub mod client;
+pub mod disk_cache;
 pub mod errors;
 pub mod partial;
 pub mod queries;
@@ -12,6 +13,7 @@ pub mod retry;
 
 pub use cache::{CacheConfig, CachedClient};
 pub use client::SupabaseClient;
+pub use disk_cache::{CacheStats, DiskCache, DiskCacheConfig};
 pub use errors::SupabaseError;
 pub use partial::{
     ItemSummary, SpellCost, SpellDamage, SpellRange, SpellSummary, SpellTiming, TalentNodeSummary,
