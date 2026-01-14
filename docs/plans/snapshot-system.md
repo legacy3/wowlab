@@ -2,14 +2,14 @@
 
 ## Overview
 
-A system for generating, storing, and consuming pre-assembled game data snapshots. **All data logic lives in Rust** - generation, transformation, and consumption are unified in `crates/gamedata`.
+A system for generating, storing, and consuming pre-assembled game data snapshots. **Everything is Rust** - CLI, generation, transformation, and consumption.
 
 ```
 Raw DBC CSVs (data/)
     │
     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                    crates/gamedata (Rust)                    │
+│               crates/snapshot-parser (Rust)                  │
 │  - CSV parsing (csv crate)                                   │
 │  - DBC type definitions (serde structs)                      │
 │  - Spell/Talent/Aura/Item transformation                     │
@@ -21,109 +21,285 @@ Raw DBC CSVs (data/)
     │                           │                           │
     ▼                           ▼                           ▼
 ┌────────────────┐   ┌────────────────────┐   ┌────────────────────┐
-│ Supabase       │   │ crates/engine      │   │ packages/wowlab    │
-│ Storage        │   │ (native dep)       │   │ (WASM wrapper)     │
-│ snapshots/     │   │ - Simulation       │   │ - apps/cli         │
-│                │   │ - DPS calc         │   │ - apps/portal  │
+│ crates/cli     │   │ crates/engine      │   │ packages/wowlab    │
+│ (Rust + clap)  │   │ (native dep)       │   │ (WASM wrapper)     │
+│ - generate     │   │ - Simulation       │   │ - apps/portal      │
+│ - upload       │   │ - DPS calc         │   │                    │
+│ - validate     │   │                    │   │                    │
 └────────────────┘   └────────────────────┘   └────────────────────┘
+                                │
+                                ▼
+                     ┌────────────────────┐
+                     │ Supabase Storage   │
+                     │ snapshots/11.2.0/  │
+                     └────────────────────┘
 ```
 
 ## Architecture
 
+### Crates
+
+| Crate | Purpose |
+|-------|---------|
+| `crates/snapshot-parser` | DBC parsing, transformation, snapshot types, loaders |
+| `crates/cli` | Command-line tool (generate, upload, validate, list) |
+| `crates/engine` | Simulation engine, uses snapshot-parser |
+
 ### What Lives Where
 
-| Component | Location | Notes |
-|-----------|----------|-------|
-| DBC type definitions | `crates/gamedata/src/dbc/` | Rust structs with serde |
-| CSV parsing | `crates/gamedata/src/dbc/` | `csv` crate |
-| Data transformation | `crates/gamedata/src/transform/` | Spell, talent, aura, item |
-| Snapshot generation | `crates/gamedata/src/snapshot/` | JSON output |
-| Snapshot consumption | `crates/gamedata/src/loader/` | Native + WASM |
-| Talent string decoder | `crates/gamedata/src/talent/` | Base64 bit reader |
-| Spell description parser | `crates/gamedata/src/spell/` | Variable substitution |
-| WASM bindings | `crates/gamedata/src/wasm.rs` | wasm-bindgen exports |
-| TypeScript wrapper | `packages/wowlab/` | Only package, just wraps WASM |
+| Component | Location |
+|-----------|----------|
+| DBC type definitions | `crates/snapshot-parser/src/dbc/` |
+| CSV parsing | `crates/snapshot-parser/src/dbc/loader.rs` |
+| Data transformation | `crates/snapshot-parser/src/transform/` |
+| Snapshot types | `crates/snapshot-parser/src/snapshot/types.rs` |
+| Snapshot generation | `crates/snapshot-parser/src/snapshot/generator.rs` |
+| Snapshot consumption | `crates/snapshot-parser/src/loader/` |
+| Talent string decoder | `crates/snapshot-parser/src/talent/` |
+| Spell description parser | `crates/snapshot-parser/src/spell/` |
+| WASM bindings | `crates/snapshot-parser/src/wasm.rs` |
+| CLI commands | `crates/cli/src/` |
 
-### packages/ Demolition
+### packages/
 
-**DELETE ENTIRELY:**
-- `packages/wowlab-core/` - DBC schemas move to Rust
-- `packages/wowlab-services/` - Transformers move to Rust
-- `packages/wowlab-parsers/` - Parsers move to Rust
-- `packages/wowlab-engine/` - Merged into wowlab package
-- `packages/wowlab-gamedata/` - Merged into wowlab package
-
-**KEEP (renamed/consolidated):**
-- `packages/wowlab/` - Single package wrapping all WASM exports
-
-### Final packages/ Structure
+Single package wrapping WASM for web use:
 
 ```
 packages/
 └── wowlab/
     ├── package.json
     ├── wasm/                    # wasm-pack output
-    │   ├── wowlab.d.ts
-    │   ├── wowlab.js
-    │   └── wowlab_bg.wasm
+    │   ├── snapshot_parser.d.ts
+    │   ├── snapshot_parser.js
+    │   └── snapshot_parser_bg.wasm
     └── src/
         └── index.ts             # Re-exports WASM bindings
 ```
 
-## crates/gamedata Structure
+## crates/snapshot-parser Structure
 
 ```
-crates/gamedata/
+crates/snapshot-parser/
 ├── Cargo.toml
-├── src/
-│   ├── lib.rs                   # Public API
-│   │
-│   ├── dbc/                     # DBC definitions + CSV parsing
-│   │   ├── mod.rs
-│   │   ├── loader.rs            # CSV loader
-│   │   ├── spell.rs             # spell_*, spell_effect, etc.
-│   │   ├── talent.rs            # trait_*, talent_* tables
-│   │   ├── item.rs              # item_*, item_effect, etc.
-│   │   ├── character.rs         # chr_classes, chr_specialization
-│   │   └── curve.rs             # expected_stat, content_tuning
-│   │
-│   ├── transform/               # Raw DBC → Snapshot transformation
-│   │   ├── mod.rs
-│   │   ├── spell.rs             # SpellSnapshot generation
-│   │   ├── talent.rs            # TalentSnapshot generation
-│   │   ├── aura.rs              # AuraSnapshot generation
-│   │   ├── item.rs              # ItemSnapshot generation
-│   │   ├── spec.rs              # SpecSnapshot generation
-│   │   └── curve.rs             # CurveSnapshot generation
-│   │
-│   ├── snapshot/                # Snapshot types + generation
-│   │   ├── mod.rs
-│   │   ├── types.rs             # All snapshot struct definitions
-│   │   ├── generator.rs         # Batch generation logic
-│   │   └── manifest.rs          # Manifest generation
-│   │
-│   ├── loader/                  # Snapshot consumption
-│   │   ├── mod.rs               # SnapshotLoader trait
-│   │   ├── native.rs            # reqwest + fs (native)
-│   │   └── wasm.rs              # fetch + IndexedDB (wasm)
-│   │
-│   ├── talent/                  # Talent-specific logic
-│   │   ├── mod.rs
-│   │   ├── decoder.rs           # Base64 talent string decoding
-│   │   └── resolver.rs          # Map selections → spell IDs
-│   │
-│   ├── spell/                   # Spell-specific logic
-│   │   ├── mod.rs
-│   │   ├── description.rs       # Variable substitution parser
-│   │   └── damage.rs            # Damage formula calculations
-│   │
-│   ├── wasm.rs                  # wasm-bindgen exports
-│   └── errors.rs                # Error types
-│
-└── tests/
-    ├── dbc_parsing.rs
-    ├── transformation.rs
-    └── snapshot_roundtrip.rs
+└── src/
+    ├── lib.rs                   # Public API
+    │
+    ├── dbc/                     # DBC definitions + CSV parsing
+    │   ├── mod.rs
+    │   ├── loader.rs            # CSV loader
+    │   ├── spell.rs             # spell_*, spell_effect, etc.
+    │   ├── talent.rs            # trait_*, talent_* tables
+    │   ├── item.rs              # item_*, item_effect, etc.
+    │   ├── character.rs         # chr_classes, chr_specialization
+    │   └── curve.rs             # expected_stat, content_tuning
+    │
+    ├── transform/               # Raw DBC → Snapshot transformation
+    │   ├── mod.rs
+    │   ├── spell.rs
+    │   ├── talent.rs
+    │   ├── aura.rs
+    │   ├── item.rs
+    │   ├── spec.rs
+    │   └── curve.rs
+    │
+    ├── snapshot/                # Snapshot types + generation
+    │   ├── mod.rs
+    │   ├── types.rs             # TalentSnapshot, SpellSnapshot, etc.
+    │   ├── generator.rs         # Batch generation logic
+    │   └── manifest.rs          # Manifest generation
+    │
+    ├── loader/                  # Snapshot consumption
+    │   ├── mod.rs               # SnapshotLoader trait
+    │   ├── native.rs            # reqwest + fs (native)
+    │   └── wasm.rs              # fetch + IndexedDB (wasm)
+    │
+    ├── talent/                  # Talent-specific logic
+    │   ├── mod.rs
+    │   ├── decoder.rs           # Base64 talent string decoding
+    │   └── resolver.rs          # Map selections → spell IDs
+    │
+    ├── spell/                   # Spell-specific logic
+    │   ├── mod.rs
+    │   ├── description.rs       # Variable substitution parser
+    │   └── damage.rs            # Damage formula calculations
+    │
+    ├── wasm.rs                  # wasm-bindgen exports
+    └── errors.rs                # Error types
+```
+
+## crates/cli Structure
+
+```
+crates/cli/
+├── Cargo.toml
+└── src/
+    ├── main.rs                  # Entry point
+    ├── commands/
+    │   ├── mod.rs
+    │   ├── generate.rs          # Generate snapshots from DBC CSVs
+    │   ├── upload.rs            # Upload to Supabase Storage
+    │   ├── list.rs              # List available snapshots
+    │   └── validate.rs          # Validate snapshot integrity
+    └── config.rs                # CLI configuration
+```
+
+## CLI Usage
+
+Native Rust binary using clap:
+
+```bash
+# Generate snapshots
+wowlab snapshot generate --patch 11.2.0 --data-dir ./data --output ./snapshots
+wowlab snapshot generate --patch 11.2.0 --types talents,spells
+wowlab snapshot generate --patch 11.2.0 --specs 253,254
+
+# Upload to Supabase Storage
+wowlab snapshot upload --patch 11.2.0 --input ./snapshots
+
+# List available snapshots
+wowlab snapshot list
+wowlab snapshot list --patch 11.2.0 --verbose
+
+# Validate snapshot integrity
+wowlab snapshot validate --patch 11.2.0
+wowlab snapshot validate --patch 11.2.0 --remote
+```
+
+### CLI Implementation
+
+```rust
+// crates/cli/src/main.rs
+use clap::{Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(name = "wowlab")]
+#[command(about = "WoW Lab CLI tools")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Snapshot {
+        #[command(subcommand)]
+        action: SnapshotCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum SnapshotCommands {
+    Generate {
+        #[arg(long)]
+        patch: String,
+        #[arg(long, default_value = "./data")]
+        data_dir: PathBuf,
+        #[arg(long, default_value = "./snapshots")]
+        output: PathBuf,
+        #[arg(long)]
+        types: Option<String>,
+        #[arg(long)]
+        specs: Option<String>,
+    },
+    Upload {
+        #[arg(long)]
+        patch: String,
+        #[arg(long, default_value = "./snapshots")]
+        input: PathBuf,
+        #[arg(long)]
+        force: bool,
+    },
+    List {
+        #[arg(long)]
+        patch: Option<String>,
+        #[arg(long)]
+        verbose: bool,
+    },
+    Validate {
+        #[arg(long)]
+        patch: String,
+        #[arg(long)]
+        remote: bool,
+    },
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Snapshot { action } => match action {
+            SnapshotCommands::Generate { patch, data_dir, output, types, specs } => {
+                commands::generate::run(patch, data_dir, output, types, specs)
+            }
+            SnapshotCommands::Upload { patch, input, force } => {
+                commands::upload::run(patch, input, force)
+            }
+            SnapshotCommands::List { patch, verbose } => {
+                commands::list::run(patch, verbose)
+            }
+            SnapshotCommands::Validate { patch, remote } => {
+                commands::validate::run(patch, remote)
+            }
+        }
+    }
+}
+```
+
+```rust
+// crates/cli/src/commands/generate.rs
+use snapshot_parser::{dbc, transform, snapshot};
+
+pub fn run(
+    patch: String,
+    data_dir: PathBuf,
+    output: PathBuf,
+    types: Option<String>,
+    specs: Option<String>,
+) -> Result<()> {
+    println!("Loading DBC data from {:?}...", data_dir);
+
+    let dbc_data = dbc::load_all(&data_dir)?;
+
+    let types: Vec<&str> = types
+        .as_deref()
+        .map(|t| t.split(',').collect())
+        .unwrap_or_else(|| vec!["talents", "spells", "auras", "items", "specs", "curves"]);
+
+    let specs: Option<Vec<u32>> = specs
+        .map(|s| s.split(',').filter_map(|id| id.parse().ok()).collect());
+
+    let mut generated = 0;
+
+    for snapshot_type in types {
+        match snapshot_type {
+            "talents" => {
+                let snapshots = transform::talents(&dbc_data, specs.as_deref())?;
+                for (spec_id, snapshot) in snapshots {
+                    let path = output.join(format!("{}/talents/{}.json", patch, spec_id));
+                    snapshot::write(&path, &snapshot)?;
+                    generated += 1;
+                }
+            }
+            "spells" => {
+                let snapshots = transform::spells(&dbc_data)?;
+                for (class, snapshot) in snapshots {
+                    let path = output.join(format!("{}/spells/{}.json", patch, class));
+                    snapshot::write(&path, &snapshot)?;
+                    generated += 1;
+                }
+            }
+            // ... other types
+            _ => {}
+        }
+    }
+
+    // Generate manifest
+    let manifest = snapshot::generate_manifest(&output, &patch)?;
+    snapshot::write(&output.join(format!("{}/manifest.json", patch)), &manifest)?;
+
+    println!("Generated {} snapshot files", generated);
+    Ok(())
+}
 ```
 
 ## Snapshot Types
@@ -145,27 +321,6 @@ pub struct TalentSnapshot {
     pub point_limits: PointLimits,
     pub sub_trees: Vec<SubTreeSnapshot>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TalentNodeSnapshot {
-    pub id: u32,
-    #[serde(rename = "type")]
-    pub node_type: u8,
-    pub max_ranks: u8,
-    pub tree_index: u8,
-    pub sub_tree_id: u32,
-    pub entries: Vec<TalentEntrySnapshot>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TalentEntrySnapshot {
-    pub id: u32,
-    pub spell_id: u32,
-    pub definition_id: u32,
-    pub name: String,
-}
 ```
 
 ### SpellSnapshot
@@ -176,33 +331,21 @@ pub struct TalentEntrySnapshot {
 pub struct SpellSnapshot {
     pub id: u32,
     pub name: String,
-
-    // Timing
     pub cast_time_ms: u32,
     pub gcd_ms: u32,
     pub cooldown_ms: u32,
     pub charges: u8,
     pub charge_recovery_ms: u32,
-
-    // Resources
     pub costs: Vec<SpellCost>,
-
-    // Damage
     pub school: u8,
     pub ap_coefficient: f64,
     pub sp_coefficient: f64,
     pub base_points: i32,
     pub variance: f64,
-
-    // Targeting
     pub range: f32,
     pub radius: f32,
     pub max_targets: u8,
-
-    // Effects
     pub effects: Vec<SpellEffectSnapshot>,
-
-    // Flags
     pub is_passive: bool,
     pub can_crit: bool,
     pub ignores_gcd: bool,
@@ -218,19 +361,14 @@ pub struct AuraSnapshot {
     pub id: u32,
     pub name: String,
     pub spell_id: u32,
-
     pub base_duration_ms: u32,
     pub max_duration_ms: u32,
-
     pub max_stacks: u8,
     pub stack_behavior: StackBehavior,
-
     pub tick_period_ms: u32,
     pub periodic_type: PeriodicType,
-
     pub refresh_behavior: RefreshBehavior,
     pub pandemic_window: f32,
-
     pub effects: Vec<AuraEffectSnapshot>,
     pub flags: AuraFlags,
 }
@@ -244,57 +382,16 @@ pub struct AuraSnapshot {
 pub struct ItemSnapshot {
     pub id: u32,
     pub name: String,
-
     pub item_level: u16,
     pub quality: u8,
     pub inventory_type: u8,
     pub class_id: u8,
     pub subclass_id: u8,
-
     pub stats: Vec<ItemStat>,
     pub effects: Vec<ItemEffect>,
-
     pub set_id: Option<u32>,
     pub set_bonuses: Option<Vec<SetBonus>>,
-
     pub weapon: Option<WeaponStats>,
-}
-```
-
-### SpecSnapshot
-
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SpecSnapshot {
-    pub id: u32,
-    pub name: String,
-    pub class_id: u8,
-    pub class_name: String,
-
-    pub primary_resource: String,
-    pub max_resource: u16,
-    pub base_regen: f32,
-
-    pub base_stats: BaseStats,
-
-    pub mastery_coefficient: f32,
-    pub haste_coefficient: f32,
-
-    pub role: Role,
-    pub armor_type: ArmorType,
-}
-```
-
-### CurveSnapshot
-
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CurveSnapshot {
-    pub expected_stats: Vec<ExpectedStat>,
-    pub content_tuning: Vec<ContentTuning>,
-    pub rating_conversions: RatingConversions,
 }
 ```
 
@@ -311,7 +408,7 @@ Supabase Storage: wowlab-snapshots bucket
         │   ├── 254.json        # MM Hunter
         │   └── ...
         ├── spells/
-        │   ├── hunter.json     # All hunter spells
+        │   ├── hunter.json
         │   └── ...
         ├── auras/
         │   ├── hunter.json
@@ -326,169 +423,51 @@ Supabase Storage: wowlab-snapshots bucket
             └── scaling.json
 ```
 
-## CLI Usage
-
-The CLI calls into gamedata WASM for all operations.
-
-```bash
-# Generate snapshots (calls gamedata::snapshot::generate)
-pnpm cli snapshot generate --patch 11.2.0
-pnpm cli snapshot generate --patch 11.2.0 --types talents,spells
-pnpm cli snapshot generate --patch 11.2.0 --specs 253,254
-
-# Upload to Supabase Storage
-pnpm cli snapshot upload --patch 11.2.0
-
-# List/validate
-pnpm cli snapshot list --patch 11.2.0
-pnpm cli snapshot validate --patch 11.2.0
-```
-
-### CLI Implementation
-
-```typescript
-// apps/cli/commands/snapshot/generate.ts
-import { initWasm, generateSnapshots } from '@wowlab/wowlab';
-
-export async function generate(options: GenerateOptions) {
-  await initWasm();
-
-  const result = await generateSnapshots({
-    patch: options.patch,
-    dataDir: './data',  // Path to DBC CSVs
-    outputDir: './snapshots',
-    types: options.types,
-    specs: options.specs,
-  });
-
-  console.log(`Generated ${result.fileCount} files`);
-}
-```
-
 ## WASM Exports
 
+For web use via `packages/wowlab`:
+
 ```rust
-// crates/gamedata/src/wasm.rs
+// crates/snapshot-parser/src/wasm.rs
 
 use wasm_bindgen::prelude::*;
 
-/// Initialize the WASM module
 #[wasm_bindgen]
 pub fn init() {
     console_error_panic_hook::set_once();
 }
 
-/// Generate snapshots from DBC CSVs
-#[wasm_bindgen]
-pub async fn generate_snapshots(options: JsValue) -> Result<JsValue, JsValue> {
-    let opts: GenerateOptions = serde_wasm_bindgen::from_value(options)?;
-    let result = crate::snapshot::generator::generate(opts).await?;
-    serde_wasm_bindgen::to_value(&result).map_err(|e| e.into())
-}
-
-/// Load a talent snapshot (with caching)
 #[wasm_bindgen]
 pub async fn load_talents(spec_id: u32) -> Result<JsValue, JsValue> {
     let snapshot = crate::loader::wasm::load_talents(spec_id).await?;
     serde_wasm_bindgen::to_value(&snapshot).map_err(|e| e.into())
 }
 
-/// Decode a talent loadout string
 #[wasm_bindgen]
 pub fn decode_talent_string(talent_string: &str) -> Result<JsValue, JsValue> {
     let decoded = crate::talent::decoder::decode(talent_string)?;
     serde_wasm_bindgen::to_value(&decoded).map_err(|e| e.into())
 }
 
-/// Resolve talent selections to active spell IDs
 #[wasm_bindgen]
-pub fn resolve_talents(
-    snapshot: JsValue,
-    decoded: JsValue,
-) -> Result<JsValue, JsValue> {
+pub fn resolve_talents(snapshot: JsValue, decoded: JsValue) -> Result<JsValue, JsValue> {
     let snap: TalentSnapshot = serde_wasm_bindgen::from_value(snapshot)?;
     let dec: DecodedLoadout = serde_wasm_bindgen::from_value(decoded)?;
     let spells = crate::talent::resolver::resolve(&snap, &dec);
     serde_wasm_bindgen::to_value(&spells).map_err(|e| e.into())
 }
 
-/// Load spell data for a class
 #[wasm_bindgen]
 pub async fn load_spells(class_name: &str) -> Result<JsValue, JsValue> {
     let snapshot = crate::loader::wasm::load_spells(class_name).await?;
     serde_wasm_bindgen::to_value(&snapshot).map_err(|e| e.into())
 }
 
-/// Parse spell description with variable substitution
 #[wasm_bindgen]
-pub fn parse_spell_description(
-    template: &str,
-    spell: JsValue,
-) -> Result<String, JsValue> {
+pub fn parse_spell_description(template: &str, spell: JsValue) -> Result<String, JsValue> {
     let spell: SpellSnapshot = serde_wasm_bindgen::from_value(spell)?;
     crate::spell::description::parse(template, &spell).map_err(|e| e.into())
 }
-```
-
-## packages/wowlab
-
-The single surviving package - just re-exports WASM.
-
-```typescript
-// packages/wowlab/src/index.ts
-import init, {
-  generate_snapshots,
-  load_talents,
-  load_spells,
-  decode_talent_string,
-  resolve_talents,
-  parse_spell_description,
-} from '../wasm/wowlab.js';
-
-export { init as initWasm };
-
-export async function generateSnapshots(options: GenerateOptions): Promise<GenerateResult> {
-  return generate_snapshots(options);
-}
-
-export async function loadTalents(specId: number): Promise<TalentSnapshot> {
-  return load_talents(specId);
-}
-
-export async function loadSpells(className: string): Promise<SpellsSnapshot> {
-  return load_spells(className);
-}
-
-export function decodeTalentString(talentString: string): DecodedLoadout {
-  return decode_talent_string(talentString);
-}
-
-export function resolveTalents(
-  snapshot: TalentSnapshot,
-  decoded: DecodedLoadout
-): number[] {
-  return resolve_talents(snapshot, decoded);
-}
-
-export function parseSpellDescription(
-  template: string,
-  spell: SpellSnapshot
-): string {
-  return parse_spell_description(template, spell);
-}
-
-// Re-export types
-export type {
-  TalentSnapshot,
-  SpellSnapshot,
-  AuraSnapshot,
-  ItemSnapshot,
-  SpecSnapshot,
-  CurveSnapshot,
-  DecodedLoadout,
-  GenerateOptions,
-  GenerateResult,
-};
 ```
 
 ## Integration Examples
@@ -536,9 +515,8 @@ export function useTalentTree(specId: number, talentString?: string) {
 
 ```rust
 // crates/engine/src/simulation.rs
-use gamedata::{NativeLoader, LoaderConfig};
-use gamedata::talent::decoder::decode;
-use gamedata::talent::resolver::resolve;
+use snapshot_parser::{NativeLoader, LoaderConfig};
+use snapshot_parser::talent::{decoder, resolver};
 
 pub fn create_simulation(config: SimConfig) -> Result<Simulation, EngineError> {
     let loader = NativeLoader::new(LoaderConfig {
@@ -547,124 +525,22 @@ pub fn create_simulation(config: SimConfig) -> Result<Simulation, EngineError> {
         cache_dir: dirs::cache_dir().unwrap().join("wowlab/snapshots"),
     });
 
-    // Load talent snapshot
     let talent_snap = loader.load_talents(config.spec_id)?;
-
-    // Decode talent string
-    let decoded = decode(&config.talent_string)?;
-
-    // Resolve to spell IDs
-    let active_spells = resolve(&talent_snap, &decoded);
-
-    // Load spell data
+    let decoded = decoder::decode(&config.talent_string)?;
+    let active_spells = resolver::resolve(&talent_snap, &decoded);
     let spell_snap = loader.load_spells(&config.class_name)?;
 
-    // Build simulation with loaded data
     Ok(Simulation::new(active_spells, spell_snap))
 }
 ```
 
-### CLI
-
-```typescript
-// apps/cli/commands/snapshot/generate.ts
-import { Command } from '@effect/cli';
-import { initWasm, generateSnapshots } from '@wowlab/wowlab';
-import * as fs from 'fs/promises';
-
-export const generate = Command.make('generate', { patch, types, specs, output }, async (args) => {
-  await initWasm();
-
-  const result = await generateSnapshots({
-    patch: args.patch,
-    dataDir: './data',
-    types: args.types?.split(','),
-    specs: args.specs?.split(',').map(Number),
-  });
-
-  // Write output files
-  for (const file of result.files) {
-    const path = `${args.output}/${file.path}`;
-    await fs.mkdir(dirname(path), { recursive: true });
-    await fs.writeFile(path, JSON.stringify(file.data, null, 2));
-  }
-
-  console.log(`Generated ${result.files.length} files to ${args.output}`);
-});
-```
-
-## Implementation Phases
-
-### Phase 1: crates/gamedata Foundation
-
-1. Create `crates/gamedata` with Cargo.toml (dual-target: native + wasm)
-2. Implement DBC CSV parsing (`csv` crate + serde structs)
-3. Define all snapshot types in Rust
-4. Implement basic WASM exports
-
-**Deliverables:**
-- `crates/gamedata/` with DBC parsing
-- Snapshot type definitions
-- Basic WASM build working
-
-### Phase 2: Transformation Layer
-
-1. Port spell transformation from TypeScript extractors
-2. Port talent transformation
-3. Port aura/item transformation
-4. Implement snapshot generation
-
-**Deliverables:**
-- All transformers in Rust
-- `generate_snapshots()` working
-
-### Phase 3: packages/wowlab + CLI
-
-1. Create `packages/wowlab/` with WASM wrapper
-2. Delete all other packages
-3. Update CLI to use WASM
-4. Test snapshot generation end-to-end
-
-**Deliverables:**
-- Single `packages/wowlab/` package
-- CLI generating snapshots via WASM
-
-### Phase 4: Loaders + Consumption
-
-1. Implement native loader (reqwest + fs cache)
-2. Implement WASM loader (fetch + IndexedDB)
-3. Add talent decoder
-4. Add talent resolver
-
-**Deliverables:**
-- Snapshot consumption working
-- Talent string → spell IDs working
-
-### Phase 5: Engine Integration
-
-1. Add gamedata dependency to engine
-2. Refactor handlers to use snapshots
-3. Remove hardcoded talent data
-
-**Deliverables:**
-- Engine loads data from snapshots
-- Dynamic talent configuration
-
-### Phase 6: Portal Migration
-
-1. Update portal to use `@wowlab/wowlab`
-2. Remove Effect service dependencies
-3. Update hooks to use WASM
-
-**Deliverables:**
-- Portal using snapshots
-- No more direct Supabase queries for game data
-
 ## Cargo.toml
+
+### crates/snapshot-parser/Cargo.toml
 
 ```toml
 [package]
-name = "gamedata"
+name = "snapshot-parser"
 version = "0.1.0"
 edition = "2021"
 
@@ -695,40 +571,112 @@ serde-wasm-bindgen = { version = "0.6", optional = true }
 console_error_panic_hook = { version = "0.1", optional = true }
 ```
 
+### crates/cli/Cargo.toml
+
+```toml
+[package]
+name = "wowlab-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wowlab"
+path = "src/main.rs"
+
+[dependencies]
+snapshot-parser = { path = "../snapshot-parser" }
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+reqwest = { version = "0.12", features = ["json"] }
+sha2 = "0.10"
+```
+
 ## Build Commands
 
 ```bash
-# Build gamedata (native)
-cd crates/gamedata && cargo build --release
+# Build CLI (native)
+cargo build --release -p wowlab-cli
 
-# Build gamedata (WASM)
-cd crates/gamedata && wasm-pack build --target web --out-dir ../../packages/wowlab/wasm
+# Build snapshot-parser (WASM)
+cd crates/snapshot-parser && wasm-pack build --target web --out-dir ../../packages/wowlab/wasm
 
-# Generate snapshots
-pnpm cli snapshot generate --patch 11.2.0
+# Run CLI
+./target/release/wowlab snapshot generate --patch 11.2.0
 
-# Upload snapshots
-pnpm cli snapshot upload --patch 11.2.0
+# Or via cargo
+cargo run -p wowlab-cli -- snapshot generate --patch 11.2.0
 ```
+
+## Implementation Phases
+
+### Phase 1: crates/snapshot-parser Foundation
+
+1. Create `crates/snapshot-parser` with Cargo.toml
+2. Implement DBC CSV parsing (`csv` crate + serde structs)
+3. Define all snapshot types
+4. Basic transformation logic
+
+**Deliverables:**
+- DBC parsing working
+- Snapshot types defined
+
+### Phase 2: CLI
+
+1. Create `crates/cli` with clap
+2. Implement `generate` command
+3. Implement `upload` command (Supabase)
+4. Implement `list` and `validate` commands
+
+**Deliverables:**
+- `wowlab` CLI binary
+- Snapshot generation working
+
+### Phase 3: Loaders + WASM
+
+1. Implement native loader (reqwest + fs cache)
+2. Implement WASM loader (fetch + IndexedDB)
+3. Add wasm-bindgen exports
+4. Create `packages/wowlab` wrapper
+
+**Deliverables:**
+- WASM build working
+- `packages/wowlab` npm package
+
+### Phase 4: Engine Integration
+
+1. Add snapshot-parser dependency to engine
+2. Refactor handlers to use snapshots
+3. Remove hardcoded talent data
+
+**Deliverables:**
+- Engine uses snapshots
+- Dynamic talent configuration
+
+### Phase 5: Portal Migration
+
+1. Update portal to use `@wowlab/wowlab`
+2. Remove old Effect service dependencies
+3. Update hooks to use WASM
+
+**Deliverables:**
+- Portal using snapshots
+- No more direct Supabase queries for game data
 
 ## Migration Checklist
 
-- [ ] Create `crates/gamedata/`
-- [ ] Port DBC type definitions from `@wowlab/core`
+- [ ] Create `crates/snapshot-parser/`
+- [ ] Port DBC type definitions from old `@wowlab/core`
 - [ ] Implement CSV parsing
-- [ ] Port extractors from `@wowlab/services`
+- [ ] Port extractors from old `@wowlab/services`
 - [ ] Port talent transformer
 - [ ] Port spell transformer
 - [ ] Port aura/item transformers
-- [ ] Port talent string decoder from `@wowlab/parsers`
+- [ ] Port talent string decoder from old `@wowlab/parsers`
 - [ ] Port spell description parser
+- [ ] Create `crates/cli/`
+- [ ] Implement CLI commands
 - [ ] Implement WASM exports
 - [ ] Create `packages/wowlab/`
-- [ ] Delete `packages/wowlab-core/`
-- [ ] Delete `packages/wowlab-services/`
-- [ ] Delete `packages/wowlab-parsers/`
-- [ ] Delete `packages/wowlab-engine/`
-- [ ] Delete `packages/wowlab-gamedata/`
-- [ ] Update CLI commands
 - [ ] Update portal imports
-- [ ] Update engine to use gamedata crate
+- [ ] Update engine to use snapshot-parser

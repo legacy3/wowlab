@@ -1,11 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
+    "cli",
     "engine",
-    "gamedata",
     "node",
     "node-gui",
     "node-headless",
+    "snapshot-parser",
 ]
 
 [workspace.package]
