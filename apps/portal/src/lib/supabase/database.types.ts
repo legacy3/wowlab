@@ -559,7 +559,7 @@ export type Database = {
           claimed_at: string | null
           completed_at: string | null
           config_hash: string
-          created_at: string | null
+          created_at: string
           id: string
           iterations: number
           job_id: string
@@ -572,7 +572,7 @@ export type Database = {
           claimed_at?: string | null
           completed_at?: string | null
           config_hash: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           iterations: number
           job_id: string
@@ -585,7 +585,7 @@ export type Database = {
           claimed_at?: string | null
           completed_at?: string | null
           config_hash?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           iterations?: number
           job_id?: string
@@ -717,7 +717,7 @@ export type Database = {
         Row: {
           checksum: string | null
           created_at: string
-          current_version: number | null
+          current_version: number
           description: string | null
           forked_from_id: string | null
           id: string
@@ -732,7 +732,7 @@ export type Database = {
         Insert: {
           checksum?: string | null
           created_at?: string
-          current_version?: number | null
+          current_version?: number
           description?: string | null
           forked_from_id?: string | null
           id?: string
@@ -747,7 +747,7 @@ export type Database = {
         Update: {
           checksum?: string | null
           created_at?: string
-          current_version?: number | null
+          current_version?: number
           description?: string | null
           forked_from_id?: string | null
           id?: string
@@ -778,7 +778,7 @@ export type Database = {
       }
       rotations_versions: {
         Row: {
-          created_at: string | null
+          created_at: string
           created_by: string | null
           id: string
           message: string | null
@@ -787,7 +787,7 @@ export type Database = {
           version: number
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           id?: string
           message?: string | null
@@ -796,7 +796,7 @@ export type Database = {
           version: number
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           id?: string
           message?: string | null
@@ -816,17 +816,17 @@ export type Database = {
       }
       short_urls: {
         Row: {
-          created_at: string | null
+          created_at: string
           slug: string
           target_url: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           slug: string
           target_url: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           slug?: string
           target_url?: string
         }
@@ -900,34 +900,34 @@ export type Database = {
       }
       user_settings: {
         Row: {
-          compact_mode: boolean | null
-          created_at: string | null
-          default_fight_duration: number | null
-          default_iterations: number | null
+          compact_mode: boolean
+          created_at: string
+          default_fight_duration: number
+          default_iterations: number
           id: string
-          show_tooltips: boolean | null
-          theme: string | null
-          updated_at: string | null
+          show_tooltips: boolean
+          theme: string
+          updated_at: string
         }
         Insert: {
-          compact_mode?: boolean | null
-          created_at?: string | null
-          default_fight_duration?: number | null
-          default_iterations?: number | null
+          compact_mode?: boolean
+          created_at?: string
+          default_fight_duration?: number
+          default_iterations?: number
           id: string
-          show_tooltips?: boolean | null
-          theme?: string | null
-          updated_at?: string | null
+          show_tooltips?: boolean
+          theme?: string
+          updated_at?: string
         }
         Update: {
-          compact_mode?: boolean | null
-          created_at?: string | null
-          default_fight_duration?: number | null
-          default_iterations?: number | null
+          compact_mode?: boolean
+          created_at?: string
+          default_fight_duration?: number
+          default_iterations?: number
           id?: string
-          show_tooltips?: boolean | null
-          theme?: string | null
-          updated_at?: string | null
+          show_tooltips?: boolean
+          theme?: string
+          updated_at?: string
         }
         Relationships: []
       }
