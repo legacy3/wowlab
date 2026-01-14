@@ -1,0 +1,157 @@
+//! DataResolver trait for abstracting data sources.
+//!
+//! The resolver trait allows the engine to load spell, talent, item, and aura data
+//! from different sources:
+//! - `LocalResolver`: Loads from local CSV files via snapshot-parser (offline, portable)
+//! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
+
+use async_trait::async_trait;
+use snapshot_parser::{
+    AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat, TalentTreeWithSelections,
+};
+use std::path::PathBuf;
+
+/// Errors that can occur during data resolution.
+#[derive(Debug, thiserror::Error)]
+pub enum ResolverError {
+    #[error("Spell not found: {0}")]
+    SpellNotFound(i32),
+
+    #[error("Talent tree not found for spec: {0}")]
+    TalentTreeNotFound(i32),
+
+    #[error("Item not found: {0}")]
+    ItemNotFound(i32),
+
+    #[error("Aura not found for spell: {0}")]
+    AuraNotFound(i32),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("DBC parse error: {0}")]
+    DbcParse(String),
+
+    #[error("Transform error: {0}")]
+    Transform(String),
+
+    #[error("Talent decode error: {0}")]
+    TalentDecode(String),
+
+    #[cfg(feature = "supabase")]
+    #[error("Supabase error: {0}")]
+    Supabase(#[from] supabase_client::SupabaseError),
+
+    #[error("Environment variable error: {0}")]
+    EnvVar(String),
+}
+
+impl From<snapshot_parser::DbcError> for ResolverError {
+    fn from(e: snapshot_parser::DbcError) -> Self {
+        ResolverError::DbcParse(e.to_string())
+    }
+}
+
+impl From<snapshot_parser::TransformError> for ResolverError {
+    fn from(e: snapshot_parser::TransformError) -> Self {
+        ResolverError::Transform(e.to_string())
+    }
+}
+
+impl From<snapshot_parser::errors::TalentError> for ResolverError {
+    fn from(e: snapshot_parser::errors::TalentError) -> Self {
+        ResolverError::TalentDecode(e.to_string())
+    }
+}
+
+/// Trait for resolving game data from various sources.
+///
+/// Implementations include:
+/// - `LocalResolver`: Loads from local CSV files (default, offline)
+/// - `SupabaseResolver`: Loads from Supabase API (optional, online)
+#[async_trait]
+pub trait DataResolver: Send + Sync {
+    /// Get spell by ID.
+    async fn get_spell(&self, id: i32) -> Result<SpellDataFlat, ResolverError>;
+
+    /// Get multiple spells by IDs.
+    async fn get_spells(&self, ids: &[i32]) -> Result<Vec<SpellDataFlat>, ResolverError>;
+
+    /// Get talent tree for a spec.
+    async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, ResolverError>;
+
+    /// Get item by ID.
+    async fn get_item(&self, id: i32) -> Result<ItemDataFlat, ResolverError>;
+
+    /// Get aura by spell ID.
+    async fn get_aura(&self, spell_id: i32) -> Result<AuraDataFlat, ResolverError>;
+
+    /// Search spells by name (optional, may not be supported by all resolvers).
+    async fn search_spells(
+        &self,
+        _query: &str,
+        _limit: usize,
+    ) -> Result<Vec<SpellDataFlat>, ResolverError> {
+        // Default: not supported, returns empty
+        Ok(vec![])
+    }
+
+    /// Decode a talent string and apply it to the talent tree.
+    ///
+    /// Uses snapshot-parser's decode_talent_loadout and apply_decoded_talents.
+    async fn decode_talents(
+        &self,
+        spec_id: i32,
+        talent_string: &str,
+    ) -> Result<TalentTreeWithSelections, ResolverError> {
+        let tree = self.get_talent_tree(spec_id).await?;
+        let decoded = snapshot_parser::decode_talent_loadout(talent_string)?;
+        Ok(snapshot_parser::apply_decoded_talents(tree, &decoded))
+    }
+
+    /// Get all spell IDs from decoded talents.
+    async fn get_talent_spell_ids(
+        &self,
+        spec_id: i32,
+        talent_string: &str,
+    ) -> Result<Vec<i32>, ResolverError> {
+        let tree_with_selections = self.decode_talents(spec_id, talent_string).await?;
+
+        let mut spell_ids = Vec::new();
+        for selection in &tree_with_selections.selections {
+            if selection.ranks_purchased > 0 {
+                // Find the node in the tree
+                if let Some(node) = tree_with_selections
+                    .tree
+                    .nodes
+                    .iter()
+                    .find(|n| n.id == selection.node_id)
+                {
+                    // For choice nodes, use the choice_index to pick the right entry
+                    let entry_index = selection.choice_index.unwrap_or(0) as usize;
+                    if let Some(entry) = node.entries.get(entry_index) {
+                        spell_ids.push(entry.spell_id);
+                    }
+                }
+            }
+        }
+
+        Ok(spell_ids)
+    }
+}
+
+/// Configuration for creating a resolver.
+pub enum ResolverConfig {
+    /// Use local CSV files (default, offline, portable).
+    Local {
+        /// Path to the data directory containing CSV files.
+        /// Expected structure: `{data_dir}/data/tables/*.csv`
+        data_dir: PathBuf,
+    },
+    /// Use Supabase PostgREST API (requires `supabase` feature).
+    #[cfg(feature = "supabase")]
+    Supabase {
+        /// Optional patch version for cache invalidation.
+        patch: Option<String>,
+    },
+}

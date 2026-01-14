@@ -12,7 +12,17 @@ path = "src/lib.rs"
 name = "engine"
 path = "src/main.rs"
 
+[features]
+default = ["local"]
+local = []  # Use local CSV files (no network)
+supabase = ["dep:supabase-client"]  # Use Supabase (network required)
+
 [dependencies]
+# Data loading
+snapshot-parser = { path = "../snapshot-parser" }
+supabase-client = { path = "../supabase-client", optional = true }
+async-trait = "0.1"
+tokio = { version = "1", features = ["rt-multi-thread"] }
 bitflags = "2"
 clap = { version = "4", features = ["derive"] }
 console = "0.15"
