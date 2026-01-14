@@ -7,6 +7,7 @@ members = [
     "node-gui",
     "node-headless",
     "snapshot-parser",
+    "supabase-client",
 ]
 
 [workspace.package]
