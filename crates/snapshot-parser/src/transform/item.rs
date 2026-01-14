@@ -323,6 +323,10 @@ pub fn transform_item(dbc: &DbcData, item_id: i32) -> Result<ItemDataFlat, Trans
 pub fn transform_all_items(dbc: &DbcData) -> Vec<ItemDataFlat> {
     dbc.item
         .keys()
-        .filter_map(|&item_id| transform_item(dbc, item_id).ok())
+        .filter_map(|&item_id| {
+            transform_item(dbc, item_id)
+                .inspect_err(|e| tracing::warn!(item_id, error = %e, "Failed to transform item"))
+                .ok()
+        })
         .collect()
 }

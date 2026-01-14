@@ -24,17 +24,19 @@ pub enum ApiError {
     Http(#[from] reqwest::Error),
     #[error("API error: {0}")]
     Api(String),
+    #[error("Failed to build HTTP client: {0}")]
+    ClientBuild(String),
 }
 
 impl ApiClient {
-    pub fn new(api_url: String) -> Self {
+    pub fn new(api_url: String) -> Result<Self, ApiError> {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .connect_timeout(CONNECT_TIMEOUT)
             .build()
-            .expect("Failed to create HTTP client");
+            .map_err(|e| ApiError::ClientBuild(e.to_string()))?;
 
-        Self { http, api_url }
+        Ok(Self { http, api_url })
     }
 
     pub async fn register_node(

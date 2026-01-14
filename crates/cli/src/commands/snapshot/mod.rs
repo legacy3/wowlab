@@ -81,10 +81,6 @@ pub struct SyncArgs {
     /// If not specified, all tables are synced
     #[arg(long = "table", value_enum)]
     pub tables: Vec<SyncTable>,
-
-    /// Chunk size for batch inserts
-    #[arg(long, default_value = "1000")]
-    pub chunk_size: usize,
 }
 
 #[derive(clap::Args)]

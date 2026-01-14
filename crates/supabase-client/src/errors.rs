@@ -29,6 +29,9 @@ pub enum SupabaseError {
 
     #[error("IO error: {message}")]
     Io { message: String },
+
+    #[error("Failed to build HTTP client: {0}")]
+    ClientBuild(String),
 }
 
 impl From<std::env::VarError> for SupabaseError {

@@ -21,7 +21,11 @@ use crate::flat::{SpellDataFlat, TalentTreeFlat};
 pub fn transform_all_spells(dbc: &DbcData) -> Vec<SpellDataFlat> {
     dbc.spell_name
         .keys()
-        .filter_map(|&spell_id| transform_spell(dbc, spell_id, None).ok())
+        .filter_map(|&spell_id| {
+            transform_spell(dbc, spell_id, None)
+                .inspect_err(|e| tracing::warn!(spell_id, error = %e, "Failed to transform spell"))
+                .ok()
+        })
         .collect()
 }
 
@@ -29,6 +33,10 @@ pub fn transform_all_spells(dbc: &DbcData) -> Vec<SpellDataFlat> {
 pub fn transform_all_talent_trees(dbc: &DbcData) -> Vec<TalentTreeFlat> {
     dbc.chr_specialization
         .keys()
-        .filter_map(|&spec_id| transform_talent_tree(dbc, spec_id).ok())
+        .filter_map(|&spec_id| {
+            transform_talent_tree(dbc, spec_id)
+                .inspect_err(|e| tracing::warn!(spec_id, error = %e, "Failed to transform talent tree"))
+                .ok()
+        })
         .collect()
 }

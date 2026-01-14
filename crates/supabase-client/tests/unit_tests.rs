@@ -16,12 +16,12 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[test]
 fn test_new_client() {
-    let _client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let _client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
 }
 
 #[test]
 fn test_new_client_trailing_slash() {
-    let _client = SupabaseClient::new("https://example.supabase.co/", "test_key");
+    let _client = SupabaseClient::new("https://example.supabase.co/", "test_key").unwrap();
 }
 
 // ============================================================================
@@ -235,7 +235,7 @@ async fn test_get_spell() {
         .mount(&mock_server)
         .await;
 
-    let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+    let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
     let spell = client.get_spell(53351, None).await.unwrap();
 
     assert_eq!(spell.id, 53351);
@@ -256,7 +256,7 @@ async fn test_get_spell_not_found() {
         .mount(&mock_server)
         .await;
 
-    let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+    let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
     let result = client.get_spell(99999, None).await;
 
     assert!(matches!(result, Err(SupabaseError::NotFound { .. })));
@@ -264,7 +264,7 @@ async fn test_get_spell_not_found() {
 
 #[tokio::test]
 async fn test_get_spells_empty() {
-    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
     let result = client.get_spells(&[], None).await.unwrap();
     assert!(result.is_empty());
 }
@@ -283,7 +283,7 @@ async fn test_search_spells_url_encoding() {
         .mount(&mock_server)
         .await;
 
-    let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+    let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
     let result = client.search_spells("Death's Advance", 10).await.unwrap();
     assert!(result.is_empty());
 }
@@ -295,7 +295,7 @@ async fn test_search_spells_url_encoding() {
 #[test]
 fn test_game_cache_creation() {
     let temp_dir = std::env::temp_dir().join(format!("game_cache_test_{}", std::process::id()));
-    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
     let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
     // Verify stats work
@@ -313,7 +313,7 @@ fn test_game_cache_patch_version_change() {
 
     // Create cache with version 11.0.0
     {
-        let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+        let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
         let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
         // Write something to disk (simulating cached data)
@@ -327,7 +327,7 @@ fn test_game_cache_patch_version_change() {
 
     // Create cache with different version - should clear
     {
-        let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+        let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
         let cache = GameDataCache::with_cache_dir(client, "11.0.5", temp_dir.clone()).unwrap();
 
         // Old data should be gone
@@ -355,7 +355,7 @@ async fn test_game_cache_get_spell_caches() {
         .mount(&mock_server)
         .await;
 
-    let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+    let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
     let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
     // First call - hits network
@@ -392,7 +392,7 @@ async fn test_game_cache_disk_persistence() {
 
     // First cache instance - fetches from network
     {
-        let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+        let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
         let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
         let spell = cache.get_spell(53351).await.unwrap();
         assert_eq!(spell.name, "Kill Shot");
@@ -400,7 +400,7 @@ async fn test_game_cache_disk_persistence() {
 
     // Second cache instance - should load from disk, not network
     {
-        let client = SupabaseClient::new(&mock_server.uri(), "test_key");
+        let client = SupabaseClient::new(&mock_server.uri(), "test_key").unwrap();
         let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
         let spell = cache.get_spell(53351).await.unwrap();
         assert_eq!(spell.name, "Kill Shot");
@@ -413,7 +413,7 @@ async fn test_game_cache_disk_persistence() {
 #[test]
 fn test_game_cache_invalidate() {
     let temp_dir = std::env::temp_dir().join(format!("game_cache_inv_{}", std::process::id()));
-    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
     let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
     // Write something to disk
@@ -435,7 +435,7 @@ fn test_game_cache_invalidate() {
 #[test]
 fn test_game_cache_clear_all() {
     let temp_dir = std::env::temp_dir().join(format!("game_cache_clear_{}", std::process::id()));
-    let client = SupabaseClient::new("https://example.supabase.co", "test_key");
+    let client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
     let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
     // Write data to multiple categories

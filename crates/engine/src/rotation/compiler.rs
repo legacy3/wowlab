@@ -79,7 +79,6 @@ unsafe impl Sync for SyncFnPtr {}
 pub struct CompiledRotation {
     func_ptr: SyncFnPtr,
     schema: ContextSchema,
-    user_vars: HashMap<String, Expr>,
 }
 
 impl CompiledRotation {
@@ -87,12 +86,6 @@ impl CompiledRotation {
     pub fn compile(rotation: &Rotation, resolver: &SpecResolver) -> Result<Self> {
         // Build context schema by walking all expressions
         let mut schema_builder = SchemaBuilder::new();
-        let mut user_var_exprs = HashMap::new();
-
-        // Collect user variables
-        for (name, expr) in &rotation.variables {
-            user_var_exprs.insert(name.clone(), expr.clone());
-        }
 
         // Walk all actions and expressions to find variables
         for action in &rotation.actions {
@@ -115,7 +108,6 @@ impl CompiledRotation {
         Ok(Self {
             func_ptr: SyncFnPtr(func_ptr),
             schema,
-            user_vars: user_var_exprs,
         })
     }
 
@@ -276,7 +268,6 @@ fn compile_rotation(
                 schema,
                 variables: &rotation.variables,
                 ctx_ptr,
-                ptr_ty,
             };
             compiler.compile_actions(&rotation.actions, &rotation.lists)?
         };
@@ -309,7 +300,6 @@ struct ExprCompiler<'a, 'b> {
     schema: &'a ContextSchema,
     variables: &'a HashMap<String, Expr>,
     ctx_ptr: Value,
-    ptr_ty: Type,
 }
 
 impl<'a, 'b> ExprCompiler<'a, 'b> {
@@ -749,48 +739,5 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 Ok((val, true))
             }
         }
-    }
-}
-
-// Helper to allow immediate values in if_then_else
-impl<'a, 'b> ExprCompiler<'a, 'b> {
-    fn compile_if_then_else_val<T, E>(
-        &mut self,
-        cond: Value,
-        then_val: T,
-        else_fn: E,
-    ) -> Result<Value>
-    where
-        T: Into<ImmediateOrFn<'a, 'b>>,
-        E: FnOnce(&mut Self) -> Result<Value>,
-    {
-        match then_val.into() {
-            ImmediateOrFn::Immediate(v) => {
-                self.compile_if_then_else(cond, |_| Ok(v), else_fn)
-            }
-            ImmediateOrFn::Fn(f) => {
-                self.compile_if_then_else(cond, f, else_fn)
-            }
-        }
-    }
-}
-
-enum ImmediateOrFn<'a, 'b> {
-    Immediate(Value),
-    Fn(Box<dyn FnOnce(&mut ExprCompiler<'a, 'b>) -> Result<Value> + 'a>),
-}
-
-impl<'a, 'b> From<Value> for ImmediateOrFn<'a, 'b> {
-    fn from(v: Value) -> Self {
-        ImmediateOrFn::Immediate(v)
-    }
-}
-
-impl<'a, 'b, F> From<F> for ImmediateOrFn<'a, 'b>
-where
-    F: FnOnce(&mut ExprCompiler<'a, 'b>) -> Result<Value> + 'a,
-{
-    fn from(f: F) -> Self {
-        ImmediateOrFn::Fn(Box::new(f))
     }
 }

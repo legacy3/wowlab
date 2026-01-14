@@ -64,7 +64,8 @@ impl NodeApp {
         runtime: Arc<Runtime>,
         log_rx: mpsc::Receiver<UiLogEntry>,
     ) -> Self {
-        let (mut core, event_rx) = NodeCore::new(Arc::clone(&runtime));
+        let (mut core, event_rx) =
+            NodeCore::new(Arc::clone(&runtime)).expect("Failed to create node core");
         core.start();
 
         // Spawn background update check

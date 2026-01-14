@@ -37,6 +37,10 @@ pub fn transform_spec(dbc: &DbcData, spec_id: i32) -> Result<SpecDataFlat, Trans
 pub fn transform_all_specs(dbc: &DbcData) -> Vec<SpecDataFlat> {
     dbc.chr_specialization
         .keys()
-        .filter_map(|&spec_id| transform_spec(dbc, spec_id).ok())
+        .filter_map(|&spec_id| {
+            transform_spec(dbc, spec_id)
+                .inspect_err(|e| tracing::warn!(spec_id, error = %e, "Failed to transform spec"))
+                .ok()
+        })
         .collect()
 }

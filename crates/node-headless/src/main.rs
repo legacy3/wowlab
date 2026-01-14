@@ -144,7 +144,8 @@ fn run_node() {
     tracing::info!("Starting WoW Lab Node (headless) v{VERSION}");
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create tokio runtime"));
-    let (mut core, mut event_rx) = NodeCore::new(Arc::clone(&runtime));
+    let (mut core, mut event_rx) =
+        NodeCore::new(Arc::clone(&runtime)).expect("Failed to create node core");
 
     let running = Arc::new(AtomicBool::new(true));
 

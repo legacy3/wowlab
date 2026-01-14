@@ -193,6 +193,10 @@ pub fn transform_all_auras(dbc: &DbcData) -> Vec<AuraDataFlat> {
                 .unwrap_or(false);
             has_aura_options || has_periodic
         })
-        .filter_map(|&spell_id| transform_aura(dbc, spell_id).ok())
+        .filter_map(|&spell_id| {
+            transform_aura(dbc, spell_id)
+                .inspect_err(|e| tracing::warn!(spell_id, error = %e, "Failed to transform aura"))
+                .ok()
+        })
         .collect()
 }

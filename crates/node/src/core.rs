@@ -75,9 +75,11 @@ pub struct NodeCore {
 
 impl NodeCore {
     /// Creates a new instance and returns it with an event receiver.
-    pub fn new(runtime: Arc<tokio::runtime::Runtime>) -> (Self, mpsc::Receiver<NodeCoreEvent>) {
+    pub fn new(
+        runtime: Arc<tokio::runtime::Runtime>,
+    ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::supabase::ApiError> {
         let config = NodeConfig::load_or_create();
-        let api = ApiClient::new(config.api_url.clone());
+        let api = ApiClient::new(config.api_url.clone())?;
         let total_cores = claim::total_cores().unsigned_abs();
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
@@ -111,7 +113,7 @@ impl NodeCore {
             started: false,
         };
 
-        (core, event_rx)
+        Ok((core, event_rx))
     }
 
     /// Start async tasks (registration, realtime, worker pool).
