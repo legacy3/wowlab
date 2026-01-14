@@ -1,27 +1,53 @@
 //! Sync command - Write transformed data to Supabase Postgres
 
+use std::time::Instant;
+
 use anyhow::Result;
 use indicatif::{ProgressBar, ProgressStyle};
 use snapshot_parser::{
-    transform::{transform_all_auras, transform_all_items, transform_all_spells, transform_all_talent_trees},
-    AuraDataFlat, DbcData, ItemDataFlat, SpellDataFlat, TalentTreeFlat,
+    transform::{
+        transform_all_auras, transform_all_items, transform_all_specs, transform_all_spells,
+        transform_all_talent_trees,
+    },
+    AuraDataFlat, DbcData, ItemDataFlat, SpecDataFlat, SpellDataFlat, TalentTreeFlat,
 };
-use sqlx::{PgPool, QueryBuilder, Postgres};
+use sqlx::{PgPool, Postgres, QueryBuilder};
 
-use super::SyncArgs;
+use super::{SyncArgs, SyncTable};
 
 // Postgres bind limit is 65535. Calculate safe batch sizes per table.
 const SPELL_COLUMNS: usize = 72;
 const ITEM_COLUMNS: usize = 32;
 const AURA_COLUMNS: usize = 14;
 const TALENT_COLUMNS: usize = 10;
+const SPEC_COLUMNS: usize = 12;
 
 const SPELL_BATCH: usize = 65535 / SPELL_COLUMNS - 1; // ~909
-const ITEM_BATCH: usize = 65535 / ITEM_COLUMNS - 1;   // ~2047
-const AURA_BATCH: usize = 65535 / AURA_COLUMNS - 1;   // ~4680
+const ITEM_BATCH: usize = 65535 / ITEM_COLUMNS - 1; // ~2047
+const AURA_BATCH: usize = 65535 / AURA_COLUMNS - 1; // ~4680
 const TALENT_BATCH: usize = 65535 / TALENT_COLUMNS - 1; // ~6552
+const SPEC_BATCH: usize = 65535 / SPEC_COLUMNS - 1; // ~5460
+
+/// Check if a table should be synced based on the filter
+fn should_sync(tables: &[SyncTable], table: SyncTable) -> bool {
+    tables.is_empty() || tables.contains(&table)
+}
 
 pub async fn run_sync(args: SyncArgs) -> Result<()> {
+    let total_start = Instant::now();
+
+    // Log what we're about to do
+    if args.tables.is_empty() {
+        tracing::info!("Syncing ALL tables for patch {}", args.patch);
+    } else {
+        let table_names: Vec<_> = args.tables.iter().map(|t| t.to_string()).collect();
+        tracing::info!(
+            "Syncing tables [{}] for patch {}",
+            table_names.join(", "),
+            args.patch
+        );
+    }
+
     let database_url = std::env::var("SUPABASE_DB_URL").map_err(|_| {
         anyhow::anyhow!(
             "SUPABASE_DB_URL not set. Get it from Supabase Dashboard -> Settings -> Database -> Connection string"
@@ -29,74 +55,245 @@ pub async fn run_sync(args: SyncArgs) -> Result<()> {
     })?;
 
     tracing::info!("Connecting to database...");
+    let connect_start = Instant::now();
     let pool = PgPool::connect(&database_url).await?;
-    tracing::info!("Connected to database");
+    tracing::info!(
+        "Connected to database in {:.2}s",
+        connect_start.elapsed().as_secs_f64()
+    );
 
     tracing::info!("Loading DBC data from {:?}", args.data_dir);
+    let load_start = Instant::now();
     let dbc = DbcData::load_all(&args.data_dir)?;
-    tracing::info!("Loaded DBC data");
+    tracing::info!(
+        "Loaded DBC data in {:.2}s",
+        load_start.elapsed().as_secs_f64()
+    );
 
+    // Transform only the tables we need
     tracing::info!("Transforming data...");
-    let pb = ProgressBar::new(4);
-    pb.set_style(ProgressStyle::default_bar().template("{msg} [{bar:40}] {pos}/{len}").unwrap());
+    let transform_start = Instant::now();
 
-    pb.set_message("Spells");
-    let spells = transform_all_spells(&dbc);
-    pb.inc(1);
+    let spells = if should_sync(&args.tables, SyncTable::Spells) {
+        tracing::debug!("Transforming spells...");
+        let start = Instant::now();
+        let result = transform_all_spells(&dbc);
+        tracing::info!(
+            "  Spells: {} records in {:.2}s",
+            result.len(),
+            start.elapsed().as_secs_f64()
+        );
+        Some(result)
+    } else {
+        None
+    };
 
-    pb.set_message("Talents");
-    let talent_trees = transform_all_talent_trees(&dbc);
-    pb.inc(1);
+    let talent_trees = if should_sync(&args.tables, SyncTable::Talents) {
+        tracing::debug!("Transforming talents...");
+        let start = Instant::now();
+        let result = transform_all_talent_trees(&dbc);
+        tracing::info!(
+            "  Talents: {} records in {:.2}s",
+            result.len(),
+            start.elapsed().as_secs_f64()
+        );
+        Some(result)
+    } else {
+        None
+    };
 
-    pb.set_message("Items");
-    let items = transform_all_items(&dbc);
-    pb.inc(1);
+    let items = if should_sync(&args.tables, SyncTable::Items) {
+        tracing::debug!("Transforming items...");
+        let start = Instant::now();
+        let result = transform_all_items(&dbc);
+        tracing::info!(
+            "  Items: {} records in {:.2}s",
+            result.len(),
+            start.elapsed().as_secs_f64()
+        );
+        Some(result)
+    } else {
+        None
+    };
 
-    pb.set_message("Auras");
-    let auras = transform_all_auras(&dbc);
-    pb.inc(1);
-    pb.finish_with_message("Transformation complete");
+    let auras = if should_sync(&args.tables, SyncTable::Auras) {
+        tracing::debug!("Transforming auras...");
+        let start = Instant::now();
+        let result = transform_all_auras(&dbc);
+        tracing::info!(
+            "  Auras: {} records in {:.2}s",
+            result.len(),
+            start.elapsed().as_secs_f64()
+        );
+        Some(result)
+    } else {
+        None
+    };
+
+    let specs = if should_sync(&args.tables, SyncTable::Specs) {
+        tracing::debug!("Transforming specs...");
+        let start = Instant::now();
+        let result = transform_all_specs(&dbc);
+        tracing::info!(
+            "  Specs: {} records in {:.2}s",
+            result.len(),
+            start.elapsed().as_secs_f64()
+        );
+        Some(result)
+    } else {
+        None
+    };
 
     tracing::info!(
-        "Transformed {} spells, {} talent trees, {} items, {} auras",
-        spells.len(), talent_trees.len(), items.len(), auras.len()
+        "Transformation complete in {:.2}s",
+        transform_start.elapsed().as_secs_f64()
     );
 
     if args.dry_run {
         tracing::info!("Dry run - not writing to database");
+        tracing::info!(
+            "Total time: {:.2}s",
+            total_start.elapsed().as_secs_f64()
+        );
         return Ok(());
     }
 
+    // Begin transaction
+    tracing::info!("Beginning database transaction...");
     let mut tx = pool.begin().await?;
 
+    // Clean old data if requested
     if !args.no_clean {
-        tracing::info!("Cleaning old data for patch {}", args.patch);
-        cleanup_patch(&mut tx, &args.patch).await?;
+        tracing::info!("Cleaning old data for patch {}...", args.patch);
+        let clean_start = Instant::now();
+        cleanup_patch(&mut tx, &args.patch, &args.tables).await?;
+        tracing::info!(
+            "Cleanup complete in {:.2}s",
+            clean_start.elapsed().as_secs_f64()
+        );
     }
 
-    tracing::info!("Inserting spells...");
-    insert_spells_bulk(&mut tx, &spells, &args.patch).await?;
+    // Insert data
+    let insert_start = Instant::now();
 
-    tracing::info!("Inserting talent trees...");
-    insert_talents_bulk(&mut tx, &talent_trees, &args.patch).await?;
+    if let Some(ref data) = spells {
+        tracing::info!("Inserting {} spells (batch size: {})...", data.len(), SPELL_BATCH);
+        let start = Instant::now();
+        insert_spells_bulk(&mut tx, data, &args.patch).await?;
+        tracing::info!(
+            "  Spells inserted in {:.2}s ({:.0} rows/sec)",
+            start.elapsed().as_secs_f64(),
+            data.len() as f64 / start.elapsed().as_secs_f64()
+        );
+    }
 
-    tracing::info!("Inserting items...");
-    insert_items_bulk(&mut tx, &items, &args.patch).await?;
+    if let Some(ref data) = talent_trees {
+        tracing::info!("Inserting {} talent trees (batch size: {})...", data.len(), TALENT_BATCH);
+        let start = Instant::now();
+        insert_talents_bulk(&mut tx, data, &args.patch).await?;
+        tracing::info!(
+            "  Talents inserted in {:.2}s ({:.0} rows/sec)",
+            start.elapsed().as_secs_f64(),
+            data.len() as f64 / start.elapsed().as_secs_f64()
+        );
+    }
 
-    tracing::info!("Inserting auras...");
-    insert_auras_bulk(&mut tx, &auras, &args.patch).await?;
+    if let Some(ref data) = items {
+        tracing::info!("Inserting {} items (batch size: {})...", data.len(), ITEM_BATCH);
+        let start = Instant::now();
+        insert_items_bulk(&mut tx, data, &args.patch).await?;
+        tracing::info!(
+            "  Items inserted in {:.2}s ({:.0} rows/sec)",
+            start.elapsed().as_secs_f64(),
+            data.len() as f64 / start.elapsed().as_secs_f64()
+        );
+    }
 
+    if let Some(ref data) = auras {
+        tracing::info!("Inserting {} auras (batch size: {})...", data.len(), AURA_BATCH);
+        let start = Instant::now();
+        insert_auras_bulk(&mut tx, data, &args.patch).await?;
+        tracing::info!(
+            "  Auras inserted in {:.2}s ({:.0} rows/sec)",
+            start.elapsed().as_secs_f64(),
+            data.len() as f64 / start.elapsed().as_secs_f64()
+        );
+    }
+
+    if let Some(ref data) = specs {
+        tracing::info!("Inserting {} specs (batch size: {})...", data.len(), SPEC_BATCH);
+        let start = Instant::now();
+        insert_specs_bulk(&mut tx, data, &args.patch).await?;
+        tracing::info!(
+            "  Specs inserted in {:.2}s ({:.0} rows/sec)",
+            start.elapsed().as_secs_f64(),
+            data.len() as f64 / start.elapsed().as_secs_f64()
+        );
+    }
+
+    tracing::info!(
+        "All inserts complete in {:.2}s",
+        insert_start.elapsed().as_secs_f64()
+    );
+
+    // Commit transaction
+    tracing::info!("Committing transaction...");
+    let commit_start = Instant::now();
     tx.commit().await?;
-    tracing::info!("Sync complete for patch {}", args.patch);
+    tracing::info!(
+        "Transaction committed in {:.2}s",
+        commit_start.elapsed().as_secs_f64()
+    );
+
+    tracing::info!(
+        "Sync complete for patch {} in {:.2}s",
+        args.patch,
+        total_start.elapsed().as_secs_f64()
+    );
 
     Ok(())
 }
 
-async fn cleanup_patch(tx: &mut sqlx::Transaction<'_, Postgres>, patch: &str) -> Result<()> {
-    sqlx::query("DELETE FROM spell_data_flat WHERE patch_version = $1").bind(patch).execute(&mut **tx).await?;
-    sqlx::query("DELETE FROM talent_tree_flat WHERE patch_version = $1").bind(patch).execute(&mut **tx).await?;
-    sqlx::query("DELETE FROM item_data_flat WHERE patch_version = $1").bind(patch).execute(&mut **tx).await?;
-    sqlx::query("DELETE FROM aura_data_flat WHERE patch_version = $1").bind(patch).execute(&mut **tx).await?;
+async fn cleanup_patch(
+    tx: &mut sqlx::Transaction<'_, Postgres>,
+    patch: &str,
+    tables: &[SyncTable],
+) -> Result<()> {
+    if should_sync(tables, SyncTable::Spells) {
+        let result = sqlx::query("DELETE FROM spell_data_flat WHERE patch_version = $1")
+            .bind(patch)
+            .execute(&mut **tx)
+            .await?;
+        tracing::debug!("  Deleted {} rows from spell_data_flat", result.rows_affected());
+    }
+    if should_sync(tables, SyncTable::Talents) {
+        let result = sqlx::query("DELETE FROM talent_tree_flat WHERE patch_version = $1")
+            .bind(patch)
+            .execute(&mut **tx)
+            .await?;
+        tracing::debug!("  Deleted {} rows from talent_tree_flat", result.rows_affected());
+    }
+    if should_sync(tables, SyncTable::Items) {
+        let result = sqlx::query("DELETE FROM item_data_flat WHERE patch_version = $1")
+            .bind(patch)
+            .execute(&mut **tx)
+            .await?;
+        tracing::debug!("  Deleted {} rows from item_data_flat", result.rows_affected());
+    }
+    if should_sync(tables, SyncTable::Auras) {
+        let result = sqlx::query("DELETE FROM aura_data_flat WHERE patch_version = $1")
+            .bind(patch)
+            .execute(&mut **tx)
+            .await?;
+        tracing::debug!("  Deleted {} rows from aura_data_flat", result.rows_affected());
+    }
+    if should_sync(tables, SyncTable::Specs) {
+        let result = sqlx::query("DELETE FROM spec_data_flat WHERE patch_version = $1")
+            .bind(patch)
+            .execute(&mut **tx)
+            .await?;
+        tracing::debug!("  Deleted {} rows from spec_data_flat", result.rows_affected());
+    }
     Ok(())
 }
 
@@ -106,9 +303,21 @@ async fn insert_spells_bulk(
     patch: &str,
 ) -> Result<()> {
     let pb = ProgressBar::new(spells.len() as u64);
-    pb.set_style(ProgressStyle::default_bar().template("  Spells [{bar:40}] {pos}/{len}").unwrap());
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  Spells [{bar:40}] {pos}/{len} ({percent}%)")
+            .unwrap(),
+    );
 
-    for chunk in spells.chunks(SPELL_BATCH) {
+    let total_chunks = (spells.len() + SPELL_BATCH - 1) / SPELL_BATCH;
+    for (chunk_idx, chunk) in spells.chunks(SPELL_BATCH).enumerate() {
+        tracing::debug!(
+            "    Processing spell batch {}/{} ({} rows)",
+            chunk_idx + 1,
+            total_chunks,
+            chunk.len()
+        );
+
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
             "INSERT INTO spell_data_flat (
                 id, patch_version, name, description, aura_description, description_variables,
@@ -125,7 +334,7 @@ async fn insert_spells_bulk(
                 replacement_spell_id, shapeshift_exclude_0, shapeshift_exclude_1, shapeshift_mask_0, shapeshift_mask_1,
                 stance_bar_order, required_totem_category_0, required_totem_category_1, totem_0, totem_1,
                 attributes, effect_trigger_spell, implicit_target, learn_spells
-            ) "
+            ) ",
         );
 
         qb.push_values(chunk, |mut b, spell| {
@@ -203,7 +412,7 @@ async fn insert_spells_bulk(
                 .push_bind(serde_json::to_value(&spell.learn_spells).unwrap());
         });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET patch_version = EXCLUDED.patch_version, name = EXCLUDED.name, updated_at = NOW()");
+        qb.push(" ON CONFLICT (id) DO UPDATE SET patch_version = EXCLUDED.patch_version, name = EXCLUDED.name, description = EXCLUDED.description, updated_at = NOW()");
         qb.build().execute(&mut **tx).await?;
         pb.inc(chunk.len() as u64);
     }
@@ -218,11 +427,15 @@ async fn insert_talents_bulk(
     patch: &str,
 ) -> Result<()> {
     let pb = ProgressBar::new(trees.len() as u64);
-    pb.set_style(ProgressStyle::default_bar().template("  Talents [{bar:40}] {pos}/{len}").unwrap());
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  Talents [{bar:40}] {pos}/{len} ({percent}%)")
+            .unwrap(),
+    );
 
     for chunk in trees.chunks(TALENT_BATCH) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
-            "INSERT INTO talent_tree_flat (spec_id, patch_version, spec_name, class_name, tree_id, all_node_ids, nodes, edges, sub_trees, point_limits) "
+            "INSERT INTO talent_tree_flat (spec_id, patch_version, spec_name, class_name, tree_id, all_node_ids, nodes, edges, sub_trees, point_limits) ",
         );
 
         qb.push_values(chunk, |mut b, tree| {
@@ -238,7 +451,7 @@ async fn insert_talents_bulk(
                 .push_bind(serde_json::to_value(&tree.point_limits).unwrap());
         });
 
-        qb.push(" ON CONFLICT (spec_id) DO UPDATE SET patch_version = EXCLUDED.patch_version, nodes = EXCLUDED.nodes, edges = EXCLUDED.edges, updated_at = NOW()");
+        qb.push(" ON CONFLICT (spec_id) DO UPDATE SET patch_version = EXCLUDED.patch_version, spec_name = EXCLUDED.spec_name, nodes = EXCLUDED.nodes, edges = EXCLUDED.edges, sub_trees = EXCLUDED.sub_trees, point_limits = EXCLUDED.point_limits, updated_at = NOW()");
         qb.build().execute(&mut **tx).await?;
         pb.inc(chunk.len() as u64);
     }
@@ -253,9 +466,21 @@ async fn insert_items_bulk(
     patch: &str,
 ) -> Result<()> {
     let pb = ProgressBar::new(items.len() as u64);
-    pb.set_style(ProgressStyle::default_bar().template("  Items [{bar:40}] {pos}/{len}").unwrap());
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  Items [{bar:40}] {pos}/{len} ({percent}%)")
+            .unwrap(),
+    );
 
-    for chunk in items.chunks(ITEM_BATCH) {
+    let total_chunks = (items.len() + ITEM_BATCH - 1) / ITEM_BATCH;
+    for (chunk_idx, chunk) in items.chunks(ITEM_BATCH).enumerate() {
+        tracing::debug!(
+            "    Processing item batch {}/{} ({} rows)",
+            chunk_idx + 1,
+            total_chunks,
+            chunk.len()
+        );
+
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
             "INSERT INTO item_data_flat (
                 id, patch_version, name, description, file_name, item_level, quality,
@@ -264,7 +489,7 @@ async fn insert_items_bulk(
                 sockets, socket_bonus_enchant_id, flags, allowable_class, allowable_race,
                 expansion_id, item_set_id, set_info, drop_sources, dmg_variance,
                 gem_properties, modified_crafting_reagent_item_id
-            ) "
+            ) ",
         );
 
         qb.push_values(chunk, |mut b, item| {
@@ -302,7 +527,7 @@ async fn insert_items_bulk(
                 .push_bind(item.modified_crafting_reagent_item_id);
         });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET patch_version = EXCLUDED.patch_version, name = EXCLUDED.name, updated_at = NOW()");
+        qb.push(" ON CONFLICT (id) DO UPDATE SET patch_version = EXCLUDED.patch_version, name = EXCLUDED.name, description = EXCLUDED.description, updated_at = NOW()");
         qb.build().execute(&mut **tx).await?;
         pb.inc(chunk.len() as u64);
     }
@@ -317,19 +542,33 @@ async fn insert_auras_bulk(
     patch: &str,
 ) -> Result<()> {
     let pb = ProgressBar::new(auras.len() as u64);
-    pb.set_style(ProgressStyle::default_bar().template("  Auras [{bar:40}] {pos}/{len}").unwrap());
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  Auras [{bar:40}] {pos}/{len} ({percent}%)")
+            .unwrap(),
+    );
 
-    for chunk in auras.chunks(AURA_BATCH) {
+    let total_chunks = (auras.len() + AURA_BATCH - 1) / AURA_BATCH;
+    for (chunk_idx, chunk) in auras.chunks(AURA_BATCH).enumerate() {
+        tracing::debug!(
+            "    Processing aura batch {}/{} ({} rows)",
+            chunk_idx + 1,
+            total_chunks,
+            chunk.len()
+        );
+
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
             "INSERT INTO aura_data_flat (
                 spell_id, patch_version, base_duration_ms, max_duration_ms, max_stacks,
                 periodic_type, tick_period_ms, refresh_behavior, duration_hasted, hasted_ticks,
                 pandemic_refresh, rolling_periodic, tick_may_crit, tick_on_application
-            ) "
+            ) ",
         );
 
         qb.push_values(chunk, |mut b, aura| {
-            let periodic_type: Option<String> = aura.periodic_type.as_ref()
+            let periodic_type: Option<String> = aura
+                .periodic_type
+                .as_ref()
                 .and_then(|t| serde_json::to_value(t).ok())
                 .and_then(|v| v.as_str().map(|s| s.to_string()));
             let refresh_behavior = serde_json::to_value(&aura.refresh_behavior)
@@ -354,6 +593,53 @@ async fn insert_auras_bulk(
         });
 
         qb.push(" ON CONFLICT (spell_id) DO UPDATE SET patch_version = EXCLUDED.patch_version, updated_at = NOW()");
+        qb.build().execute(&mut **tx).await?;
+        pb.inc(chunk.len() as u64);
+    }
+
+    pb.finish();
+    Ok(())
+}
+
+async fn insert_specs_bulk(
+    tx: &mut sqlx::Transaction<'_, Postgres>,
+    specs: &[SpecDataFlat],
+    patch: &str,
+) -> Result<()> {
+    let pb = ProgressBar::new(specs.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  Specs [{bar:40}] {pos}/{len} ({percent}%)")
+            .unwrap(),
+    );
+
+    for chunk in specs.chunks(SPEC_BATCH) {
+        tracing::debug!("    Processing spec batch ({} rows)", chunk.len());
+
+        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
+            "INSERT INTO spec_data_flat (
+                id, patch_version, name, description, class_id, class_name,
+                role, order_index, icon_file_id, primary_stat_priority,
+                mastery_spell_id_0, mastery_spell_id_1
+            ) ",
+        );
+
+        qb.push_values(chunk, |mut b, spec| {
+            b.push_bind(spec.id)
+                .push_bind(patch)
+                .push_bind(&spec.name)
+                .push_bind(&spec.description)
+                .push_bind(spec.class_id)
+                .push_bind(&spec.class_name)
+                .push_bind(spec.role)
+                .push_bind(spec.order_index)
+                .push_bind(spec.icon_file_id)
+                .push_bind(spec.primary_stat_priority)
+                .push_bind(spec.mastery_spell_id_0)
+                .push_bind(spec.mastery_spell_id_1);
+        });
+
+        qb.push(" ON CONFLICT (id) DO UPDATE SET patch_version = EXCLUDED.patch_version, name = EXCLUDED.name, description = EXCLUDED.description, class_name = EXCLUDED.class_name, updated_at = NOW()");
         qb.build().execute(&mut **tx).await?;
         pb.inc(chunk.len() as u64);
     }

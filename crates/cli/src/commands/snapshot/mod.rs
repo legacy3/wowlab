@@ -30,6 +30,28 @@ impl SnapshotCommand {
     }
 }
 
+/// Valid table names for --table filter
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+pub enum SyncTable {
+    Spells,
+    Talents,
+    Items,
+    Auras,
+    Specs,
+}
+
+impl std::fmt::Display for SyncTable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SyncTable::Spells => write!(f, "spells"),
+            SyncTable::Talents => write!(f, "talents"),
+            SyncTable::Items => write!(f, "items"),
+            SyncTable::Auras => write!(f, "auras"),
+            SyncTable::Specs => write!(f, "specs"),
+        }
+    }
+}
+
 #[derive(clap::Args)]
 pub struct SyncArgs {
     /// Patch version to tag data with (e.g., "11.2.0")
@@ -47,6 +69,11 @@ pub struct SyncArgs {
     /// Dry run - transform but don't write to database
     #[arg(long)]
     pub dry_run: bool,
+
+    /// Only sync specific tables (can be specified multiple times)
+    /// If not specified, all tables are synced
+    #[arg(long = "table", value_enum)]
+    pub tables: Vec<SyncTable>,
 
     /// Chunk size for batch inserts
     #[arg(long, default_value = "1000")]

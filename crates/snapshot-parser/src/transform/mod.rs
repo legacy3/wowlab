@@ -4,11 +4,13 @@
 
 mod aura;
 mod item;
+mod spec;
 mod spell;
 mod talent;
 
 pub use aura::{transform_all_auras, transform_aura};
 pub use item::{transform_all_items, transform_item};
+pub use spec::{transform_all_specs, transform_spec};
 pub use spell::{transform_spell, SpellKnowledgeContext};
 pub use talent::transform_talent_tree;
 

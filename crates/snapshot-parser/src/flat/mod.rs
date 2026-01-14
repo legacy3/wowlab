@@ -5,6 +5,7 @@
 mod aura;
 mod item;
 mod shared;
+mod spec;
 mod spell;
 mod talent;
 
@@ -14,6 +15,7 @@ pub use item::{
     ItemStat,
 };
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
+pub use spec::SpecDataFlat;
 pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat};
 pub use talent::{
     PointLimits, TalentEdge, TalentNode, TalentNodeEntry, TalentSelection, TalentSubTree,
