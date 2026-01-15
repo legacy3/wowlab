@@ -47,8 +47,20 @@ check_deps() {
 build_parsers() {
     info "Building WASM parser..."
     cd "$ROOT_DIR/crates/parsers"
-    wasm-pack build --target web --out-dir ../../packages/parsers
-    success "WASM parser built -> packages/parsers/"
+
+    # Build to temp directory
+    local tmp_dir="$ROOT_DIR/.wasm-build"
+    rm -rf "$tmp_dir"
+    wasm-pack build --target web --out-dir "$tmp_dir"
+
+    # Pack tarball
+    cd "$tmp_dir"
+    rm -f "$ROOT_DIR/apps/portal/src/packages/parsers-"*.tgz
+    local tarball=$(npm pack --pack-destination "$ROOT_DIR/apps/portal/src/packages" 2>/dev/null)
+    cd "$ROOT_DIR"
+    rm -rf "$tmp_dir"
+
+    success "WASM parser built -> apps/portal/src/packages/$tarball"
 }
 
 # Build Rust engine

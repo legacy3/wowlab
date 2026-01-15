@@ -49,7 +49,7 @@
     "remark-mdx-frontmatter": "^5.2.0",
     "remark-reading-time": "^2.0.2",
     "zustand": "^5.0.4",
-    "parsers": "workspace:*"
+    "parsers": "file:./src/packages/parsers-0.3.0.tgz"
   },
   "devDependencies": {
     "@pandacss/dev": "^1.8.0",

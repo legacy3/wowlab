@@ -610,13 +610,13 @@ msgid "X0ha1a"
 msgstr "Save changes"
 
 #: src/components/editor/layout/editor-header.tsx:192
-msgid "VzzYJk"
-msgstr "Create"
-
-#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr "Save"
+
+#: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
+msgstr "Create"
 
 #: src/components/editor/pickers/game-object-picker.tsx:203
 #: src/components/editor/pickers/game-object-picker.tsx:275
