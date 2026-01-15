@@ -10,7 +10,7 @@ name = "wowlab"
 path = "src/main.rs"
 
 [dependencies]
-snapshot-parser = { path = "../snapshot-parser" }
+parsers = { path = "../parsers" }
 sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "json"] }
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive"] }

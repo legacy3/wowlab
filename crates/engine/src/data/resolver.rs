@@ -6,7 +6,7 @@
 //! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
 
 use async_trait::async_trait;
-use snapshot_parser::{
+use parsers::{
     AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections,
 };
 use std::path::PathBuf;
@@ -46,20 +46,20 @@ pub enum ResolverError {
     EnvVar(String),
 }
 
-impl From<snapshot_parser::DbcError> for ResolverError {
-    fn from(e: snapshot_parser::DbcError) -> Self {
+impl From<parsers::DbcError> for ResolverError {
+    fn from(e: parsers::DbcError) -> Self {
         ResolverError::DbcParse(e.to_string())
     }
 }
 
-impl From<snapshot_parser::TransformError> for ResolverError {
-    fn from(e: snapshot_parser::TransformError) -> Self {
+impl From<parsers::TransformError> for ResolverError {
+    fn from(e: parsers::TransformError) -> Self {
         ResolverError::Transform(e.to_string())
     }
 }
 
-impl From<snapshot_parser::errors::TraitError> for ResolverError {
-    fn from(e: snapshot_parser::errors::TraitError) -> Self {
+impl From<parsers::errors::TraitError> for ResolverError {
+    fn from(e: parsers::errors::TraitError) -> Self {
         ResolverError::TraitDecode(e.to_string())
     }
 }
@@ -105,8 +105,8 @@ pub trait DataResolver: Send + Sync {
         trait_string: &str,
     ) -> Result<TraitTreeWithSelections, ResolverError> {
         let tree = self.get_trait_tree(spec_id).await?;
-        let decoded = snapshot_parser::decode_trait_loadout(trait_string)?;
-        Ok(snapshot_parser::apply_decoded_traits(tree, &decoded))
+        let decoded = parsers::decode_trait_loadout(trait_string)?;
+        Ok(parsers::apply_decoded_traits(tree, &decoded))
     }
 
     /// Get all spell IDs from decoded traits.

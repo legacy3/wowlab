@@ -1,7 +1,7 @@
 //! Dump spell command - Output a single spell as JSON for debugging
 
 use anyhow::Result;
-use snapshot_parser::{transform::transform_spell, DbcData};
+use parsers::{transform::transform_spell, DbcData};
 
 use super::DumpSpellArgs;
 

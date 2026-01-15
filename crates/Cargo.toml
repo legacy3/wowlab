@@ -7,7 +7,6 @@ members = [
     "node-gui",
     "node-headless",
     "parsers",
-    "snapshot-parser",
     "supabase-client",
 ]
 

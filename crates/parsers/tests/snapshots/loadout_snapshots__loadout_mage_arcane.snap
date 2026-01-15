@@ -1,0 +1,13 @@
+---
+source: parsers/tests/loadout_snapshots.rs
+expression: snapshot
+---
+{
+  "version": 2,
+  "spec_id": 104,
+  "tree_hash_hex": "00000000000000000000000000000000",
+  "node_count": 196,
+  "selected_count": 32,
+  "purchased_count": 2,
+  "choice_nodes_count": 0
+}

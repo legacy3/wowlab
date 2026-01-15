@@ -1,7 +1,7 @@
 //! Dump trait command - Output a trait tree as JSON for debugging
 
 use anyhow::Result;
-use snapshot_parser::{transform::transform_trait_tree, DbcData};
+use parsers::{transform::transform_trait_tree, DbcData};
 
 use super::DumpTraitArgs;
 

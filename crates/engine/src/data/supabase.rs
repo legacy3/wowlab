@@ -7,7 +7,7 @@
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use snapshot_parser::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
+use parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
 use supabase_client::{GameDataCache, SupabaseClient, SupabaseError};
 
 /// Resolver that loads data from Supabase PostgREST API.

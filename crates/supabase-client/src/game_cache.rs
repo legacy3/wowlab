@@ -11,7 +11,7 @@ use crate::{SupabaseClient, SupabaseError};
 use directories::ProjectDirs;
 use moka::sync::Cache;
 use serde::{de::DeserializeOwned, Serialize};
-use snapshot_parser::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use parsers::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;

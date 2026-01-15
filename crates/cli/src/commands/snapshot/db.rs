@@ -7,7 +7,7 @@
 
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
-use snapshot_parser::{
+use parsers::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
     SpellDataFlat, TraitTreeFlat,
 };

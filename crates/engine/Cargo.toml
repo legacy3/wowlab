@@ -19,7 +19,7 @@ supabase = ["dep:supabase-client"]  # Use Supabase (network required)
 
 [dependencies]
 # Data loading
-snapshot-parser = { path = "../snapshot-parser" }
+parsers = { path = "../parsers" }
 supabase-client = { path = "../supabase-client", optional = true }
 async-trait = "0.1"
 tokio = { version = "1", features = ["rt-multi-thread"] }

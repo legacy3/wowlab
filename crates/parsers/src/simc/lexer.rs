@@ -37,6 +37,9 @@ pub enum Token<'a> {
     #[token("/")]
     Slash,
 
+    #[token("+")]
+    Plus,
+
     #[token(":")]
     Colon,
 
@@ -55,5 +58,3 @@ pub fn lex(input: &str) -> Lexer<'_> {
     Token::lexer(input)
 }
 
-#[cfg(test)]
-mod tests;

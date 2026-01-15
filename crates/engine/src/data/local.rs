@@ -5,7 +5,7 @@
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use snapshot_parser::{
+use parsers::{
     transform_all_auras, transform_all_items, transform_all_trait_trees, transform_spell,
     AuraDataFlat, DbcData, ItemDataFlat, SpellDataFlat, TraitTreeFlat,
 };

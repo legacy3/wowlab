@@ -1,0 +1,4 @@
+mage="Frostbolt"
+level=80
+race=human
+spec=frost

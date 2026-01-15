@@ -4,9 +4,9 @@
 
 use std::collections::HashMap;
 
-use crate::errors::ParseError;
-use crate::lexer::{lex, Token};
-use crate::types::{Character, Item, Loadout, Profession, Profile, Slot, Talents, WowClass};
+use super::errors::ParseError;
+use super::lexer::{lex, Token};
+use super::types::{Character, Item, Loadout, Profession, Profile, Slot, Talents, WowClass};
 
 // ============================================================================
 // Public API
@@ -150,6 +150,10 @@ impl<'a> Parser<'a> {
                 }
                 Some(Token::Slash) => {
                     parts.push("/".to_string());
+                    self.advance();
+                }
+                Some(Token::Plus) => {
+                    parts.push("+".to_string());
                     self.advance();
                 }
                 Some(Token::Eq) => {
@@ -371,5 +375,3 @@ fn title_case(s: &str) -> String {
         .join(" ")
 }
 
-#[cfg(test)]
-mod tests;

@@ -1,0 +1,265 @@
+---
+source: parsers/tests/simc_snapshots.rs
+expression: profile
+---
+{
+  "character": {
+    "name": "Wellenwilli",
+    "level": 80,
+    "race": "Tauren",
+    "class": "shaman",
+    "spec": "Restoration",
+    "region": "EU",
+    "server": "blackmoore",
+    "role": "attack",
+    "professions": [
+      {
+        "name": "Alchemy",
+        "rank": 9
+      },
+      {
+        "name": "Jewelcrafting",
+        "rank": 1
+      }
+    ]
+  },
+  "equipment": [
+    {
+      "slot": "head",
+      "id": 212011,
+      "bonusIds": [
+        6652,
+        10877,
+        10260,
+        10356,
+        8095,
+        10371,
+        1524
+      ]
+    },
+    {
+      "slot": "neck",
+      "id": 212448,
+      "bonusIds": [
+        6652,
+        10356,
+        10879,
+        10396,
+        10299,
+        1540,
+        10255
+      ],
+      "gemIds": [
+        213743,
+        213461
+      ]
+    },
+    {
+      "slot": "shoulder",
+      "id": 212009,
+      "bonusIds": [
+        6652,
+        10390,
+        10369,
+        10299,
+        1540,
+        10255
+      ]
+    },
+    {
+      "slot": "back",
+      "id": 235499,
+      "bonusIds": [
+        12401,
+        9893
+      ]
+    },
+    {
+      "slot": "chest",
+      "id": 212014,
+      "bonusIds": [
+        10356,
+        10373,
+        6652,
+        10299,
+        1540,
+        10255
+      ],
+      "enchantId": 7364
+    },
+    {
+      "slot": "wrist",
+      "id": 219342,
+      "bonusIds": [
+        10421,
+        9633,
+        8902,
+        9627,
+        11144,
+        11109,
+        8960,
+        8795,
+        10222,
+        10877
+      ],
+      "enchantId": 7391,
+      "craftedStats": [
+        36,
+        49
+      ],
+      "craftingQuality": 5
+    },
+    {
+      "slot": "hands",
+      "id": 212012,
+      "bonusIds": [
+        10356,
+        10372,
+        6652,
+        10299,
+        1540,
+        10255
+      ]
+    },
+    {
+      "slot": "waist",
+      "id": 237522,
+      "bonusIds": [
+        6652,
+        12921,
+        12239,
+        10354,
+        12291,
+        1494,
+        10255
+      ]
+    },
+    {
+      "slot": "legs",
+      "id": 219340,
+      "bonusIds": [
+        10421,
+        9633,
+        8902,
+        9627,
+        11144,
+        8795,
+        10222
+      ],
+      "enchantId": 7531,
+      "craftedStats": [
+        40,
+        32
+      ],
+      "craftingQuality": 5
+    },
+    {
+      "slot": "feet",
+      "id": 178745,
+      "bonusIds": [
+        10390,
+        6652,
+        10377,
+        10383,
+        10262,
+        9928,
+        10255
+      ],
+      "enchantId": 7424
+    },
+    {
+      "slot": "finger1",
+      "id": 228411,
+      "bonusIds": [
+        12028,
+        1511
+      ],
+      "enchantId": 7334,
+      "gemIds": [
+        228638,
+        228644,
+        228643
+      ]
+    },
+    {
+      "slot": "finger2",
+      "id": 221136,
+      "bonusIds": [
+        10264,
+        10390,
+        40,
+        10395,
+        10392,
+        10383,
+        1648,
+        10255
+      ],
+      "enchantId": 7334
+    },
+    {
+      "slot": "trinket1",
+      "id": 212451,
+      "bonusIds": [
+        6652,
+        10356,
+        10299,
+        1540,
+        10255
+      ]
+    },
+    {
+      "slot": "trinket2",
+      "id": 215171,
+      "bonusIds": [
+        6652,
+        10256,
+        3305,
+        10255
+      ]
+    },
+    {
+      "slot": "main_hand",
+      "id": 222439,
+      "bonusIds": [
+        10421,
+        9633,
+        8902,
+        9627,
+        8795,
+        10222,
+        11144,
+        11300,
+        8960
+      ],
+      "enchantId": 7454,
+      "craftedStats": [
+        40,
+        49
+      ],
+      "craftingQuality": 5
+    },
+    {
+      "slot": "off_hand",
+      "id": 212386,
+      "bonusIds": [
+        6652,
+        10356,
+        10299,
+        1540,
+        10255
+      ]
+    }
+  ],
+  "talents": {
+    "encoded": "CgQAL+iDLHPJSLC+6fqMJ8tubCAAAAAAAAAAYMzMmZZMY2WmtZWmhFbmZBGwEMLMhMWMzDY2YmtZmZmMbLMz0YGmZDLzYGMGmlxAAAD",
+    "loadouts": [
+      {
+        "name": "TalentLoadoutManager",
+        "encoded": "CgQAL+iDLHPJSLC+6fqMJ8tubCAAAAAAAAAAYMzMmZZMY2WmtZWmhFbmZBGwAmFGgxiZeAzGzsNzMzwstwMjxMMzGWmxMYMMLjBAAG"
+      }
+    ]
+  },
+  "extra": {
+    "id": "178120"
+  }
+}
