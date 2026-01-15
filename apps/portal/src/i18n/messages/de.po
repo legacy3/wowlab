@@ -162,7 +162,7 @@ msgid "MZEZ0h"
 msgstr ""
 
 #: src/components/computing/cards/job-history-card.tsx:212
-#: src/components/editor/actions/action-picker.tsx:131
+#: src/components/editor/actions/action-picker.tsx:130
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
 #: src/components/layout/computing-drawer.tsx:128
@@ -334,60 +334,60 @@ msgstr ""
 msgid "diRIFs"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:185
+#: src/components/editor/actions/action-card.tsx:184
 msgid "5GICP3"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:187
+#: src/components/editor/actions/action-card.tsx:186
 msgid "a/Zp/4"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:282
+#: src/components/editor/actions/action-card.tsx:281
 msgid "oLT0VI"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:282
+#: src/components/editor/actions/action-card.tsx:281
 msgid "h6/HKO"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:290
+#: src/components/editor/actions/action-card.tsx:289
 msgid "Rw7iI7"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:290
+#: src/components/editor/actions/action-card.tsx:289
 msgid "TqSTI0"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:295
-#: src/components/editor/actions/action-card.tsx:300
+#: src/components/editor/actions/action-card.tsx:294
+#: src/components/editor/actions/action-card.tsx:299
 msgid "4fHiNl"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:305
-#: src/components/editor/actions/action-card.tsx:311
+#: src/components/editor/actions/action-card.tsx:304
+#: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
 #: src/components/editor/sidebar/sortable-list-item.tsx:190
 #: src/components/rotations/rotation-browser.tsx:279
 msgid "K3r6DQ"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:329
+#: src/components/editor/actions/action-card.tsx:328
 msgid "+U6ozc"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:344
+#: src/components/editor/actions/action-card.tsx:343
 msgid "SJ6ecF"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:346
+#: src/components/editor/actions/action-card.tsx:345
 msgid "5ujeDa"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:347
+#: src/components/editor/actions/action-card.tsx:346
 msgid "sERRm1"
 msgstr ""
 
-#: src/components/editor/actions/action-card.tsx:373
+#: src/components/editor/actions/action-card.tsx:372
 msgid "S8kqP9"
 msgstr ""
 
@@ -418,27 +418,27 @@ msgstr ""
 
 #: src/components/editor/actions/action-list.tsx:159
 #: src/components/editor/actions/action-list.tsx:210
-#: src/components/editor/actions/action-picker.tsx:60
+#: src/components/editor/actions/action-picker.tsx:59
 msgid "U8CnSL"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:89
+#: src/components/editor/actions/action-picker.tsx:88
 msgid "pbPjxY"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:98
+#: src/components/editor/actions/action-picker.tsx:97
 msgid "gSBur4"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:107
+#: src/components/editor/actions/action-picker.tsx:106
 msgid "VCnQc6"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:111
+#: src/components/editor/actions/action-picker.tsx:110
 msgid "2jwyIJ"
 msgstr ""
 
-#: src/components/editor/actions/action-picker.tsx:120
+#: src/components/editor/actions/action-picker.tsx:119
 msgid "1z8Mvf"
 msgstr ""
 

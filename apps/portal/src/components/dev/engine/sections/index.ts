@@ -1,3 +1,3 @@
-export { RotationSchemaSection } from "./rotation-schema-section";
+export { SchemaSection } from "./schema-section";
 export { StatusSection } from "./status-section";
-export { ValidationSection } from "./validation-section";
+export { ValidatorSection } from "./validator-section";

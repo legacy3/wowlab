@@ -1,24 +1,24 @@
 "use client";
 
+import { Stack } from "styled-system/jsx";
+
 import { PageLayout } from "../shared";
-import {
-  RotationSchemaSection,
-  StatusSection,
-  ValidationSection,
-} from "./sections";
+import { SchemaSection, StatusSection, ValidatorSection } from "./sections";
 
 const NAV = [
   { id: "status", label: "Status" },
-  { id: "rotation-schema", label: "Rotation Schema" },
-  { id: "validation", label: "Validation" },
+  { id: "schema", label: "Schema" },
+  { id: "validator", label: "Validator" },
 ];
 
 export function EngineDemo() {
   return (
     <PageLayout nav={NAV}>
-      <StatusSection />
-      <RotationSchemaSection />
-      <ValidationSection />
+      <Stack gap="16">
+        <StatusSection />
+        <SchemaSection />
+        <ValidatorSection />
+      </Stack>
     </PageLayout>
   );
 }

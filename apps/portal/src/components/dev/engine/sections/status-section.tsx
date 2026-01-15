@@ -1,14 +1,76 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Grid, Stack } from "styled-system/jsx";
+import { HStack, Stack } from "styled-system/jsx";
 
-import { Badge, Code, InlineLoader, Text } from "@/components/ui";
+import { Badge, Button, Code, Text } from "@/components/ui";
 import { getEngineVersion, useEngine } from "@/lib/engine";
 
-import { DemoBox, Section, Subsection } from "../../shared";
+import {
+  DemoBox,
+  DemoDescription,
+  DemoLabel,
+  Section,
+  Subsection,
+} from "../../shared";
+
+const FEATURES = [
+  "Rotation Parsing",
+  "Rotation Validation",
+  "VarPath Schema",
+  "SimC Profile Parsing",
+  "Resource Types",
+  "Damage Schools",
+];
 
 export function StatusSection() {
+  return (
+    <Section id="status" title="Engine Status">
+      <Stack gap="10">
+        <InitDemo />
+        <FeaturesDemo />
+        <ImportsDemo />
+      </Stack>
+    </Section>
+  );
+}
+
+function FeaturesDemo() {
+  return (
+    <Subsection title="Features">
+      <DemoDescription>Capabilities in this WASM build.</DemoDescription>
+      <DemoBox>
+        <HStack gap="2" flexWrap="wrap">
+          {FEATURES.map((feature) => (
+            <Badge key={feature} variant="outline">
+              {feature}
+            </Badge>
+          ))}
+        </HStack>
+      </DemoBox>
+    </Subsection>
+  );
+}
+
+function ImportsDemo() {
+  return (
+    <Subsection title="Usage">
+      <DemoDescription>Import engine functions from the lib.</DemoDescription>
+      <DemoBox>
+        <Code language="typescript">{`import {
+  initEngine,
+  getEngineVersion,
+  parseRotation,
+  validateRotation,
+  getVarPathSchema,
+  parseSimc,
+} from "@/lib/engine";`}</Code>
+      </DemoBox>
+    </Subsection>
+  );
+}
+
+function InitDemo() {
   const { error, isLoading, isReady, retry } = useEngine();
   const [version, setVersion] = useState<string | null>(null);
 
@@ -19,78 +81,42 @@ export function StatusSection() {
   }, [isReady]);
 
   return (
-    <Section id="status" title="Engine Status">
-      <Subsection title="Initialization">
+    <Subsection title="Initialization">
+      <DemoDescription>
+        WASM module status and version information.
+      </DemoDescription>
+      <Stack gap="4">
         <DemoBox>
-          <Grid columns={{ base: 1, md: 2 }} gap="4">
-            <Stack gap="2">
-              <Text textStyle="sm" fontWeight="medium">
-                Status
-              </Text>
-              {isLoading && (
-                <Stack direction="row" align="center" gap="2">
-                  <InlineLoader />
-                  <Text color="fg.muted">Initializing WASM...</Text>
-                </Stack>
-              )}
-              {error && (
-                <Stack gap="2">
-                  <Badge colorPalette="red">Error</Badge>
-                  <Text color="fg.error" textStyle="sm">
-                    {error.message}
-                  </Text>
-                  <button onClick={retry}>Retry</button>
-                </Stack>
-              )}
-              {isReady && !error && <Badge colorPalette="green">Ready</Badge>}
-            </Stack>
-
-            <Stack gap="2">
-              <Text textStyle="sm" fontWeight="medium">
-                Version
-              </Text>
-              {version ? (
-                <Code>{version}</Code>
-              ) : (
-                <Text color="fg.muted" textStyle="sm">
-                  Loading...
-                </Text>
-              )}
-            </Stack>
-          </Grid>
+          <DemoLabel>Status</DemoLabel>
+          <HStack gap="3">
+            {isLoading && <Badge colorPalette="amber">Initializing...</Badge>}
+            {isReady && <Badge colorPalette="green">Ready</Badge>}
+            {error && (
+              <>
+                <Badge colorPalette="red">Error</Badge>
+                <Button size="xs" variant="outline" onClick={retry}>
+                  Retry
+                </Button>
+              </>
+            )}
+          </HStack>
+          {error && (
+            <Text color="fg.error" textStyle="xs" mt="2">
+              {error.message}
+            </Text>
+          )}
         </DemoBox>
-      </Subsection>
-
-      <Subsection title="Features">
         <DemoBox>
-          <Text color="fg.muted" textStyle="sm" mb="3">
-            Engine capabilities in this WASM build:
-          </Text>
-          <Stack direction="row" gap="2" flexWrap="wrap">
-            <Badge>Rotation Parsing</Badge>
-            <Badge>Rotation Validation</Badge>
-            <Badge>VarPath Schema</Badge>
-            <Badge>SimC Profile Parsing</Badge>
-            <Badge>Resource Types</Badge>
-            <Badge>Damage Schools</Badge>
-          </Stack>
+          <DemoLabel>Version</DemoLabel>
+          {version ? (
+            <Code>{version}</Code>
+          ) : (
+            <Text color="fg.muted" textStyle="sm">
+              {isReady ? "Loading..." : "Engine not ready"}
+            </Text>
+          )}
         </DemoBox>
-      </Subsection>
-
-      <Subsection title="Module Info">
-        <DemoBox>
-          <Box overflow="auto">
-            <Code language="typescript">{`import {
-  initEngine,
-  getEngineVersion,
-  parseRotation,
-  validateRotation,
-  getVarPathSchema,
-  parseSimc,
-} from "@/lib/engine";`}</Code>
-          </Box>
-        </DemoBox>
-      </Subsection>
-    </Section>
+      </Stack>
+    </Subsection>
   );
 }
