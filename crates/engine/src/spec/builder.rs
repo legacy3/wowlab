@@ -188,8 +188,8 @@ impl SpellBuilder {
     }
 
     /// Summon a pet/guardian when cast.
-    pub fn summons_pet(mut self, kind: PetKind, duration: f32, name: &'static str) -> Self {
-        self.spell.effects.push(SpellEffect::SummonPet { kind, duration, name });
+    pub fn summons_pet(mut self, kind: PetKind, duration: f32, name: impl Into<String>) -> Self {
+        self.spell.effects.push(SpellEffect::SummonPet { kind, duration, name: name.into() });
         self
     }
 
@@ -239,9 +239,9 @@ impl SpellBuilder {
     }
 
     /// Add effect that only fires when a talent is enabled.
-    pub fn with_talent(mut self, talent: &'static str, effect: SpellEffect) -> Self {
+    pub fn with_talent(mut self, talent: impl Into<String>, effect: SpellEffect) -> Self {
         self.spell.effects.push(SpellEffect::Conditional {
-            condition: EffectCondition::TalentEnabled(talent),
+            condition: EffectCondition::TalentEnabled(talent.into()),
             effect: Box::new(effect),
         });
         self

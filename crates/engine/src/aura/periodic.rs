@@ -1,8 +1,11 @@
 use crate::types::{SimTime, AuraIdx};
 use crate::combat::ActionState;
+use serde::{Serialize, Deserialize};
 
 /// Defines periodic effect behavior
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct PeriodicEffect {
     /// Aura this periodic belongs to
     pub aura_id: AuraIdx,

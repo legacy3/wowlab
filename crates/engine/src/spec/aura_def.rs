@@ -1,8 +1,11 @@
 use crate::types::{AuraIdx, SpellIdx, SimTime, Attribute, RatingType, DamageSchool, DerivedStat};
 use crate::aura::{AuraFlags, PeriodicEffect};
+use serde::{Serialize, Deserialize};
 
 /// Type of aura effect
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum AuraEffect {
     /// Flat primary stat increase (str/agi/int/sta)
     AttributeFlat { attr: Attribute, amount: f32 },
@@ -27,12 +30,14 @@ pub enum AuraEffect {
 }
 
 /// Aura definition
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct AuraDef {
     /// Unique aura ID
     pub id: AuraIdx,
     /// Display name
-    pub name: &'static str,
+    pub name: String,
     /// Base duration
     pub duration: SimTime,
     /// Max stacks
@@ -48,10 +53,10 @@ pub struct AuraDef {
 }
 
 impl AuraDef {
-    pub fn new(id: AuraIdx, name: &'static str, duration: SimTime) -> Self {
+    pub fn new(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
         Self {
             id,
-            name,
+            name: name.into(),
             duration,
             max_stacks: 1,
             flags: AuraFlags::default(),
@@ -62,12 +67,12 @@ impl AuraDef {
     }
 
     /// Create a buff
-    pub fn buff(id: AuraIdx, name: &'static str, duration: SimTime) -> Self {
+    pub fn buff(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
         Self::new(id, name, duration)
     }
 
     /// Create a debuff
-    pub fn debuff(id: AuraIdx, name: &'static str, duration: SimTime) -> Self {
+    pub fn debuff(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
         let mut aura = Self::new(id, name, duration);
         aura.flags.is_debuff = true;
         aura
@@ -76,7 +81,7 @@ impl AuraDef {
     /// Create a DoT
     pub fn dot(
         id: AuraIdx,
-        name: &'static str,
+        name: impl Into<String>,
         duration: SimTime,
         tick_interval: SimTime,
     ) -> Self {

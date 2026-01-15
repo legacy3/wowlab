@@ -61,7 +61,7 @@ fn kill_command() -> SpellDef {
         // Kill Cleave: Cleave during Beast Cleave
         .on_cast_if(
             EffectCondition::And(vec![
-                EffectCondition::TalentEnabled("kill_cleave"),
+                EffectCondition::TalentEnabled("kill_cleave".to_string()),
                 EffectCondition::BuffActive(BEAST_CLEAVE),
             ]),
             SpellEffect::Cleave { damage_pct: KILL_CLEAVE_DAMAGE, max_targets: 5 },
@@ -69,7 +69,7 @@ fn kill_command() -> SpellDef {
         // Wild Instincts: Apply debuff during Call of the Wild
         .on_cast_if(
             EffectCondition::And(vec![
-                EffectCondition::TalentEnabled("wild_instincts"),
+                EffectCondition::TalentEnabled("wild_instincts".to_string()),
                 EffectCondition::BuffActive(CALL_OF_THE_WILD_BUFF),
             ]),
             SpellEffect::ApplyDebuff { aura: WILD_INSTINCTS, stacks: 1 },

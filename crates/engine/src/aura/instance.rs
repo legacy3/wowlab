@@ -1,8 +1,11 @@
 use crate::types::{SimTime, AuraIdx, TargetIdx};
 use crate::combat::ActionState;
+use serde::{Serialize, Deserialize};
 
 /// Flags for aura behavior
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct AuraFlags {
     /// Is a debuff (on enemy)
     pub is_debuff: bool,

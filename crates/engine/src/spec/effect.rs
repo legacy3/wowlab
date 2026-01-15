@@ -4,9 +4,12 @@
 //! without scattered if/else chains in handlers.
 
 use crate::types::{SpellIdx, AuraIdx, PetKind};
+use serde::{Serialize, Deserialize};
 
 /// Effect that fires when a spell is cast.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum SpellEffect {
     /// Reduce a cooldown by a flat amount.
     ReduceCooldown { spell: SpellIdx, amount: f32 },
@@ -21,7 +24,7 @@ pub enum SpellEffect {
     SummonPet {
         kind: PetKind,
         duration: f32,
-        name: &'static str,
+        name: String,
     },
 
     /// Apply a buff to the player (with optional stack count).
@@ -53,7 +56,9 @@ pub enum SpellEffect {
 }
 
 /// Conditions for conditional effects.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum EffectCondition {
     /// Buff is active on player.
     BuffActive(AuraIdx),
@@ -62,7 +67,7 @@ pub enum EffectCondition {
     DebuffActive(AuraIdx),
 
     /// Talent is enabled.
-    TalentEnabled(&'static str),
+    TalentEnabled(String),
 
     /// Target health below percentage.
     TargetHealthBelow(f32),
@@ -93,10 +98,12 @@ pub enum EffectCondition {
 }
 
 /// Damage modifier that affects spell damage calculation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct DamageMod {
     /// Unique identifier for debugging.
-    pub name: &'static str,
+    pub name: String,
 
     /// Multiplicative modifier (1.0 = no change, 1.5 = +50%).
     pub multiplier: f32,
@@ -109,7 +116,9 @@ pub struct DamageMod {
 }
 
 /// Conditions for damage modifiers.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum ModCondition {
     /// Always applies.
     Always,
@@ -142,7 +151,7 @@ pub enum ModCondition {
     StatScaling { base: f32 },
 
     /// Talent is enabled.
-    TalentEnabled(&'static str),
+    TalentEnabled(String),
 
     /// Multiple conditions (all must be true).
     And(Vec<ModCondition>),
@@ -153,9 +162,9 @@ pub enum ModCondition {
 
 impl DamageMod {
     /// Create a simple always-active modifier.
-    pub fn always(name: &'static str, multiplier: f32) -> Self {
+    pub fn always(name: impl Into<String>, multiplier: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier,
             condition: ModCondition::Always,
             priority: 0,
@@ -163,9 +172,9 @@ impl DamageMod {
     }
 
     /// Create a modifier for a specific spell.
-    pub fn for_spell(name: &'static str, spell: SpellIdx, multiplier: f32) -> Self {
+    pub fn for_spell(name: impl Into<String>, spell: SpellIdx, multiplier: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier,
             condition: ModCondition::ForSpell(spell),
             priority: 0,
@@ -173,9 +182,9 @@ impl DamageMod {
     }
 
     /// Create a modifier that applies when a buff is active.
-    pub fn when_buff(name: &'static str, aura: AuraIdx, multiplier: f32) -> Self {
+    pub fn when_buff(name: impl Into<String>, aura: AuraIdx, multiplier: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier,
             condition: ModCondition::BuffActive(aura),
             priority: 0,
@@ -183,9 +192,9 @@ impl DamageMod {
     }
 
     /// Create a modifier for pet abilities.
-    pub fn pet_ability(name: &'static str, multiplier: f32) -> Self {
+    pub fn pet_ability(name: impl Into<String>, multiplier: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier,
             condition: ModCondition::PetAbility,
             priority: 0,
@@ -193,9 +202,9 @@ impl DamageMod {
     }
 
     /// Create a modifier for execute phase.
-    pub fn execute(name: &'static str, threshold: f32, multiplier: f32) -> Self {
+    pub fn execute(name: impl Into<String>, threshold: f32, multiplier: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier,
             condition: ModCondition::TargetHealthBelow(threshold),
             priority: 0,
@@ -203,9 +212,9 @@ impl DamageMod {
     }
 
     /// Create a per-stack modifier.
-    pub fn per_stack(name: &'static str, aura: AuraIdx, per_stack: f32) -> Self {
+    pub fn per_stack(name: impl Into<String>, aura: AuraIdx, per_stack: f32) -> Self {
         Self {
-            name,
+            name: name.into(),
             multiplier: 1.0, // Base multiplier, actual calculated at runtime
             condition: ModCondition::PerStack { aura, per_stack },
             priority: 0,
@@ -239,9 +248,9 @@ impl SpellEffect {
     }
 
     /// Create effect that only fires with talent.
-    pub fn with_talent(talent: &'static str, effect: SpellEffect) -> Self {
+    pub fn with_talent(talent: impl Into<String>, effect: SpellEffect) -> Self {
         SpellEffect::Conditional {
-            condition: EffectCondition::TalentEnabled(talent),
+            condition: EffectCondition::TalentEnabled(talent.into()),
             effect: Box::new(effect),
         }
     }
@@ -256,13 +265,15 @@ impl SpellEffect {
 }
 
 /// Talent definition with associated modifiers.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct TalentDef {
     /// Internal name (snake_case).
-    pub name: &'static str,
+    pub name: String,
 
     /// Display name.
-    pub display_name: &'static str,
+    pub display_name: String,
 
     /// Damage modifiers this talent provides.
     pub damage_mods: Vec<DamageMod>,
@@ -278,7 +289,9 @@ pub struct TalentDef {
 }
 
 /// Cooldown modification from a talent.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct CooldownMod {
     pub spell: SpellIdx,
     /// Flat reduction in seconds.
@@ -288,7 +301,9 @@ pub struct CooldownMod {
 }
 
 /// Charge modification from a talent.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ChargeMod {
     pub spell: SpellIdx,
     /// Additional charges.
@@ -296,10 +311,10 @@ pub struct ChargeMod {
 }
 
 impl TalentDef {
-    pub fn new(name: &'static str, display_name: &'static str) -> Self {
+    pub fn new(name: impl Into<String>, display_name: impl Into<String>) -> Self {
         Self {
-            name,
-            display_name,
+            name: name.into(),
+            display_name: display_name.into(),
             damage_mods: Vec::new(),
             cooldown_mods: Vec::new(),
             charge_mods: Vec::new(),
@@ -315,19 +330,19 @@ impl TalentDef {
 
     /// Add a spell-specific damage bonus.
     pub fn spell_damage(mut self, spell: SpellIdx, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::for_spell(self.name, spell, multiplier));
+        self.damage_mods.push(DamageMod::for_spell(self.name.clone(), spell, multiplier));
         self
     }
 
     /// Add execute damage bonus.
     pub fn execute_damage(mut self, threshold: f32, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::execute(self.name, threshold, multiplier));
+        self.damage_mods.push(DamageMod::execute(self.name.clone(), threshold, multiplier));
         self
     }
 
     /// Add pet damage bonus.
     pub fn pet_damage(mut self, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::pet_ability(self.name, multiplier));
+        self.damage_mods.push(DamageMod::pet_ability(self.name.clone(), multiplier));
         self
     }
 

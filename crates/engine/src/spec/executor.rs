@@ -65,7 +65,7 @@ fn execute_single_effect(ctx: &mut EffectContext<'_>, effect: &SpellEffect) {
 
         SpellEffect::SummonPet { kind, duration, name } => {
             let now = ctx.state.now();
-            let pet_id = ctx.state.pets.summon(ctx.state.player.id, *kind, name);
+            let pet_id = ctx.state.pets.summon(ctx.state.player.id, *kind, name.clone());
             ctx.state.events.schedule(now, SimEvent::PetAttack { pet: pet_id });
             // Duration is tracked via pet's expires_at, no explicit despawn event needed
             let _ = duration; // Duration used during pet creation
@@ -143,7 +143,7 @@ fn check_condition(ctx: &EffectContext<'_>, condition: &EffectCondition) -> bool
         }
 
         EffectCondition::TalentEnabled(name) => {
-            ctx.talents.contains(name)
+            ctx.talents.iter().any(|t| *t == name.as_str())
         }
 
         EffectCondition::TargetHealthBelow(threshold) => {
@@ -340,7 +340,7 @@ fn check_mod_condition(ctx: &DamageContext<'_>, condition: &ModCondition) -> boo
         ModCondition::StatScaling { .. } => true,
 
         ModCondition::TalentEnabled(name) => {
-            ctx.talents.contains(name)
+            ctx.talents.iter().any(|t| *t == name.as_str())
         }
 
         ModCondition::And(conditions) => {

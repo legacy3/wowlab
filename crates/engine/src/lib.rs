@@ -14,6 +14,10 @@ pub mod class;
 pub mod sim;
 pub mod rotation;
 pub mod results;
+#[cfg(feature = "jit")]
 pub mod specs;
 pub mod data;
+#[cfg(feature = "cli")]
 pub mod cli;
+#[cfg(feature = "wasm")]
+pub mod wasm_exports;

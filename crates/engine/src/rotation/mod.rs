@@ -42,6 +42,7 @@
 
 mod action;
 mod ast;
+#[cfg(feature = "jit")]
 mod compiler;
 mod context;
 mod error;
@@ -58,7 +59,8 @@ pub use action::Action;
 // Re-export AST types (Action renamed to AstAction to avoid conflict)
 pub use ast::{Action as AstAction, Expr, Rotation, VarOp, VarPath, ValueType};
 
-// Re-export compiler
+// Re-export compiler (only with jit feature)
+#[cfg(feature = "jit")]
 pub use compiler::{CompiledRotation, EvalResult};
 
 // Re-export context types

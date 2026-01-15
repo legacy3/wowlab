@@ -314,7 +314,7 @@ fn resolver_error_display() {
     let err = ResolverError::SpellNotFound(12345);
     assert!(err.to_string().contains("12345"));
 
-    let err = ResolverError::TalentTreeNotFound(253);
+    let err = ResolverError::TraitTreeNotFound(253);
     assert!(err.to_string().contains("253"));
 
     let err = ResolverError::ItemNotFound(99999);
@@ -358,11 +358,11 @@ fn local_resolver_integration() {
     assert!(!spells.is_empty());
     println!("get_spells: loaded {} spells", spells.len());
 
-    // Test get_talent_tree
-    let tree = rt.block_on(resolver.get_talent_tree(253)).expect("Failed to load BM talent tree");
+    // Test get_trait_tree
+    let tree = rt.block_on(resolver.get_trait_tree(253)).expect("Failed to load BM trait tree");
     assert_eq!(tree.spec_id, 253);
     assert!(!tree.nodes.is_empty());
-    println!("get_talent_tree: {} with {} nodes", tree.spec_name, tree.nodes.len());
+    println!("get_trait_tree: {} with {} nodes", tree.spec_name, tree.nodes.len());
 
     // Test get_item
     let item = rt.block_on(resolver.get_item(207170)).expect("Failed to load item");

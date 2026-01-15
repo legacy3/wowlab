@@ -14,7 +14,7 @@ pub struct Pet {
     /// Pet kind
     pub pet_kind: PetKind,
     /// Pet name (for display)
-    pub name: &'static str,
+    pub name: String,
     /// Stats (inherit from owner with scaling)
     pub stats: StatCache,
     /// Active buffs
@@ -32,12 +32,12 @@ pub struct Pet {
 }
 
 impl Pet {
-    pub fn new(id: UnitIdx, owner: UnitIdx, pet_kind: PetKind, name: &'static str) -> Self {
+    pub fn new(id: UnitIdx, owner: UnitIdx, pet_kind: PetKind, name: impl Into<String>) -> Self {
         Self {
             id,
             owner,
             pet_kind,
-            name,
+            name: name.into(),
             stats: StatCache::new(),
             buffs: TargetAuras::new(),
             cooldowns: HashMap::new(),
@@ -49,7 +49,7 @@ impl Pet {
     }
 
     /// Create a temporary pet
-    pub fn temporary(id: UnitIdx, owner: UnitIdx, name: &'static str, duration: SimTime, now: SimTime) -> Self {
+    pub fn temporary(id: UnitIdx, owner: UnitIdx, name: impl Into<String>, duration: SimTime, now: SimTime) -> Self {
         let mut pet = Self::new(id, owner, PetKind::Summon, name);
         pet.expires_at = Some(now + duration);
         pet
@@ -143,7 +143,7 @@ impl PetManager {
     }
 
     /// Summon a new pet
-    pub fn summon(&mut self, owner: UnitIdx, pet_kind: PetKind, name: &'static str) -> UnitIdx {
+    pub fn summon(&mut self, owner: UnitIdx, pet_kind: PetKind, name: impl Into<String>) -> UnitIdx {
         let id = UnitIdx(self.next_id);
         self.next_id += 1;
 
@@ -157,7 +157,7 @@ impl PetManager {
     pub fn summon_temporary(
         &mut self,
         owner: UnitIdx,
-        name: &'static str,
+        name: impl Into<String>,
         duration: SimTime,
         now: SimTime,
     ) -> UnitIdx {

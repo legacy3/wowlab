@@ -6,6 +6,7 @@
 /// - On aarch64 (Apple Silicon/big.LITTLE): Use only performance cores
 /// - On x86_64: Use physical cores (avoid hyperthreading siblings)
 /// - Fallback: Use all logical CPUs
+#[cfg(feature = "parallel")]
 pub fn get_optimal_concurrency() -> usize {
     #[cfg(target_arch = "aarch64")]
     {
@@ -28,7 +29,7 @@ pub fn get_optimal_concurrency() -> usize {
 }
 
 /// On aarch64, detect performance cores.
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(feature = "parallel", target_arch = "aarch64"))]
 fn get_aarch64_performance_cores() -> Option<usize> {
     #[cfg(target_os = "macos")]
     {
@@ -43,7 +44,7 @@ fn get_aarch64_performance_cores() -> Option<usize> {
 
 /// Query macOS sysctl for cores at a given performance level.
 /// Level 0 = performance cores (P-cores), Level 1 = efficiency cores (E-cores)
-#[cfg(all(target_arch = "aarch64", target_os = "macos"))]
+#[cfg(all(feature = "parallel", target_arch = "aarch64", target_os = "macos"))]
 fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
     use std::ffi::CString;
     use std::mem::MaybeUninit;
@@ -85,6 +86,7 @@ fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
 
 /// Configure rayon's global thread pool with the specified number of threads.
 /// Must be called before any rayon operations.
+#[cfg(feature = "parallel")]
 pub fn configure_thread_pool(num_threads: usize) -> Result<(), rayon::ThreadPoolBuildError> {
     rayon::ThreadPoolBuilder::new()
         .num_threads(num_threads)
@@ -93,6 +95,7 @@ pub fn configure_thread_pool(num_threads: usize) -> Result<(), rayon::ThreadPool
 
 /// Configure rayon with optimal concurrency for this system.
 /// Must be called before any rayon operations.
+#[cfg(feature = "parallel")]
 pub fn configure_optimal_thread_pool() -> Result<(), rayon::ThreadPoolBuildError> {
     configure_thread_pool(get_optimal_concurrency())
 }

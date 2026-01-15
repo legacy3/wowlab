@@ -58,6 +58,7 @@ impl Default for HandlerRegistry {
 /// Global handler registry with all spec handlers.
 ///
 /// This is populated at startup and provides handlers for all supported specs.
+#[cfg(feature = "jit")]
 pub fn create_default_registry() -> HandlerRegistry {
     use crate::specs::hunter::bm::BmHunter;
 

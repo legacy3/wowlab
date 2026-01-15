@@ -76,6 +76,7 @@ pub struct BatchRunner {
 }
 
 impl BatchRunner {
+    #[cfg(feature = "jit")]
     pub fn new(config: SimConfig, player: Player) -> Self {
         use crate::handler::create_default_registry;
 

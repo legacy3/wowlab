@@ -1,4 +1,5 @@
 use super::{DamageBreakdown, StatsCollector};
+#[cfg(feature = "parallel")]
 use crate::sim::BatchResults;
 use std::io::Write;
 
@@ -15,6 +16,7 @@ pub struct ResultsExporter;
 
 impl ResultsExporter {
     /// Export batch results to JSON
+    #[cfg(feature = "parallel")]
     pub fn to_json(results: &BatchResults) -> String {
         format!(
             r#"{{
@@ -37,6 +39,7 @@ impl ResultsExporter {
     }
 
     /// Export batch results to CSV
+    #[cfg(feature = "parallel")]
     pub fn to_csv(results: &BatchResults) -> String {
         let mut output = String::from("iteration,dps\n");
         for (i, dps) in results.dps_values.iter().enumerate() {
@@ -110,6 +113,7 @@ impl SimSummary {
         }
     }
 
+    #[cfg(feature = "parallel")]
     pub fn from_batch(results: &BatchResults, duration_secs: f32) -> Self {
         Self {
             dps: results.mean_dps,

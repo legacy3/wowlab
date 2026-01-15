@@ -7,4 +7,6 @@ mod traits;
 mod registry;
 
 pub use traits::SpecHandler;
-pub use registry::{HandlerRegistry, create_default_registry};
+pub use registry::HandlerRegistry;
+#[cfg(feature = "jit")]
+pub use registry::create_default_registry;

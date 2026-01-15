@@ -5,12 +5,13 @@ set -euo pipefail
 # Usage: ./scripts/build.sh [target]
 #
 # Targets:
-#   all       - Build everything (default)
-#   parsers   - Build WASM parser only
-#   engine    - Build Rust engine only
-#   portal    - Build portal app only
-#   rust      - Build all Rust crates
-#   check     - Type check and lint everything
+#   all         - Build everything (default)
+#   parsers     - Build WASM parser only
+#   engine      - Build Rust engine only
+#   engine-wasm - Build WASM engine only
+#   portal      - Build portal app only
+#   rust        - Build all Rust crates
+#   check       - Type check and lint everything
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -61,6 +62,26 @@ build_parsers() {
     rm -rf "$tmp_dir"
 
     success "WASM parser built -> packages/$tarball"
+}
+
+# Build WASM engine package
+build_engine_wasm() {
+    info "Building WASM engine..."
+    cd "$ROOT_DIR/crates/engine"
+
+    # Build to temp directory with wasm feature, no default features
+    local tmp_dir="$ROOT_DIR/.wasm-build"
+    rm -rf "$tmp_dir"
+    wasm-pack build --target web --features wasm --no-default-features --out-dir "$tmp_dir"
+
+    # Pack tarball
+    cd "$tmp_dir"
+    rm -f "$ROOT_DIR/packages/engine-"*.tgz
+    local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
+    cd "$ROOT_DIR"
+    rm -rf "$tmp_dir"
+
+    success "WASM engine built -> packages/$tarball"
 }
 
 # Build Rust engine
@@ -127,6 +148,10 @@ case "$TARGET" in
     engine)
         build_engine
         ;;
+    engine-wasm)
+        check_deps
+        build_engine_wasm
+        ;;
     rust)
         build_rust
         ;;
@@ -138,7 +163,7 @@ case "$TARGET" in
         ;;
     *)
         error "Unknown target: $TARGET"
-        echo "Usage: $0 [all|parsers|engine|rust|portal|check]"
+        echo "Usage: $0 [all|parsers|engine|engine-wasm|rust|portal|check]"
         exit 1
         ;;
 esac

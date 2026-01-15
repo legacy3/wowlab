@@ -1,8 +1,11 @@
 use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool};
 use super::effect::SpellEffect;
+use serde::{Serialize, Deserialize};
 
 /// Target type for spells
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum SpellTarget {
     /// Single enemy target
     Enemy,
@@ -21,7 +24,9 @@ pub enum SpellTarget {
 }
 
 /// GCD behavior
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum GcdType {
     /// Standard GCD (affected by haste)
     Normal,
@@ -32,7 +37,9 @@ pub enum GcdType {
 }
 
 /// Cast time behavior
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum CastType {
     /// Instant cast
     Instant,
@@ -45,7 +52,9 @@ pub enum CastType {
 }
 
 /// Resource cost definition
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ResourceCost {
     pub resource: ResourceType,
     pub amount: f32,
@@ -72,7 +81,9 @@ impl ResourceCost {
 }
 
 /// Damage effect definition
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct DamageEffect {
     pub school: DamageSchool,
     /// Base damage (at level 80)
@@ -107,12 +118,14 @@ impl Default for DamageEffect {
 }
 
 /// Spell definition
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct SpellDef {
     /// Unique spell ID
     pub id: SpellIdx,
     /// Display name
-    pub name: &'static str,
+    pub name: String,
     /// Spell school
     pub school: DamageSchool,
     /// Cast type
@@ -153,7 +166,9 @@ pub struct SpellDef {
 
 bitflags::bitflags! {
     /// Flags for special spell behavior
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+    #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
     pub struct SpellFlags: u32 {
         /// Spell is on the GCD
         const ON_GCD = 1 << 0;
@@ -173,10 +188,10 @@ bitflags::bitflags! {
 }
 
 impl SpellDef {
-    pub fn new(id: SpellIdx, name: &'static str) -> Self {
+    pub fn new(id: SpellIdx, name: impl Into<String>) -> Self {
         Self {
             id,
-            name,
+            name: name.into(),
             school: DamageSchool::Physical,
             cast_type: CastType::Instant,
             gcd: GcdType::Normal,

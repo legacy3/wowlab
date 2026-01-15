@@ -187,6 +187,8 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/parsers: {}
+
 packages:
 
   '@antfu/install-pkg@1.1.0':
@@ -4061,7 +4063,7 @@ packages:
     resolution: {integrity: sha512-GG2AQYWoLgL877gQIKeRPGO1xF9+eG1ujIb5soS5gPvLQ1y2o8FL90w2QWNdf9I361Mpp7726c+lj3U0qK1uGw==}
 
   parsers@file:packages/parsers-0.3.0.tgz:
-    resolution: {integrity: sha512-VAAiahna9tUPno9Tqn+kqh8L8jW5eSMchx48iDVAUTP6746W4dSs9UXqkkN71s5HvKug9u5JsmhewMsFgs4o0Q==, tarball: file:packages/parsers-0.3.0.tgz}
+    resolution: {integrity: sha512-mrNT0BITpw887Lc2ofQc/+E/iAmsKrqlwG6JWEa4uRsYwrT0XQgj41+oibdKtTX0cfq1sFHqoausjpS7uSmWAg==, tarball: file:packages/parsers-0.3.0.tgz}
     version: 0.3.0
 
   parseurl@1.3.3:
