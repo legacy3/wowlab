@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Grid, Stack, styled } from "styled-system/jsx";
+import { Grid, Stack } from "styled-system/jsx";
 
 import {
   CharacterCard,
@@ -14,7 +14,7 @@ import {
   SimcInput,
 } from "@/components/simulate";
 
-import { fixtures, Section, Subsection } from "../../shared";
+import { DemoDescription, fixtures, Section, Subsection } from "../../shared";
 
 export function SimulateSection() {
   return (
@@ -35,9 +35,9 @@ function CharacterCardDemo() {
   return (
     <Subsection title="Character Card">
       <Stack gap="4" maxW="xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Compact character header with external links to Raider.io and Armory.
-        </styled.p>
+        <DemoDescription>
+          Character name, realm, and spec with external links.
+        </DemoDescription>
 
         <CharacterCard character={fixtures.character} />
 
@@ -54,9 +54,7 @@ function CharacterPanelDemo() {
   return (
     <Subsection title="Character Panel">
       <Stack gap="4" maxW="2xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Complete character panel with compact header and equipment grid.
-        </styled.p>
+        <DemoDescription>Full character view with gear.</DemoDescription>
 
         <CharacterPanel
           character={fixtures.character}
@@ -73,10 +71,7 @@ function EquipmentGridDemo() {
   return (
     <Subsection title="Equipment Grid">
       <Stack gap="4" maxW="2xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Full equipment grid with character avatar in center. Left/right
-          columns, trinkets, and weapons.
-        </styled.p>
+        <DemoDescription>Paperdoll-style equipment layout.</DemoDescription>
 
         <EquipmentGrid
           character={fixtures.character}
@@ -94,10 +89,9 @@ function EquipmentSlotDemo() {
   return (
     <Subsection title="Equipment Slot">
       <Stack gap="4" maxW="xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Single equipment slot with item icon, name, and item level. Supports
-          left/right alignment and shows tooltip on hover.
-        </styled.p>
+        <DemoDescription>
+          Individual gear slot with item details.
+        </DemoDescription>
 
         <Grid columns={2} gap="3">
           <EquipmentSlot
@@ -125,10 +119,7 @@ function ParseStatusDemo() {
   return (
     <Subsection title="Parse Status">
       <Stack gap="4" maxW="xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Status indicators for parsing operations: loading, success, and error
-          states.
-        </styled.p>
+        <DemoDescription>SimC parsing status indicators.</DemoDescription>
 
         <Stack gap="3">
           <ParseLoading message="Parsing SimC data..." />
@@ -151,9 +142,7 @@ function SimcInputDemo() {
   return (
     <Subsection title="SimC Input">
       <Stack gap="4" maxW="2xl">
-        <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Monospace textarea with SimC-specific placeholder and dashed border.
-        </styled.p>
+        <DemoDescription>Textarea for SimC string input.</DemoDescription>
 
         <SimcInput value={value} onChange={(e) => setValue(e.target.value)} />
       </Stack>

@@ -159,6 +159,7 @@ export interface UseStepsStateReturn<T extends string = string> {
   isFirst: boolean;
   isLast: boolean;
   isUnlocked: (step: T) => boolean;
+  reset: () => void;
   rootProps: {
     steps: Step[];
     value: T;
@@ -233,6 +234,13 @@ export function useStepsState<T extends string = string>({
     }
   }, [currentIndex, onStepChange, steps, value]);
 
+  const reset = useCallback(() => {
+    if (value !== initialValue) {
+      onStepChange?.(value, initialValue);
+      setValue(initialValue);
+    }
+  }, [initialValue, onStepChange, value]);
+
   useEffect(() => {
     const currentStep = steps[currentIndex];
     if (currentStep?.autoAdvanceTo) {
@@ -262,6 +270,7 @@ export function useStepsState<T extends string = string>({
     isFirst: currentIndex === 0,
     isLast: currentIndex === steps.length - 1,
     isUnlocked,
+    reset,
     rootProps,
     unlockedIndex,
     value,

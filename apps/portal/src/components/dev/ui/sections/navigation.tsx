@@ -1,28 +1,32 @@
 "use client";
 
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
-import { HStack, Stack } from "styled-system/jsx";
+import { useMemo, useState } from "react";
+import { Box, HStack, Stack, styled } from "styled-system/jsx";
 
 import {
   Accordion,
   Breadcrumb,
+  Button,
   Collapsible,
   Expandable,
   Link,
+  Steps,
   Tabs,
   Text,
 } from "@/components/ui";
 import { href, routes } from "@/lib/routing";
 
-import { Section, Subsection } from "../../shared";
+import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
 export function NavigationSection() {
   return (
     <Section id="navigation" title="Navigation">
-      <Stack gap="8">
+      <Stack gap="10">
         <BreadcrumbDemo />
         <LinkDemo />
         <TabsDemo />
+        <StepsDemo />
         <AccordionDemo />
         <CollapsibleDemo />
         <ExpandableDemo />
@@ -34,23 +38,26 @@ export function NavigationSection() {
 function AccordionDemo() {
   return (
     <Subsection title="Accordion">
-      <Accordion.Root defaultValue={["item-1"]} multiple>
-        {["First", "Second", "Third"].map((label, i) => (
-          <Accordion.Item key={i} value={`item-${i + 1}`}>
-            <Accordion.ItemTrigger>
-              {label} Item
-              <Accordion.ItemIndicator>
-                <ChevronDownIcon />
-              </Accordion.ItemIndicator>
-            </Accordion.ItemTrigger>
-            <Accordion.ItemContent>
-              <Accordion.ItemBody>
-                <Text>Content for {label.toLowerCase()} accordion item.</Text>
-              </Accordion.ItemBody>
-            </Accordion.ItemContent>
-          </Accordion.Item>
-        ))}
-      </Accordion.Root>
+      <DemoDescription>Expandable content sections.</DemoDescription>
+      <DemoBox>
+        <Accordion.Root defaultValue={["item-1"]} multiple>
+          {["Stats", "Rotation", "Consumables"].map((label, i) => (
+            <Accordion.Item key={i} value={`item-${i + 1}`}>
+              <Accordion.ItemTrigger>
+                {label}
+                <Accordion.ItemIndicator>
+                  <ChevronDownIcon />
+                </Accordion.ItemIndicator>
+              </Accordion.ItemTrigger>
+              <Accordion.ItemContent>
+                <Accordion.ItemBody>
+                  <Text textStyle="sm">{label} configuration options.</Text>
+                </Accordion.ItemBody>
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+      </DemoBox>
     </Subsection>
   );
 }
@@ -58,7 +65,8 @@ function AccordionDemo() {
 function BreadcrumbDemo() {
   return (
     <Subsection title="Breadcrumb">
-      <Stack gap="4">
+      <DemoDescription>Hierarchical navigation path.</DemoDescription>
+      <DemoBox>
         <Breadcrumb.Root>
           <Breadcrumb.List>
             <Breadcrumb.Item>
@@ -80,11 +88,7 @@ function BreadcrumbDemo() {
             </Breadcrumb.Item>
           </Breadcrumb.List>
         </Breadcrumb.Root>
-        <Text color="fg.muted" textStyle="sm">
-          Pass explicit breadcrumbs to PageContainer. Last item has no href
-          (current page).
-        </Text>
-      </Stack>
+      </DemoBox>
     </Subsection>
   );
 }
@@ -92,15 +96,18 @@ function BreadcrumbDemo() {
 function CollapsibleDemo() {
   return (
     <Subsection title="Collapsible">
-      <Collapsible.Root>
-        <Collapsible.Trigger>Toggle Content</Collapsible.Trigger>
-        <Collapsible.Content>
-          <Text py="4">
-            This content can be expanded and collapsed. It animates smoothly
-            when toggling.
-          </Text>
-        </Collapsible.Content>
-      </Collapsible.Root>
+      <DemoDescription>Show/hide content toggle.</DemoDescription>
+      <DemoBox>
+        <Collapsible.Root>
+          <Collapsible.Trigger>Toggle Content</Collapsible.Trigger>
+          <Collapsible.Content>
+            <Text py="3" textStyle="sm">
+              This content can be expanded and collapsed with a smooth
+              animation.
+            </Text>
+          </Collapsible.Content>
+        </Collapsible.Root>
+      </DemoBox>
     </Subsection>
   );
 }
@@ -108,33 +115,44 @@ function CollapsibleDemo() {
 function ExpandableDemo() {
   return (
     <Subsection title="Expandable">
-      <Text color="fg.muted" mb="4">
-        Click to expand images/diagrams in a fullscreen modal.
-      </Text>
+      <DemoDescription>Fullscreen expand for images.</DemoDescription>
       <HStack gap="4" flexWrap="wrap">
-        <Expandable title="Sample Image" variant="image">
-          <img
-            src="https://placehold.co/200x150/1a1a1a/666?text=Click+to+expand"
-            alt="Sample"
-            style={{ borderRadius: "8px", cursor: "pointer" }}
-          />
-        </Expandable>
-        <Expandable title="Diagram View" variant="diagram">
-          <div
-            style={{
-              alignItems: "center",
-              background: "var(--colors-gray-3)",
-              borderRadius: "8px",
-              cursor: "pointer",
-              display: "flex",
-              height: 150,
-              justifyContent: "center",
-              width: 200,
-            }}
-          >
-            <Text color="fg.muted">Click to expand</Text>
-          </div>
-        </Expandable>
+        <DemoBox>
+          <Expandable title="Sample Image" variant="image">
+            <styled.div
+              alignItems="center"
+              bg="gray.3"
+              borderRadius="md"
+              cursor="pointer"
+              display="flex"
+              h="100px"
+              justifyContent="center"
+              w="140px"
+            >
+              <Text textStyle="xs" color="fg.muted">
+                Image
+              </Text>
+            </styled.div>
+          </Expandable>
+        </DemoBox>
+        <DemoBox>
+          <Expandable title="Diagram View" variant="diagram">
+            <styled.div
+              alignItems="center"
+              bg="gray.3"
+              borderRadius="md"
+              cursor="pointer"
+              display="flex"
+              h="100px"
+              justifyContent="center"
+              w="140px"
+            >
+              <Text textStyle="xs" color="fg.muted">
+                Diagram
+              </Text>
+            </styled.div>
+          </Expandable>
+        </DemoBox>
       </HStack>
     </Subsection>
   );
@@ -143,18 +161,119 @@ function ExpandableDemo() {
 function LinkDemo() {
   return (
     <Subsection title="Link">
-      <HStack gap="6" flexWrap="wrap">
-        <Link href="#">Default link</Link>
-        <Link href="#" colorPalette="amber">
-          Colored link
-        </Link>
-        <Link href="#" textDecoration="underline">
-          Underlined link
-        </Link>
-        <Link href="https://example.com" target="_blank">
-          External link <ExternalLinkIcon size={14} />
-        </Link>
-      </HStack>
+      <DemoDescription>Styled anchor elements.</DemoDescription>
+      <DemoBox>
+        <HStack gap="6" flexWrap="wrap">
+          <Link href="#">Default</Link>
+          <Link href="#" colorPalette="amber">
+            Colored
+          </Link>
+          <Link href="#" textDecoration="underline">
+            Underlined
+          </Link>
+          <Link href="https://example.com" target="_blank">
+            External <ExternalLinkIcon size={14} />
+          </Link>
+        </HStack>
+      </DemoBox>
+    </Subsection>
+  );
+}
+
+function StepsDemo() {
+  const [formComplete, setFormComplete] = useState(false);
+
+  const steps = useMemo(
+    () => [
+      { label: "Import", value: "details" as const },
+      {
+        canUnlock: () => formComplete,
+        label: "Configure",
+        value: "review" as const,
+      },
+      {
+        canUnlock: () => formComplete,
+        label: "Simulate",
+        value: "complete" as const,
+      },
+    ],
+    [formComplete],
+  );
+
+  const wizard = Steps.useStepsState({
+    initialValue: "details",
+    steps,
+  });
+
+  const nextStep = steps[wizard.currentIndex + 1];
+
+  return (
+    <Subsection title="Steps">
+      <DemoDescription>Multi-step wizard navigation.</DemoDescription>
+      <DemoBox>
+        <Steps.Root {...wizard.rootProps}>
+          <Steps.List />
+
+          <Steps.Content value="details">
+            <Stack py="4" gap="3">
+              <Text textStyle="sm">Import your character from SimC.</Text>
+              <Box>
+                <Button size="sm" onClick={() => setFormComplete(true)}>
+                  Import Character
+                </Button>
+              </Box>
+            </Stack>
+          </Steps.Content>
+
+          <Steps.Content value="review">
+            <Stack py="4">
+              <Text textStyle="sm">Configure simulation settings.</Text>
+            </Stack>
+          </Steps.Content>
+
+          <Steps.Content value="complete">
+            <Stack py="4">
+              <Text textStyle="sm">Ready to run simulation.</Text>
+            </Stack>
+          </Steps.Content>
+        </Steps.Root>
+
+        <HStack
+          gap="2"
+          mt="2"
+          pt="3"
+          borderTopWidth="1px"
+          borderColor="border.subtle"
+        >
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={wizard.goBack}
+            disabled={wizard.isFirst}
+          >
+            Back
+          </Button>
+          <Button
+            size="xs"
+            onClick={wizard.goNext}
+            disabled={
+              wizard.isLast || (nextStep && !wizard.isUnlocked(nextStep.value))
+            }
+          >
+            Next
+          </Button>
+          <Button
+            size="xs"
+            variant="plain"
+            onClick={() => {
+              setFormComplete(false);
+              wizard.reset();
+            }}
+          >
+            Reset
+          </Button>
+        </HStack>
+      </DemoBox>
     </Subsection>
   );
 }
@@ -162,25 +281,37 @@ function LinkDemo() {
 function TabsDemo() {
   return (
     <Subsection title="Tabs">
-      <Stack gap="6">
+      <DemoDescription>Tab navigation variants.</DemoDescription>
+      <Stack gap="4">
         {(["line", "subtle", "enclosed"] as const).map((variant) => (
-          <Tabs.Root key={variant} defaultValue="tab1" variant={variant}>
-            <Tabs.List>
-              <Tabs.Trigger value="tab1">Account</Tabs.Trigger>
-              <Tabs.Trigger value="tab2">Password</Tabs.Trigger>
-              <Tabs.Trigger value="tab3">Settings</Tabs.Trigger>
-              <Tabs.Indicator />
-            </Tabs.List>
-            <Tabs.Content value="tab1">
-              <Text py="4">Account content ({variant})</Text>
-            </Tabs.Content>
-            <Tabs.Content value="tab2">
-              <Text py="4">Password content ({variant})</Text>
-            </Tabs.Content>
-            <Tabs.Content value="tab3">
-              <Text py="4">Settings content ({variant})</Text>
-            </Tabs.Content>
-          </Tabs.Root>
+          <DemoBox key={variant}>
+            <Text textStyle="xs" color="fg.subtle" mb="2">
+              variant=&quot;{variant}&quot;
+            </Text>
+            <Tabs.Root defaultValue="tab1" variant={variant}>
+              <Tabs.List>
+                <Tabs.Trigger value="tab1">Character</Tabs.Trigger>
+                <Tabs.Trigger value="tab2">Talents</Tabs.Trigger>
+                <Tabs.Trigger value="tab3">Gear</Tabs.Trigger>
+                <Tabs.Indicator />
+              </Tabs.List>
+              <Tabs.Content value="tab1">
+                <Text py="3" textStyle="sm">
+                  Character info and stats
+                </Text>
+              </Tabs.Content>
+              <Tabs.Content value="tab2">
+                <Text py="3" textStyle="sm">
+                  Talent configuration
+                </Text>
+              </Tabs.Content>
+              <Tabs.Content value="tab3">
+                <Text py="3" textStyle="sm">
+                  Equipment and item levels
+                </Text>
+              </Tabs.Content>
+            </Tabs.Root>
+          </DemoBox>
         ))}
       </Stack>
     </Subsection>

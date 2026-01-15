@@ -2,6 +2,9 @@ export { fixtures } from "./fixtures";
 export {
   ComponentCard,
   DataCard,
+  DemoBox,
+  DemoDescription,
+  DemoLabel,
   ImportPath,
   JsonOutput,
   NavLink,

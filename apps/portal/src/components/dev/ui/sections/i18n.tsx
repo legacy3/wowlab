@@ -5,7 +5,7 @@ import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import { Badge, Code, Text } from "@/components/ui";
 
-import { ComponentCard, Section, Subsection } from "../../shared";
+import { DemoBox, DemoLabel, Section, Subsection } from "../../shared";
 
 export function I18nSection() {
   const locale = useLocale();
@@ -22,14 +22,16 @@ export function I18nSection() {
 
         <Subsection title="Numbers">
           <Grid columns={{ base: 1, md: 2 }} gap="4">
-            <ComponentCard title="integer">
+            <DemoBox>
+              <DemoLabel>integer</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row label="1234" value={format.number(1234)} />
                 <Row label="1234567" value={format.number(1234567)} />
                 <Row label="9876543210" value={format.number(9876543210)} />
               </Stack>
-            </ComponentCard>
-            <ComponentCard title="compact">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>compact</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="1234"
@@ -44,13 +46,14 @@ export function I18nSection() {
                   value={format.number(9876543210, { notation: "compact" })}
                 />
               </Stack>
-            </ComponentCard>
+            </DemoBox>
           </Grid>
         </Subsection>
 
         <Subsection title="Dates">
           <Grid columns={{ base: 1, md: 2 }} gap="4">
-            <ComponentCard title="dateTime">
+            <DemoBox>
+              <DemoLabel>dateTime</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="short"
@@ -73,8 +76,9 @@ export function I18nSection() {
                   value={format.dateTime(new Date(), { dateStyle: "full" })}
                 />
               </Stack>
-            </ComponentCard>
-            <ComponentCard title="relativeTime">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>relativeTime</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="5 min ago"
@@ -95,13 +99,14 @@ export function I18nSection() {
                   )}
                 />
               </Stack>
-            </ComponentCard>
+            </DemoBox>
           </Grid>
         </Subsection>
 
         <Subsection title="Units">
           <Grid columns={{ base: 1, md: 3 }} gap="4">
-            <ComponentCard title="seconds">
+            <DemoBox>
+              <DemoLabel>seconds</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="1"
@@ -116,8 +121,9 @@ export function I18nSection() {
                   value={format.number(90.5, { style: "unit", unit: "second" })}
                 />
               </Stack>
-            </ComponentCard>
-            <ComponentCard title="percent">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>percent</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="0.1"
@@ -132,8 +138,9 @@ export function I18nSection() {
                   value={format.number(0.995, { style: "percent" })}
                 />
               </Stack>
-            </ComponentCard>
-            <ComponentCard title="currency">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>currency</DemoLabel>
               <Stack gap="0" divideY="1px" divideColor="border.muted">
                 <Row
                   label="9.99"
@@ -157,13 +164,14 @@ export function I18nSection() {
                   })}
                 />
               </Stack>
-            </ComponentCard>
+            </DemoBox>
           </Grid>
         </Subsection>
 
         <Subsection title="ICU Messages">
           <Grid columns={{ base: 1, md: 2 }} gap="4">
-            <ComponentCard title="plurals">
+            <DemoBox>
+              <DemoLabel>plurals</DemoLabel>
               <VStack gap="2" alignItems="stretch">
                 <HStack justify="space-between">
                   <Code>count: 0</Code>
@@ -193,8 +201,9 @@ export function I18nSection() {
                   </Text>
                 </HStack>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="select">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>select</DemoLabel>
               <VStack gap="2" alignItems="stretch">
                 <HStack justify="space-between">
                   <Code>status: online</Code>
@@ -224,8 +233,9 @@ export function I18nSection() {
                   </Text>
                 </HStack>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="interpolation">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>interpolation</DemoLabel>
               <VStack gap="2" alignItems="stretch">
                 <Text>{t("Hello, {name}!", { name: "World" })}</Text>
                 <Text>
@@ -233,8 +243,9 @@ export function I18nSection() {
                 </Text>
                 <Text>{t("Price: {price}", { price: "$9.99" })}</Text>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="number in message">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>number in message</DemoLabel>
               <VStack gap="2" alignItems="stretch">
                 <HStack justify="space-between">
                   <Code>1234567</Code>
@@ -245,13 +256,14 @@ export function I18nSection() {
                   <Text>{t("{value, number, percent}", { value: 0.75 })}</Text>
                 </HStack>
               </VStack>
-            </ComponentCard>
+            </DemoBox>
           </Grid>
         </Subsection>
 
         <Subsection title="Rich Text">
           <Grid columns={{ base: 1, md: 2 }} gap="4">
-            <ComponentCard title="basic tags">
+            <DemoBox>
+              <DemoLabel>basic tags</DemoLabel>
               <VStack gap="3" alignItems="stretch">
                 <Text>
                   {t.rich("This is <b>bold</b> text", {
@@ -269,8 +281,9 @@ export function I18nSection() {
                   })}
                 </Text>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="nested tags">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>nested tags</DemoLabel>
               <VStack gap="3" alignItems="stretch">
                 <Text>
                   {t.rich("Click <b>here</b> to <i>continue</i>", {
@@ -289,8 +302,9 @@ export function I18nSection() {
                   })}
                 </Text>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="with variables">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>with variables</DemoLabel>
               <VStack gap="3" alignItems="stretch">
                 <Text>
                   {t.rich("Welcome back, <b>{name}</b>!", {
@@ -309,8 +323,9 @@ export function I18nSection() {
                   })}
                 </Text>
               </VStack>
-            </ComponentCard>
-            <ComponentCard title="complex">
+            </DemoBox>
+            <DemoBox>
+              <DemoLabel>complex</DemoLabel>
               <VStack gap="3" alignItems="stretch">
                 <Text textStyle="sm">
                   {t.rich(
@@ -338,7 +353,7 @@ export function I18nSection() {
                   )}
                 </Text>
               </VStack>
-            </ComponentCard>
+            </DemoBox>
           </Grid>
         </Subsection>
       </Stack>

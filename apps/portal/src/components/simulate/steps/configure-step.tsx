@@ -28,11 +28,16 @@ const fightStyleCollection = createListCollection({
 });
 
 export interface ConfigureStepProps {
+  onClear?: () => void;
   onSimulate: () => void;
   profile: Profile;
 }
 
-export function ConfigureStep({ onSimulate, profile }: ConfigureStepProps) {
+export function ConfigureStep({
+  onClear,
+  onSimulate,
+  profile,
+}: ConfigureStepProps) {
   const t = useExtracted();
   const { goBack } = Steps.useSteps();
 
@@ -42,6 +47,7 @@ export function ConfigureStep({ onSimulate, profile }: ConfigureStepProps) {
         character={profile.character}
         professions={profile.character.professions}
         equipment={profile.equipment ?? []}
+        onClear={onClear}
       />
 
       <Card.Root>

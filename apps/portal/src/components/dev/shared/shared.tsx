@@ -7,6 +7,40 @@ import { Card, Code, ErrorBox, Heading, Skeleton, Text } from "@/components/ui";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 
 // =============================================================================
+// Demo Components
+// =============================================================================
+
+export function DemoBox({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      bg="bg.subtle"
+      borderColor="border.subtle"
+      borderRadius="l2"
+      borderWidth="1px"
+      p="4"
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function DemoDescription({ children }: { children: React.ReactNode }) {
+  return (
+    <Text color="fg.muted" textStyle="sm" mb="4">
+      {children}
+    </Text>
+  );
+}
+
+export function DemoLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Text textStyle="xs" color="fg.subtle" mb="3">
+      {children}
+    </Text>
+  );
+}
+
+// =============================================================================
 // Layout
 // =============================================================================
 

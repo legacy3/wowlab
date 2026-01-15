@@ -15,31 +15,37 @@ import {
 } from "./sections";
 
 const NAV = [
-  { id: "forms", label: "Forms" },
-  { id: "overlays", label: "Overlays" },
-  { id: "navigation", label: "Navigation" },
-  { id: "feedback", label: "Feedback" },
-  { id: "data-display", label: "Data Display" },
+  // Foundation
+  { id: "tokens", label: "Tokens" },
+  // Core UI
   { id: "actions", label: "Actions" },
+  { id: "forms", label: "Forms" },
+  { id: "data-display", label: "Data Display" },
+  { id: "navigation", label: "Navigation" },
+  { id: "overlays", label: "Overlays" },
+  { id: "feedback", label: "Feedback" },
+  // Domain-specific
   { id: "simulate", label: "Simulate" },
   { id: "spec-picker", label: "Spec Picker" },
   { id: "i18n", label: "i18n" },
-  { id: "tokens", label: "Tokens" },
 ];
 
 export function UiDemo() {
   return (
     <PageLayout nav={NAV}>
-      <FormsSection />
-      <OverlaysSection />
-      <NavigationSection />
-      <FeedbackSection />
-      <DataDisplaySection />
+      {/* Foundation */}
+      <TokensSection />
+      {/* Core UI */}
       <ActionsSection />
+      <FormsSection />
+      <DataDisplaySection />
+      <NavigationSection />
+      <OverlaysSection />
+      <FeedbackSection />
+      {/* Domain-specific */}
       <SimulateSection />
       <SpecPickerSection />
       <I18nSection />
-      <TokensSection />
     </PageLayout>
   );
 }

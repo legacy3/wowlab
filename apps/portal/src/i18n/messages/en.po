@@ -80,7 +80,7 @@ msgid "RB2CER"
 msgstr "CPU Cores"
 
 #: src/components/computing/cards/iterations-card.tsx:31
-#: src/components/simulate/steps/configure-step.tsx:68
+#: src/components/simulate/steps/configure-step.tsx:74
 msgid "6YNH3R"
 msgstr "Iterations"
 
@@ -212,7 +212,7 @@ msgid "JerYOj"
 msgstr "Simulations"
 
 #: src/components/computing/cards/simulations-card.tsx:18
-#: src/components/dev/ui/sections/i18n.tsx:241
+#: src/components/dev/ui/sections/i18n.tsx:252
 msgid "ly9PN0"
 msgstr "{value, number}"
 
@@ -274,63 +274,63 @@ msgstr "(empty)"
 msgid "24tjE1"
 msgstr "{count, plural, =1 {# result} other {# results}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:171
-#: src/components/dev/ui/sections/i18n.tsx:180
-#: src/components/dev/ui/sections/i18n.tsx:189
+#: src/components/dev/ui/sections/i18n.tsx:179
+#: src/components/dev/ui/sections/i18n.tsx:188
+#: src/components/dev/ui/sections/i18n.tsx:197
 msgid "Y1osJw"
 msgstr "{count, plural, =0 {No items} =1 {One item} other {# items}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:202
 #: src/components/dev/ui/sections/i18n.tsx:211
 #: src/components/dev/ui/sections/i18n.tsx:220
+#: src/components/dev/ui/sections/i18n.tsx:229
 msgid "t5mISx"
 msgstr "{status, select, online {Online} offline {Offline} other {Unknown}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:230
+#: src/components/dev/ui/sections/i18n.tsx:240
 msgid "tBFOH1"
 msgstr "Hello, {name}!"
 
-#: src/components/dev/ui/sections/i18n.tsx:232
+#: src/components/dev/ui/sections/i18n.tsx:242
 msgid "/vBDCB"
 msgstr "You have {count} new messages"
 
-#: src/components/dev/ui/sections/i18n.tsx:234
+#: src/components/dev/ui/sections/i18n.tsx:244
 msgid "KhKQjV"
 msgstr "Price: {price}"
 
-#: src/components/dev/ui/sections/i18n.tsx:245
+#: src/components/dev/ui/sections/i18n.tsx:256
 msgid "lnlbAn"
 msgstr "{value, number, percent}"
 
-#: src/components/dev/ui/sections/i18n.tsx:257
+#: src/components/dev/ui/sections/i18n.tsx:269
 msgid "MgJcFD"
 msgstr "This is <b>bold</b> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:262
+#: src/components/dev/ui/sections/i18n.tsx:274
 msgid "DOAeJb"
 msgstr "This is <i>italic</i> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:267
+#: src/components/dev/ui/sections/i18n.tsx:279
 msgid "04VGuM"
 msgstr "This has <code>inline code</code>"
 
-#: src/components/dev/ui/sections/i18n.tsx:276
+#: src/components/dev/ui/sections/i18n.tsx:289
 msgid "yYGAHf"
 msgstr "Click <b>here</b> to <i>continue</i>"
 
-#: src/components/dev/ui/sections/i18n.tsx:282
+#: src/components/dev/ui/sections/i18n.tsx:295
 msgid "P8nrf0"
 msgstr "Status: <badge>{status}</badge>"
 
-#: src/components/dev/ui/sections/i18n.tsx:296
+#: src/components/dev/ui/sections/i18n.tsx:310
 msgid "jnJNX5"
 msgstr "Welcome back, <b>{name}</b>!"
 
-#: src/components/dev/ui/sections/i18n.tsx:302
+#: src/components/dev/ui/sections/i18n.tsx:316
 msgid "/dbr93"
 msgstr "You have <b>{count}</b> notifications"
 
-#: src/components/dev/ui/sections/i18n.tsx:316
+#: src/components/dev/ui/sections/i18n.tsx:331
 msgid "diRIFs"
 msgstr "Read our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
 
@@ -451,7 +451,7 @@ msgid "Z+95A6"
 msgstr "No options available"
 
 #: src/components/editor/common/select-field.tsx:40
-#: src/components/simulate/steps/configure-step.tsx:87
+#: src/components/simulate/steps/configure-step.tsx:93
 msgid "724CrE"
 msgstr "Select..."
 
@@ -890,7 +890,7 @@ msgid "B2xSl2"
 msgstr "Import different character"
 
 #: src/components/simulate/equipment-slot.tsx:19
-#: src/components/simulate/steps/configure-step.tsx:133
+#: src/components/simulate/steps/configure-step.tsx:139
 #: src/components/simulate/steps/results-step.tsx:24
 msgid "cyR7Kh"
 msgstr "Back"
@@ -986,43 +986,43 @@ msgstr "Configure"
 msgid "yaMHMB"
 msgstr "Results"
 
-#: src/components/simulate/steps/configure-step.tsx:49
+#: src/components/simulate/steps/configure-step.tsx:55
 msgid "XmIR5Z"
 msgstr "Simulation Settings"
 
-#: src/components/simulate/steps/configure-step.tsx:51
+#: src/components/simulate/steps/configure-step.tsx:57
 msgid "vJvd4+"
 msgstr "Configure how the simulation will run"
 
-#: src/components/simulate/steps/configure-step.tsx:57
+#: src/components/simulate/steps/configure-step.tsx:63
 msgid "+9Y+Sd"
 msgstr "Fight Length (sec)"
 
-#: src/components/simulate/steps/configure-step.tsx:74
+#: src/components/simulate/steps/configure-step.tsx:80
 msgid "bBhOqZ"
 msgstr "Target Count"
 
-#: src/components/simulate/steps/configure-step.tsx:84
+#: src/components/simulate/steps/configure-step.tsx:90
 msgid "oK4Gvk"
 msgstr "Fight Style"
 
-#: src/components/simulate/steps/configure-step.tsx:106
+#: src/components/simulate/steps/configure-step.tsx:112
 msgid "NDV5Mq"
 msgstr "Options"
 
-#: src/components/simulate/steps/configure-step.tsx:111
+#: src/components/simulate/steps/configure-step.tsx:117
 msgid "08bbUC"
 msgstr "Bloodlust"
 
-#: src/components/simulate/steps/configure-step.tsx:117
+#: src/components/simulate/steps/configure-step.tsx:123
 msgid "QPxBXu"
 msgstr "Optimal Raid Buffs"
 
-#: src/components/simulate/steps/configure-step.tsx:123
+#: src/components/simulate/steps/configure-step.tsx:129
 msgid "Ks48gB"
 msgstr "Food & Flask"
 
-#: src/components/simulate/steps/configure-step.tsx:135
+#: src/components/simulate/steps/configure-step.tsx:141
 msgid "7+zOhv"
 msgstr "Run Simulation"
 

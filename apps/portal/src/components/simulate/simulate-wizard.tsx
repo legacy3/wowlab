@@ -64,6 +64,10 @@ export function SimulateWizard() {
               <ConfigureStep
                 profile={profile}
                 onSimulate={() => wizard.goTo("results")}
+                onClear={() => {
+                  clearCharacter();
+                  wizard.reset();
+                }}
               />
             )}
           </Stack>
