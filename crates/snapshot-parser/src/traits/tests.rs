@@ -1,7 +1,7 @@
 use super::*;
 
-fn make_node(selected: bool, purchased: bool, choice_index: Option<u8>) -> DecodedTalentNode {
-    DecodedTalentNode {
+fn make_node(selected: bool, purchased: bool, choice_index: Option<u8>) -> DecodedTraitNode {
+    DecodedTraitNode {
         selected,
         purchased,
         partially_ranked: false,
@@ -13,7 +13,7 @@ fn make_node(selected: bool, purchased: bool, choice_index: Option<u8>) -> Decod
 
 #[test]
 fn test_roundtrip() {
-    let original = DecodedTalentLoadout {
+    let original = DecodedTraitLoadout {
         version: 1,
         spec_id: 62,
         tree_hash: [0; 16],
@@ -23,8 +23,8 @@ fn test_roundtrip() {
         ],
     };
 
-    let encoded = encode_talent_loadout(&original);
-    let decoded = decode_talent_loadout(&encoded).unwrap();
+    let encoded = encode_trait_loadout(&original);
+    let decoded = decode_trait_loadout(&encoded).unwrap();
 
     assert_eq!(decoded.version, original.version);
     assert_eq!(decoded.spec_id, original.spec_id);

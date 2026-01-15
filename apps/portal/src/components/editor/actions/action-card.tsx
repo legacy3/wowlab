@@ -1,9 +1,7 @@
 "use client";
 
-import type { Item as ItemType, Spell } from "@wowlab/core/Schemas";
 import type { RuleGroupType } from "react-querybuilder";
 
-import { Enums } from "@wowlab/core/Schemas";
 import { useBoolean } from "ahooks";
 import {
   ChevronDownIcon,
@@ -17,6 +15,8 @@ import {
 import { useExtracted } from "next-intl";
 import { memo, useMemo, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
+
+import type { Item, Spell } from "@/lib/supabase";
 
 import { useEditor, useItem, useSpell } from "@/lib/state";
 
@@ -36,36 +36,37 @@ import { ConditionBuilder } from "../conditions";
 import { ACTION_TYPES } from "../constants";
 import { ItemPicker, SpellPicker } from "../pickers";
 
-function toItemTooltipData(item: ItemType.ItemDataFlat): ItemTooltipData {
+function toItemTooltipData(item: Item): ItemTooltipData {
+  const classification = item.classification as {
+    inventoryTypeName?: string;
+  } | null;
   return {
     effects:
-      item.description && item.effects.length > 0
+      item.description && Array.isArray(item.effects) && item.effects.length > 0
         ? [{ isUse: true, text: item.description }]
         : item.description
           ? [{ text: item.description }]
           : undefined,
-    iconName: item.fileName,
-    itemLevel: item.itemLevel,
+    iconName: item.file_name,
+    itemLevel: item.item_level,
     name: item.name,
     quality: item.quality as ItemQuality,
-    slot: item.classification?.inventoryTypeName,
+    slot: classification?.inventoryTypeName,
   };
 }
 
-function toSpellTooltipData(spell: Spell.SpellDataFlat): SpellTooltipData {
+function toSpellTooltipData(spell: Spell): SpellTooltipData {
   return {
-    castTime: spell.castTime === 0 ? "Instant" : `${spell.castTime / 1000} sec`,
+    castTime:
+      spell.cast_time === 0 ? "Instant" : `${spell.cast_time / 1000} sec`,
     cooldown:
-      spell.recoveryTime > 0 ? `${spell.recoveryTime / 1000} sec` : undefined,
-    cost:
-      spell.powerCost > 0
-        ? `${spell.powerCost} ${Enums.PowerType[spell.powerType] ?? ""}`.trim()
-        : undefined,
+      spell.recovery_time > 0 ? `${spell.recovery_time / 1000} sec` : undefined,
+    cost: spell.power_cost > 0 ? String(spell.power_cost) : undefined,
     description: spell.description,
-    iconName: spell.fileName,
+    iconName: spell.file_name,
     id: spell.id,
     name: spell.name,
-    range: spell.rangeMax0 > 0 ? `${spell.rangeMax0} yd range` : undefined,
+    range: spell.range_max_0 > 0 ? `${spell.range_max_0} yd range` : undefined,
   };
 }
 
@@ -109,7 +110,7 @@ const ActionIcon = memo(function ActionIcon({
     return (
       <ItemTooltip item={toItemTooltipData(item)}>
         <Box rounded="md" overflow="hidden" borderWidth="1" cursor="default">
-          <GameIcon iconName={item.fileName} size={size} />
+          <GameIcon iconName={item.file_name} size={size} />
         </Box>
       </ItemTooltip>
     );
@@ -121,7 +122,7 @@ const ActionIcon = memo(function ActionIcon({
   return (
     <SpellTooltip spell={toSpellTooltipData(spell)}>
       <Box rounded="md" overflow="hidden" borderWidth="1" cursor="default">
-        <GameIcon iconName={spell.fileName} size={size} />
+        <GameIcon iconName={spell.file_name} size={size} />
       </Box>
     </SpellTooltip>
   );

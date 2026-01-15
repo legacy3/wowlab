@@ -4,6 +4,18 @@ use crate::dbc::DbcData;
 use crate::errors::TransformError;
 use crate::flat::SpecDataFlat;
 
+/// Resolve icon file ID to file name via manifest_interface_data
+fn resolve_icon_file_name(dbc: &DbcData, icon_file_id: i32) -> String {
+    if icon_file_id > 0 {
+        dbc.manifest_interface_data
+            .get(&icon_file_id)
+            .map(|m| m.FileName.to_lowercase().replace(".blp", ""))
+            .unwrap_or_else(|| "inv_misc_questionmark".to_string())
+    } else {
+        "inv_misc_questionmark".to_string()
+    }
+}
+
 /// Transform a single spec by ID
 pub fn transform_spec(dbc: &DbcData, spec_id: i32) -> Result<SpecDataFlat, TransformError> {
     let spec = dbc
@@ -18,6 +30,9 @@ pub fn transform_spec(dbc: &DbcData, spec_id: i32) -> Result<SpecDataFlat, Trans
         .and_then(|c| c.Name_lang.clone())
         .unwrap_or_default();
 
+    // Resolve icon file name
+    let file_name = resolve_icon_file_name(dbc, spec.SpellIconFileID);
+
     Ok(SpecDataFlat {
         id: spec.ID,
         name: spec.Name_lang.clone().unwrap_or_default(),
@@ -27,6 +42,7 @@ pub fn transform_spec(dbc: &DbcData, spec_id: i32) -> Result<SpecDataFlat, Trans
         role: spec.Role,
         order_index: spec.OrderIndex.unwrap_or(0),
         icon_file_id: spec.SpellIconFileID,
+        file_name,
         primary_stat_priority: spec.PrimaryStatPriority,
         mastery_spell_id_0: spec.MasterySpellID_0,
         mastery_spell_id_1: spec.MasterySpellID_1,

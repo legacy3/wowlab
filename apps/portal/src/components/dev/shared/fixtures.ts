@@ -1,15 +1,16 @@
-import type { EquipmentSlot } from "@/lib/sim";
+import type { Character, Item, Profession, Slot } from "@/lib/sim";
 
 export const fixtures = {
   character: {
-    class: "Shaman",
+    class: "shaman",
     level: 80,
     name: "Wellenwilli",
+    professions: [],
     race: "Tauren",
-    realm: "Blackmoore",
-    region: "EU",
+    region: "eu",
+    server: "Blackmoore",
     spec: "Restoration",
-  },
+  } satisfies Character,
 
   code: {
     reactHook: `import { useSpell } from "@/lib/state";
@@ -24,6 +25,24 @@ export function SpellInfo({ id }: { id: number }) {
   return <div>{spell.name}</div>;
 }`,
   },
+
+  equipment: [
+    { id: 212009, slot: "head" as Slot },
+    { id: 215134, slot: "neck" as Slot },
+    { id: 212003, slot: "shoulder" as Slot },
+    { id: 222817, slot: "back" as Slot },
+    { id: 212011, slot: "chest" as Slot },
+    { id: 212007, slot: "wrist" as Slot },
+    { id: 212006, slot: "hands" as Slot },
+    { id: 212002, slot: "waist" as Slot },
+    { id: 212004, slot: "legs" as Slot },
+    { id: 212000, slot: "feet" as Slot },
+    { id: 215135, slot: "finger1" as Slot },
+    { id: 215136, slot: "finger2" as Slot },
+    { id: 219314, slot: "trinket1" as Slot },
+    { id: 219315, slot: "trinket2" as Slot },
+    { id: 222446, slot: "main_hand" as Slot },
+  ] satisfies Item[],
 
   error: {
     simple: "Error: Failed to connect to simulation server",
@@ -41,29 +60,10 @@ at async main (index.ts:12)`,
     { label: "Solid", value: "solid" },
   ],
 
-  gear: {
-    back: 222817, // Consecrated Cloak
-    chest: 212011, // Consecrated Robe
-    feet: 212000, // Consecrated Slippers
-    finger1: 215135, // Ring
-    finger2: 215136, // Ring
-    hands: 212006, // Consecrated Gloves
-    head: 212009, // Consecrated Hood
-    legs: 212004, // Consecrated Leggings
-    mainHand: 222446, // Staff
-    neck: 215134, // Amulet
-    offHand: null, // Empty for 2H
-    shoulder: 212003, // Consecrated Shoulderpads
-    trinket1: 219314, // Trinket
-    trinket2: 219315, // Trinket
-    waist: 212002, // Consecrated Cord
-    wrist: 212007, // Consecrated Cuffs
-  } satisfies Record<EquipmentSlot, number | null>,
-
   professions: [
     { name: "Alchemy", rank: 525 },
     { name: "Herbalism", rank: 525 },
-  ],
+  ] satisfies Profession[],
 
   table: {
     leaderboard: [

@@ -55,11 +55,11 @@ export function ClassesAndSpecsSection() {
                     style={{
                       backgroundColor:
                         selectedSpec === spec.id
-                          ? `${getClassColor(spec.id)}20`
+                          ? `${getClassColor(spec.id) ?? ""}20`
                           : undefined,
                       borderColor:
                         selectedSpec === spec.id
-                          ? getClassColor(spec.id)
+                          ? (getClassColor(spec.id) ?? undefined)
                           : undefined,
                     }}
                   >
@@ -67,9 +67,11 @@ export function ClassesAndSpecsSection() {
                       w="2"
                       h="2"
                       rounded="full"
-                      style={{ backgroundColor: getClassColor(spec.id) }}
+                      style={{
+                        backgroundColor: getClassColor(spec.id) ?? undefined,
+                      }}
                     />
-                    {spec.label}
+                    {spec.name}
                   </Badge>
                 ))}
               </Flex>
@@ -149,7 +151,7 @@ export function ClassesAndSpecsSection() {
                         const spec = specs.find((s) => s.id === specId);
                         return (
                           <Badge key={specId} variant="outline" size="sm">
-                            {spec?.label ?? specId}
+                            {spec?.name ?? specId}
                           </Badge>
                         );
                       })}

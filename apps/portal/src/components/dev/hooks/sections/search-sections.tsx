@@ -2,24 +2,39 @@
 
 import { useState } from "react";
 
-import type { GameDataSearchResult } from "@/lib/state";
-
 import { useItemSearch, useSpellSearch } from "@/lib/state";
 
 import { SearchDisplay } from "./search-display";
+
+// Search result type matching react-query return
+type GameDataSearchResult<T> = {
+  data: T[];
+  isError: boolean;
+  isLoading: boolean;
+};
 
 interface SearchSectionConfig<T> {
   defaultQuery: string;
   description: string;
   id: string;
   title: string;
-  useHook: (opts: { query: string }) => GameDataSearchResult<T>;
+  useHook: (query: string) => {
+    data: T[] | undefined;
+    isLoading: boolean;
+    isError: boolean;
+  };
 }
 
 function createSearchSection<T>(config: SearchSectionConfig<T>) {
   return function SearchSection() {
     const [query, setQuery] = useState(config.defaultQuery);
-    const result = config.useHook({ query });
+    const hookResult = config.useHook(query);
+
+    const result: GameDataSearchResult<T> = {
+      data: hookResult.data ?? [],
+      isError: hookResult.isError,
+      isLoading: hookResult.isLoading,
+    };
 
     return (
       <SearchDisplay
@@ -36,7 +51,7 @@ function createSearchSection<T>(config: SearchSectionConfig<T>) {
 
 export const SpellSearchSection = createSearchSection({
   defaultQuery: "Fireball",
-  description: "Returns array of { ID, Name_lang } matching the query",
+  description: "Returns array of SpellSummary matching the query",
   id: "spell-search",
   title: "useSpellSearch",
   useHook: useSpellSearch,
@@ -44,7 +59,7 @@ export const SpellSearchSection = createSearchSection({
 
 export const ItemSearchSection = createSearchSection({
   defaultQuery: "Thunderfury",
-  description: "Returns array of { ID, Display_lang } matching the query",
+  description: "Returns array of ItemSummary matching the query",
   id: "item-search",
   title: "useItemSearch",
   useHook: useItemSearch,

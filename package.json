@@ -3,13 +3,19 @@
   "private": true,
   "packageManager": "pnpm@10.26.2",
   "scripts": {
-    "build": "pnpm -r build",
-        "dev": "pnpm -r --filter portal --parallel dev",
+    "setup": "./scripts/setup.sh",
+    "build": "./scripts/build.sh all",
+    "build:parsers": "./scripts/build.sh parsers",
+    "build:engine": "./scripts/build.sh engine",
+    "build:rust": "./scripts/build.sh rust",
+    "build:portal": "./scripts/build.sh portal",
+    "dev": "pnpm -r --filter @apps/portal --parallel dev",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r --if-present --no-bail lint",
     "lint:fix": "pnpm -r --if-present --no-bail lint:fix",
     "format": "pnpm -r --if-present --no-bail format",
+    "check": "./scripts/build.sh check",
     "ncu": "pnpm -r --if-present ncu"
   },
   "devDependencies": {

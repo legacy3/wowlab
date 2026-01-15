@@ -1,56 +1,45 @@
 "use client";
 
-import {
-  SimcLexError,
-  SimcParseError,
-  SimcParserLive,
-  SimcParserTag,
-  type SimcProfile,
-  SimcTransformError,
-} from "@wowlab/parsers";
-import { Effect, ManagedRuntime } from "effect";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type {
-  CharacterParseState,
-  ParsedSimcData,
-  RecentCharacterSummary,
-} from "./types";
+import type { ParseState, Profile, RecentProfile } from "./types";
 
-import { simcProfileToPortalData } from "./simc-adapter";
+export const MAX_RECENT_PROFILES = 8;
 
-type ParseError = SimcLexError | SimcParseError | SimcTransformError;
-
-function formatParseError(error: ParseError): string {
-  switch (error._tag) {
-    case "SimcLexError":
-      return `Lexer error: ${error.errors.map((e) => e.message).join(", ")}`;
-
-    case "SimcParseError":
-      return `Parse error: ${error.errors.map((e) => e.message).join(", ")}`;
-
-    case "SimcTransformError":
-      return `Transform error: ${error.message}`;
-
-    default:
-      return "Unknown error";
-  }
-}
-
-const simcRuntime = ManagedRuntime.make(SimcParserLive);
-
-export const MAX_RECENT_CHARACTERS = 8;
+// Lazy-loaded WASM module
+let wasmModule: typeof import("parsers") | null = null;
+let wasmInitPromise: Promise<typeof import("parsers")> | null = null;
 
 // Character input store
 interface CharacterInputStore {
   clearCharacter: () => void;
   input: string;
-  parseState: CharacterParseState;
+  parseState: ParseState;
   setInput: (input: string) => Promise<void>;
 }
 
-export const useCharacterInput = create<CharacterInputStore>()((set, get) => ({
+async function getParser(): Promise<typeof import("parsers")> {
+  if (wasmModule) {
+    return wasmModule;
+  }
+
+  if (wasmInitPromise) {
+    return wasmInitPromise;
+  }
+
+  wasmInitPromise = (async () => {
+    const mod = await import("parsers");
+    await mod.default();
+    wasmModule = mod;
+
+    return mod;
+  })();
+
+  return wasmInitPromise;
+}
+
+export const useCharacterInput = create<CharacterInputStore>()((set) => ({
   clearCharacter: () => {
     set({ input: "", parseState: { status: "idle" } });
   },
@@ -69,55 +58,42 @@ export const useCharacterInput = create<CharacterInputStore>()((set, get) => ({
 
     set({ parseState: { status: "parsing" } });
 
-    const program = Effect.gen(function* () {
-      const parser = yield* SimcParserTag;
-      return yield* parser.parse(input);
-    });
-
-    const result = await simcRuntime.runPromise(Effect.either(program));
-
-    if (result._tag === "Left") {
+    try {
+      const parser = await getParser();
+      const profile = parser.parseSimc(input) as Profile;
+      set({ parseState: { profile, status: "success" } });
+    } catch (err) {
       set({
         parseState: {
-          error: formatParseError(result.left),
+          error:
+            err instanceof Error ? err.message : "Failed to parse SimC profile",
           status: "error",
         },
       });
-    } else {
-      const portalData = simcProfileToPortalData(result.right);
-
-      set({
-        parseState: {
-          data: portalData,
-          profile: result.right,
-          status: "success",
-        },
-      });
-
-      // Add to recent characters
-      const { addRecent } = useRecentCharacters.getState();
-      addRecent(input.trim(), result.right, portalData);
     }
   },
 }));
 
-// Recent characters store (persisted)
-interface RecentCharactersStore {
-  addRecent: (simc: string, profile: SimcProfile, data: ParsedSimcData) => void;
+// Recent profiles store (persisted)
+interface RecentProfilesStore {
+  addRecent: (simc: string, profile: Profile) => void;
   clearRecent: () => void;
-  recent: string[];
+  recent: RecentProfile[];
   removeRecent: (simc: string) => void;
 }
 
-export const useRecentCharacters = create<RecentCharactersStore>()(
+export const useRecentProfiles = create<RecentProfilesStore>()(
   persist(
     (set, get) => ({
-      addRecent: (simc, _profile, _data) => {
+      addRecent: (simc, profile) => {
         const current = get().recent;
         const trimmed = simc.trim();
-        const withoutDupes = current.filter((s) => s.trim() !== trimmed);
+        const withoutDupes = current.filter((r) => r.simc.trim() !== trimmed);
         set({
-          recent: [trimmed, ...withoutDupes].slice(0, MAX_RECENT_CHARACTERS),
+          recent: [{ profile, simc: trimmed }, ...withoutDupes].slice(
+            0,
+            MAX_RECENT_PROFILES,
+          ),
         });
       },
 
@@ -127,57 +103,19 @@ export const useRecentCharacters = create<RecentCharactersStore>()(
 
       removeRecent: (simc) => {
         const current = get().recent;
-        set({ recent: current.filter((s) => s.trim() !== simc.trim()) });
+        set({ recent: current.filter((r) => r.simc.trim() !== simc.trim()) });
       },
     }),
-    { name: "wowlab-recent-characters" },
+    { name: "wowlab-recent-profiles" },
   ),
 );
 
-// Selector for parsed character data
-export const selectParsedCharacter = (
-  state: CharacterInputStore,
-): ParsedSimcData | null =>
-  state.parseState.status === "success" ? state.parseState.data : null;
-
-// Selector for simc profile
-export const selectSimcProfile = (
-  state: CharacterInputStore,
-): SimcProfile | null =>
+// Selectors
+export const selectProfile = (state: CharacterInputStore): Profile | null =>
   state.parseState.status === "success" ? state.parseState.profile : null;
 
-// Selector for parse error
 export const selectParseError = (state: CharacterInputStore): string | null =>
   state.parseState.status === "error" ? state.parseState.error : null;
 
-// Selector for is parsing
 export const selectIsParsing = (state: CharacterInputStore): boolean =>
   state.parseState.status === "parsing";
-
-// Hook to parse recent characters on demand
-export async function parseRecentCharacters(): Promise<
-  RecentCharacterSummary[]
-> {
-  const { recent } = useRecentCharacters.getState();
-
-  if (recent.length === 0) {
-    return [];
-  }
-
-  const parseOne = (simc: string) =>
-    Effect.gen(function* () {
-      const parser = yield* SimcParserTag;
-      const profile = yield* parser.parse(simc);
-      return { data: simcProfileToPortalData(profile), profile, simc };
-    });
-
-  const program = Effect.forEach(
-    recent,
-    (simc) => Effect.either(parseOne(simc)),
-    { concurrency: "unbounded" },
-  );
-
-  const results = await simcRuntime.runPromise(program);
-
-  return results.flatMap((r) => (r._tag === "Right" ? [r.right] : []));
-}

@@ -2,17 +2,19 @@
 //!
 //! Usage:
 //!   wowlab snapshot sync --patch 11.2.0 --data-dir ./data
-//!   wowlab snapshot sync --patch 11.2.0 --table spells --table talents
+//!   wowlab snapshot sync --patch 11.2.0 --table spells --table traits
 
 use std::time::Instant;
 
 use anyhow::Result;
 use snapshot_parser::{
     transform::{
-        transform_all_auras, transform_all_items, transform_all_specs, transform_all_spells,
-        transform_all_talent_trees,
+        transform_all_auras, transform_all_classes, transform_all_global_colors,
+        transform_all_global_strings, transform_all_items, transform_all_specs,
+        transform_all_spells, transform_all_trait_trees,
     },
-    AuraDataFlat, DbcData, ItemDataFlat, SpecDataFlat, SpellDataFlat, TalentTreeFlat,
+    AuraDataFlat, ClassDataFlat, DbcData, GlobalColorFlat, GlobalStringFlat, ItemDataFlat,
+    SpecDataFlat, SpellDataFlat, TraitTreeFlat,
 };
 
 use super::{db, SyncArgs, SyncTable};
@@ -24,10 +26,13 @@ use super::{db, SyncArgs, SyncTable};
 /// Transformed data ready for database insertion.
 struct TransformedData {
     spells: Option<Vec<SpellDataFlat>>,
-    talents: Option<Vec<TalentTreeFlat>>,
+    traits: Option<Vec<TraitTreeFlat>>,
     items: Option<Vec<ItemDataFlat>>,
     auras: Option<Vec<AuraDataFlat>>,
     specs: Option<Vec<SpecDataFlat>>,
+    classes: Option<Vec<ClassDataFlat>>,
+    global_colors: Option<Vec<GlobalColorFlat>>,
+    global_strings: Option<Vec<GlobalStringFlat>>,
 }
 
 // ============================================================================
@@ -85,8 +90,8 @@ fn transform_data(dbc: &DbcData, tables: &[SyncTable]) -> TransformedData {
         spells: transform_if(tables, SyncTable::Spells, "spells", || {
             transform_all_spells(dbc)
         }),
-        talents: transform_if(tables, SyncTable::Talents, "talents", || {
-            transform_all_talent_trees(dbc)
+        traits: transform_if(tables, SyncTable::Traits, "traits", || {
+            transform_all_trait_trees(dbc)
         }),
         items: transform_if(tables, SyncTable::Items, "items", || {
             transform_all_items(dbc)
@@ -96,6 +101,15 @@ fn transform_data(dbc: &DbcData, tables: &[SyncTable]) -> TransformedData {
         }),
         specs: transform_if(tables, SyncTable::Specs, "specs", || {
             transform_all_specs(dbc)
+        }),
+        classes: transform_if(tables, SyncTable::Classes, "classes", || {
+            transform_all_classes(dbc)
+        }),
+        global_colors: transform_if(tables, SyncTable::GlobalColors, "global_colors", || {
+            transform_all_global_colors(dbc)
+        }),
+        global_strings: transform_if(tables, SyncTable::GlobalStrings, "global_strings", || {
+            transform_all_global_strings(dbc)
         }),
     }
 }
@@ -131,8 +145,8 @@ async fn insert_all(
     if let Some(ref rows) = data.spells {
         insert_timed("spells", rows.len(), db::insert_spells(tx, rows, patch)).await?;
     }
-    if let Some(ref rows) = data.talents {
-        insert_timed("talents", rows.len(), db::insert_talents(tx, rows, patch)).await?;
+    if let Some(ref rows) = data.traits {
+        insert_timed("traits", rows.len(), db::insert_traits(tx, rows, patch)).await?;
     }
     if let Some(ref rows) = data.items {
         insert_timed("items", rows.len(), db::insert_items(tx, rows, patch)).await?;
@@ -142,6 +156,15 @@ async fn insert_all(
     }
     if let Some(ref rows) = data.specs {
         insert_timed("specs", rows.len(), db::insert_specs(tx, rows, patch)).await?;
+    }
+    if let Some(ref rows) = data.classes {
+        insert_timed("classes", rows.len(), db::insert_classes(tx, rows, patch)).await?;
+    }
+    if let Some(ref rows) = data.global_colors {
+        insert_timed("global_colors", rows.len(), db::insert_global_colors(tx, rows, patch)).await?;
+    }
+    if let Some(ref rows) = data.global_strings {
+        insert_timed("global_strings", rows.len(), db::insert_global_strings(tx, rows, patch)).await?;
     }
     Ok(())
 }

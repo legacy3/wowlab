@@ -1,7 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
-import { type CrudFilter, useDelete, useList } from "@refinedev/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   GlobeIcon,
   LockIcon,
@@ -22,6 +22,7 @@ import type { RotationsRow } from "@/components/editor/types";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUser } from "@/lib/state";
+import { createClient } from "@/lib/supabase";
 
 import {
   Badge,
@@ -47,7 +48,7 @@ interface RotationRowProps {
   actionsLabel: string;
   deleteLabel: string;
   editLabel: string;
-  getClassColor: (specId: number) => string;
+  getClassColor: (specId: number) => string | null;
   getSpecLabel: (specId: number) => string | null;
   isOwner: boolean;
   onDelete: (id: string) => void;
@@ -82,55 +83,55 @@ export function RotationBrowser() {
     [classFilter, getSpecIdsForClass],
   );
 
-  const filters = useMemo(() => {
-    const result: CrudFilter[] = [];
+  const supabase = createClient();
+  const queryClient = useQueryClient();
 
-    if (filter === "public") {
-      result.push({ field: "isPublic", operator: "eq", value: true });
-    } else if (filter === "mine" && userId) {
-      result.push({ field: "userId", operator: "eq", value: userId });
-    }
+  const { data: rotations = [], isLoading } = useQuery({
+    queryFn: async () => {
+      let query = supabase
+        .from("rotations")
+        .select("*")
+        .order("updated_at", { ascending: false });
 
-    if (search.trim()) {
-      result.push({
-        field: "name",
-        operator: "contains",
-        value: search.trim(),
-      });
-    }
+      if (filter === "public") {
+        query = query.eq("is_public", true);
+      } else if (filter === "mine" && userId) {
+        query = query.eq("user_id", userId);
+      }
 
-    if (specIdsForClass && specIdsForClass.length > 0) {
-      result.push({
-        field: "specId",
-        operator: "in",
-        value: specIdsForClass,
-      });
-    }
+      if (search.trim()) {
+        query = query.ilike("name", `%${search.trim()}%`);
+      }
 
-    return result;
-  }, [filter, userId, search, specIdsForClass]);
+      if (specIdsForClass && specIdsForClass.length > 0) {
+        query = query.in("spec_id", specIdsForClass);
+      }
 
-  const {
-    query: { isLoading },
-    result,
-  } = useList<RotationsRow>({
-    filters,
-    resource: "rotations",
-    sorters: [{ field: "updatedAt", order: "desc" }],
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as RotationsRow[];
+    },
+    queryKey: ["rotations", { filter, search, specIdsForClass, userId }],
   });
 
-  const { mutate: deleteRotation } = useDelete<RotationsRow>();
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("rotations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
+    },
+  });
 
   const handleDelete = useCallback(
     (id: string) => {
       if (confirm(t("Are you sure you want to delete this rotation?"))) {
-        deleteRotation({ id, resource: "rotations" });
+        deleteMutation.mutate(id);
       }
     },
-    [deleteRotation, t],
+    [deleteMutation, t],
   );
-
-  const rotations = result?.data ?? [];
 
   return (
     <VStack gap="4" alignItems="stretch">
@@ -267,7 +268,7 @@ export function RotationBrowser() {
             <RotationRow
               key={rotation.id}
               rotation={rotation}
-              isOwner={rotation.userId === userId}
+              isOwner={rotation.user_id === userId}
               getClassColor={getClassColor}
               getSpecLabel={getSpecLabel}
               onDelete={handleDelete}
@@ -359,10 +360,10 @@ function RotationRow({
   rotation,
 }: RotationRowProps) {
   const format = useFormatter();
-  const updatedAt = format.relativeTime(new Date(rotation.updatedAt));
+  const updatedAt = format.relativeTime(new Date(rotation.updated_at));
 
-  const specLabel = getSpecLabel(rotation.specId);
-  const classColor = getClassColor(rotation.specId);
+  const specLabel = getSpecLabel(rotation.spec_id);
+  const classColor = getClassColor(rotation.spec_id);
 
   return (
     <IntlLink href={href(routes.rotations.editor.edit, { id: rotation.id })}>
@@ -396,7 +397,7 @@ function RotationRow({
                 h="2"
                 rounded="full"
                 flexShrink={0}
-                style={{ backgroundColor: classColor }}
+                style={{ backgroundColor: classColor ?? undefined }}
               />
               <Text textStyle="sm" color="fg.muted" truncate>
                 {specLabel}
@@ -410,7 +411,7 @@ function RotationRow({
         </HStack>
 
         <Box w="24" textAlign="center">
-          {rotation.isPublic ? (
+          {rotation.is_public ? (
             <Badge size="sm" variant="subtle" colorPalette="green">
               <GlobeIcon size={12} />
               {publicLabel}

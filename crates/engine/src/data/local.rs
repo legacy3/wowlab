@@ -6,8 +6,8 @@
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
 use snapshot_parser::{
-    transform_all_auras, transform_all_items, transform_all_talent_trees, transform_spell,
-    AuraDataFlat, DbcData, ItemDataFlat, SpellDataFlat, TalentTreeFlat,
+    transform_all_auras, transform_all_items, transform_all_trait_trees, transform_spell,
+    AuraDataFlat, DbcData, ItemDataFlat, SpellDataFlat, TraitTreeFlat,
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -23,8 +23,8 @@ pub struct LocalResolver {
     dbc: RwLock<Option<DbcData>>,
     /// Cached transformed spells (lazy loaded)
     spells: RwLock<Option<HashMap<i32, SpellDataFlat>>>,
-    /// Cached transformed talent trees (lazy loaded)
-    talents: RwLock<Option<HashMap<i32, TalentTreeFlat>>>,
+    /// Cached transformed trait trees (lazy loaded)
+    traits: RwLock<Option<HashMap<i32, TraitTreeFlat>>>,
     /// Cached transformed items (lazy loaded)
     items: RwLock<Option<HashMap<i32, ItemDataFlat>>>,
     /// Cached transformed auras (lazy loaded)
@@ -40,7 +40,7 @@ impl LocalResolver {
             data_dir,
             dbc: RwLock::new(None),
             spells: RwLock::new(None),
-            talents: RwLock::new(None),
+            traits: RwLock::new(None),
             items: RwLock::new(None),
             auras: RwLock::new(None),
         }
@@ -49,7 +49,7 @@ impl LocalResolver {
     /// Preload all data (optional, for benchmarking or when you know you'll need it all).
     pub fn preload_all(&self) -> Result<(), ResolverError> {
         self.ensure_spells_loaded()?;
-        self.ensure_talents_loaded()?;
+        self.ensure_traits_loaded()?;
         self.ensure_items_loaded()?;
         self.ensure_auras_loaded()?;
         Ok(())
@@ -96,25 +96,25 @@ impl LocalResolver {
         Ok(())
     }
 
-    /// Lazy load talent trees on first access.
-    fn ensure_talents_loaded(&self) -> Result<(), ResolverError> {
-        if self.talents.read().unwrap().is_some() {
+    /// Lazy load trait trees on first access.
+    fn ensure_traits_loaded(&self) -> Result<(), ResolverError> {
+        if self.traits.read().unwrap().is_some() {
             return Ok(());
         }
 
         self.ensure_dbc_loaded()?;
 
-        tracing::debug!("Transforming all talent trees");
+        tracing::debug!("Transforming all trait trees");
         let dbc_guard = self.dbc.read().unwrap();
         let dbc = dbc_guard.as_ref().unwrap();
 
-        let talents = transform_all_talent_trees(dbc);
-        let talent_map: HashMap<i32, TalentTreeFlat> =
-            talents.into_iter().map(|t| (t.spec_id, t)).collect();
+        let traits = transform_all_trait_trees(dbc);
+        let trait_map: HashMap<i32, TraitTreeFlat> =
+            traits.into_iter().map(|t| (t.spec_id, t)).collect();
 
-        let count = talent_map.len();
-        *self.talents.write().unwrap() = Some(talent_map);
-        tracing::debug!(count, "Talent trees loaded");
+        let count = trait_map.len();
+        *self.traits.write().unwrap() = Some(trait_map);
+        tracing::debug!(count, "Trait trees loaded");
 
         Ok(())
     }
@@ -186,16 +186,16 @@ impl DataResolver for LocalResolver {
         Ok(ids.iter().filter_map(|id| spell_map.get(id).cloned()).collect())
     }
 
-    async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, ResolverError> {
-        self.ensure_talents_loaded()?;
-        self.talents
+    async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, ResolverError> {
+        self.ensure_traits_loaded()?;
+        self.traits
             .read()
             .unwrap()
             .as_ref()
             .unwrap()
             .get(&spec_id)
             .cloned()
-            .ok_or(ResolverError::TalentTreeNotFound(spec_id))
+            .ok_or(ResolverError::TraitTreeNotFound(spec_id))
     }
 
     async fn get_item(&self, id: i32) -> Result<ItemDataFlat, ResolverError> {

@@ -1,4 +1,4 @@
-//! Talent tree transformation - converts raw DBC data into TalentTreeFlat
+//! Talent tree transformation - converts raw DBC data into TraitTreeFlat
 //!
 //! Transforms WoW's trait system tables into a unified talent tree structure.
 //! The trait system uses several interconnected tables:
@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 use crate::dbc::DbcData;
 use crate::dbc::rows::{TraitNodeRow, TraitNodeXTraitNodeEntryRow, TraitNodeGroupXTraitNodeRow};
 use crate::errors::TransformError;
-use crate::flat::{PointLimits, TalentEdge, TalentNode, TalentNodeEntry, TalentSubTree, TalentTreeFlat};
+use crate::flat::{PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat};
 
 /// Target position for hero talent trees after offset calculation.
 /// Hero trees are repositioned to appear in a consistent location.
@@ -50,10 +50,10 @@ const TREE_INDEX_HERO: i32 = 3;
 /// 7. Determine tree index (class/spec/hero) for each node
 /// 8. Assemble final node entries with spell/icon info
 /// 9. Calculate point limits from currency sources
-pub fn transform_talent_tree(
+pub fn transform_trait_tree(
     dbc: &DbcData,
     spec_id: i32,
-) -> Result<TalentTreeFlat, TransformError> {
+) -> Result<TraitTreeFlat, TransformError> {
     // Step 1: Load spec and class metadata
     let spec = dbc
         .chr_specialization
@@ -133,7 +133,7 @@ pub fn transform_talent_tree(
 
     // Step 10: Assemble nodes
     // Skip Type=3 nodes (SubTreeSelection) as they're UI-only for choosing hero specs
-    let mut nodes: Vec<TalentNode> = tree_nodes
+    let mut nodes: Vec<TraitNode> = tree_nodes
         .iter()
         .filter(|node| node.Type != 3)
         .filter_map(|node| {
@@ -151,9 +151,9 @@ pub fn transform_talent_tree(
     nodes.sort_by_key(|n| n.id);
 
     // Step 11: Convert edges to output format
-    let mut edges: Vec<TalentEdge> = all_edges
+    let mut edges: Vec<TraitEdge> = all_edges
         .iter()
-        .map(|e| TalentEdge {
+        .map(|e| TraitEdge {
             id: e.ID,
             from_node_id: e.LeftTraitNodeID,
             to_node_id: e.RightTraitNodeID,
@@ -173,7 +173,7 @@ pub fn transform_talent_tree(
     let mut all_node_ids: Vec<i32> = tree_nodes.iter().map(|n| n.ID).collect();
     all_node_ids.sort();
 
-    Ok(TalentTreeFlat {
+    Ok(TraitTreeFlat {
         spec_id,
         spec_name: spec.Name_lang.clone().unwrap_or_default(),
         class_name: chr_class.Name_lang.clone().unwrap_or_default(),
@@ -308,7 +308,7 @@ fn build_node_entries_map(
 // Helper Functions - Node Building
 // ============================================================================
 
-/// Build a TalentNode from raw DBC data.
+/// Build a TraitNode from raw DBC data.
 fn build_talent_node(
     dbc: &DbcData,
     node: &TraitNodeRow,
@@ -317,11 +317,11 @@ fn build_talent_node(
     node_group_memberships: &[TraitNodeGroupXTraitNodeRow],
     group_to_tree_index: &HashMap<i32, i32>,
     order_index_map: &HashMap<i32, i32>,
-) -> Option<TalentNode> {
+) -> Option<TraitNode> {
     let x_entries = node_x_entries.get(&node.ID)?;
 
     let mut max_ranks = 1;
-    let mut entries: Vec<TalentNodeEntry> = Vec::new();
+    let mut entries: Vec<TraitNodeEntry> = Vec::new();
 
     for x_entry in x_entries {
         let entry = dbc.trait_node_entry.get(&x_entry.TraitNodeEntryID)?;
@@ -335,7 +335,7 @@ fn build_talent_node(
         let name = get_talent_name(dbc, definition);
         let description = get_talent_description(dbc, definition);
 
-        entries.push(TalentNodeEntry {
+        entries.push(TraitNodeEntry {
             id: entry.ID,
             definition_id: definition.ID,
             spell_id: definition.SpellID,
@@ -355,7 +355,7 @@ fn build_talent_node(
     // Determine tree index based on subtree or group membership
     let tree_index = determine_tree_index(node, node_group_memberships, group_to_tree_index);
 
-    Some(TalentNode {
+    Some(TraitNode {
         id: node.ID,
         pos_x,
         pos_y,
@@ -441,8 +441,8 @@ fn get_talent_description(dbc: &DbcData, definition: &crate::dbc::TraitDefinitio
 fn build_subtrees(
     dbc: &DbcData,
     valid_sub_tree_ids: &HashSet<i32>,
-    nodes: &[TalentNode],
-) -> Vec<TalentSubTree> {
+    nodes: &[TraitNode],
+) -> Vec<TraitSubTree> {
     valid_sub_tree_ids
         .iter()
         .filter_map(|&sub_tree_id| {
@@ -454,7 +454,7 @@ fn build_subtrees(
                 .map(|e| e.Name.clone())
                 .unwrap_or_else(|| derive_sub_tree_icon(nodes, sub_tree_id));
 
-            Some(TalentSubTree {
+            Some(TraitSubTree {
                 id: sub_tree_id,
                 name: sub_tree.Name_lang.clone().unwrap_or_default(),
                 description: sub_tree.Description_lang.clone().unwrap_or_default(),
@@ -584,7 +584,7 @@ fn get_icon_file_name(dbc: &DbcData, definition: &crate::dbc::TraitDefinitionRow
 }
 
 /// Derive subtree icon from the first node entry with an icon.
-fn derive_sub_tree_icon(nodes: &[TalentNode], sub_tree_id: i32) -> String {
+fn derive_sub_tree_icon(nodes: &[TraitNode], sub_tree_id: i32) -> String {
     nodes
         .iter()
         .filter(|n| n.sub_tree_id == sub_tree_id)

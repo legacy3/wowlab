@@ -5,5 +5,11 @@ export {
   SpecSection,
   SpellSection,
 } from "./entity-sections";
-export { ClassesListSection, SpecsListSection } from "./list-sections";
+export {
+  ClassesDirectListSection,
+  ClassesListSection,
+  GlobalColorsSection,
+  GlobalStringsSection,
+  SpecsListSection,
+} from "./list-sections";
 export { ItemSearchSection, SpellSearchSection } from "./search-sections";

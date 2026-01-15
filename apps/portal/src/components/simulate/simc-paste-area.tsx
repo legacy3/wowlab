@@ -5,8 +5,8 @@ import { Stack } from "styled-system/jsx";
 
 import {
   selectIsParsing,
-  selectParsedCharacter,
   selectParseError,
+  selectProfile,
   useCharacterInput,
 } from "@/lib/sim";
 
@@ -20,7 +20,7 @@ export function SimcPasteArea() {
   const setInput = useCharacterInput((s) => s.setInput);
   const isParsing = useCharacterInput(selectIsParsing);
   const parseError = useCharacterInput(selectParseError);
-  const parsedCharacter = useCharacterInput(selectParsedCharacter);
+  const profile = useCharacterInput(selectProfile);
 
   return (
     <Stack gap="4">
@@ -35,10 +35,10 @@ export function SimcPasteArea() {
         />
       )}
 
-      {parsedCharacter && (
+      {profile && (
         <CharacterCard
-          character={parsedCharacter.character}
-          professions={parsedCharacter.professions}
+          character={profile.character}
+          professions={profile.character.professions}
         />
       )}
     </Stack>

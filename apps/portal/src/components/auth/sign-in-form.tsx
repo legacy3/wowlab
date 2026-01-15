@@ -5,7 +5,7 @@ import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, Grid, Stack, styled } from "styled-system/jsx";
 
-import type { OAuthProvider } from "@/lib/refine";
+import type { OAuthProvider } from "@/lib/state";
 
 import {
   Button,

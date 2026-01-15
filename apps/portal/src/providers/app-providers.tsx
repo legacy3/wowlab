@@ -3,7 +3,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
 
-import { RefineProvider } from "./refine-provider";
+import { QueryProvider } from "./query-provider";
 
 type AppProvidersProps = {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ export function AppProviders({
       timeZone={timeZone}
     >
       <ThemeProvider attribute="class">
-        <RefineProvider>{children}</RefineProvider>
+        <QueryProvider>{children}</QueryProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   );

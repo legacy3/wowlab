@@ -7,7 +7,7 @@
 
 use async_trait::async_trait;
 use snapshot_parser::{
-    AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat, TalentTreeWithSelections,
+    AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections,
 };
 use std::path::PathBuf;
 
@@ -17,8 +17,8 @@ pub enum ResolverError {
     #[error("Spell not found: {0}")]
     SpellNotFound(i32),
 
-    #[error("Talent tree not found for spec: {0}")]
-    TalentTreeNotFound(i32),
+    #[error("Trait tree not found for spec: {0}")]
+    TraitTreeNotFound(i32),
 
     #[error("Item not found: {0}")]
     ItemNotFound(i32),
@@ -35,8 +35,8 @@ pub enum ResolverError {
     #[error("Transform error: {0}")]
     Transform(String),
 
-    #[error("Talent decode error: {0}")]
-    TalentDecode(String),
+    #[error("Trait decode error: {0}")]
+    TraitDecode(String),
 
     #[cfg(feature = "supabase")]
     #[error("Supabase error: {0}")]
@@ -58,9 +58,9 @@ impl From<snapshot_parser::TransformError> for ResolverError {
     }
 }
 
-impl From<snapshot_parser::errors::TalentError> for ResolverError {
-    fn from(e: snapshot_parser::errors::TalentError) -> Self {
-        ResolverError::TalentDecode(e.to_string())
+impl From<snapshot_parser::errors::TraitError> for ResolverError {
+    fn from(e: snapshot_parser::errors::TraitError) -> Self {
+        ResolverError::TraitDecode(e.to_string())
     }
 }
 
@@ -77,8 +77,8 @@ pub trait DataResolver: Send + Sync {
     /// Get multiple spells by IDs.
     async fn get_spells(&self, ids: &[i32]) -> Result<Vec<SpellDataFlat>, ResolverError>;
 
-    /// Get talent tree for a spec.
-    async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, ResolverError>;
+    /// Get trait tree for a spec.
+    async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, ResolverError>;
 
     /// Get item by ID.
     async fn get_item(&self, id: i32) -> Result<ItemDataFlat, ResolverError>;
@@ -96,26 +96,26 @@ pub trait DataResolver: Send + Sync {
         Ok(vec![])
     }
 
-    /// Decode a talent string and apply it to the talent tree.
+    /// Decode a trait string and apply it to the trait tree.
     ///
-    /// Uses snapshot-parser's decode_talent_loadout and apply_decoded_talents.
-    async fn decode_talents(
+    /// Uses snapshot-parser's decode_trait_loadout and apply_decoded_traits.
+    async fn decode_traits(
         &self,
         spec_id: i32,
-        talent_string: &str,
-    ) -> Result<TalentTreeWithSelections, ResolverError> {
-        let tree = self.get_talent_tree(spec_id).await?;
-        let decoded = snapshot_parser::decode_talent_loadout(talent_string)?;
-        Ok(snapshot_parser::apply_decoded_talents(tree, &decoded))
+        trait_string: &str,
+    ) -> Result<TraitTreeWithSelections, ResolverError> {
+        let tree = self.get_trait_tree(spec_id).await?;
+        let decoded = snapshot_parser::decode_trait_loadout(trait_string)?;
+        Ok(snapshot_parser::apply_decoded_traits(tree, &decoded))
     }
 
-    /// Get all spell IDs from decoded talents.
-    async fn get_talent_spell_ids(
+    /// Get all spell IDs from decoded traits.
+    async fn get_trait_spell_ids(
         &self,
         spec_id: i32,
-        talent_string: &str,
+        trait_string: &str,
     ) -> Result<Vec<i32>, ResolverError> {
-        let tree_with_selections = self.decode_talents(spec_id, talent_string).await?;
+        let tree_with_selections = self.decode_traits(spec_id, trait_string).await?;
 
         let mut spell_ids = Vec::new();
         for selection in &tree_with_selections.selections {

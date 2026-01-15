@@ -72,11 +72,11 @@ export function SpecPickerSection() {
                     </Text>
                     <Badge
                       style={{
-                        backgroundColor: `${getClassColor(selectedSpec)}20`,
-                        borderColor: getClassColor(selectedSpec),
+                        backgroundColor: `${getClassColor(selectedSpec) ?? ""}20`,
+                        borderColor: getClassColor(selectedSpec) ?? undefined,
                       }}
                     >
-                      {getClassColor(selectedSpec)}
+                      {getClassColor(selectedSpec) ?? "null"}
                     </Badge>
                   </Flex>
                 </Stack>

@@ -7,7 +7,10 @@
 
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
-use snapshot_parser::{AuraDataFlat, ItemDataFlat, SpecDataFlat, SpellDataFlat, TalentTreeFlat};
+use snapshot_parser::{
+    AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
+    SpellDataFlat, TraitTreeFlat,
+};
 use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
 
 use super::SyncTable;
@@ -50,11 +53,14 @@ pub async fn cleanup_patch(
     tables: &[SyncTable],
 ) -> Result<(), sqlx::Error> {
     let mappings: &[(SyncTable, &str)] = &[
-        (SyncTable::Spells, "spell_data_flat"),
-        (SyncTable::Talents, "talent_tree_flat"),
-        (SyncTable::Items, "item_data_flat"),
-        (SyncTable::Auras, "aura_data_flat"),
-        (SyncTable::Specs, "spec_data_flat"),
+        (SyncTable::Spells, "game.spells"),
+        (SyncTable::Traits, "game.specs_traits"),
+        (SyncTable::Items, "game.items"),
+        (SyncTable::Auras, "game.auras"),
+        (SyncTable::Specs, "game.specs"),
+        (SyncTable::Classes, "game.classes"),
+        (SyncTable::GlobalColors, "game.global_colors"),
+        (SyncTable::GlobalStrings, "game.global_strings"),
     ];
 
     for (sync_table, table_name) in mappings {
@@ -98,7 +104,7 @@ pub async fn insert_spells(
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO spell_data_flat ({}) ",
+            "INSERT INTO game.spells ({}) ",
             COLUMNS.join(", ")
         ));
 
@@ -187,9 +193,9 @@ pub async fn insert_spells(
     Ok(())
 }
 
-pub async fn insert_talents(
+pub async fn insert_traits(
     tx: &mut Transaction<'_, Postgres>,
-    rows: &[TalentTreeFlat],
+    rows: &[TraitTreeFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
@@ -197,11 +203,11 @@ pub async fn insert_talents(
         "all_node_ids", "nodes", "edges", "sub_trees", "point_limits",
     ];
 
-    let pb = progress_bar(rows.len(), "Talents");
+    let pb = progress_bar(rows.len(), "Traits");
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO talent_tree_flat ({}) ",
+            "INSERT INTO game.specs_traits ({}) ",
             COLUMNS.join(", ")
         ));
 
@@ -246,7 +252,7 @@ pub async fn insert_items(
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO item_data_flat ({}) ",
+            "INSERT INTO game.items ({}) ",
             COLUMNS.join(", ")
         ));
 
@@ -310,7 +316,7 @@ pub async fn insert_auras(
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO aura_data_flat ({}) ",
+            "INSERT INTO game.auras ({}) ",
             COLUMNS.join(", ")
         ));
 
@@ -359,7 +365,7 @@ pub async fn insert_specs(
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
         "id", "patch_version", "name", "description", "class_id", "class_name",
-        "role", "order_index", "icon_file_id", "primary_stat_priority",
+        "role", "order_index", "icon_file_id", "file_name", "primary_stat_priority",
         "mastery_spell_id_0", "mastery_spell_id_1",
     ];
 
@@ -367,7 +373,7 @@ pub async fn insert_specs(
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
         let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO spec_data_flat ({}) ",
+            "INSERT INTO game.specs ({}) ",
             COLUMNS.join(", ")
         ));
 
@@ -381,9 +387,116 @@ pub async fn insert_specs(
                 .push_bind(s.role)
                 .push_bind(s.order_index)
                 .push_bind(s.icon_file_id)
+                .push_bind(&s.file_name)
                 .push_bind(s.primary_stat_priority)
                 .push_bind(s.mastery_spell_id_0)
                 .push_bind(s.mastery_spell_id_1);
+        });
+
+        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+        qb.push(upsert_all_columns(COLUMNS));
+        qb.build().execute(&mut **tx).await?;
+        pb.inc(chunk.len() as u64);
+    }
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_classes(
+    tx: &mut Transaction<'_, Postgres>,
+    rows: &[ClassDataFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &[
+        "id", "patch_version", "name", "filename", "icon_file_id", "file_name", "color",
+        "spell_class_set", "primary_stat_priority", "roles_mask",
+    ];
+
+    let pb = progress_bar(rows.len(), "Classes");
+
+    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
+        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+            "INSERT INTO game.classes ({}) ",
+            COLUMNS.join(", ")
+        ));
+
+        qb.push_values(chunk, |mut b, c| {
+            b.push_bind(c.id)
+                .push_bind(patch)
+                .push_bind(&c.name)
+                .push_bind(&c.filename)
+                .push_bind(c.icon_file_id)
+                .push_bind(&c.file_name)
+                .push_bind(&c.color)
+                .push_bind(c.spell_class_set)
+                .push_bind(c.primary_stat_priority)
+                .push_bind(c.roles_mask);
+        });
+
+        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+        qb.push(upsert_all_columns(COLUMNS));
+        qb.build().execute(&mut **tx).await?;
+        pb.inc(chunk.len() as u64);
+    }
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_global_colors(
+    tx: &mut Transaction<'_, Postgres>,
+    rows: &[GlobalColorFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &["id", "patch_version", "name", "color"];
+
+    let pb = progress_bar(rows.len(), "GlobalColors");
+
+    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
+        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+            "INSERT INTO game.global_colors ({}) ",
+            COLUMNS.join(", ")
+        ));
+
+        qb.push_values(chunk, |mut b, c| {
+            b.push_bind(c.id)
+                .push_bind(patch)
+                .push_bind(&c.name)
+                .push_bind(&c.color);
+        });
+
+        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+        qb.push(upsert_all_columns(COLUMNS));
+        qb.build().execute(&mut **tx).await?;
+        pb.inc(chunk.len() as u64);
+    }
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_global_strings(
+    tx: &mut Transaction<'_, Postgres>,
+    rows: &[GlobalStringFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &["id", "patch_version", "tag", "value", "flags"];
+
+    let pb = progress_bar(rows.len(), "GlobalStrings");
+
+    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
+        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+            "INSERT INTO game.global_strings ({}) ",
+            COLUMNS.join(", ")
+        ));
+
+        qb.push_values(chunk, |mut b, s| {
+            b.push_bind(s.id)
+                .push_bind(patch)
+                .push_bind(&s.tag)
+                .push_bind(&s.value)
+                .push_bind(s.flags);
         });
 
         qb.push(" ON CONFLICT (id) DO UPDATE SET ");

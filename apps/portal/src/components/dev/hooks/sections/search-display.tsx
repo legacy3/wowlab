@@ -5,11 +5,16 @@ import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
-import type { GameDataSearchResult } from "@/lib/state";
-
 import { Badge, Input } from "@/components/ui";
 
 import { DataCard, JsonOutput, Section, Subsection } from "../../shared";
+
+// Search result type matching react-query return
+type GameDataSearchResult<T> = {
+  data: T[];
+  isError: boolean;
+  isLoading: boolean;
+};
 
 interface SearchDisplayProps {
   description: string;

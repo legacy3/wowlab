@@ -42,6 +42,12 @@ pub enum TransformError {
     #[error("Class {class_id} not found in DBC cache")]
     ClassNotFound { class_id: i32 },
 
+    #[error("Global color {color_id} not found in DBC cache")]
+    GlobalColorNotFound { color_id: i32 },
+
+    #[error("Global string {string_id} not found in DBC cache")]
+    GlobalStringNotFound { string_id: i32 },
+
     #[error("Loadout for spec {spec_id} not found")]
     LoadoutNotFound { spec_id: i32 },
 
@@ -52,13 +58,13 @@ pub enum TransformError {
     Dbc(#[from] DbcError),
 }
 
-/// Errors that can occur during talent string encoding/decoding
+/// Errors that can occur during trait string encoding/decoding
 #[derive(Debug, Error)]
-pub enum TalentError {
-    #[error("Invalid characters in talent string")]
+pub enum TraitError {
+    #[error("Invalid characters in trait string")]
     InvalidCharacters,
 
-    #[error("Talent string too short")]
+    #[error("Trait string too short")]
     TooShort,
 
     #[error("Invalid bit read: not enough data")]

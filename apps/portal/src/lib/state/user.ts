@@ -1,50 +1,95 @@
 "use client";
 
-import { useGetIdentity, useLogin, useLogout } from "@refinedev/core";
-import { useMemo } from "react";
+import type { OAuthResponse } from "@supabase/supabase-js";
 
-import type { OAuthProvider } from "@/lib/refine";
-import type { UserIdentity } from "@/lib/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo } from "react";
 
-import type { StateResult } from "./types";
+import { createClient } from "@/lib/supabase";
 
-export interface User extends UserIdentity {
+export type OAuthProvider = "discord" | "github" | "google" | "twitch";
+
+export interface User {
+  avatar_url: string | null;
+  email: string | null;
+  handle: string | null;
+  id: string;
   initials: string;
 }
 
-export interface UserState extends StateResult<User> {
-  login: (provider: OAuthProvider, redirectTo?: string) => void;
-  logout: () => void;
+export interface UserState {
+  data: User | null;
+  error: Error | null;
+  isLoading: boolean;
+  login: (
+    provider: OAuthProvider,
+    redirectTo?: string,
+  ) => Promise<OAuthResponse>;
+  logout: () => Promise<void>;
 }
 
 export function useUser(): UserState {
-  const { data, error, isLoading } = useGetIdentity<UserIdentity>();
-  const { mutate: loginMutation } = useLogin<{
-    provider: OAuthProvider;
-    redirectTo?: string;
-  }>();
-  const { mutate: logoutMutation } = useLogout();
+  const supabase = createClient();
+  const queryClient = useQueryClient();
 
-  const user = useMemo(() => {
-    if (!data) {
-      return null;
-    }
+  const { data, error, isLoading } = useQuery({
+    queryFn: async (): Promise<User | null> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
 
-    return {
-      ...data,
-      initials: data.handle ? data.handle.slice(0, 2).toUpperCase() : "?",
-    };
-  }, [data]);
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("handle, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      const handle = profile?.handle ?? null;
+
+      return {
+        avatar_url: profile?.avatar_url ?? null,
+        email: user.email ?? null,
+        handle,
+        id: user.id,
+        initials: handle ? handle.slice(0, 2).toUpperCase() : "?",
+      };
+    },
+    queryKey: ["auth", "user"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase, queryClient]);
+
+  const login = useCallback(
+    (provider: OAuthProvider, redirectTo?: string): Promise<OAuthResponse> => {
+      return supabase.auth.signInWithOAuth({
+        options: {
+          redirectTo: redirectTo ?? `${window.location.origin}/auth/callback`,
+        },
+        provider,
+      });
+    },
+    [supabase],
+  );
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+  }, [supabase, queryClient]);
 
   return {
-    data: user,
+    data: data ?? null,
     error: error instanceof Error ? error : null,
     isLoading,
-
-    login: (provider, redirectTo) => loginMutation({ provider, redirectTo }),
-    logout: () => logoutMutation(),
-    set: () => {
-      throw new Error("User state is read-only");
-    },
+    login,
+    logout,
   };
 }

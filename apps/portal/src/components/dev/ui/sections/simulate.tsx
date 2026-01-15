@@ -78,7 +78,7 @@ function CharacterPanelDemo() {
         <CharacterPanel
           character={fixtures.character}
           professions={fixtures.professions}
-          gear={fixtures.gear}
+          equipment={fixtures.equipment}
           actions={<Button size="sm">Simulate</Button>}
           onClear={() => {}}
         />
@@ -96,13 +96,19 @@ function EquipmentGridDemo() {
           columns, trinkets, and weapons.
         </styled.p>
 
-        <EquipmentGrid character={fixtures.character} gear={fixtures.gear} />
+        <EquipmentGrid
+          character={fixtures.character}
+          equipment={fixtures.equipment}
+        />
       </Stack>
     </Subsection>
   );
 }
 
 function EquipmentSlotDemo() {
+  const headItem = fixtures.equipment.find((i) => i.slot === "head");
+  const handsItem = fixtures.equipment.find((i) => i.slot === "hands");
+
   return (
     <Subsection title="Equipment Slot">
       <Stack gap="4" maxW="xl">
@@ -112,16 +118,20 @@ function EquipmentSlotDemo() {
         </styled.p>
 
         <Grid columns={2} gap="3">
-          <EquipmentSlot slot="head" itemId={fixtures.gear.head} align="left" />
+          <EquipmentSlot
+            slot="head"
+            itemId={headItem?.id ?? null}
+            align="left"
+          />
           <EquipmentSlot
             slot="hands"
-            itemId={fixtures.gear.hands}
+            itemId={handsItem?.id ?? null}
             align="right"
           />
         </Grid>
 
         <Grid columns={2} gap="3">
-          <EquipmentSlot slot="offHand" itemId={null} align="left" />
+          <EquipmentSlot slot="off_hand" itemId={null} align="left" />
           <EquipmentSlot slot="trinket2" itemId={null} align="right" />
         </Grid>
       </Stack>

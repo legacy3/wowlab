@@ -3,11 +3,7 @@
 import { useExtracted } from "next-intl";
 import { Stack } from "styled-system/jsx";
 
-import type {
-  CharacterProfession,
-  CharacterSummary,
-  EquipmentSlot,
-} from "@/lib/sim";
+import type { Character, Item, Profession } from "@/lib/sim";
 
 import { Button, Card } from "@/components/ui";
 
@@ -16,18 +12,18 @@ import { EquipmentGrid } from "./equipment-grid";
 
 export interface CharacterPanelProps {
   actions?: React.ReactNode;
-  character: CharacterSummary;
+  character: Character;
   children?: React.ReactNode;
-  gear: Record<EquipmentSlot, number | null>;
+  equipment: Item[];
   onClear?: () => void;
-  professions?: CharacterProfession[];
+  professions?: Profession[];
 }
 
 export function CharacterPanel({
   actions,
   character,
   children,
-  gear,
+  equipment,
   onClear,
   professions,
 }: CharacterPanelProps) {
@@ -45,7 +41,7 @@ export function CharacterPanel({
 
       <Card.Body p="4" pt="0">
         <Stack gap="4">
-          <EquipmentGrid character={character} gear={gear} />
+          <EquipmentGrid character={character} equipment={equipment} />
 
           {children}
 

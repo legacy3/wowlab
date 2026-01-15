@@ -11,7 +11,7 @@ use crate::{SupabaseClient, SupabaseError};
 use directories::ProjectDirs;
 use moka::sync::Cache;
 use serde::{de::DeserializeOwned, Serialize};
-use snapshot_parser::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
+use snapshot_parser::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
@@ -24,7 +24,7 @@ pub struct GameDataCache {
 
     // L1: In-memory (no TTL - data is immutable per patch)
     spells: Cache<i32, SpellDataFlat>,
-    talents: Cache<i32, TalentTreeFlat>,
+    traits: Cache<i32, TraitTreeFlat>,
     items: Cache<i32, ItemDataFlat>,
     auras: Cache<i32, AuraDataFlat>,
 }
@@ -39,7 +39,7 @@ pub struct CacheStats {
 #[derive(Debug, Default)]
 pub struct MemoryStats {
     pub spells: u64,
-    pub talents: u64,
+    pub traits: u64,
     pub items: u64,
     pub auras: u64,
 }
@@ -47,7 +47,7 @@ pub struct MemoryStats {
 #[derive(Debug, Default)]
 pub struct DiskStats {
     pub spells: usize,
-    pub talents: usize,
+    pub traits: usize,
     pub items: usize,
     pub auras: usize,
 }
@@ -83,7 +83,7 @@ impl GameDataCache {
             patch: patch.clone(),
             cache_dir: cache_dir.clone(),
             spells: Cache::builder().max_capacity(50_000).build(),
-            talents: Cache::builder().max_capacity(1_000).build(),
+            traits: Cache::builder().max_capacity(1_000).build(),
             items: Cache::builder().max_capacity(50_000).build(),
             auras: Cache::builder().max_capacity(10_000).build(),
         };
@@ -122,20 +122,20 @@ impl GameDataCache {
         Ok(v)
     }
 
-    /// Get a talent tree by spec ID.
-    pub async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, SupabaseError> {
-        if let Some(v) = self.talents.get(&spec_id) {
+    /// Get a trait tree by spec ID.
+    pub async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, SupabaseError> {
+        if let Some(v) = self.traits.get(&spec_id) {
             return Ok(v);
         }
 
-        if let Some(v) = self.read_disk::<TalentTreeFlat>("talents", spec_id) {
-            self.talents.insert(spec_id, v.clone());
+        if let Some(v) = self.read_disk::<TraitTreeFlat>("traits", spec_id) {
+            self.traits.insert(spec_id, v.clone());
             return Ok(v);
         }
 
-        let v = self.client.get_talent_tree(spec_id).await?;
-        self.write_disk("talents", spec_id, &v)?;
-        self.talents.insert(spec_id, v.clone());
+        let v = self.client.get_trait_tree(spec_id).await?;
+        self.write_disk("traits", spec_id, &v)?;
+        self.traits.insert(spec_id, v.clone());
         Ok(v)
     }
 
@@ -183,13 +183,13 @@ impl GameDataCache {
         CacheStats {
             memory: MemoryStats {
                 spells: self.spells.entry_count(),
-                talents: self.talents.entry_count(),
+                traits: self.traits.entry_count(),
                 items: self.items.entry_count(),
                 auras: self.auras.entry_count(),
             },
             disk: DiskStats {
                 spells: self.count_disk_entries("spells"),
-                talents: self.count_disk_entries("talents"),
+                traits: self.count_disk_entries("traits"),
                 items: self.count_disk_entries("items"),
                 auras: self.count_disk_entries("auras"),
             },
@@ -199,7 +199,7 @@ impl GameDataCache {
     /// Clear all caches (memory and disk).
     pub fn clear_all(&self) -> Result<(), SupabaseError> {
         self.spells.invalidate_all();
-        self.talents.invalidate_all();
+        self.traits.invalidate_all();
         self.items.invalidate_all();
         self.auras.invalidate_all();
         self.clear_disk()?;
@@ -213,10 +213,10 @@ impl GameDataCache {
         let _ = self.remove_disk("spells", id);
     }
 
-    /// Invalidate a specific talent tree.
-    pub fn invalidate_talent(&self, spec_id: i32) {
-        self.talents.invalidate(&spec_id);
-        let _ = self.remove_disk("talents", spec_id);
+    /// Invalidate a specific trait tree.
+    pub fn invalidate_trait(&self, spec_id: i32) {
+        self.traits.invalidate(&spec_id);
+        let _ = self.remove_disk("traits", spec_id);
     }
 
     /// Invalidate a specific item.
@@ -268,7 +268,7 @@ impl GameDataCache {
     }
 
     fn clear_disk(&self) -> Result<(), SupabaseError> {
-        for category in ["spells", "talents", "items", "auras"] {
+        for category in ["spells", "traits", "items", "auras"] {
             let dir = self.cache_dir.join(category);
             if dir.exists() {
                 fs::remove_dir_all(&dir).map_err(|e| SupabaseError::Io {

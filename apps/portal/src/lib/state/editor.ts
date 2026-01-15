@@ -185,11 +185,11 @@ export const useEditor = create<EditorState>()(
 
       set((state) => {
         state.rotationId = rotation.id;
-        state.specId = rotation.specId;
+        state.specId = rotation.spec_id;
         state.name = rotation.name;
         state.slug = rotation.slug;
         state.description = rotation.description ?? "";
-        state.isPublic = rotation.isPublic;
+        state.isPublic = rotation.is_public;
 
         state.variables = data.variables ?? [];
         state.actionLists = data.lists ?? [];
@@ -198,7 +198,7 @@ export const useEditor = create<EditorState>()(
         state.selectedListId = data.lists[0]?.id ?? null;
         state.viewMode = "edit";
         state.isDirty = false;
-        state.ownerId = rotation.userId;
+        state.ownerId = rotation.user_id;
         state.isLocked = true;
       });
     },

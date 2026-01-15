@@ -7,8 +7,8 @@ msgstr ""
 "X-Crowdin-SourceKey: msgstr\n"
 
 #: src/app/[locale]/dev/ui/loading.tsx:10
-#: src/components/dev/hooks/sections/entity-display.tsx:80
-#: src/components/dev/hooks/sections/search-display.tsx:70
+#: src/components/dev/hooks/sections/entity-display.tsx:86
+#: src/components/dev/hooks/sections/search-display.tsx:75
 #: src/components/editor/pickers/game-object-picker.tsx:302
 msgid "gjBiyj"
 msgstr "Loading..."
@@ -84,7 +84,7 @@ msgid "6YNH3R"
 msgstr "Iterations"
 
 #: src/components/computing/cards/job-history-card.tsx:67
-#: src/components/rotations/rotation-browser.tsx:147
+#: src/components/rotations/rotation-browser.tsx:148
 msgid "zQvVDJ"
 msgstr "All"
 
@@ -131,7 +131,7 @@ msgstr "Status"
 
 #: src/components/computing/cards/job-history-card.tsx:154
 #: src/components/editor/variable-editor-dialog.tsx:65
-#: src/components/rotations/rotation-browser.tsx:261
+#: src/components/rotations/rotation-browser.tsx:262
 msgid "HAlOn1"
 msgstr "Name"
 
@@ -147,7 +147,7 @@ msgstr "Casts"
 
 #: src/components/computing/cards/job-history-card.tsx:162
 #: src/components/editor/common/item-actions-menu.tsx:73
-#: src/components/rotations/rotation-browser.tsx:276
+#: src/components/rotations/rotation-browser.tsx:277
 msgid "wL7VAE"
 msgstr "Actions"
 
@@ -231,7 +231,7 @@ msgstr "{count, plural, other {# min read}}"
 #: src/components/content/article-meta.tsx:82
 #: src/components/editor/common/item-actions-menu.tsx:50
 #: src/components/editor/layout/editor-header.tsx:161
-#: src/components/rotations/rotation-browser.tsx:277
+#: src/components/rotations/rotation-browser.tsx:278
 msgid "wEQDC6"
 msgstr "Edit"
 
@@ -251,25 +251,25 @@ msgstr "Table of contents"
 msgid "H0dq7D"
 msgstr "Link to this section"
 
-#: src/components/dev/hooks/sections/entity-display.tsx:62
+#: src/components/dev/hooks/sections/entity-display.tsx:68
 msgid "5dsizS"
 msgstr "Enter ID"
 
-#: src/components/dev/hooks/sections/entity-display.tsx:71
+#: src/components/dev/hooks/sections/entity-display.tsx:77
 msgid "rELDbB"
 msgstr "Refresh"
 
-#: src/components/dev/hooks/sections/search-display.tsx:57
+#: src/components/dev/hooks/sections/search-display.tsx:62
 #: src/components/editor/pickers/game-object-picker.tsx:152
-#: src/components/rotations/rotation-browser.tsx:185
+#: src/components/rotations/rotation-browser.tsx:186
 msgid "0BUTMv"
 msgstr "Search..."
 
-#: src/components/dev/hooks/sections/search-display.tsx:63
+#: src/components/dev/hooks/sections/search-display.tsx:68
 msgid "4PQ9vQ"
 msgstr "(empty)"
 
-#: src/components/dev/hooks/sections/search-display.tsx:65
+#: src/components/dev/hooks/sections/search-display.tsx:70
 msgid "24tjE1"
 msgstr "{count, plural, =1 {# result} other {# results}}"
 
@@ -333,60 +333,60 @@ msgstr "You have <b>{count}</b> notifications"
 msgid "diRIFs"
 msgstr "Read our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
 
-#: src/components/editor/actions/action-card.tsx:184
+#: src/components/editor/actions/action-card.tsx:185
 msgid "5GICP3"
 msgstr "Select list..."
 
-#: src/components/editor/actions/action-card.tsx:186
+#: src/components/editor/actions/action-card.tsx:187
 msgid "a/Zp/4"
 msgstr "No other lists"
 
-#: src/components/editor/actions/action-card.tsx:281
+#: src/components/editor/actions/action-card.tsx:282
 msgid "oLT0VI"
 msgstr "Disable action"
 
-#: src/components/editor/actions/action-card.tsx:281
+#: src/components/editor/actions/action-card.tsx:282
 msgid "h6/HKO"
 msgstr "Enable action"
 
-#: src/components/editor/actions/action-card.tsx:289
+#: src/components/editor/actions/action-card.tsx:290
 msgid "Rw7iI7"
 msgstr "Disable"
 
-#: src/components/editor/actions/action-card.tsx:289
+#: src/components/editor/actions/action-card.tsx:290
 msgid "TqSTI0"
 msgstr "Enable"
 
-#: src/components/editor/actions/action-card.tsx:294
-#: src/components/editor/actions/action-card.tsx:299
+#: src/components/editor/actions/action-card.tsx:295
+#: src/components/editor/actions/action-card.tsx:300
 msgid "4fHiNl"
 msgstr "Duplicate"
 
-#: src/components/editor/actions/action-card.tsx:304
-#: src/components/editor/actions/action-card.tsx:310
+#: src/components/editor/actions/action-card.tsx:305
+#: src/components/editor/actions/action-card.tsx:311
 #: src/components/editor/common/item-actions-menu.tsx:55
 #: src/components/editor/sidebar/sortable-list-item.tsx:190
-#: src/components/rotations/rotation-browser.tsx:278
+#: src/components/rotations/rotation-browser.tsx:279
 msgid "K3r6DQ"
 msgstr "Delete"
 
-#: src/components/editor/actions/action-card.tsx:328
+#: src/components/editor/actions/action-card.tsx:329
 msgid "+U6ozc"
 msgstr "Type"
 
-#: src/components/editor/actions/action-card.tsx:343
+#: src/components/editor/actions/action-card.tsx:344
 msgid "SJ6ecF"
 msgstr "Spell"
 
-#: src/components/editor/actions/action-card.tsx:345
+#: src/components/editor/actions/action-card.tsx:346
 msgid "5ujeDa"
 msgstr "Item"
 
-#: src/components/editor/actions/action-card.tsx:346
+#: src/components/editor/actions/action-card.tsx:347
 msgid "sERRm1"
 msgstr "Target List"
 
-#: src/components/editor/actions/action-card.tsx:372
+#: src/components/editor/actions/action-card.tsx:373
 msgid "S8kqP9"
 msgstr "Conditions"
 
@@ -554,7 +554,7 @@ msgid "BfrgHC"
 msgstr "Unsaved"
 
 #: src/components/editor/layout/editor-header.tsx:102
-#: src/components/rotations/rotation-browser.tsx:195
+#: src/components/rotations/rotation-browser.tsx:196
 msgid "bW7B87"
 msgstr "New"
 
@@ -583,8 +583,8 @@ msgid "Zl4/y9"
 msgstr "Lock"
 
 #: src/components/editor/layout/editor-header.tsx:154
-#: src/components/rotations/rotation-browser.tsx:151
-#: src/components/rotations/rotation-browser.tsx:274
+#: src/components/rotations/rotation-browser.tsx:152
+#: src/components/rotations/rotation-browser.tsx:275
 msgid "uhu5aG"
 msgstr "Public"
 
@@ -601,7 +601,7 @@ msgid "xpod2V"
 msgstr "Preview mode"
 
 #: src/components/editor/layout/editor-header.tsx:185
-#: src/components/rotations/rotation-browser.tsx:252
+#: src/components/rotations/rotation-browser.tsx:253
 msgid "XAbrnv"
 msgstr "Create rotation"
 
@@ -823,67 +823,67 @@ msgstr "Toggle theme"
 msgid "deU3q5"
 msgstr "Theme: {theme}"
 
-#: src/components/layout/user-menu.tsx:72
+#: src/components/layout/user-menu.tsx:73
 msgid "TwyMau"
 msgstr "Account"
 
-#: src/components/layout/user-menu.tsx:79
+#: src/components/layout/user-menu.tsx:80
 msgid "D3idYv"
 msgstr "Settings"
 
-#: src/components/layout/user-menu.tsx:85
+#: src/components/layout/user-menu.tsx:86
 msgid "xXbJso"
 msgstr "Sign out"
 
-#: src/components/rotations/rotation-browser.tsx:126
+#: src/components/rotations/rotation-browser.tsx:129
 msgid "NT27VP"
 msgstr "Are you sure you want to delete this rotation?"
 
-#: src/components/rotations/rotation-browser.tsx:156
+#: src/components/rotations/rotation-browser.tsx:157
 msgid "snC7V6"
 msgstr "Mine"
 
-#: src/components/rotations/rotation-browser.tsx:167
+#: src/components/rotations/rotation-browser.tsx:168
 msgid "HwTqox"
 msgstr "All Classes"
 
-#: src/components/rotations/rotation-browser.tsx:211
+#: src/components/rotations/rotation-browser.tsx:212
 msgid "lOsU8p"
 msgstr "Clear class filter"
 
-#: src/components/rotations/rotation-browser.tsx:225
+#: src/components/rotations/rotation-browser.tsx:226
 msgid "4YJHut"
 msgstr "Clear search"
 
-#: src/components/rotations/rotation-browser.tsx:243
+#: src/components/rotations/rotation-browser.tsx:244
 msgid "XJF590"
 msgstr "You haven't created any rotations yet"
 
-#: src/components/rotations/rotation-browser.tsx:244
+#: src/components/rotations/rotation-browser.tsx:245
 msgid "gSiLuH"
 msgstr "No rotations found"
 
-#: src/components/rotations/rotation-browser.tsx:262
+#: src/components/rotations/rotation-browser.tsx:263
 msgid "EPvBR+"
 msgstr "Spec"
 
-#: src/components/rotations/rotation-browser.tsx:263
+#: src/components/rotations/rotation-browser.tsx:264
 msgid "JAkIqb"
 msgstr "Visibility"
 
-#: src/components/rotations/rotation-browser.tsx:264
+#: src/components/rotations/rotation-browser.tsx:265
 msgid "xrk6zg"
 msgstr "Updated"
 
-#: src/components/rotations/rotation-browser.tsx:275
+#: src/components/rotations/rotation-browser.tsx:276
 msgid "viXE32"
 msgstr "Private"
 
-#: src/components/simulate/character-card.tsx:48
+#: src/components/simulate/character-card.tsx:49
 msgid "y++pfq"
 msgstr "{level, plural, other {Level #}}"
 
-#: src/components/simulate/character-panel.tsx:59
+#: src/components/simulate/character-panel.tsx:55
 msgid "B2xSl2"
 msgstr "Import different character"
 

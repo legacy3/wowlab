@@ -2,14 +2,26 @@
 
 import type { ReactNode } from "react";
 
-import { Enums } from "@wowlab/core/Schemas";
 import { Box, Flex, VStack } from "styled-system/jsx";
+
+import { useGlobalColors } from "@/lib/state";
 
 import { Text, Tooltip } from "../ui";
 import { GameIcon } from "./game-icon";
 import { tooltipColors } from "./tooltip-colors";
 
-export type ItemQuality = Enums.ItemQuality;
+const QUALITY_COLOR_NAMES = [
+  "ITEM_POOR_COLOR",
+  "ITEM_STANDARD_COLOR",
+  "ITEM_GOOD_COLOR",
+  "ITEM_SUPERIOR_COLOR",
+  "ITEM_EPIC_COLOR",
+  "ITEM_LEGENDARY_COLOR",
+  "ITEM_ARTIFACT_COLOR",
+  "ITEM_SCALING_STAT_COLOR",
+] as const;
+
+export type ItemQuality = number;
 
 export interface ItemTooltipData {
   effects?: Array<{ text: string; isUse?: boolean }>;
@@ -77,7 +89,8 @@ export function SpellTooltip({ children, spell }: SpellTooltipProps) {
 }
 
 function ItemTooltipContent({ item }: { item: ItemTooltipData }) {
-  const qualityColor = Enums.ITEM_QUALITY_COLORS[item.quality];
+  const qualityColors = useGlobalColors(...QUALITY_COLOR_NAMES);
+  const qualityColor = qualityColors[item.quality]?.color;
 
   return (
     <VStack gap="1" alignItems="stretch">

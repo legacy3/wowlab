@@ -42,8 +42,8 @@ export function UserMenu() {
           p="0"
         >
           <Avatar.Root size="sm">
-            {user.avatarUrl ? (
-              <Avatar.Image src={user.avatarUrl} alt={user.handle ?? "User"} />
+            {user.avatar_url ? (
+              <Avatar.Image src={user.avatar_url} alt={user.handle ?? "User"} />
             ) : null}
             <Avatar.Fallback>{user.initials}</Avatar.Fallback>
           </Avatar.Root>
@@ -56,6 +56,7 @@ export function UserMenu() {
               value="profile"
               fontWeight="medium"
               onClick={() =>
+                user.handle &&
                 router.push(href(routes.users.profile, { handle: user.handle }))
               }
             >

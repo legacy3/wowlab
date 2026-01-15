@@ -111,18 +111,19 @@ export interface RotationData {
 }
 
 export interface RotationsRow {
-  createdAt: string;
-  currentVersion: number | null;
+  checksum: string | null;
+  created_at: string;
+  current_version: number;
   description: string | null;
-  forkedFromId: string | null;
+  forked_from_id: string | null;
   id: string;
-  isPublic: boolean;
+  is_public: boolean;
   name: string;
   script: string; // JSON-serialized RotationData
   slug: string;
-  specId: number;
-  updatedAt: string;
-  userId: string;
+  spec_id: number;
+  updated_at: string;
+  user_id: string;
 }
 
 export interface Variable {

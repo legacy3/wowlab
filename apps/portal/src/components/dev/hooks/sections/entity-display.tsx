@@ -5,8 +5,6 @@ import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
-import type { StateResult } from "@/lib/state";
-
 import { Badge, Button, Input } from "@/components/ui";
 
 import { DataCard, JsonOutput, Section, Subsection } from "../../shared";
@@ -20,6 +18,14 @@ interface EntityDisplayProps<T extends Record<string, unknown>> {
   result: StateResult<T>;
   title: string;
 }
+
+// State result type matching react-query return
+type StateResult<T> = {
+  data: T | undefined;
+  error: Error | null;
+  isLoading: boolean;
+  refresh?: () => void;
+};
 
 export function EntityDisplay<T extends Record<string, unknown>>({
   description,

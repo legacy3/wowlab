@@ -4,6 +4,8 @@ import { ChevronDownIcon, ChevronLeftIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, Grid, HStack, styled, VStack } from "styled-system/jsx";
 
+import type { SpecSummary } from "@/lib/supabase";
+
 import { Card, Skeleton, Text } from "@/components/ui";
 import { useClassesAndSpecs } from "@/lib/state";
 
@@ -16,7 +18,7 @@ import { GameIcon } from "./game-icon";
 interface ClassGridProps {
   classes: Array<{
     color: string;
-    filename: string;
+    fileName: string | null;
     id: number;
     label: string;
   }>;
@@ -31,7 +33,7 @@ interface SpecGridProps {
   onBack: () => void;
   onSelect: (specId: number) => void;
   selectedSpecId?: number | null;
-  specs: Array<{ iconName: string; id: number; label: string }>;
+  specs: SpecSummary[];
 }
 
 interface SpecPickerProps {
@@ -84,7 +86,7 @@ function ClassGrid({ classes, onSelect }: ClassGridProps) {
     <Grid columns={5} gap="2">
       {classes.map((cls) => (
         <GridButton key={cls.id} onClick={() => onSelect(cls.id)}>
-          <GameIcon iconName={`class_${cls.filename}`} size="lg" />
+          <GameIcon iconName={cls.fileName} size="lg" />
           <Text textStyle="xs" textAlign="center" lineHeight="tight">
             {cls.label}
           </Text>
@@ -107,9 +109,9 @@ function CompactPicker({
 
   const currentSpec = specs.find((s) => s.id === specId);
   const currentClass = currentSpec
-    ? classes.find((c) => c.id === currentSpec.classId)
+    ? classes.find((c) => c.id === currentSpec.class_id)
     : null;
-  const specsForClass = specs.filter((s) => s.classId === selectedClassId);
+  const specsForClass = specs.filter((s) => s.class_id === selectedClassId);
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
   const handleSelectClass = (classId: number) => {
@@ -153,7 +155,7 @@ function CompactPicker({
       >
         {currentSpec && currentClass ? (
           <>
-            <GameIcon iconName={currentSpec.iconName} size="sm" />
+            <GameIcon iconName={currentSpec.file_name} size="sm" />
             <Text
               textStyle="sm"
               style={{ color: currentClass.color }}
@@ -164,7 +166,7 @@ function CompactPicker({
             <Text textStyle="sm" color="fg.muted">
               /
             </Text>
-            <Text textStyle="sm">{currentSpec.label}</Text>
+            <Text textStyle="sm">{currentSpec.name}</Text>
           </>
         ) : (
           <Text textStyle="sm" color="fg.muted">
@@ -202,7 +204,7 @@ function CompactPicker({
             _hover={{ bg: "gray.3" }}
             title={cls.label}
           >
-            <GameIcon iconName={`class_${cls.filename}`} size="sm" />
+            <GameIcon iconName={cls.fileName} size="sm" />
           </styled.button>
         ))}
       </HStack>
@@ -225,7 +227,7 @@ function CompactPicker({
         <ChevronLeftIcon size={14} />
       </styled.button>
       {selectedClass && (
-        <GameIcon iconName={`class_${selectedClass.filename}`} size="sm" />
+        <GameIcon iconName={selectedClass.fileName} size="sm" />
       )}
       {specsForClass.map((spec) => (
         <styled.button
@@ -241,8 +243,8 @@ function CompactPicker({
           bg={spec.id === specId ? "gray.3" : undefined}
           _hover={{ bg: "gray.3" }}
         >
-          <GameIcon iconName={spec.iconName} size="sm" />
-          <Text textStyle="xs">{spec.label}</Text>
+          <GameIcon iconName={spec.file_name} size="sm" />
+          <Text textStyle="xs">{spec.name}</Text>
         </styled.button>
       ))}
     </HStack>
@@ -259,7 +261,7 @@ function FullPicker({
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const { classes, isLoading, specs } = useClassesAndSpecs();
 
-  const specsForClass = specs.filter((s) => s.classId === selectedClassId);
+  const specsForClass = specs.filter((s) => s.class_id === selectedClassId);
 
   if (isLoading) {
     return <SpecPickerSkeleton />;
@@ -313,7 +315,7 @@ function SpecGrid({ onBack, onSelect, selectedSpecId, specs }: SpecGridProps) {
             selected={spec.id === selectedSpecId}
             w="20"
           >
-            <GameIcon iconName={spec.iconName} size="lg" />
+            <GameIcon iconName={spec.file_name} size="lg" />
             <Text
               textStyle="xs"
               textAlign="center"
@@ -322,7 +324,7 @@ function SpecGrid({ onBack, onSelect, selectedSpecId, specs }: SpecGridProps) {
               display="flex"
               alignItems="center"
             >
-              {spec.label}
+              {spec.name}
             </Text>
           </GridButton>
         ))}

@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import type { StateResult } from "@/lib/state";
-
 import { useClass, useItem, useSpec, useSpell } from "@/lib/state";
 
 import { EntityDisplay } from "./entity-display";
@@ -16,6 +14,12 @@ interface EntitySectionConfig<T> {
   title: string;
   useHook: (id: number) => StateResult<T>;
 }
+
+type StateResult<T> = {
+  data: T | undefined;
+  error: Error | null;
+  isLoading: boolean;
+};
 
 function createEntitySection<T extends Record<string, unknown>>(
   config: EntitySectionConfig<T>,
@@ -40,7 +44,7 @@ function createEntitySection<T extends Record<string, unknown>>(
 
 export const SpellSection = createEntitySection({
   defaultId: 408,
-  description: "Returns SpellDataFlat with all spell properties flattened",
+  description: "Returns Spell with all spell properties",
   id: "spell",
   nameField: "name",
   title: "useSpell",
@@ -49,7 +53,7 @@ export const SpellSection = createEntitySection({
 
 export const ItemSection = createEntitySection({
   defaultId: 19019,
-  description: "Returns ItemDataFlat with all item properties flattened",
+  description: "Returns Item with all item properties",
   id: "item",
   nameField: "name",
   title: "useItem",
@@ -58,7 +62,7 @@ export const ItemSection = createEntitySection({
 
 export const ClassSection = createEntitySection({
   defaultId: 1,
-  description: "Returns class data with specs, colors, and metadata",
+  description: "Returns Class with name, color, and file info",
   id: "class",
   nameField: "name",
   title: "useClass",
@@ -67,7 +71,7 @@ export const ClassSection = createEntitySection({
 
 export const SpecSection = createEntitySection({
   defaultId: 62,
-  description: "Returns spec data with class info, role, and icon",
+  description: "Returns Spec with class info, role, and icon",
   id: "spec",
   nameField: "name",
   title: "useSpec",

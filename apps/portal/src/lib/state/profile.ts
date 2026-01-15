@@ -1,8 +1,10 @@
 "use client";
 
-import { useList } from "@refinedev/core";
+import { useQuery } from "@tanstack/react-query";
 
 import type { Row } from "@/lib/supabase";
+
+import { createClient } from "@/lib/supabase";
 
 export type Profile = Row<"user_profiles">;
 export type Rotation = Row<"rotations">;
@@ -12,19 +14,23 @@ type ProfileWithRotations = {
 } & Profile;
 
 export function useUserProfile(handle: string) {
-  const {
-    query: { isLoading },
-    result,
-  } = useList<ProfileWithRotations>({
-    filters: [{ field: "handle", operator: "eq", value: handle }],
-    meta: {
-      select: "*, rotations(id, name, description, specId, updatedAt)",
+  const supabase = createClient();
+
+  const { data, isLoading } = useQuery({
+    enabled: !!handle,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*, rotations(id, name, description, spec_id, updated_at)")
+        .eq("handle", handle)
+        .single();
+      if (error) throw error;
+      return data as ProfileWithRotations;
     },
-    pagination: { pageSize: 1 },
-    resource: "user_profiles",
+    queryKey: ["user-profile", handle],
   });
 
-  const profile = result?.data?.[0] ?? null;
+  const profile = data ?? null;
   const rotations = profile?.rotations ?? [];
 
   return {

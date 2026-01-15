@@ -22,17 +22,11 @@
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.1.1",
     "@react-querybuilder/dnd": "^8.13.0",
-    "@refinedev/core": "^5.0.8",
-    "@refinedev/nextjs-router": "^7.0.4",
-    "@refinedev/supabase": "^6.0.1",
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-query-persist-client": "^5.90.18",
-    "@wowlab/core": "workspace:*",
-    "@wowlab/parsers": "workspace:*",
-    "@wowlab/services": "workspace:*",
     "ahooks": "^3.9.6",
     "change-case": "^5.4.4",
     "date-fns": "^4.1.0",
@@ -54,7 +48,8 @@
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^5.2.0",
     "remark-reading-time": "^2.0.2",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.4",
+    "parsers": "workspace:*"
   },
   "devDependencies": {
     "@pandacss/dev": "^1.8.0",

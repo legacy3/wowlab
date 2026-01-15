@@ -6,11 +6,11 @@
 //! - `sync.rs` - Main sync command orchestration
 //! - `db.rs` - Database operations (bulk insert, cleanup)
 //! - `dump_spell.rs` - Debug utility for single spell
-//! - `dump_talent.rs` - Debug utility for single talent tree
+//! - `dump_trait.rs` - Debug utility for single trait tree
 
 mod db;
 mod dump_spell;
-mod dump_talent;
+mod dump_trait;
 mod sync;
 
 use anyhow::Result;
@@ -23,8 +23,8 @@ pub enum SnapshotCommand {
     Sync(SyncArgs),
     /// Dump a single spell to JSON (for debugging)
     DumpSpell(DumpSpellArgs),
-    /// Dump a talent tree to JSON (for debugging)
-    DumpTalent(DumpTalentArgs),
+    /// Dump a trait tree to JSON (for debugging)
+    DumpTrait(DumpTraitArgs),
 }
 
 impl SnapshotCommand {
@@ -32,7 +32,7 @@ impl SnapshotCommand {
         match self {
             Self::Sync(args) => sync::run_sync(args).await,
             Self::DumpSpell(args) => dump_spell::run_dump_spell(args),
-            Self::DumpTalent(args) => dump_talent::run_dump_talent(args),
+            Self::DumpTrait(args) => dump_trait::run_dump_trait(args),
         }
     }
 }
@@ -41,20 +41,26 @@ impl SnapshotCommand {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
 pub enum SyncTable {
     Spells,
-    Talents,
+    Traits,
     Items,
     Auras,
     Specs,
+    Classes,
+    GlobalColors,
+    GlobalStrings,
 }
 
 impl std::fmt::Display for SyncTable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SyncTable::Spells => write!(f, "spells"),
-            SyncTable::Talents => write!(f, "talents"),
+            SyncTable::Traits => write!(f, "traits"),
             SyncTable::Items => write!(f, "items"),
             SyncTable::Auras => write!(f, "auras"),
             SyncTable::Specs => write!(f, "specs"),
+            SyncTable::Classes => write!(f, "classes"),
+            SyncTable::GlobalColors => write!(f, "global_colors"),
+            SyncTable::GlobalStrings => write!(f, "global_strings"),
         }
     }
 }
@@ -94,7 +100,7 @@ pub struct DumpSpellArgs {
 }
 
 #[derive(clap::Args)]
-pub struct DumpTalentArgs {
+pub struct DumpTraitArgs {
     /// Spec ID to dump
     pub spec_id: i32,
 

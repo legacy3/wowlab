@@ -3,13 +3,13 @@
 import { css } from "styled-system/css";
 import { Grid, Stack, styled } from "styled-system/jsx";
 
-import type { CharacterSummary, EquipmentSlot as SlotType } from "@/lib/sim";
+import type { Character, Item, Slot } from "@/lib/sim";
 
 import { Avatar, Text } from "@/components/ui";
 
 import { EquipmentSlot } from "./equipment-slot";
 
-const LEFT_SLOTS: SlotType[] = [
+const LEFT_SLOTS: Slot[] = [
   "head",
   "neck",
   "shoulder",
@@ -18,7 +18,7 @@ const LEFT_SLOTS: SlotType[] = [
   "wrist",
 ];
 
-const RIGHT_SLOTS: SlotType[] = [
+const RIGHT_SLOTS: Slot[] = [
   "hands",
   "waist",
   "legs",
@@ -27,8 +27,8 @@ const RIGHT_SLOTS: SlotType[] = [
   "finger2",
 ];
 
-const TRINKET_SLOTS: SlotType[] = ["trinket1", "trinket2"];
-const WEAPON_SLOTS: SlotType[] = ["mainHand", "offHand"];
+const TRINKET_SLOTS: Slot[] = ["trinket1", "trinket2"];
+const WEAPON_SLOTS: Slot[] = ["main_hand", "off_hand"];
 
 const dividerStyles = css({
   bg: "border",
@@ -38,11 +38,11 @@ const dividerStyles = css({
 });
 
 export interface EquipmentGridProps {
-  character: CharacterSummary;
-  gear: Record<SlotType, number | null>;
+  character: Character;
+  equipment: Item[];
 }
 
-export function EquipmentGrid({ character, gear }: EquipmentGridProps) {
+export function EquipmentGrid({ character, equipment }: EquipmentGridProps) {
   return (
     <Stack gap="0">
       {/* Main 3-column grid */}
@@ -53,7 +53,7 @@ export function EquipmentGrid({ character, gear }: EquipmentGridProps) {
             <EquipmentSlot
               key={slot}
               slot={slot}
-              itemId={gear[slot]}
+              itemId={getItemId(equipment, slot)}
               align="left"
             />
           ))}
@@ -93,7 +93,7 @@ export function EquipmentGrid({ character, gear }: EquipmentGridProps) {
             <EquipmentSlot
               key={slot}
               slot={slot}
-              itemId={gear[slot]}
+              itemId={getItemId(equipment, slot)}
               align="right"
             />
           ))}
@@ -108,7 +108,7 @@ export function EquipmentGrid({ character, gear }: EquipmentGridProps) {
           <EquipmentSlot
             key={slot}
             slot={slot}
-            itemId={gear[slot]}
+            itemId={getItemId(equipment, slot)}
             align={i === 0 ? "left" : "right"}
           />
         ))}
@@ -122,11 +122,16 @@ export function EquipmentGrid({ character, gear }: EquipmentGridProps) {
           <EquipmentSlot
             key={slot}
             slot={slot}
-            itemId={gear[slot]}
+            itemId={getItemId(equipment, slot)}
             align={i === 0 ? "left" : "right"}
           />
         ))}
       </Grid>
     </Stack>
   );
+}
+
+function getItemId(equipment: Item[], slot: Slot): number | null {
+  const item = equipment.find((i) => i.slot === slot);
+  return item?.id ?? null;
 }

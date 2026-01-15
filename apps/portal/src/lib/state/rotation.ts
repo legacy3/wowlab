@@ -1,27 +1,38 @@
 "use client";
 
-import { useCreate, useOne, useUpdate } from "@refinedev/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import type { RotationsRow } from "@/components/editor/types";
 
 import { href, routes } from "@/lib/routing";
+import { createClient } from "@/lib/supabase";
 
 import { useEditor } from "./editor";
+import { useUser } from "./user";
 
 export function useLoadRotation(id: string | null) {
+  const supabase = createClient();
   const load = useEditor((s) => s.load);
 
   const {
-    query: { error, isError, isLoading },
-    result: rotation,
-  } = useOne<RotationsRow>({
-    id: id ?? "",
-    queryOptions: {
-      enabled: !!id,
+    data: rotation,
+    error,
+    isError,
+    isLoading,
+  } = useQuery({
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data as RotationsRow;
     },
-    resource: "rotations",
+    queryKey: ["rotations", id],
   });
 
   return {
@@ -33,12 +44,15 @@ export function useLoadRotation(id: string | null) {
         load(rotation);
       }
     }, [rotation, load]),
-    rotation,
+    rotation: rotation ?? null,
   };
 }
 
 export function useSaveRotation() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
   const router = useRouter();
+  const { data: user } = useUser();
 
   const rotationId = useEditor((s) => s.rotationId);
   const name = useEditor((s) => s.name);
@@ -51,19 +65,67 @@ export function useSaveRotation() {
 
   const isNew = !rotationId;
 
-  const { mutateAsync: createRotation, mutation: createMutation } =
-    useCreate<RotationsRow>();
+  const createMutation = useMutation({
+    mutationFn: async (values: {
+      name: string;
+      slug: string;
+      script: string;
+      spec_id: number;
+      is_public: boolean;
+      description: string | null;
+      user_id: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .insert(values)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as RotationsRow;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
+    },
+  });
 
-  const { mutateAsync: updateRotation, mutation: updateMutation } =
-    useUpdate<RotationsRow>();
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      ...values
+    }: {
+      id: string;
+      name: string;
+      slug: string;
+      script: string;
+      spec_id: number;
+      is_public: boolean;
+      description: string | null;
+    }) => {
+      const { data, error } = await supabase
+        .from("rotations")
+        .update(values)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as RotationsRow;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["rotations"] });
+      queryClient.setQueryData(["rotations", data.id], data);
+    },
+  });
 
   const isCreating = createMutation.isPending;
   const isUpdating = updateMutation.isPending;
 
   const save = useCallback(async () => {
-    // Prevent concurrent saves
     if (isCreating || isUpdating) {
       return;
+    }
+
+    if (!user?.id) {
+      throw new Error("Must be logged in to save");
     }
 
     const script = JSON.stringify(serialize());
@@ -76,43 +138,34 @@ export function useSaveRotation() {
         .replace(/^-|-$/g, "");
 
     if (isNew) {
-      const result = await createRotation({
-        resource: "rotations",
-        values: {
-          currentVersion: 1,
-          description: description || null,
-          forkedFromId: null,
-          isPublic,
-          name: name || "Untitled Rotation",
-          script,
-          slug: rotationSlug,
-          specId: specId ?? 0,
-        },
+      const result = await createMutation.mutateAsync({
+        description: description || null,
+        is_public: isPublic,
+        name: name || "Untitled Rotation",
+        script,
+        slug: rotationSlug,
+        spec_id: specId ?? 0,
+        user_id: user.id,
       });
 
-      // Only mark clean after successful save
-      if (result?.data?.id) {
+      if (result?.id) {
         markClean();
-        router.push(href(routes.rotations.editor.edit, { id: result.data.id }));
+        router.push(href(routes.rotations.editor.edit, { id: result.id }));
       }
 
       return result;
     } else {
-      const result = await updateRotation({
+      const result = await updateMutation.mutateAsync({
+        description: description || null,
         id: rotationId as string,
-        resource: "rotations",
-        values: {
-          description: description || null,
-          isPublic,
-          name,
-          script,
-          slug: rotationSlug,
-          specId: specId ?? 0,
-        },
+        is_public: isPublic,
+        name,
+        script,
+        slug: rotationSlug,
+        spec_id: specId ?? 0,
       });
 
-      // Only mark clean after successful update
-      if (result?.data) {
+      if (result) {
         markClean();
       }
       return result;
@@ -129,9 +182,10 @@ export function useSaveRotation() {
     isPublic,
     serialize,
     markClean,
-    createRotation,
-    updateRotation,
+    createMutation,
+    updateMutation,
     router,
+    user,
   ]);
 
   return {

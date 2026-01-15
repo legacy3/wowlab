@@ -5,13 +5,13 @@ import { useExtracted } from "next-intl";
 import { css, cx } from "styled-system/css";
 import { Flex, styled } from "styled-system/jsx";
 
-import type { EquipmentSlot as EquipmentSlotType } from "@/lib/sim";
+import type { Slot } from "@/lib/sim";
 
 import { GameIcon, ItemTooltip } from "@/components/game";
 import { Skeleton, Text, Tooltip } from "@/components/ui";
 import { useItem } from "@/lib/state";
 
-function useSlotLabel(slot: EquipmentSlotType): string {
+function useSlotLabel(slot: Slot): string {
   const t = useExtracted();
 
   switch (slot) {
@@ -39,13 +39,13 @@ function useSlotLabel(slot: EquipmentSlotType): string {
     case "legs":
       return t("Legs");
 
-    case "mainHand":
+    case "main_hand":
       return t("Main Hand");
 
     case "neck":
       return t("Neck");
 
-    case "offHand":
+    case "off_hand":
       return t("Off Hand");
 
     case "shoulder":
@@ -111,7 +111,7 @@ export interface EquipmentSlotProps {
   align?: "left" | "right";
   className?: string;
   itemId: number | null;
-  slot: EquipmentSlotType;
+  slot: Slot;
 }
 
 export function EquipmentSlot({
@@ -146,7 +146,7 @@ export function EquipmentSlot({
   const icon = item ? (
     <div className={iconWrapperStyles}>
       <GameIcon
-        iconName={item.fileName ?? "inv_misc_questionmark"}
+        iconName={item.file_name ?? "inv_misc_questionmark"}
         size="md"
         alt={item.name}
       />
@@ -158,8 +158,8 @@ export function EquipmentSlot({
   const content = item ? (
     <ItemTooltip
       item={{
-        iconName: item.fileName,
-        itemLevel: item.itemLevel ?? 0,
+        iconName: item.file_name,
+        itemLevel: item.item_level ?? 0,
         name: item.name,
         quality: item.quality ?? 1,
         slot: slotLabel,
@@ -197,11 +197,11 @@ export function EquipmentSlot({
             <>
               {slotLabel}
               <DotIcon size={12} />
-              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.itemLevel })}
+              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.item_level })}
             </>
           ) : (
             <>
-              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.itemLevel })}
+              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.item_level })}
               <DotIcon size={12} />
               {slotLabel}
             </>

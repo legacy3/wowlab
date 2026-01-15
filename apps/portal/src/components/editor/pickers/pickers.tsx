@@ -1,8 +1,6 @@
 "use client";
 
-import type { Item as ItemType, Spell } from "@wowlab/core/Schemas";
-
-import type { ItemSearchResult, SpellSearchResult } from "@/lib/state";
+import type { Item, ItemSummary, Spell, SpellSummary } from "@/lib/supabase";
 
 import { useItem, useItemSearch, useSpell, useSpellSearch } from "@/lib/state";
 
@@ -19,37 +17,52 @@ interface PickerProps {
   variant?: "inline" | "input";
 }
 
+function useItemSearchWrapper(opts: { query: string }) {
+  const result = useItemSearch(opts.query);
+  return { data: result.data ?? [], isLoading: result.isLoading };
+}
+
+function useItemWrapper(id: number | null | undefined) {
+  const result = useItem(id);
+  return { data: result.data ?? null, isLoading: result.isLoading };
+}
+
+// Wrapper hooks to match expected signature
+function useSpellSearchWrapper(opts: { query: string }) {
+  const result = useSpellSearch(opts.query);
+  return { data: result.data ?? [], isLoading: result.isLoading };
+}
+
+function useSpellWrapper(id: number | null | undefined) {
+  const result = useSpell(id);
+  return { data: result.data ?? null, isLoading: result.isLoading };
+}
+
 // Configs
-const SPELL_CONFIG: GameObjectPickerConfig<
-  SpellSearchResult,
-  Spell.SpellDataFlat
-> = {
+const SPELL_CONFIG: GameObjectPickerConfig<SpellSummary, Spell> = {
   emptyMessage: "No spells found",
-  getIconName: (data) => data.fileName,
-  getId: (item) => item.ID,
-  getLabel: (item) => item.Name_lang ?? `Spell #${item.ID}`,
+  getIconName: (data) => data.file_name,
+  getId: (item) => item.id,
+  getLabel: (item) => item.name ?? `Spell #${item.id}`,
   getName: (data) => data.name,
   noun: "Spell",
   searchPlaceholder: "Search spells...",
   selectPlaceholder: "Select spell...",
-  useData: useSpell,
-  useSearch: useSpellSearch,
+  useData: useSpellWrapper,
+  useSearch: useSpellSearchWrapper,
 };
 
-const ITEM_CONFIG: GameObjectPickerConfig<
-  ItemSearchResult,
-  ItemType.ItemDataFlat
-> = {
+const ITEM_CONFIG: GameObjectPickerConfig<ItemSummary, Item> = {
   emptyMessage: "No items found",
-  getIconName: (data) => data.fileName,
-  getId: (item) => item.ID,
-  getLabel: (item) => item.Display_lang ?? `Item #${item.ID}`,
+  getIconName: (data) => data.file_name,
+  getId: (item) => item.id,
+  getLabel: (item) => item.name ?? `Item #${item.id}`,
   getName: (data) => data.name,
   noun: "Item",
   searchPlaceholder: "Search items...",
   selectPlaceholder: "Select item...",
-  useData: useItem,
-  useSearch: useItemSearch,
+  useData: useItemWrapper,
+  useSearch: useItemSearchWrapper,
 };
 
 export function ItemPicker({

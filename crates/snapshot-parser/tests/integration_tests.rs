@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use snapshot_parser::{
     apply_decoded_talents, decode_talent_loadout, encode_talent_loadout, transform_all_auras,
     transform_all_items, transform_all_spells, transform_aura, transform_item, transform_spell,
-    transform_talent_tree, DbcData, DecodedTalentLoadout, DecodedTalentNode,
+    transform_trait_tree, DbcData, DecodedTalentLoadout, DecodedTraitNode,
 };
 
 fn data_dir() -> PathBuf {
@@ -74,7 +74,7 @@ fn test_transform_mortal_strike() {
 
 #[test]
 fn test_transform_arcane_mage_talents() {
-    let tree = transform_talent_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
+    let tree = transform_trait_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
 
     assert_eq!(tree.spec_id, 62);
     assert_eq!(tree.spec_name, "Arcane");
@@ -85,7 +85,7 @@ fn test_transform_arcane_mage_talents() {
 
 #[test]
 fn test_transform_fury_warrior_talents() {
-    let tree = transform_talent_tree(dbc(), 72).expect("Failed to transform Fury Warrior");
+    let tree = transform_trait_tree(dbc(), 72).expect("Failed to transform Fury Warrior");
 
     assert_eq!(tree.spec_id, 72);
     assert_eq!(tree.spec_name, "Fury");
@@ -96,8 +96,8 @@ fn test_transform_fury_warrior_talents() {
 // Talent Codec Tests
 // ============================================================================
 
-fn make_node(selected: bool, purchased: bool) -> DecodedTalentNode {
-    DecodedTalentNode {
+fn make_node(selected: bool, purchased: bool) -> DecodedTraitNode {
+    DecodedTraitNode {
         selected,
         purchased,
         partially_ranked: false,
@@ -107,8 +107,8 @@ fn make_node(selected: bool, purchased: bool) -> DecodedTalentNode {
     }
 }
 
-fn make_partial_node(ranks: u8) -> DecodedTalentNode {
-    DecodedTalentNode {
+fn make_partial_node(ranks: u8) -> DecodedTraitNode {
+    DecodedTraitNode {
         selected: true,
         purchased: true,
         partially_ranked: true,
@@ -118,8 +118,8 @@ fn make_partial_node(ranks: u8) -> DecodedTalentNode {
     }
 }
 
-fn make_choice_node(choice: u8) -> DecodedTalentNode {
-    DecodedTalentNode {
+fn make_choice_node(choice: u8) -> DecodedTraitNode {
+    DecodedTraitNode {
         selected: true,
         purchased: true,
         partially_ranked: false,
@@ -185,8 +185,8 @@ fn test_show_spell_details() {
 }
 
 #[test]
-fn test_show_talent_tree_details() {
-    let tree = transform_talent_tree(dbc(), 71).expect("Failed to transform Arms Warrior");
+fn test_show_trait_tree_details() {
+    let tree = transform_trait_tree(dbc(), 71).expect("Failed to transform Arms Warrior");
 
     println!("{} {} (spec {}): {} nodes, {} edges, {} subtrees",
         tree.class_name, tree.spec_name, tree.spec_id,
@@ -201,7 +201,7 @@ fn test_show_talent_tree_details() {
 
 #[test]
 fn test_show_mage_tree_details() {
-    let tree = transform_talent_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
+    let tree = transform_trait_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
 
     println!("{} {} (spec {}): {} nodes, {} subtrees",
         tree.class_name, tree.spec_name, tree.spec_id,
@@ -273,7 +273,7 @@ fn test_transform_all_spells_sample() {
 
 #[test]
 fn test_apply_decoded_talents() {
-    let tree = transform_talent_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
+    let tree = transform_trait_tree(dbc(), 62).expect("Failed to transform Arcane Mage");
     let loadout = DecodedTalentLoadout {
         version: 1,
         spec_id: 62,
@@ -295,10 +295,10 @@ fn test_apply_decoded_talents() {
 // ============================================================================
 
 /// Debug test for investigating talent tree hero talent issues.
-/// Run with: cargo test -p snapshot-parser test_debug_talent_tree -- --nocapture --ignored
+/// Run with: cargo test -p snapshot-parser test_debug_trait_tree -- --nocapture --ignored
 #[test]
 #[ignore]
-fn test_debug_talent_tree() {
+fn test_debug_trait_tree() {
     let specs = [
         (71, "Arms Warrior"),
         (72, "Fury Warrior"),
@@ -311,7 +311,7 @@ fn test_debug_talent_tree() {
     println!("{:-<80}", "");
 
     for (spec_id, name) in specs {
-        match transform_talent_tree(dbc(), spec_id) {
+        match transform_trait_tree(dbc(), spec_id) {
             Ok(tree) => {
                 let hero_nodes = tree.nodes.iter().filter(|n| n.tree_index == 3).count();
                 println!("{:20} nodes={:3} hero={:2} subtrees={}",

@@ -3,14 +3,14 @@
 import { useExtracted } from "next-intl";
 import { Flex, HStack, Stack, styled } from "styled-system/jsx";
 
-import type { CharacterProfession, CharacterSummary } from "@/lib/sim";
+import type { Character, Profession } from "@/lib/sim";
 
 import { Badge, Heading, Text } from "@/components/ui";
 
 export interface CharacterCardProps {
   actions?: React.ReactNode;
-  character: CharacterSummary;
-  professions?: CharacterProfession[];
+  character: Character;
+  professions?: Profession[];
 }
 
 export function CharacterCard({
@@ -39,7 +39,8 @@ export function CharacterCard({
               {character.name}
             </Heading>
             <Text textStyle="sm" color="fg.muted">
-              {character.realm} &bull; {character.region}
+              {character.server ?? "Unknown"} &bull;{" "}
+              {character.region?.toUpperCase() ?? "Unknown"}
             </Text>
           </Stack>
 

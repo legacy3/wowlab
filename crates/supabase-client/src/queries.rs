@@ -1,7 +1,7 @@
 //! Query methods for Supabase PostgREST API
 
 use crate::{SupabaseClient, SupabaseError};
-use snapshot_parser::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
+use snapshot_parser::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 
 /// Build select clause string from columns slice
 fn columns_to_select(columns: &[&str]) -> String {
@@ -84,19 +84,19 @@ impl SupabaseClient {
         Ok(self.get(&path).await?.json().await?)
     }
 
-    /// Get talent tree for a spec
-    pub async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, SupabaseError> {
-        let path = format!("talent_tree_flat?spec_id=eq.{}", spec_id);
-        let trees: Vec<TalentTreeFlat> = self.get(&path).await?.json().await?;
-        first_or_not_found(trees, "talent_tree_flat", "spec_id", spec_id)
+    /// Get trait tree for a spec
+    pub async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, SupabaseError> {
+        let path = format!("specs_traits?spec_id=eq.{}", spec_id);
+        let trees: Vec<TraitTreeFlat> = self.get(&path).await?.json().await?;
+        first_or_not_found(trees, "specs_traits", "spec_id", spec_id)
     }
 
-    /// Get all talent trees for a class
-    pub async fn get_class_talent_trees(
+    /// Get all trait trees for a class
+    pub async fn get_class_trait_trees(
         &self,
         class_id: i32,
-    ) -> Result<Vec<TalentTreeFlat>, SupabaseError> {
-        let path = format!("talent_tree_flat?class_id=eq.{}", class_id);
+    ) -> Result<Vec<TraitTreeFlat>, SupabaseError> {
+        let path = format!("specs_traits?class_id=eq.{}", class_id);
         Ok(self.get(&path).await?.json().await?)
     }
 

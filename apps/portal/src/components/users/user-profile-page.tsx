@@ -49,9 +49,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
       >
         <HStack gap="4">
           <Avatar.Root size="xl">
-            {profile.avatarUrl && (
+            {profile.avatar_url && (
               <Avatar.Image
-                src={profile.avatarUrl}
+                src={profile.avatar_url}
                 alt={t("{handle}'s avatar", { handle: profile.handle })}
               />
             )}
@@ -91,9 +91,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
                 key={rotation.id}
                 id={rotation.id}
                 name={rotation.name}
-                specIcon={getSpecIcon(rotation.specId)}
-                specLabel={getSpecLabel(rotation.specId)}
-                updatedAt={rotation.updatedAt}
+                specIcon={getSpecIcon(rotation.spec_id)}
+                specLabel={getSpecLabel(rotation.spec_id)}
+                updatedAt={rotation.updated_at}
               />
             ))}
           </VStack>

@@ -3,8 +3,10 @@
 import { PageLayout } from "../shared";
 import {
   ClassesAndSpecsSection,
-  ClassesListSection,
+  ClassesDirectListSection,
   ClassSection,
+  GlobalColorsSection,
+  GlobalStringsSection,
   ItemSearchSection,
   ItemSection,
   SpecSection,
@@ -14,29 +16,33 @@ import {
 } from "./sections";
 
 const NAV = [
-  { id: "spell", label: "useSpell" },
-  { id: "item", label: "useItem" },
   { id: "class", label: "useClass" },
-  { id: "spec", label: "useSpec" },
-  { id: "classes-list", label: "useClasses" },
-  { id: "specs-list", label: "useSpecs" },
+  { id: "classes-direct-list", label: "useClasses" },
   { id: "classes-and-specs", label: "useClassesAndSpecs" },
-  { id: "spell-search", label: "useSpellSearch" },
+  { id: "global-colors", label: "useGlobalColors" },
+  { id: "global-strings", label: "useGlobalStrings" },
+  { id: "item", label: "useItem" },
   { id: "item-search", label: "useItemSearch" },
+  { id: "spec", label: "useSpec" },
+  { id: "specs-list", label: "useSpecs" },
+  { id: "spell", label: "useSpell" },
+  { id: "spell-search", label: "useSpellSearch" },
 ];
 
 export function HooksDemo() {
   return (
     <PageLayout nav={NAV}>
-      <SpellSection />
-      <ItemSection />
       <ClassSection />
-      <SpecSection />
-      <ClassesListSection />
-      <SpecsListSection />
+      <ClassesDirectListSection />
       <ClassesAndSpecsSection />
-      <SpellSearchSection />
+      <GlobalColorsSection />
+      <GlobalStringsSection />
+      <ItemSection />
       <ItemSearchSection />
+      <SpecSection />
+      <SpecsListSection />
+      <SpellSection />
+      <SpellSearchSection />
     </PageLayout>
   );
 }

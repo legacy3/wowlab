@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 
 use insta::{assert_json_snapshot, with_settings};
 use snapshot_parser::{
-    transform_aura, transform_item, transform_spell, transform_talent_tree, DbcData,
+    transform_aura, transform_item, transform_spell, transform_trait_tree, DbcData,
 };
 
 fn data_dir() -> PathBuf {
@@ -61,8 +61,8 @@ fn snapshot_spell_moonfire() {
 // ============================================================================
 
 #[test]
-fn snapshot_talent_tree_arcane_mage() {
-    let tree = transform_talent_tree(dbc(), 62).expect("Arcane Mage");
+fn snapshot_trait_tree_arcane_mage() {
+    let tree = transform_trait_tree(dbc(), 62).expect("Arcane Mage");
     with_settings!({
         // Redact node count to avoid snapshot churn on minor changes
         info => &format!("nodes: {}, edges: {}", tree.nodes.len(), tree.edges.len()),
@@ -72,8 +72,8 @@ fn snapshot_talent_tree_arcane_mage() {
 }
 
 #[test]
-fn snapshot_talent_tree_fury_warrior() {
-    let tree = transform_talent_tree(dbc(), 72).expect("Fury Warrior");
+fn snapshot_trait_tree_fury_warrior() {
+    let tree = transform_trait_tree(dbc(), 72).expect("Fury Warrior");
     with_settings!({
         info => &format!("nodes: {}, edges: {}", tree.nodes.len(), tree.edges.len()),
     }, {
@@ -82,8 +82,8 @@ fn snapshot_talent_tree_fury_warrior() {
 }
 
 #[test]
-fn snapshot_talent_tree_havoc_dh() {
-    let tree = transform_talent_tree(dbc(), 577).expect("Havoc DH");
+fn snapshot_trait_tree_havoc_dh() {
+    let tree = transform_trait_tree(dbc(), 577).expect("Havoc DH");
     with_settings!({
         info => &format!("nodes: {}, edges: {}", tree.nodes.len(), tree.edges.len()),
     }, {

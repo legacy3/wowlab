@@ -1,30 +1,30 @@
-//! Talent loadout string encoding/decoding
+//! Trait loadout string encoding/decoding
 //!
-//! Implements the WoW talent loadout string format used by the game client,
+//! Implements the WoW trait loadout string format used by the game client,
 //! Wowhead, and SimC. The format is a base64-encoded bitstream containing:
 //!
 //! - Version (8 bits)
 //! - Spec ID (16 bits)
-//! - Tree hash (128 bits) - identifies the talent tree structure
+//! - Tree hash (128 bits) - identifies the trait tree structure
 //! - Node data (variable) - selection state for each node in order
 
 use std::collections::HashMap;
 
-use crate::errors::TalentError;
-use crate::flat::{TalentSelection, TalentTreeFlat, TalentTreeWithSelections};
+use crate::errors::TraitError;
+use crate::flat::{TraitSelection, TraitTreeFlat, TraitTreeWithSelections};
 
-/// A decoded talent loadout containing all node selections.
+/// A decoded trait loadout containing all node selections.
 #[derive(Debug, Clone)]
-pub struct DecodedTalentLoadout {
+pub struct DecodedTraitLoadout {
     pub version: u8,
     pub spec_id: u16,
     pub tree_hash: [u8; 16],
-    pub nodes: Vec<DecodedTalentNode>,
+    pub nodes: Vec<DecodedTraitNode>,
 }
 
 /// Selection state for a single talent node.
 #[derive(Debug, Clone)]
-pub struct DecodedTalentNode {
+pub struct DecodedTraitNode {
     pub selected: bool,
     pub purchased: bool,
     pub partially_ranked: bool,
@@ -75,9 +75,9 @@ impl<'a> BitReader<'a> {
         }
     }
 
-    fn read(&mut self, bit_count: usize) -> Result<u32, TalentError> {
+    fn read(&mut self, bit_count: usize) -> Result<u32, TraitError> {
         if self.position + bit_count > self.total_bits {
-            return Err(TalentError::NotEnoughData);
+            return Err(TraitError::NotEnoughData);
         }
 
         let mut value = 0u32;
@@ -88,7 +88,7 @@ impl<'a> BitReader<'a> {
             let byte = self.data.as_bytes().get(char_idx).copied().unwrap_or(0);
             let char_value = BASE64_CHAR_MAP[byte as usize];
             if char_value == 255 {
-                return Err(TalentError::InvalidCharacters);
+                return Err(TraitError::InvalidCharacters);
             }
 
             let bit = (char_value >> bit_offset) & 1;
@@ -154,7 +154,7 @@ impl BitWriter {
 // Public API
 // ============================================================================
 
-/// Decode a talent loadout string into structured data.
+/// Decode a trait loadout string into structured data.
 ///
 /// The bitstream format for each node:
 /// - 1 bit: selected flag
@@ -165,9 +165,9 @@ impl BitWriter {
 ///     - If partially_ranked: 6 bits for ranks_purchased
 ///     - 1 bit: choice_node flag
 ///     - If choice_node: 2 bits for choice_index
-pub fn decode_talent_loadout(talent_string: &str) -> Result<DecodedTalentLoadout, TalentError> {
+pub fn decode_trait_loadout(talent_string: &str) -> Result<DecodedTraitLoadout, TraitError> {
     if talent_string.is_empty() {
-        return Err(TalentError::TooShort);
+        return Err(TraitError::TooShort);
     }
 
     validate_base64_chars(talent_string)?;
@@ -187,7 +187,7 @@ pub fn decode_talent_loadout(talent_string: &str) -> Result<DecodedTalentLoadout
         nodes.push(decode_node(&mut reader)?);
     }
 
-    Ok(DecodedTalentLoadout {
+    Ok(DecodedTraitLoadout {
         version,
         spec_id,
         tree_hash,
@@ -195,20 +195,20 @@ pub fn decode_talent_loadout(talent_string: &str) -> Result<DecodedTalentLoadout
     })
 }
 
-fn validate_base64_chars(s: &str) -> Result<(), TalentError> {
+fn validate_base64_chars(s: &str) -> Result<(), TraitError> {
     for c in s.chars() {
         let valid = c.is_ascii_alphanumeric() || matches!(c, '+' | '/' | '-' | '_');
         if !valid {
-            return Err(TalentError::InvalidCharacters);
+            return Err(TraitError::InvalidCharacters);
         }
     }
     Ok(())
 }
 
-fn decode_node(reader: &mut BitReader) -> Result<DecodedTalentNode, TalentError> {
+fn decode_node(reader: &mut BitReader) -> Result<DecodedTraitNode, TraitError> {
     let selected = reader.read(1)? == 1;
     if !selected {
-        return Ok(DecodedTalentNode {
+        return Ok(DecodedTraitNode {
             selected: false,
             purchased: false,
             partially_ranked: false,
@@ -220,7 +220,7 @@ fn decode_node(reader: &mut BitReader) -> Result<DecodedTalentNode, TalentError>
 
     let purchased = reader.read(1)? == 1;
     if !purchased {
-        return Ok(DecodedTalentNode {
+        return Ok(DecodedTraitNode {
             selected: true,
             purchased: false,
             partially_ranked: false,
@@ -244,7 +244,7 @@ fn decode_node(reader: &mut BitReader) -> Result<DecodedTalentNode, TalentError>
         None
     };
 
-    Ok(DecodedTalentNode {
+    Ok(DecodedTraitNode {
         selected: true,
         purchased: true,
         partially_ranked,
@@ -254,8 +254,8 @@ fn decode_node(reader: &mut BitReader) -> Result<DecodedTalentNode, TalentError>
     })
 }
 
-/// Encode a talent loadout into a string.
-pub fn encode_talent_loadout(loadout: &DecodedTalentLoadout) -> String {
+/// Encode a trait loadout into a string.
+pub fn encode_trait_loadout(loadout: &DecodedTraitLoadout) -> String {
     let mut writer = BitWriter::new();
 
     writer.write(loadout.version as u32, 8);
@@ -272,7 +272,7 @@ pub fn encode_talent_loadout(loadout: &DecodedTalentLoadout) -> String {
     writer.finish()
 }
 
-fn encode_node(writer: &mut BitWriter, node: &DecodedTalentNode) {
+fn encode_node(writer: &mut BitWriter, node: &DecodedTraitNode) {
     writer.write(u32::from(node.selected), 1);
     if !node.selected {
         return;
@@ -295,18 +295,18 @@ fn encode_node(writer: &mut BitWriter, node: &DecodedTalentNode) {
 }
 
 // ============================================================================
-// Apply Decoded Talents
+// Apply Decoded Traits
 // ============================================================================
 
-/// Apply decoded talent selections to a talent tree.
+/// Apply decoded trait selections to a trait tree.
 ///
 /// Maps the decoded node data to the tree nodes using `all_node_ids` for correct
 /// positioning. The decoded nodes array is indexed by position in the loadout
 /// string, which corresponds to the sorted order of all node IDs.
-pub fn apply_decoded_talents(
-    tree: TalentTreeFlat,
-    decoded: &DecodedTalentLoadout,
-) -> TalentTreeWithSelections {
+pub fn apply_decoded_traits(
+    tree: TraitTreeFlat,
+    decoded: &DecodedTraitLoadout,
+) -> TraitTreeWithSelections {
     // Build a map from node ID to the actual node (for looking up maxRanks)
     let node_by_id: HashMap<i32, _> = tree.nodes.iter().map(|n| (n.id, n)).collect();
 
@@ -333,7 +333,7 @@ pub fn apply_decoded_talents(
                     }
                 });
 
-            selections.push(TalentSelection {
+            selections.push(TraitSelection {
                 node_id,
                 selected: decoded_node.selected,
                 ranks_purchased,
@@ -342,7 +342,7 @@ pub fn apply_decoded_talents(
         }
     }
 
-    TalentTreeWithSelections { tree, selections }
+    TraitTreeWithSelections { tree, selections }
 }
 
 #[cfg(test)]

@@ -98,6 +98,10 @@ pub struct DbcData {
     pub item_class_by_class_id: HashMap<i32, ItemClassRow>,
     pub item_sub_class_by_class_id: HashMap<i32, Vec<ItemSubClassRow>>,
     pub journal_encounter_item: HashMap<i32, Vec<JournalEncounterItemRow>>,
+
+    // Global tables
+    pub global_color: HashMap<i32, GlobalColorRow>,
+    pub global_strings: HashMap<i32, GlobalStringsRow>,
 }
 
 impl DbcData {
@@ -194,6 +198,10 @@ impl DbcData {
         let item_class_by_class_id = group_one_by(&item_class, |c| c.ClassID);
         let item_sub_class_by_class_id = group_by(&item_sub_class, |c| c.ClassID);
 
+        // Global tables
+        let global_color = load_by_id::<GlobalColorRow>(&tables_dir, "GlobalColor")?;
+        let global_strings = load_by_id::<GlobalStringsRow>(&tables_dir, "GlobalStrings")?;
+
         Ok(Self {
             // Spell tables
             spell_name,
@@ -270,6 +278,10 @@ impl DbcData {
             item_class_by_class_id,
             item_sub_class_by_class_id,
             journal_encounter_item,
+
+            // Global tables
+            global_color,
+            global_strings,
         })
     }
 
@@ -420,6 +432,8 @@ impl_has_id!(
     // Item tables
     ItemRow, ItemSparseRow, ItemEffectRow, ItemSetRow, ItemClassRow, ItemSubClassRow,
     ItemAppearanceRow, JournalEncounterRow, JournalInstanceRow,
+    // Global tables
+    GlobalColorRow, GlobalStringsRow,
 );
 
 macro_rules! impl_has_fk {

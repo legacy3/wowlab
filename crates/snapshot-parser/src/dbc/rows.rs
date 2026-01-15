@@ -932,3 +932,24 @@ pub struct JournalInstanceRow {
     pub AreaID: i32,
     pub CovenantID: i32,
 }
+
+// =============================================================================
+// Global Tables
+// =============================================================================
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct GlobalColorRow {
+    pub ID: i32,
+    pub LuaConstantName: String,
+    pub Color: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct GlobalStringsRow {
+    pub ID: i32,
+    pub BaseTag: String,
+    pub TagText_lang: Option<String>,
+    pub Flags: i32,
+}
