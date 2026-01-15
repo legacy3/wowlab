@@ -36,6 +36,14 @@ fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
     AURA_DEFS.get_or_init(aura_definitions).iter().find(|a| a.id == id)
 }
 
+fn get_spell_defs() -> &'static [SpellDef] {
+    SPELL_DEFS.get_or_init(spell_definitions)
+}
+
+fn get_aura_defs() -> &'static [AuraDef] {
+    AURA_DEFS.get_or_init(aura_definitions)
+}
+
 /// Get damage multiplier from aura effects
 fn aura_damage_multiplier(aura: &AuraDef) -> f32 {
     for effect in &aura.effects {
@@ -232,6 +240,29 @@ impl SpecHandler for MmHunter {
 
     fn class_id(&self) -> ClassId {
         ClassId::Hunter
+    }
+
+    fn display_name(&self) -> &'static str {
+        "Marksmanship Hunter"
+    }
+
+    fn spell_definitions(&self) -> &'static [SpellDef] {
+        get_spell_defs()
+    }
+
+    fn aura_definitions(&self) -> &'static [AuraDef] {
+        get_aura_defs()
+    }
+
+    fn talent_names(&self) -> Vec<String> {
+        // MM Hunter has basic talent flags but no full talent definitions yet
+        vec![
+            "trueshot".to_string(),
+            "lock_and_load".to_string(),
+            "steady_focus".to_string(),
+            "trick_shots".to_string(),
+            "volley".to_string(),
+        ]
     }
 
     fn init(&self, state: &mut SimState) {

@@ -47,6 +47,10 @@ fn get_spell_defs() -> &'static [SpellDef] {
     SPELL_DEFS.get().expect("BM Hunter spell definitions not initialized")
 }
 
+fn get_aura_defs() -> &'static [AuraDef] {
+    AURA_DEFS.get().expect("BM Hunter aura definitions not initialized")
+}
+
 // ============================================================================
 // Handler
 // ============================================================================
@@ -236,6 +240,19 @@ impl Default for BmHunter {
 impl SpecHandler for BmHunter {
     fn spec_id(&self) -> SpecId { SpecId::BeastMastery }
     fn class_id(&self) -> ClassId { ClassId::Hunter }
+
+    fn display_name(&self) -> &'static str { "Beast Mastery Hunter" }
+
+    fn spell_definitions(&self) -> &'static [SpellDef] { get_spell_defs() }
+
+    fn aura_definitions(&self) -> &'static [AuraDef] { get_aura_defs() }
+
+    fn talent_names(&self) -> Vec<String> {
+        super::talents::talent_definitions()
+            .into_iter()
+            .map(|t| t.name)
+            .collect()
+    }
 
     fn init(&self, state: &mut SimState) {
         let pet_id = state.pets.summon(state.player.id, PetKind::Permanent, "Pet");

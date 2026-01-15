@@ -3,9 +3,9 @@
 import { VariableIcon } from "lucide-react";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
-import { Badge, Text } from "@/components/ui";
+import type { Variable } from "@/lib/engine";
 
-import type { Variable } from "../types";
+import { Badge, Text } from "@/components/ui";
 
 import { EditDeleteMenu } from "../common";
 

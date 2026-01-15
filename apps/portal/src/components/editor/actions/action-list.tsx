@@ -25,9 +25,9 @@ import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 import { Box, Center, VStack } from "styled-system/jsx";
 
-import { useEditor, useSelectedList } from "@/lib/state/editor";
+import type { Action } from "@/lib/engine";
 
-import type { Action } from "../types";
+import { useEditor, useSelectedList } from "@/lib/state/editor";
 
 import { Badge, Button, Heading, Text } from "../../ui";
 import { ActionCard } from "./action-card";

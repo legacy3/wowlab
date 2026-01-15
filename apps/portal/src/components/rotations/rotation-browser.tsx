@@ -17,7 +17,7 @@ import { useExtracted, useFormatter } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import type { RotationsRow } from "@/components/editor/types";
+import type { RotationsRow } from "@/lib/engine";
 
 import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";

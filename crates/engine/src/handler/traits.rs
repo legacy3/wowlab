@@ -26,6 +26,30 @@ pub trait SpecHandler: Send + Sync {
         self.spec_id().class()
     }
 
+    /// Returns the WoW API spec ID (e.g., 253 for BM Hunter).
+    fn wow_spec_id(&self) -> u32 {
+        self.spec_id().wow_spec_id()
+    }
+
+    /// Returns the WoW API class ID (e.g., 3 for Hunter).
+    fn wow_class_id(&self) -> u32 {
+        self.class_id() as u32
+    }
+
+    /// Human-readable display name for the spec.
+    fn display_name(&self) -> &'static str;
+
+    // === Coverage Methods ===
+
+    /// Returns all spell definitions implemented by this spec.
+    fn spell_definitions(&self) -> &'static [SpellDef];
+
+    /// Returns all aura definitions implemented by this spec.
+    fn aura_definitions(&self) -> &'static [AuraDef];
+
+    /// Returns all talent names for this spec.
+    fn talent_names(&self) -> Vec<String>;
+
     // === Initialization ===
 
     /// Initialize simulation state (pets, events, etc.).

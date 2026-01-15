@@ -16,11 +16,11 @@ import { useExtracted } from "next-intl";
 import { memo, useMemo, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
+import type { Action, ActionType } from "@/lib/engine";
 import type { Item, Spell } from "@/lib/supabase";
 
+import { ACTION_TYPES } from "@/lib/engine";
 import { useEditor, useItem, useSpell } from "@/lib/state";
-
-import type { Action, ActionType } from "../types";
 
 import {
   GameIcon,
@@ -33,7 +33,6 @@ import {
 import { Badge, Card, Collapsible, IconButton, Text, Tooltip } from "../../ui";
 import { SelectField } from "../common";
 import { ConditionBuilder } from "../conditions";
-import { ACTION_TYPES } from "../constants";
 import { ItemPicker, SpellPicker } from "../pickers";
 
 function toItemTooltipData(item: Item): ItemTooltipData {

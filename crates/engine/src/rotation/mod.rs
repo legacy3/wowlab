@@ -48,6 +48,7 @@ mod context;
 mod error;
 mod parser;
 mod resolver;
+mod validate;
 
 #[cfg(test)]
 mod tests;
@@ -71,3 +72,9 @@ pub use error::{Error, Result};
 
 // Re-export resolver types
 pub use resolver::{ResolvedVar, SpecResolver};
+
+// Re-export validation types
+pub use validate::{
+    get_var_path_schema, validate_rotation, ValidationError, ValidationResult, ValidationWarning,
+    VarPathCategory, VarPathInfo,
+};

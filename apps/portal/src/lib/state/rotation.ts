@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
-import type { RotationsRow } from "@/components/editor/types";
+import type { RotationsRow } from "@/lib/engine";
 
 import { href, routes } from "@/lib/routing";
 import { createClient } from "@/lib/supabase";

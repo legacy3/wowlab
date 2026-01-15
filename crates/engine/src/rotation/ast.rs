@@ -2,10 +2,17 @@
 //!
 //! Represents parsed rotation definitions before name resolution.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[cfg(feature = "wasm")]
+use tsify::Tsify;
+
 /// A complete rotation definition.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Rotation {
     pub name: String,
     /// User-defined variables (computed expressions).
@@ -17,64 +24,88 @@ pub struct Rotation {
 }
 
 /// An action in the rotation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum Action {
     /// Cast a spell.
+    #[serde(rename_all = "camelCase")]
     Cast {
         spell: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Call a sub-list (returns if no action found).
+    #[serde(rename_all = "camelCase")]
     Call {
         list: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Run a sub-list (does not return if no action found).
+    #[serde(rename_all = "camelCase")]
     Run {
         list: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Set a runtime variable.
+    #[serde(rename_all = "camelCase")]
     SetVar {
         name: String,
         value: Expr,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Modify a runtime variable.
+    #[serde(rename_all = "camelCase")]
     ModifyVar {
         name: String,
         op: VarOp,
         value: Expr,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Wait for a fixed duration.
+    #[serde(rename_all = "camelCase")]
     Wait {
         seconds: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Wait until a condition is true.
-    WaitUntil {
-        condition: Expr,
-    },
+    #[serde(rename_all = "camelCase")]
+    WaitUntil { condition: Expr },
     /// Pool resources.
+    #[serde(rename_all = "camelCase")]
     Pool {
+        #[serde(skip_serializing_if = "Option::is_none")]
         extra: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Use a trinket by slot.
+    #[serde(rename_all = "camelCase")]
     UseTrinket {
         slot: u8,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
     /// Use an item by name.
+    #[serde(rename_all = "camelCase")]
     UseItem {
         name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         condition: Option<Expr>,
     },
 }
 
 /// Variable modification operation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum VarOp {
     Set,
     Add,
@@ -87,56 +118,62 @@ pub enum VarOp {
 }
 
 /// An expression.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum Expr {
     // === Literals ===
-    Bool(bool),
-    Int(i64),
-    Float(f64),
+    Bool { value: bool },
+    Int { value: i64 },
+    Float { value: f64 },
 
     // === Variable reference (unresolved path) ===
-    Var(VarPath),
+    Var { path: VarPath },
 
     // === User variable reference ===
-    UserVar(String),
+    UserVar { name: String },
 
     // === Logical ===
-    And(Vec<Expr>),
-    Or(Vec<Expr>),
-    Not(Box<Expr>),
+    And { operands: Vec<Expr> },
+    Or { operands: Vec<Expr> },
+    Not { operand: Box<Expr> },
 
     // === Comparison ===
-    Gt(Box<Expr>, Box<Expr>),
-    Gte(Box<Expr>, Box<Expr>),
-    Lt(Box<Expr>, Box<Expr>),
-    Lte(Box<Expr>, Box<Expr>),
-    Eq(Box<Expr>, Box<Expr>),
-    Ne(Box<Expr>, Box<Expr>),
+    Gt { left: Box<Expr>, right: Box<Expr> },
+    Gte { left: Box<Expr>, right: Box<Expr> },
+    Lt { left: Box<Expr>, right: Box<Expr> },
+    Lte { left: Box<Expr>, right: Box<Expr> },
+    Eq { left: Box<Expr>, right: Box<Expr> },
+    Ne { left: Box<Expr>, right: Box<Expr> },
 
     // === Arithmetic ===
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
-    Mul(Box<Expr>, Box<Expr>),
-    Div(Box<Expr>, Box<Expr>),
-    Mod(Box<Expr>, Box<Expr>),
+    Add { left: Box<Expr>, right: Box<Expr> },
+    Sub { left: Box<Expr>, right: Box<Expr> },
+    Mul { left: Box<Expr>, right: Box<Expr> },
+    Div { left: Box<Expr>, right: Box<Expr> },
+    Mod { left: Box<Expr>, right: Box<Expr> },
 
     // === Functions ===
-    Floor(Box<Expr>),
-    Ceil(Box<Expr>),
-    Abs(Box<Expr>),
-    Min(Box<Expr>, Box<Expr>),
-    Max(Box<Expr>, Box<Expr>),
+    Floor { operand: Box<Expr> },
+    Ceil { operand: Box<Expr> },
+    Abs { operand: Box<Expr> },
+    Min { left: Box<Expr>, right: Box<Expr> },
+    Max { left: Box<Expr>, right: Box<Expr> },
 }
 
 /// A variable path (e.g., "resource.focus", "cd.kill_command.ready").
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum VarPath {
     // === resource.* ===
-    Resource(String),
-    ResourceMax(String),
-    ResourceDeficit(String),
-    ResourcePercent(String),
-    ResourceRegen(String),
+    Resource { resource: String },
+    ResourceMax { resource: String },
+    ResourceDeficit { resource: String },
+    ResourcePercent { resource: String },
+    ResourceRegen { resource: String },
 
     // === player.* ===
     PlayerHealth,
@@ -144,34 +181,34 @@ pub enum VarPath {
     PlayerHealthPercent,
 
     // === cd.* ===
-    CdReady(String),
-    CdRemaining(String),
-    CdDuration(String),
-    CdCharges(String),
-    CdChargesMax(String),
-    CdRechargeTime(String),
-    CdFullRecharge(String),
+    CdReady { spell: String },
+    CdRemaining { spell: String },
+    CdDuration { spell: String },
+    CdCharges { spell: String },
+    CdChargesMax { spell: String },
+    CdRechargeTime { spell: String },
+    CdFullRecharge { spell: String },
 
     // === buff.* ===
-    BuffActive(String),
-    BuffInactive(String),
-    BuffRemaining(String),
-    BuffStacks(String),
-    BuffStacksMax(String),
-    BuffDuration(String),
+    BuffActive { aura: String },
+    BuffInactive { aura: String },
+    BuffRemaining { aura: String },
+    BuffStacks { aura: String },
+    BuffStacksMax { aura: String },
+    BuffDuration { aura: String },
 
     // === debuff.* ===
-    DebuffActive(String),
-    DebuffInactive(String),
-    DebuffRemaining(String),
-    DebuffStacks(String),
-    DebuffRefreshable(String),
+    DebuffActive { aura: String },
+    DebuffInactive { aura: String },
+    DebuffRemaining { aura: String },
+    DebuffStacks { aura: String },
+    DebuffRefreshable { aura: String },
 
     // === dot.* ===
-    DotTicking(String),
-    DotRemaining(String),
-    DotRefreshable(String),
-    DotTicksRemaining(String),
+    DotTicking { dot: String },
+    DotRemaining { dot: String },
+    DotRefreshable { dot: String },
+    DotTicksRemaining { dot: String },
 
     // === target.* ===
     TargetHealthPercent,
@@ -192,21 +229,21 @@ pub enum VarPath {
     // === pet.* ===
     PetActive,
     PetRemaining,
-    PetBuffActive(String),
+    PetBuffActive { aura: String },
 
     // === talent.* ===
-    Talent(String),
+    Talent { name: String },
 
     // === equipped.* ===
-    Equipped(String),
+    Equipped { item: String },
 
     // === trinket.* ===
-    TrinketReady(u8),
-    TrinketRemaining(u8),
+    TrinketReady { slot: u8 },
+    TrinketRemaining { slot: u8 },
 
     // === spell.* ===
-    SpellCost(String),
-    SpellCastTime(String),
+    SpellCost { spell: String },
+    SpellCastTime { spell: String },
 }
 
 impl VarPath {
@@ -214,27 +251,27 @@ impl VarPath {
     pub fn value_type(&self) -> ValueType {
         match self {
             // Boolean values
-            Self::CdReady(_)
-            | Self::BuffActive(_)
-            | Self::BuffInactive(_)
-            | Self::DebuffActive(_)
-            | Self::DebuffInactive(_)
-            | Self::DebuffRefreshable(_)
-            | Self::DotTicking(_)
-            | Self::DotRefreshable(_)
+            Self::CdReady { .. }
+            | Self::BuffActive { .. }
+            | Self::BuffInactive { .. }
+            | Self::DebuffActive { .. }
+            | Self::DebuffInactive { .. }
+            | Self::DebuffRefreshable { .. }
+            | Self::DotTicking { .. }
+            | Self::DotRefreshable { .. }
             | Self::PetActive
-            | Self::PetBuffActive(_)
-            | Self::Talent(_)
-            | Self::Equipped(_)
-            | Self::TrinketReady(_) => ValueType::Bool,
+            | Self::PetBuffActive { .. }
+            | Self::Talent { .. }
+            | Self::Equipped { .. }
+            | Self::TrinketReady { .. } => ValueType::Bool,
 
             // Integer values
-            Self::CdCharges(_)
-            | Self::CdChargesMax(_)
-            | Self::BuffStacks(_)
-            | Self::BuffStacksMax(_)
-            | Self::DebuffStacks(_)
-            | Self::DotTicksRemaining(_)
+            Self::CdCharges { .. }
+            | Self::CdChargesMax { .. }
+            | Self::BuffStacks { .. }
+            | Self::BuffStacksMax { .. }
+            | Self::DebuffStacks { .. }
+            | Self::DotTicksRemaining { .. }
             | Self::EnemyCount => ValueType::Int,
 
             // Float values (everything else)
@@ -244,7 +281,10 @@ impl VarPath {
 }
 
 /// Value type for type checking.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum ValueType {
     Bool,
     Int,
@@ -255,11 +295,11 @@ impl Expr {
     /// Check if this expression is a boolean variable reference.
     pub fn is_bool_var(&self) -> bool {
         match self {
-            Expr::Var(path) => path.value_type() == ValueType::Bool,
-            Expr::Bool(_) => true,
-            Expr::And(_) | Expr::Or(_) | Expr::Not(_) => true,
-            Expr::Gt(..) | Expr::Gte(..) | Expr::Lt(..) | Expr::Lte(..) => true,
-            Expr::Eq(..) | Expr::Ne(..) => true,
+            Expr::Var { path } => path.value_type() == ValueType::Bool,
+            Expr::Bool { .. } => true,
+            Expr::And { .. } | Expr::Or { .. } | Expr::Not { .. } => true,
+            Expr::Gt { .. } | Expr::Gte { .. } | Expr::Lt { .. } | Expr::Lte { .. } => true,
+            Expr::Eq { .. } | Expr::Ne { .. } => true,
             _ => false,
         }
     }

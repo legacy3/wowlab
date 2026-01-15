@@ -4,5 +4,5 @@ export {
   FIELD_CATEGORIES,
   getFieldsByCategory,
 } from "./condition-builder";
-export type { ConditionField, FieldCategory } from "./fields";
-export { OPERATORS } from "./fields";
+export type { ConditionField, FieldCategory } from "./condition-builder";
+export { OPERATORS } from "@/lib/engine";

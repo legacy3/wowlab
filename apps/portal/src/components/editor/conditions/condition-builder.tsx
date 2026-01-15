@@ -7,6 +7,15 @@ import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 
 import {
+  CONDITION_FIELDS,
+  type ConditionField,
+  FIELD_CATEGORIES,
+  type FieldCategory,
+  getFieldsByCategory,
+  OPERATORS,
+} from "@/lib/engine";
+
+import {
   AddGroupButton,
   AddRuleButton,
   CombinatorSelector,
@@ -15,18 +24,8 @@ import {
   RemoveButton,
   ValueEditor,
 } from "./condition-controls";
-import {
-  CONDITION_FIELDS,
-  type ConditionField,
-  type FieldCategory,
-  OPERATORS,
-} from "./fields";
 
-export {
-  CONDITION_FIELDS,
-  FIELD_CATEGORIES,
-  getFieldsByCategory,
-} from "./fields";
+export { CONDITION_FIELDS, FIELD_CATEGORIES, getFieldsByCategory };
 export type { ConditionField, FieldCategory };
 
 interface ConditionBuilderProps {

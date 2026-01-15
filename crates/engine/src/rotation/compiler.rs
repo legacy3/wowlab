@@ -176,41 +176,41 @@ fn collect_vars_from_expr(
     schema: &mut SchemaBuilder,
 ) -> Result<()> {
     match expr {
-        Expr::Bool(_) | Expr::Int(_) | Expr::Float(_) | Expr::UserVar(_) => {}
+        Expr::Bool { .. } | Expr::Int { .. } | Expr::Float { .. } | Expr::UserVar { .. } => {}
 
-        Expr::Var(path) => {
+        Expr::Var { path } => {
             let resolved = resolve_var(path, resolver)?;
             schema.add(resolved);
         }
 
-        Expr::And(exprs) | Expr::Or(exprs) => {
-            for e in exprs {
+        Expr::And { operands } | Expr::Or { operands } => {
+            for e in operands {
                 collect_vars_from_expr(e, resolver, schema)?;
             }
         }
 
-        Expr::Not(inner)
-        | Expr::Floor(inner)
-        | Expr::Ceil(inner)
-        | Expr::Abs(inner) => {
-            collect_vars_from_expr(inner, resolver, schema)?;
+        Expr::Not { operand }
+        | Expr::Floor { operand }
+        | Expr::Ceil { operand }
+        | Expr::Abs { operand } => {
+            collect_vars_from_expr(operand, resolver, schema)?;
         }
 
-        Expr::Gt(a, b)
-        | Expr::Gte(a, b)
-        | Expr::Lt(a, b)
-        | Expr::Lte(a, b)
-        | Expr::Eq(a, b)
-        | Expr::Ne(a, b)
-        | Expr::Add(a, b)
-        | Expr::Sub(a, b)
-        | Expr::Mul(a, b)
-        | Expr::Div(a, b)
-        | Expr::Mod(a, b)
-        | Expr::Min(a, b)
-        | Expr::Max(a, b) => {
-            collect_vars_from_expr(a, resolver, schema)?;
-            collect_vars_from_expr(b, resolver, schema)?;
+        Expr::Gt { left, right }
+        | Expr::Gte { left, right }
+        | Expr::Lt { left, right }
+        | Expr::Lte { left, right }
+        | Expr::Eq { left, right }
+        | Expr::Ne { left, right }
+        | Expr::Add { left, right }
+        | Expr::Sub { left, right }
+        | Expr::Mul { left, right }
+        | Expr::Div { left, right }
+        | Expr::Mod { left, right }
+        | Expr::Min { left, right }
+        | Expr::Max { left, right } => {
+            collect_vars_from_expr(left, resolver, schema)?;
+            collect_vars_from_expr(right, resolver, schema)?;
         }
     }
     Ok(())
@@ -464,16 +464,16 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
 
     fn compile_bool_expr(&mut self, expr: &Expr) -> Result<Value> {
         match expr {
-            Expr::Bool(b) => {
-                Ok(self.builder.ins().iconst(types::I8, if *b { 1 } else { 0 }))
+            Expr::Bool { value } => {
+                Ok(self.builder.ins().iconst(types::I8, if *value { 1 } else { 0 }))
             }
 
-            Expr::Var(path) => {
+            Expr::Var { path } => {
                 let resolved = resolve_var(path, self.resolver)?;
                 self.load_bool_var(&resolved)
             }
 
-            Expr::UserVar(name) => {
+            Expr::UserVar { name } => {
                 let expr = self
                     .variables
                     .get(name)
@@ -482,44 +482,44 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 self.compile_bool_expr(&expr)
             }
 
-            Expr::And(exprs) => {
+            Expr::And { operands } => {
                 // Logical AND (all expressions evaluated - no short-circuit for JIT simplicity)
-                if exprs.is_empty() {
+                if operands.is_empty() {
                     return Ok(self.builder.ins().iconst(types::I8, 1));
                 }
-                let mut result = self.compile_bool_expr(&exprs[0])?;
-                for expr in &exprs[1..] {
+                let mut result = self.compile_bool_expr(&operands[0])?;
+                for expr in &operands[1..] {
                     let next = self.compile_bool_expr(expr)?;
                     result = self.builder.ins().band(result, next);
                 }
                 Ok(result)
             }
 
-            Expr::Or(exprs) => {
+            Expr::Or { operands } => {
                 // Logical OR (all expressions evaluated - no short-circuit for JIT simplicity)
-                if exprs.is_empty() {
+                if operands.is_empty() {
                     return Ok(self.builder.ins().iconst(types::I8, 0));
                 }
-                let mut result = self.compile_bool_expr(&exprs[0])?;
-                for expr in &exprs[1..] {
+                let mut result = self.compile_bool_expr(&operands[0])?;
+                for expr in &operands[1..] {
                     let next = self.compile_bool_expr(expr)?;
                     result = self.builder.ins().bor(result, next);
                 }
                 Ok(result)
             }
 
-            Expr::Not(inner) => {
-                let val = self.compile_bool_expr(inner)?;
+            Expr::Not { operand } => {
+                let val = self.compile_bool_expr(operand)?;
                 let one = self.builder.ins().iconst(types::I8, 1);
                 Ok(self.builder.ins().bxor(val, one))
             }
 
-            Expr::Gt(a, b) => self.compile_comparison(FloatCC::GreaterThan, IntCC::SignedGreaterThan, a, b),
-            Expr::Gte(a, b) => self.compile_comparison(FloatCC::GreaterThanOrEqual, IntCC::SignedGreaterThanOrEqual, a, b),
-            Expr::Lt(a, b) => self.compile_comparison(FloatCC::LessThan, IntCC::SignedLessThan, a, b),
-            Expr::Lte(a, b) => self.compile_comparison(FloatCC::LessThanOrEqual, IntCC::SignedLessThanOrEqual, a, b),
-            Expr::Eq(a, b) => self.compile_comparison(FloatCC::Equal, IntCC::Equal, a, b),
-            Expr::Ne(a, b) => self.compile_comparison(FloatCC::NotEqual, IntCC::NotEqual, a, b),
+            Expr::Gt { left, right } => self.compile_comparison(FloatCC::GreaterThan, IntCC::SignedGreaterThan, left, right),
+            Expr::Gte { left, right } => self.compile_comparison(FloatCC::GreaterThanOrEqual, IntCC::SignedGreaterThanOrEqual, left, right),
+            Expr::Lt { left, right } => self.compile_comparison(FloatCC::LessThan, IntCC::SignedLessThan, left, right),
+            Expr::Lte { left, right } => self.compile_comparison(FloatCC::LessThanOrEqual, IntCC::SignedLessThanOrEqual, left, right),
+            Expr::Eq { left, right } => self.compile_comparison(FloatCC::Equal, IntCC::Equal, left, right),
+            Expr::Ne { left, right } => self.compile_comparison(FloatCC::NotEqual, IntCC::NotEqual, left, right),
 
             _ => Err(Error::TypeError {
                 expected: "bool",
@@ -565,20 +565,20 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
 
     fn compile_numeric_expr(&mut self, expr: &Expr) -> Result<(Value, bool)> {
         match expr {
-            Expr::Int(i) => {
-                Ok((self.builder.ins().iconst(types::I32, *i), false))
+            Expr::Int { value } => {
+                Ok((self.builder.ins().iconst(types::I32, *value), false))
             }
 
-            Expr::Float(f) => {
-                Ok((self.builder.ins().f64const(*f), true))
+            Expr::Float { value } => {
+                Ok((self.builder.ins().f64const(*value), true))
             }
 
-            Expr::Var(path) => {
+            Expr::Var { path } => {
                 let resolved = resolve_var(path, self.resolver)?;
                 self.load_numeric_var(&resolved)
             }
 
-            Expr::UserVar(name) => {
+            Expr::UserVar { name } => {
                 let expr = self
                     .variables
                     .get(name)
@@ -587,14 +587,14 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 self.compile_numeric_expr(&expr)
             }
 
-            Expr::Add(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fadd(a, c), |b, a, c| b.ins().iadd(a, c)),
-            Expr::Sub(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fsub(a, c), |b, a, c| b.ins().isub(a, c)),
-            Expr::Mul(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fmul(a, c), |b, a, c| b.ins().imul(a, c)),
-            Expr::Div(a, b) => self.compile_binop(a, b, |b, a, c| b.ins().fdiv(a, c), |b, a, c| b.ins().sdiv(a, c)),
-            Expr::Mod(a, b) => {
+            Expr::Add { left, right } => self.compile_binop(left, right, |b, a, c| b.ins().fadd(a, c), |b, a, c| b.ins().iadd(a, c)),
+            Expr::Sub { left, right } => self.compile_binop(left, right, |b, a, c| b.ins().fsub(a, c), |b, a, c| b.ins().isub(a, c)),
+            Expr::Mul { left, right } => self.compile_binop(left, right, |b, a, c| b.ins().fmul(a, c), |b, a, c| b.ins().imul(a, c)),
+            Expr::Div { left, right } => self.compile_binop(left, right, |b, a, c| b.ins().fdiv(a, c), |b, a, c| b.ins().sdiv(a, c)),
+            Expr::Mod { left, right } => {
                 // Modulo: convert to float if needed, then compute f % g = f - g * floor(f / g)
-                let (a_val, a_float) = self.compile_numeric_expr(a)?;
-                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+                let (a_val, a_float) = self.compile_numeric_expr(left)?;
+                let (b_val, b_float) = self.compile_numeric_expr(right)?;
                 let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };
                 let b_f = if b_float { b_val } else { self.builder.ins().fcvt_from_sint(types::F64, b_val) };
                 let div = self.builder.ins().fdiv(a_f, b_f);
@@ -603,20 +603,20 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 Ok((self.builder.ins().fsub(a_f, prod), true))
             }
 
-            Expr::Floor(inner) => {
-                let (val, is_float) = self.compile_numeric_expr(inner)?;
+            Expr::Floor { operand } => {
+                let (val, is_float) = self.compile_numeric_expr(operand)?;
                 let float_val = if is_float { val } else { self.builder.ins().fcvt_from_sint(types::F64, val) };
                 Ok((self.builder.ins().floor(float_val), true))
             }
 
-            Expr::Ceil(inner) => {
-                let (val, is_float) = self.compile_numeric_expr(inner)?;
+            Expr::Ceil { operand } => {
+                let (val, is_float) = self.compile_numeric_expr(operand)?;
                 let float_val = if is_float { val } else { self.builder.ins().fcvt_from_sint(types::F64, val) };
                 Ok((self.builder.ins().ceil(float_val), true))
             }
 
-            Expr::Abs(inner) => {
-                let (val, is_float) = self.compile_numeric_expr(inner)?;
+            Expr::Abs { operand } => {
+                let (val, is_float) = self.compile_numeric_expr(operand)?;
                 if is_float {
                     Ok((self.builder.ins().fabs(val), true))
                 } else {
@@ -628,9 +628,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 }
             }
 
-            Expr::Min(a, b) => {
-                let (a_val, a_float) = self.compile_numeric_expr(a)?;
-                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+            Expr::Min { left, right } => {
+                let (a_val, a_float) = self.compile_numeric_expr(left)?;
+                let (b_val, b_float) = self.compile_numeric_expr(right)?;
                 let is_float = a_float || b_float;
                 if is_float {
                     let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };
@@ -642,9 +642,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 }
             }
 
-            Expr::Max(a, b) => {
-                let (a_val, a_float) = self.compile_numeric_expr(a)?;
-                let (b_val, b_float) = self.compile_numeric_expr(b)?;
+            Expr::Max { left, right } => {
+                let (a_val, a_float) = self.compile_numeric_expr(left)?;
+                let (b_val, b_float) = self.compile_numeric_expr(right)?;
                 let is_float = a_float || b_float;
                 if is_float {
                     let a_f = if a_float { a_val } else { self.builder.ins().fcvt_from_sint(types::F64, a_val) };

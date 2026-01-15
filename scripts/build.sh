@@ -69,17 +69,15 @@ build_engine_wasm() {
     info "Building WASM engine..."
     cd "$ROOT_DIR/crates/engine"
 
-    # Build to temp directory with wasm feature, no default features
-    local tmp_dir="$ROOT_DIR/.wasm-build"
-    rm -rf "$tmp_dir"
-    wasm-pack build --target web --features wasm --no-default-features --out-dir "$tmp_dir"
+    # Build to default pkg directory with wasm feature, no default features
+    rm -rf pkg
+    wasm-pack build --target web --features wasm --no-default-features
 
     # Pack tarball
-    cd "$tmp_dir"
+    cd pkg
     rm -f "$ROOT_DIR/packages/engine-"*.tgz
     local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
     cd "$ROOT_DIR"
-    rm -rf "$tmp_dir"
 
     success "WASM engine built -> packages/$tarball"
 }
@@ -111,7 +109,7 @@ build_portal() {
 # Build everything
 build_all() {
     check_deps
-    build_parsers
+    build_engine_wasm
     info "Installing dependencies..."
     pnpm install
     build_portal

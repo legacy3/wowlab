@@ -1,4 +1,495 @@
+/**
+ * Engine WASM wrapper module
+ *
+ * Provides singleton initialization and async wrappers for engine WASM functions.
+ * Types are re-exported from the engine package for convenience.
+ */
+
+import type { RuleGroupType, RuleType } from "react-querybuilder";
 import type { Field } from "react-querybuilder";
+
+import { BoxIcon, ListIcon, type LucideIcon, SparklesIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
+// Re-export react-querybuilder types
+export type { RuleGroupType, RuleType };
+
+// Type re-exports from engine
+export type {
+  Attribute,
+  // Core types
+  AuraDef,
+  AuraEffect,
+  AuraFlags,
+  AuraIdx,
+  CastType,
+  // Profile types
+  Character,
+  ChargeMod,
+  ClassId,
+  ConditionFieldDef,
+  ConditionFieldType,
+  CooldownMod,
+  DamageEffect,
+  DamageFlags,
+  DamageMod,
+  DamageSchool,
+  DamageSchoolInfo,
+  DerivedStat,
+  EffectCondition,
+  EnemyIdx,
+  Expr,
+  GcdType,
+  HitResult,
+  Item,
+  Loadout,
+  MasteryEffect,
+  ModCondition,
+  PeriodicEffect,
+  PetIdx,
+  PetKind,
+  PetType,
+  ProcIdx,
+  Profession,
+  Profile,
+  RaceId,
+  RatingType,
+  ResourceCost,
+  ResourceIdx,
+  ResourceType,
+  ResourceTypeInfo,
+  // Rotation types
+  Rotation,
+  Action as RotationAction,
+  SimTime,
+  Slot,
+  SnapshotFlags,
+  SnapshotIdx,
+  SpecId,
+  SpellDef,
+  SpellEffect,
+  SpellFlags,
+  SpellIdx,
+  SpellTarget,
+  TalentDef,
+  Talents,
+  TargetIdx,
+  UnitIdx,
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
+  ValueType,
+  VarOp,
+  VarPath,
+  VarPathCategory,
+  VarPathInfo,
+  WowClass,
+} from "engine";
+
+// WASM initialization state
+let initPromise: Promise<typeof import("engine")> | null = null;
+let wasmModule: typeof import("engine") | null = null;
+let initError: Error | null = null;
+
+export interface Action {
+  condition: RuleGroupType;
+  enabled: boolean;
+  id: string;
+  itemId?: number;
+  listId?: string;
+  spellId?: number;
+  type: ActionType;
+}
+
+export interface ActionActions {
+  addAction: (
+    listId: string,
+    input: Omit<Action, "id" | "enabled" | "condition">,
+  ) => string;
+  deleteAction: (listId: string, actionId: string) => void;
+  duplicateAction: (listId: string, actionId: string) => string | undefined;
+  reorderActions: (listId: string, from: number, to: number) => void;
+  updateAction: (
+    listId: string,
+    actionId: string,
+    updates: Partial<Omit<Action, "id">>,
+  ) => void;
+}
+
+export interface ActionList {
+  actions: Action[];
+  id: string;
+  label: string;
+  listType: ListType;
+  name: string;
+}
+
+// Async wrapper functions for WASM calls
+
+export type ActionType = "spell" | "item" | "call_action_list";
+
+export interface EditorContent {
+  actionLists: ActionList[];
+  defaultListId: string;
+  variables: Variable[];
+}
+
+export interface EditorMetadata {
+  description: string;
+  isPublic: boolean;
+  name: string;
+  rotationId: string | null;
+  slug: string;
+  specId: number | null;
+}
+
+export type EditorState = ActionActions &
+  EditorContent &
+  EditorMetadata &
+  EditorUIState &
+  ListActions &
+  LockActions &
+  MetadataActions &
+  PersistenceActions &
+  VariableActions &
+  ViewActions;
+
+export interface EditorUIState {
+  isDirty: boolean;
+  isLocked: boolean;
+  ownerId: string | null;
+  selectedListId: string | null;
+  viewMode: ViewMode;
+}
+
+export interface ListActions {
+  addList: (input: {
+    name: string;
+    label: string;
+    listType: ListType;
+  }) => string;
+  deleteList: (id: string) => void;
+  renameList: (id: string, label: string) => void;
+  reorderLists: (from: number, to: number) => void;
+  selectList: (id: string | null) => void;
+  setDefaultList: (id: string) => void;
+}
+
+export type ListType = "precombat" | "main" | "sub";
+
+export interface LockActions {
+  setLocked: (locked: boolean) => void;
+}
+
+export interface MetadataActions {
+  setDescription: (description: string) => void;
+  setIsPublic: (isPublic: boolean) => void;
+  setName: (name: string) => void;
+  setSpecId: (specId: number | null) => void;
+}
+
+export interface PersistenceActions {
+  load: (rotation: RotationsRow) => void;
+  markClean: () => void;
+  reset: () => void;
+  serialize: () => RotationData;
+}
+
+export interface RotationData {
+  defaultListId: string;
+  lists: ActionList[];
+  variables: Variable[];
+}
+
+export interface RotationsRow {
+  checksum: string | null;
+  created_at: string;
+  current_version: number;
+  description: string | null;
+  forked_from_id: string | null;
+  id: string;
+  is_public: boolean;
+  name: string;
+  script: string;
+  slug: string;
+  spec_id: number;
+  updated_at: string;
+  user_id: string;
+}
+
+// =============================================================================
+// React Hook for Engine Initialization
+// =============================================================================
+
+export interface UseEngineResult {
+  error: Error | null;
+  isLoading: boolean;
+  isReady: boolean;
+  retry: () => void;
+}
+
+export interface Variable {
+  expression: string;
+  id: string;
+  name: string;
+}
+
+// =============================================================================
+// Editor Types (from deleted types.ts)
+// =============================================================================
+
+export interface VariableActions {
+  addVariable: (variable: Omit<Variable, "id">) => string;
+  deleteVariable: (id: string) => void;
+  updateVariable: (id: string, updates: Partial<Omit<Variable, "id">>) => void;
+}
+
+export interface ViewActions {
+  setViewMode: (mode: ViewMode) => void;
+}
+
+export type ViewMode = "edit" | "preview";
+
+/**
+ * Get all attribute types.
+ */
+export async function getAttributes(): Promise<[string, number][]> {
+  const engine = await initEngine();
+  return engine.getAttributes();
+}
+
+/**
+ * Get all damage schools with metadata.
+ */
+export async function getDamageSchools(): Promise<
+  import("engine").DamageSchoolInfo[]
+> {
+  const engine = await initEngine();
+  return engine.getDamageSchools();
+}
+
+/**
+ * Get all derived stat types.
+ */
+export async function getDerivedStats(): Promise<[string, string][]> {
+  const engine = await initEngine();
+  return engine.getDerivedStats();
+}
+
+/**
+ * Get condition schema for effect conditions.
+ */
+export async function getEffectConditionSchema(): Promise<
+  import("engine").ConditionFieldDef[]
+> {
+  const engine = await initEngine();
+  return engine.getEffectConditionSchema();
+}
+
+/**
+ * Get the engine version string.
+ */
+export async function getEngineVersion(): Promise<string> {
+  const engine = await initEngine();
+  return engine.getEngineVersion();
+}
+
+/**
+ * Get initialization error if any.
+ */
+export function getInitError(): Error | null {
+  return initError;
+}
+
+/**
+ * Get condition schema for damage mod conditions.
+ */
+export async function getModConditionSchema(): Promise<
+  import("engine").ConditionFieldDef[]
+> {
+  const engine = await initEngine();
+  return engine.getModConditionSchema();
+}
+
+/**
+ * Get all rating types.
+ */
+export async function getRatingTypes(): Promise<[string, number][]> {
+  const engine = await initEngine();
+  return engine.getRatingTypes();
+}
+
+/**
+ * Get all resource types with metadata.
+ */
+export async function getResourceTypes(): Promise<
+  import("engine").ResourceTypeInfo[]
+> {
+  const engine = await initEngine();
+  return engine.getResourceTypes();
+}
+
+/**
+ * Get the VarPath schema for the rotation editor.
+ */
+export async function getVarPathSchema(): Promise<
+  import("engine").VarPathCategory[]
+> {
+  const engine = await initEngine();
+  return engine.getVarPathSchema();
+}
+
+/**
+ * Initialize the engine WASM module.
+ * Uses singleton pattern - only initializes once.
+ *
+ * @returns Promise that resolves when WASM is ready
+ */
+export async function initEngine(): Promise<typeof import("engine")> {
+  // Return cached module if already initialized
+  if (wasmModule) {
+    return wasmModule;
+  }
+
+  // Return cached error if initialization failed
+  if (initError) {
+    throw initError;
+  }
+
+  // Start initialization if not already in progress
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        // Dynamic import for SSR compatibility
+        const engine = await import("engine");
+        // Initialize the WASM module
+        await engine.default();
+        wasmModule = engine;
+        return engine;
+      } catch (error) {
+        initError = error instanceof Error ? error : new Error(String(error));
+        initPromise = null;
+        throw initError;
+      }
+    })();
+  }
+
+  return initPromise;
+}
+
+/**
+ * Check if the engine is initialized.
+ */
+export function isEngineReady(): boolean {
+  return wasmModule !== null;
+}
+
+/**
+ * Parse a rotation from JSON.
+ */
+export async function parseRotation(
+  json: string,
+): Promise<import("engine").Rotation> {
+  const engine = await initEngine();
+  return engine.parseRotation(json);
+}
+
+/**
+ * Parse a SimC profile string.
+ */
+export async function parseSimc(
+  input: string,
+): Promise<import("engine").Profile> {
+  const engine = await initEngine();
+  return engine.parseSimc(input);
+}
+
+/**
+ * React hook for engine WASM initialization with loading/error states.
+ *
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const { isLoading, isReady, error, retry } = useEngine();
+ *
+ *   if (isLoading) return <Spinner />;
+ *   if (error) return <ErrorMessage error={error} onRetry={retry} />;
+ *   if (!isReady) return null;
+ *
+ *   return <YourContent />;
+ * }
+ * ```
+ */
+export function useEngine(): UseEngineResult {
+  const [isLoading, setIsLoading] = useState(!isEngineReady());
+  const [isReady, setIsReady] = useState(isEngineReady());
+  const [error, setError] = useState<Error | null>(getInitError());
+  const [retryCount, setRetryCount] = useState(0);
+
+  const retry = useCallback(() => {
+    // Clear cached error state
+    initError = null;
+    initPromise = null;
+    setError(null);
+    setIsLoading(true);
+    setIsReady(false);
+    setRetryCount((c) => c + 1);
+  }, []);
+
+  useEffect(() => {
+    // Skip if already ready
+    if (isEngineReady()) {
+      setIsReady(true);
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    initEngine()
+      .then(() => {
+        if (!cancelled) {
+          setIsReady(true);
+          setIsLoading(false);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+          setIsLoading(false);
+          setIsReady(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [retryCount]);
+
+  return { error, isLoading, isReady, retry };
+}
+
+/**
+ * Validate a rotation JSON string.
+ */
+export async function validateRotation(
+  json: string,
+): Promise<import("engine").ValidationResult> {
+  const engine = await initEngine();
+  return engine.validateRotation(json);
+}
+
+export const createEmptyCondition = (): RuleGroupType => ({
+  combinator: "and",
+  rules: [],
+});
+
+export const generateId = (): string => crypto.randomUUID();
+
+// =============================================================================
+// Condition Fields (from deleted conditions/fields.ts)
+// =============================================================================
 
 export interface ConditionField extends Field {
   category: string;
@@ -864,3 +1355,56 @@ export const OPERATORS = [
   { label: ">", name: ">" },
   { label: ">=", name: ">=" },
 ];
+
+// =============================================================================
+// Constants (from deleted constants.ts)
+// =============================================================================
+
+export interface ActionTypeConfig {
+  description?: string;
+  icon: LucideIcon;
+  label: string;
+  value: ActionType;
+}
+
+export const ACTION_TYPES: ActionTypeConfig[] = [
+  {
+    description: "Cast a spell",
+    icon: SparklesIcon,
+    label: "Spell",
+    value: "spell",
+  },
+  { description: "Use an item", icon: BoxIcon, label: "Item", value: "item" },
+  {
+    description: "Execute another action list",
+    icon: ListIcon,
+    label: "Call List",
+    value: "call_action_list",
+  },
+];
+
+export const ACTION_TYPE_MAP = Object.fromEntries(
+  ACTION_TYPES.map((t) => [t.value, t]),
+) as Record<ActionType, ActionTypeConfig>;
+
+export interface ListTypeConfig {
+  badgeColor: string;
+  color: string;
+  label: string;
+  value: ListType;
+}
+
+export const LIST_TYPES: ListTypeConfig[] = [
+  {
+    badgeColor: "amber",
+    color: "amber.500",
+    label: "Pre-combat",
+    value: "precombat",
+  },
+  { badgeColor: "green", color: "green.500", label: "Main", value: "main" },
+  { badgeColor: "gray", color: "fg.muted", label: "Sub-list", value: "sub" },
+];
+
+export const LIST_TYPE_MAP = Object.fromEntries(
+  LIST_TYPES.map((t) => [t.value, t]),
+) as Record<ListType, ListTypeConfig>;

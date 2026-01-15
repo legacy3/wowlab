@@ -15,9 +15,9 @@ import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import { useEditor } from "@/lib/state/editor";
+import type { ActionList, Variable } from "@/lib/engine";
 
-import type { ActionList, Variable } from "./types";
+import { useEditor } from "@/lib/state/editor";
 
 import { Button, Card, Code, Text, Tooltip } from "../ui";
 

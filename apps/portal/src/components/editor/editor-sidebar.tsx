@@ -28,9 +28,9 @@ import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import { useEditor } from "@/lib/state/editor";
+import type { Variable } from "@/lib/engine";
 
-import type { Variable } from "./types";
+import { useEditor } from "@/lib/state/editor";
 
 import { Button, Code, IconButton, Tabs, Text, Tooltip } from "../ui";
 import {

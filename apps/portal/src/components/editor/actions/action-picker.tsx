@@ -5,13 +5,11 @@ import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
+import { ACTION_TYPES, type ActionType } from "@/lib/engine";
 import { useEditor } from "@/lib/state/editor";
-
-import type { ActionType } from "../types";
 
 import { Button, Dialog, IconButton, Tabs, Text } from "../../ui";
 import { SelectField } from "../common";
-import { ACTION_TYPES } from "../constants";
 import { ItemPicker, SpellPicker } from "../pickers";
 
 interface ActionPickerProps {

@@ -256,24 +256,24 @@ impl ResolvedVar {
 pub fn resolve_var(path: &VarPath, resolver: &SpecResolver) -> Result<ResolvedVar> {
     match path {
         // Resource
-        VarPath::Resource(r) => {
-            check_resource(r, resolver)?;
+        VarPath::Resource { resource } => {
+            check_resource(resource, resolver)?;
             Ok(ResolvedVar::Resource)
         }
-        VarPath::ResourceMax(r) => {
-            check_resource(r, resolver)?;
+        VarPath::ResourceMax { resource } => {
+            check_resource(resource, resolver)?;
             Ok(ResolvedVar::ResourceMax)
         }
-        VarPath::ResourceDeficit(r) => {
-            check_resource(r, resolver)?;
+        VarPath::ResourceDeficit { resource } => {
+            check_resource(resource, resolver)?;
             Ok(ResolvedVar::ResourceDeficit)
         }
-        VarPath::ResourcePercent(r) => {
-            check_resource(r, resolver)?;
+        VarPath::ResourcePercent { resource } => {
+            check_resource(resource, resolver)?;
             Ok(ResolvedVar::ResourcePercent)
         }
-        VarPath::ResourceRegen(r) => {
-            check_resource(r, resolver)?;
+        VarPath::ResourceRegen { resource } => {
+            check_resource(resource, resolver)?;
             Ok(ResolvedVar::ResourceRegen)
         }
 
@@ -283,37 +283,37 @@ pub fn resolve_var(path: &VarPath, resolver: &SpecResolver) -> Result<ResolvedVa
         VarPath::PlayerHealthPercent => Ok(ResolvedVar::PlayerHealthPercent),
 
         // Cooldowns
-        VarPath::CdReady(s) => Ok(ResolvedVar::CdReady(resolver.resolve_spell(s)?)),
-        VarPath::CdRemaining(s) => Ok(ResolvedVar::CdRemaining(resolver.resolve_spell(s)?)),
-        VarPath::CdDuration(s) => Ok(ResolvedVar::CdDuration(resolver.resolve_spell(s)?)),
-        VarPath::CdCharges(s) => Ok(ResolvedVar::CdCharges(resolver.resolve_spell(s)?)),
-        VarPath::CdChargesMax(s) => Ok(ResolvedVar::CdChargesMax(resolver.resolve_spell(s)?)),
-        VarPath::CdRechargeTime(s) => Ok(ResolvedVar::CdRechargeTime(resolver.resolve_spell(s)?)),
-        VarPath::CdFullRecharge(s) => Ok(ResolvedVar::CdFullRecharge(resolver.resolve_spell(s)?)),
+        VarPath::CdReady { spell } => Ok(ResolvedVar::CdReady(resolver.resolve_spell(spell)?)),
+        VarPath::CdRemaining { spell } => Ok(ResolvedVar::CdRemaining(resolver.resolve_spell(spell)?)),
+        VarPath::CdDuration { spell } => Ok(ResolvedVar::CdDuration(resolver.resolve_spell(spell)?)),
+        VarPath::CdCharges { spell } => Ok(ResolvedVar::CdCharges(resolver.resolve_spell(spell)?)),
+        VarPath::CdChargesMax { spell } => Ok(ResolvedVar::CdChargesMax(resolver.resolve_spell(spell)?)),
+        VarPath::CdRechargeTime { spell } => Ok(ResolvedVar::CdRechargeTime(resolver.resolve_spell(spell)?)),
+        VarPath::CdFullRecharge { spell } => Ok(ResolvedVar::CdFullRecharge(resolver.resolve_spell(spell)?)),
 
         // Buffs
-        VarPath::BuffActive(a) => Ok(ResolvedVar::BuffActive(resolver.resolve_aura(a)?)),
-        VarPath::BuffInactive(a) => Ok(ResolvedVar::BuffInactive(resolver.resolve_aura(a)?)),
-        VarPath::BuffRemaining(a) => Ok(ResolvedVar::BuffRemaining(resolver.resolve_aura(a)?)),
-        VarPath::BuffStacks(a) => Ok(ResolvedVar::BuffStacks(resolver.resolve_aura(a)?)),
-        VarPath::BuffStacksMax(a) => Ok(ResolvedVar::BuffStacksMax(resolver.resolve_aura(a)?)),
-        VarPath::BuffDuration(a) => Ok(ResolvedVar::BuffDuration(resolver.resolve_aura(a)?)),
+        VarPath::BuffActive { aura } => Ok(ResolvedVar::BuffActive(resolver.resolve_aura(aura)?)),
+        VarPath::BuffInactive { aura } => Ok(ResolvedVar::BuffInactive(resolver.resolve_aura(aura)?)),
+        VarPath::BuffRemaining { aura } => Ok(ResolvedVar::BuffRemaining(resolver.resolve_aura(aura)?)),
+        VarPath::BuffStacks { aura } => Ok(ResolvedVar::BuffStacks(resolver.resolve_aura(aura)?)),
+        VarPath::BuffStacksMax { aura } => Ok(ResolvedVar::BuffStacksMax(resolver.resolve_aura(aura)?)),
+        VarPath::BuffDuration { aura } => Ok(ResolvedVar::BuffDuration(resolver.resolve_aura(aura)?)),
 
         // Debuffs
-        VarPath::DebuffActive(a) => Ok(ResolvedVar::DebuffActive(resolver.resolve_aura(a)?)),
-        VarPath::DebuffInactive(a) => Ok(ResolvedVar::DebuffInactive(resolver.resolve_aura(a)?)),
-        VarPath::DebuffRemaining(a) => Ok(ResolvedVar::DebuffRemaining(resolver.resolve_aura(a)?)),
-        VarPath::DebuffStacks(a) => Ok(ResolvedVar::DebuffStacks(resolver.resolve_aura(a)?)),
-        VarPath::DebuffRefreshable(a) => {
-            Ok(ResolvedVar::DebuffRefreshable(resolver.resolve_aura(a)?))
+        VarPath::DebuffActive { aura } => Ok(ResolvedVar::DebuffActive(resolver.resolve_aura(aura)?)),
+        VarPath::DebuffInactive { aura } => Ok(ResolvedVar::DebuffInactive(resolver.resolve_aura(aura)?)),
+        VarPath::DebuffRemaining { aura } => Ok(ResolvedVar::DebuffRemaining(resolver.resolve_aura(aura)?)),
+        VarPath::DebuffStacks { aura } => Ok(ResolvedVar::DebuffStacks(resolver.resolve_aura(aura)?)),
+        VarPath::DebuffRefreshable { aura } => {
+            Ok(ResolvedVar::DebuffRefreshable(resolver.resolve_aura(aura)?))
         }
 
         // DoTs
-        VarPath::DotTicking(a) => Ok(ResolvedVar::DotTicking(resolver.resolve_dot(a)?)),
-        VarPath::DotRemaining(a) => Ok(ResolvedVar::DotRemaining(resolver.resolve_dot(a)?)),
-        VarPath::DotRefreshable(a) => Ok(ResolvedVar::DotRefreshable(resolver.resolve_dot(a)?)),
-        VarPath::DotTicksRemaining(a) => {
-            Ok(ResolvedVar::DotTicksRemaining(resolver.resolve_dot(a)?))
+        VarPath::DotTicking { dot } => Ok(ResolvedVar::DotTicking(resolver.resolve_dot(dot)?)),
+        VarPath::DotRemaining { dot } => Ok(ResolvedVar::DotRemaining(resolver.resolve_dot(dot)?)),
+        VarPath::DotRefreshable { dot } => Ok(ResolvedVar::DotRefreshable(resolver.resolve_dot(dot)?)),
+        VarPath::DotTicksRemaining { dot } => {
+            Ok(ResolvedVar::DotTicksRemaining(resolver.resolve_dot(dot)?))
         }
 
         // Target
@@ -335,22 +335,22 @@ pub fn resolve_var(path: &VarPath, resolver: &SpecResolver) -> Result<ResolvedVa
         // Pet
         VarPath::PetActive => Ok(ResolvedVar::PetActive),
         VarPath::PetRemaining => Ok(ResolvedVar::PetRemaining),
-        VarPath::PetBuffActive(a) => Ok(ResolvedVar::PetBuffActive(resolver.resolve_aura(a)?)),
+        VarPath::PetBuffActive { aura } => Ok(ResolvedVar::PetBuffActive(resolver.resolve_aura(aura)?)),
 
         // Talent
-        VarPath::Talent(t) => Ok(ResolvedVar::Talent(resolver.resolve_talent(t)?)),
+        VarPath::Talent { name } => Ok(ResolvedVar::Talent(resolver.resolve_talent(name)?)),
 
         // Equipment
-        VarPath::Equipped(_) => {
+        VarPath::Equipped { .. } => {
             // TODO: Item resolution
             Ok(ResolvedVar::Talent(false))
         }
-        VarPath::TrinketReady(slot) => Ok(ResolvedVar::TrinketReady(*slot)),
-        VarPath::TrinketRemaining(slot) => Ok(ResolvedVar::TrinketRemaining(*slot)),
+        VarPath::TrinketReady { slot } => Ok(ResolvedVar::TrinketReady(*slot)),
+        VarPath::TrinketRemaining { slot } => Ok(ResolvedVar::TrinketRemaining(*slot)),
 
         // Spell info
-        VarPath::SpellCost(s) => Ok(ResolvedVar::SpellCost(resolver.resolve_spell(s)?)),
-        VarPath::SpellCastTime(s) => Ok(ResolvedVar::SpellCastTime(resolver.resolve_spell(s)?)),
+        VarPath::SpellCost { spell } => Ok(ResolvedVar::SpellCost(resolver.resolve_spell(spell)?)),
+        VarPath::SpellCastTime { spell } => Ok(ResolvedVar::SpellCastTime(resolver.resolve_spell(spell)?)),
     }
 }
 

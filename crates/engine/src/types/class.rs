@@ -83,6 +83,123 @@ pub enum SpecId {
 impl SpecId {
     pub const COUNT: usize = 39;
 
+    /// Returns the WoW API spec ID (used in GetSpecialization, etc).
+    pub const fn wow_spec_id(self) -> u32 {
+        match self {
+            // Warrior
+            Self::Arms => 71,
+            Self::Fury => 72,
+            Self::ProtWarrior => 73,
+            // Paladin
+            Self::HolyPaladin => 65,
+            Self::ProtPaladin => 66,
+            Self::Retribution => 70,
+            // Hunter
+            Self::BeastMastery => 253,
+            Self::Marksmanship => 254,
+            Self::Survival => 255,
+            // Rogue
+            Self::Assassination => 259,
+            Self::Outlaw => 260,
+            Self::Subtlety => 261,
+            // Priest
+            Self::Discipline => 256,
+            Self::HolyPriest => 257,
+            Self::Shadow => 258,
+            // Death Knight
+            Self::Blood => 250,
+            Self::FrostDK => 251,
+            Self::Unholy => 252,
+            // Shaman
+            Self::Elemental => 262,
+            Self::Enhancement => 263,
+            Self::RestoShaman => 264,
+            // Mage
+            Self::Arcane => 62,
+            Self::Fire => 63,
+            Self::FrostMage => 64,
+            // Warlock
+            Self::Affliction => 265,
+            Self::Demonology => 266,
+            Self::Destruction => 267,
+            // Monk
+            Self::Brewmaster => 268,
+            Self::Mistweaver => 270,
+            Self::Windwalker => 269,
+            // Druid
+            Self::Balance => 102,
+            Self::Feral => 103,
+            Self::Guardian => 104,
+            Self::RestoDruid => 105,
+            // Demon Hunter
+            Self::Havoc => 577,
+            Self::Vengeance => 581,
+            // Evoker
+            Self::Devastation => 1467,
+            Self::Preservation => 1468,
+            Self::Augmentation => 1473,
+        }
+    }
+
+    /// Convert from WoW API spec ID to SpecId.
+    pub const fn from_wow_spec_id(wow_id: u32) -> Option<Self> {
+        Some(match wow_id {
+            // Warrior
+            71 => Self::Arms,
+            72 => Self::Fury,
+            73 => Self::ProtWarrior,
+            // Paladin
+            65 => Self::HolyPaladin,
+            66 => Self::ProtPaladin,
+            70 => Self::Retribution,
+            // Hunter
+            253 => Self::BeastMastery,
+            254 => Self::Marksmanship,
+            255 => Self::Survival,
+            // Rogue
+            259 => Self::Assassination,
+            260 => Self::Outlaw,
+            261 => Self::Subtlety,
+            // Priest
+            256 => Self::Discipline,
+            257 => Self::HolyPriest,
+            258 => Self::Shadow,
+            // Death Knight
+            250 => Self::Blood,
+            251 => Self::FrostDK,
+            252 => Self::Unholy,
+            // Shaman
+            262 => Self::Elemental,
+            263 => Self::Enhancement,
+            264 => Self::RestoShaman,
+            // Mage
+            62 => Self::Arcane,
+            63 => Self::Fire,
+            64 => Self::FrostMage,
+            // Warlock
+            265 => Self::Affliction,
+            266 => Self::Demonology,
+            267 => Self::Destruction,
+            // Monk
+            268 => Self::Brewmaster,
+            270 => Self::Mistweaver,
+            269 => Self::Windwalker,
+            // Druid
+            102 => Self::Balance,
+            103 => Self::Feral,
+            104 => Self::Guardian,
+            105 => Self::RestoDruid,
+            // Demon Hunter
+            577 => Self::Havoc,
+            581 => Self::Vengeance,
+            // Evoker
+            1467 => Self::Devastation,
+            1468 => Self::Preservation,
+            1473 => Self::Augmentation,
+            _ => return None,
+        })
+    }
+
     pub const fn class(self) -> ClassId {
         match self {
             Self::Arms | Self::Fury | Self::ProtWarrior => ClassId::Warrior,

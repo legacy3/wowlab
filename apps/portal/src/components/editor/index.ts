@@ -1,4 +1,8 @@
-export { ActionCard, ActionList, ActionPicker } from "./actions";
+export {
+  ActionCard,
+  ActionList as ActionListComponent,
+  ActionPicker,
+} from "./actions";
 
 export {
   DragHandle,
@@ -18,13 +22,6 @@ export {
 } from "./common";
 
 export { CONDITION_FIELDS, ConditionBuilder } from "./conditions";
-
-export {
-  ACTION_TYPE_MAP,
-  ACTION_TYPES,
-  LIST_TYPE_MAP,
-  LIST_TYPES,
-} from "./constants";
 
 export { EditorSidebar } from "./editor-sidebar";
 
@@ -56,8 +53,6 @@ export {
   VariableItem,
 } from "./sidebar";
 
-export * from "./types";
-
 export {
   countEnabledActions,
   countTotalActions,
@@ -71,3 +66,38 @@ export {
   VariableEditorDialog,
   type VariableEditorDialogProps,
 } from "./variable-editor-dialog";
+export {
+  ACTION_TYPE_MAP,
+  ACTION_TYPES,
+  LIST_TYPE_MAP,
+  LIST_TYPES,
+} from "@/lib/engine";
+
+// Editor types re-exported from engine
+export type {
+  Action,
+  ActionActions,
+  ActionList,
+  ActionType,
+  ActionTypeConfig,
+  EditorContent,
+  EditorMetadata,
+  EditorState,
+  EditorUIState,
+  ListActions,
+  ListType,
+  ListTypeConfig,
+  LockActions,
+  MetadataActions,
+  PersistenceActions,
+  RotationData,
+  RotationsRow,
+  RuleGroupType,
+  RuleType,
+  Variable,
+  VariableActions,
+  ViewActions,
+  ViewMode,
+} from "@/lib/engine";
+
+export { createEmptyCondition, generateId } from "@/lib/engine";

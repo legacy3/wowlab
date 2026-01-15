@@ -4,7 +4,7 @@ import { useExtracted } from "next-intl";
 import { useEffect, useState } from "react";
 import { Box, VStack } from "styled-system/jsx";
 
-import type { Variable } from "./types";
+import type { Variable } from "@/lib/engine";
 
 import { Button, Code, Dialog, Input, Text } from "../ui";
 

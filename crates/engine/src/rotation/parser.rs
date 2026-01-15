@@ -184,13 +184,13 @@ fn parse_var_op(s: &str) -> Result<VarOp> {
 
 fn parse_expr(value: &Value) -> Result<Expr> {
     match value {
-        Value::Bool(b) => Ok(Expr::Bool(*b)),
+        Value::Bool(b) => Ok(Expr::Bool { value: *b }),
 
         Value::Number(n) => {
             if let Some(i) = n.as_i64() {
-                Ok(Expr::Int(i))
+                Ok(Expr::Int { value: i })
             } else if let Some(f) = n.as_f64() {
-                Ok(Expr::Float(f))
+                Ok(Expr::Float { value: f })
             } else {
                 Err(Error::Syntax("invalid number".into()))
             }
@@ -220,8 +220,8 @@ fn parse_expr(value: &Value) -> Result<Expr> {
                             got: arr.len(),
                         });
                     }
-                    let exprs: Result<Vec<_>> = arr.iter().map(parse_expr).collect();
-                    Ok(Expr::And(exprs?))
+                    let operands: Result<Vec<_>> = arr.iter().map(parse_expr).collect();
+                    Ok(Expr::And { operands: operands? })
                 }
 
                 "or" => {
@@ -233,8 +233,8 @@ fn parse_expr(value: &Value) -> Result<Expr> {
                             got: arr.len(),
                         });
                     }
-                    let exprs: Result<Vec<_>> = arr.iter().map(parse_expr).collect();
-                    Ok(Expr::Or(exprs?))
+                    let operands: Result<Vec<_>> = arr.iter().map(parse_expr).collect();
+                    Ok(Expr::Or { operands: operands? })
                 }
 
                 "not" => {
@@ -243,95 +243,68 @@ fn parse_expr(value: &Value) -> Result<Expr> {
                     } else {
                         args
                     };
-                    Ok(Expr::Not(Box::new(parse_expr(inner)?)))
+                    Ok(Expr::Not { operand: Box::new(parse_expr(inner)?) })
                 }
 
                 // Comparison
                 ">" => {
                     let (a, b) = require_binary(args, ">")?;
-                    Ok(Expr::Gt(Box::new(parse_expr(a)?), Box::new(parse_expr(b)?)))
+                    Ok(Expr::Gt { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 ">=" => {
                     let (a, b) = require_binary(args, ">=")?;
-                    Ok(Expr::Gte(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Gte { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "<" => {
                     let (a, b) = require_binary(args, "<")?;
-                    Ok(Expr::Lt(Box::new(parse_expr(a)?), Box::new(parse_expr(b)?)))
+                    Ok(Expr::Lt { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "<=" => {
                     let (a, b) = require_binary(args, "<=")?;
-                    Ok(Expr::Lte(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Lte { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "==" => {
                     let (a, b) = require_binary(args, "==")?;
-                    Ok(Expr::Eq(Box::new(parse_expr(a)?), Box::new(parse_expr(b)?)))
+                    Ok(Expr::Eq { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "!=" => {
                     let (a, b) = require_binary(args, "!=")?;
-                    Ok(Expr::Ne(Box::new(parse_expr(a)?), Box::new(parse_expr(b)?)))
+                    Ok(Expr::Ne { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
 
                 // Arithmetic
                 "+" => {
                     let (a, b) = require_binary(args, "+")?;
-                    Ok(Expr::Add(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Add { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "-" => {
                     let (a, b) = require_binary(args, "-")?;
-                    Ok(Expr::Sub(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Sub { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "*" => {
                     let (a, b) = require_binary(args, "*")?;
-                    Ok(Expr::Mul(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Mul { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "/" => {
                     let (a, b) = require_binary(args, "/")?;
-                    Ok(Expr::Div(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Div { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "%" => {
                     let (a, b) = require_binary(args, "%")?;
-                    Ok(Expr::Mod(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Mod { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
 
                 // Functions
-                "floor" => Ok(Expr::Floor(Box::new(parse_expr(args)?))),
-                "ceil" => Ok(Expr::Ceil(Box::new(parse_expr(args)?))),
-                "abs" => Ok(Expr::Abs(Box::new(parse_expr(args)?))),
+                "floor" => Ok(Expr::Floor { operand: Box::new(parse_expr(args)?) }),
+                "ceil" => Ok(Expr::Ceil { operand: Box::new(parse_expr(args)?) }),
+                "abs" => Ok(Expr::Abs { operand: Box::new(parse_expr(args)?) }),
                 "min" => {
                     let (a, b) = require_binary(args, "min")?;
-                    Ok(Expr::Min(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Min { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
                 "max" => {
                     let (a, b) = require_binary(args, "max")?;
-                    Ok(Expr::Max(
-                        Box::new(parse_expr(a)?),
-                        Box::new(parse_expr(b)?),
-                    ))
+                    Ok(Expr::Max { left: Box::new(parse_expr(a)?), right: Box::new(parse_expr(b)?) })
                 }
 
                 _ => Err(Error::UnknownOperator(op.clone())),
@@ -345,10 +318,10 @@ fn parse_expr(value: &Value) -> Result<Expr> {
 fn parse_var_or_user_var(s: &str) -> Result<Expr> {
     // Try to parse as a variable path
     match parse_var_path(s) {
-        Ok(path) => Ok(Expr::Var(path)),
+        Ok(path) => Ok(Expr::Var { path }),
         Err(_) => {
             // Assume it's a user variable
-            Ok(Expr::UserVar(s.to_string()))
+            Ok(Expr::UserVar { name: s.to_string() })
         }
     }
 }
@@ -358,11 +331,11 @@ fn parse_var_path(s: &str) -> Result<VarPath> {
 
     match parts.as_slice() {
         // resource.*
-        ["resource", name] => Ok(VarPath::Resource(name.to_string())),
-        ["resource", name, "max"] => Ok(VarPath::ResourceMax(name.to_string())),
-        ["resource", name, "deficit"] => Ok(VarPath::ResourceDeficit(name.to_string())),
-        ["resource", name, "percent"] => Ok(VarPath::ResourcePercent(name.to_string())),
-        ["resource", name, "regen"] => Ok(VarPath::ResourceRegen(name.to_string())),
+        ["resource", name] => Ok(VarPath::Resource { resource: name.to_string() }),
+        ["resource", name, "max"] => Ok(VarPath::ResourceMax { resource: name.to_string() }),
+        ["resource", name, "deficit"] => Ok(VarPath::ResourceDeficit { resource: name.to_string() }),
+        ["resource", name, "percent"] => Ok(VarPath::ResourcePercent { resource: name.to_string() }),
+        ["resource", name, "regen"] => Ok(VarPath::ResourceRegen { resource: name.to_string() }),
 
         // player.*
         ["player", "health"] => Ok(VarPath::PlayerHealth),
@@ -370,34 +343,34 @@ fn parse_var_path(s: &str) -> Result<VarPath> {
         ["player", "health", "percent"] => Ok(VarPath::PlayerHealthPercent),
 
         // cd.*
-        ["cd", spell, "ready"] => Ok(VarPath::CdReady(spell.to_string())),
-        ["cd", spell, "remaining"] => Ok(VarPath::CdRemaining(spell.to_string())),
-        ["cd", spell, "duration"] => Ok(VarPath::CdDuration(spell.to_string())),
-        ["cd", spell, "charges"] => Ok(VarPath::CdCharges(spell.to_string())),
-        ["cd", spell, "charges_max"] => Ok(VarPath::CdChargesMax(spell.to_string())),
-        ["cd", spell, "recharge_time"] => Ok(VarPath::CdRechargeTime(spell.to_string())),
-        ["cd", spell, "full_recharge"] => Ok(VarPath::CdFullRecharge(spell.to_string())),
+        ["cd", spell, "ready"] => Ok(VarPath::CdReady { spell: spell.to_string() }),
+        ["cd", spell, "remaining"] => Ok(VarPath::CdRemaining { spell: spell.to_string() }),
+        ["cd", spell, "duration"] => Ok(VarPath::CdDuration { spell: spell.to_string() }),
+        ["cd", spell, "charges"] => Ok(VarPath::CdCharges { spell: spell.to_string() }),
+        ["cd", spell, "charges_max"] => Ok(VarPath::CdChargesMax { spell: spell.to_string() }),
+        ["cd", spell, "recharge_time"] => Ok(VarPath::CdRechargeTime { spell: spell.to_string() }),
+        ["cd", spell, "full_recharge"] => Ok(VarPath::CdFullRecharge { spell: spell.to_string() }),
 
         // buff.*
-        ["buff", name, "active"] => Ok(VarPath::BuffActive(name.to_string())),
-        ["buff", name, "inactive"] => Ok(VarPath::BuffInactive(name.to_string())),
-        ["buff", name, "remaining"] => Ok(VarPath::BuffRemaining(name.to_string())),
-        ["buff", name, "stacks"] => Ok(VarPath::BuffStacks(name.to_string())),
-        ["buff", name, "stacks_max"] => Ok(VarPath::BuffStacksMax(name.to_string())),
-        ["buff", name, "duration"] => Ok(VarPath::BuffDuration(name.to_string())),
+        ["buff", name, "active"] => Ok(VarPath::BuffActive { aura: name.to_string() }),
+        ["buff", name, "inactive"] => Ok(VarPath::BuffInactive { aura: name.to_string() }),
+        ["buff", name, "remaining"] => Ok(VarPath::BuffRemaining { aura: name.to_string() }),
+        ["buff", name, "stacks"] => Ok(VarPath::BuffStacks { aura: name.to_string() }),
+        ["buff", name, "stacks_max"] => Ok(VarPath::BuffStacksMax { aura: name.to_string() }),
+        ["buff", name, "duration"] => Ok(VarPath::BuffDuration { aura: name.to_string() }),
 
         // debuff.*
-        ["debuff", name, "active"] => Ok(VarPath::DebuffActive(name.to_string())),
-        ["debuff", name, "inactive"] => Ok(VarPath::DebuffInactive(name.to_string())),
-        ["debuff", name, "remaining"] => Ok(VarPath::DebuffRemaining(name.to_string())),
-        ["debuff", name, "stacks"] => Ok(VarPath::DebuffStacks(name.to_string())),
-        ["debuff", name, "refreshable"] => Ok(VarPath::DebuffRefreshable(name.to_string())),
+        ["debuff", name, "active"] => Ok(VarPath::DebuffActive { aura: name.to_string() }),
+        ["debuff", name, "inactive"] => Ok(VarPath::DebuffInactive { aura: name.to_string() }),
+        ["debuff", name, "remaining"] => Ok(VarPath::DebuffRemaining { aura: name.to_string() }),
+        ["debuff", name, "stacks"] => Ok(VarPath::DebuffStacks { aura: name.to_string() }),
+        ["debuff", name, "refreshable"] => Ok(VarPath::DebuffRefreshable { aura: name.to_string() }),
 
         // dot.*
-        ["dot", name, "ticking"] => Ok(VarPath::DotTicking(name.to_string())),
-        ["dot", name, "remaining"] => Ok(VarPath::DotRemaining(name.to_string())),
-        ["dot", name, "refreshable"] => Ok(VarPath::DotRefreshable(name.to_string())),
-        ["dot", name, "ticks_remaining"] => Ok(VarPath::DotTicksRemaining(name.to_string())),
+        ["dot", name, "ticking"] => Ok(VarPath::DotTicking { dot: name.to_string() }),
+        ["dot", name, "remaining"] => Ok(VarPath::DotRemaining { dot: name.to_string() }),
+        ["dot", name, "refreshable"] => Ok(VarPath::DotRefreshable { dot: name.to_string() }),
+        ["dot", name, "ticks_remaining"] => Ok(VarPath::DotTicksRemaining { dot: name.to_string() }),
 
         // target.*
         ["target", "health_percent"] => Ok(VarPath::TargetHealthPercent),
@@ -418,31 +391,31 @@ fn parse_var_path(s: &str) -> Result<VarPath> {
         // pet.*
         ["pet", "active"] => Ok(VarPath::PetActive),
         ["pet", "remaining"] => Ok(VarPath::PetRemaining),
-        ["pet", "buff", name, "active"] => Ok(VarPath::PetBuffActive(name.to_string())),
+        ["pet", "buff", name, "active"] => Ok(VarPath::PetBuffActive { aura: name.to_string() }),
 
         // talent.*
-        ["talent", name] => Ok(VarPath::Talent(name.to_string())),
+        ["talent", name] => Ok(VarPath::Talent { name: name.to_string() }),
 
         // equipped.*
-        ["equipped", name] => Ok(VarPath::Equipped(name.to_string())),
+        ["equipped", name] => Ok(VarPath::Equipped { item: name.to_string() }),
 
         // trinket.*
         ["trinket", slot, "ready"] => {
             let slot: u8 = slot
                 .parse()
                 .map_err(|_| Error::Syntax(format!("invalid trinket slot: {}", slot)))?;
-            Ok(VarPath::TrinketReady(slot))
+            Ok(VarPath::TrinketReady { slot })
         }
         ["trinket", slot, "remaining"] => {
             let slot: u8 = slot
                 .parse()
                 .map_err(|_| Error::Syntax(format!("invalid trinket slot: {}", slot)))?;
-            Ok(VarPath::TrinketRemaining(slot))
+            Ok(VarPath::TrinketRemaining { slot })
         }
 
         // spell.*
-        ["spell", name, "cost"] => Ok(VarPath::SpellCost(name.to_string())),
-        ["spell", name, "cast_time"] => Ok(VarPath::SpellCastTime(name.to_string())),
+        ["spell", name, "cost"] => Ok(VarPath::SpellCost { spell: name.to_string() }),
+        ["spell", name, "cast_time"] => Ok(VarPath::SpellCastTime { spell: name.to_string() }),
 
         _ => Err(Error::UnknownPath(s.to_string())),
     }

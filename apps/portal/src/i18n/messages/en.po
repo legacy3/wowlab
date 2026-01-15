@@ -162,7 +162,7 @@ msgid "MZEZ0h"
 msgstr "No jobs match the current filter"
 
 #: src/components/computing/cards/job-history-card.tsx:212
-#: src/components/editor/actions/action-picker.tsx:132
+#: src/components/editor/actions/action-picker.tsx:131
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
 #: src/components/layout/computing-drawer.tsx:128
@@ -418,27 +418,27 @@ msgstr "Add spells, items, or call other action lists to build your rotation."
 
 #: src/components/editor/actions/action-list.tsx:159
 #: src/components/editor/actions/action-list.tsx:210
-#: src/components/editor/actions/action-picker.tsx:61
+#: src/components/editor/actions/action-picker.tsx:60
 msgid "U8CnSL"
 msgstr "Add action"
 
-#: src/components/editor/actions/action-picker.tsx:90
+#: src/components/editor/actions/action-picker.tsx:89
 msgid "pbPjxY"
 msgstr "Search for a spell to add to the rotation."
 
-#: src/components/editor/actions/action-picker.tsx:99
+#: src/components/editor/actions/action-picker.tsx:98
 msgid "gSBur4"
 msgstr "Search for an item to use in the rotation."
 
-#: src/components/editor/actions/action-picker.tsx:108
+#: src/components/editor/actions/action-picker.tsx:107
 msgid "VCnQc6"
 msgstr "Select an action list to call."
 
-#: src/components/editor/actions/action-picker.tsx:112
+#: src/components/editor/actions/action-picker.tsx:111
 msgid "2jwyIJ"
 msgstr "No other action lists available. Create a new list first."
 
-#: src/components/editor/actions/action-picker.tsx:121
+#: src/components/editor/actions/action-picker.tsx:120
 msgid "1z8Mvf"
 msgstr "Select a list..."
 

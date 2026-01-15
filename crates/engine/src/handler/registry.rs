@@ -4,6 +4,10 @@ use super::SpecHandler;
 use crate::types::SpecId;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::OnceLock;
+
+/// Global handler registry, lazily initialized.
+static GLOBAL_REGISTRY: OnceLock<HandlerRegistry> = OnceLock::new();
 
 /// Registry mapping spec IDs to their handlers.
 ///
@@ -47,6 +51,17 @@ impl HandlerRegistry {
     pub fn specs(&self) -> Vec<SpecId> {
         self.handlers.keys().copied().collect()
     }
+
+    /// Get a handler by WoW API spec ID.
+    pub fn get_by_wow_id(&self, wow_spec_id: u32) -> Option<Arc<dyn SpecHandler>> {
+        let spec = SpecId::from_wow_spec_id(wow_spec_id)?;
+        self.get(spec)
+    }
+
+    /// Get all registered handlers.
+    pub fn handlers(&self) -> impl Iterator<Item = &Arc<dyn SpecHandler>> {
+        self.handlers.values()
+    }
 }
 
 impl Default for HandlerRegistry {
@@ -61,11 +76,21 @@ impl Default for HandlerRegistry {
 #[cfg(feature = "jit")]
 pub fn create_default_registry() -> HandlerRegistry {
     use crate::specs::hunter::bm::BmHunter;
+    use crate::specs::hunter::mm::MmHunter;
 
     let mut registry = HandlerRegistry::new();
 
     // Register all implemented specs
     registry.register(BmHunter::new());
+    registry.register(MmHunter::new());
 
     registry
+}
+
+/// Get or create the global handler registry.
+///
+/// This lazily initializes the registry with all implemented spec handlers.
+#[cfg(feature = "jit")]
+pub fn global_registry() -> &'static HandlerRegistry {
+    GLOBAL_REGISTRY.get_or_init(create_default_registry)
 }

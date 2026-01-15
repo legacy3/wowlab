@@ -3,13 +3,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { parseSimc } from "@/lib/engine";
+
 import type { ParseState, Profile, RecentProfile } from "./types";
 
 export const MAX_RECENT_PROFILES = 8;
-
-// Lazy-loaded WASM module
-let wasmModule: typeof import("parsers") | null = null;
-let wasmInitPromise: Promise<typeof import("parsers")> | null = null;
 
 // Character input store
 interface CharacterInputStore {
@@ -17,26 +15,6 @@ interface CharacterInputStore {
   input: string;
   parseState: ParseState;
   setInput: (input: string) => Promise<void>;
-}
-
-async function getParser(): Promise<typeof import("parsers")> {
-  if (wasmModule) {
-    return wasmModule;
-  }
-
-  if (wasmInitPromise) {
-    return wasmInitPromise;
-  }
-
-  wasmInitPromise = (async () => {
-    const mod = await import("parsers");
-    await mod.default();
-    wasmModule = mod;
-
-    return mod;
-  })();
-
-  return wasmInitPromise;
 }
 
 export const useCharacterInput = create<CharacterInputStore>()((set) => ({
@@ -59,8 +37,7 @@ export const useCharacterInput = create<CharacterInputStore>()((set) => ({
     set({ parseState: { status: "parsing" } });
 
     try {
-      const parser = await getParser();
-      const profile = parser.parseSimc(input) as Profile;
+      const profile = await parseSimc(input);
       set({ parseState: { profile, status: "success" } });
     } catch (err) {
       set({

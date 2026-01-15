@@ -186,9 +186,10 @@ export const routes = {
       index: route("/dev/docs", "Docs", "Documentation", "BookOpen", sitemap.weekly),
       page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"), // sitemap: lib/docs
     },
+    engine: route("/dev/engine", "Engine", "Simulation engine", "Cpu"),
     hooks: route("/dev/hooks", "Hooks", "Game data hooks", "FlaskConical"),
     ui: route("/dev/ui", "UI Showcase", "UI components", "Sparkles"),
-  }).main("docs", "hooks", "ui"),
+  }).main("docs", "engine", "hooks", "ui"),
 
   error: route("/error", "Error", "Something went wrong", "Info"),
   notFound: route("/404", "Not Found", "Page not found", "Info"),
