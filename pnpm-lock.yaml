@@ -120,8 +120,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       parsers:
-        specifier: file:./src/packages/parsers-0.3.0.tgz
-        version: file:apps/portal/src/packages/parsers-0.3.0.tgz
+        specifier: file:../../packages/parsers-0.3.0.tgz
+        version: file:packages/parsers-0.3.0.tgz
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -4060,8 +4060,8 @@ packages:
   parse-entities@4.0.2:
     resolution: {integrity: sha512-GG2AQYWoLgL877gQIKeRPGO1xF9+eG1ujIb5soS5gPvLQ1y2o8FL90w2QWNdf9I361Mpp7726c+lj3U0qK1uGw==}
 
-  parsers@file:apps/portal/src/packages/parsers-0.3.0.tgz:
-    resolution: {integrity: sha512-VAAiahna9tUPno9Tqn+kqh8L8jW5eSMchx48iDVAUTP6746W4dSs9UXqkkN71s5HvKug9u5JsmhewMsFgs4o0Q==, tarball: file:apps/portal/src/packages/parsers-0.3.0.tgz}
+  parsers@file:packages/parsers-0.3.0.tgz:
+    resolution: {integrity: sha512-VAAiahna9tUPno9Tqn+kqh8L8jW5eSMchx48iDVAUTP6746W4dSs9UXqkkN71s5HvKug9u5JsmhewMsFgs4o0Q==, tarball: file:packages/parsers-0.3.0.tgz}
     version: 0.3.0
 
   parseurl@1.3.3:
@@ -9887,7 +9887,7 @@ snapshots:
       is-decimal: 2.0.1
       is-hexadecimal: 2.0.1
 
-  parsers@file:apps/portal/src/packages/parsers-0.3.0.tgz: {}
+  parsers@file:packages/parsers-0.3.0.tgz: {}
 
   parseurl@1.3.3: {}
 

@@ -55,12 +55,12 @@ build_parsers() {
 
     # Pack tarball
     cd "$tmp_dir"
-    rm -f "$ROOT_DIR/apps/portal/src/packages/parsers-"*.tgz
-    local tarball=$(npm pack --pack-destination "$ROOT_DIR/apps/portal/src/packages" 2>/dev/null)
+    rm -f "$ROOT_DIR/packages/parsers-"*.tgz
+    local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
     cd "$ROOT_DIR"
     rm -rf "$tmp_dir"
 
-    success "WASM parser built -> apps/portal/src/packages/$tarball"
+    success "WASM parser built -> packages/$tarball"
 }
 
 # Build Rust engine

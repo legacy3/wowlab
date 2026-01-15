@@ -11,7 +11,6 @@ import { CharacterCard } from "./character-card";
 import { EquipmentGrid } from "./equipment-grid";
 
 export interface CharacterPanelProps {
-  actions?: React.ReactNode;
   character: Character;
   children?: React.ReactNode;
   equipment: Item[];
@@ -20,7 +19,6 @@ export interface CharacterPanelProps {
 }
 
 export function CharacterPanel({
-  actions,
   character,
   children,
   equipment,
@@ -31,12 +29,8 @@ export function CharacterPanel({
 
   return (
     <Card.Root>
-      <Card.Header p="4">
-        <CharacterCard
-          character={character}
-          professions={professions}
-          actions={actions}
-        />
+      <Card.Header px="4" py="3">
+        <CharacterCard character={character} professions={professions} />
       </Card.Header>
 
       <Card.Body p="4" pt="0">

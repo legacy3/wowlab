@@ -11,4 +11,4 @@ export {
   type ParseSuccessProps,
 } from "./parse-status";
 export { SimcInput, type SimcInputProps } from "./simc-input";
-export { SimcPasteArea } from "./simc-paste-area";
+export { SimulateWizard } from "./simulate-wizard";

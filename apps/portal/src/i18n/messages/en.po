@@ -80,6 +80,7 @@ msgid "RB2CER"
 msgstr "CPU Cores"
 
 #: src/components/computing/cards/iterations-card.tsx:31
+#: src/components/simulate/steps/configure-step.tsx:68
 msgid "6YNH3R"
 msgstr "Iterations"
 
@@ -450,6 +451,7 @@ msgid "Z+95A6"
 msgstr "No options available"
 
 #: src/components/editor/common/select-field.tsx:40
+#: src/components/simulate/steps/configure-step.tsx:87
 msgid "724CrE"
 msgstr "Select..."
 
@@ -610,13 +612,13 @@ msgid "X0ha1a"
 msgstr "Save changes"
 
 #: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
+msgstr "Create"
+
+#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr "Save"
-
-#: src/components/editor/layout/editor-header.tsx:192
-msgid "VzzYJk"
-msgstr "Create"
 
 #: src/components/editor/pickers/game-object-picker.tsx:203
 #: src/components/editor/pickers/game-object-picker.tsx:275
@@ -879,15 +881,17 @@ msgstr "Updated"
 msgid "viXE32"
 msgstr "Private"
 
-#: src/components/simulate/character-card.tsx:49
+#: src/components/simulate/character-card.tsx:26
 msgid "y++pfq"
 msgstr "{level, plural, other {Level #}}"
 
-#: src/components/simulate/character-panel.tsx:55
+#: src/components/simulate/character-panel.tsx:49
 msgid "B2xSl2"
 msgstr "Import different character"
 
 #: src/components/simulate/equipment-slot.tsx:19
+#: src/components/simulate/steps/configure-step.tsx:133
+#: src/components/simulate/steps/results-step.tsx:24
 msgid "cyR7Kh"
 msgstr "Back"
 
@@ -970,13 +974,73 @@ msgstr "Parsed successfully"
 msgid "agfmcf"
 msgstr "Paste your SimulationCraft export here..."
 
-#: src/components/simulate/simc-paste-area.tsx:29
+#: src/components/simulate/simulate-wizard.tsx:23
+msgid "9XUYQt"
+msgstr "Import"
+
+#: src/components/simulate/simulate-wizard.tsx:28
+msgid "9t1iiv"
+msgstr "Configure"
+
+#: src/components/simulate/simulate-wizard.tsx:33
+msgid "yaMHMB"
+msgstr "Results"
+
+#: src/components/simulate/steps/configure-step.tsx:49
+msgid "XmIR5Z"
+msgstr "Simulation Settings"
+
+#: src/components/simulate/steps/configure-step.tsx:51
+msgid "vJvd4+"
+msgstr "Configure how the simulation will run"
+
+#: src/components/simulate/steps/configure-step.tsx:57
+msgid "+9Y+Sd"
+msgstr "Fight Length (sec)"
+
+#: src/components/simulate/steps/configure-step.tsx:74
+msgid "bBhOqZ"
+msgstr "Target Count"
+
+#: src/components/simulate/steps/configure-step.tsx:84
+msgid "oK4Gvk"
+msgstr "Fight Style"
+
+#: src/components/simulate/steps/configure-step.tsx:106
+msgid "NDV5Mq"
+msgstr "Options"
+
+#: src/components/simulate/steps/configure-step.tsx:111
+msgid "08bbUC"
+msgstr "Bloodlust"
+
+#: src/components/simulate/steps/configure-step.tsx:117
+msgid "QPxBXu"
+msgstr "Optimal Raid Buffs"
+
+#: src/components/simulate/steps/configure-step.tsx:123
+msgid "Ks48gB"
+msgstr "Food & Flask"
+
+#: src/components/simulate/steps/configure-step.tsx:135
+msgid "7+zOhv"
+msgstr "Run Simulation"
+
+#: src/components/simulate/steps/import-step.tsx:26
 msgid "Qu1V80"
 msgstr "Parsing SimC data..."
 
-#: src/components/simulate/simc-paste-area.tsx:33
+#: src/components/simulate/steps/import-step.tsx:30
 msgid "lBCJxl"
 msgstr "Failed to parse SimC export"
+
+#: src/components/simulate/steps/results-step.tsx:16
+msgid "3nXl8c"
+msgstr "Simulation Results"
+
+#: src/components/simulate/steps/results-step.tsx:19
+msgid "l9Ep76"
+msgstr "Work in progress..."
 
 #: src/components/users/user-profile-page.tsx:31
 msgid "INrbJL"

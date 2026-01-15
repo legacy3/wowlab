@@ -32,6 +32,7 @@ import { progress } from "./progress";
 import { prose } from "./prose";
 import { select } from "./select";
 import { skeleton } from "./skeleton";
+import { steps } from "./steps";
 import { switchRecipe } from "./switch";
 import { table } from "./table";
 import { tabs } from "./tabs";
@@ -79,6 +80,7 @@ export const slotRecipes = {
   menu,
   popover,
   select,
+  steps,
   switchRecipe,
   table,
   tabs,

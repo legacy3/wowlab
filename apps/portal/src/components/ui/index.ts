@@ -36,6 +36,7 @@ export * as NumberInput from "./number-input";
 export * as Popover from "./popover";
 export * as Progress from "./progress";
 export * as Select from "./select";
+export * as Steps from "./steps";
 export * as Switch from "./switch";
 export * as Table from "./table";
 export * as Tabs from "./tabs";

@@ -1,8 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useState } from "react";
-import { Grid, HStack, Stack, styled } from "styled-system/jsx";
+import { Grid, Stack, styled } from "styled-system/jsx";
 
 import {
   CharacterCard,
@@ -14,7 +13,6 @@ import {
   ParseSuccess,
   SimcInput,
 } from "@/components/simulate";
-import { Button, IconButton } from "@/components/ui";
 
 import { fixtures, Section, Subsection } from "../../shared";
 
@@ -38,8 +36,7 @@ function CharacterCardDemo() {
     <Subsection title="Character Card">
       <Stack gap="4" maxW="xl">
         <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Displays parsed character information with class, spec, race, and
-          professions.
+          Compact character header with external links to Raider.io and Armory.
         </styled.p>
 
         <CharacterCard character={fixtures.character} />
@@ -47,19 +44,6 @@ function CharacterCardDemo() {
         <CharacterCard
           character={fixtures.character}
           professions={fixtures.professions}
-        />
-
-        <CharacterCard
-          character={fixtures.character}
-          professions={fixtures.professions}
-          actions={
-            <HStack gap="2">
-              <Button size="sm">Simulate</Button>
-              <IconButton size="sm" variant="plain">
-                <X size={16} />
-              </IconButton>
-            </HStack>
-          }
         />
       </Stack>
     </Subsection>
@@ -71,15 +55,13 @@ function CharacterPanelDemo() {
     <Subsection title="Character Panel">
       <Stack gap="4" maxW="2xl">
         <styled.p color="fg.muted" textStyle="sm" mb="2">
-          Complete character panel with header card, equipment grid, and
-          optional actions.
+          Complete character panel with compact header and equipment grid.
         </styled.p>
 
         <CharacterPanel
           character={fixtures.character}
           professions={fixtures.professions}
           equipment={fixtures.equipment}
-          actions={<Button size="sm">Simulate</Button>}
           onClear={() => {}}
         />
       </Stack>

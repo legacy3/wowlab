@@ -72,7 +72,7 @@ supabase/.branches
 .claude/*
 !.claude/skills/
 *.tgz
-!apps/portal/src/packages/*.tgz
+!packages/*.tgz
 .mcp.json
 
 # Third party data (local only)

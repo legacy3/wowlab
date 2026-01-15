@@ -1,82 +1,76 @@
 "use client";
 
 import { useExtracted } from "next-intl";
-import { Flex, HStack, Stack, styled } from "styled-system/jsx";
+import { Flex, HStack } from "styled-system/jsx";
 
 import type { Character, Profession } from "@/lib/sim";
 
-import { Badge, Heading, Text } from "@/components/ui";
+import { Heading, IconButton, Text, Tooltip } from "@/components/ui";
+import { RaiderIoIcon, WowArmoryIcon } from "@/lib/icons";
 
 export interface CharacterCardProps {
-  actions?: React.ReactNode;
   character: Character;
   professions?: Profession[];
 }
 
 export function CharacterCard({
-  actions,
   character,
   professions = [],
 }: CharacterCardProps) {
   const t = useExtracted();
 
+  const server = character.server ?? "Unknown";
+  const region = character.region?.toUpperCase() ?? "Unknown";
+
+  const infoParts = [
+    t("{level, plural, other {Level #}}", { level: character.level }),
+    character.spec,
+    `${character.race} ${character.class}`,
+    ...professions.map((p) => `${p.name} ${p.rank}`),
+  ].filter(Boolean);
+
   return (
-    <styled.div
-      bg="colorPalette.2"
-      borderColor="colorPalette.6"
-      borderRadius="l3"
-      borderWidth="1px"
-      p="4"
-    >
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        gap="4"
-        justify="space-between"
-      >
-        <Stack gap="3">
-          <Stack gap="1">
-            <Heading as="h3" size="md">
-              {character.name}
-            </Heading>
-            <Text textStyle="sm" color="fg.muted">
-              {character.server ?? "Unknown"} &bull;{" "}
-              {character.region?.toUpperCase() ?? "Unknown"}
-            </Text>
-          </Stack>
+    <Flex justify="space-between" align="center" gap="4">
+      <Flex direction="column" gap="0.5" minW="0">
+        <HStack gap="2">
+          <Heading as="h3" size="sm" truncate>
+            {character.name}
+          </Heading>
+          <Text textStyle="sm" color="fg.muted" flexShrink={0}>
+            {server}-{region}
+          </Text>
+        </HStack>
 
-          <HStack gap="1.5" flexWrap="wrap">
-            <Badge size="sm">
-              {t("{level, plural, other {Level #}}", {
-                level: character.level,
-              })}
-            </Badge>
-            {character.spec && (
-              <Badge size="sm" variant="outline">
-                {character.spec}
-              </Badge>
-            )}
-            <Badge size="sm" variant="subtle">
-              {character.race} {character.class}
-            </Badge>
-          </HStack>
-
-          {professions.length > 0 && (
-            <HStack gap="1.5" flexWrap="wrap">
-              {professions.map((prof) => (
-                <Badge key={prof.name} size="sm" variant="outline">
-                  {prof.name} {prof.rank}
-                </Badge>
-              ))}
-            </HStack>
-          )}
-        </Stack>
-
-        {actions && (
-          <Flex alignItems="flex-start" flexShrink={0}>
-            {actions}
-          </Flex>
-        )}
+        <Text textStyle="xs" color="fg.subtle" truncate>
+          {infoParts.join(" · ")}
+        </Text>
       </Flex>
-    </styled.div>
+
+      <HStack gap="1" flexShrink={0}>
+        <Tooltip content="Raider.io">
+          <IconButton variant="plain" size="sm" asChild>
+            <a
+              href={`https://raider.io/characters/${region.toLowerCase()}/${server}/${character.name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <RaiderIoIcon width={16} height={16} />
+            </a>
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip content="Armory">
+          <IconButton variant="plain" size="sm" asChild>
+            <a
+              href={`https://worldofwarcraft.blizzard.com/character/${region.toLowerCase()}/${server}/${character.name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <WowArmoryIcon width={16} height={16} />
+            </a>
+          </IconButton>
+        </Tooltip>
+      </HStack>
+    </Flex>
   );
 }

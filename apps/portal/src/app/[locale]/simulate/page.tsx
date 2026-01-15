@@ -1,5 +1,5 @@
-import { SimcPasteArea } from "@/components/simulate";
+import { SimulateWizard } from "@/components/simulate";
 
 export default function SimulatePage() {
-  return <SimcPasteArea />;
+  return <SimulateWizard />;
 }
