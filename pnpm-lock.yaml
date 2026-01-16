@@ -187,8 +187,6 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/parsers: {}
-
 packages:
 
   '@antfu/install-pkg@1.1.0':

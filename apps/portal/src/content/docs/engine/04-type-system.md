@@ -1,0 +1,112 @@
+---
+title: Type System
+description: Type-safe indices and time representation
+updatedAt: 2026-01-16
+---
+
+# Type System
+
+The engine uses newtype wrappers to prevent accidentally mixing incompatible values.
+
+## Type-safe indices
+
+Each ID type is a distinct newtype:
+
+```rust
+SpellIdx(u32)   // WoW spell ID
+AuraIdx(u32)    // Buff/debuff ID
+ProcIdx(u32)    // Internal proc ID
+UnitIdx(u16)    // Actor (0=player, 1..N=pets)
+TargetIdx(u16)  // Enemy target
+PetIdx(u16)     // Pet-specific
+EnemyIdx(u16)   // Enemy-specific
+SnapshotIdx(u32) // Delayed damage snapshot
+ResourceIdx(u8)  // Resource type
+```
+
+## Compile-time safety
+
+The compiler prevents mixing IDs:
+
+```rust
+let spell: SpellIdx = SpellIdx(34026);
+let aura: AuraIdx = AuraIdx(19574);
+
+// This won't compile:
+let wrong: SpellIdx = aura; // ERROR: mismatched types
+
+// Must be explicit:
+let explicit: SpellIdx = SpellIdx(aura.0); // OK but deliberate
+```
+
+This catches bugs at compile time rather than runtime.
+
+## SimTime
+
+Simulation time uses millisecond precision:
+
+```rust
+SimTime(u32)  // Milliseconds
+
+// Construction
+SimTime::from_millis(1000)
+SimTime::from_secs_f32(1.0)
+SimTime::ZERO
+
+// Conversion
+time.as_millis()    // u32
+time.as_secs_f32()  // f32
+
+// Arithmetic
+let later = time + SimTime::from_millis(500);
+let earlier = time - SimTime::from_millis(200);
+```
+
+## Why u32?
+
+32 bits of milliseconds gives:
+
+- Max value: 4,294,967,295 ms
+- That's ~49.7 days
+
+No WoW fight lasts 49 days. Using `u32` instead of `u64` saves memory in event structures (billions of events over many iterations).
+
+## Index benefits
+
+| Benefit          | Example                                               |
+| ---------------- | ----------------------------------------------------- |
+| Type safety      | Can't pass `AuraIdx` where `SpellIdx` expected        |
+| Self-documenting | Function signature shows what ID type it needs        |
+| Refactoring      | Compiler catches all uses when type changes           |
+| Debug clarity    | Print output shows `SpellIdx(34026)` not just `34026` |
+
+## Common patterns
+
+**Lookup tables** use the index type as key:
+
+```rust
+HashMap<SpellIdx, SpellDef>
+HashMap<AuraIdx, AuraDef>
+```
+
+**Event payloads** carry typed indices:
+
+```rust
+EventKind::SpellDamage {
+    spell: SpellIdx,
+    target: TargetIdx,
+    snapshot: SnapshotIdx,
+}
+```
+
+**Function parameters** document what they expect:
+
+```rust
+fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef>
+fn apply_aura(&mut self, aura: AuraIdx, target: TargetIdx)
+```
+
+## Next steps
+
+- [Known Issues](/docs/engine/05-known-issues) - Current limitations
+- [Module Structure](/docs/engine/00-module-structure) - Code organization

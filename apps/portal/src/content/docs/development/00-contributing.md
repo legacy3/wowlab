@@ -38,7 +38,7 @@ pnpm lint     # check for lint errors
 
 ## Code style
 
-We lean on [Effect-TS](https://effect.website/) for effectful code in the core packages. The portal uses [Refine](https://refine.dev/) for data fetching and routing. The simulation engine is written in Rust (see `crates/engine/`) and compiled to WebAssembly for browser use.
+We lean on [Effect-TS](https://effect.website/) for effectful code in the core packages. The portal uses [Refine](https://refine.dev/) for data fetching and routing. The simulation engine is written in Rust (see `crates/engine/`) and compiled to WASM for type sharing and rotation validation in the portal. Actual simulations run on local nodes with JIT compilation.
 
 ## Editing docs
 

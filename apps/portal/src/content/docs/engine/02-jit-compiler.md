@@ -1,0 +1,133 @@
+---
+title: JIT Compiler
+description: Cranelift JIT compilation for rotations
+updatedAt: 2026-01-16
+---
+
+# JIT Compiler
+
+Rotations compile from JSON to native machine code using Cranelift.
+
+## Compilation pipeline
+
+```mermaid
+flowchart LR
+    JSON[Rotation JSON] --> Parser
+    Parser --> AST[Rotation AST]
+    AST --> Resolver[SpecResolver]
+    Resolver --> Schema[ContextSchema]
+    Schema --> Compiler[Cranelift Compiler]
+    Compiler --> IR[Cranelift IR]
+    IR --> Native[Native Function]
+    Native --> CompiledRotation
+```
+
+### Parser
+
+Converts JSON to an AST. Actions become `Action` variants, conditions become `Expr` trees.
+
+### Resolver
+
+Validates spell and aura names against the spec's definitions. Maps string names to internal IDs. Builds the list of expressions that need runtime context.
+
+### ContextSchema
+
+Defines the byte buffer layout for runtime context:
+
+```rust
+ContextSchema {
+    size: usize,                        // Total buffer size
+    fields: Vec<ContextField>,          // Field definitions
+    offsets: HashMap<ExprKey, usize>,   // Expression -> offset
+}
+```
+
+### Compiler
+
+Generates Cranelift IR for each action and expression. The IR then compiles to native machine code.
+
+## Context buffer layout
+
+The JIT function reads game state from a flat byte buffer:
+
+```
++----------+----------+----------+----------+
+| resource | cooldown | buff     | combat   |
+| current  | ready    | active   | time     |
+| (f64)    | (bool)   | (bool)   | (f64)    |
++----------+----------+----------+----------+
+| offset 0 | offset 8 | offset 9 | offset 16|
+```
+
+Before each evaluation:
+
+1. Handler populates the buffer with current state
+2. JIT function reads values at known offsets
+3. Native code evaluates conditions and returns result
+
+This avoids function call overhead - just memory reads.
+
+## Generated code example
+
+For a simple condition like `focus.current >= 50`:
+
+```
+; Load focus.current from buffer offset 0
+mov rax, [rdi]           ; rdi = buffer pointer
+; Compare to 50.0
+movsd xmm0, [rax]
+cmpsd xmm0, 50.0, GE
+; Branch based on result
+```
+
+The generated code is tight and cache-friendly.
+
+## Evaluation result
+
+The JIT function returns a packed `u64`:
+
+```rust
+EvalResult {
+    kind: u8,       // 0=none, 1=cast, 2=wait, 3=pool
+    spell_id: u32,  // WoW spell ID
+    wait_time: f32, // Seconds to wait
+}
+
+// Packed as u64: bits 0-31=wait, 32-55=spell, 56-63=kind
+```
+
+Packing into a single register avoids struct return overhead.
+
+## Performance
+
+Typical evaluation times:
+
+- Simple rotation: ~3ns per evaluation
+- Complex rotation (50+ conditions): ~10-20ns
+
+At these speeds, rotation evaluation is not a bottleneck. The engine can evaluate millions of decisions per second.
+
+## Memory management
+
+The compiled module must stay alive as long as the function pointer is used:
+
+```rust
+Box::leak(Box::new(module)); // Module leaked intentionally
+```
+
+This is a known memory leak - if you compile many rotations, memory accumulates. For typical usage (a few rotations per session), this is acceptable.
+
+## Compile-time vs runtime
+
+Some things are baked in at compile time:
+
+- Spell IDs (resolved from names)
+- Talent checks (booleans set during compilation)
+- Buffer offsets (determined by schema)
+
+This means changing talents requires recompilation. The tradeoff is faster runtime evaluation.
+
+## Next steps
+
+- [Rotation Reference](/docs/reference/02-rotation-reference) - Full expression syntax
+- [Spec Handlers](/docs/engine/03-spec-handlers) - How handlers use compiled rotations

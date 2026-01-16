@@ -5,7 +5,7 @@ import { routes } from "@/lib/routing";
 
 import type { Doc, DocEntry } from "./types";
 
-import { development, guides, overview, reference } from "./sections";
+import { development, engine, guides, overview, reference } from "./sections";
 
 function mergeDocs(parts: Array<Record<string, Doc>>): Record<string, Doc> {
   const merged: Record<string, Doc> = {};
@@ -29,6 +29,7 @@ export const docs: Record<string, Doc> = mergeDocs([
   overview.docs,
   guides.docs,
   reference.docs,
+  engine.docs,
   development.docs,
 ]);
 
@@ -36,6 +37,7 @@ export const docsIndex: DocEntry[] = [
   ...overview.index,
   ...guides.index,
   ...reference.index,
+  ...engine.index,
   ...development.index,
 ];
 
