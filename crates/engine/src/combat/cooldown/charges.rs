@@ -134,3 +134,72 @@ impl ChargedCooldown {
         self.next_charge_at = SimTime::ZERO;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_charges_fractional_full() {
+        let cd = ChargedCooldown::new(2, 10.0);
+        let now = SimTime::from_secs_f32(0.0);
+
+        // Full charges should return max_charges
+        assert_eq!(cd.charges_fractional(now), 2.0);
+    }
+
+    #[test]
+    fn test_charges_fractional_recharging() {
+        let mut cd = ChargedCooldown::new(2, 10.0);
+        let haste = 1.0;
+
+        // Spend a charge at time 0
+        cd.spend(SimTime::from_secs_f32(0.0), haste);
+
+        // At time 0, we have 1 charge and just started recharging
+        // next_charge_at = 10.0, so progress = 0/10 = 0
+        assert_eq!(cd.charges_fractional(SimTime::from_secs_f32(0.0)), 1.0);
+
+        // At time 5, we're halfway through recharging
+        // progress = 5/10 = 0.5
+        let fractional = cd.charges_fractional(SimTime::from_secs_f32(5.0));
+        assert!((fractional - 1.5).abs() < 0.01, "Expected ~1.5, got {}", fractional);
+
+        // At time 9, we're almost done
+        // progress = 9/10 = 0.9
+        let fractional = cd.charges_fractional(SimTime::from_secs_f32(9.0));
+        assert!((fractional - 1.9).abs() < 0.01, "Expected ~1.9, got {}", fractional);
+    }
+
+    #[test]
+    fn test_charges_fractional_zero_charges() {
+        let mut cd = ChargedCooldown::new(2, 10.0);
+        let haste = 1.0;
+
+        // Spend both charges
+        cd.spend(SimTime::from_secs_f32(0.0), haste);
+        cd.spend(SimTime::from_secs_f32(0.0), haste);
+
+        // At time 0, we have 0 charges
+        assert_eq!(cd.charges_fractional(SimTime::from_secs_f32(0.0)), 0.0);
+
+        // At time 5, we're halfway through recharging the first
+        let fractional = cd.charges_fractional(SimTime::from_secs_f32(5.0));
+        assert!((fractional - 0.5).abs() < 0.01, "Expected ~0.5, got {}", fractional);
+    }
+
+    #[test]
+    fn test_has_charge_returns_true_with_charges() {
+        let cd = ChargedCooldown::new(2, 10.0);
+        assert!(cd.has_charge());
+    }
+
+    #[test]
+    fn test_has_charge_returns_false_with_zero_charges() {
+        let mut cd = ChargedCooldown::new(2, 10.0);
+        let haste = 1.0;
+        cd.spend(SimTime::from_secs_f32(0.0), haste);
+        cd.spend(SimTime::from_secs_f32(0.0), haste);
+        assert!(!cd.has_charge());
+    }
+}

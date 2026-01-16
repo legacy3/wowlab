@@ -20,6 +20,12 @@ pub struct Enemy {
     pub debuffs: TargetAuras,
     /// When enemy dies (for fixed-health scenarios)
     pub dies_at: Option<SimTime>,
+    /// Distance to target in yards
+    pub distance: f32,
+    /// Target is currently casting
+    pub is_casting: bool,
+    /// Target is currently moving
+    pub is_moving: bool,
 }
 
 impl Enemy {
@@ -33,6 +39,9 @@ impl Enemy {
             is_boss: true,
             debuffs: TargetAuras::new(),
             dies_at: None,
+            distance: 5.0, // Default melee range
+            is_casting: false,
+            is_moving: false,
         }
     }
 
@@ -62,6 +71,22 @@ impl Enemy {
     pub fn reset(&mut self) {
         self.current_health = self.max_health;
         self.debuffs = TargetAuras::new();
+        self.is_casting = false;
+        self.is_moving = false;
+    }
+
+    /// Calculate time to reach a specific health percentage
+    pub fn time_to_percent(&self, percent: f32, dps: f32) -> SimTime {
+        let target_health = self.max_health * (percent / 100.0);
+        let damage_needed = self.current_health - target_health;
+        if damage_needed <= 0.0 {
+            return SimTime::ZERO;
+        }
+        if dps <= 0.0 {
+            return SimTime::MAX;
+        }
+        let seconds = damage_needed / dps;
+        SimTime::from_secs_f32(seconds)
     }
 
     /// Health percentage

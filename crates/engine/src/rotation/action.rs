@@ -11,6 +11,11 @@ pub enum Action {
     WaitGcd,
     /// Wait for a duration.
     Wait(f64),
+    /// Pool resources until target amount is reached.
+    Pool {
+        /// Target resource amount to pool to.
+        target: f64,
+    },
     /// No action.
     None,
 }

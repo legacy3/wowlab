@@ -37,7 +37,28 @@ pub struct Player {
     pub next_auto_oh: Option<SimTime>,
     /// Whether player is moving
     pub is_moving: bool,
+    /// Current health
+    pub health: f64,
+    /// Maximum health
+    pub max_health: f64,
+    /// Character level
+    pub level: u8,
+    /// Is the player alive
+    pub alive: bool,
+    /// Is the player in combat
+    pub in_combat: bool,
+    /// Is the player stealthed
+    pub stealthed: bool,
+    /// Is the player mounted
+    pub mounted: bool,
+    /// Remaining movement duration in seconds
+    pub movement_duration: f64,
 }
+
+/// Default max health for players (typical end-game value)
+pub const DEFAULT_MAX_HEALTH: f64 = 1_000_000.0;
+/// Default player level
+pub const DEFAULT_LEVEL: u8 = 80;
 
 impl Player {
     pub fn new(spec: SpecId) -> Self {
@@ -56,6 +77,14 @@ impl Player {
             next_auto_mh: SimTime::ZERO,
             next_auto_oh: None,
             is_moving: false,
+            health: DEFAULT_MAX_HEALTH,
+            max_health: DEFAULT_MAX_HEALTH,
+            level: DEFAULT_LEVEL,
+            alive: true,
+            in_combat: true, // Simulation assumes combat
+            stealthed: false,
+            mounted: false,
+            movement_duration: 0.0,
         }
     }
 
@@ -68,6 +97,12 @@ impl Player {
         self.next_auto_mh = SimTime::ZERO;
         self.next_auto_oh = None;
         self.is_moving = false;
+        self.health = self.max_health;
+        self.alive = true;
+        self.in_combat = true;
+        self.stealthed = false;
+        self.mounted = false;
+        self.movement_duration = 0.0;
 
         for cd in self.cooldowns.values_mut() {
             cd.reset();
@@ -190,6 +225,58 @@ impl Player {
         } else {
             self.next_auto_mh = now + speed;
         }
+    }
+
+    /// Check if a spell can be cast (cooldown ready, in range, not on GCD).
+    ///
+    /// This is a comprehensive check that combines:
+    /// - Cooldown availability (regular or charged)
+    /// - GCD availability
+    /// - Target in range (using primary enemy distance)
+    ///
+    /// Note: Resource cost checking is not included here as it requires
+    /// spell definition lookup which is handled at the spec level.
+    pub fn can_cast_spell(
+        &self,
+        spell: SpellIdx,
+        state: &crate::sim::SimState,
+        now: SimTime,
+    ) -> bool {
+        // Check GCD
+        if self.on_gcd(now) {
+            return false;
+        }
+
+        // Check if casting or channeling
+        if self.is_casting(now) || self.is_channeling(now) {
+            return false;
+        }
+
+        // Check regular cooldown
+        if let Some(cd) = self.cooldown(spell) {
+            if !cd.is_ready(now) {
+                return false;
+            }
+        }
+
+        // Check charged cooldown (must have at least 1 charge)
+        if let Some(cd) = self.charged_cooldown(spell) {
+            if cd.current_charges == 0 {
+                return false;
+            }
+        }
+
+        // Check range (using primary enemy)
+        if let Some(enemy) = state.enemies.primary() {
+            // Default spell range is 40 yards
+            // TODO: Get actual spell range from spell definitions
+            let spell_range = 40.0;
+            if enemy.distance > spell_range {
+                return false;
+            }
+        }
+
+        true
     }
 }
 

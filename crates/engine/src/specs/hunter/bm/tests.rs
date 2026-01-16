@@ -161,9 +161,8 @@ fn rotation_compile_basic() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 
     // Verify it compiled successfully (the schema should have the right size)
     assert!(compiled.schema().size > 0);
@@ -179,9 +178,8 @@ fn rotation_compile_with_condition() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -194,9 +192,8 @@ fn rotation_compile_with_resource_check() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -209,9 +206,8 @@ fn rotation_compile_with_buff_check() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -230,9 +226,8 @@ fn rotation_compile_with_and_condition() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -251,9 +246,8 @@ fn rotation_compile_with_or_condition() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -272,9 +266,8 @@ fn rotation_compile_with_lists() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -294,9 +287,8 @@ fn rotation_compile_with_variables() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -309,9 +301,8 @@ fn rotation_compile_with_dot_check() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -324,9 +315,8 @@ fn rotation_compile_with_charges() {
         ]
     }"#;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -334,9 +324,8 @@ fn rotation_compile_full_example() {
     // Use the example rotation JSON from the rotation module
     let json = EXAMPLE_ROTATION_JSON;
 
-    let rotation = Rotation::from_json(json).expect("Failed to parse example rotation");
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile(&rotation, &resolver).expect("Failed to compile example rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile example rotation");
 }
 
 #[test]

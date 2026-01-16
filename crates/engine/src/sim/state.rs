@@ -68,6 +68,79 @@ impl SimConfig {
     }
 }
 
+/// Rolling window for DPS calculation (used for TTD estimates)
+#[derive(Debug, Clone)]
+pub struct DpsWindow {
+    /// Circular buffer of (time, damage) samples
+    samples: Vec<(SimTime, f32)>,
+    /// Window duration in seconds
+    window_secs: f32,
+    /// Total damage in window
+    window_damage: f32,
+}
+
+impl Default for DpsWindow {
+    fn default() -> Self {
+        Self::new(10.0) // 10-second rolling window
+    }
+}
+
+impl DpsWindow {
+    /// Create a new DPS window with the given duration
+    pub fn new(window_secs: f32) -> Self {
+        Self {
+            samples: Vec::with_capacity(256),
+            window_secs,
+            window_damage: 0.0,
+        }
+    }
+
+    /// Record damage at the given time
+    pub fn record(&mut self, time: SimTime, damage: f32) {
+        self.samples.push((time, damage));
+        self.window_damage += damage;
+    }
+
+    /// Prune old samples and return current DPS
+    pub fn current_dps(&mut self, now: SimTime) -> f32 {
+        let cutoff = now.saturating_sub(SimTime::from_secs_f32(self.window_secs));
+
+        // Remove old samples
+        let mut removed_damage = 0.0;
+        self.samples.retain(|(t, d)| {
+            if *t < cutoff {
+                removed_damage += *d;
+                false
+            } else {
+                true
+            }
+        });
+        self.window_damage -= removed_damage;
+
+        // Calculate DPS
+        if self.samples.is_empty() {
+            return 0.0;
+        }
+
+        // Time span of samples
+        let earliest = self.samples.first().map(|(t, _)| *t).unwrap_or(now);
+        let span = now.saturating_sub(earliest).as_secs_f32();
+
+        if span < 0.1 {
+            // Not enough time to calculate meaningful DPS
+            return 0.0;
+        }
+
+        self.window_damage / span
+    }
+
+    /// Reset the window
+    pub fn reset(&mut self) {
+        self.samples.clear();
+        self.window_damage = 0.0;
+    }
+}
+
 /// Main simulation state
 #[derive(Debug)]
 pub struct SimState {
@@ -97,6 +170,8 @@ pub struct SimState {
     pub total_damage: f64,
     /// Event trace (if enabled)
     pub trace: Vec<TraceEvent>,
+    /// Rolling DPS window for TTD calculations (damage in last N seconds)
+    dps_window: DpsWindow,
 }
 
 /// Traced event for debugging
@@ -144,6 +219,7 @@ impl SimState {
             finished: false,
             total_damage: 0.0,
             trace: Vec::new(),
+            dps_window: DpsWindow::default(),
         }
     }
 
@@ -170,6 +246,7 @@ impl SimState {
         self.enemies.reset();
         self.auras.reset();
         self.multipliers = DamageMultipliers::default();
+        self.dps_window.reset();
     }
 
     /// Current simulation time
@@ -199,6 +276,18 @@ impl SimState {
     /// Record damage
     pub fn record_damage(&mut self, amount: f32) {
         self.total_damage += amount as f64;
+        self.dps_window.record(self.current_time, amount);
+    }
+
+    /// Get rolling DPS (for TTD calculations)
+    pub fn rolling_dps(&mut self) -> f32 {
+        self.dps_window.current_dps(self.current_time)
+    }
+
+    /// Get rolling DPS (immutable version using overall DPS as fallback)
+    pub fn rolling_dps_estimate(&self) -> f32 {
+        // Use overall DPS as fallback since we can't mutate
+        self.current_dps() as f32
     }
 
     /// Add trace event

@@ -12,7 +12,7 @@ use crate::spec::{SpellDef, AuraDef, GcdType, SpellFlags, EffectContext, DamageC
 use crate::combat::{Cooldown, ChargedCooldown};
 use crate::aura::AuraInstance;
 use crate::actor::Player;
-use crate::rotation::{Action, CompiledRotation, Rotation};
+use crate::rotation::{Action, CompiledRotation};
 use crate::data::{TuningData, apply_spell_overrides, apply_aura_overrides};
 use super::constants::*;
 use super::spells::spell_definitions;
@@ -103,9 +103,8 @@ impl BmHunter {
         apply_aura_overrides(&mut auras, &tuning.aura);
         AURA_DEFS.set(auras).map_err(|_| "Aura definitions already initialized")?;
 
-        let rotation = Rotation::from_json(json).map_err(|e| format!("Parse error: {}", e))?;
         let resolver = spec_resolver(TalentFlags::empty());
-        let compiled = CompiledRotation::compile(&rotation, &resolver).map_err(|e| format!("Compile error: {}", e))?;
+        let compiled = CompiledRotation::compile_json(json, &resolver).map_err(|e| format!("Compile error: {}", e))?;
         BM_ROTATION.set(compiled).map_err(|_| "Rotation already initialized")?;
 
         Ok(())

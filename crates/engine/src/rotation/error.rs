@@ -24,6 +24,9 @@ pub enum Error {
     #[error("unknown talent: {0}")]
     UnknownTalent(String),
 
+    #[error("unknown resource: {0}")]
+    UnknownResource(String),
+
     #[error("unknown action list: {0}")]
     UnknownList(String),
 
@@ -51,4 +54,7 @@ pub enum Error {
 
     #[error("circular variable reference: {0}")]
     CircularRef(String),
+
+    #[error("expression depth exceeds maximum of {max} (found depth {depth})")]
+    MaxDepthExceeded { depth: usize, max: usize },
 }

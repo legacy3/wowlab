@@ -1,25 +1,61 @@
 //! Name resolution for rotations.
 //!
-//! Maps spell/aura names to game IDs and builds context schema.
+//! Provides a SpecResolver that maps spell/aura names to game IDs.
+//! Resolution happens at parse time, so the Expr enum contains resolved IDs.
 
 use std::collections::{HashMap, HashSet};
 
-use crate::types::{AuraIdx, SpellIdx};
+use crate::specs::SpecData;
+use crate::types::{AuraIdx, ResourceType, SpellIdx};
 
-use super::ast::VarPath;
 use super::error::{Error, Result};
+
+/// Talent information including rank support.
+#[derive(Debug, Clone, Copy)]
+pub struct TalentInfo {
+    /// Whether the talent is enabled.
+    pub enabled: bool,
+    /// Current rank (1 for enabled talents without explicit rank, 0 for disabled).
+    pub rank: i32,
+    /// Maximum rank (defaults to 1 for single-rank talents).
+    pub max_rank: i32,
+}
+
+impl TalentInfo {
+    /// Create a simple enabled/disabled talent (rank 1 if enabled).
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            enabled,
+            rank: if enabled { 1 } else { 0 },
+            max_rank: 1,
+        }
+    }
+
+    /// Create a ranked talent.
+    pub fn ranked(rank: i32, max_rank: i32) -> Self {
+        Self {
+            enabled: rank > 0,
+            rank,
+            max_rank,
+        }
+    }
+}
 
 /// Spec-specific name resolver.
 ///
 /// Each spec provides one of these to map rotation names to game IDs.
+/// This is a thin wrapper around SpecData that provides the rotation-specific API.
 #[derive(Debug, Clone)]
 pub struct SpecResolver {
     pub name: String,
-    pub resource_type: Option<String>,
+    /// Legacy string-based resource type for backwards compatibility.
+    resource_type_str: Option<String>,
+    /// Map from resource name to ResourceType enum.
+    resources: HashMap<String, ResourceType>,
     spells: HashMap<String, SpellIdx>,
     auras: HashMap<String, AuraIdx>,
     dots: HashMap<String, AuraIdx>,
-    talents: HashMap<String, bool>,
+    talents: HashMap<String, TalentInfo>,
     charged_cooldowns: HashSet<String>,
 }
 
@@ -28,7 +64,8 @@ impl SpecResolver {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
-            resource_type: None,
+            resource_type_str: None,
+            resources: HashMap::new(),
             spells: HashMap::new(),
             auras: HashMap::new(),
             dots: HashMap::new(),
@@ -37,9 +74,48 @@ impl SpecResolver {
         }
     }
 
-    /// Set the primary resource type.
-    pub fn resource(mut self, resource_type: impl Into<String>) -> Self {
-        self.resource_type = Some(resource_type.into());
+    /// Create from a SpecData registry.
+    pub fn from_spec_data(data: &SpecData) -> Self {
+        let mut resolver = Self::new(data.name.clone());
+        resolver.resource_type_str = data.primary_resource().map(String::from);
+
+        // Register common resources by name
+        if let Some(res_name) = data.primary_resource() {
+            if let Some(res_type) = resource_name_to_type(res_name) {
+                resolver.resources.insert(res_name.to_string(), res_type);
+            }
+        }
+
+        for (name, id) in data.spells() {
+            resolver.spells.insert(name.to_string(), id);
+        }
+        for (name, id) in data.auras() {
+            resolver.auras.insert(name.to_string(), id);
+        }
+        for (name, id) in data.dots() {
+            resolver.dots.insert(name.to_string(), id);
+        }
+        for (name, enabled) in data.talents_iter() {
+            resolver.talents.insert(name.to_string(), TalentInfo::new(enabled));
+        }
+
+        resolver
+    }
+
+    /// Set the primary resource type by name.
+    pub fn resource(mut self, resource_name: impl Into<String>) -> Self {
+        let name = resource_name.into();
+        self.resource_type_str = Some(name.clone());
+        // Also register by name if we can parse it
+        if let Some(res_type) = resource_name_to_type(&name) {
+            self.resources.insert(name, res_type);
+        }
+        self
+    }
+
+    /// Register a resource by name with its type.
+    pub fn resource_type(mut self, name: impl Into<String>, res_type: ResourceType) -> Self {
+        self.resources.insert(name.into(), res_type);
         self
     }
 
@@ -72,7 +148,13 @@ impl SpecResolver {
 
     /// Register a talent with its current enabled state.
     pub fn talent(mut self, name: impl Into<String>, enabled: bool) -> Self {
-        self.talents.insert(name.into(), enabled);
+        self.talents.insert(name.into(), TalentInfo::new(enabled));
+        self
+    }
+
+    /// Register a talent with a specific rank.
+    pub fn talent_ranked(mut self, name: impl Into<String>, rank: i32, max_rank: i32) -> Self {
+        self.talents.insert(name.into(), TalentInfo::ranked(rank, max_rank));
         self
     }
 
@@ -104,6 +186,14 @@ impl SpecResolver {
     pub fn resolve_talent(&self, name: &str) -> Result<bool> {
         self.talents
             .get(name)
+            .map(|info| info.enabled)
+            .ok_or_else(|| Error::UnknownTalent(name.to_string()))
+    }
+
+    /// Get full talent info including rank.
+    pub fn resolve_talent_info(&self, name: &str) -> Result<TalentInfo> {
+        self.talents
+            .get(name)
             .copied()
             .ok_or_else(|| Error::UnknownTalent(name.to_string()))
     }
@@ -113,9 +203,22 @@ impl SpecResolver {
         self.charged_cooldowns.contains(name)
     }
 
-    /// Get the primary resource type.
+    /// Get the primary resource type as a string (legacy).
     pub fn primary_resource(&self) -> Option<&str> {
-        self.resource_type.as_deref()
+        self.resource_type_str.as_deref()
+    }
+
+    /// Resolve a resource name to its ResourceType.
+    pub fn resolve_resource(&self, name: &str) -> Result<ResourceType> {
+        // First check if it's explicitly registered
+        if let Some(&res_type) = self.resources.get(name) {
+            return Ok(res_type);
+        }
+        // Try to parse the name directly as a resource type
+        if let Some(res_type) = resource_name_to_type(name) {
+            return Ok(res_type);
+        }
+        Err(Error::UnknownResource(name.to_string()))
     }
 
     /// Check if an aura is registered.
@@ -130,236 +233,37 @@ impl SpecResolver {
 
     /// Check if a talent is registered (returns enabled state).
     pub fn has_talent(&self, name: &str) -> bool {
-        self.talents.get(name).copied().unwrap_or(false)
+        self.talents.get(name).map(|info| info.enabled).unwrap_or(false)
     }
 }
 
-/// Resolved variable - ready for context population.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum ResolvedVar {
-    // === Resource ===
-    Resource,
-    ResourceMax,
-    ResourceDeficit,
-    ResourcePercent,
-    ResourceRegen,
-
-    // === Player ===
-    PlayerHealth,
-    PlayerHealthMax,
-    PlayerHealthPercent,
-
-    // === Cooldowns ===
-    CdReady(SpellIdx),
-    CdRemaining(SpellIdx),
-    CdDuration(SpellIdx),
-    CdCharges(SpellIdx),
-    CdChargesMax(SpellIdx),
-    CdRechargeTime(SpellIdx),
-    CdFullRecharge(SpellIdx),
-
-    // === Buffs ===
-    BuffActive(AuraIdx),
-    BuffInactive(AuraIdx),
-    BuffRemaining(AuraIdx),
-    BuffStacks(AuraIdx),
-    BuffStacksMax(AuraIdx),
-    BuffDuration(AuraIdx),
-
-    // === Debuffs ===
-    DebuffActive(AuraIdx),
-    DebuffInactive(AuraIdx),
-    DebuffRemaining(AuraIdx),
-    DebuffStacks(AuraIdx),
-    DebuffRefreshable(AuraIdx),
-
-    // === DoTs ===
-    DotTicking(AuraIdx),
-    DotRemaining(AuraIdx),
-    DotRefreshable(AuraIdx),
-    DotTicksRemaining(AuraIdx),
-
-    // === Target ===
-    TargetHealthPercent,
-    TargetTimeToDie,
-    TargetDistance,
-
-    // === Enemy ===
-    EnemyCount,
-
-    // === Combat ===
-    CombatTime,
-    CombatRemaining,
-
-    // === GCD ===
-    GcdRemaining,
-    GcdDuration,
-
-    // === Pet ===
-    PetActive,
-    PetRemaining,
-    PetBuffActive(AuraIdx),
-
-    // === Talent (compile-time constant) ===
-    Talent(bool),
-
-    // === Equipment ===
-    TrinketReady(u8),
-    TrinketRemaining(u8),
-
-    // === Spell info ===
-    SpellCost(SpellIdx),
-    SpellCastTime(SpellIdx),
-}
-
-impl ResolvedVar {
-    /// Returns true if this is a boolean variable.
-    pub fn is_bool(&self) -> bool {
-        matches!(
-            self,
-            Self::CdReady(_)
-                | Self::BuffActive(_)
-                | Self::BuffInactive(_)
-                | Self::DebuffActive(_)
-                | Self::DebuffInactive(_)
-                | Self::DebuffRefreshable(_)
-                | Self::DotTicking(_)
-                | Self::DotRefreshable(_)
-                | Self::PetActive
-                | Self::PetBuffActive(_)
-                | Self::Talent(_)
-                | Self::TrinketReady(_)
-        )
-    }
-
-    /// Returns true if this is an integer variable.
-    pub fn is_int(&self) -> bool {
-        matches!(
-            self,
-            Self::CdCharges(_)
-                | Self::CdChargesMax(_)
-                | Self::BuffStacks(_)
-                | Self::BuffStacksMax(_)
-                | Self::DebuffStacks(_)
-                | Self::DotTicksRemaining(_)
-                | Self::EnemyCount
-        )
-    }
-
-    /// Returns true if this is a float variable.
-    pub fn is_float(&self) -> bool {
-        !self.is_bool() && !self.is_int()
+/// Convert a resource name string to a ResourceType.
+pub fn resource_name_to_type(name: &str) -> Option<ResourceType> {
+    match name.to_lowercase().as_str() {
+        "mana" => Some(ResourceType::Mana),
+        "rage" => Some(ResourceType::Rage),
+        "focus" => Some(ResourceType::Focus),
+        "energy" => Some(ResourceType::Energy),
+        "combo_points" | "combopoints" => Some(ResourceType::ComboPoints),
+        "runes" => Some(ResourceType::Runes),
+        "runic_power" | "runicpower" => Some(ResourceType::RunicPower),
+        "soul_shards" | "soulshards" => Some(ResourceType::SoulShards),
+        "lunar_power" | "lunarpower" | "astral_power" | "astralpower" => {
+            Some(ResourceType::LunarPower)
+        }
+        "holy_power" | "holypower" => Some(ResourceType::HolyPower),
+        "maelstrom" => Some(ResourceType::Maelstrom),
+        "chi" => Some(ResourceType::Chi),
+        "insanity" => Some(ResourceType::Insanity),
+        "arcane_charges" | "arcanecharges" => Some(ResourceType::ArcaneCharges),
+        "fury" => Some(ResourceType::Fury),
+        "pain" => Some(ResourceType::Pain),
+        "essence" => Some(ResourceType::Essence),
+        _ => None,
     }
 }
 
-/// Resolve a variable path to a resolved variable.
-pub fn resolve_var(path: &VarPath, resolver: &SpecResolver) -> Result<ResolvedVar> {
-    match path {
-        // Resource
-        VarPath::Resource { resource } => {
-            check_resource(resource, resolver)?;
-            Ok(ResolvedVar::Resource)
-        }
-        VarPath::ResourceMax { resource } => {
-            check_resource(resource, resolver)?;
-            Ok(ResolvedVar::ResourceMax)
-        }
-        VarPath::ResourceDeficit { resource } => {
-            check_resource(resource, resolver)?;
-            Ok(ResolvedVar::ResourceDeficit)
-        }
-        VarPath::ResourcePercent { resource } => {
-            check_resource(resource, resolver)?;
-            Ok(ResolvedVar::ResourcePercent)
-        }
-        VarPath::ResourceRegen { resource } => {
-            check_resource(resource, resolver)?;
-            Ok(ResolvedVar::ResourceRegen)
-        }
-
-        // Player
-        VarPath::PlayerHealth => Ok(ResolvedVar::PlayerHealth),
-        VarPath::PlayerHealthMax => Ok(ResolvedVar::PlayerHealthMax),
-        VarPath::PlayerHealthPercent => Ok(ResolvedVar::PlayerHealthPercent),
-
-        // Cooldowns
-        VarPath::CdReady { spell } => Ok(ResolvedVar::CdReady(resolver.resolve_spell(spell)?)),
-        VarPath::CdRemaining { spell } => Ok(ResolvedVar::CdRemaining(resolver.resolve_spell(spell)?)),
-        VarPath::CdDuration { spell } => Ok(ResolvedVar::CdDuration(resolver.resolve_spell(spell)?)),
-        VarPath::CdCharges { spell } => Ok(ResolvedVar::CdCharges(resolver.resolve_spell(spell)?)),
-        VarPath::CdChargesMax { spell } => Ok(ResolvedVar::CdChargesMax(resolver.resolve_spell(spell)?)),
-        VarPath::CdRechargeTime { spell } => Ok(ResolvedVar::CdRechargeTime(resolver.resolve_spell(spell)?)),
-        VarPath::CdFullRecharge { spell } => Ok(ResolvedVar::CdFullRecharge(resolver.resolve_spell(spell)?)),
-
-        // Buffs
-        VarPath::BuffActive { aura } => Ok(ResolvedVar::BuffActive(resolver.resolve_aura(aura)?)),
-        VarPath::BuffInactive { aura } => Ok(ResolvedVar::BuffInactive(resolver.resolve_aura(aura)?)),
-        VarPath::BuffRemaining { aura } => Ok(ResolvedVar::BuffRemaining(resolver.resolve_aura(aura)?)),
-        VarPath::BuffStacks { aura } => Ok(ResolvedVar::BuffStacks(resolver.resolve_aura(aura)?)),
-        VarPath::BuffStacksMax { aura } => Ok(ResolvedVar::BuffStacksMax(resolver.resolve_aura(aura)?)),
-        VarPath::BuffDuration { aura } => Ok(ResolvedVar::BuffDuration(resolver.resolve_aura(aura)?)),
-
-        // Debuffs
-        VarPath::DebuffActive { aura } => Ok(ResolvedVar::DebuffActive(resolver.resolve_aura(aura)?)),
-        VarPath::DebuffInactive { aura } => Ok(ResolvedVar::DebuffInactive(resolver.resolve_aura(aura)?)),
-        VarPath::DebuffRemaining { aura } => Ok(ResolvedVar::DebuffRemaining(resolver.resolve_aura(aura)?)),
-        VarPath::DebuffStacks { aura } => Ok(ResolvedVar::DebuffStacks(resolver.resolve_aura(aura)?)),
-        VarPath::DebuffRefreshable { aura } => {
-            Ok(ResolvedVar::DebuffRefreshable(resolver.resolve_aura(aura)?))
-        }
-
-        // DoTs
-        VarPath::DotTicking { dot } => Ok(ResolvedVar::DotTicking(resolver.resolve_dot(dot)?)),
-        VarPath::DotRemaining { dot } => Ok(ResolvedVar::DotRemaining(resolver.resolve_dot(dot)?)),
-        VarPath::DotRefreshable { dot } => Ok(ResolvedVar::DotRefreshable(resolver.resolve_dot(dot)?)),
-        VarPath::DotTicksRemaining { dot } => {
-            Ok(ResolvedVar::DotTicksRemaining(resolver.resolve_dot(dot)?))
-        }
-
-        // Target
-        VarPath::TargetHealthPercent => Ok(ResolvedVar::TargetHealthPercent),
-        VarPath::TargetTimeToDie => Ok(ResolvedVar::TargetTimeToDie),
-        VarPath::TargetDistance => Ok(ResolvedVar::TargetDistance),
-
-        // Enemy
-        VarPath::EnemyCount => Ok(ResolvedVar::EnemyCount),
-
-        // Combat
-        VarPath::CombatTime => Ok(ResolvedVar::CombatTime),
-        VarPath::CombatRemaining => Ok(ResolvedVar::CombatRemaining),
-
-        // GCD
-        VarPath::GcdRemaining => Ok(ResolvedVar::GcdRemaining),
-        VarPath::GcdDuration => Ok(ResolvedVar::GcdDuration),
-
-        // Pet
-        VarPath::PetActive => Ok(ResolvedVar::PetActive),
-        VarPath::PetRemaining => Ok(ResolvedVar::PetRemaining),
-        VarPath::PetBuffActive { aura } => Ok(ResolvedVar::PetBuffActive(resolver.resolve_aura(aura)?)),
-
-        // Talent
-        VarPath::Talent { name } => Ok(ResolvedVar::Talent(resolver.resolve_talent(name)?)),
-
-        // Equipment
-        VarPath::Equipped { .. } => {
-            // TODO: Item resolution
-            Ok(ResolvedVar::Talent(false))
-        }
-        VarPath::TrinketReady { slot } => Ok(ResolvedVar::TrinketReady(*slot)),
-        VarPath::TrinketRemaining { slot } => Ok(ResolvedVar::TrinketRemaining(*slot)),
-
-        // Spell info
-        VarPath::SpellCost { spell } => Ok(ResolvedVar::SpellCost(resolver.resolve_spell(spell)?)),
-        VarPath::SpellCastTime { spell } => Ok(ResolvedVar::SpellCastTime(resolver.resolve_spell(spell)?)),
-    }
-}
-
-fn check_resource(r: &str, resolver: &SpecResolver) -> Result<()> {
-    if let Some(primary) = resolver.primary_resource() {
-        if r == primary {
-            return Ok(());
-        }
-    }
-    // Allow any resource name for now
-    Ok(())
+/// Check that a resource name is valid (can be resolved).
+pub fn check_resource(r: &str, resolver: &SpecResolver) -> Result<ResourceType> {
+    resolver.resolve_resource(r)
 }

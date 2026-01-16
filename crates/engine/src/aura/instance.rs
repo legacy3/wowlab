@@ -161,4 +161,37 @@ impl AuraInstance {
 
         self.remaining_ticks > 0
     }
+
+    /// Is this a periodic aura (has tick effects)?
+    #[inline]
+    pub fn is_periodic(&self) -> bool {
+        self.tick_interval.is_some()
+    }
+
+    /// Time between ticks in seconds.
+    /// Returns 0.0 if not periodic.
+    #[inline]
+    pub fn tick_time(&self) -> f64 {
+        self.tick_interval
+            .map(|interval| interval.as_secs_f64())
+            .unwrap_or(0.0)
+    }
+
+    /// Time until next tick in seconds.
+    /// Returns 0.0 if not periodic or already expired.
+    #[inline]
+    pub fn next_tick_in(&self, now: SimTime) -> f64 {
+        if !self.is_periodic() {
+            return 0.0;
+        }
+        self.next_tick
+            .map(|next_at| {
+                if next_at > now {
+                    (next_at - now).as_secs_f64()
+                } else {
+                    0.0
+                }
+            })
+            .unwrap_or(0.0)
+    }
 }

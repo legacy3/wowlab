@@ -37,6 +37,11 @@ impl SimTime {
     }
 
     #[inline]
+    pub fn as_secs_f64(self) -> f64 {
+        self.0 as f64 / 1000.0
+    }
+
+    #[inline]
     pub const fn saturating_sub(self, other: SimTime) -> SimTime {
         SimTime(self.0.saturating_sub(other.0))
     }

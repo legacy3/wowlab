@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "wasm")]
 use tsify::Tsify;
 
-use super::ast::{Action, Expr, Rotation};
+use super::ast::{Action, Expr, Rotation, ValueType, VarOp};
 
 /// Result of validating a rotation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,6 +65,17 @@ pub enum ValidationError {
     DuplicateVariable { name: String },
     /// Duplicate list definition.
     DuplicateList { name: String },
+    /// Type mismatch in variable operation.
+    TypeMismatch {
+        /// Variable name.
+        name: String,
+        /// The operation being performed.
+        op: String,
+        /// Expected type(s).
+        expected: String,
+        /// Actual type.
+        got: String,
+    },
 }
 
 /// A validation warning.
@@ -214,7 +225,10 @@ fn validate_action(
             }
         }
         Action::ModifyVar {
-            value, condition, ..
+            name,
+            op,
+            value,
+            condition,
         } => {
             validate_expr(
                 value,
@@ -225,6 +239,24 @@ fn validate_action(
             );
             if let Some(cond) = condition {
                 validate_expr(cond, variable_names, used_variables, errors, "condition");
+            }
+
+            // Type check: arithmetic operations require numeric types
+            let requires_numeric = matches!(
+                op,
+                VarOp::Add | VarOp::Sub | VarOp::Mul | VarOp::Div | VarOp::Min | VarOp::Max
+            );
+
+            if requires_numeric {
+                let value_type = value.value_type();
+                if value_type == ValueType::Bool {
+                    errors.push(ValidationError::TypeMismatch {
+                        name: name.clone(),
+                        op: format!("{:?}", op).to_lowercase(),
+                        expected: "int or float".to_string(),
+                        got: "bool".to_string(),
+                    });
+                }
             }
         }
         Action::WaitUntil { condition } => {
@@ -247,7 +279,26 @@ fn validate_expr(
     location: &str,
 ) {
     match expr {
-        Expr::Bool { .. } | Expr::Int { .. } | Expr::Float { .. } | Expr::Var { .. } => {}
+        // Literals and domain expressions are always valid
+        Expr::Bool { .. }
+        | Expr::Int { .. }
+        | Expr::Float { .. }
+        | Expr::Resource(_)
+        | Expr::Cooldown(_)
+        | Expr::Buff(_)
+        | Expr::Debuff(_)
+        | Expr::Dot(_)
+        | Expr::Combat(_)
+        | Expr::Target(_)
+        | Expr::Player(_)
+        | Expr::Spell(_)
+        | Expr::Talent(_)
+        | Expr::Gcd(_)
+        | Expr::Pet(_)
+        | Expr::Enemy(_)
+        | Expr::Equipped { .. }
+        | Expr::TrinketReady { .. }
+        | Expr::TrinketRemaining { .. } => {}
 
         Expr::UserVar { name } => {
             if !variable_names.contains(name) {
@@ -341,7 +392,26 @@ fn has_circular_reference(
                 || has_circular_reference(target, right, variables, visited, path)
         }
 
-        _ => false,
+        // Domain expressions don't reference user variables, so no circular reference possible
+        Expr::Bool { .. }
+        | Expr::Int { .. }
+        | Expr::Float { .. }
+        | Expr::Resource(_)
+        | Expr::Cooldown(_)
+        | Expr::Buff(_)
+        | Expr::Debuff(_)
+        | Expr::Dot(_)
+        | Expr::Combat(_)
+        | Expr::Target(_)
+        | Expr::Player(_)
+        | Expr::Spell(_)
+        | Expr::Talent(_)
+        | Expr::Gcd(_)
+        | Expr::Pet(_)
+        | Expr::Enemy(_)
+        | Expr::Equipped { .. }
+        | Expr::TrinketReady { .. }
+        | Expr::TrinketRemaining { .. } => false,
     }
 }
 
