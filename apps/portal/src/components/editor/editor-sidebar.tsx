@@ -16,6 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import {
   ChevronLeftIcon,
@@ -25,7 +26,7 @@ import {
   VariableIcon,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { Variable } from "@/lib/engine";
@@ -121,6 +122,22 @@ export function EditorSidebar() {
       addVariable(data);
     }
   };
+
+  const listsParentRef = useRef<HTMLDivElement>(null);
+  const listsVirtualizer = useVirtualizer({
+    count: actionLists.length,
+    estimateSize: () => 36,
+    getScrollElement: () => listsParentRef.current,
+    overscan: 5,
+  });
+
+  const varsParentRef = useRef<HTMLDivElement>(null);
+  const varsVirtualizer = useVirtualizer({
+    count: variables.length,
+    estimateSize: () => 40,
+    getScrollElement: () => varsParentRef.current,
+    overscan: 5,
+  });
 
   if (collapsed) {
     return (
@@ -219,7 +236,7 @@ export function EditorSidebar() {
               </IconButton>
             </Tooltip>
           </Flex>
-          <Box flex="1" overflowY="auto" p="2">
+          <Box ref={listsParentRef} flex="1" overflowY="auto" p="2">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -230,20 +247,39 @@ export function EditorSidebar() {
                 items={actionLists.map((l) => l.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <VStack gap="0.5" alignItems="stretch">
-                  {actionLists.map((list) => (
-                    <SortableListItem
-                      key={list.id}
-                      list={list}
-                      isSelected={list.id === selectedListId}
-                      isDefault={list.id === defaultListId}
-                      onSelect={() => selectList(list.id)}
-                      onRename={(label) => renameList(list.id, label)}
-                      onSetDefault={() => setDefaultList(list.id)}
-                      onDelete={() => deleteList(list.id)}
-                    />
-                  ))}
-                </VStack>
+                {actionLists.length > 0 && (
+                  <Box
+                    h={`${listsVirtualizer.getTotalSize()}px`}
+                    position="relative"
+                  >
+                    {listsVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const list = actionLists[virtualRow.index];
+
+                      return (
+                        <Box
+                          key={list.id}
+                          position="absolute"
+                          top="0"
+                          left="0"
+                          w="full"
+                          style={{
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <SortableListItem
+                            list={list}
+                            isSelected={list.id === selectedListId}
+                            isDefault={list.id === defaultListId}
+                            onSelect={() => selectList(list.id)}
+                            onRename={(label) => renameList(list.id, label)}
+                            onSetDefault={() => setDefaultList(list.id)}
+                            onDelete={() => deleteList(list.id)}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
               </SortableContext>
               <DragOverlay>
                 {activeList && (
@@ -312,17 +348,34 @@ export function EditorSidebar() {
               </IconButton>
             </Tooltip>
           </Flex>
-          <Box flex="1" overflowY="auto" p="2">
-            <VStack gap="1" alignItems="stretch">
-              {variables.map((variable) => (
-                <VariableItem
-                  key={variable.id}
-                  variable={variable}
-                  onEdit={() => handleEditVariable(variable)}
-                  onDelete={() => deleteVariable(variable.id)}
-                />
-              ))}
-            </VStack>
+          <Box ref={varsParentRef} flex="1" overflowY="auto" p="2">
+            {variables.length > 0 && (
+              <Box
+                h={`${varsVirtualizer.getTotalSize()}px`}
+                position="relative"
+              >
+                {varsVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const variable = variables[virtualRow.index];
+
+                  return (
+                    <Box
+                      key={variable.id}
+                      position="absolute"
+                      top="0"
+                      left="0"
+                      w="full"
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                    >
+                      <VariableItem
+                        variable={variable}
+                        onEdit={() => handleEditVariable(variable)}
+                        onDelete={() => deleteVariable(variable.id)}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
             {variables.length === 0 && (
               <Box textAlign="center" py="8">
                 <Text textStyle="sm" color="fg.muted">

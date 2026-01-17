@@ -19,10 +19,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ListTreeIcon, PlusIcon } from "lucide-react";
 import { useExtracted } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Box, Center, VStack } from "styled-system/jsx";
 
 import type { Action } from "@/lib/engine";
@@ -105,6 +106,14 @@ export function ActionList() {
     ? selectedList.actions.findIndex((a) => a.id === activeId)
     : -1;
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: selectedList.actions.length,
+    estimateSize: () => 72,
+    getScrollElement: () => parentRef.current,
+    overscan: 3,
+  });
+
   return (
     <Box maxW="4xl" mx="auto">
       <VStack gap="4" alignItems="stretch">
@@ -172,16 +181,42 @@ export function ActionList() {
               items={selectedList.actions.map((a) => a.id)}
               strategy={verticalListSortingStrategy}
             >
-              <VStack gap="2" alignItems="stretch">
-                {selectedList.actions.map((action, index) => (
-                  <SortableActionCard
-                    key={action.id}
-                    action={action}
-                    listId={selectedList.id}
-                    index={index}
-                  />
-                ))}
-              </VStack>
+              <Box
+                ref={parentRef}
+                maxH="calc(100vh - 280px)"
+                overflow="auto"
+                pr="2"
+              >
+                <Box
+                  h={`${virtualizer.getTotalSize()}px`}
+                  position="relative"
+                  w="full"
+                >
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const action = selectedList.actions[virtualRow.index];
+
+                    return (
+                      <Box
+                        key={action.id}
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        w="full"
+                        pb="2"
+                        style={{
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <SortableActionCard
+                          action={action}
+                          listId={selectedList.id}
+                          index={virtualRow.index}
+                        />
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
             </SortableContext>
 
             <DragOverlay>

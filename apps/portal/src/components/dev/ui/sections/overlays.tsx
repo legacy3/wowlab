@@ -26,7 +26,7 @@ import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
 export function OverlaysSection() {
   return (
-    <Section id="overlays" title="Overlays">
+    <Section id="overlays" title="Overlays" lazy>
       <Stack gap="10">
         <TooltipDemo />
         <DialogDemo />

@@ -26,7 +26,7 @@ import {
 
 export function ChartsSection() {
   return (
-    <Section id="charts" title="Charts">
+    <Section id="charts" title="Charts" lazy>
       <Stack gap="10">
         <AnalysisDemo />
         <LineChartDemo />

@@ -5,10 +5,11 @@ import {
   useListCollection,
 } from "@ark-ui/react/combobox";
 import { useFilter } from "@ark-ui/react/locale";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useExtracted } from "next-intl";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
 import { GameIcon } from "../../game";
@@ -95,6 +96,14 @@ export function GameObjectPicker<TSearchResult, TData>({
     set(items);
   }, [searchResults, set]);
 
+  const listRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: collection.items.length,
+    estimateSize: () => 40,
+    getScrollElement: () => listRef.current,
+    overscan: 5,
+  });
+
   const handleInputChange = (details: ComboboxType.InputValueChangeDetails) => {
     setInputValue(details.inputValue);
   };
@@ -172,21 +181,45 @@ export function GameObjectPicker<TSearchResult, TData>({
                 {isLoading && <Loader size="xs" />}
               </Flex>
             </Box>
-            <Combobox.List>
-              {collection.items.map((item) => (
-                <Combobox.Item key={item.value} item={item}>
-                  <Combobox.ItemText>
-                    <DropdownItem
-                      id={item.id}
-                      useData={config.useData}
-                      getName={config.getName}
-                      getIconName={config.getIconName}
-                    />
-                  </Combobox.ItemText>
-                  <Combobox.ItemIndicator />
-                </Combobox.Item>
-              ))}
-            </Combobox.List>
+            <Box ref={listRef} maxH="300px" overflow="auto">
+              {collection.items.length > 0 && (
+                <Combobox.List
+                  style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    position: "relative",
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = collection.items[virtualRow.index];
+
+                    return (
+                      <Combobox.Item
+                        key={item.value}
+                        item={item}
+                        style={{
+                          height: `${virtualRow.size}px`,
+                          left: 0,
+                          position: "absolute",
+                          top: 0,
+                          transform: `translateY(${virtualRow.start}px)`,
+                          width: "100%",
+                        }}
+                      >
+                        <Combobox.ItemText>
+                          <DropdownItem
+                            id={item.id}
+                            useData={config.useData}
+                            getName={config.getName}
+                            getIconName={config.getIconName}
+                          />
+                        </Combobox.ItemText>
+                        <Combobox.ItemIndicator />
+                      </Combobox.Item>
+                    );
+                  })}
+                </Combobox.List>
+              )}
+            </Box>
             {collection.items.length === 0 &&
               !isLoading &&
               inputValue.length >= 2 && (
@@ -244,21 +277,45 @@ export function GameObjectPicker<TSearchResult, TData>({
 
       <Combobox.Positioner>
         <Combobox.Content>
-          <Combobox.List>
-            {collection.items.map((item) => (
-              <Combobox.Item key={item.value} item={item}>
-                <Combobox.ItemText>
-                  <DropdownItem
-                    id={item.id}
-                    useData={config.useData}
-                    getName={config.getName}
-                    getIconName={config.getIconName}
-                  />
-                </Combobox.ItemText>
-                <Combobox.ItemIndicator />
-              </Combobox.Item>
-            ))}
-          </Combobox.List>
+          <Box ref={listRef} maxH="300px" overflow="auto">
+            {collection.items.length > 0 && (
+              <Combobox.List
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                  position: "relative",
+                }}
+              >
+                {virtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = collection.items[virtualRow.index];
+
+                  return (
+                    <Combobox.Item
+                      key={item.value}
+                      item={item}
+                      style={{
+                        height: `${virtualRow.size}px`,
+                        left: 0,
+                        position: "absolute",
+                        top: 0,
+                        transform: `translateY(${virtualRow.start}px)`,
+                        width: "100%",
+                      }}
+                    >
+                      <Combobox.ItemText>
+                        <DropdownItem
+                          id={item.id}
+                          useData={config.useData}
+                          getName={config.getName}
+                          getIconName={config.getIconName}
+                        />
+                      </Combobox.ItemText>
+                      <Combobox.ItemIndicator />
+                    </Combobox.Item>
+                  );
+                })}
+              </Combobox.List>
+            )}
+          </Box>
           {collection.items.length === 0 &&
             !isLoading &&
             inputValue.length >= 2 && (

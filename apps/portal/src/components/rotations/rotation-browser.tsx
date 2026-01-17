@@ -2,6 +2,7 @@
 
 import { createListCollection } from "@ark-ui/react/select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   GlobeIcon,
   LockIcon,
@@ -14,7 +15,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useExtracted, useFormatter } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/lib/engine";
@@ -132,6 +133,14 @@ export function RotationBrowser() {
     },
     [deleteMutation, t],
   );
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: rotations.length,
+    estimateSize: () => 65,
+    getScrollElement: () => parentRef.current,
+    overscan: 5,
+  });
 
   return (
     <VStack gap="4" alignItems="stretch">
@@ -264,21 +273,37 @@ export function RotationBrowser() {
             visibilityLabel={t("Visibility")}
             updatedLabel={t("Updated")}
           />
-          {rotations.map((rotation) => (
-            <RotationRow
-              key={rotation.id}
-              rotation={rotation}
-              isOwner={rotation.user_id === userId}
-              getClassColor={getClassColor}
-              getSpecLabel={getSpecLabel}
-              onDelete={handleDelete}
-              publicLabel={t("Public")}
-              privateLabel={t("Private")}
-              actionsLabel={t("Actions")}
-              editLabel={t("Edit")}
-              deleteLabel={t("Delete")}
-            />
-          ))}
+          <Box ref={parentRef} maxH="600px" overflow="auto">
+            <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const rotation = rotations[virtualRow.index];
+
+                return (
+                  <Box
+                    key={rotation.id}
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="full"
+                    style={{ transform: `translateY(${virtualRow.start}px)` }}
+                  >
+                    <RotationRow
+                      rotation={rotation}
+                      isOwner={rotation.user_id === userId}
+                      getClassColor={getClassColor}
+                      getSpecLabel={getSpecLabel}
+                      onDelete={handleDelete}
+                      publicLabel={t("Public")}
+                      privateLabel={t("Private")}
+                      actionsLabel={t("Actions")}
+                      editLabel={t("Edit")}
+                      deleteLabel={t("Delete")}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
         </Box>
       )}
     </VStack>

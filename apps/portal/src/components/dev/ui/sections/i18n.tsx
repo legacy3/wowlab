@@ -13,7 +13,7 @@ export function I18nSection() {
   const format = useFormatter();
 
   return (
-    <Section id="i18n" title="i18n Formatting">
+    <Section id="i18n" title="i18n Formatting" lazy>
       <Stack gap="8">
         <HStack gap="2">
           <Text color="fg.muted">Locale:</Text>

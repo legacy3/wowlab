@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { env } from "@/lib/env";
+import { href, routes } from "@/lib/routing";
 
 type ArticleMetaProps = {
   author?: string;
@@ -53,7 +54,15 @@ export function ArticleMeta({
       )}
       {author && (
         <MetaItem icon={User}>
-          <Text textStyle="xs">{author}</Text>
+          <Link
+            href={href(routes.users.profile, { handle: author })}
+            variant="plain"
+            textStyle="xs"
+            color="fg.muted"
+            _hover={{ color: "fg.default" }}
+          >
+            {author}
+          </Link>
         </MetaItem>
       )}
       {computedReadingTime !== undefined && (

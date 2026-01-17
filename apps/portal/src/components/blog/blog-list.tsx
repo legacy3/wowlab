@@ -1,7 +1,8 @@
 "use client";
 
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useExtracted, useFormatter } from "next-intl";
-import { Stack, VStack } from "styled-system/jsx";
+import { Box, Stack } from "styled-system/jsx";
 
 import type { BlogPost } from "@/lib/content/blog";
 
@@ -16,6 +17,12 @@ export function BlogList({ posts }: BlogListProps) {
   const t = useExtracted();
   const format = useFormatter();
 
+  const virtualizer = useWindowVirtualizer({
+    count: posts.length,
+    estimateSize: () => 80,
+    overscan: 5,
+  });
+
   if (posts.length === 0) {
     return (
       <Empty.Root size="md" variant="plain">
@@ -27,31 +34,41 @@ export function BlogList({ posts }: BlogListProps) {
   }
 
   return (
-    <VStack alignItems="stretch" gap="6">
-      {posts.map((post) => {
+    <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
+      {virtualizer.getVirtualItems().map((virtualRow) => {
+        const post = posts[virtualRow.index];
         const slug = post.slug.replace(/^blog\//, "");
 
         return (
-          <Stack key={slug} gap="1">
-            <Link href={href(routes.blog.post, { slug })}>{post.title}</Link>
-            <Text color="fg.muted" textStyle="sm">
-              {post.description}
-            </Text>
-            <Text
-              as="time"
-              color="fg.subtle"
-              textStyle="xs"
-              fontVariantNumeric="tabular-nums"
-            >
-              {format.dateTime(new Date(post.publishedAt), {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </Text>
-          </Stack>
+          <Box
+            key={slug}
+            position="absolute"
+            top="0"
+            left="0"
+            w="full"
+            style={{ transform: `translateY(${virtualRow.start}px)` }}
+          >
+            <Stack gap="1" pb="6">
+              <Link href={href(routes.blog.post, { slug })}>{post.title}</Link>
+              <Text color="fg.muted" textStyle="sm">
+                {post.description}
+              </Text>
+              <Text
+                as="time"
+                color="fg.subtle"
+                textStyle="xs"
+                fontVariantNumeric="tabular-nums"
+              >
+                {format.dateTime(new Date(post.publishedAt), {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
+            </Stack>
+          </Box>
         );
       })}
-    </VStack>
+    </Box>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { X } from "lucide-react";
 import { useExtracted, useFormatter } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { css } from "styled-system/css";
 import { Box, Grid, HStack, Stack } from "styled-system/jsx";
 
@@ -73,6 +74,14 @@ export function JobHistoryCard() {
     running: t("Running"),
   };
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: filteredJobs.length,
+    estimateSize: () => 48,
+    getScrollElement: () => parentRef.current,
+    overscan: 5,
+  });
+
   return (
     <>
       <Card.Root>
@@ -138,15 +147,9 @@ export function JobHistoryCard() {
             onChange={(e) => setFilter(e.target.value)}
             maxW="sm"
           />
-          <Box maxH="400px" overflow="auto" rounded="lg" borderWidth="1">
+          <Box rounded="lg" borderWidth="1" overflow="hidden">
             <Table.Root variant="surface">
-              <Table.Head
-                position="sticky"
-                top="0"
-                zIndex="10"
-                bg="bg.muted/95"
-                backdropFilter="blur(4px)"
-              >
+              <Table.Head bg="bg.muted/95">
                 <Table.Row>
                   <Table.Header w="100px" fontWeight="medium">
                     {t("Status")}
@@ -163,75 +166,96 @@ export function JobHistoryCard() {
                   </Table.Header>
                 </Table.Row>
               </Table.Head>
-              <Table.Body>
-                {filteredJobs.length === 0 ? (
-                  <Table.Row>
-                    <Table.Cell colSpan={5} h="32">
-                      <Empty.Root variant="plain" size="sm">
-                        <Empty.Content>
-                          <Empty.Title>
-                            {jobs.length === 0
-                              ? t("No simulations yet")
-                              : t("No jobs match the current filter")}
-                          </Empty.Title>
-                        </Empty.Content>
-                      </Empty.Root>
-                    </Table.Cell>
-                  </Table.Row>
-                ) : (
-                  filteredJobs.map((job) => (
-                    <Table.Row
-                      key={job.id}
-                      cursor="pointer"
-                      _hover={{ bg: "bg.subtle" }}
-                      onClick={() => setSelectedJob(job)}
-                    >
-                      <Table.Cell>
-                        <JobStatusBadge status={job.status} />
-                      </Table.Cell>
-                      <Table.Cell fontWeight="medium">{job.name}</Table.Cell>
-                      <Table.Cell
-                        fontFamily="mono"
-                        textStyle="sm"
-                        fontVariantNumeric="tabular-nums"
-                      >
-                        {job.result?.dps
-                          ? format.number(job.result.dps, {
-                              notation: "compact",
-                            })
-                          : "\u2014"}
-                      </Table.Cell>
-                      <Table.Cell
-                        fontFamily="mono"
-                        textStyle="sm"
-                        fontVariantNumeric="tabular-nums"
-                      >
-                        {job.result?.casts ?? "\u2014"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Tooltip content={t("Cancel")}>
-                          <IconButton
-                            variant="plain"
-                            size="xs"
-                            aria-label={t("Cancel simulation")}
-                            disabled={
-                              job.status !== "running" &&
-                              job.status !== "queued"
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              cancelJob(job.id);
-                            }}
-                          >
-                            <X style={{ height: 14, width: 14 }} />
-                          </IconButton>
-                        </Tooltip>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                )}
-              </Table.Body>
             </Table.Root>
+            <Box ref={parentRef} maxH="352px" overflow="auto">
+              {filteredJobs.length === 0 ? (
+                <Box h="32">
+                  <Empty.Root variant="plain" size="sm">
+                    <Empty.Content>
+                      <Empty.Title>
+                        {jobs.length === 0
+                          ? t("No simulations yet")
+                          : t("No jobs match the current filter")}
+                      </Empty.Title>
+                    </Empty.Content>
+                  </Empty.Root>
+                </Box>
+              ) : (
+                <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const job = filteredJobs[virtualRow.index];
+
+                    return (
+                      <Table.Root
+                        key={job.id}
+                        variant="surface"
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        w="full"
+                        style={{
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <Table.Body>
+                          <Table.Row
+                            cursor="pointer"
+                            _hover={{ bg: "bg.subtle" }}
+                            onClick={() => setSelectedJob(job)}
+                          >
+                            <Table.Cell w="100px">
+                              <JobStatusBadge status={job.status} />
+                            </Table.Cell>
+                            <Table.Cell fontWeight="medium">
+                              {job.name}
+                            </Table.Cell>
+                            <Table.Cell
+                              w="120px"
+                              fontFamily="mono"
+                              textStyle="sm"
+                              fontVariantNumeric="tabular-nums"
+                            >
+                              {job.result?.dps
+                                ? format.number(job.result.dps, {
+                                    notation: "compact",
+                                  })
+                                : "\u2014"}
+                            </Table.Cell>
+                            <Table.Cell
+                              w="100px"
+                              fontFamily="mono"
+                              textStyle="sm"
+                              fontVariantNumeric="tabular-nums"
+                            >
+                              {job.result?.casts ?? "\u2014"}
+                            </Table.Cell>
+                            <Table.Cell w="80px">
+                              <Tooltip content={t("Cancel")}>
+                                <IconButton
+                                  variant="plain"
+                                  size="xs"
+                                  aria-label={t("Cancel simulation")}
+                                  disabled={
+                                    job.status !== "running" &&
+                                    job.status !== "queued"
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    cancelJob(job.id);
+                                  }}
+                                >
+                                  <X style={{ height: 14, width: 14 }} />
+                                </IconButton>
+                              </Tooltip>
+                            </Table.Cell>
+                          </Table.Row>
+                        </Table.Body>
+                      </Table.Root>
+                    );
+                  })}
+                </Box>
+              )}
+            </Box>
           </Box>
         </Card.Body>
       </Card.Root>

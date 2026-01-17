@@ -26,7 +26,7 @@ import {
 
 export function DataDisplaySection() {
   return (
-    <Section id="data-display" title="Data Display">
+    <Section id="data-display" title="Data Display" lazy>
       <Stack gap="10">
         <CodeDemo />
         <KbdDemo />

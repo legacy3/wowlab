@@ -7,6 +7,7 @@ export {
   DemoLabel,
   ImportPath,
   JsonOutput,
+  LazyContent,
   NavLink,
   PageLayout,
   Section,

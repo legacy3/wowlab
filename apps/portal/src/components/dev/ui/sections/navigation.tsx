@@ -21,7 +21,7 @@ import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
 export function NavigationSection() {
   return (
-    <Section id="navigation" title="Navigation">
+    <Section id="navigation" title="Navigation" lazy>
       <Stack gap="10">
         <BreadcrumbDemo />
         <LinkDemo />

@@ -18,7 +18,7 @@ import { DemoDescription, fixtures, Section, Subsection } from "../../shared";
 
 export function SimulateSection() {
   return (
-    <Section id="simulate" title="Simulate">
+    <Section id="simulate" title="Simulate" lazy>
       <Stack gap="8">
         <CharacterCardDemo />
         <EquipmentSlotDemo />

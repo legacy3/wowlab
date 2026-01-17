@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useInView } from "react-intersection-observer";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
 import { Card, Code, ErrorBox, Heading, Skeleton, Text } from "@/components/ui";
@@ -163,6 +164,36 @@ export function JsonOutput({
   );
 }
 
+export function LazyContent({
+  children,
+  minHeight = 300,
+}: {
+  children: React.ReactNode;
+  minHeight?: number;
+}) {
+  const { inView, ref } = useInView({
+    rootMargin: "200px",
+    triggerOnce: true,
+  });
+
+  return (
+    <Box ref={ref} minH={inView ? undefined : `${minHeight}px`}>
+      {inView ? (
+        children
+      ) : (
+        <Stack gap="4">
+          <Skeleton h="200" />
+          <Skeleton h="200" />
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
+// =============================================================================
+// Data Display
+// =============================================================================
+
 export function PageLayout({ children, nav }: PageLayoutProps) {
   const headingIds = useMemo(() => nav.map((item) => item.id), [nav]);
   const activeId = useActiveHeading(headingIds);
@@ -207,17 +238,15 @@ export function PageLayout({ children, nav }: PageLayoutProps) {
   );
 }
 
-// =============================================================================
-// Data Display
-// =============================================================================
-
 export function Section({
   children,
   id,
+  lazy = false,
   title,
 }: {
   children: React.ReactNode;
   id: string;
+  lazy?: boolean;
   title: string;
 }) {
   return (
@@ -232,7 +261,7 @@ export function Section({
       >
         {title}
       </Heading>
-      {children}
+      {lazy ? <LazyContent>{children}</LazyContent> : children}
     </styled.section>
   );
 }
