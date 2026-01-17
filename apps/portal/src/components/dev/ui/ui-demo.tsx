@@ -19,6 +19,7 @@ import {
 const NAV = [
   // Foundation
   { id: "tokens", label: "Tokens" },
+  { id: "i18n", label: "i18n" },
   // Core UI
   { id: "actions", label: "Actions" },
   { id: "forms", label: "Forms" },
@@ -30,7 +31,6 @@ const NAV = [
   // Domain-specific
   { id: "simulate", label: "Simulate" },
   { id: "spec-picker", label: "Spec Picker" },
-  { id: "i18n", label: "i18n" },
   { id: "distributed-nodes", label: "Distributed Nodes" },
 ];
 
@@ -38,6 +38,7 @@ export function UiDemo() {
   return (
     <PageLayout nav={NAV}>
       <TokensSection />
+      <I18nSection />
       <ActionsSection />
       <FormsSection />
       <DataDisplaySection />
@@ -47,7 +48,6 @@ export function UiDemo() {
       <FeedbackSection />
       <SimulateSection />
       <SpecPickerSection />
-      <I18nSection />
       <DistributedNodesSection />
     </PageLayout>
   );
