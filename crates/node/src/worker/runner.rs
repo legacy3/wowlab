@@ -1,9 +1,11 @@
 //! Simulation runner that integrates with the engine crate.
 
-use engine::sim::{BatchResults, SimConfig, SimState, Simulation};
+use engine::sim::{BatchResults, SimConfig, Simulation};
 use engine::types::SpecId;
 use engine::actor::Player;
-use engine::specs::BmHunter;
+use engine::handler::SpecHandler;
+use engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
+use engine::specs::hunter::mm::MmHunter;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -159,9 +161,26 @@ impl SimRunner {
         // Create player with stats
         let mut player = create_player(spec_id, &request.player)?;
 
-        // Get spec handler
-        let handler: Arc<dyn engine::handler::SpecHandler> = match spec_id {
-            SpecId::BeastMastery => Arc::new(BmHunter::new()),
+        // Get rotation JSON - use provided if it looks like JSON, otherwise use empty default.
+        // This handles backwards compatibility with old Rhai script format.
+        let rotation_json = if request.rotation.is_empty() || !request.rotation.trim().starts_with('{') {
+            r#"{"name": "default", "actions": []}"#.to_string()
+        } else {
+            request.rotation.clone()
+        };
+
+        // Create spec handler with rotation
+        let handler: Arc<dyn SpecHandler> = match spec_id {
+            SpecId::BeastMastery => {
+                let h = BmHunter::new(&rotation_json, TalentFlags::empty(), TierSetFlags::NONE)
+                    .map_err(|e| SimError::Engine(format!("Failed to create BM handler: {}", e)))?;
+                Arc::new(h)
+            }
+            SpecId::Marksmanship => {
+                let h = MmHunter::new(&rotation_json)
+                    .map_err(|e| SimError::Engine(format!("Failed to create MM handler: {}", e)))?;
+                Arc::new(h)
+            }
             _ => return Err(SimError::Engine(format!("Spec {:?} not implemented", spec_id))),
         };
 
