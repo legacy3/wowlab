@@ -242,11 +242,13 @@ export function Section({
   children,
   id,
   lazy = false,
+  minHeight,
   title,
 }: {
   children: React.ReactNode;
   id: string;
   lazy?: boolean;
+  minHeight?: number;
   title: string;
 }) {
   return (
@@ -261,7 +263,7 @@ export function Section({
       >
         {title}
       </Heading>
-      {lazy ? <LazyContent>{children}</LazyContent> : children}
+      {lazy ? <LazyContent minHeight={minHeight}>{children}</LazyContent> : children}
     </styled.section>
   );
 }

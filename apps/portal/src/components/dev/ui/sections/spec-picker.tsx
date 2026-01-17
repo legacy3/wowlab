@@ -14,7 +14,7 @@ export function SpecPickerSection() {
   const { getClassColor, getSpecLabel } = useClassesAndSpecs();
 
   return (
-    <Section id="spec-picker" title="Spec Picker" lazy>
+    <Section id="spec-picker" title="Spec Picker" lazy minHeight={866}>
       <Subsection title="Interactive spec selector">
         <Stack gap="6">
           <Card.Root>

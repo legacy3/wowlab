@@ -35,7 +35,7 @@ const selectCollection = createListCollection({
 
 export function FormsSection() {
   return (
-    <Section id="forms" title="Forms" lazy>
+    <Section id="forms" title="Forms" lazy minHeight={1950}>
       <Stack gap="10">
         <InputDemo />
         <TextareaDemo />

@@ -27,7 +27,7 @@ import {
 
 export function FeedbackSection() {
   return (
-    <Section id="feedback" title="Feedback" lazy>
+    <Section id="feedback" title="Feedback" lazy minHeight={2590}>
       <Stack gap="10">
         <LoaderDemo />
         <SkeletonDemo />
