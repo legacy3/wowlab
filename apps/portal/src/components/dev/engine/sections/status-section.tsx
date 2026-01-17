@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
 import { Badge, Button, Code, Text } from "@/components/ui";
-import { getEngineVersion, useEngine } from "@/lib/engine";
+import { engine } from "@/lib/engine";
 
 import {
   DemoBox,
@@ -57,28 +57,47 @@ function ImportsDemo() {
     <Subsection title="Usage">
       <DemoDescription>Import engine functions from the lib.</DemoDescription>
       <DemoBox>
-        <Code language="typescript">{`import {
-  initEngine,
-  getEngineVersion,
-  parseRotation,
-  validateRotation,
-  getVarPathSchema,
-  parseSimc,
-} from "@/lib/engine";`}</Code>
+        <Code language="typescript">{`import { engine } from "@/lib/engine";
+
+// Schema
+const schema = await engine.schema.varPaths();
+
+// Parsing
+const profile = await engine.parseSimc(input);
+const rotation = await engine.parseRotation(json);
+
+// Validation
+const result = await engine.validate(json);`}</Code>
       </DemoBox>
     </Subsection>
   );
 }
 
 function InitDemo() {
-  const { error, isLoading, isReady, retry } = useEngine();
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const [version, setVersion] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const load = () => {
+    setStatus("loading");
+    setError(null);
+    engine
+      .version()
+      .then((v) => {
+        setVersion(v);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        setError(err);
+        setStatus("error");
+      });
+  };
 
   useEffect(() => {
-    if (isReady) {
-      getEngineVersion().then(setVersion);
-    }
-  }, [isReady]);
+    load();
+  }, []);
 
   return (
     <Subsection title="Initialization">
@@ -89,12 +108,14 @@ function InitDemo() {
         <DemoBox>
           <DemoLabel>Status</DemoLabel>
           <HStack gap="3">
-            {isLoading && <Badge colorPalette="amber">Initializing...</Badge>}
-            {isReady && <Badge colorPalette="green">Ready</Badge>}
-            {error && (
+            {status === "loading" && (
+              <Badge colorPalette="amber">Initializing...</Badge>
+            )}
+            {status === "ready" && <Badge colorPalette="green">Ready</Badge>}
+            {status === "error" && (
               <>
                 <Badge colorPalette="red">Error</Badge>
-                <Button size="xs" variant="outline" onClick={retry}>
+                <Button size="xs" variant="outline" onClick={load}>
                   Retry
                 </Button>
               </>
@@ -112,7 +133,7 @@ function InitDemo() {
             <Code>{version}</Code>
           ) : (
             <Text color="fg.muted" textStyle="sm">
-              {isReady ? "Loading..." : "Engine not ready"}
+              {status === "loading" ? "Loading..." : "Engine not ready"}
             </Text>
           )}
         </DemoBox>

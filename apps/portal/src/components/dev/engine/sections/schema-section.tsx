@@ -1,16 +1,11 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
 import { Badge, Code, Input, Skeleton, Table, Text } from "@/components/ui";
-import {
-  getVarPathSchema,
-  useEngine,
-  type VarPathCategory,
-  type VarPathInfo,
-} from "@/lib/engine";
+import { engine, type VarPathCategory, type VarPathInfo } from "@/lib/engine";
 
 import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
@@ -19,19 +14,17 @@ interface FlatPath extends VarPathInfo {
 }
 
 export function SchemaSection() {
-  const { isReady } = useEngine();
   const [schema, setSchema] = useState<VarPathCategory[] | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const fetchedRef = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isReady && !fetchedRef.current) {
-      fetchedRef.current = true;
-      getVarPathSchema().then(setSchema).catch(setError);
-    }
-  }, [isReady]);
-
-  const isLoading = isReady && !schema && !error;
+    engine.schema
+      .varPaths()
+      .then(setSchema)
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const flatPaths = useMemo(() => {
     if (!schema) return [];
@@ -54,9 +47,7 @@ export function SchemaSection() {
             category.
           </DemoDescription>
           <DemoBox>
-            {!isReady ? (
-              <Text color="fg.muted">Engine not ready</Text>
-            ) : isLoading ? (
+            {isLoading ? (
               <HStack gap="2">
                 <Skeleton h="5" w="24" />
                 <Skeleton h="5" w="24" />

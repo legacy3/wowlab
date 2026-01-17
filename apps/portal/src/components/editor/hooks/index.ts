@@ -1,3 +1,5 @@
+// Hooks
+
 export { useCanEdit, useIsOwner } from "./use-can-edit";
 export {
   formatShortcut,

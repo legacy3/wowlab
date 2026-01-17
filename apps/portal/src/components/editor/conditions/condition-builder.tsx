@@ -6,14 +6,7 @@ import { QueryBuilder } from "react-querybuilder";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 
-import {
-  CONDITION_FIELDS,
-  type ConditionField,
-  FIELD_CATEGORIES,
-  type FieldCategory,
-  getFieldsByCategory,
-  OPERATORS,
-} from "@/lib/engine";
+import { CONDITION_FIELDS, OPERATORS } from "@/lib/engine";
 
 import {
   AddGroupButton,
@@ -24,9 +17,6 @@ import {
   RemoveButton,
   ValueEditor,
 } from "./condition-controls";
-
-export { CONDITION_FIELDS, FIELD_CATEGORIES, getFieldsByCategory };
-export type { ConditionField, FieldCategory };
 
 interface ConditionBuilderProps {
   disabled?: boolean;

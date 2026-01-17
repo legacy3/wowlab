@@ -1,8 +1,16 @@
+/* eslint-disable */
+
+// Client
+
 export { createClient } from "./client";
-export type { Database } from "./database.types";
+
+// Middleware
+
 export { updateSession } from "./middleware";
-// Note: Server client must be imported directly from "./server" in server components
-// to avoid bundling next/headers in client code
+
+// Types
+
+export type { Database } from "./database.types";
 export type {
   Aura,
   GameRow,
@@ -19,3 +27,5 @@ export type {
   UserIdentity,
   View,
 } from "./types";
+
+// Note: Server client must be imported directly from "./server" in server components to avoid bundling next/headers in client code

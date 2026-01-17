@@ -1,3 +1,7 @@
+/* eslint-disable */
+
+// Navigation
+
 export {
   getPathname,
   Link,
@@ -5,4 +9,7 @@ export {
   usePathname,
   useRouter,
 } from "./navigation";
-export { type Locale, routing } from "./routing";
+
+// Routing
+
+export { routing, type Locale } from "./routing";

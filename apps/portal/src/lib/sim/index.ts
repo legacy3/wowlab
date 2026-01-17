@@ -1,3 +1,5 @@
+// Store
+
 export {
   MAX_RECENT_PROFILES,
   selectIsParsing,
@@ -6,6 +8,9 @@ export {
   useCharacterInput,
   useRecentProfiles,
 } from "./store";
+
+// Types
+
 export type {
   Character,
   Item,

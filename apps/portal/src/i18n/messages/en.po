@@ -663,39 +663,39 @@ msgstr "No options available"
 msgid "724CrE"
 msgstr "Select..."
 
-#: src/components/editor/conditions/condition-controls.tsx:50
+#: src/components/editor/conditions/condition-controls.tsx:51
 msgid "HpoDwk"
 msgstr "Group"
 
-#: src/components/editor/conditions/condition-controls.tsx:69
+#: src/components/editor/conditions/condition-controls.tsx:70
 msgid "XTdAcD"
 msgstr "Rule"
 
-#: src/components/editor/conditions/condition-controls.tsx:92
+#: src/components/editor/conditions/condition-controls.tsx:93
 msgid "Oo+0sJ"
 msgstr "..."
 
-#: src/components/editor/conditions/condition-controls.tsx:159
+#: src/components/editor/conditions/condition-controls.tsx:160
 msgid "Ln/gLL"
 msgstr "Search fields..."
 
-#: src/components/editor/conditions/condition-controls.tsx:170
+#: src/components/editor/conditions/condition-controls.tsx:171
 msgid "DcB1x4"
 msgstr "No fields found"
 
-#: src/components/editor/conditions/condition-controls.tsx:212
+#: src/components/editor/conditions/condition-controls.tsx:213
 msgid "e3oUSp"
 msgstr "Operator..."
 
-#: src/components/editor/conditions/condition-controls.tsx:233
+#: src/components/editor/conditions/condition-controls.tsx:234
 msgid "G/yZLu"
 msgstr "Remove"
 
-#: src/components/editor/conditions/condition-controls.tsx:257
+#: src/components/editor/conditions/condition-controls.tsx:258
 msgid "H/qfPC"
 msgstr "Select value..."
 
-#: src/components/editor/conditions/condition-controls.tsx:270
+#: src/components/editor/conditions/condition-controls.tsx:271
 msgid "vla+dM"
 msgstr "Value..."
 

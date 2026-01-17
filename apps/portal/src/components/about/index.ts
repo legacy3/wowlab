@@ -1,1 +1,3 @@
-export * from "./about-tabs";
+// Components
+
+export { AboutTabs } from "./about-tabs";

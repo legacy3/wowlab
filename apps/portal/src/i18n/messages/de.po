@@ -663,39 +663,39 @@ msgstr ""
 msgid "724CrE"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:50
+#: src/components/editor/conditions/condition-controls.tsx:51
 msgid "HpoDwk"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:69
+#: src/components/editor/conditions/condition-controls.tsx:70
 msgid "XTdAcD"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:92
+#: src/components/editor/conditions/condition-controls.tsx:93
 msgid "Oo+0sJ"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:159
+#: src/components/editor/conditions/condition-controls.tsx:160
 msgid "Ln/gLL"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:170
+#: src/components/editor/conditions/condition-controls.tsx:171
 msgid "DcB1x4"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:212
+#: src/components/editor/conditions/condition-controls.tsx:213
 msgid "e3oUSp"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:233
+#: src/components/editor/conditions/condition-controls.tsx:234
 msgid "G/yZLu"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:257
+#: src/components/editor/conditions/condition-controls.tsx:258
 msgid "H/qfPC"
 msgstr ""
 
-#: src/components/editor/conditions/condition-controls.tsx:270
+#: src/components/editor/conditions/condition-controls.tsx:271
 msgid "vla+dM"
 msgstr ""
 

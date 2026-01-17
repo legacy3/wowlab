@@ -1,3 +1,5 @@
+// Components
+
 export { ActionsSection } from "./actions";
 export { ChartsSection } from "./charts";
 export { DataDisplaySection } from "./data-display";

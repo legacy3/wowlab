@@ -14,9 +14,10 @@ import { PlusIcon, XIcon } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { CONDITION_FIELDS, FIELD_CATEGORIES } from "@/lib/engine";
+
 import { Button, Combobox, Empty, IconButton, Input } from "../../ui";
 import { SelectField, type SelectOption } from "../common/select-field";
-import { CONDITION_FIELDS, FIELD_CATEGORIES } from "./condition-builder";
 
 interface FieldItem {
   category: string;

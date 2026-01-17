@@ -1,4 +1,14 @@
+/* eslint-disable */
+
+// Types
+
 export type { DocEntry } from "./docs";
-export * from "./toc";
 export type { NavItem, TocEntry } from "./types";
-export * from "./utils";
+
+// TOC
+
+export { flattenToc, type TocHeading } from "./toc";
+
+// Utils
+
+export { createNavItem, getAdjacentItems } from "./utils";
