@@ -181,6 +181,8 @@ msgstr "No jobs match the current filter"
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
 #: src/components/layout/computing-drawer.tsx:128
+#: src/components/nodes/node-settings-dialog.tsx:191
+#: src/components/nodes/node-settings-dialog.tsx:237
 msgid "47FYwb"
 msgstr "Cancel"
 
@@ -237,6 +239,7 @@ msgstr "OK"
 
 #: src/components/computing/cards/workers-card.tsx:14
 #: src/components/nodes/node-claim-form.tsx:109
+#: src/components/nodes/node-settings-dialog.tsx:111
 #: src/components/nodes/nodes-table.tsx:82
 #: src/components/nodes/nodes-table.tsx:157
 msgid "t6RYbw"
@@ -385,6 +388,7 @@ msgstr "Duplicate"
 #: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
 #: src/components/editor/sidebar/sortable-list-item.tsx:190
+#: src/components/nodes/node-settings-dialog.tsx:188
 #: src/components/rotations/rotation-browser.tsx:300
 msgid "K3r6DQ"
 msgstr "Delete"
@@ -877,6 +881,7 @@ msgid "adQu2P"
 msgstr "Configure Your Node"
 
 #: src/components/nodes/node-claim-form.tsx:99
+#: src/components/nodes/node-settings-dialog.tsx:102
 msgid "+gH1Ai"
 msgstr "Node Name"
 
@@ -885,6 +890,7 @@ msgid "3WiUI+"
 msgstr "My Gaming PC"
 
 #: src/components/nodes/node-claim-form.tsx:111
+#: src/components/nodes/node-settings-dialog.tsx:113
 msgid "d8nhsg"
 msgstr "{workers, number} / {totalCores, number} cores"
 
@@ -904,15 +910,15 @@ msgstr "Claim Your Node"
 msgid "W6+Aj5"
 msgstr "Enter the 6-character code displayed by your node application"
 
-#: src/components/nodes/node-claim-form.tsx:198
+#: src/components/nodes/node-claim-form.tsx:200
 msgid "6bMfIz"
 msgstr "Verify Code"
 
-#: src/components/nodes/node-claim-form.tsx:211
+#: src/components/nodes/node-claim-form.tsx:213
 msgid "yScDrH"
 msgstr "Don't have the app?"
 
-#: src/components/nodes/node-claim-form.tsx:217
+#: src/components/nodes/node-claim-form.tsx:219
 msgid "OZpUxW"
 msgstr "Download Node"
 
@@ -947,6 +953,47 @@ msgstr "Desktop"
 #: src/components/nodes/node-download-dialog.tsx:144
 msgid "0EkaRE"
 msgstr "Download CLI (headless)"
+
+#: src/components/nodes/node-settings-dialog.tsx:85
+msgid "WWEwrn"
+msgstr "Node Settings"
+
+#: src/components/nodes/node-settings-dialog.tsx:87
+msgid "Jce+aM"
+msgstr "Configure your node settings"
+
+#: src/components/nodes/node-settings-dialog.tsx:142
+msgid "qxg3uo"
+msgstr "Access"
+
+#: src/components/nodes/node-settings-dialog.tsx:146
+msgid "cWUdpb"
+msgstr "Select access level"
+
+#: src/components/nodes/node-settings-dialog.tsx:165
+msgid "YXoHk0"
+msgstr "Power"
+
+#: src/components/nodes/node-settings-dialog.tsx:167
+msgid "8WOSZM"
+msgstr "Enable this node for simulations"
+
+#: src/components/nodes/node-settings-dialog.tsx:194
+msgid "3VI9mt"
+msgstr "Save Changes"
+
+#: src/components/nodes/node-settings-dialog.tsx:212
+#: src/components/nodes/node-settings-dialog.tsx:245
+msgid "w/GP8Z"
+msgstr "Delete Node"
+
+#: src/components/nodes/node-settings-dialog.tsx:214
+msgid "JDJoIZ"
+msgstr "This action cannot be undone."
+
+#: src/components/nodes/node-settings-dialog.tsx:222
+msgid "d8JZF+"
+msgstr "Type {name} to confirm deletion."
 
 #: src/components/nodes/nodes-table.tsx:80
 #: src/components/nodes/nodes-table.tsx:155

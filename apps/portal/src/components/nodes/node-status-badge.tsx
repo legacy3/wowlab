@@ -36,7 +36,7 @@ export function NodeStatusBadge({ size, status }: NodeStatusBadgeProps) {
       variant={config.variant}
       size={size}
     >
-      {t(config.label)}
+      {config.label}
     </Badge>
   );
 }

@@ -152,7 +152,7 @@ export function NodeSettingsDialog({
                     <Select.Content>
                       {accessCollection.items.map((item) => (
                         <Select.Item key={item.value} item={item}>
-                          <Select.ItemText>{t(item.label)}</Select.ItemText>
+                          <Select.ItemText>{item.label}</Select.ItemText>
                           <Select.ItemIndicator />
                         </Select.Item>
                       ))}

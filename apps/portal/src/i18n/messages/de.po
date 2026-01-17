@@ -181,6 +181,8 @@ msgstr ""
 #: src/components/editor/variable-editor-dialog.tsx:97
 #: src/components/layout/computing-drawer.tsx:103
 #: src/components/layout/computing-drawer.tsx:128
+#: src/components/nodes/node-settings-dialog.tsx:191
+#: src/components/nodes/node-settings-dialog.tsx:237
 msgid "47FYwb"
 msgstr ""
 
@@ -237,6 +239,7 @@ msgstr ""
 
 #: src/components/computing/cards/workers-card.tsx:14
 #: src/components/nodes/node-claim-form.tsx:109
+#: src/components/nodes/node-settings-dialog.tsx:111
 #: src/components/nodes/nodes-table.tsx:82
 #: src/components/nodes/nodes-table.tsx:157
 msgid "t6RYbw"
@@ -385,6 +388,7 @@ msgstr ""
 #: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
 #: src/components/editor/sidebar/sortable-list-item.tsx:190
+#: src/components/nodes/node-settings-dialog.tsx:188
 #: src/components/rotations/rotation-browser.tsx:300
 msgid "K3r6DQ"
 msgstr ""
@@ -877,6 +881,7 @@ msgid "adQu2P"
 msgstr ""
 
 #: src/components/nodes/node-claim-form.tsx:99
+#: src/components/nodes/node-settings-dialog.tsx:102
 msgid "+gH1Ai"
 msgstr ""
 
@@ -885,6 +890,7 @@ msgid "3WiUI+"
 msgstr ""
 
 #: src/components/nodes/node-claim-form.tsx:111
+#: src/components/nodes/node-settings-dialog.tsx:113
 msgid "d8nhsg"
 msgstr ""
 
@@ -904,15 +910,15 @@ msgstr ""
 msgid "W6+Aj5"
 msgstr ""
 
-#: src/components/nodes/node-claim-form.tsx:198
+#: src/components/nodes/node-claim-form.tsx:200
 msgid "6bMfIz"
 msgstr ""
 
-#: src/components/nodes/node-claim-form.tsx:211
+#: src/components/nodes/node-claim-form.tsx:213
 msgid "yScDrH"
 msgstr ""
 
-#: src/components/nodes/node-claim-form.tsx:217
+#: src/components/nodes/node-claim-form.tsx:219
 msgid "OZpUxW"
 msgstr ""
 
@@ -946,6 +952,47 @@ msgstr ""
 
 #: src/components/nodes/node-download-dialog.tsx:144
 msgid "0EkaRE"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:85
+msgid "WWEwrn"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:87
+msgid "Jce+aM"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:142
+msgid "qxg3uo"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:146
+msgid "cWUdpb"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:165
+msgid "YXoHk0"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:167
+msgid "8WOSZM"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:194
+msgid "3VI9mt"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:212
+#: src/components/nodes/node-settings-dialog.tsx:245
+msgid "w/GP8Z"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:214
+msgid "JDJoIZ"
+msgstr ""
+
+#: src/components/nodes/node-settings-dialog.tsx:222
+msgid "d8JZF+"
 msgstr ""
 
 #: src/components/nodes/nodes-table.tsx:80
