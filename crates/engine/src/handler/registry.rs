@@ -4,10 +4,6 @@ use super::SpecHandler;
 use crate::types::SpecId;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::OnceLock;
-
-/// Global handler registry, lazily initialized.
-static GLOBAL_REGISTRY: OnceLock<HandlerRegistry> = OnceLock::new();
 
 /// Registry mapping spec IDs to their handlers.
 ///
@@ -70,27 +66,24 @@ impl Default for HandlerRegistry {
     }
 }
 
-/// Global handler registry with all spec handlers.
-///
-/// This is populated at startup and provides handlers for all supported specs.
+/// Create a spec handler for the given spec with rotation and talents.
 #[cfg(feature = "jit")]
-pub fn create_default_registry() -> HandlerRegistry {
-    use crate::specs::hunter::bm::BmHunter;
+pub fn create_handler(
+    spec_id: SpecId,
+    rotation_json: &str,
+) -> Result<Arc<dyn SpecHandler>, String> {
+    use crate::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
     use crate::specs::hunter::mm::MmHunter;
 
-    let mut registry = HandlerRegistry::new();
-
-    // Register all implemented specs
-    registry.register(BmHunter::new());
-    registry.register(MmHunter::new());
-
-    registry
-}
-
-/// Get or create the global handler registry.
-///
-/// This lazily initializes the registry with all implemented spec handlers.
-#[cfg(feature = "jit")]
-pub fn global_registry() -> &'static HandlerRegistry {
-    GLOBAL_REGISTRY.get_or_init(create_default_registry)
+    match spec_id {
+        SpecId::BeastMastery => {
+            let handler = BmHunter::new(rotation_json, TalentFlags::empty(), TierSetFlags::NONE)?;
+            Ok(Arc::new(handler))
+        }
+        SpecId::Marksmanship => {
+            let handler = MmHunter::new(rotation_json)?;
+            Ok(Arc::new(handler))
+        }
+        _ => Err(format!("Spec {:?} not implemented", spec_id)),
+    }
 }

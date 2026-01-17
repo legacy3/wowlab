@@ -4,16 +4,20 @@ use crate::class::HunterClass;
 use crate::class::hunter::FOCUS_REGEN_BASE;
 use crate::types::{SpecId, ClassId};
 
+fn create_handler() -> MmHunter {
+    MmHunter::with_defaults().expect("Failed to create MmHunter")
+}
+
 #[test]
 fn test_mm_hunter_spec_id() {
-    let handler = MmHunter::new();
+    let handler = create_handler();
     assert_eq!(handler.spec_id(), SpecId::Marksmanship);
     assert_eq!(handler.class_id(), ClassId::Hunter);
 }
 
 #[test]
 fn test_mm_hunter_is_hunter_class() {
-    let handler = MmHunter::new();
+    let handler = create_handler();
     // Verify HunterClass trait is implemented
     assert_eq!(handler.base_focus_regen(), FOCUS_REGEN_BASE);
 }
@@ -59,7 +63,7 @@ fn test_spell_name_lookup() {
 
 #[test]
 fn test_aura_name_lookup() {
-    let handler = MmHunter::new();
+    let handler = create_handler();
     assert_eq!(handler.aura_name_to_idx("trueshot"), Some(TRUESHOT_BUFF));
     assert_eq!(handler.aura_name_to_idx("precise_shots"), Some(PRECISE_SHOTS));
     assert_eq!(handler.aura_name_to_idx("steady_focus"), Some(STEADY_FOCUS));
@@ -86,7 +90,7 @@ fn test_mm_lone_wolf_by_default() {
     // MM Hunter uses Lone Wolf (no pet) by default
     // Pet damage modifier should be 1.0 (no special bonus)
     // Since SimState requires parameters, we test the trait method directly
-    let handler = MmHunter::new();
+    let handler = create_handler();
 
     // Create a minimal SimState for testing
     use crate::sim::{SimState, SimConfig};
@@ -144,8 +148,8 @@ fn test_parallel_bm_mm_no_conflicts() {
     // Verify both specs can be created and used without global state conflicts
     use crate::specs::hunter::bm::BmHunter;
 
-    let bm_handler = BmHunter::new();
-    let mm_handler = MmHunter::new();
+    let bm_handler = BmHunter::with_defaults().expect("Failed to create BmHunter");
+    let mm_handler = create_handler();
 
     // Both should return their respective spec IDs
     assert_eq!(bm_handler.spec_id(), SpecId::BeastMastery);
@@ -169,8 +173,8 @@ fn test_shared_hunter_class_methods() {
     use crate::actor::Player;
     use crate::specs::hunter::bm::BmHunter;
 
-    let bm_handler = BmHunter::new();
-    let mm_handler = MmHunter::new();
+    let bm_handler = BmHunter::with_defaults().expect("Failed to create BmHunter");
+    let mm_handler = create_handler();
 
     // Both should use the same base focus regen from HunterClass
     assert_eq!(bm_handler.base_focus_regen(), FOCUS_REGEN_BASE);

@@ -1,9 +1,7 @@
-use crate::types::SpecId;
 use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress};
-use crate::handler::{SpecHandler, create_default_registry};
+use crate::handler::{SpecHandler, create_handler};
 use crate::actor::Player;
 use crate::rotation::Rotation;
-use crate::specs::BmHunter;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
 use std::sync::Arc;
 use std::time::Duration;
@@ -79,16 +77,11 @@ impl Runner {
 
         let spec_id = spec.to_spec_id();
 
-        // Get handler from registry
-        let registry = create_default_registry();
-        let handler = registry.get(spec_id)
-            .ok_or_else(|| format!("Spec {:?} not implemented", spec_id))?;
-
         // Load rotation script
         let rotation_script = Self::load_rotation_script(spec, rotation_file.as_deref())?;
 
-        // Initialize rotation for this spec
-        Self::init_rotation(spec_id, &rotation_script)?;
+        // Create handler with rotation
+        let handler = create_handler(spec_id, &rotation_script)?;
 
         // Load gear
         let gear = if let Some(ref path) = gear_file {
@@ -150,14 +143,6 @@ impl Runner {
         }
 
         Ok(())
-    }
-
-    /// Initialize rotation for a spec
-    fn init_rotation(spec_id: SpecId, script: &str) -> Result<(), String> {
-        match spec_id {
-            SpecId::BeastMastery => BmHunter::init_rotation(script),
-            _ => Err(format!("Spec {:?} not implemented", spec_id)),
-        }
     }
 
     /// Run batch simulation in parallel across all CPU cores
@@ -235,7 +220,7 @@ impl Runner {
     fn list_specs() -> Result<(), String> {
         println!("Available specs:");
         println!("  bm-hunter  - Beast Mastery Hunter");
-        // Add more as implemented
+        println!("  mm-hunter  - Marksmanship Hunter");
         Ok(())
     }
 
@@ -249,6 +234,7 @@ impl Runner {
             // Use default rotation for spec
             let default_path = match spec {
                 SpecArg::BmHunter => "rotations/bm_hunter.json",
+                SpecArg::MmHunter => "rotations/mm_hunter.json",
             };
             debug!(path = default_path, "Loading default rotation file");
             std::fs::read_to_string(default_path)

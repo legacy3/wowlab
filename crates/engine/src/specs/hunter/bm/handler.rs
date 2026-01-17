@@ -23,15 +23,16 @@ use super::talents::{active_talents, collect_damage_mods};
 use tracing::debug;
 
 // ============================================================================
-// Static Storage
+// Static Storage (spell/aura definitions are code constants)
 // ============================================================================
 
-static BM_ROTATION: std::sync::OnceLock<CompiledRotation> = std::sync::OnceLock::new();
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
-fn get_rotation() -> &'static CompiledRotation {
-    BM_ROTATION.get().expect("BM Hunter rotation not initialized")
+/// Ensure spell and aura definitions are initialized (idempotent).
+fn ensure_definitions() {
+    SPELL_DEFS.get_or_init(spell_definitions);
+    AURA_DEFS.get_or_init(aura_definitions);
 }
 
 fn get_spell(id: SpellIdx) -> Option<&'static SpellDef> {
@@ -58,25 +59,29 @@ fn get_aura_defs() -> &'static [AuraDef] {
 pub struct BmHunter {
     talents: TalentFlags,
     tier_sets: TierSetFlags,
+    rotation: CompiledRotation,
 }
 
 impl BmHunter {
-    pub fn new() -> Self {
-        Self {
-            talents: TalentFlags::empty(),
-            tier_sets: TierSetFlags::NONE,
-        }
+    /// Create a new BM Hunter handler with the given rotation and talents.
+    pub fn new(rotation_json: &str, talents: TalentFlags, tier_sets: TierSetFlags) -> Result<Self, String> {
+        ensure_definitions();
+
+        let resolver = spec_resolver(talents);
+        let rotation = CompiledRotation::compile_json(rotation_json, &resolver)
+            .map_err(|e| format!("Compile error: {}", e))?;
+
+        Ok(Self { talents, tier_sets, rotation })
     }
 
-    pub fn with_talents(talents: TalentFlags) -> Self {
-        Self {
-            talents,
-            tier_sets: TierSetFlags::NONE,
-        }
+    /// Create with default empty rotation (for tests/simple cases).
+    pub fn with_defaults() -> Result<Self, String> {
+        Self::new(r#"{"actions":[]}"#, TalentFlags::empty(), TierSetFlags::NONE)
     }
 
-    pub fn with_talents_and_tier_sets(talents: TalentFlags, tier_sets: TierSetFlags) -> Self {
-        Self { talents, tier_sets }
+    /// Create with talents and default rotation.
+    pub fn with_talents(rotation_json: &str, talents: TalentFlags) -> Result<Self, String> {
+        Self::new(rotation_json, talents, TierSetFlags::NONE)
     }
 
     pub fn has_talent(&self, talent: TalentFlags) -> bool {
@@ -85,21 +90,6 @@ impl BmHunter {
 
     pub fn has_tier_set(&self, tier_set: TierSetFlags) -> bool {
         self.tier_sets.contains(tier_set)
-    }
-
-    /// Initialize rotation from JSON.
-    pub fn init_rotation(json: &str) -> Result<(), String> {
-        let spells = spell_definitions();
-        SPELL_DEFS.set(spells).map_err(|_| "Spell definitions already initialized")?;
-
-        let auras = aura_definitions();
-        AURA_DEFS.set(auras).map_err(|_| "Aura definitions already initialized")?;
-
-        let resolver = spec_resolver(TalentFlags::empty());
-        let compiled = CompiledRotation::compile_json(json, &resolver).map_err(|e| format!("Compile error: {}", e))?;
-        BM_ROTATION.set(compiled).map_err(|_| "Rotation already initialized")?;
-
-        Ok(())
     }
 
     /// Get talent names for effect execution.
@@ -218,11 +208,6 @@ impl BmHunter {
     }
 }
 
-impl Default for BmHunter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 // ============================================================================
 // SpecHandler Implementation
@@ -287,7 +272,7 @@ impl SpecHandler for BmHunter {
     fn on_gcd(&self, state: &mut SimState) {
         if state.finished { return; }
 
-        let result = get_rotation().evaluate(state);
+        let result = self.rotation.evaluate(state);
 
         if result.is_cast() {
             if let Some(spell) = spell_id_to_idx(result.spell_id) {
@@ -384,7 +369,7 @@ impl SpecHandler for BmHunter {
     }
 
     fn next_action(&self, state: &SimState) -> Action {
-        let result = get_rotation().evaluate(state);
+        let result = self.rotation.evaluate(state);
         if result.is_cast() {
             spell_id_to_idx(result.spell_id).map(Action::Cast).unwrap_or(Action::WaitGcd)
         } else if result.is_wait() {

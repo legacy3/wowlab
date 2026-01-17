@@ -4,22 +4,9 @@ use crate::types::*;
 use crate::sim::{SimState, SimConfig};
 use crate::actor::Player;
 use crate::rotation::{Rotation, CompiledRotation};
-use std::sync::Once;
 
-static INIT_ROTATION: Once = Once::new();
-
-fn ensure_rotation() {
-    INIT_ROTATION.call_once(|| {
-        // Simple rotation using the new name-based format
-        let json = r#"{
-            "name": "test_rotation",
-            "actions": [
-                { "cast": "kill_command" },
-                { "cast": "cobra_shot" }
-            ]
-        }"#;
-        let _ = BmHunter::init_rotation(json);
-    });
+fn create_handler() -> BmHunter {
+    BmHunter::with_defaults().expect("Failed to create BmHunter")
 }
 
 #[test]
@@ -43,7 +30,7 @@ fn aura_definitions_count() {
 
 #[test]
 fn player_init() {
-    let handler = BmHunter::new();
+    let handler = create_handler();
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);
 
@@ -55,8 +42,7 @@ fn player_init() {
 
 #[test]
 fn sim_init() {
-    ensure_rotation();
-    let handler = BmHunter::new();
+    let handler = create_handler();
     let config = SimConfig::default().with_duration(10.0);
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);
@@ -68,7 +54,7 @@ fn sim_init() {
 
 #[test]
 fn cooldown_lookup() {
-    let handler = BmHunter::new();
+    let handler = create_handler();
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);
 
@@ -81,8 +67,7 @@ fn cooldown_lookup() {
 
 #[test]
 fn pet_init() {
-    ensure_rotation();
-    let handler = BmHunter::new();
+    let handler = create_handler();
     let config = SimConfig::default().with_duration(10.0);
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);

@@ -17,31 +17,32 @@ use super::procs::setup_procs;
 use super::rotation::{spec_resolver, spell_name_to_idx, spell_id_to_idx};
 use tracing::debug;
 
-static MM_ROTATION: std::sync::OnceLock<CompiledRotation> = std::sync::OnceLock::new();
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
 /// Hidden aura for tracking Steady Shot count for Steady Focus
 const STEADY_SHOT_TRACKER: AuraIdx = AuraIdx(999001);
 
-fn get_rotation() -> &'static CompiledRotation {
-    MM_ROTATION.get().expect("MM Hunter rotation not initialized")
+/// Ensure spell and aura definitions are initialized (idempotent).
+fn ensure_definitions() {
+    SPELL_DEFS.get_or_init(spell_definitions);
+    AURA_DEFS.get_or_init(aura_definitions);
 }
 
 fn get_spell(id: SpellIdx) -> Option<&'static SpellDef> {
-    SPELL_DEFS.get_or_init(spell_definitions).iter().find(|s| s.id == id)
+    SPELL_DEFS.get()?.iter().find(|s| s.id == id)
 }
 
 fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
-    AURA_DEFS.get_or_init(aura_definitions).iter().find(|a| a.id == id)
+    AURA_DEFS.get()?.iter().find(|a| a.id == id)
 }
 
 fn get_spell_defs() -> &'static [SpellDef] {
-    SPELL_DEFS.get_or_init(spell_definitions)
+    SPELL_DEFS.get().expect("MM Hunter spell definitions not initialized")
 }
 
 fn get_aura_defs() -> &'static [AuraDef] {
-    AURA_DEFS.get_or_init(aura_definitions)
+    AURA_DEFS.get().expect("MM Hunter aura definitions not initialized")
 }
 
 /// Get damage multiplier from aura effects
@@ -58,23 +59,27 @@ fn aura_damage_multiplier(aura: &AuraDef) -> f32 {
 ///
 /// Marksmanship focuses on ranged damage with careful shot placement.
 /// Unlike BM, MM can operate without a pet using Lone Wolf.
-pub struct MmHunter;
+pub struct MmHunter {
+    rotation: CompiledRotation,
+}
 
 impl MmHunter {
-    /// Create a new MM Hunter handler.
-    pub fn new() -> Self {
-        Self
-    }
+    /// Create a new MM Hunter handler with the given rotation.
+    pub fn new(rotation_json: &str) -> Result<Self, String> {
+        ensure_definitions();
 
-    /// Initialize the rotation from JSON.
-    pub fn init_rotation(json: &str) -> Result<(), String> {
-        let rotation = Rotation::from_json(json)
+        let rotation = Rotation::from_json(rotation_json)
             .map_err(|e| format!("Failed to parse rotation: {}", e))?;
         let resolver = spec_resolver(TalentFlags::empty());
         let compiled = CompiledRotation::compile(&rotation, &resolver)
             .map_err(|e| format!("Failed to compile rotation: {}", e))?;
-        MM_ROTATION.set(compiled).map_err(|_| "Rotation already initialized".to_string())?;
-        Ok(())
+
+        Ok(Self { rotation: compiled })
+    }
+
+    /// Create with default empty rotation (for tests/simple cases).
+    pub fn with_defaults() -> Result<Self, String> {
+        Self::new(r#"{"actions":[]}"#)
     }
 
     /// Internal helper to cast a spell
@@ -227,11 +232,6 @@ impl MmHunter {
     }
 }
 
-impl Default for MmHunter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl SpecHandler for MmHunter {
     fn spec_id(&self) -> SpecId {
@@ -290,7 +290,7 @@ impl SpecHandler for MmHunter {
     fn on_gcd(&self, state: &mut SimState) {
         if state.finished { return; }
 
-        let result = get_rotation().evaluate(state);
+        let result = self.rotation.evaluate(state);
 
         if result.is_cast() {
             if let Some(spell) = spell_id_to_idx(result.spell_id) {
@@ -358,7 +358,7 @@ impl SpecHandler for MmHunter {
     }
 
     fn next_action(&self, state: &SimState) -> Action {
-        let result = get_rotation().evaluate(state);
+        let result = self.rotation.evaluate(state);
         if result.is_cast() {
             if let Some(spell_idx) = spell_id_to_idx(result.spell_id) {
                 Action::Cast(spell_idx)

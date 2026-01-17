@@ -70,12 +70,14 @@ pub enum Command {
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum SpecArg {
     BmHunter,
+    MmHunter,
 }
 
 impl SpecArg {
     pub fn to_spec_id(&self) -> crate::types::SpecId {
         match self {
             SpecArg::BmHunter => crate::types::SpecId::BeastMastery,
+            SpecArg::MmHunter => crate::types::SpecId::Marksmanship,
         }
     }
 }

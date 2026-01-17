@@ -76,22 +76,6 @@ pub struct BatchRunner {
 }
 
 impl BatchRunner {
-    #[cfg(feature = "jit")]
-    pub fn new(config: SimConfig, player: Player) -> Self {
-        use crate::handler::create_default_registry;
-
-        let registry = create_default_registry();
-        let handler = registry.get(player.spec)
-            .expect("No handler registered for spec");
-
-        Self {
-            handler,
-            config,
-            player_template: player,
-            iterations: 1000,
-        }
-    }
-
     pub fn with_handler(handler: Arc<dyn SpecHandler>, config: SimConfig, player: Player) -> Self {
         Self {
             handler,

@@ -108,9 +108,16 @@ struct SyncFnPtr(RotationFn);
 unsafe impl Send for SyncFnPtr {}
 unsafe impl Sync for SyncFnPtr {}
 
+/// Wrapper to make JITModule Send+Sync.
+/// Safe because we never mutate the module after compilation - it's just keeping memory alive.
+struct SyncJitModule(#[allow(dead_code)] JITModule);
+unsafe impl Send for SyncJitModule {}
+unsafe impl Sync for SyncJitModule {}
+
 /// A compiled rotation ready for execution.
 pub struct CompiledRotation {
     func_ptr: SyncFnPtr,
+    _module: SyncJitModule,  // Owns JIT memory, dropped when rotation is dropped
     schema: ContextSchema,
 }
 
@@ -197,10 +204,11 @@ impl CompiledRotation {
         let schema = schema_builder.build();
 
         // Compile to native code
-        let func_ptr = compile_rotation(&resolved, resolver, &schema)?;
+        let (module, func_ptr) = compile_rotation(&resolved, resolver, &schema)?;
 
         Ok(Self {
             func_ptr: SyncFnPtr(func_ptr),
+            _module: module,
             schema,
         })
     }
@@ -303,7 +311,7 @@ fn compile_rotation(
     rotation: &Rotation,
     resolver: &SpecResolver,
     schema: &ContextSchema,
-) -> Result<RotationFn> {
+) -> Result<(SyncJitModule, RotationFn)> {
     let mut flag_builder = settings::builder();
     flag_builder
         .set("opt_level", "speed")
@@ -373,10 +381,7 @@ fn compile_rotation(
     let func_ptr = module.get_finalized_function(func_id);
     let func_ptr: RotationFn = unsafe { std::mem::transmute(func_ptr) };
 
-    // Leak the module to keep JIT memory alive
-    Box::leak(Box::new(module));
-
-    Ok(func_ptr)
+    Ok((SyncJitModule(module), func_ptr))
 }
 
 struct ExprCompiler<'a, 'b> {

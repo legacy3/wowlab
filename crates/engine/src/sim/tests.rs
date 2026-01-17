@@ -2,19 +2,11 @@ use super::*;
 use crate::types::*;
 use crate::actor::Player;
 use crate::specs::BmHunter;
-use std::sync::{Arc, Once};
+use crate::handler::SpecHandler;
+use std::sync::Arc;
 
-static INIT_ROTATION: Once = Once::new();
-
-fn ensure_rotation() {
-    INIT_ROTATION.call_once(|| {
-        // Simple rotation that just waits (no actions)
-        let json = r#"{
-            "name": "wait_rotation",
-            "actions": []
-        }"#;
-        let _ = BmHunter::init_rotation(json);
-    });
+fn create_handler() -> Arc<dyn SpecHandler> {
+    Arc::new(BmHunter::with_defaults().expect("Failed to create BmHunter"))
 }
 
 #[test]
@@ -120,10 +112,10 @@ fn batch_results_cv() {
 
 #[test]
 fn batch_runner_basic() {
-    ensure_rotation();
+    let handler = create_handler();
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
-    let runner = BatchRunner::new(config, player)
+    let runner = BatchRunner::with_handler(handler, config, player)
         .with_iterations(10);
 
     let results = runner.run();
@@ -159,8 +151,7 @@ fn decision_context_basic() {
 
 #[test]
 fn simulation_runs_to_completion() {
-    ensure_rotation();
-    let handler = Arc::new(BmHunter::new());
+    let handler = create_handler();
     let config = SimConfig::default().with_duration(1.0); // 1 second fight
     let player = Player::new(SpecId::BeastMastery);
 
@@ -185,14 +176,13 @@ fn sim_config_builders() {
 
 #[test]
 fn simulation_current_dps() {
-    ensure_rotation();
-    let handler = Arc::new(BmHunter::new());
+    let handler = create_handler();
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
 
     let mut sim = Simulation::new(handler, config, player);
     sim.run();
 
-    // DPS should be 0 since wait_gcd() rotation does nothing
+    // DPS should be 0 since empty rotation does nothing
     assert_eq!(sim.dps(), 0.0);
 }
