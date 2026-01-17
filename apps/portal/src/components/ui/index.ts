@@ -3,6 +3,7 @@
 export * from "./absolute-center";
 export * from "./badge";
 export * from "./button";
+export * from "./charts";
 export * from "./error-box";
 export * from "./group";
 export * from "./heading";

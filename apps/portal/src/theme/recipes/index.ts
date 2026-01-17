@@ -6,6 +6,7 @@ import { badge } from "./badge";
 import { breadcrumb } from "./breadcrumb";
 import { button } from "./button";
 import { card } from "./card";
+import { chart } from "./chart";
 import { code } from "./code";
 import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
@@ -46,6 +47,7 @@ export const recipes = {
   badge,
   breadcrumb,
   button,
+  chart,
   code,
   errorBox,
   group,

@@ -12,6 +12,70 @@ export const fixtures = {
     spec: "Restoration",
   } satisfies Character,
 
+  charts: {
+    bar: [
+      { label: "Jan", value: 45 },
+      { label: "Feb", value: 62 },
+      { label: "Mar", value: 38 },
+      { label: "Apr", value: 71 },
+      { label: "May", value: 55 },
+      { label: "Jun", value: 83 },
+    ],
+    line: [
+      { x: 0, y: 20 },
+      { x: 1, y: 35 },
+      { x: 2, y: 28 },
+      { x: 3, y: 55 },
+      { x: 4, y: 43 },
+      { x: 5, y: 67 },
+      { x: 6, y: 58 },
+      { x: 7, y: 72 },
+    ],
+    multiLine: [
+      [
+        { x: 0, y: 45 },
+        { x: 1, y: 52 },
+        { x: 2, y: 48 },
+        { x: 3, y: 61 },
+        { x: 4, y: 55 },
+        { x: 5, y: 72 },
+        { x: 6, y: 68 },
+        { x: 7, y: 75 },
+      ],
+      [
+        { x: 0, y: 32 },
+        { x: 1, y: 38 },
+        { x: 2, y: 35 },
+        { x: 3, y: 42 },
+        { x: 4, y: 39 },
+        { x: 5, y: 48 },
+        { x: 6, y: 45 },
+        { x: 7, y: 51 },
+      ],
+    ],
+    pie: [
+      { label: "Fire", value: 35 },
+      { label: "Frost", value: 25 },
+      { label: "Arcane", value: 20 },
+      { label: "Nature", value: 20 },
+    ],
+    // Simulated DPS timeline data (30 seconds of combat)
+    dpsTimeline: Array.from({ length: 30 }, (_, i) => ({
+      x: i,
+      y:
+        45000 +
+        Math.sin(i * 0.5) * 8000 +
+        (Math.random() - 0.5) * 12000 +
+        i * 500,
+    })),
+    // DPS distribution across multiple pulls
+    dpsDistribution: [
+      52000, 54500, 48000, 56000, 51000, 49500, 55000, 53000, 50000, 57000,
+      52500, 54000, 49000, 55500, 51500, 53500, 50500, 56500, 52000, 48500,
+      54500, 51000, 55000, 49500, 53000, 50000, 56000, 52500, 54000, 51500,
+    ],
+  },
+
   code: {
     reactHook: `import { useSpell } from "@/lib/state";
 

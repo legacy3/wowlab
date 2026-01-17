@@ -3,6 +3,7 @@
 import { PageLayout } from "../shared";
 import {
   ActionsSection,
+  ChartsSection,
   DataDisplaySection,
   FeedbackSection,
   FormsSection,
@@ -21,6 +22,7 @@ const NAV = [
   { id: "actions", label: "Actions" },
   { id: "forms", label: "Forms" },
   { id: "data-display", label: "Data Display" },
+  { id: "charts", label: "Charts" },
   { id: "navigation", label: "Navigation" },
   { id: "overlays", label: "Overlays" },
   { id: "feedback", label: "Feedback" },
@@ -39,6 +41,7 @@ export function UiDemo() {
       <ActionsSection />
       <FormsSection />
       <DataDisplaySection />
+      <ChartsSection />
       <NavigationSection />
       <OverlaysSection />
       <FeedbackSection />

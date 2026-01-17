@@ -1,4 +1,5 @@
 export { ActionsSection } from "./actions";
+export { ChartsSection } from "./charts";
 export { DataDisplaySection } from "./data-display";
 export { FeedbackSection } from "./feedback";
 export { FormsSection } from "./forms";

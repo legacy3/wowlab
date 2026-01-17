@@ -1,7 +1,22 @@
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import { createCssVariablesTheme } from "shiki";
 import { defineCollection, defineConfig, s } from "velite";
+
+const execAsync = promisify(exec);
+
+const gitTimestamp = () =>
+  s
+    .custom<string | undefined>((i) => i === undefined || typeof i === "string")
+    .transform<string>(async (_, { meta }) => {
+      const { stdout } = await execAsync(
+        `git log -1 --format=%cd ${meta.path}`,
+      );
+
+      return new Date(stdout || Date.now()).toISOString();
+    });
 
 const codeTheme = createCssVariablesTheme({
   name: "css-variables",
@@ -15,7 +30,7 @@ const baseSchema = {
   slug: s.path(),
   title: s.string(),
   toc: s.toc(),
-  updatedAt: s.isodate().optional(),
+  updatedAt: gitTimestamp(),
 };
 
 const about = defineCollection({
