@@ -6,7 +6,7 @@
 use moka::sync::Cache;
 use std::time::Duration;
 
-/// Cached simulation config (from sim_configs table).
+/// Cached simulation config (from jobs_configs table).
 #[derive(Debug, Clone)]
 pub struct CachedConfig {
     /// The full config JSON including rotationId.

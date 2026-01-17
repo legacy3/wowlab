@@ -150,7 +150,7 @@ async fn run_realtime(
     let mut node_rx = node_channel
         .on_postgres_changes(
             PostgresChangesFilter::new(PostgresChangeEvent::All, "public")
-                .table("user_nodes")
+                .table("nodes")
                 .filter(format!("id=eq.{node_id}")),
         )
         .await;
@@ -168,8 +168,8 @@ async fn run_realtime(
     let mut chunks_rx = chunks_channel
         .on_postgres_changes(
             PostgresChangesFilter::new(PostgresChangeEvent::All, "public")
-                .table("sim_chunks")
-                .filter(format!("nodeId=eq.{node_id}")),
+                .table("jobs_chunks")
+                .filter(format!("node_id=eq.{node_id}")),
         )
         .await;
 
