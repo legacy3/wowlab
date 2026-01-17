@@ -1,5 +1,6 @@
 "use client";
 
+import { Activity, CpuIcon, ServerIcon, WifiIcon } from "lucide-react";
 import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
@@ -10,6 +11,7 @@ import {
   Code,
   HelpText,
   Kbd,
+  StatCard,
   Table,
   Text,
 } from "@/components/ui";
@@ -28,6 +30,7 @@ export function DataDisplaySection() {
   return (
     <Section id="data-display" title="Data Display" lazy minHeight={2939}>
       <Stack gap="10">
+        <StatCardDemo />
         <BadgeDemo />
         <AvatarDemo />
         <CodeDemo />
@@ -260,6 +263,48 @@ function KbdDemo() {
             <Kbd>P</Kbd>
             <Text>for commands.</Text>
           </HStack>
+        </DemoBox>
+      </Stack>
+    </Subsection>
+  );
+}
+
+function StatCardDemo() {
+  return (
+    <Subsection title="StatCard">
+      <DemoDescription>
+        Metric display cards with icon and value.
+      </DemoDescription>
+      <Stack gap="4">
+        <DemoBox>
+          <DemoLabel>Default (md)</DemoLabel>
+          <Grid columns={3} gap="4">
+            <StatCard icon={ServerIcon} label="Nodes" value={5} />
+            <StatCard icon={WifiIcon} label="Online" value={3} />
+            <StatCard icon={CpuIcon} label="Workers" value={24} />
+          </Grid>
+        </DemoBox>
+        <DemoBox>
+          <DemoLabel>Small</DemoLabel>
+          <Grid columns={4} gap="4">
+            <StatCard
+              icon={Activity}
+              label="Simulations"
+              value={128}
+              size="sm"
+            />
+            <StatCard icon={ServerIcon} label="Nodes" value={5} size="sm" />
+            <StatCard icon={WifiIcon} label="Online" value={3} size="sm" />
+            <StatCard icon={CpuIcon} label="Workers" value={24} size="sm" />
+          </Grid>
+        </DemoBox>
+        <DemoBox>
+          <DemoLabel>With null value</DemoLabel>
+          <Grid columns={3} gap="4">
+            <StatCard icon={ServerIcon} label="Loading" value={null} />
+            <StatCard icon={Activity} label="Pending" value={null} />
+            <StatCard icon={CpuIcon} label="Unknown" value={null} />
+          </Grid>
         </DemoBox>
       </Stack>
     </Subsection>

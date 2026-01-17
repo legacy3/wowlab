@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import type { NodePlatform } from "@/components/nodes/types";
+import type { NodePlatform } from "@/components/account/nodes/downloads";
 
 declare global {
   interface Navigator {

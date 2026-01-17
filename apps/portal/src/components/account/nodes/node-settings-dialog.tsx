@@ -16,28 +16,24 @@ import {
   Switch,
   Text,
 } from "@/components/ui";
-
-import type { Node, NodeAccessType } from "./types";
+import {
+  NODE_ACCESS_OPTIONS,
+  type NodeAccessType,
+  type NodeWithMeta,
+  type SaveNodeData,
+} from "@/lib/state";
 
 import { PlatformIcon } from "./platform-icon";
-import { NODE_ACCESS_OPTIONS } from "./types";
 
 const accessCollection = createListCollection({ items: NODE_ACCESS_OPTIONS });
-
-export interface NodeSettingsData {
-  accessType: NodeAccessType;
-  enabled: boolean;
-  name: string;
-  workers: number;
-}
 
 interface NodeSettingsDialogProps {
   isDeleting?: boolean;
   isSaving?: boolean;
-  node: Node;
+  node: NodeWithMeta;
   onDelete: () => Promise<void>;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: NodeSettingsData) => Promise<void>;
+  onSave: (data: SaveNodeData) => Promise<void>;
   open: boolean;
 }
 
@@ -52,7 +48,7 @@ export function NodeSettingsDialog({
 }: NodeSettingsDialogProps) {
   const t = useExtracted();
   const [name, setName] = useState(node.name);
-  const [workers, setWorkers] = useState([node.workers]);
+  const [workers, setWorkers] = useState([node.max_parallel]);
   const [accessType, setAccessType] = useState<NodeAccessType>(
     node.accessType ?? "private",
   );
@@ -63,9 +59,8 @@ export function NodeSettingsDialog({
   const handleSave = async () => {
     await onSave({
       accessType,
-      enabled,
+      maxParallel: workers[0],
       name,
-      workers: workers[0],
     });
     onOpenChange(false);
   };
@@ -111,14 +106,14 @@ export function NodeSettingsDialog({
                     <Field.Label>{t("Workers")}</Field.Label>
                     <styled.span textStyle="sm" color="fg.muted">
                       {t("{workers, number} / {totalCores, number} cores", {
-                        totalCores: node.totalCores,
+                        totalCores: node.total_cores,
                         workers: workers[0],
                       })}
                     </styled.span>
                   </HStack>
                   <Slider.Root
                     min={1}
-                    max={node.totalCores}
+                    max={node.total_cores}
                     value={workers}
                     onValueChange={(e) => setWorkers(e.value)}
                   >

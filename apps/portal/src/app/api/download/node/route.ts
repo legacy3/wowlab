@@ -5,7 +5,7 @@ import {
   GITHUB_REPO,
   isValidPlatform,
   isValidVariant,
-} from "@/lib/config/downloads";
+} from "@/components/account/nodes/downloads";
 
 interface GitHubRelease {
   assets: Array<{ browser_download_url: string; name: string }>;

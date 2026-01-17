@@ -16,6 +16,7 @@ import {
   PenLine,
   Play,
   Search,
+  Server,
   Settings,
   Shield,
   Sparkles,
@@ -41,6 +42,7 @@ const icons = {
   PenLine,
   Play,
   Search,
+  Server,
   Settings,
   Shield,
   Sparkles,
@@ -143,6 +145,10 @@ export const routes = {
   account: group({
     index: route("/account", "Account", "Your account", "User"),
     settings: route("/account/settings", "Settings", "Account settings", "Settings"),
+    nodes: {
+      index: route("/account/nodes", "Nodes", "Manage compute nodes", "Server"),
+      claim: route("/account/nodes/claim", "Claim Node", "Claim a new node", "Server"),
+    },
   }).standalone(),
 
   users: {

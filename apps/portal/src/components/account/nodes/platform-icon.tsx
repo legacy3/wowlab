@@ -1,11 +1,11 @@
 "use client";
 
+import { HelpCircleIcon } from "lucide-react";
+
 import { AppleIcon, LinuxIcon, WindowsIcon } from "@/lib/icons";
 
-import type { NodePlatform } from "./types";
-
 interface PlatformIconProps {
-  platform: NodePlatform;
+  platform: string;
   size?: number;
 }
 
@@ -20,5 +20,7 @@ export function PlatformIcon({ platform, size = 16 }: PlatformIconProps) {
       return <AppleIcon {...props} />;
     case "windows":
       return <WindowsIcon {...props} />;
+    default:
+      return <HelpCircleIcon size={size} />;
   }
 }

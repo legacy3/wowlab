@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Server, Settings, User } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Flex } from "styled-system/jsx";
@@ -78,6 +78,13 @@ export function UserMenu() {
             >
               <Settings size={16} />
               {t("Settings")}
+            </Menu.Item>
+            <Menu.Item
+              value="nodes"
+              onClick={() => router.push(href(routes.account.nodes.index))}
+            >
+              <Server size={16} />
+              {t("Nodes")}
             </Menu.Item>
           </Menu.ItemGroup>
           <Menu.Separator />

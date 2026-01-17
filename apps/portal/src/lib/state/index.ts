@@ -42,6 +42,32 @@ export {
   useSpellSearch,
 } from "./game";
 
+// Nodes domain
+export {
+  deriveAccessType,
+  mapAccessTypeFromDb,
+  mapAccessTypeToDb,
+  NODE_ACCESS_OPTIONS,
+  type NodeAccessOption,
+  type NodeAccessType,
+  type NodeOwner,
+  type NodePermissionRow,
+  type NodeRow,
+  type NodeWithMeta,
+  type SaveNodeData,
+  selectOnlineCount,
+  selectOnlineNodes,
+  selectTotalWorkers,
+  transformNode,
+  useClaimNode,
+  useNode,
+  useNodeMutations,
+  useNodes,
+  useNodesSelection,
+  useNodesSelectionArray,
+  type VerifyResult,
+} from "./nodes";
+
 export { useUserProfile } from "./profile";
 
 export { useLoadRotation, useSaveRotation } from "./rotation";

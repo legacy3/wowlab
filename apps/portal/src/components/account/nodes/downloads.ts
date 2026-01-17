@@ -1,16 +1,15 @@
-import type { NodePlatform } from "@/components/nodes/types";
-
 export const GITHUB_REPO = "legacy3/wowlab";
 
 export const NODE_VARIANTS = ["gui", "headless"] as const;
 export type NodeVariant = (typeof NODE_VARIANTS)[number];
 
-export const NODE_PLATFORMS: readonly NodePlatform[] = [
+export const NODE_PLATFORMS = [
   "linux",
   "linux-arm",
   "macos",
   "windows",
-];
+] as const;
+export type NodePlatform = (typeof NODE_PLATFORMS)[number];
 
 const PLATFORM_TARGETS: Record<NodePlatform, string> = {
   linux: "x86_64-unknown-linux-gnu",

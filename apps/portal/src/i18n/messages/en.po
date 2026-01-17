@@ -53,6 +53,249 @@ msgstr "Unknown error"
 msgid "uqwRlB"
 msgstr "Rotation not found"
 
+#: src/components/account/nodes/bulk-action-bar.tsx:33
+msgid "6zuVQb"
+msgstr "{count, plural, =1 {# selected} other {# selected}}"
+
+#: src/components/account/nodes/bulk-action-bar.tsx:46
+msgid "C+fYkQ"
+msgstr "Power On"
+
+#: src/components/account/nodes/bulk-action-bar.tsx:55
+msgid "cmxduZ"
+msgstr "Power Off"
+
+#: src/components/account/nodes/bulk-action-bar.tsx:62
+msgid "EYIw2M"
+msgstr "Clear selection"
+
+#: src/components/account/nodes/node-claim-form.tsx:83
+msgid "adQu2P"
+msgstr "Configure Your Node"
+
+#: src/components/account/nodes/node-claim-form.tsx:97
+#: src/components/account/nodes/node-settings-dialog.tsx:97
+msgid "+gH1Ai"
+msgstr "Node Name"
+
+#: src/components/account/nodes/node-claim-form.tsx:101
+msgid "3WiUI+"
+msgstr "My Gaming PC"
+
+#: src/components/account/nodes/node-claim-form.tsx:107
+#: src/components/account/nodes/node-settings-dialog.tsx:106
+#: src/components/account/nodes/nodes-page.tsx:105
+#: src/components/account/nodes/nodes-table.tsx:82
+#: src/components/account/nodes/nodes-table.tsx:159
+#: src/components/computing/cards/workers-card.tsx:13
+msgid "t6RYbw"
+msgstr "Workers"
+
+#: src/components/account/nodes/node-claim-form.tsx:109
+#: src/components/account/nodes/node-settings-dialog.tsx:108
+msgid "d8nhsg"
+msgstr "{workers, number} / {totalCores, number} cores"
+
+#: src/components/account/nodes/node-claim-form.tsx:129
+msgid "sSYE+I"
+msgstr "How many CPU cores to dedicate to simulations"
+
+#: src/components/account/nodes/node-claim-form.tsx:139
+#: src/components/account/nodes/nodes-page.tsx:124
+msgid "2+mzpb"
+msgstr "Claim Node"
+
+#: src/components/account/nodes/node-claim-form.tsx:154
+msgid "1VA/+D"
+msgstr "Claim Your Node"
+
+#: src/components/account/nodes/node-claim-form.tsx:157
+msgid "W6+Aj5"
+msgstr "Enter the 6-character code displayed by your node application"
+
+#: src/components/account/nodes/node-claim-form.tsx:198
+msgid "6bMfIz"
+msgstr "Verify Code"
+
+#: src/components/account/nodes/node-claim-form.tsx:211
+msgid "yScDrH"
+msgstr "Don't have the app?"
+
+#: src/components/account/nodes/node-claim-form.tsx:217
+msgid "OZpUxW"
+msgstr "Download Node"
+
+#: src/components/account/nodes/node-download-dialog.tsx:59
+msgid "Aznvkg"
+msgstr "Get the Node"
+
+#: src/components/account/nodes/node-download-dialog.tsx:61
+msgid "zAc9z/"
+msgstr "Run local simulations or share compute with others"
+
+#: src/components/account/nodes/node-download-dialog.tsx:89
+msgid "AiW0JR"
+msgstr "Docker"
+
+#: src/components/account/nodes/node-download-dialog.tsx:91
+msgid "SgzGOA"
+msgstr "Multi-arch container for servers"
+
+#: src/components/account/nodes/node-download-dialog.tsx:97
+msgid "FgydNe"
+msgstr "View"
+
+#: src/components/account/nodes/node-download-dialog.tsx:121
+msgid "qWRLiY"
+msgstr "Detected"
+
+#: src/components/account/nodes/node-download-dialog.tsx:138
+msgid "tHSb8p"
+msgstr "Desktop"
+
+#: src/components/account/nodes/node-download-dialog.tsx:141
+msgid "0EkaRE"
+msgstr "Download CLI (headless)"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:80
+msgid "WWEwrn"
+msgstr "Node Settings"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:82
+msgid "Jce+aM"
+msgstr "Configure your node settings"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:137
+msgid "qxg3uo"
+msgstr "Access"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:141
+msgid "cWUdpb"
+msgstr "Select access level"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:160
+msgid "YXoHk0"
+msgstr "Power"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:162
+msgid "8WOSZM"
+msgstr "Enable this node for simulations"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:183
+#: src/components/editor/actions/action-card.tsx:304
+#: src/components/editor/actions/action-card.tsx:310
+#: src/components/editor/common/item-actions-menu.tsx:55
+#: src/components/editor/sidebar/sortable-list-item.tsx:190
+#: src/components/rotations/rotation-browser.tsx:300
+msgid "K3r6DQ"
+msgstr "Delete"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:186
+#: src/components/account/nodes/node-settings-dialog.tsx:232
+#: src/components/computing/cards/job-history-card.tsx:233
+#: src/components/editor/actions/action-picker.tsx:130
+#: src/components/editor/variable-editor-dialog.tsx:97
+#: src/components/layout/computing-drawer.tsx:103
+#: src/components/layout/computing-drawer.tsx:128
+msgid "47FYwb"
+msgstr "Cancel"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:189
+msgid "3VI9mt"
+msgstr "Save Changes"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:207
+#: src/components/account/nodes/node-settings-dialog.tsx:240
+msgid "w/GP8Z"
+msgstr "Delete Node"
+
+#: src/components/account/nodes/node-settings-dialog.tsx:209
+msgid "JDJoIZ"
+msgstr "This action cannot be undone."
+
+#: src/components/account/nodes/node-settings-dialog.tsx:217
+msgid "d8JZF+"
+msgstr "Type {name} to confirm deletion."
+
+#: src/components/account/nodes/nodes-claim-page.tsx:100
+msgid "Vhbm9s"
+msgstr "Download and run the WoW Lab Node application on your computer"
+
+#: src/components/account/nodes/nodes-claim-page.tsx:108
+#: src/components/computing/cards/job-history-card.tsx:364
+#: src/components/computing/cards/status-card.tsx:39
+msgid "KN7zKn"
+msgstr "Error"
+
+#: src/components/account/nodes/nodes-page.tsx:103
+#: src/components/layout/user-menu.tsx:87
+msgid "Cjr0yv"
+msgstr "Nodes"
+
+#: src/components/account/nodes/nodes-page.tsx:104
+msgid "ccU6l/"
+msgstr "Online"
+
+#: src/components/account/nodes/nodes-page.tsx:138
+msgid "pGsW0O"
+msgstr "No nodes yet"
+
+#: src/components/account/nodes/nodes-page.tsx:140
+msgid "mm2BIA"
+msgstr "Claim a node to contribute compute resources for simulations"
+
+#: src/components/account/nodes/nodes-page.tsx:147
+msgid "DIweTv"
+msgstr "Claim Your First Node"
+
+#: src/components/account/nodes/nodes-table.tsx:79
+#: src/components/account/nodes/nodes-table.tsx:156
+#: src/components/computing/cards/job-history-card.tsx:157
+#: src/components/editor/variable-editor-dialog.tsx:65
+#: src/components/rotations/rotation-browser.tsx:271
+msgid "HAlOn1"
+msgstr "Name"
+
+#: src/components/account/nodes/nodes-table.tsx:80
+#: src/components/account/nodes/nodes-table.tsx:157
+msgid "Mmuj1R"
+msgstr "Platform"
+
+#: src/components/account/nodes/nodes-table.tsx:81
+#: src/components/account/nodes/nodes-table.tsx:158
+#: src/components/computing/cards/job-history-card.tsx:155
+#: src/components/computing/cards/status-card.tsx:31
+msgid "tzMNF3"
+msgstr "Status"
+
+#: src/components/account/nodes/nodes-table.tsx:83
+msgid "frN4vy"
+msgstr "Last Seen"
+
+#: src/components/account/nodes/nodes-table.tsx:132
+#: src/components/layout/user-menu.tsx:80
+msgid "D3idYv"
+msgstr "Settings"
+
+#: src/components/account/nodes/nodes-table.tsx:192
+msgid "lI44WY"
+msgstr "{workers, number} active of {totalCores, number} cores"
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:29
+#: src/components/computing/cards/job-history-card.tsx:68
+#: src/components/rotations/rotation-browser.tsx:157
+msgid "zQvVDJ"
+msgstr "All"
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:30
+#: src/components/rotations/rotation-browser.tsx:166
+msgid "snC7V6"
+msgstr "Mine"
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:31
+msgid "kWI6zX"
+msgstr "Shared"
+
 #: src/components/auth/sign-in-form.tsx:50
 msgid "wxbLaE"
 msgstr "Signing you in..."
@@ -94,12 +337,6 @@ msgstr "CPU Cores"
 msgid "6YNH3R"
 msgstr "Iterations"
 
-#: src/components/computing/cards/job-history-card.tsx:68
-#: src/components/nodes/owner-filter-tabs.tsx:29
-#: src/components/rotations/rotation-browser.tsx:157
-msgid "zQvVDJ"
-msgstr "All"
-
 #: src/components/computing/cards/job-history-card.tsx:69
 msgid "3wsVWF"
 msgstr "Cancelled"
@@ -136,21 +373,6 @@ msgstr "{count, plural, =1 {# job} other {# jobs}}"
 msgid "GJ2/jZ"
 msgstr "Filter jobs..."
 
-#: src/components/computing/cards/job-history-card.tsx:155
-#: src/components/computing/cards/status-card.tsx:31
-#: src/components/nodes/nodes-table.tsx:81
-#: src/components/nodes/nodes-table.tsx:156
-msgid "tzMNF3"
-msgstr "Status"
-
-#: src/components/computing/cards/job-history-card.tsx:157
-#: src/components/editor/variable-editor-dialog.tsx:65
-#: src/components/nodes/nodes-table.tsx:79
-#: src/components/nodes/nodes-table.tsx:154
-#: src/components/rotations/rotation-browser.tsx:271
-msgid "HAlOn1"
-msgstr "Name"
-
 #: src/components/computing/cards/job-history-card.tsx:159
 #: src/components/computing/cards/job-history-card.tsx:306
 msgid "+yzdej"
@@ -176,16 +398,6 @@ msgstr "No simulations yet"
 msgid "MZEZ0h"
 msgstr "No jobs match the current filter"
 
-#: src/components/computing/cards/job-history-card.tsx:233
-#: src/components/editor/actions/action-picker.tsx:130
-#: src/components/editor/variable-editor-dialog.tsx:97
-#: src/components/layout/computing-drawer.tsx:103
-#: src/components/layout/computing-drawer.tsx:128
-#: src/components/nodes/node-settings-dialog.tsx:191
-#: src/components/nodes/node-settings-dialog.tsx:237
-msgid "47FYwb"
-msgstr "Cancel"
-
 #: src/components/computing/cards/job-history-card.tsx:237
 msgid "iAcOL5"
 msgstr "Cancel simulation"
@@ -202,11 +414,6 @@ msgstr "Total Damage"
 msgid "IuFETn"
 msgstr "Duration"
 
-#: src/components/computing/cards/job-history-card.tsx:364
-#: src/components/computing/cards/status-card.tsx:39
-msgid "KN7zKn"
-msgstr "Error"
-
 #: src/components/computing/cards/job-history-card.tsx:372
 msgid "6WjAAf"
 msgstr "Rotation ID: {id}"
@@ -220,15 +427,15 @@ msgstr "Result ID: {id}"
 msgid "rbrahO"
 msgstr "Close"
 
-#: src/components/computing/cards/memory-card.tsx:17
+#: src/components/computing/cards/memory-card.tsx:16
 msgid "dVx3yz"
 msgstr "Memory"
 
-#: src/components/computing/cards/simulations-card.tsx:17
+#: src/components/computing/cards/simulations-card.tsx:16
 msgid "JerYOj"
 msgstr "Simulations"
 
-#: src/components/computing/cards/simulations-card.tsx:18
+#: src/components/computing/cards/simulations-card.tsx:17
 #: src/components/dev/ui/sections/i18n.tsx:256
 msgid "ly9PN0"
 msgstr "{value, number}"
@@ -236,14 +443,6 @@ msgstr "{value, number}"
 #: src/components/computing/cards/status-card.tsx:39
 msgid "kAEQyV"
 msgstr "OK"
-
-#: src/components/computing/cards/workers-card.tsx:14
-#: src/components/nodes/node-claim-form.tsx:109
-#: src/components/nodes/node-settings-dialog.tsx:111
-#: src/components/nodes/nodes-table.tsx:82
-#: src/components/nodes/nodes-table.tsx:157
-msgid "t6RYbw"
-msgstr "Workers"
 
 #: src/components/content/article-meta.tsx:71
 #: src/components/content/article-sidebar.tsx:97
@@ -383,15 +582,6 @@ msgstr "Enable"
 #: src/components/editor/actions/action-card.tsx:299
 msgid "4fHiNl"
 msgstr "Duplicate"
-
-#: src/components/editor/actions/action-card.tsx:304
-#: src/components/editor/actions/action-card.tsx:310
-#: src/components/editor/common/item-actions-menu.tsx:55
-#: src/components/editor/sidebar/sortable-list-item.tsx:190
-#: src/components/nodes/node-settings-dialog.tsx:188
-#: src/components/rotations/rotation-browser.tsx:300
-msgid "K3r6DQ"
-msgstr "Delete"
 
 #: src/components/editor/actions/action-card.tsx:328
 msgid "+U6ozc"
@@ -851,171 +1041,9 @@ msgstr "Theme: {theme}"
 msgid "TwyMau"
 msgstr "Account"
 
-#: src/components/layout/user-menu.tsx:80
-#: src/components/nodes/nodes-table.tsx:130
-msgid "D3idYv"
-msgstr "Settings"
-
-#: src/components/layout/user-menu.tsx:86
+#: src/components/layout/user-menu.tsx:93
 msgid "xXbJso"
 msgstr "Sign out"
-
-#: src/components/nodes/bulk-action-bar.tsx:33
-msgid "6zuVQb"
-msgstr "{count, plural, =1 {# selected} other {# selected}}"
-
-#: src/components/nodes/bulk-action-bar.tsx:46
-msgid "C+fYkQ"
-msgstr "Power On"
-
-#: src/components/nodes/bulk-action-bar.tsx:55
-msgid "cmxduZ"
-msgstr "Power Off"
-
-#: src/components/nodes/bulk-action-bar.tsx:62
-msgid "EYIw2M"
-msgstr "Clear selection"
-
-#: src/components/nodes/node-claim-form.tsx:85
-msgid "adQu2P"
-msgstr "Configure Your Node"
-
-#: src/components/nodes/node-claim-form.tsx:99
-#: src/components/nodes/node-settings-dialog.tsx:102
-msgid "+gH1Ai"
-msgstr "Node Name"
-
-#: src/components/nodes/node-claim-form.tsx:103
-msgid "3WiUI+"
-msgstr "My Gaming PC"
-
-#: src/components/nodes/node-claim-form.tsx:111
-#: src/components/nodes/node-settings-dialog.tsx:113
-msgid "d8nhsg"
-msgstr "{workers, number} / {totalCores, number} cores"
-
-#: src/components/nodes/node-claim-form.tsx:131
-msgid "sSYE+I"
-msgstr "How many CPU cores to dedicate to simulations"
-
-#: src/components/nodes/node-claim-form.tsx:141
-msgid "2+mzpb"
-msgstr "Claim Node"
-
-#: src/components/nodes/node-claim-form.tsx:156
-msgid "1VA/+D"
-msgstr "Claim Your Node"
-
-#: src/components/nodes/node-claim-form.tsx:159
-msgid "W6+Aj5"
-msgstr "Enter the 6-character code displayed by your node application"
-
-#: src/components/nodes/node-claim-form.tsx:200
-msgid "6bMfIz"
-msgstr "Verify Code"
-
-#: src/components/nodes/node-claim-form.tsx:213
-msgid "yScDrH"
-msgstr "Don't have the app?"
-
-#: src/components/nodes/node-claim-form.tsx:219
-msgid "OZpUxW"
-msgstr "Download Node"
-
-#: src/components/nodes/node-download-dialog.tsx:62
-msgid "Aznvkg"
-msgstr "Get the Node"
-
-#: src/components/nodes/node-download-dialog.tsx:64
-msgid "zAc9z/"
-msgstr "Run local simulations or share compute with others"
-
-#: src/components/nodes/node-download-dialog.tsx:92
-msgid "AiW0JR"
-msgstr "Docker"
-
-#: src/components/nodes/node-download-dialog.tsx:94
-msgid "SgzGOA"
-msgstr "Multi-arch container for servers"
-
-#: src/components/nodes/node-download-dialog.tsx:100
-msgid "FgydNe"
-msgstr "View"
-
-#: src/components/nodes/node-download-dialog.tsx:124
-msgid "qWRLiY"
-msgstr "Detected"
-
-#: src/components/nodes/node-download-dialog.tsx:141
-msgid "tHSb8p"
-msgstr "Desktop"
-
-#: src/components/nodes/node-download-dialog.tsx:144
-msgid "0EkaRE"
-msgstr "Download CLI (headless)"
-
-#: src/components/nodes/node-settings-dialog.tsx:85
-msgid "WWEwrn"
-msgstr "Node Settings"
-
-#: src/components/nodes/node-settings-dialog.tsx:87
-msgid "Jce+aM"
-msgstr "Configure your node settings"
-
-#: src/components/nodes/node-settings-dialog.tsx:142
-msgid "qxg3uo"
-msgstr "Access"
-
-#: src/components/nodes/node-settings-dialog.tsx:146
-msgid "cWUdpb"
-msgstr "Select access level"
-
-#: src/components/nodes/node-settings-dialog.tsx:165
-msgid "YXoHk0"
-msgstr "Power"
-
-#: src/components/nodes/node-settings-dialog.tsx:167
-msgid "8WOSZM"
-msgstr "Enable this node for simulations"
-
-#: src/components/nodes/node-settings-dialog.tsx:194
-msgid "3VI9mt"
-msgstr "Save Changes"
-
-#: src/components/nodes/node-settings-dialog.tsx:212
-#: src/components/nodes/node-settings-dialog.tsx:245
-msgid "w/GP8Z"
-msgstr "Delete Node"
-
-#: src/components/nodes/node-settings-dialog.tsx:214
-msgid "JDJoIZ"
-msgstr "This action cannot be undone."
-
-#: src/components/nodes/node-settings-dialog.tsx:222
-msgid "d8JZF+"
-msgstr "Type {name} to confirm deletion."
-
-#: src/components/nodes/nodes-table.tsx:80
-#: src/components/nodes/nodes-table.tsx:155
-msgid "Mmuj1R"
-msgstr "Platform"
-
-#: src/components/nodes/nodes-table.tsx:83
-msgid "frN4vy"
-msgstr "Last Seen"
-
-#: src/components/nodes/nodes-table.tsx:190
-msgid "lI44WY"
-msgstr "{workers, number} active of {totalCores, number} cores"
-
-#: src/components/nodes/owner-filter-tabs.tsx:30
-#: src/components/rotations/rotation-browser.tsx:166
-msgid "snC7V6"
-msgstr "Mine"
-
-#: src/components/nodes/owner-filter-tabs.tsx:31
-msgid "kWI6zX"
-msgstr "Shared"
 
 #: src/components/rotations/rotation-browser.tsx:130
 msgid "NT27VP"

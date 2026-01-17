@@ -13,14 +13,11 @@ import {
   Tooltip,
 } from "@/components/ui";
 import { useDetectedPlatform } from "@/hooks/use-detected-platform";
-import {
-  DOCKER_URL,
-  getNodeDownloadUrl,
-  PLATFORM_INFO,
-} from "@/lib/config/downloads";
 import { AppleIcon, DockerIcon, LinuxIcon, WindowsIcon } from "@/lib/icons";
 
-import type { NodePlatform } from "./types";
+import type { NodePlatform } from "./downloads";
+
+import { DOCKER_URL, getNodeDownloadUrl, PLATFORM_INFO } from "./downloads";
 
 const PLATFORM_ICONS: Record<NodePlatform, typeof AppleIcon> = {
   linux: LinuxIcon,

@@ -17,8 +17,6 @@ import {
   Text,
 } from "@/components/ui";
 
-import type { NodePlatform } from "./types";
-
 import { PlatformIcon } from "./platform-icon";
 
 interface ClaimData {
@@ -36,7 +34,7 @@ interface NodeClaimFormProps {
 }
 
 interface VerifyResult {
-  platform: NodePlatform;
+  platform: string;
   totalCores: number;
   version: string;
 }

@@ -12,6 +12,7 @@ export * from "./icon-button";
 export * from "./link";
 export * from "./loader";
 export * from "./skeleton";
+export * from "./stat-card";
 export * from "./text";
 export * from "./tooltip";
 

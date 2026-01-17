@@ -4,6 +4,8 @@ import { CpuIcon, SettingsIcon } from "lucide-react";
 import { useExtracted, useFormatter, useNow } from "next-intl";
 import { Box, HStack } from "styled-system/jsx";
 
+import type { NodeWithMeta } from "@/lib/state";
+
 import {
   Checkbox,
   IconButton,
@@ -13,15 +15,13 @@ import {
   Tooltip,
 } from "@/components/ui";
 
-import type { Node } from "./types";
-
 import { NodeStatusBadge } from "./node-status-badge";
 import { PlatformIcon } from "./platform-icon";
 
 interface NodesTableProps {
-  nodes: Node[];
+  nodes: NodeWithMeta[];
   onSelectionChange: (ids: string[]) => void;
-  onSettingsClick?: (node: Node) => void;
+  onSettingsClick?: (node: NodeWithMeta) => void;
   selectedIds: string[];
 }
 
@@ -112,13 +112,15 @@ export function NodesTable({
               </Table.Cell>
               <Table.Cell>
                 <WorkersDisplay
-                  workers={node.workers}
-                  totalCores={node.totalCores}
+                  workers={node.max_parallel}
+                  totalCores={node.total_cores}
                 />
               </Table.Cell>
               <Table.Cell>
                 <Text textStyle="sm" color="fg.muted">
-                  {format.relativeTime(node.lastSeen, now)}
+                  {node.last_seen_at
+                    ? format.relativeTime(new Date(node.last_seen_at), now)
+                    : "-"}
                 </Text>
               </Table.Cell>
               <Table.Cell>

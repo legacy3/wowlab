@@ -38,6 +38,7 @@ import { radioGroup } from "./radio-group";
 import { select } from "./select";
 import { skeleton } from "./skeleton";
 import { slider } from "./slider";
+import { statCard } from "./stat-card";
 import { steps } from "./steps";
 import { switchRecipe } from "./switch";
 import { table } from "./table";
@@ -92,6 +93,7 @@ export const slotRecipes = {
   radioGroup,
   select,
   slider,
+  statCard,
   steps,
   switchRecipe,
   table,

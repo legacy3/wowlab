@@ -3,9 +3,8 @@
 import { MemoryStick } from "lucide-react";
 import { useExtracted } from "next-intl";
 
+import { StatCard } from "@/components/ui";
 import { useClientHardware } from "@/hooks/use-client-hardware";
-
-import { StatCard } from "./stat-card";
 
 export function MemoryCard() {
   const t = useExtracted();

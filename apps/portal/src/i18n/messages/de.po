@@ -53,6 +53,249 @@ msgstr ""
 msgid "uqwRlB"
 msgstr ""
 
+#: src/components/account/nodes/bulk-action-bar.tsx:33
+msgid "6zuVQb"
+msgstr ""
+
+#: src/components/account/nodes/bulk-action-bar.tsx:46
+msgid "C+fYkQ"
+msgstr ""
+
+#: src/components/account/nodes/bulk-action-bar.tsx:55
+msgid "cmxduZ"
+msgstr ""
+
+#: src/components/account/nodes/bulk-action-bar.tsx:62
+msgid "EYIw2M"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:83
+msgid "adQu2P"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:97
+#: src/components/account/nodes/node-settings-dialog.tsx:97
+msgid "+gH1Ai"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:101
+msgid "3WiUI+"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:107
+#: src/components/account/nodes/node-settings-dialog.tsx:106
+#: src/components/account/nodes/nodes-page.tsx:105
+#: src/components/account/nodes/nodes-table.tsx:82
+#: src/components/account/nodes/nodes-table.tsx:159
+#: src/components/computing/cards/workers-card.tsx:13
+msgid "t6RYbw"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:109
+#: src/components/account/nodes/node-settings-dialog.tsx:108
+msgid "d8nhsg"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:129
+msgid "sSYE+I"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:139
+#: src/components/account/nodes/nodes-page.tsx:124
+msgid "2+mzpb"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:154
+msgid "1VA/+D"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:157
+msgid "W6+Aj5"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:198
+msgid "6bMfIz"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:211
+msgid "yScDrH"
+msgstr ""
+
+#: src/components/account/nodes/node-claim-form.tsx:217
+msgid "OZpUxW"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:59
+msgid "Aznvkg"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:61
+msgid "zAc9z/"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:89
+msgid "AiW0JR"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:91
+msgid "SgzGOA"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:97
+msgid "FgydNe"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:121
+msgid "qWRLiY"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:138
+msgid "tHSb8p"
+msgstr ""
+
+#: src/components/account/nodes/node-download-dialog.tsx:141
+msgid "0EkaRE"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:80
+msgid "WWEwrn"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:82
+msgid "Jce+aM"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:137
+msgid "qxg3uo"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:141
+msgid "cWUdpb"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:160
+msgid "YXoHk0"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:162
+msgid "8WOSZM"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:183
+#: src/components/editor/actions/action-card.tsx:304
+#: src/components/editor/actions/action-card.tsx:310
+#: src/components/editor/common/item-actions-menu.tsx:55
+#: src/components/editor/sidebar/sortable-list-item.tsx:190
+#: src/components/rotations/rotation-browser.tsx:300
+msgid "K3r6DQ"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:186
+#: src/components/account/nodes/node-settings-dialog.tsx:232
+#: src/components/computing/cards/job-history-card.tsx:233
+#: src/components/editor/actions/action-picker.tsx:130
+#: src/components/editor/variable-editor-dialog.tsx:97
+#: src/components/layout/computing-drawer.tsx:103
+#: src/components/layout/computing-drawer.tsx:128
+msgid "47FYwb"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:189
+msgid "3VI9mt"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:207
+#: src/components/account/nodes/node-settings-dialog.tsx:240
+msgid "w/GP8Z"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:209
+msgid "JDJoIZ"
+msgstr ""
+
+#: src/components/account/nodes/node-settings-dialog.tsx:217
+msgid "d8JZF+"
+msgstr ""
+
+#: src/components/account/nodes/nodes-claim-page.tsx:100
+msgid "Vhbm9s"
+msgstr ""
+
+#: src/components/account/nodes/nodes-claim-page.tsx:108
+#: src/components/computing/cards/job-history-card.tsx:364
+#: src/components/computing/cards/status-card.tsx:39
+msgid "KN7zKn"
+msgstr ""
+
+#: src/components/account/nodes/nodes-page.tsx:103
+#: src/components/layout/user-menu.tsx:87
+msgid "Cjr0yv"
+msgstr ""
+
+#: src/components/account/nodes/nodes-page.tsx:104
+msgid "ccU6l/"
+msgstr ""
+
+#: src/components/account/nodes/nodes-page.tsx:138
+msgid "pGsW0O"
+msgstr ""
+
+#: src/components/account/nodes/nodes-page.tsx:140
+msgid "mm2BIA"
+msgstr ""
+
+#: src/components/account/nodes/nodes-page.tsx:147
+msgid "DIweTv"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:79
+#: src/components/account/nodes/nodes-table.tsx:156
+#: src/components/computing/cards/job-history-card.tsx:157
+#: src/components/editor/variable-editor-dialog.tsx:65
+#: src/components/rotations/rotation-browser.tsx:271
+msgid "HAlOn1"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:80
+#: src/components/account/nodes/nodes-table.tsx:157
+msgid "Mmuj1R"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:81
+#: src/components/account/nodes/nodes-table.tsx:158
+#: src/components/computing/cards/job-history-card.tsx:155
+#: src/components/computing/cards/status-card.tsx:31
+msgid "tzMNF3"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:83
+msgid "frN4vy"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:132
+#: src/components/layout/user-menu.tsx:80
+msgid "D3idYv"
+msgstr ""
+
+#: src/components/account/nodes/nodes-table.tsx:192
+msgid "lI44WY"
+msgstr ""
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:29
+#: src/components/computing/cards/job-history-card.tsx:68
+#: src/components/rotations/rotation-browser.tsx:157
+msgid "zQvVDJ"
+msgstr ""
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:30
+#: src/components/rotations/rotation-browser.tsx:166
+msgid "snC7V6"
+msgstr ""
+
+#: src/components/account/nodes/owner-filter-tabs.tsx:31
+msgid "kWI6zX"
+msgstr ""
+
 #: src/components/auth/sign-in-form.tsx:50
 msgid "wxbLaE"
 msgstr ""
@@ -94,12 +337,6 @@ msgstr ""
 msgid "6YNH3R"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:68
-#: src/components/nodes/owner-filter-tabs.tsx:29
-#: src/components/rotations/rotation-browser.tsx:157
-msgid "zQvVDJ"
-msgstr ""
-
 #: src/components/computing/cards/job-history-card.tsx:69
 msgid "3wsVWF"
 msgstr ""
@@ -136,21 +373,6 @@ msgstr ""
 msgid "GJ2/jZ"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:155
-#: src/components/computing/cards/status-card.tsx:31
-#: src/components/nodes/nodes-table.tsx:81
-#: src/components/nodes/nodes-table.tsx:156
-msgid "tzMNF3"
-msgstr ""
-
-#: src/components/computing/cards/job-history-card.tsx:157
-#: src/components/editor/variable-editor-dialog.tsx:65
-#: src/components/nodes/nodes-table.tsx:79
-#: src/components/nodes/nodes-table.tsx:154
-#: src/components/rotations/rotation-browser.tsx:271
-msgid "HAlOn1"
-msgstr ""
-
 #: src/components/computing/cards/job-history-card.tsx:159
 #: src/components/computing/cards/job-history-card.tsx:306
 msgid "+yzdej"
@@ -176,16 +398,6 @@ msgstr ""
 msgid "MZEZ0h"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:233
-#: src/components/editor/actions/action-picker.tsx:130
-#: src/components/editor/variable-editor-dialog.tsx:97
-#: src/components/layout/computing-drawer.tsx:103
-#: src/components/layout/computing-drawer.tsx:128
-#: src/components/nodes/node-settings-dialog.tsx:191
-#: src/components/nodes/node-settings-dialog.tsx:237
-msgid "47FYwb"
-msgstr ""
-
 #: src/components/computing/cards/job-history-card.tsx:237
 msgid "iAcOL5"
 msgstr ""
@@ -202,11 +414,6 @@ msgstr ""
 msgid "IuFETn"
 msgstr ""
 
-#: src/components/computing/cards/job-history-card.tsx:364
-#: src/components/computing/cards/status-card.tsx:39
-msgid "KN7zKn"
-msgstr ""
-
 #: src/components/computing/cards/job-history-card.tsx:372
 msgid "6WjAAf"
 msgstr ""
@@ -220,29 +427,21 @@ msgstr ""
 msgid "rbrahO"
 msgstr ""
 
-#: src/components/computing/cards/memory-card.tsx:17
+#: src/components/computing/cards/memory-card.tsx:16
 msgid "dVx3yz"
 msgstr ""
 
-#: src/components/computing/cards/simulations-card.tsx:17
+#: src/components/computing/cards/simulations-card.tsx:16
 msgid "JerYOj"
 msgstr ""
 
-#: src/components/computing/cards/simulations-card.tsx:18
+#: src/components/computing/cards/simulations-card.tsx:17
 #: src/components/dev/ui/sections/i18n.tsx:256
 msgid "ly9PN0"
 msgstr ""
 
 #: src/components/computing/cards/status-card.tsx:39
 msgid "kAEQyV"
-msgstr ""
-
-#: src/components/computing/cards/workers-card.tsx:14
-#: src/components/nodes/node-claim-form.tsx:109
-#: src/components/nodes/node-settings-dialog.tsx:111
-#: src/components/nodes/nodes-table.tsx:82
-#: src/components/nodes/nodes-table.tsx:157
-msgid "t6RYbw"
 msgstr ""
 
 #: src/components/content/article-meta.tsx:71
@@ -382,15 +581,6 @@ msgstr ""
 #: src/components/editor/actions/action-card.tsx:294
 #: src/components/editor/actions/action-card.tsx:299
 msgid "4fHiNl"
-msgstr ""
-
-#: src/components/editor/actions/action-card.tsx:304
-#: src/components/editor/actions/action-card.tsx:310
-#: src/components/editor/common/item-actions-menu.tsx:55
-#: src/components/editor/sidebar/sortable-list-item.tsx:190
-#: src/components/nodes/node-settings-dialog.tsx:188
-#: src/components/rotations/rotation-browser.tsx:300
-msgid "K3r6DQ"
 msgstr ""
 
 #: src/components/editor/actions/action-card.tsx:328
@@ -851,170 +1041,8 @@ msgstr ""
 msgid "TwyMau"
 msgstr ""
 
-#: src/components/layout/user-menu.tsx:80
-#: src/components/nodes/nodes-table.tsx:130
-msgid "D3idYv"
-msgstr ""
-
-#: src/components/layout/user-menu.tsx:86
+#: src/components/layout/user-menu.tsx:93
 msgid "xXbJso"
-msgstr ""
-
-#: src/components/nodes/bulk-action-bar.tsx:33
-msgid "6zuVQb"
-msgstr ""
-
-#: src/components/nodes/bulk-action-bar.tsx:46
-msgid "C+fYkQ"
-msgstr ""
-
-#: src/components/nodes/bulk-action-bar.tsx:55
-msgid "cmxduZ"
-msgstr ""
-
-#: src/components/nodes/bulk-action-bar.tsx:62
-msgid "EYIw2M"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:85
-msgid "adQu2P"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:99
-#: src/components/nodes/node-settings-dialog.tsx:102
-msgid "+gH1Ai"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:103
-msgid "3WiUI+"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:111
-#: src/components/nodes/node-settings-dialog.tsx:113
-msgid "d8nhsg"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:131
-msgid "sSYE+I"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:141
-msgid "2+mzpb"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:156
-msgid "1VA/+D"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:159
-msgid "W6+Aj5"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:200
-msgid "6bMfIz"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:213
-msgid "yScDrH"
-msgstr ""
-
-#: src/components/nodes/node-claim-form.tsx:219
-msgid "OZpUxW"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:62
-msgid "Aznvkg"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:64
-msgid "zAc9z/"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:92
-msgid "AiW0JR"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:94
-msgid "SgzGOA"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:100
-msgid "FgydNe"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:124
-msgid "qWRLiY"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:141
-msgid "tHSb8p"
-msgstr ""
-
-#: src/components/nodes/node-download-dialog.tsx:144
-msgid "0EkaRE"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:85
-msgid "WWEwrn"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:87
-msgid "Jce+aM"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:142
-msgid "qxg3uo"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:146
-msgid "cWUdpb"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:165
-msgid "YXoHk0"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:167
-msgid "8WOSZM"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:194
-msgid "3VI9mt"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:212
-#: src/components/nodes/node-settings-dialog.tsx:245
-msgid "w/GP8Z"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:214
-msgid "JDJoIZ"
-msgstr ""
-
-#: src/components/nodes/node-settings-dialog.tsx:222
-msgid "d8JZF+"
-msgstr ""
-
-#: src/components/nodes/nodes-table.tsx:80
-#: src/components/nodes/nodes-table.tsx:155
-msgid "Mmuj1R"
-msgstr ""
-
-#: src/components/nodes/nodes-table.tsx:83
-msgid "frN4vy"
-msgstr ""
-
-#: src/components/nodes/nodes-table.tsx:190
-msgid "lI44WY"
-msgstr ""
-
-#: src/components/nodes/owner-filter-tabs.tsx:30
-#: src/components/rotations/rotation-browser.tsx:166
-msgid "snC7V6"
-msgstr ""
-
-#: src/components/nodes/owner-filter-tabs.tsx:31
-msgid "kWI6zX"
 msgstr ""
 
 #: src/components/rotations/rotation-browser.tsx:130

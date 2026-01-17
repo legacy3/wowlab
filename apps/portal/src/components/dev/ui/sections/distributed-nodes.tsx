@@ -6,7 +6,6 @@ import { Box, Stack } from "styled-system/jsx";
 
 import {
   BulkActionBar,
-  type Node,
   NodeClaimForm,
   NodeDownloadDialog,
   NodeSettingsDialog,
@@ -15,8 +14,8 @@ import {
   NodeStatusBadge,
   type OwnerFilter,
   OwnerFilterTabs,
-} from "@/components/nodes";
-import { Badge, Button, Empty } from "@/components/ui";
+} from "@/components/account/nodes";
+import { Button, Empty } from "@/components/ui";
 
 import {
   DemoBox,
@@ -134,7 +133,7 @@ function NodeDownloadDialogDemo() {
 
 function NodeSettingsDialogDemo() {
   const [open, setOpen] = useState(false);
-  const node = fixtures.nodes.list[0] as Node;
+  const node = fixtures.nodes.list[0];
 
   return (
     <Subsection title="NodeSettingsDialog">
@@ -199,7 +198,7 @@ function NodesSkeletonDemo() {
 
 function NodesTableDemo() {
   const [selected, setSelected] = useState<string[]>([]);
-  const nodes = fixtures.nodes.list as Node[];
+  const nodes = fixtures.nodes.list;
 
   return (
     <Subsection title="NodesTable">

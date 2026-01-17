@@ -3,9 +3,8 @@
 import { Activity } from "lucide-react";
 import { useExtracted } from "next-intl";
 
+import { StatCard } from "@/components/ui";
 import { useWorkerSystem } from "@/lib/state";
-
-import { StatCard } from "./stat-card";
 
 export function SimulationsCard() {
   const t = useExtracted();
