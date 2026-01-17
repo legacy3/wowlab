@@ -58,7 +58,7 @@ export function ContentNav({
                 <Text fontWeight="medium">{prev.title}</Text>
               </VStack>
             ) : (
-              <Text>{prev.title}</Text>
+              <Text as="span">{prev.title}</Text>
             )}
           </Flex>
         </Link>
@@ -82,7 +82,7 @@ export function ContentNav({
                 <Text fontWeight="medium">{next.title}</Text>
               </VStack>
             ) : (
-              <Text>{next.title}</Text>
+              <Text as="span">{next.title}</Text>
             )}
             <Icon size="sm">
               <ChevronRight />
