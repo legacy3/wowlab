@@ -1,6 +1,7 @@
 "use client";
 
 import { DownloadIcon, TerminalIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { Box, Grid, HStack, Stack, styled } from "styled-system/jsx";
 
 import {
@@ -50,6 +51,7 @@ export function NodeDownloadDialog({
   onOpenChange,
   open,
 }: NodeDownloadDialogProps) {
+  const t = useExtracted();
   const detectedPlatform = useDetectedPlatform();
 
   return (
@@ -57,9 +59,9 @@ export function NodeDownloadDialog({
       <Dialog.Positioner>
         <Dialog.Content w="fit-content">
           <Dialog.Header>
-            <Dialog.Title>Get the Node</Dialog.Title>
+            <Dialog.Title>{t("Get the Node")}</Dialog.Title>
             <Dialog.Description>
-              Run local simulations or share compute with others
+              {t("Run local simulations or share compute with others")}
             </Dialog.Description>
             <Dialog.CloseTrigger />
           </Dialog.Header>
@@ -87,15 +89,15 @@ export function NodeDownloadDialog({
                 <HStack gap="3">
                   <DockerIcon width={24} height={24} />
                   <Stack gap="0">
-                    <Text fontWeight="medium">Docker</Text>
+                    <Text fontWeight="medium">{t("Docker")}</Text>
                     <Text textStyle="sm" color="fg.muted">
-                      Multi-arch container for servers
+                      {t("Multi-arch container for servers")}
                     </Text>
                   </Stack>
                 </HStack>
                 <Button size="sm" variant="outline" asChild>
                   <styled.a href={DOCKER_URL} target="_blank" rel="noreferrer">
-                    View
+                    {t("View")}
                   </styled.a>
                 </Button>
               </HStack>
@@ -108,6 +110,7 @@ export function NodeDownloadDialog({
 }
 
 function PlatformCard({ arch, id, isDetected, name }: PlatformCardProps) {
+  const t = useExtracted();
   const Icon = PLATFORM_ICONS[id];
 
   return (
@@ -118,7 +121,7 @@ function PlatformCard({ arch, id, isDetected, name }: PlatformCardProps) {
     >
       {isDetected && (
         <Badge position="absolute" top="-2" left="3" size="sm" variant="solid">
-          Detected
+          {t("Detected")}
         </Badge>
       )}
       <Stack gap="3" alignItems="center" textAlign="center">
@@ -135,10 +138,10 @@ function PlatformCard({ arch, id, isDetected, name }: PlatformCardProps) {
           <Button size="sm" asChild>
             <a href={getNodeDownloadUrl(id, "gui")}>
               <DownloadIcon size={14} />
-              Desktop
+              {t("Desktop")}
             </a>
           </Button>
-          <Tooltip content="Download CLI (headless)">
+          <Tooltip content={t("Download CLI (headless)")}>
             <IconButton size="sm" variant="outline" asChild>
               <a href={getNodeDownloadUrl(id, "headless")}>
                 <TerminalIcon size={14} />

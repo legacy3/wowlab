@@ -28,13 +28,13 @@ export function DataDisplaySection() {
   return (
     <Section id="data-display" title="Data Display" lazy minHeight={2939}>
       <Stack gap="10">
+        <BadgeDemo />
+        <AvatarDemo />
         <CodeDemo />
         <KbdDemo />
         <HelpTextDemo />
-        <TableDemo />
         <CardDemo />
-        <BadgeDemo />
-        <AvatarDemo />
+        <TableDemo />
       </Stack>
     </Section>
   );

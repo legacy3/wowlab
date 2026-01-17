@@ -29,10 +29,10 @@ export function OverlaysSection() {
     <Section id="overlays" title="Overlays" lazy minHeight={1040}>
       <Stack gap="10">
         <TooltipDemo />
-        <DialogDemo />
-        <DrawerDemo />
         <PopoverDemo />
         <MenuDemo />
+        <DialogDemo />
+        <DrawerDemo />
       </Stack>
     </Section>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, DownloadIcon, FlaskConicalIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { useState } from "react";
 import { Center, Divider, HStack, Stack, styled } from "styled-system/jsx";
 
@@ -47,6 +48,7 @@ export function NodeClaimForm({
   onDownloadClick,
   onVerify,
 }: NodeClaimFormProps) {
+  const t = useExtracted();
   const [code, setCode] = useState<string[]>([]);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
   const [name, setName] = useState("");
@@ -80,7 +82,7 @@ export function NodeClaimForm({
           <Stack gap="5" py="4">
             <Stack gap="1" textAlign="center">
               <Text fontWeight="semibold" textStyle="lg">
-                Configure Your Node
+                {t("Configure Your Node")}
               </Text>
               <HStack gap="2" justify="center">
                 <Badge variant="surface">
@@ -94,19 +96,22 @@ export function NodeClaimForm({
             </Stack>
 
             <Field.Root>
-              <Field.Label>Node Name</Field.Label>
+              <Field.Label>{t("Node Name")}</Field.Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="My Gaming PC"
+                placeholder={t("My Gaming PC")}
               />
             </Field.Root>
 
             <Field.Root>
               <HStack justify="space-between">
-                <Field.Label>Workers</Field.Label>
+                <Field.Label>{t("Workers")}</Field.Label>
                 <styled.span textStyle="sm" color="fg.muted">
-                  {workers[0]} / {verifyResult.totalCores} cores
+                  {t("{workers, number} / {totalCores, number} cores", {
+                    totalCores: verifyResult.totalCores,
+                    workers: workers[0],
+                  })}
                 </styled.span>
               </HStack>
               <Slider.Root
@@ -123,7 +128,7 @@ export function NodeClaimForm({
                 </Slider.Control>
               </Slider.Root>
               <Field.HelperText>
-                How many CPU cores to dedicate to simulations
+                {t("How many CPU cores to dedicate to simulations")}
               </Field.HelperText>
             </Field.Root>
 
@@ -133,7 +138,7 @@ export function NodeClaimForm({
               loading={isClaiming}
               disabled={!name.trim()}
             >
-              Claim Node
+              {t("Claim Node")}
             </Button>
           </Stack>
         </Card.Body>
@@ -148,10 +153,12 @@ export function NodeClaimForm({
         <Stack gap="6" alignItems="center" textAlign="center" py="4">
           <Stack gap="1">
             <Text fontWeight="semibold" textStyle="lg">
-              Claim Your Node
+              {t("Claim Your Node")}
             </Text>
             <Text textStyle="sm" color="fg.muted">
-              Enter the 6-character code displayed by your node application
+              {t(
+                "Enter the 6-character code displayed by your node application",
+              )}
             </Text>
           </Stack>
 
@@ -190,7 +197,7 @@ export function NodeClaimForm({
           >
             <FlaskConicalIcon size={16} />
             <CheckIcon size={16} />
-            Verify Code
+            {t("Verify Code")}
           </Button>
 
           {onDownloadClick && (
@@ -203,13 +210,13 @@ export function NodeClaimForm({
                   fontWeight="medium"
                   letterSpacing="wide"
                 >
-                  Don't have the app?
+                  {t("Don't have the app?")}
                 </styled.span>
               </Divider>
 
               <Button w="full" variant="outline" onClick={onDownloadClick}>
                 <DownloadIcon size={16} />
-                Download Node
+                {t("Download Node")}
               </Button>
             </>
           )}

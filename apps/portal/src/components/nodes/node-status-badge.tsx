@@ -1,5 +1,7 @@
 "use client";
 
+import { useExtracted } from "next-intl";
+
 import type { BadgeProps } from "@/components/ui/badge";
 
 import { Badge } from "@/components/ui";
@@ -25,6 +27,7 @@ interface NodeStatusBadgeProps {
 }
 
 export function NodeStatusBadge({ size, status }: NodeStatusBadgeProps) {
+  const t = useExtracted();
   const config = STATUS_CONFIG[status];
 
   return (
@@ -33,7 +36,7 @@ export function NodeStatusBadge({ size, status }: NodeStatusBadgeProps) {
       variant={config.variant}
       size={size}
     >
-      {config.label}
+      {t(config.label)}
     </Badge>
   );
 }

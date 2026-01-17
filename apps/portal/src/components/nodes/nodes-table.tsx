@@ -1,6 +1,7 @@
 "use client";
 
 import { CpuIcon, SettingsIcon } from "lucide-react";
+import { useExtracted, useFormatter, useNow } from "next-intl";
 import { Box, HStack } from "styled-system/jsx";
 
 import {
@@ -35,6 +36,9 @@ export function NodesTable({
   onSettingsClick,
   selectedIds,
 }: NodesTableProps) {
+  const t = useExtracted();
+  const format = useFormatter();
+  const now = useNow();
   const allSelected = selectedIds.length === nodes.length && nodes.length > 0;
   const someSelected = selectedIds.length > 0 && !allSelected;
 
@@ -72,11 +76,11 @@ export function NodesTable({
                 </Checkbox.Control>
               </Checkbox.Root>
             </Table.Header>
-            <Table.Header>Name</Table.Header>
-            <Table.Header>Platform</Table.Header>
-            <Table.Header>Status</Table.Header>
-            <Table.Header>Workers</Table.Header>
-            <Table.Header>Last Seen</Table.Header>
+            <Table.Header>{t("Name")}</Table.Header>
+            <Table.Header>{t("Platform")}</Table.Header>
+            <Table.Header>{t("Status")}</Table.Header>
+            <Table.Header>{t("Workers")}</Table.Header>
+            <Table.Header>{t("Last Seen")}</Table.Header>
             <Table.Header w="10" />
           </Table.Row>
         </Table.Head>
@@ -114,7 +118,7 @@ export function NodesTable({
               </Table.Cell>
               <Table.Cell>
                 <Text textStyle="sm" color="fg.muted">
-                  {formatLastSeen(node.lastSeen)}
+                  {format.relativeTime(node.lastSeen, now)}
                 </Text>
               </Table.Cell>
               <Table.Cell>
@@ -123,6 +127,7 @@ export function NodesTable({
                     size="xs"
                     variant="plain"
                     onClick={() => onSettingsClick(node)}
+                    aria-label={t("Settings")}
                   >
                     <SettingsIcon size={14} />
                   </IconButton>
@@ -137,6 +142,8 @@ export function NodesTable({
 }
 
 export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
+  const t = useExtracted();
+
   return (
     <Table.Root variant="surface">
       <Table.Head>
@@ -144,10 +151,10 @@ export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
           <Table.Header w="10">
             <Skeleton w="4" h="4" />
           </Table.Header>
-          <Table.Header>Name</Table.Header>
-          <Table.Header>Platform</Table.Header>
-          <Table.Header>Status</Table.Header>
-          <Table.Header>Workers</Table.Header>
+          <Table.Header>{t("Name")}</Table.Header>
+          <Table.Header>{t("Platform")}</Table.Header>
+          <Table.Header>{t("Status")}</Table.Header>
+          <Table.Header>{t("Workers")}</Table.Header>
         </Table.Row>
       </Table.Head>
       <Table.Body>
@@ -175,19 +182,16 @@ export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
   );
 }
 
-function formatLastSeen(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.floor(diff / (1000 * 60));
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
-
 function WorkersDisplay({ totalCores, workers }: WorkersDisplayProps) {
+  const t = useExtracted();
+
   return (
-    <Tooltip content={`${workers} active of ${totalCores} cores`}>
+    <Tooltip
+      content={t("{workers, number} active of {totalCores, number} cores", {
+        totalCores,
+        workers,
+      })}
+    >
       <HStack gap="1.5">
         <CpuIcon size={14} />
         <Text textStyle="sm">

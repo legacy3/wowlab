@@ -37,9 +37,7 @@ const NAV = [
 export function UiDemo() {
   return (
     <PageLayout nav={NAV}>
-      {/* Foundation */}
       <TokensSection />
-      {/* Core UI */}
       <ActionsSection />
       <FormsSection />
       <DataDisplaySection />
@@ -47,7 +45,6 @@ export function UiDemo() {
       <NavigationSection />
       <OverlaysSection />
       <FeedbackSection />
-      {/* Domain-specific */}
       <SimulateSection />
       <SpecPickerSection />
       <I18nSection />

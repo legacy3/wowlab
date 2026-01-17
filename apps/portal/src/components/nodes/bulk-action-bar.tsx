@@ -1,6 +1,7 @@
 "use client";
 
 import { PowerIcon, XIcon } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { HStack } from "styled-system/jsx";
 
 import { Badge, Button, Group, IconButton } from "@/components/ui";
@@ -20,13 +21,19 @@ export function BulkActionBar({
   onPowerOn,
   selectedCount,
 }: BulkActionBarProps) {
+  const t = useExtracted();
+
   if (selectedCount === 0) {
     return null;
   }
 
   return (
     <HStack gap="3" flexWrap="wrap">
-      <Badge variant="surface">{selectedCount} selected</Badge>
+      <Badge variant="surface">
+        {t("{count, plural, =1 {# selected} other {# selected}}", {
+          count: selectedCount,
+        })}
+      </Badge>
       <Group attached>
         <Button
           size="sm"
@@ -36,7 +43,7 @@ export function BulkActionBar({
           loading={isLoading}
         >
           <PowerIcon size={14} />
-          Power On
+          {t("Power On")}
         </Button>
         <Button
           size="sm"
@@ -45,10 +52,15 @@ export function BulkActionBar({
           loading={isLoading}
         >
           <PowerIcon size={14} />
-          Power Off
+          {t("Power Off")}
         </Button>
       </Group>
-      <IconButton size="sm" variant="plain" onClick={onClearSelection}>
+      <IconButton
+        size="sm"
+        variant="plain"
+        onClick={onClearSelection}
+        aria-label={t("Clear selection")}
+      >
         <XIcon size={14} />
       </IconButton>
     </HStack>

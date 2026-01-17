@@ -187,7 +187,10 @@ function NodesSkeletonDemo() {
               Download Node
             </Button>
           </Empty.Root>
-          <NodeDownloadDialog open={downloadOpen} onOpenChange={setDownloadOpen} />
+          <NodeDownloadDialog
+            open={downloadOpen}
+            onOpenChange={setDownloadOpen}
+          />
         </DemoBox>
       </Stack>
     </Subsection>
