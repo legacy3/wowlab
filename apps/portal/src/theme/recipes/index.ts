@@ -7,6 +7,7 @@ import { breadcrumb } from "./breadcrumb";
 import { button } from "./button";
 import { card } from "./card";
 import { chart } from "./chart";
+import { checkbox } from "./checkbox";
 import { code } from "./code";
 import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
@@ -28,11 +29,15 @@ import { link } from "./link";
 import { loader } from "./loader";
 import { menu } from "./menu";
 import { numberInput } from "./number-input";
+import { pinInput } from "./pin-input";
 import { popover } from "./popover";
 import { progress } from "./progress";
 import { prose } from "./prose";
+import { radioCardGroup } from "./radio-card-group";
+import { radioGroup } from "./radio-group";
 import { select } from "./select";
 import { skeleton } from "./skeleton";
+import { slider } from "./slider";
 import { steps } from "./steps";
 import { switchRecipe } from "./switch";
 import { table } from "./table";
@@ -72,6 +77,7 @@ export const slotRecipes = {
   accordion,
   avatar,
   card,
+  checkbox,
   collapsible,
   combobox,
   dialog,
@@ -80,8 +86,12 @@ export const slotRecipes = {
   expandable,
   field,
   menu,
+  pinInput,
   popover,
+  radioCardGroup,
+  radioGroup,
   select,
+  slider,
   steps,
   switchRecipe,
   table,

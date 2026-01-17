@@ -116,18 +116,18 @@ at runSimulation (simulation.ts:89)
 at async main (index.ts:12)`,
   },
 
-  frameworks: [
-    { label: "React", value: "react" },
-    { label: "Vue", value: "vue" },
-    { label: "Svelte", value: "svelte" },
-    { label: "Angular", value: "angular" },
-    { label: "Solid", value: "solid" },
-  ],
-
   professions: [
     { name: "Alchemy", rank: 525 },
     { name: "Herbalism", rank: 525 },
   ] satisfies Profession[],
+
+  specs: [
+    { label: "Restoration", value: "restoration" },
+    { label: "Enhancement", value: "enhancement" },
+    { label: "Elemental", value: "elemental" },
+    { label: "Holy", value: "holy" },
+    { label: "Protection", value: "protection" },
+  ],
 
   table: {
     leaderboard: [

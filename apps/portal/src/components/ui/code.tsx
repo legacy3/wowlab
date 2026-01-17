@@ -3,10 +3,15 @@
 import type { ReactNode } from "react";
 
 import { useEffect, useState } from "react";
-import { codeToHtml } from "shiki";
+import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 import { code } from "styled-system/recipes";
+
+const codeTheme = createCssVariablesTheme({
+  name: "css-variables",
+  variablePrefix: "--shiki-",
+});
 
 export interface CodeProps {
   children: ReactNode;
@@ -81,7 +86,7 @@ export function Code({ children, className, language }: CodeProps) {
 
     codeToHtml(codeString, {
       lang: language,
-      theme: "css-variables",
+      theme: codeTheme,
     }).then((result) => {
       if (!cancelled) {
         setHtml(result);

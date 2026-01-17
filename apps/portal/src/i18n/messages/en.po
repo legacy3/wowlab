@@ -222,7 +222,7 @@ msgid "JerYOj"
 msgstr "Simulations"
 
 #: src/components/computing/cards/simulations-card.tsx:18
-#: src/components/dev/ui/sections/i18n.tsx:252
+#: src/components/dev/ui/sections/i18n.tsx:256
 msgid "ly9PN0"
 msgstr "{value, number}"
 
@@ -284,63 +284,63 @@ msgstr "(empty)"
 msgid "24tjE1"
 msgstr "{count, plural, =1 {# result} other {# results}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:179
-#: src/components/dev/ui/sections/i18n.tsx:188
-#: src/components/dev/ui/sections/i18n.tsx:197
+#: src/components/dev/ui/sections/i18n.tsx:183
+#: src/components/dev/ui/sections/i18n.tsx:192
+#: src/components/dev/ui/sections/i18n.tsx:201
 msgid "Y1osJw"
 msgstr "{count, plural, =0 {No items} =1 {One item} other {# items}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:211
-#: src/components/dev/ui/sections/i18n.tsx:220
-#: src/components/dev/ui/sections/i18n.tsx:229
+#: src/components/dev/ui/sections/i18n.tsx:215
+#: src/components/dev/ui/sections/i18n.tsx:224
+#: src/components/dev/ui/sections/i18n.tsx:233
 msgid "t5mISx"
 msgstr "{status, select, online {Online} offline {Offline} other {Unknown}}"
 
-#: src/components/dev/ui/sections/i18n.tsx:240
+#: src/components/dev/ui/sections/i18n.tsx:244
 msgid "tBFOH1"
 msgstr "Hello, {name}!"
 
-#: src/components/dev/ui/sections/i18n.tsx:242
+#: src/components/dev/ui/sections/i18n.tsx:246
 msgid "/vBDCB"
 msgstr "You have {count} new messages"
 
-#: src/components/dev/ui/sections/i18n.tsx:244
+#: src/components/dev/ui/sections/i18n.tsx:248
 msgid "KhKQjV"
 msgstr "Price: {price}"
 
-#: src/components/dev/ui/sections/i18n.tsx:256
+#: src/components/dev/ui/sections/i18n.tsx:260
 msgid "lnlbAn"
 msgstr "{value, number, percent}"
 
-#: src/components/dev/ui/sections/i18n.tsx:269
+#: src/components/dev/ui/sections/i18n.tsx:273
 msgid "MgJcFD"
 msgstr "This is <b>bold</b> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:274
+#: src/components/dev/ui/sections/i18n.tsx:278
 msgid "DOAeJb"
 msgstr "This is <i>italic</i> text"
 
-#: src/components/dev/ui/sections/i18n.tsx:279
+#: src/components/dev/ui/sections/i18n.tsx:283
 msgid "04VGuM"
 msgstr "This has <code>inline code</code>"
 
-#: src/components/dev/ui/sections/i18n.tsx:289
+#: src/components/dev/ui/sections/i18n.tsx:293
 msgid "yYGAHf"
 msgstr "Click <b>here</b> to <i>continue</i>"
 
-#: src/components/dev/ui/sections/i18n.tsx:295
+#: src/components/dev/ui/sections/i18n.tsx:299
 msgid "P8nrf0"
 msgstr "Status: <badge>{status}</badge>"
 
-#: src/components/dev/ui/sections/i18n.tsx:310
+#: src/components/dev/ui/sections/i18n.tsx:314
 msgid "jnJNX5"
 msgstr "Welcome back, <b>{name}</b>!"
 
-#: src/components/dev/ui/sections/i18n.tsx:316
+#: src/components/dev/ui/sections/i18n.tsx:320
 msgid "/dbr93"
 msgstr "You have <b>{count}</b> notifications"
 
-#: src/components/dev/ui/sections/i18n.tsx:331
+#: src/components/dev/ui/sections/i18n.tsx:335
 msgid "diRIFs"
 msgstr "Read our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
 
