@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted, useFormatter, useLocale } from "next-intl";
+import { useExtracted, useFormatter, useLocale, useNow } from "next-intl";
 import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import { Badge, Code, Text } from "@/components/ui";
@@ -11,6 +11,7 @@ export function I18nSection() {
   const locale = useLocale();
   const t = useExtracted();
   const format = useFormatter();
+  const now = useNow();
 
   return (
     <Section id="i18n" title="i18n Formatting" lazy minHeight={1623}>
@@ -83,19 +84,22 @@ export function I18nSection() {
                 <Row
                   label="5 min ago"
                   value={format.relativeTime(
-                    new Date(Date.now() - 5 * 60 * 1000),
+                    new Date(now.getTime() - 5 * 60 * 1000),
+                    now,
                   )}
                 />
                 <Row
                   label="2 hours ago"
                   value={format.relativeTime(
-                    new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    new Date(now.getTime() - 2 * 60 * 60 * 1000),
+                    now,
                   )}
                 />
                 <Row
                   label="3 days ago"
                   value={format.relativeTime(
-                    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+                    new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+                    now,
                   )}
                 />
               </Stack>

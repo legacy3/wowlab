@@ -263,7 +263,11 @@ export function Section({
       >
         {title}
       </Heading>
-      {lazy ? <LazyContent minHeight={minHeight}>{children}</LazyContent> : children}
+      {lazy ? (
+        <LazyContent minHeight={minHeight}>{children}</LazyContent>
+      ) : (
+        children
+      )}
     </styled.section>
   );
 }
