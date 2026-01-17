@@ -2,11 +2,15 @@
 
 use clap::{Parser, Subcommand};
 use node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
-use signal_hook::consts::signal::{SIGINT, SIGTERM};
-use signal_hook_tokio::Signals;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+
+#[cfg(unix)]
+use signal_hook::consts::signal::{SIGINT, SIGTERM};
+#[cfg(unix)]
+use signal_hook_tokio::Signals;
+#[cfg(unix)]
 use tokio_stream::StreamExt;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -149,21 +153,35 @@ fn run_node() {
 
     let running = Arc::new(AtomicBool::new(true));
 
-    // Set up signal handling for graceful shutdown (SIGINT + SIGTERM)
-    let r = Arc::clone(&running);
-    runtime.spawn(async move {
-        let mut signals =
-            Signals::new([SIGINT, SIGTERM]).expect("Failed to register signal handlers");
-        while let Some(signal) = signals.next().await {
-            match signal {
-                SIGINT => tracing::info!("Received SIGINT (Ctrl-C), shutting down..."),
-                SIGTERM => tracing::info!("Received SIGTERM, shutting down..."),
-                _ => {}
+    // Set up signal handling for graceful shutdown
+    #[cfg(unix)]
+    {
+        let r = Arc::clone(&running);
+        runtime.spawn(async move {
+            let mut signals =
+                Signals::new([SIGINT, SIGTERM]).expect("Failed to register signal handlers");
+            while let Some(signal) = signals.next().await {
+                match signal {
+                    SIGINT => tracing::info!("Received SIGINT (Ctrl-C), shutting down..."),
+                    SIGTERM => tracing::info!("Received SIGTERM, shutting down..."),
+                    _ => {}
+                }
+                r.store(false, Ordering::SeqCst);
+                break;
             }
-            r.store(false, Ordering::SeqCst);
-            break;
-        }
-    });
+        });
+    }
+
+    #[cfg(windows)]
+    {
+        let r = Arc::clone(&running);
+        runtime.spawn(async move {
+            if tokio::signal::ctrl_c().await.is_ok() {
+                tracing::info!("Received Ctrl-C, shutting down...");
+                r.store(false, Ordering::SeqCst);
+            }
+        });
+    }
 
     core.start();
     print_status(&core);

@@ -106,12 +106,12 @@ async fn test_game_cache_real() {
 
     let stats = cache.stats();
     println!(
-        "Memory: spells={}, talents={}, items={}, auras={}",
-        stats.memory.spells, stats.memory.talents, stats.memory.items, stats.memory.auras
+        "Memory: spells={}, traits={}, items={}, auras={}",
+        stats.memory.spells, stats.memory.traits, stats.memory.items, stats.memory.auras
     );
     println!(
-        "Disk: spells={}, talents={}, items={}, auras={}",
-        stats.disk.spells, stats.disk.talents, stats.disk.items, stats.disk.auras
+        "Disk: spells={}, traits={}, items={}, auras={}",
+        stats.disk.spells, stats.disk.traits, stats.disk.items, stats.disk.auras
     );
 
     // Cleanup
@@ -136,20 +136,20 @@ async fn test_retry_logic_real() {
 }
 
 // ============================================================================
-// Talent Tree Tests
+// Trait Tree Tests
 // ============================================================================
 
 #[tokio::test]
 #[ignore = "requires SUPABASE_URL and SUPABASE_ANON_KEY"]
-async fn test_get_talent_tree_real() {
+async fn test_get_trait_tree_real() {
     let client = get_client().expect("SUPABASE_URL and SUPABASE_ANON_KEY must be set");
 
-    let result = client.get_talent_tree(253).await;
+    let result = client.get_trait_tree(253).await;
     match result {
         Ok(tree) => {
             println!("Tree: {} {} - {} nodes", tree.class_name, tree.spec_name, tree.nodes.len());
         }
-        Err(e) => println!("Talent tree not found or error: {}", e),
+        Err(e) => println!("Trait tree not found or error: {}", e),
     }
 }
 
