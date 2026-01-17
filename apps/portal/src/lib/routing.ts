@@ -151,9 +151,7 @@ export const routes = {
 
   about: group({
     index: route("/about", "About", "About WoW Lab", "Info", sitemap.monthly),
-    privacy: route("/about?tab=privacy-policy", "Privacy Policy", "Privacy policy", "Shield", sitemap.monthly),
-    terms: route("/about?tab=terms-of-service", "Terms of Service", "Terms of service", "FileText", sitemap.monthly),
-  }).standalone(),
+  }).secondary(),
 
   simulate: group({
     index: route("/simulate", "Simulate", "Run simulations", "Play", sitemap.weekly),

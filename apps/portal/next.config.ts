@@ -1,16 +1,26 @@
 import type { NextConfig } from "next";
 
-import createMDX from "@next/mdx";
 import createNextIntlPlugin from "next-intl/plugin";
 
 import { locales } from "./src/i18n/routing";
+
+const isDev = process.argv.indexOf("dev") !== -1;
+const isBuild = process.argv.indexOf("build") !== -1;
+
+const buildVelite = async () => {
+  if (!process.env.VELITE_STARTED && (isDev || isBuild)) {
+    process.env.VELITE_STARTED = "1";
+    const { build } = await import("velite");
+    await build({ clean: !isDev, watch: isDev });
+  }
+};
+
+buildVelite().catch(console.error);
 
 const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
   },
-
-  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 
   async redirects() {
     return [
@@ -42,26 +52,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-
-  options: {
-    rehypePlugins: [
-      "rehype-slug",
-      "@stefanprobst/rehype-extract-toc",
-      "@stefanprobst/rehype-extract-toc/mdx",
-    ],
-
-    remarkPlugins: [
-      "remark-gfm",
-      "remark-frontmatter",
-      ["remark-mdx-frontmatter", { name: "meta" }],
-      "remark-reading-time",
-      "remark-reading-time/mdx",
-    ],
-  },
-});
-
 const withNextIntl = createNextIntlPlugin({
   experimental: {
     extract: {
@@ -77,4 +67,4 @@ const withNextIntl = createNextIntlPlugin({
   requestConfig: "./src/i18n/request.ts",
 });
 
-export default withNextIntl(withMDX(nextConfig));
+export default withNextIntl(nextConfig);

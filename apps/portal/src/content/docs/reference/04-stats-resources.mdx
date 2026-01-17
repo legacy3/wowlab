@@ -1,0 +1,193 @@
+---
+title: Stats & Resources
+description: How stats are computed and resources work
+updatedAt: 2026-01-17
+---
+
+# Stats & Resources
+
+How the engine computes combat stats from ratings and manages resource pools.
+
+## Stat computation flow
+
+<Mermaid chart={`
+flowchart TB
+    subgraph Input
+        Primary[PrimaryStats]
+        Ratings[Ratings]
+        Spec[SpecId]
+    end
+
+    subgraph Conversion
+        RatingConvert["rating_to_percent()"]
+        DR[Diminishing Returns]
+        Coeff[Mastery Coefficient]
+    end
+
+    subgraph Output
+        Combat[CombatStats]
+        AP[Attack Power]
+        Crit[Crit Chance]
+        Haste[Haste Multiplier]
+        Mastery[Mastery Value]
+    end
+
+    Primary --> |spec primary| AP
+    Ratings --> RatingConvert
+    RatingConvert --> DR
+    DR --> Crit
+    DR --> Haste
+    DR --> |* coeff| Mastery
+
+    Combat --> AP
+    Combat --> Crit
+    Combat --> Haste
+    Combat --> Mastery
+
+`} />
+
+## Primary stats
+
+Base attributes that determine attack power:
+
+```rust
+PrimaryStats {
+    strength: f32,
+    agility: f32,
+    intellect: f32,
+    stamina: f32,
+}
+```
+
+Each spec has a designated primary stat. For physical DPS:
+
+- Strength specs: 1 Str = 1 AP
+- Agility specs: 1 Agi = 1 AP
+
+## Secondary ratings
+
+Raw rating values from gear:
+
+```rust
+Ratings {
+    crit: f32,
+    haste: f32,
+    mastery: f32,
+    versatility: f32,
+    leech: f32,
+    avoidance: f32,
+    speed: f32,
+}
+```
+
+Ratings convert to percentages using level-dependent formulas with diminishing returns at high values.
+
+## StatCache
+
+The stat cache stores computed values and recomputes only when dirty:
+
+```rust
+StatCache {
+    primary: PrimaryStats,      // Str, Agi, Int, Sta
+    ratings: Ratings,           // Crit, Haste, Mastery, Vers
+    combat: CombatStats,        // Computed values
+    spec: SpecId,
+    dirty: bool,                // Invalidation flag
+}
+```
+
+When a buff modifies stats, it sets `dirty = true`. The next stat query recomputes `combat` from the current `primary` and `ratings`.
+
+## Combat stats
+
+Final computed values used in calculations:
+
+```rust
+CombatStats {
+    crit_chance: f32,       // 0.0 - 1.0+
+    haste: f32,             // 1.0 = no haste, 1.3 = 30% haste
+    mastery: f32,           // Spec-specific value
+    versatility_damage: f32, // Damage/healing bonus
+    versatility_dr: f32,    // Damage reduction (half of damage bonus)
+    attack_power: f32,
+    spell_power: f32,
+    weapon_dps: f32,        // For melee calculations
+}
+```
+
+## Resource system
+
+Resources like focus, energy, and mana use a pool structure:
+
+```rust
+ResourcePool {
+    resource_type: ResourceType,
+    current: f32,
+    max: f32,
+}
+
+UnitResources {
+    primary: Option<ResourcePool>,    // Focus, Energy, etc.
+    secondary: Option<ResourcePool>,  // Combo Points, etc.
+    mana: Option<ResourcePool>,       // Hybrid casters
+}
+```
+
+## Resource regeneration
+
+Resources regenerate at fixed rates per second:
+
+| Resource | Base Regen |
+| -------- | ---------- |
+| Energy   | 10.0/sec   |
+| Focus    | 5.0/sec    |
+
+Haste increases regeneration:
+
+```
+actual_regen = base_regen * haste_multiplier
+```
+
+The simulation schedules `ResourceTick` events every 100ms to apply regeneration in discrete steps.
+
+## Resource costs and gains
+
+Spells define resource interactions:
+
+```rust
+SpellDef {
+    costs: Vec<ResourceCost>,   // What it costs
+    gains: Vec<ResourceGain>,   // What it generates
+    // ...
+}
+
+ResourceCost {
+    resource: ResourceType,
+    amount: f32,
+}
+```
+
+Before casting, the engine checks if the player has enough resources. After casting, it deducts costs and adds gains.
+
+## Haste effects
+
+Haste affects multiple systems:
+
+| System         | Effect              |
+| -------------- | ------------------- |
+| GCD            | Reduced (min 0.75s) |
+| Cast time      | Reduced             |
+| DoT tick rate  | Faster ticks        |
+| Resource regen | Faster              |
+| RPPM procs     | Higher proc rate    |
+
+The haste multiplier applies multiplicatively:
+
+```
+actual_time = base_time / haste_multiplier
+```
+
+## Next steps
+
+- [Damage System](/dev/docs/reference/03-damage-system) - How stats affect damage
+- [Auras & Procs](/dev/docs/reference/05-auras-procs) - How buffs modify stats

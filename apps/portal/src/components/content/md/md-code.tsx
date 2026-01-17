@@ -2,26 +2,97 @@
 
 import type { ReactNode } from "react";
 
-import { Code } from "@/components/ui/code";
-
-import { MdMermaid } from "./md-mermaid";
+import { css } from "styled-system/css";
+import { Box } from "styled-system/jsx";
+import { code as inlineCode } from "styled-system/recipes";
 
 type MdCodeProps = {
   className?: string;
   children: ReactNode;
+  "data-language"?: string;
 };
 
-export function MdCode({ children, className = "" }: MdCodeProps) {
-  const language = className.replace("language-", "") || undefined;
-  const code = String(children).trimEnd();
+type MdPreProps = {
+  className?: string;
+  children: ReactNode;
+  "data-language"?: string;
+  "data-theme"?: string;
+};
 
-  if (language === "mermaid") {
-    return <MdMermaid chart={code} />;
-  }
+// TODO Move this to recipe?
+const preStyles = css({
+  "& [data-highlighted-chars]": {
+    bg: "amber.a4",
+    borderRadius: "sm",
+    px: "1",
+  },
+  "& [data-highlighted-line]": {
+    bg: "amber.a3",
+  },
+  "& [data-line]": {
+    mx: "-4",
+    px: "4",
+  },
+  "& code": {
+    bg: "transparent",
+    border: "none",
+    display: "block",
+    fontFamily: "inherit",
+    fontSize: "inherit",
+    p: "0",
+  },
+  bg: "gray.a3",
+  borderRadius: "lg",
+  fontFamily: "code",
+  fontSize: "sm",
+  lineHeight: "relaxed",
+  my: "6",
+  overflow: "auto",
+  p: "4",
+  position: "relative",
+});
 
-  return <Code language={language}>{children}</Code>;
+const badgeStyles = css({
+  backdropFilter: "blur(4px)",
+  bg: "bg.default/80",
+  borderRadius: "sm",
+  color: "fg.muted",
+  fontFamily: "code",
+  fontSize: "xs",
+  fontWeight: "medium",
+  letterSpacing: "wide",
+  position: "absolute",
+  px: "1.5",
+  py: "0.5",
+  right: "2",
+  textTransform: "uppercase",
+  top: "2",
+  zIndex: "1",
+});
+
+export function MdCode({ children, className, ...props }: MdCodeProps) {
+  return (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
 }
 
-export function MdPre({ children }: MdCodeProps) {
-  return <>{children}</>;
+export function MdInlineCode({ children, className }: MdCodeProps) {
+  return (
+    <code className={`${inlineCode()} ${className ?? ""}`}>{children}</code>
+  );
+}
+
+export function MdPre({ children, className, ...props }: MdPreProps) {
+  const language = props["data-language"];
+
+  return (
+    <Box position="relative">
+      {language && <Box className={badgeStyles}>{language}</Box>}
+      <pre className={`${preStyles} ${className ?? ""}`} {...props}>
+        {children}
+      </pre>
+    </Box>
+  );
 }

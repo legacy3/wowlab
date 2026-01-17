@@ -17,6 +17,7 @@ Cargo.lock
 out/
 next-env.d.ts
 .vercel
+.velite/
 
 # Environment variables
 .env

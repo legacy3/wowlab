@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { blogIndex } from "@/lib/blog";
-import { docSlugs } from "@/lib/docs";
+import { blogIndex } from "@/lib/content/blog";
+import { docSlugs } from "@/lib/content/docs";
 import { env } from "@/lib/env";
 import { getSitemapRoutes, routes } from "@/lib/routing";
 

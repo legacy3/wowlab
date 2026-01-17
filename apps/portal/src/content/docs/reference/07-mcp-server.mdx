@@ -1,0 +1,58 @@
+---
+title: MCP Server
+description: Query WoW spell/item data with AI tools
+updatedAt: 2026-01-17
+---
+
+# MCP Server
+
+Query WoW spell and item data from any MCP-compatible tool.
+
+## What it's for
+
+The MCP server gives AI assistants (Claude, Cursor, etc.) access to WoW game data. Ask questions like "what's the cooldown of Fireball?" or "compare the damage of these two trinkets" and the assistant can look it up directly.
+
+**Not limited to WoW Lab users.** Anyone can use this to query WoW data for theorycrafting, building tools, or exploring game mechanics.
+
+## Install
+
+**Claude Code:**
+
+```bash
+claude mcp add wowlab -- npx -y @wowlab/mcp-server@latest
+```
+
+**Other tools:** Add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "wowlab": {
+      "command": "npx",
+      "args": ["-y", "@wowlab/mcp-server@latest"]
+    }
+  }
+}
+```
+
+## Available tools
+
+| Tool               | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| `get_spell`        | Get full spell details by ID                        |
+| `get_item`         | Get full item details by ID                         |
+| `search_spells`    | Search spells by name                               |
+| `search_items`     | Search items by name                                |
+| `get_spells_batch` | Get multiple spells by ID (max 50)                  |
+| `get_items_batch`  | Get multiple items by ID (max 50)                   |
+| `query_table`      | Query raw DBC tables                                |
+| `get_schema`       | List tables or get column info                      |
+| `call_function`    | Run computed functions (damage, cooldowns, scaling) |
+| `list_functions`   | List available computed functions                   |
+
+Just ask your AI assistant what you want to know. It will figure out which tools to use.
+
+## Links
+
+- [npm](https://www.npmjs.com/package/@wowlab/mcp-server)
+- [Source](/go/github/tree/main/apps/mcp-server)

@@ -3,7 +3,7 @@
 import { FileText } from "lucide-react";
 import { Flex, VStack } from "styled-system/jsx";
 
-import type { DocEntry } from "@/lib/docs/types";
+import type { DocEntry } from "@/lib/content";
 
 import * as Accordion from "@/components/ui/accordion";
 import { Icon } from "@/components/ui/icon";

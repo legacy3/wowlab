@@ -1,0 +1,159 @@
+---
+title: Data Model
+description: How spell data is assembled at runtime
+updatedAt: 2026-01-17
+---
+
+# Data Model
+
+WoW Lab pre-transforms game data from Blizzard's DBC/DB2 files into flat, denormalized structures that are fast to query and easy to work with.
+
+If you want to explore the raw WoW data tables yourself, [wago.tools/db2](https://wago.tools/db2) is an excellent browser for all the DBC files.
+
+## The simple version
+
+Blizzard stores spell data across dozens of normalized tables (spell_name, spell_misc, spell_effect, spell_cooldowns, etc.). WoW Lab runs a transformation pipeline that joins these tables and produces flat structures stored in Supabase. Apps query these pre-assembled records directly.
+
+**Traditional Pre-parsed Approach:**
+
+<Mermaid
+  chart={`
+flowchart LR
+    A1[Data Files] --> A2[Build Script] --> A3[Giant JSON] --> A4[App]
+`}
+/>
+
+**WoW Lab Pipeline:**
+
+<Mermaid
+  chart={`
+flowchart LR
+    B1[DBC Files] --> B2[Transformer] --> B3[Flat Tables] --> B4[Supabase] --> B5[App]
+`}
+/>
+
+The transformation happens once per patch. Apps get fast, simple queries against denormalized data.
+
+## Why this matters
+
+**Traditional tools** dump everything into massive JSON files. Updating anything means regenerating the entire blob and redeploying.
+
+**WoW Lab** stores transformed data in a database. Updates are granular - you can refresh a single spell or table without touching the rest. The flat structure means queries are simple SELECT statements, not complex joins.
+
+## How data gets transformed
+
+The transformation pipeline reads Blizzard's normalized DBC tables and produces flat records. This happens offline via CLI tools, not at runtime.
+
+<Mermaid
+  chart={`
+flowchart TD
+    DBC["DBC/DB2 Files"] --> Parser["Snapshot Parser"]
+    Parser --> Tables["Normalized Tables"]
+    subgraph Tables["Source Tables (15+)"]
+        spell_name["spell_name"]
+        spell_misc["spell_misc"]
+        spell_effect["spell_effect"]
+        spell_cooldowns["spell_cooldowns"]
+        spell_duration["spell_duration"]
+        spell_range["spell_range"]
+    end
+    Tables --> Transform["Transformer"]
+    Transform --> Flat["Flat Structure"]
+    Flat --> DB["game.spells"]
+`}
+/>
+
+The transformer joins data from 15+ source tables, resolves all the index references, and produces a single flat record per spell.
+
+## The game schema
+
+WoW Lab stores transformed data in the `game` schema in Supabase. Each table contains pre-joined, denormalized records:
+
+| Table          | What it stores                                            |
+| -------------- | --------------------------------------------------------- |
+| `spells`       | Flat spell records with all timing, costs, effects inline |
+| `items`        | Flat item records with stats, effects, sockets inline     |
+| `auras`        | Aura-specific data (duration, stacks, periodic info)      |
+| `specs`        | Specialization definitions                                |
+| `specs_traits` | Talent tree nodes and edges                               |
+| `classes`      | Class definitions with colors and icons                   |
+
+The source DBC tables (spell_name, spell_misc, spell_effect, spell_cooldowns, spell_duration, spell_range, spell_radius, spell_cast_times, spell_aura_options, etc.) are joined during transformation. Apps never query these source tables directly.
+
+## Index resolution
+
+Blizzard's DBC tables use numeric indices to reference other tables. For example, `spell_misc.CastingTimeIndex = 42` points to row 42 in `spell_cast_times`. The transformer resolves all these references and embeds the actual values:
+
+<Mermaid
+  chart={`
+flowchart LR
+    A["spell_misc: CastingTimeIndex = 42"] --> B["spell_cast_times: ID 42, Base 2500ms"] --> C["game.spells: castTime = 2500"]
+`}
+/>
+
+By the time data reaches Supabase, all indices are resolved. The `game.spells` table has `cast_time` as an integer, not a reference.
+
+## Caching
+
+Since queries are simple lookups against flat tables, caching is straightforward:
+
+1. **Browser cache** - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) stores fetched records locally. Data persists until a new patch drops.
+2. **Automatic batching** - When a page renders 50 spell tooltips, all IDs get bundled into a single `WHERE id IN (...)` call.
+3. **Engine cache** - The Rust engine uses a multi-layer cache (memory + disk) via `GameDataCache` when running with Supabase.
+
+<Mermaid
+  chart={`
+flowchart TD
+    Request["Spell Request"] --> Cache{"In Cache?"}
+    Cache -->|Yes| Return["Return Cached"]
+    Cache -->|No| Fetch["Fetch from Supabase"]
+    Fetch --> Store["Store in Cache"]
+    Store --> Return
+`}
+/>
+
+## Comparison
+
+| Aspect              | Giant JSON blob       | WoW Lab (flat tables) |
+| ------------------- | --------------------- | --------------------- |
+| **First request**   | Instant (pre-loaded)  | Fast (single query)   |
+| **Repeat requests** | Instant               | Instant (cached)      |
+| **Data freshness**  | Stale until rebuild   | Fresh per patch       |
+| **Memory usage**    | All spells loaded     | Only requested spells |
+| **Update process**  | Rebuild + redeploy    | Database update       |
+| **Storage**         | 50-200MB JSON in repo | Database              |
+
+## When each approach wins
+
+**Giant JSON blobs work when:**
+
+- Every spell must be ready the moment the app boots
+- You need an offline snapshot with zero runtime dependencies
+- The dataset is small enough to bundle
+
+**Flat database tables work when:**
+
+- Users browse a handful of spells per session
+- You want granular updates without regenerating everything
+- You need to query by attributes (search, filter, sort)
+
+## The code path
+
+The data system has two main components:
+
+**Transformation (offline, CLI)**
+
+- `packages/parsers` - Parses DBC/DB2 files and produces flat structures
+- `pnpm cli sync` - Uploads transformed data to Supabase
+
+**Runtime (Rust engine)**
+
+- `DataResolver` trait - Abstract interface for loading game data
+- `LocalResolver` - Loads from local CSV files (offline, portable)
+- `SupabaseResolver` - Loads from Supabase API with multi-layer caching
+- `GameDataCache` - Memory + disk cache for Supabase data
+
+**Runtime (Portal app)**
+
+- `useSpell(id)` / `useItem(id)` - React hooks that fetch flat records
+- React Query handles caching and deduplication

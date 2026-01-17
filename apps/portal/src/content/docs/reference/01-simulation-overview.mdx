@@ -1,0 +1,216 @@
+---
+title: Simulation Overview
+description: How the simulation engine processes combat
+updatedAt: 2026-01-17
+---
+
+# Simulation Overview
+
+The Rust simulation engine runs on local nodes, not in the browser. It uses JIT compilation (Cranelift) to compile rotations to native machine code for maximum performance.
+
+## Architecture
+
+<Mermaid chart={`
+flowchart TB
+    subgraph Portal
+        Editor[Rotation Editor]
+        DB[(Database)]
+        WASM[Engine WASM]
+    end
+
+    subgraph LocalNode[Local Node]
+        Engine[Rust Engine]
+        JIT[Cranelift JIT]
+    end
+
+    Editor --> |save| DB
+    WASM --> |validate| Editor
+    DB --> |job| Engine
+    Engine --> JIT
+    Engine --> |results| DB
+
+`} />
+
+**Portal** uses the engine compiled to WASM for type sharing and rotation validation. It cannot run simulations because browsers don't support JIT compilation.
+
+**Local nodes** run the full engine with JIT. Start a node on your PC, Docker, or cloud to receive simulation jobs.
+
+## Engine flow
+
+<Mermaid chart={`
+flowchart TB
+    subgraph Input
+        JSON[Rotation JSON]
+        Config[SimConfig]
+        Player[Player Stats]
+    end
+
+    subgraph Compilation
+        Parser[Parser]
+        JIT[Cranelift JIT]
+    end
+
+    subgraph Runtime
+        Sim[Simulation]
+        State[SimState]
+        Handler[SpecHandler]
+        Queue[EventQueue]
+    end
+
+    subgraph Output
+        Results[BatchResults]
+    end
+
+    JSON --> Parser
+    Parser --> JIT
+    JIT --> CompiledRotation
+
+    Config --> Sim
+    Player --> Sim
+    CompiledRotation --> Sim
+
+    Handler --> Sim
+    Sim --> State
+    State --> Queue
+    Queue --> Sim
+    Sim --> Results
+
+`} />
+
+## Event system
+
+The simulation processes events in time order. When your rotation casts a spell, that creates events. Those events create more events. Everything chains together.
+
+**Core event types:**
+
+- `GcdEnd` - Rotation can act again
+- `CastComplete` - Spell finishes casting
+- `SpellDamage` - Damage applies (after travel time)
+- `AuraTick` / `AuraExpire` - DoT/buff events
+- `AutoAttack` / `PetAttack` - Auto-attack timing
+- `ResourceTick` - Regeneration (every 100ms)
+- `ChargeReady` - Charged cooldown gains a charge
+- `CooldownReady` - Cooldown completes (informational)
+- `ProcIcdEnd` - Proc internal cooldown ends
+
+## Simulation loop
+
+<Mermaid chart={`
+sequenceDiagram
+    participant B as BatchRunner
+    participant S as Simulation
+    participant Q as EventQueue
+    participant H as SpecHandler
+
+    B->>S: new(handler, config, player)
+    S->>H: init_player(&mut player)
+    S->>H: init(&mut state)
+    H->>Q: schedule initial events
+
+    loop Event Loop
+        Q->>S: pop next event
+        S->>S: advance_time(event.time)
+        alt GcdEnd
+            S->>H: on_gcd(&mut state)
+            H->>H: next_action() [JIT eval]
+            H->>S: cast_spell()
+        else CastComplete
+            S->>H: on_cast_complete()
+            H->>Q: schedule SpellDamage
+        else SpellDamage
+            S->>H: on_spell_damage()
+            H->>S: record_damage()
+        else AuraTick
+            S->>H: on_aura_tick()
+        end
+    end
+
+    S->>B: return DPS
+
+`} />
+
+## SimState
+
+The simulation state holds everything about the current fight:
+
+```rust
+SimState {
+    config: SimConfig,          // Duration, targets, seed
+    events: EventQueue,         // Central event queue
+    current_time: SimTime,      // Current simulation time
+    rng: FastRng,               // Seeded PRNG
+    player: Player,             // Player actor
+    pets: PetManager,           // Pet actors
+    enemies: EnemyManager,      // Enemy actors
+    auras: AuraTracker,         // Multi-target aura tracking
+    multipliers: DamageMultipliers,
+    iteration: u32,             // Current iteration (batch runs)
+    finished: bool,             // Is simulation complete
+    total_damage: f64,          // Accumulated damage
+}
+```
+
+## Batch processing
+
+Run many iterations in parallel to get statistical results:
+
+<Mermaid chart={`
+flowchart TB
+    Config[SimConfig] --> BatchRunner
+    Handler[Arc SpecHandler] --> BatchRunner
+    Player[Player Template] --> BatchRunner
+
+    BatchRunner --> |par_iter| Thread1[Thread 1]
+    BatchRunner --> |par_iter| Thread2[Thread 2]
+    BatchRunner --> |par_iter| ThreadN[Thread N]
+
+    Thread1 --> |seed+0| Sim1[Simulation]
+    Thread2 --> |seed+1| Sim2[Simulation]
+    ThreadN --> |seed+N| SimN[Simulation]
+
+    Sim1 --> Results[BatchResults]
+    Sim2 --> Results
+    SimN --> Results
+
+    Results --> Stats[mean, std_dev, percentiles]
+
+`} />
+
+Each iteration uses a different RNG seed, producing a distribution of results. The batch runner calculates mean DPS, standard deviation, and percentiles.
+
+## Rotation evaluation
+
+When `GcdEnd` fires, the spec handler calls the JIT-compiled rotation:
+
+1. **Populate context** - Write current state (resources, cooldowns, buffs) to a byte buffer
+2. **Evaluate** - JIT native code executes (~10-50ns per evaluation)
+3. **Execute result** - Cast the returned spell or wait
+
+<Mermaid chart={`
+sequenceDiagram
+    participant H as Handler
+    participant R as CompiledRotation
+    participant C as Context
+    participant S as SimState
+
+    H->>C: populate_context(state)
+    Note over C: Write resources, cooldowns,<br/>buffs to byte buffer
+
+    H->>R: evaluate(context_ptr)
+    Note over R: JIT native code executes
+
+    R->>H: EvalResult { kind, spell_id }
+
+    alt kind == Cast
+        H->>S: cast_spell(spell_id)
+    else kind == Wait
+        H->>S: schedule GcdEnd after wait_time
+    end
+
+`} />
+
+## Next steps
+
+- [Rotation Reference](/dev/docs/reference/02-rotation-reference) - Full expression syntax
+- [Damage System](/dev/docs/reference/03-damage-system) - How damage is calculated
+- [Event System](/dev/docs/engine/01-event-system) - Timing wheel internals

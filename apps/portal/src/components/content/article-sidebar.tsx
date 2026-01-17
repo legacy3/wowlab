@@ -5,35 +5,26 @@ import { useExtracted, useFormatter } from "next-intl";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
-import type { TocHeading } from "@/lib/content/toc";
-import type { TocEntry } from "@/lib/content/types";
+import type { DocEntry, TocEntry, TocHeading } from "@/lib/content";
 
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { useActiveHeading } from "@/hooks/use-active-heading";
-import { flattenToc } from "@/lib/content/toc";
+import { flattenToc } from "@/lib/content";
 import { href, routes } from "@/lib/routing";
-
-type ArticleMeta = {
-  date?: string;
-  readingTime?: number;
-};
 
 type ArticleSidebarProps = {
   toc?: TocEntry[];
-  meta?: ArticleMeta;
+  meta?: {
+    date?: string;
+    readingTime?: number;
+  };
   nav?: {
-    items: SidebarNavItem[];
+    items: DocEntry[];
     currentSlug: string;
   };
-};
-
-type SidebarNavItem = {
-  slug: string;
-  title: string;
-  children?: SidebarNavItem[];
 };
 
 export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
@@ -77,7 +68,7 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
   );
 }
 
-function Meta({ meta }: { meta: ArticleMeta }) {
+function Meta({ meta }: { meta: { date?: string; readingTime?: number } }) {
   const t = useExtracted();
   const format = useFormatter();
 
@@ -118,7 +109,7 @@ function NavGroup({
   defaultOpen,
   item,
 }: {
-  item: SidebarNavItem;
+  item: DocEntry;
   currentSlug: string;
   defaultOpen: boolean;
 }) {
@@ -173,7 +164,7 @@ function Navigation({
   currentSlug,
   items,
 }: {
-  items: SidebarNavItem[];
+  items: DocEntry[];
   currentSlug: string;
 }) {
   const t = useExtracted();
@@ -264,7 +255,7 @@ function TableOfContents({
             href={`#${heading.id}`}
             variant="plain"
             textStyle="xs"
-            pl={heading.level === 3 ? "3" : "0"}
+            pl={`${(heading.level - 2) * 3}`}
             color={activeId === heading.id ? "fg.default" : "fg.muted"}
             fontWeight={activeId === heading.id ? "medium" : "normal"}
             _hover={{ color: "fg.default" }}

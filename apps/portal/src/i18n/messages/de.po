@@ -225,7 +225,7 @@ msgid "t6RYbw"
 msgstr ""
 
 #: src/components/content/article-meta.tsx:62
-#: src/components/content/article-sidebar.tsx:106
+#: src/components/content/article-sidebar.tsx:97
 msgid "0KAbwr"
 msgstr ""
 
@@ -236,15 +236,15 @@ msgstr ""
 msgid "wEQDC6"
 msgstr ""
 
-#: src/components/content/article-sidebar.tsx:191
+#: src/components/content/article-sidebar.tsx:182
 msgid "fBg+7V"
 msgstr ""
 
-#: src/components/content/article-sidebar.tsx:253
+#: src/components/content/article-sidebar.tsx:244
 msgid "TM7OHi"
 msgstr ""
 
-#: src/components/content/article-sidebar.tsx:259
+#: src/components/content/article-sidebar.tsx:250
 msgid "gjyzc7"
 msgstr ""
 

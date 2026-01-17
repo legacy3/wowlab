@@ -1,7 +1,7 @@
 import { Stack } from "styled-system/jsx";
 
 import { Button, Card } from "@/components/ui";
-import { docsIndex, getFirstSlug } from "@/lib/docs";
+import { docsIndex, getFirstSlug } from "@/lib/content/docs";
 import { href, routes } from "@/lib/routing";
 
 import { DocTree } from "./doc-tree";

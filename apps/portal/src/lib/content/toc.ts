@@ -8,19 +8,23 @@ export type TocHeading = {
 
 export function flattenToc(
   entries: TocEntry[],
+  level = 2,
   result: TocHeading[] = [],
 ): TocHeading[] {
   for (const entry of entries) {
-    if (entry.id && entry.depth >= 2) {
+    // Velite URLs are like "#heading-id", extract the id
+    const id = entry.url.startsWith("#") ? entry.url.slice(1) : entry.url;
+
+    if (id && level >= 2) {
       result.push({
-        id: entry.id,
-        level: entry.depth,
-        text: entry.value,
+        id,
+        level,
+        text: entry.title,
       });
     }
 
-    if (entry.children) {
-      flattenToc(entry.children, result);
+    if (entry.items && entry.items.length > 0) {
+      flattenToc(entry.items, level + 1, result);
     }
   }
 

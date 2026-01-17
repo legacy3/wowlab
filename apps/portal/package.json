@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "rm -rf .next && next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -11,18 +11,14 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write --ignore-path ../../.prettierignore .",
     "ncu": "ncu -u",
-    "prepare": "panda codegen"
+    "prepare": "velite && panda codegen"
   },
   "dependencies": {
     "@ark-ui/react": "^5.30.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@mdx-js/loader": "^3.1.1",
-    "@mdx-js/react": "^3.1.1",
-    "@next/mdx": "^16.1.1",
     "@react-querybuilder/dnd": "^8.13.0",
-    "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "@tanstack/react-query": "^5.90.16",
@@ -31,6 +27,7 @@
     "change-case": "^5.4.4",
     "date-fns": "^4.1.0",
     "effect": "^3.19.4",
+    "engine": "file:../../packages/engine-0.3.0.tgz",
     "gray-matter": "^4.0.3",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^0.562.0",
@@ -39,29 +36,25 @@
     "next": "16.1.1",
     "next-intl": "^4.7.0",
     "next-themes": "^0.4.6",
+    "nuqs": "^2.8.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-querybuilder": "^8.13.0",
-    "react-syntax-highlighter": "^15.6.1",
     "rehype-slug": "^6.0.0",
-    "remark-frontmatter": "^5.0.0",
-    "remark-gfm": "^4.0.1",
-    "remark-mdx-frontmatter": "^5.2.0",
-    "remark-reading-time": "^2.0.2",
-    "zustand": "^5.0.4",
-    "engine": "file:../../packages/engine-0.3.0.tgz"
+    "velite": "^0.3.1",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@pandacss/dev": "^1.8.0",
-    "@types/mdx": "^2.0.13",
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/react-syntax-highlighter": "^15.5.13",
     "baseline-browser-mapping": "^2.9.13",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "eslint-plugin-perfectionist": "^5.1.0",
+    "rehype-pretty-code": "^0.14.1",
+    "shiki": "^3.21.0",
     "typescript": "^5"
   }
 }

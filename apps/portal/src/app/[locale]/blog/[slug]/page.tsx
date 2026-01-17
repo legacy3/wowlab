@@ -4,10 +4,10 @@ import { ArticleMeta } from "@/components/content/article-meta";
 import { ArticleSidebar } from "@/components/content/article-sidebar";
 import { ContentArticle } from "@/components/content/content-article";
 import { ContentNav } from "@/components/content/content-nav";
+import { MDXContent } from "@/components/content/mdx-content";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
-import { blogSlugs } from "@/lib/blog";
-import { getBlogPageData } from "@/lib/blog/data";
+import { blogSlugs, getBlogPageData } from "@/lib/content/blog";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -15,7 +15,7 @@ type Props = {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const { Content, entry, next, prev } = await getBlogPageData(slug);
+  const { next, post, prev } = await getBlogPageData(slug);
 
   return (
     <Flex gap="8">
@@ -25,24 +25,24 @@ export default async function BlogPostPage({ params }: Props) {
         >
           <VStack gap="3" alignItems="flex-start" mb="8">
             <Heading as="h1" size="4xl">
-              {entry.title}
+              {post.title}
             </Heading>
-            {entry.description && (
+            {post.description && (
               <Text color="fg.muted" mt="-1">
-                {entry.description}
+                {post.description}
               </Text>
             )}
             <ArticleMeta
-              date={entry.publishedAt}
-              author={entry.author}
-              readingTime={entry.readingTime?.minutes ?? 0}
+              date={post.publishedAt}
+              author={post.author}
+              readingTime={post.metadata.readingTime}
             />
           </VStack>
-          <Content />
+          <MDXContent code={post.body} />
         </ContentArticle>
       </Box>
 
-      <ArticleSidebar toc={entry.tableOfContents} />
+      <ArticleSidebar toc={post.toc} />
     </Flex>
   );
 }

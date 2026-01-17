@@ -2,6 +2,7 @@
 
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { QueryProvider } from "./query-provider";
 
@@ -19,14 +20,16 @@ export function AppProviders({
   timeZone,
 }: AppProvidersProps) {
   return (
-    <NextIntlClientProvider
-      locale={locale}
-      messages={messages}
-      timeZone={timeZone}
-    >
-      <ThemeProvider attribute="class">
-        <QueryProvider>{children}</QueryProvider>
-      </ThemeProvider>
-    </NextIntlClientProvider>
+    <NuqsAdapter>
+      <NextIntlClientProvider
+        locale={locale}
+        messages={messages}
+        timeZone={timeZone}
+      >
+        <ThemeProvider attribute="class">
+          <QueryProvider>{children}</QueryProvider>
+        </ThemeProvider>
+      </NextIntlClientProvider>
+    </NuqsAdapter>
   );
 }

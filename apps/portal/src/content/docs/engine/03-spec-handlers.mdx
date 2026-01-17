@@ -1,0 +1,244 @@
+---
+title: Spec Handlers
+description: Implementing spec-specific behavior
+updatedAt: 2026-01-17
+---
+
+# Spec Handlers
+
+Every spec implements the `SpecHandler` trait to define its spells, auras, and behavior.
+
+## SpecHandler trait
+
+```rust
+pub trait SpecHandler: Send + Sync {
+    // Identity
+    fn spec_id(&self) -> SpecId;
+    fn class_id(&self) -> ClassId;
+    fn display_name(&self) -> &'static str;
+
+    // Definitions
+    fn spell_definitions(&self) -> &'static [SpellDef];
+    fn aura_definitions(&self) -> &'static [AuraDef];
+    fn talent_names(&self) -> Vec<String>;
+
+    // Initialization
+    fn init(&self, state: &mut SimState);
+    fn init_player(&self, player: &mut Player);
+
+    // Event Handlers
+    fn on_gcd(&self, state: &mut SimState);
+    fn on_cast_complete(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn on_spell_damage(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn on_auto_attack(&self, state: &mut SimState, unit: UnitIdx);
+    fn on_pet_attack(&self, state: &mut SimState, pet: UnitIdx);
+    fn on_aura_tick(&self, state: &mut SimState, aura: AuraIdx, target: TargetIdx);
+
+    // Actions
+    fn cast_spell(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn next_action(&self, state: &SimState) -> Action;
+
+    // Lookups
+    fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef>;
+    fn get_aura(&self, id: AuraIdx) -> Option<&AuraDef>;
+    fn spell_name_to_idx(&self, name: &str) -> Option<SpellIdx>;
+    fn aura_name_to_idx(&self, name: &str) -> Option<AuraIdx>;
+}
+```
+
+## File organization
+
+Each spec has a folder with these files:
+
+<Mermaid chart={`
+flowchart TB
+    subgraph SpecFiles["Spec Files (e.g., hunter/bm/)"]
+        Constants[constants.rs]
+        Spells[spells.rs]
+        Auras[auras.rs]
+        Talents[talents.rs]
+        Procs[procs.rs]
+        Handler[handler.rs]
+        Rotation[rotation.rs]
+    end
+
+    subgraph StaticData["Static Data (OnceLock)"]
+        SpellDefs[SPELL_DEFS]
+        AuraDefs[AURA_DEFS]
+        CompiledRot[BM_ROTATION]
+    end
+
+    Constants --> Spells
+    Constants --> Auras
+    Constants --> Talents
+    Constants --> Procs
+
+    Spells --> SpellDefs
+    Auras --> AuraDefs
+    Rotation --> CompiledRot
+
+    Handler --> SpellDefs
+    Handler --> AuraDefs
+    Handler --> CompiledRot
+
+`} />
+
+### constants.rs
+
+Spell and aura IDs as constants:
+
+```rust
+pub const KILL_COMMAND: SpellIdx = SpellIdx(34026);
+pub const BESTIAL_WRATH: AuraIdx = AuraIdx(19574);
+```
+
+### spells.rs
+
+Spell definitions using the builder pattern:
+
+```rust
+pub fn spell_definitions() -> Vec<SpellDef> {
+    vec![
+        SpellBuilder::new(KILL_COMMAND, "Kill Command")
+            .school(DamageSchool::Physical)
+            .instant()
+            .cooldown(7.5)
+            .cost(ResourceType::Focus, 30.0)
+            .physical_damage(2.0)  // AP coefficient
+            .pet_ability()
+            .build(),
+    ]
+}
+```
+
+### auras.rs
+
+Aura definitions:
+
+```rust
+pub fn aura_definitions() -> Vec<AuraDef> {
+    vec![
+        AuraBuilder::buff(BESTIAL_WRATH_BUFF, "Bestial Wrath", 15.0)
+            .damage_multiplier(1.25)
+            .build(),
+
+        AuraBuilder::dot(BARBED_SHOT_DOT, "Barbed Shot", 8.0, 2.0)
+            .periodic_damage(2.0, 0.15)
+            .pandemic()
+            .snapshots()
+            .build(),
+    ]
+}
+```
+
+### procs.rs
+
+Proc registrations:
+
+```rust
+pub fn setup_procs(registry: &mut ProcRegistry) {
+    // Wild Call: 20% chance on auto-attack crit to reset Barbed Shot
+    registry.register_fixed(
+        FixedProc::new(WILD_CALL, 0.20),
+        ProcHandler::new(
+            WILD_CALL,
+            "Wild Call",
+            ProcFlags::ON_AUTO_ATTACK | ProcFlags::ON_CRIT,
+            ProcEffect::ReduceCooldown {
+                spell: BARBED_SHOT,
+                amount: SimTime::from_secs(12),
+            },
+        ),
+    );
+}
+```
+
+### handler.rs
+
+The actual `SpecHandler` implementation. Most methods delegate to shared utilities.
+
+### rotation.rs
+
+Rotation support with JSON-based actions:
+
+```rust
+pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
+    SpecResolver::new("bm_hunter")
+        .resource("focus")
+        .spell("kill_command", KILL_COMMAND.0)
+        .spell("cobra_shot", COBRA_SHOT.0)
+        .aura("bestial_wrath", BESTIAL_WRATH_BUFF.0)
+        .charged_cooldown("barbed_shot")
+        .talent("alpha_predator", talents.contains(TalentFlags::ALPHA_PREDATOR))
+}
+```
+
+## Spell effects system
+
+Spells can declare effects that execute automatically:
+
+```rust
+SpellEffect::ReduceCooldown { spell, amount }
+SpellEffect::GainCharge { spell }
+SpellEffect::TriggerSpell { spell }
+SpellEffect::SummonPet { kind, duration, name }
+SpellEffect::ApplyBuff { aura, stacks }
+SpellEffect::ApplyDebuff { aura, stacks }
+SpellEffect::ExtendAura { aura, amount }
+SpellEffect::RefreshAura { aura }
+SpellEffect::PetMirrorCast { damage_pct }
+SpellEffect::Cleave { damage_pct, max_targets }
+SpellEffect::Conditional { condition, effect }
+SpellEffect::Multi(Vec<SpellEffect>)
+```
+
+### Effect conditions
+
+Effects can be conditional:
+
+```rust
+EffectCondition::BuffActive(AuraIdx)
+EffectCondition::DebuffActive(AuraIdx)
+EffectCondition::TalentEnabled(String)
+EffectCondition::TargetHealthBelow(f32)
+EffectCondition::PlayerHealthBelow(f32)
+EffectCondition::DuringBuff(AuraIdx)
+EffectCondition::PetActive
+EffectCondition::HasStacks { aura, min }
+EffectCondition::CooldownReady(SpellIdx)
+EffectCondition::And(Vec<EffectCondition>)
+EffectCondition::Or(Vec<EffectCondition>)
+EffectCondition::Not(Box<EffectCondition>)
+```
+
+Example conditional effect:
+
+```rust
+SpellBuilder::new(KILL_COMMAND, "Kill Command")
+    // Kill Cleave: Cleave during Beast Cleave
+    .on_cast_if(
+        EffectCondition::And(vec![
+            EffectCondition::TalentEnabled("kill_cleave".to_string()),
+            EffectCondition::BuffActive(BEAST_CLEAVE),
+        ]),
+        SpellEffect::Cleave { damage_pct: 0.60, max_targets: 5 },
+    )
+    .build()
+```
+
+## BM Hunter example
+
+The BM Hunter implementation includes:
+
+- ~40 talent flags (bitflags)
+- ~30 proc handlers (base + talent-specific)
+- 25 spell definitions
+- 53 aura definitions
+- 19 talent definitions with damage modifiers
+- 3 hero talent trees (Pack Leader, Dark Ranger, Sentinel)
+- TWW Season 1, 2, and 3 tier set bonuses
+
+## Next steps
+
+- [Type System](/dev/docs/engine/04-type-system) - Type-safe indices
+- [Module Structure](/dev/docs/engine/00-module-structure) - Code organization

@@ -225,7 +225,7 @@ msgid "t6RYbw"
 msgstr "Workers"
 
 #: src/components/content/article-meta.tsx:62
-#: src/components/content/article-sidebar.tsx:106
+#: src/components/content/article-sidebar.tsx:97
 msgid "0KAbwr"
 msgstr "{count, plural, other {# min read}}"
 
@@ -236,15 +236,15 @@ msgstr "{count, plural, other {# min read}}"
 msgid "wEQDC6"
 msgstr "Edit"
 
-#: src/components/content/article-sidebar.tsx:191
+#: src/components/content/article-sidebar.tsx:182
 msgid "fBg+7V"
 msgstr "Navigation"
 
-#: src/components/content/article-sidebar.tsx:253
+#: src/components/content/article-sidebar.tsx:244
 msgid "TM7OHi"
 msgstr "On this page"
 
-#: src/components/content/article-sidebar.tsx:259
+#: src/components/content/article-sidebar.tsx:250
 msgid "gjyzc7"
 msgstr "Table of contents"
 

@@ -1,0 +1,300 @@
+---
+title: MDX Components
+description: Custom components available in MDX content
+updatedAt: 2026-01-17
+---
+
+# MDX Components
+
+All documentation and blog posts are written in MDX. Standard markdown elements are styled automatically, and custom components are available for richer content.
+
+## Custom Components
+
+### Alert
+
+Display important information with visual emphasis.
+
+```jsx
+<Alert title="Warning">This action cannot be undone.</Alert>
+```
+
+<Alert title="Warning">This action cannot be undone.</Alert>
+
+The `title` prop is optional:
+
+<Alert>A simple alert without a title.</Alert>
+
+### Badge
+
+Status indicators and labels.
+
+```jsx
+<Badge>Default</Badge>
+<Badge color="green">Success</Badge>
+<Badge color="red">Error</Badge>
+<Badge color="gray" variant="outline">Outline</Badge>
+```
+
+<Badge>Default</Badge> <Badge color="green">Success</Badge>
+<Badge color="red">Error</Badge>
+<Badge color="gray" variant="outline">
+  Outline
+</Badge>
+
+### Card
+
+Content containers for grouping related information.
+
+```jsx
+<Card title="Feature" description="Optional description">
+  Card content goes here.
+</Card>
+```
+
+<Card title="Feature" description="Optional description">
+  Card content goes here.
+</Card>
+
+### CardGrid
+
+Grid layout for multiple cards.
+
+```jsx
+<CardGrid columns={3}>
+  <FeatureCard title="Fast">Optimized for speed.</FeatureCard>
+  <FeatureCard title="Simple">Easy to understand.</FeatureCard>
+  <FeatureCard title="Flexible">Adapts to your needs.</FeatureCard>
+</CardGrid>
+```
+
+<CardGrid columns={3}>
+  <FeatureCard title="Fast">Optimized for speed.</FeatureCard>
+  <FeatureCard title="Simple">Easy to understand.</FeatureCard>
+  <FeatureCard title="Flexible">Adapts to your needs.</FeatureCard>
+</CardGrid>
+
+### Collapsible
+
+Hide content behind an expandable section.
+
+```jsx
+<Collapsible title="Show details">Hidden content here.</Collapsible>
+```
+
+<Collapsible title="Show details">
+  Hidden content revealed when expanded.
+</Collapsible>
+
+Use `defaultOpen` to start expanded:
+
+<Collapsible title="Expanded by default" defaultOpen>
+  This content is visible immediately.
+</Collapsible>
+
+### Kbd
+
+Keyboard shortcut display.
+
+```jsx
+Press <Kbd>⌘</Kbd> <Kbd>K</Kbd> to open search.
+```
+
+Press <Kbd>⌘</Kbd> <Kbd>K</Kbd> to open search.
+
+### Mermaid
+
+Create diagrams using Mermaid syntax.
+
+```jsx
+<Mermaid
+  chart={`
+flowchart LR
+    A[Start] --> B[Process]
+    B --> C[End]
+`}
+/>
+```
+
+<Mermaid
+  chart={`
+flowchart LR
+    A[Start] --> B[Process]
+    B --> C[End]
+`}
+/>
+
+<Collapsible title="More diagram examples">
+
+**Sequence Diagram**
+
+<Mermaid
+  chart={`
+sequenceDiagram
+    participant Client
+    participant Server
+    Client->>Server: Request
+    Server-->>Client: Response
+`}
+/>
+
+**State Diagram**
+
+<Mermaid
+  chart={`
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Running: start
+    Running --> Idle: stop
+`}
+/>
+
+</Collapsible>
+
+### Steps
+
+Step-by-step instructions with numbered indicators.
+
+```jsx
+<Steps>
+  <Step step={1} title="Install dependencies">
+    Run `npm install` to get started.
+  </Step>
+  <Step step={2} title="Configure">
+    Edit the config file.
+  </Step>
+  <Step step={3} title="Run">
+    Start the application.
+  </Step>
+</Steps>
+```
+
+<Steps>
+  <Step step={1} title="Install dependencies">
+    Run `npm install` to get started.
+  </Step>
+  <Step step={2} title="Configure">
+    Edit the config file.
+  </Step>
+  <Step step={3} title="Run">
+    Start the application.
+  </Step>
+</Steps>
+
+### Tabs
+
+Tabbed content for alternatives (languages, platforms, etc).
+
+```jsx
+<Tabs defaultValue="npm">
+  <TabList>
+    <TabTrigger value="npm">npm</TabTrigger>
+    <TabTrigger value="pnpm">pnpm</TabTrigger>
+  </TabList>
+  <TabContent value="npm">npm install wowlab</TabContent>
+  <TabContent value="pnpm">pnpm add wowlab</TabContent>
+</Tabs>
+```
+
+<Tabs defaultValue="npm">
+  <TabList>
+    <TabTrigger value="npm">npm</TabTrigger>
+    <TabTrigger value="pnpm">pnpm</TabTrigger>
+    <TabTrigger value="yarn">yarn</TabTrigger>
+  </TabList>
+  <TabContent value="npm">
+
+```bash
+npm install wowlab
+```
+
+  </TabContent>
+  <TabContent value="pnpm">
+
+```bash
+pnpm add wowlab
+```
+
+  </TabContent>
+  <TabContent value="yarn">
+
+```bash
+yarn add wowlab
+```
+
+  </TabContent>
+</Tabs>
+
+## Native Elements
+
+Standard markdown elements are automatically styled.
+
+### Headings
+
+```markdown
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+```
+
+### Links
+
+[Internal link](/dev/docs/00-overview) and [External link](https://github.com)
+
+External links open in a new tab.
+
+### Lists
+
+- Item one
+- Item two
+  - Nested item
+- Item three
+
+### Code
+
+**Inline code:** Use `const` for constants.
+
+**Code blocks with syntax highlighting:**
+
+```typescript
+const greeting = "Hello, World!";
+console.log(greeting);
+```
+
+### Blockquotes
+
+> This is a blockquote.
+> It can span multiple lines.
+
+### Tables
+
+| Column A | Column B | Column C |
+| -------- | -------- | -------- |
+| Value 1  | Value 2  | Value 3  |
+| Value 4  | Value 5  | Value 6  |
+
+### Inline Formatting
+
+**Bold text** and _italic text_ and ~~strikethrough~~.
+
+---
+
+## Component Reference
+
+| Component     | Props                    | Description        |
+| ------------- | ------------------------ | ------------------ |
+| `Alert`       | `title?`                 | Callout box        |
+| `Badge`       | `color?`, `variant?`     | Status label       |
+| `Card`        | `title?`, `description?` | Content container  |
+| `CardGrid`    | `columns?` (2 or 3)      | Grid layout        |
+| `FeatureCard` | `title`, `icon?`         | Feature highlight  |
+| `Collapsible` | `title`, `defaultOpen?`  | Expandable section |
+| `Kbd`         | -                        | Keyboard key       |
+| `Mermaid`     | `chart`                  | Diagram            |
+| `Steps`       | -                        | Step container     |
+| `Step`        | `step`, `title`          | Individual step    |
+| `Tabs`        | `defaultValue?`          | Tab container      |
+| `TabList`     | -                        | Tab buttons        |
+| `TabTrigger`  | `value`                  | Tab button         |
+| `TabContent`  | `value`                  | Tab panel          |

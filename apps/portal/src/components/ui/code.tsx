@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { useEffect, useState } from "react";
+import { codeToHtml } from "shiki";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 import { code } from "styled-system/recipes";
@@ -14,56 +15,26 @@ export interface CodeProps {
 }
 
 const blockStyles = css({
-  "& .token.atrule, & .token.attr-value": {
-    color: { _dark: "#a78bfa", _light: "#7c3aed" },
+  "& code": {
+    bg: "transparent",
+    border: "none",
+    display: "block",
+    fontFamily: "inherit",
+    fontSize: "inherit",
+    p: "0",
   },
-  "& .token.boolean, & .token.number": {
-    color: { _dark: "#fbbf24", _light: "#b45309" },
-  },
-  "& .token.class-name": {
-    color: { _dark: "#fbbf24", _light: "#b45309" },
-  },
-  "& .token.comment, & .token.prolog, & .token.doctype, & .token.cdata": {
-    color: { _dark: "slate.9", _light: "slate.9" },
-    fontStyle: "italic",
-  },
-  "& .token.function": {
-    color: { _dark: "#60a5fa", _light: "#2563eb" },
-  },
-  "& .token.keyword": {
-    color: { _dark: "#e879f9", _light: "#c026d3" },
-  },
-  "& .token.operator, & .token.entity, & .token.url, & .token.variable": {
-    color: { _dark: "#38bdf8", _light: "#0284c7" },
-  },
-  "& .token.property, & .token.tag, & .token.constant, & .token.symbol, & .token.deleted":
-    {
-      color: { _dark: "#fb923c", _light: "#c2410c" },
-    },
-  "& .token.punctuation": {
-    color: { _dark: "slate.11", _light: "slate.11" },
-  },
-  "& .token.regex, & .token.important": {
-    color: { _dark: "#fb923c", _light: "#ea580c" },
-  },
-  "& .token.selector, & .token.attr-name, & .token.string, & .token.char, & .token.builtin, & .token.inserted":
-    {
-      color: { _dark: "#4ade80", _light: "#16a34a" },
-    },
   "& pre": {
-    bg: "gray.a3 !important",
-    color: { _dark: "slate.12", _light: "slate.12" },
-    fontSize: "sm !important",
-    lineHeight: "relaxed !important",
+    bg: "transparent !important",
     m: "0 !important",
     p: "4 !important",
   },
-  "& pre, & code, & pre *, & code *": {
-    fontFamily: "code !important",
-  },
+  bg: "gray.a3",
   borderRadius: "lg",
+  fontFamily: "code",
+  fontSize: "sm",
+  lineHeight: "relaxed",
   my: "6",
-  overflow: "hidden",
+  overflow: "auto",
   position: "relative",
 });
 
@@ -85,18 +56,52 @@ const badgeStyles = css({
   zIndex: "1",
 });
 
+const placeholderStyles = css({
+  bg: "gray.a3",
+  borderRadius: "lg",
+  fontFamily: "code",
+  fontSize: "sm",
+  lineHeight: "relaxed",
+  my: "6",
+  overflow: "auto",
+  p: "4",
+  whiteSpace: "pre",
+});
+
 export function Code({ children, className, language }: CodeProps) {
+  const [html, setHtml] = useState<string | null>(null);
+  const codeString = String(children).trimEnd();
+
+  useEffect(() => {
+    if (!language) {
+      return;
+    }
+
+    let cancelled = false;
+
+    codeToHtml(codeString, {
+      lang: language,
+      theme: "css-variables",
+    }).then((result) => {
+      if (!cancelled) {
+        setHtml(result);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [codeString, language]);
+
   if (language) {
+    if (!html) {
+      return <Box className={placeholderStyles}>{codeString}</Box>;
+    }
+
     return (
       <Box className={`${blockStyles} ${className ?? ""}`}>
         <Box className={badgeStyles}>{language}</Box>
-        <SyntaxHighlighter
-          language={language}
-          useInlineStyles={false}
-          codeTagProps={{ style: { fontFamily: "inherit" } }}
-        >
-          {String(children).trimEnd()}
-        </SyntaxHighlighter>
+        <div dangerouslySetInnerHTML={{ __html: html }} />
       </Box>
     );
   }

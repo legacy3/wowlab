@@ -79,9 +79,36 @@ export default defineConfig({
               },
             },
           },
+
           gray: slate,
           green: green,
           red: red,
+          syntax: {
+            bg: {
+              value: { _dark: "{colors.gray.2}", _light: "{colors.gray.2}" },
+            },
+            comment: {
+              value: { _dark: "{colors.gray.9}", _light: "{colors.gray.9}" },
+            },
+            constant: {
+              value: { _dark: "{colors.amber.11}", _light: "{colors.gray.12}" },
+            },
+            fg: {
+              value: { _dark: "{colors.gray.12}", _light: "{colors.gray.12}" },
+            },
+            function: {
+              value: { _dark: "{colors.amber.11}", _light: "{colors.gray.12}" },
+            },
+            keyword: {
+              value: { _dark: "{colors.amber.11}", _light: "{colors.gray.12}" },
+            },
+            punctuation: {
+              value: { _dark: "{colors.gray.11}", _light: "{colors.gray.10}" },
+            },
+            string: {
+              value: { _dark: "{colors.amber.12}", _light: "{colors.gray.11}" },
+            },
+          },
         },
 
         radii: {
@@ -107,6 +134,11 @@ export default defineConfig({
       tokens: {
         colors: colors,
         durations: durations,
+        fonts: {
+          code: { value: "var(--font-roboto-mono), ui-monospace, monospace" },
+          mono: { value: "var(--font-roboto-mono), ui-monospace, monospace" },
+          sans: { value: "var(--font-roboto), ui-sans-serif, sans-serif" },
+        },
         zIndex: zIndex,
       },
     },

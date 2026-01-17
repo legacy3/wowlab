@@ -21,13 +21,15 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["./*"],
-      "styled-system/*": ["../styled-system/*"]
+      "styled-system/*": ["../styled-system/*"],
+      "#content": ["../.velite"]
     },
     "typeRoots": ["./node_modules/@types", "./@types"]
   },
   "include": [
     "src",
     "styled-system",
+    ".velite",
     "@types/**/*.d.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
