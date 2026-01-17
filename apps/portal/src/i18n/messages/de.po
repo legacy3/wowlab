@@ -133,10 +133,6 @@ msgstr ""
 msgid "zAc9z/"
 msgstr ""
 
-#: src/components/account/nodes/node-download-dialog.tsx:89
-msgid "AiW0JR"
-msgstr ""
-
 #: src/components/account/nodes/node-download-dialog.tsx:91
 msgid "SgzGOA"
 msgstr ""
@@ -824,12 +820,12 @@ msgid "X0ha1a"
 msgstr ""
 
 #: src/components/editor/layout/editor-header.tsx:192
-#: src/components/editor/variable-editor-dialog.tsx:100
-msgid "jvo0vs"
+msgid "VzzYJk"
 msgstr ""
 
 #: src/components/editor/layout/editor-header.tsx:192
-msgid "VzzYJk"
+#: src/components/editor/variable-editor-dialog.tsx:100
+msgid "jvo0vs"
 msgstr ""
 
 #: src/components/editor/pickers/game-object-picker.tsx:236

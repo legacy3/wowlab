@@ -133,10 +133,6 @@ msgstr "Get the Node"
 msgid "zAc9z/"
 msgstr "Run local simulations or share compute with others"
 
-#: src/components/account/nodes/node-download-dialog.tsx:89
-msgid "AiW0JR"
-msgstr "Docker"
-
 #: src/components/account/nodes/node-download-dialog.tsx:91
 msgid "SgzGOA"
 msgstr "Multi-arch container for servers"
@@ -824,13 +820,13 @@ msgid "X0ha1a"
 msgstr "Save changes"
 
 #: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
+msgstr "Create"
+
+#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr "Save"
-
-#: src/components/editor/layout/editor-header.tsx:192
-msgid "VzzYJk"
-msgstr "Create"
 
 #: src/components/editor/pickers/game-object-picker.tsx:236
 #: src/components/editor/pickers/game-object-picker.tsx:332

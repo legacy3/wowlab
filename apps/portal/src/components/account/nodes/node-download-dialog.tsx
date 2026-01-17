@@ -86,7 +86,7 @@ export function NodeDownloadDialog({
                 <HStack gap="3">
                   <DockerIcon width={24} height={24} />
                   <Stack gap="0">
-                    <Text fontWeight="medium">{t("Docker")}</Text>
+                    <Text fontWeight="medium">Docker</Text>
                     <Text textStyle="sm" color="fg.muted">
                       {t("Multi-arch container for servers")}
                     </Text>
