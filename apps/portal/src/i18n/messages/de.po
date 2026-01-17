@@ -69,20 +69,20 @@ msgstr ""
 msgid "EYIw2M"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:83
+#: src/components/account/nodes/node-claim-form.tsx:85
 msgid "adQu2P"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:97
+#: src/components/account/nodes/node-claim-form.tsx:99
 #: src/components/account/nodes/node-settings-dialog.tsx:97
 msgid "+gH1Ai"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:101
+#: src/components/account/nodes/node-claim-form.tsx:103
 msgid "3WiUI+"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:107
+#: src/components/account/nodes/node-claim-form.tsx:109
 #: src/components/account/nodes/node-settings-dialog.tsx:106
 #: src/components/account/nodes/nodes-page.tsx:107
 #: src/components/account/nodes/nodes-table.tsx:82
@@ -91,37 +91,37 @@ msgstr ""
 msgid "t6RYbw"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:109
+#: src/components/account/nodes/node-claim-form.tsx:111
 #: src/components/account/nodes/node-settings-dialog.tsx:108
 msgid "d8nhsg"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:129
+#: src/components/account/nodes/node-claim-form.tsx:131
 msgid "sSYE+I"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:139
+#: src/components/account/nodes/node-claim-form.tsx:141
 #: src/components/account/nodes/nodes-page.tsx:126
 msgid "2+mzpb"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:154
+#: src/components/account/nodes/node-claim-form.tsx:156
 msgid "1VA/+D"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:157
+#: src/components/account/nodes/node-claim-form.tsx:159
 msgid "W6+Aj5"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:198
+#: src/components/account/nodes/node-claim-form.tsx:200
 msgid "6bMfIz"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:211
+#: src/components/account/nodes/node-claim-form.tsx:213
 msgid "yScDrH"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:217
+#: src/components/account/nodes/node-claim-form.tsx:219
 msgid "OZpUxW"
 msgstr ""
 
@@ -213,11 +213,11 @@ msgstr ""
 msgid "d8JZF+"
 msgstr ""
 
-#: src/components/account/nodes/nodes-claim-page.tsx:94
+#: src/components/account/nodes/nodes-claim-page.tsx:95
 msgid "Vhbm9s"
 msgstr ""
 
-#: src/components/account/nodes/nodes-claim-page.tsx:102
+#: src/components/account/nodes/nodes-claim-page.tsx:103
 #: src/components/computing/cards/job-history-card.tsx:364
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"

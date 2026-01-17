@@ -51,6 +51,7 @@ export function NodesClaimPage() {
     try {
       const result = await verifyCode.mutateAsync(code);
       return {
+        name: result.name,
         platform: result.platform,
         totalCores: result.total_cores,
         version: "latest",

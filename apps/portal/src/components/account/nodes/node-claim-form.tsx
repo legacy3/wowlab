@@ -34,6 +34,7 @@ interface NodeClaimFormProps {
 }
 
 interface VerifyResult {
+  name: string;
   platform: string;
   totalCores: number;
   version: string;
@@ -60,7 +61,8 @@ export function NodeClaimForm({
     const result = await onVerify(codeString);
     if (result) {
       setVerifyResult(result);
-      setWorkers([Math.min(4, result.totalCores)]);
+      setName(result.name);
+      setWorkers([Math.max(1, result.totalCores)]);
     }
   };
 
