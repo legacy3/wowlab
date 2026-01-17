@@ -20,7 +20,7 @@ Deno.serve(
     const supabase = createSupabaseClient();
 
     const { data, error } = await supabase
-      .from("sim_configs")
+      .from("jobs_configs")
       .select("config")
       .eq("hash", hash)
       .single();
@@ -30,8 +30,8 @@ Deno.serve(
     }
 
     await supabase
-      .from("sim_configs")
-      .update({ lastUsedAt: new Date().toISOString() })
+      .from("jobs_configs")
+      .update({ last_used_at: new Date().toISOString() })
       .eq("hash", hash);
 
     return jsonResponse(data.config, 200, {

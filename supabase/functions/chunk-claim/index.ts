@@ -27,8 +27,8 @@ Deno.serve(
     const supabase = createSupabaseClient();
 
     const { data: node, error: nodeError } = await supabase
-      .from("user_nodes")
-      .select("id, userId")
+      .from("nodes")
+      .select("id, user_id")
       .eq("id", nodeId)
       .single();
 
@@ -37,41 +37,41 @@ Deno.serve(
     }
 
     const { data: permissions } = await supabase
-      .from("user_nodes_permissions")
-      .select("accessType, targetId")
-      .eq("nodeId", nodeId);
+      .from("nodes_permissions")
+      .select("access_type, target_id")
+      .eq("node_id", nodeId);
 
     const perms = permissions || [];
-    const isPublic = perms.some((p) => p.accessType === "public");
+    const isPublic = perms.some((p) => p.access_type === "public");
     const sharedWithUsers = perms
-      .filter((p) => p.accessType === "user" && p.targetId)
-      .map((p) => p.targetId);
-    const allowedOwners = [node.userId, ...sharedWithUsers];
+      .filter((p) => p.access_type === "user" && p.target_id)
+      .map((p) => p.target_id);
+    const allowedOwners = [node.user_id, ...sharedWithUsers];
 
     const { data: pendingChunks, error: findError } = await supabase
-      .from("sim_chunks")
-      .select("id, jobId, configHash, iterations, seedOffset")
-      .is("nodeId", null)
+      .from("jobs_chunks")
+      .select("id, job_id, config_hash, iterations, seed_offset")
+      .is("node_id", null)
       .eq("status", "pending")
-      .order("createdAt", { ascending: true })
+      .order("created_at", { ascending: true })
       .limit(50);
 
     if (findError || !pendingChunks || pendingChunks.length === 0) {
       return jsonResponse({ chunks: [], configHash: null });
     }
 
-    const jobIds = [...new Set(pendingChunks.map((c) => c.jobId))];
+    const jobIds = [...new Set(pendingChunks.map((c) => c.job_id))];
     const { data: jobs } = await supabase
-      .from("sim_jobs")
-      .select("id, userId")
+      .from("jobs")
+      .select("id, user_id")
       .in("id", jobIds);
 
-    const jobOwnerMap = new Map((jobs || []).map((j) => [j.id, j.userId]));
+    const jobOwnerMap = new Map((jobs || []).map((j) => [j.id, j.user_id]));
 
     const allowedChunks = isPublic
       ? pendingChunks
       : pendingChunks.filter((c) => {
-          const jobOwner = jobOwnerMap.get(c.jobId);
+          const jobOwner = jobOwnerMap.get(c.job_id);
           return jobOwner && allowedOwners.includes(jobOwner);
         });
 
@@ -83,27 +83,27 @@ Deno.serve(
     const chunkIds = toClaim.map((c) => c.id);
 
     const { data: claimedChunks, error: updateError } = await supabase
-      .from("sim_chunks")
+      .from("jobs_chunks")
       .update({
-        nodeId,
+        node_id: nodeId,
         status: "running",
-        claimedAt: new Date().toISOString(),
+        claimed_at: new Date().toISOString(),
       })
       .in("id", chunkIds)
-      .is("nodeId", null)
-      .select("id, configHash, iterations, seedOffset");
+      .is("node_id", null)
+      .select("id, config_hash, iterations, seed_offset");
 
     if (updateError || !claimedChunks || claimedChunks.length === 0) {
       return jsonResponse({ chunks: [], configHash: null });
     }
 
-    const configHash = claimedChunks[0].configHash;
+    const configHash = claimedChunks[0].config_hash;
 
     return jsonResponse({
       chunks: claimedChunks.map((c) => ({
         id: c.id,
         iterations: c.iterations,
-        seedOffset: c.seedOffset,
+        seedOffset: c.seed_offset,
       })),
       configHash,
     });

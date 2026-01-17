@@ -27,7 +27,7 @@ Deno.serve(
     }
 
     const { data: configExists, error: configError } = await supabase
-      .from("sim_configs")
+      .from("jobs_configs")
       .select("hash")
       .eq("hash", configHash)
       .single();
@@ -40,11 +40,11 @@ Deno.serve(
     }
 
     const { data: job, error: jobError } = await supabase
-      .from("sim_jobs")
+      .from("jobs")
       .insert({
-        userId: user.id,
-        configHash,
-        totalIterations: iterations,
+        user_id: user.id,
+        config_hash: configHash,
+        total_iterations: iterations,
         status: "pending",
       })
       .select("id")
@@ -64,25 +64,26 @@ Deno.serve(
     for (let i = 0; i < numChunks; i++) {
       const chunkIterations = Math.min(CHUNK_SIZE, iterations - i * CHUNK_SIZE);
       chunks.push({
-        jobId: job.id,
-        nodeId: null,
-        configHash,
+        job_id: job.id,
+        node_id: null,
+        config_hash: configHash,
         iterations: chunkIterations,
-        seedOffset: i * CHUNK_SIZE,
+        seed_offset: i * CHUNK_SIZE,
         status: "pending",
       });
     }
 
     const { error: chunksError } = await supabase
-      .from("sim_chunks")
+      .from("jobs_chunks")
       .insert(chunks);
 
     if (chunksError) {
       console.error("Chunks creation error:", chunksError);
-      await supabase.from("sim_jobs").delete().eq("id", job.id);
+      await supabase.from("jobs").delete().eq("id", job.id);
       return jsonResponse({ error: "Failed to create chunks" }, 500);
     }
 
+    // Broadcast to nodes via realtime channel
     const channel = supabase.channel("pending-chunks");
     await channel.send({
       type: "broadcast",

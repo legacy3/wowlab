@@ -41,23 +41,23 @@ Deno.serve(
     const claimCode = generateClaimCode();
 
     const { data, error } = await supabase
-      .from("user_nodes")
+      .from("nodes")
       .insert({
-        claimCode,
+        claim_code: claimCode,
         name: hostname,
-        totalCores,
-        maxParallel: enabledCores,
+        total_cores: totalCores,
+        max_parallel: enabledCores,
         platform,
         version,
         status: "pending",
       })
-      .select("id, claimCode")
+      .select("id, claim_code")
       .single();
 
     if (error) {
       return jsonResponse({ error: error.message }, 400);
     }
 
-    return jsonResponse(data);
+    return jsonResponse({ id: data.id, claimCode: data.claim_code });
   }),
 );

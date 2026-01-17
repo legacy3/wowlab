@@ -19,14 +19,14 @@ Deno.serve(
     const supabase = createSupabaseClient();
 
     const { data, error } = await supabase
-      .from("user_nodes")
+      .from("nodes")
       .update({
         status: status || "online",
-        lastSeenAt: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
       })
       .eq("id", nodeId)
-      .not("userId", "is", null)
-      .select("id, name, maxParallel, status")
+      .not("user_id", "is", null)
+      .select("id, name, max_parallel, status")
       .single();
 
     if (error) {
@@ -36,6 +36,11 @@ Deno.serve(
       return jsonResponse({ error: error.message }, 400);
     }
 
-    return jsonResponse(data);
+    return jsonResponse({
+      id: data.id,
+      name: data.name,
+      maxParallel: data.max_parallel,
+      status: data.status,
+    });
   }),
 );

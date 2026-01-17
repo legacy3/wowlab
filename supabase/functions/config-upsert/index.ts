@@ -44,9 +44,9 @@ Deno.serve(
     }
 
     const { error: upsertError } = await supabase
-      .from("sim_configs")
+      .from("jobs_configs")
       .upsert(
-        { hash, config, lastUsedAt: new Date().toISOString() },
+        { hash, config, last_used_at: new Date().toISOString() },
         { onConflict: "hash" },
       );
 

@@ -19,20 +19,20 @@ Deno.serve(
     const supabase = createSupabaseClient();
 
     const { data, error } = await supabase
-      .from("sim_chunks")
+      .from("jobs_chunks")
       .update({
         status: "completed",
         result,
-        completedAt: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
       })
       .eq("id", chunkId)
       .eq("status", "running")
-      .select("id, jobId, iterations")
+      .select("id, job_id, iterations")
       .single();
 
     if (error) {
       const { data: existing } = await supabase
-        .from("sim_chunks")
+        .from("jobs_chunks")
         .select("id, status")
         .eq("id", chunkId)
         .single();
@@ -53,9 +53,9 @@ Deno.serve(
     }
 
     const { count: pendingCount } = await supabase
-      .from("sim_chunks")
+      .from("jobs_chunks")
       .select("id", { count: "exact", head: true })
-      .eq("jobId", data.jobId)
+      .eq("job_id", data.job_id)
       .neq("status", "completed");
 
     let jobComplete = false;
@@ -64,9 +64,9 @@ Deno.serve(
       jobComplete = true;
 
       const { data: chunks } = await supabase
-        .from("sim_chunks")
+        .from("jobs_chunks")
         .select("result, iterations")
-        .eq("jobId", data.jobId)
+        .eq("job_id", data.job_id)
         .eq("status", "completed");
 
       if (chunks && chunks.length > 0) {
@@ -98,22 +98,22 @@ Deno.serve(
         };
 
         await supabase
-          .from("sim_jobs")
+          .from("jobs")
           .update({
             status: "completed",
             result: aggregatedResult,
-            completedIterations: totalIterations,
-            completedAt: new Date().toISOString(),
+            completed_iterations: totalIterations,
+            completed_at: new Date().toISOString(),
           })
-          .eq("id", data.jobId);
+          .eq("id", data.job_id);
 
-        await supabase.from("sim_chunks").delete().eq("jobId", data.jobId);
+        await supabase.from("jobs_chunks").delete().eq("job_id", data.job_id);
       }
     } else {
       await supabase
-        .from("sim_jobs")
+        .from("jobs")
         .update({ status: "running" })
-        .eq("id", data.jobId)
+        .eq("id", data.job_id)
         .eq("status", "pending");
     }
 
