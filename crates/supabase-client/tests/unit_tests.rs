@@ -439,7 +439,7 @@ fn test_game_cache_clear_all() {
     let cache = GameDataCache::with_cache_dir(client, "11.0.0", temp_dir.clone()).unwrap();
 
     // Write data to multiple categories
-    for (category, id) in [("spells", 1), ("items", 2), ("talents", 3)] {
+    for (category, id) in [("spells", 1), ("items", 2), ("traits", 3)] {
         let dir = temp_dir.join(category);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join(format!("{}.json", id)), "{}").unwrap();
@@ -448,7 +448,7 @@ fn test_game_cache_clear_all() {
     let stats = cache.stats();
     assert_eq!(stats.disk.spells, 1);
     assert_eq!(stats.disk.items, 1);
-    assert_eq!(stats.disk.talents, 1);
+    assert_eq!(stats.disk.traits, 1);
 
     // Clear all
     cache.clear_all().unwrap();
@@ -456,7 +456,7 @@ fn test_game_cache_clear_all() {
     let stats = cache.stats();
     assert_eq!(stats.disk.spells, 0);
     assert_eq!(stats.disk.items, 0);
-    assert_eq!(stats.disk.talents, 0);
+    assert_eq!(stats.disk.traits, 0);
 
     // Cleanup
     let _ = std::fs::remove_dir_all(&temp_dir);

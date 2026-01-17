@@ -8,13 +8,13 @@ const createSupabaseClient = () =>
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
 function generateClaimCode(): string {
   let code = "";
+
   for (let i = 0; i < 6; i++) {
-    code += CHARSET[Math.floor(Math.random() * CHARSET.length)];
+    code += Math.floor(Math.random() * 10).toString();
   }
+
   return code;
 }
 
