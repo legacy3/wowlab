@@ -13,7 +13,6 @@ use crate::combat::{Cooldown, ChargedCooldown};
 use crate::aura::AuraInstance;
 use crate::actor::Player;
 use crate::rotation::{Action, CompiledRotation};
-use crate::data::{TuningData, apply_spell_overrides, apply_aura_overrides};
 use super::constants::*;
 use super::spells::spell_definitions;
 use super::auras::aura_definitions;
@@ -90,17 +89,10 @@ impl BmHunter {
 
     /// Initialize rotation from JSON.
     pub fn init_rotation(json: &str) -> Result<(), String> {
-        Self::init_rotation_with_tuning(json, &TuningData::empty())
-    }
-
-    /// Initialize rotation with tuning overrides.
-    pub fn init_rotation_with_tuning(json: &str, tuning: &TuningData) -> Result<(), String> {
-        let mut spells = spell_definitions();
-        apply_spell_overrides(&mut spells, &tuning.spell);
+        let spells = spell_definitions();
         SPELL_DEFS.set(spells).map_err(|_| "Spell definitions already initialized")?;
 
-        let mut auras = aura_definitions();
-        apply_aura_overrides(&mut auras, &tuning.aura);
+        let auras = aura_definitions();
         AURA_DEFS.set(auras).map_err(|_| "Aura definitions already initialized")?;
 
         let resolver = spec_resolver(TalentFlags::empty());

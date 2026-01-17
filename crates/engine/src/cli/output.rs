@@ -25,7 +25,6 @@ struct ColorScheme {
     value: Style,
     success: Style,
     warning: Style,
-    muted: Style,
 }
 
 impl Default for ColorScheme {
@@ -36,7 +35,6 @@ impl Default for ColorScheme {
             value: Style::new().bold().white(),
             success: Style::new().green(),
             warning: Style::new().yellow(),
-            muted: Style::new().dim(),
         }
     }
 }
@@ -227,12 +225,6 @@ impl Output {
             self.kv("Parallelism", &format!("{} cores", cores));
         }
         self.blank();
-    }
-
-    /// Print tuning info if loaded.
-    pub fn tuning_loaded(&self, spells: usize, auras: usize) {
-        let msg = format!("Loaded tuning: {} spells, {} auras", spells, auras);
-        eprintln!("  {}", self.colors.muted.apply_to(msg));
     }
 }
 

@@ -107,11 +107,7 @@ pub struct AuraDefInfo {
 fn ensure_bm_hunter_initialized() {
     static INIT: OnceLock<()> = OnceLock::new();
     INIT.get_or_init(|| {
-        // Initialize with empty tuning data - we only need spell/aura definitions
-        let _ = BmHunter::init_rotation_with_tuning(
-            r#"{"actions":[]}"#,
-            &crate::data::TuningData::empty(),
-        );
+        let _ = BmHunter::init_rotation(r#"{"actions":[]}"#);
     });
 }
 

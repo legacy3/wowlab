@@ -48,10 +48,6 @@ pub enum Command {
         #[arg(long)]
         gear: Option<String>,
 
-        /// Tuning override files (can be specified multiple times)
-        #[arg(long = "tuning", value_name = "FILE")]
-        tuning: Vec<String>,
-
         /// Enable detailed trace
         #[arg(long)]
         trace: bool,

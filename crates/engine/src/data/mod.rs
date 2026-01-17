@@ -4,21 +4,16 @@
 //! - **DataResolver trait**: Abstract interface for loading game data
 //! - **LocalResolver**: Loads from local CSV files (default, offline, portable)
 //! - **SupabaseResolver**: Loads from Supabase API (optional, requires `supabase` feature)
-//! - **External tuning**: Runtime tuning capabilities without recompilation
 
-mod loader;
 mod local;
 mod resolver;
 #[cfg(feature = "supabase")]
 mod supabase;
-mod tuning;
 
-pub use loader::*;
 pub use local::LocalResolver;
 pub use resolver::{DataResolver, ResolverConfig, ResolverError};
 #[cfg(feature = "supabase")]
 pub use supabase::SupabaseResolver;
-pub use tuning::*;
 
 use std::sync::Arc;
 

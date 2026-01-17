@@ -3,14 +3,12 @@ use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress
 use crate::handler::{SpecHandler, create_default_registry};
 use crate::actor::Player;
 use crate::rotation::Rotation;
-use crate::data::{TuningData, load_tuning};
 use crate::specs::BmHunter;
 use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
-use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use std::thread;
-use tracing::{debug, info, warn, instrument};
+use tracing::{debug, info, instrument};
 
 pub struct Runner;
 
@@ -26,7 +24,6 @@ impl Runner {
                 output,
                 rotation,
                 gear,
-                tuning,
                 trace,
                 threads: _, // Handled in main.rs before run()
             } => {
@@ -39,7 +36,6 @@ impl Runner {
                     output,
                     rotation,
                     gear,
-                    tuning,
                     trace,
                 )
             }
@@ -59,7 +55,7 @@ impl Runner {
         }
     }
 
-    #[instrument(skip(gear_file, rotation_file, tuning_files), fields(spec = ?spec, iterations, targets, duration))]
+    #[instrument(skip(gear_file, rotation_file), fields(spec = ?spec, iterations, targets, duration))]
     fn run_sim(
         spec: SpecArg,
         duration: f32,
@@ -69,7 +65,6 @@ impl Runner {
         output_format: OutputFormat,
         rotation_file: Option<String>,
         gear_file: Option<String>,
-        tuning_files: Vec<String>,
         trace: bool,
     ) -> Result<(), String> {
         let out = Output::new();
@@ -84,13 +79,6 @@ impl Runner {
 
         let spec_id = spec.to_spec_id();
 
-        // Load tuning data
-        let tuning = Self::load_tuning_data(&tuning_files)?;
-        if !tuning.is_empty() && matches!(output_format, OutputFormat::Text) {
-            out.tuning_loaded(tuning.spell.len(), tuning.aura.len());
-            out.blank();
-        }
-
         // Get handler from registry
         let registry = create_default_registry();
         let handler = registry.get(spec_id)
@@ -99,8 +87,8 @@ impl Runner {
         // Load rotation script
         let rotation_script = Self::load_rotation_script(spec, rotation_file.as_deref())?;
 
-        // Initialize rotation for this spec (with tuning)
-        Self::init_rotation(spec_id, &rotation_script, &tuning)?;
+        // Initialize rotation for this spec
+        Self::init_rotation(spec_id, &rotation_script)?;
 
         // Load gear
         let gear = if let Some(ref path) = gear_file {
@@ -165,38 +153,11 @@ impl Runner {
     }
 
     /// Initialize rotation for a spec
-    fn init_rotation(spec_id: SpecId, script: &str, tuning: &TuningData) -> Result<(), String> {
+    fn init_rotation(spec_id: SpecId, script: &str) -> Result<(), String> {
         match spec_id {
-            SpecId::BeastMastery => BmHunter::init_rotation_with_tuning(script, tuning),
+            SpecId::BeastMastery => BmHunter::init_rotation(script),
             _ => Err(format!("Spec {:?} not implemented", spec_id)),
         }
-    }
-
-    /// Load tuning data from files
-    fn load_tuning_data(paths: &[String]) -> Result<TuningData, String> {
-        let mut tuning = TuningData::empty();
-
-        for path_str in paths {
-            let path = Path::new(path_str);
-            if !path.exists() {
-                warn!(path = %path.display(), "Tuning file not found, skipping");
-                continue;
-            }
-
-            let file_tuning = load_tuning(path)
-                .map_err(|e| format!("Failed to load tuning file '{}': {}", path_str, e))?;
-            tuning.merge(file_tuning);
-        }
-
-        if !tuning.is_empty() {
-            info!(
-                spells = tuning.spell.len(),
-                auras = tuning.aura.len(),
-                "Loaded tuning overrides"
-            );
-        }
-
-        Ok(tuning)
     }
 
     /// Run batch simulation in parallel across all CPU cores
