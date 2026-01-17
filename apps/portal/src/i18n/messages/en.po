@@ -84,7 +84,7 @@ msgstr "My Gaming PC"
 
 #: src/components/account/nodes/node-claim-form.tsx:107
 #: src/components/account/nodes/node-settings-dialog.tsx:106
-#: src/components/account/nodes/nodes-page.tsx:105
+#: src/components/account/nodes/nodes-page.tsx:107
 #: src/components/account/nodes/nodes-table.tsx:82
 #: src/components/account/nodes/nodes-table.tsx:159
 #: src/components/computing/cards/workers-card.tsx:13
@@ -101,7 +101,7 @@ msgid "sSYE+I"
 msgstr "How many CPU cores to dedicate to simulations"
 
 #: src/components/account/nodes/node-claim-form.tsx:139
-#: src/components/account/nodes/nodes-page.tsx:124
+#: src/components/account/nodes/nodes-page.tsx:126
 msgid "2+mzpb"
 msgstr "Claim Node"
 
@@ -217,34 +217,34 @@ msgstr "This action cannot be undone."
 msgid "d8JZF+"
 msgstr "Type {name} to confirm deletion."
 
-#: src/components/account/nodes/nodes-claim-page.tsx:100
+#: src/components/account/nodes/nodes-claim-page.tsx:94
 msgid "Vhbm9s"
 msgstr "Download and run the WoW Lab Node application on your computer"
 
-#: src/components/account/nodes/nodes-claim-page.tsx:108
+#: src/components/account/nodes/nodes-claim-page.tsx:102
 #: src/components/computing/cards/job-history-card.tsx:364
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"
 msgstr "Error"
 
-#: src/components/account/nodes/nodes-page.tsx:103
+#: src/components/account/nodes/nodes-page.tsx:105
 #: src/components/layout/user-menu.tsx:87
 msgid "Cjr0yv"
 msgstr "Nodes"
 
-#: src/components/account/nodes/nodes-page.tsx:104
+#: src/components/account/nodes/nodes-page.tsx:106
 msgid "ccU6l/"
 msgstr "Online"
 
-#: src/components/account/nodes/nodes-page.tsx:138
+#: src/components/account/nodes/nodes-page.tsx:140
 msgid "pGsW0O"
 msgstr "No nodes yet"
 
-#: src/components/account/nodes/nodes-page.tsx:140
+#: src/components/account/nodes/nodes-page.tsx:142
 msgid "mm2BIA"
 msgstr "Claim a node to contribute compute resources for simulations"
 
-#: src/components/account/nodes/nodes-page.tsx:147
+#: src/components/account/nodes/nodes-page.tsx:149
 msgid "DIweTv"
 msgstr "Claim Your First Node"
 
@@ -824,13 +824,13 @@ msgid "X0ha1a"
 msgstr "Save changes"
 
 #: src/components/editor/layout/editor-header.tsx:192
-msgid "VzzYJk"
-msgstr "Create"
-
-#: src/components/editor/layout/editor-header.tsx:192
 #: src/components/editor/variable-editor-dialog.tsx:100
 msgid "jvo0vs"
 msgstr "Save"
+
+#: src/components/editor/layout/editor-header.tsx:192
+msgid "VzzYJk"
+msgstr "Create"
 
 #: src/components/editor/pickers/game-object-picker.tsx:236
 #: src/components/editor/pickers/game-object-picker.tsx:332
