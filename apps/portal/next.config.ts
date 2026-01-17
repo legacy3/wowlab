@@ -17,6 +17,21 @@ const buildVelite = async () => {
 
 buildVelite().catch(console.error);
 
+const NODE_PLATFORMS = ["linux", "linux-arm", "macos", "windows"] as const;
+
+function generateNodeRewrites() {
+  return NODE_PLATFORMS.flatMap((platform) => [
+    {
+      destination: `/api/download/node?platform=${platform}`,
+      source: `/go/node-${platform}`,
+    },
+    {
+      destination: `/api/download/node?platform=${platform}&variant=headless`,
+      source: `/go/node-headless-${platform}`,
+    },
+  ]);
+}
+
 const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
@@ -40,6 +55,10 @@ const nextConfig: NextConfig = {
         source: "/go/github",
       },
     ];
+  },
+
+  async rewrites() {
+    return generateNodeRewrites();
   },
 
   sassOptions: {

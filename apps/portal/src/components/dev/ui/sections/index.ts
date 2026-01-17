@@ -1,6 +1,7 @@
 export { ActionsSection } from "./actions";
 export { ChartsSection } from "./charts";
 export { DataDisplaySection } from "./data-display";
+export { DistributedNodesSection } from "./distributed-nodes";
 export { FeedbackSection } from "./feedback";
 export { FormsSection } from "./forms";
 export { I18nSection } from "./i18n";

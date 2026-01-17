@@ -5,6 +5,7 @@ import {
   ActionsSection,
   ChartsSection,
   DataDisplaySection,
+  DistributedNodesSection,
   FeedbackSection,
   FormsSection,
   I18nSection,
@@ -30,6 +31,7 @@ const NAV = [
   { id: "simulate", label: "Simulate" },
   { id: "spec-picker", label: "Spec Picker" },
   { id: "i18n", label: "i18n" },
+  { id: "distributed-nodes", label: "Distributed Nodes" },
 ];
 
 export function UiDemo() {
@@ -49,6 +51,7 @@ export function UiDemo() {
       <SimulateSection />
       <SpecPickerSection />
       <I18nSection />
+      <DistributedNodesSection />
     </PageLayout>
   );
 }
