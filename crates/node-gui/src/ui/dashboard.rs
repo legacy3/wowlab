@@ -3,9 +3,16 @@ use super::theme::{
     card_frame, AMBER_9, BLUE_9, BG_SUBTLE, BORDER, FG_DEFAULT, FG_MUTED, FG_SUBTLE, GREEN_9,
     RADIUS_MD, RED_9, SLATE_5,
 };
+use egui_plot::{Line, Plot, PlotPoints};
 use node::NodeStats;
+use std::collections::VecDeque;
 
-pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
+pub fn show(
+    ui: &mut egui::Ui,
+    stats: &NodeStats,
+    sims_history: &VecDeque<f64>,
+    cpu_history: &VecDeque<f32>,
+) {
     ui.add_space(8.0);
 
     card_frame().show(ui, |ui| {
@@ -76,7 +83,122 @@ pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
 
         // CPU progress bar inline
         cpu_bar(ui, stats.cpu_usage);
+
+        // Sparklines section
+        if !sims_history.is_empty() || !cpu_history.is_empty() {
+            ui.add_space(12.0);
+            ui.separator();
+            ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                ui.label(
+                    egui::RichText::new(icon(Icon::Activity))
+                        .color(FG_SUBTLE)
+                        .size(12.0),
+                );
+                ui.label(egui::RichText::new("Metrics").color(FG_MUTED).size(11.0));
+            });
+
+            ui.add_space(8.0);
+
+            // Show sparklines side by side
+            ui.horizontal(|ui| {
+                let chart_width = (ui.available_width() - 8.0) / 2.0;
+
+                // Sims/sec sparkline
+                ui.vertical(|ui| {
+                    ui.set_width(chart_width);
+                    ui.label(
+                        egui::RichText::new("Sims/sec")
+                            .color(FG_SUBTLE)
+                            .size(10.0),
+                    );
+                    sparkline(ui, sims_history, AMBER_9, chart_width, 40.0);
+                });
+
+                ui.add_space(8.0);
+
+                // CPU sparkline
+                ui.vertical(|ui| {
+                    ui.set_width(chart_width);
+                    ui.label(egui::RichText::new("CPU %").color(FG_SUBTLE).size(10.0));
+                    sparkline_f32(ui, cpu_history, GREEN_9, chart_width, 40.0, 1.0);
+                });
+            });
+        }
     });
+}
+
+fn sparkline(ui: &mut egui::Ui, data: &VecDeque<f64>, color: egui::Color32, width: f32, height: f32) {
+    if data.is_empty() {
+        return;
+    }
+
+    let points: PlotPoints = data
+        .iter()
+        .enumerate()
+        .map(|(i, &v)| [i as f64, v])
+        .collect();
+
+    Plot::new(egui::Id::new(format!("sparkline_{:p}", data)))
+        .height(height)
+        .width(width)
+        .show_axes([false, false])
+        .show_grid(false)
+        .allow_zoom(false)
+        .allow_drag(false)
+        .allow_scroll(false)
+        .show_x(false)
+        .show_y(false)
+        .include_y(0.0)
+        .show_background(false)
+        .show(ui, |plot_ui| {
+            plot_ui.line(
+                Line::new(points)
+                    .color(color)
+                    .stroke(egui::Stroke::new(1.5, color)),
+            );
+        });
+}
+
+fn sparkline_f32(
+    ui: &mut egui::Ui,
+    data: &VecDeque<f32>,
+    color: egui::Color32,
+    width: f32,
+    height: f32,
+    max_y: f32,
+) {
+    if data.is_empty() {
+        return;
+    }
+
+    let points: PlotPoints = data
+        .iter()
+        .enumerate()
+        .map(|(i, &v)| [i as f64, (v * 100.0) as f64]) // Convert to percentage
+        .collect();
+
+    Plot::new(egui::Id::new(format!("sparkline_f32_{:p}", data)))
+        .height(height)
+        .width(width)
+        .show_axes([false, false])
+        .show_grid(false)
+        .allow_zoom(false)
+        .allow_drag(false)
+        .allow_scroll(false)
+        .show_x(false)
+        .show_y(false)
+        .include_y(0.0)
+        .include_y(max_y as f64 * 100.0) // Max at 100%
+        .show_background(false)
+        .show(ui, |plot_ui| {
+            plot_ui.line(
+                Line::new(points)
+                    .color(color)
+                    .stroke(egui::Stroke::new(1.5, color)),
+            );
+        });
 }
 
 fn stat_card(

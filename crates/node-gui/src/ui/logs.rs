@@ -2,13 +2,15 @@ use super::icons::{icon, Icon};
 use super::theme::{
     card_frame, AMBER_9, BG_SUBTLE, BG_SURFACE, BORDER_HOVER, FG_MUTED, FG_SUBTLE, RED_9, SLATE_8,
 };
+use egui_virtual_list::VirtualList;
 use node::{utils::logging, LogEntry, LogLevel};
 use std::collections::VecDeque;
 
-#[derive(Clone, PartialEq, Default)]
+#[derive(Default)]
 pub struct LogFilter {
     pub level: LogLevel,
     pub expanded_index: Option<usize>,
+    pub virtual_list: VirtualList,
 }
 
 impl LogFilter {
@@ -92,43 +94,77 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
         ui.separator();
         ui.add_space(4.0);
 
-        egui::ScrollArea::vertical()
-            .auto_shrink([false, false])
-            .stick_to_bottom(true)
-            .show(ui, |ui| {
-                ui.style_mut().spacing.item_spacing.y = 1.0;
+        // Pre-filter logs for virtual list
+        let filtered: Vec<(usize, &LogEntry)> = logs
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| filter.matches(e.level))
+            .collect();
 
-                let filtered: Vec<_> = logs
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, e)| filter.matches(e.level))
-                    .collect();
-
-                if filtered.is_empty() {
-                    ui.add_space(20.0);
-                    ui.vertical_centered(|ui| {
-                        ui.label(
-                            egui::RichText::new(icon(Icon::Inbox))
-                                .color(BORDER_HOVER)
-                                .size(24.0),
-                        );
-                        ui.add_space(8.0);
-                        ui.label(
-                            egui::RichText::new("No logs at this level")
-                                .color(FG_SUBTLE)
-                                .size(13.0),
-                        );
-                    });
-                    ui.add_space(20.0);
-                } else {
-                    for (idx, entry) in filtered {
-                        let is_expanded = filter.expanded_index == Some(idx);
-                        if log_entry_row(ui, entry, ui.available_width(), is_expanded) {
-                            filter.expanded_index = if is_expanded { None } else { Some(idx) };
-                        }
-                    }
-                }
+        if filtered.is_empty() {
+            ui.add_space(20.0);
+            ui.vertical_centered(|ui| {
+                ui.label(
+                    egui::RichText::new(icon(Icon::Inbox))
+                        .color(BORDER_HOVER)
+                        .size(24.0),
+                );
+                ui.add_space(8.0);
+                ui.label(
+                    egui::RichText::new("No logs at this level")
+                        .color(FG_SUBTLE)
+                        .size(13.0),
+                );
             });
+            ui.add_space(20.0);
+        } else {
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .stick_to_bottom(true)
+                .show(ui, |ui| {
+                    ui.style_mut().spacing.item_spacing.y = 1.0;
+
+                    let available_width = ui.available_width();
+                    let expanded_index = filter.expanded_index;
+
+                    filter.virtual_list.ui_custom_layout(
+                        ui,
+                        filtered.len(),
+                        |ui, start_index| {
+                            if let Some((original_idx, entry)) = filtered.get(start_index) {
+                                let is_expanded = expanded_index == Some(*original_idx);
+                                if log_entry_row(ui, entry, available_width, is_expanded) {
+                                    // Return click info through a temp memory slot
+                                    ui.ctx().memory_mut(|mem| {
+                                        mem.data.insert_temp(
+                                            egui::Id::new("log_clicked"),
+                                            (*original_idx, is_expanded),
+                                        );
+                                    });
+                                }
+                            }
+                            1 // One item per row
+                        },
+                    );
+                });
+
+            // Handle clicks after virtual list rendering
+            if let Some((clicked_idx, was_expanded)) = ui.ctx().memory_mut(|mem| {
+                mem.data
+                    .get_temp::<(usize, bool)>(egui::Id::new("log_clicked"))
+            }) {
+                filter.expanded_index = if was_expanded {
+                    None
+                } else {
+                    Some(clicked_idx)
+                };
+                // Clear the temp data
+                ui.ctx().memory_mut(|mem| {
+                    mem.data
+                        .remove::<(usize, bool)>(egui::Id::new("log_clicked"));
+                });
+            }
+        }
     });
 }
 

@@ -2,6 +2,10 @@ mod app;
 mod ui;
 
 use app::NodeApp;
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 use clap::{Parser, Subcommand};
 use node::utils::logging;
 use std::sync::Arc;

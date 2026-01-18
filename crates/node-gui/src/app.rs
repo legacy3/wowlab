@@ -8,6 +8,8 @@ use crate::ui::{
         FG_SUBTLE, GREEN_9, RADIUS_SM, RED_9, SLATE_1, SLATE_8,
     },
 };
+use egui_modal::Modal;
+use egui_notify::Toasts;
 use node::{
     utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
     NodeCoreEvent, NodeState,
@@ -23,6 +25,7 @@ use tracing::Level;
 
 const MAX_LOGS: usize = 100;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const METRICS_HISTORY_SIZE: usize = 60; // 60 samples = 1 minute at 1 sample/sec
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -59,6 +62,16 @@ pub struct NodeApp {
     show_update_modal: bool,
     update_state: UpdateState,
     update_result_rx: Option<mpsc::Receiver<Result<(), String>>>,
+    // Toast notifications
+    toasts: Toasts,
+    last_connection_status: Option<ConnectionStatus>,
+    last_node_state: Option<NodeState>,
+    // Unlink confirmation
+    confirm_unlink: bool,
+    // Metrics history for sparklines
+    sims_per_second_history: VecDeque<f64>,
+    cpu_usage_history: VecDeque<f32>,
+    last_metrics_sample: Instant,
 }
 
 impl NodeApp {
@@ -101,6 +114,15 @@ impl NodeApp {
             show_update_modal: false,
             update_state: UpdateState::default(),
             update_result_rx: None,
+            toasts: Toasts::default()
+                .with_anchor(egui_notify::Anchor::BottomRight)
+                .with_margin(egui::vec2(12.0, 12.0)),
+            last_connection_status: None,
+            last_node_state: None,
+            confirm_unlink: false,
+            sims_per_second_history: VecDeque::with_capacity(METRICS_HISTORY_SIZE),
+            cpu_usage_history: VecDeque::with_capacity(METRICS_HISTORY_SIZE),
+            last_metrics_sample: Instant::now(),
         }
     }
 
@@ -135,6 +157,31 @@ impl NodeApp {
         }
     }
 
+    fn sample_metrics(&mut self) {
+        // Sample every second
+        if self.last_metrics_sample.elapsed() < Duration::from_secs(1) {
+            return;
+        }
+        self.last_metrics_sample = Instant::now();
+
+        let stats = self.core.stats();
+
+        // Keep history capped at METRICS_HISTORY_SIZE
+        if self.sims_per_second_history.len() >= METRICS_HISTORY_SIZE {
+            self.sims_per_second_history.pop_front();
+        }
+        self.sims_per_second_history.push_back(stats.sims_per_second);
+
+        if self.cpu_usage_history.len() >= METRICS_HISTORY_SIZE {
+            self.cpu_usage_history.pop_front();
+        }
+        self.cpu_usage_history.push_back(stats.cpu_usage);
+    }
+
+    pub fn metrics_history(&self) -> (&VecDeque<f64>, &VecDeque<f32>) {
+        (&self.sims_per_second_history, &self.cpu_usage_history)
+    }
+
     fn poll_update_result(&mut self) {
         if let Some(rx) = &mut self.update_result_rx {
             if let Ok(result) = rx.try_recv() {
@@ -145,6 +192,54 @@ impl NodeApp {
                 self.update_result_rx = None;
             }
         }
+    }
+
+    fn check_status_changes(&mut self) {
+        let current_status = self.core.connection_status();
+        let current_state = self.core.state().clone();
+
+        // Check connection status changes
+        if let Some(last_status) = &self.last_connection_status {
+            if *last_status != current_status {
+                match (&last_status, &current_status) {
+                    (ConnectionStatus::Disconnected, ConnectionStatus::Connected) => {
+                        self.toasts
+                            .success("Connected to server")
+                            .duration(Some(Duration::from_secs(3)));
+                    }
+                    (ConnectionStatus::Connected, ConnectionStatus::Disconnected) => {
+                        self.toasts
+                            .warning("Disconnected from server")
+                            .duration(Some(Duration::from_secs(3)));
+                    }
+                    (ConnectionStatus::Connecting, ConnectionStatus::Connected) => {
+                        self.toasts
+                            .success("Connected to server")
+                            .duration(Some(Duration::from_secs(3)));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        self.last_connection_status = Some(current_status);
+
+        // Check state changes (e.g., claiming -> running = node linked)
+        if let Some(last_state) = &self.last_node_state {
+            match (&last_state, &current_state) {
+                (NodeState::Claiming { .. }, NodeState::Running) => {
+                    self.toasts
+                        .success("Node linked successfully!")
+                        .duration(Some(Duration::from_secs(4)));
+                }
+                (_, NodeState::Unavailable) if !matches!(last_state, NodeState::Unavailable) => {
+                    self.toasts
+                        .error("Server unavailable")
+                        .duration(Some(Duration::from_secs(4)));
+                }
+                _ => {}
+            }
+        }
+        self.last_node_state = Some(current_state);
     }
 
     fn start_update(&mut self) {
@@ -353,6 +448,31 @@ impl NodeApp {
         });
     }
 
+    fn handle_keyboard_shortcuts(&mut self, ctx: &egui::Context) {
+        // Only handle shortcuts when running (not during claiming, etc.)
+        if !matches!(self.core.state(), NodeState::Running) {
+            return;
+        }
+
+        ctx.input(|i| {
+            // Tab switching: Cmd/Ctrl + 1/2/3
+            if i.modifiers.command {
+                if i.key_pressed(egui::Key::Num1) {
+                    self.current_tab = Tab::Status;
+                } else if i.key_pressed(egui::Key::Num2) {
+                    self.current_tab = Tab::Logs;
+                } else if i.key_pressed(egui::Key::Num3) {
+                    self.current_tab = Tab::Settings;
+                } else if i.key_pressed(egui::Key::L) {
+                    // Cmd/Ctrl+L - Open log folder
+                    if let Some(dir) = node::utils::logging::log_dir() {
+                        let _ = open::that(dir);
+                    }
+                }
+            }
+        });
+    }
+
     fn load_logo(&mut self, ctx: &egui::Context) {
         if self.logo.is_some() {
             return;
@@ -369,6 +489,36 @@ impl NodeApp {
             egui::ColorImage::from_rgba_unmultiplied([width, height], &rgba.into_raw());
         self.logo = Some(ctx.load_texture("logo", color_image, egui::TextureOptions::LINEAR));
     }
+
+    fn show_unlink_modal(&mut self, ctx: &egui::Context) -> bool {
+        let mut should_unlink = false;
+        let modal = Modal::new(ctx, "unlink_confirmation");
+
+        modal.show(|ui| {
+            modal.title(ui, "Unlink Node");
+            modal.frame(ui, |ui| {
+                modal.body(
+                    ui,
+                    "Are you sure you want to unlink this node?\n\nYou will need to re-claim it to use it again.",
+                );
+            });
+            modal.buttons(ui, |ui| {
+                if modal.caution_button(ui, "Unlink").clicked() {
+                    should_unlink = true;
+                }
+                if modal.button(ui, "Cancel").clicked() {
+                    self.confirm_unlink = false;
+                }
+            });
+        });
+
+        if self.confirm_unlink {
+            modal.open();
+            self.confirm_unlink = false;
+        }
+
+        should_unlink
+    }
 }
 
 impl eframe::App for NodeApp {
@@ -379,7 +529,15 @@ impl eframe::App for NodeApp {
         self.poll_core_events();
         self.poll_update_check();
         self.poll_update_result();
+        self.sample_metrics();
+        self.check_status_changes();
+        self.handle_keyboard_shortcuts(ctx);
         self.show_update_modal(ctx);
+        if self.show_unlink_modal(ctx) {
+            NodeConfig::delete();
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
+        self.toasts.show(ctx);
 
         egui::TopBottomPanel::top("header")
             .frame(header_frame())
@@ -548,14 +706,16 @@ impl eframe::App for NodeApp {
                     ui.add_space(4.0);
 
                     match self.current_tab {
-                        Tab::Status => dashboard::show(ui, &self.core.stats()),
+                        Tab::Status => {
+                            let (sims_history, cpu_history) = self.metrics_history();
+                            dashboard::show(ui, &self.core.stats(), sims_history, cpu_history);
+                        }
                         Tab::Logs => logs::show(ui, &self.logs, &mut self.log_filter),
                         Tab::Settings => {
                             let action =
                                 settings::show(ui, self.core.node_name(), self.core.node_id());
                             if matches!(action, SettingsAction::Unlink) {
-                                NodeConfig::delete();
-                                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                                self.confirm_unlink = true;
                             }
                         }
                     }
