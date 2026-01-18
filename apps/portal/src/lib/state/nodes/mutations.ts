@@ -16,6 +16,7 @@ export interface SaveNodeData {
 
 export interface VerifyResult {
   id: string;
+  max_parallel: number;
   name: string;
   platform: string;
   total_cores: number;
@@ -31,7 +32,7 @@ export function useClaimNode() {
 
       const { data, error } = await supabase
         .from("nodes")
-        .select("id, name, platform, total_cores")
+        .select("id, name, platform, total_cores, max_parallel")
         .eq("claim_code", normalizedCode)
         .is("user_id", null)
         .single();

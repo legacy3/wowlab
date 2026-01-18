@@ -35,6 +35,7 @@ import { progress } from "./progress";
 import { prose } from "./prose";
 import { radioCardGroup } from "./radio-card-group";
 import { radioGroup } from "./radio-group";
+import { secretValue } from "./secret-value";
 import { select } from "./select";
 import { skeleton } from "./skeleton";
 import { slider } from "./slider";
@@ -69,6 +70,7 @@ export const recipes = {
   numberInput,
   progress,
   prose,
+  secretValue,
   skeleton,
   text,
   textarea,

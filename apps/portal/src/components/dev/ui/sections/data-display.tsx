@@ -1,9 +1,11 @@
 "use client";
 
 import { Activity, CpuIcon, ServerIcon, WifiIcon } from "lucide-react";
+import { useState } from "react";
 import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
+  Alert,
   Avatar,
   Badge,
   Button,
@@ -11,6 +13,8 @@ import {
   Code,
   HelpText,
   Kbd,
+  SecretValue,
+  Slider,
   StatCard,
   Table,
   Text,
@@ -33,6 +37,7 @@ export function DataDisplaySection() {
         <StatCardDemo />
         <BadgeDemo />
         <AvatarDemo />
+        <SecretValueDemo />
         <CodeDemo />
         <KbdDemo />
         <HelpTextDemo />
@@ -263,6 +268,99 @@ function KbdDemo() {
             <Kbd>P</Kbd>
             <Text>for commands.</Text>
           </HStack>
+        </DemoBox>
+      </Stack>
+    </Subsection>
+  );
+}
+
+function SecretValueDemo() {
+  const [length, setLength] = useState([12]);
+
+  return (
+    <Subsection title="SecretValue">
+      <DemoDescription>
+        Reveal-on-click display for sensitive information.
+      </DemoDescription>
+      <Stack gap="4">
+        <Alert.Root>
+          <Alert.Content>
+            <Alert.Description>
+              Always use a fixed <Code>hiddenLength</Code> that roughly fits
+              your content type. Never use the actual value length - that leaks
+              information about the secret.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+        <DemoBox>
+          <DemoLabel>Interactive</DemoLabel>
+          <Stack gap="4">
+            <HStack gap="4" justify="space-between">
+              <Text textStyle="sm" color="fg.muted">
+                hiddenLength: {length[0]}
+              </Text>
+              <Slider.Root
+                min={4}
+                max={24}
+                value={length}
+                onValueChange={(e) => setLength(e.value)}
+                w="48"
+              >
+                <Slider.Control>
+                  <Slider.Track>
+                    <Slider.Range />
+                  </Slider.Track>
+                  <Slider.Thumbs />
+                </Slider.Control>
+              </Slider.Root>
+            </HStack>
+            <SecretValue
+              value="my-secret-api-key-12345"
+              hiddenLength={length[0]}
+            />
+          </Stack>
+        </DemoBox>
+        <DemoBox>
+          <DemoLabel>Variants</DemoLabel>
+          <Stack gap="3">
+            <HStack gap="4">
+              <Text textStyle="sm" color="fg.muted" minW="16">
+                plain
+              </Text>
+              <SecretValue
+                value="user@example.com"
+                hiddenLength={12}
+                variant="plain"
+              />
+            </HStack>
+            <HStack gap="4">
+              <Text textStyle="sm" color="fg.muted" minW="16">
+                field
+              </Text>
+              <SecretValue
+                value="sk_live_abc123xyz"
+                hiddenLength={16}
+                variant="field"
+              />
+            </HStack>
+          </Stack>
+        </DemoBox>
+        <DemoBox>
+          <DemoLabel>Sizes</DemoLabel>
+          <Stack gap="3">
+            {(["sm", "md", "lg"] as const).map((size) => (
+              <HStack key={size} gap="4">
+                <Text textStyle="sm" color="fg.muted" minW="8">
+                  {size}
+                </Text>
+                <SecretValue
+                  value="secret-value-123"
+                  hiddenLength={12}
+                  size={size}
+                />
+              </HStack>
+            ))}
+          </Stack>
         </DemoBox>
       </Stack>
     </Subsection>

@@ -69,21 +69,21 @@ msgstr "Power Off"
 msgid "EYIw2M"
 msgstr "Clear selection"
 
-#: src/components/account/nodes/node-claim-form.tsx:85
+#: src/components/account/nodes/node-claim-form.tsx:86
 msgid "adQu2P"
 msgstr "Configure Your Node"
 
-#: src/components/account/nodes/node-claim-form.tsx:99
-#: src/components/account/nodes/node-settings-dialog.tsx:97
+#: src/components/account/nodes/node-claim-form.tsx:100
+#: src/components/account/nodes/node-settings-dialog.tsx:98
 msgid "+gH1Ai"
 msgstr "Node Name"
 
-#: src/components/account/nodes/node-claim-form.tsx:103
+#: src/components/account/nodes/node-claim-form.tsx:104
 msgid "3WiUI+"
 msgstr "My Gaming PC"
 
-#: src/components/account/nodes/node-claim-form.tsx:109
-#: src/components/account/nodes/node-settings-dialog.tsx:106
+#: src/components/account/nodes/node-claim-form.tsx:110
+#: src/components/account/nodes/node-settings-dialog.tsx:107
 #: src/components/account/nodes/nodes-page.tsx:107
 #: src/components/account/nodes/nodes-table.tsx:82
 #: src/components/account/nodes/nodes-table.tsx:159
@@ -91,37 +91,37 @@ msgstr "My Gaming PC"
 msgid "t6RYbw"
 msgstr "Workers"
 
-#: src/components/account/nodes/node-claim-form.tsx:111
-#: src/components/account/nodes/node-settings-dialog.tsx:108
+#: src/components/account/nodes/node-claim-form.tsx:112
+#: src/components/account/nodes/node-settings-dialog.tsx:109
 msgid "d8nhsg"
 msgstr "{workers, number} / {totalCores, number} cores"
 
-#: src/components/account/nodes/node-claim-form.tsx:131
+#: src/components/account/nodes/node-claim-form.tsx:132
 msgid "sSYE+I"
 msgstr "How many CPU cores to dedicate to simulations"
 
-#: src/components/account/nodes/node-claim-form.tsx:141
+#: src/components/account/nodes/node-claim-form.tsx:142
 #: src/components/account/nodes/nodes-page.tsx:126
 msgid "2+mzpb"
 msgstr "Claim Node"
 
-#: src/components/account/nodes/node-claim-form.tsx:156
+#: src/components/account/nodes/node-claim-form.tsx:157
 msgid "1VA/+D"
 msgstr "Claim Your Node"
 
-#: src/components/account/nodes/node-claim-form.tsx:159
+#: src/components/account/nodes/node-claim-form.tsx:160
 msgid "W6+Aj5"
 msgstr "Enter the 6-character code displayed by your node application"
 
-#: src/components/account/nodes/node-claim-form.tsx:200
+#: src/components/account/nodes/node-claim-form.tsx:201
 msgid "6bMfIz"
 msgstr "Verify Code"
 
-#: src/components/account/nodes/node-claim-form.tsx:213
+#: src/components/account/nodes/node-claim-form.tsx:214
 msgid "yScDrH"
 msgstr "Don't have the app?"
 
-#: src/components/account/nodes/node-claim-form.tsx:219
+#: src/components/account/nodes/node-claim-form.tsx:220
 msgid "OZpUxW"
 msgstr "Download Node"
 
@@ -153,31 +153,31 @@ msgstr "Desktop"
 msgid "0EkaRE"
 msgstr "Download CLI (headless)"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:80
+#: src/components/account/nodes/node-settings-dialog.tsx:81
 msgid "WWEwrn"
 msgstr "Node Settings"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:82
+#: src/components/account/nodes/node-settings-dialog.tsx:83
 msgid "Jce+aM"
 msgstr "Configure your node settings"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:137
+#: src/components/account/nodes/node-settings-dialog.tsx:138
 msgid "qxg3uo"
 msgstr "Access"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:141
+#: src/components/account/nodes/node-settings-dialog.tsx:142
 msgid "cWUdpb"
 msgstr "Select access level"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:160
+#: src/components/account/nodes/node-settings-dialog.tsx:161
 msgid "YXoHk0"
 msgstr "Power"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:162
+#: src/components/account/nodes/node-settings-dialog.tsx:163
 msgid "8WOSZM"
 msgstr "Enable this node for simulations"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:183
+#: src/components/account/nodes/node-settings-dialog.tsx:184
 #: src/components/editor/actions/action-card.tsx:304
 #: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
@@ -186,8 +186,8 @@ msgstr "Enable this node for simulations"
 msgid "K3r6DQ"
 msgstr "Delete"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:186
-#: src/components/account/nodes/node-settings-dialog.tsx:232
+#: src/components/account/nodes/node-settings-dialog.tsx:187
+#: src/components/account/nodes/node-settings-dialog.tsx:234
 #: src/components/computing/cards/job-history-card.tsx:233
 #: src/components/editor/actions/action-picker.tsx:130
 #: src/components/editor/variable-editor-dialog.tsx:97
@@ -196,28 +196,28 @@ msgstr "Delete"
 msgid "47FYwb"
 msgstr "Cancel"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:189
+#: src/components/account/nodes/node-settings-dialog.tsx:190
 msgid "3VI9mt"
 msgstr "Save Changes"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:207
-#: src/components/account/nodes/node-settings-dialog.tsx:240
+#: src/components/account/nodes/node-settings-dialog.tsx:208
+#: src/components/account/nodes/node-settings-dialog.tsx:242
 msgid "w/GP8Z"
 msgstr "Delete Node"
 
-#: src/components/account/nodes/node-settings-dialog.tsx:209
+#: src/components/account/nodes/node-settings-dialog.tsx:210
 msgid "JDJoIZ"
 msgstr "This action cannot be undone."
 
-#: src/components/account/nodes/node-settings-dialog.tsx:217
-msgid "d8JZF+"
-msgstr "Type {name} to confirm deletion."
+#: src/components/account/nodes/node-settings-dialog.tsx:218
+msgid "yhNHmS"
+msgstr "Type the node name to confirm deletion:"
 
-#: src/components/account/nodes/nodes-claim-page.tsx:95
+#: src/components/account/nodes/nodes-claim-page.tsx:96
 msgid "Vhbm9s"
 msgstr "Download and run the WoW Lab Node application on your computer"
 
-#: src/components/account/nodes/nodes-claim-page.tsx:103
+#: src/components/account/nodes/nodes-claim-page.tsx:104
 #: src/components/computing/cards/job-history-card.tsx:364
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"

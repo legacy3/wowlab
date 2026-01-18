@@ -90,6 +90,7 @@ function NodeClaimFormDemo() {
               await new Promise((r) => setTimeout(r, 500));
               if (code === "123456") {
                 return {
+                  maxParallel: 6,
                   name: "Demo Gaming PC",
                   platform: "windows",
                   totalCores: 12,

@@ -84,6 +84,7 @@ export * as Popover from "./popover";
 export * as Progress from "./progress";
 export * as RadioCardGroup from "./radio-card-group";
 export * as RadioGroup from "./radio-group";
+export { SecretValue, type SecretValueProps } from "./secret-value";
 export * as Select from "./select";
 export * as Slider from "./slider";
 export * as Steps from "./steps";

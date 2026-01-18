@@ -34,6 +34,7 @@ interface NodeClaimFormProps {
 }
 
 interface VerifyResult {
+  maxParallel: number;
   name: string;
   platform: string;
   totalCores: number;
@@ -62,7 +63,7 @@ export function NodeClaimForm({
     if (result) {
       setVerifyResult(result);
       setName(result.name);
-      setWorkers([Math.max(1, result.totalCores)]);
+      setWorkers([Math.max(1, result.maxParallel)]);
     }
   };
 

@@ -69,21 +69,21 @@ msgstr ""
 msgid "EYIw2M"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:85
+#: src/components/account/nodes/node-claim-form.tsx:86
 msgid "adQu2P"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:99
-#: src/components/account/nodes/node-settings-dialog.tsx:97
+#: src/components/account/nodes/node-claim-form.tsx:100
+#: src/components/account/nodes/node-settings-dialog.tsx:98
 msgid "+gH1Ai"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:103
+#: src/components/account/nodes/node-claim-form.tsx:104
 msgid "3WiUI+"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:109
-#: src/components/account/nodes/node-settings-dialog.tsx:106
+#: src/components/account/nodes/node-claim-form.tsx:110
+#: src/components/account/nodes/node-settings-dialog.tsx:107
 #: src/components/account/nodes/nodes-page.tsx:107
 #: src/components/account/nodes/nodes-table.tsx:82
 #: src/components/account/nodes/nodes-table.tsx:159
@@ -91,37 +91,37 @@ msgstr ""
 msgid "t6RYbw"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:111
-#: src/components/account/nodes/node-settings-dialog.tsx:108
+#: src/components/account/nodes/node-claim-form.tsx:112
+#: src/components/account/nodes/node-settings-dialog.tsx:109
 msgid "d8nhsg"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:131
+#: src/components/account/nodes/node-claim-form.tsx:132
 msgid "sSYE+I"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:141
+#: src/components/account/nodes/node-claim-form.tsx:142
 #: src/components/account/nodes/nodes-page.tsx:126
 msgid "2+mzpb"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:156
+#: src/components/account/nodes/node-claim-form.tsx:157
 msgid "1VA/+D"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:159
+#: src/components/account/nodes/node-claim-form.tsx:160
 msgid "W6+Aj5"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:200
+#: src/components/account/nodes/node-claim-form.tsx:201
 msgid "6bMfIz"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:213
+#: src/components/account/nodes/node-claim-form.tsx:214
 msgid "yScDrH"
 msgstr ""
 
-#: src/components/account/nodes/node-claim-form.tsx:219
+#: src/components/account/nodes/node-claim-form.tsx:220
 msgid "OZpUxW"
 msgstr ""
 
@@ -153,31 +153,31 @@ msgstr ""
 msgid "0EkaRE"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:80
+#: src/components/account/nodes/node-settings-dialog.tsx:81
 msgid "WWEwrn"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:82
+#: src/components/account/nodes/node-settings-dialog.tsx:83
 msgid "Jce+aM"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:137
+#: src/components/account/nodes/node-settings-dialog.tsx:138
 msgid "qxg3uo"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:141
+#: src/components/account/nodes/node-settings-dialog.tsx:142
 msgid "cWUdpb"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:160
+#: src/components/account/nodes/node-settings-dialog.tsx:161
 msgid "YXoHk0"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:162
+#: src/components/account/nodes/node-settings-dialog.tsx:163
 msgid "8WOSZM"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:183
+#: src/components/account/nodes/node-settings-dialog.tsx:184
 #: src/components/editor/actions/action-card.tsx:304
 #: src/components/editor/actions/action-card.tsx:310
 #: src/components/editor/common/item-actions-menu.tsx:55
@@ -186,8 +186,8 @@ msgstr ""
 msgid "K3r6DQ"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:186
-#: src/components/account/nodes/node-settings-dialog.tsx:232
+#: src/components/account/nodes/node-settings-dialog.tsx:187
+#: src/components/account/nodes/node-settings-dialog.tsx:234
 #: src/components/computing/cards/job-history-card.tsx:233
 #: src/components/editor/actions/action-picker.tsx:130
 #: src/components/editor/variable-editor-dialog.tsx:97
@@ -196,28 +196,28 @@ msgstr ""
 msgid "47FYwb"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:189
+#: src/components/account/nodes/node-settings-dialog.tsx:190
 msgid "3VI9mt"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:207
-#: src/components/account/nodes/node-settings-dialog.tsx:240
+#: src/components/account/nodes/node-settings-dialog.tsx:208
+#: src/components/account/nodes/node-settings-dialog.tsx:242
 msgid "w/GP8Z"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:209
+#: src/components/account/nodes/node-settings-dialog.tsx:210
 msgid "JDJoIZ"
 msgstr ""
 
-#: src/components/account/nodes/node-settings-dialog.tsx:217
-msgid "d8JZF+"
+#: src/components/account/nodes/node-settings-dialog.tsx:218
+msgid "yhNHmS"
 msgstr ""
 
-#: src/components/account/nodes/nodes-claim-page.tsx:95
+#: src/components/account/nodes/nodes-claim-page.tsx:96
 msgid "Vhbm9s"
 msgstr ""
 
-#: src/components/account/nodes/nodes-claim-page.tsx:103
+#: src/components/account/nodes/nodes-claim-page.tsx:104
 #: src/components/computing/cards/job-history-card.tsx:364
 #: src/components/computing/cards/status-card.tsx:39
 msgid "KN7zKn"

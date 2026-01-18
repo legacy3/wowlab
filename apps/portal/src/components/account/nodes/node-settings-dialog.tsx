@@ -8,6 +8,7 @@ import { HStack, Stack, styled } from "styled-system/jsx";
 
 import {
   Button,
+  Code,
   Dialog,
   Field,
   Input,
@@ -214,8 +215,9 @@ export function NodeSettingsDialog({
             <Dialog.Body>
               <Stack gap="4">
                 <Text textStyle="sm">
-                  {t("Type {name} to confirm deletion.", { name: node.name })}
+                  {t("Type the node name to confirm deletion:")}
                 </Text>
+                <Code>{node.name}</Code>
                 <Input
                   placeholder={node.name}
                   value={deleteConfirmName}
