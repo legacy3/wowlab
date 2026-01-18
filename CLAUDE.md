@@ -41,6 +41,7 @@ Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
 | `park-ui` | UI components |
 | `engine-content` | Rust engine spells/talents |
 | `effect-service` | Effect-TS services |
+| `rust-quality` | Rust code review, clippy, testing |
 
 ## More Context
 
