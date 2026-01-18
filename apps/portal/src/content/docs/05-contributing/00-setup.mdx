@@ -68,7 +68,7 @@ pnpm lint
 
 ## Rust engine
 
-The simulation engine is in `crates/04-engine/`:
+The simulation engine is in `crates/engine/`:
 
 ```bash
 cd crates/engine
@@ -81,7 +81,7 @@ cargo test
 For browser type sharing:
 
 ```bash
-wasm-pack build --target web --out-dir ../../packages/wowlab-04-engine/wasm
+wasm-pack build --target web --out-dir ../../packages/wowlab-engine/wasm
 ```
 
 ## Project structure
@@ -90,12 +90,16 @@ wasm-pack build --target web --out-dir ../../packages/wowlab-04-engine/wasm
 wowlab/
   apps/
     portal/          - Next.js web app
-    mcp-server/      - MCP server
+    mcp-server/      - MCP server for AI assistants
   crates/
-    04-engine/          - Rust simulation engine
-  packages/
+    engine/          - Rust simulation engine
+    node/            - Shared node library
+    node-gui/        - Desktop node app
+    node-headless/   - Server/container node
     parsers/         - DBC file parsers
-    wowlab-04-engine/   - WASM bindings
+    cli/             - CLI tools
+  packages/
+    wowlab-engine/   - WASM bindings
 ```
 
 ## Common tasks

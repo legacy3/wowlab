@@ -13,13 +13,13 @@ Implement a new specialization in the engine.
 ## Create the folder structure
 
 ```bash
-mkdir -p crates/04-engine/src/specs/{class}/{spec}
+mkdir -p crates/engine/src/specs/{class}/{spec}
 ```
 
 Example for Frost Mage:
 
 ```bash
-mkdir -p crates/04-engine/src/specs/mage/frost
+mkdir -p crates/engine/src/specs/mage/frost
 ```
 
 ## Create files
@@ -204,7 +204,7 @@ pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
 
 ## Register the spec
 
-In `crates/04-engine/src/handler/registry.rs`, add the handler:
+In `crates/engine/src/handler/registry.rs`, add the handler:
 
 ```rust
 pub fn get_handler(spec_id: SpecId) -> Option<Box<dyn SpecHandler>> {

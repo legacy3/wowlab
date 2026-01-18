@@ -9,12 +9,12 @@ nextSteps:
 
 # Architecture
 
-The simulation engine lives in `crates/04-engine/`. This page covers module organization and data flow.
+The simulation engine lives in `crates/engine/`. This page covers module organization and data flow.
 
 ## Module layout
 
 ```
-crates/04-engine/src/
+crates/engine/src/
   actor/     - Player, Pet, Enemy actors
   api/       - Public API types
   aura/      - Buff/debuff tracking
@@ -22,7 +22,7 @@ crates/04-engine/src/
   cli/       - Command-line interface
   combat/    - Damage pipeline, cooldowns
   core/      - Event queue, RNG
-  03-data/      - Data loading
+  data/      - Data loading
   handler/   - SpecHandler trait
   math/      - Utility functions
   prelude/   - Common imports
