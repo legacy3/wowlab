@@ -1,7 +1,7 @@
 use super::icons::{icon, Icon};
 use super::theme::{
-    BG_CANVAS, BG_SURFACE, BORDER, BORDER_HOVER, FG_DEFAULT, FG_SUBTLE, GREEN_9, RADIUS_LG,
-    RADIUS_MD,
+    subtitle, text, title, BG_CANVAS, BG_SURFACE, BORDER, BORDER_HOVER, FG_DEFAULT, FG_SUBTLE,
+    GREEN_9, RADIUS_LG, RADIUS_MD, SPACE_SM, SPACE_XS,
 };
 use std::time::Instant;
 
@@ -14,11 +14,8 @@ pub fn show(ui: &mut egui::Ui, code: &str) {
         ui.vertical_centered(|ui| {
             let top_space = ((available.height() - 350.0) / 3.0).max(20.0);
             ui.add_space(top_space);
-
             claim_card(ui, code);
-
             ui.add_space(24.0);
-
             waiting_spinner(ui);
         });
     });
@@ -35,28 +32,16 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
         .inner_margin(egui::Margin::symmetric(40.0, 32.0))
         .show(ui, |ui| {
             ui.vertical_centered(|ui| {
-                ui.label(
-                    egui::RichText::new("Claim Your Node")
-                        .size(22.0)
-                        .strong()
-                        .color(FG_DEFAULT),
-                );
-                ui.add_space(8.0);
-                ui.label(
-                    egui::RichText::new("Enter this code on the website")
-                        .size(13.0)
-                        .color(FG_SUBTLE),
-                );
+                ui.label(text("Claim Your Node").size(22.0).strong().color(FG_DEFAULT));
+                ui.add_space(SPACE_SM);
+                ui.label(subtitle("Enter this code on the website"));
                 ui.add_space(28.0);
 
                 code_display(ui, &chars);
 
-                ui.add_space(8.0);
-
+                ui.add_space(SPACE_SM);
                 copy_code_button(ui, code);
-
                 ui.add_space(28.0);
-
                 open_claim_button(ui, &full_url);
             });
         });
@@ -64,21 +49,21 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
 
 fn code_display(ui: &mut egui::Ui, chars: &[char]) {
     ui.horizontal(|ui| {
-        let code_width = 6.0 * 54.0 + 5.0 * 8.0 + 24.0;
+        let code_width = 6.0 * 54.0 + 5.0 * SPACE_SM + 24.0;
         let offset = (ui.available_width() - code_width) / 2.0;
         if offset > 0.0 {
             ui.add_space(offset);
         }
 
-        ui.spacing_mut().item_spacing.x = 8.0;
+        ui.spacing_mut().item_spacing.x = SPACE_SM;
 
         for ch in chars.iter().take(3) {
             char_slot(ui, *ch);
         }
 
-        ui.add_space(4.0);
-        ui.label(egui::RichText::new("•").size(20.0).color(FG_SUBTLE));
-        ui.add_space(4.0);
+        ui.add_space(SPACE_XS);
+        ui.label(text("•").size(20.0).color(FG_SUBTLE));
+        ui.add_space(SPACE_XS);
 
         for ch in chars.iter().skip(3).take(3) {
             char_slot(ui, *ch);
@@ -95,7 +80,7 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
     let show_copied =
         copied_at.is_some_and(|t| t.elapsed().as_secs_f64() < COPIED_FEEDBACK_DURATION);
 
-    let (text, color) = if show_copied {
+    let (label, color) = if show_copied {
         (format!("{} Copied!", icon(Icon::Check)), GREEN_9)
     } else {
         (format!("{} Click to copy", icon(Icon::Copy)), FG_SUBTLE)
@@ -103,8 +88,7 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
 
     if ui
         .add(
-            egui::Label::new(egui::RichText::new(text).size(11.0).color(color))
-                .sense(egui::Sense::click()),
+            egui::Label::new(text(label).size(11.0).color(color)).sense(egui::Sense::click()),
         )
         .on_hover_cursor(egui::CursorIcon::PointingHand)
         .clicked()
@@ -119,9 +103,7 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
 
 fn open_claim_button(ui: &mut egui::Ui, url: &str) {
     let button = egui::Button::new(
-        egui::RichText::new(format!("{}  Open Claim Page", icon(Icon::ExternalLink)))
-            .size(14.0)
-            .color(FG_DEFAULT),
+        title(format!("{}  Open Claim Page", icon(Icon::ExternalLink))).size(14.0),
     )
     .fill(GREEN_9)
     .stroke(egui::Stroke::NONE)
@@ -145,12 +127,8 @@ fn waiting_spinner(ui: &mut egui::Ui) {
             ui.add_space(offset);
         }
         ui.add(egui::widgets::Spinner::new().size(14.0).color(GREEN_9));
-        ui.add_space(8.0);
-        ui.label(
-            egui::RichText::new("Waiting for claim...")
-                .size(13.0)
-                .color(FG_SUBTLE),
-        );
+        ui.add_space(SPACE_SM);
+        ui.label(text("Waiting for claim...").size(13.0).color(FG_SUBTLE));
     });
 }
 
@@ -162,7 +140,7 @@ fn char_slot(ui: &mut egui::Ui, ch: char) {
         .inner_margin(egui::Margin::symmetric(14.0, 10.0))
         .show(ui, |ui| {
             ui.label(
-                egui::RichText::new(ch.to_string())
+                text(ch.to_string())
                     .size(26.0)
                     .monospace()
                     .strong()

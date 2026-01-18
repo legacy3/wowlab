@@ -1,98 +1,51 @@
-use egui::{Color32, Rounding, Shadow, Stroke, Vec2};
+use super::icons::{icon, Icon};
+use egui::{Color32, RichText, Rounding, Shadow, Stroke, Vec2};
 
-// =============================================================================
-// SLATE COLOR SCALE (matches portal's dark mode)
-// 12-step scale from Radix Colors
-// =============================================================================
+// Radix Colors - Slate scale (dark mode)
+pub const SLATE_1: Color32 = Color32::from_rgb(17, 17, 19);
+pub const SLATE_2: Color32 = Color32::from_rgb(24, 25, 27);
+pub const SLATE_3: Color32 = Color32::from_rgb(33, 34, 37);
+pub const SLATE_4: Color32 = Color32::from_rgb(39, 42, 45);
+pub const SLATE_5: Color32 = Color32::from_rgb(46, 49, 53);
+pub const SLATE_6: Color32 = Color32::from_rgb(54, 58, 63);
+pub const SLATE_7: Color32 = Color32::from_rgb(67, 72, 78);
+pub const SLATE_8: Color32 = Color32::from_rgb(90, 97, 105);
+pub const SLATE_9: Color32 = Color32::from_rgb(105, 110, 119);
+pub const SLATE_11: Color32 = Color32::from_rgb(176, 180, 186);
+pub const SLATE_12: Color32 = Color32::from_rgb(237, 238, 240);
 
-/// Darkest background - app canvas
-pub const SLATE_1: Color32 = Color32::from_rgb(17, 17, 19); // #111113
-/// Panel/card backgrounds
-pub const SLATE_2: Color32 = Color32::from_rgb(24, 25, 27); // #18191b
-/// Subtle background
-pub const SLATE_3: Color32 = Color32::from_rgb(33, 34, 37); // #212225
-/// Subtle background hover
-pub const SLATE_4: Color32 = Color32::from_rgb(39, 42, 45); // #272a2d
-/// Subtle background active
-pub const SLATE_5: Color32 = Color32::from_rgb(46, 49, 53); // #2e3135
-/// Border default
-pub const SLATE_6: Color32 = Color32::from_rgb(54, 58, 63); // #363a3f
-/// Border hover
-pub const SLATE_7: Color32 = Color32::from_rgb(67, 72, 78); // #43484e
-/// Stronger UI element
-pub const SLATE_8: Color32 = Color32::from_rgb(90, 97, 105); // #5a6169
-/// Muted text / placeholder
-pub const SLATE_9: Color32 = Color32::from_rgb(105, 110, 119); // #696e77
-/// Muted text hover
-pub const SLATE_10: Color32 = Color32::from_rgb(119, 123, 132); // #777b84
-/// Secondary text
-pub const SLATE_11: Color32 = Color32::from_rgb(176, 180, 186); // #b0b4ba
-/// Primary text
-pub const SLATE_12: Color32 = Color32::from_rgb(237, 238, 240); // #edeef0
+// Accent colors
+pub const GREEN_9: Color32 = Color32::from_rgb(70, 167, 88);
+pub const AMBER_9: Color32 = Color32::from_rgb(255, 197, 61);
+pub const AMBER_11: Color32 = Color32::from_rgb(171, 105, 0);
+pub const RED_9: Color32 = Color32::from_rgb(229, 72, 77);
+pub const BLUE_9: Color32 = Color32::from_rgb(0, 144, 255);
+pub const BLUE_11: Color32 = Color32::from_rgb(82, 169, 255);
 
-// =============================================================================
-// ACCENT COLORS
-// =============================================================================
-
-/// Success / Primary CTA - grass green
-pub const GREEN_9: Color32 = Color32::from_rgb(70, 167, 88); // #46a758
-pub const GREEN_10: Color32 = Color32::from_rgb(60, 151, 77); // #3c974d (hover)
-
-/// Warning - amber
-pub const AMBER_9: Color32 = Color32::from_rgb(255, 197, 61); // #ffc53d
-pub const AMBER_11: Color32 = Color32::from_rgb(171, 105, 0); // #ab6900 (text)
-
-/// Error - red
-pub const RED_9: Color32 = Color32::from_rgb(229, 72, 77); // #e5484d
-pub const RED_10: Color32 = Color32::from_rgb(220, 62, 66); // #dc3e42 (hover)
-
-/// Info - blue
-pub const BLUE_9: Color32 = Color32::from_rgb(0, 144, 255); // #0090ff
-pub const BLUE_11: Color32 = Color32::from_rgb(82, 169, 255); // #52a9ff (text)
-
-// =============================================================================
-// SEMANTIC TOKENS
-// =============================================================================
-
-/// Primary foreground text
+// Semantic tokens
 pub const FG_DEFAULT: Color32 = SLATE_12;
-/// Secondary text
 pub const FG_MUTED: Color32 = SLATE_11;
-/// Tertiary/placeholder text
 pub const FG_SUBTLE: Color32 = SLATE_9;
-
-/// App background
 pub const BG_CANVAS: Color32 = SLATE_1;
-/// Surface background (cards, panels)
 pub const BG_SURFACE: Color32 = SLATE_2;
-/// Subtle background for nested elements
 pub const BG_SUBTLE: Color32 = SLATE_3;
-/// Subtle hover
 pub const BG_SUBTLE_HOVER: Color32 = SLATE_4;
-/// Subtle active
 pub const BG_SUBTLE_ACTIVE: Color32 = SLATE_5;
-
-/// Default border
 pub const BORDER: Color32 = SLATE_6;
-/// Hover border
 pub const BORDER_HOVER: Color32 = SLATE_7;
 
-// =============================================================================
-// RADIUS SCALE (matches portal's l1/l2/l3)
-// =============================================================================
-
-/// Small radius - inputs, small buttons
+// Radius
 pub const RADIUS_SM: f32 = 6.0;
-/// Medium radius - buttons, badges
 pub const RADIUS_MD: f32 = 8.0;
-/// Large radius - cards, panels, modals
 pub const RADIUS_LG: f32 = 12.0;
 
-// =============================================================================
-// SHADOWS
-// =============================================================================
+// Spacing constants
+pub const SPACE_XS: f32 = 4.0;
+pub const SPACE_SM: f32 = 8.0;
+pub const SPACE_MD: f32 = 12.0;
+pub const SPACE_LG: f32 = 16.0;
 
-/// Small shadow for subtle depth
+// Shadows
 pub fn shadow_sm() -> Shadow {
     Shadow {
         offset: [0.0, 2.0].into(),
@@ -102,7 +55,6 @@ pub fn shadow_sm() -> Shadow {
     }
 }
 
-/// Medium shadow for cards
 pub fn shadow_md() -> Shadow {
     Shadow {
         offset: [0.0, 4.0].into(),
@@ -112,7 +64,6 @@ pub fn shadow_md() -> Shadow {
     }
 }
 
-/// Large shadow for modals/popovers
 pub fn shadow_lg() -> Shadow {
     Shadow {
         offset: [0.0, 8.0].into(),
@@ -122,10 +73,7 @@ pub fn shadow_lg() -> Shadow {
     }
 }
 
-// =============================================================================
-// THEME APPLICATION
-// =============================================================================
-
+// Theme application
 pub fn apply_theme(ctx: &egui::Context) {
     use egui::{style::Selection, Visuals};
 
@@ -140,23 +88,16 @@ pub fn apply_theme(ctx: &egui::Context) {
         hyperlink_color: BLUE_11,
         warn_fg_color: AMBER_11,
         error_fg_color: RED_9,
-
-        // Window styling
         window_rounding: Rounding::same(RADIUS_LG),
         window_shadow: shadow_lg(),
         window_stroke: Stroke::new(1.0, BORDER),
-
-        // Popup styling
         menu_rounding: Rounding::same(RADIUS_MD),
         popup_shadow: shadow_md(),
-
         selection: Selection {
             bg_fill: GREEN_9.gamma_multiply(0.25),
             stroke: Stroke::new(1.0, GREEN_9),
         },
-
         widgets: egui::style::Widgets {
-            // Non-interactive: labels, static content
             noninteractive: egui::style::WidgetVisuals {
                 bg_fill: BG_SURFACE,
                 weak_bg_fill: BG_SURFACE,
@@ -165,7 +106,6 @@ pub fn apply_theme(ctx: &egui::Context) {
                 rounding: Rounding::same(RADIUS_SM),
                 expansion: 0.0,
             },
-            // Inactive: buttons at rest
             inactive: egui::style::WidgetVisuals {
                 bg_fill: BG_SUBTLE,
                 weak_bg_fill: BG_SUBTLE,
@@ -174,7 +114,6 @@ pub fn apply_theme(ctx: &egui::Context) {
                 rounding: Rounding::same(RADIUS_SM),
                 expansion: 0.0,
             },
-            // Hovered: mouse over
             hovered: egui::style::WidgetVisuals {
                 bg_fill: BG_SUBTLE_HOVER,
                 weak_bg_fill: BG_SUBTLE_HOVER,
@@ -183,7 +122,6 @@ pub fn apply_theme(ctx: &egui::Context) {
                 rounding: Rounding::same(RADIUS_SM),
                 expansion: 0.0,
             },
-            // Active: pressed
             active: egui::style::WidgetVisuals {
                 bg_fill: BG_SUBTLE_ACTIVE,
                 weak_bg_fill: BG_SUBTLE_ACTIVE,
@@ -192,7 +130,6 @@ pub fn apply_theme(ctx: &egui::Context) {
                 rounding: Rounding::same(RADIUS_SM),
                 expansion: 0.0,
             },
-            // Open: expanded dropdown/menu
             open: egui::style::WidgetVisuals {
                 bg_fill: BG_SUBTLE,
                 weak_bg_fill: BG_SURFACE,
@@ -206,53 +143,135 @@ pub fn apply_theme(ctx: &egui::Context) {
     });
 
     ctx.style_mut(|style| {
-        // Spacing - matches portal's spacing scale
         style.spacing.item_spacing = Vec2::new(8.0, 6.0);
         style.spacing.button_padding = Vec2::new(14.0, 8.0);
         style.spacing.window_margin = egui::Margin::same(16.0);
         style.spacing.menu_margin = egui::Margin::same(6.0);
-
-        // Disable text selection on labels for cleaner UI
         style.interaction.selectable_labels = false;
     });
 }
 
-// =============================================================================
-// FRAME HELPERS
-// =============================================================================
-
-/// Card frame - primary container with border and shadow
+// Frame helpers
 pub fn card_frame() -> egui::Frame {
     egui::Frame::none()
         .fill(BG_SURFACE)
         .stroke(Stroke::new(1.0, BORDER))
         .rounding(Rounding::same(RADIUS_LG))
-        .inner_margin(egui::Margin::same(16.0))
+        .inner_margin(egui::Margin::same(SPACE_LG))
         .shadow(shadow_sm())
 }
 
-/// Elevated card - more prominent with larger shadow
-pub fn card_frame_elevated() -> egui::Frame {
-    egui::Frame::none()
-        .fill(BG_SURFACE)
-        .stroke(Stroke::new(1.0, BORDER))
-        .rounding(Rounding::same(RADIUS_LG))
-        .inner_margin(egui::Margin::same(16.0))
-        .shadow(shadow_md())
-}
-
-/// Subtle card - nested elements, less prominent
-pub fn card_frame_subtle() -> egui::Frame {
+pub fn inner_card() -> egui::Frame {
     egui::Frame::none()
         .fill(BG_SUBTLE)
+        .stroke(Stroke::new(1.0, BORDER))
         .rounding(Rounding::same(RADIUS_MD))
-        .inner_margin(egui::Margin::same(12.0))
+        .inner_margin(egui::Margin::same(SPACE_MD))
 }
 
-/// Header frame - top panel styling
 pub fn header_frame() -> egui::Frame {
     egui::Frame::none()
         .fill(BG_SURFACE)
         .stroke(Stroke::new(1.0, BORDER))
-        .inner_margin(egui::Margin::symmetric(16.0, 12.0))
+        .inner_margin(egui::Margin::symmetric(SPACE_LG, SPACE_MD))
 }
+
+// Text helpers - basic building blocks
+pub fn text(s: impl Into<String>) -> RichText {
+    RichText::new(s)
+}
+
+pub fn icon_text(i: Icon) -> RichText {
+    text(icon(i))
+}
+
+pub fn title(s: impl Into<String>) -> RichText {
+    text(s).size(16.0).strong().color(FG_DEFAULT)
+}
+
+pub fn title_lg(s: impl Into<String>) -> RichText {
+    text(s).size(18.0).strong().color(FG_DEFAULT)
+}
+
+pub fn subtitle(s: impl Into<String>) -> RichText {
+    text(s).size(14.0).color(FG_SUBTLE)
+}
+
+// Layout components - these render complete UI elements
+
+/// Row with icon, label, and optional right-aligned value
+pub fn labeled_row(ui: &mut egui::Ui, i: Icon, label: &str, value: Option<&str>) {
+    ui.horizontal(|ui| {
+        ui.add_space(SPACE_XS);
+        ui.label(icon_text(i).size(12.0).color(FG_SUBTLE));
+        ui.add_space(SPACE_XS);
+        ui.label(text(label).size(11.0).color(FG_MUTED));
+        if let Some(v) = value {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.label(text(v).size(11.0).monospace().color(FG_DEFAULT));
+            });
+        }
+    });
+}
+
+/// Section header - icon + label
+pub fn section_header(ui: &mut egui::Ui, i: Icon, label: &str) {
+    ui.horizontal(|ui| {
+        ui.label(icon_text(i).size(14.0).color(FG_SUBTLE));
+        ui.add_space(SPACE_XS);
+        ui.label(text(label).size(13.0).color(FG_MUTED));
+    });
+}
+
+/// Stat card with icon, label on top and large value below
+pub fn stat_card(ui: &mut egui::Ui, i: Icon, label: &str, value: &str, color: Color32) {
+    inner_card().show(ui, |ui| {
+        ui.horizontal(|ui| {
+            ui.label(icon_text(i).size(12.0).color(FG_SUBTLE));
+            ui.add_space(SPACE_XS);
+            ui.label(text(label).size(11.0).color(FG_MUTED));
+        });
+        ui.add_space(SPACE_XS);
+        ui.label(text(value).size(18.0).strong().monospace().color(color));
+    });
+}
+
+/// Progress bar with label and percentage
+pub fn progress_bar(ui: &mut egui::Ui, i: Icon, label: &str, value: f32, color: Color32) {
+    labeled_row(ui, i, label, Some(&format!("{:.0}%", value * 100.0)));
+    ui.add_space(SPACE_XS);
+
+    let width = ui.available_width();
+    let height = 6.0;
+    let (rect, _) = ui.allocate_exact_size(egui::vec2(width, height), egui::Sense::hover());
+
+    ui.painter().rect_filled(rect, height / 2.0, SLATE_5);
+
+    let fill = rect.width() * value;
+    if fill > 0.0 {
+        let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill, rect.height()));
+        ui.painter().rect_filled(fill_rect, height / 2.0, color);
+    }
+}
+
+/// Two-column grid layout
+pub fn two_columns<F>(ui: &mut egui::Ui, mut content: F)
+where
+    F: FnMut(&mut egui::Ui, usize),
+{
+    let width = (ui.available_width() - SPACE_SM) / 2.0;
+    egui::Grid::new(ui.next_auto_id())
+        .num_columns(2)
+        .spacing([SPACE_SM, SPACE_SM])
+        .min_col_width(width)
+        .max_col_width(width)
+        .show(ui, |ui| {
+            content(ui, 0);
+            content(ui, 1);
+            ui.end_row();
+            content(ui, 2);
+            content(ui, 3);
+            ui.end_row();
+        });
+}
+
