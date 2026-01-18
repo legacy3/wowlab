@@ -1,6 +1,6 @@
-use crate::types::{SimTime, AuraIdx, TargetIdx};
 use crate::combat::ActionState;
-use serde::{Serialize, Deserialize};
+use crate::types::{AuraIdx, SimTime, TargetIdx};
+use serde::{Deserialize, Serialize};
 
 /// Flags for aura behavior
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
@@ -129,9 +129,8 @@ impl AuraInstance {
 
         if self.flags.can_pandemic {
             // Pandemic: up to 30% of base duration can carry over
-            let max_pandemic = SimTime::from_millis(
-                (self.base_duration.as_millis() as f32 * 0.3) as u32
-            );
+            let max_pandemic =
+                SimTime::from_millis((self.base_duration.as_millis() as f32 * 0.3) as u32);
             let carryover = remaining.min(max_pandemic);
             self.expires_at = now + self.base_duration + carryover;
         } else {
@@ -155,7 +154,7 @@ impl AuraInstance {
 
         if let Some(interval) = self.tick_interval {
             if let Some(ref mut next) = self.next_tick {
-                *next = *next + interval;
+                *next += interval;
             }
         }
 

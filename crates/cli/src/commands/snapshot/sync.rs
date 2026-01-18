@@ -50,10 +50,16 @@ pub async fn run_sync(args: SyncArgs) -> Result<()> {
     tracing::info!("Transforming data...");
     let transform_start = Instant::now();
     let data = transform_data(&dbc, &args.tables);
-    tracing::info!("Transforming data in {:.2}s", transform_start.elapsed().as_secs_f64());
+    tracing::info!(
+        "Transforming data in {:.2}s",
+        transform_start.elapsed().as_secs_f64()
+    );
 
     if args.dry_run {
-        tracing::info!("Dry run complete in {:.2}s", total_start.elapsed().as_secs_f64());
+        tracing::info!(
+            "Dry run complete in {:.2}s",
+            total_start.elapsed().as_secs_f64()
+        );
         return Ok(());
     }
 
@@ -161,10 +167,20 @@ async fn insert_all(
         insert_timed("classes", rows.len(), db::insert_classes(tx, rows, patch)).await?;
     }
     if let Some(ref rows) = data.global_colors {
-        insert_timed("global_colors", rows.len(), db::insert_global_colors(tx, rows, patch)).await?;
+        insert_timed(
+            "global_colors",
+            rows.len(),
+            db::insert_global_colors(tx, rows, patch),
+        )
+        .await?;
     }
     if let Some(ref rows) = data.global_strings {
-        insert_timed("global_strings", rows.len(), db::insert_global_strings(tx, rows, patch)).await?;
+        insert_timed(
+            "global_strings",
+            rows.len(),
+            db::insert_global_strings(tx, rows, patch),
+        )
+        .await?;
     }
     Ok(())
 }

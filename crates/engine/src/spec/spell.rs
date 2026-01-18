@@ -1,6 +1,6 @@
-use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool};
 use super::effect::SpellEffect;
-use serde::{Serialize, Deserialize};
+use crate::types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
+use serde::{Deserialize, Serialize};
 
 /// Target type for spells
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

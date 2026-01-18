@@ -215,7 +215,10 @@ impl ApiClient {
         let response = self
             .http
             .post(&url)
-            .json(&Request { node_id, batch_size })
+            .json(&Request {
+                node_id,
+                batch_size,
+            })
             .send()
             .await?;
 

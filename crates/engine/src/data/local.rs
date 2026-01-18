@@ -183,7 +183,10 @@ impl DataResolver for LocalResolver {
         self.ensure_spells_loaded()?;
         let spells = self.spells.read().unwrap();
         let spell_map = spells.as_ref().unwrap();
-        Ok(ids.iter().filter_map(|id| spell_map.get(id).cloned()).collect())
+        Ok(ids
+            .iter()
+            .filter_map(|id| spell_map.get(id).cloned())
+            .collect())
     }
 
     async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, ResolverError> {

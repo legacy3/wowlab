@@ -3,10 +3,10 @@
 //! All Hunter specs have pets with similar base mechanics. This module
 //! provides shared constants and default behavior that specs can override.
 
-use crate::types::{SimTime, UnitIdx, DamageSchool};
-use crate::sim::SimState;
 use crate::combat::DamagePipeline;
 use crate::core::SimEvent;
+use crate::sim::SimState;
+use crate::types::{DamageSchool, SimTime, UnitIdx};
 
 /// Base pet attack speed (ms).
 pub const PET_ATTACK_SPEED: SimTime = SimTime::from_millis(2000);
@@ -20,11 +20,7 @@ pub const PET_AUTO_ATTACK_COEF: f32 = 0.5;
 /// Calculate base pet damage.
 ///
 /// This uses the owner's attack power scaled by inheritance and coefficient.
-pub fn calculate_pet_damage(
-    state: &mut SimState,
-    ap_coef: f32,
-    damage_multiplier: f32,
-) -> f32 {
+pub fn calculate_pet_damage(state: &mut SimState, ap_coef: f32, damage_multiplier: f32) -> f32 {
     let ap = state.player.stats.attack_power();
     let sp = state.player.stats.spell_power();
     let crit = state.player.stats.crit_chance();
@@ -33,9 +29,9 @@ pub fn calculate_pet_damage(
     let inherited_coef = ap_coef * PET_STAT_INHERITANCE;
 
     let result = DamagePipeline::calculate(
-        0.0,             // base damage
-        inherited_coef,  // AP coefficient
-        0.0,             // SP coefficient
+        0.0,            // base damage
+        inherited_coef, // AP coefficient
+        0.0,            // SP coefficient
         ap,
         sp,
         &state.multipliers,
@@ -61,7 +57,12 @@ pub fn default_pet_attack(
     let now = state.now();
 
     // Verify pet is valid
-    if !state.pets.get(pet).map(|p| p.is_valid(now)).unwrap_or(false) {
+    if !state
+        .pets
+        .get(pet)
+        .map(|p| p.is_valid(now))
+        .unwrap_or(false)
+    {
         return;
     }
 

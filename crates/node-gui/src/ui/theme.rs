@@ -274,4 +274,3 @@ where
             ui.end_row();
         });
 }
-

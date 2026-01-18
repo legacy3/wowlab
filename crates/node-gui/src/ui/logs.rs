@@ -111,10 +111,9 @@ fn render_log_list(ui: &mut egui::Ui, filtered: &[(usize, &LogEntry)], filter: &
             let available_width = ui.available_width();
             let expanded_index = filter.expanded_index;
 
-            filter.virtual_list.ui_custom_layout(
-                ui,
-                filtered.len(),
-                |ui, start_index| {
+            filter
+                .virtual_list
+                .ui_custom_layout(ui, filtered.len(), |ui, start_index| {
                     if let Some((original_idx, entry)) = filtered.get(start_index) {
                         let is_expanded = expanded_index == Some(*original_idx);
                         if log_entry_row(ui, entry, available_width, is_expanded) {
@@ -127,8 +126,7 @@ fn render_log_list(ui: &mut egui::Ui, filtered: &[(usize, &LogEntry)], filter: &
                         }
                     }
                     1
-                },
-            );
+                });
         });
 
     if let Some((clicked_idx, was_expanded)) = ui.ctx().memory_mut(|mem| {
@@ -176,7 +174,14 @@ fn log_entry_row(
         .rounding(egui::Rounding::same(SPACE_XS))
         .inner_margin(egui::Margin::symmetric(SPACE_XS, 2.0))
         .show(ui, |ui| {
-            clicked = render_row_content(ui, entry, level_icon, level_color, available_width, is_expanded);
+            clicked = render_row_content(
+                ui,
+                entry,
+                level_icon,
+                level_color,
+                available_width,
+                is_expanded,
+            );
         });
 
     clicked
@@ -236,7 +241,11 @@ fn render_row_content(
 
             if needs_truncate {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let chevron_icon = if is_expanded { Icon::ChevronUp } else { Icon::ChevronDown };
+                    let chevron_icon = if is_expanded {
+                        Icon::ChevronUp
+                    } else {
+                        Icon::ChevronDown
+                    };
                     ui.label(icon_text(chevron_icon).size(11.0).color(SLATE_8));
                 });
             }

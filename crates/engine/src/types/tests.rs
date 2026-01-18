@@ -28,7 +28,10 @@ fn spec_class_mapping() {
 fn spec_primary_resource() {
     assert_eq!(SpecId::BeastMastery.primary_resource(), ResourceType::Focus);
     assert_eq!(SpecId::Fury.primary_resource(), ResourceType::Rage);
-    assert_eq!(SpecId::Assassination.primary_resource(), ResourceType::Energy);
+    assert_eq!(
+        SpecId::Assassination.primary_resource(),
+        ResourceType::Energy
+    );
     assert_eq!(SpecId::Shadow.primary_resource(), ResourceType::Mana);
 }
 

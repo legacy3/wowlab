@@ -1,4 +1,4 @@
-use crate::types::{SpellIdx, AuraIdx, ProcIdx};
+use crate::types::{AuraIdx, ProcIdx, SpellIdx};
 
 // ============================================================================
 // Spell IDs - Core Abilities

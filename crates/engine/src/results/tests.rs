@@ -46,9 +46,30 @@ fn spell_stats_crit_rate() {
 fn collector_record() {
     let mut collector = StatsCollector::new();
 
-    collector.record_damage(SimTime::from_secs(1), SpellIdx(1), TargetIdx(0), 1000.0, false, false);
-    collector.record_damage(SimTime::from_secs(2), SpellIdx(1), TargetIdx(0), 1500.0, true, false);
-    collector.record_damage(SimTime::from_secs(3), SpellIdx(2), TargetIdx(0), 800.0, false, false);
+    collector.record_damage(
+        SimTime::from_secs(1),
+        SpellIdx(1),
+        TargetIdx(0),
+        1000.0,
+        false,
+        false,
+    );
+    collector.record_damage(
+        SimTime::from_secs(2),
+        SpellIdx(1),
+        TargetIdx(0),
+        1500.0,
+        true,
+        false,
+    );
+    collector.record_damage(
+        SimTime::from_secs(3),
+        SpellIdx(2),
+        TargetIdx(0),
+        800.0,
+        false,
+        false,
+    );
 
     assert!((collector.total_damage - 3300.0).abs() < 0.1);
     assert!(collector.spell(SpellIdx(1)).is_some());
@@ -60,7 +81,14 @@ fn collector_dps() {
     let mut collector = StatsCollector::new();
     collector.set_start(SimTime::ZERO);
 
-    collector.record_damage(SimTime::from_secs(5), SpellIdx(1), TargetIdx(0), 5000.0, false, false);
+    collector.record_damage(
+        SimTime::from_secs(5),
+        SpellIdx(1),
+        TargetIdx(0),
+        5000.0,
+        false,
+        false,
+    );
     collector.set_end(SimTime::from_secs(10));
 
     assert!((collector.dps() - 500.0).abs() < 0.1);
@@ -70,8 +98,22 @@ fn collector_dps() {
 fn collector_trace() {
     let mut collector = StatsCollector::new().with_trace();
 
-    collector.record_damage(SimTime::from_secs(1), SpellIdx(1), TargetIdx(0), 1000.0, false, false);
-    collector.record_damage(SimTime::from_secs(2), SpellIdx(2), TargetIdx(0), 2000.0, true, false);
+    collector.record_damage(
+        SimTime::from_secs(1),
+        SpellIdx(1),
+        TargetIdx(0),
+        1000.0,
+        false,
+        false,
+    );
+    collector.record_damage(
+        SimTime::from_secs(2),
+        SpellIdx(2),
+        TargetIdx(0),
+        2000.0,
+        true,
+        false,
+    );
 
     assert_eq!(collector.events().len(), 2);
     assert!(collector.events()[1].is_crit);
@@ -82,8 +124,22 @@ fn breakdown_from_collector() {
     let mut collector = StatsCollector::new();
     collector.set_start(SimTime::ZERO);
 
-    collector.record_damage(SimTime::from_secs(1), SpellIdx(1), TargetIdx(0), 6000.0, false, false);
-    collector.record_damage(SimTime::from_secs(2), SpellIdx(2), TargetIdx(0), 4000.0, false, false);
+    collector.record_damage(
+        SimTime::from_secs(1),
+        SpellIdx(1),
+        TargetIdx(0),
+        6000.0,
+        false,
+        false,
+    );
+    collector.record_damage(
+        SimTime::from_secs(2),
+        SpellIdx(2),
+        TargetIdx(0),
+        4000.0,
+        false,
+        false,
+    );
     collector.set_end(SimTime::from_secs(10));
 
     let mut names = HashMap::new();
@@ -101,7 +157,14 @@ fn breakdown_from_collector() {
 fn breakdown_table() {
     let mut collector = StatsCollector::new();
     collector.set_start(SimTime::ZERO);
-    collector.record_damage(SimTime::from_secs(5), SpellIdx(1), TargetIdx(0), 10000.0, false, false);
+    collector.record_damage(
+        SimTime::from_secs(5),
+        SpellIdx(1),
+        TargetIdx(0),
+        10000.0,
+        false,
+        false,
+    );
     collector.set_end(SimTime::from_secs(10));
 
     let mut names = HashMap::new();
@@ -151,7 +214,14 @@ fn export_csv() {
 fn sim_summary_single() {
     let mut collector = StatsCollector::new();
     collector.set_start(SimTime::ZERO);
-    collector.record_damage(SimTime::from_secs(60), SpellIdx(1), TargetIdx(0), 60000.0, false, false);
+    collector.record_damage(
+        SimTime::from_secs(60),
+        SpellIdx(1),
+        TargetIdx(0),
+        60000.0,
+        false,
+        false,
+    );
     collector.set_end(SimTime::from_secs(60));
 
     let summary = SimSummary::from_single(&collector);

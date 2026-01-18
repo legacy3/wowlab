@@ -1,12 +1,12 @@
 use super::{SimConfig, Simulation};
-use crate::handler::SpecHandler;
 use crate::actor::Player;
-use crate::math::{Summary, RunningStats};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::time::Instant;
-use rayon::prelude::*;
+use crate::handler::SpecHandler;
+use crate::math::{RunningStats, Summary};
 use parking_lot::Mutex;
+use rayon::prelude::*;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Arc;
+use std::time::Instant;
 
 /// Results from a batch of iterations
 #[derive(Clone, Debug)]

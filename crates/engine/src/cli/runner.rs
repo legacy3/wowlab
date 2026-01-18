@@ -1,11 +1,11 @@
-use crate::sim::{SimConfig, Simulation, BatchResults, BatchRunner, ExactProgress};
-use crate::handler::{SpecHandler, create_handler};
+use super::{banner, Args, Command, GearConfig, Output, OutputFormat, SpecArg};
 use crate::actor::Player;
+use crate::handler::{create_handler, SpecHandler};
 use crate::rotation::Rotation;
-use super::{Args, Command, SpecArg, OutputFormat, GearConfig, Output, banner};
+use crate::sim::{BatchResults, BatchRunner, ExactProgress, SimConfig, Simulation};
 use std::sync::Arc;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 use tracing::{debug, info, instrument};
 
 pub struct Runner;
@@ -24,27 +24,13 @@ impl Runner {
                 gear,
                 trace,
                 threads: _, // Handled in main.rs before run()
-            } => {
-                Self::run_sim(
-                    spec,
-                    duration,
-                    iterations,
-                    targets,
-                    seed,
-                    output,
-                    rotation,
-                    gear,
-                    trace,
-                )
-            }
+            } => Self::run_sim(
+                spec, duration, iterations, targets, seed, output, rotation, gear, trace,
+            ),
 
-            Command::Specs => {
-                Self::list_specs()
-            }
+            Command::Specs => Self::list_specs(),
 
-            Command::Validate { file } => {
-                Self::validate_rotation(&file)
-            }
+            Command::Validate { file } => Self::validate_rotation(&file),
 
             Command::Version => {
                 println!("engine_new v{}", env!("CARGO_PKG_VERSION"));
@@ -54,6 +40,7 @@ impl Runner {
     }
 
     #[instrument(skip(gear_file, rotation_file), fields(spec = ?spec, iterations, targets, duration))]
+    #[allow(clippy::too_many_arguments)]
     fn run_sim(
         spec: SpecArg,
         duration: f32,
@@ -107,8 +94,7 @@ impl Runner {
         );
 
         // Setup config
-        let mut config = SimConfig::default()
-            .with_duration(duration);
+        let mut config = SimConfig::default().with_duration(duration);
 
         if let Some(s) = seed {
             config = config.with_seed(s);
@@ -128,11 +114,16 @@ impl Runner {
             let mut sim = Simulation::new(handler, config, player);
             sim.run();
 
-            info!(dps = sim.dps(), damage = sim.total_damage(), "Simulation complete");
+            info!(
+                dps = sim.dps(),
+                damage = sim.total_damage(),
+                "Simulation complete"
+            );
             out.single_result(&sim, output_format);
         } else {
             debug!(iterations, "Running batch simulation");
-            let (results, elapsed) = Self::run_batch(handler, config, player, iterations, &out, output_format);
+            let (results, elapsed) =
+                Self::run_batch(handler, config, player, iterations, &out, output_format);
             info!(
                 mean_dps = results.mean_dps,
                 std_dev = results.std_dev,
@@ -157,8 +148,8 @@ impl Runner {
         let num_threads = rayon::current_num_threads();
 
         // Create batch runner
-        let runner = BatchRunner::with_handler(handler, config, player_template)
-            .with_iterations(iterations);
+        let runner =
+            BatchRunner::with_handler(handler, config, player_template).with_iterations(iterations);
 
         // Create progress tracker
         let progress = Arc::new(ExactProgress::new(iterations));
@@ -182,11 +173,7 @@ impl Runner {
                     let mean = progress_clone.running_mean();
 
                     if completed > 0 {
-                        pb.set_message(format!(
-                            "~{:.0} DPS | {:.0} iter/s",
-                            mean,
-                            throughput
-                        ));
+                        pb.set_message(format!("~{:.0} DPS | {:.0} iter/s", mean, throughput));
                     }
 
                     thread::sleep(Duration::from_millis(50));
@@ -228,8 +215,7 @@ impl Runner {
     fn load_rotation_script(spec: SpecArg, path: Option<&str>) -> Result<String, String> {
         if let Some(p) = path {
             debug!(path = p, "Loading rotation file");
-            std::fs::read_to_string(p)
-                .map_err(|e| format!("Failed to read rotation file: {}", e))
+            std::fs::read_to_string(p).map_err(|e| format!("Failed to read rotation file: {}", e))
         } else {
             // Use default rotation for spec
             let default_path = match spec {
@@ -244,8 +230,8 @@ impl Runner {
 
     fn validate_rotation(file: &str) -> Result<(), String> {
         debug!(file, "Validating rotation file");
-        let content = std::fs::read_to_string(file)
-            .map_err(|e| format!("Failed to read file: {}", e))?;
+        let content =
+            std::fs::read_to_string(file).map_err(|e| format!("Failed to read file: {}", e))?;
 
         // Parse JSON rotation
         let rotation = Rotation::from_json(&content)
@@ -254,7 +240,11 @@ impl Runner {
         info!(name = %rotation.name, actions = rotation.actions.len(), "Parsed rotation");
 
         // Validation is parsing-only for now, as compilation requires spec-specific resolver
-        println!("Rotation '{}' is valid ({} actions)", rotation.name, rotation.actions.len());
+        println!(
+            "Rotation '{}' is valid ({} actions)",
+            rotation.name,
+            rotation.actions.len()
+        );
         println!("  Variables: {}", rotation.variables.len());
         println!("  Lists: {}", rotation.lists.len());
 

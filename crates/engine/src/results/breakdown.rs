@@ -33,15 +33,25 @@ impl DamageBreakdown {
         let duration = collector.duration().as_secs_f32();
         let total = collector.total_damage;
 
-        let mut entries: Vec<_> = collector.spells()
+        let mut entries: Vec<_> = collector
+            .spells()
             .map(|stats| {
-                let name = spell_names.get(&stats.spell)
+                let name = spell_names
+                    .get(&stats.spell)
                     .cloned()
                     .unwrap_or_else(|| format!("Spell_{}", stats.spell.0));
 
                 let damage = stats.total();
-                let dps = if duration > 0.0 { damage / duration as f64 } else { 0.0 };
-                let percent = if total > 0.0 { (damage / total * 100.0) as f32 } else { 0.0 };
+                let dps = if duration > 0.0 {
+                    damage / duration as f64
+                } else {
+                    0.0
+                };
+                let percent = if total > 0.0 {
+                    (damage / total * 100.0) as f32
+                } else {
+                    0.0
+                };
 
                 BreakdownEntry {
                     spell: stats.spell,
@@ -50,7 +60,9 @@ impl DamageBreakdown {
                     dps,
                     percent,
                     count: stats.count + stats.tick_count,
-                    average: ((stats.total_damage + stats.tick_damage) / (stats.count + stats.tick_count).max(1) as f64) as f32,
+                    average: ((stats.total_damage + stats.tick_damage)
+                        / (stats.count + stats.tick_count).max(1) as f64)
+                        as f32,
                     crit_rate: stats.crit_rate(),
                 }
             })
@@ -62,7 +74,11 @@ impl DamageBreakdown {
         Self {
             entries,
             total_damage: total,
-            total_dps: if duration > 0.0 { total / duration as f64 } else { 0.0 },
+            total_dps: if duration > 0.0 {
+                total / duration as f64
+            } else {
+                0.0
+            },
             duration_secs: duration,
         }
     }
@@ -81,21 +97,14 @@ impl DamageBreakdown {
         for entry in &self.entries {
             output.push_str(&format!(
                 "{:30} {:>12.0} {:>10.1} {:>7.1}% {:>8} {:>8.0}\n",
-                entry.name,
-                entry.damage,
-                entry.dps,
-                entry.percent,
-                entry.count,
-                entry.average,
+                entry.name, entry.damage, entry.dps, entry.percent, entry.count, entry.average,
             ));
         }
 
         output.push_str(&"-".repeat(80));
         output.push_str(&format!(
             "\n{:30} {:>12.0} {:>10.1}\n",
-            "Total",
-            self.total_damage,
-            self.total_dps,
+            "Total", self.total_damage, self.total_dps,
         ));
 
         output

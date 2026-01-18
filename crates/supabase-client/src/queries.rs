@@ -37,7 +37,9 @@ impl SupabaseClient {
         id: i32,
         columns: Option<&[&str]>,
     ) -> Result<SpellDataFlat, SupabaseError> {
-        let select = columns.map(columns_to_select).unwrap_or_else(|| "*".to_string());
+        let select = columns
+            .map(columns_to_select)
+            .unwrap_or_else(|| "*".to_string());
         let path = format!("spell_data_flat?id=eq.{}&select={}", id, select);
         let spells: Vec<SpellDataFlat> = self.get(&path).await?.json().await?;
         first_or_not_found(spells, "spell_data_flat", "id", id)
@@ -49,7 +51,11 @@ impl SupabaseClient {
         id: i32,
         columns: &[&str],
     ) -> Result<T, SupabaseError> {
-        let path = format!("spell_data_flat?id=eq.{}&select={}", id, columns_to_select(columns));
+        let path = format!(
+            "spell_data_flat?id=eq.{}&select={}",
+            id,
+            columns_to_select(columns)
+        );
         let items: Vec<T> = self.get(&path).await?.json().await?;
         first_or_not_found(items, "spell_data_flat", "id", id)
     }
@@ -64,8 +70,14 @@ impl SupabaseClient {
             return Ok(vec![]);
         }
 
-        let select = columns.map(columns_to_select).unwrap_or_else(|| "*".to_string());
-        let path = format!("spell_data_flat?id=in.({})&select={}", ids_to_list(ids), select);
+        let select = columns
+            .map(columns_to_select)
+            .unwrap_or_else(|| "*".to_string());
+        let path = format!(
+            "spell_data_flat?id=in.({})&select={}",
+            ids_to_list(ids),
+            select
+        );
         Ok(self.get(&path).await?.json().await?)
     }
 
@@ -106,7 +118,9 @@ impl SupabaseClient {
         id: i32,
         columns: Option<&[&str]>,
     ) -> Result<ItemDataFlat, SupabaseError> {
-        let select = columns.map(columns_to_select).unwrap_or_else(|| "*".to_string());
+        let select = columns
+            .map(columns_to_select)
+            .unwrap_or_else(|| "*".to_string());
         let path = format!("item_data_flat?id=eq.{}&select={}", id, select);
         let items: Vec<ItemDataFlat> = self.get(&path).await?.json().await?;
         first_or_not_found(items, "item_data_flat", "id", id)

@@ -1,4 +1,4 @@
-use crate::types::{SpecId, MasteryEffect};
+use crate::types::{MasteryEffect, SpecId};
 
 /// Class/spec coefficients for stat calculations
 #[derive(Clone, Debug)]
@@ -17,8 +17,8 @@ pub struct SpecCoefficients {
 
 impl SpecCoefficients {
     pub fn for_spec(spec: SpecId) -> Self {
-        use SpecId::*;
         use MasteryEffect::*;
+        use SpecId::*;
 
         match spec {
             BeastMastery => Self {

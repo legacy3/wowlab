@@ -117,7 +117,7 @@ unsafe impl Sync for SyncJitModule {}
 /// A compiled rotation ready for execution.
 pub struct CompiledRotation {
     func_ptr: SyncFnPtr,
-    _module: SyncJitModule,  // Owns JIT memory, dropped when rotation is dropped
+    _module: SyncJitModule, // Owns JIT memory, dropped when rotation is dropped
     schema: ContextSchema,
 }
 
@@ -140,12 +140,18 @@ impl CompiledRotation {
         // If it was parsed with from_json (unresolved), we need to re-parse from JSON.
         // Try to detect this by checking if we have any domain expressions.
         let needs_resolution = rotation.actions.iter().any(|a| {
-            if let AstAction::Cast { condition: Some(c), .. } = a {
+            if let AstAction::Cast {
+                condition: Some(c), ..
+            } = a
+            {
                 matches!(c, Expr::UserVar { .. })
             } else {
                 false
             }
-        }) || rotation.variables.values().any(|v| matches!(v, Expr::UserVar { .. }));
+        }) || rotation
+            .variables
+            .values()
+            .any(|v| matches!(v, Expr::UserVar { .. }));
 
         if needs_resolution {
             // Re-serialize and re-parse - this works because we use the original JSON format
@@ -161,7 +167,6 @@ impl CompiledRotation {
 
     /// Compile an already-resolved rotation.
     fn compile_resolved(resolved: Rotation, resolver: &SpecResolver) -> Result<Self> {
-
         // Build context schema by walking all expressions
         let mut schema_builder = SchemaBuilder::new();
 
@@ -429,7 +434,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                             val
                         }
                     };
-                    self.builder.ins().store(MemFlags::trusted(), int_val, addr, 0);
+                    self.builder
+                        .ins()
+                        .store(MemFlags::trusted(), int_val, addr, 0);
                 }
                 FieldType::Float => {
                     let (val, is_float) = self.compile_numeric_expr(init_expr)?;
@@ -438,7 +445,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                     } else {
                         self.builder.ins().fcvt_from_sint(types::F64, val)
                     };
-                    self.builder.ins().store(MemFlags::trusted(), float_val, addr, 0);
+                    self.builder
+                        .ins()
+                        .store(MemFlags::trusted(), float_val, addr, 0);
                 }
             }
         }
@@ -507,8 +516,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                     .get(list)
                     .ok_or_else(|| Error::UnknownList(list.clone()))?;
 
-                let run_list =
-                    |s: &mut Self| -> Result<Value> { s.compile_action_chain(list_actions, 0, lists) };
+                let run_list = |s: &mut Self| -> Result<Value> {
+                    s.compile_action_chain(list_actions, 0, lists)
+                };
 
                 if let Some(cond) = condition {
                     let cond_val = self.compile_bool_expr(cond)?;
@@ -535,7 +545,11 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 self.compile_if_then_else(cond_val, |s| next(s), |_| Ok(wait_result))
             }
 
-            AstAction::SetVar { name, value, condition } => {
+            AstAction::SetVar {
+                name,
+                value,
+                condition,
+            } => {
                 let do_set = |s: &mut Self| -> Result<Value> {
                     s.compile_set_var(name, value)?;
                     next(s)
@@ -549,7 +563,12 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 }
             }
 
-            AstAction::ModifyVar { name, op, value, condition } => {
+            AstAction::ModifyVar {
+                name,
+                op,
+                value,
+                condition,
+            } => {
                 let do_modify = |s: &mut Self| -> Result<Value> {
                     s.compile_modify_var(name, op, value)?;
                     next(s)
@@ -605,12 +624,7 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
         }
     }
 
-    fn compile_if_then_else<T, E>(
-        &mut self,
-        cond: Value,
-        then_val: T,
-        else_val: E,
-    ) -> Result<Value>
+    fn compile_if_then_else<T, E>(&mut self, cond: Value, then_val: T, else_val: E) -> Result<Value>
     where
         T: FnOnce(&mut Self) -> Result<Value>,
         E: FnOnce(&mut Self) -> Result<Value>,
@@ -802,12 +816,9 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 Ok(self.builder.ins().bxor(val, one))
             }
 
-            Expr::Gt { left, right } => self.compile_comparison(
-                FloatCC::GreaterThan,
-                IntCC::SignedGreaterThan,
-                left,
-                right,
-            ),
+            Expr::Gt { left, right } => {
+                self.compile_comparison(FloatCC::GreaterThan, IntCC::SignedGreaterThan, left, right)
+            }
             Expr::Gte { left, right } => self.compile_comparison(
                 FloatCC::GreaterThanOrEqual,
                 IntCC::SignedGreaterThanOrEqual,
@@ -912,7 +923,10 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                     .fcmp(FloatCC::GreaterThanOrEqual, abs_diff, epsilon))
             } else {
                 // eq: |a - b| < EPSILON
-                Ok(self.builder.ins().fcmp(FloatCC::LessThan, abs_diff, epsilon))
+                Ok(self
+                    .builder
+                    .ins()
+                    .fcmp(FloatCC::LessThan, abs_diff, epsilon))
             }
         } else {
             // Integer comparison is exact
@@ -1084,10 +1098,7 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                     };
                     Ok((self.builder.ins().fmin(a_f, b_f), true))
                 } else {
-                    let cmp = self
-                        .builder
-                        .ins()
-                        .icmp(IntCC::SignedLessThan, a_val, b_val);
+                    let cmp = self.builder.ins().icmp(IntCC::SignedLessThan, a_val, b_val);
                     Ok((self.builder.ins().select(cmp, a_val, b_val), false))
                 }
             }
@@ -1414,7 +1425,8 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                 let (operand, operand_is_float) = self.compile_numeric_expr(value)?;
 
                 // Promote to float if needed
-                let is_float = current_is_float || operand_is_float || field_type == FieldType::Float;
+                let is_float =
+                    current_is_float || operand_is_float || field_type == FieldType::Float;
                 let (curr_val, op_val) = if is_float {
                     let c = if current_is_float {
                         current
@@ -1472,7 +1484,10 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                         if is_float {
                             self.builder.ins().fmin(curr_val, op_val)
                         } else {
-                            let cmp = self.builder.ins().icmp(IntCC::SignedLessThan, curr_val, op_val);
+                            let cmp =
+                                self.builder
+                                    .ins()
+                                    .icmp(IntCC::SignedLessThan, curr_val, op_val);
                             self.builder.ins().select(cmp, curr_val, op_val)
                         }
                     }
@@ -1480,7 +1495,10 @@ impl<'a, 'b> ExprCompiler<'a, 'b> {
                         if is_float {
                             self.builder.ins().fmax(curr_val, op_val)
                         } else {
-                            let cmp = self.builder.ins().icmp(IntCC::SignedGreaterThan, curr_val, op_val);
+                            let cmp =
+                                self.builder
+                                    .ins()
+                                    .icmp(IntCC::SignedGreaterThan, curr_val, op_val);
                             self.builder.ins().select(cmp, curr_val, op_val)
                         }
                     }

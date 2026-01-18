@@ -68,11 +68,7 @@ impl PopulateContext for TargetExpr {
                 write_f64(buffer, offset, health as f64);
             }
             Self::HealthMax => {
-                let max_health = state
-                    .enemies
-                    .primary()
-                    .map(|e| e.max_health)
-                    .unwrap_or(0.0);
+                let max_health = state.enemies.primary().map(|e| e.max_health).unwrap_or(0.0);
                 write_f64(buffer, offset, max_health as f64);
             }
             Self::HealthPercent => {
@@ -127,11 +123,7 @@ impl PopulateContext for TargetExpr {
                 write_i32(buffer, offset, count as i32);
             }
             Self::Distance => {
-                let distance = state
-                    .enemies
-                    .primary()
-                    .map(|e| e.distance)
-                    .unwrap_or(5.0);
+                let distance = state.enemies.primary().map(|e| e.distance).unwrap_or(5.0);
                 write_f64(buffer, offset, distance as f64);
             }
             Self::Casting => {

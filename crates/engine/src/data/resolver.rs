@@ -6,9 +6,7 @@
 //! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
 
 use async_trait::async_trait;
-use parsers::{
-    AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections,
-};
+use parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections};
 use std::path::PathBuf;
 
 /// Errors that can occur during data resolution.

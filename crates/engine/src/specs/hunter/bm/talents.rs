@@ -2,8 +2,8 @@
 //!
 //! Each talent defines its damage modifiers, cooldown changes, and effects.
 
-use crate::spec::{TalentDef, DamageMod, ModCondition};
 use super::constants::*;
+use crate::spec::{DamageMod, ModCondition, TalentDef};
 
 /// Single source of truth for talent flag to name mapping.
 const TALENT_MAP: &[(TalentFlags, &str)] = &[
@@ -108,8 +108,8 @@ fn killer_instinct() -> TalentDef {
 
 fn killer_cobra() -> TalentDef {
     TalentDef::new("killer_cobra", "Killer Cobra")
-        // While Bestial Wrath is active, Cobra Shot resets Kill Command CD
-        // This is handled via effects, not damage mods
+    // While Bestial Wrath is active, Cobra Shot resets Kill Command CD
+    // This is handled via effects, not damage mods
 }
 
 fn training_expert() -> TalentDef {
@@ -124,16 +124,15 @@ fn training_expert() -> TalentDef {
 
 fn animal_companion() -> TalentDef {
     TalentDef::new("animal_companion", "Animal Companion")
-        // Summon a second pet - handled via spell effects
+    // Summon a second pet - handled via spell effects
 }
 
 fn solitary_companion() -> TalentDef {
     TalentDef::new("solitary_companion", "Solitary Companion")
         // +10% damage without Animal Companion
-        .damage_mod(
-            DamageMod::always("solitary_companion", 1.10)
-                .when(ModCondition::TalentEnabled("solitary_companion".to_string()))
-        )
+        .damage_mod(DamageMod::always("solitary_companion", 1.10).when(
+            ModCondition::TalentEnabled("solitary_companion".to_string()),
+        ))
 }
 
 fn wild_hunt() -> TalentDef {
@@ -144,7 +143,7 @@ fn wild_hunt() -> TalentDef {
 
 fn brutal_companion() -> TalentDef {
     TalentDef::new("brutal_companion", "Brutal Companion")
-        // Extra pet attack at max Frenzy - handled in handler
+    // Extra pet attack at max Frenzy - handled in handler
 }
 
 // ============================================================================
@@ -154,83 +153,81 @@ fn brutal_companion() -> TalentDef {
 fn piercing_fangs() -> TalentDef {
     TalentDef::new("piercing_fangs", "Piercing Fangs")
         // Pet crit damage during Bestial Wrath
-        .damage_mod(
-            DamageMod {
-                name: "piercing_fangs".to_string(),
-                multiplier: 1.0 + PIERCING_FANGS_CRIT_DAMAGE,
-                condition: ModCondition::And(vec![
-                    ModCondition::PetAbility,
-                    ModCondition::BuffActive(BESTIAL_WRATH_BUFF),
-                    ModCondition::OnCrit,
-                ]),
-                priority: 0,
-            }
-        )
+        .damage_mod(DamageMod {
+            name: "piercing_fangs".to_string(),
+            multiplier: 1.0 + PIERCING_FANGS_CRIT_DAMAGE,
+            condition: ModCondition::And(vec![
+                ModCondition::PetAbility,
+                ModCondition::BuffActive(BESTIAL_WRATH_BUFF),
+                ModCondition::OnCrit,
+            ]),
+            priority: 0,
+        })
 }
 
 fn serpentine_rhythm() -> TalentDef {
     TalentDef::new("serpentine_rhythm", "Serpentine Rhythm")
         // Cobra Shot damage bonus per stack
-        .damage_mod(
-            DamageMod {
-                name: "serpentine_rhythm".to_string(),
-                multiplier: 1.0, // Calculated at runtime based on stacks
-                condition: ModCondition::And(vec![
-                    ModCondition::ForSpell(COBRA_SHOT),
-                    ModCondition::PerStack { aura: SERPENTINE_RHYTHM, per_stack: SERPENTINE_RHYTHM_DAMAGE },
-                ]),
-                priority: 0,
-            }
-        )
+        .damage_mod(DamageMod {
+            name: "serpentine_rhythm".to_string(),
+            multiplier: 1.0, // Calculated at runtime based on stacks
+            condition: ModCondition::And(vec![
+                ModCondition::ForSpell(COBRA_SHOT),
+                ModCondition::PerStack {
+                    aura: SERPENTINE_RHYTHM,
+                    per_stack: SERPENTINE_RHYTHM_DAMAGE,
+                },
+            ]),
+            priority: 0,
+        })
 }
 
 fn go_for_the_throat() -> TalentDef {
     TalentDef::new("go_for_the_throat", "Go for the Throat")
         // KC crit damage scales with crit rating
-        .damage_mod(
-            DamageMod {
-                name: "go_for_the_throat".to_string(),
-                multiplier: 1.0, // Calculated at runtime
-                condition: ModCondition::And(vec![
-                    ModCondition::ForSpell(KILL_COMMAND),
-                    ModCondition::OnCrit,
-                    ModCondition::StatScaling { base: GO_FOR_THE_THROAT_SCALING },
-                ]),
-                priority: 0,
-            }
-        )
+        .damage_mod(DamageMod {
+            name: "go_for_the_throat".to_string(),
+            multiplier: 1.0, // Calculated at runtime
+            condition: ModCondition::And(vec![
+                ModCondition::ForSpell(KILL_COMMAND),
+                ModCondition::OnCrit,
+                ModCondition::StatScaling {
+                    base: GO_FOR_THE_THROAT_SCALING,
+                },
+            ]),
+            priority: 0,
+        })
 }
 
 fn pack_mentality() -> TalentDef {
     TalentDef::new("pack_mentality", "Pack Mentality")
         // KC damage bonus with special pet buff
-        .damage_mod(
-            DamageMod {
-                name: "pack_mentality".to_string(),
-                multiplier: 1.0 + PACK_MENTALITY_BONUS,
-                condition: ModCondition::And(vec![
-                    ModCondition::ForSpell(KILL_COMMAND),
-                    ModCondition::BuffActive(PACK_MENTALITY),
-                ]),
-                priority: 0,
-            }
-        )
+        .damage_mod(DamageMod {
+            name: "pack_mentality".to_string(),
+            multiplier: 1.0 + PACK_MENTALITY_BONUS,
+            condition: ModCondition::And(vec![
+                ModCondition::ForSpell(KILL_COMMAND),
+                ModCondition::BuffActive(PACK_MENTALITY),
+            ]),
+            priority: 0,
+        })
 }
 
 fn wild_instincts() -> TalentDef {
     TalentDef::new("wild_instincts", "Wild Instincts")
         // KC bonus vs debuffed targets - per stack
-        .damage_mod(
-            DamageMod {
-                name: "wild_instincts".to_string(),
-                multiplier: 1.0,
-                condition: ModCondition::And(vec![
-                    ModCondition::ForSpell(KILL_COMMAND),
-                    ModCondition::PerStack { aura: WILD_INSTINCTS, per_stack: 0.05 },
-                ]),
-                priority: 0,
-            }
-        )
+        .damage_mod(DamageMod {
+            name: "wild_instincts".to_string(),
+            multiplier: 1.0,
+            condition: ModCondition::And(vec![
+                ModCondition::ForSpell(KILL_COMMAND),
+                ModCondition::PerStack {
+                    aura: WILD_INSTINCTS,
+                    per_stack: 0.05,
+                },
+            ]),
+            priority: 0,
+        })
 }
 
 // ============================================================================
@@ -239,17 +236,17 @@ fn wild_instincts() -> TalentDef {
 
 fn kill_cleave_talent() -> TalentDef {
     TalentDef::new("kill_cleave", "Kill Cleave")
-        // KC cleaves during Beast Cleave - handled via spell effects
+    // KC cleaves during Beast Cleave - handled via spell effects
 }
 
 fn bloody_frenzy() -> TalentDef {
     TalentDef::new("bloody_frenzy", "Bloody Frenzy")
-        // Beast Cleave active during Call of the Wild - handled via spell effects
+    // Beast Cleave active during Call of the Wild - handled via spell effects
 }
 
 fn thundering_hooves() -> TalentDef {
     TalentDef::new("thundering_hooves", "Thundering Hooves")
-        // Bestial Wrath casts Explosive Shot - handled via spell effects
+    // Bestial Wrath casts Explosive Shot - handled via spell effects
 }
 
 fn master_handler() -> TalentDef {
@@ -260,10 +257,10 @@ fn master_handler() -> TalentDef {
 
 fn dire_frenzy() -> TalentDef {
     TalentDef::new("dire_frenzy", "Dire Frenzy")
-        // Dire Beast extends Frenzy - handled via spell effects
+    // Dire Beast extends Frenzy - handled via spell effects
 }
 
 fn withering_fire() -> TalentDef {
     TalentDef::new("withering_fire", "Withering Fire")
-        // Free abilities during CDs - handled in cost check
+    // Free abilities during CDs - handled in cost check
 }

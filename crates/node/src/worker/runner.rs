@@ -1,11 +1,11 @@
 //! Simulation runner that integrates with the engine crate.
 
-use engine::sim::{BatchResults, SimConfig, Simulation};
-use engine::types::SpecId;
 use engine::actor::Player;
 use engine::handler::SpecHandler;
+use engine::sim::{BatchResults, SimConfig, Simulation};
 use engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
 use engine::specs::hunter::mm::MmHunter;
+use engine::types::SpecId;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -152,11 +152,12 @@ impl SimRunner {
 
         // Get rotation JSON - use provided if it looks like JSON, otherwise use empty default.
         // This handles backwards compatibility with old Rhai script format.
-        let rotation_json = if request.rotation.is_empty() || !request.rotation.trim().starts_with('{') {
-            r#"{"name": "default", "actions": []}"#.to_string()
-        } else {
-            request.rotation.clone()
-        };
+        let rotation_json =
+            if request.rotation.is_empty() || !request.rotation.trim().starts_with('{') {
+                r#"{"name": "default", "actions": []}"#.to_string()
+            } else {
+                request.rotation.clone()
+            };
 
         // Create spec handler with rotation
         let handler: Arc<dyn SpecHandler> = match spec_id {
@@ -170,7 +171,12 @@ impl SimRunner {
                     .map_err(|e| SimError::Engine(format!("Failed to create MM handler: {}", e)))?;
                 Arc::new(h)
             }
-            _ => return Err(SimError::Engine(format!("Spec {:?} not implemented", spec_id))),
+            _ => {
+                return Err(SimError::Engine(format!(
+                    "Spec {:?} not implemented",
+                    spec_id
+                )))
+            }
         };
 
         // Initialize spec-specific abilities
@@ -258,11 +264,7 @@ fn run_batch(
         let mut iter_config = config.clone();
         iter_config.seed = config.seed.wrapping_add(i as u64);
 
-        let mut sim = Simulation::new(
-            Arc::clone(&handler),
-            iter_config,
-            player_template.clone(),
-        );
+        let mut sim = Simulation::new(Arc::clone(&handler), iter_config, player_template.clone());
         sim.run();
         dps_values.push(sim.dps());
     }

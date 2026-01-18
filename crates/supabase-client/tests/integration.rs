@@ -3,7 +3,7 @@
 //! These tests require SUPABASE_URL and SUPABASE_ANON_KEY environment variables.
 //! Run with: cargo test -p supabase-client --test integration -- --ignored
 
-use supabase_client::{GameDataCache, RetryConfig, SpellTiming, SupabaseClient, with_retry};
+use supabase_client::{with_retry, GameDataCache, RetryConfig, SpellTiming, SupabaseClient};
 
 fn get_client() -> Option<SupabaseClient> {
     SupabaseClient::from_env().ok()
@@ -37,7 +37,10 @@ async fn test_get_spell_partial_real() {
     match result {
         Ok(timing) => {
             assert_eq!(timing.id, 133);
-            println!("Timing: cast={}ms, recovery={}ms", timing.cast_time, timing.recovery_time);
+            println!(
+                "Timing: cast={}ms, recovery={}ms",
+                timing.cast_time, timing.recovery_time
+            );
         }
         Err(e) => println!("Spell not found or error: {}", e),
     }
@@ -97,7 +100,10 @@ async fn test_game_cache_real() {
             assert!(result2.is_ok());
             assert_eq!(result2.unwrap().id, spell.id);
 
-            println!("First: {:?}, Second (cached): {:?}", first_duration, second_duration);
+            println!(
+                "First: {:?}, Second (cached): {:?}",
+                first_duration, second_duration
+            );
             // Cached access should be much faster
             assert!(second_duration < first_duration / 2);
         }
@@ -147,7 +153,12 @@ async fn test_get_trait_tree_real() {
     let result = client.get_trait_tree(253).await;
     match result {
         Ok(tree) => {
-            println!("Tree: {} {} - {} nodes", tree.class_name, tree.spec_name, tree.nodes.len());
+            println!(
+                "Tree: {} {} - {} nodes",
+                tree.class_name,
+                tree.spec_name,
+                tree.nodes.len()
+            );
         }
         Err(e) => println!("Trait tree not found or error: {}", e),
     }

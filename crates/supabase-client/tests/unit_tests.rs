@@ -4,8 +4,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
 use supabase_client::{
-    GameDataCache, ItemSummary, RetryConfig, SpellCost, SpellTiming, SupabaseClient,
-    SupabaseError, with_retry,
+    with_retry, GameDataCache, ItemSummary, RetryConfig, SpellCost, SpellTiming, SupabaseClient,
+    SupabaseError,
 };
 use wiremock::matchers::{header, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};

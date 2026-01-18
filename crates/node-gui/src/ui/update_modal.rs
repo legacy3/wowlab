@@ -5,34 +5,20 @@ use super::theme::{
 };
 use tokio::sync::mpsc;
 
+#[derive(Default)]
 pub enum UpdateState {
+    #[default]
     Downloading,
     Success,
     Failed(String),
 }
 
-impl Default for UpdateState {
-    fn default() -> Self {
-        Self::Downloading
-    }
-}
-
+#[derive(Default)]
 pub struct UpdateModal {
     pub available: Option<String>,
     pub show: bool,
     pub state: UpdateState,
     pub result_rx: Option<mpsc::Receiver<Result<(), String>>>,
-}
-
-impl Default for UpdateModal {
-    fn default() -> Self {
-        Self {
-            available: None,
-            show: false,
-            state: UpdateState::default(),
-            result_rx: None,
-        }
-    }
 }
 
 impl UpdateModal {
@@ -100,7 +86,13 @@ impl UpdateModal {
             });
     }
 
-    fn render_content(&mut self, ui: &mut egui::Ui, new_version: &str, url: &str, ctx: &egui::Context) {
+    fn render_content(
+        &mut self,
+        ui: &mut egui::Ui,
+        new_version: &str,
+        url: &str,
+        ctx: &egui::Context,
+    ) {
         let version = env!("CARGO_PKG_VERSION");
 
         match &self.state {
@@ -160,7 +152,8 @@ impl UpdateModal {
                     if ui
                         .add(
                             egui::Button::new(
-                                text(format!("{} Download", icon(Icon::ExternalLink))).color(SLATE_1),
+                                text(format!("{} Download", icon(Icon::ExternalLink)))
+                                    .color(SLATE_1),
                             )
                             .fill(GREEN_9)
                             .min_size(egui::vec2(100.0, 32.0)),

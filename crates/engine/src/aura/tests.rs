@@ -46,7 +46,8 @@ fn aura_instance_stacks() {
         SimTime::from_secs(10),
         now,
         AuraFlags::default(),
-    ).with_stacks(3);
+    )
+    .with_stacks(3);
 
     assert_eq!(aura.stacks, 1);
     assert!(aura.add_stack());
@@ -65,7 +66,11 @@ fn aura_pandemic_refresh() {
         TargetIdx(0),
         SimTime::from_secs(10),
         now,
-        AuraFlags { can_pandemic: true, refreshable: true, ..Default::default() },
+        AuraFlags {
+            can_pandemic: true,
+            refreshable: true,
+            ..Default::default()
+        },
     );
 
     // Refresh at 7 seconds (3 sec remaining, 30% of 10 = 3)
@@ -85,7 +90,11 @@ fn aura_pandemic_cap() {
         TargetIdx(0),
         SimTime::from_secs(10),
         now,
-        AuraFlags { can_pandemic: true, refreshable: true, ..Default::default() },
+        AuraFlags {
+            can_pandemic: true,
+            refreshable: true,
+            ..Default::default()
+        },
     );
 
     // Refresh immediately (10 sec remaining, but cap at 30% = 3)
@@ -106,7 +115,10 @@ fn target_auras_basic() {
         TargetIdx(0),
         SimTime::from_secs(10),
         now,
-        AuraFlags { refreshable: true, ..Default::default() },
+        AuraFlags {
+            refreshable: true,
+            ..Default::default()
+        },
     );
 
     tracker.apply(aura, now);
@@ -126,8 +138,12 @@ fn target_auras_refresh() {
         TargetIdx(0),
         SimTime::from_secs(10),
         now,
-        AuraFlags { refreshable: true, ..Default::default() },
-    ).with_stacks(5);
+        AuraFlags {
+            refreshable: true,
+            ..Default::default()
+        },
+    )
+    .with_stacks(5);
 
     tracker.apply(aura.clone(), now);
     tracker.apply(aura, now); // Refresh
@@ -140,21 +156,27 @@ fn target_auras_cleanup() {
     let now = SimTime::ZERO;
     let mut tracker = TargetAuras::new();
 
-    tracker.apply(AuraInstance::new(
-        AuraIdx(1),
-        TargetIdx(0),
-        SimTime::from_secs(5),
+    tracker.apply(
+        AuraInstance::new(
+            AuraIdx(1),
+            TargetIdx(0),
+            SimTime::from_secs(5),
+            now,
+            AuraFlags::default(),
+        ),
         now,
-        AuraFlags::default(),
-    ), now);
+    );
 
-    tracker.apply(AuraInstance::new(
-        AuraIdx(2),
-        TargetIdx(0),
-        SimTime::from_secs(15),
+    tracker.apply(
+        AuraInstance::new(
+            AuraIdx(2),
+            TargetIdx(0),
+            SimTime::from_secs(15),
+            now,
+            AuraFlags::default(),
+        ),
         now,
-        AuraFlags::default(),
-    ), now);
+    );
 
     let later = SimTime::from_secs(10);
     tracker.cleanup(later);
@@ -175,7 +197,10 @@ fn aura_tracker_multi_target() {
             TargetIdx(0),
             SimTime::from_secs(10),
             now,
-            AuraFlags { is_debuff: true, ..Default::default() },
+            AuraFlags {
+                is_debuff: true,
+                ..Default::default()
+            },
         ),
         now,
     );
@@ -187,7 +212,10 @@ fn aura_tracker_multi_target() {
             TargetIdx(2),
             SimTime::from_secs(10),
             now,
-            AuraFlags { is_debuff: true, ..Default::default() },
+            AuraFlags {
+                is_debuff: true,
+                ..Default::default()
+            },
         ),
         now,
     );
@@ -198,8 +226,7 @@ fn aura_tracker_multi_target() {
 
 #[test]
 fn periodic_tick_calculation() {
-    let effect = PeriodicEffect::new(AuraIdx(1), SimTime::from_secs(3))
-        .with_coefficient(1.0);
+    let effect = PeriodicEffect::new(AuraIdx(1), SimTime::from_secs(3)).with_coefficient(1.0);
 
     // Base: 10 seconds / 3 second interval = 3 ticks
     assert_eq!(effect.total_ticks(SimTime::from_secs(10), 1.0), 3);
@@ -228,8 +255,12 @@ fn aura_instance_periodic() {
         TargetIdx(0),
         SimTime::from_secs(12),
         now,
-        AuraFlags { is_periodic: true, ..Default::default() },
-    ).with_periodic(SimTime::from_secs(3), now);
+        AuraFlags {
+            is_periodic: true,
+            ..Default::default()
+        },
+    )
+    .with_periodic(SimTime::from_secs(3), now);
 
     assert_eq!(aura.remaining_ticks, 4);
     assert_eq!(aura.next_tick, Some(SimTime::from_secs(3)));

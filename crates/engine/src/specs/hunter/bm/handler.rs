@@ -3,23 +3,28 @@
 //! This handler delegates to the generic effect executor, keeping
 //! spec-specific code minimal.
 
-use crate::handler::SpecHandler;
-use crate::class::HunterClass;
-use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, PetKind, DamageSchool};
-use crate::sim::SimState;
-use crate::core::SimEvent;
-use crate::spec::{SpellDef, AuraDef, GcdType, SpellFlags, EffectContext, DamageContext, execute_effects, calculate_damage};
-use crate::combat::{Cooldown, ChargedCooldown};
-use crate::aura::AuraInstance;
-use crate::actor::Player;
-use crate::rotation::{Action, CompiledRotation};
-use super::constants::*;
-use super::spells::spell_definitions;
 use super::auras::aura_definitions;
+use super::constants::*;
 use super::pet::PetDamage;
 use super::procs::{setup_procs, setup_procs_with_talents, setup_tier_set_procs};
 use super::rotation::{spec_resolver, spell_id_to_idx, spell_name_to_idx};
+use super::spells::spell_definitions;
 use super::talents::{active_talents, collect_damage_mods};
+use crate::actor::Player;
+use crate::aura::AuraInstance;
+use crate::class::HunterClass;
+use crate::combat::{ChargedCooldown, Cooldown};
+use crate::core::SimEvent;
+use crate::handler::SpecHandler;
+use crate::rotation::{Action, CompiledRotation};
+use crate::sim::SimState;
+use crate::spec::{
+    calculate_damage, execute_effects, AuraDef, DamageContext, EffectContext, GcdType, SpellDef,
+    SpellFlags,
+};
+use crate::types::{
+    AuraIdx, ClassId, DamageSchool, PetKind, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx,
+};
 use tracing::debug;
 
 // ============================================================================
@@ -44,11 +49,15 @@ fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
 }
 
 fn get_spell_defs() -> &'static [SpellDef] {
-    SPELL_DEFS.get().expect("BM Hunter spell definitions not initialized")
+    SPELL_DEFS
+        .get()
+        .expect("BM Hunter spell definitions not initialized")
 }
 
 fn get_aura_defs() -> &'static [AuraDef] {
-    AURA_DEFS.get().expect("BM Hunter aura definitions not initialized")
+    AURA_DEFS
+        .get()
+        .expect("BM Hunter aura definitions not initialized")
 }
 
 // ============================================================================
@@ -64,19 +73,31 @@ pub struct BmHunter {
 
 impl BmHunter {
     /// Create a new BM Hunter handler with the given rotation and talents.
-    pub fn new(rotation_json: &str, talents: TalentFlags, tier_sets: TierSetFlags) -> Result<Self, String> {
+    pub fn new(
+        rotation_json: &str,
+        talents: TalentFlags,
+        tier_sets: TierSetFlags,
+    ) -> Result<Self, String> {
         ensure_definitions();
 
         let resolver = spec_resolver(talents);
         let rotation = CompiledRotation::compile_json(rotation_json, &resolver)
             .map_err(|e| format!("Compile error: {}", e))?;
 
-        Ok(Self { talents, tier_sets, rotation })
+        Ok(Self {
+            talents,
+            tier_sets,
+            rotation,
+        })
     }
 
     /// Create with default empty rotation (for tests/simple cases).
     pub fn with_defaults() -> Result<Self, String> {
-        Self::new(r#"{"actions":[]}"#, TalentFlags::empty(), TierSetFlags::NONE)
+        Self::new(
+            r#"{"actions":[]}"#,
+            TalentFlags::empty(),
+            TierSetFlags::NONE,
+        )
     }
 
     /// Create with talents and default rotation.
@@ -99,7 +120,9 @@ impl BmHunter {
 
     /// Cast a spell using the effect system.
     fn do_cast(&self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
-        let Some(spell) = get_spell(spell_id) else { return };
+        let Some(spell) = get_spell(spell_id) else {
+            return;
+        };
         let now = state.now();
         let haste = state.player.stats.haste();
 
@@ -155,12 +178,20 @@ impl BmHunter {
             state.schedule_in(gcd, SimEvent::GcdEnd);
         }
 
-        state.events.schedule(now, SimEvent::CastComplete { spell: spell_id, target });
+        state.events.schedule(
+            now,
+            SimEvent::CastComplete {
+                spell: spell_id,
+                target,
+            },
+        );
     }
 
     fn apply_aura(&self, state: &mut SimState, aura_id: AuraIdx, target: TargetIdx) {
         let now = state.now();
-        let Some(aura) = get_aura(aura_id) else { return };
+        let Some(aura) = get_aura(aura_id) else {
+            return;
+        };
 
         let mut instance = AuraInstance::new(aura_id, target, aura.duration, now, aura.flags);
         if aura.max_stacks > 1 {
@@ -175,7 +206,13 @@ impl BmHunter {
                 target_auras.apply(instance, now);
             }
             if let Some(ref periodic) = aura.periodic {
-                state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
+                state.schedule_in(
+                    periodic.interval,
+                    SimEvent::AuraTick {
+                        aura: aura_id,
+                        target,
+                    },
+                );
             }
         } else {
             state.player.buffs.apply(instance, now);
@@ -183,7 +220,15 @@ impl BmHunter {
     }
 
     /// Calculate damage using the modifier system.
-    fn do_damage(&self, state: &mut SimState, spell_id: Option<SpellIdx>, target: TargetIdx, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
+    fn do_damage(
+        &self,
+        state: &mut SimState,
+        spell_id: Option<SpellIdx>,
+        target: TargetIdx,
+        ap_coef: f32,
+        sp_coef: f32,
+        school: DamageSchool,
+    ) -> f32 {
         let talents = self.talent_names();
         let talents_slice: Vec<&'static str> = talents;
         let damage_mods = collect_damage_mods(self.talents);
@@ -208,20 +253,29 @@ impl BmHunter {
     }
 }
 
-
 // ============================================================================
 // SpecHandler Implementation
 // ============================================================================
 
 impl SpecHandler for BmHunter {
-    fn spec_id(&self) -> SpecId { SpecId::BeastMastery }
-    fn class_id(&self) -> ClassId { ClassId::Hunter }
+    fn spec_id(&self) -> SpecId {
+        SpecId::BeastMastery
+    }
+    fn class_id(&self) -> ClassId {
+        ClassId::Hunter
+    }
 
-    fn display_name(&self) -> &'static str { "Beast Mastery Hunter" }
+    fn display_name(&self) -> &'static str {
+        "Beast Mastery Hunter"
+    }
 
-    fn spell_definitions(&self) -> &'static [SpellDef] { get_spell_defs() }
+    fn spell_definitions(&self) -> &'static [SpellDef] {
+        get_spell_defs()
+    }
 
-    fn aura_definitions(&self) -> &'static [AuraDef] { get_aura_defs() }
+    fn aura_definitions(&self) -> &'static [AuraDef] {
+        get_aura_defs()
+    }
 
     fn talent_names(&self) -> Vec<String> {
         super::talents::talent_definitions()
@@ -231,20 +285,33 @@ impl SpecHandler for BmHunter {
     }
 
     fn init(&self, state: &mut SimState) {
-        let pet_id = state.pets.summon(state.player.id, PetKind::Permanent, "Pet");
-        state.events.schedule(SimTime::ZERO, SimEvent::AutoAttack { unit: state.player.id });
-        state.events.schedule(SimTime::ZERO, SimEvent::PetAttack { pet: pet_id });
+        let pet_id = state
+            .pets
+            .summon(state.player.id, PetKind::Permanent, "Pet");
+        state.events.schedule(
+            SimTime::ZERO,
+            SimEvent::AutoAttack {
+                unit: state.player.id,
+            },
+        );
+        state
+            .events
+            .schedule(SimTime::ZERO, SimEvent::PetAttack { pet: pet_id });
 
         if self.has_talent(TalentFlags::ANIMAL_COMPANION) {
-            let ac_pet = state.pets.summon(state.player.id, PetKind::Permanent, "Animal Companion");
-            state.events.schedule(SimTime::ZERO, SimEvent::PetAttack { pet: ac_pet });
+            let ac_pet = state
+                .pets
+                .summon(state.player.id, PetKind::Permanent, "Animal Companion");
+            state
+                .events
+                .schedule(SimTime::ZERO, SimEvent::PetAttack { pet: ac_pet });
         }
     }
 
     fn init_player(&self, player: &mut Player) {
         player.spec = SpecId::BeastMastery;
-        player.resources = crate::resource::UnitResources::new()
-            .with_primary(crate::types::ResourceType::Focus);
+        player.resources =
+            crate::resource::UnitResources::new().with_primary(crate::types::ResourceType::Focus);
 
         for spell in get_spell_defs() {
             if spell.charges > 0 {
@@ -252,7 +319,10 @@ impl SpecHandler for BmHunter {
                 if spell.id == BARBED_SHOT && self.has_talent(TalentFlags::ALPHA_PREDATOR) {
                     charges += 1;
                 }
-                player.add_charged_cooldown(spell.id, ChargedCooldown::new(charges, spell.charge_time.as_secs_f32()));
+                player.add_charged_cooldown(
+                    spell.id,
+                    ChargedCooldown::new(charges, spell.charge_time.as_secs_f32()),
+                );
             } else if spell.cooldown > SimTime::ZERO {
                 player.add_cooldown(spell.id, Cooldown::new(spell.cooldown.as_secs_f32()));
             }
@@ -270,7 +340,9 @@ impl SpecHandler for BmHunter {
     }
 
     fn on_gcd(&self, state: &mut SimState) {
-        if state.finished { return; }
+        if state.finished {
+            return;
+        }
 
         let result = self.rotation.evaluate(state);
 
@@ -293,10 +365,19 @@ impl SpecHandler for BmHunter {
     }
 
     fn on_spell_damage(&self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
-        let Some(spell) = get_spell(spell_id) else { return };
+        let Some(spell) = get_spell(spell_id) else {
+            return;
+        };
         let Some(ref dmg) = spell.damage else { return };
 
-        let damage = self.do_damage(state, Some(spell_id), target, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school);
+        let damage = self.do_damage(
+            state,
+            Some(spell_id),
+            target,
+            dmg.ap_coefficient,
+            dmg.sp_coefficient,
+            dmg.school,
+        );
         state.record_damage(damage);
         debug!(spell = spell_id.0, damage, "Spell damage");
     }
@@ -305,7 +386,14 @@ impl SpecHandler for BmHunter {
         let now = state.now();
         let haste = state.player.stats.haste();
 
-        let damage = self.do_damage(state, None, TargetIdx(0), PetDamage::AUTO_ATTACK_COEF, 0.0, DamageSchool::Physical);
+        let damage = self.do_damage(
+            state,
+            None,
+            TargetIdx(0),
+            PetDamage::AUTO_ATTACK_COEF,
+            0.0,
+            DamageSchool::Physical,
+        );
         state.record_damage(damage);
 
         // Wild Call proc
@@ -345,11 +433,25 @@ impl SpecHandler for BmHunter {
 
     fn on_aura_tick(&self, state: &mut SimState, aura_id: AuraIdx, target: TargetIdx) {
         let now = state.now();
-        if !state.auras.target(target).map(|a| a.has(aura_id, now)).unwrap_or(false) { return; }
+        if !state
+            .auras
+            .target(target)
+            .map(|a| a.has(aura_id, now))
+            .unwrap_or(false)
+        {
+            return;
+        }
 
         if let Some(aura) = get_aura(aura_id) {
             if let Some(ref periodic) = aura.periodic {
-                let damage = self.do_damage(state, None, target, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical);
+                let damage = self.do_damage(
+                    state,
+                    None,
+                    target,
+                    periodic.ap_coefficient,
+                    periodic.sp_coefficient,
+                    DamageSchool::Physical,
+                );
                 state.record_damage(damage);
 
                 // Master Handler: Barbed Shot ticks reduce KC CD
@@ -359,7 +461,13 @@ impl SpecHandler for BmHunter {
                     }
                 }
 
-                state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
+                state.schedule_in(
+                    periodic.interval,
+                    SimEvent::AuraTick {
+                        aura: aura_id,
+                        target,
+                    },
+                );
             }
         }
     }
@@ -371,7 +479,9 @@ impl SpecHandler for BmHunter {
     fn next_action(&self, state: &SimState) -> Action {
         let result = self.rotation.evaluate(state);
         if result.is_cast() {
-            spell_id_to_idx(result.spell_id).map(Action::Cast).unwrap_or(Action::WaitGcd)
+            spell_id_to_idx(result.spell_id)
+                .map(Action::Cast)
+                .unwrap_or(Action::WaitGcd)
         } else if result.is_wait() {
             Action::Wait(result.wait_time as f64)
         } else {
@@ -379,9 +489,15 @@ impl SpecHandler for BmHunter {
         }
     }
 
-    fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef> { get_spell(id) }
-    fn get_aura(&self, id: AuraIdx) -> Option<&AuraDef> { get_aura(id) }
-    fn spell_name_to_idx(&self, name: &str) -> Option<SpellIdx> { spell_name_to_idx(name) }
+    fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef> {
+        get_spell(id)
+    }
+    fn get_aura(&self, id: AuraIdx) -> Option<&AuraDef> {
+        get_aura(id)
+    }
+    fn spell_name_to_idx(&self, name: &str) -> Option<SpellIdx> {
+        spell_name_to_idx(name)
+    }
 
     fn aura_name_to_idx(&self, name: &str) -> Option<AuraIdx> {
         match name {
@@ -393,7 +509,14 @@ impl SpecHandler for BmHunter {
         }
     }
 
-    fn calculate_damage(&self, state: &mut SimState, _base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
+    fn calculate_damage(
+        &self,
+        state: &mut SimState,
+        _base: f32,
+        ap_coef: f32,
+        sp_coef: f32,
+        school: DamageSchool,
+    ) -> f32 {
         self.do_damage(state, None, TargetIdx(0), ap_coef, sp_coef, school)
     }
 }

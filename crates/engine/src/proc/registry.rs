@@ -1,6 +1,6 @@
-use crate::types::ProcIdx;
-use super::{RppmState, FixedProc, ProcHandler, ProcFlags, ProcContext, ProcEffect};
+use super::{FixedProc, ProcContext, ProcEffect, ProcFlags, ProcHandler, RppmState};
 use crate::core::FastRng;
+use crate::types::ProcIdx;
 use crate::types::SimTime;
 
 /// Manages all procs for a unit
@@ -73,10 +73,8 @@ impl ProcRegistry {
         // Check RPPM procs
         for rppm in &mut self.rppm {
             if let Some(handler) = self.handlers.iter().find(|h| h.id == rppm.proc_id) {
-                if handler.can_trigger(ctx) {
-                    if rppm.attempt(now, ctx.haste, 0.0, rng) {
-                        triggered.push((rppm.proc_id, handler.effect.clone()));
-                    }
+                if handler.can_trigger(ctx) && rppm.attempt(now, ctx.haste, 0.0, rng) {
+                    triggered.push((rppm.proc_id, handler.effect.clone()));
                 }
             }
         }
@@ -84,10 +82,8 @@ impl ProcRegistry {
         // Check fixed procs
         for fixed in &mut self.fixed {
             if let Some(handler) = self.handlers.iter().find(|h| h.id == fixed.proc_id) {
-                if handler.can_trigger(ctx) {
-                    if fixed.attempt(now, rng) {
-                        triggered.push((fixed.proc_id, handler.effect.clone()));
-                    }
+                if handler.can_trigger(ctx) && fixed.attempt(now, rng) {
+                    triggered.push((fixed.proc_id, handler.effect.clone()));
                 }
             }
         }
@@ -97,7 +93,9 @@ impl ProcRegistry {
 
     /// Get all handlers that match a trigger
     pub fn handlers_for(&self, flags: ProcFlags) -> impl Iterator<Item = &ProcHandler> {
-        self.handlers.iter().filter(move |h| h.triggers.intersects(flags))
+        self.handlers
+            .iter()
+            .filter(move |h| h.triggers.intersects(flags))
     }
 }
 

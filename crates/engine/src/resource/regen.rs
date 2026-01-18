@@ -1,16 +1,12 @@
-use crate::types::{ResourceType, SimTime};
 use super::ResourcePool;
+use crate::types::{ResourceType, SimTime};
 
 /// Handles resource regeneration
 pub struct ResourceRegen;
 
 impl ResourceRegen {
     /// Calculate regen amount for a time period
-    pub fn calculate(
-        resource_type: ResourceType,
-        duration: SimTime,
-        haste: f32,
-    ) -> f32 {
+    pub fn calculate(resource_type: ResourceType, duration: SimTime, haste: f32) -> f32 {
         let base_per_sec = resource_type.base_regen_per_sec();
         if base_per_sec == 0.0 {
             return 0.0;
@@ -23,11 +19,7 @@ impl ResourceRegen {
     }
 
     /// Apply regen to a pool
-    pub fn apply(
-        pool: &mut ResourcePool,
-        duration: SimTime,
-        haste: f32,
-    ) {
+    pub fn apply(pool: &mut ResourcePool, duration: SimTime, haste: f32) {
         let amount = Self::calculate(pool.resource_type, duration, haste);
         if amount > 0.0 {
             pool.gain(amount);
@@ -35,11 +27,7 @@ impl ResourceRegen {
     }
 
     /// Time until resource reaches target (for predictive gating)
-    pub fn time_to_reach(
-        pool: &ResourcePool,
-        target: f32,
-        haste: f32,
-    ) -> Option<SimTime> {
+    pub fn time_to_reach(pool: &ResourcePool, target: f32, haste: f32) -> Option<SimTime> {
         if pool.current >= target {
             return Some(SimTime::ZERO);
         }

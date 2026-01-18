@@ -15,9 +15,9 @@ pub use global::{
     transform_class, transform_global_color, transform_global_string,
 };
 pub use item::{transform_all_items, transform_item};
+pub use r#trait::transform_trait_tree;
 pub use spec::{transform_all_specs, transform_spec};
 pub use spell::{transform_spell, SpellKnowledgeContext};
-pub use r#trait::transform_trait_tree;
 
 use crate::dbc::DbcData;
 use crate::flat::{SpellDataFlat, TraitTreeFlat};
@@ -40,7 +40,9 @@ pub fn transform_all_trait_trees(dbc: &DbcData) -> Vec<TraitTreeFlat> {
         .keys()
         .filter_map(|&spec_id| {
             transform_trait_tree(dbc, spec_id)
-                .inspect_err(|e| tracing::warn!(spec_id, error = %e, "Failed to transform talent tree"))
+                .inspect_err(
+                    |e| tracing::warn!(spec_id, error = %e, "Failed to transform talent tree"),
+                )
                 .ok()
         })
         .collect()

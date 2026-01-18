@@ -81,7 +81,9 @@ pub fn transform_all_global_colors(dbc: &DbcData) -> Vec<GlobalColorFlat> {
         .keys()
         .filter_map(|&color_id| {
             transform_global_color(dbc, color_id)
-                .inspect_err(|e| tracing::warn!(color_id, error = %e, "Failed to transform global color"))
+                .inspect_err(
+                    |e| tracing::warn!(color_id, error = %e, "Failed to transform global color"),
+                )
                 .ok()
         })
         .collect()
@@ -111,7 +113,9 @@ pub fn transform_all_global_strings(dbc: &DbcData) -> Vec<GlobalStringFlat> {
         .keys()
         .filter_map(|&string_id| {
             transform_global_string(dbc, string_id)
-                .inspect_err(|e| tracing::warn!(string_id, error = %e, "Failed to transform global string"))
+                .inspect_err(
+                    |e| tracing::warn!(string_id, error = %e, "Failed to transform global string"),
+                )
                 .ok()
         })
         .collect()

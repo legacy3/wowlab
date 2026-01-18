@@ -1,6 +1,6 @@
-use crate::proc::{ProcHandler, ProcFlags, ProcEffect, FixedProc, ProcRegistry};
-use crate::types::{SimTime, ProcIdx};
 use super::constants::*;
+use crate::proc::{FixedProc, ProcEffect, ProcFlags, ProcHandler, ProcRegistry};
+use crate::types::{ProcIdx, SimTime};
 
 /// Setup BM Hunter procs based on enabled talents
 pub fn setup_procs(registry: &mut ProcRegistry) {
@@ -44,8 +44,9 @@ pub fn setup_tier_set_procs(registry: &mut ProcRegistry, tier_sets: TierSetFlags
                 ProcEffect::CastSpell {
                     spell: HARMONIZE_BARBED_SHOT,
                 },
-            ).with_spell_filter(vec![BARBED_SHOT])
-             .with_requires_aura(HARMONIZE),
+            )
+            .with_spell_filter(vec![BARBED_SHOT])
+            .with_requires_aura(HARMONIZE),
         );
     }
 
@@ -61,7 +62,8 @@ pub fn setup_tier_set_procs(registry: &mut ProcRegistry, tier_sets: TierSetFlags
                     spell: BARBED_SHOT,
                     amount: SimTime::from_secs_f32(TWW_S2_2PC_BS_REDUCTION),
                 },
-            ).with_spell_filter(vec![BESTIAL_WRATH]),
+            )
+            .with_spell_filter(vec![BESTIAL_WRATH]),
         );
     }
 
@@ -76,7 +78,8 @@ pub fn setup_tier_set_procs(registry: &mut ProcRegistry, tier_sets: TierSetFlags
                 ProcEffect::ApplyAura {
                     aura: POTENT_MUTAGEN,
                 },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 
@@ -96,7 +99,8 @@ pub fn setup_tier_set_procs(registry: &mut ProcRegistry, tier_sets: TierSetFlags
                 ProcEffect::ApplyAura {
                     aura: STAMPEDE_BUFF,
                 },
-            ).with_spell_filter(vec![HOWL_OF_THE_PACK_LEADER]),
+            )
+            .with_spell_filter(vec![HOWL_OF_THE_PACK_LEADER]),
         );
     }
 }
@@ -128,7 +132,8 @@ fn setup_base_procs(registry: &mut ProcRegistry) {
                 spell: BESTIAL_WRATH,
                 amount: SimTime::from_secs(12),
             },
-        ).with_spell_filter(vec![BARBED_SHOT]),
+        )
+        .with_spell_filter(vec![BARBED_SHOT]),
     );
 }
 
@@ -146,7 +151,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     spell: KILL_COMMAND,
                     amount: SimTime::from_secs_f32(7.5), // Full reset
                 },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 
@@ -162,7 +168,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     aura: THRILL_OF_THE_HUNT,
                     stacks: 1,
                 },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 
@@ -174,9 +181,7 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 LACERATION_PROC,
                 "Laceration",
                 ProcFlags::ON_CRIT,
-                ProcEffect::ApplyAura {
-                    aura: LACERATION,
-                },
+                ProcEffect::ApplyAura { aura: LACERATION },
             ),
         );
     }
@@ -193,7 +198,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     spell: BARBED_SHOT,
                     amount: SimTime::from_secs_f32(BARBED_SCALES_CDR),
                 },
-            ).with_spell_filter(vec![COBRA_SHOT]),
+            )
+            .with_spell_filter(vec![COBRA_SHOT]),
         );
     }
 
@@ -208,7 +214,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::ApplyAura {
                     aura: SNAKESKIN_QUIVER_PROC,
                 },
-            ).with_spell_filter(vec![COBRA_SHOT]),
+            )
+            .with_spell_filter(vec![COBRA_SHOT]),
         );
     }
 
@@ -224,7 +231,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     spell: KILL_SHOT,
                     amount: SimTime::from_secs_f32(HUNTERS_PREY_CDR),
                 },
-            ).with_spell_filter(vec![KILL_COMMAND]),
+            )
+            .with_spell_filter(vec![KILL_COMMAND]),
         );
     }
 
@@ -236,10 +244,9 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 DIRE_COMMAND,
                 "Dire Command",
                 ProcFlags::ON_SPELL_CAST,
-                ProcEffect::CastSpell {
-                    spell: DIRE_BEAST,
-                },
-            ).with_spell_filter(vec![KILL_COMMAND]),
+                ProcEffect::CastSpell { spell: DIRE_BEAST },
+            )
+            .with_spell_filter(vec![KILL_COMMAND]),
         );
     }
 
@@ -289,7 +296,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     spell: BARBED_SHOT,
                     amount: SimTime::from_secs(24), // 2 charges worth
                 },
-            ).with_spell_filter(vec![BESTIAL_WRATH]),
+            )
+            .with_spell_filter(vec![BESTIAL_WRATH]),
         );
     }
 
@@ -301,10 +309,9 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 STOMP_PROC,
                 "Stomp",
                 ProcFlags::ON_SPELL_CAST,
-                ProcEffect::CastSpell {
-                    spell: PET_STOMP,
-                },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+                ProcEffect::CastSpell { spell: PET_STOMP },
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 
@@ -320,7 +327,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     aura: SERPENTINE_RHYTHM,
                     stacks: 1,
                 },
-            ).with_spell_filter(vec![COBRA_SHOT]),
+            )
+            .with_spell_filter(vec![COBRA_SHOT]),
         );
     }
 
@@ -335,7 +343,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::ApplyAura {
                     aura: PIERCING_FANGS,
                 },
-            ).with_spell_filter(vec![BESTIAL_WRATH]),
+            )
+            .with_spell_filter(vec![BESTIAL_WRATH]),
         );
     }
 
@@ -350,7 +359,8 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::ApplyAura {
                     aura: SERPENT_STING,
                 },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 
@@ -362,9 +372,7 @@ fn setup_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 BLOODSHED_DIRE_BEAST,
                 "Bloodshed Dire Beast",
                 ProcFlags::ON_PERIODIC_DAMAGE,
-                ProcEffect::CastSpell {
-                    spell: DIRE_BEAST,
-                },
+                ProcEffect::CastSpell { spell: DIRE_BEAST },
             ),
         );
     }
@@ -383,7 +391,8 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::CastSpell {
                     spell: HOWL_OF_THE_PACK_LEADER,
                 },
-            ).with_spell_filter(vec![BESTIAL_WRATH]),
+            )
+            .with_spell_filter(vec![BESTIAL_WRATH]),
         );
     }
 
@@ -399,7 +408,8 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     aura: BEAST_CLEAVE,
                     amount: SimTime::from_secs_f32(COVERING_FIRE_EXTENSION),
                 },
-            ).with_spell_filter(vec![MULTI_SHOT]),
+            )
+            .with_spell_filter(vec![MULTI_SHOT]),
         );
     }
 
@@ -415,7 +425,8 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                     spell: KILL_COMMAND,
                     amount: SimTime::from_secs_f32(URSINE_FURY_CDR),
                 },
-            ).with_requires_aura(BEAR_READY),
+            )
+            .with_requires_aura(BEAR_READY),
         );
     }
 
@@ -430,7 +441,8 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::ApplyAura {
                     aura: ENVENOMED_FANGS,
                 },
-            ).with_requires_aura(BEAR_READY),
+            )
+            .with_requires_aura(BEAR_READY),
         );
     }
 
@@ -445,7 +457,8 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 ProcEffect::ApplyAura {
                     aura: WITHERING_FIRE,
                 },
-            ).with_spell_filter(vec![BESTIAL_WRATH, CALL_OF_THE_WILD]),
+            )
+            .with_spell_filter(vec![BESTIAL_WRATH, CALL_OF_THE_WILD]),
         );
     }
 
@@ -457,10 +470,9 @@ fn setup_hero_talent_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 BLEAK_POWDER,
                 "Phantom Pain",
                 ProcFlags::ON_SPELL_CAST,
-                ProcEffect::ApplyAura {
-                    aura: PHANTOM_PAIN,
-                },
-            ).with_spell_filter(vec![BLACK_ARROW]),
+                ProcEffect::ApplyAura { aura: PHANTOM_PAIN },
+            )
+            .with_spell_filter(vec![BLACK_ARROW]),
         );
     }
 
@@ -579,7 +591,8 @@ fn setup_remaining_talent_procs(registry: &mut ProcRegistry, talents: TalentFlag
                 ProcEffect::ApplyAura {
                     aura: COBRA_SENSES_READY,
                 },
-            ).with_spell_filter(vec![KILL_COMMAND]),
+            )
+            .with_spell_filter(vec![KILL_COMMAND]),
         );
     }
 
@@ -595,7 +608,8 @@ fn setup_remaining_talent_procs(registry: &mut ProcRegistry, talents: TalentFlag
                     aura: HUNTSMASTERS_CALL_BUFF,
                     stacks: 1,
                 },
-            ).with_spell_filter(vec![BARBED_SHOT]),
+            )
+            .with_spell_filter(vec![BARBED_SHOT]),
         );
     }
 

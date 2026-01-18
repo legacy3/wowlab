@@ -50,9 +50,12 @@ impl ResultsExporter {
 
     /// Export breakdown to JSON
     pub fn breakdown_to_json(breakdown: &DamageBreakdown) -> String {
-        let entries: Vec<String> = breakdown.entries.iter()
-            .map(|e| format!(
-                r#"    {{
+        let entries: Vec<String> = breakdown
+            .entries
+            .iter()
+            .map(|e| {
+                format!(
+                    r#"    {{
       "name": "{}",
       "damage": {:.0},
       "dps": {:.2},
@@ -61,8 +64,9 @@ impl ResultsExporter {
       "average": {:.0},
       "crit_rate": {:.2}
     }}"#,
-                e.name, e.damage, e.dps, e.percent, e.count, e.average, e.crit_rate
-            ))
+                    e.name, e.damage, e.dps, e.percent, e.count, e.average, e.crit_rate
+                )
+            })
             .collect();
 
         format!(
@@ -82,10 +86,7 @@ impl ResultsExporter {
     }
 
     /// Write results to file
-    pub fn write_to_file(
-        path: &std::path::Path,
-        content: &str,
-    ) -> std::io::Result<()> {
+    pub fn write_to_file(path: &std::path::Path, content: &str) -> std::io::Result<()> {
         let mut file = std::fs::File::create(path)?;
         file.write_all(content.as_bytes())?;
         Ok(())

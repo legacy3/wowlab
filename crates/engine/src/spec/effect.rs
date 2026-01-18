@@ -3,8 +3,8 @@
 //! This module provides a data-driven way to define spell behavior
 //! without scattered if/else chains in handlers.
 
-use crate::types::{SpellIdx, AuraIdx, PetKind};
-use serde::{Serialize, Deserialize};
+use crate::types::{AuraIdx, PetKind, SpellIdx};
+use serde::{Deserialize, Serialize};
 
 /// Effect that fires when a spell is cast.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -330,19 +330,22 @@ impl TalentDef {
 
     /// Add a spell-specific damage bonus.
     pub fn spell_damage(mut self, spell: SpellIdx, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::for_spell(self.name.clone(), spell, multiplier));
+        self.damage_mods
+            .push(DamageMod::for_spell(self.name.clone(), spell, multiplier));
         self
     }
 
     /// Add execute damage bonus.
     pub fn execute_damage(mut self, threshold: f32, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::execute(self.name.clone(), threshold, multiplier));
+        self.damage_mods
+            .push(DamageMod::execute(self.name.clone(), threshold, multiplier));
         self
     }
 
     /// Add pet damage bonus.
     pub fn pet_damage(mut self, multiplier: f32) -> Self {
-        self.damage_mods.push(DamageMod::pet_ability(self.name.clone(), multiplier));
+        self.damage_mods
+            .push(DamageMod::pet_ability(self.name.clone(), multiplier));
         self
     }
 
@@ -375,7 +378,7 @@ impl TalentDef {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{SpellIdx, AuraIdx};
+    use crate::types::{AuraIdx, SpellIdx};
 
     const TEST_SPELL: SpellIdx = SpellIdx(1);
     const TEST_AURA: AuraIdx = AuraIdx(1);

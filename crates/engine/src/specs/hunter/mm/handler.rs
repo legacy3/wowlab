@@ -1,20 +1,20 @@
 //! MM Hunter spec handler - uses definitions from spells.rs, auras.rs
 
-use crate::handler::SpecHandler;
-use crate::class::HunterClass;
-use crate::types::{SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, SimTime, DamageSchool};
-use crate::sim::SimState;
-use crate::core::SimEvent;
-use crate::spec::{SpellDef, AuraDef, AuraEffect, GcdType, SpellFlags};
-use crate::combat::{Cooldown, DamagePipeline};
-use crate::aura::{AuraInstance, AuraFlags};
-use crate::actor::Player;
-use crate::rotation::{Action, CompiledRotation, Rotation};
-use super::constants::*;
-use super::spells::spell_definitions;
 use super::auras::aura_definitions;
+use super::constants::*;
 use super::procs::setup_procs;
-use super::rotation::{spec_resolver, spell_name_to_idx, spell_id_to_idx};
+use super::rotation::{spec_resolver, spell_id_to_idx, spell_name_to_idx};
+use super::spells::spell_definitions;
+use crate::actor::Player;
+use crate::aura::{AuraFlags, AuraInstance};
+use crate::class::HunterClass;
+use crate::combat::{Cooldown, DamagePipeline};
+use crate::core::SimEvent;
+use crate::handler::SpecHandler;
+use crate::rotation::{Action, CompiledRotation, Rotation};
+use crate::sim::SimState;
+use crate::spec::{AuraDef, AuraEffect, GcdType, SpellDef, SpellFlags};
+use crate::types::{AuraIdx, ClassId, DamageSchool, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx};
 use tracing::debug;
 
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
@@ -38,11 +38,15 @@ fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
 }
 
 fn get_spell_defs() -> &'static [SpellDef] {
-    SPELL_DEFS.get().expect("MM Hunter spell definitions not initialized")
+    SPELL_DEFS
+        .get()
+        .expect("MM Hunter spell definitions not initialized")
 }
 
 fn get_aura_defs() -> &'static [AuraDef] {
-    AURA_DEFS.get().expect("MM Hunter aura definitions not initialized")
+    AURA_DEFS
+        .get()
+        .expect("MM Hunter aura definitions not initialized")
 }
 
 /// Get damage multiplier from aura effects
@@ -84,7 +88,9 @@ impl MmHunter {
 
     /// Internal helper to cast a spell
     fn do_cast_spell(&self, state: &mut SimState, spell_id: SpellIdx, target: TargetIdx) {
-        let Some(spell) = get_spell(spell_id) else { return };
+        let Some(spell) = get_spell(spell_id) else {
+            return;
+        };
         let now = state.now();
         let haste = state.player.stats.haste();
 
@@ -149,7 +155,13 @@ impl MmHunter {
             state.schedule_in(gcd, SimEvent::GcdEnd);
         }
 
-        state.events.schedule(now, SimEvent::CastComplete { spell: spell_id, target });
+        state.events.schedule(
+            now,
+            SimEvent::CastComplete {
+                spell: spell_id,
+                target,
+            },
+        );
     }
 
     /// Track Steady Focus buff application.
@@ -167,7 +179,11 @@ impl MmHunter {
                 TargetIdx(0),
                 SimTime::from_secs(5), // Short duration to reset if gap
                 now,
-                AuraFlags { is_hidden: true, refreshable: true, ..Default::default() },
+                AuraFlags {
+                    is_hidden: true,
+                    refreshable: true,
+                    ..Default::default()
+                },
             );
             tracker = tracker.with_stacks(2);
             tracker.stacks = 1;
@@ -181,7 +197,9 @@ impl MmHunter {
 
     fn apply_aura(&self, state: &mut SimState, aura_id: AuraIdx, target: TargetIdx) {
         let now = state.now();
-        let Some(aura) = get_aura(aura_id) else { return };
+        let Some(aura) = get_aura(aura_id) else {
+            return;
+        };
 
         let mut instance = AuraInstance::new(aura_id, target, aura.duration, now, aura.flags);
         if aura.max_stacks > 1 {
@@ -197,14 +215,33 @@ impl MmHunter {
         }
     }
 
-    fn do_calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool, spell_id: Option<SpellIdx>) -> f32 {
+    fn do_calculate_damage(
+        &self,
+        state: &mut SimState,
+        base: f32,
+        ap_coef: f32,
+        sp_coef: f32,
+        school: DamageSchool,
+        spell_id: Option<SpellIdx>,
+    ) -> f32 {
         let ap = state.player.stats.attack_power();
         let sp = state.player.stats.spell_power();
         let crit = state.player.stats.crit_chance();
         let armor = state.enemies.primary().map(|e| e.armor).unwrap_or(0.0);
         let now = state.now();
 
-        let result = DamagePipeline::calculate(base, ap_coef, sp_coef, ap, sp, &state.multipliers, crit, school, armor, &mut state.rng);
+        let result = DamagePipeline::calculate(
+            base,
+            ap_coef,
+            sp_coef,
+            ap,
+            sp,
+            &state.multipliers,
+            crit,
+            school,
+            armor,
+            &mut state.rng,
+        );
         let mut damage = result.final_amount;
 
         // Trueshot: Bonus damage during cooldown
@@ -231,7 +268,6 @@ impl MmHunter {
         damage
     }
 }
-
 
 impl SpecHandler for MmHunter {
     fn spec_id(&self) -> SpecId {
@@ -271,13 +307,18 @@ impl SpecHandler for MmHunter {
         self.apply_aura(state, LONE_WOLF, TargetIdx(0));
 
         // Schedule first auto-attack
-        state.events.schedule(SimTime::ZERO, SimEvent::AutoAttack { unit: state.player.id });
+        state.events.schedule(
+            SimTime::ZERO,
+            SimEvent::AutoAttack {
+                unit: state.player.id,
+            },
+        );
     }
 
     fn init_player(&self, player: &mut Player) {
         player.spec = SpecId::Marksmanship;
-        player.resources = crate::resource::UnitResources::new()
-            .with_primary(crate::types::ResourceType::Focus);
+        player.resources =
+            crate::resource::UnitResources::new().with_primary(crate::types::ResourceType::Focus);
 
         for spell in spell_definitions() {
             if spell.cooldown > SimTime::ZERO {
@@ -288,7 +329,9 @@ impl SpecHandler for MmHunter {
     }
 
     fn on_gcd(&self, state: &mut SimState) {
-        if state.finished { return; }
+        if state.finished {
+            return;
+        }
 
         let result = self.rotation.evaluate(state);
 
@@ -311,10 +354,19 @@ impl SpecHandler for MmHunter {
     }
 
     fn on_spell_damage(&self, state: &mut SimState, spell_id: SpellIdx, _target: TargetIdx) {
-        let Some(spell) = get_spell(spell_id) else { return };
+        let Some(spell) = get_spell(spell_id) else {
+            return;
+        };
         let Some(ref dmg) = spell.damage else { return };
 
-        let damage = self.do_calculate_damage(state, dmg.base_damage, dmg.ap_coefficient, dmg.sp_coefficient, dmg.school, Some(spell_id));
+        let damage = self.do_calculate_damage(
+            state,
+            dmg.base_damage,
+            dmg.ap_coefficient,
+            dmg.sp_coefficient,
+            dmg.school,
+            Some(spell_id),
+        );
         state.record_damage(damage);
         debug!(spell = spell_id.0, damage, "Spell damage");
     }
@@ -342,13 +394,33 @@ impl SpecHandler for MmHunter {
 
     fn on_aura_tick(&self, state: &mut SimState, aura_id: AuraIdx, target: TargetIdx) {
         let now = state.now();
-        if !state.auras.target(target).map(|a| a.has(aura_id, now)).unwrap_or(false) { return; }
+        if !state
+            .auras
+            .target(target)
+            .map(|a| a.has(aura_id, now))
+            .unwrap_or(false)
+        {
+            return;
+        }
 
         if let Some(aura) = get_aura(aura_id) {
             if let Some(ref periodic) = aura.periodic {
-                let damage = self.do_calculate_damage(state, 0.0, periodic.ap_coefficient, periodic.sp_coefficient, DamageSchool::Physical, None);
+                let damage = self.do_calculate_damage(
+                    state,
+                    0.0,
+                    periodic.ap_coefficient,
+                    periodic.sp_coefficient,
+                    DamageSchool::Physical,
+                    None,
+                );
                 state.record_damage(damage);
-                state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
+                state.schedule_in(
+                    periodic.interval,
+                    SimEvent::AuraTick {
+                        aura: aura_id,
+                        target,
+                    },
+                );
             }
         }
     }
@@ -396,7 +468,14 @@ impl SpecHandler for MmHunter {
         }
     }
 
-    fn calculate_damage(&self, state: &mut SimState, base: f32, ap_coef: f32, sp_coef: f32, school: DamageSchool) -> f32 {
+    fn calculate_damage(
+        &self,
+        state: &mut SimState,
+        base: f32,
+        ap_coef: f32,
+        sp_coef: f32,
+        school: DamageSchool,
+    ) -> f32 {
         self.do_calculate_damage(state, base, ap_coef, sp_coef, school, None)
     }
 }

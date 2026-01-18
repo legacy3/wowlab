@@ -137,7 +137,8 @@ impl NodeApp {
         if self.sims_per_second_history.len() >= METRICS_HISTORY_SIZE {
             self.sims_per_second_history.pop_front();
         }
-        self.sims_per_second_history.push_back(stats.sims_per_second);
+        self.sims_per_second_history
+            .push_back(stats.sims_per_second);
 
         if self.cpu_usage_history.len() >= METRICS_HISTORY_SIZE {
             self.cpu_usage_history.pop_front();
@@ -340,12 +341,30 @@ impl NodeApp {
 
     fn show_running_state(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            tab_button(ui, &mut self.current_tab, Tab::Status, Icon::LayoutDashboard, "Status");
+            tab_button(
+                ui,
+                &mut self.current_tab,
+                Tab::Status,
+                Icon::LayoutDashboard,
+                "Status",
+            );
             ui.add_space(4.0);
             let logs_label = format!("Logs ({})", self.logs.len());
-            tab_button(ui, &mut self.current_tab, Tab::Logs, Icon::ScrollText, &logs_label);
+            tab_button(
+                ui,
+                &mut self.current_tab,
+                Tab::Logs,
+                Icon::ScrollText,
+                &logs_label,
+            );
             ui.add_space(4.0);
-            tab_button(ui, &mut self.current_tab, Tab::Settings, Icon::Settings, "Settings");
+            tab_button(
+                ui,
+                &mut self.current_tab,
+                Tab::Settings,
+                Icon::Settings,
+                "Settings",
+            );
         });
 
         ui.add_space(4.0);

@@ -11,20 +11,15 @@ use crate::types::{AuraIdx, SimTime};
 use super::{write_bool, write_f64, write_i32, FieldType, PopulateContext};
 
 /// Target specifier for aura queries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum AuraOn {
+    #[default]
     Player,
     Target,
     Pet,
-}
-
-impl Default for AuraOn {
-    fn default() -> Self {
-        AuraOn::Player
-    }
 }
 
 /// Unified aura expressions that can query player, target, or pet auras.
@@ -953,7 +948,11 @@ mod tests {
             UnifiedAuraExpr::AuraNextTick { aura, on },
         ];
 
-        assert_eq!(all_exprs.len(), 11, "Should have exactly 11 expression types");
+        assert_eq!(
+            all_exprs.len(),
+            11,
+            "Should have exactly 11 expression types"
+        );
 
         for expr in all_exprs {
             let json = serde_json::to_string(&expr).unwrap();

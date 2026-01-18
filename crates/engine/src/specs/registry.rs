@@ -262,8 +262,7 @@ mod tests {
 
     #[test]
     fn test_dot_also_registers_as_aura() {
-        let data = SpecData::new("test")
-            .dot("serpent_sting", AuraIdx(271788));
+        let data = SpecData::new("test").dot("serpent_sting", AuraIdx(271788));
 
         // DoT lookup
         assert_eq!(data.dot_id("serpent_sting"), Some(AuraIdx(271788)));
@@ -287,8 +286,7 @@ mod tests {
 
     #[test]
     fn test_charged_cooldowns() {
-        let data = SpecData::new("test")
-            .charged_cooldown("barbed_shot");
+        let data = SpecData::new("test").charged_cooldown("barbed_shot");
 
         assert!(data.is_charged("barbed_shot"));
         assert!(!data.is_charged("kill_command"));
@@ -296,8 +294,7 @@ mod tests {
 
     #[test]
     fn test_resource() {
-        let data = SpecData::new("test")
-            .resource("focus");
+        let data = SpecData::new("test").resource("focus");
 
         assert_eq!(data.primary_resource(), Some("focus"));
     }

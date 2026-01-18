@@ -1,16 +1,11 @@
+use super::constants::*;
 use crate::actor::Pet;
 use crate::combat::Cooldown;
-use crate::types::{UnitIdx, SimTime, PetKind};
-use super::constants::*;
+use crate::types::{PetKind, SimTime, UnitIdx};
 
 /// Create a BM Hunter pet
 pub fn create_pet(owner: UnitIdx) -> Pet {
-    let mut pet = Pet::new(
-        UnitIdx(1),
-        owner,
-        PetKind::Permanent,
-        "Pet",
-    );
+    let mut pet = Pet::new(UnitIdx(1), owner, PetKind::Permanent, "Pet");
 
     // Pet has Stomp on a 10s cooldown
     pet.add_cooldown(PET_STOMP, Cooldown::new(10.0));

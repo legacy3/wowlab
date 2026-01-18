@@ -51,15 +51,15 @@ impl RuneState {
         }
 
         // Sort ready times
-        let mut times: Vec<_> = self.ready_at.iter().copied().collect();
+        let mut times: Vec<_> = self.ready_at.to_vec();
         times.sort();
 
         // Time until the Nth rune is ready
-        times.get(count as usize - 1)
+        times
+            .get(count as usize - 1)
             .map(|&t| t.saturating_sub(now))
             .unwrap_or(SimTime::MAX)
     }
-
 }
 
 impl Default for RuneState {

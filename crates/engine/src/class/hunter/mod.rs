@@ -12,22 +12,20 @@ pub mod focus;
 pub mod pet;
 pub mod shared;
 
-pub use focus::{FOCUS_REGEN_BASE, FOCUS_MAX, focus_regen_rate, regenerate_focus};
+pub use focus::{focus_regen_rate, regenerate_focus, FOCUS_MAX, FOCUS_REGEN_BASE};
 pub use pet::{
-    PET_ATTACK_SPEED, PET_STAT_INHERITANCE, PET_AUTO_ATTACK_COEF,
-    calculate_pet_damage, default_pet_attack,
+    calculate_pet_damage, default_pet_attack, PET_ATTACK_SPEED, PET_AUTO_ATTACK_COEF,
+    PET_STAT_INHERITANCE,
 };
 pub use shared::{
-    KILL_SHOT, TRANQUILIZING_SHOT, ARCANE_SHOT, STEADY_SHOT,
-    ASPECT_OF_THE_CHEETAH, ASPECT_OF_THE_TURTLE,
-    KILL_SHOT_THRESHOLD, KILL_SHOT_COST, KILL_SHOT_AP_COEF, KILL_SHOT_COOLDOWN,
-    can_use_kill_shot, calculate_kill_shot_damage,
-    RANGED_ATTACK_SPEED, ranged_attack_speed,
+    calculate_kill_shot_damage, can_use_kill_shot, ranged_attack_speed, ARCANE_SHOT,
+    ASPECT_OF_THE_CHEETAH, ASPECT_OF_THE_TURTLE, KILL_SHOT, KILL_SHOT_AP_COEF, KILL_SHOT_COOLDOWN,
+    KILL_SHOT_COST, KILL_SHOT_THRESHOLD, RANGED_ATTACK_SPEED, STEADY_SHOT, TRANQUILIZING_SHOT,
 };
 
 use crate::handler::SpecHandler;
 use crate::sim::SimState;
-use crate::types::{UnitIdx, TargetIdx, DamageSchool};
+use crate::types::{DamageSchool, TargetIdx, UnitIdx};
 
 /// Shared behavior for all Hunter specs.
 ///
@@ -96,16 +94,18 @@ pub trait HunterClass: SpecHandler {
         let now = state.now();
 
         // Verify pet is valid
-        if !state.pets.get(pet).map(|p| p.is_valid(now)).unwrap_or(false) {
+        if !state
+            .pets
+            .get(pet)
+            .map(|p| p.is_valid(now))
+            .unwrap_or(false)
+        {
             return 0.0;
         }
 
         // Calculate damage with modifiers
-        let damage = calculate_pet_damage(
-            state,
-            PET_AUTO_ATTACK_COEF,
-            self.pet_damage_modifier(state),
-        );
+        let damage =
+            calculate_pet_damage(state, PET_AUTO_ATTACK_COEF, self.pet_damage_modifier(state));
         state.record_damage(damage);
 
         damage

@@ -3,13 +3,13 @@
 //! This struct solves the borrow checker issue where we need to call
 //! `handler.on_gcd(&mut state)`. By owning both, we can borrow them separately.
 
-use std::sync::Arc;
+use super::{SimConfig, SimState};
+use crate::actor::Player;
+use crate::core::{ScheduledEvent, SimEvent};
 use crate::handler::SpecHandler;
-use crate::core::{SimEvent, ScheduledEvent};
 use crate::resource::ResourceRegen;
 use crate::types::SimTime;
-use super::{SimState, SimConfig};
-use crate::actor::Player;
+use std::sync::Arc;
 use tracing::{debug, trace};
 
 /// Simulation combining handler and state.
@@ -136,10 +136,15 @@ impl Simulation {
             }
 
             SimEvent::CastComplete { spell, target } => {
-                self.handler.on_cast_complete(&mut self.state, spell, target);
+                self.handler
+                    .on_cast_complete(&mut self.state, spell, target);
             }
 
-            SimEvent::SpellDamage { spell, target, snapshot_id: _ } => {
+            SimEvent::SpellDamage {
+                spell,
+                target,
+                snapshot_id: _,
+            } => {
                 self.handler.on_spell_damage(&mut self.state, spell, target);
             }
 
@@ -178,10 +183,8 @@ impl Simulation {
                 self.handle_resource_tick();
 
                 if !self.state.finished {
-                    self.state.schedule_in(
-                        SimTime::from_millis(100),
-                        SimEvent::ResourceTick,
-                    );
+                    self.state
+                        .schedule_in(SimTime::from_millis(100), SimEvent::ResourceTick);
                 }
             }
 

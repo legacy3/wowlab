@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
@@ -34,7 +34,12 @@ impl ResourceType {
             Self::Rage | Self::Focus | Self::Energy => 100,
             Self::ComboPoints | Self::SoulShards | Self::HolyPower | Self::Chi | Self::Essence => 5,
             Self::Runes => 6,
-            Self::RunicPower | Self::LunarPower | Self::Maelstrom | Self::Insanity | Self::Fury | Self::Pain => 100,
+            Self::RunicPower
+            | Self::LunarPower
+            | Self::Maelstrom
+            | Self::Insanity
+            | Self::Fury
+            | Self::Pain => 100,
             Self::ArcaneCharges => 4,
         }
     }

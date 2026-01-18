@@ -1,4 +1,4 @@
-use crate::types::{SnapshotFlags, DamageSchool, HitResult};
+use crate::types::{DamageSchool, HitResult, SnapshotFlags};
 
 /// Snapshotted state for an action (DoTs, delayed damage)
 #[derive(Clone, Debug, Default)]
@@ -36,11 +36,7 @@ impl ActionState {
     }
 
     /// Snapshot stats from cache based on flags
-    pub fn snapshot(
-        &mut self,
-        cache: &crate::stats::StatCache,
-        flags: SnapshotFlags,
-    ) {
+    pub fn snapshot(&mut self, cache: &crate::stats::StatCache, flags: SnapshotFlags) {
         if flags.contains(SnapshotFlags::ATTACK_POWER) {
             self.attack_power = cache.attack_power();
         }

@@ -4,11 +4,13 @@
 //! replacing scattered if/else chains in spec handlers.
 
 use crate::aura::AuraInstance;
+use crate::combat::DamagePipeline;
 use crate::core::SimEvent;
 use crate::sim::SimState;
+use crate::spec::{
+    AuraDef, DamageMod, EffectCondition, ModCondition, SpellDef, SpellEffect, SpellFlags,
+};
 use crate::types::{AuraIdx, DamageSchool, HitResult, SimTime, SpellIdx, TargetIdx};
-use crate::combat::DamagePipeline;
-use crate::spec::{SpellDef, AuraDef, SpellFlags, SpellEffect, EffectCondition, DamageMod, ModCondition};
 
 use tracing::debug;
 
@@ -56,17 +58,29 @@ fn execute_single_effect(ctx: &mut EffectContext<'_>, effect: &SpellEffect) {
 
         SpellEffect::TriggerSpell { spell } => {
             let now = ctx.state.now();
-            ctx.state.events.schedule(now, SimEvent::CastComplete {
-                spell: *spell,
-                target: ctx.target,
-            });
+            ctx.state.events.schedule(
+                now,
+                SimEvent::CastComplete {
+                    spell: *spell,
+                    target: ctx.target,
+                },
+            );
             debug!(spell = spell.0, "Triggered spell");
         }
 
-        SpellEffect::SummonPet { kind, duration, name } => {
+        SpellEffect::SummonPet {
+            kind,
+            duration,
+            name,
+        } => {
             let now = ctx.state.now();
-            let pet_id = ctx.state.pets.summon(ctx.state.player.id, *kind, name.clone());
-            ctx.state.events.schedule(now, SimEvent::PetAttack { pet: pet_id });
+            let pet_id = ctx
+                .state
+                .pets
+                .summon(ctx.state.player.id, *kind, name.clone());
+            ctx.state
+                .events
+                .schedule(now, SimEvent::PetAttack { pet: pet_id });
             // Duration is tracked via pet's expires_at, no explicit despawn event needed
             let _ = duration; // Duration used during pet creation
             debug!(pet = pet_id.0, duration, name, "Summoned pet");
@@ -84,7 +98,7 @@ fn execute_single_effect(ctx: &mut EffectContext<'_>, effect: &SpellEffect) {
             let now = ctx.state.now();
             if ctx.state.player.buffs.has(*aura, now) {
                 if let Some(instance) = ctx.state.player.buffs.get_mut(*aura) {
-                    instance.expires_at = instance.expires_at + SimTime::from_secs_f32(*amount);
+                    instance.expires_at += SimTime::from_secs_f32(*amount);
                     debug!(aura = aura.0, amount, "Extended aura");
                 }
             }
@@ -108,7 +122,10 @@ fn execute_single_effect(ctx: &mut EffectContext<'_>, effect: &SpellEffect) {
             debug!(damage_pct, "Pet mirror cast");
         }
 
-        SpellEffect::Cleave { damage_pct, max_targets } => {
+        SpellEffect::Cleave {
+            damage_pct,
+            max_targets,
+        } => {
             // Cleave damage is handled during damage calculation
             debug!(damage_pct, max_targets, "Cleave effect");
         }
@@ -132,25 +149,23 @@ fn check_condition(ctx: &EffectContext<'_>, condition: &EffectCondition) -> bool
     let now = ctx.state.now();
 
     match condition {
-        EffectCondition::BuffActive(aura) => {
-            ctx.state.player.buffs.has(*aura, now)
-        }
+        EffectCondition::BuffActive(aura) => ctx.state.player.buffs.has(*aura, now),
 
-        EffectCondition::DebuffActive(aura) => {
-            ctx.state.auras.target(ctx.target)
-                .map(|a| a.has(*aura, now))
-                .unwrap_or(false)
-        }
+        EffectCondition::DebuffActive(aura) => ctx
+            .state
+            .auras
+            .target(ctx.target)
+            .map(|a| a.has(*aura, now))
+            .unwrap_or(false),
 
-        EffectCondition::TalentEnabled(name) => {
-            ctx.talents.iter().any(|t| *t == name.as_str())
-        }
+        EffectCondition::TalentEnabled(name) => ctx.talents.contains(&name.as_str()),
 
-        EffectCondition::TargetHealthBelow(threshold) => {
-            ctx.state.enemies.primary()
-                .map(|e| (e.current_health / e.max_health) < *threshold)
-                .unwrap_or(false)
-        }
+        EffectCondition::TargetHealthBelow(threshold) => ctx
+            .state
+            .enemies
+            .primary()
+            .map(|e| (e.current_health / e.max_health) < *threshold)
+            .unwrap_or(false),
 
         EffectCondition::PlayerHealthBelow(threshold) => {
             // Player health not tracked in DPS sims - assume always above threshold
@@ -159,35 +174,26 @@ fn check_condition(ctx: &EffectContext<'_>, condition: &EffectCondition) -> bool
             false
         }
 
-        EffectCondition::DuringBuff(aura) => {
-            ctx.state.player.buffs.has(*aura, now)
-        }
+        EffectCondition::DuringBuff(aura) => ctx.state.player.buffs.has(*aura, now),
 
-        EffectCondition::PetActive => {
-            ctx.state.pets.active(now).count() > 0
-        }
+        EffectCondition::PetActive => ctx.state.pets.active(now).count() > 0,
 
         EffectCondition::HasStacks { aura, min } => {
             ctx.state.player.buffs.stacks(*aura, now) >= *min
         }
 
-        EffectCondition::CooldownReady(spell) => {
-            ctx.state.player.cooldown(*spell)
-                .map(|cd| cd.is_ready(now))
-                .unwrap_or(true)
-        }
+        EffectCondition::CooldownReady(spell) => ctx
+            .state
+            .player
+            .cooldown(*spell)
+            .map(|cd| cd.is_ready(now))
+            .unwrap_or(true),
 
-        EffectCondition::And(conditions) => {
-            conditions.iter().all(|c| check_condition(ctx, c))
-        }
+        EffectCondition::And(conditions) => conditions.iter().all(|c| check_condition(ctx, c)),
 
-        EffectCondition::Or(conditions) => {
-            conditions.iter().any(|c| check_condition(ctx, c))
-        }
+        EffectCondition::Or(conditions) => conditions.iter().any(|c| check_condition(ctx, c)),
 
-        EffectCondition::Not(cond) => {
-            !check_condition(ctx, cond)
-        }
+        EffectCondition::Not(cond) => !check_condition(ctx, cond),
     }
 }
 
@@ -196,7 +202,13 @@ fn apply_buff(ctx: &mut EffectContext<'_>, aura_id: AuraIdx, stacks: u8) {
     let now = ctx.state.now();
 
     if let Some(aura_def) = (ctx.get_aura)(aura_id) {
-        let mut instance = AuraInstance::new(aura_id, TargetIdx(0), aura_def.duration, now, aura_def.flags);
+        let mut instance = AuraInstance::new(
+            aura_id,
+            TargetIdx(0),
+            aura_def.duration,
+            now,
+            aura_def.flags,
+        );
 
         if aura_def.max_stacks > 1 {
             // For stackable buffs, add stacks up to max
@@ -215,7 +227,8 @@ fn apply_debuff(ctx: &mut EffectContext<'_>, aura_id: AuraIdx, target: TargetIdx
     let now = ctx.state.now();
 
     if let Some(aura_def) = (ctx.get_aura)(aura_id) {
-        let mut instance = AuraInstance::new(aura_id, target, aura_def.duration, now, aura_def.flags);
+        let mut instance =
+            AuraInstance::new(aura_id, target, aura_def.duration, now, aura_def.flags);
 
         if let Some(ref periodic) = aura_def.periodic {
             instance = instance.with_periodic(periodic.interval, now);
@@ -231,10 +244,21 @@ fn apply_debuff(ctx: &mut EffectContext<'_>, aura_id: AuraIdx, target: TargetIdx
 
         // Schedule first tick for periodic effects
         if let Some(ref periodic) = aura_def.periodic {
-            ctx.state.schedule_in(periodic.interval, SimEvent::AuraTick { aura: aura_id, target });
+            ctx.state.schedule_in(
+                periodic.interval,
+                SimEvent::AuraTick {
+                    aura: aura_id,
+                    target,
+                },
+            );
         }
 
-        debug!(aura = aura_id.0, target = target.0, stacks, "Applied debuff");
+        debug!(
+            aura = aura_id.0,
+            target = target.0,
+            stacks,
+            "Applied debuff"
+        );
     }
 }
 
@@ -271,8 +295,15 @@ pub fn calculate_damage(
 
     // Calculate base damage through pipeline
     let result = DamagePipeline::calculate(
-        base, ap_coef, sp_coef, ap, sp,
-        &ctx.state.multipliers, crit, school, armor,
+        base,
+        ap_coef,
+        sp_coef,
+        ap,
+        sp,
+        &ctx.state.multipliers,
+        crit,
+        school,
+        armor,
         &mut ctx.state.rng,
     );
 
@@ -280,7 +311,9 @@ pub fn calculate_damage(
     ctx.is_crit = result.hit_result == HitResult::Crit;
 
     // Apply all active modifiers
-    let mut sorted_mods: Vec<_> = ctx.modifiers.iter()
+    let mut sorted_mods: Vec<_> = ctx
+        .modifiers
+        .iter()
         .filter(|m| check_mod_condition(ctx, &m.condition))
         .collect();
     sorted_mods.sort_by_key(|m| m.priority);
@@ -288,7 +321,10 @@ pub fn calculate_damage(
     for modifier in sorted_mods {
         let mult = get_modifier_value(ctx, modifier);
         damage *= mult;
-        debug!(name = modifier.name, mult, damage, "Applied damage modifier");
+        debug!(
+            name = modifier.name,
+            mult, damage, "Applied damage modifier"
+        );
     }
 
     damage
@@ -301,55 +337,47 @@ fn check_mod_condition(ctx: &DamageContext<'_>, condition: &ModCondition) -> boo
     match condition {
         ModCondition::Always => true,
 
-        ModCondition::ForSpell(spell) => {
-            ctx.spell_id == Some(*spell)
-        }
+        ModCondition::ForSpell(spell) => ctx.spell_id == Some(*spell),
 
-        ModCondition::PetAbility => {
-            ctx.spell.map(|s| s.flags.contains(SpellFlags::PET_ABILITY)).unwrap_or(false)
-        }
+        ModCondition::PetAbility => ctx
+            .spell
+            .map(|s| s.flags.contains(SpellFlags::PET_ABILITY))
+            .unwrap_or(false),
 
-        ModCondition::BuffActive(aura) => {
-            ctx.state.player.buffs.has(*aura, now)
-        }
+        ModCondition::BuffActive(aura) => ctx.state.player.buffs.has(*aura, now),
 
-        ModCondition::DebuffActive(aura) => {
-            ctx.state.auras.target(ctx.target)
-                .map(|a| a.has(*aura, now))
-                .unwrap_or(false)
-        }
+        ModCondition::DebuffActive(aura) => ctx
+            .state
+            .auras
+            .target(ctx.target)
+            .map(|a| a.has(*aura, now))
+            .unwrap_or(false),
 
-        ModCondition::TargetHealthBelow(threshold) => {
-            ctx.state.enemies.primary()
-                .map(|e| (e.current_health / e.max_health) < *threshold)
-                .unwrap_or(false)
-        }
+        ModCondition::TargetHealthBelow(threshold) => ctx
+            .state
+            .enemies
+            .primary()
+            .map(|e| (e.current_health / e.max_health) < *threshold)
+            .unwrap_or(false),
 
         ModCondition::OnCrit => ctx.is_crit,
 
-        ModCondition::PerStack { aura, .. } => {
-            ctx.state.player.buffs.stacks(*aura, now) > 0
-        }
+        ModCondition::PerStack { aura, .. } => ctx.state.player.buffs.stacks(*aura, now) > 0,
 
-        ModCondition::ExecutePhase => {
-            ctx.state.enemies.primary()
-                .map(|e| (e.current_health / e.max_health) < 0.20)
-                .unwrap_or(false)
-        }
+        ModCondition::ExecutePhase => ctx
+            .state
+            .enemies
+            .primary()
+            .map(|e| (e.current_health / e.max_health) < 0.20)
+            .unwrap_or(false),
 
         ModCondition::StatScaling { .. } => true,
 
-        ModCondition::TalentEnabled(name) => {
-            ctx.talents.iter().any(|t| *t == name.as_str())
-        }
+        ModCondition::TalentEnabled(name) => ctx.talents.contains(&name.as_str()),
 
-        ModCondition::And(conditions) => {
-            conditions.iter().all(|c| check_mod_condition(ctx, c))
-        }
+        ModCondition::And(conditions) => conditions.iter().all(|c| check_mod_condition(ctx, c)),
 
-        ModCondition::Or(conditions) => {
-            conditions.iter().any(|c| check_mod_condition(ctx, c))
-        }
+        ModCondition::Or(conditions) => conditions.iter().any(|c| check_mod_condition(ctx, c)),
     }
 }
 

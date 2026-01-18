@@ -85,7 +85,9 @@ pub fn transform_item(dbc: &DbcData, item_id: i32) -> Result<ItemDataFlat, Trans
     if icon_file_data_id == 0 {
         // Try to get from item appearance
         if let Some(modified_appearance) = dbc.item_modified_appearance.get(&item_id) {
-            if let Some(appearance) = dbc.item_appearance.get(&modified_appearance.ItemAppearanceID)
+            if let Some(appearance) = dbc
+                .item_appearance
+                .get(&modified_appearance.ItemAppearanceID)
             {
                 if appearance.DefaultIconFileDataID > 0 {
                     icon_file_data_id = appearance.DefaultIconFileDataID;
@@ -110,13 +112,15 @@ pub fn transform_item(dbc: &DbcData, item_id: i32) -> Result<ItemDataFlat, Trans
             links
                 .iter()
                 .filter_map(|link| {
-                    dbc.item_effect.get(&link.ItemEffectID).map(|effect| ItemEffect {
-                        spell_id: effect.SpellID,
-                        trigger_type: effect.TriggerType,
-                        charges: effect.Charges,
-                        cooldown: effect.CoolDownMSec,
-                        category_cooldown: effect.CategoryCoolDownMSec,
-                    })
+                    dbc.item_effect
+                        .get(&link.ItemEffectID)
+                        .map(|effect| ItemEffect {
+                            spell_id: effect.SpellID,
+                            trigger_type: effect.TriggerType,
+                            charges: effect.Charges,
+                            cooldown: effect.CoolDownMSec,
+                            category_cooldown: effect.CategoryCoolDownMSec,
+                        })
                 })
                 .collect()
         })
@@ -243,7 +247,10 @@ pub fn transform_item(dbc: &DbcData, item_id: i32) -> Result<ItemDataFlat, Trans
 
             ItemSetInfo {
                 set_id: item_set_id,
-                set_name: item_set.Name_lang.clone().unwrap_or_else(|| "Unknown Set".to_string()),
+                set_name: item_set
+                    .Name_lang
+                    .clone()
+                    .unwrap_or_else(|| "Unknown Set".to_string()),
                 item_ids,
                 bonuses,
             }
@@ -260,7 +267,9 @@ pub fn transform_item(dbc: &DbcData, item_id: i32) -> Result<ItemDataFlat, Trans
             encounter_items
                 .iter()
                 .filter_map(|encounter_item| {
-                    let encounter = dbc.journal_encounter.get(&encounter_item.JournalEncounterID)?;
+                    let encounter = dbc
+                        .journal_encounter
+                        .get(&encounter_item.JournalEncounterID)?;
                     let instance = dbc.journal_instance.get(&encounter.JournalInstanceID);
 
                     Some(ItemDropSource {

@@ -43,24 +43,16 @@ pub fn primary_stat_for_spec(spec: SpecId) -> Attribute {
     use SpecId::*;
     match spec {
         // Agility specs
-        BeastMastery | Marksmanship | Survival |
-        Assassination | Outlaw | Subtlety |
-        Feral | Guardian |
-        Brewmaster | Windwalker |
-        Havoc | Vengeance => Attribute::Agility,
+        BeastMastery | Marksmanship | Survival | Assassination | Outlaw | Subtlety | Feral
+        | Guardian | Brewmaster | Windwalker | Havoc | Vengeance => Attribute::Agility,
 
         // Strength specs
-        Arms | Fury | ProtWarrior |
-        HolyPaladin | ProtPaladin | Retribution |
-        Blood | FrostDK | Unholy => Attribute::Strength,
+        Arms | Fury | ProtWarrior | HolyPaladin | ProtPaladin | Retribution | Blood | FrostDK
+        | Unholy => Attribute::Strength,
 
         // Intellect specs
-        Discipline | HolyPriest | Shadow |
-        Elemental | Enhancement | RestoShaman |
-        Arcane | Fire | FrostMage |
-        Affliction | Demonology | Destruction |
-        Mistweaver |
-        Balance | RestoDruid |
-        Devastation | Preservation | Augmentation => Attribute::Intellect,
+        Discipline | HolyPriest | Shadow | Elemental | Enhancement | RestoShaman | Arcane
+        | Fire | FrostMage | Affliction | Demonology | Destruction | Mistweaver | Balance
+        | RestoDruid | Devastation | Preservation | Augmentation => Attribute::Intellect,
     }
 }

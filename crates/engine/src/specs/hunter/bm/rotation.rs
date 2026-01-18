@@ -2,15 +2,15 @@
 //!
 //! Provides name resolution for BM Hunter rotations and context building.
 
+use super::constants::*;
 use crate::rotation::SpecResolver;
 use crate::types::SpellIdx;
-use super::constants::*;
 
 /// Create a spec resolver for BM Hunter.
 ///
 /// This maps human-readable spell/aura names to game IDs.
 pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
-    let resolver = SpecResolver::new("bm_hunter")
+    SpecResolver::new("bm_hunter")
         .resource("focus")
         // Core spells
         .spell("kill_command", KILL_COMMAND.0)
@@ -48,20 +48,42 @@ pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
         // Charged cooldowns
         .charged_cooldown("barbed_shot")
         // Talents
-        .talent("animal_companion", talents.contains(TalentFlags::ANIMAL_COMPANION))
-        .talent("solitary_companion", talents.contains(TalentFlags::SOLITARY_COMPANION))
-        .talent("thrill_of_the_hunt", talents.contains(TalentFlags::THRILL_OF_THE_HUNT))
-        .talent("go_for_the_throat", talents.contains(TalentFlags::GO_FOR_THE_THROAT))
-        .talent("alpha_predator", talents.contains(TalentFlags::ALPHA_PREDATOR))
-        .talent("killer_instinct", talents.contains(TalentFlags::KILLER_INSTINCT))
+        .talent(
+            "animal_companion",
+            talents.contains(TalentFlags::ANIMAL_COMPANION),
+        )
+        .talent(
+            "solitary_companion",
+            talents.contains(TalentFlags::SOLITARY_COMPANION),
+        )
+        .talent(
+            "thrill_of_the_hunt",
+            talents.contains(TalentFlags::THRILL_OF_THE_HUNT),
+        )
+        .talent(
+            "go_for_the_throat",
+            talents.contains(TalentFlags::GO_FOR_THE_THROAT),
+        )
+        .talent(
+            "alpha_predator",
+            talents.contains(TalentFlags::ALPHA_PREDATOR),
+        )
+        .talent(
+            "killer_instinct",
+            talents.contains(TalentFlags::KILLER_INSTINCT),
+        )
         .talent("killer_cobra", talents.contains(TalentFlags::KILLER_COBRA))
         .talent("bloodshed", talents.contains(TalentFlags::BLOODSHED))
-        .talent("call_of_the_wild", talents.contains(TalentFlags::CALL_OF_THE_WILD))
+        .talent(
+            "call_of_the_wild",
+            talents.contains(TalentFlags::CALL_OF_THE_WILD),
+        )
         .talent("dire_beast", talents.contains(TalentFlags::DIRE_BEAST))
-        .talent("murder_of_crows", talents.contains(TalentFlags::MURDER_OF_CROWS))
-        .talent("black_arrow", talents.contains(TalentFlags::BLACK_ARROW));
-
-    resolver
+        .talent(
+            "murder_of_crows",
+            talents.contains(TalentFlags::MURDER_OF_CROWS),
+        )
+        .talent("black_arrow", talents.contains(TalentFlags::BLACK_ARROW))
 }
 
 /// Default spec resolver (no talents).

@@ -62,12 +62,7 @@ impl PopulateContext for CooldownExpr {
                     .player
                     .charged_cooldown(*spell)
                     .map(|cd| cd.has_charge())
-                    .or_else(|| {
-                        state
-                            .player
-                            .cooldown(*spell)
-                            .map(|cd| cd.is_ready(now))
-                    })
+                    .or_else(|| state.player.cooldown(*spell).map(|cd| cd.is_ready(now)))
                     .unwrap_or(true);
                 write_bool(buffer, offset, ready);
             }

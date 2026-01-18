@@ -10,8 +10,8 @@
 use crate::{SupabaseClient, SupabaseError};
 use directories::ProjectDirs;
 use moka::sync::Cache;
-use serde::{de::DeserializeOwned, Serialize};
 use parsers::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use serde::{de::DeserializeOwned, Serialize};
 use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
@@ -241,7 +241,12 @@ impl GameDataCache {
         serde_json::from_reader(BufReader::new(file)).ok()
     }
 
-    fn write_disk<T: Serialize>(&self, category: &str, key: i32, value: &T) -> Result<(), SupabaseError> {
+    fn write_disk<T: Serialize>(
+        &self,
+        category: &str,
+        key: i32,
+        value: &T,
+    ) -> Result<(), SupabaseError> {
         let dir = self.cache_dir.join(category);
         fs::create_dir_all(&dir).map_err(|e| SupabaseError::Io {
             message: format!("Failed to create cache subdir: {}", e),

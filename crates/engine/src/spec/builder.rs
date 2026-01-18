@@ -1,7 +1,10 @@
-use super::{SpellDef, AuraDef, CastType, GcdType, SpellTarget, SpellFlags, DamageEffect, ResourceCost, AuraEffect};
-use super::effect::{SpellEffect, EffectCondition};
-use crate::types::{SpellIdx, AuraIdx, ResourceType, SimTime, DamageSchool, DerivedStat, PetKind};
+use super::effect::{EffectCondition, SpellEffect};
+use super::{
+    AuraDef, AuraEffect, CastType, DamageEffect, GcdType, ResourceCost, SpellDef, SpellFlags,
+    SpellTarget,
+};
 use crate::aura::PeriodicEffect;
+use crate::types::{AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx};
 
 /// Builder for spell definitions
 pub struct SpellBuilder {
@@ -32,7 +35,10 @@ impl SpellBuilder {
     }
 
     pub fn channel(mut self, duration_ms: u32, ticks: u8) -> Self {
-        self.spell.cast_type = CastType::Channel { duration: duration_ms, ticks };
+        self.spell.cast_type = CastType::Channel {
+            duration: duration_ms,
+            ticks,
+        };
         self.spell.castable_while_moving = false;
         self
     }
@@ -71,7 +77,9 @@ impl SpellBuilder {
     }
 
     pub fn cost_percent(mut self, resource: ResourceType, percent: f32) -> Self {
-        self.spell.costs.push(ResourceCost::percent(resource, percent));
+        self.spell
+            .costs
+            .push(ResourceCost::percent(resource, percent));
         self
     }
 
@@ -177,7 +185,9 @@ impl SpellBuilder {
 
     /// Reduce another spell's cooldown when this spell is cast.
     pub fn reduces_cooldown(mut self, spell: SpellIdx, amount: f32) -> Self {
-        self.spell.effects.push(SpellEffect::ReduceCooldown { spell, amount });
+        self.spell
+            .effects
+            .push(SpellEffect::ReduceCooldown { spell, amount });
         self
     }
 
@@ -189,43 +199,60 @@ impl SpellBuilder {
 
     /// Summon a pet/guardian when cast.
     pub fn summons_pet(mut self, kind: PetKind, duration: f32, name: impl Into<String>) -> Self {
-        self.spell.effects.push(SpellEffect::SummonPet { kind, duration, name: name.into() });
+        self.spell.effects.push(SpellEffect::SummonPet {
+            kind,
+            duration,
+            name: name.into(),
+        });
         self
     }
 
     /// Apply a buff to the player.
     pub fn applies_buff(mut self, aura: AuraIdx) -> Self {
-        self.spell.effects.push(SpellEffect::ApplyBuff { aura, stacks: 1 });
+        self.spell
+            .effects
+            .push(SpellEffect::ApplyBuff { aura, stacks: 1 });
         self
     }
 
     /// Apply a buff with specific stack count.
     pub fn applies_buff_stacks(mut self, aura: AuraIdx, stacks: u8) -> Self {
-        self.spell.effects.push(SpellEffect::ApplyBuff { aura, stacks });
+        self.spell
+            .effects
+            .push(SpellEffect::ApplyBuff { aura, stacks });
         self
     }
 
     /// Apply a debuff to the target.
     pub fn applies_debuff(mut self, aura: AuraIdx) -> Self {
-        self.spell.effects.push(SpellEffect::ApplyDebuff { aura, stacks: 1 });
+        self.spell
+            .effects
+            .push(SpellEffect::ApplyDebuff { aura, stacks: 1 });
         self
     }
 
     /// Extend an aura's duration.
     pub fn extends_aura(mut self, aura: AuraIdx, amount: f32) -> Self {
-        self.spell.effects.push(SpellEffect::ExtendAura { aura, amount });
+        self.spell
+            .effects
+            .push(SpellEffect::ExtendAura { aura, amount });
         self
     }
 
     /// Pet mirrors this cast (like Animal Companion).
     pub fn pet_mirrors(mut self, damage_pct: f32) -> Self {
-        self.spell.effects.push(SpellEffect::PetMirrorCast { damage_pct });
+        self.spell
+            .effects
+            .push(SpellEffect::PetMirrorCast { damage_pct });
         self
     }
 
     /// Cleave damage to nearby targets.
     pub fn cleaves(mut self, damage_pct: f32, max_targets: u8) -> Self {
-        self.spell.effects.push(SpellEffect::Cleave { damage_pct, max_targets });
+        self.spell.effects.push(SpellEffect::Cleave {
+            damage_pct,
+            max_targets,
+        });
         self
     }
 
@@ -279,7 +306,12 @@ impl AuraBuilder {
         }
     }
 
-    pub fn dot(id: AuraIdx, name: &'static str, duration_secs: f32, tick_interval_secs: f32) -> Self {
+    pub fn dot(
+        id: AuraIdx,
+        name: &'static str,
+        duration_secs: f32,
+        tick_interval_secs: f32,
+    ) -> Self {
         Self {
             aura: AuraDef::dot(
                 id,
@@ -316,27 +348,39 @@ impl AuraBuilder {
     }
 
     pub fn attribute_flat(mut self, attr: crate::types::Attribute, amount: f32) -> Self {
-        self.aura.effects.push(AuraEffect::AttributeFlat { attr, amount });
+        self.aura
+            .effects
+            .push(AuraEffect::AttributeFlat { attr, amount });
         self
     }
 
     pub fn attribute_percent(mut self, attr: crate::types::Attribute, amount: f32) -> Self {
-        self.aura.effects.push(AuraEffect::AttributePercent { attr, amount });
+        self.aura
+            .effects
+            .push(AuraEffect::AttributePercent { attr, amount });
         self
     }
 
     pub fn rating_flat(mut self, rating: crate::types::RatingType, amount: f32) -> Self {
-        self.aura.effects.push(AuraEffect::RatingFlat { rating, amount });
+        self.aura
+            .effects
+            .push(AuraEffect::RatingFlat { rating, amount });
         self
     }
 
     pub fn damage_multiplier(mut self, amount: f32) -> Self {
-        self.aura.effects.push(AuraEffect::DamageMultiplier { amount, school: None });
+        self.aura.effects.push(AuraEffect::DamageMultiplier {
+            amount,
+            school: None,
+        });
         self
     }
 
     pub fn school_damage(mut self, school: DamageSchool, amount: f32) -> Self {
-        self.aura.effects.push(AuraEffect::DamageMultiplier { amount, school: Some(school) });
+        self.aura.effects.push(AuraEffect::DamageMultiplier {
+            amount,
+            school: Some(school),
+        });
         self
     }
 
@@ -357,7 +401,8 @@ impl AuraBuilder {
     }
 
     pub fn periodic_damage(mut self, tick_interval_secs: f32, ap_coef: f32) -> Self {
-        let mut periodic = PeriodicEffect::new(self.aura.id, SimTime::from_secs_f32(tick_interval_secs));
+        let mut periodic =
+            PeriodicEffect::new(self.aura.id, SimTime::from_secs_f32(tick_interval_secs));
         periodic = periodic.with_ap_scaling(ap_coef);
         self.aura.periodic = Some(periodic);
         self.aura.flags.is_periodic = true;

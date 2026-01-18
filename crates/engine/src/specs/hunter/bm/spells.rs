@@ -2,9 +2,9 @@
 //!
 //! Each spell defines its behavior inline - costs, damage, and effects.
 
-use crate::spec::{SpellBuilder, SpellDef, SpellTarget, SpellEffect, EffectCondition};
-use crate::types::{ResourceType, DamageSchool, PetKind};
 use super::constants::*;
+use crate::spec::{EffectCondition, SpellBuilder, SpellDef, SpellEffect, SpellTarget};
+use crate::types::{DamageSchool, PetKind, ResourceType};
 
 /// Get all BM Hunter spell definitions.
 pub fn spell_definitions() -> Vec<SpellDef> {
@@ -57,14 +57,20 @@ fn kill_command() -> SpellDef {
         .physical_damage(2.0)
         .pet_ability()
         // Animal Companion: Pet mirrors the cast at 65% damage
-        .with_talent("animal_companion", SpellEffect::PetMirrorCast { damage_pct: 0.65 })
+        .with_talent(
+            "animal_companion",
+            SpellEffect::PetMirrorCast { damage_pct: 0.65 },
+        )
         // Kill Cleave: Cleave during Beast Cleave
         .on_cast_if(
             EffectCondition::And(vec![
                 EffectCondition::TalentEnabled("kill_cleave".to_string()),
                 EffectCondition::BuffActive(BEAST_CLEAVE),
             ]),
-            SpellEffect::Cleave { damage_pct: KILL_CLEAVE_DAMAGE, max_targets: 5 },
+            SpellEffect::Cleave {
+                damage_pct: KILL_CLEAVE_DAMAGE,
+                max_targets: 5,
+            },
         )
         // Wild Instincts: Apply debuff during Call of the Wild
         .on_cast_if(
@@ -72,7 +78,10 @@ fn kill_command() -> SpellDef {
                 EffectCondition::TalentEnabled("wild_instincts".to_string()),
                 EffectCondition::BuffActive(CALL_OF_THE_WILD_BUFF),
             ]),
-            SpellEffect::ApplyDebuff { aura: WILD_INSTINCTS, stacks: 1 },
+            SpellEffect::ApplyDebuff {
+                aura: WILD_INSTINCTS,
+                stacks: 1,
+            },
         )
         .build()
 }
@@ -86,7 +95,13 @@ fn cobra_shot() -> SpellDef {
         // Cobra Shot reduces Kill Command cooldown
         .reduces_cooldown(KILL_COMMAND, COBRA_SHOT_CDR)
         // Serpentine Rhythm: Build stacks on cast (consumed for damage)
-        .with_talent("serpentine_rhythm", SpellEffect::ApplyBuff { aura: SERPENTINE_RHYTHM, stacks: 1 })
+        .with_talent(
+            "serpentine_rhythm",
+            SpellEffect::ApplyBuff {
+                aura: SERPENTINE_RHYTHM,
+                stacks: 1,
+            },
+        )
         .build()
 }
 
@@ -112,9 +127,20 @@ fn bestial_wrath() -> SpellDef {
         .cooldown(BESTIAL_WRATH_COOLDOWN)
         .apply_aura(BESTIAL_WRATH_BUFF)
         // Thundering Hooves: Cast Explosive Shot
-        .with_talent("thundering_hooves", SpellEffect::TriggerSpell { spell: EXPLOSIVE_SHOT })
+        .with_talent(
+            "thundering_hooves",
+            SpellEffect::TriggerSpell {
+                spell: EXPLOSIVE_SHOT,
+            },
+        )
         // Piercing Fangs: Apply crit buff
-        .with_talent("piercing_fangs", SpellEffect::ApplyBuff { aura: PIERCING_FANGS, stacks: 1 })
+        .with_talent(
+            "piercing_fangs",
+            SpellEffect::ApplyBuff {
+                aura: PIERCING_FANGS,
+                stacks: 1,
+            },
+        )
         .build()
 }
 
@@ -152,7 +178,13 @@ fn call_of_the_wild() -> SpellDef {
         .cooldown(CALL_OF_THE_WILD_COOLDOWN)
         .apply_aura(CALL_OF_THE_WILD_BUFF)
         // Bloody Frenzy: Beast Cleave active during CotW
-        .with_talent("bloody_frenzy", SpellEffect::ApplyBuff { aura: BEAST_CLEAVE, stacks: 1 })
+        .with_talent(
+            "bloody_frenzy",
+            SpellEffect::ApplyBuff {
+                aura: BEAST_CLEAVE,
+                stacks: 1,
+            },
+        )
         .build()
 }
 
@@ -173,10 +205,13 @@ fn dire_beast() -> SpellDef {
         // Summon a guardian pet
         .summons_pet(PetKind::Guardian, DIRE_BEAST_DURATION, "Dire Beast")
         // Dire Frenzy: Extend duration
-        .with_talent("dire_frenzy", SpellEffect::ExtendAura {
-            aura: FRENZY,
-            amount: DIRE_FRENZY_EXTENSION,
-        })
+        .with_talent(
+            "dire_frenzy",
+            SpellEffect::ExtendAura {
+                aura: FRENZY,
+                amount: DIRE_FRENZY_EXTENSION,
+            },
+        )
         .build()
 }
 

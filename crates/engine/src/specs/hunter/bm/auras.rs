@@ -1,5 +1,5 @@
-use crate::spec::{AuraBuilder, AuraDef};
 use super::constants::*;
+use crate::spec::{AuraBuilder, AuraDef};
 
 /// Get all BM Hunter aura definitions
 pub fn aura_definitions() -> Vec<AuraDef> {
@@ -93,9 +93,13 @@ fn beast_cleave_buff() -> AuraDef {
 // ============================================================================
 
 fn call_of_the_wild_buff() -> AuraDef {
-    AuraBuilder::buff(CALL_OF_THE_WILD_BUFF, "Call of the Wild", CALL_OF_THE_WILD_DURATION)
-        // Spawns pets every 4 seconds, reduces KC/BS cooldowns
-        .build()
+    AuraBuilder::buff(
+        CALL_OF_THE_WILD_BUFF,
+        "Call of the Wild",
+        CALL_OF_THE_WILD_DURATION,
+    )
+    // Spawns pets every 4 seconds, reduces KC/BS cooldowns
+    .build()
 }
 
 fn bloodshed_debuff() -> AuraDef {
@@ -106,10 +110,15 @@ fn bloodshed_debuff() -> AuraDef {
 }
 
 fn murder_of_crows_debuff() -> AuraDef {
-    AuraBuilder::dot(MURDER_OF_CROWS_DEBUFF, "A Murder of Crows", MURDER_OF_CROWS_DURATION, MURDER_OF_CROWS_TICK)
-        .periodic_damage(MURDER_OF_CROWS_TICK, 0.12) // AP coefficient per tick
-        .snapshots()
-        .build()
+    AuraBuilder::dot(
+        MURDER_OF_CROWS_DEBUFF,
+        "A Murder of Crows",
+        MURDER_OF_CROWS_DURATION,
+        MURDER_OF_CROWS_TICK,
+    )
+    .periodic_damage(MURDER_OF_CROWS_TICK, 0.12) // AP coefficient per tick
+    .snapshots()
+    .build()
 }
 
 // ============================================================================
@@ -118,30 +127,42 @@ fn murder_of_crows_debuff() -> AuraDef {
 
 /// Thrill of the Hunt - player crit buff
 fn thrill_of_the_hunt_buff() -> AuraDef {
-    AuraBuilder::buff(THRILL_OF_THE_HUNT, "Thrill of the Hunt", THRILL_OF_THE_HUNT_DURATION)
-        .stacks(THRILL_OF_THE_HUNT_STACKS)
-        .refreshable()
-        .crit(THRILL_OF_THE_HUNT_CRIT) // 2% crit per stack
-        .build()
+    AuraBuilder::buff(
+        THRILL_OF_THE_HUNT,
+        "Thrill of the Hunt",
+        THRILL_OF_THE_HUNT_DURATION,
+    )
+    .stacks(THRILL_OF_THE_HUNT_STACKS)
+    .refreshable()
+    .crit(THRILL_OF_THE_HUNT_CRIT) // 2% crit per stack
+    .build()
 }
 
 /// Thrill of the Hunt - pet crit buff
 fn thrill_of_the_hunt_pet_buff() -> AuraDef {
-    AuraBuilder::buff(THRILL_OF_THE_HUNT_PET, "Thrill of the Hunt (Pet)", THRILL_OF_THE_HUNT_DURATION)
-        .stacks(THRILL_OF_THE_HUNT_STACKS)
-        .refreshable()
-        .crit(THRILL_OF_THE_HUNT_CRIT) // 2% crit per stack
-        .hidden()
-        .build()
+    AuraBuilder::buff(
+        THRILL_OF_THE_HUNT_PET,
+        "Thrill of the Hunt (Pet)",
+        THRILL_OF_THE_HUNT_DURATION,
+    )
+    .stacks(THRILL_OF_THE_HUNT_STACKS)
+    .refreshable()
+    .crit(THRILL_OF_THE_HUNT_CRIT) // 2% crit per stack
+    .hidden()
+    .build()
 }
 
 /// Serpentine Rhythm - Cobra Shot damage buff
 fn serpentine_rhythm_buff() -> AuraDef {
-    AuraBuilder::buff(SERPENTINE_RHYTHM, "Serpentine Rhythm", SERPENTINE_RHYTHM_DURATION)
-        .stacks(SERPENTINE_RHYTHM_STACKS)
-        .refreshable()
-        .damage_multiplier(1.0 + SERPENTINE_RHYTHM_DAMAGE) // 5% per stack
-        .build()
+    AuraBuilder::buff(
+        SERPENTINE_RHYTHM,
+        "Serpentine Rhythm",
+        SERPENTINE_RHYTHM_DURATION,
+    )
+    .stacks(SERPENTINE_RHYTHM_STACKS)
+    .refreshable()
+    .damage_multiplier(1.0 + SERPENTINE_RHYTHM_DAMAGE) // 5% per stack
+    .build()
 }
 
 /// Piercing Fangs - pet crit bonus during Bestial Wrath
@@ -228,9 +249,14 @@ fn pack_mentality_buff() -> AuraDef {
 }
 
 fn envenomed_fangs_dot() -> AuraDef {
-    AuraBuilder::dot(ENVENOMED_FANGS, "Envenomed Fangs", ENVENOMED_FANGS_DURATION, ENVENOMED_FANGS_TICK)
-        .periodic_damage(ENVENOMED_FANGS_TICK, 0.15) // Nature damage
-        .build()
+    AuraBuilder::dot(
+        ENVENOMED_FANGS,
+        "Envenomed Fangs",
+        ENVENOMED_FANGS_DURATION,
+        ENVENOMED_FANGS_TICK,
+    )
+    .periodic_damage(ENVENOMED_FANGS_TICK, 0.15) // Nature damage
+    .build()
 }
 
 // ============================================================================
@@ -238,10 +264,15 @@ fn envenomed_fangs_dot() -> AuraDef {
 // ============================================================================
 
 fn black_arrow_dot() -> AuraDef {
-    AuraBuilder::dot(BLACK_ARROW_DOT, "Black Arrow", BLACK_ARROW_DURATION, BLACK_ARROW_TICK)
-        .periodic_damage(BLACK_ARROW_TICK, BLACK_ARROW_AP_COEF)
-        .pandemic()
-        .build()
+    AuraBuilder::dot(
+        BLACK_ARROW_DOT,
+        "Black Arrow",
+        BLACK_ARROW_DURATION,
+        BLACK_ARROW_TICK,
+    )
+    .periodic_damage(BLACK_ARROW_TICK, BLACK_ARROW_AP_COEF)
+    .pandemic()
+    .build()
 }
 
 fn phantom_pain_buff() -> AuraDef {

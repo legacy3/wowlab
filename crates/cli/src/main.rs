@@ -36,10 +36,7 @@ async fn main() -> Result<()> {
     // Initialize tracing - defaults to info, override with RUST_LOG
     tracing_subscriber::registry()
         .with(fmt::layer())
-        .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
         .init();
 
     let cli = Cli::parse();

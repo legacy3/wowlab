@@ -13,8 +13,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use crate::dbc::rows::{TraitNodeGroupXTraitNodeRow, TraitNodeRow, TraitNodeXTraitNodeEntryRow};
 use crate::dbc::DbcData;
-use crate::dbc::rows::{TraitNodeRow, TraitNodeXTraitNodeEntryRow, TraitNodeGroupXTraitNodeRow};
 use crate::errors::TransformError;
 use crate::flat::{PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat};
 
@@ -50,17 +50,16 @@ const TREE_INDEX_HERO: i32 = 3;
 /// 7. Determine tree index (class/spec/hero) for each node
 /// 8. Assemble final node entries with spell/icon info
 /// 9. Calculate point limits from currency sources
-pub fn transform_trait_tree(
-    dbc: &DbcData,
-    spec_id: i32,
-) -> Result<TraitTreeFlat, TransformError> {
+pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat, TransformError> {
     // Step 1: Load spec and class metadata
     let spec = dbc
         .chr_specialization
         .get(&spec_id)
         .ok_or(TransformError::SpecNotFound { spec_id })?;
 
-    let class_id = spec.ClassID.ok_or(TransformError::SpecNotFound { spec_id })?;
+    let class_id = spec
+        .ClassID
+        .ok_or(TransformError::SpecNotFound { spec_id })?;
     let chr_class = dbc
         .chr_classes
         .get(&class_id)
@@ -220,12 +219,7 @@ fn collect_edges(
 ) -> Vec<crate::dbc::TraitEdgeRow> {
     node_ids
         .iter()
-        .flat_map(|&node_id| {
-            dbc.trait_edge
-                .get(&node_id)
-                .cloned()
-                .unwrap_or_default()
-        })
+        .flat_map(|&node_id| dbc.trait_edge.get(&node_id).cloned().unwrap_or_default())
         .filter(|e| {
             node_id_set.contains(&e.LeftTraitNodeID) && node_id_set.contains(&e.RightTraitNodeID)
         })
@@ -292,11 +286,9 @@ fn build_node_entries_map(
                 .unwrap_or_default();
 
             let mut sorted = entries;
-            sorted.sort_by(|a, b| {
-                match (a.Index >= 0, b.Index >= 0) {
-                    (true, true) => a.Index.cmp(&b.Index),
-                    _ => b.TraitNodeEntryID.cmp(&a.TraitNodeEntryID),
-                }
+            sorted.sort_by(|a, b| match (a.Index >= 0, b.Index >= 0) {
+                (true, true) => a.Index.cmp(&b.Index),
+                _ => b.TraitNodeEntryID.cmp(&a.TraitNodeEntryID),
             });
 
             (n.ID, sorted)
@@ -505,7 +497,10 @@ fn calculate_point_limits(dbc: &DbcData, all_tree_ids: &[i32]) -> PointLimits {
         let Some(currency) = dbc.trait_currency.get(&tc.TraitCurrencyID) else {
             continue;
         };
-        let total = currency_totals.get(&tc.TraitCurrencyID).copied().unwrap_or(0);
+        let total = currency_totals
+            .get(&tc.TraitCurrencyID)
+            .copied()
+            .unwrap_or(0);
 
         if currency.Flags & CURRENCY_FLAG_CLASS != 0 {
             class_limit += total;

@@ -219,7 +219,13 @@ fn validate_action(
         Action::SetVar {
             value, condition, ..
         } => {
-            validate_expr(value, variable_names, used_variables, errors, "set_var value");
+            validate_expr(
+                value,
+                variable_names,
+                used_variables,
+                errors,
+                "set_var value",
+            );
             if let Some(cond) = condition {
                 validate_expr(cond, variable_names, used_variables, errors, "condition");
             }
@@ -271,6 +277,7 @@ fn validate_action(
     }
 }
 
+#[allow(clippy::only_used_in_recursion)]
 fn validate_expr(
     expr: &Expr,
     variable_names: &HashSet<String>,
@@ -373,7 +380,9 @@ fn has_circular_reference(
         Expr::Not { operand }
         | Expr::Floor { operand }
         | Expr::Ceil { operand }
-        | Expr::Abs { operand } => has_circular_reference(target, operand, variables, visited, path),
+        | Expr::Abs { operand } => {
+            has_circular_reference(target, operand, variables, visited, path)
+        }
 
         Expr::Gt { left, right }
         | Expr::Gte { left, right }

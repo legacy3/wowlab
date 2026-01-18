@@ -1,4 +1,4 @@
-use crate::types::{SpellIdx, SimTime, TargetIdx};
+use crate::types::{SimTime, SpellIdx, TargetIdx};
 use std::collections::HashMap;
 
 /// Single damage event record
@@ -142,7 +142,10 @@ impl StatsCollector {
         self.end_time = time;
 
         // Update spell stats
-        let stats = self.spells.entry(spell).or_insert_with(|| SpellStats::new(spell));
+        let stats = self
+            .spells
+            .entry(spell)
+            .or_insert_with(|| SpellStats::new(spell));
         stats.record(amount, is_crit, is_periodic);
 
         // Store event if tracing
@@ -227,7 +230,7 @@ impl ResourceStats {
     pub fn record_state(&mut self, current: f32, max: f32, dt: SimTime) {
         self.peak = self.peak.max(current);
         if (current - max).abs() < 0.01 {
-            self.time_at_cap = self.time_at_cap + dt;
+            self.time_at_cap += dt;
         }
     }
 

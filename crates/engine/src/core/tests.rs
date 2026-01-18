@@ -105,7 +105,7 @@ fn rng_distribution() {
     // Check f32 is in [0, 1)
     for _ in 0..1000 {
         let v = rng.next_f32();
-        assert!(v >= 0.0 && v < 1.0);
+        assert!((0.0..1.0).contains(&v));
     }
 }
 
@@ -139,7 +139,7 @@ fn rng_range() {
 
     for _ in 0..1000 {
         let v = rng.range(10.0, 20.0);
-        assert!(v >= 10.0 && v <= 20.0);
+        assert!((10.0..=20.0).contains(&v));
     }
 }
 

@@ -6,7 +6,8 @@ use parsers::simc::parse;
 
 fn load_fixture(name: &str) -> String {
     let path = format!("tests/fixtures/{}.txt", name);
-    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to load fixture {}: {}", path, e))
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Failed to load fixture {}: {}", path, e))
 }
 
 // =============================================================================
@@ -52,10 +53,20 @@ fn test_professions_parsing() {
 
     assert_eq!(profile.character.professions.len(), 2);
 
-    let alchemy = profile.character.professions.iter().find(|p| p.name == "Alchemy").unwrap();
+    let alchemy = profile
+        .character
+        .professions
+        .iter()
+        .find(|p| p.name == "Alchemy")
+        .unwrap();
     assert_eq!(alchemy.rank, 9);
 
-    let jc = profile.character.professions.iter().find(|p| p.name == "Jewelcrafting").unwrap();
+    let jc = profile
+        .character
+        .professions
+        .iter()
+        .find(|p| p.name == "Jewelcrafting")
+        .unwrap();
     assert_eq!(jc.rank, 1);
 }
 
@@ -77,9 +88,16 @@ fn test_equipment_head_slot() {
     let input = load_fixture("simc_shaman_full");
     let profile = parse(&input).unwrap();
 
-    let head = profile.equipment.iter().find(|e| e.slot == parsers::Slot::Head).unwrap();
+    let head = profile
+        .equipment
+        .iter()
+        .find(|e| e.slot == parsers::Slot::Head)
+        .unwrap();
     assert_eq!(head.id, 212011);
-    assert_eq!(head.bonus_ids, Some(vec![6652, 10877, 10260, 10356, 8095, 10371, 1524]));
+    assert_eq!(
+        head.bonus_ids,
+        Some(vec![6652, 10877, 10260, 10356, 8095, 10371, 1524])
+    );
     assert!(head.enchant_id.is_none());
     assert!(head.gem_ids.is_none());
 }
@@ -89,7 +107,11 @@ fn test_equipment_with_gems() {
     let input = load_fixture("simc_shaman_full");
     let profile = parse(&input).unwrap();
 
-    let neck = profile.equipment.iter().find(|e| e.slot == parsers::Slot::Neck).unwrap();
+    let neck = profile
+        .equipment
+        .iter()
+        .find(|e| e.slot == parsers::Slot::Neck)
+        .unwrap();
     assert_eq!(neck.id, 212448);
     assert_eq!(neck.gem_ids, Some(vec![213743, 213461]));
 }
@@ -99,7 +121,11 @@ fn test_equipment_with_enchant() {
     let input = load_fixture("simc_shaman_full");
     let profile = parse(&input).unwrap();
 
-    let chest = profile.equipment.iter().find(|e| e.slot == parsers::Slot::Chest).unwrap();
+    let chest = profile
+        .equipment
+        .iter()
+        .find(|e| e.slot == parsers::Slot::Chest)
+        .unwrap();
     assert_eq!(chest.id, 212014);
     assert_eq!(chest.enchant_id, Some(7364));
 }
@@ -109,7 +135,11 @@ fn test_equipment_with_crafted_stats() {
     let input = load_fixture("simc_shaman_full");
     let profile = parse(&input).unwrap();
 
-    let wrist = profile.equipment.iter().find(|e| e.slot == parsers::Slot::Wrist).unwrap();
+    let wrist = profile
+        .equipment
+        .iter()
+        .find(|e| e.slot == parsers::Slot::Wrist)
+        .unwrap();
     assert_eq!(wrist.id, 219342);
     assert_eq!(wrist.crafted_stats, Some(vec![36, 49]));
     assert_eq!(wrist.crafting_quality, Some(5));
@@ -120,7 +150,11 @@ fn test_ring_with_multiple_gems() {
     let input = load_fixture("simc_shaman_full");
     let profile = parse(&input).unwrap();
 
-    let finger1 = profile.equipment.iter().find(|e| e.slot == parsers::Slot::Finger1).unwrap();
+    let finger1 = profile
+        .equipment
+        .iter()
+        .find(|e| e.slot == parsers::Slot::Finger1)
+        .unwrap();
     assert_eq!(finger1.id, 228411);
     assert_eq!(finger1.gem_ids, Some(vec![228638, 228644, 228643]));
     assert_eq!(finger1.enchant_id, Some(7334));

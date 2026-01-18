@@ -63,7 +63,11 @@ fn test_engine_integration() {
             println!("Mean DPS: {:.0}", mean_dps);
 
             // Just verify we get a valid number (0 is acceptable for now)
-            assert!(mean_dps >= 0.0, "DPS should be non-negative, got {}", mean_dps);
+            assert!(
+                mean_dps >= 0.0,
+                "DPS should be non-negative, got {}",
+                mean_dps
+            );
         }
         Err(e) => {
             panic!("Simulation failed: {}", e);

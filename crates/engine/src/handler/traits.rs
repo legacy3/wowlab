@@ -2,13 +2,11 @@
 //!
 //! All specializations must implement this trait to participate in the simulation.
 
-use crate::types::{
-    SpecId, ClassId, SpellIdx, AuraIdx, TargetIdx, UnitIdx, DamageSchool,
-};
-use crate::sim::SimState;
-use crate::spec::{SpellDef, AuraDef};
 use crate::actor::Player;
 use crate::rotation::Action;
+use crate::sim::SimState;
+use crate::spec::{AuraDef, SpellDef};
+use crate::types::{AuraIdx, ClassId, DamageSchool, SpecId, SpellIdx, TargetIdx, UnitIdx};
 
 /// Core trait all specs must implement.
 ///

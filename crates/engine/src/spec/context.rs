@@ -1,7 +1,7 @@
-use crate::types::{SpellIdx, TargetIdx, SimTime, DamageSchool};
-use crate::combat::ActionState;
-use crate::actor::{Player, Enemy};
+use crate::actor::{Enemy, Player};
 use crate::aura::AuraTracker;
+use crate::combat::ActionState;
+use crate::types::{DamageSchool, SimTime, SpellIdx, TargetIdx};
 
 /// Context for checking if a spell can be cast
 #[derive(Clone, Debug)]
@@ -88,7 +88,11 @@ pub enum CastResult {
     /// On cooldown
     OnCooldown { remaining: SimTime },
     /// Not enough resource
-    NotEnoughResource { resource: crate::types::ResourceType, have: f32, need: f32 },
+    NotEnoughResource {
+        resource: crate::types::ResourceType,
+        have: f32,
+        need: f32,
+    },
     /// Missing required aura
     MissingRequiredAura { aura: crate::types::AuraIdx },
     /// Invalid target

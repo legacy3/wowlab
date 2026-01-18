@@ -1,8 +1,8 @@
 use super::*;
-use crate::handler::SpecHandler;
-use crate::class::HunterClass;
 use crate::class::hunter::FOCUS_REGEN_BASE;
-use crate::types::{SpecId, ClassId};
+use crate::class::HunterClass;
+use crate::handler::SpecHandler;
+use crate::types::{ClassId, SpecId};
 
 fn create_handler() -> MmHunter {
     MmHunter::with_defaults().expect("Failed to create MmHunter")
@@ -65,7 +65,10 @@ fn test_spell_name_lookup() {
 fn test_aura_name_lookup() {
     let handler = create_handler();
     assert_eq!(handler.aura_name_to_idx("trueshot"), Some(TRUESHOT_BUFF));
-    assert_eq!(handler.aura_name_to_idx("precise_shots"), Some(PRECISE_SHOTS));
+    assert_eq!(
+        handler.aura_name_to_idx("precise_shots"),
+        Some(PRECISE_SHOTS)
+    );
     assert_eq!(handler.aura_name_to_idx("steady_focus"), Some(STEADY_FOCUS));
     assert_eq!(handler.aura_name_to_idx("lone_wolf"), Some(LONE_WOLF));
     assert_eq!(handler.aura_name_to_idx("invalid"), None);
@@ -77,7 +80,9 @@ fn test_kill_shot_shared_with_bm() {
     use crate::specs::hunter::bm;
 
     let mm_kill_shot = spell_definitions().into_iter().find(|s| s.id == KILL_SHOT);
-    let bm_kill_shot = bm::spell_definitions().into_iter().find(|s| s.id == bm::KILL_SHOT);
+    let bm_kill_shot = bm::spell_definitions()
+        .into_iter()
+        .find(|s| s.id == bm::KILL_SHOT);
 
     assert!(mm_kill_shot.is_some());
     assert!(bm_kill_shot.is_some());
@@ -93,8 +98,8 @@ fn test_mm_lone_wolf_by_default() {
     let handler = create_handler();
 
     // Create a minimal SimState for testing
-    use crate::sim::{SimState, SimConfig};
     use crate::actor::Player;
+    use crate::sim::{SimConfig, SimState};
 
     let config = SimConfig::default();
     let player = Player::new(SpecId::Marksmanship);
@@ -105,7 +110,10 @@ fn test_mm_lone_wolf_by_default() {
 
 #[test]
 fn test_aimed_shot_has_cast_time() {
-    let spell = spell_definitions().into_iter().find(|s| s.id == AIMED_SHOT).unwrap();
+    let spell = spell_definitions()
+        .into_iter()
+        .find(|s| s.id == AIMED_SHOT)
+        .unwrap();
     // Aimed Shot should have a cast time
     match spell.cast_type {
         crate::spec::CastType::Cast(_) => {}
@@ -115,7 +123,10 @@ fn test_aimed_shot_has_cast_time() {
 
 #[test]
 fn test_rapid_fire_is_channel() {
-    let spell = spell_definitions().into_iter().find(|s| s.id == RAPID_FIRE).unwrap();
+    let spell = spell_definitions()
+        .into_iter()
+        .find(|s| s.id == RAPID_FIRE)
+        .unwrap();
     // Rapid Fire should be a channel
     match spell.cast_type {
         crate::spec::CastType::Channel { .. } => {}
@@ -125,20 +136,29 @@ fn test_rapid_fire_is_channel() {
 
 #[test]
 fn test_trueshot_is_off_gcd() {
-    let spell = spell_definitions().into_iter().find(|s| s.id == TRUESHOT).unwrap();
+    let spell = spell_definitions()
+        .into_iter()
+        .find(|s| s.id == TRUESHOT)
+        .unwrap();
     // Trueshot should be off GCD
     assert_eq!(spell.gcd, crate::spec::GcdType::None);
 }
 
 #[test]
 fn test_aimed_shot_applies_precise_shots() {
-    let spell = spell_definitions().into_iter().find(|s| s.id == AIMED_SHOT).unwrap();
+    let spell = spell_definitions()
+        .into_iter()
+        .find(|s| s.id == AIMED_SHOT)
+        .unwrap();
     assert!(spell.apply_auras.contains(&PRECISE_SHOTS));
 }
 
 #[test]
 fn test_steady_shot_generates_focus() {
-    let spell = spell_definitions().into_iter().find(|s| s.id == STEADY_SHOT).unwrap();
+    let spell = spell_definitions()
+        .into_iter()
+        .find(|s| s.id == STEADY_SHOT)
+        .unwrap();
     assert!(!spell.gains.is_empty());
     assert_eq!(spell.gains[0].amount, STEADY_SHOT_FOCUS_GAIN);
 }
@@ -169,8 +189,8 @@ fn test_parallel_bm_mm_no_conflicts() {
 
 #[test]
 fn test_shared_hunter_class_methods() {
-    use crate::sim::{SimState, SimConfig};
     use crate::actor::Player;
+    use crate::sim::{SimConfig, SimState};
     use crate::specs::hunter::bm::BmHunter;
 
     let bm_handler = BmHunter::with_defaults().expect("Failed to create BmHunter");

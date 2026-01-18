@@ -13,8 +13,8 @@ use tsify::Tsify;
 use crate::types::{AuraIdx, SpellIdx};
 
 use super::expr::{
-    BuffExpr, CombatExpr, CooldownExpr, DebuffExpr, DotExpr, EnemyExpr, FieldType, GcdExpr, PetExpr,
-    PlayerExpr, PopulateContext, ResourceExpr, SpellExpr, TalentExpr, TargetExpr,
+    BuffExpr, CombatExpr, CooldownExpr, DebuffExpr, DotExpr, EnemyExpr, FieldType, GcdExpr,
+    PetExpr, PlayerExpr, PopulateContext, ResourceExpr, SpellExpr, TalentExpr, TargetExpr,
 };
 
 /// A complete rotation definition.
@@ -136,12 +136,20 @@ pub enum VarOp {
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum Expr {
     // === Literals ===
-    Bool { value: bool },
-    Int { value: i64 },
-    Float { value: f64 },
+    Bool {
+        value: bool,
+    },
+    Int {
+        value: i64,
+    },
+    Float {
+        value: f64,
+    },
 
     // === User variable reference ===
-    UserVar { name: String },
+    UserVar {
+        name: String,
+    },
 
     // === Domain expressions (resolved) ===
     /// Resource expressions (focus, mana, etc.).
@@ -171,38 +179,95 @@ pub enum Expr {
     /// Pet expressions.
     Pet(PetExpr),
     /// Equipment expressions.
-    Equipped { item: String },
+    Equipped {
+        item: String,
+    },
     /// Trinket ready expression.
-    TrinketReady { slot: u8 },
+    TrinketReady {
+        slot: u8,
+    },
     /// Trinket cooldown remaining.
-    TrinketRemaining { slot: u8 },
+    TrinketRemaining {
+        slot: u8,
+    },
 
     // === Logical ===
-    And { operands: Vec<Expr> },
-    Or { operands: Vec<Expr> },
-    Not { operand: Box<Expr> },
+    And {
+        operands: Vec<Expr>,
+    },
+    Or {
+        operands: Vec<Expr>,
+    },
+    Not {
+        operand: Box<Expr>,
+    },
 
     // === Comparison ===
-    Gt { left: Box<Expr>, right: Box<Expr> },
-    Gte { left: Box<Expr>, right: Box<Expr> },
-    Lt { left: Box<Expr>, right: Box<Expr> },
-    Lte { left: Box<Expr>, right: Box<Expr> },
-    Eq { left: Box<Expr>, right: Box<Expr> },
-    Ne { left: Box<Expr>, right: Box<Expr> },
+    Gt {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Gte {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Lt {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Lte {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Eq {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Ne {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 
     // === Arithmetic ===
-    Add { left: Box<Expr>, right: Box<Expr> },
-    Sub { left: Box<Expr>, right: Box<Expr> },
-    Mul { left: Box<Expr>, right: Box<Expr> },
-    Div { left: Box<Expr>, right: Box<Expr> },
-    Mod { left: Box<Expr>, right: Box<Expr> },
+    Add {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Sub {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Mul {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Div {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Mod {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 
     // === Functions ===
-    Floor { operand: Box<Expr> },
-    Ceil { operand: Box<Expr> },
-    Abs { operand: Box<Expr> },
-    Min { left: Box<Expr>, right: Box<Expr> },
-    Max { left: Box<Expr>, right: Box<Expr> },
+    Floor {
+        operand: Box<Expr>,
+    },
+    Ceil {
+        operand: Box<Expr>,
+    },
+    Abs {
+        operand: Box<Expr>,
+    },
+    Min {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    Max {
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 }
 
 /// Value type for type checking.

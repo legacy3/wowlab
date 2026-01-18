@@ -1,4 +1,4 @@
-use super::{PrimaryStats, Ratings, CombatStats};
+use super::{CombatStats, PrimaryStats, Ratings};
 use crate::types::SpecId;
 
 /// Cached stat calculations to avoid recomputation
@@ -55,8 +55,8 @@ impl StatCache {
     }
 
     fn compute_combat_stats(&mut self, mastery_coeff: f32) {
-        use super::ratings::rating_to_percent;
         use super::attributes::primary_stat_for_spec;
+        use super::ratings::rating_to_percent;
         use crate::types::RatingType;
 
         // Get primary stat for this spec

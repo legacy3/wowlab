@@ -1,12 +1,15 @@
 //! Pretty CLI output using indicatif, tabled, and console.
 
 use console::{style, Style};
-use indicatif::{ProgressBar, ProgressStyle, HumanDuration};
-use tabled::{Table, Tabled, settings::{Style as TableStyle, Modify, object::Rows, Alignment}};
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
+use tabled::{
+    settings::{object::Rows, Alignment, Modify, Style as TableStyle},
+    Table, Tabled,
+};
 
-use crate::sim::{Simulation, BatchResults};
 use super::OutputFormat;
+use crate::sim::{BatchResults, Simulation};
 
 /// Get number of CPU cores available for parallel simulation
 pub fn num_cores() -> usize {
@@ -126,7 +129,10 @@ impl Output {
         let rows = vec![
             ResultRow::new("DPS", format!("{:.2}", sim.dps())),
             ResultRow::new("Total Damage", format!("{:.0}", sim.total_damage())),
-            ResultRow::new("Duration", format!("{:.1}s", sim.state.config.duration.as_secs_f32())),
+            ResultRow::new(
+                "Duration",
+                format!("{:.1}s", sim.state.config.duration.as_secs_f32()),
+            ),
         ];
 
         let table = Table::new(rows)
@@ -148,7 +154,8 @@ impl Output {
 
     fn single_result_csv(&self, sim: &Simulation) {
         println!("dps,damage,duration");
-        println!("{:.2},{:.0},{:.2}",
+        println!(
+            "{:.2},{:.0},{:.2}",
             sim.dps(),
             sim.total_damage(),
             sim.state.config.duration.as_secs_f32(),

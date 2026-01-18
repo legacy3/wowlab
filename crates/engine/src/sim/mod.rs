@@ -1,14 +1,14 @@
-mod state;
-mod executor;
 #[cfg(feature = "parallel")]
 mod batch;
+mod executor;
 mod simulation;
+mod state;
 
-pub use state::*;
-pub use executor::*;
 #[cfg(feature = "parallel")]
 pub use batch::*;
+pub use executor::*;
 pub use simulation::*;
+pub use state::*;
 
 #[cfg(test)]
 mod tests;

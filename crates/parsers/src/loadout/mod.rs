@@ -137,7 +137,8 @@ impl BitWriter {
     }
 
     fn flush_char(&mut self) {
-        self.output.push(BASE64_URL_SAFE[self.current_char as usize] as char);
+        self.output
+            .push(BASE64_URL_SAFE[self.current_char as usize] as char);
         self.current_char = 0;
         self.bit_position = 0;
     }

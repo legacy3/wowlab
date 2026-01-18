@@ -36,8 +36,7 @@ impl SupabaseResolver {
         })?;
 
         let patch_version = patch.unwrap_or("unknown");
-        let cache =
-            GameDataCache::new(client, patch_version).map_err(ResolverError::Supabase)?;
+        let cache = GameDataCache::new(client, patch_version).map_err(ResolverError::Supabase)?;
 
         Ok(Self { cache })
     }

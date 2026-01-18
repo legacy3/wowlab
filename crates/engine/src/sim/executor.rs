@@ -1,7 +1,7 @@
 //! Decision context for APL evaluation.
 
-use crate::types::SimTime;
 use super::SimState;
+use crate::types::SimTime;
 
 /// Decision context for APL
 #[derive(Clone, Debug)]
@@ -35,14 +35,18 @@ impl<'a> DecisionContext<'a> {
 
     /// Check if cooldown is ready
     pub fn cooldown_ready(&self, spell: crate::types::SpellIdx) -> bool {
-        self.state.player.cooldown(spell)
+        self.state
+            .player
+            .cooldown(spell)
             .map(|cd| cd.is_ready(self.now))
             .unwrap_or(true)
     }
 
     /// Get cooldown remaining
     pub fn cooldown_remaining(&self, spell: crate::types::SpellIdx) -> SimTime {
-        self.state.player.cooldown(spell)
+        self.state
+            .player
+            .cooldown(spell)
             .map(|cd| cd.remaining(self.now))
             .unwrap_or(SimTime::ZERO)
     }
@@ -54,7 +58,10 @@ impl<'a> DecisionContext<'a> {
 
     /// Get primary resource amount
     pub fn resource(&self) -> f32 {
-        self.state.player.resources.primary
+        self.state
+            .player
+            .resources
+            .primary
             .as_ref()
             .map(|r| r.current)
             .unwrap_or(0.0)
@@ -62,7 +69,10 @@ impl<'a> DecisionContext<'a> {
 
     /// Get resource deficit
     pub fn resource_deficit(&self) -> f32 {
-        self.state.player.resources.primary
+        self.state
+            .player
+            .resources
+            .primary
             .as_ref()
             .map(|r| r.deficit())
             .unwrap_or(0.0)
@@ -70,7 +80,9 @@ impl<'a> DecisionContext<'a> {
 
     /// Get primary target health percent
     pub fn target_health_pct(&self) -> f32 {
-        self.state.enemies.primary()
+        self.state
+            .enemies
+            .primary()
             .map(|e| e.health_percent())
             .unwrap_or(1.0)
     }

@@ -67,7 +67,7 @@ fn base_percent_per_point(rating_type: RatingType) -> f32 {
     match rating_type {
         RatingType::Crit => 1.0,
         RatingType::Haste => 1.0,
-        RatingType::Mastery => 1.0, // Multiplied by spec coefficient
+        RatingType::Mastery => 1.0,     // Multiplied by spec coefficient
         RatingType::Versatility => 1.0, // Damage/healing, half for DR
         RatingType::Leech => 1.0,
         RatingType::Avoidance => 1.0,

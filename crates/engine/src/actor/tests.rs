@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::{SpecId, UnitIdx, SimTime, TargetIdx, PetKind};
+use crate::types::{PetKind, SimTime, SpecId, TargetIdx, UnitIdx};
 
 #[test]
 fn player_basic() {
@@ -76,7 +76,13 @@ fn pet_basic() {
 #[test]
 fn pet_temporary() {
     let now = SimTime::ZERO;
-    let pet = Pet::temporary(UnitIdx(1), UnitIdx(0), "Spirit Beast", SimTime::from_secs(15), now);
+    let pet = Pet::temporary(
+        UnitIdx(1),
+        UnitIdx(0),
+        "Spirit Beast",
+        SimTime::from_secs(15),
+        now,
+    );
 
     assert!(pet.is_valid(now));
     assert!(pet.is_valid(SimTime::from_secs(10)));

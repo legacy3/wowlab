@@ -6,8 +6,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::errors::DbcError;
 use crate::dbc::rows::*;
+use crate::errors::DbcError;
 
 /// Container for all loaded DBC data with indexed lookups.
 ///
@@ -118,64 +118,92 @@ impl DbcData {
         let spell_range = load_by_id::<SpellRangeRow>(&tables_dir, "SpellRange")?;
         let spell_radius = load_by_id::<SpellRadiusRow>(&tables_dir, "SpellRadius")?;
         let spell_category = load_by_id::<SpellCategoryRow>(&tables_dir, "SpellCategory")?;
-        let spell_description_variables = load_by_id::<SpellDescriptionVariablesRow>(&tables_dir, "SpellDescriptionVariables")?;
+        let spell_description_variables =
+            load_by_id::<SpellDescriptionVariablesRow>(&tables_dir, "SpellDescriptionVariables")?;
         let difficulty = load_by_id::<DifficultyRow>(&tables_dir, "Difficulty")?;
-        let manifest_interface_data = load_by_id::<ManifestInterfaceDataRow>(&tables_dir, "ManifestInterfaceData")?;
+        let manifest_interface_data =
+            load_by_id::<ManifestInterfaceDataRow>(&tables_dir, "ManifestInterfaceData")?;
 
         // Spell tables indexed by SpellID
         let spell_misc = load_one_by_fk::<SpellMiscRow>(&tables_dir, "SpellMisc")?;
         let spell_effect = load_by_fk::<SpellEffectRow>(&tables_dir, "SpellEffect")?;
         let spell_power = load_by_fk::<SpellPowerRow>(&tables_dir, "SpellPower")?;
         let spell_cooldowns = load_one_by_fk::<SpellCooldownsRow>(&tables_dir, "SpellCooldowns")?;
-        let spell_categories = load_one_by_fk::<SpellCategoriesRow>(&tables_dir, "SpellCategories")?;
-        let spell_class_options = load_one_by_fk::<SpellClassOptionsRow>(&tables_dir, "SpellClassOptions")?;
-        let spell_aura_restrictions = load_one_by_fk::<SpellAuraRestrictionsRow>(&tables_dir, "SpellAuraRestrictions")?;
-        let spell_interrupts = load_one_by_fk::<SpellInterruptsRow>(&tables_dir, "SpellInterrupts")?;
+        let spell_categories =
+            load_one_by_fk::<SpellCategoriesRow>(&tables_dir, "SpellCategories")?;
+        let spell_class_options =
+            load_one_by_fk::<SpellClassOptionsRow>(&tables_dir, "SpellClassOptions")?;
+        let spell_aura_restrictions =
+            load_one_by_fk::<SpellAuraRestrictionsRow>(&tables_dir, "SpellAuraRestrictions")?;
+        let spell_interrupts =
+            load_one_by_fk::<SpellInterruptsRow>(&tables_dir, "SpellInterrupts")?;
         let spell_empower = load_one_by_fk::<SpellEmpowerRow>(&tables_dir, "SpellEmpower")?;
-        let spell_empower_stage = load_by_fk::<SpellEmpowerStageRow>(&tables_dir, "SpellEmpowerStage")?;
-        let spell_target_restrictions = load_one_by_fk::<SpellTargetRestrictionsRow>(&tables_dir, "SpellTargetRestrictions")?;
+        let spell_empower_stage =
+            load_by_fk::<SpellEmpowerStageRow>(&tables_dir, "SpellEmpowerStage")?;
+        let spell_target_restrictions =
+            load_one_by_fk::<SpellTargetRestrictionsRow>(&tables_dir, "SpellTargetRestrictions")?;
         let spell_levels = load_by_fk::<SpellLevelsRow>(&tables_dir, "SpellLevels")?;
         let spell_learn_spell = load_by_fk::<SpellLearnSpellRow>(&tables_dir, "SpellLearnSpell")?;
-        let spell_replacement = load_one_by_fk::<SpellReplacementRow>(&tables_dir, "SpellReplacement")?;
-        let spell_shapeshift = load_one_by_fk::<SpellShapeshiftRow>(&tables_dir, "SpellShapeshift")?;
+        let spell_replacement =
+            load_one_by_fk::<SpellReplacementRow>(&tables_dir, "SpellReplacement")?;
+        let spell_shapeshift =
+            load_one_by_fk::<SpellShapeshiftRow>(&tables_dir, "SpellShapeshift")?;
         let spell_totems = load_by_fk::<SpellTotemsRow>(&tables_dir, "SpellTotems")?;
-        let spell_x_description_variables = load_by_fk::<SpellXDescriptionVariablesRow>(&tables_dir, "SpellXDescriptionVariables")?;
-        let spell_aura_options = load_one_by_fk::<SpellAuraOptionsRow>(&tables_dir, "SpellAuraOptions")?;
+        let spell_x_description_variables =
+            load_by_fk::<SpellXDescriptionVariablesRow>(&tables_dir, "SpellXDescriptionVariables")?;
+        let spell_aura_options =
+            load_one_by_fk::<SpellAuraOptionsRow>(&tables_dir, "SpellAuraOptions")?;
 
         // Character tables
-        let chr_specialization = load_by_id::<ChrSpecializationRow>(&tables_dir, "ChrSpecialization")?;
+        let chr_specialization =
+            load_by_id::<ChrSpecializationRow>(&tables_dir, "ChrSpecialization")?;
         let chr_classes = load_by_id::<ChrClassesRow>(&tables_dir, "ChrClasses")?;
-        let specialization_spells = load_by_fk::<SpecializationSpellsRow>(&tables_dir, "SpecializationSpells")?;
+        let specialization_spells =
+            load_by_fk::<SpecializationSpellsRow>(&tables_dir, "SpecializationSpells")?;
 
         // Talent tables indexed by ID
         let trait_node = load_by_id::<TraitNodeRow>(&tables_dir, "TraitNode")?;
         let trait_node_entry = load_by_id::<TraitNodeEntryRow>(&tables_dir, "TraitNodeEntry")?;
         let trait_definition = load_by_id::<TraitDefinitionRow>(&tables_dir, "TraitDefinition")?;
-        let trait_tree_loadout = load_by_id::<TraitTreeLoadoutRow>(&tables_dir, "TraitTreeLoadout")?;
+        let trait_tree_loadout =
+            load_by_id::<TraitTreeLoadoutRow>(&tables_dir, "TraitTreeLoadout")?;
         let trait_sub_tree = load_by_id::<TraitSubTreeRow>(&tables_dir, "TraitSubTree")?;
         let trait_currency = load_by_id::<TraitCurrencyRow>(&tables_dir, "TraitCurrency")?;
         let trait_cost = load_by_id::<TraitCostRow>(&tables_dir, "TraitCost")?;
         let trait_cond = load_by_id::<TraitCondRow>(&tables_dir, "TraitCond")?;
-        let ui_texture_atlas_element = load_by_id::<UiTextureAtlasElementRow>(&tables_dir, "UiTextureAtlasElement")?;
+        let ui_texture_atlas_element =
+            load_by_id::<UiTextureAtlasElementRow>(&tables_dir, "UiTextureAtlasElement")?;
 
         // Build secondary indices for talent tables
         let trait_node_by_tree = group_by(&trait_node, |n| n.TraitTreeID);
         let trait_tree_loadout_by_spec = group_by(&trait_tree_loadout, |l| l.ChrSpecializationID);
 
         // Talent tables indexed by foreign key
-        let trait_tree_loadout_entry = load_by_fk::<TraitTreeLoadoutEntryRow>(&tables_dir, "TraitTreeLoadoutEntry")?;
+        let trait_tree_loadout_entry =
+            load_by_fk::<TraitTreeLoadoutEntryRow>(&tables_dir, "TraitTreeLoadoutEntry")?;
         let trait_edge = load_by_fk::<TraitEdgeRow>(&tables_dir, "TraitEdge")?;
-        let trait_node_x_trait_node_entry = load_by_fk::<TraitNodeXTraitNodeEntryRow>(&tables_dir, "TraitNodeXTraitNodeEntry")?;
-        let trait_tree_x_trait_currency = load_by_fk::<TraitTreeXTraitCurrencyRow>(&tables_dir, "TraitTreeXTraitCurrency")?;
-        let trait_currency_source = load_by_fk::<TraitCurrencySourceRow>(&tables_dir, "TraitCurrencySource")?;
-        let trait_node_group_x_trait_node = load_by_fk::<TraitNodeGroupXTraitNodeRow>(&tables_dir, "TraitNodeGroupXTraitNode")?;
-        let trait_node_group_x_trait_cost = load_by_fk::<TraitNodeGroupXTraitCostRow>(&tables_dir, "TraitNodeGroupXTraitCost")?;
-        let trait_node_group_x_trait_cond = load_by_fk::<TraitNodeGroupXTraitCondRow>(&tables_dir, "TraitNodeGroupXTraitCond")?;
-        let trait_node_x_trait_cond = load_by_fk::<TraitNodeXTraitCondRow>(&tables_dir, "TraitNodeXTraitCond")?;
+        let trait_node_x_trait_node_entry =
+            load_by_fk::<TraitNodeXTraitNodeEntryRow>(&tables_dir, "TraitNodeXTraitNodeEntry")?;
+        let trait_tree_x_trait_currency =
+            load_by_fk::<TraitTreeXTraitCurrencyRow>(&tables_dir, "TraitTreeXTraitCurrency")?;
+        let trait_currency_source =
+            load_by_fk::<TraitCurrencySourceRow>(&tables_dir, "TraitCurrencySource")?;
+        let trait_node_group_x_trait_node =
+            load_by_fk::<TraitNodeGroupXTraitNodeRow>(&tables_dir, "TraitNodeGroupXTraitNode")?;
+        let trait_node_group_x_trait_cost =
+            load_by_fk::<TraitNodeGroupXTraitCostRow>(&tables_dir, "TraitNodeGroupXTraitCost")?;
+        let trait_node_group_x_trait_cond =
+            load_by_fk::<TraitNodeGroupXTraitCondRow>(&tables_dir, "TraitNodeGroupXTraitCond")?;
+        let trait_node_x_trait_cond =
+            load_by_fk::<TraitNodeXTraitCondRow>(&tables_dir, "TraitNodeXTraitCond")?;
         let spec_set_member = load_by_fk::<SpecSetMemberRow>(&tables_dir, "SpecSetMember")?;
 
         // Index trait conditions by node group for fast lookup
-        let trait_cond_by_node_group = group_by_filtered(&trait_cond, |c| c.TraitNodeGroupID, |c| c.TraitNodeGroupID > 0);
+        let trait_cond_by_node_group = group_by_filtered(
+            &trait_cond,
+            |c| c.TraitNodeGroupID,
+            |c| c.TraitNodeGroupID > 0,
+        );
 
         // Item tables indexed by ID
         let item = load_by_id::<ItemRow>(&tables_dir, "Item")?;
@@ -191,8 +219,10 @@ impl DbcData {
         // Item tables indexed by foreign key
         let item_x_item_effect = load_by_fk::<ItemXItemEffectRow>(&tables_dir, "ItemXItemEffect")?;
         let item_set_spell = load_by_fk::<ItemSetSpellRow>(&tables_dir, "ItemSetSpell")?;
-        let item_modified_appearance = load_one_by_fk::<ItemModifiedAppearanceRow>(&tables_dir, "ItemModifiedAppearance")?;
-        let journal_encounter_item = load_by_fk::<JournalEncounterItemRow>(&tables_dir, "JournalEncounterItem")?;
+        let item_modified_appearance =
+            load_one_by_fk::<ItemModifiedAppearanceRow>(&tables_dir, "ItemModifiedAppearance")?;
+        let journal_encounter_item =
+            load_by_fk::<JournalEncounterItemRow>(&tables_dir, "JournalEncounterItem")?;
 
         // Build secondary indices for item tables
         let item_class_by_class_id = group_one_by(&item_class, |c| c.ClassID);
@@ -284,7 +314,6 @@ impl DbcData {
             global_strings,
         })
     }
-
 }
 
 // ============================================================================
@@ -373,7 +402,10 @@ fn load_one_by_fk<T: serde::de::DeserializeOwned + HasFk>(
 }
 
 /// Group an existing HashMap's values by a key function.
-fn group_by<T: Clone, F: Fn(&T) -> i32>(source: &HashMap<i32, T>, key_fn: F) -> HashMap<i32, Vec<T>> {
+fn group_by<T: Clone, F: Fn(&T) -> i32>(
+    source: &HashMap<i32, T>,
+    key_fn: F,
+) -> HashMap<i32, Vec<T>> {
     let mut map: HashMap<i32, Vec<T>> = HashMap::new();
     for value in source.values() {
         map.entry(key_fn(value)).or_default().push(value.clone());
@@ -397,7 +429,10 @@ fn group_by_filtered<T: Clone, F: Fn(&T) -> i32, P: Fn(&T) -> bool>(
 }
 
 /// Group an existing HashMap's values by a key function (one-to-one, first match wins).
-fn group_one_by<T: Clone, F: Fn(&T) -> i32>(source: &HashMap<i32, T>, key_fn: F) -> HashMap<i32, T> {
+fn group_one_by<T: Clone, F: Fn(&T) -> i32>(
+    source: &HashMap<i32, T>,
+    key_fn: F,
+) -> HashMap<i32, T> {
     let mut map: HashMap<i32, T> = HashMap::new();
     for value in source.values() {
         map.entry(key_fn(value)).or_insert_with(|| value.clone());
@@ -424,21 +459,49 @@ macro_rules! impl_has_id {
 }
 
 impl_has_id!(
-    SpellNameRow, SpellRow, SpellCastTimesRow, SpellDurationRow, SpellRangeRow,
-    SpellRadiusRow, SpellCategoryRow, SpellDescriptionVariablesRow, DifficultyRow,
-    ManifestInterfaceDataRow, ChrSpecializationRow, ChrClassesRow, TraitNodeRow,
-    TraitNodeEntryRow, TraitDefinitionRow, TraitTreeLoadoutRow, TraitSubTreeRow,
-    TraitCurrencyRow, TraitCostRow, TraitCondRow, UiTextureAtlasElementRow,
+    SpellNameRow,
+    SpellRow,
+    SpellCastTimesRow,
+    SpellDurationRow,
+    SpellRangeRow,
+    SpellRadiusRow,
+    SpellCategoryRow,
+    SpellDescriptionVariablesRow,
+    DifficultyRow,
+    ManifestInterfaceDataRow,
+    ChrSpecializationRow,
+    ChrClassesRow,
+    TraitNodeRow,
+    TraitNodeEntryRow,
+    TraitDefinitionRow,
+    TraitTreeLoadoutRow,
+    TraitSubTreeRow,
+    TraitCurrencyRow,
+    TraitCostRow,
+    TraitCondRow,
+    UiTextureAtlasElementRow,
     // Item tables
-    ItemRow, ItemSparseRow, ItemEffectRow, ItemSetRow, ItemClassRow, ItemSubClassRow,
-    ItemAppearanceRow, JournalEncounterRow, JournalInstanceRow,
+    ItemRow,
+    ItemSparseRow,
+    ItemEffectRow,
+    ItemSetRow,
+    ItemClassRow,
+    ItemSubClassRow,
+    ItemAppearanceRow,
+    JournalEncounterRow,
+    JournalInstanceRow,
     // Global tables
-    GlobalColorRow, GlobalStringsRow,
+    GlobalColorRow,
+    GlobalStringsRow,
 );
 
 macro_rules! impl_has_fk {
     ($t:ty, $field:ident) => {
-        impl HasFk for $t { fn fk(&self) -> i32 { self.$field } }
+        impl HasFk for $t {
+            fn fk(&self) -> i32 {
+                self.$field
+            }
+        }
     };
 }
 

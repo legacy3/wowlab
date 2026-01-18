@@ -1,6 +1,6 @@
-use crate::types::{AuraIdx, SpellIdx, SimTime, Attribute, RatingType, DamageSchool, DerivedStat};
 use crate::aura::{AuraFlags, PeriodicEffect};
-use serde::{Serialize, Deserialize};
+use crate::types::{Attribute, AuraIdx, DamageSchool, DerivedStat, RatingType, SimTime, SpellIdx};
+use serde::{Deserialize, Serialize};
 
 /// Type of aura effect
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -16,15 +16,24 @@ pub enum AuraEffect {
     /// Percentage increase to a derived stat (crit chance, haste mult, etc.)
     DerivedPercent { stat: DerivedStat, amount: f32 },
     /// Damage multiplier
-    DamageMultiplier { amount: f32, school: Option<DamageSchool> },
+    DamageMultiplier {
+        amount: f32,
+        school: Option<DamageSchool>,
+    },
     /// Periodic damage
     PeriodicDamage(PeriodicEffect),
     /// Resource regen modifier
-    ResourceRegen { resource: crate::types::ResourceType, amount: f32 },
+    ResourceRegen {
+        resource: crate::types::ResourceType,
+        amount: f32,
+    },
     /// Cooldown reduction
     CooldownReduction { spell: SpellIdx, amount: f32 },
     /// Proc chance modifier
-    ProcChance { proc: crate::types::ProcIdx, amount: f32 },
+    ProcChance {
+        proc: crate::types::ProcIdx,
+        amount: f32,
+    },
     /// Custom effect (handled by spec)
     Custom { id: u32 },
 }

@@ -1,5 +1,5 @@
-use crate::proc::{ProcHandler, ProcFlags, ProcEffect, FixedProc, ProcRegistry};
 use super::constants::*;
+use crate::proc::{FixedProc, ProcEffect, ProcFlags, ProcHandler, ProcRegistry};
 
 /// Setup MM Hunter procs
 pub fn setup_procs(registry: &mut ProcRegistry) {

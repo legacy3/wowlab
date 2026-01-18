@@ -34,9 +34,7 @@ fn spell_cast_time_haste() {
 
 #[test]
 fn spell_gcd_floor() {
-    let spell = SpellBuilder::new(SpellIdx(1), "Fast")
-        .instant()
-        .build();
+    let spell = SpellBuilder::new(SpellIdx(1), "Fast").instant().build();
 
     // GCD should be floored at 750ms even with massive haste
     let gcd = spell.gcd_duration(3.0);
@@ -45,9 +43,7 @@ fn spell_gcd_floor() {
 
 #[test]
 fn spell_no_gcd() {
-    let spell = SpellBuilder::new(SpellIdx(1), "OffGCD")
-        .no_gcd()
-        .build();
+    let spell = SpellBuilder::new(SpellIdx(1), "OffGCD").no_gcd().build();
 
     let gcd = spell.gcd_duration(1.0);
     assert_eq!(gcd, SimTime::ZERO);
@@ -118,7 +114,9 @@ fn cast_result_variants() {
     let success = CastResult::Success(CastContext::new(SpellIdx(1), TargetIdx(0), SimTime::ZERO));
     assert!(success.is_success());
 
-    let on_cd = CastResult::OnCooldown { remaining: SimTime::from_secs(5) };
+    let on_cd = CastResult::OnCooldown {
+        remaining: SimTime::from_secs(5),
+    };
     assert!(!on_cd.is_success());
 }
 

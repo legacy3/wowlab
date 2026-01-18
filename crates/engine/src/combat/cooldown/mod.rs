@@ -1,5 +1,6 @@
-mod cooldown;
 mod charges;
+#[allow(clippy::module_inception)]
+mod cooldown;
 
-pub use cooldown::*;
 pub use charges::*;
+pub use cooldown::*;

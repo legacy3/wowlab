@@ -95,7 +95,9 @@ fn check_and_apply_update() {
                 Ok(false) => {} // Already up to date (race condition, ignore)
                 Err(e) => {
                     tracing::warn!("Auto-update failed: {e}");
-                    tracing::warn!("Continuing with current version. Run `node-headless update` manually.");
+                    tracing::warn!(
+                        "Continuing with current version. Run `node-headless update` manually."
+                    );
                 }
             }
         }

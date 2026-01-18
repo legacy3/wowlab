@@ -80,11 +80,8 @@ fn regen_time_to_reach() {
 
 #[test]
 fn regen_no_regen_resource() {
-    let time = ResourceRegen::time_to_reach(
-        &ResourcePool::new_empty(ResourceType::Rage),
-        50.0,
-        1.0,
-    );
+    let time =
+        ResourceRegen::time_to_reach(&ResourcePool::new_empty(ResourceType::Rage), 50.0, 1.0);
     assert!(time.is_none()); // Rage doesn't regen passively
 }
 

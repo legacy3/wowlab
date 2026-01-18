@@ -32,7 +32,12 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
         .inner_margin(egui::Margin::symmetric(40.0, 32.0))
         .show(ui, |ui| {
             ui.vertical_centered(|ui| {
-                ui.label(text("Claim Your Node").size(22.0).strong().color(FG_DEFAULT));
+                ui.label(
+                    text("Claim Your Node")
+                        .size(22.0)
+                        .strong()
+                        .color(FG_DEFAULT),
+                );
                 ui.add_space(SPACE_SM);
                 ui.label(subtitle("Enter this code on the website"));
                 ui.add_space(28.0);
@@ -87,9 +92,7 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
     };
 
     if ui
-        .add(
-            egui::Label::new(text(label).size(11.0).color(color)).sense(egui::Sense::click()),
-        )
+        .add(egui::Label::new(text(label).size(11.0).color(color)).sense(egui::Sense::click()))
         .on_hover_cursor(egui::CursorIcon::PointingHand)
         .clicked()
     {

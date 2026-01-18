@@ -1,10 +1,10 @@
 pub mod action;
-pub mod damage;
 pub mod cooldown;
+pub mod damage;
 
 pub use action::*;
-pub use damage::*;
 pub use cooldown::*;
+pub use damage::*;
 
 #[cfg(test)]
 mod tests;

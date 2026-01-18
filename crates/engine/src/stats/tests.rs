@@ -29,12 +29,17 @@ fn rating_conversion() {
 fn rating_dr() {
     // High rating should have diminishing returns
     // Need ratings high enough to exceed 30% threshold (30 * 180 = 5400 raw rating)
-    let low = rating_to_percent(5400.0, RatingType::Crit);  // Exactly at threshold
+    let low = rating_to_percent(5400.0, RatingType::Crit); // Exactly at threshold
     let high = rating_to_percent(10800.0, RatingType::Crit); // Would be 60% without DR
 
     // Without DR, high would be exactly 2x low (60% vs 30%)
     // With DR, high should be less than 2x low
-    assert!(high < low * 2.0, "Expected DR to reduce high rating. Low: {}, High: {}", low, high);
+    assert!(
+        high < low * 2.0,
+        "Expected DR to reduce high rating. Low: {}, High: {}",
+        low,
+        high
+    );
     // But high should still be more than low
     assert!(high > low, "High rating should still give more than low");
 }
@@ -68,12 +73,18 @@ fn modifier_stack() {
 fn spec_coefficients() {
     let coeff = SpecCoefficients::for_spec(SpecId::BeastMastery);
     assert_eq!(coeff.mastery_coeff, 2.0);
-    assert!(matches!(coeff.mastery_effect, MasteryEffect::PetAndOwnerDamage { .. }));
+    assert!(matches!(
+        coeff.mastery_effect,
+        MasteryEffect::PetAndOwnerDamage { .. }
+    ));
 }
 
 #[test]
 fn primary_stat_for_spec_check() {
-    assert_eq!(primary_stat_for_spec(SpecId::BeastMastery), Attribute::Agility);
+    assert_eq!(
+        primary_stat_for_spec(SpecId::BeastMastery),
+        Attribute::Agility
+    );
     assert_eq!(primary_stat_for_spec(SpecId::Fury), Attribute::Strength);
     assert_eq!(primary_stat_for_spec(SpecId::Fire), Attribute::Intellect);
 }

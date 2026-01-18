@@ -79,25 +79,36 @@ fn local_resolver_integration() {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     // Test get_spell
-    let spell = rt.block_on(resolver.get_spell(34026)).expect("Failed to load Kill Command");
+    let spell = rt
+        .block_on(resolver.get_spell(34026))
+        .expect("Failed to load Kill Command");
     assert_eq!(spell.id, 34026);
     assert_eq!(spell.name, "Kill Command");
     println!("get_spell: {} ({})", spell.name, spell.id);
 
     // Test get_spells (batch)
-    let spells = rt.block_on(resolver.get_spells(&[34026, 193455, 185358]))
+    let spells = rt
+        .block_on(resolver.get_spells(&[34026, 193455, 185358]))
         .expect("Failed to load spells batch");
     assert!(!spells.is_empty());
     println!("get_spells: loaded {} spells", spells.len());
 
     // Test get_trait_tree
-    let tree = rt.block_on(resolver.get_trait_tree(253)).expect("Failed to load BM trait tree");
+    let tree = rt
+        .block_on(resolver.get_trait_tree(253))
+        .expect("Failed to load BM trait tree");
     assert_eq!(tree.spec_id, 253);
     assert!(!tree.nodes.is_empty());
-    println!("get_trait_tree: {} with {} nodes", tree.spec_name, tree.nodes.len());
+    println!(
+        "get_trait_tree: {} with {} nodes",
+        tree.spec_name,
+        tree.nodes.len()
+    );
 
     // Test get_item
-    let item = rt.block_on(resolver.get_item(207170)).expect("Failed to load item");
+    let item = rt
+        .block_on(resolver.get_item(207170))
+        .expect("Failed to load item");
     assert_eq!(item.id, 207170);
     println!("get_item: {} ({})", item.name, item.id);
 
@@ -108,16 +119,23 @@ fn local_resolver_integration() {
             println!("get_aura: spell_id {}", aura.spell_id);
         }
         Err(ResolverError::AuraNotFound(id)) => {
-            println!("get_aura: no aura data for spell {} (expected for some spells)", id);
+            println!(
+                "get_aura: no aura data for spell {} (expected for some spells)",
+                id
+            );
         }
         Err(e) => panic!("Unexpected error loading aura: {}", e),
     }
 
     // Test search_spells
-    let results = rt.block_on(resolver.search_spells("Kill Command", 5))
+    let results = rt
+        .block_on(resolver.search_spells("Kill Command", 5))
         .expect("Failed to search spells");
     assert!(!results.is_empty());
-    println!("search_spells: found {} results for 'Kill Command'", results.len());
+    println!(
+        "search_spells: found {} results for 'Kill Command'",
+        results.len()
+    );
 
     println!("LocalResolver integration test PASSED");
 }
@@ -142,17 +160,27 @@ fn supabase_resolver_integration() {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     // Test get_spell
-    let spell = rt.block_on(resolver.get_spell(34026)).expect("Failed to load Kill Command");
+    let spell = rt
+        .block_on(resolver.get_spell(34026))
+        .expect("Failed to load Kill Command");
     assert_eq!(spell.id, 34026);
     println!("get_spell: {} ({})", spell.name, spell.id);
 
     // Test get_talent_tree
-    let tree = rt.block_on(resolver.get_talent_tree(253)).expect("Failed to load BM talent tree");
+    let tree = rt
+        .block_on(resolver.get_talent_tree(253))
+        .expect("Failed to load BM talent tree");
     assert_eq!(tree.spec_id, 253);
-    println!("get_talent_tree: {} with {} nodes", tree.spec_name, tree.nodes.len());
+    println!(
+        "get_talent_tree: {} with {} nodes",
+        tree.spec_name,
+        tree.nodes.len()
+    );
 
     // Test get_item
-    let item = rt.block_on(resolver.get_item(207170)).expect("Failed to load item");
+    let item = rt
+        .block_on(resolver.get_item(207170))
+        .expect("Failed to load item");
     assert_eq!(item.id, 207170);
     println!("get_item: {} ({})", item.name, item.id);
 
@@ -168,14 +196,17 @@ fn supabase_resolver_integration() {
     }
 
     // Test search_spells
-    let results = rt.block_on(resolver.search_spells("Kill Command", 5))
+    let results = rt
+        .block_on(resolver.search_spells("Kill Command", 5))
         .expect("Failed to search spells");
     println!("search_spells: found {} results", results.len());
 
     // Print cache stats
     let stats = resolver.cache_stats();
-    println!("Cache stats - memory: spells={}, talents={}, items={}, auras={}",
-        stats.memory.spells, stats.memory.talents, stats.memory.items, stats.memory.auras);
+    println!(
+        "Cache stats - memory: spells={}, talents={}, items={}, auras={}",
+        stats.memory.spells, stats.memory.talents, stats.memory.items, stats.memory.auras
+    );
 
     println!("SupabaseResolver integration test PASSED");
 }

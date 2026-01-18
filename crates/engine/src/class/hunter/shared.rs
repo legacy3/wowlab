@@ -3,9 +3,9 @@
 //! Abilities like Kill Shot, Tranquilizing Shot, and aspects are available
 //! to all Hunter specs with the same base implementation.
 
-use crate::types::{SpellIdx, AuraIdx, SimTime, TargetIdx, DamageSchool};
-use crate::sim::SimState;
 use crate::combat::DamagePipeline;
+use crate::sim::SimState;
+use crate::types::{AuraIdx, DamageSchool, SimTime, SpellIdx, TargetIdx};
 
 // ============================================================================
 // Shared Spell IDs

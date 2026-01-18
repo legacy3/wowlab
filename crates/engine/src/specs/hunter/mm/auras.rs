@@ -1,5 +1,5 @@
-use crate::spec::{AuraBuilder, AuraDef};
 use super::constants::*;
+use crate::spec::{AuraBuilder, AuraDef};
 
 /// Get all MM Hunter aura definitions
 pub fn aura_definitions() -> Vec<AuraDef> {
@@ -15,8 +15,8 @@ pub fn aura_definitions() -> Vec<AuraDef> {
 
 fn trueshot_buff() -> AuraDef {
     AuraBuilder::buff(TRUESHOT_BUFF, "Trueshot", TRUESHOT_DURATION)
-        .haste(TRUESHOT_HASTE)  // 50% haste
-        .crit(TRUESHOT_CRIT)    // 20% crit
+        .haste(TRUESHOT_HASTE) // 50% haste
+        .crit(TRUESHOT_CRIT) // 20% crit
         .build()
 }
 

@@ -16,10 +16,10 @@ pub use item::{
     ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo,
     ItemStat,
 };
+pub use r#trait::{
+    PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
+    TraitTreeWithSelections,
+};
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
 pub use spec::SpecDataFlat;
 pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat};
-pub use r#trait::{
-    PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree,
-    TraitTreeFlat, TraitTreeWithSelections,
-};

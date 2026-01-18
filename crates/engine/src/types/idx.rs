@@ -3,8 +3,8 @@
 //! These wrappers prevent mixing up different index types (e.g., passing a spell index
 //! where an aura index is expected) and provide validation at construction time.
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 // =============================================================================
 // SpellIdx - Index into spell definitions/states

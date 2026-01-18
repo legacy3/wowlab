@@ -1,6 +1,6 @@
-use crate::types::{AuraIdx, TargetIdx, SimTime};
-use smallvec::SmallVec;
 use super::AuraInstance;
+use crate::types::{AuraIdx, SimTime, TargetIdx};
+use smallvec::SmallVec;
 
 /// Per-target aura tracking (stack-allocated for typical aura counts)
 #[derive(Clone, Debug, Default)]
@@ -10,7 +10,9 @@ pub struct TargetAuras {
 
 impl TargetAuras {
     pub fn new() -> Self {
-        Self { auras: SmallVec::new() }
+        Self {
+            auras: SmallVec::new(),
+        }
     }
 
     /// Get aura by ID
@@ -25,7 +27,9 @@ impl TargetAuras {
 
     /// Check if aura is active
     pub fn has(&self, aura_id: AuraIdx, now: SimTime) -> bool {
-        self.auras.iter().any(|a| a.aura_id == aura_id && a.is_active(now))
+        self.auras
+            .iter()
+            .any(|a| a.aura_id == aura_id && a.is_active(now))
     }
 
     /// Get stack count (0 if not present)
@@ -76,12 +80,18 @@ impl TargetAuras {
 
     /// Count of active debuffs
     pub fn debuff_count(&self, now: SimTime) -> usize {
-        self.auras.iter().filter(|a| a.flags.is_debuff && a.is_active(now)).count()
+        self.auras
+            .iter()
+            .filter(|a| a.flags.is_debuff && a.is_active(now))
+            .count()
     }
 
     /// Count of active buffs
     pub fn buff_count(&self, now: SimTime) -> usize {
-        self.auras.iter().filter(|a| !a.flags.is_debuff && a.is_active(now)).count()
+        self.auras
+            .iter()
+            .filter(|a| !a.flags.is_debuff && a.is_active(now))
+            .count()
     }
 }
 

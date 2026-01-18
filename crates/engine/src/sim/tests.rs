@@ -1,8 +1,8 @@
 use super::*;
-use crate::types::*;
 use crate::actor::Player;
-use crate::specs::BmHunter;
 use crate::handler::SpecHandler;
+use crate::specs::BmHunter;
+use crate::types::*;
 use std::sync::Arc;
 
 fn create_handler() -> Arc<dyn SpecHandler> {
@@ -115,8 +115,7 @@ fn batch_runner_basic() {
     let handler = create_handler();
     let config = SimConfig::default().with_duration(10.0);
     let player = Player::new(SpecId::BeastMastery);
-    let runner = BatchRunner::with_handler(handler, config, player)
-        .with_iterations(10);
+    let runner = BatchRunner::with_handler(handler, config, player).with_iterations(10);
 
     let results = runner.run();
 

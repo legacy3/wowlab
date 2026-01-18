@@ -53,7 +53,7 @@ impl Default for GlobalColorFlat {
 }
 
 /// Flat global string structure for database storage
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GlobalStringFlat {
     pub id: i32,
@@ -62,24 +62,18 @@ pub struct GlobalStringFlat {
     pub flags: i32,
 }
 
-impl Default for GlobalStringFlat {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            tag: String::new(),
-            value: String::new(),
-            flags: 0,
-        }
-    }
-}
-
 // =============================================================================
 // Color Conversion Helpers
 // =============================================================================
 
 /// Convert RGB components (0-255) to hex color string
 pub fn rgb_to_hex(r: i32, g: i32, b: i32) -> String {
-    format!("#{:02X}{:02X}{:02X}", r.clamp(0, 255), g.clamp(0, 255), b.clamp(0, 255))
+    format!(
+        "#{:02X}{:02X}{:02X}",
+        r.clamp(0, 255),
+        g.clamp(0, 255),
+        b.clamp(0, 255)
+    )
 }
 
 /// Convert signed ARGB integer to hex color string (strips alpha)

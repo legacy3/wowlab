@@ -1,10 +1,10 @@
-mod player;
-mod pet;
 mod enemy;
+mod pet;
+mod player;
 
-pub use player::*;
-pub use pet::*;
 pub use enemy::*;
+pub use pet::*;
+pub use player::*;
 
 #[cfg(test)]
 mod tests;

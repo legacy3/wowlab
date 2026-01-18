@@ -1,6 +1,6 @@
-use crate::types::{SimTime, AuraIdx};
 use crate::combat::ActionState;
-use serde::{Serialize, Deserialize};
+use crate::types::{AuraIdx, SimTime};
+use serde::{Deserialize, Serialize};
 
 /// Defines periodic effect behavior
 #[derive(Clone, Debug, Serialize, Deserialize)]

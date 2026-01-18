@@ -96,7 +96,9 @@ impl SpecResolver {
             resolver.dots.insert(name.to_string(), id);
         }
         for (name, enabled) in data.talents_iter() {
-            resolver.talents.insert(name.to_string(), TalentInfo::new(enabled));
+            resolver
+                .talents
+                .insert(name.to_string(), TalentInfo::new(enabled));
         }
 
         resolver
@@ -154,7 +156,8 @@ impl SpecResolver {
 
     /// Register a talent with a specific rank.
     pub fn talent_ranked(mut self, name: impl Into<String>, rank: i32, max_rank: i32) -> Self {
-        self.talents.insert(name.into(), TalentInfo::ranked(rank, max_rank));
+        self.talents
+            .insert(name.into(), TalentInfo::ranked(rank, max_rank));
         self
     }
 
@@ -233,7 +236,10 @@ impl SpecResolver {
 
     /// Check if a talent is registered (returns enabled state).
     pub fn has_talent(&self, name: &str) -> bool {
-        self.talents.get(name).map(|info| info.enabled).unwrap_or(false)
+        self.talents
+            .get(name)
+            .map(|info| info.enabled)
+            .unwrap_or(false)
     }
 }
 

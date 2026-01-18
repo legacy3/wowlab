@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use crate::types::{UnitIdx, SpellIdx, SimTime, PetKind};
-use crate::stats::StatCache;
 use crate::aura::TargetAuras;
 use crate::combat::Cooldown;
+use crate::stats::StatCache;
+use crate::types::{PetKind, SimTime, SpellIdx, UnitIdx};
+use std::collections::HashMap;
 
 /// Pet state during simulation
 #[derive(Clone, Debug)]
@@ -49,7 +49,13 @@ impl Pet {
     }
 
     /// Create a temporary pet
-    pub fn temporary(id: UnitIdx, owner: UnitIdx, name: impl Into<String>, duration: SimTime, now: SimTime) -> Self {
+    pub fn temporary(
+        id: UnitIdx,
+        owner: UnitIdx,
+        name: impl Into<String>,
+        duration: SimTime,
+        now: SimTime,
+    ) -> Self {
         let mut pet = Self::new(id, owner, PetKind::Summon, name);
         pet.expires_at = Some(now + duration);
         pet
@@ -143,7 +149,12 @@ impl PetManager {
     }
 
     /// Summon a new pet
-    pub fn summon(&mut self, owner: UnitIdx, pet_kind: PetKind, name: impl Into<String>) -> UnitIdx {
+    pub fn summon(
+        &mut self,
+        owner: UnitIdx,
+        pet_kind: PetKind,
+        name: impl Into<String>,
+    ) -> UnitIdx {
         let id = UnitIdx(self.next_id);
         self.next_id += 1;
 
@@ -192,7 +203,8 @@ impl PetManager {
 
     /// Remove expired pets
     pub fn cleanup(&mut self, now: SimTime) {
-        self.pets.retain(|p| p.is_valid(now) || p.pet_kind == PetKind::Permanent);
+        self.pets
+            .retain(|p| p.is_valid(now) || p.pet_kind == PetKind::Permanent);
     }
 
     /// Dismiss pet

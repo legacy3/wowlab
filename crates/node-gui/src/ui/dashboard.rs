@@ -22,14 +22,25 @@ pub fn show(
                 0 => (
                     Icon::Cpu,
                     "Workers",
-                    format!("{}/{} ({})", stats.busy_workers, stats.max_workers, stats.total_cores),
-                    if stats.busy_workers > 0 { GREEN_9 } else { FG_DEFAULT },
+                    format!(
+                        "{}/{} ({})",
+                        stats.busy_workers, stats.max_workers, stats.total_cores
+                    ),
+                    if stats.busy_workers > 0 {
+                        GREEN_9
+                    } else {
+                        FG_DEFAULT
+                    },
                 ),
                 1 => (
                     Icon::Layers,
                     "Jobs",
                     stats.active_jobs.to_string(),
-                    if stats.active_jobs > 0 { BLUE_9 } else { FG_DEFAULT },
+                    if stats.active_jobs > 0 {
+                        BLUE_9
+                    } else {
+                        FG_DEFAULT
+                    },
                 ),
                 2 => (
                     Icon::CircleCheck,
@@ -41,7 +52,11 @@ pub fn show(
                     Icon::Zap,
                     "Sims/sec",
                     format!("{:.0}", stats.sims_per_second),
-                    if stats.sims_per_second > 0.0 { AMBER_9 } else { FG_DEFAULT },
+                    if stats.sims_per_second > 0.0 {
+                        AMBER_9
+                    } else {
+                        FG_DEFAULT
+                    },
                 ),
                 _ => return,
             };

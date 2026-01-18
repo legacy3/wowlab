@@ -206,7 +206,7 @@ impl SchemaBuilder {
 
         // Align offset
         let alignment = field_type.alignment();
-        if self.current_offset % alignment != 0 {
+        if !self.current_offset.is_multiple_of(alignment) {
             self.current_offset += alignment - (self.current_offset % alignment);
         }
 
@@ -236,7 +236,8 @@ impl SchemaBuilder {
             name: name.to_string(),
             var_type,
         };
-        self.add_key(key).expect("user var should always be addable")
+        self.add_key(key)
+            .expect("user var should always be addable")
     }
 
     /// Get the offset for a user variable by name.
@@ -247,7 +248,7 @@ impl SchemaBuilder {
     /// Build the final schema.
     pub fn build(self) -> ContextSchema {
         // Align total size to 8 bytes
-        let size = if self.current_offset % 8 != 0 {
+        let size = if !self.current_offset.is_multiple_of(8) {
             self.current_offset + (8 - self.current_offset % 8)
         } else {
             self.current_offset.max(8)

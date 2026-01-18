@@ -60,11 +60,7 @@ impl PopulateContext for SpellExpr {
             Self::InRange { spell: _ } => {
                 // Check if target is in range
                 // Default distance is 5 yards (melee range)
-                let distance = state
-                    .enemies
-                    .primary()
-                    .map(|e| e.distance)
-                    .unwrap_or(5.0);
+                let distance = state.enemies.primary().map(|e| e.distance).unwrap_or(5.0);
                 // TODO: Look up actual spell range from tuning
                 let spell_range = 40.0; // Default ranged
                 write_bool(buffer, offset, distance <= spell_range);
@@ -77,12 +73,7 @@ impl PopulateContext for SpellExpr {
                     .player
                     .charged_cooldown(*spell)
                     .map(|cd| cd.has_charge())
-                    .or_else(|| {
-                        state
-                            .player
-                            .cooldown(*spell)
-                            .map(|cd| cd.is_ready(now))
-                    })
+                    .or_else(|| state.player.cooldown(*spell).map(|cd| cd.is_ready(now)))
                     .unwrap_or(true); // No cooldown tracked = usable
                 write_bool(buffer, offset, usable);
             }

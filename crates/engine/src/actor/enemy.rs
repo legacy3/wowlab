@@ -1,5 +1,5 @@
-use crate::types::{TargetIdx, SimTime};
 use crate::aura::TargetAuras;
+use crate::types::{SimTime, TargetIdx};
 
 /// Enemy state
 #[derive(Clone, Debug)]

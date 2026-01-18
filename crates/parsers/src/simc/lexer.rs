@@ -57,4 +57,3 @@ pub type Lexer<'a> = LogosLexer<'a, Token<'a>>;
 pub fn lex(input: &str) -> Lexer<'_> {
     Token::lexer(input)
 }
-

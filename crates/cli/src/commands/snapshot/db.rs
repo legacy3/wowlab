@@ -6,11 +6,11 @@
 //! - Upsert conflict handling
 
 use indicatif::{ProgressBar, ProgressStyle};
-use serde::Serialize;
 use parsers::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
     SpellDataFlat, TraitTreeFlat,
 };
+use serde::Serialize;
 use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
 
 use super::SyncTable;
@@ -67,7 +67,11 @@ pub async fn cleanup_patch(
         if should_sync(tables, *sync_table) {
             let sql = format!("DELETE FROM {} WHERE patch_version = $1", table_name);
             let result = sqlx::query(&sql).bind(patch).execute(&mut **tx).await?;
-            tracing::debug!("  Deleted {} rows from {}", result.rows_affected(), table_name);
+            tracing::debug!(
+                "  Deleted {} rows from {}",
+                result.rows_affected(),
+                table_name
+            );
         }
     }
 
@@ -84,29 +88,85 @@ pub async fn insert_spells(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "id", "patch_version", "name", "description", "aura_description", "description_variables",
-        "file_name", "is_passive", "knowledge_source", "cast_time", "recovery_time", "start_recovery_time",
-        "mana_cost", "power_cost", "power_cost_pct", "power_type", "charge_recovery_time", "max_charges",
-        "range_max_0", "range_max_1", "range_min_0", "range_min_1", "cone_degrees", "radius_max", "radius_min",
-        "defense_type", "school_mask", "bonus_coefficient_from_ap", "effect_bonus_coefficient",
-        "interrupt_aura_0", "interrupt_aura_1", "interrupt_channel_0", "interrupt_channel_1", "interrupt_flags",
-        "duration", "max_duration", "can_empower", "empower_stages", "dispel_type", "facing_caster_flags", "speed",
-        "spell_class_mask_1", "spell_class_mask_2", "spell_class_mask_3", "spell_class_mask_4", "spell_class_set",
-        "base_level", "max_level", "max_passive_aura_level", "spell_level",
-        "caster_aura_spell", "caster_aura_state", "exclude_caster_aura_spell", "exclude_caster_aura_state",
-        "exclude_target_aura_spell", "exclude_target_aura_state", "target_aura_spell", "target_aura_state",
-        "replacement_spell_id", "shapeshift_exclude_0", "shapeshift_exclude_1", "shapeshift_mask_0", "shapeshift_mask_1",
-        "stance_bar_order", "required_totem_category_0", "required_totem_category_1", "totem_0", "totem_1",
-        "attributes", "effect_trigger_spell", "implicit_target", "learn_spells",
+        "id",
+        "patch_version",
+        "name",
+        "description",
+        "aura_description",
+        "description_variables",
+        "file_name",
+        "is_passive",
+        "knowledge_source",
+        "cast_time",
+        "recovery_time",
+        "start_recovery_time",
+        "mana_cost",
+        "power_cost",
+        "power_cost_pct",
+        "power_type",
+        "charge_recovery_time",
+        "max_charges",
+        "range_max_0",
+        "range_max_1",
+        "range_min_0",
+        "range_min_1",
+        "cone_degrees",
+        "radius_max",
+        "radius_min",
+        "defense_type",
+        "school_mask",
+        "bonus_coefficient_from_ap",
+        "effect_bonus_coefficient",
+        "interrupt_aura_0",
+        "interrupt_aura_1",
+        "interrupt_channel_0",
+        "interrupt_channel_1",
+        "interrupt_flags",
+        "duration",
+        "max_duration",
+        "can_empower",
+        "empower_stages",
+        "dispel_type",
+        "facing_caster_flags",
+        "speed",
+        "spell_class_mask_1",
+        "spell_class_mask_2",
+        "spell_class_mask_3",
+        "spell_class_mask_4",
+        "spell_class_set",
+        "base_level",
+        "max_level",
+        "max_passive_aura_level",
+        "spell_level",
+        "caster_aura_spell",
+        "caster_aura_state",
+        "exclude_caster_aura_spell",
+        "exclude_caster_aura_state",
+        "exclude_target_aura_spell",
+        "exclude_target_aura_state",
+        "target_aura_spell",
+        "target_aura_state",
+        "replacement_spell_id",
+        "shapeshift_exclude_0",
+        "shapeshift_exclude_1",
+        "shapeshift_mask_0",
+        "shapeshift_mask_1",
+        "stance_bar_order",
+        "required_totem_category_0",
+        "required_totem_category_1",
+        "totem_0",
+        "totem_1",
+        "attributes",
+        "effect_trigger_spell",
+        "implicit_target",
+        "learn_spells",
     ];
 
     let pb = progress_bar(rows.len(), "Spells");
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.spells ({}) ",
-            COLUMNS.join(", ")
-        ));
+        let mut qb: QueryBuilder<Postgres> =
+            QueryBuilder::new(format!("INSERT INTO game.spells ({}) ", COLUMNS.join(", ")));
 
         qb.push_values(chunk, |mut b, s| {
             b.push_bind(s.id)
@@ -199,8 +259,16 @@ pub async fn insert_traits(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "spec_id", "patch_version", "spec_name", "class_name", "tree_id",
-        "all_node_ids", "nodes", "edges", "sub_trees", "point_limits",
+        "spec_id",
+        "patch_version",
+        "spec_name",
+        "class_name",
+        "tree_id",
+        "all_node_ids",
+        "nodes",
+        "edges",
+        "sub_trees",
+        "point_limits",
     ];
 
     let pb = progress_bar(rows.len(), "Traits");
@@ -240,21 +308,45 @@ pub async fn insert_items(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "id", "patch_version", "name", "description", "file_name", "item_level", "quality",
-        "required_level", "binding", "buy_price", "sell_price", "max_count", "stackable", "speed",
-        "class_id", "subclass_id", "inventory_type", "classification", "stats", "effects",
-        "sockets", "socket_bonus_enchant_id", "flags", "allowable_class", "allowable_race",
-        "expansion_id", "item_set_id", "set_info", "drop_sources", "dmg_variance",
-        "gem_properties", "modified_crafting_reagent_item_id",
+        "id",
+        "patch_version",
+        "name",
+        "description",
+        "file_name",
+        "item_level",
+        "quality",
+        "required_level",
+        "binding",
+        "buy_price",
+        "sell_price",
+        "max_count",
+        "stackable",
+        "speed",
+        "class_id",
+        "subclass_id",
+        "inventory_type",
+        "classification",
+        "stats",
+        "effects",
+        "sockets",
+        "socket_bonus_enchant_id",
+        "flags",
+        "allowable_class",
+        "allowable_race",
+        "expansion_id",
+        "item_set_id",
+        "set_info",
+        "drop_sources",
+        "dmg_variance",
+        "gem_properties",
+        "modified_crafting_reagent_item_id",
     ];
 
     let pb = progress_bar(rows.len(), "Items");
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.items ({}) ",
-            COLUMNS.join(", ")
-        ));
+        let mut qb: QueryBuilder<Postgres> =
+            QueryBuilder::new(format!("INSERT INTO game.items ({}) ", COLUMNS.join(", ")));
 
         qb.push_values(chunk, |mut b, i| {
             b.push_bind(i.id)
@@ -307,18 +399,27 @@ pub async fn insert_auras(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "spell_id", "patch_version", "base_duration_ms", "max_duration_ms", "max_stacks",
-        "periodic_type", "tick_period_ms", "refresh_behavior", "duration_hasted", "hasted_ticks",
-        "pandemic_refresh", "rolling_periodic", "tick_may_crit", "tick_on_application",
+        "spell_id",
+        "patch_version",
+        "base_duration_ms",
+        "max_duration_ms",
+        "max_stacks",
+        "periodic_type",
+        "tick_period_ms",
+        "refresh_behavior",
+        "duration_hasted",
+        "hasted_ticks",
+        "pandemic_refresh",
+        "rolling_periodic",
+        "tick_may_crit",
+        "tick_on_application",
     ];
 
     let pb = progress_bar(rows.len(), "Auras");
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.auras ({}) ",
-            COLUMNS.join(", ")
-        ));
+        let mut qb: QueryBuilder<Postgres> =
+            QueryBuilder::new(format!("INSERT INTO game.auras ({}) ", COLUMNS.join(", ")));
 
         qb.push_values(chunk, |mut b, a| {
             let periodic_type = a
@@ -364,18 +465,26 @@ pub async fn insert_specs(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "id", "patch_version", "name", "description", "class_id", "class_name",
-        "role", "order_index", "icon_file_id", "file_name", "primary_stat_priority",
-        "mastery_spell_id_0", "mastery_spell_id_1",
+        "id",
+        "patch_version",
+        "name",
+        "description",
+        "class_id",
+        "class_name",
+        "role",
+        "order_index",
+        "icon_file_id",
+        "file_name",
+        "primary_stat_priority",
+        "mastery_spell_id_0",
+        "mastery_spell_id_1",
     ];
 
     let pb = progress_bar(rows.len(), "Specs");
 
     for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.specs ({}) ",
-            COLUMNS.join(", ")
-        ));
+        let mut qb: QueryBuilder<Postgres> =
+            QueryBuilder::new(format!("INSERT INTO game.specs ({}) ", COLUMNS.join(", ")));
 
         qb.push_values(chunk, |mut b, s| {
             b.push_bind(s.id)
@@ -409,8 +518,16 @@ pub async fn insert_classes(
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &[
-        "id", "patch_version", "name", "filename", "icon_file_id", "file_name", "color",
-        "spell_class_set", "primary_stat_priority", "roles_mask",
+        "id",
+        "patch_version",
+        "name",
+        "filename",
+        "icon_file_id",
+        "file_name",
+        "color",
+        "spell_class_set",
+        "primary_stat_priority",
+        "roles_mask",
     ];
 
     let pb = progress_bar(rows.len(), "Classes");
@@ -533,7 +650,10 @@ fn progress_bar(total: usize, label: &str) -> ProgressBar {
     let pb = ProgressBar::new(total as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template(&format!("  {} [{{bar:40}}] {{pos}}/{{len}} ({{percent}}%)", label))
+            .template(&format!(
+                "  {} [{{bar:40}}] {{pos}}/{{len}} ({{percent}}%)",
+                label
+            ))
             .expect("valid template"),
     );
     pb

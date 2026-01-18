@@ -24,8 +24,7 @@ use std::sync::OnceLock;
 
 /// Information about an implemented spec.
 #[cfg(feature = "jit")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpecInfo {
     /// WoW API spec ID (e.g., 253 for BM Hunter).
@@ -44,8 +43,7 @@ pub struct SpecInfo {
 
 /// Detailed coverage information for a spec.
 #[cfg(feature = "jit")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpecCoverage {
     /// WoW API spec ID.
@@ -64,8 +62,7 @@ pub struct SpecCoverage {
 
 /// Spell definition for frontend display.
 #[cfg(feature = "jit")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpellDefInfo {
     /// WoW spell ID.
@@ -82,8 +79,7 @@ pub struct SpellDefInfo {
 
 /// Aura definition for frontend display.
 #[cfg(feature = "jit")]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct AuraDefInfo {
     /// WoW spell ID.
@@ -141,15 +137,11 @@ fn get_handler_for_coverage(wow_spec_id: u32) -> Option<Box<dyn SpecHandler>> {
 fn get_all_handlers() -> Vec<Box<dyn SpecHandler>> {
     ensure_bm_hunter_initialized();
     ensure_mm_hunter_initialized();
-    vec![
-        Box::new(BmHunter::new()),
-        Box::new(MmHunter::new()),
-    ]
+    vec![Box::new(BmHunter::new()), Box::new(MmHunter::new())]
 }
 
 /// Field definition for condition schema (used by editor).
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ConditionFieldDef {
     /// Field name (e.g., "BuffActive", "TargetHealthBelow").
@@ -165,8 +157,7 @@ pub struct ConditionFieldDef {
 }
 
 /// Type of condition field for UI rendering.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionFieldType {
     /// Simple boolean condition (e.g., PetActive).
@@ -180,8 +171,7 @@ pub enum ConditionFieldType {
 }
 
 /// Resource type info for UI.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ResourceTypeInfo {
     pub name: String,
@@ -191,8 +181,7 @@ pub struct ResourceTypeInfo {
 }
 
 /// Damage school info for UI.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(tsify::Tsify)]
+#[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct DamageSchoolInfo {
     pub name: String,

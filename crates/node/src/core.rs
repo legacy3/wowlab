@@ -114,10 +114,7 @@ impl NodeCore {
             result_rx: None,
             last_heartbeat: None,
             last_claim_poll: None,
-            backoff: ExponentialBackoff::new(
-                Duration::from_secs(5),
-                Duration::from_secs(5 * 60),
-            ),
+            backoff: ExponentialBackoff::new(Duration::from_secs(5), Duration::from_secs(5 * 60)),
             event_tx,
             config,
             started: false,
@@ -703,8 +700,7 @@ impl NodeCore {
                     {
                         Ok(rotation) => {
                             // Check if we have it cached with matching checksum
-                            match cache
-                                .get_rotation(&cached_config.rotation_id, &rotation.checksum)
+                            match cache.get_rotation(&cached_config.rotation_id, &rotation.checksum)
                             {
                                 Some(script) => {
                                     tracing::debug!("Rotation cache hit: {}", &rotation.id[..8]);

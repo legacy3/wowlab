@@ -1,10 +1,10 @@
 mod instance;
-mod tracker;
 mod periodic;
+mod tracker;
 
 pub use instance::*;
-pub use tracker::*;
 pub use periodic::*;
+pub use tracker::*;
 
 #[cfg(test)]
 mod tests;

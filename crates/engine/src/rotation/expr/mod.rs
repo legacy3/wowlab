@@ -3,36 +3,36 @@
 //! Each domain module defines expressions that operate on a specific game concept
 //! and implements the PopulateContext trait for distributed context population.
 
-mod resource;
-mod cooldown;
+mod arithmetic;
 mod aura;
 mod combat;
-mod target;
+mod cooldown;
 mod enemy;
+mod gcd;
+mod literal;
+mod logic;
+mod pet;
 mod player;
+mod resource;
 mod spell;
 mod talent;
-mod gcd;
-mod pet;
-mod logic;
-mod arithmetic;
-mod literal;
+mod target;
 mod variable;
 
-pub use resource::ResourceExpr;
-pub use cooldown::CooldownExpr;
+pub use arithmetic::ArithmeticExpr;
 pub use aura::{AuraExpr, AuraOn, BuffExpr, DebuffExpr, DotExpr, UnifiedAuraExpr};
 pub use combat::CombatExpr;
-pub use target::{PercentValue, TargetExpr};
+pub use cooldown::CooldownExpr;
 pub use enemy::EnemyExpr;
+pub use gcd::GcdExpr;
+pub use literal::LiteralExpr;
+pub use logic::LogicExpr;
+pub use pet::PetExpr;
 pub use player::PlayerExpr;
+pub use resource::ResourceExpr;
 pub use spell::SpellExpr;
 pub use talent::TalentExpr;
-pub use gcd::GcdExpr;
-pub use pet::PetExpr;
-pub use logic::LogicExpr;
-pub use arithmetic::ArithmeticExpr;
-pub use literal::LiteralExpr;
+pub use target::{PercentValue, TargetExpr};
 pub use variable::VariableExpr;
 
 use crate::sim::SimState;

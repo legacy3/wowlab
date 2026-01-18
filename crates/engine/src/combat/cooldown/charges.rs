@@ -120,9 +120,7 @@ impl ChargedCooldown {
             return base;
         }
 
-        let elapsed = now.saturating_sub(
-            self.next_charge_at.saturating_sub(self.recharge_time)
-        );
+        let elapsed = now.saturating_sub(self.next_charge_at.saturating_sub(self.recharge_time));
         let progress = elapsed.as_secs_f32() / self.recharge_time.as_secs_f32();
 
         base + progress.clamp(0.0, 1.0)
@@ -163,12 +161,20 @@ mod tests {
         // At time 5, we're halfway through recharging
         // progress = 5/10 = 0.5
         let fractional = cd.charges_fractional(SimTime::from_secs_f32(5.0));
-        assert!((fractional - 1.5).abs() < 0.01, "Expected ~1.5, got {}", fractional);
+        assert!(
+            (fractional - 1.5).abs() < 0.01,
+            "Expected ~1.5, got {}",
+            fractional
+        );
 
         // At time 9, we're almost done
         // progress = 9/10 = 0.9
         let fractional = cd.charges_fractional(SimTime::from_secs_f32(9.0));
-        assert!((fractional - 1.9).abs() < 0.01, "Expected ~1.9, got {}", fractional);
+        assert!(
+            (fractional - 1.9).abs() < 0.01,
+            "Expected ~1.9, got {}",
+            fractional
+        );
     }
 
     #[test]
@@ -185,7 +191,11 @@ mod tests {
 
         // At time 5, we're halfway through recharging the first
         let fractional = cd.charges_fractional(SimTime::from_secs_f32(5.0));
-        assert!((fractional - 0.5).abs() < 0.01, "Expected ~0.5, got {}", fractional);
+        assert!(
+            (fractional - 0.5).abs() < 0.01,
+            "Expected ~0.5, got {}",
+            fractional
+        );
     }
 
     #[test]

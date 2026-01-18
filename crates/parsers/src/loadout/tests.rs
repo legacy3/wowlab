@@ -17,10 +17,7 @@ fn test_roundtrip() {
         version: 1,
         spec_id: 62,
         tree_hash: [0; 16],
-        nodes: vec![
-            make_node(true, true, None),
-            make_node(false, false, None),
-        ],
+        nodes: vec![make_node(true, true, None), make_node(false, false, None)],
     };
 
     let encoded = encode_trait_loadout(&original);
@@ -33,7 +30,11 @@ fn test_roundtrip() {
     for (i, (orig, dec)) in original.nodes.iter().zip(decoded.nodes.iter()).enumerate() {
         assert_eq!(orig.selected, dec.selected, "Node {} selected mismatch", i);
         if orig.selected {
-            assert_eq!(orig.purchased, dec.purchased, "Node {} purchased mismatch", i);
+            assert_eq!(
+                orig.purchased, dec.purchased,
+                "Node {} purchased mismatch",
+                i
+            );
         }
     }
 }

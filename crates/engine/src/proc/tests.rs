@@ -1,6 +1,6 @@
 use super::*;
-use crate::types::*;
 use crate::core::FastRng;
+use crate::types::*;
 
 #[test]
 fn proc_flags_basic() {
@@ -107,8 +107,7 @@ fn fixed_proc_basic() {
 
 #[test]
 fn fixed_proc_icd() {
-    let mut proc = FixedProc::new(ProcIdx(1), 1.0)
-        .with_icd(SimTime::from_secs(5));
+    let mut proc = FixedProc::new(ProcIdx(1), 1.0).with_icd(SimTime::from_secs(5));
     let mut rng = FastRng::new(42);
 
     // First proc succeeds
@@ -127,7 +126,10 @@ fn proc_handler_trigger_check() {
         ProcIdx(1),
         "Test Proc",
         ProcFlags::ON_DAMAGE | ProcFlags::ON_CRIT,
-        ProcEffect::Damage { base: 100.0, coefficient: 1.0 },
+        ProcEffect::Damage {
+            base: 100.0,
+            coefficient: 1.0,
+        },
     );
 
     let damage_ctx = ProcContext::damage(ProcFlags::ON_DAMAGE, 1000.0, false);
@@ -147,7 +149,8 @@ fn proc_handler_spell_filter() {
         "Filtered Proc",
         ProcFlags::ON_SPELL_CAST,
         ProcEffect::ApplyAura { aura: AuraIdx(1) },
-    ).with_spell_filter(vec![SpellIdx(10), SpellIdx(20)]);
+    )
+    .with_spell_filter(vec![SpellIdx(10), SpellIdx(20)]);
 
     let matching = ProcContext {
         trigger: ProcFlags::ON_SPELL_CAST,
@@ -177,7 +180,10 @@ fn proc_registry_check() {
             ProcIdx(1),
             "Damage Proc",
             ProcFlags::ON_DAMAGE,
-            ProcEffect::Damage { base: 50.0, coefficient: 1.0 },
+            ProcEffect::Damage {
+                base: 50.0,
+                coefficient: 1.0,
+            },
         ),
     );
 
@@ -192,7 +198,10 @@ fn proc_registry_check() {
 fn proc_effect_multiple() {
     let effect = ProcEffect::Multiple(vec![
         ProcEffect::ApplyAura { aura: AuraIdx(1) },
-        ProcEffect::Damage { base: 100.0, coefficient: 1.0 },
+        ProcEffect::Damage {
+            base: 100.0,
+            coefficient: 1.0,
+        },
     ]);
 
     match effect {

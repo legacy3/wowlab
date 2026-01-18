@@ -2,8 +2,8 @@ use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Duration;
 use supabase_realtime_rs::{
-    ChannelEvent, EventPayload, PostgresChangeEvent, PostgresChangesFilter,
-    PostgresChangesPayload, RealtimeChannelOptions, RealtimeClient, RealtimeClientOptions,
+    ChannelEvent, EventPayload, PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload,
+    RealtimeChannelOptions, RealtimeClient, RealtimeClientOptions,
     RealtimeError as SbRealtimeError,
 };
 use tokio::runtime::Handle;

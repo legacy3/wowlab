@@ -1,22 +1,21 @@
-mod idx;
-mod time;
-mod resource;
-mod class;
 mod attribute;
+mod class;
 mod damage;
+mod idx;
+mod resource;
 mod snapshot;
+mod time;
 
 // Re-export all index types
-pub use idx::{
-    SpellIdx, AuraIdx, ProcIdx, UnitIdx, TargetIdx,
-    PetIdx, EnemyIdx, SnapshotIdx, ResourceIdx,
-};
-pub use time::*;
-pub use resource::*;
-pub use class::*;
 pub use attribute::*;
+pub use class::*;
 pub use damage::*;
+pub use idx::{
+    AuraIdx, EnemyIdx, PetIdx, ProcIdx, ResourceIdx, SnapshotIdx, SpellIdx, TargetIdx, UnitIdx,
+};
+pub use resource::*;
 pub use snapshot::*;
+pub use time::*;
 
 #[cfg(test)]
 mod tests;

@@ -26,7 +26,11 @@ pub fn transform_spell(
 
     let spell_row = dbc.spell.get(&spell_id);
     let misc = dbc.spell_misc.get(&spell_id);
-    let effects = dbc.spell_effect.get(&spell_id).map(|v| v.as_slice()).unwrap_or(&[]);
+    let effects = dbc
+        .spell_effect
+        .get(&spell_id)
+        .map(|v| v.as_slice())
+        .unwrap_or(&[]);
     let categories = dbc.spell_categories.get(&spell_id);
 
     // Extract attributes
@@ -70,7 +74,9 @@ pub fn transform_spell(
             } else {
                 return None;
             };
-            dbc.spell_radius.get(&idx).map(|r| (r.RadiusMin, r.RadiusMax))
+            dbc.spell_radius
+                .get(&idx)
+                .map(|r| (r.RadiusMin, r.RadiusMax))
         })
         .unwrap_or((0.0, 0.0));
 
@@ -177,10 +183,7 @@ pub fn transform_spell(
     let stance_bar_order = shapeshift.map(|s| s.StanceBarOrder).unwrap_or(0);
 
     // Extract totems
-    let totems = dbc
-        .spell_totems
-        .get(&spell_id)
-        .and_then(|t| t.first());
+    let totems = dbc.spell_totems.get(&spell_id).and_then(|t| t.first());
     let totem_0 = totems.map(|t| t.Totem_0).unwrap_or(0);
     let totem_1 = totems.map(|t| t.Totem_1).unwrap_or(0);
     let required_totem_category_0 = totems.map(|t| t.RequiredTotemCategoryID_0).unwrap_or(0);
@@ -243,7 +246,10 @@ pub fn transform_spell(
         .spell_x_description_variables
         .get(&spell_id)
         .and_then(|xvars| xvars.first())
-        .and_then(|xvar| dbc.spell_description_variables.get(&xvar.SpellDescriptionVariablesID))
+        .and_then(|xvar| {
+            dbc.spell_description_variables
+                .get(&xvar.SpellDescriptionVariablesID)
+        })
         .map(|dv| dv.Variables.clone())
         .unwrap_or_default();
 
@@ -252,11 +258,7 @@ pub fn transform_spell(
     let file_name = if icon_file_data_id > 0 {
         dbc.manifest_interface_data
             .get(&icon_file_data_id)
-            .map(|m| {
-                m.FileName
-                    .to_lowercase()
-                    .replace(".blp", "")
-            })
+            .map(|m| m.FileName.to_lowercase().replace(".blp", ""))
             .unwrap_or_else(|| "inv_misc_questionmark".to_string())
     } else {
         "inv_misc_questionmark".to_string()

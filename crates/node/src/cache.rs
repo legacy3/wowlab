@@ -75,7 +75,8 @@ impl ConfigCache {
 
     /// Insert a rotation into the cache.
     pub fn insert_rotation(&self, id: String, script: String, checksum: String) {
-        self.rotations.insert(id, CachedRotation { script, checksum });
+        self.rotations
+            .insert(id, CachedRotation { script, checksum });
     }
 
     /// Clear all caches. Useful for debugging or resetting.

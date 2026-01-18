@@ -21,7 +21,10 @@ pub mod transform;
 // ============================================================================
 
 // SimC parsing
-pub use simc::{parse as parse_simc, Character, Item, Loadout, ParseError, Profile, Slot, Talents, WowClass, Profession};
+pub use simc::{
+    parse as parse_simc, Character, Item, Loadout, ParseError, Profession, Profile, Slot, Talents,
+    WowClass,
+};
 
 // DBC data loading
 pub use dbc::DbcData;
@@ -34,8 +37,8 @@ pub use flat::{
     argb_to_hex, rgb_to_hex, AuraDataFlat, ClassDataFlat, EmpowerStage, GlobalColorFlat,
     GlobalStringFlat, ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus,
     ItemSetInfo, ItemStat, KnowledgeSource, LearnSpell, PeriodicType, PointLimits, RefreshBehavior,
-    SpecDataFlat, SpellDataFlat, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree,
-    TraitTreeFlat, TraitTreeWithSelections,
+    SpecDataFlat, SpellDataFlat, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection,
+    TraitSubTree, TraitTreeFlat, TraitTreeWithSelections,
 };
 
 // DBC → Flat transformation

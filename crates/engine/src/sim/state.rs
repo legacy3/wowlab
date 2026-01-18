@@ -1,8 +1,8 @@
-use crate::types::SimTime;
-use crate::core::{EventQueue, FastRng};
-use crate::actor::{Player, PetManager, EnemyManager};
+use crate::actor::{EnemyManager, PetManager, Player};
 use crate::aura::AuraTracker;
 use crate::combat::DamageMultipliers;
+use crate::core::{EventQueue, FastRng};
+use crate::types::SimTime;
 
 /// Configuration for simulation
 #[derive(Clone, Debug)]
@@ -183,13 +183,33 @@ pub struct TraceEvent {
 
 #[derive(Clone, Debug)]
 pub enum TraceEventType {
-    SpellCast { spell: crate::types::SpellIdx, target: crate::types::TargetIdx },
-    Damage { spell: crate::types::SpellIdx, amount: f32, is_crit: bool },
-    AuraApply { aura: crate::types::AuraIdx, target: crate::types::TargetIdx },
-    AuraExpire { aura: crate::types::AuraIdx, target: crate::types::TargetIdx },
-    ResourceGain { resource: crate::types::ResourceType, amount: f32 },
-    CooldownStart { spell: crate::types::SpellIdx },
-    ProcTrigger { proc: crate::types::ProcIdx },
+    SpellCast {
+        spell: crate::types::SpellIdx,
+        target: crate::types::TargetIdx,
+    },
+    Damage {
+        spell: crate::types::SpellIdx,
+        amount: f32,
+        is_crit: bool,
+    },
+    AuraApply {
+        aura: crate::types::AuraIdx,
+        target: crate::types::TargetIdx,
+    },
+    AuraExpire {
+        aura: crate::types::AuraIdx,
+        target: crate::types::TargetIdx,
+    },
+    ResourceGain {
+        resource: crate::types::ResourceType,
+        amount: f32,
+    },
+    CooldownStart {
+        spell: crate::types::SpellIdx,
+    },
+    ProcTrigger {
+        proc: crate::types::ProcIdx,
+    },
 }
 
 impl SimState {
@@ -200,7 +220,10 @@ impl SimState {
         events.schedule(config.duration, crate::core::SimEvent::SimEnd);
 
         // Schedule resource ticks (every 100ms for energy/focus)
-        events.schedule(SimTime::from_millis(100), crate::core::SimEvent::ResourceTick);
+        events.schedule(
+            SimTime::from_millis(100),
+            crate::core::SimEvent::ResourceTick,
+        );
 
         // Schedule initial GCD end to start rotation
         events.schedule(SimTime::ZERO, crate::core::SimEvent::GcdEnd);
@@ -236,9 +259,14 @@ impl SimState {
 
         // Reset event queue
         self.events.clear();
-        self.events.schedule(self.config.duration, crate::core::SimEvent::SimEnd);
-        self.events.schedule(SimTime::from_millis(100), crate::core::SimEvent::ResourceTick);
-        self.events.schedule(SimTime::ZERO, crate::core::SimEvent::GcdEnd);
+        self.events
+            .schedule(self.config.duration, crate::core::SimEvent::SimEnd);
+        self.events.schedule(
+            SimTime::from_millis(100),
+            crate::core::SimEvent::ResourceTick,
+        );
+        self.events
+            .schedule(SimTime::ZERO, crate::core::SimEvent::GcdEnd);
 
         // Reset actors
         self.player.reset();

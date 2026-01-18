@@ -1,7 +1,7 @@
 use super::*;
-use crate::types::*;
 use crate::core::FastRng;
 use crate::stats::StatCache;
+use crate::types::*;
 
 #[test]
 fn action_state_snapshot() {
@@ -52,9 +52,9 @@ fn damage_pipeline_basic() {
         5000.0, // ap
         0.0,    // sp
         &mult,
-        0.0,    // crit chance (guaranteed no crit)
+        0.0, // crit chance (guaranteed no crit)
         DamageSchool::Physical,
-        0.0,    // no armor
+        0.0, // no armor
         &mut rng,
     );
 
@@ -68,13 +68,29 @@ fn damage_pipeline_armor() {
     let mult = DamageMultipliers::new();
 
     let no_armor = DamagePipeline::calculate(
-        1000.0, 0.0, 0.0, 0.0, 0.0, &mult, 0.0,
-        DamageSchool::Physical, 0.0, &mut rng,
+        1000.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        &mult,
+        0.0,
+        DamageSchool::Physical,
+        0.0,
+        &mut rng,
     );
 
     let with_armor = DamagePipeline::calculate(
-        1000.0, 0.0, 0.0, 0.0, 0.0, &mult, 0.0,
-        DamageSchool::Physical, 5000.0, &mut rng,
+        1000.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        &mult,
+        0.0,
+        DamageSchool::Physical,
+        5000.0,
+        &mut rng,
     );
 
     assert!(with_armor.final_amount < no_armor.final_amount);
@@ -97,7 +113,7 @@ fn cooldown_hasted() {
     let mut cd = Cooldown::new(10.0).hasted();
 
     cd.start(SimTime::ZERO, 2.0); // 100% haste
-    // Should be ready at 5 seconds instead of 10
+                                  // Should be ready at 5 seconds instead of 10
     assert!(!cd.is_ready(SimTime::from_secs(4)));
     assert!(cd.is_ready(SimTime::from_secs(5)));
 }

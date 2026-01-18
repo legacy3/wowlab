@@ -1,6 +1,6 @@
-use crate::spec::{SpellBuilder, SpellDef, SpellTarget};
-use crate::types::{ResourceType, DamageSchool};
 use super::constants::*;
+use crate::spec::{SpellBuilder, SpellDef, SpellTarget};
+use crate::types::{DamageSchool, ResourceType};
 
 /// Get all MM Hunter spell definitions
 pub fn spell_definitions() -> Vec<SpellDef> {

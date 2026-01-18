@@ -56,7 +56,10 @@ fn is_retryable(err: &SupabaseError) -> bool {
 }
 
 /// Retry a fallible async operation with exponential backoff
-pub async fn with_retry<T, F, Fut>(config: &RetryConfig, mut operation: F) -> Result<T, SupabaseError>
+pub async fn with_retry<T, F, Fut>(
+    config: &RetryConfig,
+    mut operation: F,
+) -> Result<T, SupabaseError>
 where
     F: FnMut() -> Fut,
     Fut: Future<Output = Result<T, SupabaseError>>,
@@ -77,7 +80,9 @@ where
                 let delay = if let SupabaseError::RateLimited { retry_after_ms } = &e {
                     Duration::from_millis(*retry_after_ms)
                 } else {
-                    backoff.next_backoff().unwrap_or(Duration::from_millis(config.max_delay_ms))
+                    backoff
+                        .next_backoff()
+                        .unwrap_or(Duration::from_millis(config.max_delay_ms))
                 };
 
                 tracing::warn!(

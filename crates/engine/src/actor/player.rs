@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use crate::types::{SpecId, SpellIdx, UnitIdx, SimTime};
-use crate::stats::StatCache;
-use crate::resource::UnitResources;
-use crate::combat::{Cooldown, ChargedCooldown};
 use crate::aura::TargetAuras;
+use crate::combat::{ChargedCooldown, Cooldown};
 use crate::proc::ProcRegistry;
+use crate::resource::UnitResources;
+use crate::stats::StatCache;
+use crate::types::{SimTime, SpecId, SpellIdx, UnitIdx};
+use std::collections::HashMap;
 
 /// Player state during simulation
 #[derive(Clone, Debug)]
@@ -287,7 +287,9 @@ pub struct PlayerBuilder {
 
 impl PlayerBuilder {
     pub fn new(spec: SpecId) -> Self {
-        Self { player: Player::new(spec) }
+        Self {
+            player: Player::new(spec),
+        }
     }
 
     pub fn with_stats(mut self, stats: StatCache) -> Self {

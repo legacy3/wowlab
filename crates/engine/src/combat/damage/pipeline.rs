@@ -1,6 +1,6 @@
-use crate::types::{DamageSchool, HitResult, DamageFlags};
-use crate::core::FastRng;
 use super::DamageMultipliers;
+use crate::core::FastRng;
+use crate::types::{DamageFlags, DamageSchool, HitResult};
 
 /// Result of damage calculation
 #[derive(Clone, Debug)]
@@ -22,6 +22,7 @@ pub struct DamagePipeline;
 
 impl DamagePipeline {
     /// Calculate damage with full pipeline
+    #[allow(clippy::too_many_arguments)]
     pub fn calculate(
         base: f32,
         ap_coeff: f32,
@@ -43,7 +44,11 @@ impl DamagePipeline {
 
         // 2. Roll for crit
         let is_crit = rng.roll(crit_chance);
-        let hit_result = if is_crit { HitResult::Crit } else { HitResult::Hit };
+        let hit_result = if is_crit {
+            HitResult::Crit
+        } else {
+            HitResult::Hit
+        };
 
         // 3. Apply multipliers
         amount *= multipliers.total_da(is_crit);
@@ -69,6 +74,7 @@ impl DamagePipeline {
     }
 
     /// Calculate periodic (DoT) tick damage
+    #[allow(clippy::too_many_arguments)]
     pub fn calculate_periodic(
         base: f32,
         ap_coeff: f32,
@@ -88,7 +94,11 @@ impl DamagePipeline {
         let raw = amount;
 
         let is_crit = rng.roll(crit_chance);
-        let hit_result = if is_crit { HitResult::Crit } else { HitResult::Hit };
+        let hit_result = if is_crit {
+            HitResult::Crit
+        } else {
+            HitResult::Hit
+        };
 
         // Use TA multiplier for periodic
         amount *= multipliers.total_ta(is_crit);

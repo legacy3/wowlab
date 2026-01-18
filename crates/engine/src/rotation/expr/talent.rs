@@ -77,7 +77,13 @@ impl TalentExpr {
     /// Get the rank value (0 if disabled or not a rank expression).
     pub fn get_rank(&self) -> i32 {
         match self {
-            Self::Enabled { value } => if *value { 1 } else { 0 },
+            Self::Enabled { value } => {
+                if *value {
+                    1
+                } else {
+                    0
+                }
+            }
             Self::Rank { rank } => *rank,
             Self::MaxRank { .. } => 0,
         }

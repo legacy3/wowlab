@@ -2,12 +2,15 @@
 //!
 //! Uses insta for golden file testing. Run `cargo insta review` to update snapshots.
 
-use parsers::loadout::{decode_trait_loadout, encode_trait_loadout, DecodedTraitLoadout, DecodedTraitNode};
+use parsers::loadout::{
+    decode_trait_loadout, encode_trait_loadout, DecodedTraitLoadout, DecodedTraitNode,
+};
 use serde::Serialize;
 
 // Real talent strings from the game
 const SHAMAN_RESTO_TALENTS: &str = "CgQAL+iDLHPJSLC+6fqMJ8tubCAAAAAAAAAAYMzMmZZMY2WmtZWmhFbmZBGwEMLMhMWMzDY2YmtZmZmMbLMz0YGmZDLzYGMGmlxAAAD";
-const MAGE_ARCANE_TALENTS: &str = "CgGAAAAAAAAAAAAAAAAAAAAAAoABAAAAAAJJJJJJRSkopJRSACAAAAAAAEAAAAAA";
+const MAGE_ARCANE_TALENTS: &str =
+    "CgGAAAAAAAAAAAAAAAAAAAAAAoABAAAAAAJJJJJJRSkopJRSACAAAAAAAEAAAAAA";
 const WARRIOR_ARMS_TALENTS: &str = "CYQAAAAAAAAAAAAAAAAAAAAAgCAAAEBAAAA";
 const HUNTER_BM_TALENTS: &str = "C0PAAAAAAAAAAAAAAAAAAAAAAYMbDMgBMbsFyYBAAAAAAzY2GmlZGMjZMzyYmZGMjZyMmxMjZGmZYgxMzAzY2WmhZDAAAAAAmB";
 
@@ -43,7 +46,8 @@ impl From<&DecodedTraitLoadout> for LoadoutSnapshot {
 
 #[test]
 fn test_decode_shaman_resto() {
-    let decoded = decode_trait_loadout(SHAMAN_RESTO_TALENTS).expect("Failed to decode shaman talents");
+    let decoded =
+        decode_trait_loadout(SHAMAN_RESTO_TALENTS).expect("Failed to decode shaman talents");
     let snapshot = LoadoutSnapshot::from(&decoded);
     insta::assert_json_snapshot!("loadout_shaman_resto", snapshot);
 }
@@ -57,7 +61,8 @@ fn test_decode_mage_arcane() {
 
 #[test]
 fn test_decode_warrior_arms() {
-    let decoded = decode_trait_loadout(WARRIOR_ARMS_TALENTS).expect("Failed to decode warrior talents");
+    let decoded =
+        decode_trait_loadout(WARRIOR_ARMS_TALENTS).expect("Failed to decode warrior talents");
     let snapshot = LoadoutSnapshot::from(&decoded);
     insta::assert_json_snapshot!("loadout_warrior_arms", snapshot);
 }
@@ -159,14 +164,34 @@ fn test_roundtrip_custom() {
     for (i, (orig, dec)) in original.nodes.iter().zip(decoded.nodes.iter()).enumerate() {
         assert_eq!(orig.selected, dec.selected, "Node {} selected mismatch", i);
         if orig.selected && orig.purchased {
-            assert_eq!(orig.purchased, dec.purchased, "Node {} purchased mismatch", i);
-            assert_eq!(orig.partially_ranked, dec.partially_ranked, "Node {} partially_ranked mismatch", i);
+            assert_eq!(
+                orig.purchased, dec.purchased,
+                "Node {} purchased mismatch",
+                i
+            );
+            assert_eq!(
+                orig.partially_ranked, dec.partially_ranked,
+                "Node {} partially_ranked mismatch",
+                i
+            );
             if orig.partially_ranked {
-                assert_eq!(orig.ranks_purchased, dec.ranks_purchased, "Node {} ranks_purchased mismatch", i);
+                assert_eq!(
+                    orig.ranks_purchased, dec.ranks_purchased,
+                    "Node {} ranks_purchased mismatch",
+                    i
+                );
             }
-            assert_eq!(orig.choice_node, dec.choice_node, "Node {} choice_node mismatch", i);
+            assert_eq!(
+                orig.choice_node, dec.choice_node,
+                "Node {} choice_node mismatch",
+                i
+            );
             if orig.choice_node {
-                assert_eq!(orig.choice_index, dec.choice_index, "Node {} choice_index mismatch", i);
+                assert_eq!(
+                    orig.choice_index, dec.choice_index,
+                    "Node {} choice_index mismatch",
+                    i
+                );
             }
         }
     }

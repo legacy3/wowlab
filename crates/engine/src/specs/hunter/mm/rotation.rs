@@ -2,13 +2,13 @@
 //!
 //! Provides name resolution for MM Hunter rotations.
 
+use super::constants::*;
 use crate::rotation::SpecResolver;
 use crate::types::SpellIdx;
-use super::constants::*;
 
 /// Create a spec resolver for MM Hunter.
 pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
-    let resolver = SpecResolver::new("mm_hunter")
+    SpecResolver::new("mm_hunter")
         .resource("focus")
         // Core spells
         .spell("aimed_shot", AIMED_SHOT.0)
@@ -26,9 +26,10 @@ pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
         .aura("lock_and_load", LOCK_AND_LOAD.0)
         // Talents
         .talent("trueshot", talents.contains(TalentFlags::TRUESHOT))
-        .talent("lock_and_load", talents.contains(TalentFlags::LOCK_AND_LOAD));
-
-    resolver
+        .talent(
+            "lock_and_load",
+            talents.contains(TalentFlags::LOCK_AND_LOAD),
+        )
 }
 
 /// Default spec resolver (no talents).

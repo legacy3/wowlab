@@ -1,5 +1,5 @@
-use crate::types::{SimTime, ProcIdx};
 use crate::core::FastRng;
+use crate::types::{ProcIdx, SimTime};
 
 /// RPPM (Real Procs Per Minute) state with Bad Luck Protection
 #[derive(Clone, Debug)]
@@ -103,13 +103,7 @@ impl RppmState {
     }
 
     /// Attempt to proc, returns true if successful
-    pub fn attempt(
-        &mut self,
-        now: SimTime,
-        haste: f32,
-        crit: f32,
-        rng: &mut FastRng,
-    ) -> bool {
+    pub fn attempt(&mut self, now: SimTime, haste: f32, crit: f32, rng: &mut FastRng) -> bool {
         // Check ICD
         if self.on_icd(now) {
             return false;

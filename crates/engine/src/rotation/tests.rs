@@ -1,8 +1,8 @@
 //! Rotation system tests.
 
 use super::*;
-use crate::sim::{SimConfig, SimState};
 use crate::actor::Player;
+use crate::sim::{SimConfig, SimState};
 use crate::types::SpecId;
 
 /// Create a minimal SimState for testing
@@ -495,15 +495,21 @@ fn test_eval_result_wait() {
 
 #[test]
 fn test_schema_builder() {
-    use super::expr::{CooldownExpr, ResourceExpr, BuffExpr};
     use super::context::ExprKey;
+    use super::expr::{BuffExpr, CooldownExpr, ResourceExpr};
     use crate::types::ResourceType;
 
     let mut builder = SchemaBuilder::new();
 
-    let key1 = ExprKey::Resource(ResourceExpr::ResourceCurrent { resource: ResourceType::Focus });
-    let key2 = ExprKey::Cooldown(CooldownExpr::CooldownReady { spell: crate::types::SpellIdx(1) });
-    let key3 = ExprKey::Buff(BuffExpr::Stacks { aura: crate::types::AuraIdx(1) });
+    let key1 = ExprKey::Resource(ResourceExpr::ResourceCurrent {
+        resource: ResourceType::Focus,
+    });
+    let key2 = ExprKey::Cooldown(CooldownExpr::CooldownReady {
+        spell: crate::types::SpellIdx(1),
+    });
+    let key3 = ExprKey::Buff(BuffExpr::Stacks {
+        aura: crate::types::AuraIdx(1),
+    });
 
     let offset1 = builder.add_key(key1.clone()).unwrap();
     let offset2 = builder.add_key(key2.clone()).unwrap();
@@ -523,17 +529,21 @@ fn test_schema_builder() {
 
 #[test]
 fn test_schema_alignment() {
-    use super::expr::{CooldownExpr, ResourceExpr};
     use super::context::ExprKey;
+    use super::expr::{CooldownExpr, ResourceExpr};
     use crate::types::ResourceType;
 
     let mut builder = SchemaBuilder::new();
 
     // Add bool (1 byte)
-    let bool_key = ExprKey::Cooldown(CooldownExpr::CooldownReady { spell: crate::types::SpellIdx(1) });
+    let bool_key = ExprKey::Cooldown(CooldownExpr::CooldownReady {
+        spell: crate::types::SpellIdx(1),
+    });
     builder.add_key(bool_key).unwrap();
     // Add float (8 bytes) - should be aligned
-    let float_key = ExprKey::Resource(ResourceExpr::ResourceCurrent { resource: ResourceType::Focus });
+    let float_key = ExprKey::Resource(ResourceExpr::ResourceCurrent {
+        resource: ResourceType::Focus,
+    });
     builder.add_key(float_key.clone()).unwrap();
 
     let schema = builder.build();
@@ -585,15 +595,33 @@ fn test_cooldown_expr_json_roundtrip() {
     use crate::types::SpellIdx;
 
     let test_cases = vec![
-        CooldownExpr::CooldownReady { spell: SpellIdx(123) },
-        CooldownExpr::CooldownRemaining { spell: SpellIdx(123) },
-        CooldownExpr::CooldownDuration { spell: SpellIdx(123) },
-        CooldownExpr::CooldownBaseDuration { spell: SpellIdx(123) },
-        CooldownExpr::CooldownCharges { spell: SpellIdx(123) },
-        CooldownExpr::CooldownChargesMax { spell: SpellIdx(123) },
-        CooldownExpr::CooldownChargesFractional { spell: SpellIdx(123) },
-        CooldownExpr::CooldownRechargeTime { spell: SpellIdx(123) },
-        CooldownExpr::CooldownFullRechargeTime { spell: SpellIdx(123) },
+        CooldownExpr::CooldownReady {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownRemaining {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownDuration {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownBaseDuration {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownCharges {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownChargesMax {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownChargesFractional {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownRechargeTime {
+            spell: SpellIdx(123),
+        },
+        CooldownExpr::CooldownFullRechargeTime {
+            spell: SpellIdx(123),
+        },
     ];
 
     for expr in test_cases {
@@ -601,7 +629,7 @@ fn test_cooldown_expr_json_roundtrip() {
         let json = serde_json::to_string(&expr).expect("Failed to serialize");
         // Deserialize back
         let deserialized: CooldownExpr = serde_json::from_str(&json)
-            .expect(&format!("Failed to deserialize: {}", json));
+            .unwrap_or_else(|_| panic!("Failed to deserialize: {}", json));
         // Should be equal
         assert_eq!(expr, deserialized, "Roundtrip failed for {:?}", expr);
     }
@@ -614,20 +642,65 @@ fn test_cooldown_expr_camel_case_deserialization() {
 
     // All 9 expressions with camelCase type tag
     let test_cases = vec![
-        (r#"{"type":"cooldownReady","spell":123}"#, CooldownExpr::CooldownReady { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownRemaining","spell":123}"#, CooldownExpr::CooldownRemaining { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownDuration","spell":123}"#, CooldownExpr::CooldownDuration { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownBaseDuration","spell":123}"#, CooldownExpr::CooldownBaseDuration { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownCharges","spell":123}"#, CooldownExpr::CooldownCharges { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownChargesMax","spell":123}"#, CooldownExpr::CooldownChargesMax { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownChargesFractional","spell":123}"#, CooldownExpr::CooldownChargesFractional { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownRechargeTime","spell":123}"#, CooldownExpr::CooldownRechargeTime { spell: SpellIdx(123) }),
-        (r#"{"type":"cooldownFullRechargeTime","spell":123}"#, CooldownExpr::CooldownFullRechargeTime { spell: SpellIdx(123) }),
+        (
+            r#"{"type":"cooldownReady","spell":123}"#,
+            CooldownExpr::CooldownReady {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownRemaining","spell":123}"#,
+            CooldownExpr::CooldownRemaining {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownDuration","spell":123}"#,
+            CooldownExpr::CooldownDuration {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownBaseDuration","spell":123}"#,
+            CooldownExpr::CooldownBaseDuration {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownCharges","spell":123}"#,
+            CooldownExpr::CooldownCharges {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownChargesMax","spell":123}"#,
+            CooldownExpr::CooldownChargesMax {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownChargesFractional","spell":123}"#,
+            CooldownExpr::CooldownChargesFractional {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownRechargeTime","spell":123}"#,
+            CooldownExpr::CooldownRechargeTime {
+                spell: SpellIdx(123),
+            },
+        ),
+        (
+            r#"{"type":"cooldownFullRechargeTime","spell":123}"#,
+            CooldownExpr::CooldownFullRechargeTime {
+                spell: SpellIdx(123),
+            },
+        ),
     ];
 
     for (json, expected) in test_cases {
         let deserialized: CooldownExpr = serde_json::from_str(json)
-            .expect(&format!("Failed to deserialize: {}", json));
+            .unwrap_or_else(|_| panic!("Failed to deserialize: {}", json));
         assert_eq!(deserialized, expected, "Failed for JSON: {}", json);
     }
 }
@@ -699,19 +772,46 @@ fn test_cooldown_expr_field_types() {
     use crate::types::SpellIdx;
 
     // Bool type
-    assert_eq!(CooldownExpr::CooldownReady { spell: SpellIdx(1) }.field_type(), FieldType::Bool);
+    assert_eq!(
+        CooldownExpr::CooldownReady { spell: SpellIdx(1) }.field_type(),
+        FieldType::Bool
+    );
 
     // Int type
-    assert_eq!(CooldownExpr::CooldownCharges { spell: SpellIdx(1) }.field_type(), FieldType::Int);
-    assert_eq!(CooldownExpr::CooldownChargesMax { spell: SpellIdx(1) }.field_type(), FieldType::Int);
+    assert_eq!(
+        CooldownExpr::CooldownCharges { spell: SpellIdx(1) }.field_type(),
+        FieldType::Int
+    );
+    assert_eq!(
+        CooldownExpr::CooldownChargesMax { spell: SpellIdx(1) }.field_type(),
+        FieldType::Int
+    );
 
     // Float type
-    assert_eq!(CooldownExpr::CooldownRemaining { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(CooldownExpr::CooldownDuration { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(CooldownExpr::CooldownBaseDuration { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(CooldownExpr::CooldownChargesFractional { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(CooldownExpr::CooldownRechargeTime { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(CooldownExpr::CooldownFullRechargeTime { spell: SpellIdx(1) }.field_type(), FieldType::Float);
+    assert_eq!(
+        CooldownExpr::CooldownRemaining { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        CooldownExpr::CooldownDuration { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        CooldownExpr::CooldownBaseDuration { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        CooldownExpr::CooldownChargesFractional { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        CooldownExpr::CooldownRechargeTime { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        CooldownExpr::CooldownFullRechargeTime { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
 }
 
 // ============================================================================
@@ -877,17 +977,32 @@ fn test_enemy_fields() {
 
 #[test]
 fn test_spell_expr_field_types() {
-    use super::expr::{SpellExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, PopulateContext, SpellExpr};
     use crate::types::SpellIdx;
 
     // Float types
-    assert_eq!(SpellExpr::Cost { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(SpellExpr::CastTime { spell: SpellIdx(1) }.field_type(), FieldType::Float);
-    assert_eq!(SpellExpr::Range { spell: SpellIdx(1) }.field_type(), FieldType::Float);
+    assert_eq!(
+        SpellExpr::Cost { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        SpellExpr::CastTime { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
+    assert_eq!(
+        SpellExpr::Range { spell: SpellIdx(1) }.field_type(),
+        FieldType::Float
+    );
 
     // Bool types
-    assert_eq!(SpellExpr::InRange { spell: SpellIdx(1) }.field_type(), FieldType::Bool);
-    assert_eq!(SpellExpr::Usable { spell: SpellIdx(1) }.field_type(), FieldType::Bool);
+    assert_eq!(
+        SpellExpr::InRange { spell: SpellIdx(1) }.field_type(),
+        FieldType::Bool
+    );
+    assert_eq!(
+        SpellExpr::Usable { spell: SpellIdx(1) }.field_type(),
+        FieldType::Bool
+    );
 }
 
 #[test]
@@ -944,15 +1059,24 @@ fn test_spell_range_parse() {
 
 #[test]
 fn test_talent_expr_field_types() {
-    use super::expr::{TalentExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, PopulateContext, TalentExpr};
 
     // Bool type
-    assert_eq!(TalentExpr::Enabled { value: true }.field_type(), FieldType::Bool);
-    assert_eq!(TalentExpr::Enabled { value: false }.field_type(), FieldType::Bool);
+    assert_eq!(
+        TalentExpr::Enabled { value: true }.field_type(),
+        FieldType::Bool
+    );
+    assert_eq!(
+        TalentExpr::Enabled { value: false }.field_type(),
+        FieldType::Bool
+    );
 
     // Int types
     assert_eq!(TalentExpr::Rank { rank: 1 }.field_type(), FieldType::Int);
-    assert_eq!(TalentExpr::MaxRank { max_rank: 3 }.field_type(), FieldType::Int);
+    assert_eq!(
+        TalentExpr::MaxRank { max_rank: 3 }.field_type(),
+        FieldType::Int
+    );
 }
 
 #[test]
@@ -1024,7 +1148,7 @@ fn test_talent_max_rank_parse() {
 
 #[test]
 fn test_gcd_expr_field_types() {
-    use super::expr::{GcdExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, GcdExpr, PopulateContext};
 
     // Bool type
     assert_eq!(GcdExpr::Active.field_type(), FieldType::Bool);
@@ -1056,12 +1180,15 @@ fn test_gcd_active_parse() {
 
 #[test]
 fn test_pet_expr_field_types() {
-    use super::expr::{PetExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, PetExpr, PopulateContext};
     use crate::types::AuraIdx;
 
     // Bool types
     assert_eq!(PetExpr::Active.field_type(), FieldType::Bool);
-    assert_eq!(PetExpr::BuffActive { aura: AuraIdx(1) }.field_type(), FieldType::Bool);
+    assert_eq!(
+        PetExpr::BuffActive { aura: AuraIdx(1) }.field_type(),
+        FieldType::Bool
+    );
 
     // Int type
     assert_eq!(PetExpr::Count.field_type(), FieldType::Int);
@@ -1293,10 +1420,7 @@ fn test_float_inequality_with_epsilon() {
 fn test_validate_depth_shallow() {
     // Test that shallow expressions pass depth validation
     let expr = Expr::And {
-        operands: vec![
-            Expr::Bool { value: true },
-            Expr::Bool { value: false },
-        ],
+        operands: vec![Expr::Bool { value: true }, Expr::Bool { value: false }],
     };
 
     assert!(expr.validate_depth().is_ok());
@@ -1781,7 +1905,11 @@ fn test_modify_var_type_check_valid() {
     let rotation = Rotation::from_json(json).unwrap();
     let result = validate_rotation(&rotation);
 
-    assert!(result.valid, "Expected valid rotation, got errors: {:?}", result.errors);
+    assert!(
+        result.valid,
+        "Expected valid rotation, got errors: {:?}",
+        result.errors
+    );
 }
 
 #[test]
@@ -1800,8 +1928,14 @@ fn test_modify_var_type_check_bool_error() {
     let rotation = Rotation::from_json(json).unwrap();
     let result = validate_rotation(&rotation);
 
-    assert!(!result.valid, "Expected validation error for bool in arithmetic op");
-    assert!(result.errors.iter().any(|e| matches!(e, ValidationError::TypeMismatch { .. })));
+    assert!(
+        !result.valid,
+        "Expected validation error for bool in arithmetic op"
+    );
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| matches!(e, ValidationError::TypeMismatch { .. })));
 }
 
 #[test]
@@ -1820,7 +1954,10 @@ fn test_modify_var_set_allows_bool() {
     let rotation = Rotation::from_json(json).unwrap();
     let result = validate_rotation(&rotation);
 
-    assert!(result.valid, "Expected valid rotation for set with bool value");
+    assert!(
+        result.valid,
+        "Expected valid rotation for set with bool value"
+    );
 }
 
 #[test]
@@ -1839,7 +1976,10 @@ fn test_modify_var_reset_allows_any_type() {
     let rotation = Rotation::from_json(json).unwrap();
     let result = validate_rotation(&rotation);
 
-    assert!(result.valid, "Expected valid rotation for reset with bool value");
+    assert!(
+        result.valid,
+        "Expected valid rotation for reset with bool value"
+    );
 }
 
 // ============================================================================
@@ -1951,7 +2091,8 @@ fn test_bm_hunter_st_rotation_json_roundtrip() {
 fn test_bm_hunter_st_rotation_with_paths_compiles() {
     // Test the rotation with var paths compiles correctly via resolver
     let resolver = test_resolver();
-    let compiled = CompiledRotation::compile_json(BM_HUNTER_ST_ROTATION_WITH_PATHS, &resolver).unwrap();
+    let compiled =
+        CompiledRotation::compile_json(BM_HUNTER_ST_ROTATION_WITH_PATHS, &resolver).unwrap();
 
     // Schema should have entries for all the expressions used
     assert!(compiled.schema().size > 0, "Schema should be non-empty");
@@ -1961,7 +2102,10 @@ fn test_bm_hunter_st_rotation_with_paths_compiles() {
     let result = compiled.evaluate(&state);
 
     // Should return a cast action
-    assert!(result.is_cast() || result.is_none(), "Should return cast or none");
+    assert!(
+        result.is_cast() || result.is_none(),
+        "Should return cast or none"
+    );
 }
 
 #[test]
@@ -1970,13 +2114,23 @@ fn test_bm_hunter_st_rotation_validation() {
     let result = validate_rotation(&rotation);
 
     // Should be valid
-    assert!(result.valid, "Rotation should be valid, got errors: {:?}", result.errors);
+    assert!(
+        result.valid,
+        "Rotation should be valid, got errors: {:?}",
+        result.errors
+    );
 
     // No undefined variables
-    assert!(!result.errors.iter().any(|e| matches!(e, ValidationError::UndefinedVariable { .. })));
+    assert!(!result
+        .errors
+        .iter()
+        .any(|e| matches!(e, ValidationError::UndefinedVariable { .. })));
 
     // No undefined lists
-    assert!(!result.errors.iter().any(|e| matches!(e, ValidationError::UndefinedList { .. })));
+    assert!(!result
+        .errors
+        .iter()
+        .any(|e| matches!(e, ValidationError::UndefinedList { .. })));
 }
 
 #[test]
@@ -1992,7 +2146,10 @@ fn test_bm_hunter_st_rotation_compilation() {
     let result = compiled.evaluate(&state);
 
     // Should return a cast action (since cooldowns are ready by default)
-    assert!(result.is_cast() || result.is_none(), "Should return cast or none");
+    assert!(
+        result.is_cast() || result.is_none(),
+        "Should return cast or none"
+    );
 }
 
 #[test]
@@ -2022,7 +2179,7 @@ fn test_bm_hunter_st_rotation_execution() {
 
 #[test]
 fn test_all_expr_variants_have_value_type() {
-    use crate::types::{AuraIdx, SpellIdx, ResourceType};
+    use crate::types::{AuraIdx, ResourceType, SpellIdx};
 
     // Test every expression variant has a valid value_type
     let expressions: Vec<Expr> = vec![
@@ -2030,12 +2187,14 @@ fn test_all_expr_variants_have_value_type() {
         Expr::Bool { value: true },
         Expr::Int { value: 42 },
         Expr::Float { value: 3.5 },
-
         // User variable
-        Expr::UserVar { name: "test".to_string() },
-
+        Expr::UserVar {
+            name: "test".to_string(),
+        },
         // Domain expressions
-        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent { resource: ResourceType::Focus }),
+        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent {
+            resource: ResourceType::Focus,
+        }),
         Expr::Cooldown(super::expr::CooldownExpr::CooldownReady { spell: SpellIdx(1) }),
         Expr::Buff(super::expr::BuffExpr::Active { aura: AuraIdx(1) }),
         Expr::Debuff(super::expr::DebuffExpr::Active { aura: AuraIdx(1) }),
@@ -2048,36 +2207,85 @@ fn test_all_expr_variants_have_value_type() {
         Expr::Talent(super::expr::TalentExpr::Enabled { value: true }),
         Expr::Gcd(super::expr::GcdExpr::Active),
         Expr::Pet(super::expr::PetExpr::Active),
-        Expr::Equipped { item: "test".to_string() },
+        Expr::Equipped {
+            item: "test".to_string(),
+        },
         Expr::TrinketReady { slot: 1 },
         Expr::TrinketRemaining { slot: 1 },
-
         // Logical
-        Expr::And { operands: vec![Expr::Bool { value: true }] },
-        Expr::Or { operands: vec![Expr::Bool { value: true }] },
-        Expr::Not { operand: Box::new(Expr::Bool { value: true }) },
-
+        Expr::And {
+            operands: vec![Expr::Bool { value: true }],
+        },
+        Expr::Or {
+            operands: vec![Expr::Bool { value: true }],
+        },
+        Expr::Not {
+            operand: Box::new(Expr::Bool { value: true }),
+        },
         // Comparison
-        Expr::Gt { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 0 }) },
-        Expr::Gte { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 0 }) },
-        Expr::Lt { left: Box::new(Expr::Int { value: 0 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Lte { left: Box::new(Expr::Int { value: 0 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Eq { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Ne { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 0 }) },
-
+        Expr::Gt {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 0 }),
+        },
+        Expr::Gte {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 0 }),
+        },
+        Expr::Lt {
+            left: Box::new(Expr::Int { value: 0 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Lte {
+            left: Box::new(Expr::Int { value: 0 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Eq {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Ne {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 0 }),
+        },
         // Arithmetic
-        Expr::Add { left: Box::new(Expr::Float { value: 1.0 }), right: Box::new(Expr::Float { value: 2.0 }) },
-        Expr::Sub { left: Box::new(Expr::Float { value: 2.0 }), right: Box::new(Expr::Float { value: 1.0 }) },
-        Expr::Mul { left: Box::new(Expr::Float { value: 2.0 }), right: Box::new(Expr::Float { value: 3.0 }) },
-        Expr::Div { left: Box::new(Expr::Float { value: 6.0 }), right: Box::new(Expr::Float { value: 2.0 }) },
-        Expr::Mod { left: Box::new(Expr::Float { value: 7.0 }), right: Box::new(Expr::Float { value: 3.0 }) },
-
+        Expr::Add {
+            left: Box::new(Expr::Float { value: 1.0 }),
+            right: Box::new(Expr::Float { value: 2.0 }),
+        },
+        Expr::Sub {
+            left: Box::new(Expr::Float { value: 2.0 }),
+            right: Box::new(Expr::Float { value: 1.0 }),
+        },
+        Expr::Mul {
+            left: Box::new(Expr::Float { value: 2.0 }),
+            right: Box::new(Expr::Float { value: 3.0 }),
+        },
+        Expr::Div {
+            left: Box::new(Expr::Float { value: 6.0 }),
+            right: Box::new(Expr::Float { value: 2.0 }),
+        },
+        Expr::Mod {
+            left: Box::new(Expr::Float { value: 7.0 }),
+            right: Box::new(Expr::Float { value: 3.0 }),
+        },
         // Functions
-        Expr::Floor { operand: Box::new(Expr::Float { value: 3.7 }) },
-        Expr::Ceil { operand: Box::new(Expr::Float { value: 3.2 }) },
-        Expr::Abs { operand: Box::new(Expr::Float { value: -5.0 }) },
-        Expr::Min { left: Box::new(Expr::Float { value: 1.0 }), right: Box::new(Expr::Float { value: 2.0 }) },
-        Expr::Max { left: Box::new(Expr::Float { value: 1.0 }), right: Box::new(Expr::Float { value: 2.0 }) },
+        Expr::Floor {
+            operand: Box::new(Expr::Float { value: 3.7 }),
+        },
+        Expr::Ceil {
+            operand: Box::new(Expr::Float { value: 3.2 }),
+        },
+        Expr::Abs {
+            operand: Box::new(Expr::Float { value: -5.0 }),
+        },
+        Expr::Min {
+            left: Box::new(Expr::Float { value: 1.0 }),
+            right: Box::new(Expr::Float { value: 2.0 }),
+        },
+        Expr::Max {
+            left: Box::new(Expr::Float { value: 1.0 }),
+            right: Box::new(Expr::Float { value: 2.0 }),
+        },
     ];
 
     // Verify each expression has a valid value_type
@@ -2093,22 +2301,39 @@ fn test_all_expr_variants_have_value_type() {
     // Verify type categories
     assert_eq!(Expr::Bool { value: true }.value_type(), ValueType::Bool);
     assert_eq!(Expr::Int { value: 42 }.value_type(), ValueType::Int);
-    assert_eq!(Expr::Float { value: 3.14 }.value_type(), ValueType::Float);
+    assert_eq!(
+        Expr::Float {
+            value: std::f64::consts::PI
+        }
+        .value_type(),
+        ValueType::Float
+    );
     assert_eq!(Expr::And { operands: vec![] }.value_type(), ValueType::Bool);
-    assert_eq!(Expr::Add { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 2 }) }.value_type(), ValueType::Float);
+    assert_eq!(
+        Expr::Add {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 2 })
+        }
+        .value_type(),
+        ValueType::Float
+    );
 }
 
 #[test]
 fn test_all_expr_variants_validate_depth() {
-    use crate::types::{AuraIdx, SpellIdx, ResourceType};
+    use crate::types::{AuraIdx, ResourceType, SpellIdx};
 
     // All leaf expressions should pass depth validation
     let expressions: Vec<Expr> = vec![
         Expr::Bool { value: true },
         Expr::Int { value: 42 },
         Expr::Float { value: 3.5 },
-        Expr::UserVar { name: "test".to_string() },
-        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent { resource: ResourceType::Focus }),
+        Expr::UserVar {
+            name: "test".to_string(),
+        },
+        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent {
+            resource: ResourceType::Focus,
+        }),
         Expr::Cooldown(super::expr::CooldownExpr::CooldownReady { spell: SpellIdx(1) }),
         Expr::Buff(super::expr::BuffExpr::Active { aura: AuraIdx(1) }),
         Expr::Debuff(super::expr::DebuffExpr::Active { aura: AuraIdx(1) }),
@@ -2121,7 +2346,9 @@ fn test_all_expr_variants_validate_depth() {
         Expr::Talent(super::expr::TalentExpr::Enabled { value: true }),
         Expr::Gcd(super::expr::GcdExpr::Active),
         Expr::Pet(super::expr::PetExpr::Active),
-        Expr::Equipped { item: "test".to_string() },
+        Expr::Equipped {
+            item: "test".to_string(),
+        },
         Expr::TrinketReady { slot: 1 },
         Expr::TrinketRemaining { slot: 1 },
     ];
@@ -2141,23 +2368,45 @@ fn test_all_expr_variants_validate_depth() {
 
 #[test]
 fn test_all_resource_expr_field_types() {
-    use super::expr::{ResourceExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, PopulateContext, ResourceExpr};
     use crate::types::ResourceType;
 
     let variants = [
-        ResourceExpr::ResourceCurrent { resource: ResourceType::Focus },
-        ResourceExpr::ResourceMax { resource: ResourceType::Focus },
-        ResourceExpr::ResourceDeficit { resource: ResourceType::Focus },
-        ResourceExpr::ResourcePercent { resource: ResourceType::Focus },
-        ResourceExpr::ResourceDeficitPercent { resource: ResourceType::Focus },
-        ResourceExpr::ResourceRegen { resource: ResourceType::Focus },
-        ResourceExpr::ResourceTimeToMax { resource: ResourceType::Focus },
-        ResourceExpr::ResourceTimeTo { resource: ResourceType::Focus, amount: 50.0 },
+        ResourceExpr::ResourceCurrent {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceMax {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceDeficit {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourcePercent {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceDeficitPercent {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceRegen {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceTimeToMax {
+            resource: ResourceType::Focus,
+        },
+        ResourceExpr::ResourceTimeTo {
+            resource: ResourceType::Focus,
+            amount: 50.0,
+        },
     ];
 
     // All resource expressions return Float
     for variant in &variants {
-        assert_eq!(variant.field_type(), FieldType::Float, "Failed for {:?}", variant);
+        assert_eq!(
+            variant.field_type(),
+            FieldType::Float,
+            "Failed for {:?}",
+            variant
+        );
     }
 }
 
@@ -2185,9 +2434,15 @@ fn test_all_debuff_expr_field_types() {
 
     assert_eq!(DebuffExpr::Active { aura }.field_type(), FieldType::Bool);
     assert_eq!(DebuffExpr::Inactive { aura }.field_type(), FieldType::Bool);
-    assert_eq!(DebuffExpr::Remaining { aura }.field_type(), FieldType::Float);
+    assert_eq!(
+        DebuffExpr::Remaining { aura }.field_type(),
+        FieldType::Float
+    );
     assert_eq!(DebuffExpr::Stacks { aura }.field_type(), FieldType::Int);
-    assert_eq!(DebuffExpr::Refreshable { aura }.field_type(), FieldType::Bool);
+    assert_eq!(
+        DebuffExpr::Refreshable { aura }.field_type(),
+        FieldType::Bool
+    );
 }
 
 #[test]
@@ -2200,18 +2455,27 @@ fn test_all_dot_expr_field_types() {
     assert_eq!(DotExpr::Ticking { aura }.field_type(), FieldType::Bool);
     assert_eq!(DotExpr::Remaining { aura }.field_type(), FieldType::Float);
     assert_eq!(DotExpr::Refreshable { aura }.field_type(), FieldType::Bool);
-    assert_eq!(DotExpr::TicksRemaining { aura }.field_type(), FieldType::Int);
+    assert_eq!(
+        DotExpr::TicksRemaining { aura }.field_type(),
+        FieldType::Int
+    );
 }
 
 #[test]
 fn test_all_target_expr_field_types() {
-    use super::expr::{TargetExpr, PercentValue, FieldType, PopulateContext};
+    use super::expr::{FieldType, PercentValue, PopulateContext, TargetExpr};
 
     assert_eq!(TargetExpr::Health.field_type(), FieldType::Float);
     assert_eq!(TargetExpr::HealthMax.field_type(), FieldType::Float);
     assert_eq!(TargetExpr::HealthPercent.field_type(), FieldType::Float);
     assert_eq!(TargetExpr::TimeToDie.field_type(), FieldType::Float);
-    assert_eq!(TargetExpr::TimeToPercent { percent: PercentValue(30.0) }.field_type(), FieldType::Float);
+    assert_eq!(
+        TargetExpr::TimeToPercent {
+            percent: PercentValue(30.0)
+        }
+        .field_type(),
+        FieldType::Float
+    );
     assert_eq!(TargetExpr::Distance.field_type(), FieldType::Float);
     assert_eq!(TargetExpr::Casting.field_type(), FieldType::Bool);
     assert_eq!(TargetExpr::Moving.field_type(), FieldType::Bool);
@@ -2220,7 +2484,7 @@ fn test_all_target_expr_field_types() {
 
 #[test]
 fn test_all_player_expr_field_types() {
-    use super::expr::{PlayerExpr, FieldType, PopulateContext};
+    use super::expr::{FieldType, PlayerExpr, PopulateContext};
 
     // Float types
     assert_eq!(PlayerExpr::Health.field_type(), FieldType::Float);
@@ -2263,7 +2527,10 @@ fn test_all_enemy_expr_field_types() {
     use crate::types::SpellIdx;
 
     assert_eq!(EnemyExpr::Count.field_type(), FieldType::Int);
-    assert_eq!(EnemyExpr::SpellTargetsHit { spell: SpellIdx(1) }.field_type(), FieldType::Int);
+    assert_eq!(
+        EnemyExpr::SpellTargetsHit { spell: SpellIdx(1) }.field_type(),
+        FieldType::Int
+    );
 }
 
 // ============================================================================
@@ -2293,9 +2560,15 @@ fn test_expr_json_roundtrip_literals() {
 #[test]
 fn test_expr_json_roundtrip_logical() {
     let cases: Vec<Expr> = vec![
-        Expr::And { operands: vec![Expr::Bool { value: true }, Expr::Bool { value: false }] },
-        Expr::Or { operands: vec![Expr::Bool { value: true }] },
-        Expr::Not { operand: Box::new(Expr::Bool { value: true }) },
+        Expr::And {
+            operands: vec![Expr::Bool { value: true }, Expr::Bool { value: false }],
+        },
+        Expr::Or {
+            operands: vec![Expr::Bool { value: true }],
+        },
+        Expr::Not {
+            operand: Box::new(Expr::Bool { value: true }),
+        },
         Expr::And { operands: vec![] }, // Empty AND
         Expr::Or { operands: vec![] },  // Empty OR
     ];
@@ -2313,12 +2586,30 @@ fn test_expr_json_roundtrip_comparison() {
     let right = Box::new(Expr::Int { value: 5 });
 
     let cases: Vec<Expr> = vec![
-        Expr::Gt { left: left.clone(), right: right.clone() },
-        Expr::Gte { left: left.clone(), right: right.clone() },
-        Expr::Lt { left: left.clone(), right: right.clone() },
-        Expr::Lte { left: left.clone(), right: right.clone() },
-        Expr::Eq { left: left.clone(), right: right.clone() },
-        Expr::Ne { left: left.clone(), right: right.clone() },
+        Expr::Gt {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Gte {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Lt {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Lte {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Eq {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Ne {
+            left: left.clone(),
+            right: right.clone(),
+        },
     ];
 
     for expr in cases {
@@ -2334,13 +2625,34 @@ fn test_expr_json_roundtrip_arithmetic() {
     let right = Box::new(Expr::Float { value: 3.0 });
 
     let cases: Vec<Expr> = vec![
-        Expr::Add { left: left.clone(), right: right.clone() },
-        Expr::Sub { left: left.clone(), right: right.clone() },
-        Expr::Mul { left: left.clone(), right: right.clone() },
-        Expr::Div { left: left.clone(), right: right.clone() },
-        Expr::Mod { left: left.clone(), right: right.clone() },
-        Expr::Min { left: left.clone(), right: right.clone() },
-        Expr::Max { left: left.clone(), right: right.clone() },
+        Expr::Add {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Sub {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Mul {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Div {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Mod {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Min {
+            left: left.clone(),
+            right: right.clone(),
+        },
+        Expr::Max {
+            left: left.clone(),
+            right: right.clone(),
+        },
     ];
 
     for expr in cases {
@@ -2353,9 +2665,15 @@ fn test_expr_json_roundtrip_arithmetic() {
 #[test]
 fn test_expr_json_roundtrip_functions() {
     let cases: Vec<Expr> = vec![
-        Expr::Floor { operand: Box::new(Expr::Float { value: 3.7 }) },
-        Expr::Ceil { operand: Box::new(Expr::Float { value: 3.2 }) },
-        Expr::Abs { operand: Box::new(Expr::Float { value: -5.0 }) },
+        Expr::Floor {
+            operand: Box::new(Expr::Float { value: 3.7 }),
+        },
+        Expr::Ceil {
+            operand: Box::new(Expr::Float { value: 3.2 }),
+        },
+        Expr::Abs {
+            operand: Box::new(Expr::Float { value: -5.0 }),
+        },
     ];
 
     for expr in cases {
@@ -2372,18 +2690,56 @@ fn test_expr_json_roundtrip_functions() {
 #[test]
 fn test_action_json_roundtrip() {
     let actions: Vec<AstAction> = vec![
-        AstAction::Cast { spell: "test".to_string(), condition: None },
-        AstAction::Cast { spell: "test".to_string(), condition: Some(Expr::Bool { value: true }) },
-        AstAction::Call { list: "cooldowns".to_string(), condition: None },
-        AstAction::Run { list: "st".to_string(), condition: None },
-        AstAction::Wait { seconds: 1.5, condition: None },
-        AstAction::WaitUntil { condition: Expr::Bool { value: true } },
-        AstAction::Pool { extra: Some(20.0), condition: None },
-        AstAction::Pool { extra: None, condition: None },
-        AstAction::UseTrinket { slot: 1, condition: None },
-        AstAction::UseItem { name: "potion".to_string(), condition: None },
-        AstAction::SetVar { name: "test".to_string(), value: Expr::Int { value: 10 }, condition: None },
-        AstAction::ModifyVar { name: "test".to_string(), op: VarOp::Add, value: Expr::Int { value: 5 }, condition: None },
+        AstAction::Cast {
+            spell: "test".to_string(),
+            condition: None,
+        },
+        AstAction::Cast {
+            spell: "test".to_string(),
+            condition: Some(Expr::Bool { value: true }),
+        },
+        AstAction::Call {
+            list: "cooldowns".to_string(),
+            condition: None,
+        },
+        AstAction::Run {
+            list: "st".to_string(),
+            condition: None,
+        },
+        AstAction::Wait {
+            seconds: 1.5,
+            condition: None,
+        },
+        AstAction::WaitUntil {
+            condition: Expr::Bool { value: true },
+        },
+        AstAction::Pool {
+            extra: Some(20.0),
+            condition: None,
+        },
+        AstAction::Pool {
+            extra: None,
+            condition: None,
+        },
+        AstAction::UseTrinket {
+            slot: 1,
+            condition: None,
+        },
+        AstAction::UseItem {
+            name: "potion".to_string(),
+            condition: None,
+        },
+        AstAction::SetVar {
+            name: "test".to_string(),
+            value: Expr::Int { value: 10 },
+            condition: None,
+        },
+        AstAction::ModifyVar {
+            name: "test".to_string(),
+            op: VarOp::Add,
+            value: Expr::Int { value: 5 },
+            condition: None,
+        },
     ];
 
     for action in actions {
@@ -2507,7 +2863,10 @@ fn test_validation_circular_variable_reference() {
     let result = validate_rotation(&rotation);
 
     assert!(!result.valid, "Should detect circular reference");
-    assert!(result.errors.iter().any(|e| matches!(e, ValidationError::CircularReference { .. })));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| matches!(e, ValidationError::CircularReference { .. })));
 }
 
 #[test]
@@ -2523,7 +2882,10 @@ fn test_validation_undefined_list() {
     let result = validate_rotation(&rotation);
 
     assert!(!result.valid, "Should detect undefined list");
-    assert!(result.errors.iter().any(|e| matches!(e, ValidationError::UndefinedList { name } if name == "nonexistent")));
+    assert!(result
+        .errors
+        .iter()
+        .any(|e| matches!(e, ValidationError::UndefinedList { name } if name == "nonexistent")));
 }
 
 #[test]
@@ -2537,7 +2899,9 @@ fn test_validation_empty_actions() {
     let result = validate_rotation(&rotation);
 
     assert!(!result.valid, "Should detect empty actions");
-    assert!(result.errors.iter().any(|e| matches!(e, ValidationError::EmptyActionList { list_name } if list_name == "actions")));
+    assert!(result.errors.iter().any(
+        |e| matches!(e, ValidationError::EmptyActionList { list_name } if list_name == "actions")
+    ));
 }
 
 #[test]
@@ -2557,7 +2921,10 @@ fn test_validation_unused_variable_warning() {
 
     // Should be valid but with warnings
     assert!(result.valid, "Should be valid despite unused variable");
-    assert!(result.warnings.iter().any(|w| matches!(w, ValidationWarning::UnusedVariable { name } if name == "unused_var")));
+    assert!(result
+        .warnings
+        .iter()
+        .any(|w| matches!(w, ValidationWarning::UnusedVariable { name } if name == "unused_var")));
 }
 
 // ============================================================================
@@ -2608,7 +2975,7 @@ fn test_expression_variant_count() {
     let variant_count = 39; // Update this if variants are added/removed
 
     // Create 39 distinct expression variants
-    use crate::types::{AuraIdx, SpellIdx, ResourceType};
+    use crate::types::{AuraIdx, ResourceType, SpellIdx};
 
     let examples: Vec<Expr> = vec![
         // Literals (3)
@@ -2616,9 +2983,13 @@ fn test_expression_variant_count() {
         Expr::Int { value: 1 },
         Expr::Float { value: 1.0 },
         // UserVar (1)
-        Expr::UserVar { name: "x".to_string() },
+        Expr::UserVar {
+            name: "x".to_string(),
+        },
         // Domain (16)
-        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent { resource: ResourceType::Focus }),
+        Expr::Resource(super::expr::ResourceExpr::ResourceCurrent {
+            resource: ResourceType::Focus,
+        }),
         Expr::Cooldown(super::expr::CooldownExpr::CooldownReady { spell: SpellIdx(1) }),
         Expr::Buff(super::expr::BuffExpr::Active { aura: AuraIdx(1) }),
         Expr::Debuff(super::expr::DebuffExpr::Active { aura: AuraIdx(1) }),
@@ -2631,35 +3002,90 @@ fn test_expression_variant_count() {
         Expr::Talent(super::expr::TalentExpr::Enabled { value: true }),
         Expr::Gcd(super::expr::GcdExpr::Active),
         Expr::Pet(super::expr::PetExpr::Active),
-        Expr::Equipped { item: "x".to_string() },
+        Expr::Equipped {
+            item: "x".to_string(),
+        },
         Expr::TrinketReady { slot: 1 },
         Expr::TrinketRemaining { slot: 1 },
         // Logical (3)
         Expr::And { operands: vec![] },
         Expr::Or { operands: vec![] },
-        Expr::Not { operand: Box::new(Expr::Bool { value: true }) },
+        Expr::Not {
+            operand: Box::new(Expr::Bool { value: true }),
+        },
         // Comparison (6)
-        Expr::Gt { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 0 }) },
-        Expr::Gte { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 0 }) },
-        Expr::Lt { left: Box::new(Expr::Int { value: 0 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Lte { left: Box::new(Expr::Int { value: 0 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Eq { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Ne { left: Box::new(Expr::Int { value: 0 }), right: Box::new(Expr::Int { value: 1 }) },
+        Expr::Gt {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 0 }),
+        },
+        Expr::Gte {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 0 }),
+        },
+        Expr::Lt {
+            left: Box::new(Expr::Int { value: 0 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Lte {
+            left: Box::new(Expr::Int { value: 0 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Eq {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Ne {
+            left: Box::new(Expr::Int { value: 0 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
         // Arithmetic (5)
-        Expr::Add { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Sub { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Mul { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Div { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
-        Expr::Mod { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 1 }) },
+        Expr::Add {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Sub {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Mul {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Div {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
+        Expr::Mod {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 1 }),
+        },
         // Functions (5)
-        Expr::Floor { operand: Box::new(Expr::Float { value: 1.5 }) },
-        Expr::Ceil { operand: Box::new(Expr::Float { value: 1.5 }) },
-        Expr::Abs { operand: Box::new(Expr::Float { value: -1.0 }) },
-        Expr::Min { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 2 }) },
-        Expr::Max { left: Box::new(Expr::Int { value: 1 }), right: Box::new(Expr::Int { value: 2 }) },
+        Expr::Floor {
+            operand: Box::new(Expr::Float { value: 1.5 }),
+        },
+        Expr::Ceil {
+            operand: Box::new(Expr::Float { value: 1.5 }),
+        },
+        Expr::Abs {
+            operand: Box::new(Expr::Float { value: -1.0 }),
+        },
+        Expr::Min {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 2 }),
+        },
+        Expr::Max {
+            left: Box::new(Expr::Int { value: 1 }),
+            right: Box::new(Expr::Int { value: 2 }),
+        },
     ];
 
-    assert_eq!(examples.len(), variant_count, "Expected {} expression variants, got {}", variant_count, examples.len());
+    assert_eq!(
+        examples.len(),
+        variant_count,
+        "Expected {} expression variants, got {}",
+        variant_count,
+        examples.len()
+    );
 }
 
 // ============================================================================

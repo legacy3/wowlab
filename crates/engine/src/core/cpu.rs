@@ -10,7 +10,7 @@
 pub fn get_optimal_concurrency() -> usize {
     #[cfg(target_arch = "aarch64")]
     {
-        get_aarch64_performance_cores().unwrap_or_else(|| rayon::current_num_threads())
+        get_aarch64_performance_cores().unwrap_or_else(rayon::current_num_threads)
     }
 
     #[cfg(target_arch = "x86_64")]

@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::types::{RatingType, SpecId};
 use crate::stats::StatCache;
+use crate::types::{RatingType, SpecId};
+use serde::{Deserialize, Serialize};
 
 /// Gear configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -36,10 +36,9 @@ impl Default for GearConfig {
 impl GearConfig {
     /// Load from JSON file
     pub fn from_file(path: &str) -> Result<Self, String> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| format!("Failed to read file: {}", e))?;
-        serde_json::from_str(&content)
-            .map_err(|e| format!("Failed to parse JSON: {}", e))
+        let content =
+            std::fs::read_to_string(path).map_err(|e| format!("Failed to read file: {}", e))?;
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse JSON: {}", e))
     }
 
     /// Apply to stat cache
@@ -54,7 +53,9 @@ impl GearConfig {
         stats.ratings.set(RatingType::Haste, self.haste as f32);
         stats.ratings.set(RatingType::Crit, self.crit as f32);
         stats.ratings.set(RatingType::Mastery, self.mastery as f32);
-        stats.ratings.set(RatingType::Versatility, self.versatility as f32);
+        stats
+            .ratings
+            .set(RatingType::Versatility, self.versatility as f32);
 
         // Mark for recalculation
         stats.invalidate();

@@ -1,9 +1,9 @@
 use super::*;
-use crate::handler::SpecHandler;
-use crate::types::*;
-use crate::sim::{SimState, SimConfig};
 use crate::actor::Player;
-use crate::rotation::{Rotation, CompiledRotation};
+use crate::handler::SpecHandler;
+use crate::rotation::{CompiledRotation, Rotation};
+use crate::sim::{SimConfig, SimState};
+use crate::types::*;
 
 fn create_handler() -> BmHunter {
     BmHunter::with_defaults().expect("Failed to create BmHunter")
@@ -58,10 +58,14 @@ fn cooldown_lookup() {
     let mut player = Player::new(SpecId::BeastMastery);
     handler.init_player(&mut player);
 
-    let kc_cd = player.cooldown(KILL_COMMAND).expect("Kill Command should have cooldown");
+    let kc_cd = player
+        .cooldown(KILL_COMMAND)
+        .expect("Kill Command should have cooldown");
     assert!(kc_cd.is_ready(SimTime::ZERO));
 
-    let bw_cd = player.cooldown(BESTIAL_WRATH).expect("Bestial Wrath should have cooldown");
+    let bw_cd = player
+        .cooldown(BESTIAL_WRATH)
+        .expect("Bestial Wrath should have cooldown");
     assert!(bw_cd.is_ready(SimTime::ZERO));
 }
 
@@ -79,7 +83,10 @@ fn pet_init() {
     handler.init(&mut state);
 
     // BM Hunter should have summoned a pet
-    assert!(state.pets.active(now).count() > 0, "BM Hunter should have an active pet");
+    assert!(
+        state.pets.active(now).count() > 0,
+        "BM Hunter should have an active pet"
+    );
 }
 
 // ============================================================================
@@ -147,7 +154,8 @@ fn rotation_compile_basic() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 
     // Verify it compiled successfully (the schema should have the right size)
     assert!(compiled.schema().size > 0);
@@ -164,7 +172,8 @@ fn rotation_compile_with_condition() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -178,7 +187,8 @@ fn rotation_compile_with_resource_check() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -192,7 +202,8 @@ fn rotation_compile_with_buff_check() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -212,7 +223,8 @@ fn rotation_compile_with_and_condition() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -232,7 +244,8 @@ fn rotation_compile_with_or_condition() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -252,7 +265,8 @@ fn rotation_compile_with_lists() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -273,7 +287,8 @@ fn rotation_compile_with_variables() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -287,7 +302,8 @@ fn rotation_compile_with_dot_check() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -301,7 +317,8 @@ fn rotation_compile_with_charges() {
     }"#;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
+    let _compiled =
+        CompiledRotation::compile_json(json, &resolver).expect("Failed to compile rotation");
 }
 
 #[test]
@@ -310,7 +327,8 @@ fn rotation_compile_full_example() {
     let json = EXAMPLE_ROTATION_JSON;
 
     let resolver = spec_resolver(TalentFlags::empty());
-    let _compiled = CompiledRotation::compile_json(json, &resolver).expect("Failed to compile example rotation");
+    let _compiled = CompiledRotation::compile_json(json, &resolver)
+        .expect("Failed to compile example rotation");
 }
 
 #[test]

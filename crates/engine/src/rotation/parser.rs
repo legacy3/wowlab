@@ -9,8 +9,8 @@ use serde_json::Value;
 use super::ast::{Action, Expr, Rotation, VarOp};
 use super::error::{Error, Result};
 use super::expr::{
-    BuffExpr, CombatExpr, CooldownExpr, DebuffExpr, DotExpr, EnemyExpr, GcdExpr, PetExpr, PlayerExpr,
-    PercentValue, ResourceExpr, SpellExpr, TalentExpr, TargetExpr,
+    BuffExpr, CombatExpr, CooldownExpr, DebuffExpr, DotExpr, EnemyExpr, GcdExpr, PercentValue,
+    PetExpr, PlayerExpr, ResourceExpr, SpellExpr, TalentExpr, TargetExpr,
 };
 use super::resolver::SpecResolver;
 
@@ -581,7 +581,10 @@ fn parse_expr_object_resolved(
                     got: arr.len(),
                 });
             }
-            let operands: Result<Vec<_>> = arr.iter().map(|v| parse_expr_resolved(v, resolver)).collect();
+            let operands: Result<Vec<_>> = arr
+                .iter()
+                .map(|v| parse_expr_resolved(v, resolver))
+                .collect();
             Ok(Expr::And {
                 operands: operands?,
             })
@@ -596,7 +599,10 @@ fn parse_expr_object_resolved(
                     got: arr.len(),
                 });
             }
-            let operands: Result<Vec<_>> = arr.iter().map(|v| parse_expr_resolved(v, resolver)).collect();
+            let operands: Result<Vec<_>> = arr
+                .iter()
+                .map(|v| parse_expr_resolved(v, resolver))
+                .collect();
             Ok(Expr::Or {
                 operands: operands?,
             })
@@ -755,7 +761,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
         ["resource", name, "deficit_percent"] => {
             let resource = super::resolver::check_resource(name, resolver)?;
-            Ok(Expr::Resource(ResourceExpr::ResourceDeficitPercent { resource }))
+            Ok(Expr::Resource(ResourceExpr::ResourceDeficitPercent {
+                resource,
+            }))
         }
         ["resource", name, "time_to_max"] => {
             let resource = super::resolver::check_resource(name, resolver)?;
@@ -791,7 +799,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
         ["cd", spell, "remaining"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownRemaining { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownRemaining {
+                spell: id,
+            }))
         }
         ["cd", spell, "duration"] => {
             let id = resolver.resolve_spell(spell)?;
@@ -799,7 +809,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
         ["cd", spell, "base_duration"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownBaseDuration { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownBaseDuration {
+                spell: id,
+            }))
         }
         ["cd", spell, "charges"] => {
             let id = resolver.resolve_spell(spell)?;
@@ -807,19 +819,27 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
         ["cd", spell, "charges_max"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownChargesMax { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownChargesMax {
+                spell: id,
+            }))
         }
         ["cd", spell, "charges_fractional"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownChargesFractional { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownChargesFractional {
+                spell: id,
+            }))
         }
         ["cd", spell, "recharge_time"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownRechargeTime { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownRechargeTime {
+                spell: id,
+            }))
         }
         ["cd", spell, "full_recharge"] | ["cd", spell, "full_recharge_time"] => {
             let id = resolver.resolve_spell(spell)?;
-            Ok(Expr::Cooldown(CooldownExpr::CooldownFullRechargeTime { spell: id }))
+            Ok(Expr::Cooldown(CooldownExpr::CooldownFullRechargeTime {
+                spell: id,
+            }))
         }
 
         // buff.*
@@ -897,7 +917,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
             let percent: f64 = pct
                 .parse()
                 .map_err(|_| Error::Syntax(format!("invalid percent: {}", pct)))?;
-            Ok(Expr::Target(TargetExpr::TimeToPercent { percent: PercentValue(percent) }))
+            Ok(Expr::Target(TargetExpr::TimeToPercent {
+                percent: PercentValue(percent),
+            }))
         }
         ["target", "distance"] => Ok(Expr::Target(TargetExpr::Distance)),
         ["target", "casting"] => Ok(Expr::Target(TargetExpr::Casting)),
@@ -943,7 +965,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
         ["talent", name, "max_rank"] => {
             let info = resolver.resolve_talent_info(name)?;
-            Ok(Expr::Talent(TalentExpr::MaxRank { max_rank: info.max_rank }))
+            Ok(Expr::Talent(TalentExpr::MaxRank {
+                max_rank: info.max_rank,
+            }))
         }
 
         // equipped.*
@@ -988,7 +1012,9 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }
 
         // Not a known path - assume it's a user variable
-        _ => Ok(Expr::UserVar { name: s.to_string() }),
+        _ => Ok(Expr::UserVar {
+            name: s.to_string(),
+        }),
     }
 }
 
