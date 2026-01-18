@@ -9,23 +9,9 @@ Current limitations and anti-patterns in the engine.
 
 ## Critical issues
 
-### JIT memory leak
-
-`rotation/compiler.rs:377`
-
-```rust
-Box::leak(Box::new(module)); // Memory never freed
-```
-
-The compiled module must stay alive as long as the JIT function is used. Currently leaked intentionally. If many rotations are compiled, memory accumulates.
-
-**Impact**: Memory grows with each unique rotation compiled.
-
-**Mitigation**: Reuse compiled rotations. For typical usage (a few rotations per session), this is acceptable.
-
 ### Hardcoded armor constant
 
-`combat/damage/pipeline.rs:118`
+`combat/damage/pipeline.rs:128`
 
 ```rust
 const ARMOR_CONSTANT: f32 = 7390.0;
@@ -39,7 +25,7 @@ Armor mitigation uses a constant for level 80 targets. Simulating different targ
 
 ### Pet stat inheritance inconsistency
 
-`actor/pet.rs:71`
+`actor/pet.rs:77`
 
 - AP/SP scaled by inheritance factor (passed as parameter)
 - Haste/Crit ratings copied directly (not scaled)
@@ -62,7 +48,7 @@ Talents are baked into JIT code at compile time. Changing talents requires recom
 
 ### Proc registry lookup
 
-`proc/registry.rs:75`
+`proc/registry.rs:39`
 
 O(n) linear search through handlers for each proc check.
 
@@ -77,7 +63,7 @@ self.handlers.iter().find(|h| h.id == rppm.proc_id)
 
 ### Context buffer allocation
 
-`rotation/compiler.rs:210`
+`rotation/compiler.rs:223`
 
 ```rust
 let mut buffer = vec![0u8; self.schema.size.max(8)];
@@ -91,10 +77,10 @@ Buffer allocated on every rotation evaluation.
 
 ### String-based talent checks
 
-`spec/executor.rs:146`
+`spec/executor.rs:161`
 
 ```rust
-ctx.talents.iter().any(|t| *t == name.as_str())
+ctx.talents.contains(&name.as_str())
 ```
 
 O(n) string comparison for each talent check.
@@ -152,7 +138,7 @@ pub struct SchoolModifiers {
 
 ### Silent tuning failures
 
-`data/loader.rs:70`
+`data/local.rs:70`
 
 If a spell name in the tuning file does not match any SpellDef, it is silently ignored. The loader iterates over spells and looks up tuning entries, but never validates that all tuning entries were used.
 
@@ -164,10 +150,9 @@ If a spell name in the tuning file does not match any SpellDef, it is silently i
 
 ### High priority
 
-1. **Fix JIT memory leak** - Implement proper module lifecycle
-2. **Integrate SchoolModifiers** - Connect to damage pipeline
-3. **Add tuning validation** - Log warnings for unused entries
-4. **Wire up spell expressions** - Cost, CastTime, Range should use SpellDef
+1. **Integrate SchoolModifiers** - Connect to damage pipeline
+2. **Add tuning validation** - Log warnings for unused entries
+3. **Wire up spell expressions** - Cost, CastTime, Range should use SpellDef
 
 ### Medium priority
 

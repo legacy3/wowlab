@@ -9,7 +9,7 @@ The engine optimizes for simulation speed above all else. This document explains
 
 ## Primary constraint: speed
 
-Combat simulation requires millions of iterations to produce statistically meaningful results. A 5-minute fight at 1000 iterations means simulating 83+ hours of combat. Speed isn't a nice-to-have—it determines whether users wait seconds or minutes for results.
+Combat simulation requires millions of iterations to produce statistically meaningful results. A 5-minute fight at 1000 iterations means simulating 83+ hours of combat. Speed determines whether users wait seconds or minutes for results.
 
 Every architectural decision flows from this constraint.
 
@@ -101,15 +101,15 @@ The engine needs JIT to achieve acceptable performance. Without JIT, rotation ev
 
 Several "obvious" simplifications were rejected because they'd hurt performance:
 
-**Dynamic rotation loading:** Rotations could be interpreted at runtime instead of compiled. This would simplify the codebase significantly. Rejected—100x slowdown.
+**Dynamic rotation loading:** Rotations could be interpreted at runtime instead of compiled. This would simplify the codebase. Rejected: 100x slowdown.
 
-**Garbage-collected language:** Would eliminate memory management complexity. Rejected—GC pauses introduce result variance and reduce throughput.
+**Garbage-collected language:** Would eliminate memory management complexity. Rejected: GC pauses introduce result variance and reduce throughput.
 
-**Generic event system:** Events could carry dynamic payloads instead of typed variants. Rejected—dynamic dispatch overhead in the hot loop.
+**Generic event system:** Events could carry dynamic payloads instead of typed variants. Rejected: dynamic dispatch overhead in the hot loop.
 
-**HashMap for aura lookup:** Would simplify AuraTracker. Rejected—SmallVec with linear scan is faster for typical aura counts (stack-allocated for up to 16 auras).
+**HashMap for aura lookup:** Would simplify AuraTracker. Rejected: SmallVec with linear scan is faster for typical aura counts (stack-allocated for up to 16 auras).
 
-**String-based spell IDs:** Would be more readable than numeric indices. Rejected—string hashing and comparison in the hot loop.
+**String-based spell IDs:** Would be more readable than numeric indices. Rejected: string hashing and comparison in the hot loop.
 
 ## Trade-offs we did make
 
@@ -132,4 +132,4 @@ Not everything optimizes for speed:
 | Typed indices  | Strings         | Hash overhead           |
 | SmallVec auras | HashMap         | Slower for ≤16 auras    |
 
-The engine is the result of iterative refinement. Each decision was tested against alternatives. What remains is the minimal architecture that achieves the required performance.
+The engine is the result of iterative refinement. Each decision was tested against alternatives. The result is the minimal architecture that achieves the required performance.

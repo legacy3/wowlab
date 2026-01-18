@@ -138,7 +138,7 @@ Bad luck protection increases the `blp_multiplier` on failed attempts:
 blp_multiplier *= (1 + time_factor * 3)
 ```
 
-The multiplier resets to 1.0 on successful proc.
+The multiplier caps at 100x to prevent overflow. It resets to 1.0 on successful proc.
 
 ### Fixed chance
 

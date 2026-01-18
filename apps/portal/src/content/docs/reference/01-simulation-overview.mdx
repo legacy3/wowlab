@@ -146,6 +146,8 @@ SimState {
     iteration: u32,             // Current iteration (batch runs)
     finished: bool,             // Is simulation complete
     total_damage: f64,          // Accumulated damage
+    trace: Vec<TraceEvent>,     // Debug event log
+    dps_window: DpsWindow,      // Rolling DPS calculation
 }
 ```
 

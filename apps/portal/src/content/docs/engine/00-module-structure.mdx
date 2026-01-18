@@ -12,6 +12,7 @@ How the `crates/engine` code is organized.
 ```
 crates/engine/src/
   actor/     - Player, Pet, Enemy actors
+  api/       - Public API types for external consumers
   aura/      - Buff/debuff tracking, DoT mechanics
   class/     - Shared class logic (Hunter traits)
   cli/       - Command-line interface
@@ -30,6 +31,7 @@ crates/engine/src/
   specs/     - Spec implementations (Hunter BM/MM)
   stats/     - StatCache, ratings, modifiers
   types/     - Type-safe indices, enums
+  wasm/      - WebAssembly bindings
 ```
 
 ## Module responsibilities
@@ -72,7 +74,7 @@ Proc system: `RppmState` for RPPM procs, `ProcHandler` trait for proc behavior, 
 
 ### results/
 
-`ResultCollector` aggregates simulation runs. Calculates mean, std dev, percentiles. `DamageBreakdown` for per-spell analysis.
+`StatsCollector` aggregates simulation runs. Calculates mean, std dev, percentiles. `DamageBreakdown` for per-spell analysis.
 
 ### rotation/
 
@@ -89,6 +91,7 @@ Core simulation logic:
 
 - `state.rs` - `SimState` struct
 - `simulation.rs` - Event loop execution
+- `executor.rs` - Effect execution logic
 - `batch.rs` - Parallel batch runner
 
 ### spec/

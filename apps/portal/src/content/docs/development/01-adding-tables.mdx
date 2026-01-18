@@ -7,10 +7,7 @@ description: How to add new game data tables to Supabase
 
 Game data lives in Supabase under the `game` schema. Raw DBC data is stored in `raw_dbc` and transformed views/tables are exposed via `game`.
 
-<Alert variant="info">
-  Most contributors don't need to add tables. The existing tables cover spells,
-  items, talents, and other common data.
-</Alert>
+Most contributors don't need to add tables. The existing tables cover spells, items, talents, and other common data.
 
 ## Overview
 
@@ -23,16 +20,14 @@ Adding a new DBC table involves:
 
 ## 1. Create the migration
 
-Create a migration file in `supabase/migrations/`:
+Use the Supabase MCP tool to apply migrations directly:
 
 ```sql
--- 20260117000000_add_my_new_table.sql
-
 -- Raw DBC table (matches CSV structure)
 create table raw_dbc.my_new_table (
   "ID" integer primary key,
   "Name_lang" text,
-  "SomeFK" integer,
+  "SomeFK" integer
   -- ... match columns from the CSV exactly
 );
 
@@ -45,19 +40,11 @@ select
 from raw_dbc.my_new_table;
 ```
 
-Apply the migration:
-
-```bash
-supabase db push
-```
+Use `mcp__supabase__apply_migration` to apply the SQL.
 
 ## 2. Generate TypeScript types
 
-Regenerate the database types:
-
-```bash
-supabase gen types typescript --schema game,raw_dbc > apps/portal/src/lib/supabase/database.types.ts
-```
+Regenerate the database types using `mcp__supabase__generate_typescript_types` and save the output to `apps/portal/src/lib/supabase/database.types.ts`.
 
 ## 3. Add React Query hooks (optional)
 

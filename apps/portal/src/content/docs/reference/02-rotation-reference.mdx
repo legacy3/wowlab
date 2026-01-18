@@ -9,7 +9,7 @@ Complete reference for all rotation expressions and syntax.
 
 ## AST structure
 
-Rotations compile to an abstract syntax tree:
+Rotations compile to an abstract syntax tree. The AST uses string identifiers for readability:
 
 ```rust
 Rotation {
@@ -19,6 +19,7 @@ Rotation {
     actions: Vec<Action>,                // Entry point
 }
 
+// AST Action (parser output, uses string names)
 Action::Cast { spell, condition }
 Action::Call { list, condition }        // Returns if no match
 Action::Run { list, condition }         // Continues even if no match
@@ -31,56 +32,33 @@ Action::UseTrinket { slot, condition }
 Action::UseItem { name, condition }
 ```
 
+After resolution, actions compile to a simpler runtime representation:
+
+```rust
+// Runtime Action (JIT output, uses indices)
+Action::Cast(SpellIdx)
+Action::WaitGcd
+Action::Wait(f64)
+Action::Pool { target: f64 }
+Action::None
+```
+
 ## Expression types
 
-<Mermaid
-  chart={`
-mindmap
-  root((Expr))
-    Literals
-      Bool
-      Int
-      Float
-    Resources
-      Current
-      Max
-      Deficit
-      Percent
-      Regen
-      TimeToMax
-    Cooldowns
-      Ready
-      Remaining
-      Charges
-      ChargesFractional
-    Auras
-      Active
-      Stacks
-      Remaining
-      Refreshable
-    Combat
-      Time
-      Remaining
-    Target
-      Health
-      HealthPercent
-      TimeToDie
-      Distance
-    Player
-      Haste
-      Crit
-      Moving
-    Logical
-      And
-      Or
-      Not
-    Comparison
-      Gt, Gte, Lt, Lte
-      Eq, Ne
-    Arithmetic
-      Add, Sub, Mul, Div
-`}
-/>
+Expressions fall into these categories:
+
+| Category   | Expressions                                                  |
+| ---------- | ------------------------------------------------------------ |
+| Literals   | `Bool`, `Int`, `Float`                                       |
+| Resources  | `Current`, `Max`, `Deficit`, `Percent`, `Regen`, `TimeToMax` |
+| Cooldowns  | `Ready`, `Remaining`, `Charges`, `ChargesFractional`         |
+| Auras      | `Active`, `Stacks`, `Remaining`, `Refreshable`               |
+| Combat     | `Time`, `Remaining`                                          |
+| Target     | `Health`, `HealthPercent`, `TimeToDie`, `Distance`           |
+| Player     | `Haste`, `Crit`, `Moving`                                    |
+| Logical    | `And`, `Or`, `Not`                                           |
+| Comparison | `Gt`, `Gte`, `Lt`, `Lte`, `Eq`, `Ne`                         |
+| Arithmetic | `Add`, `Sub`, `Mul`, `Div`                                   |
 
 ## Resource expressions
 

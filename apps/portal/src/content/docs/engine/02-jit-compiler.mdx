@@ -110,13 +110,17 @@ At these speeds, rotation evaluation is not a bottleneck. The engine can evaluat
 
 ## Memory management
 
-The compiled module must stay alive as long as the function pointer is used:
+The compiled module must stay alive as long as the function pointer is used. The `CompiledRotation` struct owns the `SyncJitModule`, which keeps the compiled code alive:
 
 ```rust
-Box::leak(Box::new(module)); // Module leaked intentionally
+pub struct CompiledRotation {
+    func: JitFn,
+    _module: SyncJitModule, // Keeps compiled code alive
+    schema: ContextSchema,
+}
 ```
 
-This is a known memory leak - if you compile many rotations, memory accumulates. For typical usage (a few rotations per session), this is acceptable.
+When `CompiledRotation` is dropped, the module and its memory are freed. Reuse compiled rotations where possible to avoid repeated compilation.
 
 ## Compile-time vs runtime
 

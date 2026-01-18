@@ -154,5 +154,6 @@ The data system has two main components:
 
 **Runtime (Portal app)**
 
-- `useSpell(id)` / `useItem(id)` - React hooks that fetch flat records
+- `useSpell(id)` / `useItem(id)` - React Query hooks returning `{ data, isLoading, error }`
+- Access the spell/item via the `data` property
 - React Query handles caching and deduplication
