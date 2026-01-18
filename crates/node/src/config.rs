@@ -116,6 +116,11 @@ impl NodeConfig {
         self.save();
     }
 
+    pub fn clear_node_id(&mut self) {
+        self.node_id = None;
+        self.save();
+    }
+
     pub fn delete() -> bool {
         let Some(path) = Self::config_path() else {
             return false;

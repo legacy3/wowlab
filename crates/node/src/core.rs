@@ -5,6 +5,7 @@ use crate::{
     claim,
     config::NodeConfig,
     supabase::SupabaseRealtime,
+    utils::backoff::ExponentialBackoff,
     ApiClient, ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent,
     WorkItem, WorkResult, WorkerPool,
 };
@@ -58,6 +59,7 @@ pub struct NodeCore {
     cache: Arc<ConfigCache>,
 
     // Async task receivers
+    verify_rx: Option<mpsc::Receiver<Option<bool>>>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     claim_rx: Option<mpsc::Receiver<bool>>,
@@ -66,6 +68,9 @@ pub struct NodeCore {
     // Timing
     last_heartbeat: Option<Instant>,
     last_claim_poll: Option<Instant>,
+
+    // Retry backoff for unavailable state
+    backoff: ExponentialBackoff,
 
     // Event output
     event_tx: mpsc::Sender<NodeCoreEvent>,
@@ -84,7 +89,7 @@ impl NodeCore {
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
         let state = if config.node_id.is_some() {
-            NodeState::Running
+            NodeState::Verifying
         } else {
             NodeState::Registering
         };
@@ -102,12 +107,17 @@ impl NodeCore {
             total_cores,
             cache: Arc::new(ConfigCache::new()),
             connection_status: ConnectionStatus::Connecting,
+            verify_rx: None,
             register_rx: None,
             realtime_rx: None,
             claim_rx: None,
             result_rx: None,
             last_heartbeat: None,
             last_claim_poll: None,
+            backoff: ExponentialBackoff::new(
+                Duration::from_secs(5),
+                Duration::from_secs(5 * 60),
+            ),
             event_tx,
             config,
             started: false,
@@ -128,7 +138,7 @@ impl NodeCore {
         self.result_rx = self.worker_pool.result_rx();
 
         match self.node_id {
-            Some(id) => self.start_realtime(id),
+            Some(id) => self.start_verification(id),
             None => self.start_registration(),
         }
     }
@@ -136,12 +146,14 @@ impl NodeCore {
     /// Poll for updates. Call this periodically (e.g., every 100ms).
     /// Returns true if there are pending events.
     pub fn poll(&mut self) -> bool {
+        self.check_verification();
         self.check_registration();
         self.check_realtime_events();
         self.check_heartbeat();
         self.poll_claim_status();
         self.check_claim_result();
         self.check_work_results();
+        self.check_retry();
 
         // Return whether we made progress
         true
@@ -175,6 +187,11 @@ impl NodeCore {
         stats
     }
 
+    /// Get time until next retry attempt (for UI display).
+    pub fn time_until_retry(&self) -> Option<Duration> {
+        self.backoff.time_until_retry()
+    }
+
     /// Get the claim code if in claiming state.
     pub fn claim_code(&self) -> Option<&str> {
         match &self.state {
@@ -191,6 +208,118 @@ impl NodeCore {
     /// Get the runtime handle.
     pub fn runtime_handle(&self) -> &Handle {
         self.runtime.handle()
+    }
+
+    fn start_verification(&mut self, node_id: Uuid) {
+        let (tx, rx) = mpsc::channel(1);
+        self.verify_rx = Some(rx);
+        let api = self.api.clone();
+
+        tracing::info!("Verifying node...");
+
+        // Heartbeat returns 404 if node doesn't exist or isn't claimed
+        // Other errors (network, 5xx) mean server is unavailable
+        self.runtime.spawn(async move {
+            let result: Option<bool> = match api.set_online(node_id).await {
+                Ok(()) => Some(true),
+                Err(e) => {
+                    let err_str = e.to_string();
+                    // 404 "Node not found" means invalid node
+                    if err_str.contains("not found") || err_str.contains("not claimed") {
+                        Some(false)
+                    } else {
+                        // Network error or server error - unavailable
+                        None
+                    }
+                }
+            };
+            let _ = tx.send(result).await;
+        });
+    }
+
+    fn check_verification(&mut self) {
+        let Some(ref mut rx) = self.verify_rx else {
+            return;
+        };
+
+        match rx.try_recv() {
+            Ok(Some(true)) => {
+                tracing::info!("Node verified, starting...");
+                self.verify_rx = None;
+                self.backoff.reset();
+                self.state = NodeState::Running;
+                let _ = self
+                    .event_tx
+                    .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+                if let Some(id) = self.node_id {
+                    self.start_realtime(id);
+                }
+            }
+            Ok(Some(false)) => {
+                tracing::warn!("Node invalid or not claimed, re-registering...");
+                self.verify_rx = None;
+                self.node_id = None;
+                self.config.clear_node_id();
+                self.state = NodeState::Registering;
+                let _ = self
+                    .event_tx
+                    .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+                self.start_registration();
+            }
+            Ok(None) => {
+                tracing::error!("Server unavailable, please check https://wowlab.gg/status");
+                self.verify_rx = None;
+                self.set_unavailable();
+            }
+            Err(mpsc::error::TryRecvError::Empty) => {}
+            Err(mpsc::error::TryRecvError::Disconnected) => {
+                self.verify_rx = None;
+            }
+        }
+    }
+
+    /// Set state to unavailable and schedule retry with backoff.
+    fn set_unavailable(&mut self) {
+        self.state = NodeState::Unavailable;
+        let _ = self.backoff.next_retry_at();
+        tracing::info!(
+            "Will retry in {} seconds",
+            self.backoff.current_backoff().as_secs()
+        );
+        let _ = self
+            .event_tx
+            .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+    }
+
+    /// Check if it's time to retry after unavailable state.
+    fn check_retry(&mut self) {
+        if !matches!(self.state, NodeState::Unavailable) {
+            return;
+        }
+
+        if !self.backoff.should_retry() {
+            return;
+        }
+
+        // Time to retry - increase backoff for next failure
+        self.backoff.on_retry();
+
+        tracing::info!("Retrying connection...");
+
+        // Try to verify/register depending on whether we have a node_id
+        if let Some(id) = self.node_id {
+            self.state = NodeState::Verifying;
+            let _ = self
+                .event_tx
+                .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+            self.start_verification(id);
+        } else {
+            self.state = NodeState::Registering;
+            let _ = self
+                .event_tx
+                .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+            self.start_registration();
+        }
     }
 
     fn start_registration(&mut self) {
@@ -228,6 +357,7 @@ impl NodeCore {
             Ok(RegisterResult::Success { id, code }) => {
                 self.node_id = Some(id);
                 self.config.set_node_id(id);
+                self.backoff.reset();
                 self.state = NodeState::Claiming { code: code.clone() };
                 tracing::info!("Registered! Claim code: {code}");
                 self.register_rx = None;
@@ -240,6 +370,7 @@ impl NodeCore {
                 tracing::error!("Registration failed: {err}");
                 self.register_rx = None;
                 let _ = self.event_tx.try_send(NodeCoreEvent::Error(err.clone()));
+                self.set_unavailable();
             }
             Err(mpsc::error::TryRecvError::Empty) => {}
             Err(mpsc::error::TryRecvError::Disconnected) => {

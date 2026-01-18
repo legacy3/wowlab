@@ -55,12 +55,16 @@ pub enum LogLevel {
 /// Current state of the node.
 #[derive(Clone, Debug)]
 pub enum NodeState {
+    /// Verifying saved node is still valid.
+    Verifying,
     /// Registering with the server.
     Registering,
     /// Waiting to be claimed by a user.
     Claiming { code: String },
     /// Fully operational.
     Running,
+    /// Server unavailable (maintenance/outage).
+    Unavailable,
 }
 
 /// Connection status to the realtime server.

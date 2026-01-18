@@ -11,114 +11,103 @@ use std::sync::Arc;
 
 /// JSON request format for distributed simulation.
 #[derive(Debug, Clone, Deserialize)]
-pub struct SimRequest {
+#[allow(dead_code)] // Fields exist for JSON deserialization compatibility
+struct SimRequest {
     /// Player configuration
-    pub player: PlayerConfig,
+    player: PlayerConfig,
 
     /// Fight duration in seconds
-    pub duration: f32,
+    duration: f32,
 
     /// Target configuration
-    pub target: TargetConfig,
+    target: TargetConfig,
 
-    /// Rotation script (Rhai code) - currently ignored until rotation system is integrated
+    /// Rotation JSON with name and actions.
     #[serde(default)]
-    pub rotation: String,
+    rotation: String,
 
-    /// Spells - currently ignored (using spec handler definitions)
+    /// Reserved for future use.
     #[serde(default)]
-    pub spells: Vec<serde_json::Value>,
+    spells: Vec<serde_json::Value>,
 
-    /// Auras - currently ignored (using spec handler definitions)
+    /// Reserved for future use.
     #[serde(default)]
-    pub auras: Vec<serde_json::Value>,
+    auras: Vec<serde_json::Value>,
 }
 
-/// Player configuration from JSON
+/// Player configuration from JSON.
 #[derive(Debug, Clone, Deserialize)]
-pub struct PlayerConfig {
-    /// Player name
+#[allow(dead_code)] // Fields exist for JSON deserialization compatibility
+struct PlayerConfig {
     #[serde(default)]
-    pub name: String,
-
-    /// Spec identifier (e.g., "beast_mastery")
-    pub spec: String,
-
-    /// Player stats
-    pub stats: StatsConfig,
-
-    /// Resource configuration
+    name: String,
+    spec: String,
+    stats: StatsConfig,
     #[serde(default)]
-    pub resources: Option<ResourceConfig>,
-
-    /// Weapon speed
+    resources: Option<ResourceConfig>,
     #[serde(default)]
-    pub weapon_speed: f32,
-
-    /// Weapon damage range [min, max]
+    weapon_speed: f32,
     #[serde(default)]
-    pub weapon_damage: [f32; 2],
+    weapon_damage: [f32; 2],
 }
 
-/// Stats configuration from JSON
+/// Stats configuration from JSON.
 #[derive(Debug, Clone, Deserialize, Default)]
-pub struct StatsConfig {
-    pub strength: f32,
-    pub agility: f32,
-    pub intellect: f32,
+struct StatsConfig {
+    strength: f32,
+    agility: f32,
+    intellect: f32,
     #[serde(default)]
-    pub stamina: f32,
-
-    // Rating-based stats
+    stamina: f32,
     #[serde(default)]
-    pub crit_rating: f32,
+    crit_rating: f32,
     #[serde(default)]
-    pub haste_rating: f32,
+    haste_rating: f32,
     #[serde(default)]
-    pub mastery_rating: f32,
+    mastery_rating: f32,
     #[serde(default)]
-    pub versatility_rating: f32,
-
-    // Percent-based stats (for direct setting)
+    versatility_rating: f32,
     #[serde(default)]
-    pub crit_pct: Option<f32>,
+    crit_pct: Option<f32>,
     #[serde(default)]
-    pub haste_pct: Option<f32>,
+    haste_pct: Option<f32>,
     #[serde(default)]
-    pub mastery_pct: Option<f32>,
+    mastery_pct: Option<f32>,
     #[serde(default)]
-    pub versatility_pct: Option<f32>,
+    versatility_pct: Option<f32>,
 }
 
-/// Resource configuration from JSON
+/// Resource configuration from JSON.
 #[derive(Debug, Clone, Deserialize)]
-pub struct ResourceConfig {
-    pub resource_type: String,
-    pub max: f32,
-    pub regen_per_second: f32,
+#[allow(dead_code)]
+struct ResourceConfig {
+    resource_type: String,
+    max: f32,
+    regen_per_second: f32,
     #[serde(default)]
-    pub initial: f32,
+    initial: f32,
 }
 
-/// Target configuration from JSON
+/// Target configuration from JSON.
 #[derive(Debug, Clone, Deserialize)]
-pub struct TargetConfig {
+#[allow(dead_code)]
+struct TargetConfig {
     #[serde(default)]
-    pub level_diff: i32,
-    pub max_health: f32,
+    level_diff: i32,
+    max_health: f32,
     #[serde(default)]
-    pub armor: f32,
+    armor: f32,
 }
 
 /// Result format returned by the simulation runner.
 #[derive(Debug, Clone, Serialize)]
-pub struct SimResponse {
-    pub iterations: u32,
-    pub mean_dps: f64,
-    pub std_dps: f64,
-    pub min_dps: f64,
-    pub max_dps: f64,
-    pub total_casts: u64,
+struct SimResponse {
+    iterations: u32,
+    mean_dps: f64,
+    std_dps: f64,
+    min_dps: f64,
+    max_dps: f64,
+    total_casts: u64,
 }
 
 impl From<BatchResults> for SimResponse {

@@ -1,11 +1,11 @@
 //! Headless simulation node for servers.
 
-use clap::{Parser, Subcommand};
-use node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
+use clap::{Parser, Subcommand};
+use node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 #[cfg(unix)]
 use signal_hook::consts::signal::{SIGINT, SIGTERM};
 #[cfg(unix)]
@@ -160,14 +160,13 @@ fn run_node() {
         runtime.spawn(async move {
             let mut signals =
                 Signals::new([SIGINT, SIGTERM]).expect("Failed to register signal handlers");
-            while let Some(signal) = signals.next().await {
+            if let Some(signal) = signals.next().await {
                 match signal {
                     SIGINT => tracing::info!("Received SIGINT (Ctrl-C), shutting down..."),
                     SIGTERM => tracing::info!("Received SIGTERM, shutting down..."),
                     _ => {}
                 }
                 r.store(false, Ordering::SeqCst);
-                break;
             }
         });
     }
@@ -202,41 +201,38 @@ fn run_node() {
 fn handle_event(event: &NodeCoreEvent, core: &NodeCore) {
     match event {
         NodeCoreEvent::StateChanged(state) => match state {
-            NodeState::Registering => {
-                tracing::info!("State: Registering with server...");
-            }
+            NodeState::Verifying => tracing::info!("Verifying node..."),
+            NodeState::Registering => tracing::info!("Registering with server..."),
             NodeState::Claiming { code } => {
-                tracing::info!("State: Waiting to be claimed");
-                tracing::info!("Claim code: {}", code);
+                tracing::info!("Waiting to be claimed");
+                tracing::info!("Claim code: {code}");
                 tracing::info!("Visit https://wowlab.gg/nodes to claim this node");
             }
-            NodeState::Running => {
-                tracing::info!("State: Running");
+            NodeState::Running => tracing::info!("Node running"),
+            NodeState::Unavailable => {
+                tracing::error!("Server unavailable");
+                tracing::error!("Check https://wowlab.gg/status for updates");
             }
         },
         NodeCoreEvent::ConnectionChanged(status) => {
-            let status_str = match status {
+            let msg = match status {
                 ConnectionStatus::Connecting => "Connecting",
                 ConnectionStatus::Connected => "Connected",
                 ConnectionStatus::Disconnected => "Disconnected",
             };
-            tracing::info!("Connection: {}", status_str);
+            tracing::info!("Connection: {msg}");
         }
-        NodeCoreEvent::Claimed => {
-            tracing::info!("Node has been claimed by a user!");
-        }
+        NodeCoreEvent::Claimed => tracing::info!("Node claimed!"),
         NodeCoreEvent::ChunkAssigned { id, iterations } => {
-            tracing::info!("Chunk assigned: {} ({} iterations)", id, iterations);
+            tracing::info!("Chunk assigned: {id} ({iterations} iterations)");
         }
         NodeCoreEvent::ChunkCompleted { id, mean_dps } => {
-            tracing::info!("Chunk completed: {} ({:.0} DPS)", id, mean_dps);
+            tracing::info!("Chunk completed: {id} ({mean_dps:.0} DPS)");
         }
         NodeCoreEvent::ChunkFailed { id, error } => {
-            tracing::error!("Chunk failed: {} - {}", id, error);
+            tracing::error!("Chunk failed: {id} - {error}");
         }
-        NodeCoreEvent::Error(err) => {
-            tracing::error!("Error: {}", err);
-        }
+        NodeCoreEvent::Error(err) => tracing::error!("Error: {err}"),
     }
 
     let stats = core.stats();
@@ -261,16 +257,17 @@ fn print_status(core: &NodeCore) {
     );
 
     match core.state() {
-        NodeState::Registering => {
-            tracing::info!("Status: Registering...");
-        }
+        NodeState::Verifying => tracing::info!("Status: Verifying..."),
+        NodeState::Registering => tracing::info!("Status: Registering..."),
         NodeState::Claiming { code } => {
             tracing::info!("Status: Pending claim");
-            tracing::info!("Claim code: {}", code);
+            tracing::info!("Claim code: {code}");
             tracing::info!("Visit https://wowlab.gg/nodes to claim this node");
         }
-        NodeState::Running => {
-            tracing::info!("Status: Ready");
+        NodeState::Running => tracing::info!("Status: Ready"),
+        NodeState::Unavailable => {
+            tracing::error!("Status: Server unavailable");
+            tracing::error!("Check https://wowlab.gg/status for updates");
         }
     }
 }

@@ -63,6 +63,7 @@ impl NodeApp {
         _cc: &eframe::CreationContext<'_>,
         runtime: Arc<Runtime>,
         log_rx: mpsc::Receiver<UiLogEntry>,
+        skip_update: bool,
     ) -> Self {
         let (mut core, event_rx) =
             NodeCore::new(Arc::clone(&runtime)).expect("Failed to create node core");
@@ -70,17 +71,19 @@ impl NodeApp {
 
         // Spawn background update check
         let (update_tx, update_rx) = mpsc::channel(1);
-        std::thread::spawn(move || {
-            match node::update::check_for_update(VERSION) {
-                Ok(Some(version)) => {
-                    let _ = update_tx.blocking_send(version);
+        if !skip_update {
+            std::thread::spawn(move || {
+                match node::update::check_for_update(VERSION) {
+                    Ok(Some(version)) => {
+                        let _ = update_tx.blocking_send(version);
+                    }
+                    Ok(None) => {}
+                    Err(e) => {
+                        tracing::debug!("Update check failed: {}", e);
+                    }
                 }
-                Ok(None) => {}
-                Err(e) => {
-                    tracing::debug!("Update check failed: {}", e);
-                }
-            }
-        });
+            });
+        }
 
         Self {
             core,
@@ -326,8 +329,10 @@ impl NodeApp {
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
         let (color, text, icon_char) = match (self.core.state(), self.core.connection_status()) {
+            (NodeState::Verifying, _) => (theme::ZINC_500, "Verifying", icon(Icon::Loader)),
             (NodeState::Registering, _) => (theme::ZINC_500, "Registering", icon(Icon::Loader)),
             (NodeState::Claiming { .. }, _) => (theme::YELLOW_500, "Pending", icon(Icon::Clock)),
+            (NodeState::Unavailable, _) => (theme::RED_500, "Unavailable", icon(Icon::CircleX)),
             (NodeState::Running, ConnectionStatus::Connected) => {
                 (theme::GREEN_500, "Online", icon(Icon::Wifi))
             }
@@ -406,6 +411,22 @@ impl eframe::App for NodeApp {
                     .inner_margin(egui::Margin::same(16.0)),
             )
             .show(ctx, |ui| match self.core.state() {
+                NodeState::Verifying => {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(60.0);
+                        ui.add(
+                            egui::widgets::Spinner::new()
+                                .size(32.0)
+                                .color(theme::GREEN_500),
+                        );
+                        ui.add_space(16.0);
+                        ui.label(
+                            egui::RichText::new("Verifying node...")
+                                .size(14.0)
+                                .color(theme::TEXT_MUTED),
+                        );
+                    });
+                }
                 NodeState::Registering => {
                     ui.vertical_centered(|ui| {
                         ui.add_space(60.0);
@@ -424,6 +445,79 @@ impl eframe::App for NodeApp {
                 }
                 NodeState::Claiming { code } => {
                     claim_view::show(ui, code);
+                }
+                NodeState::Unavailable => {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(60.0);
+                        ui.label(
+                            egui::RichText::new(icon(Icon::CloudOff))
+                                .size(48.0)
+                                .color(theme::ZINC_500),
+                        );
+                        ui.add_space(16.0);
+                        ui.label(
+                            egui::RichText::new("Server Unavailable")
+                                .size(18.0)
+                                .strong()
+                                .color(theme::TEXT_PRIMARY),
+                        );
+                        ui.add_space(8.0);
+                        ui.label(
+                            egui::RichText::new("The server is temporarily unavailable.")
+                                .size(14.0)
+                                .color(theme::TEXT_MUTED),
+                        );
+                        ui.add_space(24.0);
+
+                        // Retry countdown
+                        if let Some(remaining) = self.core.time_until_retry() {
+                            let secs = remaining.as_secs();
+                            let text = if secs == 0 {
+                                "Retrying now...".to_string()
+                            } else if secs == 1 {
+                                "Retrying in 1 second".to_string()
+                            } else {
+                                format!("Retrying in {secs} seconds")
+                            };
+                            ui.with_layout(
+                                egui::Layout::top_down(egui::Align::Center),
+                                |ui| {
+                                    ui.horizontal(|ui| {
+                                        ui.add(
+                                            egui::widgets::Spinner::new()
+                                                .size(14.0)
+                                                .color(theme::ZINC_500),
+                                        );
+                                        ui.add_space(8.0);
+                                        ui.label(
+                                            egui::RichText::new(text)
+                                                .size(13.0)
+                                                .color(theme::ZINC_500),
+                                        );
+                                    });
+                                },
+                            );
+                        }
+
+                        ui.add_space(24.0);
+                        let link = ui.add(
+                            egui::Label::new(
+                                egui::RichText::new(format!(
+                                    "{} Check status page",
+                                    icon(Icon::ExternalLink)
+                                ))
+                                .size(13.0)
+                                .color(theme::TEXT_MUTED),
+                            )
+                            .sense(egui::Sense::click()),
+                        );
+                        if link.clicked() {
+                            let _ = open::that("https://wowlab.gg/status");
+                        }
+                        if link.hovered() {
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        }
+                    });
                 }
                 NodeState::Running => {
                     ui.horizontal(|ui| {

@@ -14,6 +14,10 @@ use std::sync::Arc;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
+
+    /// Skip automatic update check on startup
+    #[arg(long, global = true)]
+    no_update: bool,
 }
 
 #[derive(Subcommand)]
@@ -82,6 +86,7 @@ fn main() -> eframe::Result<()> {
         Some(Commands::Run) | None => {}
     }
 
+    let skip_update = cli.no_update;
     let log_rx = logging::init_with_ui();
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
@@ -103,9 +108,9 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "WoW Lab Node",
         options,
-        Box::new(|cc| {
+        Box::new(move |cc| {
             setup_egui(&cc.egui_ctx);
-            Ok(Box::new(NodeApp::new(cc, runtime, log_rx)))
+            Ok(Box::new(NodeApp::new(cc, runtime, log_rx, skip_update)))
         }),
     )
 }
