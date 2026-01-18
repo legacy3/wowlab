@@ -1,0 +1,69 @@
+---
+title: Running a Node
+description: Set up and configure a local simulation node
+nextSteps:
+  - 00-getting-started/02-understanding-results
+  - 02-concepts/00-how-sims-work
+---
+
+# Running a Node
+
+Simulations run on local nodes, not in the browser. The Rust engine uses JIT compilation which browsers cannot support.
+
+## Quick start
+
+```bash
+npx @wowlab/node
+```
+
+The node:
+
+1. Connects to the WoW Lab platform
+2. Receives simulation jobs
+3. Runs the Rust engine locally
+4. Returns results to the browser
+
+## Why local nodes?
+
+Browsers cannot JIT-compile arbitrary code. The simulation engine compiles rotations to native machine code using Cranelift for maximum performance. This requires running outside the browser sandbox.
+
+Benefits:
+
+- Your hardware runs the math
+- No server costs
+- Full CPU utilization
+- Privacy (simulation data stays local)
+
+## Configuration
+
+Environment variables:
+
+| Variable         | Default   | Description                          |
+| ---------------- | --------- | ------------------------------------ |
+| `WOWLAB_THREADS` | CPU count | Worker thread count                  |
+| `WOWLAB_LOG`     | `info`    | Log level (debug, info, warn, error) |
+
+Example:
+
+```bash
+WOWLAB_THREADS=4 WOWLAB_LOG=debug npx @wowlab/node
+```
+
+## Docker
+
+Run the node in a container:
+
+```bash
+docker run -it ghcr.io/legacy3/wowlab-node
+```
+
+## Building from source
+
+Clone and build the Rust engine:
+
+```bash
+git clone https://github.com/legacy3/wowlab.git
+cd wowlab/crates/engine
+cargo build --release
+./target/release/wowlab-node
+```

@@ -1,0 +1,132 @@
+---
+title: JIT Compiler
+description: Cranelift JIT compilation for rotations
+nextSteps:
+  - 04-engine/03-implementing-specs
+  - 04-engine/04-type-system
+---
+
+# JIT Compiler
+
+Rotations compile from JSON to native machine code using Cranelift. This enables fast rotation evaluation during simulation.
+
+## Compilation pipeline
+
+<Mermaid
+  chart={`
+flowchart LR
+    JSON[Rotation JSON] --> Parser
+    Parser --> AST
+    AST --> Resolver
+    Resolver --> Schema[ContextSchema]
+    Schema --> Compiler[Cranelift]
+    Compiler --> Native[Native Function]
+`}
+/>
+
+### Parser
+
+Converts JSON to an AST. Actions become `Action` variants, conditions become `Expr` trees.
+
+### Resolver
+
+Validates spell and aura names against the spec. Maps string names to indices. Builds the context schema.
+
+### ContextSchema
+
+Defines the byte buffer layout for runtime context:
+
+```rust
+ContextSchema {
+    size: usize,                        // Total buffer size
+    fields: Vec<ContextField>,          // Field definitions
+    offsets: HashMap<ExprKey, usize>,   // Expression -> offset
+}
+```
+
+### Compiler
+
+Generates Cranelift IR for each action and expression. The IR compiles to native machine code.
+
+## Context buffer
+
+The JIT function reads game state from a flat byte buffer:
+
+```
++----------+----------+----------+----------+
+| resource | cooldown | buff     | combat   |
+| current  | ready    | active   | time     |
+| (f64)    | (bool)   | (bool)   | (f64)    |
++----------+----------+----------+----------+
+| offset 0 | offset 8 | offset 9 | offset 16|
+```
+
+Before each evaluation:
+
+1. Handler populates buffer with current state
+2. JIT function reads values at known offsets
+3. Native code evaluates conditions
+4. Returns result
+
+This avoids function call overhead. Just memory reads.
+
+## Evaluation result
+
+The JIT function returns a packed `u64`:
+
+```rust
+EvalResult {
+    kind: u8,       // 0=none, 1=cast, 2=wait, 3=pool
+    spell_id: u32,  // Spell index (24 bits)
+    wait_time: f32, // Seconds to wait
+}
+
+// Packed: bits 0-31=wait_time, 32-55=spell_id, 56-63=kind
+```
+
+Packing into a single register avoids struct return overhead.
+
+## Performance
+
+Typical evaluation times:
+
+- Simple rotation: ~3ns
+- Complex rotation (50+ conditions): ~10-20ns
+
+At these speeds, rotation evaluation is not a bottleneck.
+
+## Memory management
+
+The `CompiledRotation` struct owns the JIT module:
+
+```rust
+pub struct CompiledRotation {
+    func: JitFn,
+    _module: SyncJitModule, // Keeps compiled code alive
+    schema: ContextSchema,
+}
+```
+
+When `CompiledRotation` drops, the module and its memory free. Reuse compiled rotations where possible.
+
+## Compile-time vs runtime
+
+Some things bake in at compile time:
+
+- Spell IDs (resolved from names)
+- Talent checks (booleans set during compilation)
+- Buffer offsets (determined by schema)
+
+Changing talents requires recompilation. The tradeoff is faster runtime evaluation.
+
+## Why JIT?
+
+Alternatives considered:
+
+| Approach     | Problem                       |
+| ------------ | ----------------------------- |
+| Interpreter  | 100x slower than native       |
+| Tree-walking | Branch misprediction overhead |
+| Bytecode VM  | Still 10-50x slower           |
+
+JIT compilation gives near-C performance for rotation evaluation.

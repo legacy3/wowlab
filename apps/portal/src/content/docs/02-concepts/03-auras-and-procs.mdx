@@ -1,0 +1,166 @@
+---
+title: Auras & Procs
+description: How buffs, debuffs, and procs work
+nextSteps:
+  - 01-rotations/04-advanced-patterns
+  - 01-rotations/03-expressions
+---
+
+# Auras & Procs
+
+Auras are buffs and debuffs. Procs are triggered effects. Both modify combat.
+
+## Aura lifecycle
+
+<Mermaid
+  chart={`
+stateDiagram-v2
+    [*] --> Applied: apply
+    Applied --> Active: start
+    Active --> Refreshed: refresh
+    Refreshed --> Active: extend
+    Active --> Expired: time up
+    Expired --> [*]: remove
+`}
+/>
+
+## Aura properties
+
+Each active aura tracks:
+
+| Property     | Description                     |
+| ------------ | ------------------------------- |
+| `aura_id`    | Which aura                      |
+| `target`     | Who it's on                     |
+| `expires_at` | When it ends                    |
+| `stacks`     | Current stack count             |
+| `snapshot`   | Stats at application (for DoTs) |
+| `next_tick`  | When periodic effect fires      |
+
+## Buffs vs debuffs
+
+- **Buffs**: Applied to player, provide bonuses
+- **Debuffs**: Applied to enemies, typically damage or vulnerability
+
+The engine tracks buffs on the player and debuffs on each target separately.
+
+## Pandemic refresh
+
+Refreshing a DoT extends its duration, capped at 130% of base:
+
+```
+max_extension = base_duration × 0.3
+new_duration = base_duration + min(remaining, max_extension)
+```
+
+Example: 15s DoT with 5s remaining refreshes to 15 + 4.5 = 19.5s.
+
+Query pandemic state with `debuff.name.refreshable` (true when below 30% remaining).
+
+## Snapshotting
+
+Some DoTs snapshot stats at application:
+
+- Attack power
+- Crit chance
+- Haste
+- Damage multipliers
+
+Snapshotted DoTs keep those values for their full duration. Refreshing updates the snapshot.
+
+Check the `snapshots` flag on the aura definition.
+
+## Proc systems
+
+### RPPM (Real Procs Per Minute)
+
+Haste-scaled proc rate with bad luck protection:
+
+```
+effective_ppm = base_ppm × haste_multiplier
+time_since = now - last_attempt
+base_chance = effective_ppm × time_since / 60
+final_chance = base_chance × blp_multiplier
+```
+
+Bad luck protection increases `blp_multiplier` on failed attempts:
+
+```
+blp_multiplier *= (1 + time_factor × 3)
+```
+
+The multiplier caps at 100x and resets to 1.0 on successful proc.
+
+### Fixed chance
+
+Simple percentage per trigger event:
+
+```
+if random() < chance:
+    proc triggers
+```
+
+Optional internal cooldown (ICD) prevents multiple procs in quick succession.
+
+## Proc triggers
+
+Procs fire on specific events:
+
+| Trigger        | When                 |
+| -------------- | -------------------- |
+| On cast        | Spell casting begins |
+| On hit         | Damage applies       |
+| On crit        | Damage crits         |
+| On tick        | DoT/HoT ticks        |
+| On auto attack | Melee swing          |
+
+## Proc effects
+
+When a proc triggers:
+
+| Effect           | What it does            |
+| ---------------- | ----------------------- |
+| `ApplyAura`      | Apply a buff            |
+| `CastSpell`      | Cast a spell            |
+| `Damage`         | Deal direct damage      |
+| `Resource`       | Grant/consume resources |
+| `ReduceCooldown` | Lower a cooldown        |
+| `ExtendAura`     | Extend an aura          |
+| `AddStacks`      | Add stacks              |
+
+## Rotation expressions
+
+Query auras:
+
+```
+buff.bestial_wrath.active      // Is buff up?
+buff.bestial_wrath.stacks      // How many stacks?
+buff.bestial_wrath.remains     // Seconds left?
+buff.bestial_wrath.refreshable // In pandemic window?
+
+debuff.serpent_sting.active    // Is debuff on target?
+debuff.serpent_sting.refreshable
+```
+
+## Common patterns
+
+**Maintain a DoT:**
+
+```json
+{
+  "cast": "serpent_sting",
+  "if": "debuff.serpent_sting.refreshable | !debuff.serpent_sting.active"
+}
+```
+
+**React to a proc:**
+
+```json
+{ "cast": "barbed_shot", "if": "buff.wild_call.active" }
+```
+
+**During a buff:**
+
+```json
+{ "cast": "kill_command", "if": "buff.bestial_wrath.active" }
+```

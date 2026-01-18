@@ -1,0 +1,118 @@
+---
+title: Game Data
+description: How WoW Lab handles spell and item data
+nextSteps:
+  - 03-data/01-mcp-server
+  - 03-data/02-spec-coverage
+---
+
+# Game Data
+
+WoW Lab transforms Blizzard's DBC files into flat, queryable tables. Apps query pre-assembled records instead of joining dozens of normalized tables at runtime.
+
+## The problem
+
+Blizzard stores spell data across 15+ normalized tables:
+
+- `spell_name` - Spell names
+- `spell_misc` - Timing, range refs
+- `spell_effect` - Effect definitions
+- `spell_cooldowns` - Cooldown data
+- `spell_duration` - Duration refs
+- And many more...
+
+Getting complete spell info requires joining all these tables and resolving index references.
+
+## The solution
+
+WoW Lab runs a transformation pipeline:
+
+<Mermaid
+  chart={`
+flowchart LR
+    DBC[DBC Files] --> Transform[Transformer]
+    Transform --> Flat[Flat Records]
+    Flat --> DB[(Supabase)]
+    DB --> App[Your App]
+`}
+/>
+
+The transformer:
+
+1. Reads all DBC tables
+2. Joins and denormalizes
+3. Resolves index references
+4. Produces flat records
+5. Uploads to Supabase
+
+This happens once per patch. Apps get fast, simple queries.
+
+## Flat structure
+
+A spell record contains everything inline:
+
+| Field                    | Source                         |
+| ------------------------ | ------------------------------ |
+| `id`                     | spell_name.ID                  |
+| `name`                   | spell_name.Name_lang           |
+| `cast_time`              | Resolved from spell_cast_times |
+| `cooldown`               | Resolved from spell_cooldowns  |
+| `range_min`, `range_max` | Resolved from spell_range      |
+| `effects`                | Joined from spell_effect       |
+
+No joins needed at query time.
+
+## Available tables
+
+The `game` schema in Supabase:
+
+| Table          | Contents                               |
+| -------------- | -------------------------------------- |
+| `spells`       | Spell data with timing, costs, effects |
+| `items`        | Item data with stats, effects          |
+| `auras`        | Aura-specific data                     |
+| `classes`      | Class definitions                      |
+| `specs`        | Specializations                        |
+| `specs_traits` | Talent tree nodes                      |
+
+## Caching
+
+Data caching happens at multiple levels:
+
+1. **Browser (IndexedDB)** - Stores fetched records locally
+2. **React Query** - Deduplicates requests, caches in memory
+3. **Engine (Rust)** - Memory + disk cache via `GameDataCache`
+
+Once fetched, spell data persists until a new patch drops.
+
+## Automatic batching
+
+When a page renders multiple tooltips, requests batch automatically:
+
+```sql
+SELECT * FROM game.spells WHERE id IN (1, 2, 3, 4, 5)
+```
+
+Instead of N separate queries, one query fetches all needed records.
+
+## Portal hooks
+
+Query data in React components:
+
+```typescript
+const { data: spell, isLoading } = useSpell(spellId);
+const { data: item, isLoading } = useItem(itemId);
+```
+
+Hooks return React Query results with `data`, `isLoading`, and `error`.
+
+## Engine resolvers
+
+The Rust engine supports multiple data sources:
+
+| Resolver           | Use case                    |
+| ------------------ | --------------------------- |
+| `LocalResolver`    | CSV files, offline/portable |
+| `SupabaseResolver` | Database with caching       |
+
+Both implement the `DataResolver` trait for consistent access.

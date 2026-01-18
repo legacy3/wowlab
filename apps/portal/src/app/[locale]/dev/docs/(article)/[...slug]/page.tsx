@@ -5,6 +5,7 @@ import { ArticleSidebar } from "@/components/content/article-sidebar";
 import { ContentArticle } from "@/components/content/content-article";
 import { ContentNav } from "@/components/content/content-nav";
 import { MDXContent } from "@/components/content/mdx-content";
+import { NextSteps } from "@/components/content/next-steps";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { docsIndex, docSlugs, getDocPageData } from "@/lib/content/docs";
@@ -15,8 +16,17 @@ type Props = {
 
 export default async function DocPage({ params }: Props) {
   const { slug } = await params;
-  const { body, description, fullSlug, next, prev, title, toc, updatedAt } =
-    await getDocPageData(slug);
+  const {
+    body,
+    description,
+    fullSlug,
+    next,
+    nextSteps,
+    prev,
+    title,
+    toc,
+    updatedAt,
+  } = await getDocPageData(slug);
 
   return (
     <Flex gap="8">
@@ -37,6 +47,7 @@ export default async function DocPage({ params }: Props) {
             />
           </VStack>
           <MDXContent code={body} />
+          <NextSteps items={nextSteps} />
         </ContentArticle>
       </Box>
 

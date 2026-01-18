@@ -1,0 +1,151 @@
+---
+title: JSON Format
+description: Rotation JSON syntax reference
+nextSteps:
+  - 01-rotations/03-expressions
+  - 01-rotations/04-advanced-patterns
+---
+
+# JSON Format
+
+Rotations serialize to JSON. The editor produces this format, but you can also write it directly.
+
+## Structure
+
+```json
+{
+  "name": "BM Hunter ST",
+  "variables": {},
+  "lists": {},
+  "actions": []
+}
+```
+
+| Field       | Type   | Description          |
+| ----------- | ------ | -------------------- |
+| `name`      | string | Rotation name        |
+| `variables` | object | Reusable expressions |
+| `lists`     | object | Named action lists   |
+| `actions`   | array  | Main priority list   |
+
+## Actions
+
+### Cast
+
+```json
+{ "cast": "kill_command", "if": "cd.kill_command.ready" }
+```
+
+### Call
+
+Jump to a named list. Return to main actions if nothing casts.
+
+```json
+{ "call": "cooldowns", "if": "combat.time > 0" }
+```
+
+### Run
+
+Jump to a named list. Continue in that list regardless of cast result.
+
+```json
+{ "run": "aoe", "if": "enemy.count >= 3" }
+```
+
+### Wait
+
+Pause for a duration (seconds).
+
+```json
+{ "wait": 0.5 }
+```
+
+### Pool
+
+Wait for resources before continuing.
+
+```json
+{ "pool": true, "extra": 20 }
+```
+
+The `extra` field specifies additional resource to pool beyond the next spell's cost.
+
+## Conditions
+
+Conditions use expression syntax. Simple conditions are strings:
+
+```json
+{ "cast": "kill_command", "if": "cd.kill_command.ready" }
+```
+
+Complex conditions use JSON objects:
+
+```json
+{ "cast": "kill_command", "if": { ">=": ["focus.current", 30] } }
+```
+
+### Operators
+
+| Operator      | Syntax                  | Example    |
+| ------------- | ----------------------- | ---------- |
+| And           | `&` or `{"and": [...]}` | `"a & b"`  |
+| Or            | `\|` or `{"or": [...]}` | `"a \| b"` |
+| Not           | `!` or `{"not": ...}`   | `"!a"`     |
+| Greater       | `>` or `{">": [a, b]}`  | `"x > 5"`  |
+| Greater/Equal | `>=`                    | `"x >= 5"` |
+| Less          | `<`                     | `"x < 5"`  |
+| Less/Equal    | `<=`                    | `"x <= 5"` |
+| Equal         | `=`                     | `"x = 5"`  |
+| Not Equal     | `!=`                    | `"x != 5"` |
+
+## Named lists
+
+```json
+{
+  "lists": {
+    "cooldowns": [
+      { "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" },
+      { "cast": "call_of_the_wild", "if": "cd.call_of_the_wild.ready" }
+    ],
+    "st": [{ "cast": "kill_command" }, { "cast": "cobra_shot" }]
+  },
+  "actions": [{ "call": "cooldowns" }, { "run": "st" }]
+}
+```
+
+## Variables
+
+Define reusable expressions:
+
+```json
+{
+  "variables": {
+    "save_cds": "combat.remains < 20",
+    "need_focus": "focus.current < 50"
+  },
+  "actions": [{ "cast": "bestial_wrath", "if": "!variable.save_cds" }]
+}
+```
+
+Access with `variable.name`.
+
+## Complete example
+
+```json
+{
+  "name": "BM Hunter",
+  "variables": {
+    "pool_for_bw": "cd.bestial_wrath.remains < 2 & focus.current < 50"
+  },
+  "lists": {
+    "cooldowns": [{ "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" }]
+  },
+  "actions": [
+    { "call": "cooldowns" },
+    { "pool": true, "if": "variable.pool_for_bw" },
+    { "cast": "barbed_shot", "if": "cd.barbed_shot.charges >= 1" },
+    { "cast": "kill_command", "if": "cd.kill_command.ready" },
+    { "cast": "cobra_shot" }
+  ]
+}
+```

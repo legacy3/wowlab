@@ -1,12 +1,11 @@
 "use client";
 
-import { FileText } from "lucide-react";
 import { Flex, VStack } from "styled-system/jsx";
 
 import type { DocEntry } from "@/lib/content";
 
 import * as Accordion from "@/components/ui/accordion";
-import { Icon } from "@/components/ui/icon";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { href, routes } from "@/lib/routing";
@@ -17,73 +16,29 @@ type DocTreeProps = {
 };
 
 export function DocTree({ activeSlug, items }: DocTreeProps) {
-  const defaultOpenGroups = items
-    .filter((item) => {
-      if (!item.children) {
-        return false;
-      }
-      return item.children.some((child) => child.slug === activeSlug);
-    })
-    .map((item) => item.slug);
+  const sections = items.filter((item) => item.children);
+  const defaultOpen = sections
+    .filter((s) => s.children?.some((c) => c.slug === activeSlug))
+    .map((s) => s.slug);
 
   return (
-    <VStack alignItems="stretch" gap="1">
-      {items.map((item) => {
-        if (item.children) {
-          return (
-            <Accordion.Root
-              key={item.slug}
-              defaultValue={defaultOpenGroups}
-              multiple
-            >
-              <DocGroup item={item} activeSlug={activeSlug} />
-            </Accordion.Root>
-          );
-        }
-
-        const isActive = item.slug === activeSlug;
-        return <DocLeaf key={item.slug} item={item} isActive={isActive} />;
-      })}
-    </VStack>
+    <Accordion.Root defaultValue={defaultOpen} multiple>
+      <VStack alignItems="stretch" gap="0">
+        {sections.map((section) => (
+          <DocSection
+            key={section.slug}
+            section={section}
+            activeSlug={activeSlug}
+          />
+        ))}
+      </VStack>
+    </Accordion.Root>
   );
 }
 
-function DocGroup({
-  activeSlug,
-  item,
-}: {
-  item: DocEntry;
-  activeSlug?: string;
-}) {
-  if (!item.children) {
-    return null;
-  }
+function DocLink({ isActive, item }: { item: DocEntry; isActive: boolean }) {
+  const number = extractNumber(item.slug);
 
-  return (
-    <Accordion.Item value={item.slug}>
-      <Accordion.ItemTrigger>
-        <Text fontWeight="medium" textStyle="sm">
-          {item.title}
-        </Text>
-        <Accordion.ItemIndicator />
-      </Accordion.ItemTrigger>
-      <Accordion.ItemContent>
-        <VStack alignItems="stretch" gap="1" pl="2">
-          {item.children.map((child) => {
-            const isActive = child.slug === activeSlug;
-            return child.children ? (
-              <DocGroup key={child.slug} item={child} activeSlug={activeSlug} />
-            ) : (
-              <DocLeaf key={child.slug} item={child} isActive={isActive} />
-            );
-          })}
-        </VStack>
-      </Accordion.ItemContent>
-    </Accordion.Item>
-  );
-}
-
-function DocLeaf({ isActive, item }: { item: DocEntry; isActive: boolean }) {
   return (
     <Link
       href={href(routes.dev.docs.page, { slug: item.slug })}
@@ -91,22 +46,72 @@ function DocLeaf({ isActive, item }: { item: DocEntry; isActive: boolean }) {
       textDecoration="none"
     >
       <Flex
-        alignItems="center"
-        gap="2"
+        align="center"
+        gap="3"
         py="1.5"
-        px="2"
+        px="3"
         borderRadius="md"
-        bg={isActive ? "gray.subtle.bg" : undefined}
+        bg={isActive ? "colorPalette.subtle.bg" : undefined}
         color={isActive ? "fg.default" : "fg.muted"}
-        _hover={{ bg: "gray.subtle.bg/50" }}
+        _hover={{ bg: "gray.subtle.bg/50", color: "fg.default" }}
         transition="colors"
+        colorPalette="amber"
       >
-        <ItemNumber slug={item.slug} />
-        <Text fontWeight="medium" textStyle="sm">
-          {item.title}
-        </Text>
+        {number && (
+          <Text
+            color="fg.subtle"
+            fontFamily="mono"
+            textStyle="xs"
+            fontVariantNumeric="tabular-nums"
+            w="3"
+            textAlign="right"
+          >
+            {number}
+          </Text>
+        )}
+        <Text textStyle="sm">{item.title}</Text>
       </Flex>
     </Link>
+  );
+}
+
+function DocSection({
+  activeSlug,
+  section,
+}: {
+  section: DocEntry;
+  activeSlug?: string;
+}) {
+  const count = section.children?.length ?? 0;
+
+  return (
+    <Accordion.Item
+      value={section.slug}
+      borderTopWidth="1px"
+      borderColor="border.subtle"
+      _last={{ borderBottomWidth: "1px" }}
+    >
+      <Accordion.ItemTrigger py="3">
+        <Flex align="center" gap="3" flex="1">
+          <Text fontWeight="semibold">{section.title}</Text>
+          <Badge variant="outline" size="sm">
+            {count}
+          </Badge>
+        </Flex>
+        <Accordion.ItemIndicator />
+      </Accordion.ItemTrigger>
+      <Accordion.ItemContent>
+        <VStack alignItems="stretch" gap="0.5" pb="3">
+          {section.children?.map((child) => (
+            <DocLink
+              key={child.slug}
+              item={child}
+              isActive={child.slug === activeSlug}
+            />
+          ))}
+        </VStack>
+      </Accordion.ItemContent>
+    </Accordion.Item>
   );
 }
 
@@ -114,30 +119,4 @@ function extractNumber(slug: string): string | null {
   const lastSegment = slug.split("/").pop() ?? slug;
   const match = lastSegment.match(/^(\d+)-/);
   return match ? String(parseInt(match[1], 10) + 1) : null;
-}
-
-function ItemNumber({ slug }: { slug: string }) {
-  const number = extractNumber(slug);
-
-  if (number) {
-    return (
-      <Text
-        color="fg.muted"
-        fontFamily="mono"
-        textStyle="xs"
-        fontVariantNumeric="tabular-nums"
-        w="4"
-        textAlign="right"
-        flexShrink={0}
-      >
-        {number}.
-      </Text>
-    );
-  }
-
-  return (
-    <Icon size="sm" color="fg.muted" flexShrink={0}>
-      <FileText />
-    </Icon>
-  );
 }

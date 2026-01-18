@@ -1,0 +1,148 @@
+---
+title: Known Issues
+description: Current limitations and areas for improvement
+nextSteps:
+  - 04-engine/00-architecture
+  - 05-contributing/00-setup
+---
+
+# Known Issues
+
+Current limitations in the engine. These are documented for transparency and to guide contributions.
+
+## Hardcoded armor constant
+
+`combat/damage/pipeline.rs:128`
+
+```rust
+const ARMOR_CONSTANT: f32 = 7390.0;
+```
+
+Armor mitigation uses a constant for level 80 targets. Simulating different target levels gives incorrect mitigation.
+
+**Impact**: Physical damage calculations wrong for non-80 targets.
+
+**Fix needed**: Make armor constant configurable per target level.
+
+## Pet stat inheritance
+
+`actor/pet.rs:77`
+
+Pet stats inherit inconsistently:
+
+- AP/SP scaled by inheritance factor
+- Haste/Crit ratings copied directly (not scaled)
+
+This matches WoW behavior but can be confusing.
+
+## Talents as compile-time constants
+
+`rotation/expr/talent.rs`
+
+Talents bake into JIT code at compile time. Changing talents requires recompiling the rotation.
+
+**Impact**: Cannot dynamically toggle talents.
+
+**Tradeoff**: Faster runtime evaluation.
+
+## Performance concerns
+
+### Proc registry lookup
+
+`proc/registry.rs:39`
+
+O(n) linear search for proc handlers:
+
+```rust
+self.handlers.iter().find(|h| h.id == rppm.proc_id)
+```
+
+**Fix needed**: HashMap with ProcIdx key for O(1) lookup.
+
+### Context buffer allocation
+
+`rotation/compiler.rs:223`
+
+```rust
+let mut buffer = vec![0u8; self.schema.size.max(8)];
+```
+
+Buffer allocated on every rotation evaluation.
+
+**Fix needed**: Thread-local arena or pre-allocated buffer.
+
+### String-based talent checks
+
+`spec/executor.rs:161`
+
+```rust
+ctx.talents.contains(&name.as_str())
+```
+
+O(n) string comparison for talent checks.
+
+**Fix needed**: Use talent indices or HashMap.
+
+## Design issues
+
+### Dual parse paths
+
+`rotation/parser.rs:20`
+
+Two parse functions:
+
+- `from_json()` - Returns unresolved AST
+- `from_json_resolved()` - Returns resolved AST
+
+**Impact**: Easy to use wrong function.
+
+**Fix needed**: Single parse function with explicit resolution step.
+
+### Incomplete spell information
+
+`rotation/expr/spell.rs:47`
+
+Some expressions have TODO implementations:
+
+- `Cost`: Returns 0
+- `CastTime`: Returns 0
+- `Range`: Returns 40 (hardcoded)
+
+**Fix needed**: Wire up SpellDef data to expression evaluation.
+
+### Missing SchoolModifiers integration
+
+`combat/damage/multipliers.rs:84`
+
+`SchoolModifiers` struct exists but is unused in damage pipeline.
+
+**Fix needed**: Apply school modifiers in damage calculation.
+
+### Silent tuning failures
+
+`03-data/local.rs:70`
+
+Tuning file entries that don't match any SpellDef are silently ignored.
+
+**Fix needed**: Log warnings for unused tuning entries.
+
+## Recommendations
+
+### High priority
+
+1. Integrate SchoolModifiers into damage pipeline
+2. Add tuning validation with warnings
+3. Wire up spell expressions (Cost, CastTime, Range)
+
+### Medium priority
+
+1. HashMap for proc lookups
+2. Cache context buffer
+3. Parameterize armor constant
+4. Index talent lookups
+
+### Low priority
+
+1. Unify parse paths
+2. Document pet inheritance
+3. Runtime talent changes

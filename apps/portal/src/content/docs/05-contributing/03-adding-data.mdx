@@ -1,0 +1,103 @@
+---
+title: Adding Data
+description: Add new DBC tables to Supabase
+nextSteps:
+  - 03-data/00-game-data
+  - 05-contributing/01-adding-spells
+---
+
+# Adding Data
+
+Add new game data tables to the database. Most contributors don't need this. Existing tables cover spells, items, talents, and common data.
+
+## When to add tables
+
+Add a table when:
+
+- A new data type is needed (achievements, mounts, etc.)
+- Existing tables lack required columns
+- A new transformation is needed
+
+## Process overview
+
+1. Create the table in Supabase
+2. Generate TypeScript types
+3. Add React Query hooks (optional)
+
+## Create the table
+
+Use the Supabase MCP tool to apply a migration:
+
+```sql
+-- Raw DBC table (matches CSV structure)
+CREATE TABLE raw_dbc.my_new_table (
+  "ID" integer PRIMARY KEY,
+  "Name_lang" text,
+  "SomeFK" integer
+);
+
+-- View in game schema (clean names)
+CREATE VIEW game.my_new_table AS
+SELECT
+  "ID" AS id,
+  "Name_lang" AS name,
+  "SomeFK" AS some_fk
+FROM raw_dbc.my_new_table;
+```
+
+Column names in `raw_dbc` match the DBC file exactly. The `game` view provides clean snake_case names.
+
+## Generate types
+
+Use `mcp__supabase__generate_typescript_types` to regenerate types. Save output to `apps/portal/src/lib/supabase/database.types.ts`.
+
+## Add hooks (optional)
+
+If you need to query the table from React, add hooks in `apps/portal/src/lib/state/game.ts`:
+
+```typescript
+export function useMyNewTable(id: number | null | undefined) {
+  const supabase = createClient();
+
+  return useQuery({
+    enabled: id != null,
+    queryKey: ["game", "my-new-table", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .schema("game")
+        .from("my_new_table")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+```
+
+## Existing tables
+
+Tables in the `game` schema:
+
+| Table            | Contents                               |
+| ---------------- | -------------------------------------- |
+| `spells`         | Spell data with timing, costs, effects |
+| `items`          | Item data with stats                   |
+| `auras`          | Aura information                       |
+| `classes`        | Class definitions                      |
+| `specs`          | Specializations                        |
+| `specs_traits`   | Talent tree nodes                      |
+| `global_colors`  | UI colors                              |
+| `global_strings` | Localized strings                      |
+
+Check existing tables before adding new ones.
+
+## Data transformation
+
+For complex transformations, add logic to `packages/parsers/`:
+
+1. Read DBC files
+2. Transform and join as needed
+3. Output flat structures
+4. Upload via `pnpm cli sync`

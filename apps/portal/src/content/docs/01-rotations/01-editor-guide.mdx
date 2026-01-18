@@ -1,0 +1,76 @@
+---
+title: Editor Guide
+description: Using the visual rotation editor
+nextSteps:
+  - 01-rotations/02-json-format
+  - 01-rotations/03-expressions
+---
+
+# Editor Guide
+
+The rotation editor at [/01-rotations/editor](/01-rotations/editor) provides a visual interface for building rotations.
+
+## Creating a rotation
+
+1. Click "New Rotation"
+2. Select your class and spec
+3. Name your rotation
+
+## Adding actions
+
+Click "Add Action" to add a new priority entry. Choose the action type:
+
+- **Cast** - Use a spell
+- **Call** - Jump to a named list, return if nothing casts
+- **Run** - Jump to a named list, continue regardless
+- **Wait** - Pause for a duration
+- **Pool** - Wait for resources
+
+## Setting conditions
+
+Click the condition field to open the condition builder. Options:
+
+**Visual mode** - Click to build conditions from dropdowns
+
+**Text mode** - Type conditions directly using expression syntax
+
+The editor validates conditions against your spec. Invalid spell names or syntax errors show immediately.
+
+## Reordering
+
+Drag actions to reorder priorities. Remember: higher = more important.
+
+## Named lists
+
+For complex rotations, break logic into named lists:
+
+1. Click "Add List"
+2. Name it (e.g., "cooldowns", "aoe", "cleave")
+3. Add actions to the list
+4. Reference with Call or Run from main actions
+
+Use Call when the list should return control (cooldown checks). Use Run when the list handles the rest of the GCD (AoE rotation).
+
+## Testing
+
+Click "Validate" to check your rotation against the engine. The validator reports:
+
+- Unknown spell names
+- Invalid conditions
+- Syntax errors
+
+## Saving
+
+Click "Save" to store the rotation. You get:
+
+- A unique URL for sharing
+- Version history
+- The ability to fork and modify
+
+## Importing/Exporting
+
+**Export** - Download rotation as JSON for backup or sharing
+
+**Import** - Upload a JSON file to create a rotation
+
+The JSON format matches the [JSON Format](/dev/docs/01-rotations/02-json-format) reference.

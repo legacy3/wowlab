@@ -1,0 +1,168 @@
+---
+title: Implementing Specs
+description: How to implement a spec in the engine
+nextSteps:
+  - 04-engine/04-type-system
+  - 04-engine/05-known-issues
+  - 05-contributing/01-adding-spells
+---
+
+# Implementing Specs
+
+Every spec implements the `SpecHandler` trait. This page covers the structure and patterns.
+
+## SpecHandler trait
+
+```rust
+pub trait SpecHandler: Send + Sync {
+    fn spec_id(&self) -> SpecId;
+    fn class_id(&self) -> ClassId;
+    fn display_name(&self) -> &'static str;
+
+    fn spell_definitions(&self) -> &'static [SpellDef];
+    fn aura_definitions(&self) -> &'static [AuraDef];
+    fn talent_names(&self) -> Vec<String>;
+
+    fn init(&self, state: &mut SimState);
+    fn init_player(&self, player: &mut Player);
+
+    fn on_gcd(&self, state: &mut SimState);
+    fn on_cast_complete(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn on_spell_damage(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn on_auto_attack(&self, state: &mut SimState, unit: UnitIdx);
+
+    fn cast_spell(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn next_action(&self, state: &SimState) -> Action;
+
+    fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef>;
+    fn get_aura(&self, id: AuraIdx) -> Option<&AuraDef>;
+}
+```
+
+## File organization
+
+Each spec has a folder:
+
+```
+specs/hunter/bm/
+  constants.rs   - Spell/aura IDs
+  spells.rs      - SpellDef definitions
+  auras.rs       - AuraDef definitions
+  talents.rs     - Talent flags and effects
+  procs.rs       - Proc registrations
+  pet.rs         - Pet abilities
+  handler.rs     - SpecHandler impl
+  rotation.rs    - SpecResolver setup
+  tests.rs       - Unit tests
+```
+
+## Constants
+
+Define spell and aura IDs:
+
+```rust
+pub const KILL_COMMAND: SpellIdx = SpellIdx(34026);
+pub const BESTIAL_WRATH: AuraIdx = AuraIdx(19574);
+```
+
+Use the actual WoW spell IDs.
+
+## Spell definitions
+
+Use the builder pattern:
+
+```rust
+pub fn spell_definitions() -> Vec<SpellDef> {
+    vec![
+        SpellBuilder::new(KILL_COMMAND, "Kill Command")
+            .school(DamageSchool::Physical)
+            .instant()
+            .cooldown(7.5)
+            .cost(ResourceType::Focus, 30.0)
+            .physical_damage(2.0)  // AP coefficient
+            .pet_ability()
+            .build(),
+    ]
+}
+```
+
+## Aura definitions
+
+```rust
+pub fn aura_definitions() -> Vec<AuraDef> {
+    vec![
+        AuraBuilder::buff(BESTIAL_WRATH_BUFF, "Bestial Wrath", 15.0)
+            .damage_multiplier(1.25)
+            .build(),
+
+        AuraBuilder::dot(BARBED_SHOT_DOT, "Barbed Shot", 8.0, 2.0)
+            .periodic_damage(2.0, 0.15)
+            .pandemic()
+            .snapshots()
+            .build(),
+    ]
+}
+```
+
+## Proc registration
+
+```rust
+pub fn setup_procs(registry: &mut ProcRegistry) {
+    registry.register_fixed(
+        FixedProc::new(WILD_CALL, 0.20),
+        ProcHandler::new(
+            WILD_CALL,
+            "Wild Call",
+            ProcFlags::ON_AUTO_ATTACK | ProcFlags::ON_CRIT,
+            ProcEffect::ReduceCooldown {
+                spell: BARBED_SHOT,
+                amount: SimTime::from_secs(12),
+            },
+        ),
+    );
+}
+```
+
+## Spell effects
+
+Spells can declare effects:
+
+```rust
+SpellEffect::ReduceCooldown { spell, amount }
+SpellEffect::TriggerSpell { spell }
+SpellEffect::ApplyBuff { aura, stacks }
+SpellEffect::ApplyDebuff { aura, stacks }
+SpellEffect::ExtendAura { aura, amount }
+SpellEffect::Cleave { damage_pct, max_targets }
+SpellEffect::Conditional { condition, effect }
+```
+
+## Conditional effects
+
+```rust
+SpellBuilder::new(KILL_COMMAND, "Kill Command")
+    .on_cast_if(
+        EffectCondition::And(vec![
+            EffectCondition::TalentEnabled("kill_cleave".to_string()),
+            EffectCondition::BuffActive(BEAST_CLEAVE),
+        ]),
+        SpellEffect::Cleave { damage_pct: 0.60, max_targets: 5 },
+    )
+    .build()
+```
+
+## Rotation support
+
+Set up the spec resolver for rotation compilation:
+
+```rust
+pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {
+    SpecResolver::new("bm_hunter")
+        .resource("focus")
+        .spell("kill_command", KILL_COMMAND.0)
+        .spell("cobra_shot", COBRA_SHOT.0)
+        .aura("bestial_wrath", BESTIAL_WRATH_BUFF.0)
+        .charged_cooldown("barbed_shot")
+        .talent("alpha_predator", talents.contains(TalentFlags::ALPHA_PREDATOR))
+}
+```

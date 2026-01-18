@@ -1,4 +1,4 @@
-import { Stack } from "styled-system/jsx";
+import { Flex, Stack } from "styled-system/jsx";
 
 import { Button, Card } from "@/components/ui";
 import { docsIndex, getFirstSlug } from "@/lib/content/docs";
@@ -11,18 +11,18 @@ export function DocsIndex() {
 
   return (
     <Stack gap="6">
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Get Started</Card.Title>
-          <Card.Description>Introduction to WoW Lab</Card.Description>
-        </Card.Header>
-        <Card.Footer>
-          <Button asChild>
+      <Card.Root px="5" py="4">
+        <Flex justify="space-between" align="center" gap="4">
+          <Card.Header p="0">
+            <Card.Title>Get Started</Card.Title>
+            <Card.Description>Introduction to WoW Lab</Card.Description>
+          </Card.Header>
+          <Button asChild size="sm">
             <a href={href(routes.dev.docs.page, { slug: getFirstSlug() })}>
-              Read the Overview
+              Read the Introduction
             </a>
           </Button>
-        </Card.Footer>
+        </Flex>
       </Card.Root>
       <DocTree items={sections} />
     </Stack>

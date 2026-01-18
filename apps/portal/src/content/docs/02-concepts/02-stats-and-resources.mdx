@@ -1,0 +1,146 @@
+---
+title: Stats & Resources
+description: Stat conversion and resource mechanics
+nextSteps:
+  - 02-concepts/03-auras-and-procs
+  - 01-rotations/03-expressions
+---
+
+# Stats & Resources
+
+How gear stats convert to combat values, and how resource pools work.
+
+## Primary stats
+
+Each spec has a primary stat that determines attack/spell power:
+
+| Stat      | Specs                                              | Effect       |
+| --------- | -------------------------------------------------- | ------------ |
+| Strength  | Warriors, DKs, Paladins (ret/prot)                 | 1 Str = 1 AP |
+| Agility   | Hunters, Rogues, Monks, DHs, Druids, Shamans (enh) | 1 Agi = 1 AP |
+| Intellect | Casters, Healers                                   | 1 Int = 1 SP |
+
+## Secondary ratings
+
+Ratings convert to percentages with diminishing returns at high values:
+
+| Rating          | Effect                                        |
+| --------------- | --------------------------------------------- |
+| Critical Strike | Chance to deal double damage                  |
+| Haste           | Faster casts, GCDs, DoT ticks, resource regen |
+| Mastery         | Spec-specific bonus                           |
+| Versatility     | Damage/healing bonus + damage reduction       |
+
+### Haste effects
+
+Haste affects many systems:
+
+| System         | Effect                    |
+| -------------- | ------------------------- |
+| GCD            | Reduced (minimum 0.75s)   |
+| Cast time      | Reduced                   |
+| DoT tick rate  | More ticks, same duration |
+| Resource regen | Faster                    |
+| RPPM procs     | Higher proc rate          |
+
+Formula:
+
+```
+actual_time = base_time / (1 + haste_pct)
+```
+
+### Versatility
+
+Versatility provides:
+
+- Damage/healing bonus: full value
+- Damage reduction: half value
+
+Example: 10% vers = +10% damage, +5% damage reduction.
+
+## Stat cache
+
+The engine caches computed combat stats:
+
+```rust
+StatCache {
+    primary: PrimaryStats,    // Str, Agi, Int, Sta
+    ratings: Ratings,         // Crit, Haste, Mastery, Vers
+    combat: CombatStats,      // Computed values
+    dirty: bool,              // Needs recompute
+}
+```
+
+When buffs modify stats, the cache marks dirty. Next access recomputes combat values.
+
+## Combat stats
+
+Final computed values:
+
+| Stat                 | Type     | Description                        |
+| -------------------- | -------- | ---------------------------------- |
+| `crit_chance`        | 0.0-1.0+ | Chance to crit                     |
+| `haste`              | 1.0+     | Haste multiplier (1.3 = 30% haste) |
+| `mastery`            | varies   | Spec-dependent value               |
+| `versatility_damage` | 0.0+     | Damage bonus                       |
+| `versatility_dr`     | 0.0+     | Damage reduction (half of damage)  |
+| `attack_power`       | f32      | Physical damage scaling            |
+| `spell_power`        | f32      | Magic damage scaling               |
+
+## Resources
+
+Resources use a pool structure:
+
+```rust
+ResourcePool {
+    resource_type: ResourceType,
+    current: f32,
+    max: f32,
+}
+```
+
+### Regeneration
+
+Resources regenerate at base rates:
+
+| Resource    | Base Regen            |
+| ----------- | --------------------- |
+| Energy      | 10/sec                |
+| Focus       | 5/sec                 |
+| Mana        | 1%/sec (of max)       |
+| Rage        | On damage dealt/taken |
+| Runic Power | On rune spending      |
+
+Haste increases energy/focus regen:
+
+```
+actual_regen = base_regen × haste_multiplier
+```
+
+The engine schedules `ResourceTick` events every 100ms to apply regeneration.
+
+### Costs and gains
+
+Spells define resource costs and gains:
+
+```rust
+SpellDef {
+    costs: Vec<ResourceCost>,   // What it costs
+    gains: Vec<ResourceGain>,   // What it generates
+}
+```
+
+Before casting, the engine checks sufficient resources. After casting, it deducts costs and adds gains.
+
+## Expressions
+
+Query stats and resources in rotations:
+
+**Resources:**
+
+- `focus.current`, `focus.max`, `focus.deficit`
+- `focus.percent`, `focus.regen`, `focus.time_to_max`
+
+**Stats (via player):**
+
+- `player.haste`, `player.crit`

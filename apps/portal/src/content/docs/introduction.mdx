@@ -1,0 +1,32 @@
+---
+title: Introduction
+description: What is WoW Lab and how to get started
+nextSteps:
+  - 00-getting-started/00-quickstart
+  - 01-rotations/00-basics
+  - 02-concepts/00-how-sims-work
+---
+
+# WoW Lab
+
+Combat simulation platform for World of Warcraft. Build rotations in your browser, run sims on your machine, query game data through MCP.
+
+## Quick links
+
+- [Quickstart](/dev/docs/00-getting-started/00-quickstart) - Run your first sim
+- [Rotation Basics](/dev/docs/01-rotations/00-basics) - Learn priority lists
+- [Spec Coverage](/dev/docs/03-data/02-spec-coverage) - See what specs work
+
+## How it works
+
+1. **Build** - Create rotation priority lists in the visual editor
+2. **Simulate** - Run thousands of iterations on your local machine
+3. **Analyze** - View DPS distributions, damage breakdowns, and timelines
+
+The browser handles rotation building and results display. A local node runs the actual simulation using a JIT-compiled Rust engine.
+
+## Current status
+
+<Badge color="amber">v0.1.0</Badge>
+
+Early release. Beast Mastery and Marksmanship Hunter are implemented. More specs coming.

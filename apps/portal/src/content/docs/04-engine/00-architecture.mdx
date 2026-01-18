@@ -1,0 +1,145 @@
+---
+title: Architecture
+description: Engine module structure and data flow
+nextSteps:
+  - 04-engine/01-event-system
+  - 04-engine/02-jit-compiler
+  - 04-engine/03-implementing-specs
+---
+
+# Architecture
+
+The simulation engine lives in `crates/04-engine/`. This page covers module organization and data flow.
+
+## Module layout
+
+```
+crates/04-engine/src/
+  actor/     - Player, Pet, Enemy actors
+  api/       - Public API types
+  aura/      - Buff/debuff tracking
+  class/     - Shared class logic
+  cli/       - Command-line interface
+  combat/    - Damage pipeline, cooldowns
+  core/      - Event queue, RNG
+  03-data/      - Data loading
+  handler/   - SpecHandler trait
+  math/      - Utility functions
+  prelude/   - Common imports
+  proc/      - Proc system (RPPM, fixed)
+  resource/  - Resource pools
+  results/   - Statistics collection
+  rotation/  - Parser, JIT compiler
+  sim/       - SimState, execution
+  spec/      - SpellDef, AuraDef
+  specs/     - Spec implementations
+  stats/     - StatCache, ratings
+  types/     - Type-safe indices
+  wasm/      - WebAssembly bindings
+```
+
+## Data flow
+
+<Mermaid chart={`
+flowchart TB
+    subgraph Input
+        JSON[Rotation JSON]
+        Config[SimConfig]
+        Player[Player Stats]
+    end
+
+    subgraph Compilation
+        Parser --> AST[Rotation AST]
+        AST --> Resolver[SpecResolver]
+        Resolver --> JIT[Cranelift]
+        JIT --> Native[Native Code]
+    end
+
+    subgraph Runtime
+        Native --> Handler[SpecHandler]
+        Handler --> SimState
+        SimState --> EventQueue
+        EventQueue --> Handler
+    end
+
+    subgraph Output
+        SimState --> Results[BatchResults]
+    end
+
+    JSON --> Parser
+    Config --> SimState
+    Player --> SimState
+
+`} />
+
+## Key modules
+
+### rotation/
+
+The JIT compilation pipeline:
+
+- `parser.rs` - JSON to AST
+- `resolver.rs` - Validate names, build schema
+- `compiler.rs` - AST to Cranelift IR
+- `expr/` - Expression evaluation
+
+### sim/
+
+Core simulation:
+
+- `state.rs` - `SimState` struct
+- `simulation.rs` - Event loop
+- `executor.rs` - Effect execution
+- `batch.rs` - Parallel runner
+
+### spec/
+
+Spell and aura definitions:
+
+- `spell.rs` - `SpellDef`, `SpellFlags`
+- `aura_def.rs` - `AuraDef`, `AuraFlags`
+- `effect.rs` - Spell effects
+- `builder.rs` - Builder patterns
+
+### specs/
+
+Actual spec implementations:
+
+- `hunter/bm/` - Beast Mastery
+- `hunter/mm/` - Marksmanship
+
+Each spec has: constants, spells, auras, procs, talents, handler, rotation.
+
+### handler/
+
+The `SpecHandler` trait that specs implement:
+
+```rust
+pub trait SpecHandler: Send + Sync {
+    fn spec_id(&self) -> SpecId;
+    fn spell_definitions(&self) -> &'static [SpellDef];
+    fn aura_definitions(&self) -> &'static [AuraDef];
+    fn init(&self, state: &mut SimState);
+    fn on_gcd(&self, state: &mut SimState);
+    fn on_cast_complete(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn cast_spell(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
+    fn next_action(&self, state: &SimState) -> Action;
+    // ... more methods
+}
+```
+
+### results/
+
+Statistics collection:
+
+- `StatsCollector` - Aggregates simulation runs
+- `DamageBreakdown` - Per-spell analysis
+
+## Thread model
+
+Batch simulations run in parallel:
+
+1. `BatchRunner` distributes iterations across threads
+2. Each thread gets its own RNG seed
+3. Results aggregate via concurrent collection
+4. Final statistics computed after all iterations complete

@@ -1,0 +1,139 @@
+---
+title: Adding Spells
+description: Add spells to an existing spec
+nextSteps:
+  - 05-contributing/02-adding-specs
+  - 04-engine/03-implementing-specs
+---
+
+# Adding Spells
+
+Add new spells or auras to an implemented spec.
+
+## Find the spec folder
+
+Specs live in `crates/04-engine/src/specs/`:
+
+```
+specs/
+  hunter/
+    bm/           - Beast Mastery
+    mm/           - Marksmanship
+```
+
+## Add a constant
+
+In `constants.rs`, add the spell ID:
+
+```rust
+pub const NEW_SPELL: SpellIdx = SpellIdx(123456);
+```
+
+Use the actual WoW spell ID from wago.tools or the MCP server.
+
+## Define the spell
+
+In `spells.rs`, add the definition:
+
+```rust
+SpellBuilder::new(NEW_SPELL, "New Spell")
+    .school(DamageSchool::Physical)
+    .instant()                      // or .cast_time(1.5)
+    .cooldown(15.0)                 // seconds
+    .cost(ResourceType::Focus, 40.0)
+    .physical_damage(1.5)           // AP coefficient
+    .build()
+```
+
+### Common builder methods
+
+| Method                     | Description               |
+| -------------------------- | ------------------------- |
+| `.school(DamageSchool)`    | Damage type               |
+| `.instant()`               | No cast time              |
+| `.cast_time(f32)`          | Base cast time in seconds |
+| `.cooldown(f32)`           | Cooldown in seconds       |
+| `.charges(u8, f32)`        | Charges and recharge time |
+| `.cost(ResourceType, f32)` | Resource cost             |
+| `.physical_damage(f32)`    | AP coefficient            |
+| `.magic_damage(f32)`       | SP coefficient            |
+| `.pet_ability()`           | Executed by pet           |
+
+### Adding effects
+
+```rust
+SpellBuilder::new(NEW_SPELL, "New Spell")
+    .on_cast(SpellEffect::ApplyBuff {
+        aura: NEW_BUFF,
+        stacks: 1,
+    })
+    .build()
+```
+
+### Conditional effects
+
+```rust
+.on_cast_if(
+    EffectCondition::TalentEnabled("talent_name".to_string()),
+    SpellEffect::Damage { base: 100.0, coefficient: 0.5 },
+)
+```
+
+## Add an aura
+
+In `auras.rs`:
+
+```rust
+AuraBuilder::buff(NEW_BUFF, "New Buff", 15.0)  // name, duration
+    .damage_multiplier(1.10)                    // 10% damage increase
+    .build()
+```
+
+### Aura builder methods
+
+| Method                                     | Description                    |
+| ------------------------------------------ | ------------------------------ |
+| `::buff(id, name, duration)`               | Player buff                    |
+| `::debuff(id, name, duration)`             | Enemy debuff                   |
+| `::dot(id, name, duration, tick_interval)` | Damage over time               |
+| `.damage_multiplier(f32)`                  | Damage modifier                |
+| `.haste_multiplier(f32)`                   | Haste modifier                 |
+| `.pandemic()`                              | Enables pandemic refresh       |
+| `.snapshots()`                             | Snapshots stats at application |
+| `.max_stacks(u8)`                          | Stack limit                    |
+
+## Add to rotation resolver
+
+In `rotation.rs`, register the spell name:
+
+```rust
+SpecResolver::new("bm_hunter")
+    .spell("new_spell", NEW_SPELL.0)
+    .aura("new_buff", NEW_BUFF.0)
+    // ...
+```
+
+This allows rotations to reference the spell by name.
+
+## Test
+
+Write tests in `tests.rs`:
+
+```rust
+#[test]
+fn test_new_spell_damage() {
+    let state = setup_test_state();
+    let handler = BmHunterHandler::new();
+
+    handler.cast_spell(&mut state, NEW_SPELL, TargetIdx(0));
+
+    assert!(state.total_damage > 0.0);
+}
+```
+
+Run tests:
+
+```bash
+cd crates/engine
+cargo test
+```

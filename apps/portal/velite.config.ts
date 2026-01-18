@@ -56,7 +56,10 @@ const blog = defineCollection({
 const docs = defineCollection({
   name: "Doc",
   pattern: "docs/**/*.mdx",
-  schema: s.object(baseSchema),
+  schema: s.object({
+    ...baseSchema,
+    nextSteps: s.array(s.string()).optional(),
+  }),
 });
 
 export default defineConfig({

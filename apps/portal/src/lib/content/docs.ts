@@ -16,83 +16,69 @@ export type DocEntry = {
   children?: DocEntry[];
 };
 
-const SECTION_GROUPS: Record<string, string> = {
-  development: "Development",
-  engine: "Engine Internals",
-  guides: "Guides",
-  reference: "Reference",
-};
+const stripPrefix = (s: string) => s.replace(/^docs\//, "");
+const getDepth = (s: string) => s.split("/").length;
+const getSection = (s: string) => s.split("/")[0];
 
-export const docs: Record<string, Doc> = {};
+const toTitleCase = (s: string) =>
+  s
+    .replace(/^\d+-/, "")
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
-for (const doc of veliteDocs) {
-  const slug = doc.slug.replace(/^docs\//, "");
-  docs[slug] = doc;
-}
+export const docs = Object.fromEntries(
+  veliteDocs.map((doc) => [stripPrefix(doc.slug), doc]),
+) as Record<string, Doc>;
 
 export const docSlugs = Object.keys(docs).sort((a, b) => {
-  const depthA = a.split("/").length;
-  const depthB = b.split("/").length;
-
-  if (depthA !== depthB) {
-    return depthA - depthB;
-  }
-
-  return a.localeCompare(b);
+  const depthDiff = getDepth(a) - getDepth(b);
+  return depthDiff !== 0 ? depthDiff : a.localeCompare(b);
 });
 
 function buildDocsIndex(): DocEntry[] {
-  const rootEntries: DocEntry[] = [];
-  const groups: Record<string, DocEntry[]> = {};
+  const root: DocEntry[] = [];
+  const sections = new Map<string, DocEntry[]>();
 
   for (const slug of docSlugs) {
-    const doc = docs[slug];
-    const parts = slug.split("/");
+    const entry = { slug, title: docs[slug].title };
 
-    if (parts.length === 1) {
-      rootEntries.push({ slug, title: doc.title });
+    if (getDepth(slug) === 1) {
+      root.push(entry);
     } else {
-      const section = parts[0];
-      if (!groups[section]) {
-        groups[section] = [];
+      const section = getSection(slug);
+      if (!sections.has(section)) {
+        sections.set(section, []);
       }
-
-      groups[section].push({ slug, title: doc.title });
+      sections.get(section)!.push(entry);
     }
   }
 
-  const result: DocEntry[] = [...rootEntries];
-
-  for (const [section, children] of Object.entries(groups)) {
-    const groupTitle = SECTION_GROUPS[section] ?? section;
-    result.push({
-      children,
+  return [
+    ...root,
+    ...[...sections.keys()].sort().map((section) => ({
+      children: sections.get(section)!,
       slug: section,
-      title: groupTitle,
-    });
-  }
-
-  return result;
+      title: toTitleCase(section),
+    })),
+  ];
 }
 
 export const docsIndex = buildDocsIndex();
 
-export function getDoc(slug: string): Doc | undefined {
-  return docs[slug];
-}
+export const getDoc = (slug: string) => docs[slug];
 
-export function getDocNavMeta(slug: string): NavItem {
-  const doc = docs[slug];
-  if (!doc) {
-    return null;
-  }
+export const getDocNavMeta = (slug: string): NavItem =>
+  docs[slug]
+    ? createNavItem(slug, docs[slug].title, routes.dev.docs.index.path)
+    : null;
 
-  return createNavItem(slug, doc.title, routes.dev.docs.index.path);
-}
+export const getFirstSlug = () => docSlugs[0] ?? "introduction";
 
-export function getFirstSlug(): string {
-  return docSlugs[0] ?? "00-overview";
-}
+export const resolveNextSteps = (slugs?: string[]): NonNullable<NavItem>[] =>
+  (slugs ?? [])
+    .map(getDocNavMeta)
+    .filter((item): item is NonNullable<NavItem> => item !== null);
 
 export const getDocPageData = cache(async (slug: string[]) => {
   const fullSlug = slug.join("/");
@@ -110,6 +96,7 @@ export const getDocPageData = cache(async (slug: string[]) => {
     fullSlug,
     metadata: doc.metadata,
     next,
+    nextSteps: resolveNextSteps(doc.nextSteps),
     prev,
     title: doc.title,
     toc: doc.toc,

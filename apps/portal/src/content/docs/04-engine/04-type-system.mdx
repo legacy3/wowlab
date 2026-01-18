@@ -1,0 +1,150 @@
+---
+title: Type System
+description: Type-safe indices and newtypes
+nextSteps:
+  - 04-engine/05-known-issues
+  - 05-contributing/01-adding-spells
+---
+
+# Type System
+
+The engine uses newtype wrappers to prevent mixing incompatible IDs. This catches bugs at compile time.
+
+## Index types
+
+```rust
+pub struct SpellIdx(pub u32);    // Spell identifier
+pub struct AuraIdx(pub u32);     // Aura identifier
+pub struct ProcIdx(pub u32);     // Proc identifier
+pub struct UnitIdx(pub u16);     // Unit identifier
+pub struct TargetIdx(pub u16);   // Target identifier
+pub struct PetIdx(pub u16);      // Pet identifier
+pub struct EnemyIdx(pub u16);    // Enemy identifier
+pub struct SnapshotIdx(pub u32); // Snapshot identifier
+pub struct ResourceIdx(pub u8);  // Resource identifier
+```
+
+## Why newtypes?
+
+Without newtypes:
+
+```rust
+fn cast_spell(spell: u32, target: u32);
+
+// Bug: arguments swapped, compiles fine
+cast_spell(target_id, spell_id);
+```
+
+With newtypes:
+
+```rust
+fn cast_spell(spell: SpellIdx, target: TargetIdx);
+
+// Compile error: expected SpellIdx, found TargetIdx
+cast_spell(target_id, spell_id);
+```
+
+## SimTime
+
+Time uses millisecond precision:
+
+```rust
+pub struct SimTime(u32);
+
+impl SimTime {
+    pub const ZERO: SimTime = SimTime(0);
+
+    pub fn from_secs(secs: u32) -> Self;
+    pub fn from_secs_f32(secs: f32) -> Self;
+    pub fn from_millis(ms: u32) -> Self;
+
+    pub fn as_secs_f32(&self) -> f32;
+    pub fn as_millis(&self) -> u32;
+}
+```
+
+Arithmetic operations are saturating:
+
+```rust
+impl Add for SimTime {
+    fn add(self, rhs: Self) -> Self {
+        SimTime(self.0.saturating_add(rhs.0))
+    }
+}
+```
+
+## SpecId and ClassId
+
+Spec and class identification:
+
+```rust
+pub struct SpecId(pub u32);
+pub struct ClassId(pub u32);
+
+impl SpecId {
+    pub const BM_HUNTER: SpecId = SpecId(253);
+    pub const MM_HUNTER: SpecId = SpecId(254);
+    // ...
+}
+```
+
+## ResourceType
+
+Resource pool types:
+
+```rust
+pub enum ResourceType {
+    Mana,
+    Rage,
+    Focus,
+    Energy,
+    ComboPoints,
+    RunicPower,
+    SoulShards,
+    // ...
+}
+```
+
+## DamageSchool
+
+Damage types:
+
+```rust
+pub enum DamageSchool {
+    Physical,
+    Fire,
+    Frost,
+    Nature,
+    Shadow,
+    Arcane,
+    Holy,
+}
+```
+
+## Conversion traits
+
+Indices implement `From` for ergonomic construction:
+
+```rust
+impl From<u32> for SpellIdx {
+    fn from(id: u32) -> Self {
+        SpellIdx(id)
+    }
+}
+
+// Usage
+let spell = SpellIdx::from(34026);
+let spell: SpellIdx = 34026.into();
+```
+
+## Debug output
+
+All types implement `Debug` for logging:
+
+```rust
+#[derive(Debug)]
+pub struct SpellIdx(pub u32);
+
+// Prints: SpellIdx(34026)
+println!("{:?}", KILL_COMMAND);
+```

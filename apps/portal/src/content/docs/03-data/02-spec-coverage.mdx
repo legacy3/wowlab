@@ -1,0 +1,75 @@
+---
+title: Spec Coverage
+description: Which specs are implemented in the simulator
+nextSteps:
+  - 00-getting-started/00-quickstart
+  - 05-contributing/02-adding-specs
+---
+
+# Spec Coverage
+
+The simulator implements specs incrementally. This page tracks what works.
+
+## Current status
+
+<Badge color="green">Implemented</Badge>
+<Badge color="amber">In Progress</Badge> <Badge color="red">Not Started</Badge>
+
+### Hunter
+
+| Spec          | Status                                   | Notes                      |
+| ------------- | ---------------------------------------- | -------------------------- |
+| Beast Mastery | <Badge color="green">Implemented</Badge> | Full rotation, all talents |
+| Marksmanship  | <Badge color="green">Implemented</Badge> | Full rotation, all talents |
+| Survival      | <Badge color="red">Not Started</Badge>   |                            |
+
+### Other classes
+
+| Class        | Status                                 |
+| ------------ | -------------------------------------- |
+| Death Knight | <Badge color="red">Not Started</Badge> |
+| Demon Hunter | <Badge color="red">Not Started</Badge> |
+| Druid        | <Badge color="red">Not Started</Badge> |
+| Evoker       | <Badge color="red">Not Started</Badge> |
+| Mage         | <Badge color="red">Not Started</Badge> |
+| Monk         | <Badge color="red">Not Started</Badge> |
+| Paladin      | <Badge color="red">Not Started</Badge> |
+| Priest       | <Badge color="red">Not Started</Badge> |
+| Rogue        | <Badge color="red">Not Started</Badge> |
+| Shaman       | <Badge color="red">Not Started</Badge> |
+| Warlock      | <Badge color="red">Not Started</Badge> |
+| Warrior      | <Badge color="red">Not Started</Badge> |
+
+## What "implemented" means
+
+A fully implemented spec has:
+
+- All rotational abilities
+- All talent modifiers
+- Proc handlers
+- Pet abilities (if applicable)
+- Tier set bonuses
+
+## Coverage details
+
+For implemented specs, coverage means:
+
+- **Spells**: Core rotational abilities work
+- **Talents**: Talent effects modify damage correctly
+- **Procs**: RPPM and fixed-chance procs trigger
+- **Cooldowns**: Cooldown reduction effects work
+- **Resources**: Generation and costs are accurate
+
+## Limitations
+
+Even implemented specs may have limitations:
+
+- Some utility abilities may not be simulated
+- Complex interactions might be simplified
+- Very new patches may have missing tuning data
+
+Check [Known Issues](/dev/docs/04-engine/05-known-issues) for specific limitations.
+
+## Contributing a spec
+
+Want to add a spec? See [Adding Specs](/dev/docs/05-contributing/02-adding-specs) for the implementation guide.

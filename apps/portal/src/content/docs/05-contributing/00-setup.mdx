@@ -1,0 +1,110 @@
+---
+title: Development Setup
+description: Get the project running locally
+nextSteps:
+  - 05-contributing/01-adding-spells
+  - 05-contributing/02-adding-specs
+  - 05-contributing/03-adding-data
+---
+
+# Development Setup
+
+Clone and run WoW Lab locally.
+
+## Prerequisites
+
+- Node.js 20+
+- pnpm 9+
+- Rust 1.75+ (for engine development)
+
+## Clone and install
+
+```bash
+git clone https://github.com/legacy3/wowlab.git
+cd wowlab
+pnpm install
+```
+
+## Environment setup
+
+Copy the example environment file:
+
+```bash
+cp apps/portal/.env.example apps/portal/.env.local
+```
+
+Fill in the required values (Supabase credentials, etc.).
+
+## Run development server
+
+```bash
+pnpm dev
+```
+
+This starts:
+
+- Portal app at http://localhost:3000
+- Other services as needed
+
+## Build everything
+
+```bash
+pnpm build
+```
+
+Always use `pnpm build` to build the entire monorepo. Never use `pnpm --filter`.
+
+## Run tests
+
+```bash
+pnpm test
+```
+
+## Lint
+
+```bash
+pnpm lint
+```
+
+## Rust engine
+
+The simulation engine is in `crates/04-engine/`:
+
+```bash
+cd crates/engine
+cargo build --release
+cargo test
+```
+
+### Build WASM
+
+For browser type sharing:
+
+```bash
+wasm-pack build --target web --out-dir ../../packages/wowlab-04-engine/wasm
+```
+
+## Project structure
+
+```
+wowlab/
+  apps/
+    portal/          - Next.js web app
+    mcp-server/      - MCP server
+  crates/
+    04-engine/          - Rust simulation engine
+  packages/
+    parsers/         - DBC file parsers
+    wowlab-04-engine/   - WASM bindings
+```
+
+## Common tasks
+
+| Task             | Command                                     |
+| ---------------- | ------------------------------------------- |
+| Start dev server | `pnpm dev`                                  |
+| Build all        | `pnpm build`                                |
+| Run tests        | `pnpm test`                                 |
+| Lint code        | `pnpm lint`                                 |
+| Build engine     | `cd crates/engine && cargo build --release` |
+| Test engine      | `cd crates/engine && cargo test`            |

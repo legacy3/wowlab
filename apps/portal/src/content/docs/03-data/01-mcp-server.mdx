@@ -1,0 +1,118 @@
+---
+title: MCP Server
+description: Query game data through Model Context Protocol
+nextSteps:
+  - 01-rotations/00-basics
+  - 03-data/02-spec-coverage
+---
+
+# MCP Server
+
+The WoW Lab MCP server provides spell and item data to AI assistants via Model Context Protocol.
+
+## What is MCP?
+
+Model Context Protocol lets AI tools query external data sources. Claude, Cursor, and other AI assistants can connect to MCP servers to fetch real-time information.
+
+## Available tools
+
+| Tool               | Description                  |
+| ------------------ | ---------------------------- |
+| `get_spell`        | Get spell by ID              |
+| `get_item`         | Get item by ID               |
+| `get_spells_batch` | Get multiple spells (max 50) |
+| `get_items_batch`  | Get multiple items (max 50)  |
+| `search_spells`    | Search spells by name        |
+| `search_items`     | Search items by name         |
+| `query_table`      | Query any DBC table          |
+| `get_schema`       | List tables and columns      |
+| `call_function`    | Compute derived values       |
+| `list_functions`   | List available functions     |
+
+## Usage examples
+
+### Get a spell
+
+```
+Tool: get_spell
+Input: { "id": 34026 }
+Output: Kill Command spell data
+```
+
+### Search spells
+
+```
+Tool: search_spells
+Input: { "query": "Kill Command", "limit": 5 }
+Output: Array of matching spells with IDs
+```
+
+### Batch fetch
+
+```
+Tool: get_spells_batch
+Input: { "ids": [34026, 19574, 217200] }
+Output: Array of spell objects
+```
+
+### Query tables
+
+```
+Tool: query_table
+Input: {
+  "table": "spells",
+  "filters": { "name": { "ilike": "fire" } },
+  "limit": 10
+}
+Output: Matching spell rows
+```
+
+## Computed functions
+
+The `call_function` tool provides computed values not in raw data:
+
+| Function          | Description                |
+| ----------------- | -------------------------- |
+| `getDamage`       | Calculate spell damage     |
+| `extractCooldown` | Parse cooldown from spell  |
+| `extractCastTime` | Parse cast time            |
+| `extractDuration` | Parse aura duration        |
+| `extractRange`    | Parse spell range          |
+| `extractScaling`  | Parse scaling coefficients |
+
+Use `list_functions` to see all available functions and their arguments.
+
+## Connecting
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "wowlab": {
+      "command": "npx",
+      "args": ["@wowlab/mcp-server"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Add to MCP settings:
+
+```json
+{
+  "wowlab": {
+    "command": "npx @wowlab/mcp-server"
+  }
+}
+```
+
+## Use cases
+
+- **AI theorycraft**: Ask Claude to analyze spell interactions
+- **Rotation building**: Query spell cooldowns and costs while writing rotations
+- **Data exploration**: Search for spells by effect type or school
