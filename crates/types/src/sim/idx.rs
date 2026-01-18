@@ -16,7 +16,7 @@ use std::fmt;
 /// The underlying u32 matches WoW's spell ID system.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct SpellIdx(pub u32);
@@ -92,7 +92,7 @@ impl From<SpellIdx> for u32 {
 /// Used to reference buffs/debuffs in aura tracking, effect application, and events.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct AuraIdx(pub u32);
@@ -168,7 +168,7 @@ impl From<AuraIdx> for u32 {
 /// Used to reference proc handlers in the proc registry and ICD tracking.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct ProcIdx(pub u32);
@@ -241,7 +241,7 @@ impl From<ProcIdx> for u32 {
 /// - N+1.. = Enemies
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct UnitIdx(pub u16);
@@ -339,7 +339,7 @@ impl From<UnitIdx> for u16 {
 /// Target 0 is the primary target.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct TargetIdx(pub u16);
@@ -437,7 +437,7 @@ impl From<TargetIdx> for u16 {
 /// type safety when only pets are valid.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct PetIdx(pub u16);
@@ -535,7 +535,7 @@ impl From<PetIdx> for u16 {
 /// TargetIdx for type safety in enemy-specific operations.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct EnemyIdx(pub u16);
@@ -633,7 +633,7 @@ impl From<EnemyIdx> for u16 {
 /// (travel time, etc.). Each snapshot gets a unique incrementing ID.
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct SnapshotIdx(pub u32);
@@ -712,7 +712,7 @@ impl From<SnapshotIdx> for u32 {
 /// Used to reference different resource types (mana, rage, energy, focus, etc.).
 #[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(transparent)]
 pub struct ResourceIdx(pub u8);

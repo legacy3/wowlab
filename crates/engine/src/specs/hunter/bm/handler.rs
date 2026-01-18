@@ -22,7 +22,7 @@ use crate::spec::{
     calculate_damage, execute_effects, AuraDef, DamageContext, EffectContext, GcdType, SpellDef,
     SpellFlags,
 };
-use crate::types::{
+use wowlab_types::{
     AuraIdx, ClassId, DamageSchool, PetKind, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx,
 };
 use tracing::debug;
@@ -311,7 +311,7 @@ impl SpecHandler for BmHunter {
     fn init_player(&self, player: &mut Player) {
         player.spec = SpecId::BeastMastery;
         player.resources =
-            crate::resource::UnitResources::new().with_primary(crate::types::ResourceType::Focus);
+            crate::resource::UnitResources::new().with_primary(wowlab_types::ResourceType::Focus);
 
         for spell in get_spell_defs() {
             if spell.charges > 0 {

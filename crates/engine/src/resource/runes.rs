@@ -1,4 +1,4 @@
-use crate::types::SimTime;
+use wowlab_types::SimTime;
 
 /// Number of runes DKs have
 pub const NUM_RUNES: usize = 6;

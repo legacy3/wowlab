@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::*;
+use wowlab_types::*;
 
 #[allow(unused_imports)]
 use crate::combat::ActionState;

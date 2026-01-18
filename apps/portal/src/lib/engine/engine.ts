@@ -1,4 +1,4 @@
-type EngineModule = typeof import("engine");
+type EngineModule = typeof import("wowlab-engine");
 
 let module: EngineModule | null = null;
 let initPromise: Promise<EngineModule> | null = null;
@@ -11,7 +11,7 @@ async function init(): Promise<EngineModule> {
   if (!initPromise) {
     initPromise = (async () => {
       try {
-        const m = await import("engine");
+        const m = await import("wowlab-engine");
         await m.default();
         module = m;
         return m;
@@ -42,12 +42,12 @@ export const engine = {
     return module !== null;
   },
 
-  async parseRotation(json: string): Promise<import("engine").Rotation> {
+  async parseRotation(json: string): Promise<import("wowlab-engine").Rotation> {
     const m = await init();
     return m.parseRotation(json);
   },
 
-  async parseSimc(input: string): Promise<import("engine").Profile> {
+  async parseSimc(input: string): Promise<import("wowlab-engine").Profile> {
     const m = await init();
     return m.parseSimc(input);
   },
@@ -58,7 +58,7 @@ export const engine = {
       return m.getAttributes();
     },
 
-    async damageSchools(): Promise<import("engine").DamageSchoolInfo[]> {
+    async damageSchools(): Promise<import("wowlab-engine").DamageSchoolInfo[]> {
       const m = await init();
       return m.getDamageSchools();
     },
@@ -68,12 +68,16 @@ export const engine = {
       return m.getDerivedStats();
     },
 
-    async effectConditions(): Promise<import("engine").ConditionFieldDef[]> {
+    async effectConditions(): Promise<
+      import("wowlab-engine").ConditionFieldDef[]
+    > {
       const m = await init();
       return m.getEffectConditionSchema();
     },
 
-    async modConditions(): Promise<import("engine").ConditionFieldDef[]> {
+    async modConditions(): Promise<
+      import("wowlab-engine").ConditionFieldDef[]
+    > {
       const m = await init();
       return m.getModConditionSchema();
     },
@@ -83,18 +87,20 @@ export const engine = {
       return m.getRatingTypes();
     },
 
-    async resources(): Promise<import("engine").ResourceTypeInfo[]> {
+    async resources(): Promise<import("wowlab-engine").ResourceTypeInfo[]> {
       const m = await init();
       return m.getResourceTypes();
     },
 
-    async varPaths(): Promise<import("engine").VarPathCategory[]> {
+    async varPaths(): Promise<import("wowlab-engine").VarPathCategory[]> {
       const m = await init();
       return m.getVarPathSchema();
     },
   },
 
-  async validate(json: string): Promise<import("engine").ValidationResult> {
+  async validate(
+    json: string,
+  ): Promise<import("wowlab-engine").ValidationResult> {
     const m = await init();
     return m.validateRotation(json);
   },

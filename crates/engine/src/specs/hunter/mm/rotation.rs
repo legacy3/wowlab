@@ -4,7 +4,7 @@
 
 use super::constants::*;
 use crate::rotation::SpecResolver;
-use crate::types::SpellIdx;
+use wowlab_types::SpellIdx;
 
 /// Create a spec resolver for MM Hunter.
 pub fn spec_resolver(talents: TalentFlags) -> SpecResolver {

@@ -4,7 +4,7 @@
 
 use super::constants::*;
 use crate::spec::{EffectCondition, SpellBuilder, SpellDef, SpellEffect, SpellTarget};
-use crate::types::{DamageSchool, PetKind, ResourceType};
+use wowlab_types::{DamageSchool, PetKind, ResourceType};
 
 /// Get all BM Hunter spell definitions.
 pub fn spell_definitions() -> Vec<SpellDef> {

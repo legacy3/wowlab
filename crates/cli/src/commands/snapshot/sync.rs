@@ -7,7 +7,7 @@
 use std::time::Instant;
 
 use anyhow::Result;
-use parsers::{
+use wowlab_parsers::{
     transform::{
         transform_all_auras, transform_all_classes, transform_all_global_colors,
         transform_all_global_strings, transform_all_items, transform_all_specs,

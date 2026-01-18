@@ -1,5 +1,5 @@
 use crate::aura::{AuraFlags, PeriodicEffect};
-use crate::types::{Attribute, AuraIdx, DamageSchool, DerivedStat, RatingType, SimTime, SpellIdx};
+use wowlab_types::{Attribute, AuraIdx, DamageSchool, DerivedStat, RatingType, SimTime, SpellIdx};
 use serde::{Deserialize, Serialize};
 
 /// Type of aura effect
@@ -24,14 +24,14 @@ pub enum AuraEffect {
     PeriodicDamage(PeriodicEffect),
     /// Resource regen modifier
     ResourceRegen {
-        resource: crate::types::ResourceType,
+        resource: wowlab_types::ResourceType,
         amount: f32,
     },
     /// Cooldown reduction
     CooldownReduction { spell: SpellIdx, amount: f32 },
     /// Proc chance modifier
     ProcChance {
-        proc: crate::types::ProcIdx,
+        proc: wowlab_types::ProcIdx,
         amount: f32,
     },
     /// Custom effect (handled by spec)

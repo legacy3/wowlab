@@ -7,7 +7,7 @@ use mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 use clap::{Parser, Subcommand};
-use node::utils::logging;
+use wowlab_node::utils::logging;
 use std::sync::Arc;
 
 #[derive(Parser)]
@@ -70,7 +70,7 @@ fn main() -> eframe::Result<()> {
     match cli.command {
         Some(Commands::Update { check }) => {
             if check {
-                match node::update::check_for_update(VERSION) {
+                match wowlab_node::update::check_for_update(VERSION) {
                     Ok(Some(version)) => {
                         println!("New version available: {}", version);
                         println!("Run `node-gui update` to install");
@@ -81,7 +81,7 @@ fn main() -> eframe::Result<()> {
                         std::process::exit(1);
                     }
                 }
-            } else if let Err(e) = node::update::update("node-gui", VERSION) {
+            } else if let Err(e) = wowlab_node::update::update("node-gui", VERSION) {
                 eprintln!("Update failed: {}", e);
                 std::process::exit(1);
             }

@@ -2,7 +2,7 @@
 
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use crate::flat::SpecDataFlat;
+use wowlab_types::data::SpecDataFlat;
 
 /// Resolve icon file ID to file name via manifest_interface_data
 fn resolve_icon_file_name(dbc: &DbcData, icon_file_id: i32) -> String {

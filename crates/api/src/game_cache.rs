@@ -10,7 +10,7 @@
 use crate::{SupabaseClient, SupabaseError};
 use directories::ProjectDirs;
 use moka::sync::Cache;
-use parsers::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_types::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fs;
 use std::io::{BufReader, BufWriter};

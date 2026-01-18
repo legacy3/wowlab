@@ -2,7 +2,7 @@
 
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use crate::flat::{AuraDataFlat, PeriodicType, RefreshBehavior};
+use wowlab_types::data::{AuraDataFlat, PeriodicType, RefreshBehavior};
 
 /// Attribute flag bits for aura behavior
 const ATTR_DURATION_HASTED: i32 = 0x00400000; // Attribute_8 bit 22

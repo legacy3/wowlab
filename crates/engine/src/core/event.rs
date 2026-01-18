@@ -1,4 +1,4 @@
-use crate::types::{AuraIdx, ProcIdx, SpellIdx, TargetIdx, UnitIdx};
+use wowlab_types::{AuraIdx, ProcIdx, SpellIdx, TargetIdx, UnitIdx};
 
 /// All possible simulation events
 #[derive(Clone, Debug)]

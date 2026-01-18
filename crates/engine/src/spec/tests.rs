@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::*;
+use wowlab_types::*;
 
 #[test]
 fn spell_builder_basic() {

@@ -6,7 +6,7 @@
 //! - Upsert conflict handling
 
 use indicatif::{ProgressBar, ProgressStyle};
-use parsers::{
+use wowlab_parsers::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
     SpellDataFlat, TraitTreeFlat,
 };

@@ -1,7 +1,7 @@
 use super::*;
 use crate::core::FastRng;
 use crate::stats::StatCache;
-use crate::types::*;
+use wowlab_types::*;
 
 #[test]
 fn action_state_snapshot() {

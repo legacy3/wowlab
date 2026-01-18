@@ -1,8 +1,10 @@
-use super::DamageSchool;
+//! Character attributes and stats.
+
+use super::super::combat::DamageSchool;
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
 pub enum Attribute {
@@ -13,7 +15,7 @@ pub enum Attribute {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
 pub enum RatingType {
@@ -33,7 +35,7 @@ impl RatingType {
 /// Derived combat stats (percentage-based, not ratings)
 /// These are the final computed values after rating conversion
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum DerivedStat {
     /// Crit chance percentage
@@ -50,7 +52,7 @@ pub enum DerivedStat {
 
 /// How mastery affects damage for a spec
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum MasteryEffect {
     /// Flat damage multiplier to all damage

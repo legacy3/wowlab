@@ -11,7 +11,7 @@ use crate::ui::{
 };
 use egui_modal::Modal;
 use egui_notify::Toasts;
-use node::{
+use wowlab_node::{
     utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
     NodeCoreEvent, NodeState,
 };
@@ -69,7 +69,7 @@ impl NodeApp {
         let (update_tx, update_rx) = mpsc::channel(1);
         if !skip_update {
             std::thread::spawn(move || {
-                if let Ok(Some(version)) = node::update::check_for_update(VERSION) {
+                if let Ok(Some(version)) = wowlab_node::update::check_for_update(VERSION) {
                     let _ = update_tx.blocking_send(version);
                 }
             });
@@ -229,7 +229,7 @@ impl NodeApp {
                 } else if i.key_pressed(egui::Key::Num3) {
                     self.current_tab = Tab::Settings;
                 } else if i.key_pressed(egui::Key::L) {
-                    if let Some(dir) = node::utils::logging::log_dir() {
+                    if let Some(dir) = wowlab_node::utils::logging::log_dir() {
                         let _ = open::that(dir);
                     }
                 }

@@ -1,13 +1,14 @@
 [workspace]
 resolver = "2"
 members = [
+    "api",
     "cli",
     "engine",
     "node",
     "node-gui",
     "node-headless",
     "parsers",
-    "supabase-client",
+    "types",
 ]
 
 [workspace.package]

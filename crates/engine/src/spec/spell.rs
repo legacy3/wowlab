@@ -1,5 +1,5 @@
 use super::effect::SpellEffect;
-use crate::types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
+use wowlab_types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
 use serde::{Deserialize, Serialize};
 
 /// Target type for spells

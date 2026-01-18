@@ -1,4 +1,4 @@
-use crate::types::{Attribute, DamageSchool, RatingType};
+use wowlab_types::{Attribute, DamageSchool, RatingType};
 
 /// A stat modifier from a buff/aura
 #[derive(Clone, Debug)]

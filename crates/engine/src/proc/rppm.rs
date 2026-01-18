@@ -1,5 +1,5 @@
 use crate::core::FastRng;
-use crate::types::{ProcIdx, SimTime};
+use wowlab_types::{ProcIdx, SimTime};
 
 /// RPPM (Real Procs Per Minute) state with Bad Luck Protection
 #[derive(Clone, Debug)]

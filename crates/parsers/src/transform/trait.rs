@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 use crate::dbc::rows::{TraitNodeGroupXTraitNodeRow, TraitNodeRow, TraitNodeXTraitNodeEntryRow};
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use crate::flat::{PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat};
+use wowlab_types::data::{PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat};
 
 /// Target position for hero talent trees after offset calculation.
 /// Hero trees are repositioned to appear in a consistent location.

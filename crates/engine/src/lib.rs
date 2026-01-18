@@ -18,6 +18,5 @@ pub mod spec;
 #[cfg(feature = "jit")]
 pub mod specs;
 pub mod stats;
-pub mod types;
 #[cfg(feature = "wasm")]
 pub mod wasm_exports;

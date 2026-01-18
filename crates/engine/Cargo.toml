@@ -1,5 +1,5 @@
 [package]
-name = "engine"
+name = "wowlab-engine"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -17,16 +17,19 @@ required-features = ["cli"]
 [features]
 default = ["local", "jit", "cli", "parallel"]
 local = []  # Use local CSV files (no network)
-supabase = ["dep:supabase-client"]  # Use Supabase (network required)
+supabase = ["dep:wowlab-api"]  # Use Supabase (network required)
 jit = ["dep:cranelift", "dep:cranelift-jit", "dep:cranelift-module", "dep:cranelift-native"]  # JIT compilation
 cli = ["dep:clap", "dep:console", "dep:indicatif", "dep:tabled", "dep:tokio", "dep:tracing-subscriber"]  # CLI tools
-wasm = ["dep:tsify", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]  # WASM export
+wasm = ["wowlab-types/wasm", "dep:tsify", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]  # WASM export
 parallel = ["dep:rayon", "dep:num_cpus", "dep:mimalloc"]  # Parallel execution & fast allocator
 
 [dependencies]
+# Core types
+wowlab-types = { path = "../types" }
+
 # Data loading
-parsers = { path = "../parsers" }
-supabase-client = { path = "../supabase-client", optional = true }
+wowlab-parsers = { path = "../parsers" }
+wowlab-api = { path = "../api", optional = true }
 async-trait = "0.1"
 bitflags = { version = "2", features = ["serde"] }
 clap = { version = "4", features = ["derive"], optional = true }

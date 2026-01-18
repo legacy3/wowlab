@@ -1,0 +1,29 @@
+//! Core type definitions for wowlab.
+//!
+//! This crate contains foundational types shared across the wowlab ecosystem:
+//! - Combat types (damage schools, resources)
+//! - Game types (classes, specs, attributes)
+//! - Data types (spell, aura, item, talent flat structures)
+//! - Simulation types (indices, time)
+
+pub mod combat;
+pub mod data;
+pub mod game;
+pub mod sim;
+
+// Re-export commonly used types
+pub use combat::{DamageFlags, DamageSchool, HitResult, ResourceType};
+pub use data::{
+    AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemClassification,
+    ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo, ItemStat,
+    KnowledgeSource, PeriodicType, PointLimits, RefreshBehavior, SpecDataFlat, SpellDataFlat,
+    TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
+    TraitTreeWithSelections,
+};
+pub use game::{
+    Attribute, ClassId, DerivedStat, MasteryEffect, PetKind, PetType, RaceId, RatingType, SpecId,
+};
+pub use sim::{
+    AuraIdx, EnemyIdx, PetIdx, ProcIdx, ResourceIdx, SimTime, SnapshotFlags, SnapshotIdx, SpellIdx,
+    TargetIdx, UnitIdx,
+};

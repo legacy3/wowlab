@@ -1,11 +1,11 @@
 //! Simulation runner that integrates with the engine crate.
 
-use engine::actor::Player;
-use engine::handler::SpecHandler;
-use engine::sim::{BatchResults, SimConfig, Simulation};
-use engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
-use engine::specs::hunter::mm::MmHunter;
-use engine::types::SpecId;
+use wowlab_engine::actor::Player;
+use wowlab_engine::handler::SpecHandler;
+use wowlab_engine::sim::{BatchResults, SimConfig, Simulation};
+use wowlab_engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
+use wowlab_engine::specs::hunter::mm::MmHunter;
+use wowlab_types::SpecId;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -253,7 +253,7 @@ fn create_player(spec_id: SpecId, config: &PlayerConfig) -> Result<Player, SimEr
 
 /// Run batch simulation with proper spec initialization per iteration
 fn run_batch(
-    handler: Arc<dyn engine::handler::SpecHandler>,
+    handler: Arc<dyn wowlab_engine::handler::SpecHandler>,
     config: SimConfig,
     player_template: Player,
     iterations: u32,

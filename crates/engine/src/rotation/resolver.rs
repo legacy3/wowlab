@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 
 #[cfg(feature = "jit")]
 use crate::specs::SpecData;
-use crate::types::{AuraIdx, ResourceType, SpellIdx};
+use wowlab_types::{AuraIdx, ResourceType, SpellIdx};
 
 use super::error::{Error, Result};
 

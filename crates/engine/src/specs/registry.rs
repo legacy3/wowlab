@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use crate::types::{AuraIdx, SpellIdx};
+use wowlab_types::{AuraIdx, SpellIdx};
 
 /// Centralized registry for spec-specific game data.
 ///

@@ -1,4 +1,4 @@
-use node::utils::backoff::ExponentialBackoff;
+use wowlab_node::utils::backoff::ExponentialBackoff;
 use std::time::Duration;
 
 #[test]

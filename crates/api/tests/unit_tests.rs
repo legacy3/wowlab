@@ -3,7 +3,7 @@
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
-use supabase_client::{
+use wowlab_api::{
     with_retry, GameDataCache, ItemSummary, RetryConfig, SpellCost, SpellTiming, SupabaseClient,
     SupabaseError,
 };

@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::*;
+use wowlab_types::*;
 
 #[test]
 fn primary_stats_access() {

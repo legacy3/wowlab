@@ -10,7 +10,7 @@ use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{Linkage, Module};
 
 use crate::sim::SimState;
-use crate::types::SpellIdx;
+use wowlab_types::SpellIdx;
 
 use super::ast::{Action as AstAction, Expr, Rotation, ValueType, VarOp};
 use super::context::{populate_context, ContextSchema, ExprKey, SchemaBuilder};

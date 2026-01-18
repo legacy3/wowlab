@@ -32,7 +32,7 @@ impl UpdateModal {
 
         let current_version = env!("CARGO_PKG_VERSION").to_string();
         std::thread::spawn(move || {
-            let result = node::update::update("node-gui", &current_version)
+            let result = wowlab_node::update::update("node-gui", &current_version)
                 .map(|_| ())
                 .map_err(|e| e.to_string());
             let _ = tx.blocking_send(result);

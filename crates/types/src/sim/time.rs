@@ -1,3 +1,5 @@
+//! Simulation time types.
+
 use serde::{Deserialize, Serialize};
 
 /// Simulation time in milliseconds
@@ -5,7 +7,7 @@ use serde::{Deserialize, Serialize};
     Copy, Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
 )]
 #[serde(transparent)]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct SimTime(pub u32);
 

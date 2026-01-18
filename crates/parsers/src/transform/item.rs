@@ -2,7 +2,7 @@
 
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use crate::flat::{
+use wowlab_types::data::{
     ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo,
     ItemStat,
 };

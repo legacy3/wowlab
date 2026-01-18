@@ -1,9 +1,9 @@
 //! Integration tests against real Supabase
 //!
 //! These tests require SUPABASE_URL and SUPABASE_ANON_KEY environment variables.
-//! Run with: cargo test -p supabase-client --test integration -- --ignored
+//! Run with: cargo test -p wowlab-api --test integration -- --ignored
 
-use supabase_client::{with_retry, GameDataCache, RetryConfig, SpellTiming, SupabaseClient};
+use wowlab_api::{with_retry, GameDataCache, RetryConfig, SpellTiming, SupabaseClient};
 
 fn get_client() -> Option<SupabaseClient> {
     SupabaseClient::from_env().ok()

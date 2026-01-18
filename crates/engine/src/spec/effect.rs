@@ -3,7 +3,7 @@
 //! This module provides a data-driven way to define spell behavior
 //! without scattered if/else chains in handlers.
 
-use crate::types::{AuraIdx, PetKind, SpellIdx};
+use wowlab_types::{AuraIdx, PetKind, SpellIdx};
 use serde::{Deserialize, Serialize};
 
 /// Effect that fires when a spell is cast.
@@ -378,7 +378,7 @@ impl TalentDef {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{AuraIdx, SpellIdx};
+    use wowlab_types::{AuraIdx, SpellIdx};
 
     const TEST_SPELL: SpellIdx = SpellIdx(1);
     const TEST_AURA: AuraIdx = AuraIdx(1);

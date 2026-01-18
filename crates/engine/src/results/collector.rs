@@ -1,4 +1,4 @@
-use crate::types::{SimTime, SpellIdx, TargetIdx};
+use wowlab_types::{SimTime, SpellIdx, TargetIdx};
 use std::collections::HashMap;
 
 /// Single damage event record

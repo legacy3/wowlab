@@ -20,7 +20,7 @@ pub use spec::{transform_all_specs, transform_spec};
 pub use spell::{transform_spell, SpellKnowledgeContext};
 
 use crate::dbc::DbcData;
-use crate::flat::{SpellDataFlat, TraitTreeFlat};
+use wowlab_types::data::{SpellDataFlat, TraitTreeFlat};
 
 /// Transform all spells in the database
 pub fn transform_all_spells(dbc: &DbcData) -> Vec<SpellDataFlat> {

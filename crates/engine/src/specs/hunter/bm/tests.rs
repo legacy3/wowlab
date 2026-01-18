@@ -3,7 +3,7 @@ use crate::actor::Player;
 use crate::handler::SpecHandler;
 use crate::rotation::{CompiledRotation, Rotation};
 use crate::sim::{SimConfig, SimState};
-use crate::types::*;
+use wowlab_types::*;
 
 fn create_handler() -> BmHunter {
     BmHunter::with_defaults().expect("Failed to create BmHunter")

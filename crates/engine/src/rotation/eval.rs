@@ -15,7 +15,7 @@ pub const MAX_DEPTH: usize = 100;
 ///
 /// # Examples
 /// ```
-/// use engine::rotation::eval::safe_div;
+/// use wowlab_engine::rotation::eval::safe_div;
 /// assert_eq!(safe_div(10.0, 2.0), 5.0);
 /// assert_eq!(safe_div(10.0, 0.0), 0.0);
 /// assert_eq!(safe_div(0.0, 0.0), 0.0);
@@ -35,7 +35,7 @@ pub fn safe_div(a: f64, b: f64) -> f64 {
 ///
 /// # Examples
 /// ```
-/// use engine::rotation::eval::float_eq;
+/// use wowlab_engine::rotation::eval::float_eq;
 /// assert!(float_eq(1.0, 1.0 + 1e-7));
 /// assert!(!float_eq(1.0, 1.1));
 /// ```
@@ -60,7 +60,7 @@ pub fn float_ne(a: f64, b: f64) -> bool {
 ///
 /// # Examples
 /// ```
-/// use engine::rotation::eval::true_mod;
+/// use wowlab_engine::rotation::eval::true_mod;
 /// assert_eq!(true_mod(7.0, 3.0), 1.0);   // Standard case
 /// assert_eq!(true_mod(-7.0, 3.0), 2.0);  // True modulo: -7 mod 3 = 2 (not -1)
 /// assert_eq!(true_mod(7.0, -3.0), -2.0); // Result has sign of divisor

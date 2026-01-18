@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use clap::{Parser, Subcommand};
-use node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
+use wowlab_node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 #[cfg(unix)]
 use signal_hook::consts::signal::{SIGINT, SIGTERM};
 #[cfg(unix)]
@@ -48,7 +48,7 @@ fn main() {
     match cli.command {
         Some(Commands::Update { check }) => {
             if check {
-                match node::update::check_for_update(VERSION) {
+                match wowlab_node::update::check_for_update(VERSION) {
                     Ok(Some(version)) => {
                         tracing::info!("Update available: v{VERSION} → v{version}");
                         tracing::info!("Run `node-headless update` to install");
@@ -61,7 +61,7 @@ fn main() {
                 }
             } else {
                 tracing::info!("Updating node-headless...");
-                match node::update::update("node-headless", VERSION) {
+                match wowlab_node::update::update("node-headless", VERSION) {
                     Ok(true) => tracing::info!("Updated successfully. Please restart."),
                     Ok(false) => tracing::info!("Already on latest version."),
                     Err(e) => {
@@ -82,12 +82,12 @@ fn main() {
 
 /// Check for updates on startup and auto-apply if available.
 fn check_and_apply_update() {
-    match node::update::check_for_update(VERSION) {
+    match wowlab_node::update::check_for_update(VERSION) {
         Ok(Some(new_version)) => {
             tracing::info!("Update available: v{VERSION} → v{new_version}");
             tracing::info!("Downloading...");
 
-            match node::update::update("node-headless", VERSION) {
+            match wowlab_node::update::update("node-headless", VERSION) {
                 Ok(true) => {
                     tracing::info!("Update installed. Restarting...");
                     restart();

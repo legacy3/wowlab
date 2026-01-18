@@ -75,7 +75,7 @@ build_engine_wasm() {
 
     # Pack tarball
     cd pkg
-    rm -f "$ROOT_DIR/packages/engine-"*.tgz
+    rm -f "$ROOT_DIR/packages/wowlab-engine-"*.tgz
     local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
     cd "$ROOT_DIR"
 

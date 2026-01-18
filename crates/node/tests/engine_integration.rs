@@ -1,6 +1,6 @@
 //! Integration test for engine integration.
 
-use node::worker::SimRunner;
+use wowlab_node::worker::SimRunner;
 
 const TEST_CONFIG: &str = r#"{
     "player": {

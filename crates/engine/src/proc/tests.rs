@@ -1,6 +1,6 @@
 use super::*;
 use crate::core::FastRng;
-use crate::types::*;
+use wowlab_types::*;
 
 #[test]
 fn proc_flags_basic() {

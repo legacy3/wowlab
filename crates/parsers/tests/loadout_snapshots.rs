@@ -2,7 +2,7 @@
 //!
 //! Uses insta for golden file testing. Run `cargo insta review` to update snapshots.
 
-use parsers::loadout::{
+use wowlab_parsers::loadout::{
     decode_trait_loadout, encode_trait_loadout, DecodedTraitLoadout, DecodedTraitNode,
 };
 use serde::Serialize;

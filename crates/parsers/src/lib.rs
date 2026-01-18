@@ -11,7 +11,6 @@
 
 pub mod dbc;
 pub mod errors;
-pub mod flat;
 pub mod loadout;
 pub mod simc;
 pub mod transform;
@@ -32,8 +31,8 @@ pub use dbc::DbcData;
 // Error types
 pub use errors::{DbcError, TraitError, TransformError};
 
-// Flat structures (for database/API)
-pub use flat::{
+// Flat structures (for database/API) - re-exported from wowlab-types
+pub use wowlab_types::data::{
     argb_to_hex, rgb_to_hex, AuraDataFlat, ClassDataFlat, EmpowerStage, GlobalColorFlat,
     GlobalStringFlat, ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus,
     ItemSetInfo, ItemStat, KnowledgeSource, LearnSpell, PeriodicType, PointLimits, RefreshBehavior,
@@ -57,7 +56,7 @@ pub use loadout::{
 };
 
 // Alias for backward compatibility
-pub use flat::TraitTreeFlat as TalentTreeFlat;
+pub use wowlab_types::data::TraitTreeFlat as TalentTreeFlat;
 
 // ============================================================================
 // WASM Bindings

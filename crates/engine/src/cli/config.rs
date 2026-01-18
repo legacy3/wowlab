@@ -1,5 +1,5 @@
 use crate::stats::StatCache;
-use crate::types::{RatingType, SpecId};
+use wowlab_types::{RatingType, SpecId};
 use serde::{Deserialize, Serialize};
 
 /// Gear configuration

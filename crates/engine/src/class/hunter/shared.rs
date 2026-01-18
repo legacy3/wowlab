@@ -5,7 +5,7 @@
 
 use crate::combat::DamagePipeline;
 use crate::sim::SimState;
-use crate::types::{AuraIdx, DamageSchool, SimTime, SpellIdx, TargetIdx};
+use wowlab_types::{AuraIdx, DamageSchool, SimTime, SpellIdx, TargetIdx};
 
 // ============================================================================
 // Shared Spell IDs

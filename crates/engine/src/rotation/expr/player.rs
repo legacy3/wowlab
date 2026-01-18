@@ -7,7 +7,7 @@ use tsify::Tsify;
 
 use crate::sim::SimState;
 use crate::stats::primary_stat_for_spec;
-use crate::types::SimTime;
+use wowlab_types::SimTime;
 
 use super::{write_bool, write_f64, write_i32, FieldType, PopulateContext};
 
@@ -159,7 +159,7 @@ mod tests {
     use super::*;
     use crate::actor::Player;
     use crate::sim::{SimConfig, SimState};
-    use crate::types::SpecId;
+    use wowlab_types::SpecId;
 
     fn read_f64(buffer: &[u8], offset: usize) -> f64 {
         assert!(

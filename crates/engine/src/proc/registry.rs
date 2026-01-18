@@ -1,7 +1,7 @@
 use super::{FixedProc, ProcContext, ProcEffect, ProcFlags, ProcHandler, RppmState};
 use crate::core::FastRng;
-use crate::types::ProcIdx;
-use crate::types::SimTime;
+use wowlab_types::ProcIdx;
+use wowlab_types::SimTime;
 
 /// Manages all procs for a unit
 #[derive(Clone, Debug)]

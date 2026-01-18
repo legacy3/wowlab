@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::*;
+use wowlab_types::*;
 
 #[test]
 fn resource_pool_basic() {

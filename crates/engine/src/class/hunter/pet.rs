@@ -6,7 +6,7 @@
 use crate::combat::DamagePipeline;
 use crate::core::SimEvent;
 use crate::sim::SimState;
-use crate::types::{DamageSchool, SimTime, UnitIdx};
+use wowlab_types::{DamageSchool, SimTime, UnitIdx};
 
 /// Base pet attack speed (ms).
 pub const PET_ATTACK_SPEED: SimTime = SimTime::from_millis(2000);

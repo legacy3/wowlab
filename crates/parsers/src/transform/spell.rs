@@ -2,7 +2,7 @@
 
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use crate::flat::{EmpowerStage, KnowledgeSource, LearnSpell, SpellDataFlat};
+use wowlab_types::data::{EmpowerStage, KnowledgeSource, LearnSpell, SpellDataFlat};
 
 /// Knowledge context for determining how a spell was learned
 pub struct SpellKnowledgeContext {

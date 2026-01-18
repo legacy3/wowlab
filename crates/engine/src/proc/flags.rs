@@ -64,9 +64,9 @@ pub struct ProcContext {
     /// What triggered this proc check
     pub trigger: ProcFlags,
     /// Spell that triggered (if any)
-    pub spell_id: Option<crate::types::SpellIdx>,
+    pub spell_id: Option<wowlab_types::SpellIdx>,
     /// Target involved
-    pub target: Option<crate::types::TargetIdx>,
+    pub target: Option<wowlab_types::TargetIdx>,
     /// Was it a critical strike
     pub is_crit: bool,
     /// Damage dealt (if applicable)
@@ -98,7 +98,7 @@ impl ProcContext {
         }
     }
 
-    pub fn spell_cast(spell_id: crate::types::SpellIdx) -> Self {
+    pub fn spell_cast(spell_id: wowlab_types::SpellIdx) -> Self {
         Self {
             trigger: ProcFlags::ON_SPELL_CAST,
             spell_id: Some(spell_id),

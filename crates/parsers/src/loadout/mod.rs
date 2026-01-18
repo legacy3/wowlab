@@ -11,7 +11,7 @@
 use std::collections::HashMap;
 
 use crate::errors::TraitError;
-use crate::flat::{TraitSelection, TraitTreeFlat, TraitTreeWithSelections};
+use wowlab_types::data::{TraitSelection, TraitTreeFlat, TraitTreeWithSelections};
 
 /// A decoded trait loadout containing all node selections.
 #[derive(Debug, Clone)]

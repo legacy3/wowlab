@@ -1,5 +1,5 @@
 use super::{ProcContext, ProcFlags};
-use crate::types::{AuraIdx, ProcIdx, SpellIdx};
+use wowlab_types::{AuraIdx, ProcIdx, SpellIdx};
 
 /// Result of a proc trigger
 #[derive(Clone, Debug)]
@@ -12,18 +12,18 @@ pub enum ProcEffect {
     Damage { base: f32, coefficient: f32 },
     /// Grant resource
     Resource {
-        resource: crate::types::ResourceType,
+        resource: wowlab_types::ResourceType,
         amount: f32,
     },
     /// Reduce cooldown
     ReduceCooldown {
         spell: SpellIdx,
-        amount: crate::types::SimTime,
+        amount: wowlab_types::SimTime,
     },
     /// Extend aura
     ExtendAura {
         aura: AuraIdx,
-        amount: crate::types::SimTime,
+        amount: wowlab_types::SimTime,
     },
     /// Add stacks to aura
     AddStacks { aura: AuraIdx, stacks: u8 },

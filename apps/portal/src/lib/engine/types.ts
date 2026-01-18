@@ -67,7 +67,7 @@ export type {
   VarPathCategory,
   VarPathInfo,
   WowClass,
-} from "engine";
+} from "wowlab-engine";
 
 export interface Action {
   condition: RuleGroupType;

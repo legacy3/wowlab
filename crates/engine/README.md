@@ -114,7 +114,7 @@ The rotation system achieves ~0.05 microseconds per evaluation through:
 ## Library Usage
 
 ```rust
-use engine::{sim::SimExecutor, cli::SimConfig};
+use wowlab_engine::{sim::SimExecutor, cli::SimConfig};
 
 let config = SimConfig {
     spec: SpecId::BeastMastery,

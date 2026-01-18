@@ -1,4 +1,4 @@
-use crate::types::{Attribute, SpecId};
+use wowlab_types::{Attribute, SpecId};
 
 /// Primary stat values
 #[derive(Clone, Debug, Default)]

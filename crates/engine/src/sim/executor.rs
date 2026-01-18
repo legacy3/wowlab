@@ -1,7 +1,7 @@
 //! Decision context for APL evaluation.
 
 use super::SimState;
-use crate::types::SimTime;
+use wowlab_types::SimTime;
 
 /// Decision context for APL
 #[derive(Clone, Debug)]
@@ -24,17 +24,17 @@ impl<'a> DecisionContext<'a> {
     }
 
     /// Check if buff is active
-    pub fn buff_up(&self, aura: crate::types::AuraIdx) -> bool {
+    pub fn buff_up(&self, aura: wowlab_types::AuraIdx) -> bool {
         self.state.player.buffs.has(aura, self.now)
     }
 
     /// Get buff stacks
-    pub fn buff_stacks(&self, aura: crate::types::AuraIdx) -> u8 {
+    pub fn buff_stacks(&self, aura: wowlab_types::AuraIdx) -> u8 {
         self.state.player.buffs.stacks(aura, self.now)
     }
 
     /// Check if cooldown is ready
-    pub fn cooldown_ready(&self, spell: crate::types::SpellIdx) -> bool {
+    pub fn cooldown_ready(&self, spell: wowlab_types::SpellIdx) -> bool {
         self.state
             .player
             .cooldown(spell)
@@ -43,7 +43,7 @@ impl<'a> DecisionContext<'a> {
     }
 
     /// Get cooldown remaining
-    pub fn cooldown_remaining(&self, spell: crate::types::SpellIdx) -> SimTime {
+    pub fn cooldown_remaining(&self, spell: wowlab_types::SpellIdx) -> SimTime {
         self.state
             .player
             .cooldown(spell)

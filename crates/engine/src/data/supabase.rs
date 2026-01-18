@@ -7,8 +7,8 @@
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
-use supabase_client::{GameDataCache, SupabaseClient, SupabaseError};
+use wowlab_api::{GameDataCache, SupabaseClient, SupabaseError};
+use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
 
 /// Resolver that loads data from Supabase PostgREST API.
 ///
@@ -42,7 +42,7 @@ impl SupabaseResolver {
     }
 
     /// Get cache statistics for diagnostics.
-    pub fn cache_stats(&self) -> supabase_client::CacheStats {
+    pub fn cache_stats(&self) -> wowlab_api::CacheStats {
         self.cache.stats()
     }
 

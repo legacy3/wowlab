@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use crate::sim::SimState;
-use crate::types::SimTime;
+use wowlab_types::SimTime;
 
 use super::ast::Expr;
 use super::expr::{write_bool, write_f64, FieldType, PopulateContext};

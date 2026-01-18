@@ -1,4 +1,4 @@
-use crate::types::DamageSchool;
+use wowlab_types::DamageSchool;
 
 /// Layered damage multipliers (applied multiplicatively)
 #[derive(Clone, Debug)]

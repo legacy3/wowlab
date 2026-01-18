@@ -1,5 +1,5 @@
 use crate::aura::TargetAuras;
-use crate::types::{SimTime, TargetIdx};
+use wowlab_types::{SimTime, TargetIdx};
 
 /// Enemy state
 #[derive(Clone, Debug)]

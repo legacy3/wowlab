@@ -1,4 +1,4 @@
-use crate::types::{AuraIdx, ProcIdx, SpellIdx};
+use wowlab_types::{AuraIdx, ProcIdx, SpellIdx};
 
 // ============================================================================
 // Spell IDs - Core Abilities

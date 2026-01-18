@@ -2,7 +2,7 @@ use super::*;
 use crate::class::hunter::FOCUS_REGEN_BASE;
 use crate::class::HunterClass;
 use crate::handler::SpecHandler;
-use crate::types::{ClassId, SpecId};
+use wowlab_types::{ClassId, SpecId};
 
 fn create_handler() -> MmHunter {
     MmHunter::with_defaults().expect("Failed to create MmHunter")

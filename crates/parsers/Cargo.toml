@@ -1,5 +1,5 @@
 [package]
-name = "parsers"
+name = "wowlab-parsers"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -9,7 +9,14 @@ description = "Parsers for WoW-related data formats (SimC profiles, DBC CSV, tal
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = []
+wasm = ["wowlab-types/wasm"]
+
 [dependencies]
+# Core types
+wowlab-types = { path = "../types" }
+
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -1,3 +1,3 @@
 //! Common imports for internal use and specs
 
-pub use crate::types::*;
+pub use wowlab_types::*;

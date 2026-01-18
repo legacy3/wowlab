@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::{PetKind, SimTime, SpecId, TargetIdx, UnitIdx};
+use wowlab_types::{PetKind, SimTime, SpecId, TargetIdx, UnitIdx};
 
 #[test]
 fn player_basic() {

@@ -1,7 +1,9 @@
 [package]
-name = "node-gui"
-version = "99.0.0"
-edition = "2021"
+name = "wowlab-node-gui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
 description = "GUI for WoW Lab distributed simulation node"
 
 [[bin]]
@@ -9,7 +11,7 @@ name = "node-gui"
 path = "src/main.rs"
 
 [dependencies]
-node = { path = "../node" }
+wowlab-node = { path = "../node" }
 eframe = "0.29"
 egui = "0.29"
 egui-notify = "0.17"

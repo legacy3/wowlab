@@ -1,7 +1,7 @@
 //! Query methods for Supabase PostgREST API
 
 use crate::{SupabaseClient, SupabaseError};
-use parsers::flat::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_types::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 
 /// Build select clause string from columns slice
 fn columns_to_select(columns: &[&str]) -> String {

@@ -2,7 +2,7 @@
 //!
 //! Uses insta for golden file testing. Run `cargo insta review` to update snapshots.
 
-use parsers::simc::parse;
+use wowlab_parsers::simc::parse;
 
 fn load_fixture(name: &str) -> String {
     let path = format!("tests/fixtures/{}.txt", name);
@@ -91,7 +91,7 @@ fn test_equipment_head_slot() {
     let head = profile
         .equipment
         .iter()
-        .find(|e| e.slot == parsers::Slot::Head)
+        .find(|e| e.slot == wowlab_parsers::Slot::Head)
         .unwrap();
     assert_eq!(head.id, 212011);
     assert_eq!(
@@ -110,7 +110,7 @@ fn test_equipment_with_gems() {
     let neck = profile
         .equipment
         .iter()
-        .find(|e| e.slot == parsers::Slot::Neck)
+        .find(|e| e.slot == wowlab_parsers::Slot::Neck)
         .unwrap();
     assert_eq!(neck.id, 212448);
     assert_eq!(neck.gem_ids, Some(vec![213743, 213461]));
@@ -124,7 +124,7 @@ fn test_equipment_with_enchant() {
     let chest = profile
         .equipment
         .iter()
-        .find(|e| e.slot == parsers::Slot::Chest)
+        .find(|e| e.slot == wowlab_parsers::Slot::Chest)
         .unwrap();
     assert_eq!(chest.id, 212014);
     assert_eq!(chest.enchant_id, Some(7364));
@@ -138,7 +138,7 @@ fn test_equipment_with_crafted_stats() {
     let wrist = profile
         .equipment
         .iter()
-        .find(|e| e.slot == parsers::Slot::Wrist)
+        .find(|e| e.slot == wowlab_parsers::Slot::Wrist)
         .unwrap();
     assert_eq!(wrist.id, 219342);
     assert_eq!(wrist.crafted_stats, Some(vec![36, 49]));
@@ -153,7 +153,7 @@ fn test_ring_with_multiple_gems() {
     let finger1 = profile
         .equipment
         .iter()
-        .find(|e| e.slot == parsers::Slot::Finger1)
+        .find(|e| e.slot == wowlab_parsers::Slot::Finger1)
         .unwrap();
     assert_eq!(finger1.id, 228411);
     assert_eq!(finger1.gem_ids, Some(vec![228638, 228644, 228643]));

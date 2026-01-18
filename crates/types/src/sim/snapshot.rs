@@ -1,8 +1,10 @@
+//! Snapshot flags for tracking what stats are captured at cast time.
+
 use serde::{Deserialize, Serialize};
 
 bitflags::bitflags! {
     #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
+    #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
     #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
     pub struct SnapshotFlags: u32 {
         const ATTACK_POWER = 1 << 0;
