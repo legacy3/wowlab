@@ -1,5 +1,8 @@
 use super::icons::{icon, Icon};
-use super::theme::{BORDER, GREEN_500, SURFACE, TEXT_MUTED, TEXT_PRIMARY, ZINC_700, ZINC_950};
+use super::theme::{
+    BG_CANVAS, BG_SURFACE, BORDER, BORDER_HOVER, FG_DEFAULT, FG_SUBTLE, GREEN_9, RADIUS_LG,
+    RADIUS_MD,
+};
 use std::time::Instant;
 
 const COPIED_FEEDBACK_DURATION: f64 = 2.0;
@@ -26,9 +29,9 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
     let chars: Vec<char> = code.chars().collect();
 
     egui::Frame::none()
-        .fill(SURFACE)
+        .fill(BG_SURFACE)
         .stroke(egui::Stroke::new(1.0, BORDER))
-        .rounding(egui::Rounding::same(12.0))
+        .rounding(egui::Rounding::same(RADIUS_LG))
         .inner_margin(egui::Margin::symmetric(40.0, 32.0))
         .show(ui, |ui| {
             ui.vertical_centered(|ui| {
@@ -36,13 +39,13 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
                     egui::RichText::new("Claim Your Node")
                         .size(22.0)
                         .strong()
-                        .color(TEXT_PRIMARY),
+                        .color(FG_DEFAULT),
                 );
                 ui.add_space(8.0);
                 ui.label(
                     egui::RichText::new("Enter this code on the website")
                         .size(13.0)
-                        .color(TEXT_MUTED),
+                        .color(FG_SUBTLE),
                 );
                 ui.add_space(28.0);
 
@@ -74,7 +77,7 @@ fn code_display(ui: &mut egui::Ui, chars: &[char]) {
         }
 
         ui.add_space(4.0);
-        ui.label(egui::RichText::new("•").size(20.0).color(TEXT_MUTED));
+        ui.label(egui::RichText::new("•").size(20.0).color(FG_SUBTLE));
         ui.add_space(4.0);
 
         for ch in chars.iter().skip(3).take(3) {
@@ -93,9 +96,9 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
         copied_at.is_some_and(|t| t.elapsed().as_secs_f64() < COPIED_FEEDBACK_DURATION);
 
     let (text, color) = if show_copied {
-        (format!("{} Copied!", icon(Icon::Check)), GREEN_500)
+        (format!("{} Copied!", icon(Icon::Check)), GREEN_9)
     } else {
-        (format!("{} Click to copy", icon(Icon::Copy)), TEXT_MUTED)
+        (format!("{} Click to copy", icon(Icon::Copy)), FG_SUBTLE)
     };
 
     if ui
@@ -118,11 +121,11 @@ fn open_claim_button(ui: &mut egui::Ui, url: &str) {
     let button = egui::Button::new(
         egui::RichText::new(format!("{}  Open Claim Page", icon(Icon::ExternalLink)))
             .size(14.0)
-            .color(TEXT_PRIMARY),
+            .color(FG_DEFAULT),
     )
-    .fill(GREEN_500)
+    .fill(GREEN_9)
     .stroke(egui::Stroke::NONE)
-    .rounding(egui::Rounding::same(8.0))
+    .rounding(egui::Rounding::same(RADIUS_MD))
     .min_size(egui::vec2(220.0, 40.0));
 
     let response = ui.add(button);
@@ -141,21 +144,21 @@ fn waiting_spinner(ui: &mut egui::Ui) {
         if offset > 0.0 {
             ui.add_space(offset);
         }
-        ui.add(egui::widgets::Spinner::new().size(14.0).color(GREEN_500));
+        ui.add(egui::widgets::Spinner::new().size(14.0).color(GREEN_9));
         ui.add_space(8.0);
         ui.label(
             egui::RichText::new("Waiting for claim...")
                 .size(13.0)
-                .color(TEXT_MUTED),
+                .color(FG_SUBTLE),
         );
     });
 }
 
 fn char_slot(ui: &mut egui::Ui, ch: char) {
     egui::Frame::none()
-        .fill(ZINC_950)
-        .stroke(egui::Stroke::new(1.0, ZINC_700))
-        .rounding(egui::Rounding::same(8.0))
+        .fill(BG_CANVAS)
+        .stroke(egui::Stroke::new(1.0, BORDER_HOVER))
+        .rounding(egui::Rounding::same(RADIUS_MD))
         .inner_margin(egui::Margin::symmetric(14.0, 10.0))
         .show(ui, |ui| {
             ui.label(
@@ -163,7 +166,7 @@ fn char_slot(ui: &mut egui::Ui, ch: char) {
                     .size(26.0)
                     .monospace()
                     .strong()
-                    .color(TEXT_PRIMARY),
+                    .color(FG_DEFAULT),
             );
         });
 }

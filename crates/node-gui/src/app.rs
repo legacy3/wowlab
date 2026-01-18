@@ -3,7 +3,10 @@ use crate::ui::{
     icons::{icon, Icon},
     logs::{self, LogFilter},
     settings::{self, SettingsAction},
-    theme,
+    theme::{
+        header_frame, AMBER_9, BG_CANVAS, BG_SUBTLE, BG_SURFACE, BORDER, FG_DEFAULT, FG_MUTED,
+        FG_SUBTLE, GREEN_9, RADIUS_SM, RED_9, SLATE_1, SLATE_8,
+    },
 };
 use node::{
     utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
@@ -166,9 +169,9 @@ impl NodeApp {
         }
 
         let (title, stroke_color) = match &self.update_state {
-            UpdateState::Downloading => ("Updating", theme::GREEN_500),
-            UpdateState::Success => ("Update Complete", theme::GREEN_500),
-            UpdateState::Failed(_) => ("Update Failed", theme::RED_500),
+            UpdateState::Downloading => ("Updating", GREEN_9),
+            UpdateState::Success => ("Update Complete", GREEN_9),
+            UpdateState::Failed(_) => ("Update Failed", RED_9),
         };
         let url = release_url(new_version);
 
@@ -179,7 +182,7 @@ impl NodeApp {
             .fixed_size([320.0, 0.0])
             .frame(
                 egui::Frame::window(&ctx.style())
-                    .fill(theme::ZINC_900)
+                    .fill(BG_SURFACE)
                     .stroke(egui::Stroke::new(1.0, stroke_color)),
             )
             .show(ctx, |ui| {
@@ -188,39 +191,39 @@ impl NodeApp {
 
                     match &self.update_state {
                         UpdateState::Downloading => {
-                            ui.add(egui::Spinner::new().size(32.0).color(theme::GREEN_500));
+                            ui.add(egui::Spinner::new().size(32.0).color(GREEN_9));
                             ui.add_space(12.0);
                             ui.label(
                                 egui::RichText::new("Downloading update...")
                                     .size(16.0)
                                     .strong()
-                                    .color(theme::TEXT_PRIMARY),
+                                    .color(FG_DEFAULT),
                             );
                             ui.add_space(4.0);
                             ui.label(
                                 egui::RichText::new(format!("{VERSION} → {new_version}"))
                                     .size(14.0)
-                                    .color(theme::TEXT_MUTED),
+                                    .color(FG_SUBTLE),
                             );
                         }
                         UpdateState::Success => {
                             ui.label(
                                 egui::RichText::new(icon(Icon::Check))
                                     .size(32.0)
-                                    .color(theme::GREEN_500),
+                                    .color(GREEN_9),
                             );
                             ui.add_space(12.0);
                             ui.label(
                                 egui::RichText::new("Update installed!")
                                     .size(16.0)
                                     .strong()
-                                    .color(theme::TEXT_PRIMARY),
+                                    .color(FG_DEFAULT),
                             );
                             ui.add_space(4.0);
                             ui.label(
                                 egui::RichText::new(format!("Version {new_version}"))
                                     .size(14.0)
-                                    .color(theme::TEXT_MUTED),
+                                    .color(FG_SUBTLE),
                             );
                             ui.add_space(16.0);
 
@@ -231,9 +234,9 @@ impl NodeApp {
                                             "{} Restart",
                                             icon(Icon::RefreshCw)
                                         ))
-                                        .color(theme::ZINC_950),
+                                        .color(SLATE_1),
                                     )
-                                    .fill(theme::GREEN_500)
+                                    .fill(GREEN_9)
                                     .min_size(egui::vec2(120.0, 32.0)),
                                 )
                                 .clicked()
@@ -248,18 +251,18 @@ impl NodeApp {
                             ui.label(
                                 egui::RichText::new(icon(Icon::CircleX))
                                     .size(32.0)
-                                    .color(theme::RED_500),
+                                    .color(RED_9),
                             );
                             ui.add_space(12.0);
                             ui.label(
                                 egui::RichText::new("Update failed")
                                     .size(16.0)
                                     .strong()
-                                    .color(theme::TEXT_PRIMARY),
+                                    .color(FG_DEFAULT),
                             );
                             ui.add_space(4.0);
                             ui.label(
-                                egui::RichText::new(error).size(12.0).color(theme::TEXT_MUTED),
+                                egui::RichText::new(error).size(12.0).color(FG_SUBTLE),
                             );
                             ui.add_space(16.0);
 
@@ -267,9 +270,9 @@ impl NodeApp {
                                 if ui
                                     .add(
                                         egui::Button::new(
-                                            egui::RichText::new("Close").color(theme::TEXT_MUTED),
+                                            egui::RichText::new("Close").color(FG_MUTED),
                                         )
-                                        .fill(theme::ZINC_800)
+                                        .fill(BG_SUBTLE)
                                         .min_size(egui::vec2(100.0, 32.0)),
                                     )
                                     .clicked()
@@ -286,9 +289,9 @@ impl NodeApp {
                                                 "{} Download",
                                                 icon(Icon::ExternalLink)
                                             ))
-                                            .color(theme::ZINC_950),
+                                            .color(SLATE_1),
                                         )
-                                        .fill(theme::GREEN_500)
+                                        .fill(GREEN_9)
                                         .min_size(egui::vec2(100.0, 32.0)),
                                     )
                                     .clicked()
@@ -311,7 +314,7 @@ impl NodeApp {
                                 icon(Icon::ExternalLink)
                             ))
                             .size(11.0)
-                            .color(theme::ZINC_600),
+                            .color(SLATE_8),
                         )
                         .sense(egui::Sense::click()),
                     );
@@ -329,18 +332,18 @@ impl NodeApp {
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
         let (color, text, icon_char) = match (self.core.state(), self.core.connection_status()) {
-            (NodeState::Verifying, _) => (theme::ZINC_500, "Verifying", icon(Icon::Loader)),
-            (NodeState::Registering, _) => (theme::ZINC_500, "Registering", icon(Icon::Loader)),
-            (NodeState::Claiming { .. }, _) => (theme::YELLOW_500, "Pending", icon(Icon::Clock)),
-            (NodeState::Unavailable, _) => (theme::RED_500, "Unavailable", icon(Icon::CircleX)),
+            (NodeState::Verifying, _) => (FG_SUBTLE, "Verifying", icon(Icon::Loader)),
+            (NodeState::Registering, _) => (FG_SUBTLE, "Registering", icon(Icon::Loader)),
+            (NodeState::Claiming { .. }, _) => (AMBER_9, "Pending", icon(Icon::Clock)),
+            (NodeState::Unavailable, _) => (RED_9, "Unavailable", icon(Icon::CircleX)),
             (NodeState::Running, ConnectionStatus::Connected) => {
-                (theme::GREEN_500, "Online", icon(Icon::Wifi))
+                (GREEN_9, "Online", icon(Icon::Wifi))
             }
             (NodeState::Running, ConnectionStatus::Connecting) => {
-                (theme::YELLOW_500, "Connecting", icon(Icon::Loader))
+                (AMBER_9, "Connecting", icon(Icon::Loader))
             }
             (NodeState::Running, ConnectionStatus::Disconnected) => {
-                (theme::RED_500, "Offline", icon(Icon::WifiOff))
+                (RED_9, "Offline", icon(Icon::WifiOff))
             }
         };
 
@@ -379,12 +382,7 @@ impl eframe::App for NodeApp {
         self.show_update_modal(ctx);
 
         egui::TopBottomPanel::top("header")
-            .frame(
-                egui::Frame::none()
-                    .fill(theme::ZINC_900)
-                    .stroke(egui::Stroke::new(1.0, theme::ZINC_800))
-                    .inner_margin(egui::Margin::symmetric(16.0, 12.0)),
-            )
+            .frame(header_frame())
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     if let Some(logo) = &self.logo {
@@ -395,7 +393,7 @@ impl eframe::App for NodeApp {
                         egui::RichText::new("WoW Lab Node")
                             .size(16.0)
                             .strong()
-                            .color(theme::TEXT_PRIMARY),
+                            .color(FG_DEFAULT),
                     );
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -407,7 +405,7 @@ impl eframe::App for NodeApp {
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::none()
-                    .fill(theme::ZINC_950)
+                    .fill(BG_CANVAS)
                     .inner_margin(egui::Margin::same(16.0)),
             )
             .show(ctx, |ui| match self.core.state() {
@@ -417,13 +415,13 @@ impl eframe::App for NodeApp {
                         ui.add(
                             egui::widgets::Spinner::new()
                                 .size(32.0)
-                                .color(theme::GREEN_500),
+                                .color(GREEN_9),
                         );
                         ui.add_space(16.0);
                         ui.label(
                             egui::RichText::new("Verifying node...")
                                 .size(14.0)
-                                .color(theme::TEXT_MUTED),
+                                .color(FG_SUBTLE),
                         );
                     });
                 }
@@ -433,13 +431,13 @@ impl eframe::App for NodeApp {
                         ui.add(
                             egui::widgets::Spinner::new()
                                 .size(32.0)
-                                .color(theme::GREEN_500),
+                                .color(GREEN_9),
                         );
                         ui.add_space(16.0);
                         ui.label(
                             egui::RichText::new("Connecting to server...")
                                 .size(14.0)
-                                .color(theme::TEXT_MUTED),
+                                .color(FG_SUBTLE),
                         );
                     });
                 }
@@ -452,20 +450,20 @@ impl eframe::App for NodeApp {
                         ui.label(
                             egui::RichText::new(icon(Icon::CloudOff))
                                 .size(48.0)
-                                .color(theme::ZINC_500),
+                                .color(FG_SUBTLE),
                         );
                         ui.add_space(16.0);
                         ui.label(
                             egui::RichText::new("Server Unavailable")
                                 .size(18.0)
                                 .strong()
-                                .color(theme::TEXT_PRIMARY),
+                                .color(FG_DEFAULT),
                         );
                         ui.add_space(8.0);
                         ui.label(
                             egui::RichText::new("The server is temporarily unavailable.")
                                 .size(14.0)
-                                .color(theme::TEXT_MUTED),
+                                .color(FG_SUBTLE),
                         );
                         ui.add_space(24.0);
 
@@ -486,13 +484,13 @@ impl eframe::App for NodeApp {
                                         ui.add(
                                             egui::widgets::Spinner::new()
                                                 .size(14.0)
-                                                .color(theme::ZINC_500),
+                                                .color(FG_SUBTLE),
                                         );
                                         ui.add_space(8.0);
                                         ui.label(
                                             egui::RichText::new(text)
                                                 .size(13.0)
-                                                .color(theme::ZINC_500),
+                                                .color(FG_SUBTLE),
                                         );
                                     });
                                 },
@@ -507,7 +505,7 @@ impl eframe::App for NodeApp {
                                     icon(Icon::ExternalLink)
                                 ))
                                 .size(13.0)
-                                .color(theme::TEXT_MUTED),
+                                .color(FG_SUBTLE),
                             )
                             .sense(egui::Sense::click()),
                         );
@@ -571,9 +569,9 @@ impl eframe::App for NodeApp {
 fn tab_button(ui: &mut egui::Ui, current: &mut Tab, tab: Tab, icon_char: &str, label: &str) {
     let is_active = *current == tab;
     let (bg, text_color) = if is_active {
-        (theme::ZINC_800, theme::TEXT_PRIMARY)
+        (BG_SUBTLE, FG_DEFAULT)
     } else {
-        (egui::Color32::TRANSPARENT, theme::TEXT_MUTED)
+        (egui::Color32::TRANSPARENT, FG_SUBTLE)
     };
 
     let button = egui::Button::new(
@@ -583,11 +581,11 @@ fn tab_button(ui: &mut egui::Ui, current: &mut Tab, tab: Tab, icon_char: &str, l
     )
     .fill(bg)
     .stroke(if is_active {
-        egui::Stroke::new(1.0, theme::ZINC_700)
+        egui::Stroke::new(1.0, BORDER)
     } else {
         egui::Stroke::NONE
     })
-    .rounding(egui::Rounding::same(6.0))
+    .rounding(egui::Rounding::same(RADIUS_SM))
     .min_size(egui::vec2(0.0, 32.0));
 
     if ui.add(button).clicked() {

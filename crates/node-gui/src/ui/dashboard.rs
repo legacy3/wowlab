@@ -1,7 +1,7 @@
 use super::icons::{icon, Icon};
 use super::theme::{
-    card_frame, BLUE_500, GREEN_500, RED_500, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY, YELLOW_500,
-    ZINC_700, ZINC_800,
+    card_frame, AMBER_9, BLUE_9, BG_SUBTLE, BORDER, FG_DEFAULT, FG_MUTED, FG_SUBTLE, GREEN_9,
+    RADIUS_MD, RED_9, SLATE_5,
 };
 use node::NodeStats;
 
@@ -28,7 +28,7 @@ pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
                         stats.busy_workers, stats.max_workers, stats.total_cores
                     ),
                     if stats.busy_workers > 0 {
-                        Some(GREEN_500)
+                        Some(GREEN_9)
                     } else {
                         None
                     },
@@ -40,7 +40,7 @@ pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
                     "Jobs",
                     &stats.active_jobs.to_string(),
                     if stats.active_jobs > 0 {
-                        Some(BLUE_500)
+                        Some(BLUE_9)
                     } else {
                         None
                     },
@@ -62,7 +62,7 @@ pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
                     "Sims/sec",
                     &format!("{:.0}", stats.sims_per_second),
                     if stats.sims_per_second > 0.0 {
-                        Some(YELLOW_500)
+                        Some(AMBER_9)
                     } else {
                         None
                     },
@@ -88,22 +88,23 @@ fn stat_card(
     accent: Option<egui::Color32>,
 ) {
     egui::Frame::none()
-        .fill(ZINC_800)
-        .rounding(egui::Rounding::same(6.0))
-        .inner_margin(egui::Margin::same(10.0))
+        .fill(BG_SUBTLE)
+        .stroke(egui::Stroke::new(1.0, BORDER))
+        .rounding(egui::Rounding::same(RADIUS_MD))
+        .inner_margin(egui::Margin::same(12.0))
         .show(ui, |ui| {
-            ui.set_width(width - 22.0);
+            ui.set_width(width - 28.0);
 
             ui.horizontal(|ui| {
-                ui.label(egui::RichText::new(icon_char).color(TEXT_MUTED).size(12.0));
-                ui.label(egui::RichText::new(label).color(TEXT_MUTED).size(11.0));
+                ui.label(egui::RichText::new(icon_char).color(FG_SUBTLE).size(12.0));
+                ui.label(egui::RichText::new(label).color(FG_SUBTLE).size(11.0));
             });
 
-            ui.add_space(2.0);
+            ui.add_space(4.0);
 
             ui.label(
                 egui::RichText::new(value)
-                    .color(accent.unwrap_or(TEXT_PRIMARY))
+                    .color(accent.unwrap_or(FG_DEFAULT))
                     .size(18.0)
                     .strong()
                     .monospace(),
@@ -115,15 +116,15 @@ fn cpu_bar(ui: &mut egui::Ui, usage: f32) {
     ui.horizontal(|ui| {
         ui.label(
             egui::RichText::new(icon(Icon::Gauge))
-                .color(TEXT_MUTED)
+                .color(FG_SUBTLE)
                 .size(12.0),
         );
-        ui.label(egui::RichText::new("CPU").color(TEXT_SECONDARY).size(11.0));
+        ui.label(egui::RichText::new("CPU").color(FG_MUTED).size(11.0));
 
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             ui.label(
                 egui::RichText::new(format!("{:.0}%", usage * 100.0))
-                    .color(TEXT_PRIMARY)
+                    .color(FG_DEFAULT)
                     .size(11.0)
                     .monospace(),
             );
@@ -133,21 +134,26 @@ fn cpu_bar(ui: &mut egui::Ui, usage: f32) {
     ui.add_space(4.0);
 
     let bar_width = ui.available_width();
-    let (rect, _) = ui.allocate_exact_size(egui::vec2(bar_width, 4.0), egui::Sense::hover());
+    let bar_height = 6.0;
+    let (rect, _) = ui.allocate_exact_size(egui::vec2(bar_width, bar_height), egui::Sense::hover());
 
-    ui.painter().rect_filled(rect, 2.0, ZINC_700);
+    // Background track
+    ui.painter()
+        .rect_filled(rect, bar_height / 2.0, SLATE_5);
 
+    // Fill bar
     let fill_width = rect.width() * usage;
     if fill_width > 0.0 {
         let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
         let fill_color = if usage > 0.8 {
-            RED_500
+            RED_9
         } else if usage > 0.5 {
-            YELLOW_500
+            AMBER_9
         } else {
-            GREEN_500
+            GREEN_9
         };
-        ui.painter().rect_filled(fill_rect, 2.0, fill_color);
+        ui.painter()
+            .rect_filled(fill_rect, bar_height / 2.0, fill_color);
     }
 }
 

@@ -1,7 +1,6 @@
 use super::icons::{icon, Icon};
 use super::theme::{
-    card_frame, RED_500, TEXT_MUTED, TEXT_SECONDARY, YELLOW_500, ZINC_500, ZINC_600, ZINC_700,
-    ZINC_800, ZINC_900,
+    card_frame, AMBER_9, BG_SUBTLE, BG_SURFACE, BORDER_HOVER, FG_MUTED, FG_SUBTLE, RED_9, SLATE_8,
 };
 use node::{utils::logging, LogEntry, LogLevel};
 use std::collections::VecDeque;
@@ -39,12 +38,12 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
         ui.horizontal(|ui| {
             ui.label(
                 egui::RichText::new(icon(Icon::ScrollText))
-                    .color(TEXT_MUTED)
+                    .color(FG_SUBTLE)
                     .size(14.0),
             );
             ui.label(
                 egui::RichText::new("Activity Log")
-                    .color(TEXT_SECONDARY)
+                    .color(FG_MUTED)
                     .size(13.0),
             );
 
@@ -62,7 +61,7 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
                 let visible = logs.iter().filter(|e| filter.matches(e.level)).count();
                 ui.label(
                     egui::RichText::new(format!("{visible}"))
-                        .color(TEXT_MUTED)
+                        .color(FG_SUBTLE)
                         .size(11.0),
                 );
 
@@ -71,7 +70,7 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
                 let folder_btn = egui::Button::new(
                     egui::RichText::new(icon(Icon::FolderOpen))
                         .size(13.0)
-                        .color(TEXT_MUTED),
+                        .color(FG_SUBTLE),
                 )
                 .fill(egui::Color32::TRANSPARENT)
                 .stroke(egui::Stroke::NONE);
@@ -110,13 +109,13 @@ pub fn show(ui: &mut egui::Ui, logs: &VecDeque<LogEntry>, filter: &mut LogFilter
                     ui.vertical_centered(|ui| {
                         ui.label(
                             egui::RichText::new(icon(Icon::Inbox))
-                                .color(ZINC_700)
+                                .color(BORDER_HOVER)
                                 .size(24.0),
                         );
                         ui.add_space(8.0);
                         ui.label(
                             egui::RichText::new("No logs at this level")
-                                .color(TEXT_MUTED)
+                                .color(FG_SUBTLE)
                                 .size(13.0),
                         );
                     });
@@ -140,17 +139,17 @@ fn log_entry_row(
     is_expanded: bool,
 ) -> bool {
     let (level_icon, level_color) = match entry.level {
-        LogLevel::Info => (icon(Icon::Info), ZINC_500),
-        LogLevel::Warn => (icon(Icon::TriangleAlert), YELLOW_500),
-        LogLevel::Error => (icon(Icon::CircleX), RED_500),
-        LogLevel::Debug => (icon(Icon::Bug), ZINC_600),
+        LogLevel::Info => (icon(Icon::Info), FG_SUBTLE),
+        LogLevel::Warn => (icon(Icon::TriangleAlert), AMBER_9),
+        LogLevel::Error => (icon(Icon::CircleX), RED_9),
+        LogLevel::Debug => (icon(Icon::Bug), SLATE_8),
     };
 
     let is_error = matches!(entry.level, LogLevel::Error | LogLevel::Warn);
     let bg_color = if is_expanded {
-        ZINC_900
+        BG_SURFACE
     } else if is_error {
-        ZINC_800.gamma_multiply(0.3)
+        BG_SUBTLE.gamma_multiply(0.5)
     } else {
         egui::Color32::TRANSPARENT
     };
@@ -186,9 +185,9 @@ fn render_log_row(
     let mut clicked = false;
 
     let msg_color = match entry.level {
-        LogLevel::Error => RED_500,
-        LogLevel::Warn => YELLOW_500,
-        _ => TEXT_SECONDARY,
+        LogLevel::Error => RED_9,
+        LogLevel::Warn => AMBER_9,
+        _ => FG_MUTED,
     };
 
     // Measure actual text width using egui's font system
@@ -220,7 +219,7 @@ fn render_log_row(
                 egui::RichText::new(time_str)
                     .size(11.0)
                     .monospace()
-                    .color(ZINC_600),
+                    .color(SLATE_8),
             );
             ui.add_space(8.0);
             ui.label(
@@ -248,7 +247,7 @@ fn render_log_row(
                     } else {
                         icon(Icon::ChevronDown)
                     };
-                    ui.label(egui::RichText::new(chevron).size(11.0).color(ZINC_600));
+                    ui.label(egui::RichText::new(chevron).size(11.0).color(SLATE_8));
                 });
             }
         });

@@ -1,7 +1,5 @@
-use super::{
-    icons::{icon, Icon},
-    theme,
-};
+use super::icons::{icon, Icon};
+use super::theme::{card_frame, FG_DEFAULT, FG_SUBTLE, GREEN_9, RADIUS_SM, RED_9, SLATE_1};
 use uuid::Uuid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -17,20 +15,20 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
     ui.add_space(8.0);
 
     // Node info card
-    theme::card_frame().show(ui, |ui| {
+    card_frame().show(ui, |ui| {
         ui.set_width(ui.available_width());
 
         ui.horizontal(|ui| {
             ui.label(
                 egui::RichText::new(icon(Icon::Server))
                     .size(14.0)
-                    .color(theme::GREEN_500),
+                    .color(GREEN_9),
             );
             ui.label(
                 egui::RichText::new("Node Info")
                     .size(13.0)
                     .strong()
-                    .color(theme::TEXT_PRIMARY),
+                    .color(FG_DEFAULT),
             );
         });
 
@@ -50,7 +48,7 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
     ui.add_space(8.0);
 
     // Danger zone card
-    theme::card_frame().show(ui, |ui| {
+    card_frame().show(ui, |ui| {
         ui.set_width(ui.available_width());
 
         ui.horizontal(|ui| {
@@ -59,18 +57,18 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
                     ui.label(
                         egui::RichText::new(icon(Icon::Unlink))
                             .size(13.0)
-                            .color(theme::TEXT_MUTED),
+                            .color(FG_SUBTLE),
                     );
                     ui.label(
                         egui::RichText::new("Unlink Node")
                             .size(13.0)
-                            .color(theme::TEXT_PRIMARY),
+                            .color(FG_DEFAULT),
                     );
                 });
                 ui.label(
                     egui::RichText::new("You'll need to re-claim this node to use it again")
                         .size(11.0)
-                        .color(theme::TEXT_MUTED),
+                        .color(FG_SUBTLE),
                 );
             });
 
@@ -78,10 +76,10 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
                 let unlink_button = egui::Button::new(
                     egui::RichText::new("Unlink")
                         .size(12.0)
-                        .color(egui::Color32::WHITE),
+                        .color(SLATE_1),
                 )
-                .fill(theme::RED_500)
-                .rounding(egui::Rounding::same(6.0));
+                .fill(RED_9)
+                .rounding(egui::Rounding::same(RADIUS_SM));
 
                 if ui.add(unlink_button).clicked() {
                     action = SettingsAction::Unlink;
@@ -98,13 +96,13 @@ fn info_row(ui: &mut egui::Ui, label: &str, value: &str) {
         ui.label(
             egui::RichText::new(label)
                 .size(12.0)
-                .color(theme::TEXT_MUTED),
+                .color(FG_SUBTLE),
         );
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             ui.label(
                 egui::RichText::new(value)
                     .size(12.0)
-                    .color(theme::TEXT_PRIMARY),
+                    .color(FG_DEFAULT),
             );
         });
     });
