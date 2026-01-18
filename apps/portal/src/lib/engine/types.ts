@@ -64,7 +64,6 @@ export type {
   ValidationWarning,
   ValueType,
   VarOp,
-  VarPath,
   VarPathCategory,
   VarPathInfo,
   WowClass,

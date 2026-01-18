@@ -103,7 +103,6 @@ export type {
   Variable,
   VariableActions,
   VarOp,
-  VarPath,
   VarPathCategory,
   VarPathInfo,
   ViewActions,

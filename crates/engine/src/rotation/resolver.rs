@@ -5,6 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+#[cfg(feature = "jit")]
 use crate::specs::SpecData;
 use crate::types::{AuraIdx, ResourceType, SpellIdx};
 
@@ -75,6 +76,7 @@ impl SpecResolver {
     }
 
     /// Create from a SpecData registry.
+    #[cfg(feature = "jit")]
     pub fn from_spec_data(data: &SpecData) -> Self {
         let mut resolver = Self::new(data.name.clone());
         resolver.resource_type_str = data.primary_resource().map(String::from);
