@@ -26,26 +26,124 @@ const DEMO_TIMELINE: TimelineData = {
   duration: 30000,
   events: [
     // Cooldowns track
-    { color: "#ef4444", duration: 15000, id: "1", name: "Bestial Wrath", startTime: 0, track: 0 },
-    { color: "#ef4444", duration: 15000, id: "2", name: "Bestial Wrath", startTime: 18000, track: 0 },
+    {
+      color: "#ef4444",
+      duration: 15000,
+      id: "1",
+      name: "Bestial Wrath",
+      startTime: 0,
+      track: 0,
+    },
+    {
+      color: "#ef4444",
+      duration: 15000,
+      id: "2",
+      name: "Bestial Wrath",
+      startTime: 18000,
+      track: 0,
+    },
 
     // Buffs track
-    { color: "#f97316", duration: 10000, id: "3", name: "Bloodlust", startTime: 0, track: 1 },
-    { color: "#a855f7", duration: 12000, id: "4", name: "Aspect of the Wild", startTime: 12000, track: 1 },
+    {
+      color: "#f97316",
+      duration: 10000,
+      id: "3",
+      name: "Bloodlust",
+      startTime: 0,
+      track: 1,
+    },
+    {
+      color: "#a855f7",
+      duration: 12000,
+      id: "4",
+      name: "Aspect of the Wild",
+      startTime: 12000,
+      track: 1,
+    },
 
     // Damage track
-    { color: "#22c55e", duration: 1500, id: "5", name: "Kill Command", startTime: 0, track: 2 },
-    { color: "#eab308", duration: 1000, id: "6", name: "Cobra Shot", startTime: 2000, track: 2 },
-    { color: "#22c55e", duration: 1500, id: "7", name: "Kill Command", startTime: 6000, track: 2 },
-    { color: "#eab308", duration: 1000, id: "8", name: "Cobra Shot", startTime: 8000, track: 2 },
-    { color: "#22c55e", duration: 1500, id: "9", name: "Kill Command", startTime: 12000, track: 2 },
-    { color: "#eab308", duration: 1000, id: "10", name: "Cobra Shot", startTime: 14000, track: 2 },
-    { color: "#22c55e", duration: 1500, id: "11", name: "Kill Command", startTime: 18000, track: 2 },
-    { color: "#eab308", duration: 1000, id: "12", name: "Cobra Shot", startTime: 20000, track: 2 },
+    {
+      color: "#22c55e",
+      duration: 1500,
+      id: "5",
+      name: "Kill Command",
+      startTime: 0,
+      track: 2,
+    },
+    {
+      color: "#eab308",
+      duration: 1000,
+      id: "6",
+      name: "Cobra Shot",
+      startTime: 2000,
+      track: 2,
+    },
+    {
+      color: "#22c55e",
+      duration: 1500,
+      id: "7",
+      name: "Kill Command",
+      startTime: 6000,
+      track: 2,
+    },
+    {
+      color: "#eab308",
+      duration: 1000,
+      id: "8",
+      name: "Cobra Shot",
+      startTime: 8000,
+      track: 2,
+    },
+    {
+      color: "#22c55e",
+      duration: 1500,
+      id: "9",
+      name: "Kill Command",
+      startTime: 12000,
+      track: 2,
+    },
+    {
+      color: "#eab308",
+      duration: 1000,
+      id: "10",
+      name: "Cobra Shot",
+      startTime: 14000,
+      track: 2,
+    },
+    {
+      color: "#22c55e",
+      duration: 1500,
+      id: "11",
+      name: "Kill Command",
+      startTime: 18000,
+      track: 2,
+    },
+    {
+      color: "#eab308",
+      duration: 1000,
+      id: "12",
+      name: "Cobra Shot",
+      startTime: 20000,
+      track: 2,
+    },
 
     // Movement track
-    { color: "#3b82f6", duration: 500, id: "13", name: "Disengage", startTime: 5000, track: 3 },
-    { color: "#3b82f6", duration: 500, id: "14", name: "Disengage", startTime: 18000, track: 3 },
+    {
+      color: "#3b82f6",
+      duration: 500,
+      id: "13",
+      name: "Disengage",
+      startTime: 5000,
+      track: 3,
+    },
+    {
+      color: "#3b82f6",
+      duration: 500,
+      id: "14",
+      name: "Disengage",
+      startTime: 18000,
+      track: 3,
+    },
   ],
   tracks: ["Cooldowns", "Buffs", "Damage", "Movement"],
 };
@@ -90,8 +188,14 @@ const tooltipStyles = css({
 // =============================================================================
 
 export default function TimelineDemoPage() {
-  const { containerRef, controllerRef, dimensions, isReady, setIsReady, transformTooltip } =
-    useCanvasContainer();
+  const {
+    containerRef,
+    controllerRef,
+    dimensions,
+    isReady,
+    setIsReady,
+    transformTooltip,
+  } = useCanvasContainer();
   const [tooltip, setTooltip] = useState<TimelineTooltipData | null>(null);
 
   const handleHover = useCallback(
@@ -115,10 +219,20 @@ export default function TimelineDemoPage() {
     if (!controller || !isReady) return;
 
     controller.clear();
-    renderTimeline(controller.canvas, DEMO_TIMELINE, { onEventHover: handleHover });
+    renderTimeline(controller.canvas, DEMO_TIMELINE, {
+      onEventHover: handleHover,
+    });
   }, [controllerRef, isReady, handleHover]);
 
-  const { canvasRef, clear, deleteSelected, resetView, state, zoomIn, zoomOut } = useCanvas({
+  const {
+    canvasRef,
+    clear,
+    deleteSelected,
+    resetView,
+    state,
+    zoomIn,
+    zoomOut,
+  } = useCanvas({
     backgroundColor: "transparent",
     height: dimensions.height,
     onReady: handleReady,
@@ -143,11 +257,20 @@ export default function TimelineDemoPage() {
       </Box>
 
       {tooltip && (
-        <div className={tooltipStyles} style={{ left: tooltip.screenX + 10, top: tooltip.screenY }}>
-          <div style={{ color: tooltip.event.color, fontWeight: 600 }}>{tooltip.event.name}</div>
+        <div
+          className={tooltipStyles}
+          style={{ left: tooltip.screenX + 10, top: tooltip.screenY }}
+        >
+          <div style={{ color: tooltip.event.color, fontWeight: 600 }}>
+            {tooltip.event.name}
+          </div>
           <div style={{ color: COLORS.text, marginTop: 2 }}>
             {(tooltip.event.startTime / 1000).toFixed(1)}s —{" "}
-            {((tooltip.event.startTime + tooltip.event.duration) / 1000).toFixed(1)}s
+            {(
+              (tooltip.event.startTime + tooltip.event.duration) /
+              1000
+            ).toFixed(1)}
+            s
           </div>
         </div>
       )}

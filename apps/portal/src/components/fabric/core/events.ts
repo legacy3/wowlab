@@ -1,20 +1,26 @@
 import type * as fabric from "fabric";
 
-// =============================================================================
-// Typed Event Emitter for Plugin Communication
-// =============================================================================
-
 export interface FabricEvents {
+  "alignment:change": { type: string };
   "canvas:dispose": void;
   "canvas:ready": void;
   "canvas:resize": { width: number; height: number };
+  "clipboard:clear": void;
   "clipboard:copy": { count: number };
   "clipboard:cut": { count: number };
+  "clipboard:duplicate": { count: number };
   "clipboard:paste": { count: number };
   "history:redo": void;
   "history:save": void;
   "history:undo": void;
   "history:update": HistoryState;
+  "interaction:change": { mode: string };
+  "object:add": { object: fabric.FabricObject };
+  "objects:clear": void;
+  "objects:duplicate": { objects: fabric.FabricObject[] };
+  "objects:import": void;
+  "objects:remove": { objects: fabric.FabricObject[] };
+  "objects:reorder": void;
   "pan:change": { x: number; y: number };
   "selection:change": { objects: fabric.FabricObject[] };
   "zoom:change": { zoom: number };

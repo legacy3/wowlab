@@ -52,25 +52,28 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
   }, []);
 
   // Transform tooltip position based on viewport
-  const transformTooltip = useCallback(<T extends TooltipPosition>(data: T | null): T | null => {
-    if (!data) return null;
+  const transformTooltip = useCallback(
+    <T extends TooltipPosition>(data: T | null): T | null => {
+      if (!data) return null;
 
-    const controller = controllerRef.current;
-    if (!controller) return data;
+      const controller = controllerRef.current;
+      if (!controller) return data;
 
-    const vpt = controller.canvas.viewportTransform;
-    const zoom = controller.canvas.getZoom();
+      const vpt = controller.canvas.viewportTransform;
+      const zoom = controller.canvas.getZoom();
 
-    if (vpt) {
-      return {
-        ...data,
-        screenX: data.screenX * zoom + vpt[4],
-        screenY: data.screenY * zoom + vpt[5],
-      };
-    }
+      if (vpt) {
+        return {
+          ...data,
+          screenX: data.screenX * zoom + vpt[4],
+          screenY: data.screenY * zoom + vpt[5],
+        };
+      }
 
-    return data;
-  }, []);
+      return data;
+    },
+    [],
+  );
 
   return {
     containerRef,

@@ -1,7 +1,3 @@
-// =============================================================================
-// Talent Data Types
-// =============================================================================
-
 export interface NodeSelection {
   choiceIndex?: number; // For choice nodes: 0 or 1
   nodeId: number;
@@ -31,10 +27,6 @@ export interface TalentEntry {
   spellId: number;
 }
 
-// =============================================================================
-// Selection State
-// =============================================================================
-
 export interface TalentNode {
   entries: TalentEntry[];
   id: number;
@@ -44,16 +36,12 @@ export interface TalentNode {
   posY: number;
   subTreeId: number;
   treeIndex: number;
-  type: number; // 0 = single, 1 = tiered(?), 2 = choice
+  type: number; // 0 = single, 1 = tiered, 2 = choice
 }
 
 export interface TalentSelection {
   nodes: Map<number, NodeSelection>;
 }
-
-// =============================================================================
-// Hover/Tooltip
-// =============================================================================
 
 export interface TalentSubTree {
   description: string;
@@ -61,10 +49,6 @@ export interface TalentSubTree {
   id: number;
   name: string;
 }
-
-// =============================================================================
-// Renderer Options
-// =============================================================================
 
 export interface TalentTreeData {
   edges: TalentEdge[];

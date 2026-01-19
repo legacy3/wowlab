@@ -2,6 +2,12 @@
 // Timeline Data Types
 // =============================================================================
 
+export interface TimelineData {
+  duration: number; // total timeline duration in ms
+  events: TimelineEvent[];
+  tracks: string[]; // track names
+}
+
 export interface TimelineEvent {
   color: string;
   duration: number; // ms
@@ -9,12 +15,6 @@ export interface TimelineEvent {
   name: string;
   startTime: number; // ms
   track: number;
-}
-
-export interface TimelineData {
-  duration: number; // total timeline duration in ms
-  events: TimelineEvent[];
-  tracks: string[]; // track names
 }
 
 // =============================================================================

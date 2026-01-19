@@ -3,16 +3,32 @@ export { batchAdd, batchRemove, preloadImages } from "./batch";
 
 // Core
 export { CanvasController } from "./core/controller";
-export { EventEmitter, type FabricEvents, type HistoryState } from "./core/events";
+export {
+  EventEmitter,
+  type FabricEvents,
+  type HistoryState,
+} from "./core/events";
 export { type FabricPlugin, PluginRegistry } from "./core/plugin";
 export { THEME, type Theme } from "./core/theme";
 
 // Types
-export type { CanvasConfig, CanvasState, ShapeOptions, TextOptions } from "./core/types";
+export type {
+  CanvasConfig,
+  CanvasState,
+  ShapeOptions,
+  TextOptions,
+} from "./core/types";
 
 // React Hooks
-export { useCanvas, type UseCanvasOptions, type UseCanvasReturn } from "./hooks/use-canvas";
-export { useCanvasContainer, type UseCanvasContainerReturn } from "./hooks/use-canvas-container";
+export {
+  useCanvas,
+  type UseCanvasOptions,
+  type UseCanvasReturn,
+} from "./hooks/use-canvas";
+export {
+  useCanvasContainer,
+  type UseCanvasContainerReturn,
+} from "./hooks/use-canvas-container";
 // Shape factories (native Fabric.js wrappers)
 export {
   createCircle,

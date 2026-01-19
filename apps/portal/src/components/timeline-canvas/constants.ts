@@ -18,18 +18,18 @@ export const EVENT_CORNER_RADIUS = 4;
 
 export const COLORS = {
   // Base (from theme)
-  bg: THEME.bg,
-  text: THEME.text,
-  textBright: THEME.textBright,
-  border: THEME.border,
   accent: THEME.accent,
   accentGlow: THEME.accentGlow,
+  bg: THEME.bg,
+  border: THEME.border,
+  text: THEME.text,
+  textBright: THEME.textBright,
 
   // Timeline-specific
-  headerBg: THEME.bgElevated,
-  trackBg: "#131316",
-  trackBgAlt: "#16161a",
   gridLine: THEME.borderMuted,
   gridLineMajor: THEME.border,
+  headerBg: THEME.bgElevated,
   tickMark: "#3f3f46",
+  trackBg: "#131316",
+  trackBgAlt: "#16161a",
 } as const;

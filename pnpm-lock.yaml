@@ -5224,7 +5224,7 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.0.tgz:
-    resolution: {integrity: sha512-/XIOQr7KE3v6eegPBS4mDoYh3UnhOOFVOuk4qWkOl0EzEl74pEkf8FVImPOaH8/H1dQHL390vpPq/I4IrQIMxQ==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
+    resolution: {integrity: sha512-WDUBV1+Q7+KGc0PkVZvUP98vgt0s9W0yW1gipdWZ2ReWGIVZdvICFyB9sHfgGrOB9GbIf5BzoIffN9fQzdcfqw==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
     version: 0.4.0
 
   wrappy@1.0.2:

@@ -1,6 +1,11 @@
 import * as fabric from "fabric";
 
-import { batchAdd, staticLine, staticRect, staticText } from "@/components/fabric";
+import {
+  batchAdd,
+  staticLine,
+  staticRect,
+  staticText,
+} from "@/components/fabric";
 
 import type { TimelineData, TimelineRenderOptions } from "./types";
 
@@ -81,10 +86,13 @@ export function renderTimeline(
 
     // Vertical grid line in content area
     staticObjects.push(
-      staticLine([x, TIME_HEADER_HEIGHT, x, TIME_HEADER_HEIGHT + contentHeight], {
-        stroke: isMajor ? COLORS.gridLineMajor : COLORS.gridLine,
-        strokeWidth: 1,
-      }),
+      staticLine(
+        [x, TIME_HEADER_HEIGHT, x, TIME_HEADER_HEIGHT + contentHeight],
+        {
+          stroke: isMajor ? COLORS.gridLineMajor : COLORS.gridLine,
+          strokeWidth: 1,
+        },
+      ),
     );
 
     // Tick mark in time header
@@ -166,15 +174,19 @@ export function renderTimeline(
 
   // Label column right border
   staticObjects.push(
-    staticLine([HEADER_WIDTH, 0, HEADER_WIDTH, TIME_HEADER_HEIGHT + contentHeight], {
-      stroke: COLORS.border,
-      strokeWidth: 1,
-    }),
+    staticLine(
+      [HEADER_WIDTH, 0, HEADER_WIDTH, TIME_HEADER_HEIGHT + contentHeight],
+      {
+        stroke: COLORS.border,
+        strokeWidth: 1,
+      },
+    ),
   );
 
   // Track borders
   tracks.forEach((_, i) => {
-    const y = TIME_HEADER_HEIGHT + (i + 1) * (TRACK_HEIGHT + TRACK_GAP) - TRACK_GAP;
+    const y =
+      TIME_HEADER_HEIGHT + (i + 1) * (TRACK_HEIGHT + TRACK_GAP) - TRACK_GAP;
     staticObjects.push(
       staticLine([HEADER_WIDTH, y, canvasWidth, y], {
         stroke: COLORS.border,
@@ -192,7 +204,10 @@ export function renderTimeline(
 
   events.forEach((event) => {
     const x = HEADER_WIDTH + (event.startTime / 1000) * PIXELS_PER_SECOND;
-    const y = TIME_HEADER_HEIGHT + event.track * (TRACK_HEIGHT + TRACK_GAP) + EVENT_PADDING;
+    const y =
+      TIME_HEADER_HEIGHT +
+      event.track * (TRACK_HEIGHT + TRACK_GAP) +
+      EVENT_PADDING;
     const width = Math.max((event.duration / 1000) * PIXELS_PER_SECOND, 12);
     const height = TRACK_HEIGHT - EVENT_PADDING * 2;
 
@@ -252,21 +267,42 @@ export function renderTimeline(
   // Playhead (in content area only)
   // ==========================================================================
 
-  const playheadX = HEADER_WIDTH + (playheadPosition / 1000) * PIXELS_PER_SECOND;
+  const playheadX =
+    HEADER_WIDTH + (playheadPosition / 1000) * PIXELS_PER_SECOND;
 
   // Glow
   canvas.add(
     new fabric.Line(
-      [playheadX, TIME_HEADER_HEIGHT, playheadX, TIME_HEADER_HEIGHT + contentHeight],
-      { evented: false, selectable: false, stroke: PLAYHEAD_GLOW, strokeWidth: 8 },
+      [
+        playheadX,
+        TIME_HEADER_HEIGHT,
+        playheadX,
+        TIME_HEADER_HEIGHT + contentHeight,
+      ],
+      {
+        evented: false,
+        selectable: false,
+        stroke: PLAYHEAD_GLOW,
+        strokeWidth: 8,
+      },
     ),
   );
 
   // Line
   canvas.add(
     new fabric.Line(
-      [playheadX, TIME_HEADER_HEIGHT, playheadX, TIME_HEADER_HEIGHT + contentHeight],
-      { evented: false, selectable: false, stroke: PLAYHEAD_COLOR, strokeWidth: 2 },
+      [
+        playheadX,
+        TIME_HEADER_HEIGHT,
+        playheadX,
+        TIME_HEADER_HEIGHT + contentHeight,
+      ],
+      {
+        evented: false,
+        selectable: false,
+        stroke: PLAYHEAD_COLOR,
+        strokeWidth: 2,
+      },
     ),
   );
 

@@ -22,10 +22,10 @@ export const THEME = {
   accentGlow: "rgba(250, 204, 21, 0.2)",
 
   // Status colors
-  success: "#22c55e",
-  warning: "#f97316",
   error: "#ef4444",
   info: "#3b82f6",
+  success: "#22c55e",
+  warning: "#f97316",
 } as const;
 
 export type Theme = typeof THEME;

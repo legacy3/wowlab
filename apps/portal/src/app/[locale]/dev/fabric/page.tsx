@@ -22,7 +22,7 @@ import {
   renderTalentTree,
   type TalentTreeData,
   type TooltipData,
-} from "@/components/talent-canvas";
+} from "@/components/talent-tree";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
 import { useSpecTraits } from "@/lib/state";
 
@@ -76,8 +76,14 @@ const specPickerWrapperStyles = css({
 // =============================================================================
 
 export default function TalentTreePage() {
-  const { containerRef, controllerRef, dimensions, isReady, setIsReady, transformTooltip } =
-    useCanvasContainer();
+  const {
+    containerRef,
+    controllerRef,
+    dimensions,
+    isReady,
+    setIsReady,
+    transformTooltip,
+  } = useCanvasContainer();
   const [specId, setSpecId] = useState<number>(253);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
@@ -124,7 +130,15 @@ export default function TalentTreePage() {
     });
   }, [controllerRef, specTraits, isReady, handleHover]);
 
-  const { canvasRef, clear, deleteSelected, resetView, state, zoomIn, zoomOut } = useCanvas({
+  const {
+    canvasRef,
+    clear,
+    deleteSelected,
+    resetView,
+    state,
+    zoomIn,
+    zoomOut,
+  } = useCanvas({
     backgroundColor: "transparent",
     height: dimensions.height,
     onReady: handleReady,
@@ -198,7 +212,10 @@ export default function TalentTreePage() {
             dangerouslySetInnerHTML={{
               __html: hoveredEntry.description
                 .replace(/\$\w+/g, "<em style='color:#facc15'>X</em>")
-                .replace(/\|c[a-f0-9]{8}([^|]+)\|r/gi, "<em style='color:#facc15'>$1</em>"),
+                .replace(
+                  /\|c[a-f0-9]{8}([^|]+)\|r/gi,
+                  "<em style='color:#facc15'>$1</em>",
+                ),
             }}
           />
           {tooltip.node.maxRanks > 1 && (
