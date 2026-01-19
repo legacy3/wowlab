@@ -33,14 +33,6 @@ msgstr ""
 msgid "SWMHO+"
 msgstr ""
 
-#: src/app/[locale]/plan/talents/page.tsx:11
-msgid "TBcwz7"
-msgstr ""
-
-#: src/app/[locale]/plan/talents/page.tsx:13
-msgid "sANaE7"
-msgstr ""
-
 #: src/app/[locale]/rotations/editor/[id]/page.tsx:34
 msgid "K5pRrS"
 msgstr ""

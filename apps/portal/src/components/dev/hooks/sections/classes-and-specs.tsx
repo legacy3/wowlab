@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Flex, Grid, HStack, Stack } from "styled-system/jsx";
 
-import { GameIcon } from "@/components/game/game-icon";
+import { GameIcon } from "@/components/game";
 import { Badge, Card, Skeleton, Text } from "@/components/ui";
 import { useClassesAndSpecs } from "@/lib/state";
 

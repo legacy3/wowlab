@@ -1,9 +1,10 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { parseAsInteger, useQueryState } from "nuqs";
 import { useCallback, useEffect, useState } from "react";
 import { css } from "styled-system/css";
-import { Box, HStack } from "styled-system/jsx";
+import { Box, HStack, VStack } from "styled-system/jsx";
 
 import {
   type CanvasController,
@@ -16,15 +17,17 @@ import {
   useCanvas,
   useCanvasContainer,
 } from "@/components/fabric";
-import { SpecPicker } from "@/components/game/spec-picker";
+import { SpecPicker } from "@/components/game";
 import {
   COLORS,
   renderTalentTree,
   type TalentTreeData,
   type TooltipData,
-} from "@/components/talent-tree";
+} from "./talent-tree";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
 import { useSpecTraits } from "@/lib/state";
+
+import { TalentStartScreen } from "./talent-start-screen";
 
 // =============================================================================
 // Styles
@@ -34,9 +37,11 @@ const containerStyles = css({
   bg: "bg.canvas",
   display: "flex",
   flexDir: "column",
-  h: "calc(100vh - 64px)",
+  h: "calc(100vh - 200px)",
+  minH: "600px",
   overflow: "hidden",
   position: "relative",
+  rounded: "lg",
   w: "100%",
 });
 
@@ -64,7 +69,7 @@ const tooltipStyles = css({
   zIndex: 100,
 });
 
-const specPickerWrapperStyles = css({
+const controlsWrapperStyles = css({
   left: "3",
   position: "absolute",
   top: "3",
@@ -72,10 +77,16 @@ const specPickerWrapperStyles = css({
 });
 
 // =============================================================================
-// Page
+// Talent Tree View
 // =============================================================================
 
-export default function TalentTreePage() {
+function TalentTreeView({
+  onSpecChange,
+  specId,
+}: {
+  onSpecChange: (specId: number) => void;
+  specId: number;
+}) {
   const {
     containerRef,
     controllerRef,
@@ -84,7 +95,6 @@ export default function TalentTreePage() {
     setIsReady,
     transformTooltip,
   } = useCanvasContainer();
-  const [specId, setSpecId] = useState<number>(253);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
   const { data: specTraits } = useSpecTraits(specId);
@@ -160,10 +170,10 @@ export default function TalentTreePage() {
 
   return (
     <div className={containerStyles} ref={containerRef}>
-      {/* Spec picker */}
-      <div className={specPickerWrapperStyles}>
+      {/* Controls */}
+      <div className={controlsWrapperStyles}>
         <HStack gap="2">
-          <SpecPicker compact specId={specId} onSelect={setSpecId} />
+          <SpecPicker compact specId={specId} onSelect={onSpecChange} />
           <UITooltip content="Export PNG">
             <IconButton variant="outline" size="sm" onClick={handleExport}>
               <Download size={16} />
@@ -232,5 +242,46 @@ export default function TalentTreePage() {
         </div>
       )}
     </div>
+  );
+}
+
+// =============================================================================
+// Main Content
+// =============================================================================
+
+export function TalentCalculatorContent() {
+  const [specId, setSpecId] = useQueryState(
+    "spec",
+    parseAsInteger.withOptions({
+      history: "push",
+      shallow: true,
+    }),
+  );
+
+  const handleSpecSelect = useCallback(
+    (selectedSpecId: number) => {
+      setSpecId(selectedSpecId);
+    },
+    [setSpecId],
+  );
+
+  // Show start screen when no spec selected
+  if (!specId) {
+    return (
+      <TalentStartScreen
+        talents=""
+        onSpecSelect={handleSpecSelect}
+        onTalentStringChange={() => {
+          // TODO: Parse talent string to extract specId
+        }}
+      />
+    );
+  }
+
+  // Show talent tree when spec is selected
+  return (
+    <VStack gap="4" w="full">
+      <TalentTreeView specId={specId} onSpecChange={handleSpecSelect} />
+    </VStack>
   );
 }

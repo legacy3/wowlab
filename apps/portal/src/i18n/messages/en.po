@@ -33,14 +33,6 @@ msgstr "The page you're looking for doesn't exist or has been moved."
 msgid "SWMHO+"
 msgstr "Go home"
 
-#: src/app/[locale]/plan/talents/page.tsx:11
-msgid "TBcwz7"
-msgstr "Talents"
-
-#: src/app/[locale]/plan/talents/page.tsx:13
-msgid "sANaE7"
-msgstr "Talent tree builder coming soon."
-
 #: src/app/[locale]/rotations/editor/[id]/page.tsx:34
 msgid "K5pRrS"
 msgstr "Failed to load rotation:"

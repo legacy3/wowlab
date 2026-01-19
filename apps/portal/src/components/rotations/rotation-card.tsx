@@ -3,7 +3,7 @@
 import { useFormatter } from "next-intl";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
-import { GameIcon } from "@/components/game/game-icon";
+import { GameIcon } from "@/components/game";
 import { Text } from "@/components/ui";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
