@@ -19,9 +19,9 @@ import {
 } from "@/components/fabric";
 import { SpecPicker } from "@/components/game";
 import {
-  COLORS,
   renderTalentTree,
   type TalentTreeData,
+  TalentTooltip,
   type TooltipData,
 } from "./talent-tree";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
@@ -51,22 +51,6 @@ const toolbarWrapperStyles = css({
   top: "3",
   transform: "translateX(-50%)",
   zIndex: 10,
-});
-
-const tooltipStyles = css({
-  bg: "gray.900/98",
-  border: "1px solid",
-  borderColor: "gray.700",
-  borderRadius: "lg",
-  boxShadow: "xl",
-  color: "gray.100",
-  fontSize: "sm",
-  lineHeight: "relaxed",
-  maxW: "300px",
-  p: "3",
-  pointerEvents: "none",
-  position: "absolute",
-  zIndex: 100,
 });
 
 const controlsWrapperStyles = css({
@@ -166,8 +150,6 @@ function TalentTreeView({
     }
   }, [controllerRef]);
 
-  const hoveredEntry = tooltip?.node.entries[tooltip.entryIndex];
-
   return (
     <div className={containerStyles} ref={containerRef}>
       {/* Controls */}
@@ -200,47 +182,7 @@ function TalentTreeView({
       </Box>
 
       {/* Tooltip */}
-      {tooltip && hoveredEntry && (
-        <div
-          className={tooltipStyles}
-          style={{
-            left: tooltip.screenX + 10,
-            top: tooltip.screenY,
-          }}
-        >
-          <div
-            style={{
-              color: COLORS.selectionRing,
-              fontWeight: 600,
-              marginBottom: "4px",
-            }}
-          >
-            {hoveredEntry.name}
-          </div>
-          <div
-            style={{ color: COLORS.textMuted }}
-            dangerouslySetInnerHTML={{
-              __html: hoveredEntry.description
-                .replace(/\$\w+/g, "<em style='color:#facc15'>X</em>")
-                .replace(
-                  /\|c[a-f0-9]{8}([^|]+)\|r/gi,
-                  "<em style='color:#facc15'>$1</em>",
-                ),
-            }}
-          />
-          {tooltip.node.maxRanks > 1 && (
-            <div
-              style={{
-                color: COLORS.textMuted,
-                fontSize: "12px",
-                marginTop: "4px",
-              }}
-            >
-              Rank: 0/{tooltip.node.maxRanks}
-            </div>
-          )}
-        </div>
-      )}
+      {tooltip && <TalentTooltip data={tooltip} />}
     </div>
   );
 }

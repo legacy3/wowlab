@@ -27,11 +27,10 @@ const titleStyles = css({
 });
 
 const descriptionStyles = css({
-  "& em": {
-    color: "yellow.400",
-    fontStyle: "normal",
-  },
   color: "gray.400",
+  fontFamily: "mono",
+  fontSize: "xs",
+  whiteSpace: "pre-wrap",
 });
 
 const rankStyles = css({
@@ -48,11 +47,6 @@ export function TalentTooltip({ data }: TalentTooltipProps) {
   const entry = data.node.entries[data.entryIndex];
   if (!entry) return null;
 
-  // Parse description: replace $variables and |cXXXXXXXX color codes
-  const parsedDescription = entry.description
-    .replace(/\$\w+/g, "<em>X</em>")
-    .replace(/\|c[a-f0-9]{8}([^|]+)\|r/gi, "<em>$1</em>");
-
   return (
     <div
       className={tooltipStyles}
@@ -64,10 +58,7 @@ export function TalentTooltip({ data }: TalentTooltipProps) {
       <div className={titleStyles} style={{ color: COLORS.selectionRing }}>
         {entry.name}
       </div>
-      <div
-        className={descriptionStyles}
-        dangerouslySetInnerHTML={{ __html: parsedDescription }}
-      />
+      <code className={descriptionStyles}>{entry.description}</code>
       {data.node.maxRanks > 1 && (
         <div className={rankStyles}>Rank: 0/{data.node.maxRanks}</div>
       )}

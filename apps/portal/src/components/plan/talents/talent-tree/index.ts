@@ -1,8 +1,6 @@
-/* eslint-disable */
-
 // Components
 
-export { TalentTree, type TalentTreeProps } from "./talent-tree";
+export { TalentTooltip } from "./tooltip/talent-tooltip";
 
 // Renderer
 
