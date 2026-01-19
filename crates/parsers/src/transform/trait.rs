@@ -87,7 +87,7 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
     let order_index_map = build_order_index_map(dbc, loadouts);
 
     // Step 4: Collect all nodes from all trees for this spec
-    let tree_nodes: Vec<_> = all_tree_ids
+    let all_tree_nodes: Vec<_> = all_tree_ids
         .iter()
         .flat_map(|&tid| {
             dbc.trait_node_by_tree
@@ -97,12 +97,24 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
         })
         .collect();
 
+    // Step 5: Build spec set lookup for filtering
+    let spec_set_to_specs = build_spec_set_lookup(dbc);
+
+    // Step 6: Filter nodes by spec conditions
+    // This removes nodes that are gated for other specs (e.g., Balance shouldn't see
+    // Feral-specific talents like "Sudden Ambush" that occupy the same position)
+    let tree_nodes: Vec<_> = all_tree_nodes
+        .iter()
+        .filter(|node| should_include_node_for_spec(dbc, node.ID, spec_id, &spec_set_to_specs))
+        .cloned()
+        .collect();
+
     let node_ids: Vec<i32> = tree_nodes.iter().map(|n| n.ID).collect();
     let node_id_set: HashSet<i32> = node_ids.iter().copied().collect();
 
-    // Step 5: Filter subtrees to only those available for this spec
+    // Step 7: Filter subtrees to only those available for this spec
     // Hero talent subtrees are gated by spec-specific conditions
-    let valid_sub_tree_ids = get_valid_subtrees_for_spec(dbc, &tree_nodes, spec_id);
+    let valid_sub_tree_ids = get_valid_subtrees_for_spec(dbc, &all_tree_nodes, spec_id);
 
     let all_sub_tree_ids: Vec<i32> = tree_nodes
         .iter()
@@ -112,14 +124,14 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
         .into_iter()
         .collect();
 
-    // Step 6: Collect edges, filtering to only edges within this tree
+    // Step 8: Collect edges, filtering to only edges within this tree
     let all_edges = collect_edges(dbc, &node_ids, &node_id_set);
 
-    // Step 7: Calculate position offsets for hero trees
+    // Step 9: Calculate position offsets for hero trees
     // Hero trees are repositioned to a standard location for consistent display
     let hero_tree_offsets = calculate_hero_tree_offsets(&tree_nodes, &all_sub_tree_ids);
 
-    // Step 8: Build node group memberships and tree index lookup
+    // Step 10: Build node group memberships and tree index lookup
     let node_group_memberships = collect_node_group_memberships(dbc, &tree_nodes);
     let group_ids: HashSet<i32> = node_group_memberships
         .iter()
@@ -127,10 +139,10 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
         .collect();
     let group_to_tree_index = build_group_tree_index_map(dbc, &group_ids);
 
-    // Step 9: Build node entries mapping with sorted selections
+    // Step 11: Build node entries mapping with sorted selections
     let node_x_entries = build_node_entries_map(dbc, &tree_nodes);
 
-    // Step 10: Assemble nodes
+    // Step 12: Assemble nodes
     // Skip Type=3 nodes (SubTreeSelection) as they're UI-only for choosing hero specs
     let mut nodes: Vec<TraitNode> = tree_nodes
         .iter()
@@ -149,7 +161,7 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
         .collect();
     nodes.sort_by_key(|n| n.id);
 
-    // Step 11: Convert edges to output format
+    // Step 13: Convert edges to output format
     let mut edges: Vec<TraitEdge> = all_edges
         .iter()
         .map(|e| TraitEdge {
@@ -161,11 +173,11 @@ pub fn transform_trait_tree(dbc: &DbcData, spec_id: i32) -> Result<TraitTreeFlat
         .collect();
     edges.sort_by_key(|e| e.id);
 
-    // Step 12: Build subtrees (only those valid for this spec)
+    // Step 14: Build subtrees (only those valid for this spec)
     let mut sub_trees = build_subtrees(dbc, &valid_sub_tree_ids, &nodes);
     sub_trees.sort_by_key(|s| s.id);
 
-    // Step 13: Calculate point limits from currency sources
+    // Step 15: Calculate point limits from currency sources
     let point_limits = calculate_point_limits(dbc, &all_tree_ids);
 
     // All node IDs sorted for loadout string parsing
@@ -657,6 +669,7 @@ fn build_spec_set_lookup(dbc: &DbcData) -> HashMap<i32, Vec<i32>> {
 }
 
 /// Check if a node is available for a given spec based on its conditions.
+/// Used for SubTreeSelection nodes which are expected to have spec conditions.
 fn is_node_available_for_spec(
     dbc: &DbcData,
     node_id: i32,
@@ -686,4 +699,92 @@ fn is_node_available_for_spec(
     }
 
     false
+}
+
+/// Check if a talent node should be included for a given spec.
+///
+/// Spec-conditional filtering happens at TWO levels:
+/// 1. Direct node conditions via `TraitNodeXTraitCond` (rare)
+/// 2. Group conditions via `TraitNodeGroupXTraitCond` (common for spec-conditional nodes)
+///
+/// For spec-conditional nodes (e.g., Balance sees "Solstice" while Feral sees "Merciless Claws"
+/// at the same position), the spec restriction is on a TraitNodeGroup, not the node itself.
+///
+/// Logic:
+/// - Check direct node conditions first
+/// - Check all group memberships for spec conditions
+/// - If ANY spec condition exists (node or group), the spec must be in an allowed set
+fn should_include_node_for_spec(
+    dbc: &DbcData,
+    node_id: i32,
+    spec_id: i32,
+    spec_set_to_specs: &HashMap<i32, Vec<i32>>,
+) -> bool {
+    let mut has_spec_condition = false;
+    let mut spec_allowed = false;
+
+    // Check direct node conditions (TraitNodeXTraitCond)
+    let node_conds = dbc
+        .trait_node_x_trait_cond
+        .get(&node_id)
+        .cloned()
+        .unwrap_or_default();
+
+    for node_cond in &node_conds {
+        let Some(cond) = dbc.trait_cond.get(&node_cond.TraitCondID) else {
+            continue;
+        };
+
+        if cond.CondType != COND_TYPE_SPEC || cond.SpecSetID <= 0 {
+            continue;
+        }
+
+        has_spec_condition = true;
+
+        if let Some(specs) = spec_set_to_specs.get(&cond.SpecSetID) {
+            if specs.contains(&spec_id) {
+                spec_allowed = true;
+            }
+        }
+    }
+
+    // Check group conditions (TraitNodeGroupXTraitCond -> TraitCond)
+    // This is the primary mechanism for spec-conditional nodes
+    let node_groups = dbc
+        .trait_node_group_x_trait_node
+        .get(&node_id)
+        .cloned()
+        .unwrap_or_default();
+
+    for node_group in &node_groups {
+        // Get condition references for this group
+        let group_cond_refs = dbc
+            .trait_node_group_x_trait_cond
+            .get(&node_group.TraitNodeGroupID)
+            .cloned()
+            .unwrap_or_default();
+
+        for cond_ref in &group_cond_refs {
+            // Look up the actual condition
+            let Some(cond) = dbc.trait_cond.get(&cond_ref.TraitCondID) else {
+                continue;
+            };
+
+            if cond.CondType != COND_TYPE_SPEC || cond.SpecSetID <= 0 {
+                continue;
+            }
+
+            has_spec_condition = true;
+
+            if let Some(specs) = spec_set_to_specs.get(&cond.SpecSetID) {
+                if specs.contains(&spec_id) {
+                    spec_allowed = true;
+                }
+            }
+        }
+    }
+
+    // No spec conditions = available to all specs
+    // Has spec conditions = only if this spec is allowed
+    !has_spec_condition || spec_allowed
 }
