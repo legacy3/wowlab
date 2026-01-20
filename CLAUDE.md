@@ -6,6 +6,7 @@
 2. **Tree before creating files.** Always run `tree` on the containing directory first. Match existing naming and structure patterns exactly. One file per domain concept.
 3. **Read skills before related work.** Skills in `.claude/skills/` have required patterns. Load with `/game-data`, `/park-ui`, etc.
 4. **No inferior solutions.** Never suggest or implement "quick fixes", "workarounds", or "hardcoded" alternatives to proper solutions. If something needs database work, do database work. If something needs proper architecture, do proper architecture. No shortcuts, no hacks, no "Option A vs B" bullshit.
+5. **Never leave old code.** When refactoring or renaming, DELETE the old code completely. No deprecated wrappers, no backwards-compatibility shims, no "legacy exports", no commented-out old versions. If something is renamed or replaced, update ALL usages and remove the old thing entirely. If you detect yourself about to leave old code, STOP immediately, apologize, and fix it.
 
 ## Commands
 

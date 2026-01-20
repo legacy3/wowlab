@@ -1,5 +1,7 @@
 # node-headless
 
+**RULE: Never leave old code.** When refactoring or renaming, DELETE the old code completely. No deprecated wrappers, no backwards-compatibility shims, no "legacy exports", no commented-out old versions. Update ALL usages and remove the old thing entirely.
+
 Headless simulation node for servers and Docker deployments.
 
 ## Commands

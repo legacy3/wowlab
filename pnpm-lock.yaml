@@ -167,6 +167,9 @@ importers:
       wowlab-engine:
         specifier: file:../../packages/wowlab-engine-0.4.0.tgz
         version: file:packages/wowlab-engine-0.4.0.tgz
+      wowlab-parsers:
+        specifier: file:../../packages/wowlab-parsers-0.4.0.tgz
+        version: file:packages/wowlab-parsers-0.4.0.tgz
       zustand:
         specifier: ^5.0.4
         version: 5.0.9(@types/react@19.2.2)(immer@11.1.3)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
@@ -207,6 +210,8 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/wowlab-parsers: {}
 
 packages:
 
@@ -5224,7 +5229,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.0.tgz:
-    resolution: {integrity: sha512-l5eKJ0BozFKfAQBz2O1xLNUoSDXYV+R2yKHhV71dmVmRUYW19bFILD6TUKSfG0SZCTxDwcRXSkbOLowdwbbYnw==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
+    resolution: {integrity: sha512-+FkY7krAUnXgM+02bxiq/dAaolbbLFnV5Ydkcbeuk0reRT8sziMshTTJNIh2Jc5vfbHfmyBDrS4JrbeHEiMBYw==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
+    version: 0.4.0
+
+  wowlab-parsers@file:packages/wowlab-parsers-0.4.0.tgz:
+    resolution: {integrity: sha512-LIrGV871+a3NQ5l2jWT9f/ZJX3zKMtlmzjWvWfdbPo6kNLeCxuj6onCcoGN/odC1vAf+gAClc5guW+x4yCTgRA==, tarball: file:packages/wowlab-parsers-0.4.0.tgz}
     version: 0.4.0
 
   wrappy@1.0.2:
@@ -11597,6 +11606,8 @@ snapshots:
   wordwrapjs@5.1.1: {}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.0.tgz: {}
+
+  wowlab-parsers@file:packages/wowlab-parsers-0.4.0.tgz: {}
 
   wrappy@1.0.2: {}
 

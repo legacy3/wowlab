@@ -390,6 +390,7 @@ export type Database = {
           duration: number;
           effect_bonus_coefficient: number;
           effect_trigger_spell: number[];
+          effects: Json;
           empower_stages: Json;
           exclude_caster_aura_spell: number;
           exclude_caster_aura_state: number;
@@ -465,6 +466,7 @@ export type Database = {
           duration?: number;
           effect_bonus_coefficient?: number;
           effect_trigger_spell?: number[];
+          effects?: Json;
           empower_stages?: Json;
           exclude_caster_aura_spell?: number;
           exclude_caster_aura_state?: number;
@@ -540,6 +542,7 @@ export type Database = {
           duration?: number;
           effect_bonus_coefficient?: number;
           effect_trigger_spell?: number[];
+          effects?: Json;
           empower_stages?: Json;
           exclude_caster_aura_spell?: number;
           exclude_caster_aura_state?: number;

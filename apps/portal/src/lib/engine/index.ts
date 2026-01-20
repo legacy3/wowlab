@@ -1,24 +1,38 @@
 /* eslint-disable */
 
-// Engine
-
-export { engine } from "./engine";
-
 // Constants
 
 export {
   ACTION_TYPE_MAP,
   ACTION_TYPES,
+  type ActionTypeConfig,
   CONDITION_FIELDS,
+  type ConditionField,
   FIELD_CATEGORIES,
+  type FieldCategory,
   LIST_TYPE_MAP,
   LIST_TYPES,
-  OPERATORS,
-  type ActionTypeConfig,
-  type ConditionField,
-  type FieldCategory,
   type ListTypeConfig,
+  OPERATORS,
 } from "./constants";
+
+// Engine
+
+export { engine } from "./engine";
+
+// Spell Description
+
+export {
+  analyzeSpellDescription,
+  formatDuration,
+  formatRange,
+  fragmentsToPlainText,
+  nullResolver,
+  renderSpellDescription,
+  type SpellDescFragment,
+  type SpellDescRenderResult,
+  type SpellDescResolver,
+} from "./spell-desc";
 
 // Types
 

@@ -109,6 +109,7 @@ build_portal() {
 # Build everything
 build_all() {
     check_deps
+    build_parsers
     build_engine_wasm
     info "Installing dependencies..."
     pnpm install

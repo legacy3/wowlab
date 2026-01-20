@@ -20,6 +20,47 @@ pub struct LearnSpell {
     pub overrides_spell_id: i32,
 }
 
+/// Denormalized spell effect data for description variable resolution.
+/// Contains the values needed for $s1, $t1, $x1, $a1, etc.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SpellEffect {
+    /// Effect index (0, 1, 2...) - used for $s1, $s2, $s3 (1-indexed in descriptions)
+    pub index: i32,
+    /// Effect type ID
+    pub effect: i32,
+    /// Aura type if this is an apply aura effect
+    pub aura: i32,
+    /// Base points - the $s value
+    pub base_points: f64,
+    /// Aura tick period in ms - the $t value
+    pub period: i32,
+    /// Chain targets - the $x value
+    pub chain_targets: i32,
+    /// Triggered spell ID
+    pub trigger_spell: i32,
+    /// Misc value 0 (school, mechanic, etc.)
+    pub misc_value_0: i32,
+    /// Misc value 1
+    pub misc_value_1: i32,
+    /// Radius min - for $a value
+    pub radius_min: f32,
+    /// Radius max - for $a value
+    pub radius_max: f32,
+    /// Spell coefficient
+    pub coefficient: f32,
+    /// Damage variance
+    pub variance: f32,
+    /// Bonus coefficient from spell power
+    pub bonus_coefficient: f64,
+    /// Bonus coefficient from attack power
+    pub bonus_coefficient_from_ap: f64,
+    /// Amplitude
+    pub amplitude: f32,
+    /// PvP multiplier
+    pub pvp_multiplier: f32,
+}
+
 /// Flat spell data structure matching TypeScript SpellDataFlatSchema exactly
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -130,6 +171,9 @@ pub struct SpellDataFlat {
     pub effect_trigger_spell: Vec<i32>,
     pub implicit_target: Vec<i32>,
     pub learn_spells: Vec<LearnSpell>,
+
+    // Effects (denormalized for spell description rendering)
+    pub effects: Vec<SpellEffect>,
 }
 
 impl Default for SpellDataFlat {
@@ -206,6 +250,7 @@ impl Default for SpellDataFlat {
             effect_trigger_spell: Vec::new(),
             implicit_target: Vec::new(),
             learn_spells: Vec::new(),
+            effects: Vec::new(),
         }
     }
 }

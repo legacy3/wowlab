@@ -168,15 +168,42 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression_block(&mut self, content: &str) -> Option<SpellDescriptionNode> {
-        let mut expr_parser = ExprParser::new(content);
-        let (expression, decimal_places) = expr_parser.parse();
+        // The lexer returns content in format: "expr_content}.N" or "expr_content}"
+        // We need to split on } to get the expression and format specifier separately
+        let (expr_content, decimal_places) = if let Some(brace_idx) = content.find('}') {
+            let expr = &content[..brace_idx];
+            let after = &content[brace_idx + 1..];
+
+            // Check for .N format specifier
+            let decimals = if let Some(after_dot) = after.strip_prefix('.') {
+                after_dot
+                    .chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .collect::<String>()
+                    .parse::<u8>()
+                    .ok()
+            } else {
+                None
+            };
+
+            (expr, decimals)
+        } else {
+            // No closing brace found (shouldn't happen with valid lexer output)
+            (content, None)
+        };
+
+        let mut expr_parser = ExprParser::new(expr_content);
+        let (expression, inline_decimals) = expr_parser.parse();
 
         self.errors.extend(expr_parser.errors);
+
+        // Prefer the outer format specifier (after }) over inline format
+        let final_decimals = decimal_places.or(inline_decimals);
 
         expression.map(|expr| {
             SpellDescriptionNode::ExpressionBlock(ExpressionBlockNode {
                 expression: expr,
-                decimal_places,
+                decimal_places: final_decimals,
             })
         })
     }
@@ -567,6 +594,8 @@ fn parse_effect_var(s: &str) -> VariableNode {
         .unwrap_or(1) as u8;
     let var_type = &body[..body.len() - 1];
 
+    // No normalization - case matters for all variables
+    // $s1 vs $S1, $m1 vs $M1, $a1 vs $A1, $w1 vs $W1 are all different
     VariableNode::Effect(EffectVariableNode {
         var_type: var_type.to_string(),
         effect_index: index,
@@ -659,6 +688,13 @@ fn parse_at_var(s: &str) -> VariableNode {
     })
 }
 
+/// Effect variable types that require an effect index.
+/// When parsing cross-spell refs without an explicit index, these types default to effect 1.
+/// Note: W (weapon damage) is separate from w (weapon coeff)
+const EFFECT_VAR_TYPES: &[&str] = &[
+    "s", "m", "o", "t", "a", "e", "w", "x", "bc", "q", "sw",
+];
+
 fn parse_cross_spell_ref(s: &str) -> VariableNode {
     let body = &s[1..]; // strip $
 
@@ -670,7 +706,7 @@ fn parse_cross_spell_ref(s: &str) -> VariableNode {
 
     // Extract trailing effect index
     let trail_digits: String = remainder.chars().rev().take_while(|c| c.is_ascii_digit()).collect();
-    let effect_index = if !trail_digits.is_empty() {
+    let mut effect_index = if !trail_digits.is_empty() {
         trail_digits.chars().rev().collect::<String>().parse().ok()
     } else {
         None
@@ -681,6 +717,14 @@ fn parse_cross_spell_ref(s: &str) -> VariableNode {
     } else {
         remainder
     };
+
+    // No normalization - case matters for all variables
+    // For effect variable types without an explicit index, default to effect 1
+    // e.g., $1256306a should be treated as $1256306a1
+    let var_type_lower = var_type.to_lowercase();
+    if effect_index.is_none() && EFFECT_VAR_TYPES.contains(&var_type_lower.as_str()) {
+        effect_index = Some(1);
+    }
 
     VariableNode::CrossSpell(CrossSpellReferenceNode {
         spell_id,

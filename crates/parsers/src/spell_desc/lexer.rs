@@ -6,6 +6,8 @@
 use logos::{Lexer as LogosLexer, Logos};
 
 /// Extract expression block content between ${ and }
+/// Also captures optional trailing decimal format specifier like `.2`
+/// Returns tuple: (expression_content, optional_decimal_places)
 fn parse_expression_block<'a>(lex: &mut LogosLexer<'a, Token<'a>>) -> &'a str {
     let remainder = lex.remainder();
     let mut depth = 1;
@@ -25,8 +27,28 @@ fn parse_expression_block<'a>(lex: &mut LogosLexer<'a, Token<'a>>) -> &'a str {
         }
     }
 
-    lex.bump(end + 1); // include the closing }
-    &remainder[..end]
+    // Check for trailing decimal format specifier like `.2` after the closing }
+    let after_brace = &remainder[end + 1..];
+    let format_len = if let Some(after_dot) = after_brace.strip_prefix('.') {
+        // Count digits after the dot
+        let digits: usize = after_dot
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .count();
+        if digits > 0 {
+            1 + digits // include the dot
+        } else {
+            0
+        }
+    } else {
+        0
+    };
+
+    lex.bump(end + 1 + format_len); // include closing } and optional .N
+
+    // Return the full slice including the format specifier (if any)
+    // The parser will extract the format from the slice
+    &remainder[..end + format_len + 1]
 }
 
 /// Extract pluralization content between $l/$L and ;
@@ -72,9 +94,13 @@ pub enum Token<'a> {
     AtVariable(&'a str),
 
     // ========================================================================
-    // Effect variables: $s1, $m1, $M1, $o1, $t1, $a1, $A1, $e1, $w1, $x1, $bc1, $q1
+    // Effect variables: $s1, $S1, $m1, $M1, $o1, $t1, $a1, $A1, $e1, $w1, $W1, $x1, $bc1, $q1, $sw1
+    // Note: $s and $S are equivalent (normalized to lowercase in parser)
+    // $m vs $M and $a vs $A are semantically different but both valid
+    // $w vs $W are different (w=weapon coeff, W=weapon damage)
+    // $sw is "spell weapon" damage
     // ========================================================================
-    #[regex(r"\$(?:s|m|M|o|t|a|A|e|w|x|bc|q)[1-9]", priority = 10)]
+    #[regex(r"\$(?:[sS]|m|M|o|t|a|A|e|w|W|x|bc|q|sw)[1-9]", priority = 10)]
     EffectVariable(&'a str),
 
     // ========================================================================
@@ -90,15 +116,21 @@ pub enum Token<'a> {
     PlayerVariable(&'a str),
 
     // ========================================================================
-    // Enchant variables: $ec1, $ecix, $ecd
+    // Enchant variables: $ec1, $ec2, $ecix, $ecim, $ecd, $ec1s1 (combined)
     // ========================================================================
-    #[regex(r"\$(?:ec1|ecix|ecd)", priority = 10)]
+    #[regex(r"\$(?:ec[12](?:s\d)?|ecix|ecim|ecd)", priority = 10)]
     EnchantVariable(&'a str),
 
     // ========================================================================
-    // Misc variables: $maxcast, $pctD, $W, $W2, $B, $ctrmax1
+    // Misc variables: weapon stats, proc data, mastery, counters, etc.
+    // $mws/$MWS = main-hand weapon speed, $mwb/$MWB = main-hand weapon dps
+    // $ows/$OWB = off-hand weapon stats
+    // $proccooldown, $procrppm = proc timing
+    // $lpoint = level point, $mastery = mastery value
+    // $pri = priority, $rolemult = role multiplier
+    // $ctrmax = counter max (with number suffix)
     // ========================================================================
-    #[regex(r"\$(?:maxcast|pctD|W2?|B|ctrmax\d+)", priority = 10)]
+    #[regex(r"\$(?:maxcast|pctD|W|B|ctrmax\d+|mws|mwb|MWS|MWB|ows|OWB|lpoint|mastery|mas|proccooldown|procrppm|pri|rolemult)", priority = 10)]
     MiscVariable(&'a str),
 
     // ========================================================================
@@ -203,8 +235,8 @@ pub enum ExprToken<'a> {
     #[regex(r"\$<[a-zA-Z][a-zA-Z0-9]*>", priority = 10)]
     CustomVar(&'a str),
 
-    /// Effect variable: $s1, $m1, etc.
-    #[regex(r"\$(?:s|m|M|o|t|a|A|e|w|x|bc|q)[1-9]", priority = 10)]
+    /// Effect variable: $s1, $S1, $m1, $M1, $w1, $W1, $sw1, etc.
+    #[regex(r"\$(?:[sS]|m|M|o|t|a|A|e|w|W|x|bc|q|sw)[1-9]", priority = 10)]
     EffectVar(&'a str),
 
     /// Spell-level variable: $d, $n, etc.
@@ -215,12 +247,12 @@ pub enum ExprToken<'a> {
     #[regex(r"\$(?:SP|sp|AP|ap|RAP|MHP|mhp|SPS|PL|pl|INT)", priority = 10)]
     PlayerVar(&'a str),
 
-    /// Enchant variable: $ec1, $ecix, $ecd
-    #[regex(r"\$(?:ec1|ecix|ecd)", priority = 10)]
+    /// Enchant variable: $ec1, $ec2, $ecix, $ecim, $ecd, $ec1s1
+    #[regex(r"\$(?:ec[12](?:s\d)?|ecix|ecim|ecd)", priority = 10)]
     EnchantVar(&'a str),
 
-    /// Misc variable: $maxcast, $pctD, etc.
-    #[regex(r"\$(?:maxcast|pctD|W2?|B|ctrmax\d+)", priority = 10)]
+    /// Misc variable: weapon stats, proc data, mastery, etc.
+    #[regex(r"\$(?:maxcast|pctD|W|B|ctrmax\d+|mws|mwb|MWS|MWB|ows|OWB|lpoint|mastery|mas|proccooldown|procrppm|pri|rolemult)", priority = 10)]
     MiscVar(&'a str),
 
     /// @ variable: $@spelldesc123

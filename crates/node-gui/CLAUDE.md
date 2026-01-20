@@ -1,5 +1,7 @@
 # node-gui
 
+**RULE: Never leave old code.** When refactoring or renaming, DELETE the old code completely. No deprecated wrappers, no backwards-compatibility shims, no "legacy exports", no commented-out old versions. Update ALL usages and remove the old thing entirely.
+
 GUI application for the distributed simulation node using egui.
 
 ## Commands

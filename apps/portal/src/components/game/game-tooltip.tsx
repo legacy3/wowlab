@@ -8,6 +8,7 @@ import { useGlobalColors } from "@/lib/state";
 
 import { Text, Tooltip } from "../ui";
 import { GameIcon } from "./game-icon";
+import { SpellDescription } from "./spell-description";
 import { tooltipColors } from "./tooltip-colors";
 
 const QUALITY_COLOR_NAMES = [
@@ -158,7 +159,11 @@ function SpellTooltipContent({ spell }: { spell: SpellTooltipData }) {
         lineHeight="relaxed"
         color={tooltipColors.description}
       >
-        {spell.description || "No description available"}
+        <SpellDescription
+          spellId={spell.id}
+          description={spell.description}
+          fallback="No description available"
+        />
       </Text>
     </VStack>
   );

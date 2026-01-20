@@ -3,20 +3,20 @@
 // Computing
 
 export {
+  type ComputingCardId,
+  type JobStatus,
+  type PerformanceDataPoint,
   PHASE_LABELS,
   selectActiveJobs,
   selectCompletedJobs,
   selectRunningJobsCount,
+  type SimulationJob,
+  type SimulationPhase,
   useComputingCardOrder,
   useComputingDrawer,
   useJobs,
   usePerformance,
   useWorkerSystem,
-  type ComputingCardId,
-  type JobStatus,
-  type PerformanceDataPoint,
-  type SimulationJob,
-  type SimulationPhase,
   type WorkerSystemState,
 } from "./computing";
 
@@ -33,21 +33,22 @@ export {
 
 export {
   useAura,
+  useAuras,
   useClass,
   useClasses,
   useClassesAndSpecs,
   useGlobalColors,
   useGlobalStrings,
   useItem,
-  useItemSearch,
   useItems,
+  useItemSearch,
   useSpec,
-  useSpecTraits,
   useSpecs,
   useSpecsByClass,
+  useSpecTraits,
   useSpell,
-  useSpellSearch,
   useSpells,
+  useSpellSearch,
 } from "./game";
 
 // Nodes
@@ -57,6 +58,13 @@ export {
   mapAccessTypeFromDb,
   mapAccessTypeToDb,
   NODE_ACCESS_OPTIONS,
+  type NodeAccessOption,
+  type NodeAccessType,
+  type NodeOwner,
+  type NodePermissionRow,
+  type NodeRow,
+  type NodeWithMeta,
+  type SaveNodeData,
   selectOnlineCount,
   selectOnlineNodes,
   selectTotalWorkers,
@@ -67,13 +75,6 @@ export {
   useNodes,
   useNodesSelection,
   useNodesSelectionArray,
-  type NodeAccessOption,
-  type NodeAccessType,
-  type NodeOwner,
-  type NodePermissionRow,
-  type NodeRow,
-  type NodeWithMeta,
-  type SaveNodeData,
   type VerifyResult,
 } from "./nodes";
 
@@ -85,10 +86,19 @@ export { useUserProfile } from "./profile";
 
 export { useLoadRotation, useSaveRotation } from "./rotation";
 
+// Spell Description
+
+export {
+  buildResolver,
+  defaultPaperdoll,
+  type PaperdollState,
+  useSpellDescription,
+} from "./spell-desc";
+
 // UI
 
 export { useCardExpanded, useSidebar } from "./ui";
 
 // User
 
-export { useUser, type OAuthProvider } from "./user";
+export { type OAuthProvider, useUser } from "./user";

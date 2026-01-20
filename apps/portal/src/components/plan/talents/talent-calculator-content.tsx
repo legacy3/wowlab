@@ -21,6 +21,9 @@ import { SpecPicker } from "@/components/game";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
 import { useSpecTraits } from "@/lib/state";
 
+import type { TalentSubTree } from "./talent-tree";
+
+import { SpellDescriptionViewer } from "./spell-description-diff";
 import { TalentStartScreen } from "./talent-start-screen";
 import {
   renderTalentTree,
@@ -97,7 +100,22 @@ export function TalentCalculatorContent() {
   return (
     <VStack gap="4" w="full">
       <TalentTreeView specId={specId} onSpecChange={handleSpecSelect} />
+      <DescriptionDiffBox specId={specId} />
     </VStack>
+  );
+}
+
+function DescriptionDiffBox({ specId }: { specId: number }) {
+  const { data: specTraits } = useSpecTraits(specId);
+  if (!specTraits) {
+    return null;
+  }
+
+  return (
+    <SpellDescriptionViewer
+      nodes={specTraits.nodes as unknown as TalentTreeData["nodes"]}
+      subTrees={specTraits.sub_trees as unknown as TalentSubTree[]}
+    />
   );
 }
 

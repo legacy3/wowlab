@@ -16,7 +16,7 @@ pub use item::{
 };
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
 pub use spec::SpecDataFlat;
-pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat};
+pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat, SpellEffect};
 pub use talent::{
     PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
     TraitTreeWithSelections,

@@ -5,11 +5,13 @@
 //! - Game types (classes, specs, attributes)
 //! - Data types (spell, aura, item, talent flat structures)
 //! - Simulation types (indices, time)
+//! - Spell description types (dependencies, render results)
 
 pub mod combat;
 pub mod data;
 pub mod game;
 pub mod sim;
+pub mod spell_desc;
 
 // Re-export commonly used types
 pub use combat::{DamageFlags, DamageSchool, HitResult, ResourceType};
@@ -17,8 +19,8 @@ pub use data::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemClassification,
     ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo, ItemStat,
     KnowledgeSource, PeriodicType, PointLimits, RefreshBehavior, SpecDataFlat, SpellDataFlat,
-    TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
-    TraitTreeWithSelections,
+    SpellEffect, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree,
+    TraitTreeFlat, TraitTreeWithSelections,
 };
 pub use game::{
     Attribute, ClassId, DerivedStat, MasteryEffect, PetKind, PetType, RaceId, RatingType, SpecId,
@@ -26,4 +28,7 @@ pub use game::{
 pub use sim::{
     AuraIdx, EnemyIdx, PetIdx, ProcIdx, ResourceIdx, SimTime, SnapshotFlags, SnapshotIdx, SpellIdx,
     TargetIdx, UnitIdx,
+};
+pub use spell_desc::{
+    EffectDependency, SpellDescDependencies, SpellDescRenderResult, SpellValueDependency,
 };

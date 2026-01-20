@@ -4,13 +4,17 @@
 
 export { GameIcon } from "./game-icon";
 export {
-  ItemTooltip,
-  SpellTooltip,
   type ItemQuality,
+  ItemTooltip,
   type ItemTooltipData,
+  SpellTooltip,
   type SpellTooltipData,
 } from "./game-tooltip";
 export { SpecPicker, SpecPickerSkeleton } from "./spec-picker";
+export {
+  SpellDescription,
+  type SpellDescriptionProps,
+} from "./spell-description";
 
 // Constants
 

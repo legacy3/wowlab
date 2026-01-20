@@ -38,6 +38,28 @@ export function useAura(spellId: number | null | undefined) {
   });
 }
 
+export function useAuras(spellIds: number[]) {
+  const supabase = createClient();
+
+  return useQuery({
+    enabled: spellIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .schema("game")
+        .from("auras")
+        .select("*")
+        .in("spell_id", spellIds);
+
+      if (error) {
+        throw error;
+      }
+      
+      return (data ?? []) as Aura[];
+    },
+    queryKey: ["game", "auras", spellIds],
+  });
+}
+
 export function useClass(id: number | null | undefined) {
   const supabase = createClient();
 

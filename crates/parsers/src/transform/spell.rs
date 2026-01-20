@@ -2,7 +2,7 @@
 
 use crate::dbc::DbcData;
 use crate::errors::TransformError;
-use wowlab_types::data::{EmpowerStage, KnowledgeSource, LearnSpell, SpellDataFlat};
+use wowlab_types::data::{EmpowerStage, KnowledgeSource, LearnSpell, SpellDataFlat, SpellEffect};
 
 /// Knowledge context for determining how a spell was learned
 pub struct SpellKnowledgeContext {
@@ -267,6 +267,47 @@ pub fn transform_spell(
     // Determine if passive
     let is_passive = cast_time == 0 && !effects.is_empty() && effects.iter().all(|e| e.Effect == 6);
 
+    // Build denormalized effects array
+    let spell_effects: Vec<SpellEffect> = effects
+        .iter()
+        .map(|e| {
+            // Look up radius values from radius index
+            let (radius_min, radius_max) = if e.EffectRadiusIndex_0 > 0 {
+                dbc.spell_radius
+                    .get(&e.EffectRadiusIndex_0)
+                    .map(|r| (r.RadiusMin, r.RadiusMax))
+                    .unwrap_or((0.0, 0.0))
+            } else if e.EffectRadiusIndex_1 > 0 {
+                dbc.spell_radius
+                    .get(&e.EffectRadiusIndex_1)
+                    .map(|r| (r.RadiusMin, r.RadiusMax))
+                    .unwrap_or((0.0, 0.0))
+            } else {
+                (0.0, 0.0)
+            };
+
+            SpellEffect {
+                index: e.EffectIndex,
+                effect: e.Effect,
+                aura: e.EffectAura,
+                base_points: e.EffectBasePointsF,
+                period: e.EffectAuraPeriod,
+                chain_targets: e.EffectChainTargets,
+                trigger_spell: e.EffectTriggerSpell,
+                misc_value_0: e.EffectMiscValue_0,
+                misc_value_1: e.EffectMiscValue_1,
+                radius_min,
+                radius_max,
+                coefficient: e.Coefficient,
+                variance: e.Variance,
+                bonus_coefficient: e.EffectBonusCoefficient,
+                bonus_coefficient_from_ap: e.BonusCoefficientFromAP,
+                amplitude: e.EffectAmplitude,
+                pvp_multiplier: e.PvpMultiplier,
+            }
+        })
+        .collect();
+
     // Determine knowledge source
     let knowledge_source = context
         .map(|ctx| {
@@ -368,5 +409,6 @@ pub fn transform_spell(
         effect_trigger_spell,
         implicit_target,
         learn_spells,
+        effects: spell_effects,
     })
 }

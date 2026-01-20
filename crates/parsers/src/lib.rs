@@ -38,7 +38,7 @@ pub use wowlab_types::data::{
     argb_to_hex, rgb_to_hex, AuraDataFlat, ClassDataFlat, EmpowerStage, GlobalColorFlat,
     GlobalStringFlat, ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus,
     ItemSetInfo, ItemStat, KnowledgeSource, LearnSpell, PeriodicType, PointLimits, RefreshBehavior,
-    SpecDataFlat, SpellDataFlat, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection,
+    SpecDataFlat, SpellDataFlat, SpellEffect, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection,
     TraitSubTree, TraitTreeFlat, TraitTreeWithSelections,
 };
 
@@ -59,8 +59,15 @@ pub use loadout::{
 
 // Spell description parsing
 pub use spell_desc::{
-    parse as parse_spell_desc, ParsedSpellDescription, ParseResult as SpellDescParseResult,
-    SpellDescriptionNode, VariableNode,
+    analyze_dependencies as analyze_spell_desc_dependencies, parse as parse_spell_desc,
+    render_with_resolver as render_spell_desc, NullResolver, ParsedSpellDescription,
+    ParseResult as SpellDescParseResult, SpellDescResolver, SpellDescriptionNode, TestResolver,
+    VariableNode,
+};
+
+// Re-export spell desc types from wowlab-types
+pub use wowlab_types::{
+    EffectDependency, SpellDescDependencies, SpellDescRenderResult, SpellValueDependency,
 };
 
 // ============================================================================
@@ -92,3 +99,6 @@ pub fn wasm_parse_spell_desc(input: &str) -> Result<ParsedSpellDescription, JsEr
         ))
     }
 }
+
+// Re-export spell description WASM functions
+pub use spell_desc::{wasm_analyze_spell_desc, wasm_render_spell_desc, AnalyzeResult};

@@ -1,4 +1,8 @@
+"use client";
+
 import { css } from "styled-system/css";
+
+import { SpellDescription } from "@/components/game";
 
 import type { TooltipData } from "../types";
 
@@ -58,7 +62,11 @@ export function TalentTooltip({ data }: TalentTooltipProps) {
       <div className={titleStyles} style={{ color: COLORS.selectionRing }}>
         {entry.name}
       </div>
-      <code className={descriptionStyles}>{entry.description}</code>
+      <SpellDescription
+        className={descriptionStyles}
+        description={entry.description}
+        spellId={entry.spellId}
+      />
       {data.node.maxRanks > 1 && (
         <div className={rankStyles}>Rank: 0/{data.node.maxRanks}</div>
       )}

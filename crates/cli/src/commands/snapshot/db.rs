@@ -160,6 +160,7 @@ pub async fn insert_spells(
         "effect_trigger_spell",
         "implicit_target",
         "learn_spells",
+        "effects",
     ];
 
     let pb = progress_bar(rows.len(), "Spells");
@@ -240,7 +241,8 @@ pub async fn insert_spells(
                 .push_bind(&s.attributes)
                 .push_bind(&s.effect_trigger_spell)
                 .push_bind(&s.implicit_target)
-                .push_bind(to_json(&s.learn_spells));
+                .push_bind(to_json(&s.learn_spells))
+                .push_bind(to_json(&s.effects));
         });
 
         qb.push(" ON CONFLICT (id) DO UPDATE SET ");
