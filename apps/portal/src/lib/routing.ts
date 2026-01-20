@@ -82,6 +82,7 @@ export type Route = {
   description: string;
   icon: IconName;
   sitemap: SitemapConfig;
+  preview: boolean;
 };
 export type DynamicRoute = {
   template: string;
@@ -104,8 +105,9 @@ function route(
   description: string,
   icon: IconName,
   sitemapConfig: SitemapConfig = sitemap.disabled,
+  preview = false,
 ): Route {
-  return { path, label, description, icon, sitemap: sitemapConfig };
+  return { path, label, description, icon, sitemap: sitemapConfig, preview };
 }
 
 function dynamic(
@@ -178,7 +180,7 @@ export const routes = {
 
   plan: group({
     index: route("/plan", "Plan", "Character planning", "Calculator", sitemap.monthly),
-    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles", sitemap.monthly),
+    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles", sitemap.monthly, true),
   }).main("talents"),
 
   blog: group({
@@ -348,4 +350,12 @@ export function getDisallowedPaths(): string[] {
       (path, _, all) => !all.some((p) => p !== path && path.startsWith(p)),
     )
     .map((p) => `${p}/`);
+}
+
+const allRoutes = collectRoutes(routes);
+
+export function getRouteByPath(pathname: string): Route | undefined {
+  return allRoutes.find(
+    (r) => pathname === r.path || pathname.startsWith(r.path + "/"),
+  );
 }

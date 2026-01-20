@@ -312,6 +312,15 @@ msgstr ""
 msgid "s6RK5S"
 msgstr ""
 
+#: src/components/common/page-header.tsx:49
+msgid "xBYP4m"
+msgstr ""
+
+#: src/components/common/page-header.tsx:51
+#: src/components/editor/layout/editor-header.tsx:172
+msgid "TJo5E6"
+msgstr ""
+
 #: src/components/computing/cards/cpu-cores-card.tsx:27
 msgid "MLZoUU"
 msgstr ""
@@ -794,10 +803,6 @@ msgstr ""
 msgid "FcWFm7"
 msgstr ""
 
-#: src/components/editor/layout/editor-header.tsx:172
-msgid "TJo5E6"
-msgstr ""
-
 #: src/components/editor/layout/editor-header.tsx:177
 msgid "xpod2V"
 msgstr ""
@@ -948,6 +953,10 @@ msgstr ""
 
 #: src/components/layout/app-sidebar.tsx:77
 msgid "xs6vm4"
+msgstr ""
+
+#: src/components/layout/app-sidebar.tsx:200
+msgid "6+zyf5"
 msgstr ""
 
 #: src/components/layout/computing-drawer.tsx:54

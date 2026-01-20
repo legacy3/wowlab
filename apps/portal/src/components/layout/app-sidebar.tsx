@@ -5,7 +5,7 @@ import { useExtracted } from "next-intl";
 import Image from "next/image";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
-import { Collapsible, Link, Text, Tooltip } from "@/components/ui";
+import { Badge, Collapsible, Link, Text, Tooltip } from "@/components/ui";
 import { usePathname } from "@/i18n/navigation";
 import {
   getIcon,
@@ -128,6 +128,7 @@ const SidebarLink = styled(Link, {
 });
 
 function NavGroup({ item }: { item: MenuNavItem }) {
+  const t = useExtracted();
   const pathname = usePathname();
   const Icon = getIcon(item.route.icon);
   const routePath = href(item.route);
@@ -190,9 +191,15 @@ function NavGroup({ item }: { item: MenuNavItem }) {
                   href={subPath}
                   active={pathname === subPath}
                   variant="plain"
+                  opacity={subItem.preview ? 0.5 : 1}
                 >
                   <SubIcon size={16} />
                   {subItem.label}
+                  {subItem.preview && (
+                    <Badge size="sm" variant="outline" colorPalette="amber">
+                      {t("P")}
+                    </Badge>
+                  )}
                 </SidebarLink>
               </Tooltip>
             );

@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 // Components
 
 export { TalentCalculatorContent } from "./talent-calculator-content";

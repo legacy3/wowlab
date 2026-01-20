@@ -18,16 +18,16 @@ import {
   useCanvasContainer,
 } from "@/components/fabric";
 import { SpecPicker } from "@/components/game";
-import {
-  renderTalentTree,
-  type TalentTreeData,
-  TalentTooltip,
-  type TooltipData,
-} from "./talent-tree";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
 import { useSpecTraits } from "@/lib/state";
 
 import { TalentStartScreen } from "./talent-start-screen";
+import {
+  renderTalentTree,
+  TalentTooltip,
+  type TalentTreeData,
+  type TooltipData,
+} from "./talent-tree";
 
 // =============================================================================
 // Styles
@@ -62,6 +62,47 @@ const controlsWrapperStyles = css({
 
 // =============================================================================
 // Talent Tree View
+// =============================================================================
+
+export function TalentCalculatorContent() {
+  const [specId, setSpecId] = useQueryState(
+    "spec",
+    parseAsInteger.withOptions({
+      history: "push",
+      shallow: true,
+    }),
+  );
+
+  const handleSpecSelect = useCallback(
+    (selectedSpecId: number) => {
+      setSpecId(selectedSpecId);
+    },
+    [setSpecId],
+  );
+
+  // Show start screen when no spec selected
+  if (!specId) {
+    return (
+      <TalentStartScreen
+        talents=""
+        onSpecSelect={handleSpecSelect}
+        onTalentStringChange={() => {
+          // TODO: Parse talent string to extract specId
+        }}
+      />
+    );
+  }
+
+  // Show talent tree when spec is selected
+  return (
+    <VStack gap="4" w="full">
+      <TalentTreeView specId={specId} onSpecChange={handleSpecSelect} />
+    </VStack>
+  );
+}
+
+// =============================================================================
+// Main Content
 // =============================================================================
 
 function TalentTreeView({
@@ -184,46 +225,5 @@ function TalentTreeView({
       {/* Tooltip */}
       {tooltip && <TalentTooltip data={tooltip} />}
     </div>
-  );
-}
-
-// =============================================================================
-// Main Content
-// =============================================================================
-
-export function TalentCalculatorContent() {
-  const [specId, setSpecId] = useQueryState(
-    "spec",
-    parseAsInteger.withOptions({
-      history: "push",
-      shallow: true,
-    }),
-  );
-
-  const handleSpecSelect = useCallback(
-    (selectedSpecId: number) => {
-      setSpecId(selectedSpecId);
-    },
-    [setSpecId],
-  );
-
-  // Show start screen when no spec selected
-  if (!specId) {
-    return (
-      <TalentStartScreen
-        talents=""
-        onSpecSelect={handleSpecSelect}
-        onTalentStringChange={() => {
-          // TODO: Parse talent string to extract specId
-        }}
-      />
-    );
-  }
-
-  // Show talent tree when spec is selected
-  return (
-    <VStack gap="4" w="full">
-      <TalentTreeView specId={specId} onSpecChange={handleSpecSelect} />
-    </VStack>
   );
 }

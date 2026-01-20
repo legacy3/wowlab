@@ -2,8 +2,8 @@
 
 import { Flex, styled, VStack } from "styled-system/jsx";
 
-import { Input, Text } from "@/components/ui";
 import { SpecPicker } from "@/components/game";
+import { Input, Text } from "@/components/ui";
 
 interface TalentStartScreenProps {
   onSpecSelect: (specId: number) => void;
@@ -34,9 +34,7 @@ export function TalentStartScreen({
           textStyle="sm"
           value={talents}
           w="full"
-          onChange={(e) =>
-            onTalentStringChange(e.target.value.trim() || null)
-          }
+          onChange={(e) => onTalentStringChange(e.target.value.trim() || null)}
         />
       </VStack>
 

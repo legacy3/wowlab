@@ -312,6 +312,15 @@ msgstr "New here? Signing in creates an account automatically."
 msgid "s6RK5S"
 msgstr "No posts yet"
 
+#: src/components/common/page-header.tsx:49
+msgid "xBYP4m"
+msgstr "This feature is in active development"
+
+#: src/components/common/page-header.tsx:51
+#: src/components/editor/layout/editor-header.tsx:172
+msgid "TJo5E6"
+msgstr "Preview"
+
 #: src/components/computing/cards/cpu-cores-card.tsx:27
 msgid "MLZoUU"
 msgstr "Browsers may limit reported cores."
@@ -794,10 +803,6 @@ msgstr "Public"
 msgid "FcWFm7"
 msgstr "Edit mode"
 
-#: src/components/editor/layout/editor-header.tsx:172
-msgid "TJo5E6"
-msgstr "Preview"
-
 #: src/components/editor/layout/editor-header.tsx:177
 msgid "xpod2V"
 msgstr "Preview mode"
@@ -949,6 +954,10 @@ msgstr "Toolkit"
 #: src/components/layout/app-sidebar.tsx:77
 msgid "xs6vm4"
 msgstr "Misc"
+
+#: src/components/layout/app-sidebar.tsx:200
+msgid "6+zyf5"
+msgstr "P"
 
 #: src/components/layout/computing-drawer.tsx:54
 #: src/components/layout/navbar.tsx:41
