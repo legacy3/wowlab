@@ -4,6 +4,7 @@
 //! - SimC profile strings (character data, equipment, talents)
 //! - DBC CSV files (WoW database client tables)
 //! - Talent loadout strings (base64-encoded talent selections)
+//! - Spell description strings (tooltip template language)
 
 // ============================================================================
 // Modules
@@ -13,6 +14,7 @@ pub mod dbc;
 pub mod errors;
 pub mod loadout;
 pub mod simc;
+pub mod spell_desc;
 pub mod transform;
 
 // ============================================================================
@@ -55,8 +57,11 @@ pub use loadout::{
     DecodedTraitNode,
 };
 
-// Alias for backward compatibility
-pub use wowlab_types::data::TraitTreeFlat as TalentTreeFlat;
+// Spell description parsing
+pub use spell_desc::{
+    parse as parse_spell_desc, ParsedSpellDescription, ParseResult as SpellDescParseResult,
+    SpellDescriptionNode, VariableNode,
+};
 
 // ============================================================================
 // WASM Bindings
@@ -68,4 +73,22 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen(js_name = parseSimc)]
 pub fn wasm_parse_simc(input: &str) -> Result<Profile, JsError> {
     parse_simc(input).map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Parse a spell description string and return the AST.
+#[wasm_bindgen(js_name = parseSpellDesc)]
+pub fn wasm_parse_spell_desc(input: &str) -> Result<ParsedSpellDescription, JsError> {
+    let result = parse_spell_desc(input);
+    if result.errors.is_empty() {
+        Ok(result.ast)
+    } else {
+        Err(JsError::new(
+            &result
+                .errors
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
+        ))
+    }
 }
