@@ -180,8 +180,8 @@ export const routes = {
 
   plan: group({
     index: route("/plan", "Plan", "Character planning", "Calculator", sitemap.monthly),
-    talents: route("/plan/talents", "Talents", "Talent tree builder", "Sparkles", sitemap.monthly, true),
-  }).main("talents"),
+    traits: route("/plan/traits", "Traits", "Trait calculator", "Sparkles", sitemap.monthly, true),
+  }).main("traits"),
 
   blog: group({
     index: route("/blog", "Blog", "News and updates", "Newspaper", sitemap.weekly),

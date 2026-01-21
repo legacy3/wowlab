@@ -95,6 +95,26 @@ export {
 
 // UI
 
+export {
+  type TraitActions,
+  type TraitState,
+  type TraitStore,
+  useEdgeState,
+  useHistoryState,
+  useLoadoutParam,
+  useNodeActions,
+  useNodeSelection,
+  useNodeState,
+  usePointCounts,
+  usePointLimits,
+  useTraitStore,
+  useTraitUrlSync,
+  useTreeInfo,
+  useVisibleNodes,
+} from "./traits";
+
+// Traits
+
 export { useCardExpanded, useSidebar } from "./ui";
 
 // User

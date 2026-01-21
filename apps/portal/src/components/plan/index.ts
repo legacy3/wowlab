@@ -1,4 +1,4 @@
 // Components
 
 export { PlanIndex } from "./plan-index";
-export { TalentCalculatorContent, TalentStartScreen } from "./talents";
+export { TraitCalculator, TraitStartScreen } from "./traits";

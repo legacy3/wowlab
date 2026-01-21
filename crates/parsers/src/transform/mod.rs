@@ -41,7 +41,7 @@ pub fn transform_all_trait_trees(dbc: &DbcData) -> Vec<TraitTreeFlat> {
         .filter_map(|&spec_id| {
             transform_trait_tree(dbc, spec_id)
                 .inspect_err(
-                    |e| tracing::warn!(spec_id, error = %e, "Failed to transform talent tree"),
+                    |e| tracing::warn!(spec_id, error = %e, "Failed to transform trait tree"),
                 )
                 .ok()
         })
