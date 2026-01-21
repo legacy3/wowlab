@@ -1,12 +1,13 @@
 //! Sync command - Transform DBC data and write to Supabase Postgres
 //!
 //! Usage:
-//!   wowlab snapshot sync --patch 11.2.0 --data-dir ./data
-//!   wowlab snapshot sync --patch 11.2.0 --table spells --table traits
+//!   wowlab snapshot sync --patch 12.0.0 --data-dir ./data
+//!   wowlab snapshot sync --patch 12.0.0 --table spells --table traits
 
 use std::time::Instant;
 
 use anyhow::Result;
+use sqlx::PgPool;
 use wowlab_parsers::{
     transform::{
         transform_all_auras, transform_all_classes, transform_all_global_colors,
@@ -63,21 +64,22 @@ pub async fn run_sync(args: SyncArgs) -> Result<()> {
         return Ok(());
     }
 
-    // 3. Connect and insert
+    // 3. Connect to database
     let pool = timed_async("Connecting to database", db::connect()).await?;
-    let mut tx = pool.begin().await?;
 
+    // 4. Cleanup old data (in transaction for atomicity)
     if !args.no_clean {
+        let mut tx = pool.begin().await?;
         timed_async(
             "Cleaning old data",
             db::cleanup_patch(&mut tx, &args.patch, &args.tables),
         )
         .await?;
+        tx.commit().await?;
     }
 
-    insert_all(&mut tx, &data, &args.patch).await?;
-
-    timed_async("Committing transaction", tx.commit()).await?;
+    // 5. Insert new data (concurrent batches for speed)
+    insert_all(&pool, &data, &args.patch).await?;
 
     tracing::info!(
         "Sync complete for patch {} in {:.2}s",
@@ -143,34 +145,30 @@ where
 // Insert
 // ============================================================================
 
-async fn insert_all(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    data: &TransformedData,
-    patch: &str,
-) -> Result<()> {
+async fn insert_all(pool: &PgPool, data: &TransformedData, patch: &str) -> Result<()> {
     if let Some(ref rows) = data.spells {
-        insert_timed("spells", rows.len(), db::insert_spells(tx, rows, patch)).await?;
+        insert_timed("spells", rows.len(), db::insert_spells(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.traits {
-        insert_timed("traits", rows.len(), db::insert_traits(tx, rows, patch)).await?;
+        insert_timed("traits", rows.len(), db::insert_traits(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.items {
-        insert_timed("items", rows.len(), db::insert_items(tx, rows, patch)).await?;
+        insert_timed("items", rows.len(), db::insert_items(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.auras {
-        insert_timed("auras", rows.len(), db::insert_auras(tx, rows, patch)).await?;
+        insert_timed("auras", rows.len(), db::insert_auras(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.specs {
-        insert_timed("specs", rows.len(), db::insert_specs(tx, rows, patch)).await?;
+        insert_timed("specs", rows.len(), db::insert_specs(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.classes {
-        insert_timed("classes", rows.len(), db::insert_classes(tx, rows, patch)).await?;
+        insert_timed("classes", rows.len(), db::insert_classes(pool, rows, patch)).await?;
     }
     if let Some(ref rows) = data.global_colors {
         insert_timed(
             "global_colors",
             rows.len(),
-            db::insert_global_colors(tx, rows, patch),
+            db::insert_global_colors(pool, rows, patch),
         )
         .await?;
     }
@@ -178,7 +176,7 @@ async fn insert_all(
         insert_timed(
             "global_strings",
             rows.len(),
-            db::insert_global_strings(tx, rows, patch),
+            db::insert_global_strings(pool, rows, patch),
         )
         .await?;
     }

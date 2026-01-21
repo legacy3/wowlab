@@ -1,17 +1,19 @@
 //! Database operations for snapshot sync
 //!
 //! Provides bulk insert operations with:
-//! - Automatic batching respecting Postgres bind limits
+//! - Concurrent batch execution for speed
 //! - Progress tracking
 //! - Upsert conflict handling
 
+use futures::{stream, StreamExt};
 use indicatif::{ProgressBar, ProgressStyle};
+use serde::Serialize;
+use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
+use std::sync::Arc;
 use wowlab_parsers::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
     SpellDataFlat, TraitTreeFlat,
 };
-use serde::Serialize;
-use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
 
 use super::SyncTable;
 
@@ -21,6 +23,9 @@ use super::SyncTable;
 
 /// Postgres maximum bind parameters per query.
 const PG_BIND_LIMIT: usize = 65535;
+
+/// Number of concurrent batch inserts.
+const CONCURRENCY: usize = 10;
 
 /// Calculate safe batch size for a given column count.
 const fn batch_size(columns: usize) -> usize {
@@ -79,11 +84,11 @@ pub async fn cleanup_patch(
 }
 
 // ============================================================================
-// Insert Functions
+// Insert Functions - Concurrent Batch Execution
 // ============================================================================
 
 pub async fn insert_spells(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[SpellDataFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -163,100 +168,116 @@ pub async fn insert_spells(
         "effects",
     ];
 
-    let pb = progress_bar(rows.len(), "Spells");
+    let pb = Arc::new(progress_bar(rows.len(), "Spells"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> =
-            QueryBuilder::new(format!("INSERT INTO game.spells ({}) ", COLUMNS.join(", ")));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.spells ({}) ",
+                    COLUMNS.join(", ")
+                ));
 
-        qb.push_values(chunk, |mut b, s| {
-            b.push_bind(s.id)
-                .push_bind(patch)
-                .push_bind(&s.name)
-                .push_bind(&s.description)
-                .push_bind(&s.aura_description)
-                .push_bind(&s.description_variables)
-                .push_bind(&s.file_name)
-                .push_bind(s.is_passive)
-                .push_bind(to_json(&s.knowledge_source))
-                .push_bind(s.cast_time)
-                .push_bind(s.recovery_time)
-                .push_bind(s.start_recovery_time)
-                .push_bind(s.mana_cost)
-                .push_bind(s.power_cost)
-                .push_bind(s.power_cost_pct)
-                .push_bind(s.power_type)
-                .push_bind(s.charge_recovery_time)
-                .push_bind(s.max_charges)
-                .push_bind(s.range_max_0)
-                .push_bind(s.range_max_1)
-                .push_bind(s.range_min_0)
-                .push_bind(s.range_min_1)
-                .push_bind(s.cone_degrees)
-                .push_bind(s.radius_max)
-                .push_bind(s.radius_min)
-                .push_bind(s.defense_type)
-                .push_bind(s.school_mask)
-                .push_bind(s.bonus_coefficient_from_ap)
-                .push_bind(s.effect_bonus_coefficient)
-                .push_bind(s.interrupt_aura_0)
-                .push_bind(s.interrupt_aura_1)
-                .push_bind(s.interrupt_channel_0)
-                .push_bind(s.interrupt_channel_1)
-                .push_bind(s.interrupt_flags)
-                .push_bind(s.duration)
-                .push_bind(s.max_duration)
-                .push_bind(s.can_empower)
-                .push_bind(to_json(&s.empower_stages))
-                .push_bind(s.dispel_type)
-                .push_bind(s.facing_caster_flags)
-                .push_bind(s.speed)
-                .push_bind(s.spell_class_mask_1)
-                .push_bind(s.spell_class_mask_2)
-                .push_bind(s.spell_class_mask_3)
-                .push_bind(s.spell_class_mask_4)
-                .push_bind(s.spell_class_set)
-                .push_bind(s.base_level)
-                .push_bind(s.max_level)
-                .push_bind(s.max_passive_aura_level)
-                .push_bind(s.spell_level)
-                .push_bind(s.caster_aura_spell)
-                .push_bind(s.caster_aura_state)
-                .push_bind(s.exclude_caster_aura_spell)
-                .push_bind(s.exclude_caster_aura_state)
-                .push_bind(s.exclude_target_aura_spell)
-                .push_bind(s.exclude_target_aura_state)
-                .push_bind(s.target_aura_spell)
-                .push_bind(s.target_aura_state)
-                .push_bind(s.replacement_spell_id)
-                .push_bind(s.shapeshift_exclude_0)
-                .push_bind(s.shapeshift_exclude_1)
-                .push_bind(s.shapeshift_mask_0)
-                .push_bind(s.shapeshift_mask_1)
-                .push_bind(s.stance_bar_order)
-                .push_bind(s.required_totem_category_0)
-                .push_bind(s.required_totem_category_1)
-                .push_bind(s.totem_0)
-                .push_bind(s.totem_1)
-                .push_bind(&s.attributes)
-                .push_bind(&s.effect_trigger_spell)
-                .push_bind(&s.implicit_target)
-                .push_bind(to_json(&s.learn_spells))
-                .push_bind(to_json(&s.effects));
-        });
+                qb.push_values(chunk, |mut b, s| {
+                    b.push_bind(s.id)
+                        .push_bind(&patch)
+                        .push_bind(&s.name)
+                        .push_bind(&s.description)
+                        .push_bind(&s.aura_description)
+                        .push_bind(&s.description_variables)
+                        .push_bind(&s.file_name)
+                        .push_bind(s.is_passive)
+                        .push_bind(to_json(&s.knowledge_source))
+                        .push_bind(s.cast_time)
+                        .push_bind(s.recovery_time)
+                        .push_bind(s.start_recovery_time)
+                        .push_bind(s.mana_cost)
+                        .push_bind(s.power_cost)
+                        .push_bind(s.power_cost_pct)
+                        .push_bind(s.power_type)
+                        .push_bind(s.charge_recovery_time)
+                        .push_bind(s.max_charges)
+                        .push_bind(s.range_max_0)
+                        .push_bind(s.range_max_1)
+                        .push_bind(s.range_min_0)
+                        .push_bind(s.range_min_1)
+                        .push_bind(s.cone_degrees)
+                        .push_bind(s.radius_max)
+                        .push_bind(s.radius_min)
+                        .push_bind(s.defense_type)
+                        .push_bind(s.school_mask)
+                        .push_bind(s.bonus_coefficient_from_ap)
+                        .push_bind(s.effect_bonus_coefficient)
+                        .push_bind(s.interrupt_aura_0)
+                        .push_bind(s.interrupt_aura_1)
+                        .push_bind(s.interrupt_channel_0)
+                        .push_bind(s.interrupt_channel_1)
+                        .push_bind(s.interrupt_flags)
+                        .push_bind(s.duration)
+                        .push_bind(s.max_duration)
+                        .push_bind(s.can_empower)
+                        .push_bind(to_json(&s.empower_stages))
+                        .push_bind(s.dispel_type)
+                        .push_bind(s.facing_caster_flags)
+                        .push_bind(s.speed)
+                        .push_bind(s.spell_class_mask_1)
+                        .push_bind(s.spell_class_mask_2)
+                        .push_bind(s.spell_class_mask_3)
+                        .push_bind(s.spell_class_mask_4)
+                        .push_bind(s.spell_class_set)
+                        .push_bind(s.base_level)
+                        .push_bind(s.max_level)
+                        .push_bind(s.max_passive_aura_level)
+                        .push_bind(s.spell_level)
+                        .push_bind(s.caster_aura_spell)
+                        .push_bind(s.caster_aura_state)
+                        .push_bind(s.exclude_caster_aura_spell)
+                        .push_bind(s.exclude_caster_aura_state)
+                        .push_bind(s.exclude_target_aura_spell)
+                        .push_bind(s.exclude_target_aura_state)
+                        .push_bind(s.target_aura_spell)
+                        .push_bind(s.target_aura_state)
+                        .push_bind(s.replacement_spell_id)
+                        .push_bind(s.shapeshift_exclude_0)
+                        .push_bind(s.shapeshift_exclude_1)
+                        .push_bind(s.shapeshift_mask_0)
+                        .push_bind(s.shapeshift_mask_1)
+                        .push_bind(s.stance_bar_order)
+                        .push_bind(s.required_totem_category_0)
+                        .push_bind(s.required_totem_category_1)
+                        .push_bind(s.totem_0)
+                        .push_bind(s.totem_1)
+                        .push_bind(&s.attributes)
+                        .push_bind(&s.effect_trigger_spell)
+                        .push_bind(&s.implicit_target)
+                        .push_bind(to_json(&s.learn_spells))
+                        .push_bind(to_json(&s.effects));
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_traits(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[TraitTreeFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -273,39 +294,53 @@ pub async fn insert_traits(
         "point_limits",
     ];
 
-    let pb = progress_bar(rows.len(), "Traits");
+    let pb = Arc::new(progress_bar(rows.len(), "Traits"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.specs_traits ({}) ",
-            COLUMNS.join(", ")
-        ));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.specs_traits ({}) ",
+                    COLUMNS.join(", ")
+                ));
 
-        qb.push_values(chunk, |mut b, t| {
-            b.push_bind(t.spec_id)
-                .push_bind(patch)
-                .push_bind(&t.spec_name)
-                .push_bind(&t.class_name)
-                .push_bind(t.tree_id)
-                .push_bind(&t.all_node_ids)
-                .push_bind(to_json(&t.nodes))
-                .push_bind(to_json(&t.edges))
-                .push_bind(to_json(&t.sub_trees))
-                .push_bind(to_json(&t.point_limits));
-        });
+                qb.push_values(chunk, |mut b, t| {
+                    b.push_bind(t.spec_id)
+                        .push_bind(&patch)
+                        .push_bind(&t.spec_name)
+                        .push_bind(&t.class_name)
+                        .push_bind(t.tree_id)
+                        .push_bind(&t.all_node_ids)
+                        .push_bind(to_json(&t.nodes))
+                        .push_bind(to_json(&t.edges))
+                        .push_bind(to_json(&t.sub_trees))
+                        .push_bind(to_json(&t.point_limits));
+                });
 
-        qb.push(" ON CONFLICT (spec_id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (spec_id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_items(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[ItemDataFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -344,59 +379,73 @@ pub async fn insert_items(
         "modified_crafting_reagent_item_id",
     ];
 
-    let pb = progress_bar(rows.len(), "Items");
+    let pb = Arc::new(progress_bar(rows.len(), "Items"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> =
-            QueryBuilder::new(format!("INSERT INTO game.items ({}) ", COLUMNS.join(", ")));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> =
+                    QueryBuilder::new(format!("INSERT INTO game.items ({}) ", COLUMNS.join(", ")));
 
-        qb.push_values(chunk, |mut b, i| {
-            b.push_bind(i.id)
-                .push_bind(patch)
-                .push_bind(&i.name)
-                .push_bind(&i.description)
-                .push_bind(&i.file_name)
-                .push_bind(i.item_level)
-                .push_bind(i.quality)
-                .push_bind(i.required_level)
-                .push_bind(i.binding)
-                .push_bind(i.buy_price)
-                .push_bind(i.sell_price)
-                .push_bind(i.max_count)
-                .push_bind(i.stackable)
-                .push_bind(i.speed)
-                .push_bind(i.class_id)
-                .push_bind(i.subclass_id)
-                .push_bind(i.inventory_type)
-                .push_bind(to_json(&i.classification))
-                .push_bind(to_json(&i.stats))
-                .push_bind(to_json(&i.effects))
-                .push_bind(&i.sockets)
-                .push_bind(i.socket_bonus_enchant_id)
-                .push_bind(&i.flags)
-                .push_bind(i.allowable_class)
-                .push_bind(i.allowable_race)
-                .push_bind(i.expansion_id)
-                .push_bind(i.item_set_id)
-                .push_bind(to_json(&i.set_info))
-                .push_bind(to_json(&i.drop_sources))
-                .push_bind(i.dmg_variance)
-                .push_bind(i.gem_properties)
-                .push_bind(i.modified_crafting_reagent_item_id);
-        });
+                qb.push_values(chunk, |mut b, i| {
+                    b.push_bind(i.id)
+                        .push_bind(&patch)
+                        .push_bind(&i.name)
+                        .push_bind(&i.description)
+                        .push_bind(&i.file_name)
+                        .push_bind(i.item_level)
+                        .push_bind(i.quality)
+                        .push_bind(i.required_level)
+                        .push_bind(i.binding)
+                        .push_bind(i.buy_price)
+                        .push_bind(i.sell_price)
+                        .push_bind(i.max_count)
+                        .push_bind(i.stackable)
+                        .push_bind(i.speed)
+                        .push_bind(i.class_id)
+                        .push_bind(i.subclass_id)
+                        .push_bind(i.inventory_type)
+                        .push_bind(to_json(&i.classification))
+                        .push_bind(to_json(&i.stats))
+                        .push_bind(to_json(&i.effects))
+                        .push_bind(&i.sockets)
+                        .push_bind(i.socket_bonus_enchant_id)
+                        .push_bind(&i.flags)
+                        .push_bind(i.allowable_class)
+                        .push_bind(i.allowable_race)
+                        .push_bind(i.expansion_id)
+                        .push_bind(i.item_set_id)
+                        .push_bind(to_json(&i.set_info))
+                        .push_bind(to_json(&i.drop_sources))
+                        .push_bind(i.dmg_variance)
+                        .push_bind(i.gem_properties)
+                        .push_bind(i.modified_crafting_reagent_item_id);
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_auras(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[AuraDataFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -417,52 +466,66 @@ pub async fn insert_auras(
         "tick_on_application",
     ];
 
-    let pb = progress_bar(rows.len(), "Auras");
+    let pb = Arc::new(progress_bar(rows.len(), "Auras"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> =
-            QueryBuilder::new(format!("INSERT INTO game.auras ({}) ", COLUMNS.join(", ")));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> =
+                    QueryBuilder::new(format!("INSERT INTO game.auras ({}) ", COLUMNS.join(", ")));
 
-        qb.push_values(chunk, |mut b, a| {
-            let periodic_type = a
-                .periodic_type
-                .as_ref()
-                .and_then(|t| serde_json::to_value(t).ok())
-                .and_then(|v| v.as_str().map(|s| s.to_string()));
+                qb.push_values(chunk, |mut b, a| {
+                    let periodic_type = a
+                        .periodic_type
+                        .as_ref()
+                        .and_then(|t| serde_json::to_value(t).ok())
+                        .and_then(|v| v.as_str().map(|s| s.to_string()));
 
-            let refresh_behavior = serde_json::to_value(&a.refresh_behavior)
-                .ok()
-                .and_then(|v| v.as_str().map(|s| s.to_string()))
-                .unwrap_or_else(|| "pandemic".to_string());
+                    let refresh_behavior = serde_json::to_value(&a.refresh_behavior)
+                        .ok()
+                        .and_then(|v| v.as_str().map(|s| s.to_string()))
+                        .unwrap_or_else(|| "pandemic".to_string());
 
-            b.push_bind(a.spell_id)
-                .push_bind(patch)
-                .push_bind(a.base_duration_ms)
-                .push_bind(a.max_duration_ms)
-                .push_bind(a.max_stacks)
-                .push_bind(periodic_type)
-                .push_bind(a.tick_period_ms)
-                .push_bind(refresh_behavior)
-                .push_bind(a.duration_hasted)
-                .push_bind(a.hasted_ticks)
-                .push_bind(a.pandemic_refresh)
-                .push_bind(a.rolling_periodic)
-                .push_bind(a.tick_may_crit)
-                .push_bind(a.tick_on_application);
-        });
+                    b.push_bind(a.spell_id)
+                        .push_bind(&patch)
+                        .push_bind(a.base_duration_ms)
+                        .push_bind(a.max_duration_ms)
+                        .push_bind(a.max_stacks)
+                        .push_bind(periodic_type)
+                        .push_bind(a.tick_period_ms)
+                        .push_bind(refresh_behavior)
+                        .push_bind(a.duration_hasted)
+                        .push_bind(a.hasted_ticks)
+                        .push_bind(a.pandemic_refresh)
+                        .push_bind(a.rolling_periodic)
+                        .push_bind(a.tick_may_crit)
+                        .push_bind(a.tick_on_application);
+                });
 
-        qb.push(" ON CONFLICT (spell_id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (spell_id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_specs(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[SpecDataFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -482,40 +545,54 @@ pub async fn insert_specs(
         "mastery_spell_id_1",
     ];
 
-    let pb = progress_bar(rows.len(), "Specs");
+    let pb = Arc::new(progress_bar(rows.len(), "Specs"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> =
-            QueryBuilder::new(format!("INSERT INTO game.specs ({}) ", COLUMNS.join(", ")));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> =
+                    QueryBuilder::new(format!("INSERT INTO game.specs ({}) ", COLUMNS.join(", ")));
 
-        qb.push_values(chunk, |mut b, s| {
-            b.push_bind(s.id)
-                .push_bind(patch)
-                .push_bind(&s.name)
-                .push_bind(&s.description)
-                .push_bind(s.class_id)
-                .push_bind(&s.class_name)
-                .push_bind(s.role)
-                .push_bind(s.order_index)
-                .push_bind(s.icon_file_id)
-                .push_bind(&s.file_name)
-                .push_bind(s.primary_stat_priority)
-                .push_bind(s.mastery_spell_id_0)
-                .push_bind(s.mastery_spell_id_1);
-        });
+                qb.push_values(chunk, |mut b, s| {
+                    b.push_bind(s.id)
+                        .push_bind(&patch)
+                        .push_bind(&s.name)
+                        .push_bind(&s.description)
+                        .push_bind(s.class_id)
+                        .push_bind(&s.class_name)
+                        .push_bind(s.role)
+                        .push_bind(s.order_index)
+                        .push_bind(s.icon_file_id)
+                        .push_bind(&s.file_name)
+                        .push_bind(s.primary_stat_priority)
+                        .push_bind(s.mastery_spell_id_0)
+                        .push_bind(s.mastery_spell_id_1);
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_classes(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[ClassDataFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
@@ -532,97 +609,139 @@ pub async fn insert_classes(
         "roles_mask",
     ];
 
-    let pb = progress_bar(rows.len(), "Classes");
+    let pb = Arc::new(progress_bar(rows.len(), "Classes"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.classes ({}) ",
-            COLUMNS.join(", ")
-        ));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.classes ({}) ",
+                    COLUMNS.join(", ")
+                ));
 
-        qb.push_values(chunk, |mut b, c| {
-            b.push_bind(c.id)
-                .push_bind(patch)
-                .push_bind(&c.name)
-                .push_bind(&c.filename)
-                .push_bind(c.icon_file_id)
-                .push_bind(&c.file_name)
-                .push_bind(&c.color)
-                .push_bind(c.spell_class_set)
-                .push_bind(c.primary_stat_priority)
-                .push_bind(c.roles_mask);
-        });
+                qb.push_values(chunk, |mut b, c| {
+                    b.push_bind(c.id)
+                        .push_bind(&patch)
+                        .push_bind(&c.name)
+                        .push_bind(&c.filename)
+                        .push_bind(c.icon_file_id)
+                        .push_bind(&c.file_name)
+                        .push_bind(&c.color)
+                        .push_bind(c.spell_class_set)
+                        .push_bind(c.primary_stat_priority)
+                        .push_bind(c.roles_mask);
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_global_colors(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[GlobalColorFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &["id", "patch_version", "name", "color"];
 
-    let pb = progress_bar(rows.len(), "GlobalColors");
+    let pb = Arc::new(progress_bar(rows.len(), "GlobalColors"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.global_colors ({}) ",
-            COLUMNS.join(", ")
-        ));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.global_colors ({}) ",
+                    COLUMNS.join(", ")
+                ));
 
-        qb.push_values(chunk, |mut b, c| {
-            b.push_bind(c.id)
-                .push_bind(patch)
-                .push_bind(&c.name)
-                .push_bind(&c.color);
-        });
+                qb.push_values(chunk, |mut b, c| {
+                    b.push_bind(c.id)
+                        .push_bind(&patch)
+                        .push_bind(&c.name)
+                        .push_bind(&c.color);
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
 }
 
 pub async fn insert_global_strings(
-    tx: &mut Transaction<'_, Postgres>,
+    pool: &PgPool,
     rows: &[GlobalStringFlat],
     patch: &str,
 ) -> Result<(), sqlx::Error> {
     const COLUMNS: &[&str] = &["id", "patch_version", "tag", "value", "flags"];
 
-    let pb = progress_bar(rows.len(), "GlobalStrings");
+    let pb = Arc::new(progress_bar(rows.len(), "GlobalStrings"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
 
-    for chunk in rows.chunks(batch_size(COLUMNS.len())) {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-            "INSERT INTO game.global_strings ({}) ",
-            COLUMNS.join(", ")
-        ));
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.global_strings ({}) ",
+                    COLUMNS.join(", ")
+                ));
 
-        qb.push_values(chunk, |mut b, s| {
-            b.push_bind(s.id)
-                .push_bind(patch)
-                .push_bind(&s.tag)
-                .push_bind(&s.value)
-                .push_bind(s.flags);
-        });
+                qb.push_values(chunk, |mut b, s| {
+                    b.push_bind(s.id)
+                        .push_bind(&patch)
+                        .push_bind(&s.tag)
+                        .push_bind(&s.value)
+                        .push_bind(s.flags);
+                });
 
-        qb.push(" ON CONFLICT (id) DO UPDATE SET ");
-        qb.push(upsert_all_columns(COLUMNS));
-        qb.build().execute(&mut **tx).await?;
-        pb.inc(chunk.len() as u64);
-    }
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
     pb.finish();
     Ok(())
