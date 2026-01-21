@@ -1,9 +1,7 @@
 "use client";
 
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDownIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { css } from "styled-system/css";
+import { useEffect, useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
 import { FragmentRenderer } from "@/components/game";
@@ -27,14 +25,8 @@ interface TraitSpell {
   subTreeName?: string;
 }
 
-const scrollContainerStyles = css({
-  h: "500px",
-  overflow: "auto",
-});
-
 export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
   const [search, setSearch] = useState("");
-  const parentRef = useRef<HTMLDivElement>(null);
 
   const subTreeMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -53,9 +45,7 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
       const subTreeName = subTreeMap.get(node.subTreeId);
 
       for (const entry of node.entries) {
-        if (!entry.description) {
-          continue;
-        }
+        if (!entry.description) continue;
 
         spells.push({
           description: entry.description,
@@ -73,9 +63,7 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
   }, [nodes, subTreeMap]);
 
   const filteredSpells = useMemo(() => {
-    if (!search.trim()) {
-      return allSpells;
-    }
+    if (!search.trim()) return allSpells;
 
     const searchLower = search.toLowerCase();
     return allSpells.filter(
@@ -85,13 +73,6 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
         spell.subTreeName?.toLowerCase().includes(searchLower),
     );
   }, [allSpells, search]);
-
-  const virtualizer = useVirtualizer({
-    count: filteredSpells.length,
-    estimateSize: () => 48,
-    getScrollElement: () => parentRef.current,
-    overscan: 5,
-  });
 
   return (
     <Stack gap={4} w="full">
@@ -108,38 +89,17 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
         </Text>
       </HStack>
 
-      <div ref={parentRef} className={scrollContainerStyles}>
-        <Accordion.Root multiple>
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              position: "relative",
-              width: "100%",
-            }}
-          >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const spell = filteredSpells[virtualRow.index];
+      <Accordion.Root multiple>
+        {filteredSpells.slice(0, 50).map((spell) => (
+          <SpellCard key={`${spell.nodeId}-${spell.spellId}`} spell={spell} />
+        ))}
+      </Accordion.Root>
 
-              return (
-                <div
-                  key={`${spell.nodeId}-${spell.spellId}`}
-                  data-index={virtualRow.index}
-                  ref={virtualizer.measureElement}
-                  style={{
-                    left: 0,
-                    position: "absolute",
-                    top: 0,
-                    transform: `translateY(${virtualRow.start}px)`,
-                    width: "100%",
-                  }}
-                >
-                  <SpellCard spell={spell} />
-                </div>
-              );
-            })}
-          </div>
-        </Accordion.Root>
-      </div>
+      {filteredSpells.length > 50 && (
+        <Text textStyle="xs" color="fg.muted" textAlign="center">
+          Showing first 50 of {filteredSpells.length}. Search to narrow down.
+        </Text>
+      )}
 
       {filteredSpells.length === 0 && (
         <Text textStyle="sm" color="fg.muted" textAlign="center" py={8}>
