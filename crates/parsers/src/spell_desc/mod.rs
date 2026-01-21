@@ -54,4 +54,4 @@ pub use renderer::render_with_resolver;
 pub use wasm::{wasm_analyze_spell_desc, wasm_render_spell_desc, AnalyzeResult};
 
 // Re-export lexer for advanced use cases
-pub use lexer::{lex, tokenize, ExprToken, Token};
+pub use lexer::{lex, tokenize, tokenize_to_fragments, ExprToken, Token};

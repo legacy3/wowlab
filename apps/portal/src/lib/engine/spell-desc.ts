@@ -188,6 +188,8 @@ export function fragmentsToPlainText(
           return fragmentsToPlainText(f.fragments);
         case "icon":
           return "";
+        case "rawToken":
+          return f.value;
         case "spellName":
           return f.name;
         case "text":
@@ -219,6 +221,15 @@ export async function renderSpellDescription(
 ): Promise<import("wowlab-parsers").SpellDescRenderResult> {
   const m = await initParsers();
   return m.renderSpellDesc(description, spellId, resolver);
+}
+
+export async function tokenizeSpellDescription(
+  description: string,
+): Promise<import("wowlab-parsers").SpellDescFragment[]> {
+  const m = await initParsers();
+  return m.tokenizeSpellDesc(
+    description,
+  ) as import("wowlab-parsers").SpellDescFragment[];
 }
 
 /**

@@ -221,6 +221,8 @@ pub enum SpellDescFragment {
     },
     /// Unresolved variable (shown as original token).
     Unresolved { token: String },
+    /// Raw token for debug display (variable/expression shown without resolving).
+    RawToken { value: String },
 }
 
 /// Result of rendering a spell description.
@@ -283,6 +285,7 @@ impl SpellDescRenderResult {
                     SpellDescRenderResult::with_fragments(fragments.clone()).to_plain_text()
                 }
                 SpellDescFragment::Unresolved { token } => token.clone(),
+                SpellDescFragment::RawToken { value } => value.clone(),
             })
             .collect()
     }

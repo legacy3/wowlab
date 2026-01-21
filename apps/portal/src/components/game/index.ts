@@ -1,5 +1,6 @@
 // Components
 
+export { FragmentRenderer } from "./fragment-renderer";
 export { GameIcon } from "./game-icon";
 export {
   type ItemQuality,

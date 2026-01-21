@@ -30,6 +30,7 @@ export {
   type SpellDescFragment,
   type SpellDescRenderResult,
   type SpellDescResolver,
+  tokenizeSpellDescription,
 } from "./spell-desc";
 
 // Types

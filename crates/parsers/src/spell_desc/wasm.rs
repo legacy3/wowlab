@@ -4,6 +4,7 @@
 //! rendering spell descriptions with a JavaScript resolver object.
 
 use super::analyzer::analyze_dependencies;
+use super::lexer::tokenize_to_fragments;
 use super::parser::parse;
 use super::renderer::render_with_resolver;
 use super::resolver::SpellDescResolver;
@@ -256,4 +257,20 @@ pub fn wasm_render_spell_desc(
         &js_resolver,
         parse_errors,
     ))
+}
+
+/// Tokenize a spell description and return fragments for debug display.
+///
+/// Variables and expressions become RawToken fragments (for highlighting).
+/// Plain text becomes Text fragments.
+///
+/// # Arguments
+/// * `input` - The spell description text
+///
+/// # Returns
+/// A vector of `SpellDescFragment` for rendering.
+#[wasm_bindgen(js_name = tokenizeSpellDesc)]
+pub fn wasm_tokenize_spell_desc(input: &str) -> JsValue {
+    let fragments = tokenize_to_fragments(input);
+    serde_wasm_bindgen::to_value(&fragments).unwrap_or(JsValue::NULL)
 }

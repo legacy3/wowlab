@@ -1282,3 +1282,20 @@ fn render_spelldesc_recursive_with_variables() {
     let rendered = render_to_text(&result.ast, 12345, &resolver);
     assert_eq!(rendered, "Deals 100 to 200 damage.");
 }
+
+#[test]
+fn test_tokenize_color_fragments() {
+    use wowlab_parsers::spell_desc::tokenize_to_fragments;
+    use wowlab_types::spell_desc::SpellDescFragment;
+
+    let input = "|cFFFFFFFFMograine|r casts death";
+    let fragments = tokenize_to_fragments(input);
+
+    println!("Fragments: {:#?}", fragments);
+
+    // Check we got ColorStart, Text, ColorEnd, Text
+    assert!(matches!(fragments.get(0), Some(SpellDescFragment::ColorStart { .. })));
+    assert!(matches!(fragments.get(1), Some(SpellDescFragment::Text { .. })));
+    assert!(matches!(fragments.get(2), Some(SpellDescFragment::ColorEnd)));
+    assert!(matches!(fragments.get(3), Some(SpellDescFragment::Text { .. })));
+}

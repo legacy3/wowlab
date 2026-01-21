@@ -311,3 +311,86 @@ pub fn lex_expr(input: &str) -> LogosLexer<'_, ExprToken<'_>> {
 pub fn tokenize_expr(input: &str) -> Vec<ExprToken<'_>> {
     lex_expr(input).filter_map(|r| r.ok()).collect()
 }
+
+// ============================================================================
+// Tokenization to fragments (for debug UI highlighting)
+// ============================================================================
+
+use wowlab_types::spell_desc::SpellDescFragment;
+
+/// Convert a token to its corresponding fragment.
+fn token_to_fragment(token: &Token<'_>, input: &str, span: std::ops::Range<usize>) -> SpellDescFragment {
+    match token {
+        // Color codes -> ColorStart/ColorEnd
+        Token::ColorCode(code) => {
+            if code.to_lowercase() == "|r" {
+                SpellDescFragment::ColorEnd
+            } else {
+                SpellDescFragment::ColorStart {
+                    color: code[2..].to_uppercase(),
+                }
+            }
+        }
+
+        // Expression blocks -> RawToken
+        Token::ExpressionBlock(_) => SpellDescFragment::RawToken {
+            value: format!("${{{}}}", &input[span.start + 2..span.end]),
+        },
+
+        // Pluralization/Gender -> RawToken with reconstructed syntax
+        Token::Pluralization((content, cap)) => SpellDescFragment::RawToken {
+            value: format!("{}{};\u{200B}", if *cap { "$L" } else { "$l" }, content),
+        },
+        Token::Gender((content, cap)) => SpellDescFragment::RawToken {
+            value: format!("{}{};\u{200B}", if *cap { "$G" } else { "$g" }, content),
+        },
+
+        // Variables and conditionals -> RawToken
+        Token::CustomVariable(_)
+        | Token::AtVariable(_)
+        | Token::EffectVariable(_)
+        | Token::SpellLevelVariable(_)
+        | Token::PlayerVariable(_)
+        | Token::EnchantVariable(_)
+        | Token::MiscVariable(_)
+        | Token::CrossSpellRef(_)
+        | Token::SimpleVariable(_)
+        | Token::ConditionalStart
+        | Token::CondFuncCall(_) => SpellDescFragment::RawToken {
+            value: input[span].to_string(),
+        },
+
+        // Everything else -> Text
+        _ => SpellDescFragment::Text {
+            value: input[span].to_string(),
+        },
+    }
+}
+
+/// Tokenize input and return fragments for debug display.
+///
+/// Variables and expressions become RawToken fragments (highlighted).
+/// Color codes become ColorStart/ColorEnd fragments.
+/// Plain text becomes Text fragments.
+pub fn tokenize_to_fragments(input: &str) -> Vec<SpellDescFragment> {
+    let mut lexer = lex(input);
+    let mut fragments = Vec::new();
+
+    while let Some(result) = lexer.next() {
+        if let Ok(token) = result {
+            let fragment = token_to_fragment(&token, input, lexer.span());
+
+            // Merge adjacent text fragments
+            if let SpellDescFragment::Text { value } = &fragment {
+                if let Some(SpellDescFragment::Text { value: existing }) = fragments.last_mut() {
+                    existing.push_str(value);
+                    continue;
+                }
+            }
+
+            fragments.push(fragment);
+        }
+    }
+
+    fragments
+}

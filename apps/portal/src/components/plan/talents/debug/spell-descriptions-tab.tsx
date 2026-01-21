@@ -1,11 +1,16 @@
 "use client";
 
 import { ChevronDownIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
+import { FragmentRenderer } from "@/components/game";
 import { Accordion, Badge, Card, Input, Text } from "@/components/ui";
-import { fragmentsToPlainText } from "@/lib/engine";
+import {
+  fragmentsToPlainText,
+  type SpellDescFragment,
+  tokenizeSpellDescription,
+} from "@/lib/engine";
 import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
 
 import type { DebugTabProps } from "./types";
@@ -112,6 +117,14 @@ function SpellCard({ spell }: { spell: TalentSpell }) {
     defaultPaperdoll,
   );
 
+  const [rawFragments, setRawFragments] = useState<SpellDescFragment[] | null>(
+    null,
+  );
+
+  useEffect(() => {
+    tokenizeSpellDescription(spell.description).then(setRawFragments);
+  }, [spell.description]);
+
   const rendered = result ? fragmentsToPlainText(result.fragments) : null;
 
   return (
@@ -152,7 +165,11 @@ function SpellCard({ spell }: { spell: TalentSpell }) {
               <Card.Root>
                 <Card.Body py={2} px={3}>
                   <Text textStyle="xs" fontFamily="mono" color="fg.muted">
-                    {spell.description}
+                    {rawFragments ? (
+                      <FragmentRenderer fragments={rawFragments} />
+                    ) : (
+                      spell.description
+                    )}
                   </Text>
                 </Card.Body>
               </Card.Root>
