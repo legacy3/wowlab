@@ -1,5 +1,3 @@
- 
-
 // Components
 
 export { GameIcon } from "./game-icon";

@@ -3,26 +3,22 @@ import type { ReactNode } from "react";
 import { PageContainer } from "@/components/common";
 import { breadcrumb, routes } from "@/lib/routing";
 
-interface RotationsBrowseLayoutProps {
-  children: ReactNode;
-  modal: ReactNode;
-}
-
-export default function RotationsBrowseLayout({
+export default function NodesClaimLayout({
   children,
-  modal,
-}: RotationsBrowseLayoutProps) {
+}: {
+  children: ReactNode;
+}) {
   return (
     <PageContainer
-      route={routes.rotations.browse}
+      route={routes.account.nodes.claim}
       breadcrumbs={breadcrumb(
         routes.home,
-        routes.rotations.index,
-        routes.rotations.browse,
+        routes.account.index,
+        routes.account.nodes.index,
+        routes.account.nodes.claim,
       )}
     >
       {children}
-      {modal}
     </PageContainer>
   );
 }

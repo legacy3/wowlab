@@ -1,5 +1,3 @@
- 
-
 // Components
 
 export { SpellDescriptionViewer } from "./spell-description-diff";
