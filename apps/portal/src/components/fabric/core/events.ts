@@ -1,5 +1,7 @@
 import type * as fabric from "fabric";
 
+import type { InteractionMode } from "../plugins/interaction";
+
 export interface FabricEvents {
   "alignment:change": { type: string };
   "canvas:dispose": void;
@@ -14,7 +16,7 @@ export interface FabricEvents {
   "history:save": void;
   "history:undo": void;
   "history:update": HistoryState;
-  "interaction:change": { mode: string };
+  "interaction:change": { mode: InteractionMode };
   "object:add": { object: fabric.FabricObject };
   "objects:clear": void;
   "objects:duplicate": { objects: fabric.FabricObject[] };

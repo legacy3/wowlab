@@ -5,8 +5,13 @@ import type { FabricPlugin } from "../core/plugin";
 import type { ShortcutsPlugin } from "./shortcuts";
 
 export interface ZoomPluginConfig {
+  /** Enable mouse wheel zoom (default: true) */
+  enableMouseWheel?: boolean;
+  /** Maximum zoom level (default: uses controller config) */
   maxZoom?: number;
+  /** Minimum zoom level (default: uses controller config) */
   minZoom?: number;
+  /** Zoom step for button zoom (default: 0.2 = 20%) */
   zoomStep?: number;
 }
 
@@ -15,32 +20,50 @@ export class ZoomPlugin implements FabricPlugin {
   readonly name = "zoom";
 
   private canvas!: fabric.Canvas;
-  private config: Required<ZoomPluginConfig>;
+  private config!: Required<ZoomPluginConfig>;
   private controller!: CanvasController;
 
-  constructor(config: ZoomPluginConfig = {}) {
-    this.config = {
-      maxZoom: config.maxZoom ?? 20,
-      minZoom: config.minZoom ?? 0.1,
-      zoomStep: config.zoomStep ?? 0.05,
-    };
-  }
+  private handleMouseWheel = (opt: fabric.TPointerEventInfo): void => {
+    const e = opt.e as WheelEvent;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const delta = e.deltaY;
+    const current = this.canvas.getZoom();
+    const zoom = current * 0.999 ** delta;
+    const next = this.clampZoom(zoom);
+
+    this.canvas.zoomToPoint(new fabric.Point(e.offsetX, e.offsetY), next);
+    this.controller.notifyState();
+  };
+
+  constructor(private userConfig: ZoomPluginConfig = {}) {}
 
   get zoom(): number {
     return this.canvas.getZoom();
   }
 
-  clampZoom(zoom: number): number {
-    return Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
-  }
-
   destroy(): void {
+    this.canvas.off("mouse:wheel", this.handleMouseWheel);
     this.unregisterShortcuts();
   }
 
   init(canvas: fabric.Canvas, controller: CanvasController): void {
     this.canvas = canvas;
     this.controller = controller;
+
+    // Merge user config with controller defaults
+    this.config = {
+      enableMouseWheel: this.userConfig.enableMouseWheel ?? true,
+      maxZoom: this.userConfig.maxZoom ?? controller.maxZoom,
+      minZoom: this.userConfig.minZoom ?? controller.minZoom,
+      zoomStep: this.userConfig.zoomStep ?? 0.2,
+    };
+
+    if (this.config.enableMouseWheel) {
+      this.canvas.on("mouse:wheel", this.handleMouseWheel);
+    }
+
     this.registerShortcuts();
   }
 
@@ -48,28 +71,34 @@ export class ZoomPlugin implements FabricPlugin {
     const clamped = this.clampZoom(zoom);
     const center = this.canvas.getCenterPoint();
     this.canvas.zoomToPoint(new fabric.Point(center.x, center.y), clamped);
-    this.emitZoomChange();
+    this.controller.notifyState();
   }
 
   zoomIn(): void {
     const current = this.canvas.getZoom();
-    const next = this.clampZoom(current + this.config.zoomStep);
-    const center = this.canvas.getCenterPoint();
-    this.canvas.zoomToPoint(new fabric.Point(center.x, center.y), next);
-    this.emitZoomChange();
+    const next = this.clampZoom(current * (1 + this.config.zoomStep));
+    const center = new fabric.Point(
+      this.controller.width / 2,
+      this.controller.height / 2,
+    );
+    this.canvas.zoomToPoint(center, next);
+    this.controller.notifyState();
   }
 
   zoomOneToOne(): void {
     this.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-    this.emitZoomChange();
+    this.controller.notifyState();
   }
 
   zoomOut(): void {
     const current = this.canvas.getZoom();
-    const next = this.clampZoom(current - this.config.zoomStep);
-    const center = this.canvas.getCenterPoint();
-    this.canvas.zoomToPoint(new fabric.Point(center.x, center.y), next);
-    this.emitZoomChange();
+    const next = this.clampZoom(current / (1 + this.config.zoomStep));
+    const center = new fabric.Point(
+      this.controller.width / 2,
+      this.controller.height / 2,
+    );
+    this.canvas.zoomToPoint(center, next);
+    this.controller.notifyState();
   }
 
   zoomToFit(padding = 50): void {
@@ -118,7 +147,7 @@ export class ZoomPlugin implements FabricPlugin {
     const panY = canvasCenterY - centerY * zoom;
 
     this.canvas.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
-    this.emitZoomChange();
+    this.controller.notifyState();
   }
 
   zoomToObject(obj: fabric.FabricObject, padding = 50): void {
@@ -145,13 +174,13 @@ export class ZoomPlugin implements FabricPlugin {
     const panY = canvasCenterY - centerY * zoom;
 
     this.canvas.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
-    this.emitZoomChange();
+    this.controller.notifyState();
   }
 
   zoomToPoint(point: fabric.Point, zoom: number): void {
     const clamped = this.clampZoom(zoom);
     this.canvas.zoomToPoint(point, clamped);
-    this.emitZoomChange();
+    this.controller.notifyState();
   }
 
   zoomToSelection(padding = 50): void {
@@ -161,15 +190,8 @@ export class ZoomPlugin implements FabricPlugin {
     this.zoomToObject(active, padding);
   }
 
-  private emitZoomChange(): void {
-    const vpt = this.canvas.viewportTransform;
-    this.controller.events.emit("zoom:change", {
-      zoom: this.canvas.getZoom(),
-    });
-    this.controller.events.emit("pan:change", {
-      x: vpt?.[4] ?? 0,
-      y: vpt?.[5] ?? 0,
-    });
+  private clampZoom(zoom: number): number {
+    return Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
   }
 
   private registerShortcuts(): void {

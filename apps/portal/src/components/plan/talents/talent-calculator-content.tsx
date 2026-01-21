@@ -4,7 +4,7 @@ import { Download, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { css } from "styled-system/css";
-import { Box, HStack, VStack } from "styled-system/jsx";
+import { Box, Flex, HStack } from "styled-system/jsx";
 
 import {
   type CanvasController,
@@ -12,20 +12,22 @@ import {
   ControlsPlugin,
   GuidelinesPlugin,
   HistoryPlugin,
+  type InteractionMode,
+  InteractionPlugin,
   ShortcutsPlugin,
   Toolbar,
   useCanvas,
   useCanvasContainer,
+  ZoomPlugin,
 } from "@/components/fabric";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
 import { routes } from "@/lib/routing";
 import { useSpecTraits } from "@/lib/state";
 
-import type { TalentSubTree } from "./talent-tree";
-
-import { SpellDescriptionViewer } from "./spell-description-diff";
+import { DebugModal } from "./debug";
 import {
   renderTalentTree,
+  type TalentSubTree,
   TalentTooltip,
   type TalentTreeData,
   type TooltipData,
@@ -37,13 +39,9 @@ import {
 
 const containerStyles = css({
   bg: "bg.canvas",
-  display: "flex",
-  flexDir: "column",
-  h: "calc(100vh - 200px)",
-  minH: "600px",
+  flex: "1",
   overflow: "hidden",
   position: "relative",
-  rounded: "lg",
   w: "100%",
 });
 
@@ -74,24 +72,9 @@ export function TalentCalculatorContent({
   specId,
 }: TalentCalculatorContentProps) {
   return (
-    <VStack gap="4" w="full">
+    <Flex flexDirection="column" h="100vh" overflow="hidden">
       <TalentTreeView specId={specId} />
-      <DescriptionDiffBox specId={specId} />
-    </VStack>
-  );
-}
-
-function DescriptionDiffBox({ specId }: { specId: number }) {
-  const { data: specTraits } = useSpecTraits(specId);
-  if (!specTraits) {
-    return null;
-  }
-
-  return (
-    <SpellDescriptionViewer
-      nodes={specTraits.nodes as unknown as TalentTreeData["nodes"]}
-      subTrees={specTraits.sub_trees as unknown as TalentSubTree[]}
-    />
+    </Flex>
   );
 }
 
@@ -109,6 +92,7 @@ function TalentTreeView({ specId }: { specId: number }) {
     transformTooltip,
   } = useCanvasContainer();
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [mode, setMode] = useState<InteractionMode>("grab");
 
   const { data: specTraits } = useSpecTraits(specId);
 
@@ -123,10 +107,17 @@ function TalentTreeView({ specId }: { specId: number }) {
     (controller: CanvasController) => {
       controller
         .use(new ShortcutsPlugin())
+        .use(new InteractionPlugin({ defaultMode: "grab" }))
+        .use(new ZoomPlugin())
         .use(new HistoryPlugin())
         .use(new ClipboardPlugin())
         .use(new GuidelinesPlugin())
         .use(new ControlsPlugin());
+
+      // Listen for mode changes from shortcuts
+      controller.events.on("interaction:change", ({ mode: newMode }) => {
+        setMode(newMode);
+      });
 
       controllerRef.current = controller;
       setIsReady(true);
@@ -150,22 +141,54 @@ function TalentTreeView({ specId }: { specId: number }) {
       onNodeHover: handleHover,
       selectedHeroId: null,
     });
+
+    // Zoom to fit after rendering
+    const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
+    if (zoomPlugin) {
+      setTimeout(() => zoomPlugin.zoomToFit(80), 100);
+    }
   }, [controllerRef, specTraits, isReady, handleHover]);
 
-  const {
-    canvasRef,
-    clear,
-    deleteSelected,
-    resetView,
-    state,
-    zoomIn,
-    zoomOut,
-  } = useCanvas({
+  const { canvasRef, resetView, state } = useCanvas({
     backgroundColor: "transparent",
     height: dimensions.height,
     onReady: handleReady,
     width: dimensions.width,
   });
+
+  const handleModeChange = useCallback(
+    (newMode: InteractionMode) => {
+      const controller = controllerRef.current;
+      if (!controller) return;
+      const interaction =
+        controller.plugins.get<InteractionPlugin>("interaction");
+      if (interaction) {
+        interaction.setMode(newMode);
+      }
+    },
+    [controllerRef],
+  );
+
+  const handleZoomIn = useCallback(() => {
+    const controller = controllerRef.current;
+    if (!controller) return;
+    const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
+    zoomPlugin?.zoomIn();
+  }, [controllerRef]);
+
+  const handleZoomOut = useCallback(() => {
+    const controller = controllerRef.current;
+    if (!controller) return;
+    const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
+    zoomPlugin?.zoomOut();
+  }, [controllerRef]);
+
+  const handleZoomToFit = useCallback(() => {
+    const controller = controllerRef.current;
+    if (!controller) return;
+    const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
+    zoomPlugin?.zoomToFit(80);
+  }, [controllerRef]);
 
   const handleExport = useCallback(() => {
     const controller = controllerRef.current;
@@ -195,18 +218,25 @@ function TalentTreeView({ specId }: { specId: number }) {
               <Download size={16} />
             </IconButton>
           </UITooltip>
+          {specTraits && (
+            <DebugModal
+              nodes={specTraits.nodes as unknown as TalentTreeData["nodes"]}
+              subTrees={specTraits.sub_trees as unknown as TalentSubTree[]}
+            />
+          )}
         </HStack>
       </div>
 
       {/* Toolbar */}
       <div className={toolbarWrapperStyles}>
         <Toolbar
+          mode={mode}
           state={state}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
+          onModeChange={handleModeChange}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onZoomToFit={handleZoomToFit}
           onResetView={resetView}
-          onDelete={deleteSelected}
-          onClear={clear}
         />
       </div>
 

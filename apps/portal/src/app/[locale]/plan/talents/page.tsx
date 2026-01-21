@@ -4,6 +4,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
+import { Container } from "styled-system/jsx";
 
 import {
   TalentCalculatorContent,
@@ -31,22 +32,24 @@ export default async function Page({ searchParams }: Props) {
 
   if (!specId) {
     return (
-      <Empty.Root>
-        <Empty.Icon>
-          <AlertTriangle />
-        </Empty.Icon>
-        <Empty.Content>
-          <Empty.Title>Invalid loadout string</Empty.Title>
-          <Empty.Description>
-            The provided loadout string could not be decoded.
-          </Empty.Description>
-        </Empty.Content>
-        <Empty.Action>
-          <Button asChild>
-            <Link href={routes.plan.talents.path}>Back to start</Link>
-          </Button>
-        </Empty.Action>
-      </Empty.Root>
+      <Container maxW="7xl" py="8">
+        <Empty.Root>
+          <Empty.Icon>
+            <AlertTriangle />
+          </Empty.Icon>
+          <Empty.Content>
+            <Empty.Title>Invalid loadout string</Empty.Title>
+            <Empty.Description>
+              The provided loadout string could not be decoded.
+            </Empty.Description>
+          </Empty.Content>
+          <Empty.Action>
+            <Button asChild>
+              <Link href={routes.plan.talents.path}>Back to start</Link>
+            </Button>
+          </Empty.Action>
+        </Empty.Root>
+      </Container>
     );
   }
 

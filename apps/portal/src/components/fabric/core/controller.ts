@@ -8,18 +8,6 @@ import { EventEmitter } from "./events";
 import { FabricPlugin, PluginRegistry } from "./plugin";
 
 // =============================================================================
-// Module Augmentation
-// =============================================================================
-
-declare module "fabric" {
-  interface Canvas {
-    isDragging?: boolean;
-    lastPosX?: number;
-    lastPosY?: number;
-  }
-}
-
-// =============================================================================
 // Canvas Controller - Slim Core
 // =============================================================================
 
@@ -62,33 +50,37 @@ export class CanvasController {
   // Getters
   // ===========================================================================
 
-  get height() {
+  get height(): number {
     return this.config.height;
   }
 
-  get width() {
+  get maxZoom(): number {
+    return this.config.maxZoom;
+  }
+
+  get minZoom(): number {
+    return this.config.minZoom;
+  }
+
+  get width(): number {
     return this.config.width;
   }
 
-  get zoom() {
+  get zoom(): number {
     return this.canvas.getZoom();
-  }
-
-  // ===========================================================================
-  // Plugin Registration
-  // ===========================================================================
-
-  clear() {
-    this.canvas.clear();
-    this.canvas.backgroundColor = this.config.backgroundColor;
-    this.canvas.requestRenderAll();
   }
 
   // ===========================================================================
   // Public API
   // ===========================================================================
 
-  deleteSelected() {
+  clear(): void {
+    this.canvas.clear();
+    this.canvas.backgroundColor = this.config.backgroundColor;
+    this.canvas.requestRenderAll();
+  }
+
+  deleteSelected(): void {
     const active = this.canvas.getActiveObjects();
     if (active.length === 0) return;
 
@@ -99,19 +91,31 @@ export class CanvasController {
     this.canvas.requestRenderAll();
   }
 
-  async dispose() {
+  async dispose(): Promise<void> {
     this.events.emit("canvas:dispose");
     this.plugins.destroy();
     this.events.removeAllListeners();
     await this.canvas.dispose();
   }
 
-  resetView() {
-    this.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-    this.notify();
+  /** Notify state listeners of current viewport state */
+  notifyState(): void {
+    const vpt = this.canvas.viewportTransform;
+    this.onStateChange?.({
+      panX: vpt?.[4] ?? 0,
+      panY: vpt?.[5] ?? 0,
+      zoom: this.canvas.getZoom(),
+    });
+    this.events.emit("zoom:change", { zoom: this.canvas.getZoom() });
+    this.events.emit("pan:change", { x: vpt?.[4] ?? 0, y: vpt?.[5] ?? 0 });
   }
 
-  setDimensions(width: number, height: number) {
+  resetView(): void {
+    this.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    this.notifyState();
+  }
+
+  setDimensions(width: number, height: number): void {
     this.config.width = width;
     this.config.height = height;
     this.canvas.setDimensions({ height, width });
@@ -119,16 +123,16 @@ export class CanvasController {
     this.events.emit("canvas:resize", { height, width });
   }
 
-  setStateListener(fn: (state: CanvasState) => void) {
+  setStateListener(fn: (state: CanvasState) => void): void {
     this.onStateChange = fn;
-    this.notify();
+    this.notifyState();
   }
 
   toDataURL(format: "png" | "jpeg" = "png", quality = 1): string {
     return this.canvas.toDataURL({ format, multiplier: 2, quality });
   }
 
-  toJSON() {
+  toJSON(): object {
     return this.canvas.toJSON();
   }
 
@@ -141,71 +145,11 @@ export class CanvasController {
     return this;
   }
 
-  zoomIn() {
-    const current = this.canvas.getZoom();
-    const next = Math.min(this.config.maxZoom, current * 1.2);
-    const center = new fabric.Point(
-      this.config.width / 2,
-      this.config.height / 2,
-    );
-    this.canvas.zoomToPoint(center, next);
-    this.notify();
-  }
-
-  zoomOut() {
-    const current = this.canvas.getZoom();
-    const next = Math.max(this.config.minZoom, current / 1.2);
-    const center = new fabric.Point(
-      this.config.width / 2,
-      this.config.height / 2,
-    );
-    this.canvas.zoomToPoint(center, next);
-    this.notify();
-  }
-
-  zoomToPoint(point: fabric.Point, zoom: number) {
-    const clamped = Math.max(
-      this.config.minZoom,
-      Math.min(this.config.maxZoom, zoom),
-    );
-    this.canvas.zoomToPoint(point, clamped);
-    this.notify();
-  }
-
   // ===========================================================================
   // Private Methods
   // ===========================================================================
 
-  private notify() {
-    const vpt = this.canvas.viewportTransform;
-    this.onStateChange?.({
-      panX: vpt?.[4] ?? 0,
-      panY: vpt?.[5] ?? 0,
-      zoom: this.canvas.getZoom(),
-    });
-    this.events.emit("zoom:change", { zoom: this.canvas.getZoom() });
-    this.events.emit("pan:change", { x: vpt?.[4] ?? 0, y: vpt?.[5] ?? 0 });
-  }
-
-  private setupCoreEvents() {
-    // Mouse wheel zoom
-    this.canvas.on("mouse:wheel", (opt) => {
-      const e = opt.e;
-      e.preventDefault();
-      e.stopPropagation();
-
-      const delta = e.deltaY;
-      const current = this.canvas.getZoom();
-      const zoom = current * 0.999 ** delta;
-      const next = Math.max(
-        this.config.minZoom,
-        Math.min(this.config.maxZoom, zoom),
-      );
-
-      this.canvas.zoomToPoint(new fabric.Point(e.offsetX, e.offsetY), next);
-      this.notify();
-    });
-
+  private setupCoreEvents(): void {
     // Selection changes
     this.canvas.on("selection:created", (e) => {
       this.events.emit("selection:change", { objects: e.selected ?? [] });

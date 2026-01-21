@@ -53,9 +53,14 @@ export {
   GuidelinesPlugin,
   HistoryPlugin,
   type HistoryPluginConfig,
+  type InteractionMode,
+  InteractionPlugin,
+  type InteractionPluginConfig,
   type ShortcutHandler,
   type ShortcutRegistration,
   ShortcutsPlugin,
+  ZoomPlugin,
+  type ZoomPluginConfig,
 } from "./plugins";
 // UI
 export { Toolbar } from "./ui/toolbar";

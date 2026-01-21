@@ -12,7 +12,7 @@ export interface InteractionPluginConfig {
 }
 
 export class InteractionPlugin implements FabricPlugin {
-  readonly hotkeys = ["Space"];
+  readonly hotkeys = ["Space", "v", "h"];
   readonly name = "interaction";
 
   private canvas!: fabric.Canvas;
@@ -232,6 +232,26 @@ export class InteractionPlugin implements FabricPlugin {
       },
       this.name,
     );
+
+    // V for selection mode
+    shortcuts.register(
+      "v",
+      (e) => {
+        e.preventDefault();
+        this.setSelection();
+      },
+      this.name,
+    );
+
+    // H for grab/hand mode
+    shortcuts.register(
+      "h",
+      (e) => {
+        e.preventDefault();
+        this.setGrab();
+      },
+      this.name,
+    );
   }
 
   private unregisterShortcuts(): void {
@@ -239,5 +259,7 @@ export class InteractionPlugin implements FabricPlugin {
     if (!shortcuts) return;
 
     shortcuts.unregister("Space");
+    shortcuts.unregister("v");
+    shortcuts.unregister("h");
   }
 }

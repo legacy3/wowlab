@@ -1,5 +1,5 @@
 // Components
 
-export { SpellDescriptionViewer } from "./spell-description-diff";
+export { DebugModal } from "./debug";
 export { TalentCalculatorContent } from "./talent-calculator-content";
 export { TalentStartScreen } from "./talent-start-screen";

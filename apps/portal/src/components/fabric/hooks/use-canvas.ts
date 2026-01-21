@@ -7,7 +7,7 @@ import type { CanvasConfig, CanvasState } from "../core/types";
 import { CanvasController } from "../core/controller";
 
 // =============================================================================
-// Hook
+// Types
 // =============================================================================
 
 export interface UseCanvasOptions extends CanvasConfig {
@@ -21,8 +21,6 @@ export interface UseCanvasReturn {
   deleteSelected: () => void;
   resetView: () => void;
   state: CanvasState;
-  zoomIn: () => void;
-  zoomOut: () => void;
 }
 
 const DEFAULT_STATE: CanvasState = {
@@ -30,6 +28,10 @@ const DEFAULT_STATE: CanvasState = {
   panY: 0,
   zoom: 1,
 };
+
+// =============================================================================
+// Hook
+// =============================================================================
 
 export function useCanvas(options: UseCanvasOptions): UseCanvasReturn {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -70,14 +72,6 @@ export function useCanvas(options: UseCanvasOptions): UseCanvasReturn {
     controllerRef.current?.clear();
   }, []);
 
-  const zoomIn = useCallback(() => {
-    controllerRef.current?.zoomIn();
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    controllerRef.current?.zoomOut();
-  }, []);
-
   return {
     canvasRef,
     clear,
@@ -85,7 +79,5 @@ export function useCanvas(options: UseCanvasOptions): UseCanvasReturn {
     deleteSelected,
     resetView,
     state,
-    zoomIn,
-    zoomOut,
   };
 }
