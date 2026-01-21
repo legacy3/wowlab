@@ -59,7 +59,7 @@ export function RotationPreviewDrawer({
               )}
             </VStack>
             <Drawer.CloseTrigger asChild>
-              <IconButton variant="ghost" size="sm">
+              <IconButton variant="plain" size="sm">
                 <XIcon />
               </IconButton>
             </Drawer.CloseTrigger>
