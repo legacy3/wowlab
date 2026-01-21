@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Flex, HStack } from "styled-system/jsx";
 
 import type { Character, Profession } from "@/lib/sim";
@@ -17,13 +17,13 @@ export function CharacterCard({
   character,
   professions = [],
 }: CharacterCardProps) {
-  const t = useExtracted();
+  const { characterCard: content } = useIntlayer("simulate");
 
   const server = character.server ?? "Unknown";
   const region = character.region?.toUpperCase() ?? "Unknown";
 
   const infoParts = [
-    t("{level, plural, other {Level #}}", { level: character.level }),
+    content.level({ level: character.level }),
     character.spec,
     `${character.race} ${character.class}`,
     ...professions.map((p) => `${p.name} ${p.rank}`),

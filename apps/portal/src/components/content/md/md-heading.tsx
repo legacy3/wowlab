@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { Link as LinkIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Flex } from "styled-system/jsx";
 
 import { Icon } from "@/components/ui/icon";
@@ -64,7 +64,7 @@ export function MdH6({ children, id }: Omit<MdHeadingProps, "level">) {
 }
 
 function MdHeading({ children, id, level }: MdHeadingProps) {
-  const t = useExtracted();
+  const { mdHeading: content } = useIntlayer("article");
   const HeadingTag = Tag[level];
 
   return (
@@ -88,7 +88,7 @@ function MdHeading({ children, id, level }: MdHeadingProps) {
           color="fg.muted"
           _hover={{ color: "fg.default" }}
           transition="opacity"
-          aria-label={t("Link to this section")}
+          aria-label={content.linkToSection}
         >
           <Icon size="sm">
             <LinkIcon />

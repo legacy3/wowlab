@@ -1,14 +1,14 @@
 "use client";
 
 import { Server } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { StatCard } from "@/components/ui";
 import { useClientHardware } from "@/hooks/use-client-hardware";
 
 export function WorkersCard() {
-  const t = useExtracted();
+  const content = useIntlayer("computing").workersCard;
   const { workers } = useClientHardware();
 
-  return <StatCard icon={Server} label={t("Workers")} value={workers} />;
+  return <StatCard icon={Server} label={content.workers} value={workers} />;
 }

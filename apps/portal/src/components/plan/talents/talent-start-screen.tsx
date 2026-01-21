@@ -1,21 +1,34 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Flex, styled, VStack } from "styled-system/jsx";
 
 import { SpecPicker } from "@/components/game";
-import { Input, Text } from "@/components/ui";
+import { Button, Input, Text } from "@/components/ui";
+import { engine } from "@/lib/engine";
+import { routes } from "@/lib/routing";
 
-interface TalentStartScreenProps {
-  onSpecSelect: (specId: number) => void;
-  onTalentStringChange: (value: string | null) => void;
-  talents: string;
-}
+export function TalentStartScreen() {
+  const router = useRouter();
+  const [loadoutInput, setLoadoutInput] = useState("");
 
-export function TalentStartScreen({
-  onSpecSelect,
-  onTalentStringChange,
-  talents,
-}: TalentStartScreenProps) {
+  const handleSpecSelect = async (specId: number) => {
+    const loadout = await engine.encodeMinimalLoadout(specId);
+    router.push(
+      `${routes.plan.talents.path}?loadout=${encodeURIComponent(loadout)}`,
+    );
+  };
+
+  const handleLoadoutSubmit = () => {
+    const trimmed = loadoutInput.trim();
+    if (trimmed) {
+      router.push(
+        `${routes.plan.talents.path}?loadout=${encodeURIComponent(trimmed)}`,
+      );
+    }
+  };
+
   return (
     <VStack gap="8" minH="400px" justify="center" py="8">
       {/* Import section */}
@@ -28,14 +41,20 @@ export function TalentStartScreen({
             Paste a talent loadout string to view and edit
           </Text>
         </VStack>
-        <Input
-          fontFamily="mono"
-          placeholder="Paste a talent string ..."
-          textStyle="sm"
-          value={talents}
-          w="full"
-          onChange={(e) => onTalentStringChange(e.target.value.trim() || null)}
-        />
+        <Flex gap="2" w="full">
+          <Input
+            flex="1"
+            fontFamily="mono"
+            placeholder="Paste a talent string ..."
+            textStyle="sm"
+            value={loadoutInput}
+            onChange={(e) => setLoadoutInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLoadoutSubmit()}
+          />
+          <Button onClick={handleLoadoutSubmit} disabled={!loadoutInput.trim()}>
+            Load
+          </Button>
+        </Flex>
       </VStack>
 
       {/* Divider */}
@@ -57,7 +76,7 @@ export function TalentStartScreen({
             Choose a class and specialization
           </Text>
         </VStack>
-        <SpecPicker onSelect={onSpecSelect} />
+        <SpecPicker onSelect={handleSpecSelect} />
       </VStack>
     </VStack>
   );

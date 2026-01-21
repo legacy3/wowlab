@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { Tabs } from "@/components/ui";
 
@@ -17,7 +17,7 @@ export function OwnerFilterTabs({
   value,
   variant = "subtle",
 }: OwnerFilterTabsProps) {
-  const t = useExtracted();
+  const content = useIntlayer("account").ownerFilterTabs;
 
   return (
     <Tabs.Root
@@ -26,9 +26,9 @@ export function OwnerFilterTabs({
       variant={variant}
     >
       <Tabs.List>
-        <Tabs.Trigger value="all">{t("All")}</Tabs.Trigger>
-        <Tabs.Trigger value="mine">{t("Mine")}</Tabs.Trigger>
-        <Tabs.Trigger value="shared">{t("Shared")}</Tabs.Trigger>
+        <Tabs.Trigger value="all">{content.all}</Tabs.Trigger>
+        <Tabs.Trigger value="mine">{content.mine}</Tabs.Trigger>
+        <Tabs.Trigger value="shared">{content.shared}</Tabs.Trigger>
         <Tabs.Indicator />
       </Tabs.List>
     </Tabs.Root>

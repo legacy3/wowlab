@@ -1,15 +1,14 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Box, HStack, Stack } from "styled-system/jsx";
 
 import { Card, InlineLoader, Text } from "@/components/ui";
 import { useJobs, useWorkerSystem } from "@/lib/state";
 
 export function IterationsCard() {
-  const t = useExtracted();
-  const format = useFormatter();
+  const content = useIntlayer("computing").iterationsCard;
   const totalIterations = useWorkerSystem((s) => s.totalIterationsRun);
   const runningJob = useJobs((s) => s.jobs.find((j) => j.status === "running"));
 
@@ -28,7 +27,7 @@ export function IterationsCard() {
           ) : (
             <Activity style={{ height: 14, width: 14 }} />
           )}
-          <Text textStyle="xs">{t("Iterations")}</Text>
+          <Text textStyle="xs">{content.iterations}</Text>
         </HStack>
         {runningJob ? (
           <Stack mt="1" gap="1.5" w="full">
@@ -63,7 +62,7 @@ export function IterationsCard() {
             mt="1"
             fontVariantNumeric="tabular-nums"
           >
-            {format.number(totalIterations, { notation: "compact" })}
+            {totalIterations.toLocaleString(undefined, { notation: "compact" })}
           </Text>
         )}
       </Card.Body>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
@@ -9,7 +9,6 @@ import { Badge, Input } from "@/components/ui";
 
 import { DataCard, JsonOutput, Section, Subsection } from "../../shared";
 
-// Search result type matching react-query return
 type GameDataSearchResult<T> = {
   data: T[];
   isError: boolean;
@@ -33,7 +32,7 @@ export function SearchDisplay({
   result,
   title,
 }: SearchDisplayProps) {
-  const t = useExtracted();
+  const { searchDisplay: content } = useIntlayer("dev");
   const [inputValue, setInputValue] = useState(query);
 
   const { run: debouncedOnChange } = useDebounceFn(
@@ -50,6 +49,10 @@ export function SearchDisplay({
     debouncedOnChange(value);
   };
 
+  const formatResultCount = (count: number) => {
+    return count === 1 ? "1 result" : `${count} results`;
+  };
+
   return (
     <Section id={id} title={title}>
       <Subsection title="Search by name">
@@ -59,20 +62,18 @@ export function SearchDisplay({
               <Input
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder={t("Search...")}
+                placeholder={content.search}
                 w="64"
               />
             </Flex>
 
             <Flex gap="2" flexWrap="wrap">
-              <Badge variant="outline">Query: {query || t("(empty)")}</Badge>
+              <Badge variant="outline">Query: {query || content.empty}</Badge>
               <Badge colorPalette="gray">
-                {t("{count, plural, =1 {# result} other {# results}}", {
-                  count: result.data.length,
-                })}
+                {formatResultCount(result.data.length)}
               </Badge>
               {result.isLoading && (
-                <Badge colorPalette="amber">{t("Loading...")}</Badge>
+                <Badge colorPalette="amber">{content.loading}</Badge>
               )}
             </Flex>
 

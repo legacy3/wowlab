@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Stack } from "styled-system/jsx";
 
 import {
@@ -13,7 +13,7 @@ import { ParseError, ParseLoading } from "../parse-status";
 import { SimcInput } from "../simc-input";
 
 export function ImportStep() {
-  const t = useExtracted();
+  const { importStep: content } = useIntlayer("simulate");
   const input = useCharacterInput((s) => s.input);
   const setInput = useCharacterInput((s) => s.setInput);
   const isParsing = useCharacterInput(selectIsParsing);
@@ -23,11 +23,11 @@ export function ImportStep() {
     <Stack gap="4">
       <SimcInput value={input} onChange={(e) => setInput(e.target.value)} />
 
-      {isParsing && <ParseLoading message={t("Parsing SimC data...")} />}
+      {isParsing && <ParseLoading message={content.parsingSimCData} />}
 
       {parseError && (
         <ParseError
-          title={t("Failed to parse SimC export")}
+          title={content.failedToParseSimCExport}
           error={parseError}
         />
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, Clock, Pencil, User } from "lucide-react";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Flex } from "styled-system/jsx";
 
 import { Icon } from "@/components/ui/icon";
@@ -23,14 +23,13 @@ export function ArticleMeta({
   editPath,
   readingTime,
 }: ArticleMetaProps) {
-  const t = useExtracted();
-  const format = useFormatter();
+  const { articleMeta: content } = useIntlayer("article");
   const formatted = date
-    ? format.dateTime(new Date(date), {
+    ? new Intl.DateTimeFormat("en", {
         day: "numeric",
         month: "long",
         year: "numeric",
-      })
+      }).format(new Date(date))
     : null;
   const editUrl = editPath ? `${env.GITHUB_URL}/edit/main/${editPath}` : null;
   const computedReadingTime = readingTime
@@ -68,9 +67,7 @@ export function ArticleMeta({
       {computedReadingTime !== undefined && (
         <MetaItem icon={Clock}>
           <Text textStyle="xs">
-            {t("{count, plural, other {# min read}}", {
-              count: computedReadingTime,
-            })}
+            {content.minRead({ count: computedReadingTime })}
           </Text>
         </MetaItem>
       )}
@@ -88,7 +85,7 @@ export function ArticleMeta({
             <Icon size="xs">
               <Pencil />
             </Icon>
-            {t("Edit")}
+            {content.edit}
           </Flex>
         </Link>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle, CircleAlert } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { HStack } from "styled-system/jsx";
 
 import { Alert, ErrorBox, Icon, InlineLoader, Text } from "@/components/ui";
@@ -20,7 +20,7 @@ export interface ParseSuccessProps {
 }
 
 export function ParseError({ error, title }: ParseErrorProps) {
-  const t = useExtracted();
+  const { parseStatus: content } = useIntlayer("simulate");
 
   return (
     <Alert.Root status="error" variant="surface">
@@ -30,7 +30,7 @@ export function ParseError({ error, title }: ParseErrorProps) {
         </Icon>
       </Alert.Indicator>
       <Alert.Content>
-        <Alert.Title>{title ?? t("Failed to parse")}</Alert.Title>
+        <Alert.Title>{title ?? content.failedToParse}</Alert.Title>
         <Alert.Description>
           <ErrorBox>{error}</ErrorBox>
         </Alert.Description>
@@ -40,18 +40,18 @@ export function ParseError({ error, title }: ParseErrorProps) {
 }
 
 export function ParseLoading({ message }: ParseLoadingProps) {
-  const t = useExtracted();
+  const { parseStatus: content } = useIntlayer("simulate");
 
   return (
     <HStack gap="2" justify="center" color="fg.muted" py="2">
       <InlineLoader />
-      <Text textStyle="sm">{message ?? t("Parsing...")}</Text>
+      <Text textStyle="sm">{message ?? content.parsing}</Text>
     </HStack>
   );
 }
 
 export function ParseSuccess({ message }: ParseSuccessProps) {
-  const t = useExtracted();
+  const { parseStatus: content } = useIntlayer("simulate");
 
   return (
     <Alert.Root status="success" variant="surface">
@@ -62,7 +62,7 @@ export function ParseSuccess({ message }: ParseSuccessProps) {
       </Alert.Indicator>
       <Alert.Content>
         <Alert.Description>
-          {message ?? t("Parsed successfully")}
+          {message ?? content.parsedSuccessfully}
         </Alert.Description>
       </Alert.Content>
     </Alert.Root>

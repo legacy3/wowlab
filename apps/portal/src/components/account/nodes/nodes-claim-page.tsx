@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Box, Stack } from "styled-system/jsx";
@@ -37,7 +37,7 @@ export function ClaimPageSkeleton() {
 }
 
 export function NodesClaimPage() {
-  const t = useExtracted();
+  const content = useIntlayer("account").claimPage;
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useUser();
   const userId = user?.id;
@@ -93,7 +93,7 @@ export function NodesClaimPage() {
     <Stack gap="6" maxW="md" mx="auto">
       <Stack gap="2" textAlign="center">
         <Text textStyle="sm" color="fg.muted">
-          {t("Download and run the WoW Lab Node application on your computer")}
+          {content.downloadAndRun}
         </Text>
       </Stack>
 
@@ -101,7 +101,7 @@ export function NodesClaimPage() {
         <Alert.Root status="error">
           <Alert.Indicator />
           <Alert.Content>
-            <Alert.Title>{t("Error")}</Alert.Title>
+            <Alert.Title>{content.error}</Alert.Title>
             <Alert.Description>{errorMessage}</Alert.Description>
           </Alert.Content>
         </Alert.Root>

@@ -11,7 +11,7 @@ import {
   LayoutGridIcon,
   TextIcon,
 } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
@@ -45,7 +45,7 @@ interface GeneratorContext {
 }
 
 export function Preview() {
-  const t = useExtracted();
+  const { preview: content } = useIntlayer("editor");
   const name = useEditor((s) => s.name);
   const description = useEditor((s) => s.description);
   const variables = useEditor((s) => s.variables);
@@ -67,7 +67,7 @@ export function Preview() {
     [name, description, variables, actionLists, defaultListId],
   );
 
-  const content = useMemo(() => {
+  const previewContent = useMemo(() => {
     switch (previewMode) {
       case "dsl":
         return generateDSL(generatorContext);
@@ -82,7 +82,7 @@ export function Preview() {
 
   const handleCopy = async () => {
     const textToCopy =
-      previewMode === "visual" ? generateDSL(generatorContext) : content;
+      previewMode === "visual" ? generateDSL(generatorContext) : previewContent;
     await navigator.clipboard.writeText(textToCopy);
     setCopied();
     setTimeout(clearCopied, 2000);
@@ -113,10 +113,10 @@ export function Preview() {
             ))}
           </HStack>
 
-          <Tooltip content={copied ? t("Copied!") : t("Copy as DSL")}>
+          <Tooltip content={copied ? content.copied : content.copyAsDsl}>
             <Button variant="outline" size="sm" onClick={handleCopy}>
               {copied ? <CheckIcon size={16} /> : <ClipboardIcon size={16} />}
-              {copied ? t("Copied") : t("Copy")}
+              {copied ? content.copiedShort : content.copy}
             </Button>
           </Tooltip>
         </Flex>
@@ -124,7 +124,7 @@ export function Preview() {
         {previewMode === "visual" ? (
           <VisualPreview />
         ) : (
-          <CodeBlock code={content} mode={previewMode} />
+          <CodeBlock code={previewContent} mode={previewMode} />
         )}
       </VStack>
     </Box>
@@ -378,7 +378,7 @@ function isRuleType(rule: RuleType | RuleGroupType): rule is RuleType {
 }
 
 function VisualPreview() {
-  const t = useExtracted();
+  const { preview: content } = useIntlayer("editor");
 
   return (
     <Card.Root>
@@ -386,10 +386,10 @@ function VisualPreview() {
         <VStack gap="2">
           <LayoutGridIcon size={32} strokeWidth={1.5} />
           <Text color="fg.muted" textAlign="center">
-            {t("Visual preview coming soon")}
+            {content.visualPreviewComingSoon}
           </Text>
           <Text color="fg.subtle" textStyle="sm" textAlign="center">
-            {t("Use the DSL or Natural tabs to preview your rotation.")}
+            {content.useTheDslOrNaturalTabs}
           </Text>
         </VStack>
       </Card.Body>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Cpu, Menu, X } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo } from "react";
 import { Box, Flex, styled } from "styled-system/jsx";
 
@@ -18,7 +18,7 @@ import { useSidebar } from "./sidebar-context";
 import { ThemeToggle } from "./theme-toggle";
 
 export function Navbar() {
-  const t = useExtracted();
+  const { navbar: content } = useIntlayer("layout");
   const { isOpen, toggle } = useSidebar();
   const { setOpen: openDrawer } = useComputingDrawer();
   const jobs = useJobs((s) => s.jobs);
@@ -32,18 +32,18 @@ export function Navbar() {
           size="sm"
           display={{ base: "flex", lg: "none" }}
           onClick={toggle}
-          aria-label={isOpen ? t("Close menu") : t("Open menu")}
+          aria-label={isOpen ? content.closeMenu : content.openMenu}
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </IconButton>
         <Box display={{ base: "none", lg: "block" }} />
         <Flex align="center" gap="2">
-          <Tooltip content={t("Computing")}>
+          <Tooltip content={content.computing}>
             <IconButton
               variant="plain"
               size="sm"
               onClick={() => openDrawer(true)}
-              aria-label={t("Open computing drawer")}
+              aria-label={content.openComputingDrawer}
             >
               <styled.span pos="relative">
                 {runningCount > 0 ? (

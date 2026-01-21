@@ -1,7 +1,7 @@
 "use client";
 
 import { Cpu, X } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo } from "react";
 import { HStack, Stack, styled } from "styled-system/jsx";
 
@@ -29,7 +29,7 @@ import {
 } from "@/lib/state";
 
 export function ComputingDrawer() {
-  const t = useExtracted();
+  const { computingDrawer: content } = useIntlayer("layout");
   const { open, setOpen } = useComputingDrawer();
   const jobs = useJobs((s) => s.jobs);
 
@@ -37,6 +37,13 @@ export function ComputingDrawer() {
   const completedJobs = useMemo(() => selectCompletedJobs(jobs), [jobs]);
 
   const handleClose = () => setOpen(false);
+
+  const getSimulationCountText = (count: number) => {
+    if (count === 1) {
+      return `1 ${content.simulationRunning}`;
+    }
+    return `${count} ${content.simulationsRunning}`;
+  };
 
   return (
     <Drawer.Root
@@ -51,32 +58,27 @@ export function ComputingDrawer() {
             <Drawer.Title>
               <HStack gap="2.5">
                 <Cpu style={{ height: 20, width: 20 }} />
-                {t("Computing")}
+                {content.computing}
               </HStack>
             </Drawer.Title>
             <Drawer.Description>
               <HStack justifyContent="space-between">
                 <span>
                   {activeJobs.length > 0
-                    ? t(
-                        "{count, plural, =1 {# simulation running} other {# simulations running}}",
-                        {
-                          count: activeJobs.length,
-                        },
-                      )
-                    : t("No active simulations")}
+                    ? getSimulationCountText(activeJobs.length)
+                    : content.noActiveSimulations}
                 </span>
                 <Link
                   href={href(routes.computing)}
                   textStyle="xs"
                   onClick={handleClose}
                 >
-                  {t("Dashboard")}
+                  {content.dashboard}
                 </Link>
               </HStack>
             </Drawer.Description>
             <Drawer.CloseTrigger asChild pos="absolute" top="3" right="3">
-              <IconButton variant="plain" size="sm" aria-label={t("Close")}>
+              <IconButton variant="plain" size="sm" aria-label={content.close}>
                 <X />
               </IconButton>
             </Drawer.CloseTrigger>
@@ -92,7 +94,7 @@ export function ComputingDrawer() {
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  {t("Active")}
+                  {content.active}
                 </Text>
                 <Stack gap="3">
                   {activeJobs.map((job) => (
@@ -100,8 +102,8 @@ export function ComputingDrawer() {
                       key={job.id}
                       job={job}
                       onClose={handleClose}
-                      cancelLabel={t("Cancel")}
-                      viewResultsLabel={t("View Results")}
+                      cancelLabel={content.cancel}
+                      viewResultsLabel={content.viewResults}
                     />
                   ))}
                 </Stack>
@@ -117,7 +119,7 @@ export function ComputingDrawer() {
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  {t("Recent")}
+                  {content.recent}
                 </Text>
                 <Stack gap="3">
                   {completedJobs.slice(0, 5).map((job) => (
@@ -125,8 +127,8 @@ export function ComputingDrawer() {
                       key={job.id}
                       job={job}
                       onClose={handleClose}
-                      cancelLabel={t("Cancel")}
-                      viewResultsLabel={t("View Results")}
+                      cancelLabel={content.cancel}
+                      viewResultsLabel={content.viewResults}
                     />
                   ))}
                 </Stack>
@@ -140,9 +142,9 @@ export function ComputingDrawer() {
                     <Cpu />
                   </Empty.Icon>
                   <Empty.Content>
-                    <Empty.Title>{t("No simulations yet")}</Empty.Title>
+                    <Empty.Title>{content.noSimulationsYet}</Empty.Title>
                     <Empty.Description>
-                      {t("Run a simulation to see progress here.")}
+                      {content.runSimulationToSee}
                     </Empty.Description>
                   </Empty.Content>
                 </Empty.Root>

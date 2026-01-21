@@ -1,11 +1,11 @@
 "use client";
 
 import { Code2Icon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
+import NextLink from "next/link";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { RotationCard } from "@/components/rotations";
-import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUserProfile } from "@/lib/state";
 
@@ -16,7 +16,7 @@ interface UserProfilePageProps {
 }
 
 export function UserProfilePage({ handle }: UserProfilePageProps) {
-  const t = useExtracted();
+  const { userProfilePage: content } = useIntlayer("users");
   const { isLoading, notFound, profile, rotations } = useUserProfile(handle);
   const { getSpecIcon, getSpecLabel } = useClassesAndSpecs();
 
@@ -28,9 +28,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
     return (
       <Empty.Root size="lg" variant="outline">
         <Empty.Content>
-          <Empty.Title>{t("User not found")}</Empty.Title>
+          <Empty.Title>{content.userNotFound}</Empty.Title>
           <Empty.Description>
-            {t("@{handle} does not exist", { handle })}
+            {content.handleDoesNotExist({ handle })}
           </Empty.Description>
         </Empty.Content>
       </Empty.Root>
@@ -52,18 +52,18 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             {profile.avatar_url && (
               <Avatar.Image
                 src={profile.avatar_url}
-                alt={t("{handle}'s avatar", { handle: profile.handle })}
+                alt={content.avatarAlt({ handle: profile.handle })}
               />
             )}
             <Avatar.Fallback initials={initials} />
           </Avatar.Root>
-          <IntlLink
+          <NextLink
             href={href(routes.users.profile, { handle: profile.handle })}
           >
             <Text textStyle="xl" fontWeight="semibold">
               @{profile.handle}
             </Text>
-          </IntlLink>
+          </NextLink>
         </HStack>
 
         <HStack gap="4" color="fg.muted" textStyle="sm">
@@ -72,16 +72,14 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             <Text fontWeight="medium" fontVariantNumeric="tabular-nums">
               {rotations.length}
             </Text>
-            <Text>
-              {rotations.length === 1 ? t("rotation") : t("rotations")}
-            </Text>
+            <Text>{content.rotationCount(rotations.length)}</Text>
           </HStack>
         </HStack>
       </Flex>
 
       <VStack gap="4" alignItems="stretch">
         <Text textStyle="lg" fontWeight="semibold">
-          {t("Public Rotations")}
+          {content.publicRotations}
         </Text>
 
         {rotations.length > 0 ? (
@@ -100,11 +98,9 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
         ) : (
           <Empty.Root size="lg" variant="outline">
             <Empty.Content>
-              <Empty.Title>{t("No public rotations")}</Empty.Title>
+              <Empty.Title>{content.noPublicRotations}</Empty.Title>
               <Empty.Description>
-                {t("@{handle} has not published any rotations yet.", {
-                  handle,
-                })}
+                {content.noRotationsYet({ handle })}
               </Empty.Description>
             </Empty.Content>
           </Empty.Root>

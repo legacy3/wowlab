@@ -32,6 +32,12 @@ export const engine = {
     initPromise = null;
   },
 
+  async encodeMinimalLoadout(specId: number): Promise<string> {
+    const p = await import("wowlab-parsers");
+    await p.default();
+    return p.encodeMinimalLoadout(specId);
+  },
+
   get error() {
     return initError;
   },

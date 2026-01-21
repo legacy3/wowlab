@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ListTreeIcon, PlusIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useRef, useState } from "react";
 import { Box, Center, VStack } from "styled-system/jsx";
 
@@ -41,7 +41,7 @@ interface SortableActionCardProps {
 }
 
 export function ActionList() {
-  const t = useExtracted();
+  const { actionList: content } = useIntlayer("editor");
   const selectedList = useSelectedList();
   const reorderActions = useEditor((s) => s.reorderActions);
   const [pickerOpen, { set: setPickerOpen, setTrue: openPicker }] =
@@ -73,7 +73,7 @@ export function ActionList() {
       <Center h="full">
         <VStack gap="2">
           <ListTreeIcon size={48} strokeWidth={1} />
-          <Text color="fg.muted">{t("Select a list from the sidebar")}</Text>
+          <Text color="fg.muted">{content.selectListFromSidebar}</Text>
         </VStack>
       </Center>
     );
@@ -128,19 +128,19 @@ export function ActionList() {
             <Heading size="md">{selectedList.label}</Heading>
             {selectedList.listType === "main" && (
               <Badge size="sm" variant="outline">
-                {t("Entry Point")}
+                {content.entryPoint}
               </Badge>
             )}
             {selectedList.listType === "precombat" && (
               <Badge size="sm" variant="subtle" colorPalette="amber">
-                {t("Precombat")}
+                {content.precombat}
               </Badge>
             )}
           </Box>
           <Text textStyle="xs" color="fg.muted" fontFamily="mono">
-            {t("{count, plural, =1 {# action} other {# actions}}", {
-              count: selectedList.actions.length,
-            })}
+            {selectedList.actions.length === 1
+              ? "1 action"
+              : `${selectedList.actions.length} actions`}
           </Text>
         </Box>
 
@@ -151,21 +151,19 @@ export function ActionList() {
                 <ListTreeIcon size={32} strokeWidth={1.5} />
               </Box>
               <VStack gap="1">
-                <Text fontWeight="medium">{t("No actions yet")}</Text>
+                <Text fontWeight="medium">{content.noActionsYet}</Text>
                 <Text
                   textStyle="sm"
                   color="fg.muted"
                   textAlign="center"
                   maxW="52"
                 >
-                  {t(
-                    "Add spells, items, or call other action lists to build your rotation.",
-                  )}
+                  {content.addSpellsItemsOrCallOther}
                 </Text>
               </VStack>
               <Button size="sm" onClick={() => openPicker()}>
                 <PlusIcon size={16} />
-                {t("Add action")}
+                {content.addAction}
               </Button>
             </VStack>
           </Center>
@@ -242,7 +240,7 @@ export function ActionList() {
             w="full"
           >
             <PlusIcon size={16} />
-            {t("Add action")}
+            {content.addAction}
           </Button>
         )}
       </VStack>

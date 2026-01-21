@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
@@ -23,7 +23,7 @@ export function ActionPicker({
   onOpenChange,
   open,
 }: ActionPickerProps) {
-  const t = useExtracted();
+  const { actionPicker: content } = useIntlayer("editor");
   const addAction = useEditor((s) => s.addAction);
   const actionLists = useEditor((s) => s.actionLists);
   const [activeTab, setActiveTab] = useState<ActionType>("spell");
@@ -56,7 +56,7 @@ export function ActionPicker({
       <Dialog.Positioner>
         <Dialog.Content minW="md">
           <Dialog.Header>
-            <Dialog.Title>{t("Add action")}</Dialog.Title>
+            <Dialog.Title>{content.addAction}</Dialog.Title>
             <Dialog.CloseTrigger asChild>
               <IconButton variant="plain" size="sm">
                 <XIcon size={16} />
@@ -85,7 +85,7 @@ export function ActionPicker({
                 <Tabs.Content value="spell">
                   <VStack gap="3" alignItems="stretch">
                     <Text textStyle="sm" color="fg.muted">
-                      {t("Search for a spell to add to the rotation.")}
+                      {content.searchSpellDescription}
                     </Text>
                     <SpellPicker onSelect={handleAddSpell} />
                   </VStack>
@@ -94,7 +94,7 @@ export function ActionPicker({
                 <Tabs.Content value="item">
                   <VStack gap="3" alignItems="stretch">
                     <Text textStyle="sm" color="fg.muted">
-                      {t("Search for an item to use in the rotation.")}
+                      {content.searchItemDescription}
                     </Text>
                     <ItemPicker onSelect={handleAddItem} />
                   </VStack>
@@ -103,20 +103,18 @@ export function ActionPicker({
                 <Tabs.Content value="call_action_list">
                   <VStack gap="3" alignItems="stretch">
                     <Text textStyle="sm" color="fg.muted">
-                      {t("Select an action list to call.")}
+                      {content.selectActionListDescription}
                     </Text>
                     {availableLists.length === 0 ? (
                       <Text textStyle="sm" color="fg.warning">
-                        {t(
-                          "No other action lists available. Create a new list first.",
-                        )}
+                        {content.noOtherActionListsAvailable}
                       </Text>
                     ) : (
                       <SelectField
                         value={undefined}
                         options={listOptions}
                         onChange={handleAddCallList}
-                        placeholder={t("Select a list...")}
+                        placeholder={content.selectAList}
                       />
                     )}
                   </VStack>
@@ -127,7 +125,7 @@ export function ActionPicker({
 
           <Dialog.Footer>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t("Cancel")}
+              {content.cancel}
             </Button>
           </Dialog.Footer>
         </Dialog.Content>

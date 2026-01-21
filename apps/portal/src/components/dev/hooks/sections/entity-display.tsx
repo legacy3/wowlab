@@ -1,7 +1,7 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Flex, Stack } from "styled-system/jsx";
 
@@ -19,7 +19,6 @@ interface EntityDisplayProps<T extends Record<string, unknown>> {
   title: string;
 }
 
-// State result type matching react-query return
 type StateResult<T> = {
   data: T | undefined;
   error: Error | null;
@@ -36,7 +35,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
   result,
   title,
 }: EntityDisplayProps<T>) {
-  const t = useExtracted();
+  const { entityDisplay: content } = useIntlayer("dev");
   const name = result.data?.[nameField];
   const [inputValue, setInputValue] = useState(String(inputId));
 
@@ -65,7 +64,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
                 type="number"
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder={t("Enter ID")}
+                placeholder={content.enterId}
                 w="32"
               />
               {result.refresh && (
@@ -74,7 +73,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
                   variant="outline"
                   onClick={() => result.refresh?.()}
                 >
-                  {t("Refresh")}
+                  {content.refresh}
                 </Button>
               )}
             </Flex>
@@ -83,7 +82,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
               <Badge variant="outline">ID: {inputId}</Badge>
               {name && <Badge colorPalette="green">{String(name)}</Badge>}
               {result.isLoading && (
-                <Badge colorPalette="amber">{t("Loading...")}</Badge>
+                <Badge colorPalette="amber">{content.loading}</Badge>
               )}
             </Flex>
 

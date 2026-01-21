@@ -2,6 +2,7 @@
 
 import { useKeyPress } from "ahooks";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
 import type { NavItem } from "@/lib/content/types";
@@ -9,7 +10,6 @@ import type { NavItem } from "@/lib/content/types";
 import { Icon } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
-import { useRouter } from "@/i18n/navigation";
 
 type ContentNavProps = {
   prev: NavItem;

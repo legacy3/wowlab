@@ -12,7 +12,7 @@ import {
   XIcon,
   ZapIcon,
 } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
@@ -41,7 +41,7 @@ export function SortableListItem({
   onSelect,
   onSetDefault,
 }: SortableListItemProps) {
-  const t = useExtracted();
+  const { sortableListItem: content } = useIntlayer("editor");
   const [isEditing, { setFalse: stopEditing, setTrue: startEditing }] =
     useBoolean(false);
   const [editValue, setEditValue] = useState(list.label);
@@ -146,16 +146,16 @@ export function SortableListItem({
         </Text>
         {list.listType === "precombat" && (
           <Badge size="sm" variant="outline" colorPalette="amber">
-            {t("Pre")}
+            {content.pre}
           </Badge>
         )}
         {list.listType === "main" && (
           <Badge size="sm" variant="outline" colorPalette="green">
-            {t("Main")}
+            {content.main}
           </Badge>
         )}
         {isDefault && (
-          <Tooltip content={t("Default list")}>
+          <Tooltip content={content.defaultList}>
             <Box color="amber.500">
               <StarIcon size={12} fill="currentColor" />
             </Box>
@@ -168,18 +168,18 @@ export function SortableListItem({
           {list.actions.length}
         </Text>
         <ItemActionsMenu
-          ariaLabel={t("List actions")}
+          ariaLabel={content.listActions}
           actions={[
             {
               icon: EditIcon,
-              label: t("Rename"),
+              label: content.rename,
               onClick: handleStartEdit,
               value: "rename",
             },
             {
               disabled: isDefault,
               icon: StarIcon,
-              label: t("Set as default"),
+              label: content.setAsDefault,
               onClick: onSetDefault,
               value: "default",
             },
@@ -187,7 +187,7 @@ export function SortableListItem({
               destructive: true,
               disabled: !canDelete,
               icon: TrashIcon,
-              label: t("Delete"),
+              label: content.delete,
               onClick: onDelete,
               value: "delete",
             },

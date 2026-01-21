@@ -53,8 +53,8 @@ pub use transform::{
 
 // Talent loadout encoding/decoding
 pub use loadout::{
-    apply_decoded_traits, decode_trait_loadout, encode_trait_loadout, DecodedTraitLoadout,
-    DecodedTraitNode,
+    apply_decoded_traits, decode_trait_loadout, encode_minimal_loadout, encode_trait_loadout,
+    DecodedTraitLoadout, DecodedTraitNode,
 };
 
 // Spell description parsing
@@ -98,6 +98,12 @@ pub fn wasm_parse_spell_desc(input: &str) -> Result<ParsedSpellDescription, JsEr
                 .join(", "),
         ))
     }
+}
+
+/// Encode a minimal loadout string for a spec with no talent selections.
+#[wasm_bindgen(js_name = encodeMinimalLoadout)]
+pub fn wasm_encode_minimal_loadout(spec_id: u16) -> String {
+    encode_minimal_loadout(spec_id)
 }
 
 // Re-export spell description WASM functions

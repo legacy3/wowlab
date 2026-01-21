@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Container } from "styled-system/jsx";
 
 import { PageHeader } from "@/components/common";
@@ -14,7 +14,7 @@ export default function Error({
   error: { digest?: string } & Error;
   reset: () => void;
 }) {
-  const t = useExtracted();
+  const content = useIntlayer("error");
 
   return (
     <Container maxW="7xl" py="8">
@@ -22,7 +22,7 @@ export default function Error({
         <PageHeader route={routes.error} />
         <Group direction="column" gap="4">
           <ErrorBox>{error.message}</ErrorBox>
-          <Button onClick={reset}>{t("Try again")}</Button>
+          <Button onClick={reset}>{content.tryAgain}</Button>
         </Group>
       </Group>
     </Container>

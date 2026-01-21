@@ -1,7 +1,7 @@
 "use client";
 
 import { useBoolean } from "ahooks";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Box, Flex, Grid, Stack, styled } from "styled-system/jsx";
 
@@ -31,7 +31,7 @@ const IconButton = styled(Button, {
 });
 
 export function SignInForm({ redirectTo }: SignInFormProps) {
-  const t = useExtracted();
+  const { signInForm: content } = useIntlayer("auth");
   const [error, setError] = useState<string | null>(null);
   const [loading, { setFalse: stopLoading, setTrue: startLoading }] =
     useBoolean(false);
@@ -47,7 +47,7 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
     return (
       <Card.Root w="full" maxW="md">
         <Card.Body>
-          <CardLoader message={t("Signing you in...")} />
+          <CardLoader message={content.signingYouIn} />
         </Card.Body>
       </Card.Root>
     );
@@ -57,10 +57,8 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
     <Stack gap="6" w="full" maxW="md">
       <Card.Root>
         <Card.Header textAlign="center">
-          <Card.Title fontSize="2xl">{t("Sign in to continue")}</Card.Title>
-          <Card.Description>
-            {t("Choose your preferred authentication method.")}
-          </Card.Description>
+          <Card.Title fontSize="2xl">{content.signInToContinue}</Card.Title>
+          <Card.Description>{content.chooseMethod}</Card.Description>
         </Card.Header>
         <Card.Body>
           <Stack gap="4">
@@ -102,30 +100,28 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
             <Flex align="center" gap="3">
               <Box flex="1" h="1px" bg="border" />
               <Text fontSize="xs" color="fg.subtle" textTransform="uppercase">
-                {t("Secure authentication")}
+                {content.secureAuth}
               </Text>
               <Box flex="1" h="1px" bg="border" />
             </Flex>
 
             <Text textAlign="center" fontSize="xs" color="fg.muted">
-              {t.rich(
-                "By continuing, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
-                {
-                  privacy: (chunks) => (
-                    <Link href={href(routes.about.privacy)}>{chunks}</Link>
-                  ),
-                  terms: (chunks) => (
-                    <Link href={href(routes.about.terms)}>{chunks}</Link>
-                  ),
-                },
-              )}
+              {content.termsPrefix}
+              <Link href={href(routes.about.terms)}>
+                {content.termsOfService}
+              </Link>
+              {content.and}
+              <Link href={href(routes.about.privacy)}>
+                {content.privacyPolicy}
+              </Link>
+              {content.termsSuffix}
             </Text>
           </Stack>
         </Card.Body>
       </Card.Root>
 
       <Text textAlign="center" fontSize="xs" color="fg.subtle">
-        {t("New here? Signing in creates an account automatically.")}
+        {content.newHere}
       </Text>
     </Stack>
   );

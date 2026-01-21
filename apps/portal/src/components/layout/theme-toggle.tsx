@@ -1,13 +1,12 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { IconButton } from "@/components/ui";
 
-// TODO Refactor this file to single source of truth
 const themeIcons = {
   dark: Moon,
   light: Sun,
@@ -18,7 +17,7 @@ type ThemeKey = keyof typeof themeIcons;
 const themeKeys: ThemeKey[] = ["light", "dark", "system"];
 
 export function ThemeToggle() {
-  const t = useExtracted();
+  const { themeToggle: content } = useIntlayer("layout");
   const { setTheme, theme = "system" } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -27,9 +26,9 @@ export function ThemeToggle() {
   }, []);
 
   const themeLabels: Record<ThemeKey, string> = {
-    dark: t("Dark"),
-    light: t("Light"),
-    system: t("System"),
+    dark: content.dark,
+    light: content.light,
+    system: content.system,
   };
 
   const currentKey =
@@ -45,7 +44,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <IconButton variant="plain" size="sm" aria-label={t("Toggle theme")}>
+      <IconButton variant="plain" size="sm" aria-label={content.toggleTheme}>
         <Monitor size={18} />
       </IconButton>
     );
@@ -55,8 +54,8 @@ export function ThemeToggle() {
     <IconButton
       variant="plain"
       size="sm"
-      aria-label={t("Toggle theme")}
-      title={t("Theme: {theme}", { theme: themeLabels[currentKey] })}
+      aria-label={content.toggleTheme}
+      title={`${content.themeLabel} ${themeLabels[currentKey]}`}
       onClick={cycle}
     >
       <Icon size={18} />

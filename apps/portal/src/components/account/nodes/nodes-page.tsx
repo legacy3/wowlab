@@ -1,12 +1,11 @@
 "use client";
 
 import { CpuIcon, PlusIcon, ServerIcon, WifiIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Grid, HStack, Stack } from "styled-system/jsx";
 
-import { Button, Card, Empty, Skeleton, StatCard } from "@/components/ui";
-import { Link } from "@/i18n/navigation";
+import { Button, Card, Empty, Link, Skeleton, StatCard } from "@/components/ui";
 import { routes } from "@/lib/routing";
 import {
   type NodeWithMeta,
@@ -25,7 +24,7 @@ import { NodesTable, NodesTableSkeleton } from "./nodes-table";
 import { type OwnerFilter, OwnerFilterTabs } from "./owner-filter-tabs";
 
 export function NodesPage() {
-  const t = useExtracted();
+  const content = useIntlayer("account").nodesPage;
   const { data: user } = useUser();
   const userId = user?.id;
 
@@ -100,14 +99,12 @@ export function NodesPage() {
 
   return (
     <Stack gap="6">
-      {/* Stats */}
       <Grid columns={{ base: 3, sm: 3 }} gap="4">
-        <StatCard icon={ServerIcon} label={t("Nodes")} value={totalCount} />
-        <StatCard icon={WifiIcon} label={t("Online")} value={onlineCount} />
-        <StatCard icon={CpuIcon} label={t("Workers")} value={totalWorkers} />
+        <StatCard icon={ServerIcon} label={content.nodes} value={totalCount} />
+        <StatCard icon={WifiIcon} label={content.online} value={onlineCount} />
+        <StatCard icon={CpuIcon} label={content.workers} value={totalWorkers} />
       </Grid>
 
-      {/* Actions Bar */}
       <HStack justify="space-between" flexWrap="wrap" gap="4">
         <OwnerFilterTabs value={ownerFilter} onValueChange={setOwnerFilter} />
 
@@ -123,13 +120,12 @@ export function NodesPage() {
           <Button asChild>
             <Link href={routes.account.nodes.claim.path}>
               <PlusIcon size={16} />
-              {t("Claim Node")}
+              {content.claimNode}
             </Link>
           </Button>
         </HStack>
       </HStack>
 
-      {/* Nodes Table or Empty State */}
       {filteredNodes.length === 0 ? (
         <Card.Root>
           <Card.Body py="12">
@@ -137,16 +133,14 @@ export function NodesPage() {
               <Empty.Icon>
                 <ServerIcon />
               </Empty.Icon>
-              <Empty.Title>{t("No nodes yet")}</Empty.Title>
+              <Empty.Title>{content.noNodesYet}</Empty.Title>
               <Empty.Description>
-                {t(
-                  "Claim a node to contribute compute resources for simulations",
-                )}
+                {content.claimNodeDescription}
               </Empty.Description>
               <Button asChild>
                 <Link href={routes.account.nodes.claim.path}>
                   <PlusIcon size={16} />
-                  {t("Claim Your First Node")}
+                  {content.claimYourFirstNode}
                 </Link>
               </Button>
             </Empty.Root>
@@ -161,7 +155,6 @@ export function NodesPage() {
         />
       )}
 
-      {/* Settings Dialog */}
       {settingsNode && (
         <NodeSettingsDialog
           node={settingsNode}

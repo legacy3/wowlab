@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 
-import createNextIntlPlugin from "next-intl/plugin";
-
-import { locales } from "./src/i18n/routing";
+import { withIntlayer } from "next-intlayer/server";
 
 const isDev = process.argv.indexOf("dev") !== -1;
 const isBuild = process.argv.indexOf("build") !== -1;
@@ -71,19 +69,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withNextIntl = createNextIntlPlugin({
-  experimental: {
-    extract: {
-      sourceLocale: "en",
-    },
-    messages: {
-      format: "po",
-      locales: Object.keys(locales) as (keyof typeof locales)[],
-      path: "./src/i18n/messages",
-    },
-    srcPath: "./src",
-  },
-  requestConfig: "./src/i18n/request.ts",
-});
-
-export default withNextIntl(nextConfig);
+export default withIntlayer(nextConfig);

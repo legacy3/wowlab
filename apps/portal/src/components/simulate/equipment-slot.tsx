@@ -1,7 +1,7 @@
 "use client";
 
 import { DotIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { css, cx } from "styled-system/css";
 import { Flex, styled } from "styled-system/jsx";
 
@@ -11,57 +11,59 @@ import { GameIcon, ItemTooltip } from "@/components/game";
 import { Skeleton, Text, Tooltip } from "@/components/ui";
 import { useItem } from "@/lib/state";
 
-function useSlotLabel(slot: Slot): string {
-  const t = useExtracted();
+type EquipmentSlotContent = ReturnType<
+  typeof useIntlayer<"simulate">
+>["equipmentSlot"];
 
+function getSlotLabel(slot: Slot, content: EquipmentSlotContent): string {
   switch (slot) {
     case "back":
-      return t("Back");
+      return content.back;
 
     case "chest":
-      return t("Chest");
+      return content.chest;
 
     case "feet":
-      return t("Feet");
+      return content.feet;
 
     case "finger1":
-      return t("{n, plural, other {Finger #}}", { n: 1 });
+      return content.finger({ n: 1 });
 
     case "finger2":
-      return t("{n, plural, other {Finger #}}", { n: 2 });
+      return content.finger({ n: 2 });
 
     case "hands":
-      return t("Hands");
+      return content.hands;
 
     case "head":
-      return t("Head");
+      return content.head;
 
     case "legs":
-      return t("Legs");
+      return content.legs;
 
     case "main_hand":
-      return t("Main Hand");
+      return content.mainHand;
 
     case "neck":
-      return t("Neck");
+      return content.neck;
 
     case "off_hand":
-      return t("Off Hand");
+      return content.offHand;
 
     case "shoulder":
-      return t("Shoulder");
+      return content.shoulder;
 
     case "trinket1":
-      return t("{n, plural, other {Trinket #}}", { n: 1 });
+      return content.trinket({ n: 1 });
 
     case "trinket2":
-      return t("{n, plural, other {Trinket #}}", { n: 2 });
+      return content.trinket({ n: 2 });
 
     case "waist":
-      return t("Waist");
+      return content.waist;
 
     case "wrist":
-      return t("Wrist");
+      return content.wrist;
   }
 }
 
@@ -120,9 +122,9 @@ export function EquipmentSlot({
   itemId,
   slot,
 }: EquipmentSlotProps) {
-  const t = useExtracted();
+  const { equipmentSlot: content } = useIntlayer("simulate");
   const { data: item, isLoading } = useItem(itemId);
-  const slotLabel = useSlotLabel(slot);
+  const slotLabel = getSlotLabel(slot, content);
   const isRight = align === "right";
 
   if (isLoading && itemId) {
@@ -155,7 +157,9 @@ export function EquipmentSlot({
     <div className={emptyIconStyles}>—</div>
   );
 
-  const content = item ? (
+  const ilvlText = content.ilvl({ ilvl: item?.item_level ?? 0 });
+
+  const itemContent = item ? (
     <ItemTooltip
       item={{
         iconName: item.file_name,
@@ -197,11 +201,11 @@ export function EquipmentSlot({
             <>
               {slotLabel}
               <DotIcon size={12} />
-              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.item_level })}
+              {ilvlText}
             </>
           ) : (
             <>
-              {t("iLvl {ilvl, plural, other {#}}", { ilvl: item.item_level })}
+              {ilvlText}
               <DotIcon size={12} />
               {slotLabel}
             </>
@@ -218,7 +222,7 @@ export function EquipmentSlot({
       alignItems={isRight ? "flex-end" : "flex-start"}
     >
       <Text textStyle="sm" color="fg.muted" fontStyle="italic">
-        {t("Empty")}
+        {content.empty}
       </Text>
       <Text textStyle="xs" color="fg.subtle">
         {slotLabel}
@@ -230,13 +234,13 @@ export function EquipmentSlot({
     <div className={cx(slotStyles, className)}>
       {isRight ? (
         <>
-          {content}
+          {itemContent}
           {icon}
         </>
       ) : (
         <>
           {icon}
-          {content}
+          {itemContent}
         </>
       )}
     </div>

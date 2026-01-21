@@ -1,7 +1,7 @@
 "use client";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Box, Stack } from "styled-system/jsx";
 
 import type { BlogPost } from "@/lib/content/blog";
@@ -14,8 +14,7 @@ type BlogListProps = {
 };
 
 export function BlogList({ posts }: BlogListProps) {
-  const t = useExtracted();
-  const format = useFormatter();
+  const { blogList: content } = useIntlayer("blog");
 
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
@@ -27,7 +26,7 @@ export function BlogList({ posts }: BlogListProps) {
     return (
       <Empty.Root size="md" variant="plain">
         <Empty.Content>
-          <Empty.Title>{t("No posts yet")}</Empty.Title>
+          <Empty.Title>{content.noPostsYet}</Empty.Title>
         </Empty.Content>
       </Empty.Root>
     );
@@ -59,11 +58,11 @@ export function BlogList({ posts }: BlogListProps) {
                 textStyle="xs"
                 fontVariantNumeric="tabular-nums"
               >
-                {format.dateTime(new Date(post.publishedAt), {
+                {new Intl.DateTimeFormat("en", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
-                })}
+                }).format(new Date(post.publishedAt))}
               </Text>
             </Stack>
           </Box>

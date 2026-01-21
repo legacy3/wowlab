@@ -1,7 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Grid, HStack, Stack } from "styled-system/jsx";
 
 import type { Profile } from "@/lib/sim";
@@ -38,7 +38,7 @@ export function ConfigureStep({
   onSimulate,
   profile,
 }: ConfigureStepProps) {
-  const t = useExtracted();
+  const { configureStep: content } = useIntlayer("simulate");
   const { goBack } = Steps.useSteps();
 
   return (
@@ -52,15 +52,13 @@ export function ConfigureStep({
 
       <Card.Root>
         <Card.Header>
-          <Card.Title>{t("Simulation Settings")}</Card.Title>
-          <Card.Description>
-            {t("Configure how the simulation will run")}
-          </Card.Description>
+          <Card.Title>{content.simulationSettings}</Card.Title>
+          <Card.Description>{content.configureDescription}</Card.Description>
         </Card.Header>
         <Card.Body>
           <Grid columns={{ base: 1, md: 2 }} gap="6">
             <NumberInput.Root defaultValue="300" min={30} max={900} step={30}>
-              <NumberInput.Label>{t("Fight Length (sec)")}</NumberInput.Label>
+              <NumberInput.Label>{content.fightLength}</NumberInput.Label>
               <NumberInput.Input />
               <NumberInput.Control />
             </NumberInput.Root>
@@ -71,13 +69,13 @@ export function ConfigureStep({
               max={100000}
               step={1000}
             >
-              <NumberInput.Label>{t("Iterations")}</NumberInput.Label>
+              <NumberInput.Label>{content.iterations}</NumberInput.Label>
               <NumberInput.Input />
               <NumberInput.Control />
             </NumberInput.Root>
 
             <NumberInput.Root defaultValue="1" min={1} max={20}>
-              <NumberInput.Label>{t("Target Count")}</NumberInput.Label>
+              <NumberInput.Label>{content.targetCount}</NumberInput.Label>
               <NumberInput.Input />
               <NumberInput.Control />
             </NumberInput.Root>
@@ -87,10 +85,10 @@ export function ConfigureStep({
               defaultValue={["patchwerk"]}
               positioning={{ sameWidth: true }}
             >
-              <Select.Label>{t("Fight Style")}</Select.Label>
+              <Select.Label>{content.fightStyle}</Select.Label>
               <Select.Control>
                 <Select.Trigger>
-                  <Select.ValueText placeholder={t("Select...")} />
+                  <Select.ValueText placeholder={content.select} />
                   <Select.Indicator />
                 </Select.Trigger>
               </Select.Control>
@@ -109,24 +107,24 @@ export function ConfigureStep({
 
           <Stack gap="4" mt="6">
             <Text fontWeight="medium" textStyle="sm">
-              {t("Options")}
+              {content.options}
             </Text>
             <HStack gap="6" flexWrap="wrap">
               <Switch.Root defaultChecked>
                 <Switch.Control />
-                <Switch.Label>{t("Bloodlust")}</Switch.Label>
+                <Switch.Label>{content.bloodlust}</Switch.Label>
                 <Switch.HiddenInput />
               </Switch.Root>
 
               <Switch.Root>
                 <Switch.Control />
-                <Switch.Label>{t("Optimal Raid Buffs")}</Switch.Label>
+                <Switch.Label>{content.optimalRaidBuffs}</Switch.Label>
                 <Switch.HiddenInput />
               </Switch.Root>
 
               <Switch.Root defaultChecked>
                 <Switch.Control />
-                <Switch.Label>{t("Food & Flask")}</Switch.Label>
+                <Switch.Label>{content.foodAndFlask}</Switch.Label>
                 <Switch.HiddenInput />
               </Switch.Root>
             </HStack>
@@ -136,9 +134,9 @@ export function ConfigureStep({
 
       <HStack gap="3" justify="space-between">
         <Button variant="outline" onClick={goBack}>
-          {t("Back")}
+          {content.back}
         </Button>
-        <Button onClick={onSimulate}>{t("Run Simulation")}</Button>
+        <Button onClick={onSimulate}>{content.runSimulation}</Button>
       </HStack>
     </Stack>
   );

@@ -25,7 +25,7 @@ import {
   PlusIcon,
   VariableIcon,
 } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
@@ -43,7 +43,7 @@ import {
 import { VariableEditorDialog } from "./variable-editor-dialog";
 
 export function EditorSidebar() {
-  const t = useExtracted();
+  const { sidebar: content } = useIntlayer("editor");
   const [collapsed, { setFalse: expand, setTrue: collapse }] =
     useBoolean(false);
   const [activeTab, setActiveTab] = useState<TabId>("lists");
@@ -183,7 +183,7 @@ export function EditorSidebar() {
           <Tabs.List bg="transparent" h="8" gap="1">
             <Tabs.Trigger value="lists" h="7" px="2.5" rounded="md" gap="1.5">
               <ListIcon size={14} />
-              <Text textStyle="xs">{t("Lists")}</Text>
+              <Text textStyle="xs">{content.lists}</Text>
               <Text textStyle="xs" color="fg.muted">
                 {actionLists.length}
               </Text>
@@ -196,7 +196,7 @@ export function EditorSidebar() {
               gap="1.5"
             >
               <VariableIcon size={14} />
-              <Text textStyle="xs">{t("Vars")}</Text>
+              <Text textStyle="xs">{content.vars}</Text>
               <Text textStyle="xs" color="fg.muted">
                 {variables.length}
               </Text>
@@ -228,9 +228,9 @@ export function EditorSidebar() {
               textTransform="uppercase"
               letterSpacing="wider"
             >
-              {t("Action Lists")}
+              {content.actionLists}
             </Text>
-            <Tooltip content={t("Add list")}>
+            <Tooltip content={content.addList}>
               <IconButton variant="plain" size="xs" onClick={handleAddList}>
                 <PlusIcon size={14} />
               </IconButton>
@@ -304,7 +304,7 @@ export function EditorSidebar() {
             {actionLists.length === 0 && (
               <Box textAlign="center" py="8">
                 <Text textStyle="sm" color="fg.muted">
-                  {t("No lists yet")}
+                  {content.noListsYet}
                 </Text>
                 <Button
                   variant="plain"
@@ -312,7 +312,7 @@ export function EditorSidebar() {
                   onClick={handleAddList}
                   mt="1"
                 >
-                  {t("Add your first list")}
+                  {content.addYourFirstList}
                 </Button>
               </Box>
             )}
@@ -340,9 +340,9 @@ export function EditorSidebar() {
               textTransform="uppercase"
               letterSpacing="wider"
             >
-              {t("Variables")}
+              {content.variables}
             </Text>
-            <Tooltip content={t("Add variable")}>
+            <Tooltip content={content.addVariable}>
               <IconButton variant="plain" size="xs" onClick={handleAddVariable}>
                 <PlusIcon size={14} />
               </IconButton>
@@ -379,10 +379,10 @@ export function EditorSidebar() {
             {variables.length === 0 && (
               <Box textAlign="center" py="8">
                 <Text textStyle="sm" color="fg.muted">
-                  {t("No variables yet")}
+                  {content.noVariablesYet}
                 </Text>
                 <Text textStyle="xs" color="fg.muted" mt="2">
-                  {t("Use {code} in conditions", { code: "$name" })}
+                  {content.useCodeInConditions}
                 </Text>
                 <Button
                   variant="plain"
@@ -390,7 +390,7 @@ export function EditorSidebar() {
                   onClick={handleAddVariable}
                   mt="2"
                 >
-                  {t("Add your first variable")}
+                  {content.addYourFirstVariable}
                 </Button>
               </Box>
             )}

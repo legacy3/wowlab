@@ -1,7 +1,7 @@
 "use client";
 
-import { Download } from "lucide-react";
-import { parseAsInteger, useQueryState } from "nuqs";
+import { Download, X } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { css } from "styled-system/css";
 import { Box, HStack, VStack } from "styled-system/jsx";
@@ -17,14 +17,13 @@ import {
   useCanvas,
   useCanvasContainer,
 } from "@/components/fabric";
-import { SpecPicker } from "@/components/game";
 import { IconButton, Tooltip as UITooltip } from "@/components/ui";
+import { routes } from "@/lib/routing";
 import { useSpecTraits } from "@/lib/state";
 
 import type { TalentSubTree } from "./talent-tree";
 
 import { SpellDescriptionViewer } from "./spell-description-diff";
-import { TalentStartScreen } from "./talent-start-screen";
 import {
   renderTalentTree,
   TalentTooltip,
@@ -64,42 +63,19 @@ const controlsWrapperStyles = css({
 });
 
 // =============================================================================
-// Talent Tree View
+// Main Component
 // =============================================================================
 
-export function TalentCalculatorContent() {
-  const [specId, setSpecId] = useQueryState(
-    "spec",
-    parseAsInteger.withOptions({
-      history: "push",
-      shallow: true,
-    }),
-  );
+interface TalentCalculatorContentProps {
+  specId: number;
+}
 
-  const handleSpecSelect = useCallback(
-    (selectedSpecId: number) => {
-      setSpecId(selectedSpecId);
-    },
-    [setSpecId],
-  );
-
-  // Show start screen when no spec selected
-  if (!specId) {
-    return (
-      <TalentStartScreen
-        talents=""
-        onSpecSelect={handleSpecSelect}
-        onTalentStringChange={() => {
-          // TODO: Parse talent string to extract specId
-        }}
-      />
-    );
-  }
-
-  // Show talent tree when spec is selected
+export function TalentCalculatorContent({
+  specId,
+}: TalentCalculatorContentProps) {
   return (
     <VStack gap="4" w="full">
-      <TalentTreeView specId={specId} onSpecChange={handleSpecSelect} />
+      <TalentTreeView specId={specId} />
       <DescriptionDiffBox specId={specId} />
     </VStack>
   );
@@ -120,16 +96,10 @@ function DescriptionDiffBox({ specId }: { specId: number }) {
 }
 
 // =============================================================================
-// Main Content
+// Tree View
 // =============================================================================
 
-function TalentTreeView({
-  onSpecChange,
-  specId,
-}: {
-  onSpecChange: (specId: number) => void;
-  specId: number;
-}) {
+function TalentTreeView({ specId }: { specId: number }) {
   const {
     containerRef,
     controllerRef,
@@ -164,7 +134,6 @@ function TalentTreeView({
     [controllerRef, setIsReady],
   );
 
-  // Render talent tree when data changes
   useEffect(() => {
     const controller = controllerRef.current;
     if (!controller || !specTraits || !isReady) return;
@@ -214,7 +183,13 @@ function TalentTreeView({
       {/* Controls */}
       <div className={controlsWrapperStyles}>
         <HStack gap="2">
-          <SpecPicker compact specId={specId} onSelect={onSpecChange} />
+          <UITooltip content="Close">
+            <IconButton variant="outline" size="sm" asChild>
+              <Link href={routes.plan.talents.path}>
+                <X size={16} />
+              </Link>
+            </IconButton>
+          </UITooltip>
           <UITooltip content="Export PNG">
             <IconButton variant="outline" size="sm" onClick={handleExport}>
               <Download size={16} />

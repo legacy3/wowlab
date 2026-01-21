@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Flex, Stack, styled } from "styled-system/jsx";
 
 import type { Route } from "@/lib/routing";
@@ -22,7 +22,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ breadcrumbs, children, route }: PageHeaderProps) {
-  const t = useExtracted();
+  const { pageHeader: content } = useIntlayer("common");
   const breadcrumbContent =
     Array.isArray(breadcrumbs) && breadcrumbs.length > 0 ? (
       <PageBreadcrumbs items={breadcrumbs} />
@@ -46,9 +46,9 @@ export function PageHeader({ breadcrumbs, children, route }: PageHeaderProps) {
                 {route.label}
               </Heading>
               {route.preview && (
-                <Tooltip content={t("This feature is in active development")}>
+                <Tooltip content={content.previewTooltip}>
                   <Badge variant="outline" colorPalette="amber">
-                    {t("Preview")}
+                    {content.previewBadge}
                   </Badge>
                 </Tooltip>
               )}

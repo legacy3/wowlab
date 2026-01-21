@@ -1,11 +1,10 @@
 "use client";
 
-import { useFormatter } from "next-intl";
+import NextLink from "next/link";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { GameIcon } from "@/components/game";
 import { Text } from "@/components/ui";
-import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
 
 interface RotationCardProps {
@@ -23,11 +22,10 @@ export function RotationCard({
   specLabel,
   updatedAt,
 }: RotationCardProps) {
-  const format = useFormatter();
-  const relativeTime = format.relativeTime(new Date(updatedAt));
+  const relativeTime = formatRelativeTime(new Date(updatedAt));
 
   return (
-    <IntlLink href={href(routes.rotations.editor.edit, { id })}>
+    <NextLink href={href(routes.rotations.editor.edit, { id })}>
       <Flex
         px="4"
         py="3"
@@ -62,6 +60,22 @@ export function RotationCard({
           {relativeTime}
         </Text>
       </Flex>
-    </IntlLink>
+    </NextLink>
   );
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diff = date.getTime() - now.getTime();
+  const seconds = Math.round(diff / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  if (Math.abs(days) >= 1) return rtf.format(days, "day");
+  if (Math.abs(hours) >= 1) return rtf.format(hours, "hour");
+  if (Math.abs(minutes) >= 1) return rtf.format(minutes, "minute");
+  return rtf.format(seconds, "second");
 }

@@ -1,40 +1,39 @@
-import { hasLocale } from "next-intl";
-import { getMessages, getTimeZone, setRequestLocale } from "next-intl/server";
+import type { NextLayoutIntlayer } from "next-intlayer";
+
+import { configuration } from "intlayer";
+import { IntlayerClientProvider } from "next-intlayer";
+import { IntlayerServerProvider } from "next-intlayer/server";
 import { notFound } from "next/navigation";
 
 import { SiteShell } from "@/components/layout";
-import { routing } from "@/i18n/routing";
 import { AppProviders } from "@/providers";
 
-type LocaleLayoutProps = {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-};
+const { internationalization } = configuration;
 
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
+  return internationalization.locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: LocaleLayoutProps) {
+const LocaleLayout: NextLayoutIntlayer = async ({ children, params }) => {
   const { locale } = await params;
 
-  if (!hasLocale(routing.locales, locale)) {
+  if (
+    !internationalization.locales.includes(
+      locale as (typeof internationalization.locales)[number],
+    )
+  ) {
     notFound();
   }
 
-  setRequestLocale(locale);
-
-  const [messages, timeZone] = await Promise.all([
-    getMessages(),
-    getTimeZone(),
-  ]);
-
   return (
-    <AppProviders locale={locale} messages={messages} timeZone={timeZone}>
-      <SiteShell>{children}</SiteShell>
-    </AppProviders>
+    <IntlayerServerProvider locale={locale}>
+      <IntlayerClientProvider locale={locale}>
+        <AppProviders>
+          <SiteShell>{children}</SiteShell>
+        </AppProviders>
+      </IntlayerClientProvider>
+    </IntlayerServerProvider>
   );
-}
+};
+
+export default LocaleLayout;

@@ -1,14 +1,14 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { HStack } from "styled-system/jsx";
 
 import { Card, Text } from "@/components/ui";
 import { useJobs } from "@/lib/state";
 
 export function StatusCard() {
-  const t = useExtracted();
+  const content = useIntlayer("computing").statusCard;
   const lastError = useJobs(
     (s) => s.jobs.find((j) => j.status === "failed")?.error,
   );
@@ -28,7 +28,7 @@ export function StatusCard() {
               style={{ color: "var(--colors-red-10)", height: 14, width: 14 }}
             />
           )}
-          <Text textStyle="xs">{t("Status")}</Text>
+          <Text textStyle="xs">{content.status}</Text>
         </HStack>
         <Text
           textStyle="2xl"
@@ -36,7 +36,7 @@ export function StatusCard() {
           mt="1"
           color={lastError ? "red.10" : "green.10"}
         >
-          {lastError ? t("Error") : t("OK")}
+          {lastError ? content.error : content.ok}
         </Text>
       </Card.Body>
     </Card.Root>

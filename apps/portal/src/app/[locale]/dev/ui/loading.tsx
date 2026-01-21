@@ -1,11 +1,11 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { PageLoader } from "@/components/ui";
 
 export default function DevUiLoading() {
-  const t = useExtracted();
+  const content = useIntlayer("loading");
 
-  return <PageLoader message={t("Loading...")} />;
+  return <PageLoader message={content.loading} />;
 }

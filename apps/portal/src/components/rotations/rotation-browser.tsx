@@ -14,13 +14,13 @@ import {
   UserIcon,
   XIcon,
 } from "lucide-react";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
+import NextLink from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/lib/engine";
 
-import { Link as IntlLink } from "@/i18n/navigation";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUser } from "@/lib/state";
 import { createClient } from "@/lib/supabase";
@@ -68,7 +68,7 @@ interface TableHeaderProps {
 type VisibilityFilter = "all" | "public" | "mine";
 
 export function RotationBrowser() {
-  const t = useExtracted();
+  const { rotationBrowser: content } = useIntlayer("rotations");
   const [filter, setFilter] = useState<VisibilityFilter>("all");
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState<number | null>(null);
@@ -127,11 +127,11 @@ export function RotationBrowser() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm(t("Are you sure you want to delete this rotation?"))) {
+      if (confirm(content.confirmDelete)) {
         deleteMutation.mutate(id);
       }
     },
-    [deleteMutation, t],
+    [deleteMutation, content.confirmDelete],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -154,16 +154,16 @@ export function RotationBrowser() {
             <Tabs.List>
               <Tabs.Trigger value="all">
                 <GlobeIcon size={14} />
-                {t("All")}
+                {content.all}
               </Tabs.Trigger>
               <Tabs.Trigger value="public">
                 <GlobeIcon size={14} />
-                {t("Public")}
+                {content.public}
               </Tabs.Trigger>
               {userId && (
                 <Tabs.Trigger value="mine">
                   <UserIcon size={14} />
-                  {t("Mine")}
+                  {content.mine}
                 </Tabs.Trigger>
               )}
               <Tabs.Indicator />
@@ -174,7 +174,7 @@ export function RotationBrowser() {
             classes={classes}
             value={classFilter}
             onChange={setClassFilter}
-            allClassesLabel={t("All Classes")}
+            allClassesLabel={content.allClasses.value}
           />
         </HStack>
 
@@ -192,7 +192,7 @@ export function RotationBrowser() {
             </Box>
             <Input
               size="sm"
-              placeholder={t("Search...")}
+              placeholder={content.searchPlaceholder.value}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               pl="9"
@@ -200,10 +200,10 @@ export function RotationBrowser() {
             />
           </Box>
           <Button asChild size="sm">
-            <IntlLink href={href(routes.rotations.editor.index)}>
+            <NextLink href={href(routes.rotations.editor.index)}>
               <PlusIcon size={16} />
-              {t("New")}
-            </IntlLink>
+              {content.new}
+            </NextLink>
           </Button>
         </HStack>
       </Flex>
@@ -218,7 +218,7 @@ export function RotationBrowser() {
                 size="xs"
                 ml="1"
                 onClick={() => setClassFilter(null)}
-                aria-label={t("Clear class filter")}
+                aria-label={content.clearClassFilter}
               >
                 <XIcon size={12} />
               </IconButton>
@@ -232,7 +232,7 @@ export function RotationBrowser() {
                 size="xs"
                 ml="1"
                 onClick={() => setSearch("")}
-                aria-label={t("Clear search")}
+                aria-label={content.clearSearch}
               >
                 <XIcon size={12} />
               </IconButton>
@@ -250,17 +250,17 @@ export function RotationBrowser() {
           <Empty.Content>
             <Empty.Title>
               {filter === "mine"
-                ? t("You haven't created any rotations yet")
-                : t("No rotations found")}
+                ? content.noRotationsYet
+                : content.noRotationsFound}
             </Empty.Title>
           </Empty.Content>
           {filter === "mine" && (
             <Empty.Action>
               <Button asChild size="sm">
-                <IntlLink href={href(routes.rotations.editor.index)}>
+                <NextLink href={href(routes.rotations.editor.index)}>
                   <PlusIcon size={16} />
-                  {t("Create rotation")}
-                </IntlLink>
+                  {content.createRotation}
+                </NextLink>
               </Button>
             </Empty.Action>
           )}
@@ -268,10 +268,10 @@ export function RotationBrowser() {
       ) : (
         <Box borderWidth="1" rounded="lg" overflow="hidden">
           <TableHeader
-            nameLabel={t("Name")}
-            specLabel={t("Spec")}
-            visibilityLabel={t("Visibility")}
-            updatedLabel={t("Updated")}
+            nameLabel={content.name}
+            specLabel={content.spec}
+            visibilityLabel={content.visibility}
+            updatedLabel={content.updated}
           />
           <Box ref={parentRef} maxH="600px" overflow="auto">
             <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
@@ -293,11 +293,11 @@ export function RotationBrowser() {
                       getClassColor={getClassColor}
                       getSpecLabel={getSpecLabel}
                       onDelete={handleDelete}
-                      publicLabel={t("Public")}
-                      privateLabel={t("Private")}
-                      actionsLabel={t("Actions")}
-                      editLabel={t("Edit")}
-                      deleteLabel={t("Delete")}
+                      publicLabel={content.public}
+                      privateLabel={content.private}
+                      actionsLabel={content.actions}
+                      editLabel={content.edit}
+                      deleteLabel={content.delete}
                     />
                   </Box>
                 );
@@ -372,6 +372,22 @@ function ClassFilter({
   );
 }
 
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diff = date.getTime() - now.getTime();
+  const seconds = Math.round(diff / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  if (Math.abs(days) >= 1) return rtf.format(days, "day");
+  if (Math.abs(hours) >= 1) return rtf.format(hours, "hour");
+  if (Math.abs(minutes) >= 1) return rtf.format(minutes, "minute");
+  return rtf.format(seconds, "second");
+}
+
 function RotationRow({
   actionsLabel,
   deleteLabel,
@@ -384,14 +400,13 @@ function RotationRow({
   publicLabel,
   rotation,
 }: RotationRowProps) {
-  const format = useFormatter();
-  const updatedAt = format.relativeTime(new Date(rotation.updated_at));
+  const updatedAt = formatRelativeTime(new Date(rotation.updated_at));
 
   const specLabel = getSpecLabel(rotation.spec_id);
   const classColor = getClassColor(rotation.spec_id);
 
   return (
-    <IntlLink href={href(routes.rotations.editor.edit, { id: rotation.id })}>
+    <NextLink href={href(routes.rotations.editor.edit, { id: rotation.id })}>
       <Flex
         px="4"
         py="3"
@@ -475,14 +490,14 @@ function RotationRow({
               <Menu.Positioner>
                 <Menu.Content>
                   <Menu.Item value="edit" asChild>
-                    <IntlLink
+                    <NextLink
                       href={href(routes.rotations.editor.edit, {
                         id: rotation.id,
                       })}
                     >
                       <PencilIcon size={14} />
                       {editLabel}
-                    </IntlLink>
+                    </NextLink>
                   </Menu.Item>
                   <Menu.Separator />
                   <Menu.Item
@@ -502,7 +517,7 @@ function RotationRow({
           )}
         </Box>
       </Flex>
-    </IntlLink>
+    </NextLink>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckIcon, DownloadIcon, FlaskConicalIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Center, Divider, HStack, Stack, styled } from "styled-system/jsx";
 
@@ -48,7 +48,7 @@ export function NodeClaimForm({
   onDownloadClick,
   onVerify,
 }: NodeClaimFormProps) {
-  const t = useExtracted();
+  const content = useIntlayer("account").claimForm;
   const [code, setCode] = useState<string[]>([]);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
   const [name, setName] = useState("");
@@ -75,7 +75,6 @@ export function NodeClaimForm({
     });
   };
 
-  // Show configuration step after verification
   if (verifyResult) {
     return (
       <Card.Root>
@@ -83,7 +82,7 @@ export function NodeClaimForm({
           <Stack gap="5" py="4">
             <Stack gap="1" textAlign="center">
               <Text fontWeight="semibold" textStyle="lg">
-                {t("Configure Your Node")}
+                {content.configureYourNode}
               </Text>
               <HStack gap="2" justify="center">
                 <Badge variant="surface">
@@ -97,19 +96,19 @@ export function NodeClaimForm({
             </Stack>
 
             <Field.Root>
-              <Field.Label>{t("Node Name")}</Field.Label>
+              <Field.Label>{content.nodeName}</Field.Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t("My Gaming PC")}
+                placeholder={content.nodeNamePlaceholder}
               />
             </Field.Root>
 
             <Field.Root>
               <HStack justify="space-between">
-                <Field.Label>{t("Workers")}</Field.Label>
+                <Field.Label>{content.workers}</Field.Label>
                 <styled.span textStyle="sm" color="fg.muted">
-                  {t("{workers, number} / {totalCores, number} cores", {
+                  {content.workersOfCores({
                     totalCores: verifyResult.totalCores,
                     workers: workers[0],
                   })}
@@ -128,9 +127,7 @@ export function NodeClaimForm({
                   <Slider.Thumbs />
                 </Slider.Control>
               </Slider.Root>
-              <Field.HelperText>
-                {t("How many CPU cores to dedicate to simulations")}
-              </Field.HelperText>
+              <Field.HelperText>{content.workersHelperText}</Field.HelperText>
             </Field.Root>
 
             <Button
@@ -139,7 +136,7 @@ export function NodeClaimForm({
               loading={isClaiming}
               disabled={!name.trim()}
             >
-              {t("Claim Node")}
+              {content.claimNode}
             </Button>
           </Stack>
         </Card.Body>
@@ -147,19 +144,16 @@ export function NodeClaimForm({
     );
   }
 
-  // Initial verification step
   return (
     <Card.Root>
       <Card.Body>
         <Stack gap="6" alignItems="center" textAlign="center" py="4">
           <Stack gap="1">
             <Text fontWeight="semibold" textStyle="lg">
-              {t("Claim Your Node")}
+              {content.claimYourNode}
             </Text>
             <Text textStyle="sm" color="fg.muted">
-              {t(
-                "Enter the 6-character code displayed by your node application",
-              )}
+              {content.enterCodeDescription}
             </Text>
           </Stack>
 
@@ -198,7 +192,7 @@ export function NodeClaimForm({
           >
             <FlaskConicalIcon size={16} />
             <CheckIcon size={16} />
-            {t("Verify Code")}
+            {content.verifyCode}
           </Button>
 
           {onDownloadClick && (
@@ -211,13 +205,13 @@ export function NodeClaimForm({
                   fontWeight="medium"
                   letterSpacing="wide"
                 >
-                  {t("Don't have the app?")}
+                  {content.dontHaveTheApp}
                 </styled.span>
               </Divider>
 
               <Button w="full" variant="outline" onClick={onDownloadClick}>
                 <DownloadIcon size={16} />
-                {t("Download Node")}
+                {content.downloadNode}
               </Button>
             </>
           )}

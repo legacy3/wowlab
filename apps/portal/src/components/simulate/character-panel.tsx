@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Stack } from "styled-system/jsx";
 
 import type { Character, Item, Profession } from "@/lib/sim";
@@ -25,7 +25,7 @@ export function CharacterPanel({
   onClear,
   professions,
 }: CharacterPanelProps) {
-  const t = useExtracted();
+  const { characterPanel: content } = useIntlayer("simulate");
 
   return (
     <Card.Root>
@@ -46,7 +46,7 @@ export function CharacterPanel({
               onClick={onClear}
               alignSelf="center"
             >
-              {t("Import different character")}
+              {content.importDifferentCharacter}
             </Button>
           )}
         </Stack>

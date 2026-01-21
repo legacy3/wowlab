@@ -2,7 +2,7 @@
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { X } from "lucide-react";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useRef, useState } from "react";
 import { css } from "styled-system/css";
 import { Box, Grid, HStack, Stack } from "styled-system/jsx";
@@ -42,8 +42,7 @@ const statuses: (JobStatus | "all")[] = [
 ];
 
 export function JobHistoryCard() {
-  const t = useExtracted();
-  const format = useFormatter();
+  const content = useIntlayer("computing").jobHistoryCard;
   const jobs = useJobs((s) => s.jobs);
   const cancelJob = useJobs((s) => s.cancelJob);
 
@@ -65,13 +64,13 @@ export function JobHistoryCard() {
   }, [jobs, filter, statusFilter]);
 
   const statusLabels: Record<JobStatus | "all", string> = {
-    all: t("All"),
-    cancelled: t("Cancelled"),
-    completed: t("Completed"),
-    failed: t("Failed"),
-    paused: t("Paused"),
-    queued: t("Queued"),
-    running: t("Running"),
+    all: content.all,
+    cancelled: content.cancelled,
+    completed: content.completed,
+    failed: content.failed,
+    paused: content.paused,
+    queued: content.queued,
+    running: content.running,
   };
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -81,6 +80,9 @@ export function JobHistoryCard() {
     getScrollElement: () => parentRef.current,
     overscan: 5,
   });
+
+  const jobCountText =
+    filteredJobs.length === 1 ? "1 job" : `${filteredJobs.length} jobs`;
 
   return (
     <>
@@ -93,7 +95,7 @@ export function JobHistoryCard() {
             justifyContent="space-between"
           >
             <Card.Title textStyle="base" fontWeight="medium">
-              {t("Simulation History")}
+              {content.simulationHistory}
               <Text
                 as="span"
                 ml="2"
@@ -102,11 +104,7 @@ export function JobHistoryCard() {
                 color="fg.muted"
                 fontVariantNumeric="tabular-nums"
               >
-                (
-                {t("{count, plural, =1 {# job} other {# jobs}}", {
-                  count: filteredJobs.length,
-                })}
-                )
+                ({jobCountText})
               </Text>
             </Card.Title>
             <HStack gap="1.5" flexWrap="wrap">
@@ -142,7 +140,7 @@ export function JobHistoryCard() {
         </Card.Header>
         <Card.Body spaceY="4" pt="0">
           <Input
-            placeholder={t("Filter jobs...")}
+            placeholder={content.filterJobs}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             maxW="sm"
@@ -152,17 +150,19 @@ export function JobHistoryCard() {
               <Table.Head bg="bg.muted/95">
                 <Table.Row>
                   <Table.Header w="100px" fontWeight="medium">
-                    {t("Status")}
+                    {content.status}
                   </Table.Header>
-                  <Table.Header fontWeight="medium">{t("Name")}</Table.Header>
+                  <Table.Header fontWeight="medium">
+                    {content.name}
+                  </Table.Header>
                   <Table.Header w="120px" fontWeight="medium">
-                    {t("DPS")}
+                    {content.dps}
                   </Table.Header>
                   <Table.Header w="100px" fontWeight="medium">
-                    {t("Casts")}
+                    {content.casts}
                   </Table.Header>
                   <Table.Header w="80px" fontWeight="medium">
-                    {t("Actions")}
+                    {content.actions}
                   </Table.Header>
                 </Table.Row>
               </Table.Head>
@@ -174,8 +174,8 @@ export function JobHistoryCard() {
                     <Empty.Content>
                       <Empty.Title>
                         {jobs.length === 0
-                          ? t("No simulations yet")
-                          : t("No jobs match the current filter")}
+                          ? content.noSimulationsYet
+                          : content.noJobsMatchFilter}
                       </Empty.Title>
                     </Empty.Content>
                   </Empty.Root>
@@ -216,7 +216,7 @@ export function JobHistoryCard() {
                               fontVariantNumeric="tabular-nums"
                             >
                               {job.result?.dps
-                                ? format.number(job.result.dps, {
+                                ? job.result.dps.toLocaleString(undefined, {
                                     notation: "compact",
                                   })
                                 : "\u2014"}
@@ -230,11 +230,11 @@ export function JobHistoryCard() {
                               {job.result?.casts ?? "\u2014"}
                             </Table.Cell>
                             <Table.Cell w="80px">
-                              <Tooltip content={t("Cancel")}>
+                              <Tooltip content={content.cancel}>
                                 <IconButton
                                   variant="plain"
                                   size="xs"
-                                  aria-label={t("Cancel simulation")}
+                                  aria-label={content.cancelSimulation}
                                   disabled={
                                     job.status !== "running" &&
                                     job.status !== "queued"
@@ -285,7 +285,7 @@ export function JobHistoryCard() {
                 </HStack>
               </Dialog.Title>
               <Dialog.Description>
-                {t("Job ID: {id}", { id: selectedJob?.id ?? "" })}
+                {`Job ID: ${selectedJob?.id ?? ""}`}
               </Dialog.Description>
             </Dialog.Header>
 
@@ -303,52 +303,57 @@ export function JobHistoryCard() {
                     <Grid columns={2} gap="4" p="4" rounded="lg" bg="bg.muted">
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          {t("DPS")}
+                          {content.dps}
                         </Text>
                         <Text
                           textStyle="lg"
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {format.number(selectedJob.result.dps)}
+                          {selectedJob.result.dps.toLocaleString()}
                         </Text>
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          {t("Casts")}
+                          {content.casts}
                         </Text>
                         <Text
                           textStyle="lg"
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {format.number(selectedJob.result.casts)}
+                          {selectedJob.result.casts.toLocaleString()}
                         </Text>
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          {t("Total Damage")}
+                          {content.totalDamage}
                         </Text>
                         <Text
                           textStyle="lg"
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {format.number(selectedJob.result.totalDamage, {
-                            notation: "compact",
-                          })}
+                          {selectedJob.result.totalDamage.toLocaleString(
+                            undefined,
+                            {
+                              notation: "compact",
+                            },
+                          )}
                         </Text>
                       </Box>
                       <Box>
                         <Text textStyle="xs" color="fg.muted">
-                          {t("Duration")}
+                          {content.duration}
                         </Text>
                         <Text
                           textStyle="lg"
                           fontWeight="bold"
                           fontVariantNumeric="tabular-nums"
                         >
-                          {format.number(selectedJob.result.durationMs / 1000, {
+                          {(
+                            selectedJob.result.durationMs / 1000
+                          ).toLocaleString(undefined, {
                             maximumFractionDigits: 1,
                             style: "unit",
                             unit: "second",
@@ -361,20 +366,16 @@ export function JobHistoryCard() {
                   {selectedJob.error && (
                     <Stack gap="2">
                       <Text textStyle="sm" fontWeight="medium" color="red.11">
-                        {t("Error")}
+                        {content.error}
                       </Text>
                       <ErrorBox>{selectedJob.error}</ErrorBox>
                     </Stack>
                   )}
 
                   <Stack gap="1" textStyle="xs" color="fg.muted">
-                    <Text>
-                      {t("Rotation ID: {id}", { id: selectedJob.rotationId })}
-                    </Text>
+                    <Text>{`Rotation ID: ${selectedJob.rotationId}`}</Text>
                     {selectedJob.resultId && (
-                      <Text>
-                        {t("Result ID: {id}", { id: selectedJob.resultId })}
-                      </Text>
+                      <Text>{`Result ID: ${selectedJob.resultId}`}</Text>
                     )}
                   </Stack>
                 </Stack>
@@ -383,7 +384,7 @@ export function JobHistoryCard() {
 
             <Dialog.Footer>
               <Dialog.CloseTrigger asChild>
-                <Button variant="outline">{t("Close")}</Button>
+                <Button variant="outline">{content.close}</Button>
               </Dialog.CloseTrigger>
             </Dialog.Footer>
           </Dialog.Content>

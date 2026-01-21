@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRightIcon, ListIcon, VariableIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Flex, VStack } from "styled-system/jsx";
 
 import { Badge, IconButton, Tooltip } from "@/components/ui";
@@ -23,7 +23,7 @@ export function CollapsedSidebar({
   onTabClick,
   variableCount,
 }: CollapsedSidebarProps) {
-  const t = useExtracted();
+  const { collapsedSidebar: content } = useIntlayer("editor");
 
   return (
     <Flex
@@ -37,14 +37,14 @@ export function CollapsedSidebar({
       w="12"
     >
       <Tooltip
-        content={t("Expand sidebar")}
+        content={content.expandSidebar}
         positioning={{ placement: "right" }}
       >
         <IconButton
           variant="plain"
           size="sm"
           onClick={onExpand}
-          aria-label={t("Expand sidebar")}
+          aria-label={content.expandSidebar}
         >
           <ChevronRightIcon size={16} />
         </IconButton>
@@ -52,9 +52,7 @@ export function CollapsedSidebar({
 
       <VStack gap="1" mt="2">
         <Tooltip
-          content={t("{count, plural, other {Action Lists (#)}}", {
-            count: listCount,
-          })}
+          content={`Action Lists (${listCount})`}
           positioning={{ placement: "right" }}
         >
           <Flex
@@ -76,9 +74,7 @@ export function CollapsedSidebar({
         </Tooltip>
 
         <Tooltip
-          content={t("{count, plural, other {Variables (#)}}", {
-            count: variableCount,
-          })}
+          content={`Variables (${variableCount})`}
           positioning={{ placement: "right" }}
         >
           <Flex

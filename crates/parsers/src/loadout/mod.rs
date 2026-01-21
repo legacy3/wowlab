@@ -255,6 +255,18 @@ fn decode_node(reader: &mut BitReader) -> Result<DecodedTraitNode, TraitError> {
     })
 }
 
+/// Create a minimal loadout string for a spec with no talent selections.
+/// Useful for "start from scratch" flows.
+pub fn encode_minimal_loadout(spec_id: u16) -> String {
+    let loadout = DecodedTraitLoadout {
+        version: 1,
+        spec_id,
+        tree_hash: [0u8; 16],
+        nodes: Vec::new(),
+    };
+    encode_trait_loadout(&loadout)
+}
+
 /// Encode a trait loadout into a string.
 pub fn encode_trait_loadout(loadout: &DecodedTraitLoadout) -> String {
     let mut writer = BitWriter::new();

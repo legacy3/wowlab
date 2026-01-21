@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarIcon, ChevronDown, ChevronRight, Clock } from "lucide-react";
-import { useExtracted, useFormatter } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
@@ -69,8 +69,7 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
 }
 
 function Meta({ meta }: { meta: { date?: string; readingTime?: number } }) {
-  const t = useExtracted();
-  const format = useFormatter();
+  const { articleSidebar: content } = useIntlayer("article");
 
   return (
     <VStack alignItems="flex-start" gap="1.5">
@@ -80,11 +79,11 @@ function Meta({ meta }: { meta: { date?: string; readingTime?: number } }) {
             <CalendarIcon />
           </Icon>
           <Text as="time" textStyle="xs">
-            {format.dateTime(new Date(meta.date), {
+            {new Intl.DateTimeFormat("en", {
               day: "numeric",
               month: "short",
               year: "numeric",
-            })}
+            }).format(new Date(meta.date))}
           </Text>
         </Flex>
       )}
@@ -94,9 +93,7 @@ function Meta({ meta }: { meta: { date?: string; readingTime?: number } }) {
             <Clock />
           </Icon>
           <Text textStyle="xs">
-            {t("{count, plural, other {# min read}}", {
-              count: meta.readingTime,
-            })}
+            {content.minRead({ count: meta.readingTime })}
           </Text>
         </Flex>
       )}
@@ -167,7 +164,7 @@ function Navigation({
   items: DocEntry[];
   currentSlug: string;
 }) {
-  const t = useExtracted();
+  const { articleSidebar: content } = useIntlayer("article");
 
   return (
     <Box>
@@ -179,7 +176,7 @@ function Navigation({
         color="fg.muted"
         mb="3"
       >
-        {t("Navigation")}
+        {content.navigation}
       </Heading>
       <VStack alignItems="stretch" gap="1">
         {items.map((item) => {
@@ -225,7 +222,7 @@ function TableOfContents({
   headings: TocHeading[];
   activeId: string;
 }) {
-  const t = useExtracted();
+  const { articleSidebar: content } = useIntlayer("article");
 
   if (headings.length === 0) {
     return null;
@@ -241,13 +238,13 @@ function TableOfContents({
         color="fg.muted"
         mb="3"
       >
-        {t("On this page")}
+        {content.onThisPage}
       </Heading>
       <VStack
         as="nav"
         alignItems="stretch"
         gap="1"
-        aria-label={t("Table of contents")}
+        aria-label={content.tableOfContents}
       >
         {headings.map((heading) => (
           <Link

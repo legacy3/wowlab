@@ -8,7 +8,7 @@ import {
   MoreVerticalIcon,
   TrashIcon,
 } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { IconButton, Menu } from "../../ui";
 
@@ -41,18 +41,18 @@ export function EditDeleteMenu({
   onDelete,
   onEdit,
 }: EditDeleteMenuProps) {
-  const t = useExtracted();
+  const { itemActionsMenu: content } = useIntlayer("editor");
 
   return (
     <ItemActionsMenu
-      ariaLabel={ariaLabel ?? t("Item actions")}
+      ariaLabel={ariaLabel ?? content.itemActions}
       actions={[
-        { icon: EditIcon, label: t("Edit"), onClick: onEdit, value: "edit" },
+        { icon: EditIcon, label: content.edit, onClick: onEdit, value: "edit" },
         {
           destructive: true,
           disabled: !canDelete,
           icon: TrashIcon,
-          label: t("Delete"),
+          label: content.delete,
           onClick: onDelete,
           value: "delete",
         },
@@ -67,10 +67,10 @@ export function ItemActionsMenu({
   size = "xs",
   trigger,
 }: ItemActionsMenuProps) {
-  const t = useExtracted();
+  const { itemActionsMenu: content } = useIntlayer("editor");
   const regularActions = actions.filter((a) => !a.destructive);
   const destructiveActions = actions.filter((a) => a.destructive);
-  const resolvedAriaLabel = ariaLabel ?? t("Actions");
+  const resolvedAriaLabel = ariaLabel ?? content.actions;
 
   return (
     <Menu.Root>

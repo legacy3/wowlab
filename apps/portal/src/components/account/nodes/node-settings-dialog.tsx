@@ -2,7 +2,7 @@
 
 import { createListCollection } from "@ark-ui/react/select";
 import { Trash2Icon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { HStack, Stack, styled } from "styled-system/jsx";
 
@@ -47,7 +47,7 @@ export function NodeSettingsDialog({
   onSave,
   open,
 }: NodeSettingsDialogProps) {
-  const t = useExtracted();
+  const content = useIntlayer("account").settingsDialog;
   const [name, setName] = useState(node.name);
   const [workers, setWorkers] = useState([node.max_parallel]);
   const [accessType, setAccessType] = useState<NodeAccessType>(
@@ -78,9 +78,9 @@ export function NodeSettingsDialog({
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{t("Node Settings")}</Dialog.Title>
+              <Dialog.Title>{content.nodeSettings}</Dialog.Title>
               <Dialog.Description>
-                {t("Configure your node settings")}
+                {content.configureYourNodeSettings}
               </Dialog.Description>
               <Dialog.CloseTrigger />
             </Dialog.Header>
@@ -95,7 +95,7 @@ export function NodeSettingsDialog({
                 </HStack>
 
                 <Field.Root>
-                  <Field.Label>{t("Node Name")}</Field.Label>
+                  <Field.Label>{content.nodeName}</Field.Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -104,9 +104,9 @@ export function NodeSettingsDialog({
 
                 <Field.Root>
                   <HStack justify="space-between">
-                    <Field.Label>{t("Workers")}</Field.Label>
+                    <Field.Label>{content.workers}</Field.Label>
                     <styled.span textStyle="sm" color="fg.muted">
-                      {t("{workers, number} / {totalCores, number} cores", {
+                      {content.workersOfCores({
                         totalCores: node.total_cores,
                         workers: workers[0],
                       })}
@@ -135,11 +135,11 @@ export function NodeSettingsDialog({
                   }
                   positioning={{ sameWidth: true }}
                 >
-                  <Select.Label>{t("Access")}</Select.Label>
+                  <Select.Label>{content.access}</Select.Label>
                   <Select.Control>
                     <Select.Trigger>
                       <Select.ValueText
-                        placeholder={t("Select access level")}
+                        placeholder={content.selectAccessLevel}
                       />
                       <Select.Indicator />
                     </Select.Trigger>
@@ -158,9 +158,9 @@ export function NodeSettingsDialog({
 
                 <HStack justify="space-between">
                   <Stack gap="0">
-                    <Text fontWeight="medium">{t("Power")}</Text>
+                    <Text fontWeight="medium">{content.power}</Text>
                     <Text textStyle="sm" color="fg.muted">
-                      {t("Enable this node for simulations")}
+                      {content.enableThisNode}
                     </Text>
                   </Stack>
                   <Switch.Root
@@ -181,20 +181,19 @@ export function NodeSettingsDialog({
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2Icon size={14} />
-                {t("Delete")}
+                {content.delete}
               </Button>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                {t("Cancel")}
+                {content.cancel}
               </Button>
               <Button onClick={handleSave} loading={isSaving}>
-                {t("Save Changes")}
+                {content.saveChanges}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>
         </Dialog.Positioner>
       </Dialog.Root>
 
-      {/* Delete Confirmation */}
       <Dialog.Root
         open={showDeleteConfirm}
         onOpenChange={(e) => {
@@ -205,18 +204,14 @@ export function NodeSettingsDialog({
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{t("Delete Node")}</Dialog.Title>
-              <Dialog.Description>
-                {t("This action cannot be undone.")}
-              </Dialog.Description>
+              <Dialog.Title>{content.deleteNode}</Dialog.Title>
+              <Dialog.Description>{content.cannotBeUndone}</Dialog.Description>
               <Dialog.CloseTrigger />
             </Dialog.Header>
 
             <Dialog.Body>
               <Stack gap="4">
-                <Text textStyle="sm">
-                  {t("Type the node name to confirm deletion:")}
-                </Text>
+                <Text textStyle="sm">{content.typeNodeNameToConfirm}</Text>
                 <Code>{node.name}</Code>
                 <Input
                   placeholder={node.name}
@@ -231,7 +226,7 @@ export function NodeSettingsDialog({
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
               >
-                {t("Cancel")}
+                {content.cancel}
               </Button>
               <Button
                 colorPalette="red"
@@ -239,7 +234,7 @@ export function NodeSettingsDialog({
                 onClick={handleDelete}
                 loading={isDeleting}
               >
-                {t("Delete Node")}
+                {content.deleteNode}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>

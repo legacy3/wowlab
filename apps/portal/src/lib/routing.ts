@@ -50,7 +50,7 @@ const icons = {
   User,
 } as const;
 
-type IconName = keyof typeof icons;
+export type IconName = keyof typeof icons;
 type NavMeta = {
   _nav: { section: "main" | "secondary"; items: readonly string[] };
 };

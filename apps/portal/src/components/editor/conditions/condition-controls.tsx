@@ -11,7 +11,7 @@ import type {
 
 import { createListCollection } from "@ark-ui/react/combobox";
 import { PlusIcon, XIcon } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 
 import { CONDITION_FIELDS, FIELD_CATEGORIES } from "@/lib/engine";
@@ -38,7 +38,7 @@ export function AddGroupButton({
   disabled,
   handleOnClick,
 }: ActionWithRulesAndAddersProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
 
   return (
     <Button
@@ -48,7 +48,7 @@ export function AddGroupButton({
       onClick={handleOnClick}
     >
       <PlusIcon size={12} />
-      {t("Group")}
+      {content.group}
     </Button>
   );
 }
@@ -57,7 +57,7 @@ export function AddRuleButton({
   disabled,
   handleOnClick,
 }: ActionWithRulesAndAddersProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
 
   return (
     <Button
@@ -67,7 +67,7 @@ export function AddRuleButton({
       onClick={handleOnClick}
     >
       <PlusIcon size={12} />
-      {t("Rule")}
+      {content.rule}
     </Button>
   );
 }
@@ -78,7 +78,7 @@ export function CombinatorSelector({
   options,
   value,
 }: CombinatorSelectorProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
   const selectOptions = useMemo(
     () => toSelectOptions(options as FullOption[], true),
     [options],
@@ -90,7 +90,7 @@ export function CombinatorSelector({
       minW="20"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder={t("...")}
+      placeholder={content.combinatorPlaceholder}
       value={value}
     />
   );
@@ -101,7 +101,7 @@ export function FieldSelector({
   handleOnChange,
   value,
 }: FieldSelectorProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
   const [inputValue, setInputValue] = useState("");
 
   const allItems: FieldItem[] = useMemo(
@@ -157,7 +157,7 @@ export function FieldSelector({
       allowCustomValue={false}
     >
       <Combobox.Control minW="44">
-        <Combobox.Input placeholder={t("Search fields...")} />
+        <Combobox.Input placeholder={content.searchFields} />
         <Combobox.IndicatorGroup>
           {value && <Combobox.ClearTrigger />}
           <Combobox.Trigger />
@@ -168,7 +168,7 @@ export function FieldSelector({
           {filteredItems.length === 0 ? (
             <Combobox.Empty>
               <Empty.Root variant="plain" size="sm">
-                <Empty.Title>{t("No fields found")}</Empty.Title>
+                <Empty.Title>{content.noFieldsFound}</Empty.Title>
               </Empty.Root>
             </Combobox.Empty>
           ) : (
@@ -198,7 +198,7 @@ export function OperatorSelector({
   options,
   value,
 }: OperatorSelectorProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
   const selectOptions = useMemo(
     () => toSelectOptions(options as FullOption[]),
     [options],
@@ -210,7 +210,7 @@ export function OperatorSelector({
       minW="32"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder={t("Operator...")}
+      placeholder={content.operatorPlaceholder}
       value={value}
     />
   );
@@ -223,7 +223,7 @@ export function RemoveButton({
   handleOnClick: () => void;
   disabled?: boolean;
 }) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
 
   return (
     <IconButton
@@ -231,7 +231,7 @@ export function RemoveButton({
       variant="plain"
       disabled={disabled}
       onClick={handleOnClick}
-      aria-label={t("Remove")}
+      aria-label={content.remove}
     >
       <XIcon size={14} />
     </IconButton>
@@ -245,7 +245,7 @@ export function ValueEditor({
   value,
   values,
 }: ValueEditorProps) {
-  const t = useExtracted();
+  const { conditionControls: content } = useIntlayer("editor");
 
   if (values && values.length > 0) {
     const selectOptions = toSelectOptions(values as FullOption[]);
@@ -255,7 +255,7 @@ export function ValueEditor({
         minW="32"
         onChange={handleOnChange}
         options={selectOptions}
-        placeholder={t("Select value...")}
+        placeholder={content.selectValue}
         value={value ? String(value) : undefined}
       />
     );
@@ -268,7 +268,7 @@ export function ValueEditor({
       value={value ?? ""}
       disabled={disabled}
       onChange={(e) => handleOnChange(e.target.value)}
-      placeholder={t("Value...")}
+      placeholder={content.valuePlaceholder}
       w={inputType === "number" ? "24" : "32"}
     />
   );

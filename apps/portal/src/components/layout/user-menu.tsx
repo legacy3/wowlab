@@ -1,7 +1,7 @@
 "use client";
 
 import { LogOut, Server, Settings, User } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { Flex } from "styled-system/jsx";
 
@@ -10,7 +10,7 @@ import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 export function UserMenu() {
-  const t = useExtracted();
+  const { userMenu: content } = useIntlayer("layout");
   const router = useRouter();
   const { data: user, isLoading, logout } = useUser();
 
@@ -70,27 +70,27 @@ export function UserMenu() {
               onClick={() => router.push(href(routes.account.index))}
             >
               <User size={16} />
-              {t("Account")}
+              {content.account}
             </Menu.Item>
             <Menu.Item
               value="settings"
               onClick={() => router.push(href(routes.account.settings))}
             >
               <Settings size={16} />
-              {t("Settings")}
+              {content.settings}
             </Menu.Item>
             <Menu.Item
               value="nodes"
               onClick={() => router.push(href(routes.account.nodes.index))}
             >
               <Server size={16} />
-              {t("Nodes")}
+              {content.nodes}
             </Menu.Item>
           </Menu.ItemGroup>
           <Menu.Separator />
           <Menu.Item value="logout" onClick={handleSignOut}>
             <LogOut size={16} />
-            {t("Sign out")}
+            {content.signOut}
           </Menu.Item>
         </Menu.Content>
       </Menu.Positioner>

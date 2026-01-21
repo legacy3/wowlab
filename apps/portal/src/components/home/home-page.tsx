@@ -1,28 +1,28 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { CardCollection } from "@/components/common";
 import { routes } from "@/lib/routing";
 
 export function HomePage() {
-  const t = useExtracted();
+  const { homePage: content } = useIntlayer("home");
 
   const features = [
     {
-      description: t("Run quick simulations for your character."),
+      description: content.simulateDescription,
       route: routes.simulate.index,
-      title: t("Simulate"),
+      title: content.simulateTitle,
     },
     {
-      description: t("Build and share rotation priority lists."),
+      description: content.rotationsDescription,
       route: routes.rotations.index,
-      title: t("Rotations"),
+      title: content.rotationsTitle,
     },
     {
-      description: t("Explore game data hooks for spells and items."),
+      description: content.hooksDescription,
       route: routes.dev.hooks,
-      title: t("Hooks"),
+      title: content.hooksTitle,
     },
   ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo } from "react";
 
 import { Empty, Select } from "../../ui";
@@ -35,9 +35,9 @@ export function SelectField({
   value,
   w,
 }: SelectFieldProps) {
-  const t = useExtracted();
-  const resolvedEmptyMessage = emptyMessage ?? t("No options available");
-  const resolvedPlaceholder = placeholder ?? t("Select...");
+  const { selectField: content } = useIntlayer("editor");
+  const resolvedEmptyMessage = emptyMessage ?? content.noOptionsAvailable;
+  const resolvedPlaceholder = placeholder ?? content.select;
   const collection = useMemo(
     () => createListCollection({ items: options }),
     [options],

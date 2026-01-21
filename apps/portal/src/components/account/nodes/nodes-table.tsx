@@ -1,7 +1,7 @@
 "use client";
 
 import { CpuIcon, SettingsIcon } from "lucide-react";
-import { useExtracted, useFormatter, useNow } from "next-intl";
+import { useIntlayer, useLocale } from "next-intlayer";
 import { Box, HStack } from "styled-system/jsx";
 
 import type { NodeWithMeta } from "@/lib/state";
@@ -36,9 +36,9 @@ export function NodesTable({
   onSettingsClick,
   selectedIds,
 }: NodesTableProps) {
-  const t = useExtracted();
-  const format = useFormatter();
-  const now = useNow();
+  const content = useIntlayer("account").nodesTable;
+  const { locale } = useLocale();
+  const localeStr = String(locale);
   const allSelected = selectedIds.length === nodes.length && nodes.length > 0;
   const someSelected = selectedIds.length > 0 && !allSelected;
 
@@ -76,11 +76,11 @@ export function NodesTable({
                 </Checkbox.Control>
               </Checkbox.Root>
             </Table.Header>
-            <Table.Header>{t("Name")}</Table.Header>
-            <Table.Header>{t("Platform")}</Table.Header>
-            <Table.Header>{t("Status")}</Table.Header>
-            <Table.Header>{t("Workers")}</Table.Header>
-            <Table.Header>{t("Last Seen")}</Table.Header>
+            <Table.Header>{content.name}</Table.Header>
+            <Table.Header>{content.platform}</Table.Header>
+            <Table.Header>{content.status}</Table.Header>
+            <Table.Header>{content.workers}</Table.Header>
+            <Table.Header>{content.lastSeen}</Table.Header>
             <Table.Header w="10" />
           </Table.Row>
         </Table.Head>
@@ -119,7 +119,7 @@ export function NodesTable({
               <Table.Cell>
                 <Text textStyle="sm" color="fg.muted">
                   {node.last_seen_at
-                    ? format.relativeTime(new Date(node.last_seen_at), now)
+                    ? formatRelativeTime(new Date(node.last_seen_at), localeStr)
                     : "-"}
                 </Text>
               </Table.Cell>
@@ -129,7 +129,7 @@ export function NodesTable({
                     size="xs"
                     variant="plain"
                     onClick={() => onSettingsClick(node)}
-                    aria-label={t("Settings")}
+                    aria-label={content.settings}
                   >
                     <SettingsIcon size={14} />
                   </IconButton>
@@ -144,7 +144,7 @@ export function NodesTable({
 }
 
 export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
-  const t = useExtracted();
+  const content = useIntlayer("account").nodesTable;
 
   return (
     <Table.Root variant="surface">
@@ -153,10 +153,10 @@ export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
           <Table.Header w="10">
             <Skeleton w="4" h="4" />
           </Table.Header>
-          <Table.Header>{t("Name")}</Table.Header>
-          <Table.Header>{t("Platform")}</Table.Header>
-          <Table.Header>{t("Status")}</Table.Header>
-          <Table.Header>{t("Workers")}</Table.Header>
+          <Table.Header>{content.name}</Table.Header>
+          <Table.Header>{content.platform}</Table.Header>
+          <Table.Header>{content.status}</Table.Header>
+          <Table.Header>{content.workers}</Table.Header>
         </Table.Row>
       </Table.Head>
       <Table.Body>
@@ -184,16 +184,33 @@ export function NodesTableSkeleton({ rows = 3 }: { rows?: number }) {
   );
 }
 
+function formatRelativeTime(date: Date, locale: string): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  if (diffDays > 0) {
+    return rtf.format(-diffDays, "day");
+  }
+  if (diffHours > 0) {
+    return rtf.format(-diffHours, "hour");
+  }
+  if (diffMinutes > 0) {
+    return rtf.format(-diffMinutes, "minute");
+  }
+  return rtf.format(-diffSeconds, "second");
+}
+
 function WorkersDisplay({ totalCores, workers }: WorkersDisplayProps) {
-  const t = useExtracted();
+  const content = useIntlayer("account").nodesTable;
 
   return (
-    <Tooltip
-      content={t("{workers, number} active of {totalCores, number} cores", {
-        totalCores,
-        workers,
-      })}
-    >
+    <Tooltip content={content.workersActiveOfCores({ totalCores, workers })}>
       <HStack gap="1.5">
         <CpuIcon size={14} />
         <Text textStyle="sm">

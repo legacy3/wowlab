@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { css, cx } from "styled-system/css";
 
 import type { TextareaProps } from "@/components/ui";
@@ -39,8 +39,8 @@ export function SimcInput({
   placeholder,
   ...props
 }: SimcInputProps) {
-  const t = useExtracted();
-  const defaultPlaceholder = `${t("Paste your SimulationCraft export here...")}\n\n${SIMC_EXAMPLE}`;
+  const { simcInput: content } = useIntlayer("simulate");
+  const defaultPlaceholder = `${content.placeholder}\n\n${SIMC_EXAMPLE}`;
 
   return (
     <Textarea

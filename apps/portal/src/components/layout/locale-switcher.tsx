@@ -1,46 +1,48 @@
 "use client";
 
+import { configuration, getLocaleName } from "intlayer";
 import { GlobeIcon } from "lucide-react";
-import { useExtracted, useLocale } from "next-intl";
+import { useIntlayer, useLocale } from "next-intlayer";
 
 import { IconButton, Menu } from "@/components/ui";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { type Locale, locales, routing } from "@/i18n/routing";
+
+const { internationalization } = configuration;
 
 export function LocaleSwitcher() {
-  const t = useExtracted();
-  const currentLocale = useLocale() as Locale;
-  const router = useRouter();
-  const pathname = usePathname();
+  const { localeSwitcher: content } = useIntlayer("layout");
 
-  const handleLocaleChange = (newLocale: Locale) => {
-    router.replace(pathname, { locale: newLocale });
-  };
+  const { locale: currentLocale, setLocale } = useLocale({
+    onChange: "push",
+  });
 
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <IconButton variant="plain" size="sm" aria-label={t("Change language")}>
+        <IconButton
+          variant="plain"
+          size="sm"
+          aria-label={content.changeLanguage}
+        >
           <GlobeIcon />
         </IconButton>
       </Menu.Trigger>
       <Menu.Positioner>
         <Menu.Content minW="36">
           <Menu.ItemGroup>
-            <Menu.ItemGroupLabel>{t("Language")}</Menu.ItemGroupLabel>
+            <Menu.ItemGroupLabel>{content.language}</Menu.ItemGroupLabel>
           </Menu.ItemGroup>
-          {routing.locales.map((loc) => {
+          {internationalization.locales.map((loc) => {
             const isActive = currentLocale === loc;
 
             return (
               <Menu.Item
                 key={loc}
                 value={loc}
-                onClick={() => handleLocaleChange(loc)}
+                onClick={() => setLocale(loc)}
                 fontWeight={isActive ? "medium" : "normal"}
                 color={isActive ? "fg" : "fg.muted"}
               >
-                {locales[loc]}
+                {getLocaleName(loc)}
               </Menu.Item>
             );
           })}

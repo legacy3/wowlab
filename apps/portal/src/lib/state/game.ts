@@ -19,6 +19,8 @@ import type {
 
 import { createClient } from "@/lib/supabase";
 
+import { gameKeys } from "./query-keys";
+
 export function useAura(spellId: number | null | undefined) {
   const supabase = createClient();
 
@@ -53,7 +55,7 @@ export function useAuras(spellIds: number[]) {
       if (error) {
         throw error;
       }
-      
+
       return (data ?? []) as Aura[];
     },
     queryKey: ["game", "auras", spellIds],
@@ -337,7 +339,10 @@ export function useSpecTraits(specId: number | null | undefined) {
       if (error) throw error;
       return data as SpecTraits;
     },
-    queryKey: ["game", "spec-traits", specId],
+    queryKey:
+      specId != null
+        ? gameKeys.specTraits(specId)
+        : ["game", "spec-traits", null],
   });
 }
 

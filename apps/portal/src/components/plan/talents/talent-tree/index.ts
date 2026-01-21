@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // Components
 
 export { TalentTooltip } from "./tooltip/talent-tooltip";

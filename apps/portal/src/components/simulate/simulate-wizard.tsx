@@ -1,6 +1,6 @@
 "use client";
 
-import { useExtracted } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useMemo } from "react";
 import { Stack } from "styled-system/jsx";
 
@@ -12,7 +12,7 @@ import { ConfigureStep, ImportStep, ResultsStep } from "./steps";
 type StepValue = "import" | "configure" | "results";
 
 export function SimulateWizard() {
-  const t = useExtracted();
+  const { wizard: content } = useIntlayer("simulate");
   const profile = useCharacterInput(selectProfile);
   const clearCharacter = useCharacterInput((s) => s.clearCharacter);
 
@@ -20,21 +20,21 @@ export function SimulateWizard() {
     () => [
       {
         autoAdvanceTo: () => (profile ? ("configure" as const) : null),
-        label: t("Import"),
+        label: content.import,
         value: "import" as const,
       },
       {
         canUnlock: () => !!profile,
-        label: t("Configure"),
+        label: content.configure,
         value: "configure" as const,
       },
       {
         canUnlock: () => !!profile,
-        label: t("Results"),
+        label: content.results,
         value: "results" as const,
       },
     ],
-    [t, profile],
+    [content, profile],
   );
 
   const wizard = Steps.useStepsState<StepValue>({

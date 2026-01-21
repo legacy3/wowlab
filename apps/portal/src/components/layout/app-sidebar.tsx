@@ -1,14 +1,12 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useExtracted } from "next-intl";
+import { useIntlayer, useLocale } from "next-intlayer";
 import Image from "next/image";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
 import { Badge, Collapsible, Link, Text, Tooltip } from "@/components/ui";
-import { usePathname } from "@/i18n/navigation";
 import {
-  getIcon,
   href,
   type MenuItem,
   type MenuNavItem,
@@ -17,10 +15,11 @@ import {
   routes,
 } from "@/lib/routing";
 
+import { RouteIcon } from "./route-icon";
 import { useSidebar } from "./sidebar-context";
 
 export function AppSidebar() {
-  const t = useExtracted();
+  const { appSidebar: content } = useIntlayer("layout");
   const { isOpen } = useSidebar();
 
   return (
@@ -52,7 +51,7 @@ export function AppSidebar() {
             <Stack gap="0">
               <Text fontWeight="bold">WoW Lab</Text>
               <Text fontSize="xs" color="fg.muted">
-                {t("Toolkit")}
+                {content.toolkit}
               </Text>
             </Stack>
           </Flex>
@@ -74,7 +73,7 @@ export function AppSidebar() {
             px="3"
             mb="1"
           >
-            {t("Misc")}
+            {content.misc}
           </Text>
           {navSecondary.map((item) => (
             <NavLink key={href(item.route)} item={item} />
@@ -128,12 +127,12 @@ const SidebarLink = styled(Link, {
 });
 
 function NavGroup({ item }: { item: MenuNavItem }) {
-  const t = useExtracted();
-  const pathname = usePathname();
-  const Icon = getIcon(item.route.icon);
+  const { appSidebar: content } = useIntlayer("layout");
+  const { pathWithoutLocale } = useLocale();
   const routePath = href(item.route);
   const isActive =
-    pathname === routePath || pathname.startsWith(routePath + "/");
+    pathWithoutLocale === routePath ||
+    pathWithoutLocale.startsWith(routePath + "/");
 
   if (item.items.length === 0) {
     return (
@@ -142,7 +141,7 @@ function NavGroup({ item }: { item: MenuNavItem }) {
         positioning={{ placement: "right" }}
       >
         <SidebarLink href={routePath} active={isActive} variant="plain">
-          <Icon size={18} />
+          <RouteIcon name={item.route.icon} size={18} />
           {item.route.label}
         </SidebarLink>
       </Tooltip>
@@ -165,7 +164,7 @@ function NavGroup({ item }: { item: MenuNavItem }) {
           transition="colors"
         >
           <Flex align="center" gap="3">
-            <Icon size={18} />
+            <RouteIcon name={item.route.icon} size={18} />
             <Text fontSize="sm" fontWeight="medium">
               {item.route.label}
             </Text>
@@ -178,7 +177,6 @@ function NavGroup({ item }: { item: MenuNavItem }) {
       <Collapsible.Content>
         <Stack gap="0.5" pl="9" mt="1">
           {item.items.map((subItem) => {
-            const SubIcon = getIcon(subItem.icon);
             const subPath = href(subItem);
 
             return (
@@ -189,15 +187,15 @@ function NavGroup({ item }: { item: MenuNavItem }) {
               >
                 <SidebarLink
                   href={subPath}
-                  active={pathname === subPath}
+                  active={pathWithoutLocale === subPath}
                   variant="plain"
                   opacity={subItem.preview ? 0.5 : 1}
                 >
-                  <SubIcon size={16} />
+                  <RouteIcon name={subItem.icon} size={16} />
                   {subItem.label}
                   {subItem.preview && (
                     <Badge size="sm" variant="outline" colorPalette="amber">
-                      {t("P")}
+                      {content.preview}
                     </Badge>
                   )}
                 </SidebarLink>
@@ -211,8 +209,7 @@ function NavGroup({ item }: { item: MenuNavItem }) {
 }
 
 function NavLink({ item }: { item: MenuItem }) {
-  const pathname = usePathname();
-  const Icon = getIcon(item.route.icon);
+  const { pathWithoutLocale } = useLocale();
   const routePath = href(item.route);
 
   return (
@@ -222,12 +219,15 @@ function NavLink({ item }: { item: MenuItem }) {
     >
       <SidebarLink
         href={routePath}
-        active={pathname === routePath || pathname.startsWith(routePath + "/")}
+        active={
+          pathWithoutLocale === routePath ||
+          pathWithoutLocale.startsWith(routePath + "/")
+        }
         variant="plain"
         target={item.external ? "_blank" : undefined}
         rel={item.external ? "noopener noreferrer" : undefined}
       >
-        <Icon size={18} />
+        <RouteIcon name={item.route.icon} size={18} />
         {item.route.label}
       </SidebarLink>
     </Tooltip>
