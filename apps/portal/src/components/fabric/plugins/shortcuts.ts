@@ -46,26 +46,31 @@ export class ShortcutsPlugin implements FabricPlugin {
   private canvas!: fabric.Canvas;
   private controller!: CanvasController;
   private handlers = new Map<string, ShortcutRegistration>();
+
+  private isDragging = false;
+  private lastPosX = 0;
+  private lastPosY = 0;
+
   private onPanMouseDown = (opt: fabric.TPointerEventInfo): void => {
     const e = opt.e as MouseEvent;
-    this.canvas.isDragging = true;
-    this.canvas.lastPosX = e.clientX;
-    this.canvas.lastPosY = e.clientY;
+    this.isDragging = true;
+    this.lastPosX = e.clientX;
+    this.lastPosY = e.clientY;
     this.canvas.setCursor("grabbing");
   };
 
   private onPanMouseMove = (opt: fabric.TPointerEventInfo): void => {
-    if (!this.canvas.isDragging) return;
+    if (!this.isDragging) return;
 
     const e = opt.e as MouseEvent;
     const vpt = this.canvas.viewportTransform;
     if (!vpt) return;
 
-    vpt[4] += e.clientX - (this.canvas.lastPosX ?? 0);
-    vpt[5] += e.clientY - (this.canvas.lastPosY ?? 0);
+    vpt[4] += e.clientX - this.lastPosX;
+    vpt[5] += e.clientY - this.lastPosY;
 
-    this.canvas.lastPosX = e.clientX;
-    this.canvas.lastPosY = e.clientY;
+    this.lastPosX = e.clientX;
+    this.lastPosY = e.clientY;
     this.canvas.requestRenderAll();
 
     this.controller.events.emit("pan:change", {
@@ -73,8 +78,9 @@ export class ShortcutsPlugin implements FabricPlugin {
       y: vpt[5],
     });
   };
+
   private onPanMouseUp = (): void => {
-    this.canvas.isDragging = false;
+    this.isDragging = false;
     this.canvas.setCursor("grab");
   };
 
@@ -185,8 +191,8 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.canvas.selection = false;
     this.canvas.setCursor("grab");
 
-    // Enable drag panning
-    this.canvas.isDragging = false;
+    // Reset drag state
+    this.isDragging = false;
 
     this.canvas.on("mouse:down", this.onPanMouseDown);
     this.canvas.on("mouse:move", this.onPanMouseMove);
@@ -226,7 +232,7 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.canvas.defaultCursor = this.prevCursor;
     this.canvas.selection = this.prevSelection;
     this.canvas.setCursor(this.prevCursor);
-    this.canvas.isDragging = false;
+    this.isDragging = false;
 
     this.canvas.off("mouse:down", this.onPanMouseDown);
     this.canvas.off("mouse:move", this.onPanMouseMove);

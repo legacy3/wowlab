@@ -149,7 +149,7 @@ function SpellCard({ spell }: { spell: TalentSpell }) {
               <Text textStyle="xs" color="fg.muted" fontWeight="medium">
                 Raw
               </Text>
-              <Card.Root size="sm">
+              <Card.Root>
                 <Card.Body py={2} px={3}>
                   <Text textStyle="xs" fontFamily="mono" color="fg.muted">
                     {spell.description}
@@ -161,7 +161,7 @@ function SpellCard({ spell }: { spell: TalentSpell }) {
               <Text textStyle="xs" color="fg.muted" fontWeight="medium">
                 Parsed
               </Text>
-              <Card.Root size="sm">
+              <Card.Root>
                 <Card.Body py={2} px={3}>
                   {isLoading ? (
                     <Text textStyle="sm" color="fg.subtle">
