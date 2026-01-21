@@ -57,6 +57,12 @@ const perfectionistRules = {
 };
 
 const eslintConfig = defineConfig([
+  // Disable removal of eslint-disable comments
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off",
+    },
+  },
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.

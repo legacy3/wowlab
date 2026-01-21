@@ -26,8 +26,8 @@ pub use game::{
     Attribute, ClassId, DerivedStat, MasteryEffect, PetKind, PetType, RaceId, RatingType, SpecId,
 };
 pub use sim::{
-    AuraIdx, EnemyIdx, PetIdx, ProcIdx, ResourceIdx, SimTime, SnapshotFlags, SnapshotIdx, SpellIdx,
-    TargetIdx, UnitIdx,
+    AuraIdx, ChunkResult, EnemyIdx, PetIdx, ProcIdx, ResourceIdx, SimTime, SimulationResult,
+    SnapshotFlags, SnapshotIdx, SpellIdx, TargetIdx, UnitIdx,
 };
 pub use spell_desc::{
     EffectDependency, SpellDescDependencies, SpellDescRenderResult, SpellValueDependency,

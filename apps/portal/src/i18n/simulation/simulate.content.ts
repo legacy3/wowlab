@@ -98,10 +98,49 @@ export default {
       }),
     },
     resultsStep: {
+      averageDps: t({ de: "Durchschnittliche DPS", en: "Average DPS" }),
       back: t({ de: "Zurück", en: "Back" }),
+      chunks: t({ de: "Chunks", en: "Chunks" }),
+      completed: insert(
+        t({
+          de: "{{iterations}} Iterationen abgeschlossen",
+          en: "Completed {{iterations}} iterations",
+        }),
+      ),
+      error: insert(t({ de: "Fehler: {{message}}", en: "Error: {{message}}" })),
+      iterations: t({ de: "Iterationen", en: "Iterations" }),
+      jobNotFound: t({ de: "Job nicht gefunden", en: "Job not found" }),
+      loadingJob: t({ de: "Job wird geladen...", en: "Loading job..." }),
+      maxDps: t({ de: "Max DPS", en: "Max DPS" }),
+      minDps: t({ de: "Min DPS", en: "Min DPS" }),
+      noResults: t({
+        de: "Keine Ergebnisse verfügbar",
+        en: "No results available",
+      }),
+      progress: t({ de: "Fortschritt", en: "Progress" }),
+      progressIterations: insert(
+        t({
+          de: "{{completed}} / {{total}} Iterationen",
+          en: "{{completed}} / {{total}} iterations",
+        }),
+      ),
+      queued: t({
+        de: "In Warteschlange, warte auf verfügbare Knoten...",
+        en: "Queued, waiting for available nodes...",
+      }),
+      runAnother: t({ de: "Weitere starten", en: "Run Another" }),
+      running: t({ de: "Läuft...", en: "Running..." }),
+      simulationInProgress: t({
+        de: "Simulation läuft...",
+        en: "Simulation in progress...",
+      }),
       simulationResults: t({
         de: "Simulationsergebnisse",
         en: "Simulation Results",
+      }),
+      waitingForNodes: t({
+        de: "Warte auf Knoten...",
+        en: "Waiting for nodes...",
       }),
       workInProgress: t({
         de: "In Arbeit...",

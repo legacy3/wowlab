@@ -1,11 +1,14 @@
 "use client";
 
 import { useIntlayer } from "next-intlayer";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Stack } from "styled-system/jsx";
+
+import type { SimConfig } from "@/lib/state";
 
 import { Steps } from "@/components/ui";
 import { selectProfile, useCharacterInput } from "@/lib/sim";
+import { useSubmitJob } from "@/lib/state";
 
 import { ConfigureStep, ImportStep, ResultsStep } from "./steps";
 
@@ -15,6 +18,9 @@ export function SimulateWizard() {
   const { wizard: content } = useIntlayer("simulate");
   const profile = useCharacterInput(selectProfile);
   const clearCharacter = useCharacterInput((s) => s.clearCharacter);
+
+  const [jobId, setJobId] = useState<string | null>(null);
+  const submitJob = useSubmitJob();
 
   const steps = useMemo(
     () => [
@@ -42,10 +48,21 @@ export function SimulateWizard() {
     onStepChange: (from, to) => {
       if (to === "import" && profile) {
         clearCharacter();
+        setJobId(null);
       }
     },
     steps,
   });
+
+  const handleSimulate = async (config: SimConfig, iterations: number) => {
+    try {
+      const result = await submitJob.mutateAsync({ config, iterations });
+      setJobId(result.jobId);
+      wizard.goTo("results");
+    } catch (error) {
+      console.error("Failed to submit job:", error);
+    }
+  };
 
   return (
     <Stack gap="6">
@@ -63,7 +80,8 @@ export function SimulateWizard() {
             {profile && (
               <ConfigureStep
                 profile={profile}
-                onSimulate={() => wizard.goTo("results")}
+                isSubmitting={submitJob.isPending}
+                onSimulate={handleSimulate}
                 onClear={() => {
                   clearCharacter();
                   wizard.reset();
@@ -75,7 +93,10 @@ export function SimulateWizard() {
 
         <Steps.Content value="results">
           <Stack pt="6">
-            <ResultsStep />
+            <ResultsStep
+              jobId={jobId}
+              onBack={() => wizard.goTo("configure")}
+            />
           </Stack>
         </Steps.Content>
       </Steps.Root>

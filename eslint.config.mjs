@@ -92,6 +92,13 @@ const baseTypeScriptPlugins = {
 };
 
 export default [
+  // Disable removal of eslint-disable comments
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off",
+    },
+  },
+
   // Global ignores
   {
     ignores: [

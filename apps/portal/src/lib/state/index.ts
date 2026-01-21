@@ -18,7 +18,7 @@ export {
   type WorkerSystemState,
 } from "./computing";
 
-// Editor
+// Jobs (distributed simulation)
 
 export {
   useDefaultList,
@@ -27,7 +27,7 @@ export {
   useSelectedList,
 } from "./editor";
 
-// Game
+// Editor
 
 export {
   useAura,
@@ -48,6 +48,19 @@ export {
   useSpells,
   useSpellSearch,
 } from "./game";
+
+// Game
+
+export {
+  type DistributedJobStatus,
+  type Job,
+  type SimConfig,
+  type SubmitJobInput,
+  type SubmitJobResult,
+  useJob,
+  useSubmitJob,
+  useUserJobs,
+} from "./jobs";
 
 // Nodes
 

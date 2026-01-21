@@ -5,8 +5,8 @@ use wowlab_engine::handler::SpecHandler;
 use wowlab_engine::sim::{BatchResults, SimConfig, Simulation};
 use wowlab_engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
 use wowlab_engine::specs::hunter::mm::MmHunter;
-use wowlab_types::SpecId;
-use serde::{Deserialize, Serialize};
+use wowlab_types::{ChunkResult, SpecId};
+use serde::Deserialize;
 use std::sync::Arc;
 
 /// JSON request format for distributed simulation.
@@ -99,27 +99,14 @@ struct TargetConfig {
     armor: f32,
 }
 
-/// Result format returned by the simulation runner.
-#[derive(Debug, Clone, Serialize)]
-struct SimResponse {
-    iterations: u32,
-    mean_dps: f64,
-    std_dps: f64,
-    min_dps: f64,
-    max_dps: f64,
-    total_casts: u64,
-}
-
-impl From<BatchResults> for SimResponse {
-    fn from(result: BatchResults) -> Self {
-        Self {
-            iterations: result.iterations,
-            mean_dps: result.mean_dps,
-            std_dps: result.std_dev,
-            min_dps: result.min_dps,
-            max_dps: result.max_dps,
-            total_casts: 0, // Not tracked in new engine yet
-        }
+/// Convert BatchResults to ChunkResult
+fn to_chunk_result(result: BatchResults) -> ChunkResult {
+    ChunkResult {
+        iterations: result.iterations,
+        mean_dps: result.mean_dps,
+        std_dps: result.std_dev,
+        min_dps: result.min_dps,
+        max_dps: result.max_dps,
     }
 }
 
@@ -197,9 +184,9 @@ impl SimRunner {
             results.std_dev
         );
 
-        // Convert to response format
-        let response = SimResponse::from(results);
-        serde_json::to_value(response).map_err(|e| SimError::Serialization(e.to_string()))
+        // Convert to chunk result format
+        let chunk_result = to_chunk_result(results);
+        serde_json::to_value(chunk_result).map_err(|e| SimError::Serialization(e.to_string()))
     }
 }
 

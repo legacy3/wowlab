@@ -5,7 +5,12 @@ import { useIntlayer } from "next-intlayer";
 import { css } from "styled-system/css";
 import { Flex, HStack } from "styled-system/jsx";
 
-import { IconButton, Link, Loader, Tooltip as UITooltip } from "@/components/ui";
+import {
+  IconButton,
+  Link,
+  Loader,
+  Tooltip as UITooltip,
+} from "@/components/ui";
 import { routes } from "@/lib/routing";
 import { useSpecTraits } from "@/lib/state";
 
