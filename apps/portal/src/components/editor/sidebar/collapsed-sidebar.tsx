@@ -44,7 +44,7 @@ export function CollapsedSidebar({
           variant="plain"
           size="sm"
           onClick={onExpand}
-          aria-label={content.expandSidebar}
+          aria-label={content.expandSidebar.value}
         >
           <ChevronRightIcon size={16} />
         </IconButton>

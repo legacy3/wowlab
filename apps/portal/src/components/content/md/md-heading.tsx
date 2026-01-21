@@ -88,7 +88,7 @@ function MdHeading({ children, id, level }: MdHeadingProps) {
           color="fg.muted"
           _hover={{ color: "fg.default" }}
           transition="opacity"
-          aria-label={content.linkToSection}
+          aria-label={content.linkToSection.value}
         >
           <Icon size="sm">
             <LinkIcon />

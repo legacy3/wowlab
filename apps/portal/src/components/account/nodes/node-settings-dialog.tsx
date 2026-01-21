@@ -139,7 +139,7 @@ export function NodeSettingsDialog({
                   <Select.Control>
                     <Select.Trigger>
                       <Select.ValueText
-                        placeholder={content.selectAccessLevel}
+                        placeholder={content.selectAccessLevel.value}
                       />
                       <Select.Indicator />
                     </Select.Trigger>

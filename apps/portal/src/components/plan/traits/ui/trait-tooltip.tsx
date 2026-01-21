@@ -1,5 +1,6 @@
 "use client";
 
+import { useIntlayer } from "next-intlayer";
 import { css, cx } from "styled-system/css";
 
 import { SpellDescription } from "@/components/game";
@@ -65,6 +66,8 @@ export interface TraitTooltipProps {
 
 export function TraitTooltip({ data }: TraitTooltipProps) {
   const entry = data.node.entries[data.entryIndex];
+  const { tooltip: content } = useIntlayer("traits");
+
   if (!entry) {
     return null;
   }
@@ -95,15 +98,15 @@ export function TraitTooltip({ data }: TraitTooltipProps) {
             isMaxed ? rankMaxedStyles : isActive ? rankActiveStyles : undefined,
           )}
         >
-          Rank: {data.ranksPurchased}/{data.node.maxRanks}
+          {content.rank}: {data.ranksPurchased}/{data.node.maxRanks}
         </div>
       )}
       <div className={hintStyles}>
         {isMaxed
-          ? "Right-click to refund"
+          ? content.rightClickToRefund
           : isActive
-            ? "Click to add rank, right-click to refund"
-            : "Click to purchase"}
+            ? content.clickToAddRank
+            : content.clickToPurchase}
       </div>
     </div>
   );

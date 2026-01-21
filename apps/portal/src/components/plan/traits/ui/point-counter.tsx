@@ -1,5 +1,6 @@
 "use client";
 
+import { useIntlayer } from "next-intlayer";
 import { memo } from "react";
 import { css, cx } from "styled-system/css";
 import { HStack, VStack } from "styled-system/jsx";
@@ -69,12 +70,21 @@ function PointItem({ current, label, max }: PointItemProps) {
 export const PointCounter = memo(function PointCounter() {
   const { classPoints, classPointsLimit, heroPoints, heroPointsLimit } =
     usePointCounts();
+  const { pointCounter: content } = useIntlayer("traits");
 
   return (
     <div className={containerStyles}>
       <HStack gap="4">
-        <PointItem label="Class" current={classPoints} max={classPointsLimit} />
-        <PointItem label="Hero" current={heroPoints} max={heroPointsLimit} />
+        <PointItem
+          label={content.class}
+          current={classPoints}
+          max={classPointsLimit}
+        />
+        <PointItem
+          label={content.hero}
+          current={heroPoints}
+          max={heroPointsLimit}
+        />
       </HStack>
     </div>
   );

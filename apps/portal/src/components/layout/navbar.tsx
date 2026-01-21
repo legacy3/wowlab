@@ -43,7 +43,7 @@ export function Navbar() {
               variant="plain"
               size="sm"
               onClick={() => openDrawer(true)}
-              aria-label={content.openComputingDrawer}
+              aria-label={content.openComputingDrawer.value}
             >
               <styled.span pos="relative">
                 {runningCount > 0 ? (

@@ -3,12 +3,13 @@
 import type { ComponentProps } from "react";
 import type { HTMLStyledProps } from "styled-system/jsx";
 
-import { getLocalizedUrl } from "intlayer";
 import { useLocale } from "next-intlayer";
 import NextLink from "next/link";
 import { css, cx } from "styled-system/css";
 import { splitCssProps } from "styled-system/jsx";
 import { link, type LinkVariantProps } from "styled-system/recipes";
+
+import { getLocalizedUrl } from "@/lib/routing";
 
 const checkIsExternalLink = (href?: string): boolean =>
   /^https?:\/\//.test(href ?? "");

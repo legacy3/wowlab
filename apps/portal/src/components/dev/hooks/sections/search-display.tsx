@@ -62,7 +62,7 @@ export function SearchDisplay({
               <Input
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder={content.search}
+                placeholder={content.search.value}
                 w="64"
               />
             </Flex>

@@ -1,14 +1,10 @@
 import { Compass } from "lucide-react";
-import { useIntlayer } from "next-intlayer/server";
 import NextLink from "next/link";
 import { Container } from "styled-system/jsx";
 
 import { Button, Empty } from "@/components/ui";
-import { routes } from "@/lib/routing";
 
 export default function NotFound() {
-  const content = useIntlayer("not-found");
-
   return (
     <Container maxW="7xl" py="16">
       <Empty.Root size="lg" variant="plain">
@@ -16,12 +12,14 @@ export default function NotFound() {
           <Compass />
         </Empty.Icon>
         <Empty.Content>
-          <Empty.Title>{content.pageNotFound}</Empty.Title>
-          <Empty.Description>{content.description}</Empty.Description>
+          <Empty.Title>Page Not Found</Empty.Title>
+          <Empty.Description>
+            The page you're looking for doesn't exist.
+          </Empty.Description>
         </Empty.Content>
         <Empty.Action>
           <Button asChild>
-            <NextLink href={routes.home.path}>{content.goHome}</NextLink>
+            <NextLink href="/">Go Home</NextLink>
           </Button>
         </Empty.Action>
       </Empty.Root>

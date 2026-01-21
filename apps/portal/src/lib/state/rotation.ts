@@ -1,12 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import type { RotationsRow } from "@/lib/engine";
 
-import { href, routes } from "@/lib/routing";
+import { href, routes, useLocalizedRouter } from "@/lib/routing";
 import { createClient } from "@/lib/supabase";
 
 import { useEditor } from "./editor";
@@ -51,7 +50,7 @@ export function useLoadRotation(id: string | null) {
 export function useSaveRotation() {
   const supabase = createClient();
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { data: user } = useUser();
 
   const rotationId = useEditor((s) => s.rotationId);

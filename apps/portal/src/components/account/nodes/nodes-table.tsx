@@ -129,7 +129,7 @@ export function NodesTable({
                     size="xs"
                     variant="plain"
                     onClick={() => onSettingsClick(node)}
-                    aria-label={content.settings}
+                    aria-label={content.settings.value}
                   >
                     <SettingsIcon size={14} />
                   </IconButton>

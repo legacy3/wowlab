@@ -15,7 +15,6 @@ import {
   XIcon,
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import NextLink from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
@@ -31,6 +30,7 @@ import {
   Empty,
   IconButton,
   Input,
+  Link,
   Loader,
   Menu,
   Select,
@@ -200,10 +200,10 @@ export function RotationBrowser() {
             />
           </Box>
           <Button asChild size="sm">
-            <NextLink href={href(routes.rotations.editor.index)}>
+            <Link href={href(routes.rotations.editor.index)}>
               <PlusIcon size={16} />
               {content.new}
-            </NextLink>
+            </Link>
           </Button>
         </HStack>
       </Flex>
@@ -218,7 +218,7 @@ export function RotationBrowser() {
                 size="xs"
                 ml="1"
                 onClick={() => setClassFilter(null)}
-                aria-label={content.clearClassFilter}
+                aria-label={content.clearClassFilter.value}
               >
                 <XIcon size={12} />
               </IconButton>
@@ -232,7 +232,7 @@ export function RotationBrowser() {
                 size="xs"
                 ml="1"
                 onClick={() => setSearch("")}
-                aria-label={content.clearSearch}
+                aria-label={content.clearSearch.value}
               >
                 <XIcon size={12} />
               </IconButton>
@@ -257,10 +257,10 @@ export function RotationBrowser() {
           {filter === "mine" && (
             <Empty.Action>
               <Button asChild size="sm">
-                <NextLink href={href(routes.rotations.editor.index)}>
+                <Link href={href(routes.rotations.editor.index)}>
                   <PlusIcon size={16} />
                   {content.createRotation}
-                </NextLink>
+                </Link>
               </Button>
             </Empty.Action>
           )}
@@ -406,7 +406,7 @@ function RotationRow({
   const classColor = getClassColor(rotation.spec_id);
 
   return (
-    <NextLink href={href(routes.rotations.editor.edit, { id: rotation.id })}>
+    <Link href={href(routes.rotations.editor.edit, { id: rotation.id })}>
       <Flex
         px="4"
         py="3"
@@ -490,14 +490,14 @@ function RotationRow({
               <Menu.Positioner>
                 <Menu.Content>
                   <Menu.Item value="edit" asChild>
-                    <NextLink
+                    <Link
                       href={href(routes.rotations.editor.edit, {
                         id: rotation.id,
                       })}
                     >
                       <PencilIcon size={14} />
                       {editLabel}
-                    </NextLink>
+                    </Link>
                   </Menu.Item>
                   <Menu.Separator />
                   <Menu.Item
@@ -517,7 +517,7 @@ function RotationRow({
           )}
         </Box>
       </Flex>
-    </NextLink>
+    </Link>
   );
 }
 

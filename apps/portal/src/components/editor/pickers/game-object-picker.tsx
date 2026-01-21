@@ -158,7 +158,7 @@ export function GameObjectPicker<TSearchResult, TData>({
             </Button>
           </Combobox.Trigger>
           <Combobox.Input
-            placeholder={content.search}
+            placeholder={content.search.value}
             style={{ opacity: 0, pointerEvents: "none", position: "absolute" }}
           />
         </Combobox.Control>

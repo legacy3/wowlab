@@ -244,7 +244,7 @@ function TableOfContents({
         as="nav"
         alignItems="stretch"
         gap="1"
-        aria-label={content.tableOfContents}
+        aria-label={content.tableOfContents.value}
       >
         {headings.map((heading) => (
           <Link

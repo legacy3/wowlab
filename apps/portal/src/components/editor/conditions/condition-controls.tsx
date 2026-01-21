@@ -90,7 +90,7 @@ export function CombinatorSelector({
       minW="20"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder={content.combinatorPlaceholder}
+      placeholder={content.combinatorPlaceholder.value}
       value={value}
     />
   );
@@ -157,7 +157,7 @@ export function FieldSelector({
       allowCustomValue={false}
     >
       <Combobox.Control minW="44">
-        <Combobox.Input placeholder={content.searchFields} />
+        <Combobox.Input placeholder={content.searchFields.value} />
         <Combobox.IndicatorGroup>
           {value && <Combobox.ClearTrigger />}
           <Combobox.Trigger />
@@ -210,7 +210,7 @@ export function OperatorSelector({
       minW="32"
       onChange={handleOnChange}
       options={selectOptions}
-      placeholder={content.operatorPlaceholder}
+      placeholder={content.operatorPlaceholder.value}
       value={value}
     />
   );
@@ -231,7 +231,7 @@ export function RemoveButton({
       variant="plain"
       disabled={disabled}
       onClick={handleOnClick}
-      aria-label={content.remove}
+      aria-label={content.remove.value}
     >
       <XIcon size={14} />
     </IconButton>
@@ -255,7 +255,7 @@ export function ValueEditor({
         minW="32"
         onChange={handleOnChange}
         options={selectOptions}
-        placeholder={content.selectValue}
+        placeholder={content.selectValue.value}
         value={value ? String(value) : undefined}
       />
     );
@@ -268,7 +268,7 @@ export function ValueEditor({
       value={value ?? ""}
       disabled={disabled}
       onChange={(e) => handleOnChange(e.target.value)}
-      placeholder={content.valuePlaceholder}
+      placeholder={content.valuePlaceholder.value}
       w={inputType === "number" ? "24" : "32"}
     />
   );

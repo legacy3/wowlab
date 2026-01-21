@@ -65,7 +65,7 @@ export function VariableEditorDialog({
                   {content.name}
                 </Text>
                 <Input
-                  placeholder={content.variableNamePlaceholder}
+                  placeholder={content.variableNamePlaceholder.value}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -79,7 +79,7 @@ export function VariableEditorDialog({
                   {content.expression}
                 </Text>
                 <Input
-                  placeholder={content.expressionPlaceholder}
+                  placeholder={content.expressionPlaceholder.value}
                   value={expression}
                   onChange={(e) => setExpression(e.target.value)}
                   onKeyDown={handleKeyDown}

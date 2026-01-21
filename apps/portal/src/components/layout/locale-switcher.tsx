@@ -21,7 +21,7 @@ export function LocaleSwitcher() {
         <IconButton
           variant="plain"
           size="sm"
-          aria-label={content.changeLanguage}
+          aria-label={content.changeLanguage.value}
         >
           <GlobeIcon />
         </IconButton>

@@ -1,11 +1,11 @@
 "use client";
 
 import { X } from "lucide-react";
-import Link from "next/link";
+import { useIntlayer } from "next-intlayer";
 import { css } from "styled-system/css";
 import { Flex, HStack } from "styled-system/jsx";
 
-import { IconButton, Loader, Tooltip as UITooltip } from "@/components/ui";
+import { IconButton, Link, Loader, Tooltip as UITooltip } from "@/components/ui";
 import { routes } from "@/lib/routing";
 import { useSpecTraits } from "@/lib/state";
 
@@ -39,6 +39,7 @@ interface TraitCalculatorProps {
 
 export function TraitCalculator({ specId }: TraitCalculatorProps) {
   const { data: specTraits } = useSpecTraits(specId);
+  const { calculator: content } = useIntlayer("traits");
 
   if (!specTraits) {
     return (
@@ -51,7 +52,7 @@ export function TraitCalculator({ specId }: TraitCalculatorProps) {
   return (
     <Flex flexDirection="column" h="100vh" overflow="hidden">
       <header className={headerStyles}>
-        <UITooltip content="Close">
+        <UITooltip content={content.close}>
           <IconButton variant="plain" size="sm" asChild>
             <Link href={routes.plan.traits.path}>
               <X size={16} />

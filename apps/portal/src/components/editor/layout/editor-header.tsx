@@ -69,7 +69,7 @@ export function EditorHeader() {
       <HStack gap="3" flex="1">
         {canEdit ? (
           <Input
-            placeholder={content.rotationNamePlaceholder}
+            placeholder={content.rotationNamePlaceholder.value}
             value={name}
             onChange={(e) => setName(e.target.value)}
             w="64"
@@ -157,7 +157,7 @@ export function EditorHeader() {
               variant={viewMode === "edit" ? "solid" : "plain"}
               size="sm"
               onClick={() => setViewMode("edit")}
-              aria-label={content.editMode}
+              aria-label={content.editMode.value}
               disabled={!canEdit && viewMode !== "edit"}
             >
               <PencilIcon size={16} />
@@ -168,7 +168,7 @@ export function EditorHeader() {
               variant={viewMode === "preview" ? "solid" : "plain"}
               size="sm"
               onClick={() => setViewMode("preview")}
-              aria-label={content.previewMode}
+              aria-label={content.previewMode.value}
             >
               <EyeIcon size={16} />
             </IconButton>

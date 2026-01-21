@@ -1,16 +1,15 @@
 "use client";
 
 import { useBoolean, useMount } from "ahooks";
-import { useRouter } from "next/navigation";
 
 import { Button, Skeleton } from "@/components/ui";
-import { href, routes } from "@/lib/routing";
+import { href, routes, useLocalizedRouter } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 import { UserMenu } from "./user-menu";
 
 export function AuthButton() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { data: user, isLoading } = useUser();
   const [mounted, { setTrue: setMounted }] = useBoolean(false);
 

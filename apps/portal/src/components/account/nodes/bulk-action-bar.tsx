@@ -57,7 +57,7 @@ export function BulkActionBar({
         size="sm"
         variant="plain"
         onClick={onClearSelection}
-        aria-label={content.clearSelection}
+        aria-label={content.clearSelection.value}
       >
         <XIcon size={14} />
       </IconButton>

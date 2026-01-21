@@ -64,7 +64,7 @@ export function EntityDisplay<T extends Record<string, unknown>>({
                 type="number"
                 value={inputValue}
                 onChange={(e) => handleChange(e.target.value)}
-                placeholder={content.enterId}
+                placeholder={content.enterId.value}
                 w="32"
               />
               {result.refresh && (

@@ -2,14 +2,13 @@
 
 import { Code2Icon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import NextLink from "next/link";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { RotationCard } from "@/components/rotations";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUserProfile } from "@/lib/state";
 
-import { Avatar, Empty, Skeleton, Text } from "../ui";
+import { Avatar, Empty, Link, Skeleton, Text } from "../ui";
 
 interface UserProfilePageProps {
   handle: string;
@@ -57,13 +56,11 @@ export function UserProfilePage({ handle }: UserProfilePageProps) {
             )}
             <Avatar.Fallback initials={initials} />
           </Avatar.Root>
-          <NextLink
-            href={href(routes.users.profile, { handle: profile.handle })}
-          >
+          <Link href={href(routes.users.profile, { handle: profile.handle })}>
             <Text textStyle="xl" fontWeight="semibold">
               @{profile.handle}
             </Text>
-          </NextLink>
+          </Link>
         </HStack>
 
         <HStack gap="4" color="fg.muted" textStyle="sm">

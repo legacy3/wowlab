@@ -88,7 +88,7 @@ export function ConfigureStep({
               <Select.Label>{content.fightStyle}</Select.Label>
               <Select.Control>
                 <Select.Trigger>
-                  <Select.ValueText placeholder={content.select} />
+                  <Select.ValueText placeholder={content.select.value} />
                   <Select.Indicator />
                 </Select.Trigger>
               </Select.Control>

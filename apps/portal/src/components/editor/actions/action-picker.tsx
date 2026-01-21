@@ -114,7 +114,7 @@ export function ActionPicker({
                         value={undefined}
                         options={listOptions}
                         onChange={handleAddCallList}
-                        placeholder={content.selectAList}
+                        placeholder={content.selectAList.value}
                       />
                     )}
                   </VStack>

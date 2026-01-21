@@ -140,7 +140,7 @@ export function JobHistoryCard() {
         </Card.Header>
         <Card.Body spaceY="4" pt="0">
           <Input
-            placeholder={content.filterJobs}
+            placeholder={content.filterJobs.value}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             maxW="sm"
@@ -234,7 +234,7 @@ export function JobHistoryCard() {
                                 <IconButton
                                   variant="plain"
                                   size="xs"
-                                  aria-label={content.cancelSimulation}
+                                  aria-label={content.cancelSimulation.value}
                                   disabled={
                                     job.status !== "running" &&
                                     job.status !== "queued"

@@ -1,10 +1,9 @@
 "use client";
 
-import NextLink from "next/link";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
 import { GameIcon } from "@/components/game";
-import { Text } from "@/components/ui";
+import { Link, Text } from "@/components/ui";
 import { href, routes } from "@/lib/routing";
 
 interface RotationCardProps {
@@ -25,7 +24,7 @@ export function RotationCard({
   const relativeTime = formatRelativeTime(new Date(updatedAt));
 
   return (
-    <NextLink href={href(routes.rotations.editor.edit, { id })}>
+    <Link href={href(routes.rotations.editor.edit, { id })}>
       <Flex
         px="4"
         py="3"
@@ -60,7 +59,7 @@ export function RotationCard({
           {relativeTime}
         </Text>
       </Flex>
-    </NextLink>
+    </Link>
   );
 }
 

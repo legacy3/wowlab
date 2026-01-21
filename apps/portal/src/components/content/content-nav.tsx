@@ -2,7 +2,6 @@
 
 import { useKeyPress } from "ahooks";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
 import type { NavItem } from "@/lib/content/types";
@@ -10,6 +9,7 @@ import type { NavItem } from "@/lib/content/types";
 import { Icon } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
+import { useLocalizedRouter } from "@/lib/routing";
 
 type ContentNavProps = {
   prev: NavItem;
@@ -24,7 +24,7 @@ export function ContentNav({
   prev,
   showSubtitle = false,
 }: ContentNavProps) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   useKeyPress("leftarrow", () => prev && router.push(prev.href));
   useKeyPress("rightarrow", () => next && router.push(next.href));

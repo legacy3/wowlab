@@ -1,21 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Container, Flex, styled, VStack } from "styled-system/jsx";
 
 import { SpecPicker } from "@/components/game";
 import { Button, Input, Text } from "@/components/ui";
 import { engine } from "@/lib/engine";
-import { routes } from "@/lib/routing";
+import { routes, useLocalizedRouter } from "@/lib/routing";
 
 // =============================================================================
 // Component
 // =============================================================================
 
 export function TraitStartScreen() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const [loadoutInput, setLoadoutInput] = useState("");
+  const { startScreen: content } = useIntlayer("traits");
 
   const handleSpecSelect = async (specId: number) => {
     const loadout = await engine.encodeMinimalLoadout(specId);
@@ -39,10 +40,10 @@ export function TraitStartScreen() {
         {/* Header */}
         <VStack gap="2" textAlign="center">
           <Text fontWeight="bold" textStyle="2xl">
-            Trait Calculator
+            {content.traitCalculator}
           </Text>
           <Text color="fg.muted" textStyle="sm">
-            Plan your character&apos;s trait build
+            {content.planYourBuild}
           </Text>
         </VStack>
 
@@ -50,17 +51,17 @@ export function TraitStartScreen() {
         <VStack gap="4" w="full" maxW="md">
           <VStack gap="2" textAlign="center">
             <Text fontWeight="semibold" textStyle="lg">
-              Import Trait String
+              {content.importTraitString}
             </Text>
             <Text color="fg.muted" textStyle="sm">
-              Paste a talent loadout string to view and edit
+              {content.pasteLoadoutStringDescription}
             </Text>
           </VStack>
           <Flex gap="2" w="full">
             <Input
               flex="1"
               fontFamily="mono"
-              placeholder="Paste a talent string ..."
+              placeholder={content.pasteATraitString.value}
               textStyle="sm"
               value={loadoutInput}
               onChange={(e) => setLoadoutInput(e.target.value)}
@@ -70,7 +71,7 @@ export function TraitStartScreen() {
               onClick={handleLoadoutSubmit}
               disabled={!loadoutInput.trim()}
             >
-              Load
+              {content.load}
             </Button>
           </Flex>
         </VStack>
@@ -83,7 +84,7 @@ export function TraitStartScreen() {
             borderColor="border.default"
           />
           <Text color="fg.muted" textStyle="sm">
-            or
+            {content.or}
           </Text>
           <styled.div
             flex="1"
@@ -96,10 +97,10 @@ export function TraitStartScreen() {
         <VStack gap="4">
           <VStack gap="2" textAlign="center">
             <Text fontWeight="semibold" textStyle="lg">
-              Start from Scratch
+              {content.startFromScratch}
             </Text>
             <Text color="fg.muted" textStyle="sm">
-              Choose a class and specialization
+              {content.chooseClassAndSpec}
             </Text>
           </VStack>
           <SpecPicker onSelect={handleSpecSelect} />

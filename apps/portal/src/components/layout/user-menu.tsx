@@ -2,16 +2,15 @@
 
 import { LogOut, Server, Settings, User } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { useRouter } from "next/navigation";
 import { Flex } from "styled-system/jsx";
 
 import { Avatar, Menu, Skeleton } from "@/components/ui";
-import { href, routes } from "@/lib/routing";
+import { href, routes, useLocalizedRouter } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
 export function UserMenu() {
   const { userMenu: content } = useIntlayer("layout");
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { data: user, isLoading, logout } = useUser();
 
   const handleSignOut = () => {

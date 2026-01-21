@@ -44,7 +44,11 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <IconButton variant="plain" size="sm" aria-label={content.toggleTheme}>
+      <IconButton
+        variant="plain"
+        size="sm"
+        aria-label={content.toggleTheme.value}
+      >
         <Monitor size={18} />
       </IconButton>
     );
@@ -54,7 +58,7 @@ export function ThemeToggle() {
     <IconButton
       variant="plain"
       size="sm"
-      aria-label={content.toggleTheme}
+      aria-label={content.toggleTheme.value}
       title={`${content.themeLabel} ${themeLabels[currentKey]}`}
       onClick={cycle}
     >

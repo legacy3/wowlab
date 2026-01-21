@@ -1,12 +1,11 @@
 "use client";
 
 import { useIntlayer } from "next-intlayer";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Box, Stack } from "styled-system/jsx";
 
 import { Alert, Card, Skeleton, Text } from "@/components/ui";
-import { routes } from "@/lib/routing";
+import { routes, useLocalizedRouter } from "@/lib/routing";
 import { useClaimNode, useUser } from "@/lib/state";
 
 import { NodeClaimForm } from "./node-claim-form";
@@ -38,7 +37,7 @@ export function ClaimPageSkeleton() {
 
 export function NodesClaimPage() {
   const content = useIntlayer("account").claimPage;
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { data: user, isLoading: isUserLoading } = useUser();
   const userId = user?.id;
 

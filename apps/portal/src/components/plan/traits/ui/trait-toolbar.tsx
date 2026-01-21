@@ -12,6 +12,7 @@ import {
   Share2,
   Undo2,
 } from "lucide-react";
+import { useIntlayer } from "next-intlayer";
 import { memo, useCallback } from "react";
 import { css, cx } from "styled-system/css";
 import { HStack } from "styled-system/jsx";
@@ -82,6 +83,7 @@ export const TraitToolbar = memo(function TraitToolbar({
   const { canRedo, canUndo } = useHistoryState();
   const undo = useTraitStore((s) => s.undo);
   const redo = useTraitStore((s) => s.redo);
+  const { toolbar: content } = useIntlayer("traits");
 
   const handleUndo = useCallback(() => undo(), [undo]);
   const handleRedo = useCallback(() => redo(), [redo]);
@@ -89,7 +91,7 @@ export const TraitToolbar = memo(function TraitToolbar({
   return (
     <div className={cx(toolbarStyles, className)}>
       <HStack gap="0.5">
-        <Tooltip content="Select (V)">
+        <Tooltip content={content.select}>
           <IconButton
             variant="plain"
             size="sm"
@@ -99,7 +101,7 @@ export const TraitToolbar = memo(function TraitToolbar({
             <MousePointer2 size={16} />
           </IconButton>
         </Tooltip>
-        <Tooltip content="Pan (Space / H)">
+        <Tooltip content={content.pan}>
           <IconButton
             variant="plain"
             size="sm"
@@ -114,7 +116,7 @@ export const TraitToolbar = memo(function TraitToolbar({
       <div className={dividerStyles} />
 
       <HStack gap="0.5">
-        <Tooltip content="Undo (Cmd+Z)">
+        <Tooltip content={content.undo}>
           <IconButton
             variant="plain"
             size="sm"
@@ -124,7 +126,7 @@ export const TraitToolbar = memo(function TraitToolbar({
             <Undo2 size={16} />
           </IconButton>
         </Tooltip>
-        <Tooltip content="Redo (Cmd+Shift+Z)">
+        <Tooltip content={content.redo}>
           <IconButton
             variant="plain"
             size="sm"
@@ -139,13 +141,13 @@ export const TraitToolbar = memo(function TraitToolbar({
       <div className={dividerStyles} />
 
       <HStack gap="0.5">
-        <Tooltip content="Zoom Out (-)">
+        <Tooltip content={content.zoomOut}>
           <IconButton variant="plain" size="sm" onClick={onZoomOut}>
             <Minus size={16} />
           </IconButton>
         </Tooltip>
         <span className={zoomTextStyles}>{Math.round(state.zoom * 100)}%</span>
-        <Tooltip content="Zoom In (+)">
+        <Tooltip content={content.zoomIn}>
           <IconButton variant="plain" size="sm" onClick={onZoomIn}>
             <Plus size={16} />
           </IconButton>
@@ -153,12 +155,12 @@ export const TraitToolbar = memo(function TraitToolbar({
       </HStack>
 
       <HStack gap="0.5">
-        <Tooltip content="Zoom to Fit (Cmd+0)">
+        <Tooltip content={content.zoomToFit}>
           <IconButton variant="plain" size="sm" onClick={onZoomToFit}>
             <Maximize size={16} />
           </IconButton>
         </Tooltip>
-        <Tooltip content="Reset View (0)">
+        <Tooltip content={content.resetView}>
           <IconButton variant="plain" size="sm" onClick={onResetView}>
             <RotateCcw size={16} />
           </IconButton>
@@ -168,12 +170,12 @@ export const TraitToolbar = memo(function TraitToolbar({
       <div className={dividerStyles} />
 
       <HStack gap="0.5">
-        <Tooltip content="Share Link">
+        <Tooltip content={content.shareLink}>
           <IconButton variant="plain" size="sm" onClick={onShare}>
             <Share2 size={16} />
           </IconButton>
         </Tooltip>
-        <Tooltip content="Export PNG">
+        <Tooltip content={content.exportPng}>
           <IconButton variant="plain" size="sm" onClick={onExport}>
             <Download size={16} />
           </IconButton>

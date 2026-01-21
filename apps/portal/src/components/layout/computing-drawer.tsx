@@ -78,7 +78,11 @@ export function ComputingDrawer() {
               </HStack>
             </Drawer.Description>
             <Drawer.CloseTrigger asChild pos="absolute" top="3" right="3">
-              <IconButton variant="plain" size="sm" aria-label={content.close}>
+              <IconButton
+                variant="plain"
+                size="sm"
+                aria-label={content.close.value}
+              >
                 <X />
               </IconButton>
             </Drawer.CloseTrigger>

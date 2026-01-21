@@ -27,7 +27,7 @@ export function ImportStep() {
 
       {parseError && (
         <ParseError
-          title={content.failedToParseSimCExport}
+          title={content.failedToParseSimCExport.value}
           error={parseError}
         />
       )}

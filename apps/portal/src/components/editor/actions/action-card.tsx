@@ -184,7 +184,7 @@ function ListSelector({
       value={value}
       options={options}
       onChange={onChange}
-      placeholder={content.selectList}
+      placeholder={content.selectList.value}
       minW="32"
       emptyMessage={content.noOtherLists}
     />
@@ -299,7 +299,7 @@ export const ActionCard = memo(function ActionCard({
                 variant="plain"
                 size="xs"
                 onClick={() => duplicateAction(listId, action.id)}
-                aria-label={content.duplicate}
+                aria-label={content.duplicate.value}
               >
                 <CopyIcon size={14} />
               </IconButton>
@@ -310,7 +310,7 @@ export const ActionCard = memo(function ActionCard({
                 size="xs"
                 onClick={() => deleteAction(listId, action.id)}
                 _hover={{ color: "red.500" }}
-                aria-label={content.delete}
+                aria-label={content.delete.value}
               >
                 <TrashIcon size={14} />
               </IconButton>

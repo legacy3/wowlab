@@ -3,12 +3,11 @@
 import type { ReactNode } from "react";
 
 import { GlobeIcon, LockIcon, PencilIcon, XIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/lib/engine";
 
-import { href, routes } from "@/lib/routing";
+import { href, routes, useLocalizedRouter } from "@/lib/routing";
 
 import { Badge, Button, Drawer, IconButton, Link, Text } from "../ui";
 
@@ -25,7 +24,7 @@ export function RotationPreviewDrawer({
   getSpecLabel,
   rotation,
 }: RotationPreviewDrawerProps) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const specLabel = getSpecLabel(rotation.spec_id);
   const classColor = getClassColor(rotation.spec_id);
 
