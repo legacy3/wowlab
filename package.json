@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.26.2",
   "scripts": {
+    "cli": "cargo build --release --manifest-path crates/Cargo.toml -p wowlab-cli && ./crates/target/release/wowlab",
     "setup": "./scripts/setup.sh",
     "build": "./scripts/build.sh all",
     "build:parsers": "./scripts/build.sh parsers",

@@ -6034,7 +6034,7 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.0.tgz:
-    resolution: {integrity: sha512-B6V1v26ZYGfSkAi7wwEvHEtT1A3iOM7K6DCpSpxuiEe4TH5nXSkkvK5aOSvNrAulGDXexqppAsv6pUvc7Cdwgg==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
+    resolution: {integrity: sha512-1ZFhUagU6mMRjC1sWVgKf+OqKN9lkEo+99XUAECpg3+rs4ShsNOlSpPmsXUJwI22wdSI/HUW2AFtnBD89YpPbw==, tarball: file:packages/wowlab-engine-0.4.0.tgz}
     version: 0.4.0
 
   wowlab-parsers@file:packages/wowlab-parsers-0.4.0.tgz:
