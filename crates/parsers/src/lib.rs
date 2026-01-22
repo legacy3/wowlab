@@ -10,6 +10,7 @@
 // Modules
 // ============================================================================
 
+pub mod crypto;
 pub mod dbc;
 pub mod errors;
 pub mod loadout;
@@ -77,6 +78,12 @@ pub use scaling::{
 // Re-export spell desc types from wowlab-types
 pub use wowlab_types::{
     EffectDependency, SpellDescDependencies, SpellDescRenderResult, SpellValueDependency,
+};
+
+// Crypto (node authentication)
+pub use crypto::{
+    build_sign_message, derive_claim_code, derive_claim_code_from_base64, keypair_from_base64,
+    sha256_hex, verify_signature, verify_signature_base64, CryptoError, NodeKeypair,
 };
 
 // ============================================================================
@@ -190,4 +197,71 @@ pub fn wasm_get_stat_budget(
 #[wasm_bindgen(js_name = getStatName)]
 pub fn wasm_get_stat_name(stat_type: i32) -> String {
     get_stat_name(stat_type).to_string()
+}
+
+// ============================================================================
+// Crypto WASM Bindings (Node Authentication)
+// ============================================================================
+
+/// Generate a new node keypair.
+///
+/// Returns an object with `privateKey`, `publicKey`, and `claimCode` fields (all base64/string).
+#[wasm_bindgen(js_name = generateNodeKeypair)]
+pub fn wasm_generate_node_keypair() -> JsValue {
+    let keypair = crypto::NodeKeypair::generate();
+
+    let result = serde_json::json!({
+        "privateKey": keypair.private_key_base64(),
+        "publicKey": keypair.public_key_base64(),
+        "claimCode": keypair.claim_code(),
+    });
+
+    serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::NULL)
+}
+
+/// Derive claim code from a base64-encoded public key.
+#[wasm_bindgen(js_name = deriveClaimCode)]
+pub fn wasm_derive_claim_code(public_key_base64: &str) -> Result<String, JsError> {
+    crypto::derive_claim_code_from_base64(public_key_base64)
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Sign a message with a base64-encoded private key.
+///
+/// Returns the signature as base64.
+#[wasm_bindgen(js_name = signMessage)]
+pub fn wasm_sign_message(private_key_base64: &str, message: &str) -> Result<String, JsError> {
+    let keypair =
+        crypto::keypair_from_base64(private_key_base64).map_err(|e| JsError::new(&e.to_string()))?;
+    Ok(keypair.sign_base64(message.as_bytes()))
+}
+
+/// Verify a signature.
+///
+/// All inputs are base64-encoded (public key, signature) except message which is UTF-8.
+#[wasm_bindgen(js_name = verifySignature)]
+pub fn wasm_verify_signature(
+    public_key_base64: &str,
+    message: &str,
+    signature_base64: &str,
+) -> Result<bool, JsError> {
+    match crypto::verify_signature_base64(public_key_base64, message.as_bytes(), signature_base64) {
+        Ok(()) => Ok(true),
+        Err(crypto::CryptoError::VerificationFailed) => Ok(false),
+        Err(e) => Err(JsError::new(&e.to_string())),
+    }
+}
+
+/// Build the message to sign for a node request.
+///
+/// Format: `timestamp:method:path:sha256(body)`
+#[wasm_bindgen(js_name = buildSignMessage)]
+pub fn wasm_build_sign_message(timestamp: u64, method: &str, path: &str, body: &str) -> String {
+    crypto::build_sign_message(timestamp, method, path, body.as_bytes())
+}
+
+/// Compute SHA256 hash of a string and return as hex.
+#[wasm_bindgen(js_name = sha256Hex)]
+pub fn wasm_sha256_hex(data: &str) -> String {
+    crypto::sha256_hex(data.as_bytes())
 }

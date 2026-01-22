@@ -9,7 +9,7 @@ use super::parser::parse;
 use super::renderer::render_with_resolver;
 use super::resolver::SpellDescResolver;
 use wasm_bindgen::prelude::*;
-use wowlab_types::spell_desc::{SpellDescDependencies, SpellDescRenderResult};
+use wowlab_types::spell_desc::SpellDescDependencies;
 
 /// A resolver that delegates to JavaScript functions.
 ///
@@ -247,16 +247,12 @@ pub fn wasm_render_spell_desc(
     input: &str,
     self_spell_id: u32,
     resolver: JsValue,
-) -> Result<SpellDescRenderResult, JsError> {
+) -> Result<JsValue, JsError> {
     let js_resolver = JsResolver::from_js_object(&resolver)?;
     let result = parse(input);
     let parse_errors: Vec<String> = result.errors.iter().map(|e| e.to_string()).collect();
-    Ok(render_with_resolver(
-        &result.ast,
-        self_spell_id,
-        &js_resolver,
-        parse_errors,
-    ))
+    let render_result = render_with_resolver(&result.ast, self_spell_id, &js_resolver, parse_errors);
+    serde_wasm_bindgen::to_value(&render_result).map_err(|e| JsError::new(&e.to_string()))
 }
 
 /// Tokenize a spell description and return fragments for debug display.
