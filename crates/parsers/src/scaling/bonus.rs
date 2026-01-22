@@ -161,12 +161,12 @@ pub fn apply_item_bonuses(
     // Convert to final stats
     let stats: Vec<ScaledStat> = stats_map
         .into_iter()
-        .filter(|(_, v)| *v > 0.5) // Filter out negligible values
         .map(|(stat_type, value)| ScaledStat {
             stat_type,
             stat_name: get_stat_name(stat_type).to_string(),
             value: value.round() as i32,
         })
+        .filter(|s| s.value != 0)
         .collect();
 
     ScaledItemStats {
