@@ -39,7 +39,7 @@ jobs:
   build-ts:
     name: Build TypeScript
     needs: changes
-    if: needs.changes.outputs.ts == 'true'
+    if: needs.changes.outputs.ts == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_discord != 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
   build-rust:
     name: Build & Test Rust
     needs: changes
-    if: needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_discord != 'true'
     runs-on: ubuntu-24.04
 
     steps:
