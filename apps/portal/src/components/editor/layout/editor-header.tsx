@@ -6,10 +6,12 @@ import {
   PencilIcon,
   SaveIcon,
   UnlockIcon,
+  XIcon,
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { Box, Flex, HStack } from "styled-system/jsx";
+import { Flex, HStack } from "styled-system/jsx";
 
+import { SpecPicker } from "@/components/game";
 import { useEditor } from "@/lib/state/editor";
 import { useSaveRotation } from "@/lib/state/rotation";
 
@@ -17,68 +19,72 @@ import {
   Badge,
   Button,
   IconButton,
-  Input,
   Loader,
   Switch,
   Text,
   Tooltip,
 } from "../../ui";
 import { useCanEdit, useIsOwner } from "../hooks";
-import { countTotalActions } from "../utils";
 
 export function EditorHeader() {
   const { header: content } = useIntlayer("editor");
   const name = useEditor((s) => s.name);
-  const setName = useEditor((s) => s.setName);
   const viewMode = useEditor((s) => s.viewMode);
   const setViewMode = useEditor((s) => s.setViewMode);
   const isPublic = useEditor((s) => s.isPublic);
   const setIsPublic = useEditor((s) => s.setIsPublic);
   const isDirty = useEditor((s) => s.isDirty);
-  const actionLists = useEditor((s) => s.actionLists);
-  const variables = useEditor((s) => s.variables);
   const isLocked = useEditor((s) => s.isLocked);
   const setLocked = useEditor((s) => s.setLocked);
   const rotationId = useEditor((s) => s.rotationId);
+  const specId = useEditor((s) => s.specId);
+  const setSpecId = useEditor((s) => s.setSpecId);
 
   const { isLoading: isSaving, isNew, save } = useSaveRotation();
 
   const isOwner = useIsOwner();
   const canEdit = useCanEdit();
 
-  const listCount = actionLists.length;
-  const actionCount = countTotalActions(actionLists);
-  const varCount = variables.length;
-
   const handleSave = () => {
     void save();
+  };
+
+  const handleClose = () => {
+    setSpecId(null);
   };
 
   return (
     <Flex
       align="center"
       justify="space-between"
-      px="4"
-      py="2"
+      px="3"
+      h="12"
       borderBottomWidth="1"
       borderColor="border.default"
       bg="bg.default"
-      gap="4"
+      gap="3"
       flexShrink={0}
     >
-      <HStack gap="3" flex="1">
-        {canEdit ? (
-          <Input
-            placeholder={content.rotationNamePlaceholder.value}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            w="64"
-          />
-        ) : (
-          <Text fontWeight="medium" fontSize="lg">
-            {name || content.untitledRotation}
-          </Text>
-        )}
+      <HStack gap="3">
+        <Tooltip content={content.close}>
+          <IconButton
+            variant="plain"
+            size="sm"
+            onClick={handleClose}
+            aria-label={content.close.value}
+          >
+            <XIcon size={16} />
+          </IconButton>
+        </Tooltip>
+
+        <SpecPicker compact specId={specId} onSelect={setSpecId} />
+
+        <Text fontWeight="medium" textStyle="sm" color="fg.muted">
+          /
+        </Text>
+        <Text fontWeight="medium" textStyle="sm">
+          {name || content.untitledRotation}
+        </Text>
 
         {isLocked && !isOwner && (
           <Badge size="sm" variant="subtle" colorPalette="amber">
@@ -92,34 +98,6 @@ export function EditorHeader() {
             {content.locked}
           </Badge>
         )}
-        {isDirty && canEdit && (
-          <Badge size="sm" variant="outline">
-            {content.unsaved}
-          </Badge>
-        )}
-        {isNew && (
-          <Badge size="sm" variant="subtle">
-            {content.new}
-          </Badge>
-        )}
-
-        <HStack gap="2" color="fg.muted" display={{ base: "none", md: "flex" }}>
-          <Text textStyle="xs" fontFamily="mono">
-            {listCount === 1 ? "1 list" : `${listCount} lists`}
-          </Text>
-          <Text textStyle="xs" color="fg.subtle">
-            -
-          </Text>
-          <Text textStyle="xs" fontFamily="mono">
-            {actionCount === 1 ? "1 action" : `${actionCount} actions`}
-          </Text>
-          <Text textStyle="xs" color="fg.subtle">
-            -
-          </Text>
-          <Text textStyle="xs" fontFamily="mono">
-            {varCount === 1 ? "1 variable" : `${varCount} variables`}
-          </Text>
-        </HStack>
       </HStack>
 
       <HStack gap="3">

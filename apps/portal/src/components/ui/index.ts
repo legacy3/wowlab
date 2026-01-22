@@ -72,6 +72,7 @@ export * as Card from "./card";
 export * as Checkbox from "./checkbox";
 export * as Collapsible from "./collapsible";
 export * as Combobox from "./combobox";
+export * as Command from "./command";
 export * as Dialog from "./dialog";
 export * as Drawer from "./drawer";
 export * as Empty from "./empty";

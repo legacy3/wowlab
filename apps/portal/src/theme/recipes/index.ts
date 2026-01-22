@@ -11,6 +11,7 @@ import { checkbox } from "./checkbox";
 import { code } from "./code";
 import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
+import { command } from "./command";
 import { dialog } from "./dialog";
 import { drawer } from "./drawer";
 import { empty } from "./empty";
@@ -83,6 +84,7 @@ export const slotRecipes = {
   checkbox,
   collapsible,
   combobox,
+  command,
   dialog,
   drawer,
   empty,

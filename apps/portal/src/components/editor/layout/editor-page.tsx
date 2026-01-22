@@ -3,6 +3,7 @@
 import { useBoolean } from "ahooks";
 import { Box, Flex } from "styled-system/jsx";
 
+import { RotationStartScreen } from "@/components/rotations";
 import { useEditor } from "@/lib/state/editor";
 
 import { ActionList, ActionPicker } from "../actions";
@@ -14,6 +15,7 @@ import { EditorHeader } from "./editor-header";
 export function EditorPage() {
   const viewMode = useEditor((s) => s.viewMode);
   const selectedListId = useEditor((s) => s.selectedListId);
+  const specId = useEditor((s) => s.specId);
   const [pickerOpen, { set: setPickerOpen, setTrue: openPicker }] =
     useBoolean(false);
 
@@ -24,6 +26,11 @@ export function EditorPage() {
       openPicker();
     }
   });
+
+  // Show start screen if no spec is selected (new rotation)
+  if (specId === null) {
+    return <RotationStartScreen />;
+  }
 
   const effectiveViewMode = canEdit ? viewMode : "preview";
 

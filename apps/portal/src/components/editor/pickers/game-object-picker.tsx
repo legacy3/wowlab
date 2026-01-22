@@ -2,14 +2,13 @@
 
 import {
   type Combobox as ComboboxType,
-  useListCollection,
+  createListCollection,
 } from "@ark-ui/react/combobox";
-import { useFilter } from "@ark-ui/react/locale";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
 import { GameIcon } from "../../game";
@@ -78,23 +77,18 @@ export function GameObjectPicker<TSearchResult, TData>({
     query: inputValue,
   });
 
-  const items: PickerItem[] = searchResults.map((result) => ({
-    id: config.getId(result),
-    label: config.getLabel(result),
-    value: String(config.getId(result)),
-  }));
-
-  const { contains } = useFilter({ sensitivity: "base" });
-  const { collection, set } = useListCollection<PickerItem>({
-    filter: contains,
-    initialItems: [],
-    itemToString: (item) => item.label,
-    itemToValue: (item) => item.value,
-  });
-
-  useEffect(() => {
-    set(items);
-  }, [searchResults, set]);
+  const collection = useMemo(() => {
+    const items = searchResults.map((result) => ({
+      id: config.getId(result),
+      label: config.getLabel(result),
+      value: String(config.getId(result)),
+    }));
+    return createListCollection({
+      items,
+      itemToString: (item) => item.label,
+      itemToValue: (item) => item.value,
+    });
+  }, [searchResults, config]);
 
   const listRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({

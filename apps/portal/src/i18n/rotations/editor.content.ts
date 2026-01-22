@@ -84,6 +84,7 @@ export default {
       }),
     },
     header: {
+      close: t({ de: "Schließen", en: "Close" }),
       create: t({ de: "Erstellen", en: "Create" }),
       createRotation: t({ de: "Rotation erstellen", en: "Create rotation" }),
       edit: t({ de: "Bearbeiten", en: "Edit" }),
@@ -184,6 +185,28 @@ export default {
       pre: t({ de: "Pre", en: "Pre" }),
       rename: t({ de: "Umbenennen", en: "Rename" }),
       setAsDefault: t({ de: "Als Standard setzen", en: "Set as default" }),
+    },
+    startScreen: {
+      buildYourRotation: t({
+        de: "Erstelle und optimiere die Rotation deines Charakters",
+        en: "Build and optimize your character's rotation",
+      }),
+      chooseClassAndSpec: t({
+        de: "Wähle eine Klasse und Spezialisierung",
+        en: "Choose a class and specialization",
+      }),
+      chooseTemplateDescription: t({
+        de: "Beginne mit einer vorgefertigten Rotation und passe sie an",
+        en: "Start with a pre-built rotation and customize it",
+      }),
+      or: t({ de: "oder", en: "or" }),
+      rotationEditor: t({ de: "Rotations-Editor", en: "Rotation Editor" }),
+      rotationName: t({ de: "Rotationsname", en: "Rotation name" }),
+      startFromScratch: t({ de: "Neu beginnen", en: "Start from Scratch" }),
+      startFromTemplate: t({
+        de: "Mit Vorlage starten",
+        en: "Start from Template",
+      }),
     },
     variableEditorDialog: {
       add: t({ de: "Hinzufügen", en: "Add" }),

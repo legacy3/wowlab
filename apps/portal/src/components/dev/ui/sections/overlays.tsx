@@ -2,16 +2,20 @@
 
 import {
   ChevronDownIcon,
+  FileIcon,
   LogOutIcon,
   MoreHorizontalIcon,
+  SearchIcon,
   SettingsIcon,
   UserIcon,
   XIcon,
 } from "lucide-react";
-import { HStack, Stack } from "styled-system/jsx";
+import { useState } from "react";
+import { HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
   Button,
+  Command,
   Dialog,
   Drawer,
   IconButton,
@@ -26,15 +30,81 @@ import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
 export function OverlaysSection() {
   return (
-    <Section id="overlays" title="Overlays" lazy minHeight={1040}>
+    <Section id="overlays" title="Overlays" lazy minHeight={1200}>
       <Stack gap="10">
         <TooltipDemo />
         <PopoverDemo />
         <MenuDemo />
+        <CommandDemo />
         <DialogDemo />
         <DrawerDemo />
       </Stack>
     </Section>
+  );
+}
+
+function CommandDemo() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Subsection title="Command">
+      <DemoDescription>
+        Searchable command palette with grouped items.
+      </DemoDescription>
+      <DemoBox>
+        <HStack gap="4">
+          <Button variant="outline" onClick={() => setOpen(true)}>
+            <SearchIcon size={16} />
+            Open Command
+          </Button>
+
+          <Command.Dialog
+            open={open}
+            onOpenChange={(e) => setOpen(e.open)}
+            title="Command Palette"
+            description="Search for actions and items"
+          >
+            <Command.Input placeholder="Search..." />
+            <Command.List>
+              <Command.Empty>No results found.</Command.Empty>
+              <Command.Group heading="Actions">
+                <Command.Item value="new-file" onSelect={() => setOpen(false)}>
+                  <FileIcon size={16} />
+                  <VStack gap="0" alignItems="flex-start">
+                    <Text fontWeight="medium">New File</Text>
+                    <Text textStyle="xs" color="fg.muted">
+                      Create a new file
+                    </Text>
+                  </VStack>
+                  <Command.Shortcut>⌘N</Command.Shortcut>
+                </Command.Item>
+                <Command.Item value="settings" onSelect={() => setOpen(false)}>
+                  <SettingsIcon size={16} />
+                  <VStack gap="0" alignItems="flex-start">
+                    <Text fontWeight="medium">Settings</Text>
+                    <Text textStyle="xs" color="fg.muted">
+                      Open settings
+                    </Text>
+                  </VStack>
+                  <Command.Shortcut>⌘,</Command.Shortcut>
+                </Command.Item>
+              </Command.Group>
+              <Command.Separator />
+              <Command.Group heading="Account">
+                <Command.Item value="profile" onSelect={() => setOpen(false)}>
+                  <UserIcon size={16} />
+                  <Text fontWeight="medium">Profile</Text>
+                </Command.Item>
+                <Command.Item value="logout" onSelect={() => setOpen(false)}>
+                  <LogOutIcon size={16} />
+                  <Text fontWeight="medium">Logout</Text>
+                </Command.Item>
+              </Command.Group>
+            </Command.List>
+          </Command.Dialog>
+        </HStack>
+      </DemoBox>
+    </Subsection>
   );
 }
 
