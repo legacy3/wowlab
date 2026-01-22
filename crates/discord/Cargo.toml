@@ -1,0 +1,25 @@
+[package]
+name = "wowlab-discord"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "WoW Lab Discord bot"
+
+[[bin]]
+name = "wowlab-discord"
+path = "src/main.rs"
+
+[dependencies]
+# Framework
+poise = "0.6"
+tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
+
+# Wowlab crates (for future simulation features)
+wowlab-parsers = { path = "../parsers", default-features = false, features = [] }
+
+# Utilities
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "2"
+dotenvy = "0.15"
