@@ -46,7 +46,7 @@ export function CharacterPanel({
               onClick={onClear}
               alignSelf="center"
             >
-              {content.importDifferentCharacter}
+              {content.importDifferentCharacter.value}
             </Button>
           )}
         </Stack>

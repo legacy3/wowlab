@@ -40,7 +40,7 @@ export function SimcInput({
   ...props
 }: SimcInputProps) {
   const { simcInput: content } = useIntlayer("simulate");
-  const defaultPlaceholder = `${content.placeholder}\n\n${SIMC_EXAMPLE}`;
+  const defaultPlaceholder = `${content.placeholder.value}\n\n${SIMC_EXAMPLE}`;
 
   return (
     <Textarea
