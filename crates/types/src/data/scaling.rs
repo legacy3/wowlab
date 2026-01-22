@@ -106,6 +106,7 @@ impl From<i32> for ItemQuality {
 /// Maps directly to WoW's ItemBonus DBC table
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 pub struct ItemBonusFlat {
     pub id: i32,
     pub value_0: i32,
@@ -122,6 +123,7 @@ pub struct ItemBonusFlat {
 /// Maps directly to WoW's Curve DBC table
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 pub struct CurveFlat {
     pub id: i32,
     #[serde(rename = "type")]
@@ -133,6 +135,7 @@ pub struct CurveFlat {
 /// Maps directly to WoW's CurvePoint DBC table
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 pub struct CurvePointFlat {
     pub id: i32,
     pub curve_id: i32,
@@ -148,6 +151,7 @@ pub struct CurvePointFlat {
 /// Contains stat budgets per item level for different quality tiers
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 pub struct RandPropPointsFlat {
     pub id: i32,
     pub damage_replace_stat_f: f64,

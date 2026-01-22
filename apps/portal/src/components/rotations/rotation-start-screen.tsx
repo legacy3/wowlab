@@ -54,8 +54,12 @@ export function RotationStartScreen() {
         {/* Tabs */}
         <Tabs.Root defaultValue="scratch">
           <Tabs.List mb="6" justifyContent="center">
-            <Tabs.Trigger value="scratch">{content.startFromScratch}</Tabs.Trigger>
-            <Tabs.Trigger value="template">{content.startFromTemplate}</Tabs.Trigger>
+            <Tabs.Trigger value="scratch">
+              {content.startFromScratch}
+            </Tabs.Trigger>
+            <Tabs.Trigger value="template">
+              {content.startFromTemplate}
+            </Tabs.Trigger>
             <Tabs.Indicator />
           </Tabs.List>
 
