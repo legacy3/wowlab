@@ -15,8 +15,16 @@ path = "src/main.rs"
 poise = "0.6"
 tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
 
-# Wowlab crates (for future simulation features)
+# Wowlab crates
 wowlab-parsers = { path = "../parsers", default-features = false, features = [] }
+wowlab-api = { path = "../api" }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+
+# Bloom filter
+sha2 = "0.10"
+base64 = "0.22"
 
 # Utilities
 tracing = "0.1"

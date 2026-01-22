@@ -1,9 +1,17 @@
-use poise::serenity_prelude as serenity;
+use std::collections::HashMap;
 use std::env;
+use std::sync::Arc;
 
+use poise::serenity_prelude as serenity;
+use tokio::sync::RwLock;
+use wowlab_api::SupabaseClient;
+
+pub mod bloom;
 pub mod colors;
-pub mod meta;
 mod commands;
+mod discord;
+mod filter_refresh;
+pub mod meta;
 
 fn load_env() {
     // Try .env in current dir, then in crate dir
@@ -13,7 +21,10 @@ fn load_env() {
     }
 }
 
-pub struct Data {}
+pub struct Data {
+    pub filters: filter_refresh::FilterMap,
+    pub supabase: Arc<SupabaseClient>,
+}
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -153,7 +164,31 @@ async fn run() -> Result<(), Error> {
                 tracing::info!("Logged in as {}", ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 tracing::info!("Registered {} slash commands globally", framework.options().commands.len());
-                Ok(Data {})
+
+                let supabase = Arc::new(
+                    SupabaseClient::from_env_service_role()
+                        .expect("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required"),
+                );
+
+                let guild_ids: Vec<serenity::GuildId> = ready
+                    .guilds
+                    .iter()
+                    .map(|g| g.id)
+                    .collect();
+                tracing::info!(count = guild_ids.len(), "Tracking guilds");
+
+                let filters: filter_refresh::FilterMap =
+                    Arc::new(RwLock::new(HashMap::new()));
+
+                // Build filters for all guilds once at startup
+                filter_refresh::build_initial(
+                    ctx.http.clone(),
+                    guild_ids,
+                    filters.clone(),
+                    supabase.clone(),
+                );
+
+                Ok(Data { filters, supabase })
             })
         })
         .build();
@@ -180,7 +215,7 @@ async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,
-    _data: &Data,
+    data: &Data,
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot } => {
@@ -192,6 +227,15 @@ async fn event_handler(
         serenity::FullEvent::GuildCreate { guild, is_new } => {
             if is_new.unwrap_or(false) {
                 tracing::info!("Joined new guild: {} ({})", guild.name, guild.id);
+
+                // Build filter for the new guild
+                let http = ctx.http.clone();
+                let filters = data.filters.clone();
+                let supabase = data.supabase.clone();
+                let guild_id = guild.id;
+                tokio::spawn(async move {
+                    filter_refresh::build_initial(http, vec![guild_id], filters, supabase);
+                });
 
                 if let Some(system_channel) = guild.system_channel_id {
                     let _ = system_channel
@@ -205,6 +249,36 @@ async fn event_handler(
         }
         serenity::FullEvent::GuildDelete { incomplete, .. } => {
             tracing::info!("Left guild: {}", incomplete.id);
+            data.filters.write().await.remove(&incomplete.id);
+
+            let supabase = data.supabase.clone();
+            let guild_id = incomplete.id;
+            tokio::spawn(async move {
+                filter_refresh::delete_guild_filter(&supabase, guild_id).await;
+            });
+        }
+        serenity::FullEvent::GuildMemberAddition { new_member } => {
+            if !new_member.user.bot {
+                let discord_id = new_member.user.id.to_string();
+                filter_refresh::handle_member_add(
+                    &data.filters,
+                    &data.supabase,
+                    new_member.guild_id,
+                    &discord_id,
+                )
+                .await;
+            }
+        }
+        serenity::FullEvent::GuildMemberRemoval { guild_id, user, .. } => {
+            if !user.bot {
+                let http = ctx.http.clone();
+                let filters = data.filters.clone();
+                let supabase = data.supabase.clone();
+                let gid = *guild_id;
+                tokio::spawn(async move {
+                    filter_refresh::handle_member_remove(&http, &filters, &supabase, gid).await;
+                });
+            }
         }
         _ => {}
     }

@@ -12,8 +12,8 @@ pub struct SupabaseClient {
 }
 
 impl SupabaseClient {
-    /// Create a new client with the given project URL and anon key
-    pub fn new(project_url: &str, anon_key: &str) -> Result<Self, SupabaseError> {
+    /// Create a new client with the given project URL and API key (anon or service role).
+    pub fn new(project_url: &str, api_key: &str) -> Result<Self, SupabaseError> {
         let http = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
@@ -22,13 +22,13 @@ impl SupabaseClient {
         Ok(Self {
             http,
             base_url: format!("{}/rest/v1", project_url.trim_end_matches('/')),
-            anon_key: anon_key.to_string(),
+            anon_key: api_key.to_string(),
         })
     }
 
-    /// Create a client from environment variables
+    /// Create a client from environment variables using the anon key.
     ///
-    /// Requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` to be set
+    /// Requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` to be set.
     pub fn from_env() -> Result<Self, SupabaseError> {
         Self::new(
             &std::env::var("SUPABASE_URL")?,
@@ -36,7 +36,17 @@ impl SupabaseClient {
         )
     }
 
-    /// GET request to PostgREST with error handling
+    /// Create a client from environment variables using the service role key.
+    ///
+    /// Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to be set.
+    pub fn from_env_service_role() -> Result<Self, SupabaseError> {
+        Self::new(
+            &std::env::var("SUPABASE_URL")?,
+            &std::env::var("SUPABASE_SERVICE_ROLE_KEY")?,
+        )
+    }
+
+    /// GET request to PostgREST with error handling.
     pub async fn get(&self, path: &str) -> Result<reqwest::Response, SupabaseError> {
         let url = format!("{}/{}", self.base_url, path);
         tracing::debug!("GET {}", url);
@@ -49,6 +59,51 @@ impl SupabaseClient {
             .send()
             .await?;
 
+        Self::check_response(response).await
+    }
+
+    /// POST request to PostgREST (upsert with merge-duplicates).
+    pub async fn upsert<T: serde::Serialize>(
+        &self,
+        table: &str,
+        body: &T,
+    ) -> Result<reqwest::Response, SupabaseError> {
+        let url = format!("{}/{}", self.base_url, table);
+        tracing::debug!("POST {} (upsert)", url);
+
+        let response = self
+            .http
+            .post(&url)
+            .header("apikey", &self.anon_key)
+            .header("Authorization", format!("Bearer {}", self.anon_key))
+            .header("Content-Type", "application/json")
+            .header("Prefer", "resolution=merge-duplicates")
+            .json(body)
+            .send()
+            .await?;
+
+        Self::check_response(response).await
+    }
+
+    /// DELETE request to PostgREST with query filter.
+    pub async fn delete(&self, path: &str) -> Result<reqwest::Response, SupabaseError> {
+        let url = format!("{}/{}", self.base_url, path);
+        tracing::debug!("DELETE {}", url);
+
+        let response = self
+            .http
+            .delete(&url)
+            .header("apikey", &self.anon_key)
+            .header("Authorization", format!("Bearer {}", self.anon_key))
+            .send()
+            .await?;
+
+        Self::check_response(response).await
+    }
+
+    async fn check_response(
+        response: reqwest::Response,
+    ) -> Result<reqwest::Response, SupabaseError> {
         let status = response.status();
 
         if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
@@ -63,7 +118,7 @@ impl SupabaseClient {
             });
         }
 
-        if status.is_server_error() {
+        if !status.is_success() {
             let message = response.text().await.unwrap_or_default();
             return Err(SupabaseError::Server {
                 status: status.as_u16(),
