@@ -5,6 +5,7 @@
 mod aura;
 mod global;
 mod item;
+mod scaling;
 mod spec;
 mod spell;
 mod r#trait;
@@ -16,6 +17,10 @@ pub use global::{
 };
 pub use item::{transform_all_items, transform_item};
 pub use r#trait::transform_trait_tree;
+pub use scaling::{
+    transform_all_curve_points, transform_all_curves, transform_all_item_bonuses,
+    transform_all_rand_prop_points,
+};
 pub use spec::{transform_all_specs, transform_spec};
 pub use spell::{transform_spell, SpellKnowledgeContext};
 

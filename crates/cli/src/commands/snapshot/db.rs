@@ -11,8 +11,8 @@ use serde::Serialize;
 use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
 use std::sync::Arc;
 use wowlab_parsers::{
-    AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemDataFlat, SpecDataFlat,
-    SpellDataFlat, TraitTreeFlat,
+    AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, GlobalColorFlat, GlobalStringFlat,
+    ItemBonusFlat, ItemDataFlat, RandPropPointsFlat, SpecDataFlat, SpellDataFlat, TraitTreeFlat,
 };
 
 use super::SyncTable;
@@ -66,6 +66,10 @@ pub async fn cleanup_patch(
         (SyncTable::Classes, "game.classes"),
         (SyncTable::GlobalColors, "game.global_colors"),
         (SyncTable::GlobalStrings, "game.global_strings"),
+        (SyncTable::ItemBonuses, "game.item_bonuses"),
+        (SyncTable::Curves, "game.curves"),
+        (SyncTable::CurvePoints, "game.curve_points"),
+        (SyncTable::RandPropPoints, "game.rand_prop_points"),
     ];
 
     for (sync_table, table_name) in mappings {
@@ -778,4 +782,289 @@ fn progress_bar(total: usize, label: &str) -> ProgressBar {
             .expect("valid template"),
     );
     pb
+}
+
+// ============================================================================
+// Item Scaling Table Inserts
+// ============================================================================
+
+pub async fn insert_item_bonuses(
+    pool: &PgPool,
+    rows: &[ItemBonusFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &[
+        "id",
+        "patch_version",
+        "value_0",
+        "value_1",
+        "value_2",
+        "value_3",
+        "parent_item_bonus_list_id",
+        "type",
+        "order_index",
+    ];
+
+    let pb = Arc::new(progress_bar(rows.len(), "ItemBonuses"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
+
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.item_bonuses ({}) ",
+                    COLUMNS.join(", ")
+                ));
+
+                qb.push_values(chunk, |mut b, r| {
+                    b.push_bind(r.id)
+                        .push_bind(&patch)
+                        .push_bind(r.value_0)
+                        .push_bind(r.value_1)
+                        .push_bind(r.value_2)
+                        .push_bind(r.value_3)
+                        .push_bind(r.parent_item_bonus_list_id)
+                        .push_bind(r.bonus_type)
+                        .push_bind(r.order_index);
+                });
+
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_curves(
+    pool: &PgPool,
+    rows: &[CurveFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &["id", "patch_version", "type", "flags"];
+
+    let pb = Arc::new(progress_bar(rows.len(), "Curves"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
+
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.curves ({}) ",
+                    COLUMNS.join(", ")
+                ));
+
+                qb.push_values(chunk, |mut b, r| {
+                    b.push_bind(r.id)
+                        .push_bind(&patch)
+                        .push_bind(r.curve_type)
+                        .push_bind(r.flags);
+                });
+
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_curve_points(
+    pool: &PgPool,
+    rows: &[CurvePointFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &[
+        "id",
+        "patch_version",
+        "curve_id",
+        "order_index",
+        "pos_0",
+        "pos_1",
+        "pos_pre_squish_0",
+        "pos_pre_squish_1",
+    ];
+
+    let pb = Arc::new(progress_bar(rows.len(), "CurvePoints"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
+
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.curve_points ({}) ",
+                    COLUMNS.join(", ")
+                ));
+
+                qb.push_values(chunk, |mut b, r| {
+                    b.push_bind(r.id)
+                        .push_bind(&patch)
+                        .push_bind(r.curve_id)
+                        .push_bind(r.order_index)
+                        .push_bind(r.pos_0)
+                        .push_bind(r.pos_1)
+                        .push_bind(r.pos_pre_squish_0)
+                        .push_bind(r.pos_pre_squish_1);
+                });
+
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    pb.finish();
+    Ok(())
+}
+
+pub async fn insert_rand_prop_points(
+    pool: &PgPool,
+    rows: &[RandPropPointsFlat],
+    patch: &str,
+) -> Result<(), sqlx::Error> {
+    const COLUMNS: &[&str] = &[
+        "id",
+        "patch_version",
+        "damage_replace_stat_f",
+        "damage_secondary_f",
+        "damage_replace_stat",
+        "damage_secondary",
+        "epic_f_0",
+        "epic_f_1",
+        "epic_f_2",
+        "epic_f_3",
+        "epic_f_4",
+        "superior_f_0",
+        "superior_f_1",
+        "superior_f_2",
+        "superior_f_3",
+        "superior_f_4",
+        "good_f_0",
+        "good_f_1",
+        "good_f_2",
+        "good_f_3",
+        "good_f_4",
+        "epic_0",
+        "epic_1",
+        "epic_2",
+        "epic_3",
+        "epic_4",
+        "superior_0",
+        "superior_1",
+        "superior_2",
+        "superior_3",
+        "superior_4",
+        "good_0",
+        "good_1",
+        "good_2",
+        "good_3",
+        "good_4",
+    ];
+
+    let pb = Arc::new(progress_bar(rows.len(), "RandPropPoints"));
+    let patch = patch.to_string();
+    let chunks: Vec<_> = rows.chunks(batch_size(COLUMNS.len())).collect();
+
+    stream::iter(chunks)
+        .map(|chunk| {
+            let pool = pool.clone();
+            let patch = patch.clone();
+            let pb = Arc::clone(&pb);
+            async move {
+                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
+                    "INSERT INTO game.rand_prop_points ({}) ",
+                    COLUMNS.join(", ")
+                ));
+
+                qb.push_values(chunk, |mut b, r| {
+                    b.push_bind(r.id)
+                        .push_bind(&patch)
+                        .push_bind(r.damage_replace_stat_f)
+                        .push_bind(r.damage_secondary_f)
+                        .push_bind(r.damage_replace_stat)
+                        .push_bind(r.damage_secondary)
+                        .push_bind(r.epic_f_0)
+                        .push_bind(r.epic_f_1)
+                        .push_bind(r.epic_f_2)
+                        .push_bind(r.epic_f_3)
+                        .push_bind(r.epic_f_4)
+                        .push_bind(r.superior_f_0)
+                        .push_bind(r.superior_f_1)
+                        .push_bind(r.superior_f_2)
+                        .push_bind(r.superior_f_3)
+                        .push_bind(r.superior_f_4)
+                        .push_bind(r.good_f_0)
+                        .push_bind(r.good_f_1)
+                        .push_bind(r.good_f_2)
+                        .push_bind(r.good_f_3)
+                        .push_bind(r.good_f_4)
+                        .push_bind(r.epic_0)
+                        .push_bind(r.epic_1)
+                        .push_bind(r.epic_2)
+                        .push_bind(r.epic_3)
+                        .push_bind(r.epic_4)
+                        .push_bind(r.superior_0)
+                        .push_bind(r.superior_1)
+                        .push_bind(r.superior_2)
+                        .push_bind(r.superior_3)
+                        .push_bind(r.superior_4)
+                        .push_bind(r.good_0)
+                        .push_bind(r.good_1)
+                        .push_bind(r.good_2)
+                        .push_bind(r.good_3)
+                        .push_bind(r.good_4);
+                });
+
+                qb.push(" ON CONFLICT (id) DO UPDATE SET ");
+                qb.push(upsert_all_columns(COLUMNS));
+                let result = qb.build().execute(&pool).await;
+                pb.inc(chunk.len() as u64);
+                result
+            }
+        })
+        .buffer_unordered(CONCURRENCY)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    pb.finish();
+    Ok(())
 }

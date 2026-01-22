@@ -10,12 +10,14 @@ use anyhow::Result;
 use sqlx::PgPool;
 use wowlab_parsers::{
     transform::{
-        transform_all_auras, transform_all_classes, transform_all_global_colors,
-        transform_all_global_strings, transform_all_items, transform_all_specs,
-        transform_all_spells, transform_all_trait_trees,
+        transform_all_auras, transform_all_classes, transform_all_curve_points,
+        transform_all_curves, transform_all_global_colors, transform_all_global_strings,
+        transform_all_item_bonuses, transform_all_items, transform_all_rand_prop_points,
+        transform_all_specs, transform_all_spells, transform_all_trait_trees,
     },
-    AuraDataFlat, ClassDataFlat, DbcData, GlobalColorFlat, GlobalStringFlat, ItemDataFlat,
-    SpecDataFlat, SpellDataFlat, TraitTreeFlat,
+    AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, DbcData, GlobalColorFlat,
+    GlobalStringFlat, ItemBonusFlat, ItemDataFlat, RandPropPointsFlat, SpecDataFlat, SpellDataFlat,
+    TraitTreeFlat,
 };
 
 use super::{db, SyncArgs, SyncTable};
@@ -34,6 +36,10 @@ struct TransformedData {
     classes: Option<Vec<ClassDataFlat>>,
     global_colors: Option<Vec<GlobalColorFlat>>,
     global_strings: Option<Vec<GlobalStringFlat>>,
+    item_bonuses: Option<Vec<ItemBonusFlat>>,
+    curves: Option<Vec<CurveFlat>>,
+    curve_points: Option<Vec<CurvePointFlat>>,
+    rand_prop_points: Option<Vec<RandPropPointsFlat>>,
 }
 
 // ============================================================================
@@ -119,6 +125,21 @@ fn transform_data(dbc: &DbcData, tables: &[SyncTable]) -> TransformedData {
         global_strings: transform_if(tables, SyncTable::GlobalStrings, "global_strings", || {
             transform_all_global_strings(dbc)
         }),
+        item_bonuses: transform_if(tables, SyncTable::ItemBonuses, "item_bonuses", || {
+            transform_all_item_bonuses(dbc)
+        }),
+        curves: transform_if(tables, SyncTable::Curves, "curves", || {
+            transform_all_curves(dbc)
+        }),
+        curve_points: transform_if(tables, SyncTable::CurvePoints, "curve_points", || {
+            transform_all_curve_points(dbc)
+        }),
+        rand_prop_points: transform_if(
+            tables,
+            SyncTable::RandPropPoints,
+            "rand_prop_points",
+            || transform_all_rand_prop_points(dbc),
+        ),
     }
 }
 
@@ -177,6 +198,33 @@ async fn insert_all(pool: &PgPool, data: &TransformedData, patch: &str) -> Resul
             "global_strings",
             rows.len(),
             db::insert_global_strings(pool, rows, patch),
+        )
+        .await?;
+    }
+    if let Some(ref rows) = data.item_bonuses {
+        insert_timed(
+            "item_bonuses",
+            rows.len(),
+            db::insert_item_bonuses(pool, rows, patch),
+        )
+        .await?;
+    }
+    if let Some(ref rows) = data.curves {
+        insert_timed("curves", rows.len(), db::insert_curves(pool, rows, patch)).await?;
+    }
+    if let Some(ref rows) = data.curve_points {
+        insert_timed(
+            "curve_points",
+            rows.len(),
+            db::insert_curve_points(pool, rows, patch),
+        )
+        .await?;
+    }
+    if let Some(ref rows) = data.rand_prop_points {
+        insert_timed(
+            "rand_prop_points",
+            rows.len(),
+            db::insert_rand_prop_points(pool, rows, patch),
         )
         .await?;
     }

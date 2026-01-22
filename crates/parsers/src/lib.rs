@@ -35,17 +35,19 @@ pub use errors::{DbcError, TraitError, TransformError};
 
 // Flat structures (for database/API) - re-exported from wowlab-types
 pub use wowlab_types::data::{
-    argb_to_hex, rgb_to_hex, AuraDataFlat, ClassDataFlat, EmpowerStage, GlobalColorFlat,
-    GlobalStringFlat, ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus,
-    ItemSetInfo, ItemStat, KnowledgeSource, LearnSpell, PeriodicType, PointLimits, RefreshBehavior,
-    SpecDataFlat, SpellDataFlat, SpellEffect, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection,
-    TraitSubTree, TraitTreeFlat, TraitTreeWithSelections,
+    argb_to_hex, rgb_to_hex, AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, EmpowerStage,
+    GlobalColorFlat, GlobalStringFlat, ItemBonusFlat, ItemClassification, ItemDataFlat,
+    ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo, ItemStat, KnowledgeSource, LearnSpell,
+    PeriodicType, PointLimits, RandPropPointsFlat, RefreshBehavior, SpecDataFlat, SpellDataFlat,
+    SpellEffect, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
+    TraitTreeWithSelections,
 };
 
 // DBC → Flat transformation
 pub use transform::{
-    transform_all_auras, transform_all_classes, transform_all_global_colors,
-    transform_all_global_strings, transform_all_items, transform_all_specs, transform_all_spells,
+    transform_all_auras, transform_all_classes, transform_all_curve_points, transform_all_curves,
+    transform_all_global_colors, transform_all_global_strings, transform_all_item_bonuses,
+    transform_all_items, transform_all_rand_prop_points, transform_all_specs, transform_all_spells,
     transform_all_trait_trees, transform_aura, transform_class, transform_global_color,
     transform_global_string, transform_item, transform_spec, transform_spell, transform_trait_tree,
     SpellKnowledgeContext,

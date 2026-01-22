@@ -3,6 +3,7 @@
 mod aura;
 mod global;
 mod item;
+mod scaling;
 mod shared;
 mod spec;
 mod spell;
@@ -14,6 +15,7 @@ pub use item::{
     ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo,
     ItemStat,
 };
+pub use scaling::{CurveFlat, CurvePointFlat, ItemBonusFlat, RandPropPointsFlat};
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
 pub use spec::SpecDataFlat;
 pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat, SpellEffect};

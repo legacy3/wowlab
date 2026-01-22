@@ -48,6 +48,10 @@ pub enum SyncTable {
     Classes,
     GlobalColors,
     GlobalStrings,
+    ItemBonuses,
+    Curves,
+    CurvePoints,
+    RandPropPoints,
 }
 
 impl std::fmt::Display for SyncTable {
@@ -61,6 +65,10 @@ impl std::fmt::Display for SyncTable {
             SyncTable::Classes => write!(f, "classes"),
             SyncTable::GlobalColors => write!(f, "global_colors"),
             SyncTable::GlobalStrings => write!(f, "global_strings"),
+            SyncTable::ItemBonuses => write!(f, "item_bonuses"),
+            SyncTable::Curves => write!(f, "curves"),
+            SyncTable::CurvePoints => write!(f, "curve_points"),
+            SyncTable::RandPropPoints => write!(f, "rand_prop_points"),
         }
     }
 }

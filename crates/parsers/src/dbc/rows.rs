@@ -1020,3 +1020,80 @@ pub struct GlobalStringsRow {
     pub TagText_lang: Option<String>,
     pub Flags: i32,
 }
+
+// =============================================================================
+// Item Scaling Tables
+// =============================================================================
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct ItemBonusRow {
+    pub ID: i32,
+    pub Value_0: i32,
+    pub Value_1: i32,
+    pub Value_2: i32,
+    pub Value_3: i32,
+    pub ParentItemBonusListID: i32,
+    pub Type: i32,
+    pub OrderIndex: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct CurveRow {
+    pub ID: i32,
+    pub Type: i32,
+    pub Flags: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct CurvePointRow {
+    pub Pos_0: f64,
+    pub Pos_1: f64,
+    pub PosPreSquish_0: f64,
+    pub PosPreSquish_1: f64,
+    pub ID: i32,
+    pub CurveID: i32,
+    pub OrderIndex: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(non_snake_case)]
+pub struct RandPropPointsRow {
+    pub ID: i32,
+    pub DamageReplaceStatF: f64,
+    pub DamageSecondaryF: f64,
+    pub DamageReplaceStat: i32,
+    pub DamageSecondary: i32,
+    pub EpicF_0: f64,
+    pub EpicF_1: f64,
+    pub EpicF_2: f64,
+    pub EpicF_3: f64,
+    pub EpicF_4: f64,
+    pub SuperiorF_0: f64,
+    pub SuperiorF_1: f64,
+    pub SuperiorF_2: f64,
+    pub SuperiorF_3: f64,
+    pub SuperiorF_4: f64,
+    pub GoodF_0: f64,
+    pub GoodF_1: f64,
+    pub GoodF_2: f64,
+    pub GoodF_3: f64,
+    pub GoodF_4: f64,
+    pub Epic_0: i32,
+    pub Epic_1: i32,
+    pub Epic_2: i32,
+    pub Epic_3: i32,
+    pub Epic_4: i32,
+    pub Superior_0: i32,
+    pub Superior_1: i32,
+    pub Superior_2: i32,
+    pub Superior_3: i32,
+    pub Superior_4: i32,
+    pub Good_0: i32,
+    pub Good_1: i32,
+    pub Good_2: i32,
+    pub Good_3: i32,
+    pub Good_4: i32,
+}

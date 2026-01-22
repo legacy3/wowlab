@@ -102,6 +102,12 @@ pub struct DbcData {
     // Global tables
     pub global_color: HashMap<i32, GlobalColorRow>,
     pub global_strings: HashMap<i32, GlobalStringsRow>,
+
+    // Item scaling tables
+    pub item_bonus: HashMap<i32, Vec<ItemBonusRow>>,
+    pub curve: HashMap<i32, CurveRow>,
+    pub curve_point: HashMap<i32, Vec<CurvePointRow>>,
+    pub rand_prop_points: HashMap<i32, RandPropPointsRow>,
 }
 
 impl DbcData {
@@ -232,6 +238,12 @@ impl DbcData {
         let global_color = load_by_id::<GlobalColorRow>(&tables_dir, "GlobalColor")?;
         let global_strings = load_by_id::<GlobalStringsRow>(&tables_dir, "GlobalStrings")?;
 
+        // Item scaling tables
+        let item_bonus = load_by_fk::<ItemBonusRow>(&tables_dir, "ItemBonus")?;
+        let curve = load_by_id::<CurveRow>(&tables_dir, "Curve")?;
+        let curve_point = load_by_fk::<CurvePointRow>(&tables_dir, "CurvePoint")?;
+        let rand_prop_points = load_by_id::<RandPropPointsRow>(&tables_dir, "RandPropPoints")?;
+
         Ok(Self {
             // Spell tables
             spell_name,
@@ -312,6 +324,12 @@ impl DbcData {
             // Global tables
             global_color,
             global_strings,
+
+            // Item scaling tables
+            item_bonus,
+            curve,
+            curve_point,
+            rand_prop_points,
         })
     }
 }
@@ -493,6 +511,9 @@ impl_has_id!(
     // Global tables
     GlobalColorRow,
     GlobalStringsRow,
+    // Item scaling tables
+    CurveRow,
+    RandPropPointsRow,
 );
 
 macro_rules! impl_has_fk {
@@ -545,3 +566,7 @@ impl_has_fk!(ItemXItemEffectRow, ItemID);
 impl_has_fk!(ItemSetSpellRow, ItemSetID);
 impl_has_fk!(ItemModifiedAppearanceRow, ItemID);
 impl_has_fk!(JournalEncounterItemRow, ItemID);
+
+// Item scaling tables
+impl_has_fk!(ItemBonusRow, ParentItemBonusListID);
+impl_has_fk!(CurvePointRow, CurveID);
