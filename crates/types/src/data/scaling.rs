@@ -1,6 +1,106 @@
-//! Flat types for item scaling DBC tables (item_bonus, curve, curve_point, rand_prop_points)
+//! Flat types for item scaling DBC tables and scaling computation results.
+//!
+//! Contains:
+//! - Flat DBC types: ItemBonusFlat, CurveFlat, CurvePointFlat, RandPropPointsFlat
+//! - Scaling results: ScaledItemStats, AppliedBonus
+//! - Data bundle: ItemScalingData
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+// ============================================================================
+// Scaling Result Types
+// ============================================================================
+
+/// Result of applying item bonuses to scale an item's stats
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
+pub struct ScaledItemStats {
+    /// Final item level after all bonuses applied
+    pub item_level: i32,
+    /// Scaled stats (stat_type -> value)
+    pub stats: Vec<ScaledStat>,
+    /// Applied bonuses for debugging/display
+    pub applied_bonuses: Vec<AppliedBonus>,
+}
+
+/// A single scaled stat value
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
+pub struct ScaledStat {
+    /// Stat type ID (matches WoW's stat types)
+    pub stat_type: i32,
+    /// Stat type name for display
+    pub stat_name: String,
+    /// Final computed value
+    pub value: i32,
+}
+
+/// Record of an applied bonus for debugging/tooltips
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
+pub struct AppliedBonus {
+    /// Bonus list ID this came from
+    pub bonus_list_id: i32,
+    /// Bonus type (1=ILEVEL, 2=MOD, 11=SCALING, etc.)
+    pub bonus_type: i32,
+    /// Human-readable description of what was applied
+    pub description: String,
+}
+
+/// Bundle of all scaling data needed to compute item stats.
+/// Load this once and pass to scaling functions.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
+pub struct ItemScalingData {
+    /// Item bonuses grouped by parent_item_bonus_list_id
+    pub bonuses: HashMap<i32, Vec<ItemBonusFlat>>,
+    /// Curves by ID
+    pub curves: HashMap<i32, CurveFlat>,
+    /// Curve points grouped by curve_id, sorted by order_index
+    pub curve_points: HashMap<i32, Vec<CurvePointFlat>>,
+    /// Rand prop points by item level (id = item_level)
+    pub rand_prop_points: HashMap<i32, RandPropPointsFlat>,
+}
+
+/// Item quality tiers for stat budget lookup
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
+pub enum ItemQuality {
+    Poor = 0,
+    Common = 1,
+    Uncommon = 2,
+    Rare = 3,
+    Epic = 4,
+    Legendary = 5,
+    Artifact = 6,
+    Heirloom = 7,
+}
+
+impl From<i32> for ItemQuality {
+    fn from(value: i32) -> Self {
+        match value {
+            0 => ItemQuality::Poor,
+            1 => ItemQuality::Common,
+            2 => ItemQuality::Uncommon,
+            3 => ItemQuality::Rare,
+            4 => ItemQuality::Epic,
+            5 => ItemQuality::Legendary,
+            6 => ItemQuality::Artifact,
+            7 => ItemQuality::Heirloom,
+            _ => ItemQuality::Common,
+        }
+    }
+}
+
+// ============================================================================
+// Flat DBC Types
+// ============================================================================
 
 /// Flat item bonus structure for database storage
 /// Maps directly to WoW's ItemBonus DBC table

@@ -15,7 +15,10 @@ pub use item::{
     ItemClassification, ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo,
     ItemStat,
 };
-pub use scaling::{CurveFlat, CurvePointFlat, ItemBonusFlat, RandPropPointsFlat};
+pub use scaling::{
+    AppliedBonus, CurveFlat, CurvePointFlat, ItemBonusFlat, ItemQuality, ItemScalingData,
+    RandPropPointsFlat, ScaledItemStats, ScaledStat,
+};
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
 pub use spec::SpecDataFlat;
 pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat, SpellEffect};
