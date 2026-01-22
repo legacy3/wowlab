@@ -1,6 +1,8 @@
 {
   "imports": {
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js/edge-runtime.d.ts",
-    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "@std/encoding": "jsr:@std/encoding@1",
+    "@noble/ed25519": "npm:@noble/ed25519@2"
   }
 }

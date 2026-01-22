@@ -1,46 +1,49 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { createHandler, jsonResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, json } from "../_shared/response.ts";
+import { createAdmin } from "../_shared/supabase.ts";
+import { verifyNode } from "../_shared/ed25519.ts";
 
-const createSupabaseClient = () =>
-  createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return options();
+  }
 
-Deno.serve(
-  createHandler({ method: "POST" }, async (req) => {
-    const { nodeId, status } = await req.json();
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
-    if (!nodeId) {
-      return jsonResponse({ error: "nodeId required" }, 400);
+  const body = await req.text();
+  const auth = await verifyNode(req, body);
+
+  if ("error" in auth) {
+    return auth.error;
+  }
+
+  const payload = JSON.parse(body || "{}");
+  const supabase = createAdmin();
+
+  const { data, error } = await supabase
+    .from("nodes")
+    .update({
+      status: payload.status || "online",
+      last_seen_at: new Date().toISOString(),
+    })
+    .eq("public_key", auth.node.publicKey)
+    .not("user_id", "is", null)
+    .select("id, name, max_parallel, status")
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return json({ error: "Node not found or not claimed" }, 404);
     }
+    return json({ error: error.message }, 400);
+  }
 
-    const supabase = createSupabaseClient();
-
-    const { data, error } = await supabase
-      .from("nodes")
-      .update({
-        status: status || "online",
-        last_seen_at: new Date().toISOString(),
-      })
-      .eq("id", nodeId)
-      .not("user_id", "is", null)
-      .select("id, name, max_parallel, status")
-      .single();
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        return jsonResponse({ error: "Node not found or not claimed" }, 404);
-      }
-      return jsonResponse({ error: error.message }, 400);
-    }
-
-    return jsonResponse({
-      id: data.id,
-      name: data.name,
-      maxParallel: data.max_parallel,
-      status: data.status,
-    });
-  }),
-);
+  return json({
+    id: data.id,
+    name: data.name,
+    maxParallel: data.max_parallel,
+    status: data.status,
+  });
+});

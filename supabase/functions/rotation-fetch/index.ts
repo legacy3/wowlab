@@ -1,38 +1,38 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { createHandler, jsonResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, json } from "../_shared/response.ts";
+import { createAdmin } from "../_shared/supabase.ts";
 
-const createSupabaseClient = () =>
-  createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return options();
+  }
 
-Deno.serve(
-  createHandler({ method: "GET" }, async (req) => {
-    const url = new URL(req.url);
-    const id = url.searchParams.get("id");
+  if (req.method !== "GET") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
-    if (!id) {
-      return jsonResponse({ error: "id parameter required" }, 400);
-    }
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
 
-    const supabase = createSupabaseClient();
+  if (!id) {
+    return json({ error: "id parameter required" }, 400);
+  }
 
-    const { data, error } = await supabase
-      .from("rotations")
-      .select("id, script, checksum")
-      .eq("id", id)
-      .single();
+  const supabase = createAdmin();
 
-    if (error || !data) {
-      return jsonResponse({ error: "Not found" }, 404);
-    }
+  const { data, error } = await supabase
+    .from("rotations")
+    .select("id, script, checksum")
+    .eq("id", id)
+    .single();
 
-    return jsonResponse({
-      id: data.id,
-      script: data.script,
-      checksum: data.checksum,
-    });
-  }),
-);
+  if (error || !data) {
+    return json({ error: "Not found" }, 404);
+  }
+
+  return json({
+    id: data.id,
+    script: data.script,
+    checksum: data.checksum,
+  });
+});

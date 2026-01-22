@@ -1,22 +1,7 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { createHandler, jsonResponse } from "../_shared/mod.ts";
-
-const createSupabaseClient = () =>
-  createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-
-function generateClaimCode(): string {
-  let code = "";
-
-  for (let i = 0; i < 6; i++) {
-    code += Math.floor(Math.random() * 10).toString();
-  }
-
-  return code;
-}
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, json } from "../_shared/response.ts";
+import { createAdmin } from "../_shared/supabase.ts";
+import { verifyNode, deriveClaimCode } from "../_shared/ed25519.ts";
 
 interface RegisterRequest {
   hostname: string;
@@ -26,38 +11,59 @@ interface RegisterRequest {
   version: string;
 }
 
-Deno.serve(
-  createHandler({ method: "POST" }, async (req) => {
-    const body = (await req
-      .json()
-      .catch(() => ({}))) as Partial<RegisterRequest>;
-    const hostname = body.hostname || "WowLab Node";
-    const totalCores = body.totalCores || 4;
-    const enabledCores = body.enabledCores || totalCores;
-    const platform = body.platform || "unknown";
-    const version = body.version || null;
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return options();
+  }
 
-    const supabase = createSupabaseClient();
-    const claimCode = generateClaimCode();
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
-    const { data, error } = await supabase
-      .from("nodes")
-      .insert({
-        claim_code: claimCode,
-        name: hostname,
-        total_cores: totalCores,
-        max_parallel: enabledCores,
-        platform,
-        version,
-        status: "pending",
-      })
-      .select("id, claim_code")
-      .single();
+  const body = await req.text();
+  const auth = await verifyNode(req, body);
 
-    if (error) {
-      return jsonResponse({ error: error.message }, 400);
-    }
+  if ("error" in auth) {
+    return auth.error;
+  }
 
-    return jsonResponse({ id: data.id, claimCode: data.claim_code });
-  }),
-);
+  const payload = JSON.parse(body || "{}") as Partial<RegisterRequest>;
+  const supabase = createAdmin();
+
+  const { data: existing } = await supabase
+    .from("nodes")
+    .select("id, claim_code, user_id")
+    .eq("public_key", auth.node.publicKey)
+    .single();
+
+  if (existing) {
+    return json({
+      id: existing.id,
+      claimCode: existing.claim_code,
+      claimed: existing.user_id !== null,
+    });
+  }
+
+  const claimCode = await deriveClaimCode(auth.node.publicKeyBytes);
+
+  const { data, error } = await supabase
+    .from("nodes")
+    .insert({
+      public_key: auth.node.publicKey,
+      claim_code: claimCode,
+      name: payload.hostname || "WowLab Node",
+      total_cores: payload.totalCores || 4,
+      max_parallel: payload.enabledCores || payload.totalCores || 4,
+      platform: payload.platform || "unknown",
+      version: payload.version || null,
+      status: "pending",
+    })
+    .select("id, claim_code")
+    .single();
+
+  if (error || !data) {
+    return json({ error: error?.message || "Failed to create node" }, 400);
+  }
+
+  return json({ id: data.id, claimCode: data.claim_code, claimed: false });
+});

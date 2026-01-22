@@ -1,41 +1,47 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { createHandler, jsonResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, json } from "../_shared/response.ts";
+import { createAdmin } from "../_shared/supabase.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const createSupabaseClient = () =>
-  createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return options();
+  }
 
-Deno.serve(
-  createHandler({ method: "GET" }, async (req) => {
-    const url = new URL(req.url);
-    const hash = url.searchParams.get("hash");
+  if (req.method !== "GET") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
-    if (!hash) {
-      return jsonResponse({ error: "hash parameter required" }, 400);
-    }
+  const url = new URL(req.url);
+  const hash = url.searchParams.get("hash");
 
-    const supabase = createSupabaseClient();
+  if (!hash) {
+    return json({ error: "hash parameter required" }, 400);
+  }
 
-    const { data, error } = await supabase
-      .from("jobs_configs")
-      .select("config")
-      .eq("hash", hash)
-      .single();
+  const supabase = createAdmin();
 
-    if (error || !data) {
-      return jsonResponse({ error: "Not found" }, 404);
-    }
+  const { data, error } = await supabase
+    .from("jobs_configs")
+    .select("config")
+    .eq("hash", hash)
+    .single();
 
-    await supabase
-      .from("jobs_configs")
-      .update({ last_used_at: new Date().toISOString() })
-      .eq("hash", hash);
+  if (error || !data) {
+    return json({ error: "Not found" }, 404);
+  }
 
-    return jsonResponse(data.config, 200, {
+  await supabase
+    .from("jobs_configs")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("hash", hash);
+
+  return new Response(JSON.stringify(data.config), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
       "Cache-Control": "public, max-age=31536000, immutable",
-    });
-  }),
-);
+      ...corsHeaders,
+    },
+  });
+});

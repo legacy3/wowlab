@@ -1,125 +1,101 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "@supabase/supabase-js";
-import { createHandler, jsonResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, json } from "../_shared/response.ts";
+import { createAdmin } from "../_shared/supabase.ts";
+import { verifyNode } from "../_shared/ed25519.ts";
 
-const createSupabaseClient = () =>
-  createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return options();
+  }
 
-Deno.serve(
-  createHandler({ method: "POST" }, async (req) => {
-    const { chunkId, result } = await req.json();
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
-    if (!chunkId || !result) {
-      return jsonResponse({ error: "chunkId and result required" }, 400);
-    }
+  const body = await req.text();
+  const auth = await verifyNode(req, body);
 
-    const supabase = createSupabaseClient();
+  if ("error" in auth) {
+    return auth.error;
+  }
 
-    const { data, error } = await supabase
+  const payload = JSON.parse(body || "{}");
+
+  if (!payload.chunkId || !payload.result) {
+    return json({ error: "chunkId and result required" }, 400);
+  }
+
+  const supabase = createAdmin();
+
+  const { data: node } = await supabase
+    .from("nodes")
+    .select("id")
+    .eq("public_key", auth.node.publicKey)
+    .single();
+
+  if (!node) {
+    return json({ error: "Node not found" }, 404);
+  }
+
+  const { data, error } = await supabase
+    .from("jobs_chunks")
+    .update({
+      status: "completed",
+      result: payload.result,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", payload.chunkId)
+    .eq("node_id", node.id)
+    .eq("status", "running")
+    .select("id, job_id")
+    .single();
+
+  if (error) {
+    const { data: existing } = await supabase
       .from("jobs_chunks")
-      .update({
-        status: "completed",
-        result,
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", chunkId)
-      .eq("status", "running")
-      .select("id, job_id, iterations")
+      .select("id, status, node_id")
+      .eq("id", payload.chunkId)
       .single();
 
-    if (error) {
-      const { data: existing } = await supabase
-        .from("jobs_chunks")
-        .select("id, status")
-        .eq("id", chunkId)
-        .single();
-
-      if (existing?.status === "completed") {
-        return jsonResponse({
-          success: true,
-          alreadyCompleted: true,
-          jobComplete: false,
-        });
-      }
-
-      return jsonResponse({ error: error.message }, 400);
+    if (!existing) {
+      return json({ error: "Chunk not found" }, 404);
     }
 
-    if (!data) {
-      return jsonResponse({ error: "Chunk not found or not running" }, 404);
+    if (existing.node_id !== node.id) {
+      return json({ error: "Chunk not owned by this node" }, 403);
     }
 
-    const { count: pendingCount } = await supabase
-      .from("jobs_chunks")
-      .select("id", { count: "exact", head: true })
-      .eq("job_id", data.job_id)
-      .neq("status", "completed");
-
-    let jobComplete = false;
-
-    if (pendingCount === 0) {
-      jobComplete = true;
-
-      const { data: chunks } = await supabase
-        .from("jobs_chunks")
-        .select("result, iterations")
-        .eq("job_id", data.job_id)
-        .eq("status", "completed");
-
-      if (chunks && chunks.length > 0) {
-        let totalIterations = 0;
-        let weightedDps = 0;
-        let minDps = Infinity;
-        let maxDps = 0;
-
-        for (const chunk of chunks) {
-          const r = chunk.result as {
-            meanDps?: number;
-            minDps?: number;
-            maxDps?: number;
-          } | null;
-          if (r?.meanDps) {
-            totalIterations += chunk.iterations;
-            weightedDps += r.meanDps * chunk.iterations;
-            if (r.minDps !== undefined) minDps = Math.min(minDps, r.minDps);
-            if (r.maxDps !== undefined) maxDps = Math.max(maxDps, r.maxDps);
-          }
-        }
-
-        const aggregatedResult = {
-          meanDps: totalIterations > 0 ? weightedDps / totalIterations : 0,
-          minDps: minDps === Infinity ? 0 : minDps,
-          maxDps,
-          totalIterations,
-          chunksCompleted: chunks.length,
-        };
-
-        await supabase
-          .from("jobs")
-          .update({
-            status: "completed",
-            result: aggregatedResult,
-            completed_iterations: totalIterations,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", data.job_id);
-
-        await supabase.from("jobs_chunks").delete().eq("job_id", data.job_id);
-      }
-    } else {
-      await supabase
-        .from("jobs")
-        .update({ status: "running" })
-        .eq("id", data.job_id)
-        .eq("status", "pending");
+    if (existing.status === "completed") {
+      return json({
+        success: true,
+        alreadyCompleted: true,
+        jobComplete: false,
+      });
     }
 
-    return jsonResponse({
-      success: true,
-      jobComplete,
-    });
-  }),
-);
+    return json({ error: error.message }, 400);
+  }
+
+  const { count: pendingCount } = await supabase
+    .from("jobs_chunks")
+    .select("id", { count: "exact", head: true })
+    .eq("job_id", data.job_id)
+    .neq("status", "completed");
+
+  if (pendingCount === 0) {
+    await supabase
+      .from("jobs")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", data.job_id);
+
+    return json({ success: true, jobComplete: true });
+  }
+
+  await supabase
+    .from("jobs")
+    .update({ status: "running" })
+    .eq("id", data.job_id)
+    .eq("status", "pending");
+
+  return json({ success: true, jobComplete: false });
+});
