@@ -23,7 +23,7 @@ export function CharacterCard({
   const region = character.region?.toUpperCase() ?? "Unknown";
 
   const infoParts = [
-    content.level({ level: character.level }),
+    content.level({ level: character.level }).value,
     character.spec,
     `${character.race} ${character.class}`,
     ...professions.map((p) => `${p.name} ${p.rank}`),
