@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ["node-v*", "discord-v*"]
   pull_request:
     branches: [main]
 
@@ -17,7 +17,8 @@ jobs:
     outputs:
       ts: ${{ steps.filter.outputs.ts }}
       rust: ${{ steps.filter.outputs.rust }}
-      release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      release_node: ${{ startsWith(github.ref, 'refs/tags/node-v') }}
+      release_discord: ${{ startsWith(github.ref, 'refs/tags/discord-v') }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -57,7 +58,7 @@ jobs:
   build-rust:
     name: Build Rust (${{ matrix.os }})
     needs: changes
-    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.release == 'true'
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.release_node == 'true' || needs.changes.outputs.release_discord == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -93,41 +94,66 @@ jobs:
         working-directory: crates
         run: cargo test
 
-      # Release artifacts (only on tags)
-      - name: Get version
-        if: needs.changes.outputs.release == 'true'
-        id: version
+      # Node release artifacts
+      - name: Get node version
+        if: needs.changes.outputs.release_node == 'true'
+        id: node_version
         shell: bash
-        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/node-}" >> $GITHUB_OUTPUT
 
-      - name: Package binaries (Unix)
-        if: needs.changes.outputs.release == 'true' && runner.os != 'Windows'
+      - name: Package node binaries (Unix)
+        if: needs.changes.outputs.release_node == 'true' && runner.os != 'Windows'
         run: |
           for bin in node-gui node-headless; do
-            tar -czvf ${bin}-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
+            tar -czvf ${bin}-${{ steps.node_version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
           done
 
-      - name: Package binaries (Windows)
-        if: needs.changes.outputs.release == 'true' && runner.os == 'Windows'
+      - name: Package node binaries (Windows)
+        if: needs.changes.outputs.release_node == 'true' && runner.os == 'Windows'
         shell: pwsh
         run: |
           foreach ($bin in @("node-gui", "node-headless")) {
-            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.version.outputs.version }}-${{ matrix.target }}.zip"
+            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.node_version.outputs.version }}-${{ matrix.target }}.zip"
           }
 
-      - name: Upload artifacts
-        if: needs.changes.outputs.release == 'true'
+      - name: Upload node artifacts
+        if: needs.changes.outputs.release_node == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: binaries-${{ matrix.target }}
+          name: node-binaries-${{ matrix.target }}
           path: |
-            *.tar.gz
-            *.zip
+            node-gui-*
+            node-headless-*
 
-  release:
-    name: Create Release
+      # Discord release artifacts
+      - name: Get discord version
+        if: needs.changes.outputs.release_discord == 'true'
+        id: discord_version
+        shell: bash
+        run: echo "version=${GITHUB_REF#refs/tags/discord-}" >> $GITHUB_OUTPUT
+
+      - name: Package discord binary (Unix)
+        if: needs.changes.outputs.release_discord == 'true' && runner.os != 'Windows'
+        run: |
+          tar -czvf wowlab-discord-${{ steps.discord_version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-discord
+
+      - name: Package discord binary (Windows)
+        if: needs.changes.outputs.release_discord == 'true' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "crates/target/release/wowlab-discord.exe" -DestinationPath "wowlab-discord-${{ steps.discord_version.outputs.version }}-${{ matrix.target }}.zip"
+
+      - name: Upload discord artifacts
+        if: needs.changes.outputs.release_discord == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: discord-binaries-${{ matrix.target }}
+          path: wowlab-discord-*
+
+  release-node:
+    name: Create Node Release
     needs: [changes, build-rust]
-    if: needs.changes.outputs.release == 'true'
+    if: needs.changes.outputs.release_node == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -136,7 +162,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: binaries-*
+          pattern: node-binaries-*
           merge-multiple: true
 
       - uses: softprops/action-gh-release@v2
@@ -144,10 +170,30 @@ jobs:
           files: artifacts/*
           generate_release_notes: true
 
-  docker:
-    name: Build Docker Image
+  release-discord:
+    name: Create Discord Release
     needs: [changes, build-rust]
-    if: needs.changes.outputs.release == 'true'
+    if: needs.changes.outputs.release_discord == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: discord-binaries-*
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+
+  docker-node:
+    name: Build Node Docker Image
+    needs: [changes, build-rust]
+    if: needs.changes.outputs.release_node == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -158,18 +204,18 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/node-v}" >> $GITHUB_OUTPUT
 
       - name: Download Linux amd64 binary
         uses: actions/download-artifact@v4
         with:
-          name: binaries-x86_64-unknown-linux-gnu
+          name: node-binaries-x86_64-unknown-linux-gnu
           path: artifacts/amd64
 
       - name: Download Linux arm64 binary
         uses: actions/download-artifact@v4
         with:
-          name: binaries-aarch64-unknown-linux-gnu
+          name: node-binaries-aarch64-unknown-linux-gnu
           path: artifacts/arm64
 
       - name: Extract binaries
@@ -201,4 +247,63 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/wowlab-node:latest
             ghcr.io/${{ github.repository_owner }}/wowlab-node:${{ steps.version.outputs.version }}
+          platforms: linux/amd64,linux/arm64
+
+  docker-discord:
+    name: Build Discord Docker Image
+    needs: [changes, build-rust]
+    if: needs.changes.outputs.release_discord == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/discord-v}" >> $GITHUB_OUTPUT
+
+      - name: Download Linux amd64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: discord-binaries-x86_64-unknown-linux-gnu
+          path: artifacts/amd64
+
+      - name: Download Linux arm64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: discord-binaries-aarch64-unknown-linux-gnu
+          path: artifacts/arm64
+
+      - name: Extract binaries
+        run: |
+          mkdir -p linux/amd64 linux/arm64
+          tar -xzf artifacts/amd64/wowlab-discord-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
+          tar -xzf artifacts/arm64/wowlab-discord-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
+          chmod +x linux/*/wowlab-discord
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./crates/discord/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/wowlab-discord:latest
+            ghcr.io/${{ github.repository_owner }}/wowlab-discord:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64

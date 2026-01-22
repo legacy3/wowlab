@@ -43,6 +43,12 @@ const nextConfig: NextConfig = {
         source: "/go/discord",
       },
       {
+        destination:
+          "https://discord.com/oauth2/authorize?client_id=1449784411598880919&permissions=274878024768&integration_type=0&scope=bot+applications.commands",
+        permanent: false,
+        source: "/go/discord-bot",
+      },
+      {
         destination: "https://github.com/legacy3/wowlab/:path*",
         permanent: false,
         source: "/go/github/:path*",
