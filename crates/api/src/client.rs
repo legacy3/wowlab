@@ -62,39 +62,22 @@ impl SupabaseClient {
         Self::check_response(response).await
     }
 
-    /// POST request to PostgREST (upsert with merge-duplicates).
-    pub async fn upsert<T: serde::Serialize>(
+    /// PATCH request to PostgREST with query filter and JSON body.
+    pub async fn patch<T: serde::Serialize>(
         &self,
-        table: &str,
+        path: &str,
         body: &T,
     ) -> Result<reqwest::Response, SupabaseError> {
-        let url = format!("{}/{}", self.base_url, table);
-        tracing::debug!("POST {} (upsert)", url);
+        let url = format!("{}/{}", self.base_url, path);
+        tracing::debug!("PATCH {}", url);
 
         let response = self
             .http
-            .post(&url)
+            .patch(&url)
             .header("apikey", &self.anon_key)
             .header("Authorization", format!("Bearer {}", self.anon_key))
             .header("Content-Type", "application/json")
-            .header("Prefer", "resolution=merge-duplicates")
             .json(body)
-            .send()
-            .await?;
-
-        Self::check_response(response).await
-    }
-
-    /// DELETE request to PostgREST with query filter.
-    pub async fn delete(&self, path: &str) -> Result<reqwest::Response, SupabaseError> {
-        let url = format!("{}/{}", self.base_url, path);
-        tracing::debug!("DELETE {}", url);
-
-        let response = self
-            .http
-            .delete(&url)
-            .header("apikey", &self.anon_key)
-            .header("Authorization", format!("Bearer {}", self.anon_key))
             .send()
             .await?;
 

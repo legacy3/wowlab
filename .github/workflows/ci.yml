@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ["node-v*", "discord-v*"]
+    tags: ["node-v*", "server-v*"]
   pull_request:
     branches: [main]
 
@@ -18,7 +18,7 @@ jobs:
       ts: ${{ steps.filter.outputs.ts }}
       rust: ${{ steps.filter.outputs.rust }}
       release_node: ${{ startsWith(github.ref, 'refs/tags/node-v') }}
-      release_discord: ${{ startsWith(github.ref, 'refs/tags/discord-v') }}
+      release_server: ${{ startsWith(github.ref, 'refs/tags/server-v') }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -39,7 +39,7 @@ jobs:
   build-ts:
     name: Build TypeScript
     needs: changes
-    if: needs.changes.outputs.ts == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_discord != 'true'
+    if: needs.changes.outputs.ts == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_server != 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
   build-rust:
     name: Build & Test Rust
     needs: changes
-    if: needs.changes.outputs.rust == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_discord != 'true'
+    if: needs.changes.outputs.rust == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_server != 'true'
     runs-on: ubuntu-24.04
 
     steps:
@@ -144,10 +144,10 @@ jobs:
             node-gui-*
             node-headless-*
 
-  build-discord:
-    name: Build Discord (${{ matrix.target }})
+  build-server:
+    name: Build Server (${{ matrix.target }})
     needs: changes
-    if: needs.changes.outputs.release_discord == 'true'
+    if: needs.changes.outputs.release_server == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -167,22 +167,22 @@ jobs:
 
       - name: Build
         working-directory: crates
-        run: cargo build -p wowlab-discord --release
+        run: cargo build -p wowlab-server --release
 
       - name: Get version
         id: version
         shell: bash
-        run: echo "version=${GITHUB_REF#refs/tags/discord-}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/server-}" >> $GITHUB_OUTPUT
 
       - name: Package
         run: |
-          tar -czvf wowlab-discord-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-discord
+          tar -czvf wowlab-server-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-server
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: discord-binaries-${{ matrix.target }}
-          path: wowlab-discord-*
+          name: server-binaries-${{ matrix.target }}
+          path: wowlab-server-*
 
   release-node:
     name: Create Node Release
@@ -204,10 +204,10 @@ jobs:
           files: artifacts/*
           generate_release_notes: true
 
-  release-discord:
-    name: Create Discord Release
-    needs: [changes, build-discord]
-    if: needs.changes.outputs.release_discord == 'true'
+  release-server:
+    name: Create Server Release
+    needs: [changes, build-server]
+    if: needs.changes.outputs.release_server == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -216,7 +216,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: discord-binaries-*
+          pattern: server-binaries-*
           merge-multiple: true
 
       - uses: softprops/action-gh-release@v2
@@ -283,10 +283,10 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/wowlab-node:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64
 
-  docker-discord:
-    name: Build Discord Docker Image
-    needs: [changes, build-discord]
-    if: needs.changes.outputs.release_discord == 'true'
+  docker-server:
+    name: Build Server Docker Image
+    needs: [changes, build-server]
+    if: needs.changes.outputs.release_server == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -297,26 +297,26 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/discord-v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/server-v}" >> $GITHUB_OUTPUT
 
       - name: Download Linux amd64 binary
         uses: actions/download-artifact@v4
         with:
-          name: discord-binaries-x86_64-unknown-linux-gnu
+          name: server-binaries-x86_64-unknown-linux-gnu
           path: artifacts/amd64
 
       - name: Download Linux arm64 binary
         uses: actions/download-artifact@v4
         with:
-          name: discord-binaries-aarch64-unknown-linux-gnu
+          name: server-binaries-aarch64-unknown-linux-gnu
           path: artifacts/arm64
 
       - name: Extract binaries
         run: |
           mkdir -p linux/amd64 linux/arm64
-          tar -xzf artifacts/amd64/wowlab-discord-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
-          tar -xzf artifacts/arm64/wowlab-discord-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
-          chmod +x linux/*/wowlab-discord
+          tar -xzf artifacts/amd64/wowlab-server-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
+          tar -xzf artifacts/arm64/wowlab-server-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
+          chmod +x linux/*/wowlab-server
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -335,9 +335,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./crates/discord/Dockerfile
+          file: ./crates/server/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/wowlab-discord:latest
-            ghcr.io/${{ github.repository_owner }}/wowlab-discord:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/wowlab-server:latest
+            ghcr.io/${{ github.repository_owner }}/wowlab-server:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64

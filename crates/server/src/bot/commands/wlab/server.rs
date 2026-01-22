@@ -1,5 +1,7 @@
-use crate::{colors, Context, Error};
 use poise::serenity_prelude as serenity;
+
+use crate::bot::{Context, Error};
+use crate::utils::colors;
 
 /// Show server information
 #[poise::command(slash_command, guild_only, user_cooldown = 5)]

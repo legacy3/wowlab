@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use crate::bot::{Context, Error};
 
 /// Check bot latency
 #[poise::command(slash_command, user_cooldown = 3)]

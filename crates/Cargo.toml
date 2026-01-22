@@ -3,12 +3,12 @@ resolver = "2"
 members = [
     "api",
     "cli",
-    "discord",
     "engine",
     "node",
     "node-gui",
     "node-headless",
     "parsers",
+    "server",
     "types",
 ]
 

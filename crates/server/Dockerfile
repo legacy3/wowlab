@@ -5,6 +5,6 @@ FROM gcr.io/distroless/cc-debian12:latest
 ARG TARGETARCH
 
 # Copy pre-built binary for this architecture
-COPY linux/${TARGETARCH}/wowlab-discord /wowlab-discord
+COPY linux/${TARGETARCH}/wowlab-server /wowlab-server
 
-ENTRYPOINT ["/wowlab-discord"]
+ENTRYPOINT ["/wowlab-server"]

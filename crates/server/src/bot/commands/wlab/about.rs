@@ -1,5 +1,7 @@
-use crate::{colors, meta, Context, Error};
 use poise::serenity_prelude as serenity;
+
+use crate::bot::{Context, Error};
+use crate::utils::{colors, meta};
 
 /// About WoW Lab
 #[poise::command(slash_command)]

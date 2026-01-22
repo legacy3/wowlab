@@ -4,7 +4,7 @@ mod members;
 mod ping;
 mod server;
 
-use crate::{Context, Error};
+use crate::bot::{Context, Error};
 
 /// WoW Lab bot commands
 #[poise::command(

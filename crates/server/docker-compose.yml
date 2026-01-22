@@ -6,12 +6,12 @@
 #   SUPABASE_SERVICE_ROLE_KEY - Service role key (not anon key)
 
 services:
-  bot:
-    image: ghcr.io/legacy3/wowlab-discord:latest
+  server:
+    image: ghcr.io/legacy3/wowlab-server:latest
     restart: unless-stopped
     env_file: .env
     environment:
-      RUST_LOG: wowlab_discord=info
+      RUST_LOG: wowlab_server=info
       # DISCORD_TOKEN: your-bot-token
       # SUPABASE_URL: https://your-project.supabase.co
       # SUPABASE_SERVICE_ROLE_KEY: your-service-role-key
