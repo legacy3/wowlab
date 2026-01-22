@@ -56,9 +56,35 @@ jobs:
       - run: pnpm -r --filter './packages/**' build
 
   build-rust:
-    name: Build Rust (${{ matrix.os }})
+    name: Build & Test Rust
     needs: changes
-    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.release_node == 'true' || needs.changes.outputs.release_discord == 'true'
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ env.RUST_WORKSPACE }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+
+      - name: Build
+        working-directory: crates
+        run: cargo build --release
+
+      - name: Test
+        working-directory: crates
+        run: cargo test
+
+  build-node:
+    name: Build Node (${{ matrix.target }})
+    needs: changes
+    if: needs.changes.outputs.release_node == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -86,38 +112,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
 
-      - name: Build all crates
+      - name: Build
         working-directory: crates
-        run: cargo build --release
+        run: cargo build -p wowlab-node-gui -p wowlab-node-headless --release
 
-      - name: Run tests
-        working-directory: crates
-        run: cargo test
-
-      # Node release artifacts
-      - name: Get node version
-        if: needs.changes.outputs.release_node == 'true'
-        id: node_version
+      - name: Get version
+        id: version
         shell: bash
         run: echo "version=${GITHUB_REF#refs/tags/node-}" >> $GITHUB_OUTPUT
 
-      - name: Package node binaries (Unix)
-        if: needs.changes.outputs.release_node == 'true' && runner.os != 'Windows'
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
         run: |
           for bin in node-gui node-headless; do
-            tar -czvf ${bin}-${{ steps.node_version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
+            tar -czvf ${bin}-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release ${bin}
           done
 
-      - name: Package node binaries (Windows)
-        if: needs.changes.outputs.release_node == 'true' && runner.os == 'Windows'
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           foreach ($bin in @("node-gui", "node-headless")) {
-            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.node_version.outputs.version }}-${{ matrix.target }}.zip"
+            Compress-Archive -Path "crates/target/release/$bin.exe" -DestinationPath "$bin-${{ steps.version.outputs.version }}-${{ matrix.target }}.zip"
           }
 
-      - name: Upload node artifacts
-        if: needs.changes.outputs.release_node == 'true'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: node-binaries-${{ matrix.target }}
@@ -125,26 +144,41 @@ jobs:
             node-gui-*
             node-headless-*
 
-      # Discord release artifacts
-      - name: Get discord version
-        if: needs.changes.outputs.release_discord == 'true'
-        id: discord_version
+  build-discord:
+    name: Build Discord (${{ matrix.target }})
+    needs: changes
+    if: needs.changes.outputs.release_discord == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ env.RUST_WORKSPACE }}
+
+      - name: Build
+        working-directory: crates
+        run: cargo build -p wowlab-discord --release
+
+      - name: Get version
+        id: version
         shell: bash
         run: echo "version=${GITHUB_REF#refs/tags/discord-}" >> $GITHUB_OUTPUT
 
-      - name: Package discord binary (Unix)
-        if: needs.changes.outputs.release_discord == 'true' && runner.os != 'Windows'
+      - name: Package
         run: |
-          tar -czvf wowlab-discord-${{ steps.discord_version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-discord
+          tar -czvf wowlab-discord-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-discord
 
-      - name: Package discord binary (Windows)
-        if: needs.changes.outputs.release_discord == 'true' && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path "crates/target/release/wowlab-discord.exe" -DestinationPath "wowlab-discord-${{ steps.discord_version.outputs.version }}-${{ matrix.target }}.zip"
-
-      - name: Upload discord artifacts
-        if: needs.changes.outputs.release_discord == 'true'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: discord-binaries-${{ matrix.target }}
@@ -152,7 +186,7 @@ jobs:
 
   release-node:
     name: Create Node Release
-    needs: [changes, build-rust]
+    needs: [changes, build-node]
     if: needs.changes.outputs.release_node == 'true'
     runs-on: ubuntu-24.04
     permissions:
@@ -172,7 +206,7 @@ jobs:
 
   release-discord:
     name: Create Discord Release
-    needs: [changes, build-rust]
+    needs: [changes, build-discord]
     if: needs.changes.outputs.release_discord == 'true'
     runs-on: ubuntu-24.04
     permissions:
@@ -192,7 +226,7 @@ jobs:
 
   docker-node:
     name: Build Node Docker Image
-    needs: [changes, build-rust]
+    needs: [changes, build-node]
     if: needs.changes.outputs.release_node == 'true'
     runs-on: ubuntu-24.04
     permissions:
@@ -251,7 +285,7 @@ jobs:
 
   docker-discord:
     name: Build Discord Docker Image
-    needs: [changes, build-rust]
+    needs: [changes, build-discord]
     if: needs.changes.outputs.release_discord == 'true'
     runs-on: ubuntu-24.04
     permissions:

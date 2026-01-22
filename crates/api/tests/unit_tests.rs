@@ -216,7 +216,8 @@ fn mock_spell_json() -> &'static str {
         "attributes": [],
         "effectTriggerSpell": [],
         "implicitTarget": [],
-        "learnSpells": []
+        "learnSpells": [],
+        "effects": []
     }]"#
 }
 
