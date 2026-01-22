@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-discord"
-version.workspace = true
+version = "0.1.0"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
