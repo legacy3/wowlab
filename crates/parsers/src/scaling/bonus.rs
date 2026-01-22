@@ -258,4 +258,78 @@ mod tests {
         let result = apply_item_bonuses(600, &base_stats, 4, &[], &data, None);
         assert_eq!(result.item_level, 600);
     }
+
+    /// Test with actual So'leah's Secret Technique data
+    /// Base ilvl: 155, Expected scaled ilvl: 717
+    /// Bonus 10029 has type=1 (ILEVEL), value_0=562
+    /// So: 155 + 562 = 717
+    #[test]
+    fn test_soleah_secret_technique() {
+        let mut data = ItemScalingData::default();
+
+        // Bonus 10029: type=1 (ILEVEL), value_0=562
+        data.bonuses.insert(
+            10029,
+            vec![ItemBonusFlat {
+                id: 21627,
+                parent_item_bonus_list_id: 10029,
+                bonus_type: 1, // ILEVEL
+                value_0: 562,
+                value_1: 0,
+                value_2: 0,
+                value_3: 0,
+                order_index: 0,
+            }],
+        );
+
+        // Other bonuses (type 0 = no-op, type 3 = quality, type 4 = name suffix, etc.)
+        data.bonuses.insert(
+            6652,
+            vec![ItemBonusFlat {
+                id: 12792,
+                parent_item_bonus_list_id: 6652,
+                bonus_type: 0,
+                value_0: 0,
+                value_1: 0,
+                value_2: 0,
+                value_3: 0,
+                order_index: 0,
+            }],
+        );
+
+        data.bonuses.insert(
+            10390,
+            vec![ItemBonusFlat {
+                id: 22157,
+                parent_item_bonus_list_id: 10390,
+                bonus_type: 4, // Name suffix
+                value_0: 14095,
+                value_1: 0,
+                value_2: 0,
+                value_3: 0,
+                order_index: 0,
+            }],
+        );
+
+        // Add rand prop points for ilvl 717
+        data.rand_prop_points.insert(
+            717,
+            RandPropPointsFlat {
+                id: 717,
+                epic_f_0: 5000.0,
+                ..Default::default()
+            },
+        );
+
+        let base_stats = vec![ItemStat {
+            stat_type: 71, // Agility
+            value: 6666,
+        }];
+
+        let bonus_ids = vec![10390, 6652, 10383, 13444, 10029, 10255];
+        let result = apply_item_bonuses(155, &base_stats, 3, &bonus_ids, &data, Some(80));
+
+        // Base 155 + bonus 562 = 717
+        assert_eq!(result.item_level, 717, "Expected ilvl 717, got {}", result.item_level);
+    }
 }
