@@ -18,6 +18,8 @@ import {
   useUser,
 } from "@/lib/state";
 
+import { DiscordLinkBanner } from "@/components/account/settings";
+
 import { BulkActionBar } from "./bulk-action-bar";
 import { NodeSettingsDialog } from "./node-settings-dialog";
 import { NodesTable, NodesTableSkeleton } from "./nodes-table";
@@ -99,6 +101,8 @@ export function NodesPage() {
 
   return (
     <Stack gap="6">
+      <DiscordLinkBanner />
+
       <Grid columns={{ base: 3, sm: 3 }} gap="4">
         <StatCard icon={ServerIcon} label={content.nodes} value={totalCount} />
         <StatCard icon={WifiIcon} label={content.online} value={onlineCount} />

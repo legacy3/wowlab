@@ -5,6 +5,7 @@ import type { OAuthResponse } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 
+import { routes } from "@/lib/routing";
 import { createClient } from "@/lib/supabase";
 
 export type OAuthProvider = "discord" | "github" | "google" | "twitch";
@@ -14,6 +15,7 @@ export interface User {
   email: string | null;
   handle: string | null;
   id: string;
+  identities: string[];
   initials: string;
 }
 
@@ -21,6 +23,7 @@ export interface UserState {
   data: User | null;
   error: Error | null;
   isLoading: boolean;
+  linkIdentity: (provider: OAuthProvider) => Promise<void>;
   login: (
     provider: OAuthProvider,
     redirectTo?: string,
@@ -39,19 +42,24 @@ export function useUser(): UserState {
       } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("handle, avatar_url")
-        .eq("id", user.id)
-        .single();
+      const [{ data: profile }, { data: identityData }] = await Promise.all([
+        supabase
+          .from("user_profiles")
+          .select("handle, avatar_url")
+          .eq("id", user.id)
+          .single(),
+        supabase.auth.getUserIdentities(),
+      ]);
 
       const handle = profile?.handle ?? null;
+      const identities = identityData?.identities.map((i) => i.provider) ?? [];
 
       return {
         avatar_url: profile?.avatar_url ?? null,
         email: user.email ?? null,
         handle,
         id: user.id,
+        identities,
         initials: handle ? handle.slice(0, 2).toUpperCase() : "?",
       };
     },
@@ -80,6 +88,19 @@ export function useUser(): UserState {
     [supabase],
   );
 
+  const linkIdentity = useCallback(
+    async (provider: OAuthProvider) => {
+      const { error } = await supabase.auth.linkIdentity({
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${routes.account.settings.path}`,
+        },
+        provider,
+      });
+      if (error) throw error;
+    },
+    [supabase],
+  );
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     queryClient.invalidateQueries({ queryKey: ["auth"] });
@@ -89,6 +110,7 @@ export function useUser(): UserState {
     data: data ?? null,
     error: error instanceof Error ? error : null,
     isLoading,
+    linkIdentity,
     login,
     logout,
   };

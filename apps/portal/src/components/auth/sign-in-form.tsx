@@ -15,7 +15,7 @@ import {
   Link,
   Text,
 } from "@/components/ui";
-import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
+import { OAUTH_PROVIDERS } from "@/lib/providers";
 import { href, routes } from "@/lib/routing";
 import { useUser } from "@/lib/state";
 
@@ -65,36 +65,19 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
             {error && <ErrorBox>{error}</ErrorBox>}
 
             <Grid columns={2} gap="2">
-              <IconButton
-                variant="outline"
-                onClick={() => handleOAuthSignIn("discord")}
-              >
-                <DiscordIcon width={16} height={16} />
-                Discord
-              </IconButton>
-              <IconButton
-                variant="outline"
-                onClick={() => handleOAuthSignIn("github")}
-              >
-                <GitHubIcon width={16} height={16} />
-                GitHub
-              </IconButton>
-              <IconButton
-                variant="outline"
-                onClick={() => handleOAuthSignIn("google")}
-                disabled
-              >
-                <GoogleIcon width={16} height={16} />
-                Google
-              </IconButton>
-              <IconButton
-                variant="outline"
-                onClick={() => handleOAuthSignIn("twitch")}
-                disabled
-              >
-                <TwitchIcon width={16} height={16} />
-                Twitch
-              </IconButton>
+              {OAUTH_PROVIDERS.map(
+                ({ enabled, icon: Icon, label, provider }) => (
+                  <IconButton
+                    key={provider}
+                    variant="outline"
+                    onClick={() => handleOAuthSignIn(provider)}
+                    disabled={!enabled}
+                  >
+                    <Icon width={16} height={16} />
+                    {label}
+                  </IconButton>
+                ),
+              )}
             </Grid>
 
             <Flex align="center" gap="3">

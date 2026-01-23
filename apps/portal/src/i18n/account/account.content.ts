@@ -51,6 +51,13 @@ export default {
       }),
       error: t({ de: "Fehler", en: "Error" }),
     },
+    discordLink: {
+      bannerText: t({
+        de: "Discord ist nicht verknüpft. Du kannst keine Guild-geschützten Nodes nutzen.",
+        en: "Discord is not linked. You won't be able to use guild-gated nodes.",
+      }),
+      linkButton: t({ de: "Discord verknüpfen", en: "Link Discord" }),
+    },
     downloadDialog: {
       description: t({
         de: "Führe lokale Simulationen aus oder teile Rechenleistung mit anderen",
@@ -139,6 +146,20 @@ export default {
           en: "{{workers}} / {{totalCores}} cores",
         }),
       ),
+    },
+    settingsPage: {
+      connectionsDescription: t({
+        de: "Verknüpfte Drittanbieter-Konten",
+        en: "Linked third-party accounts",
+      }),
+      connectionsTitle: t({ de: "Verbindungen", en: "Connections" }),
+      email: t({ de: "E-Mail", en: "Email" }),
+      handle: t({ de: "Benutzername", en: "Handle" }),
+      profileDescription: t({
+        de: "Deine Kontoinformationen",
+        en: "Your account information",
+      }),
+      profileTitle: t({ de: "Profil", en: "Profile" }),
     },
   },
   description: "Content for account management.",
