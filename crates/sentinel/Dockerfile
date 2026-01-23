@@ -5,6 +5,6 @@ FROM gcr.io/distroless/cc-debian12:latest
 ARG TARGETARCH
 
 # Copy pre-built binary for this architecture
-COPY linux/${TARGETARCH}/wowlab-server /wowlab-server
+COPY linux/${TARGETARCH}/wowlab-sentinel /wowlab-sentinel
 
-ENTRYPOINT ["/wowlab-server"]
+ENTRYPOINT ["/wowlab-sentinel"]

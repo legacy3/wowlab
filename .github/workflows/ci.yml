@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ["node-v*", "server-v*"]
+    tags: ["node-v*", "sentinel-v*"]
   pull_request:
     branches: [main]
 
@@ -18,7 +18,7 @@ jobs:
       ts: ${{ steps.filter.outputs.ts }}
       rust: ${{ steps.filter.outputs.rust }}
       release_node: ${{ startsWith(github.ref, 'refs/tags/node-v') }}
-      release_server: ${{ startsWith(github.ref, 'refs/tags/server-v') }}
+      release_sentinel: ${{ startsWith(github.ref, 'refs/tags/sentinel-v') }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -39,7 +39,7 @@ jobs:
   build-ts:
     name: Build TypeScript
     needs: changes
-    if: needs.changes.outputs.ts == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_server != 'true'
+    if: needs.changes.outputs.ts == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_sentinel != 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
   build-rust:
     name: Build & Test Rust
     needs: changes
-    if: needs.changes.outputs.rust == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_server != 'true'
+    if: needs.changes.outputs.rust == 'true' && needs.changes.outputs.release_node != 'true' && needs.changes.outputs.release_sentinel != 'true'
     runs-on: ubuntu-24.04
 
     steps:
@@ -144,10 +144,10 @@ jobs:
             node-gui-*
             node-headless-*
 
-  build-server:
-    name: Build Server (${{ matrix.target }})
+  build-sentinel:
+    name: Build Sentinel (${{ matrix.target }})
     needs: changes
-    if: needs.changes.outputs.release_server == 'true'
+    if: needs.changes.outputs.release_sentinel == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -167,22 +167,22 @@ jobs:
 
       - name: Build
         working-directory: crates
-        run: cargo build -p wowlab-server --release
+        run: cargo build -p wowlab-sentinel --release
 
       - name: Get version
         id: version
         shell: bash
-        run: echo "version=${GITHUB_REF#refs/tags/server-}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/sentinel-}" >> $GITHUB_OUTPUT
 
       - name: Package
         run: |
-          tar -czvf wowlab-server-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-server
+          tar -czvf wowlab-sentinel-${{ steps.version.outputs.version }}-${{ matrix.target }}.tar.gz -C crates/target/release wowlab-sentinel
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: server-binaries-${{ matrix.target }}
-          path: wowlab-server-*
+          name: sentinel-binaries-${{ matrix.target }}
+          path: wowlab-sentinel-*
 
   release-node:
     name: Create Node Release
@@ -204,10 +204,10 @@ jobs:
           files: artifacts/*
           generate_release_notes: true
 
-  release-server:
-    name: Create Server Release
-    needs: [changes, build-server]
-    if: needs.changes.outputs.release_server == 'true'
+  release-sentinel:
+    name: Create Sentinel Release
+    needs: [changes, build-sentinel]
+    if: needs.changes.outputs.release_sentinel == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -216,7 +216,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: server-binaries-*
+          pattern: sentinel-binaries-*
           merge-multiple: true
 
       - uses: softprops/action-gh-release@v2
@@ -283,10 +283,10 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/wowlab-node:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64
 
-  docker-server:
-    name: Build Server Docker Image
-    needs: [changes, build-server]
-    if: needs.changes.outputs.release_server == 'true'
+  docker-sentinel:
+    name: Build Sentinel Docker Image
+    needs: [changes, build-sentinel]
+    if: needs.changes.outputs.release_sentinel == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -297,26 +297,26 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/server-v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/sentinel-v}" >> $GITHUB_OUTPUT
 
       - name: Download Linux amd64 binary
         uses: actions/download-artifact@v4
         with:
-          name: server-binaries-x86_64-unknown-linux-gnu
+          name: sentinel-binaries-x86_64-unknown-linux-gnu
           path: artifacts/amd64
 
       - name: Download Linux arm64 binary
         uses: actions/download-artifact@v4
         with:
-          name: server-binaries-aarch64-unknown-linux-gnu
+          name: sentinel-binaries-aarch64-unknown-linux-gnu
           path: artifacts/arm64
 
       - name: Extract binaries
         run: |
           mkdir -p linux/amd64 linux/arm64
-          tar -xzf artifacts/amd64/wowlab-server-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
-          tar -xzf artifacts/arm64/wowlab-server-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
-          chmod +x linux/*/wowlab-server
+          tar -xzf artifacts/amd64/wowlab-sentinel-v${{ steps.version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz -C linux/amd64
+          tar -xzf artifacts/arm64/wowlab-sentinel-v${{ steps.version.outputs.version }}-aarch64-unknown-linux-gnu.tar.gz -C linux/arm64
+          chmod +x linux/*/wowlab-sentinel
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -335,17 +335,17 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./crates/server/Dockerfile
+          file: ./crates/sentinel/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/wowlab-server:latest
-            ghcr.io/${{ github.repository_owner }}/wowlab-server:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/wowlab-sentinel:latest
+            ghcr.io/${{ github.repository_owner }}/wowlab-sentinel:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64
 
-  deploy-server:
-    name: Deploy Server to Fly.io
-    needs: [changes, docker-server]
-    if: needs.changes.outputs.release_server == 'true'
+  deploy-sentinel:
+    name: Deploy Sentinel to Fly.io
+    needs: [changes, docker-sentinel]
+    if: needs.changes.outputs.release_sentinel == 'true'
     runs-on: ubuntu-24.04
 
     steps:
@@ -354,6 +354,6 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: flyctl deploy --config crates/server/fly.toml --image ghcr.io/${{ github.repository_owner }}/wowlab-server:latest
+        run: flyctl deploy --config crates/sentinel/fly.toml --image ghcr.io/${{ github.repository_owner }}/wowlab-sentinel:latest
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

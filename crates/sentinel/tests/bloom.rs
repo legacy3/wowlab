@@ -1,5 +1,5 @@
 use base64::Engine;
-use wowlab_server::utils::bloom::{create_server_filter, filter_hash, BloomFilter};
+use wowlab_sentinel::utils::bloom::{create_server_filter, filter_hash, BloomFilter};
 
 #[test]
 fn test_insert_and_contains() {

@@ -1,17 +1,17 @@
 [package]
-name = "wowlab-server"
+name = "wowlab-sentinel"
 version = "0.2.2"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "WoW Lab server: Discord bot + chunk scheduler"
+description = "WoW Lab sentinel: Discord bot + chunk scheduler + status HTTP"
 
 [lib]
-name = "wowlab_server"
+name = "wowlab_sentinel"
 path = "src/lib.rs"
 
 [[bin]]
-name = "wowlab-server"
+name = "wowlab-sentinel"
 path = "src/main.rs"
 
 [dependencies]

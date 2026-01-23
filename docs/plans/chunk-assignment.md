@@ -10,7 +10,7 @@ The current system uses a thundering herd pattern:
 
 ## Solution
 
-A single Rust service (`crates/server`) that combines:
+A single Rust service (`crates/sentinel`) that combines:
 1. **Discord bot** (already built in `crates/discord/`)
 2. **Chunk scheduler** (assigns work to nodes, replaces `chunk-claim`)
 
@@ -19,7 +19,7 @@ Both share the same process, same Supabase client, same Bloom filter code. The s
 ## Architecture
 
 ```
-crates/server/
+crates/sentinel/
   src/
     main.rs          - Single entrypoint, spawns bot + scheduler
     bot/             - Discord bot (moved from crates/discord/)
@@ -172,7 +172,7 @@ pub struct ServerState {
 
 ## What Gets Deleted
 
-- `crates/discord/` → moved into `crates/server/`
+- `crates/discord/` → moved into `crates/sentinel/`
 - `supabase/functions/chunk-claim/` → deleted
 - `supabase/functions/token-issue/` → deleted (if not already)
 - `supabase/functions/_shared/capability-token.ts` → deleted (if not already)

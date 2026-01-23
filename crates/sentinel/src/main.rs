@@ -5,8 +5,8 @@ use std::time::Instant;
 use sqlx::PgPool;
 use tokio::sync::RwLock;
 
-use wowlab_server::state::ServerState;
-use wowlab_server::{bot, http, scheduler};
+use wowlab_sentinel::state::ServerState;
+use wowlab_sentinel::{bot, http, scheduler};
 
 fn load_env() {
     if dotenvy::dotenv().is_err() {
@@ -22,7 +22,7 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("wowlab_server=info".parse().unwrap()),
+                .add_directive("wowlab_sentinel=info".parse().unwrap()),
         )
         .init();
 
@@ -35,7 +35,7 @@ async fn main() {
     let filters = Arc::new(RwLock::new(HashMap::new()));
     let state = Arc::new(ServerState { db, filters, started_at: Instant::now() });
 
-    tracing::info!("Starting wowlab-server (bot + scheduler + http)");
+    tracing::info!("Starting wowlab-sentinel (bot + scheduler + http)");
 
     tokio::select! {
         result = bot::run(state.clone()) => {
