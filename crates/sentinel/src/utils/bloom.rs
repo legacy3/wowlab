@@ -23,7 +23,7 @@ impl BloomFilter {
         assert!(fp_rate > 0.0 && fp_rate < 1.0, "fp_rate must be in (0, 1)");
 
         let raw_bits = optimal_num_bits(n, fp_rate);
-        let num_bytes = (raw_bits as usize + 7) / 8;
+        let num_bytes = (raw_bits as usize).div_ceil(8);
         // Align to byte boundary so from_bytes reconstructs identically
         let num_bits = num_bytes as u64 * 8;
         let num_hashes = optimal_num_hashes(num_bits, n);

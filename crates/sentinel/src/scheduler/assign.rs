@@ -37,7 +37,7 @@ pub async fn assign_pending_chunks(
         node.backlog = *backlogs.get(&node.id).unwrap_or(&0);
     }
 
-    // 5. Assign each chunk to the least-loaded eligible node
+    // 5. Assign each chunk to the node with the most available capacity
     let mut assignments: Vec<Assignment> = Vec::new();
 
     for chunk in pending {
@@ -49,7 +49,8 @@ pub async fn assign_pending_chunks(
         let target = nodes
             .iter_mut()
             .filter(|n| is_eligible(n, job, &permissions, &state.filters))
-            .min_by_key(|n| n.backlog);
+            .filter(|n| n.backlog < n.capacity)
+            .max_by_key(|n| n.capacity - n.backlog);
 
         if let Some(node) = target {
             assignments.push(Assignment {
@@ -140,7 +141,8 @@ async fn fetch_jobs(
 
 async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error> {
     let rows = sqlx::query_as::<_, OnlineNodeRow>(
-        "SELECT n.id, n.user_id, i.provider_id as discord_id
+        "SELECT n.id, n.user_id, n.total_cores, n.max_parallel,
+                i.provider_id as discord_id
          FROM public.nodes n
          LEFT JOIN auth.identities i
            ON i.user_id = n.user_id AND i.provider = 'discord'
@@ -153,6 +155,7 @@ async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error>
         id: r.id,
         user_id: r.user_id,
         discord_id: r.discord_id,
+        capacity: (r.max_parallel as usize).min(r.total_cores as usize),
         backlog: 0,
     }).collect())
 }
@@ -211,6 +214,8 @@ struct JobInfo {
 struct OnlineNodeRow {
     id: Uuid,
     user_id: Uuid,
+    total_cores: i32,
+    max_parallel: i32,
     discord_id: Option<String>,
 }
 
@@ -219,6 +224,7 @@ struct OnlineNode {
     id: Uuid,
     user_id: Uuid,
     discord_id: Option<String>,
+    capacity: usize,
     backlog: usize,
 }
 
