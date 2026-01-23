@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.3.2"
+version = "0.3.3"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -34,6 +34,10 @@ sha2 = "0.10"
 
 # Types
 uuid = { version = "1", features = ["serde"] }
+
+# Metrics
+metrics = "0.24"
+metrics-exporter-prometheus = "0.18"
 
 # Utilities
 tracing = "0.1"

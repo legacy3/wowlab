@@ -23,6 +23,7 @@ pub async fn assign_pending_chunks(
 
     // 2. Get online nodes with their Discord IDs (from auth.identities)
     let mut nodes = fetch_online_nodes(&state.db).await?;
+    metrics::gauge!(crate::telemetry::NODES_ONLINE).set(nodes.len() as f64);
     if nodes.is_empty() {
         tracing::debug!("No online nodes available");
         return Ok(());
@@ -68,7 +69,8 @@ pub async fn assign_pending_chunks(
 
     // 6. Batch update chunks with assignments
     batch_assign(&state.db, &assignments).await?;
-    tracing::info!(count = assignments.len(), "Assigned chunks to nodes");
+    metrics::counter!(crate::telemetry::CHUNKS_ASSIGNED).increment(assignments.len() as u64);
+    tracing::debug!(count = assignments.len(), "Assigned chunks to nodes");
 
     Ok(())
 }

@@ -156,7 +156,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 }
 
 async fn pre_command(ctx: Context<'_>) {
-    tracing::info!(
+    tracing::debug!(
         command = ctx.command().qualified_name,
         user = %ctx.author().name,
         user_id = %ctx.author().id,

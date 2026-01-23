@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 use std::time::Instant;
 
+use metrics_exporter_prometheus::PrometheusBuilder;
 use sqlx::PgPool;
 use tokio::sync::RwLock;
 
@@ -26,6 +28,10 @@ async fn main() {
         )
         .init();
 
+    let prometheus = PrometheusBuilder::new()
+        .install_recorder()
+        .expect("Failed to install prometheus recorder");
+
     let db_url = std::env::var("SUPABASE_DB_URL")
         .expect("SUPABASE_DB_URL required");
     let db = PgPool::connect(&db_url)
@@ -33,7 +39,16 @@ async fn main() {
         .expect("Failed to connect to database");
 
     let filters = Arc::new(RwLock::new(HashMap::new()));
-    let state = Arc::new(ServerState { db, filters, started_at: Instant::now() });
+    let state = Arc::new(ServerState {
+        db,
+        filters,
+        started_at: Instant::now(),
+        prometheus,
+        last_bot_event: AtomicU64::new(0),
+        last_scheduler_tick: AtomicU64::new(0),
+    });
+
+    wowlab_sentinel::telemetry::init();
 
     tracing::info!("Starting wowlab-sentinel (bot + scheduler + http)");
 

@@ -1,4 +1,5 @@
 mod assign;
+mod reclaim;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -8,10 +9,6 @@ use uuid::Uuid;
 
 use crate::state::ServerState;
 
-/// Run the chunk scheduler. Listens for `pending_chunk` notifications via
-/// Postgres LISTEN/NOTIFY and assigns pending chunks to eligible online nodes.
-///
-/// Blocks indefinitely (reconnects on failure).
 pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing::info!("Scheduler starting");
 
@@ -30,16 +27,14 @@ async fn listen_and_assign(
     listener.listen("pending_chunk").await?;
     tracing::info!("Listening for pending_chunk notifications");
 
-    // Process any chunks that arrived before we started listening
     process_pending(state).await;
 
     loop {
-        // Wait for notification with a timeout so we periodically sweep for
-        // any missed chunks (e.g. if a notification was lost during reconnect)
+        state.touch_scheduler();
+
         match tokio::time::timeout(Duration::from_secs(30), listener.recv()).await {
             Ok(Ok(notification)) => {
                 tracing::debug!(payload = notification.payload(), "pending_chunk notification");
-                // Small debounce: collect rapid-fire notifications from batch inserts
                 tokio::time::sleep(Duration::from_millis(50)).await;
                 process_pending(state).await;
             }
@@ -47,30 +42,32 @@ async fn listen_and_assign(
                 return Err(e.into());
             }
             Err(_timeout) => {
-                // Periodic sweep
                 process_pending(state).await;
+                reclaim::reclaim_stale_chunks(state).await;
+                record_gauges(state).await;
             }
         }
     }
 }
 
-/// Fetch all unassigned pending chunks and run assignment.
 async fn process_pending(state: &ServerState) {
     match fetch_pending_chunks(state).await {
         Ok(pending) if !pending.is_empty() => {
-            tracing::info!(count = pending.len(), "Found pending chunks");
+            tracing::debug!(count = pending.len(), "Found pending chunks");
+            metrics::gauge!(crate::telemetry::CHUNKS_PENDING).set(pending.len() as f64);
             if let Err(e) = assign::assign_pending_chunks(state, &pending).await {
                 tracing::error!(error = %e, "Assignment failed");
             }
         }
-        Ok(_) => {}
+        Ok(_) => {
+            metrics::gauge!(crate::telemetry::CHUNKS_PENDING).set(0.0);
+        }
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch pending chunks");
         }
     }
 }
 
-/// Fetch unassigned pending chunks from the database.
 async fn fetch_pending_chunks(
     state: &ServerState,
 ) -> Result<Vec<PendingChunk>, sqlx::Error> {
@@ -82,6 +79,22 @@ async fn fetch_pending_chunks(
     )
     .fetch_all(&state.db)
     .await
+}
+
+async fn record_gauges(state: &ServerState) {
+    use crate::telemetry;
+
+    metrics::gauge!(telemetry::UPTIME_SECONDS).set(state.started_at.elapsed().as_secs() as f64);
+
+    let running: Result<(i64,), _> = sqlx::query_as(
+        "SELECT COUNT(*) FROM public.jobs_chunks WHERE status = 'running'"
+    )
+    .fetch_one(&state.db)
+    .await;
+
+    if let Ok((count,)) = running {
+        metrics::gauge!(telemetry::CHUNKS_RUNNING).set(count as f64);
+    }
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]

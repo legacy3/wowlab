@@ -12,6 +12,7 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
         .route("/", get(routes::index::handler))
         .route("/favicon.ico", get(routes::favicon::handler))
         .route("/status", get(routes::status::handler))
+        .route("/metrics", get(routes::metrics::handler))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;

@@ -78,7 +78,7 @@ async fn rebuild_guild(
     let filter = create_server_filter(&discord_ids);
     let member_count = discord_ids.len();
 
-    tracing::info!(
+    tracing::debug!(
         guild_id = %guild_id,
         members = member_count,
         filter_bytes = filter.as_bytes().len(),

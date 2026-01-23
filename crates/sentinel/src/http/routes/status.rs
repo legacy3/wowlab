@@ -14,13 +14,15 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     let load = sys::read_load_average();
     let cpu = sys::cpu_usage_percent().await;
 
-    // Measure actual DB ping
     let db_start = std::time::Instant::now();
     let db_status = match sqlx::query("SELECT 1").execute(&state.db).await {
         Ok(_) => "OK",
         Err(_) => "ERROR",
     };
     let db_ping_ms = db_start.elapsed().as_millis() as u64;
+
+    let bot_status = if state.bot_healthy() { "OK" } else { "DEGRADED" };
+    let scheduler_status = if state.scheduler_healthy() { "OK" } else { "DEGRADED" };
 
     Json(json!({
         "status": "success",
@@ -34,8 +36,8 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
                 "available": (os_mem_available * 10.0).round() / 10.0,
             },
             "services": [
-                { "name": "Bot", "status": "OK" },
-                { "name": "Scheduler", "status": "OK" },
+                { "name": "Bot", "status": bot_status },
+                { "name": "Scheduler", "status": scheduler_status },
                 { "name": "Database", "status": db_status, "ping": db_ping_ms },
             ]
         }

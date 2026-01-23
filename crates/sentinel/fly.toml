@@ -1,27 +1,31 @@
 app = "wowlab-sentinel"
-primary_region = "fra"
+primary_region = "lhr"
 
 [build]
   image = "ghcr.io/legacy3/wowlab-sentinel:latest"
 
-[[restart]]
-  policy = "always"
-  retries = 3
-
 [http_service]
-  internal_port = 8080
-  force_https = true
-  auto_stop_machines = "off"
   auto_start_machines = true
+  auto_stop_machines = "off"
+  force_https = true
+  internal_port = 8080
   min_machines_running = 1
 
 [[http_service.checks]]
   grace_period = "10s"
   interval = "30s"
   method = "GET"
-  timeout = "5s"
   path = "/status"
+  timeout = "5s"
+
+[[metrics]]
+  path = "/metrics"
+  port = 8080
+
+[[restart]]
+  policy = "always"
+  retries = 3
 
 [[vm]]
-  size = "shared-cpu-1x"
   memory = "256mb"
+  size = "shared-cpu-1x"

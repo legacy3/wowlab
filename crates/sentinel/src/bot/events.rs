@@ -9,9 +9,11 @@ pub async fn handle(
     _framework: poise::FrameworkContext<'_, Data, Error>,
     data: &Data,
 ) -> Result<(), Error> {
+    data.state.touch_bot();
+
     match event {
         serenity::FullEvent::Ready { data_about_bot } => {
-            tracing::info!(
+            tracing::debug!(
                 "Connected to {} guilds",
                 data_about_bot.guilds.len()
             );
