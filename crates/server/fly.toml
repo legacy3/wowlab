@@ -1,0 +1,11 @@
+app = "wowlab-server"
+primary_region = "iad"
+
+[build]
+  image = "ghcr.io/legacy3/wowlab-server:latest"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+  auto_stop_machines = "off"
+  auto_start_machines = false

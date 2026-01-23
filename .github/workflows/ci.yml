@@ -341,3 +341,19 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/wowlab-server:latest
             ghcr.io/${{ github.repository_owner }}/wowlab-server:${{ steps.version.outputs.version }}
           platforms: linux/amd64,linux/arm64
+
+  deploy-server:
+    name: Deploy Server to Fly.io
+    needs: [changes, docker-server]
+    if: needs.changes.outputs.release_server == 'true'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --config crates/server/fly.toml --image ghcr.io/${{ github.repository_owner }}/wowlab-server:latest
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
