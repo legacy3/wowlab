@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use poise::serenity_prelude::GuildId;
-use serde::Deserialize;
+use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::PendingChunk;
 use crate::state::ServerState;
@@ -11,22 +12,27 @@ pub async fn assign_pending_chunks(
     state: &ServerState,
     pending: &[PendingChunk],
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // 1. Get job owners for the pending chunks
-    let job_ids: Vec<&str> = pending.iter().map(|c| c.job_id.as_str()).collect();
-    let jobs = fetch_job_owners(state, &job_ids).await?;
+    if pending.is_empty() {
+        return Ok(());
+    }
 
-    // 2. Get online nodes (last_seen_at within 30s)
-    let mut nodes = fetch_online_nodes(state).await?;
+    let job_ids: Vec<Uuid> = pending.iter().map(|c| c.job_id).collect();
+
+    // 1. Get job metadata for the pending chunks
+    let jobs = fetch_jobs(&state.db, &job_ids).await?;
+
+    // 2. Get online nodes with their Discord IDs (from auth.identities)
+    let mut nodes = fetch_online_nodes(&state.db).await?;
     if nodes.is_empty() {
         tracing::debug!("No online nodes available");
         return Ok(());
     }
 
     // 3. Get permissions per node
-    let permissions = fetch_permissions(state).await?;
+    let permissions = fetch_permissions(&state.db).await?;
 
     // 4. Get current backlog per node
-    let backlogs = fetch_backlogs(state).await?;
+    let backlogs = fetch_backlogs(&state.db).await?;
     for node in &mut nodes {
         node.backlog = *backlogs.get(&node.id).unwrap_or(&0);
     }
@@ -40,7 +46,6 @@ pub async fn assign_pending_chunks(
             None => continue,
         };
 
-        // Find eligible nodes sorted by backlog
         let target = nodes
             .iter_mut()
             .filter(|n| is_eligible(n, job, &permissions, &state.filters))
@@ -48,8 +53,8 @@ pub async fn assign_pending_chunks(
 
         if let Some(node) = target {
             assignments.push(Assignment {
-                chunk_id: chunk.id.clone(),
-                node_id: node.id.clone(),
+                chunk_id: chunk.id,
+                node_id: node.id,
             });
             node.backlog += 1;
         }
@@ -61,7 +66,7 @@ pub async fn assign_pending_chunks(
     }
 
     // 6. Batch update chunks with assignments
-    batch_assign(state, &assignments).await?;
+    batch_assign(&state.db, &assignments).await?;
     tracing::info!(count = assignments.len(), "Assigned chunks to nodes");
 
     Ok(())
@@ -70,7 +75,7 @@ pub async fn assign_pending_chunks(
 /// Check if a node is eligible to run a chunk based on the job's access settings.
 fn is_eligible(
     node: &OnlineNode,
-    job: &JobOwner,
+    job: &JobInfo,
     permissions: &[NodePermission],
     filters: &crate::utils::filter_refresh::FilterMap,
 ) -> bool {
@@ -79,19 +84,16 @@ fn is_eligible(
         return true;
     }
 
-    // Check access_type on the job
     match job.access_type.as_deref() {
         Some("public") => true,
         Some("user") => {
-            // Check if the node has a user permission targeting the job owner
             permissions.iter().any(|p| {
                 p.node_id == node.id
                     && p.access_type == "user"
-                    && p.target_id.as_deref() == Some(&job.user_id)
+                    && p.target_id.as_deref() == Some(&job.user_id.to_string())
             })
         }
         Some("discord") => {
-            // Check Bloom filter in memory (zero network cost)
             let node_discord_id = match &node.discord_id {
                 Some(id) => id,
                 None => return false,
@@ -101,10 +103,9 @@ fn is_eligible(
                 None => return false,
             };
 
-            // We can't await here (sync fn), so use try_read
             let map = match filters.try_read() {
                 Ok(m) => m,
-                Err(_) => return false, // Filter locked, skip this cycle
+                Err(_) => return false,
             };
 
             let guild_id: GuildId = target_guild
@@ -116,117 +117,125 @@ fn is_eligible(
                 None => false,
             }
         }
-        // No access_type = owner only (already checked above)
+        // No access_type = owner only
         _ => false,
     }
 }
 
-async fn fetch_job_owners(
-    state: &ServerState,
-    job_ids: &[&str],
-) -> Result<HashMap<String, JobOwner>, Box<dyn std::error::Error + Send + Sync>> {
-    let ids_csv = job_ids.join(",");
-    let path = format!(
-        "jobs?id=in.({})\
-         &select=id,user_id,access_type,discord_server_id",
-        ids_csv
-    );
-    let response = state.supabase.get(&path).await?;
-    let jobs: Vec<JobOwner> = response.json().await?;
-    Ok(jobs.into_iter().map(|j| (j.id.clone(), j)).collect())
+async fn fetch_jobs(
+    db: &PgPool,
+    job_ids: &[Uuid],
+) -> Result<HashMap<Uuid, JobInfo>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, JobInfo>(
+        "SELECT id, user_id, access_type, discord_server_id
+         FROM public.jobs
+         WHERE id = ANY($1)"
+    )
+    .bind(job_ids)
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|j| (j.id, j)).collect())
 }
 
-async fn fetch_online_nodes(
-    state: &ServerState,
-) -> Result<Vec<OnlineNode>, Box<dyn std::error::Error + Send + Sync>> {
-    let response = state
-        .supabase
-        .get(
-            "nodes?last_seen_at=gt.now()-interval'30 seconds'\
-             &select=id,user_id,discord_id",
-        )
-        .await?;
-    let nodes: Vec<OnlineNode> = response.json().await?;
-    Ok(nodes)
+async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, OnlineNodeRow>(
+        "SELECT n.id, n.user_id, i.provider_id as discord_id
+         FROM public.nodes n
+         LEFT JOIN auth.identities i
+           ON i.user_id = n.user_id AND i.provider = 'discord'
+         WHERE n.last_seen_at > now() - interval '30 seconds'"
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|r| OnlineNode {
+        id: r.id,
+        user_id: r.user_id,
+        discord_id: r.discord_id,
+        backlog: 0,
+    }).collect())
 }
 
-async fn fetch_permissions(
-    state: &ServerState,
-) -> Result<Vec<NodePermission>, Box<dyn std::error::Error + Send + Sync>> {
-    let response = state
-        .supabase
-        .get("nodes_permissions?select=node_id,access_type,target_id")
-        .await?;
-    let perms: Vec<NodePermission> = response.json().await?;
-    Ok(perms)
+async fn fetch_permissions(db: &PgPool) -> Result<Vec<NodePermission>, sqlx::Error> {
+    sqlx::query_as::<_, NodePermission>(
+        "SELECT node_id, access_type, target_id FROM public.nodes_permissions"
+    )
+    .fetch_all(db)
+    .await
 }
 
-async fn fetch_backlogs(
-    state: &ServerState,
-) -> Result<HashMap<String, usize>, Box<dyn std::error::Error + Send + Sync>> {
-    let response = state
-        .supabase
-        .get(
-            "jobs_chunks?status=eq.running&node_id=not.is.null\
-             &select=node_id",
-        )
-        .await?;
-    let rows: Vec<BacklogRow> = response.json().await?;
+async fn fetch_backlogs(db: &PgPool) -> Result<HashMap<Uuid, usize>, sqlx::Error> {
+    let rows = sqlx::query_as::<_, BacklogRow>(
+        "SELECT node_id, COUNT(*)::int as count
+         FROM public.jobs_chunks
+         WHERE status = 'running' AND node_id IS NOT NULL
+         GROUP BY node_id"
+    )
+    .fetch_all(db)
+    .await?;
 
-    let mut map: HashMap<String, usize> = HashMap::new();
-    for row in rows {
-        if let Some(nid) = row.node_id {
-            *map.entry(nid).or_default() += 1;
-        }
-    }
-    Ok(map)
+    Ok(rows.into_iter().map(|r| (r.node_id, r.count as usize)).collect())
 }
 
 async fn batch_assign(
-    state: &ServerState,
+    db: &PgPool,
     assignments: &[Assignment],
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    for a in assignments {
-        let path = format!("jobs_chunks?id=eq.{}", a.chunk_id);
-        let body = serde_json::json!({
-            "node_id": a.node_id,
-            "status": "running"
-        });
-        state.supabase.patch(&path, &body).await?;
-    }
+) -> Result<(), sqlx::Error> {
+    let chunk_ids: Vec<Uuid> = assignments.iter().map(|a| a.chunk_id).collect();
+    let node_ids: Vec<Uuid> = assignments.iter().map(|a| a.node_id).collect();
+
+    sqlx::query(
+        "UPDATE public.jobs_chunks
+         SET node_id = data.node_id, status = 'running', claimed_at = now()
+         FROM (SELECT unnest($1::uuid[]) as chunk_id, unnest($2::uuid[]) as node_id) data
+         WHERE jobs_chunks.id = data.chunk_id"
+    )
+    .bind(&chunk_ids)
+    .bind(&node_ids)
+    .execute(db)
+    .await?;
+
     Ok(())
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct JobOwner {
-    id: String,
-    user_id: String,
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct JobInfo {
+    id: Uuid,
+    user_id: Uuid,
     access_type: Option<String>,
     discord_server_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct OnlineNode {
-    id: String,
-    user_id: String,
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct OnlineNodeRow {
+    id: Uuid,
+    user_id: Uuid,
     discord_id: Option<String>,
-    #[serde(skip)]
+}
+
+#[derive(Debug, Clone)]
+struct OnlineNode {
+    id: Uuid,
+    user_id: Uuid,
+    discord_id: Option<String>,
     backlog: usize,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 struct NodePermission {
-    node_id: String,
+    node_id: Uuid,
     access_type: String,
     target_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 struct BacklogRow {
-    node_id: Option<String>,
+    node_id: Uuid,
+    count: i32,
 }
 
 struct Assignment {
-    chunk_id: String,
-    node_id: String,
+    chunk_id: Uuid,
+    node_id: Uuid,
 }

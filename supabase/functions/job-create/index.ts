@@ -82,23 +82,8 @@ Deno.serve(async (req) => {
     return json({ error: "Failed to create chunks" }, 500);
   }
 
-  const channel = supabase.channel("pending-chunks");
-  await channel.send({
-    type: "broadcast",
-    event: "work-available",
-    payload: {
-      jobId: job.id,
-      userId: user.id,
-      configHash,
-      chunks: numChunks,
-      reason: "new-job",
-    },
-  });
-  await supabase.removeChannel(channel);
-
   return json({
     jobId: job.id,
     chunks: numChunks,
-    queued: true,
   });
 });

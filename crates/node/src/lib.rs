@@ -15,8 +15,7 @@ pub use crate::core::{NodeCore, NodeCoreEvent};
 pub use claim::ClaimError;
 pub use config::NodeConfig;
 pub use supabase::{
-    ApiClient, ApiError, ChunkPayload, ClaimWorkResponse, ClaimedChunk, NodePayload, RealtimeEvent,
-    RotationResponse, WorkAvailablePayload,
+    ApiClient, ApiError, ChunkPayload, NodePayload, RealtimeEvent, RotationResponse,
 };
 pub use worker::{WorkItem, WorkResult, WorkerPool};
 

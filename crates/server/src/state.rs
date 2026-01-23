@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use sqlx::PgPool;
 use wowlab_api::SupabaseClient;
 
 use crate::utils::filter_refresh::FilterMap;
@@ -11,5 +12,6 @@ use crate::utils::filter_refresh::FilterMap;
 /// the Bloom filters without any network calls.
 pub struct ServerState {
     pub supabase: Arc<SupabaseClient>,
+    pub db: PgPool,
     pub filters: FilterMap,
 }

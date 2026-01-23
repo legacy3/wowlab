@@ -411,8 +411,6 @@ impl NodeCore {
                     .event_tx
                     .try_send(NodeCoreEvent::ConnectionChanged(self.connection_status));
                 self.send_heartbeat();
-                // Claim any available work on connect (handles orphaned chunks)
-                self.claim_work();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
@@ -433,14 +431,6 @@ impl NodeCore {
                     iterations: payload.iterations,
                 });
                 self.process_chunk(payload);
-            }
-            RealtimeEvent::WorkAvailable(ref payload) => {
-                tracing::info!(
-                    "Work available broadcast: reason={:?}, chunks={:?}",
-                    payload.reason,
-                    payload.chunks
-                );
-                self.claim_work();
             }
             RealtimeEvent::Error(ref err) => {
                 tracing::warn!("Connection error: {err}");
@@ -544,39 +534,87 @@ impl NodeCore {
     }
 
     fn process_chunk(&mut self, payload: &ChunkPayload) {
-        let Some(node_id) = self.node_id else { return };
         let chunk_id = payload.id;
+        let config_hash = payload.config_hash.clone();
+        let iterations = payload.iterations as u32;
+        let seed_offset = payload.seed_offset as u64;
         let api = self.api.clone();
-
-        // Clone what we need for the worker pool submission
+        let cache = Arc::clone(&self.cache);
         let work_tx = self.worker_pool.work_tx();
 
         self.runtime.spawn(async move {
-            // 1. Claim the chunk and get config
-            match api.claim_chunk(chunk_id, node_id).await {
-                Ok(claim) => {
-                    tracing::info!(
-                        "Claimed chunk {} ({} iterations)",
-                        chunk_id,
-                        claim.iterations
-                    );
+            // 1. Get config (from cache or fetch)
+            let config_json = match cache.get_config(&config_hash) {
+                Some(c) => {
+                    tracing::debug!("Config cache hit: {}", &config_hash[..8]);
+                    c
+                }
+                None => {
+                    tracing::debug!("Config cache miss, fetching: {}", &config_hash[..8]);
+                    match api.fetch_config(&config_hash).await {
+                        Ok(config) => {
+                            let rotation_id = config
+                                .get("rotationId")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or_default()
+                                .to_string();
 
-                    // 2. Submit to worker pool
-                    let work_item = WorkItem {
-                        chunk_id,
-                        config_json: claim.config.to_string(),
-                        iterations: claim.iterations as u32,
-                        seed_offset: claim.seed_offset as u64,
-                    };
+                            let cached = CachedConfig {
+                                config_json: config,
+                                rotation_id,
+                            };
+                            cache.insert_config(config_hash.clone(), cached.clone());
+                            cached
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to fetch config: {}", e);
+                            return;
+                        }
+                    }
+                }
+            };
 
-                    if let Some(tx) = work_tx {
-                        if let Err(e) = tx.send(work_item).await {
-                            tracing::error!("Failed to submit work: {}", e);
+            // 2. Get rotation script
+            let rotation_script = match api.fetch_rotation(&config_json.rotation_id).await {
+                Ok(rotation) => {
+                    match cache.get_rotation(&config_json.rotation_id, &rotation.checksum) {
+                        Some(script) => script,
+                        None => {
+                            cache.insert_rotation(
+                                rotation.id.clone(),
+                                rotation.script.clone(),
+                                rotation.checksum,
+                            );
+                            rotation.script
                         }
                     }
                 }
                 Err(e) => {
-                    tracing::error!("Failed to claim chunk {}: {}", chunk_id, e);
+                    tracing::error!("Failed to fetch rotation: {}", e);
+                    return;
+                }
+            };
+
+            // 3. Build combined JSON (config + rotation)
+            let mut combined = config_json.config_json.clone();
+            if let Some(obj) = combined.as_object_mut() {
+                obj.insert(
+                    "rotation".to_string(),
+                    serde_json::Value::String(rotation_script),
+                );
+            }
+
+            // 4. Submit to worker pool
+            let work_item = WorkItem {
+                chunk_id,
+                config_json: combined.to_string(),
+                iterations,
+                seed_offset,
+            };
+
+            if let Some(tx) = work_tx {
+                if let Err(e) = tx.send(work_item).await {
+                    tracing::error!("Failed to submit work: {}", e);
                 }
             }
         });
@@ -606,165 +644,12 @@ impl NodeCore {
         }
 
         // Process results outside the borrow
-        let had_results = !results.is_empty();
         for result in results {
             self.handle_work_result(result);
         }
-
-        // After completing work, try to claim more
-        if had_results {
-            self.claim_work();
-        }
     }
 
-    /// Claim available work from the server using the pull-based API.
-    /// Called on connect and when work-available broadcasts are received.
-    fn claim_work(&mut self) {
-        // Only claim if we're fully running and connected
-        if !matches!(self.state, NodeState::Running) {
-            return;
-        }
-        if self.connection_status != ConnectionStatus::Connected {
-            return;
-        }
 
-        let Some(node_id) = self.node_id else { return };
-
-        // Calculate available capacity
-        let stats = self.worker_pool.stats();
-        let available = stats.max_workers.saturating_sub(stats.busy_workers);
-        if available == 0 {
-            tracing::debug!("No available worker capacity, skipping claim");
-            return;
-        }
-
-        let api = self.api.clone();
-        let cache = Arc::clone(&self.cache);
-        let work_tx = self.worker_pool.work_tx();
-        let event_tx = self.event_tx.clone();
-
-        self.runtime.spawn(async move {
-            match api.claim_work(node_id, available).await {
-                Ok(response) => {
-                    if response.chunks.is_empty() {
-                        tracing::debug!("No work available");
-                        return;
-                    }
-
-                    // Get configHash from response
-                    let Some(config_hash) = response.config_hash else {
-                        tracing::warn!("Claim response missing configHash");
-                        return;
-                    };
-
-                    tracing::info!(
-                        "Claimed {} chunks (config_hash: {})",
-                        response.chunks.len(),
-                        &config_hash[..8]
-                    );
-
-                    // 1. Get config (from cache or fetch)
-                    let cached_config = match cache.get_config(&config_hash) {
-                        Some(c) => {
-                            tracing::debug!("Config cache hit: {}", &config_hash[..8]);
-                            c
-                        }
-                        None => {
-                            tracing::debug!("Config cache miss, fetching: {}", &config_hash[..8]);
-                            match api.fetch_config(&config_hash).await {
-                                Ok(config_json) => {
-                                    // Extract rotationId from config
-                                    let rotation_id = config_json
-                                        .get("rotationId")
-                                        .and_then(|v| v.as_str())
-                                        .unwrap_or_default()
-                                        .to_string();
-
-                                    let cached = CachedConfig {
-                                        config_json: config_json.clone(),
-                                        rotation_id,
-                                    };
-                                    cache.insert_config(config_hash.clone(), cached.clone());
-                                    cached
-                                }
-                                Err(e) => {
-                                    tracing::error!("Failed to fetch config: {}", e);
-                                    return;
-                                }
-                            }
-                        }
-                    };
-
-                    // 2. Get rotation script (always fetch to get checksum, then check cache)
-                    let rotation_script = match api.fetch_rotation(&cached_config.rotation_id).await
-                    {
-                        Ok(rotation) => {
-                            // Check if we have it cached with matching checksum
-                            match cache.get_rotation(&cached_config.rotation_id, &rotation.checksum)
-                            {
-                                Some(script) => {
-                                    tracing::debug!("Rotation cache hit: {}", &rotation.id[..8]);
-                                    script
-                                }
-                                None => {
-                                    tracing::debug!(
-                                        "Rotation cache miss/stale, using fetched: {}",
-                                        &rotation.id[..8]
-                                    );
-                                    cache.insert_rotation(
-                                        rotation.id.clone(),
-                                        rotation.script.clone(),
-                                        rotation.checksum,
-                                    );
-                                    rotation.script
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            tracing::error!("Failed to fetch rotation: {}", e);
-                            return;
-                        }
-                    };
-
-                    // 3. Build combined JSON (config + rotation) for SimRunner
-                    let mut combined = cached_config.config_json.clone();
-                    if let Some(obj) = combined.as_object_mut() {
-                        obj.insert(
-                            "rotation".to_string(),
-                            serde_json::Value::String(rotation_script),
-                        );
-                    }
-                    let config_json = combined.to_string();
-
-                    // 4. Submit each chunk to the worker pool
-                    for chunk in response.chunks {
-                        let _ = event_tx
-                            .send(NodeCoreEvent::ChunkAssigned {
-                                id: chunk.id,
-                                iterations: chunk.iterations,
-                            })
-                            .await;
-
-                        let work_item = WorkItem {
-                            chunk_id: chunk.id,
-                            config_json: config_json.clone(),
-                            iterations: chunk.iterations as u32,
-                            seed_offset: chunk.seed_offset as u64,
-                        };
-
-                        if let Some(ref tx) = work_tx {
-                            if let Err(e) = tx.send(work_item).await {
-                                tracing::error!("Failed to submit work: {}", e);
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    tracing::debug!("Failed to claim work: {}", e);
-                }
-            }
-        });
-    }
 
     fn handle_work_result(&self, result: WorkResult) {
         let chunk_id = result.chunk_id;

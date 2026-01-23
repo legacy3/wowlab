@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Duration;
 use supabase_realtime_rs::{
-    ChannelEvent, EventPayload, PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload,
+    PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload,
     RealtimeChannelOptions, RealtimeClient, RealtimeClientOptions,
     RealtimeError as SbRealtimeError,
 };
@@ -17,21 +17,9 @@ const INITIAL_RECONNECT_DELAY: Duration = Duration::from_secs(1);
 pub enum RealtimeEvent {
     NodeUpdated(NodePayload),
     ChunkAssigned(ChunkPayload),
-    WorkAvailable(WorkAvailablePayload),
     Connected,
     Disconnected,
     Error(String),
-}
-
-#[derive(Debug, Clone, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkAvailablePayload {
-    #[serde(default)]
-    pub job_id: Option<String>,
-    #[serde(default)]
-    pub reason: Option<String>,
-    #[serde(default)]
-    pub chunks: Option<i32>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -52,6 +40,8 @@ pub struct NodePayload {
 pub struct ChunkPayload {
     pub id: Uuid,
     pub iterations: i32,
+    pub config_hash: String,
+    pub seed_offset: i32,
 }
 
 pub struct SupabaseRealtime {
@@ -176,18 +166,6 @@ async fn run_realtime(
     chunks_channel.subscribe().await?;
     tracing::debug!("Subscribed to chunk assignments");
 
-    // Subscribe to broadcast channel for work-available notifications
-    let work_channel = client
-        .channel("pending-chunks", RealtimeChannelOptions::default())
-        .await;
-
-    let mut work_rx = work_channel
-        .on(ChannelEvent::broadcast("work-available"))
-        .await;
-
-    work_channel.subscribe().await?;
-    tracing::debug!("Subscribed to work-available broadcasts");
-
     loop {
         tokio::select! {
             Some(change) = node_rx.recv() => {
@@ -198,14 +176,6 @@ async fn run_realtime(
             Some(change) = chunks_rx.recv() => {
                 if let Some(payload) = parse_change::<ChunkPayload>(&change) {
                     let _ = tx.send(RealtimeEvent::ChunkAssigned(payload)).await;
-                }
-            }
-            Some(event_payload) = work_rx.recv() => {
-                if let EventPayload::Broadcast(value) = event_payload {
-                    let payload = serde_json::from_value::<WorkAvailablePayload>(value)
-                        .unwrap_or_default();
-                    tracing::debug!("Work available broadcast: {:?}", payload);
-                    let _ = tx.send(RealtimeEvent::WorkAvailable(payload)).await;
                 }
             }
             else => break,
