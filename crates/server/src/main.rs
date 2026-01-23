@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 use tokio::sync::RwLock;
-use wowlab_api::SupabaseClient;
 
 use wowlab_server::state::ServerState;
 use wowlab_server::{bot, scheduler};
@@ -26,11 +25,6 @@ async fn main() {
         )
         .init();
 
-    let supabase = Arc::new(
-        SupabaseClient::from_env_service_role()
-            .expect("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required"),
-    );
-
     let db_url = std::env::var("SUPABASE_DB_URL")
         .expect("SUPABASE_DB_URL required");
     let db = PgPool::connect(&db_url)
@@ -38,7 +32,7 @@ async fn main() {
         .expect("Failed to connect to database");
 
     let filters = Arc::new(RwLock::new(HashMap::new()));
-    let state = Arc::new(ServerState { supabase, db, filters });
+    let state = Arc::new(ServerState { db, filters });
 
     tracing::info!("Starting wowlab-server (bot + scheduler)");
 
