@@ -1,7 +1,9 @@
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use metrics_exporter_prometheus::PrometheusHandle;
+use poise::serenity_prelude::{ConnectionStage, ShardManager};
 use sqlx::PgPool;
 
 use crate::utils::filter_refresh::FilterMap;
@@ -11,14 +13,13 @@ pub struct ServerState {
     pub filters: FilterMap,
     pub started_at: Instant,
     pub prometheus: PrometheusHandle,
-    pub last_bot_event: AtomicU64,
+    pub shard_manager: OnceLock<Arc<ShardManager>>,
     pub last_scheduler_tick: AtomicU64,
 }
 
 impl ServerState {
-    pub fn touch_bot(&self) {
-        let now = epoch_secs();
-        self.last_bot_event.store(now, Ordering::Relaxed);
+    pub fn set_shard_manager(&self, manager: Arc<ShardManager>) {
+        let _ = self.shard_manager.set(manager);
     }
 
     pub fn touch_scheduler(&self) {
@@ -26,8 +27,15 @@ impl ServerState {
         self.last_scheduler_tick.store(now, Ordering::Relaxed);
     }
 
-    pub fn bot_healthy(&self) -> bool {
-        age_secs(self.last_bot_event.load(Ordering::Relaxed)) < 120
+    pub async fn bot_healthy(&self) -> bool {
+        let Some(manager) = self.shard_manager.get() else {
+            return false;
+        };
+        let runners = manager.runners.lock().await;
+        !runners.is_empty()
+            && runners
+                .values()
+                .all(|r| r.stage == ConnectionStage::Connected)
     }
 
     pub fn scheduler_healthy(&self) -> bool {

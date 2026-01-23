@@ -21,7 +21,7 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     };
     let db_ping_ms = db_start.elapsed().as_millis() as u64;
 
-    let bot_status = if state.bot_healthy() { "OK" } else { "DEGRADED" };
+    let bot_status = if state.bot_healthy().await { "OK" } else { "DEGRADED" };
     let scheduler_status = if state.scheduler_healthy() { "OK" } else { "DEGRADED" };
 
     Json(json!({

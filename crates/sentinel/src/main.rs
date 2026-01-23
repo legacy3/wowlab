@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use metrics_exporter_prometheus::PrometheusBuilder;
@@ -44,7 +44,7 @@ async fn main() {
         filters,
         started_at: Instant::now(),
         prometheus,
-        last_bot_event: AtomicU64::new(0),
+        shard_manager: OnceLock::new(),
         last_scheduler_tick: AtomicU64::new(0),
     });
 

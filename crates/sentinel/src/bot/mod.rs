@@ -66,11 +66,14 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Error> {
 
     tracing::info!("Starting bot...");
 
-    let shard_manager = client.shard_manager.clone();
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c().await.ok();
-        tracing::info!("Received shutdown signal");
-        shard_manager.shutdown_all().await;
+    state.set_shard_manager(client.shard_manager.clone());
+    tokio::spawn({
+        let manager = client.shard_manager.clone();
+        async move {
+            tokio::signal::ctrl_c().await.ok();
+            tracing::info!("Received shutdown signal");
+            manager.shutdown_all().await;
+        }
     });
 
     client.start().await?;
