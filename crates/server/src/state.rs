@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use sqlx::PgPool;
 
 use crate::utils::filter_refresh::FilterMap;
@@ -10,4 +12,5 @@ use crate::utils::filter_refresh::FilterMap;
 pub struct ServerState {
     pub db: PgPool,
     pub filters: FilterMap,
+    pub started_at: Instant,
 }

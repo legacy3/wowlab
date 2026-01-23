@@ -11,6 +11,12 @@ primary_region = "fra"
   policy = "always"
   retries = 3
 
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = false
+
 [[vm]]
   size = "shared-cpu-1x"
   memory = "256mb"
