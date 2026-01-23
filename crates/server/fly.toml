@@ -1,5 +1,5 @@
 app = "wowlab-server"
-primary_region = "iad"
+primary_region = "fra"
 
 [build]
   image = "ghcr.io/legacy3/wowlab-server:latest"
