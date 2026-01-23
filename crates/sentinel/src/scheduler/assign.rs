@@ -77,7 +77,7 @@ pub async fn assign_pending_chunks(
 }
 
 /// Check if a node is eligible to run a chunk based on the job's access settings.
-fn is_eligible(
+pub fn is_eligible(
     node: &OnlineNode,
     job: &JobInfo,
     permissions: &[NodePermission],
@@ -208,11 +208,11 @@ async fn batch_assign(
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-struct JobInfo {
-    id: Uuid,
-    user_id: Uuid,
-    access_type: Option<String>,
-    discord_server_id: Option<String>,
+pub struct JobInfo {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub access_type: Option<String>,
+    pub discord_server_id: Option<String>,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -225,19 +225,19 @@ struct OnlineNodeRow {
 }
 
 #[derive(Debug, Clone)]
-struct OnlineNode {
-    id: Uuid,
-    user_id: Uuid,
-    discord_id: Option<String>,
-    capacity: usize,
-    backlog: usize,
+pub struct OnlineNode {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub discord_id: Option<String>,
+    pub capacity: usize,
+    pub backlog: usize,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-struct NodePermission {
-    node_id: Uuid,
-    access_type: String,
-    target_id: Option<String>,
+pub struct NodePermission {
+    pub node_id: Uuid,
+    pub access_type: String,
+    pub target_id: Option<String>,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]

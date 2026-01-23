@@ -1,4 +1,4 @@
-mod assign;
+pub mod assign;
 mod reclaim;
 
 use std::sync::Arc;
