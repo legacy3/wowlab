@@ -10,6 +10,7 @@ use crate::state::ServerState;
 pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let app = Router::new()
         .route("/", get(routes::index::handler))
+        .route("/favicon.ico", get(routes::favicon::handler))
         .route("/status", get(routes::status::handler))
         .with_state(state);
 
