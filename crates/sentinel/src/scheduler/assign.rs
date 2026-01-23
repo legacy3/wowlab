@@ -30,7 +30,8 @@ pub async fn assign_pending_chunks(
     }
 
     // 3. Get permissions per node
-    let permissions = fetch_permissions(&state.db).await?;
+    let node_ids: Vec<Uuid> = nodes.iter().map(|n| n.id).collect();
+    let permissions = fetch_permissions(&state.db, &node_ids).await?;
 
     // 4. Get current backlog per node
     let backlogs = fetch_backlogs(&state.db).await?;
@@ -162,10 +163,12 @@ async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error>
     }).collect())
 }
 
-async fn fetch_permissions(db: &PgPool) -> Result<Vec<NodePermission>, sqlx::Error> {
+async fn fetch_permissions(db: &PgPool, node_ids: &[Uuid]) -> Result<Vec<NodePermission>, sqlx::Error> {
     sqlx::query_as::<_, NodePermission>(
-        "SELECT node_id, access_type, target_id FROM public.nodes_permissions"
+        "SELECT node_id, access_type, target_id FROM public.nodes_permissions
+         WHERE node_id = ANY($1)"
     )
+    .bind(node_ids)
     .fetch_all(db)
     .await
 }

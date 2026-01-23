@@ -4,7 +4,7 @@ use crate::bot::{Context, Error};
 use crate::utils::colors;
 
 /// Show online nodes and their current load
-#[poise::command(slash_command, user_cooldown = 5)]
+#[poise::command(slash_command, guild_only, user_cooldown = 5)]
 pub async fn nodes(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer().await?;
 

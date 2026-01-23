@@ -23,36 +23,40 @@ pub fn build_initial(
     tokio::spawn(async move {
         tracing::info!(count = guild_ids.len(), "Building initial server filters");
 
+        let mut set = tokio::task::JoinSet::new();
         for guild_id in guild_ids {
-            if let Err(e) = rebuild_guild(&http, &filters, guild_id).await {
-                tracing::warn!(guild_id = %guild_id, error = %e, "Failed to build filter");
-            }
+            let http = http.clone();
+            let filters = filters.clone();
+            set.spawn(async move {
+                if let Err(e) = rebuild_guild(&http, &filters, guild_id).await {
+                    tracing::warn!(guild_id = %guild_id, error = %e, "Failed to build filter");
+                }
+            });
         }
+        while set.join_next().await.is_some() {}
+
+        tracing::info!("Initial server filters built");
     });
 }
 
 /// Called on GuildMemberAddition. Inserts the new member into the existing filter.
-pub fn handle_member_add(
+pub async fn handle_member_add(
     filters: &FilterMap,
     guild_id: GuildId,
     discord_id: &str,
 ) {
-    let filters = filters.clone();
-    let discord_id = discord_id.to_string();
-    tokio::spawn(async move {
-        let mut map = filters.write().await;
-        let entry = match map.get_mut(&guild_id) {
-            Some(e) => e,
-            None => {
-                tracing::warn!(guild_id = %guild_id, "No filter for guild, skipping add");
-                return;
-            }
-        };
+    let mut map = filters.write().await;
+    let entry = match map.get_mut(&guild_id) {
+        Some(e) => e,
+        None => {
+            tracing::warn!(guild_id = %guild_id, "No filter for guild, skipping add");
+            return;
+        }
+    };
 
-        entry.filter.insert(&discord_id);
-        entry.member_count += 1;
-        tracing::debug!(guild_id = %guild_id, discord_id, "Inserted member into filter");
-    });
+    entry.filter.insert(discord_id);
+    entry.member_count += 1;
+    tracing::debug!(guild_id = %guild_id, discord_id, "Inserted member into filter");
 }
 
 /// Called on GuildMemberRemoval. Rebuilds the filter from scratch since Bloom

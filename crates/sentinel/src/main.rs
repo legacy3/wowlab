@@ -4,8 +4,9 @@ use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use metrics_exporter_prometheus::PrometheusBuilder;
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
+use tokio_util::sync::CancellationToken;
 
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{bot, http, scheduler};
@@ -34,7 +35,11 @@ async fn main() {
 
     let db_url = std::env::var("SUPABASE_DB_URL")
         .expect("SUPABASE_DB_URL required");
-    let db = PgPool::connect(&db_url)
+    let db = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(std::time::Duration::from_secs(5))
+        .idle_timeout(std::time::Duration::from_secs(600))
+        .connect(&db_url)
         .await
         .expect("Failed to connect to database");
 
@@ -52,24 +57,27 @@ async fn main() {
 
     tracing::info!("Starting wowlab-sentinel (bot + scheduler + http)");
 
+    let shutdown = CancellationToken::new();
+
     tokio::select! {
-        result = bot::run(state.clone()) => {
+        result = bot::run(state.clone(), shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "Bot exited with error");
             }
         }
-        result = scheduler::run(state.clone()) => {
+        result = scheduler::run(state.clone(), shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "Scheduler exited with error");
             }
         }
-        result = http::run(state.clone()) => {
+        result = http::run(state.clone(), shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "HTTP server exited with error");
             }
         }
     }
 
-    tracing::error!("Server shutting down unexpectedly");
+    shutdown.cancel();
+    tracing::error!("Server shutting down");
     std::process::exit(1);
 }

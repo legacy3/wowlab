@@ -8,8 +8,6 @@ use crate::utils::colors;
 /// Show your running and pending jobs
 #[poise::command(slash_command, user_cooldown = 5)]
 pub async fn jobs(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.defer().await?;
-
     let db = &ctx.data().state.db;
     let discord_id = ctx.author().id.to_string();
 
@@ -17,7 +15,7 @@ pub async fn jobs(ctx: Context<'_>) -> Result<(), Error> {
         Some(id) => id,
         None => {
             ctx.send(
-                poise::CreateReply::default().embed(
+                poise::CreateReply::default().ephemeral(true).embed(
                     serenity::CreateEmbed::new()
                         .title("No Account Linked")
                         .description("Your Discord account is not linked to a WoW Lab account.")
@@ -28,6 +26,8 @@ pub async fn jobs(ctx: Context<'_>) -> Result<(), Error> {
             return Ok(());
         }
     };
+
+    ctx.defer().await?;
 
     let rows = sqlx::query_as::<_, JobRow>(
         "SELECT j.id, j.access_type,

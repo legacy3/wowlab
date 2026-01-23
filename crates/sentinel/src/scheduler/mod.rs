@@ -7,12 +7,17 @@ use std::time::Duration;
 use sqlx::postgres::PgListener;
 use uuid::Uuid;
 
+use tokio_util::sync::CancellationToken;
+
 use crate::state::ServerState;
 
-pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing::info!("Scheduler starting");
 
     loop {
+        if shutdown.is_cancelled() {
+            return Ok(());
+        }
         if let Err(e) = listen_and_assign(&state).await {
             tracing::error!(error = %e, "Scheduler failed, reconnecting...");
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -94,6 +99,16 @@ async fn record_gauges(state: &ServerState) {
 
     if let Ok((count,)) = running {
         metrics::gauge!(telemetry::CHUNKS_RUNNING).set(count as f64);
+    }
+
+    let online: Result<(i64,), _> = sqlx::query_as(
+        "SELECT COUNT(*) FROM public.nodes WHERE last_seen_at > now() - interval '30 seconds'"
+    )
+    .fetch_one(&state.db)
+    .await;
+
+    if let Ok((count,)) = online {
+        metrics::gauge!(telemetry::NODES_ONLINE).set(count as f64);
     }
 }
 

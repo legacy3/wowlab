@@ -50,7 +50,7 @@ pub async fn handle(
                     &data.state.filters,
                     new_member.guild_id,
                     &discord_id,
-                );
+                ).await;
             }
         }
         serenity::FullEvent::GuildMemberRemoval { guild_id, user, .. } => {

@@ -6,7 +6,7 @@ use crate::utils::embed::EmbedContent;
 use crate::utils::sys;
 
 /// Show sentinel stats: uptime, memory, scheduler throughput, bloom filters
-#[poise::command(slash_command, user_cooldown = 5)]
+#[poise::command(slash_command, guild_only, user_cooldown = 5)]
 pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer().await?;
 

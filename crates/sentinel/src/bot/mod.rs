@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use poise::serenity_prelude as serenity;
 
+use tokio_util::sync::CancellationToken;
+
 use crate::state::ServerState;
 use crate::utils::filter_refresh;
 
@@ -16,7 +18,7 @@ pub struct Data {
 }
 
 /// Run the Discord bot. Blocks until the bot shuts down.
-pub async fn run(state: Arc<ServerState>) -> Result<(), Error> {
+pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result<(), Error> {
     let token = std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN env var required");
 
     let intents = serenity::GatewayIntents::non_privileged()
@@ -69,10 +71,15 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Error> {
     state.set_shard_manager(client.shard_manager.clone());
     tokio::spawn({
         let manager = client.shard_manager.clone();
+        let shutdown = shutdown.clone();
         async move {
-            tokio::signal::ctrl_c().await.ok();
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {}
+                _ = shutdown.cancelled() => {}
+            }
             tracing::info!("Received shutdown signal");
             manager.shutdown_all().await;
+            shutdown.cancel();
         }
     });
 

@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.5.1"
+version = "0.5.2"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -18,9 +18,11 @@ path = "src/main.rs"
 # Framework
 poise = "0.6"
 tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
 
 # HTTP
 axum = "0.8"
+tower-http = { version = "0.6", features = ["trace"] }
 
 # Database
 sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid"] }
