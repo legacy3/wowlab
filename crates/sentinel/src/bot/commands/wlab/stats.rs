@@ -67,7 +67,7 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
         .section("Bloom Filters")
         .kv("Guilds tracked", guild_count)
         .kv("Total members", total_members)
-        .kv("Filter memory", format!("{:.1} KB", total_filter_bytes as f64 / 1024.0))
+        .kv("Filter memory", sys::format_bytes(total_filter_bytes))
         .build();
 
     ctx.send(
