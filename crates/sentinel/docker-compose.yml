@@ -2,8 +2,7 @@
 #
 # Required:
 #   DISCORD_TOKEN - Bot token from Discord Developer Portal
-#   SUPABASE_URL - Project URL (https://<ref>.supabase.co)
-#   SUPABASE_SERVICE_ROLE_KEY - Service role key (not anon key)
+#   SUPABASE_DB_URL - Postgres connection string
 
 services:
   server:
@@ -13,5 +12,4 @@ services:
     environment:
       RUST_LOG: wowlab_sentinel=info
       # DISCORD_TOKEN: your-bot-token
-      # SUPABASE_URL: https://your-project.supabase.co
-      # SUPABASE_SERVICE_ROLE_KEY: your-service-role-key
+      # SUPABASE_DB_URL: postgres://...

@@ -21,7 +21,6 @@ enum Part {
     Field(String, String),
     Section(String),
     Line(String),
-    Gap,
 }
 
 impl EmbedContent {
@@ -33,15 +32,6 @@ impl EmbedContent {
     pub fn field(mut self, label: &str, value: impl std::fmt::Display) -> Self {
         self.parts.push(Part::Field(label.to_string(), value.to_string()));
         self
-    }
-
-    /// Bold label with value, only included if the condition is true.
-    pub fn field_if(self, condition: bool, label: &str, value: impl std::fmt::Display) -> Self {
-        if condition {
-            self.field(label, value)
-        } else {
-            self
-        }
     }
 
     /// Key-value shorthand (same as field, just reads nicer for numeric values).
@@ -58,18 +48,6 @@ impl EmbedContent {
     /// Plain text line.
     pub fn line(mut self, text: impl std::fmt::Display) -> Self {
         self.parts.push(Part::Line(text.to_string()));
-        self
-    }
-
-    /// Inline code line: `` `text` ``
-    pub fn code(mut self, text: impl std::fmt::Display) -> Self {
-        self.parts.push(Part::Line(format!("`{}`", text)));
-        self
-    }
-
-    /// Empty line for spacing.
-    pub fn gap(mut self) -> Self {
-        self.parts.push(Part::Gap);
         self
     }
 
@@ -90,9 +68,6 @@ impl EmbedContent {
                 }
                 Part::Line(text) => {
                     out.push_str(text);
-                    out.push('\n');
-                }
-                Part::Gap => {
                     out.push('\n');
                 }
             }

@@ -83,7 +83,6 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-
 #[derive(Debug, sqlx::FromRow)]
 struct ThroughputRow {
     completed: Option<i64>,

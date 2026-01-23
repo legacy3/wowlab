@@ -1,12 +1,3 @@
-/// System-level metrics: memory, CPU, load averages.
-///
-/// Real implementations read from `/proc/` (Linux-only).
-/// Non-Linux targets get zero-value stubs.
-
-// ---------------------------------------------------------------------------
-// Linux implementations
-// ---------------------------------------------------------------------------
-
 #[cfg(target_os = "linux")]
 mod inner {
     /// RSS memory in megabytes from `/proc/self/statm`.
@@ -93,10 +84,6 @@ mod inner {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Non-Linux stubs
-// ---------------------------------------------------------------------------
-
 #[cfg(not(target_os = "linux"))]
 mod inner {
     pub fn read_memory_mb() -> f64 {
@@ -115,10 +102,6 @@ mod inner {
         (0.0, 0.0)
     }
 }
-
-// ---------------------------------------------------------------------------
-// Public re-exports
-// ---------------------------------------------------------------------------
 
 pub use inner::cpu_usage_percent;
 pub use inner::read_load_average;

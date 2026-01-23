@@ -137,4 +137,3 @@ pub fn filter_hash(bytes: &[u8]) -> String {
     let hash = Sha256::digest(bytes);
     hash[..8].iter().map(|b| format!("{:02x}", b)).collect()
 }
-
