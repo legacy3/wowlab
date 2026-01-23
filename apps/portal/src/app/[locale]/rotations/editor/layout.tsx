@@ -1,8 +1,24 @@
 import type { ReactNode } from "react";
 
+import { unauthorized } from "next/navigation";
 import { Container } from "styled-system/jsx";
 
-export default function EditorLayout({ children }: { children: ReactNode }) {
+import { createClient } from "@/lib/supabase/server";
+
+export default async function EditorLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    unauthorized();
+  }
+
   return (
     <Container maxW="8xl" py="6">
       {children}

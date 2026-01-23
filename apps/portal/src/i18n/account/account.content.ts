@@ -148,11 +148,46 @@ export default {
       ),
     },
     settingsPage: {
+      actionsDescription: t({
+        de: "Kontoaktionen und -verwaltung",
+        en: "Account actions and management",
+      }),
+      actionsTitle: t({ de: "Aktionen", en: "Actions" }),
+      cancel: t({ de: "Abbrechen", en: "Cancel" }),
       connectionsDescription: t({
         de: "Verknüpfte Drittanbieter-Konten",
         en: "Linked third-party accounts",
       }),
       connectionsTitle: t({ de: "Verbindungen", en: "Connections" }),
+      deleteAccount: t({ de: "Konto löschen", en: "Delete Account" }),
+      deletedHandle: t({
+        de: "Dein Benutzername wird permanent gesperrt, auch für dich",
+        en: "Your handle will be permanently blocked, including for you",
+      }),
+      deleteDialogDescription: t({
+        de: "Dies wird dein Konto dauerhaft entfernen.",
+        en: "This will permanently remove your account.",
+      }),
+      deletedJobs: t({
+        de: "Alle Simulationsjobs und Ergebnisse",
+        en: "All simulation jobs and results",
+      }),
+      deletedNodes: t({
+        de: "Alle registrierten Nodes und deren Konfiguration",
+        en: "All registered nodes and their configuration",
+      }),
+      deletedRotations: t({
+        de: "Alle Rotationen und Versionsverläufe",
+        en: "All rotations and version history",
+      }),
+      deleteWarningDescription: t({
+        de: "Dein Konto, alle Daten und dein Benutzername werden unwiderruflich gelöscht. Dies kann nicht rückgängig gemacht werden.",
+        en: "Your account, all associated data, and your handle will be permanently removed. This cannot be reversed.",
+      }),
+      deleteWarningTitle: t({
+        de: "Diese Aktion ist endgültig",
+        en: "This action is permanent",
+      }),
       email: t({ de: "E-Mail", en: "Email" }),
       handle: t({ de: "Benutzername", en: "Handle" }),
       profileDescription: t({
@@ -160,6 +195,18 @@ export default {
         en: "Your account information",
       }),
       profileTitle: t({ de: "Profil", en: "Profile" }),
+      resetPreferences: t({
+        de: "UI-Einstellungen zurücksetzen",
+        en: "Reset UI Preferences",
+      }),
+      typeHandleToConfirm: t({
+        de: "Gib deinen Benutzernamen ein, um das Löschen zu bestätigen:",
+        en: "Type your handle to confirm deletion:",
+      }),
+      whatGetsDeleted: t({
+        de: "Folgendes wird gelöscht:",
+        en: "The following will be deleted:",
+      }),
     },
   },
   description: "Content for account management.",

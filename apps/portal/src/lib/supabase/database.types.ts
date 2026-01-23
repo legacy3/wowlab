@@ -839,10 +839,12 @@ export type Database = {
     Tables: {
       jobs: {
         Row: {
+          access_type: string;
           completed_at: string | null;
           completed_iterations: number;
           config_hash: string;
           created_at: string;
+          discord_server_id: string | null;
           id: string;
           result: Json | null;
           status: string;
@@ -850,10 +852,12 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          access_type?: string;
           completed_at?: string | null;
           completed_iterations?: number;
           config_hash: string;
           created_at?: string;
+          discord_server_id?: string | null;
           id?: string;
           result?: Json | null;
           status?: string;
@@ -861,10 +865,12 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          access_type?: string;
           completed_at?: string | null;
           completed_iterations?: number;
           config_hash?: string;
           created_at?: string;
+          discord_server_id?: string | null;
           id?: string;
           result?: Json | null;
           status?: string;
@@ -968,39 +974,39 @@ export type Database = {
       };
       nodes: {
         Row: {
-          claim_code: string | null;
           created_at: string;
           id: string;
           last_seen_at: string | null;
           max_parallel: number;
           name: string;
           platform: string;
+          public_key: string;
           status: string;
           total_cores: number;
           user_id: string | null;
           version: string;
         };
         Insert: {
-          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
           max_parallel?: number;
           name?: string;
           platform?: string;
+          public_key: string;
           status?: string;
           total_cores?: number;
           user_id?: string | null;
           version?: string;
         };
         Update: {
-          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
           max_parallel?: number;
           name?: string;
           platform?: string;
+          public_key?: string;
           status?: string;
           total_cores?: number;
           user_id?: string | null;
@@ -1264,6 +1270,7 @@ export type Database = {
     };
     Functions: {
       cleanup_stale_data: { Args: never; Returns: undefined };
+      delete_own_account: { Args: never; Returns: undefined };
       generate_default_handle: { Args: { user_id: string }; Returns: string };
       generate_random_seed: { Args: never; Returns: string };
       get_or_create_short_url: {

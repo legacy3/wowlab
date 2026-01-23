@@ -5,6 +5,7 @@ import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Grid, HStack, Stack } from "styled-system/jsx";
 
+import { DiscordLinkBanner } from "@/components/account/settings";
 import { Button, Card, Empty, Link, Skeleton, StatCard } from "@/components/ui";
 import { routes } from "@/lib/routing";
 import {
@@ -17,8 +18,6 @@ import {
   useNodesSelectionArray,
   useUser,
 } from "@/lib/state";
-
-import { DiscordLinkBanner } from "@/components/account/settings";
 
 import { BulkActionBar } from "./bulk-action-bar";
 import { NodeSettingsDialog } from "./node-settings-dialog";

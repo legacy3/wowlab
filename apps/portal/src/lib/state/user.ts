@@ -21,6 +21,7 @@ export interface User {
 
 export interface UserState {
   data: User | null;
+  deleteAccount: () => Promise<void>;
   error: Error | null;
   isLoading: boolean;
   linkIdentity: (provider: OAuthProvider) => Promise<void>;
@@ -101,6 +102,17 @@ export function useUser(): UserState {
     [supabase],
   );
 
+  const deleteAccount = useCallback(async () => {
+    const { error } = await supabase.rpc("delete_own_account");
+    if (error) {
+      throw error;
+    }
+
+    await supabase.auth.signOut();
+
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+  }, [supabase, queryClient]);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     queryClient.invalidateQueries({ queryKey: ["auth"] });
@@ -108,6 +120,7 @@ export function useUser(): UserState {
 
   return {
     data: data ?? null,
+    deleteAccount,
     error: error instanceof Error ? error : null,
     isLoading,
     linkIdentity,
