@@ -2,25 +2,23 @@
 mod inner {
     /// RSS memory in megabytes from `/proc/self/statm`.
     pub fn read_memory_mb() -> f64 {
+        let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as f64;
         std::fs::read_to_string("/proc/self/statm")
             .ok()
             .and_then(|s| s.split_whitespace().nth(1).and_then(|p| p.parse::<u64>().ok()))
-            .map(|pages| pages as f64 * 4.0 / 1024.0)
+            .map(|pages| pages as f64 * page_size / (1024.0 * 1024.0))
             .unwrap_or(0.0)
     }
 
-    /// 1/5/15-minute load averages from `/proc/loadavg`.
+    /// 1/5/15-minute load averages via `getloadavg`.
     pub fn read_load_average() -> [f64; 3] {
-        std::fs::read_to_string("/proc/loadavg")
-            .ok()
-            .and_then(|s| {
-                let mut parts = s.split_whitespace();
-                let one = parts.next()?.parse::<f64>().ok()?;
-                let five = parts.next()?.parse::<f64>().ok()?;
-                let fifteen = parts.next()?.parse::<f64>().ok()?;
-                Some([one, five, fifteen])
-            })
-            .unwrap_or([0.0; 3])
+        let mut avg = [0.0f64; 3];
+        let ret = unsafe { libc::getloadavg(avg.as_mut_ptr(), 3) };
+        if ret == 3 {
+            avg
+        } else {
+            [0.0; 3]
+        }
     }
 
     /// CPU times (total, idle) from `/proc/stat`.
@@ -58,7 +56,7 @@ mod inner {
 
     /// System total and available memory in MB from `/proc/meminfo`.
     pub fn read_os_memory_mb() -> (f64, f64) {
-        let Some(meminfo) = std::fs::read_to_string("/proc/meminfo").ok() else {
+        let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") else {
             return (0.0, 0.0);
         };
         let mut total = 0.0;
@@ -84,7 +82,331 @@ mod inner {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "macos")]
+mod inner {
+    use std::mem;
+
+    const KERN_SUCCESS: i32 = 0;
+    const MACH_TASK_BASIC_INFO: u32 = 20;
+    const HOST_CPU_LOAD_INFO: i32 = 3;
+    const HOST_VM_INFO64: i32 = 4;
+
+    #[repr(C)]
+    struct MachTaskBasicInfo {
+        virtual_size: u64,
+        resident_size: u64,
+        resident_size_max: u64,
+        user_time: [i32; 2],
+        system_time: [i32; 2],
+        policy: i32,
+        suspend_count: i32,
+    }
+
+    #[repr(C)]
+    struct HostCpuLoadInfo {
+        ticks: [u32; 4],
+    }
+
+    #[repr(C)]
+    struct VmStatistics64 {
+        free_count: u32,
+        active_count: u32,
+        inactive_count: u32,
+        wire_count: u32,
+        zero_fill_count: u64,
+        reactivations: u64,
+        pageins: u64,
+        pageouts: u64,
+        faults: u64,
+        cow_faults: u64,
+        lookups: u64,
+        hits: u64,
+        purges: u64,
+        purgeable_count: u32,
+        speculative_count: u32,
+        decompressions: u64,
+        compressions: u64,
+        swapins: u64,
+        swapouts: u64,
+        compressor_page_count: u32,
+        throttled_count: u32,
+        external_page_count: u32,
+        internal_page_count: u32,
+        total_uncompressed_pages_in_compressor: u64,
+    }
+
+    extern "C" {
+        fn mach_task_self() -> u32;
+        fn mach_host_self() -> u32;
+        fn task_info(
+            target_task: u32,
+            flavor: u32,
+            task_info_out: *mut i32,
+            task_info_count: *mut u32,
+        ) -> i32;
+        fn host_statistics(
+            host: u32,
+            flavor: i32,
+            info: *mut i32,
+            count: *mut u32,
+        ) -> i32;
+        fn host_statistics64(
+            host: u32,
+            flavor: i32,
+            info: *mut i32,
+            count: *mut u32,
+        ) -> i32;
+    }
+
+    /// RSS memory in megabytes via Mach `task_info`.
+    pub fn read_memory_mb() -> f64 {
+        unsafe {
+            let mut info: MachTaskBasicInfo = mem::zeroed();
+            let mut count =
+                (mem::size_of::<MachTaskBasicInfo>() / mem::size_of::<u32>()) as u32;
+            let ret = task_info(
+                mach_task_self(),
+                MACH_TASK_BASIC_INFO,
+                &mut info as *mut _ as *mut i32,
+                &mut count,
+            );
+            if ret == KERN_SUCCESS {
+                info.resident_size as f64 / (1024.0 * 1024.0)
+            } else {
+                0.0
+            }
+        }
+    }
+
+    /// 1/5/15-minute load averages via `getloadavg`.
+    pub fn read_load_average() -> [f64; 3] {
+        let mut avg = [0.0f64; 3];
+        let ret = unsafe { libc::getloadavg(avg.as_mut_ptr(), 3) };
+        if ret == 3 {
+            avg
+        } else {
+            [0.0; 3]
+        }
+    }
+
+    /// CPU ticks (total, idle) from Mach `host_statistics`.
+    fn read_cpu_ticks() -> Option<(u64, u64)> {
+        unsafe {
+            let mut info: HostCpuLoadInfo = mem::zeroed();
+            let mut count =
+                (mem::size_of::<HostCpuLoadInfo>() / mem::size_of::<u32>()) as u32;
+            let ret = host_statistics(
+                mach_host_self(),
+                HOST_CPU_LOAD_INFO,
+                &mut info as *mut _ as *mut i32,
+                &mut count,
+            );
+            if ret != KERN_SUCCESS {
+                return None;
+            }
+            let user = info.ticks[0] as u64;
+            let system = info.ticks[1] as u64;
+            let idle = info.ticks[2] as u64;
+            let nice = info.ticks[3] as u64;
+            let total = user + system + idle + nice;
+            Some((total, idle))
+        }
+    }
+
+    /// CPU usage percentage sampled over 100ms.
+    pub async fn cpu_usage_percent() -> f64 {
+        let Some((total1, idle1)) = read_cpu_ticks() else {
+            return 0.0;
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        let Some((total2, idle2)) = read_cpu_ticks() else {
+            return 0.0;
+        };
+        let total_delta = total2.saturating_sub(total1);
+        if total_delta == 0 {
+            return 0.0;
+        }
+        let idle_delta = idle2.saturating_sub(idle1);
+        100.0 * (total_delta - idle_delta) as f64 / total_delta as f64
+    }
+
+    /// System total and available memory in MB.
+    pub fn read_os_memory_mb() -> (f64, f64) {
+        let total = unsafe {
+            let mut size: u64 = 0;
+            let mut len = mem::size_of::<u64>();
+            let ret = libc::sysctlbyname(
+                b"hw.memsize\0".as_ptr() as *const libc::c_char,
+                &mut size as *mut _ as *mut libc::c_void,
+                &mut len,
+                std::ptr::null_mut(),
+                0,
+            );
+            if ret == 0 {
+                size as f64 / (1024.0 * 1024.0)
+            } else {
+                0.0
+            }
+        };
+
+        let available = unsafe {
+            let mut info: VmStatistics64 = mem::zeroed();
+            let mut count =
+                (mem::size_of::<VmStatistics64>() / mem::size_of::<u32>()) as u32;
+            let ret = host_statistics64(
+                mach_host_self(),
+                HOST_VM_INFO64,
+                &mut info as *mut _ as *mut i32,
+                &mut count,
+            );
+            if ret == KERN_SUCCESS {
+                let page_size = libc::sysconf(libc::_SC_PAGESIZE) as u64;
+                let free_pages = info.free_count as u64
+                    + info.inactive_count as u64
+                    + info.purgeable_count as u64;
+                (free_pages * page_size) as f64 / (1024.0 * 1024.0)
+            } else {
+                0.0
+            }
+        };
+
+        (total, available)
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod inner {
+    use std::mem;
+
+    #[repr(C)]
+    struct ProcessMemoryCounters {
+        cb: u32,
+        page_fault_count: u32,
+        peak_working_set_size: usize,
+        working_set_size: usize,
+        quota_peak_paged_pool_usage: usize,
+        quota_paged_pool_usage: usize,
+        quota_peak_non_paged_pool_usage: usize,
+        quota_non_paged_pool_usage: usize,
+        pagefile_usage: usize,
+        peak_pagefile_usage: usize,
+    }
+
+    #[repr(C)]
+    struct MemoryStatusEx {
+        length: u32,
+        memory_load: u32,
+        total_phys: u64,
+        avail_phys: u64,
+        total_page_file: u64,
+        avail_page_file: u64,
+        total_virtual: u64,
+        avail_virtual: u64,
+        avail_extended_virtual: u64,
+    }
+
+    #[repr(C)]
+    struct FileTime {
+        low: u32,
+        high: u32,
+    }
+
+    impl FileTime {
+        fn as_u64(&self) -> u64 {
+            (self.high as u64) << 32 | self.low as u64
+        }
+    }
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetCurrentProcess() -> isize;
+        fn K32GetProcessMemoryInfo(
+            process: isize,
+            counters: *mut ProcessMemoryCounters,
+            cb: u32,
+        ) -> i32;
+        fn GlobalMemoryStatusEx(status: *mut MemoryStatusEx) -> i32;
+        fn GetSystemTimes(
+            idle: *mut FileTime,
+            kernel: *mut FileTime,
+            user: *mut FileTime,
+        ) -> i32;
+    }
+
+    /// RSS (working set) in megabytes via `K32GetProcessMemoryInfo`.
+    pub fn read_memory_mb() -> f64 {
+        unsafe {
+            let mut counters: ProcessMemoryCounters = mem::zeroed();
+            counters.cb = mem::size_of::<ProcessMemoryCounters>() as u32;
+            let ret = K32GetProcessMemoryInfo(
+                GetCurrentProcess(),
+                &mut counters,
+                counters.cb,
+            );
+            if ret != 0 {
+                counters.working_set_size as f64 / (1024.0 * 1024.0)
+            } else {
+                0.0
+            }
+        }
+    }
+
+    /// Load average is not a native concept on Windows.
+    pub fn read_load_average() -> [f64; 3] {
+        [0.0; 3]
+    }
+
+    /// CPU times (total, idle) from `GetSystemTimes`.
+    fn read_cpu_times() -> Option<(u64, u64)> {
+        unsafe {
+            let mut idle = mem::zeroed::<FileTime>();
+            let mut kernel = mem::zeroed::<FileTime>();
+            let mut user = mem::zeroed::<FileTime>();
+            let ret = GetSystemTimes(&mut idle, &mut kernel, &mut user);
+            if ret == 0 {
+                return None;
+            }
+            let idle_time = idle.as_u64();
+            let total_time = kernel.as_u64() + user.as_u64();
+            Some((total_time, idle_time))
+        }
+    }
+
+    /// CPU usage percentage sampled over 100ms.
+    pub async fn cpu_usage_percent() -> f64 {
+        let Some((total1, idle1)) = read_cpu_times() else {
+            return 0.0;
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        let Some((total2, idle2)) = read_cpu_times() else {
+            return 0.0;
+        };
+        let total_delta = total2.saturating_sub(total1);
+        if total_delta == 0 {
+            return 0.0;
+        }
+        let idle_delta = idle2.saturating_sub(idle1);
+        100.0 * (total_delta - idle_delta) as f64 / total_delta as f64
+    }
+
+    /// System total and available physical memory in MB.
+    pub fn read_os_memory_mb() -> (f64, f64) {
+        unsafe {
+            let mut status: MemoryStatusEx = mem::zeroed();
+            status.length = mem::size_of::<MemoryStatusEx>() as u32;
+            let ret = GlobalMemoryStatusEx(&mut status);
+            if ret != 0 {
+                let total = status.total_phys as f64 / (1024.0 * 1024.0);
+                let available = status.avail_phys as f64 / (1024.0 * 1024.0);
+                (total, available)
+            } else {
+                (0.0, 0.0)
+            }
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 mod inner {
     pub fn read_memory_mb() -> f64 {
         0.0
