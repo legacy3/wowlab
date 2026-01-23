@@ -3,6 +3,7 @@ use poise::serenity_prelude as serenity;
 use crate::bot::{Context, Error};
 use crate::utils::colors;
 use crate::utils::embed::EmbedContent;
+use crate::utils::sys;
 
 /// Show sentinel stats: uptime, memory, scheduler throughput, bloom filters
 #[poise::command(slash_command, user_cooldown = 5)]
@@ -14,10 +15,10 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
 
     // Uptime
     let uptime_secs = state.started_at.elapsed().as_secs();
-    let uptime = format_uptime(uptime_secs);
+    let uptime = sys::format_uptime(uptime_secs);
 
     // Memory (Linux /proc/self/statm, returns 0 on other platforms)
-    let memory_mb = read_memory_mb();
+    let memory_mb = sys::read_memory_mb();
 
     // Scheduler throughput: chunks completed in last hour
     let throughput = sqlx::query_as::<_, ThroughputRow>(
@@ -82,27 +83,6 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-fn format_uptime(secs: u64) -> String {
-    let days = secs / 86400;
-    let hours = (secs % 86400) / 3600;
-    let minutes = (secs % 3600) / 60;
-
-    if days > 0 {
-        format!("{}d {}h {}m", days, hours, minutes)
-    } else if hours > 0 {
-        format!("{}h {}m", hours, minutes)
-    } else {
-        format!("{}m", minutes)
-    }
-}
-
-fn read_memory_mb() -> f64 {
-    std::fs::read_to_string("/proc/self/statm")
-        .ok()
-        .and_then(|s| s.split_whitespace().nth(1).and_then(|p| p.parse::<u64>().ok()))
-        .map(|pages| pages as f64 * 4.0 / 1024.0)
-        .unwrap_or(0.0)
-}
 
 #[derive(Debug, sqlx::FromRow)]
 struct ThroughputRow {

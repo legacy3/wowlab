@@ -5,34 +5,39 @@ use axum::Json;
 use serde_json::{json, Value};
 
 use crate::state::ServerState;
+use crate::utils::sys;
 
 pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     let uptime = state.started_at.elapsed().as_secs();
-    let memory_mb = read_memory_mb();
+    let memory_mb = sys::read_memory_mb();
+    let (os_mem_total, os_mem_available) = sys::read_os_memory_mb();
+    let load = sys::read_load_average();
+    let cpu = sys::cpu_usage_percent().await;
 
-    let db_status = match state.db.acquire().await {
+    // Measure actual DB ping
+    let db_start = std::time::Instant::now();
+    let db_status = match sqlx::query("SELECT 1").execute(&state.db).await {
         Ok(_) => "OK",
         Err(_) => "ERROR",
     };
+    let db_ping_ms = db_start.elapsed().as_millis() as u64;
 
     Json(json!({
         "status": "success",
         "data": {
             "uptime": uptime,
-            "memory_mb": memory_mb,
+            "load": load,
+            "cpu_percent": (cpu * 10.0).round() / 10.0,
+            "memory_mb": (memory_mb * 10.0).round() / 10.0,
+            "os_memory_mb": {
+                "total": (os_mem_total * 10.0).round() / 10.0,
+                "available": (os_mem_available * 10.0).round() / 10.0,
+            },
             "services": [
                 { "name": "Bot", "status": "OK" },
                 { "name": "Scheduler", "status": "OK" },
-                { "name": "Database", "status": db_status },
+                { "name": "Database", "status": db_status, "ping": db_ping_ms },
             ]
         }
     }))
-}
-
-fn read_memory_mb() -> f64 {
-    std::fs::read_to_string("/proc/self/statm")
-        .ok()
-        .and_then(|s| s.split_whitespace().nth(1).and_then(|p| p.parse::<u64>().ok()))
-        .map(|pages| pages as f64 * 4.0 / 1024.0)
-        .unwrap_or(0.0)
 }
