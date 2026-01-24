@@ -160,9 +160,10 @@ export function NodeClaimForm({
           <PinInput.Root
             variant="surface"
             size="xl"
-            otp
+            type="alphanumeric"
             placeholder=""
-            onValueChange={(e) => setCode(e.value)}
+            value={code}
+            onValueChange={(e) => setCode(e.value.map((v) => v.toUpperCase()))}
           >
             <PinInput.HiddenInput />
             <PinInput.Control>

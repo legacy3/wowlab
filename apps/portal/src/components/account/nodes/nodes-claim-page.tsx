@@ -66,14 +66,13 @@ export function NodesClaimPage() {
     name: string;
     workers: number;
   }) => {
-    if (!userId || !pendingNode) return;
+    if (!pendingNode) return;
 
     try {
       await claimNode.mutateAsync({
         maxParallel: data.workers,
         name: data.name,
         nodeId: pendingNode.id,
-        userId,
       });
       router.push(routes.account.nodes.index.path);
     } catch {

@@ -6,7 +6,7 @@ import type { TablesUpdate } from "@/lib/supabase/database.types";
 
 import { createClient } from "@/lib/supabase/client";
 
-import { mapAccessTypeToDb, type NodeAccessType, type NodeRow } from "./types";
+import { mapAccessTypeToDb, type NodeAccessType } from "./types";
 
 export interface SaveNodeData {
   accessType: NodeAccessType;
@@ -28,23 +28,19 @@ export function useClaimNode() {
 
   const verifyCode = useMutation({
     mutationFn: async (code: string): Promise<VerifyResult> => {
-      const normalizedCode = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const { data, error } = await supabase.rpc("verify_claim_code", {
+        p_code: code,
+      });
 
-      const { data, error } = await supabase
-        .from("nodes")
-        .select("id, name, platform, total_cores, max_parallel")
-        .eq("claim_code", normalizedCode)
-        .is("user_id", null)
-        .single();
+      if (error) throw new Error("Invalid or expired claim code");
 
-      if (error) {
-        if (error.code === "PGRST116") {
-          throw new Error("Invalid or expired claim code");
-        }
-        throw error;
-      }
-
-      return data as VerifyResult;
+      return {
+        id: data.id,
+        max_parallel: data.maxParallel,
+        name: data.name,
+        platform: data.platform,
+        total_cores: data.totalCores,
+      };
     },
   });
 
@@ -53,27 +49,19 @@ export function useClaimNode() {
       maxParallel,
       name,
       nodeId,
-      userId,
     }: {
       nodeId: string;
-      userId: string;
       name: string;
       maxParallel: number;
-    }): Promise<NodeRow> => {
-      const { data, error } = await supabase
-        .from("nodes")
-        .update({
-          claim_code: null,
-          max_parallel: maxParallel,
-          name,
-          user_id: userId,
-        })
-        .eq("id", nodeId)
-        .select()
-        .single();
+    }) => {
+      const { data, error } = await supabase.rpc("claim_node", {
+        p_max_parallel: maxParallel,
+        p_name: name,
+        p_node_id: nodeId,
+      });
 
       if (error) throw error;
-      return data as NodeRow;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nodes"] });

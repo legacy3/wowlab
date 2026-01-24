@@ -9,6 +9,7 @@ import type { NodeWithMeta } from "@/lib/state";
 import {
   Checkbox,
   IconButton,
+  SecretValue,
   Skeleton,
   Table,
   Text,
@@ -98,7 +99,9 @@ export function NodesTable({
                   </Checkbox.Control>
                 </Checkbox.Root>
               </Table.Cell>
-              <Table.Cell fontWeight="medium">{node.name}</Table.Cell>
+              <Table.Cell>
+                <SecretValue value={node.name} hiddenLength={16} />
+              </Table.Cell>
               <Table.Cell>
                 <HStack gap="2">
                   <PlatformIcon platform={node.platform} size={14} />

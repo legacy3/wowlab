@@ -974,6 +974,7 @@ export type Database = {
       };
       nodes: {
         Row: {
+          claim_code: string | null;
           created_at: string;
           id: string;
           last_seen_at: string | null;
@@ -987,6 +988,7 @@ export type Database = {
           version: string;
         };
         Insert: {
+          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
@@ -1000,6 +1002,7 @@ export type Database = {
           version?: string;
         };
         Update: {
+          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
@@ -1269,15 +1272,29 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      create_job: {
-        Args: {
-          p_access_type?: string;
-          p_config: Json;
-          p_discord_server_id?: string;
-          p_iterations: number;
-        };
+      claim_node: {
+        Args: { p_max_parallel: number; p_name: string; p_node_id: string };
         Returns: Json;
       };
+      create_job:
+        | {
+            Args: {
+              p_access_type?: string;
+              p_config: Json;
+              p_discord_server_id?: string;
+              p_iterations: number;
+            };
+            Returns: Json;
+          }
+        | {
+            Args: {
+              p_access_type?: string;
+              p_config_hash: string;
+              p_discord_server_id?: string;
+              p_iterations: number;
+            };
+            Returns: Json;
+          };
       delete_own_account: { Args: never; Returns: undefined };
       generate_default_handle: { Args: { user_id: string }; Returns: string };
       generate_random_seed: { Args: never; Returns: string };
@@ -1285,6 +1302,7 @@ export type Database = {
         Args: { p_target_url: string; p_user_id?: string };
         Returns: string;
       };
+      verify_claim_code: { Args: { p_code: string }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

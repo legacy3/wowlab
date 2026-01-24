@@ -469,6 +469,83 @@ $$;
 ALTER FUNCTION "public"."notify_pending_chunk"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."verify_claim_code"("p_code" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_node record;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  SELECT id, name, platform, total_cores, max_parallel
+  INTO v_node
+  FROM nodes
+  WHERE claim_code = upper(replace(p_code, '-', ''))
+    AND user_id IS NULL;
+
+  IF v_node IS NULL THEN
+    RAISE EXCEPTION 'Invalid or expired claim code';
+  END IF;
+
+  RETURN jsonb_build_object(
+    'id', v_node.id,
+    'name', v_node.name,
+    'platform', v_node.platform,
+    'totalCores', v_node.total_cores,
+    'maxParallel', v_node.max_parallel
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."verify_claim_code"("p_code" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."claim_node"("p_node_id" "uuid", "p_name" "text", "p_max_parallel" integer) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid;
+  v_node record;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE nodes
+  SET user_id = v_user_id,
+      name = p_name,
+      max_parallel = p_max_parallel,
+      claim_code = NULL
+  WHERE id = p_node_id
+    AND user_id IS NULL
+  RETURNING id, name, max_parallel, status, platform, total_cores, version, created_at
+  INTO v_node;
+
+  IF v_node IS NULL THEN
+    RAISE EXCEPTION 'Node not found or already claimed';
+  END IF;
+
+  RETURN jsonb_build_object(
+    'id', v_node.id,
+    'name', v_node.name,
+    'maxParallel', v_node.max_parallel,
+    'status', v_node.status,
+    'platform', v_node.platform,
+    'totalCores', v_node.total_cores
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."claim_node"("p_node_id" "uuid", "p_name" "text", "p_max_parallel" integer) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."prevent_handle_change"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public', 'pg_temp'
@@ -973,7 +1050,8 @@ CREATE TABLE IF NOT EXISTS "public"."nodes" (
     "total_cores" integer DEFAULT 4 NOT NULL,
     "platform" "text" DEFAULT 'unknown'::"text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "public_key" "text" NOT NULL
+    "public_key" "text" NOT NULL,
+    "claim_code" "text"
 );
 
 
@@ -1177,6 +1255,11 @@ ALTER TABLE ONLY "public"."nodes"
 
 ALTER TABLE ONLY "public"."nodes"
     ADD CONSTRAINT "nodes_public_key_key" UNIQUE ("public_key");
+
+
+
+ALTER TABLE ONLY "public"."nodes"
+    ADD CONSTRAINT "nodes_claim_code_key" UNIQUE ("claim_code");
 
 
 
