@@ -6053,11 +6053,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-R4ZySi0fUkDcHEeq4aazw5UdBXuip01LyyQs/tdICwBbBZQmr3jk3ylIXxk6vQHMKDY6nxYmF9FIIHaACOGMUA==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-qaomuRIEz6CvOFb7xUVxSOwBgrI0KdbV8oGPJoB9RcANpUhw8vsYUHc/JjjZzDgJd5M9o0FoAc9sjWxsiKjyYQ==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz:
-    resolution: {integrity: sha512-K1p1a6HxYJk7p46l0V8Cynkzxym0fKHKFuzmKVqmy0LNc+d5ZyCvJQtC1J49dVXLKTiJbR4UtS9OVS01mUBfIQ==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
+    resolution: {integrity: sha512-u7op1+X7maV2cgNnyqNaUt6Cn1EAhuilqkzyprqCw2/j8N9LMzQvXtrAInal5WvgL6DgmEUmGVokyEik7PdPKA==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:

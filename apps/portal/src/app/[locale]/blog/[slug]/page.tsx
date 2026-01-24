@@ -64,10 +64,10 @@ export default async function BlogPostPage({ params }: Props) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  
+
   const post = getBlogPost(slug);
   if (!post) {
-     return {};
+    return {};
   }
 
   return {

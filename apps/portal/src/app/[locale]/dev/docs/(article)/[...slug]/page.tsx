@@ -84,15 +84,24 @@ export default async function DocPage({ params }: Props) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const fullSlug = slug.join("/");
 
-  const doc = getDoc(slug.join("/"));
+  const doc = getDoc(fullSlug);
   if (!doc) {
     return {};
   }
-  
+
   return {
     description: doc.description,
     openGraph: {
+      images: [
+        {
+          alt: doc.title,
+          height: 630,
+          url: `/api/og/docs?slug=${encodeURIComponent(fullSlug)}`,
+          width: 1200,
+        },
+      ],
       modifiedTime: doc.updatedAt,
       type: "article",
     },
