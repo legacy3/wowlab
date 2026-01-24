@@ -48,9 +48,8 @@ for (const item of items) {
 
 1. Search `hooks/` for existing React hooks
 2. Search `utils/` for utility functions
-3. Search `atoms/utils/` for Jotai helpers
-4. Check if a service already provides the functionality
-5. Look for similar patterns in the codebase
+3. Search `lib/state/` for existing query/store hooks
+4. Look for similar patterns in the codebase
 
 ### If Similar Code Exists
 

@@ -349,26 +349,21 @@ export { NODE_ACCESS_OPTIONS, mapAccessTypeFromDb, mapAccessTypeToDb } from "./t
 
 ```ts
 // lib/state/index.ts
-"use client";
 
 // Nodes
-export * from "./nodes";
+export { useNodes, useNode, useNodeMutations, useNodesSelection } from "./nodes";
 
 // Editor
-export * from "./editor";
+export { useEditor, useDefaultList, useListsByType, useSelectedList } from "./editor";
 
 // Game
-export * from "./game";
+export { useSpell, useSpells, useItem, useItems } from "./game";
 
 // User
-export * from "./user";
-
-// Computing
-export * from "./computing";
-
-// UI
-export * from "./ui";
+export { useUser } from "./user";
 ```
+
+Use named exports — no `export *` wildcards (see exports skill).
 
 ## Usage in Components
 
