@@ -87,6 +87,8 @@ async fn run_with_reconnect(
     let mut delay = INITIAL_RECONNECT_DELAY;
 
     loop {
+        let start = tokio::time::Instant::now();
+
         match run_realtime(&ws_url, &anon_key, node_id, &tx).await {
             Ok(()) => tracing::debug!("Realtime connection closed normally"),
             Err(e) => {
@@ -96,6 +98,11 @@ async fn run_with_reconnect(
         }
 
         let _ = tx.send(RealtimeEvent::Disconnected).await;
+
+        // Reset backoff if the connection was alive long enough to have been useful
+        if start.elapsed() > Duration::from_secs(10) {
+            delay = INITIAL_RECONNECT_DELAY;
+        }
 
         let jitter_ms = (std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

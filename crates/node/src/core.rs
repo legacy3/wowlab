@@ -398,6 +398,11 @@ impl NodeCore {
                     let _ = self
                         .event_tx
                         .try_send(NodeCoreEvent::ConnectionChanged(self.connection_status));
+                    // Restart realtime subscription
+                    if let Some(id) = self.node_id {
+                        tracing::info!("Realtime channel dropped, restarting subscription");
+                        self.start_realtime(id);
+                    }
                     return;
                 }
             }
