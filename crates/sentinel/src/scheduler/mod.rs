@@ -1,8 +1,9 @@
 pub mod assign;
+mod maintenance;
 mod reclaim;
 
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use sqlx::postgres::PgListener;
 use uuid::Uuid;
@@ -34,6 +35,9 @@ async fn listen_and_assign(
 
     process_pending(state).await;
 
+    let mut last_maintenance = Instant::now();
+    let mut last_cleanup = Instant::now();
+
     loop {
         state.touch_scheduler();
 
@@ -49,6 +53,19 @@ async fn listen_and_assign(
             Err(_timeout) => {
                 process_pending(state).await;
                 reclaim::reclaim_stale_chunks(state).await;
+
+                // Every 60s: mark offline nodes
+                if last_maintenance.elapsed() >= Duration::from_secs(60) {
+                    maintenance::mark_nodes_offline(&state.db).await;
+                    last_maintenance = Instant::now();
+                }
+
+                // Every hour: cleanup stale data
+                if last_cleanup.elapsed() >= Duration::from_secs(3600) {
+                    maintenance::cleanup_stale_data(&state.db).await;
+                    last_cleanup = Instant::now();
+                }
+
                 record_gauges(state).await;
             }
         }

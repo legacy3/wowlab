@@ -1269,7 +1269,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      cleanup_stale_data: { Args: never; Returns: undefined };
+      create_job: {
+        Args: {
+          p_access_type?: string;
+          p_config: Json;
+          p_discord_server_id?: string;
+          p_iterations: number;
+        };
+        Returns: Json;
+      };
       delete_own_account: { Args: never; Returns: undefined };
       generate_default_handle: { Args: { user_id: string }; Returns: string };
       generate_random_seed: { Args: never; Returns: string };
@@ -1277,8 +1285,6 @@ export type Database = {
         Args: { p_target_url: string; p_user_id?: string };
         Returns: string;
       };
-      mark_nodes_offline: { Args: never; Returns: undefined };
-      reap_stale_chunks: { Args: never; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

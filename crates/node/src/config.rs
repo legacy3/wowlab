@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 const DEFAULT_API_URL: &str = "https://api.wowlab.gg";
+const DEFAULT_SENTINEL_URL: &str = "https://sentinel.fly.dev";
 const DEFAULT_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -20,12 +21,18 @@ pub struct NodeConfig {
     pub node_id: Option<Uuid>,
     #[serde(default = "default_api_url")]
     pub api_url: String,
+    #[serde(default = "default_sentinel_url")]
+    pub sentinel_url: String,
     #[serde(default = "default_anon_key")]
     pub anon_key: String,
 }
 
 fn default_api_url() -> String {
     DEFAULT_API_URL.to_string()
+}
+
+fn default_sentinel_url() -> String {
+    DEFAULT_SENTINEL_URL.to_string()
 }
 
 fn default_anon_key() -> String {
@@ -37,6 +44,7 @@ impl Default for NodeConfig {
         Self {
             node_id: None,
             api_url: default_api_url(),
+            sentinel_url: default_sentinel_url(),
             anon_key: default_anon_key(),
         }
     }
@@ -104,6 +112,7 @@ impl NodeConfig {
         }
 
         let _ = writeln!(content, "api_url = {}", self.api_url);
+        let _ = writeln!(content, "sentinel_url = {}", self.sentinel_url);
         let _ = writeln!(content, "anon_key = {}", self.anon_key);
 
         if let Err(e) = std::fs::write(&path, content) {

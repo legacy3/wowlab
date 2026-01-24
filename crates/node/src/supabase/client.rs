@@ -2,10 +2,19 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use uuid::Uuid;
 
+use crate::auth::NodeKeypair;
+
 #[derive(Clone)]
 pub struct ApiClient {
     http: reqwest::Client,
+    /// Supabase API URL (for direct PostgREST queries).
     api_url: String,
+    /// Supabase anon key (for PostgREST auth).
+    anon_key: String,
+    /// Sentinel HTTP URL (for node operations).
+    sentinel_url: String,
+    /// Ed25519 keypair for request signing.
+    keypair: NodeKeypair,
 }
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
@@ -29,14 +38,39 @@ pub enum ApiError {
 }
 
 impl ApiClient {
-    pub fn new(api_url: String) -> Result<Self, ApiError> {
+    pub fn new(api_url: String, anon_key: String, sentinel_url: String, keypair: NodeKeypair) -> Result<Self, ApiError> {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .connect_timeout(CONNECT_TIMEOUT)
             .build()
             .map_err(|e| ApiError::ClientBuild(e.to_string()))?;
 
-        Ok(Self { http, api_url })
+        Ok(Self {
+            http,
+            api_url,
+            anon_key,
+            sentinel_url,
+            keypair,
+        })
+    }
+
+    /// Send a signed POST request to the sentinel.
+    async fn signed_post(&self, path: &str, body: &[u8]) -> Result<reqwest::Response, ApiError> {
+        let url = format!("{}{}", self.sentinel_url, path);
+        let headers = self.keypair.sign_request("POST", path, body);
+
+        let response = self
+            .http
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .header("X-Node-Key", &headers.key)
+            .header("X-Node-Sig", &headers.signature)
+            .header("X-Node-Ts", &headers.timestamp)
+            .body(body.to_vec())
+            .send()
+            .await?;
+
+        Ok(response)
     }
 
     pub async fn register_node(
@@ -57,19 +91,16 @@ impl ApiClient {
             version: &'a str,
         }
 
-        let url = format!("{}/functions/v1/node-register", self.api_url);
-        let response = self
-            .http
-            .post(&url)
-            .json(&Request {
-                hostname,
-                total_cores,
-                enabled_cores,
-                platform,
-                version,
-            })
-            .send()
-            .await?;
+        let body = serde_json::to_vec(&Request {
+            hostname,
+            total_cores,
+            enabled_cores,
+            platform,
+            version,
+        })
+        .unwrap();
+
+        let response = self.signed_post("/nodes/register", &body).await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
@@ -79,24 +110,14 @@ impl ApiClient {
         Ok(response.json().await?)
     }
 
-    pub async fn set_online(&self, node_id: Uuid) -> Result<(), ApiError> {
+    pub async fn set_online(&self, _node_id: Uuid) -> Result<(), ApiError> {
         #[derive(Serialize)]
-        #[serde(rename_all = "camelCase")]
         struct Request {
-            node_id: Uuid,
             status: &'static str,
         }
 
-        let url = format!("{}/functions/v1/node-heartbeat", self.api_url);
-        let response = self
-            .http
-            .post(&url)
-            .json(&Request {
-                node_id,
-                status: "online",
-            })
-            .send()
-            .await?;
+        let body = serde_json::to_vec(&Request { status: "online" }).unwrap();
+        let response = self.signed_post("/nodes/heartbeat", &body).await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
@@ -119,13 +140,8 @@ impl ApiClient {
             result: serde_json::Value,
         }
 
-        let url = format!("{}/functions/v1/chunk-complete", self.api_url);
-        let response = self
-            .http
-            .post(&url)
-            .json(&Request { chunk_id, result })
-            .send()
-            .await?;
+        let body = serde_json::to_vec(&Request { chunk_id, result }).unwrap();
+        let response = self.signed_post("/chunks/complete", &body).await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
@@ -137,25 +153,46 @@ impl ApiClient {
 }
 
 impl ApiClient {
-    /// Fetch a simulation config by hash.
-    /// Returns the full config JSON (includes rotationId for fetching script).
+    /// Fetch a simulation config by hash via direct PostgREST query.
     pub async fn fetch_config(&self, hash: &str) -> Result<serde_json::Value, ApiError> {
-        let url = format!("{}/functions/v1/config-fetch?hash={}", self.api_url, hash);
-        let response = self.http.get(&url).send().await?;
+        let url = format!(
+            "{}/rest/v1/jobs_configs?hash=eq.{}&select=config",
+            self.api_url, hash,
+        );
+
+        let response = self
+            .http
+            .get(&url)
+            .header("apikey", &self.anon_key)
+            .header("Authorization", format!("Bearer {}", self.anon_key))
+            .header("Accept", "application/vnd.pgrst.object+json")
+            .send()
+            .await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
             return Err(ApiError::Api(error));
         }
 
-        Ok(response.json().await?)
+        let row: ConfigRow = response.json().await?;
+        Ok(row.config)
     }
 
-    /// Fetch a rotation script by ID.
-    /// Returns the script and checksum for cache validation.
+    /// Fetch a rotation script by ID via direct PostgREST query.
     pub async fn fetch_rotation(&self, id: &str) -> Result<RotationResponse, ApiError> {
-        let url = format!("{}/functions/v1/rotation-fetch?id={}", self.api_url, id);
-        let response = self.http.get(&url).send().await?;
+        let url = format!(
+            "{}/rest/v1/rotations?id=eq.{}&select=id,script,checksum",
+            self.api_url, id,
+        );
+
+        let response = self
+            .http
+            .get(&url)
+            .header("apikey", &self.anon_key)
+            .header("Authorization", format!("Bearer {}", self.anon_key))
+            .header("Accept", "application/vnd.pgrst.object+json")
+            .send()
+            .await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
@@ -164,6 +201,11 @@ impl ApiClient {
 
         Ok(response.json().await?)
     }
+}
+
+#[derive(Deserialize)]
+struct ConfigRow {
+    config: serde_json::Value,
 }
 
 /// Response from rotation-fetch edge function.

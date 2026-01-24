@@ -220,7 +220,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/parsers: {}
+  packages/wowlab-parsers: {}
 
 packages:
 
@@ -6297,11 +6297,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-dNpG0Bq1kVA4teu1cLFO1L63LIKiMHDuu9pSbcrnPCnsc/OrBCZna5HpDcMyuZESoBc96POfUfBP3nory43YmA==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-t1hHAK0jeiWJGiMnqp0KHXgGrpj6IXwI4knsRXkV8A7cbTRoONhe4uCfuzhpcfflzMJSzdWVt1a07uBmudH0/g==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz:
-    resolution: {integrity: sha512-NMmQU6FROCcGE2GyiSKyPWv/acZjUWSmxwoNUxV8dg+z+exlRWNzrlJN5TvQUE8eWdevGtujv5pTFuFPs9P5aQ==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
+    resolution: {integrity: sha512-FOeWV912kzmc1+tG0nW+FCNp7r58W174IZsqyY3VEaC0yz6Brsma5zUFxqSHxCaxfp6S5IQDOBSSsj4dOvnBmQ==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:

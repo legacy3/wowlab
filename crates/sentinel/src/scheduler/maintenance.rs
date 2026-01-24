@@ -1,0 +1,74 @@
+use sqlx::PgPool;
+
+/// Mark nodes as offline if they haven't sent a heartbeat in 5 minutes.
+pub async fn mark_nodes_offline(db: &PgPool) {
+    match do_mark_offline(db).await {
+        Ok(count) if count > 0 => {
+            tracing::info!(count, "Marked nodes offline");
+            metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE).increment(count);
+        }
+        Ok(_) => {}
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to mark nodes offline");
+        }
+    }
+}
+
+async fn do_mark_offline(db: &PgPool) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query(
+        "UPDATE public.nodes
+         SET status = 'offline'
+         WHERE status = 'online'
+           AND last_seen_at IS NOT NULL
+           AND last_seen_at < now() - interval '5 minutes'",
+    )
+    .execute(db)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+/// Clean up stale data:
+/// - Unclaimed pending nodes older than 1 hour
+/// - Offline nodes not seen in 30 days
+/// - Unused configs older than 7 days
+pub async fn cleanup_stale_data(db: &PgPool) {
+    if let Err(e) = do_cleanup(db).await {
+        tracing::error!(error = %e, "Failed to cleanup stale data");
+        return;
+    }
+    tracing::debug!("Stale data cleanup complete");
+    metrics::counter!(crate::telemetry::STALE_DATA_CLEANUPS).increment(1);
+}
+
+async fn do_cleanup(db: &PgPool) -> Result<(), sqlx::Error> {
+    // Delete unclaimed pending nodes older than 1 hour
+    sqlx::query(
+        "DELETE FROM public.nodes
+         WHERE status = 'pending'
+           AND user_id IS NULL
+           AND created_at < now() - interval '1 hour'",
+    )
+    .execute(db)
+    .await?;
+
+    // Delete offline nodes not seen in 30 days
+    sqlx::query(
+        "DELETE FROM public.nodes
+         WHERE status = 'offline'
+           AND last_seen_at < now() - interval '30 days'",
+    )
+    .execute(db)
+    .await?;
+
+    // Delete unused configs older than 7 days
+    sqlx::query(
+        "DELETE FROM public.jobs_configs
+         WHERE last_used_at < now() - interval '7 days'
+           AND hash NOT IN (SELECT DISTINCT config_hash FROM public.jobs)",
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}

@@ -3,6 +3,8 @@ pub const CHUNKS_PENDING: &str = "sentinel_chunks_pending";
 pub const CHUNKS_RECLAIMED: &str = "sentinel_chunks_reclaimed_total";
 pub const CHUNKS_RUNNING: &str = "sentinel_chunks_running";
 pub const NODES_ONLINE: &str = "sentinel_nodes_online";
+pub const NODES_MARKED_OFFLINE: &str = "sentinel_nodes_marked_offline_total";
+pub const STALE_DATA_CLEANUPS: &str = "sentinel_stale_data_cleanups_total";
 pub const UPTIME_SECONDS: &str = "sentinel_uptime_seconds";
 
 pub fn init() {
@@ -10,7 +12,7 @@ pub fn init() {
         metrics::gauge!(name).set(0.0);
     }
 
-    for name in [CHUNKS_ASSIGNED, CHUNKS_RECLAIMED] {
+    for name in [CHUNKS_ASSIGNED, CHUNKS_RECLAIMED, NODES_MARKED_OFFLINE, STALE_DATA_CLEANUPS] {
         metrics::counter!(name).absolute(0);
     }
 }

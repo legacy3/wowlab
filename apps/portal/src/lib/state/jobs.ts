@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { SimulationResult } from "@/lib/engine";
+import type { Json } from "@/lib/supabase/database.types";
 
 import { createClient, type Row } from "@/lib/supabase";
 
@@ -54,17 +55,6 @@ export interface SubmitJobResult {
   jobId: string;
 }
 
-interface ConfigUpsertResponse {
-  hash: string;
-  success: boolean;
-}
-
-interface JobCreateResponse {
-  chunks: number;
-  jobId: string;
-  queued: boolean;
-}
-
 type JobRow = Row<"jobs">;
 
 export function useJob(
@@ -112,25 +102,27 @@ export function useSubmitJob() {
 
   return useMutation({
     mutationFn: async (input: SubmitJobInput): Promise<SubmitJobResult> => {
-      const { data: configData, error: configError } =
-        await supabase.functions.invoke<ConfigUpsertResponse>("config-upsert", {
-          body: { config: input.config },
-        });
-
-      if (configError || !configData) {
-        throw new Error(configError?.message ?? "Failed to upload config");
+      // Validate rotation exists if specified
+      if (input.config.rotationId) {
+        const { data } = await supabase
+          .from("rotations")
+          .select("id")
+          .eq("id", input.config.rotationId)
+          .single();
+        if (!data) throw new Error("Rotation not found");
       }
 
-      const { data: jobData, error: jobError } =
-        await supabase.functions.invoke<JobCreateResponse>("job-create", {
-          body: { configHash: configData.hash, iterations: input.iterations },
-        });
+      // Create job via RPC (handles config hashing + upsert atomically)
+      const { data, error } = await supabase.rpc("create_job", {
+        p_config: input.config as unknown as Json,
+        p_iterations: input.iterations,
+      });
 
-      if (jobError || !jobData) {
-        throw new Error(jobError?.message ?? "Failed to create job");
-      }
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("No data returned from create_job");
 
-      return { chunks: jobData.chunks, jobId: jobData.jobId };
+      const result = data as unknown as { jobId: string; chunks: number };
+      return { chunks: result.chunks, jobId: result.jobId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });

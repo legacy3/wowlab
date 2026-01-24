@@ -2,6 +2,7 @@
 //!
 //! Used by both the GUI (`node-gui`) and headless (`node-headless`) binaries.
 
+pub mod auth;
 pub mod cache;
 pub mod claim;
 pub mod config;
@@ -11,6 +12,7 @@ pub mod update;
 pub mod utils;
 pub mod worker;
 
+pub use auth::NodeKeypair;
 pub use crate::core::{NodeCore, NodeCoreEvent};
 pub use claim::ClaimError;
 pub use config::NodeConfig;

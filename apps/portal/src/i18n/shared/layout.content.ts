@@ -9,7 +9,6 @@ export default {
     },
     computingDrawer: {
       active: t({ de: "Aktiv", en: "Active" }),
-      cancel: t({ de: "Abbrechen", en: "Cancel" }),
       close: t({ de: "Schließen", en: "Close" }),
       computing: t({ de: "Computing", en: "Computing" }),
       dashboard: t({ de: "Dashboard", en: "Dashboard" }),
@@ -33,10 +32,6 @@ export default {
       simulationsRunning: t({
         de: "Simulationen laufen",
         en: "simulations running",
-      }),
-      viewResults: t({
-        de: "Ergebnisse anzeigen",
-        en: "View Results",
       }),
     },
     localeSwitcher: {

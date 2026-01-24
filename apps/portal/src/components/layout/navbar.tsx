@@ -6,11 +6,7 @@ import { useMemo } from "react";
 import { Box, Flex, styled } from "styled-system/jsx";
 
 import { IconButton, InlineLoader, Tooltip } from "@/components/ui";
-import {
-  selectRunningJobsCount,
-  useComputingDrawer,
-  useJobs,
-} from "@/lib/state";
+import { useComputingDrawer, useUserJobs } from "@/lib/state";
 
 import { AuthButton } from "./auth-button";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -21,8 +17,11 @@ export function Navbar() {
   const { navbar: content } = useIntlayer("layout");
   const { isOpen, toggle } = useSidebar();
   const { setOpen: openDrawer } = useComputingDrawer();
-  const jobs = useJobs((s) => s.jobs);
-  const runningCount = useMemo(() => selectRunningJobsCount(jobs), [jobs]);
+  const { data: jobs = [] } = useUserJobs();
+  const runningCount = useMemo(
+    () => jobs.filter((j) => j.status === "running").length,
+    [jobs],
+  );
 
   return (
     <Box as="header" position="sticky" top="0" zIndex="40" bg="bg.canvas">

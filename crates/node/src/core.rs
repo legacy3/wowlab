@@ -84,7 +84,13 @@ impl NodeCore {
         runtime: Arc<tokio::runtime::Runtime>,
     ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::supabase::ApiError> {
         let config = NodeConfig::load_or_create();
-        let api = ApiClient::new(config.api_url.clone())?;
+        let keypair = crate::auth::NodeKeypair::load_or_create();
+        let api = ApiClient::new(
+            config.api_url.clone(),
+            config.anon_key.clone(),
+            config.sentinel_url.clone(),
+            keypair,
+        )?;
         let total_cores = claim::total_cores().unsigned_abs();
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
