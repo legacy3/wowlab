@@ -8,13 +8,14 @@ Shared library for distributed simulation nodes. Used by `node-gui` and `node-he
 
 ```
 src/
+  auth.rs     - Authentication (Ed25519 signatures)
   cache.rs    - Local caching for rotation scripts
   claim.rs    - Node claiming/pairing with user accounts
   config.rs   - Node configuration management
   core.rs     - NodeCore: main event loop and state machine
   supabase/   - Supabase API client and realtime subscriptions
   update.rs   - Self-update via GitHub releases
-  utils/      - Utility functions
+  utils/      - Utility functions (backoff, cpu, logging)
   worker/     - Worker pool for parallel simulation execution
 ```
 
@@ -34,8 +35,11 @@ src/
 
 ## Dependencies
 
-- `engine` - Core simulation engine
+- `wowlab-engine` - Core simulation engine (with JIT)
+- `wowlab-types` - Shared type definitions
 - `tokio` - Async runtime
 - `reqwest` - HTTP client
 - `supabase-realtime-rs` - Realtime subscriptions
+- `ed25519-dalek` - Ed25519 signatures for node auth
+- `moka` - Async cache
 - `self_update` - Auto-update from GitHub releases

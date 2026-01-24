@@ -36,13 +36,16 @@ Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
 
 ## Skills
 
-| Skill | When |
-|-------|------|
-| `game-data` | Spells, items, DBC data |
-| `park-ui` | UI components |
-| `engine-content` | Rust engine spells/talents |
-| `effect-service` | Effect-TS services |
-| `rust-quality` | Rust code review, clippy, testing |
+| Skill              | When                              |
+| ------------------ | --------------------------------- |
+| `game-data`        | Spells, items, DBC data           |
+| `park-ui`          | UI components                     |
+| `portal-component` | New pages/components in portal    |
+| `engine-content`   | Rust engine spells/talents        |
+| `profile-engine`   | Performance profiling the engine  |
+| `effect-service`   | Effect-TS services                |
+| `rust-quality`     | Rust code review, clippy, testing |
+| `pre-commit`       | Code hygiene before commits       |
 
 ## More Context
 

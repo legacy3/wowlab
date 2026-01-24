@@ -42,7 +42,8 @@ Minimal binary that runs `NodeCore` from the `node` library without any GUI. Des
 
 ## Dependencies
 
-- `node` - Core node functionality
+- `wowlab-node` - Core node functionality
 - `tokio` - Async runtime
-- `ctrlc` - Signal handling
+- `signal-hook` + `signal-hook-tokio` - Unix signal handling
+- `tokio-stream` - Stream utilities
 - `clap` - CLI parsing

@@ -11,10 +11,12 @@ cargo build --release
 ./target/release/sentinel
 ```
 
-Starts three concurrent services:
-- **Discord Bot** — maintains per-guild Bloom filters for membership-based access control, monitors guild events to keep filters current, slash commands for monitoring
+Starts four concurrent services:
+
+- **Discord Bot** — per-guild Bloom filters for membership-based access control, slash commands for monitoring
 - **Scheduler** — PG LISTEN/NOTIFY chunk assignment + stale reclamation
-- **HTTP** — port 8080 (`/status`, `/metrics`)
+- **Cron** — periodic jobs (node maintenance, telemetry gauge recording)
+- **HTTP** — port 8080 (`/status`, `/metrics`, `/nodes/*`, `/chunks/*`)
 
 ## How Scheduling Works
 
@@ -22,3 +24,17 @@ Starts three concurrent services:
 2. Matches chunks to eligible nodes by capacity and access permissions
 3. Uses Bloom filters for Discord guild membership checks
 4. Reclaims chunks from nodes offline >60s
+5. Marks nodes offline if no heartbeat within 30s
+
+## HTTP API
+
+Public routes:
+
+- `GET /status` — health check (bot + scheduler + uptime)
+- `GET /metrics` — Prometheus metrics
+
+Node API (Ed25519 authenticated):
+
+- `POST /nodes/register` — node registration
+- `POST /nodes/heartbeat` — node heartbeat
+- `POST /chunks/complete` — chunk completion

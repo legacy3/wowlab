@@ -13,9 +13,24 @@ cargo build --release
 
 ## Architecture
 
+```
+src/
+  main.rs            - Entry point
+  app.rs             - Application state
+  ui/
+    dashboard.rs     - Main dashboard view
+    logs.rs          - Log viewer
+    settings.rs      - Settings panel
+    claim_view.rs    - Pairing code display
+    update_modal.rs  - Update notification dialog
+    theme.rs         - UI theming
+    icons.rs         - Icon definitions
+```
+
 Desktop application built with:
+
 - `eframe` / `egui` - Immediate mode GUI framework
-- `node` - Shared node library (networking, simulation)
+- `wowlab-node` - Shared node library (networking, simulation)
 - `tokio` - Async runtime for background operations
 
 ## Features
@@ -24,11 +39,13 @@ Desktop application built with:
 - Pairing code display for account linking
 - Real-time job monitoring
 - Auto-update notifications
-- System tray integration (platform-dependent)
 
 ## Dependencies
 
-- `node` - Core node functionality
+- `wowlab-node` - Core node functionality
 - `eframe` / `egui` - GUI framework
+- `egui-notify`, `egui-modal`, `egui_plot` - UI components
 - `lucide-icons` - Icon set
-- `image` - Image loading for assets
+- `tokio` - Async runtime
+- `clap` - CLI parsing
+- `mimalloc` - Memory allocator

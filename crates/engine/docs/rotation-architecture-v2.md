@@ -55,25 +55,17 @@ A name-based JIT compilation system for WoW rotation logic. Human-readable JSON 
   "name": "BM Hunter Single Target",
   "variables": {
     "sync_active": {
-      "and": [
-        "buff.call_of_the_wild.up",
-        "buff.bestial_wrath.up"
-      ]
+      "and": ["buff.call_of_the_wild.up", "buff.bestial_wrath.up"]
     },
     "sync_ready": {
-      "and": [
-        "cooldown.call_of_the_wild.ready",
-        "cooldown.bestial_wrath.ready"
-      ]
+      "and": ["cooldown.call_of_the_wild.ready", "cooldown.bestial_wrath.ready"]
     },
     "frenzy_needs_refresh": {
       "<": ["buff.frenzy.remains", 2.0]
     }
   },
   "lists": {
-    "precombat": [
-      { "spell": "summon_pet" }
-    ],
+    "precombat": [{ "spell": "summon_pet" }],
     "cooldowns": [
       {
         "spell": "call_of_the_wild",
@@ -166,7 +158,10 @@ Calls a sub-list. If no action is found, does NOT continue (hard switch).
 Sets a runtime variable (evaluated each tick).
 
 ```json
-{ "set_var": "pooling", "value": { "<": ["cooldown.bestial_wrath.remains", 3] } }
+{
+  "set_var": "pooling",
+  "value": { "<": ["cooldown.bestial_wrath.remains", 3] }
+}
 ```
 
 ### Variable Operation
@@ -203,42 +198,42 @@ Waits until enough resources for next action.
 
 ### Comparison Operators
 
-| Operator | JSON Key | Example |
-|----------|----------|---------|
-| `>=` | `">="` | `{ ">=": ["focus", 30] }` |
-| `>` | `">"` | `{ ">": ["buff.frenzy.stacks", 2] }` |
-| `<=` | `"<="` | `{ "<=": ["target.health.pct", 20] }` |
-| `<` | `"<"` | `{ "<": ["cooldown.kill_command.remains", 1] }` |
-| `==` | `"=="` | `{ "==": ["buff.frenzy.stacks", 3] }` |
-| `!=` | `"!="` | `{ "!=": ["target.count", 1] }` |
+| Operator | JSON Key | Example                                         |
+| -------- | -------- | ----------------------------------------------- |
+| `>=`     | `">="`   | `{ ">=": ["focus", 30] }`                       |
+| `>`      | `">"`    | `{ ">": ["buff.frenzy.stacks", 2] }`            |
+| `<=`     | `"<="`   | `{ "<=": ["target.health.pct", 20] }`           |
+| `<`      | `"<"`    | `{ "<": ["cooldown.kill_command.remains", 1] }` |
+| `==`     | `"=="`   | `{ "==": ["buff.frenzy.stacks", 3] }`           |
+| `!=`     | `"!="`   | `{ "!=": ["target.count", 1] }`                 |
 
 ### Logical Operators
 
-| Operator | JSON Key | Example |
-|----------|----------|---------|
-| AND | `"and"` | `{ "and": ["buff.a.up", "buff.b.up"] }` |
-| OR | `"or"` | `{ "or": ["buff.a.up", "buff.b.up"] }` |
-| NOT | `"not"` | `{ "not": "buff.a.up" }` |
+| Operator | JSON Key | Example                                 |
+| -------- | -------- | --------------------------------------- |
+| AND      | `"and"`  | `{ "and": ["buff.a.up", "buff.b.up"] }` |
+| OR       | `"or"`   | `{ "or": ["buff.a.up", "buff.b.up"] }`  |
+| NOT      | `"not"`  | `{ "not": "buff.a.up" }`                |
 
 ### Arithmetic Operators
 
-| Operator | JSON Key | Example |
-|----------|----------|---------|
-| Add | `"+"` | `{ "+": ["focus", 10] }` |
-| Subtract | `"-"` | `{ "-": ["focus.max", "focus"] }` |
-| Multiply | `"*"` | `{ "*": ["buff.stacks", 0.1] }` |
-| Divide | `"/"` | `{ "/": ["focus", "focus.max"] }` |
-| Modulo | `"%"` | `{ "%": ["time", 30] }` |
+| Operator | JSON Key | Example                           |
+| -------- | -------- | --------------------------------- |
+| Add      | `"+"`    | `{ "+": ["focus", 10] }`          |
+| Subtract | `"-"`    | `{ "-": ["focus.max", "focus"] }` |
+| Multiply | `"*"`    | `{ "*": ["buff.stacks", 0.1] }`   |
+| Divide   | `"/"`    | `{ "/": ["focus", "focus.max"] }` |
+| Modulo   | `"%"`    | `{ "%": ["time", 30] }`           |
 
 ### Special Operators
 
-| Operator | JSON Key | Description | Example |
-|----------|----------|-------------|---------|
-| Min | `"min"` | Returns smaller value | `{ "min": ["focus", 50] }` |
-| Max | `"max"` | Returns larger value | `{ "max": ["focus", 30] }` |
-| Abs | `"abs"` | Absolute value | `{ "abs": { "-": ["a", "b"] } }` |
-| Floor | `"floor"` | Round down | `{ "floor": { "/": ["focus", 30] } }` |
-| Ceil | `"ceil"` | Round up | `{ "ceil": { "/": ["focus", 30] } }` |
+| Operator | JSON Key  | Description           | Example                               |
+| -------- | --------- | --------------------- | ------------------------------------- |
+| Min      | `"min"`   | Returns smaller value | `{ "min": ["focus", 50] }`            |
+| Max      | `"max"`   | Returns larger value  | `{ "max": ["focus", 30] }`            |
+| Abs      | `"abs"`   | Absolute value        | `{ "abs": { "-": ["a", "b"] } }`      |
+| Floor    | `"floor"` | Round down            | `{ "floor": { "/": ["focus", 30] } }` |
+| Ceil     | `"ceil"`  | Round up              | `{ "ceil": { "/": ["focus", 30] } }`  |
 
 ### Expression Nesting
 
@@ -248,10 +243,12 @@ Expressions can be arbitrarily nested:
 {
   "and": [
     { ">=": ["focus", { "-": ["focus.max", 20] }] },
-    { "or": [
-      "cooldown.kill_command.ready",
-      { "<": ["cooldown.kill_command.remains", "gcd.remains"] }
-    ]}
+    {
+      "or": [
+        "cooldown.kill_command.ready",
+        { "<": ["cooldown.kill_command.remains", "gcd.remains"] }
+      ]
+    }
   ]
 }
 ```
@@ -267,7 +264,10 @@ Boolean variables can be used directly as conditions:
 Is equivalent to:
 
 ```json
-{ "spell": "bestial_wrath", "when": { "==": ["cooldown.bestial_wrath.ready", true] } }
+{
+  "spell": "bestial_wrath",
+  "when": { "==": ["cooldown.bestial_wrath.ready", true] }
+}
 ```
 
 ### Shorthand: User Variables
@@ -279,9 +279,7 @@ User-defined variables (from `variables` block) can be referenced by name:
   "variables": {
     "sync_ready": { "and": ["cooldown.a.ready", "cooldown.b.ready"] }
   },
-  "actions": [
-    { "spell": "big_cooldown", "when": "sync_ready" }
-  ]
+  "actions": [{ "spell": "big_cooldown", "when": "sync_ready" }]
 }
 ```
 
@@ -555,6 +553,7 @@ pub enum ContextField {
 ```
 
 Resolution process:
+
 1. Parse variable path: `cooldown.kill_command.ready`
 2. Look up `kill_command` in SpecResolver → `SpellIdx(34026)`
 3. Create `ContextField::CooldownReady { offset: N, spell: SpellIdx(34026) }`
@@ -692,7 +691,14 @@ impl ContextField {
 Talents are known at rotation compile time:
 
 ```json
-{ "when": { "and": ["talent.killer_instinct.enabled", { "<": ["target.health.pct", 35] }] } }
+{
+  "when": {
+    "and": [
+      "talent.killer_instinct.enabled",
+      { "<": ["target.health.pct", 35] }
+    ]
+  }
+}
 ```
 
 If `killer_instinct` is enabled, resolves to:
@@ -796,12 +802,12 @@ crates/engine/src/specs/hunter/bm/
 
 ## Performance Expectations
 
-| Operation | Time |
-|-----------|------|
-| Rotation compile | ~1-10ms (one-time startup) |
-| Context populate | ~50-150ns (per evaluation) |
-| JIT evaluation | ~10-50ns (per evaluation) |
-| **Total per-tick** | **~60-200ns** |
+| Operation          | Time                       |
+| ------------------ | -------------------------- |
+| Rotation compile   | ~1-10ms (one-time startup) |
+| Context populate   | ~50-150ns (per evaluation) |
+| JIT evaluation     | ~10-50ns (per evaluation)  |
+| **Total per-tick** | **~60-200ns**              |
 
 Comparable to current slot-based system. The context population loop is fast
 because it only populates fields the rotation actually uses.
@@ -810,18 +816,18 @@ because it only populates fields the rotation actually uses.
 
 ## Comparison with SimC
 
-| Feature | SimC APL | Our JSON | Status |
-|---------|----------|----------|--------|
-| Named variables | `cooldown.X.ready` | `cooldown.X.ready` | ✅ Same |
-| Action lists | `call_action_list` | `call_list` | ✅ Supported |
-| User variables | `variable,name=X` | `set_var` | ✅ Supported |
-| Arithmetic | `+`, `-`, `*`, `%` | `"+"`, `"-"`, `"*"`, `"/"` | ✅ Supported |
-| Functions | `floor()`, `ceil()` | `"floor"`, `"ceil"` | ✅ Supported |
-| DoT tracking | `dot.X.ticking` | `dot.X.ticking` | ✅ Supported |
-| Min/max | `<?`, `>?` | `"min"`, `"max"` | ✅ Supported |
-| Sequences | `sequence` | - | ❌ Not planned |
-| Target cycling | `cycle_targets=1` | - | 🔮 Future |
-| Line cooldown | `line_cd=X` | - | 🔮 Future |
+| Feature         | SimC APL            | Our JSON                   | Status         |
+| --------------- | ------------------- | -------------------------- | -------------- |
+| Named variables | `cooldown.X.ready`  | `cooldown.X.ready`         | ✅ Same        |
+| Action lists    | `call_action_list`  | `call_list`                | ✅ Supported   |
+| User variables  | `variable,name=X`   | `set_var`                  | ✅ Supported   |
+| Arithmetic      | `+`, `-`, `*`, `%`  | `"+"`, `"-"`, `"*"`, `"/"` | ✅ Supported   |
+| Functions       | `floor()`, `ceil()` | `"floor"`, `"ceil"`        | ✅ Supported   |
+| DoT tracking    | `dot.X.ticking`     | `dot.X.ticking`            | ✅ Supported   |
+| Min/max         | `<?`, `>?`          | `"min"`, `"max"`           | ✅ Supported   |
+| Sequences       | `sequence`          | -                          | ❌ Not planned |
+| Target cycling  | `cycle_targets=1`   | -                          | 🔮 Future      |
+| Line cooldown   | `line_cd=X`         | -                          | 🔮 Future      |
 
 ---
 
@@ -834,10 +840,12 @@ because it only populates fields the rotation actually uses.
     "sync_ready": {
       "and": [
         "cooldown.bestial_wrath.ready",
-        { "or": [
-          "cooldown.call_of_the_wild.ready",
-          { ">": ["cooldown.call_of_the_wild.remains", 30] }
-        ]}
+        {
+          "or": [
+            "cooldown.call_of_the_wild.ready",
+            { ">": ["cooldown.call_of_the_wild.remains", 30] }
+          ]
+        }
       ]
     },
     "frenzy_needs_barbed": {
@@ -854,14 +862,20 @@ because it only populates fields the rotation actually uses.
       { "spell": "bloodshed", "when": "buff.bestial_wrath.up" }
     ],
     "cleave": [
-      { "spell": "multi_shot", "when": { "<": ["buff.beast_cleave.remains", 0.5] } },
+      {
+        "spell": "multi_shot",
+        "when": { "<": ["buff.beast_cleave.remains", 0.5] }
+      },
       { "call_list": "st" }
     ],
     "st": [
       { "spell": "barbed_shot", "when": "frenzy_needs_barbed" },
       { "spell": "kill_shot", "when": { "<": ["target.health.pct", 20] } },
       { "spell": "kill_command" },
-      { "spell": "barbed_shot", "when": { ">=": ["cooldown.barbed_shot.charges", 2] } },
+      {
+        "spell": "barbed_shot",
+        "when": { ">=": ["cooldown.barbed_shot.charges", 2] }
+      },
       { "spell": "dire_beast" },
       { "spell": "cobra_shot", "when": { ">=": ["focus", 50] } }
     ]

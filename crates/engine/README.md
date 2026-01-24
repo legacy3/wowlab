@@ -4,10 +4,12 @@ High-performance WoW combat simulation engine written in Rust.
 
 ## Features
 
-- Fast discrete-event simulation with batch processing
-- Rhai-based rotation scripting with aggressive AST optimization
+- Discrete-event simulation with parallel batch processing (rayon)
+- JSON-based rotation DSL with variables, action lists, and conditions
+- JIT compilation via Cranelift for rotation evaluation
 - Accurate damage calculation with all game mechanics
 - Multi-target support
+- WASM build for browser integration
 - JSON/CSV/text output formats
 - Structured logging with tracing
 
@@ -15,6 +17,12 @@ High-performance WoW combat simulation engine written in Rust.
 
 ```bash
 cargo build --release
+```
+
+WASM target:
+
+```bash
+wasm-pack build --target web --out-dir ../../packages/wowlab-engine/wasm
 ```
 
 ## Usage
@@ -42,10 +50,11 @@ OPTIONS:
     -i, --iterations <N>       Number of iterations [default: 1000]
     -t, --targets <N>          Number of targets [default: 1]
     -o, --output <FORMAT>      Output format: text, json, csv [default: text]
-        --rotation <FILE>      Custom rotation script file
+        --threads <N>          Number of threads (auto-detected)
+        --rotation <FILE>      Custom rotation file (JSON)
         --gear <FILE>          Gear profile file
         --seed <SEED>          Random seed for reproducibility
-        --trace                Enable detailed combat trace
+        --trace                Enable detailed event tracing
 ```
 
 ### List Available Specs
@@ -54,44 +63,50 @@ OPTIONS:
 ./target/release/engine specs
 ```
 
-### Validate a Rotation Script
+### Validate a Rotation File
 
 ```bash
-./target/release/engine validate --file my_rotation.rhai
+./target/release/engine validate --file rotation.json
 ```
 
-## Rotation Scripting
+## Rotation DSL
 
-Rotations are written in Rhai with a `$` prefix for game state access:
+Rotations are JSON files with variables, named action lists, and conditions:
 
-```rhai
-// Priority-based rotation
-if $spell.bestial_wrath.ready() {
-    cast($spell.bestial_wrath)
-} else if $spell.kill_command.ready() && $power.focus >= 30.0 {
-    cast($spell.kill_command)
-} else if $talent.killer_instinct.enabled && $target.health_pct < 0.2 {
-    cast($spell.kill_shot)
-} else {
-    cast($spell.cobra_shot)
+```json
+{
+  "name": "BM Hunter ST",
+  "variables": {
+    "need_frenzy_refresh": {
+      "and": ["buff.frenzy.active", { "<": ["buff.frenzy.remaining", 2] }]
+    }
+  },
+  "lists": {
+    "cooldowns": [{ "cast": "bestial_wrath", "if": "cd.bestial_wrath.ready" }],
+    "st": [
+      {
+        "cast": "barbed_shot",
+        "if": {
+          "or": [
+            { "not": "buff.frenzy.active" },
+            "need_frenzy_refresh",
+            { ">=": ["cd.barbed_shot.charges", 2] }
+          ]
+        }
+      },
+      { "cast": "kill_command", "if": "cd.kill_command.ready" },
+      { "cast": "cobra_shot", "if": { ">=": ["resource.focus", 50] } }
+    ]
+  }
 }
 ```
 
-### State Namespaces
+### Condition Syntax
 
-| Prefix | Description | Example |
-|--------|-------------|---------|
-| `$spell` | Spell info and readiness | `$spell.kill_command.ready()` |
-| `$aura` | Buff/debuff tracking | `$aura.frenzy.stacks()` |
-| `$power` | Resources | `$power.focus` |
-| `$target` | Target state | `$target.health_pct` |
-| `$talent` | Talent info | `$talent.killer_instinct.enabled` |
-
-### Actions
-
-- `cast($spell.name)` - Cast a spell
-- `wait_gcd()` - Wait for GCD
-- `wait(seconds)` - Wait for a duration
+- String literals: `"buff.frenzy.active"`, `"cd.kill_command.ready"`
+- Comparisons: `{ "<": ["combat.time", 10] }`, `{ ">=": ["resource.focus", 50] }`
+- Logic: `{ "and": [...] }`, `{ "or": [...] }`, `{ "not": expr }`
+- Variables: Reference by name (e.g., `"need_frenzy_refresh"`)
 
 ## Architecture
 
@@ -99,35 +114,21 @@ The engine uses a discrete-event simulation model:
 
 1. **Actors** - Players and enemies with stats, resources, and auras
 2. **Events** - Scheduled combat events (casts, damage, aura applications)
-3. **Rotation** - Rhai scripts determine player actions each tick
-4. **Results** - Aggregated statistics across iterations
+3. **Rotation** - JSON DSL compiled to AST, evaluated each decision point
+4. **Batch** - Parallel iteration via rayon with running statistics
 
-### Performance
-
-The rotation system achieves ~0.05 microseconds per evaluation through:
-
-- One-time script compilation with variable extraction
-- Static optimization when talents/config change
-- Dynamic optimization per tick with constant folding
-- Minimal AST evaluation after optimization
-
-## Library Usage
+### Library Usage
 
 ```rust
-use wowlab_engine::{sim::SimExecutor, cli::SimConfig};
+use wowlab_engine::sim::{BatchRunner, SimConfig};
 
-let config = SimConfig {
-    spec: SpecId::BeastMastery,
-    duration: 300.0,
-    iterations: 1000,
-    targets: 1,
-    ..Default::default()
-};
+let runner = BatchRunner::with_handler(handler, config, player)
+    .with_iterations(1000);
 
-let results = SimExecutor::run(&config)?;
-println!("DPS: {:.0}", results.dps.mean);
+let results = runner.run();
+println!("DPS: {:.0} +/- {:.0}", results.mean_dps, results.std_dev);
 ```
 
 ## License
 
-Proprietary - WoW Lab
+PolyForm Noncommercial License 1.0.0
