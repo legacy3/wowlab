@@ -6044,11 +6044,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-jMcfbFYNNXkLy5Cq3c5Ao/gmnRO/7iVWCYbPt2rtX845TRl45DCAw1xICNAiebriTywKq33CW9YxMH8jzLcOyg==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-CrwohcSMSj/xMPDcZ8TaORtKgKVKVBeqCfIk44aWjrzsxDnWv7+XtogDfR+9jYPCW8r07xmGpEMV3YHSGXy/mg==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz:
-    resolution: {integrity: sha512-eZCe4EJQon+5ANNBJ9EA1H+90Rb7BoG9h0kVDFLGUivcTuSKzgvvhoHJWA3+wqqV8qnNwtNNq/V7uL4ZS2sZCQ==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
+    resolution: {integrity: sha512-7ZULwfn6YV0EbLpwZDBboMQWvWYnPS8wSRYrPgnNCXQaUZzC6Ko8xaU7EX7Jr7qfOSsjZFmm8UHc90TLA+3HZA==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:
