@@ -7,6 +7,7 @@ mod scaling;
 mod shared;
 mod spec;
 mod spell;
+mod partial;
 mod r#trait;
 
 pub use aura::AuraDataFlat;
@@ -22,6 +23,9 @@ pub use scaling::{
 pub use shared::{KnowledgeSource, PeriodicType, RefreshBehavior};
 pub use spec::SpecDataFlat;
 pub use spell::{EmpowerStage, LearnSpell, SpellDataFlat, SpellEffect};
+pub use partial::{
+    ItemSummary, SpellCost, SpellDamage, SpellRange, SpellSummary, SpellTiming, TalentNodeSummary,
+};
 pub use r#trait::{
     PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree, TraitTreeFlat,
     TraitTreeWithSelections,

@@ -1,20 +1,22 @@
-//! Unified game data cache: memory (moka) → disk → network
+//! Unified game data cache: memory (moka) -> disk -> network
 //!
-//! Provides a two-layer cache for immutable game data:
+//! Provides a three-layer cache for immutable game data:
 //! - L1: In-memory moka cache for hot data
 //! - L2: Disk cache (JSON files) for persistence across restarts
 //! - L3: Network fetch from Supabase as fallback
 //!
 //! Cache is keyed by patch version - when patch changes, disk cache is cleared.
 
-use crate::{SupabaseClient, SupabaseError};
+#![cfg(feature = "supabase")]
+
 use directories::ProjectDirs;
 use moka::sync::Cache;
-use wowlab_types::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
+use wowlab_supabase::{SupabaseClient, SupabaseError};
+use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 
 /// Unified game data cache with memory and disk layers.
 pub struct GameDataCache {
@@ -54,10 +56,6 @@ pub struct DiskStats {
 
 impl GameDataCache {
     /// Create a new cache with default paths from `directories` crate.
-    ///
-    /// Cache directory: `~/.cache/wowlab/game-data/` (Linux)
-    ///                  `~/Library/Caches/wowlab/game-data/` (macOS)
-    ///                  `%LOCALAPPDATA%\wowlab\game-data\` (Windows)
     pub fn new(client: SupabaseClient, patch: impl Into<String>) -> Result<Self, SupabaseError> {
         let cache_dir = ProjectDirs::from("gg", "wowlab", "wowlab")
             .map(|d| d.cache_dir().join("game-data"))
@@ -104,22 +102,59 @@ impl GameDataCache {
 
     /// Get a spell by ID.
     pub async fn get_spell(&self, id: i32) -> Result<SpellDataFlat, SupabaseError> {
-        // L1: Memory
         if let Some(v) = self.spells.get(&id) {
             return Ok(v);
         }
 
-        // L2: Disk
         if let Some(v) = self.read_disk::<SpellDataFlat>("spells", id) {
             self.spells.insert(id, v.clone());
             return Ok(v);
         }
 
-        // L3: Network
-        let v = self.client.get_spell(id, None).await?;
+        let path = format!("spells?id=eq.{}&select=*", id);
+        let v: SpellDataFlat = self.get_single(&path, "spells", "id", id).await?;
         self.write_disk("spells", id, &v)?;
         self.spells.insert(id, v.clone());
         Ok(v)
+    }
+
+    /// Get multiple spells by ID (uses cache per-item, preserves input order).
+    pub async fn get_spells(&self, ids: &[i32]) -> Result<Vec<SpellDataFlat>, SupabaseError> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
+
+        // Resolve from cache layers first, collect missing IDs
+        let mut missing = Vec::new();
+        for &id in ids {
+            if self.spells.get(&id).is_some() {
+                continue;
+            }
+            if let Some(v) = self.read_disk::<SpellDataFlat>("spells", id) {
+                self.spells.insert(id, v);
+            } else {
+                missing.push(id);
+            }
+        }
+
+        // Batch-fetch missing from network
+        if !missing.is_empty() {
+            let id_list: String = missing.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
+            let path = format!("spells?id=in.({})&select=*", id_list);
+            let fetched: Vec<SpellDataFlat> = self.client.get_schema(&path, "game").await?.json().await?;
+            for spell in fetched {
+                self.write_disk("spells", spell.id, &spell)?;
+                self.spells.insert(spell.id, spell.clone());
+            }
+        }
+
+        // Collect results in input order, skipping IDs not found
+        let results = ids
+            .iter()
+            .filter_map(|id| self.spells.get(id))
+            .collect();
+
+        Ok(results)
     }
 
     /// Get a trait tree by spec ID.
@@ -133,7 +168,8 @@ impl GameDataCache {
             return Ok(v);
         }
 
-        let v = self.client.get_trait_tree(spec_id).await?;
+        let path = format!("specs_traits?spec_id=eq.{}", spec_id);
+        let v: TraitTreeFlat = self.get_single(&path, "specs_traits", "spec_id", spec_id).await?;
         self.write_disk("traits", spec_id, &v)?;
         self.traits.insert(spec_id, v.clone());
         Ok(v)
@@ -150,7 +186,8 @@ impl GameDataCache {
             return Ok(v);
         }
 
-        let v = self.client.get_item(id, None).await?;
+        let path = format!("items?id=eq.{}&select=*", id);
+        let v: ItemDataFlat = self.get_single(&path, "items", "id", id).await?;
         self.write_disk("items", id, &v)?;
         self.items.insert(id, v.clone());
         Ok(v)
@@ -167,10 +204,25 @@ impl GameDataCache {
             return Ok(v);
         }
 
-        let v = self.client.get_aura(spell_id).await?;
+        let path = format!("auras?spell_id=eq.{}", spell_id);
+        let v: AuraDataFlat = self.get_single(&path, "auras", "spell_id", spell_id).await?;
         self.write_disk("auras", spell_id, &v)?;
         self.auras.insert(spell_id, v.clone());
         Ok(v)
+    }
+
+    /// Search spells by name (not cached - results vary).
+    pub async fn search_spells(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<SpellDataFlat>, SupabaseError> {
+        let path = format!(
+            "spells?name=ilike.*{}*&limit={}&select=id,name,file_name",
+            urlencoding::encode(query),
+            limit
+        );
+        Ok(self.client.get_schema(&path, "game").await?.json().await?)
     }
 
     /// Get the underlying client for uncached operations.
@@ -219,16 +271,23 @@ impl GameDataCache {
         let _ = self.remove_disk("traits", spec_id);
     }
 
-    /// Invalidate a specific item.
-    pub fn invalidate_item(&self, id: i32) {
-        self.items.invalidate(&id);
-        let _ = self.remove_disk("items", id);
-    }
+    // ========================================================================
+    // Network Layer
+    // ========================================================================
 
-    /// Invalidate a specific aura.
-    pub fn invalidate_aura(&self, spell_id: i32) {
-        self.auras.invalidate(&spell_id);
-        let _ = self.remove_disk("auras", spell_id);
+    async fn get_single<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        resource: &str,
+        key: &str,
+        value: i32,
+    ) -> Result<T, SupabaseError> {
+        let items: Vec<T> = self.client.get_schema(path, "game").await?.json().await?;
+        items.into_iter().next().ok_or(SupabaseError::NotFound {
+            resource: resource.to_string(),
+            key: key.to_string(),
+            value: value.to_string(),
+        })
     }
 
     // ========================================================================

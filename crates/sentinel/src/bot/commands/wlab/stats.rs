@@ -43,7 +43,7 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
 
     // Online nodes count
     let online_nodes: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM public.nodes WHERE last_seen_at > now() - interval '30 seconds'",
+        "SELECT COUNT(*) FROM public.nodes WHERE status = 'online'",
     )
     .fetch_one(db)
     .await?;

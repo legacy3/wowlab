@@ -1,6 +1,6 @@
-use crate::supabase::{ApiClient, ApiError};
 use crate::utils::cpu;
 use uuid::Uuid;
+use crate::sentinel::{SentinelClient, SentinelError};
 
 pub fn default_name() -> String {
     hostname::get()
@@ -26,7 +26,7 @@ pub fn platform() -> String {
     format!("{os}-{arch}")
 }
 
-pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> {
+pub async fn register(client: &SentinelClient) -> Result<(Uuid, String), ClaimError> {
     let hostname = default_name();
     let total = total_cores();
     let enabled = default_enabled_cores();
@@ -46,6 +46,6 @@ pub async fn register(client: &ApiClient) -> Result<(Uuid, String), ClaimError> 
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClaimError {
-    #[error("API error: {0}")]
-    Api(#[from] ApiError),
+    #[error("Sentinel error: {0}")]
+    Sentinel(#[from] SentinelError),
 }

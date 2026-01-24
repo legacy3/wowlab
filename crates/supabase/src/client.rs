@@ -5,6 +5,7 @@ use reqwest::Client;
 use std::time::Duration;
 
 /// Supabase PostgREST client
+#[derive(Clone)]
 pub struct SupabaseClient {
     http: Client,
     base_url: String,
@@ -30,20 +31,27 @@ impl SupabaseClient {
     ///
     /// Requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` to be set.
     pub fn from_env() -> Result<Self, SupabaseError> {
-        Self::new(
-            &std::env::var("SUPABASE_URL")?,
-            &std::env::var("SUPABASE_ANON_KEY")?,
-        )
+        let url = std::env::var("SUPABASE_URL").map_err(|_| SupabaseError::EnvVar {
+            name: "SUPABASE_URL".to_string(),
+        })?;
+        let key = std::env::var("SUPABASE_ANON_KEY").map_err(|_| SupabaseError::EnvVar {
+            name: "SUPABASE_ANON_KEY".to_string(),
+        })?;
+        Self::new(&url, &key)
     }
 
     /// Create a client from environment variables using the service role key.
     ///
     /// Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to be set.
     pub fn from_env_service_role() -> Result<Self, SupabaseError> {
-        Self::new(
-            &std::env::var("SUPABASE_URL")?,
-            &std::env::var("SUPABASE_SERVICE_ROLE_KEY")?,
-        )
+        let url = std::env::var("SUPABASE_URL").map_err(|_| SupabaseError::EnvVar {
+            name: "SUPABASE_URL".to_string(),
+        })?;
+        let key =
+            std::env::var("SUPABASE_SERVICE_ROLE_KEY").map_err(|_| SupabaseError::EnvVar {
+                name: "SUPABASE_SERVICE_ROLE_KEY".to_string(),
+            })?;
+        Self::new(&url, &key)
     }
 
     /// GET request to PostgREST with error handling.
@@ -56,6 +64,27 @@ impl SupabaseClient {
             .get(&url)
             .header("apikey", &self.anon_key)
             .header("Authorization", format!("Bearer {}", self.anon_key))
+            .send()
+            .await?;
+
+        Self::check_response(response).await
+    }
+
+    /// GET request to PostgREST targeting a specific schema.
+    pub async fn get_schema(
+        &self,
+        path: &str,
+        schema: &str,
+    ) -> Result<reqwest::Response, SupabaseError> {
+        let url = format!("{}/{}", self.base_url, path);
+        tracing::debug!("GET {} (schema: {})", url, schema);
+
+        let response = self
+            .http
+            .get(&url)
+            .header("apikey", &self.anon_key)
+            .header("Authorization", format!("Bearer {}", self.anon_key))
+            .header("Accept-Profile", schema)
             .send()
             .await?;
 

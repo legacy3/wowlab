@@ -47,7 +47,7 @@ impl CronJob for RecordGaugesJob {
         }
 
         let online: Result<(i64,), _> = sqlx::query_as(
-            "SELECT COUNT(*) FROM public.nodes WHERE last_seen_at > now() - interval '30 seconds'",
+            "SELECT COUNT(*) FROM public.nodes WHERE status = 'online'",
         )
         .fetch_one(&state.db)
         .await;

@@ -1,17 +1,16 @@
+//! Realtime subscription for node updates, chunk assignments, and presence tracking.
+
 use serde::Deserialize;
+use serde_json::json;
 use std::sync::Arc;
-use std::time::Duration;
-use supabase_realtime_rs::{
-    PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload,
-    RealtimeChannelOptions, RealtimeClient, RealtimeClientOptions,
-    RealtimeError as SbRealtimeError,
-};
 use tokio::runtime::Handle;
 use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
-
-const MAX_RECONNECT_DELAY: Duration = Duration::from_secs(60);
-const INITIAL_RECONNECT_DELAY: Duration = Duration::from_secs(1);
+use wowlab_supabase::{
+    PostgresChangeEvent, PostgresChangesFilter, PostgresChangesPayload,
+    RealtimeChannelOptions, RealtimeClient, RealtimeManager, SupabaseError,
+};
 
 #[derive(Debug, Clone)]
 pub enum RealtimeEvent {
@@ -44,99 +43,50 @@ pub struct ChunkPayload {
     pub seed_offset: i32,
 }
 
-pub struct SupabaseRealtime {
-    api_url: String,
-    anon_key: String,
+pub struct NodeRealtime {
+    manager: Arc<RealtimeManager>,
 }
 
-impl SupabaseRealtime {
-    pub fn new(api_url: String, anon_key: String) -> Self {
-        Self { api_url, anon_key }
-    }
-
-    fn ws_url(&self) -> String {
-        self.api_url
-            .replace("https://", "wss://")
-            .replace("http://", "ws://")
-            + "/realtime/v1"
+impl NodeRealtime {
+    pub fn new(api_url: &str, anon_key: &str) -> Self {
+        Self {
+            manager: Arc::new(RealtimeManager::new(api_url, anon_key)),
+        }
     }
 
     pub fn subscribe(
-        self: Arc<Self>,
+        &self,
         node_id: Uuid,
         handle: &Handle,
+        shutdown: CancellationToken,
     ) -> mpsc::Receiver<RealtimeEvent> {
         let (tx, rx) = mpsc::channel(32);
-        let ws_url = self.ws_url();
-        let anon_key = self.anon_key.clone();
+        let manager = Arc::clone(&self.manager);
 
         handle.spawn(async move {
-            run_with_reconnect(ws_url, anon_key, node_id, tx).await;
+            let _ = manager
+                .run_with_shutdown(shutdown, |client| {
+                    let tx = tx.clone();
+                    async move {
+                        let result = run_node_session(client, node_id, &tx).await;
+                        let _ = tx.send(RealtimeEvent::Disconnected).await;
+                        result
+                    }
+                })
+                .await;
+            tracing::debug!("Realtime subscription shut down");
         });
 
         rx
     }
 }
 
-async fn run_with_reconnect(
-    ws_url: String,
-    anon_key: String,
-    node_id: Uuid,
-    tx: mpsc::Sender<RealtimeEvent>,
-) {
-    let mut delay = INITIAL_RECONNECT_DELAY;
-
-    loop {
-        let start = tokio::time::Instant::now();
-
-        match run_realtime(&ws_url, &anon_key, node_id, &tx).await {
-            Ok(()) => tracing::debug!("Realtime connection closed normally"),
-            Err(e) => {
-                tracing::debug!("Realtime error: {e}");
-                let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
-            }
-        }
-
-        let _ = tx.send(RealtimeEvent::Disconnected).await;
-
-        // Reset backoff if the connection was alive long enough to have been useful
-        if start.elapsed() > Duration::from_secs(10) {
-            delay = INITIAL_RECONNECT_DELAY;
-        }
-
-        let jitter_ms = (std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .subsec_nanos()
-            % 1000) as u64;
-        let jittered_delay = delay + Duration::from_millis(jitter_ms);
-
-        tracing::debug!("Reconnecting in {jittered_delay:?}");
-        tokio::time::sleep(jittered_delay).await;
-
-        delay = (delay * 2).min(MAX_RECONNECT_DELAY);
-    }
-}
-
-async fn run_realtime(
-    ws_url: &str,
-    anon_key: &str,
+async fn run_node_session(
+    client: RealtimeClient,
     node_id: Uuid,
     tx: &mpsc::Sender<RealtimeEvent>,
-) -> Result<(), RealtimeError> {
-    tracing::debug!("Connecting to Realtime: {ws_url}");
-
-    let client = RealtimeClient::new(
-        ws_url,
-        RealtimeClientOptions {
-            api_key: anon_key.to_string(),
-            ..RealtimeClientOptions::default()
-        },
-    )?;
-
-    client.connect().await?;
-    let _ = tx.send(RealtimeEvent::Connected).await;
-
+) -> Result<(), SupabaseError> {
+    // Subscribe to node updates
     let node_channel = client
         .channel(
             &format!("node:{node_id}"),
@@ -155,6 +105,7 @@ async fn run_realtime(
     node_channel.subscribe().await?;
     tracing::debug!("Subscribed to node updates");
 
+    // Subscribe to chunk assignments
     let chunks_channel = client
         .channel(
             &format!("chunks:{node_id}"),
@@ -172,6 +123,25 @@ async fn run_realtime(
 
     chunks_channel.subscribe().await?;
     tracing::debug!("Subscribed to chunk assignments");
+
+    // Track presence so sentinel knows this node is online
+    let presence_channel = client
+        .channel(
+            "nodes:presence",
+            RealtimeChannelOptions {
+                presence_key: Some(node_id.to_string()),
+                ..Default::default()
+            },
+        )
+        .await;
+
+    presence_channel.subscribe().await?;
+    presence_channel
+        .track(json!({ "node_id": node_id.to_string() }))
+        .await?;
+    tracing::debug!("Tracking presence on nodes:presence");
+
+    let _ = tx.send(RealtimeEvent::Connected).await;
 
     loop {
         tokio::select! {
@@ -214,10 +184,4 @@ fn parse_change<T: for<'de> Deserialize<'de> + std::fmt::Debug>(
             }
         }
     })
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum RealtimeError {
-    #[error("Realtime client error: {0}")]
-    Client(#[from] SbRealtimeError),
 }

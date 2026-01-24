@@ -149,7 +149,7 @@ async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error>
          FROM public.nodes n
          LEFT JOIN auth.identities i
            ON i.user_id = n.user_id AND i.provider = 'discord'
-         WHERE n.last_seen_at > now() - interval '30 seconds'"
+         WHERE n.status = 'online'"
     )
     .fetch_all(db)
     .await?;

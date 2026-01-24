@@ -18,8 +18,9 @@ pub use combat::{DamageFlags, DamageSchool, HitResult, ResourceType};
 pub use data::{
     AuraDataFlat, ClassDataFlat, GlobalColorFlat, GlobalStringFlat, ItemClassification,
     ItemDataFlat, ItemDropSource, ItemEffect, ItemSetBonus, ItemSetInfo, ItemStat,
-    KnowledgeSource, PeriodicType, PointLimits, RefreshBehavior, SpecDataFlat, SpellDataFlat,
-    SpellEffect, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree,
+    ItemSummary, KnowledgeSource, PeriodicType, PointLimits, RefreshBehavior, SpecDataFlat,
+    SpellCost, SpellDamage, SpellDataFlat, SpellEffect, SpellRange, SpellSummary, SpellTiming,
+    TalentNodeSummary, TraitEdge, TraitNode, TraitNodeEntry, TraitSelection, TraitSubTree,
     TraitTreeFlat, TraitTreeWithSelections,
 };
 pub use game::{

@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
 use wowlab_sentinel::state::ServerState;
-use wowlab_sentinel::{bot, cron, http, scheduler};
+use wowlab_sentinel::{bot, cron, http, presence, scheduler};
 
 fn load_env() {
     if dotenvy::dotenv().is_err() {
@@ -78,6 +78,11 @@ async fn main() {
         result = http::run(state.clone(), shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "HTTP server exited with error");
+            }
+        }
+        result = presence::run(state.clone(), shutdown.clone()) => {
+            if let Err(e) = result {
+                tracing::error!(error = %e, "Presence subscriber exited with error");
             }
         }
     }

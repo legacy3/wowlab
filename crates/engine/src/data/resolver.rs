@@ -38,7 +38,7 @@ pub enum ResolverError {
 
     #[cfg(feature = "supabase")]
     #[error("Supabase error: {0}")]
-    Supabase(#[from] wowlab_api::SupabaseError),
+    Supabase(#[from] wowlab_supabase::SupabaseError),
 
     #[error("Environment variable error: {0}")]
     EnvVar(String),
@@ -149,7 +149,7 @@ pub enum ResolverConfig {
     /// Use Supabase PostgREST API (requires `supabase` feature).
     #[cfg(feature = "supabase")]
     Supabase {
-        /// Optional patch version for cache invalidation.
-        patch: Option<String>,
+        /// Patch version for cache invalidation.
+        patch: String,
     },
 }

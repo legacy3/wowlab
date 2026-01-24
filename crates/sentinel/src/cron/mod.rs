@@ -27,7 +27,6 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
 
     let jobs: Vec<Arc<dyn CronJob>> = vec![
         Arc::new(reclaim::ReclaimChunksJob),
-        Arc::new(maintenance::MarkNodesOfflineJob),
         Arc::new(maintenance::CleanupStaleDataJob),
         Arc::new(telemetry::RecordGaugesJob),
     ];

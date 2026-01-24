@@ -15,7 +15,7 @@ pub async fn nodes(ctx: Context<'_>) -> Result<(), Error> {
                 COUNT(jc.id) FILTER (WHERE jc.status = 'running') AS running
          FROM public.nodes n
          LEFT JOIN public.jobs_chunks jc ON jc.node_id = n.id AND jc.status = 'running'
-         WHERE n.last_seen_at > now() - interval '30 seconds'
+         WHERE n.status = 'online'
          GROUP BY n.id
          ORDER BY n.name",
     )

@@ -4,6 +4,7 @@ use directories::ProjectDirs;
 use ed25519_dalek::{Signer, SigningKey};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
+use crate::sentinel::SignedHeaders;
 
 /// Ed25519 keypair for node authentication.
 #[derive(Clone)]
@@ -67,7 +68,7 @@ impl NodeKeypair {
     }
 
     /// Sign a request, returning the auth headers (key, signature, timestamp).
-    pub fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
+    fn sign(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -100,9 +101,8 @@ impl NodeKeypair {
     }
 }
 
-/// Auth headers to attach to a request.
-pub struct SignedHeaders {
-    pub key: String,
-    pub signature: String,
-    pub timestamp: String,
+impl crate::sentinel::RequestSigner for NodeKeypair {
+    fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
+        self.sign(method, path, body)
+    }
 }

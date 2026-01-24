@@ -17,7 +17,7 @@ required-features = ["cli"]
 [features]
 default = ["local", "jit", "cli", "parallel"]
 local = []  # Use local CSV files (no network)
-supabase = ["dep:wowlab-api"]  # Use Supabase (network required)
+supabase = ["dep:wowlab-supabase", "dep:urlencoding", "dep:moka", "dep:directories"]  # Use Supabase (network required)
 jit = ["dep:cranelift", "dep:cranelift-jit", "dep:cranelift-module", "dep:cranelift-native"]  # JIT compilation
 cli = ["dep:clap", "dep:console", "dep:indicatif", "dep:tabled", "dep:tokio", "dep:tracing-subscriber"]  # CLI tools
 wasm = ["wowlab-types/wasm", "dep:tsify", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]  # WASM export
@@ -29,7 +29,10 @@ wowlab-types = { path = "../types" }
 
 # Data loading
 wowlab-parsers = { path = "../parsers" }
-wowlab-api = { path = "../api", optional = true }
+wowlab-supabase = { path = "../supabase", optional = true }
+urlencoding = { version = "2", optional = true }
+moka = { version = "0.12", features = ["sync"], optional = true }
+directories = { version = "5", optional = true }
 async-trait = "0.1"
 bitflags = { version = "2", features = ["serde"] }
 clap = { version = "4", features = ["derive"], optional = true }
@@ -75,3 +78,5 @@ getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
 
 [dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }
+wiremock = "0.6"

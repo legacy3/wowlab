@@ -1,14 +1,15 @@
 //! SupabaseResolver: Loads data from Supabase PostgREST API.
 //!
 //! This resolver requires the `supabase` feature and network access.
-//! It uses GameDataCache for efficient caching (memory + disk).
+//! Uses GameDataCache for efficient caching (memory + disk).
 
 #![cfg(feature = "supabase")]
 
+use crate::data::cache::GameDataCache;
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use wowlab_api::{GameDataCache, SupabaseClient, SupabaseError};
-use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TalentTreeFlat};
+use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_supabase::{SupabaseClient, SupabaseError};
 
 /// Resolver that loads data from Supabase PostgREST API.
 ///
@@ -29,20 +30,19 @@ impl SupabaseResolver {
     /// Create a new SupabaseResolver from environment variables.
     ///
     /// Requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` to be set.
-    pub fn from_env(patch: Option<&str>) -> Result<Self, ResolverError> {
+    pub fn from_env(patch: &str) -> Result<Self, ResolverError> {
         let client = SupabaseClient::from_env().map_err(|e| match e {
             SupabaseError::EnvVar { name } => ResolverError::EnvVar(name),
             other => ResolverError::Supabase(other),
         })?;
 
-        let patch_version = patch.unwrap_or("unknown");
-        let cache = GameDataCache::new(client, patch_version).map_err(ResolverError::Supabase)?;
+        let cache = GameDataCache::new(client, patch).map_err(ResolverError::Supabase)?;
 
         Ok(Self { cache })
     }
 
     /// Get cache statistics for diagnostics.
-    pub fn cache_stats(&self) -> wowlab_api::CacheStats {
+    pub fn cache_stats(&self) -> crate::data::cache::CacheStats {
         self.cache.stats()
     }
 
@@ -57,8 +57,8 @@ impl SupabaseResolver {
     }
 
     /// Invalidate a specific talent tree from cache.
-    pub fn invalidate_talent(&self, spec_id: i32) {
-        self.cache.invalidate_talent(spec_id);
+    pub fn invalidate_trait(&self, spec_id: i32) {
+        self.cache.invalidate_trait(spec_id);
     }
 
     /// Get the underlying client for uncached operations.
@@ -77,22 +77,15 @@ impl DataResolver for SupabaseResolver {
     }
 
     async fn get_spells(&self, ids: &[i32]) -> Result<Vec<SpellDataFlat>, ResolverError> {
-        // Fetch each spell through the cache
-        // Could be optimized with parallel requests
-        let mut results = Vec::with_capacity(ids.len());
-        for &id in ids {
-            match self.cache.get_spell(id).await {
-                Ok(spell) => results.push(spell),
-                Err(SupabaseError::NotFound { .. }) => continue, // Skip not found
-                Err(e) => return Err(ResolverError::Supabase(e)),
-            }
-        }
-        Ok(results)
+        self.cache
+            .get_spells(ids)
+            .await
+            .map_err(ResolverError::Supabase)
     }
 
-    async fn get_talent_tree(&self, spec_id: i32) -> Result<TalentTreeFlat, ResolverError> {
+    async fn get_trait_tree(&self, spec_id: i32) -> Result<TraitTreeFlat, ResolverError> {
         self.cache
-            .get_talent_tree(spec_id)
+            .get_trait_tree(spec_id)
             .await
             .map_err(ResolverError::Supabase)
     }
@@ -116,9 +109,7 @@ impl DataResolver for SupabaseResolver {
         query: &str,
         limit: usize,
     ) -> Result<Vec<SpellDataFlat>, ResolverError> {
-        // Search doesn't go through cache (results vary)
         self.cache
-            .client()
             .search_spells(query, limit)
             .await
             .map_err(ResolverError::Supabase)

@@ -4,23 +4,6 @@ use sqlx::PgPool;
 use crate::cron::CronJob;
 use crate::state::ServerState;
 
-pub struct MarkNodesOfflineJob;
-
-#[async_trait]
-impl CronJob for MarkNodesOfflineJob {
-    fn name(&self) -> &'static str {
-        "mark_nodes_offline"
-    }
-
-    fn schedule(&self) -> &'static str {
-        "0 * * * * *"
-    }
-
-    async fn run(&self, state: &ServerState) {
-        mark_nodes_offline(&state.db).await;
-    }
-}
-
 pub struct CleanupStaleDataJob;
 
 #[async_trait]
@@ -36,34 +19,6 @@ impl CronJob for CleanupStaleDataJob {
     async fn run(&self, state: &ServerState) {
         cleanup_stale_data(&state.db).await;
     }
-}
-
-/// Mark nodes as offline if they haven't sent a heartbeat in 5 minutes.
-pub async fn mark_nodes_offline(db: &PgPool) {
-    match do_mark_offline(db).await {
-        Ok(count) if count > 0 => {
-            tracing::info!(count, "Marked nodes offline");
-            metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE).increment(count);
-        }
-        Ok(_) => {}
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to mark nodes offline");
-        }
-    }
-}
-
-async fn do_mark_offline(db: &PgPool) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(
-        "UPDATE public.nodes
-         SET status = 'offline'
-         WHERE status = 'online'
-           AND last_seen_at IS NOT NULL
-           AND last_seen_at < now() - interval '5 minutes'",
-    )
-    .execute(db)
-    .await?;
-
-    Ok(result.rows_affected())
 }
 
 /// Clean up stale data:

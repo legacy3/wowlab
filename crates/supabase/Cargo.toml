@@ -1,23 +1,22 @@
 [package]
-name = "wowlab-api"
+name = "wowlab-supabase"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Data access layer for wowlab (Supabase client)"
+description = "Generic Supabase client (PostgREST + Realtime)"
 
 [dependencies]
-wowlab-types = { path = "../types" }
 reqwest = { version = "0.12", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["time"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+supabase-realtime-rs = "0.1"
 tracing = "0.1"
-urlencoding = "2"
+rand = "0.8"
 backoff = { version = "0.4", features = ["tokio"] }
-moka = { version = "0.12", features = ["sync"] }
-directories = "5"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

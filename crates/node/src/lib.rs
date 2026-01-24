@@ -7,7 +7,9 @@ pub mod cache;
 pub mod claim;
 pub mod config;
 mod core;
-pub mod supabase;
+pub mod queries;
+pub mod realtime;
+pub mod sentinel;
 pub mod update;
 pub mod utils;
 pub mod worker;
@@ -16,9 +18,9 @@ pub use auth::NodeKeypair;
 pub use crate::core::{NodeCore, NodeCoreEvent};
 pub use claim::ClaimError;
 pub use config::NodeConfig;
-pub use supabase::{
-    ApiClient, ApiError, ChunkPayload, NodePayload, RealtimeEvent, RotationResponse,
-};
+pub use queries::{ConfigRow, RotationRow};
+pub use realtime::{ChunkPayload, NodePayload, NodeRealtime, RealtimeEvent};
+pub use sentinel::{RegisterResponse, SentinelClient, SentinelError};
 pub use worker::{WorkItem, WorkResult, WorkerPool};
 
 use std::time::Instant;

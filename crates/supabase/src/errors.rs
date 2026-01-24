@@ -32,12 +32,8 @@ pub enum SupabaseError {
 
     #[error("Failed to build HTTP client: {0}")]
     ClientBuild(String),
+
+    #[error("Realtime error: {0}")]
+    Realtime(#[from] supabase_realtime_rs::RealtimeError),
 }
 
-impl From<std::env::VarError> for SupabaseError {
-    fn from(_: std::env::VarError) -> Self {
-        Self::EnvVar {
-            name: "SUPABASE_URL or SUPABASE_ANON_KEY".to_string(),
-        }
-    }
-}

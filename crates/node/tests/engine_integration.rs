@@ -48,18 +48,15 @@ fn test_engine_integration() {
         Ok(value) => {
             println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
 
-            // Check required fields exist
+            // Check required fields exist (camelCase per ChunkResult serde config)
             assert!(value.get("iterations").is_some());
-            assert!(value.get("mean_dps").is_some());
-            assert!(value.get("std_dps").is_some());
+            assert!(value.get("meanDps").is_some());
+            assert!(value.get("stdDps").is_some());
 
             // Check iterations matches input
             assert_eq!(value["iterations"].as_u64().unwrap(), 100);
 
-            // Note: DPS is currently 0 because the engine's event handlers
-            // are placeholders. Once damage dealing is implemented in the
-            // spec handlers, this will produce positive DPS.
-            let mean_dps = value["mean_dps"].as_f64().unwrap();
+            let mean_dps = value["meanDps"].as_f64().unwrap();
             println!("Mean DPS: {:.0}", mean_dps);
 
             // Just verify we get a valid number (0 is acceptable for now)

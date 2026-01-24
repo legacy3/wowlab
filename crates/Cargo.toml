@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "api",
     "cli",
     "engine",
     "node",
@@ -9,6 +8,7 @@ members = [
     "node-headless",
     "parsers",
     "sentinel",
+    "supabase",
     "types",
 ]
 

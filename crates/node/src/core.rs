@@ -4,18 +4,21 @@ use crate::{
     cache::{CachedConfig, ConfigCache},
     claim,
     config::NodeConfig,
-    supabase::SupabaseRealtime,
+    queries,
+    realtime::NodeRealtime,
     utils::backoff::ExponentialBackoff,
-    ApiClient, ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent,
+    ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent,
     WorkItem, WorkResult, WorkerPool,
 };
+use crate::sentinel::SentinelClient;
+use tokio_util::sync::CancellationToken;
+use wowlab_supabase::SupabaseClient;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::runtime::Handle;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5 * 60);
 const CLAIM_POLL_INTERVAL: Duration = Duration::from_secs(3);
 
 /// Events emitted by `NodeCore` for the UI/CLI to handle.
@@ -46,7 +49,8 @@ enum RegisterResult {
 pub struct NodeCore {
     runtime: Arc<tokio::runtime::Runtime>,
     config: NodeConfig,
-    api: ApiClient,
+    sentinel: SentinelClient,
+    supabase: SupabaseClient,
     worker_pool: WorkerPool,
     state: NodeState,
     connection_status: ConnectionStatus,
@@ -62,11 +66,11 @@ pub struct NodeCore {
     verify_rx: Option<mpsc::Receiver<Option<bool>>>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
+    realtime_shutdown: Option<CancellationToken>,
     claim_rx: Option<mpsc::Receiver<bool>>,
     result_rx: Option<mpsc::Receiver<WorkResult>>,
 
     // Timing
-    last_heartbeat: Option<Instant>,
     last_claim_poll: Option<Instant>,
 
     // Retry backoff for unavailable state
@@ -82,15 +86,15 @@ impl NodeCore {
     /// Creates a new instance and returns it with an event receiver.
     pub fn new(
         runtime: Arc<tokio::runtime::Runtime>,
-    ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::supabase::ApiError> {
+    ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::sentinel::SentinelError> {
         let config = NodeConfig::load_or_create();
         let keypair = crate::auth::NodeKeypair::load_or_create();
-        let api = ApiClient::new(
-            config.api_url.clone(),
-            config.anon_key.clone(),
+        let sentinel = SentinelClient::new(
             config.sentinel_url.clone(),
-            keypair,
+            Arc::new(keypair),
         )?;
+        let supabase = SupabaseClient::new(&config.api_url, &config.anon_key)
+            .map_err(|e| crate::sentinel::SentinelError::ClientBuild(e.to_string()))?;
         let total_cores = claim::total_cores().unsigned_abs();
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
@@ -105,7 +109,8 @@ impl NodeCore {
         let core = Self {
             runtime,
             state,
-            api,
+            sentinel,
+            supabase,
             worker_pool: WorkerPool::new(enabled_cores as usize),
             node_id: config.node_id,
             node_name: claim::default_name(),
@@ -116,9 +121,9 @@ impl NodeCore {
             verify_rx: None,
             register_rx: None,
             realtime_rx: None,
+            realtime_shutdown: None,
             claim_rx: None,
             result_rx: None,
-            last_heartbeat: None,
             last_claim_poll: None,
             backoff: ExponentialBackoff::new(Duration::from_secs(5), Duration::from_secs(5 * 60)),
             event_tx,
@@ -140,9 +145,10 @@ impl NodeCore {
         self.worker_pool.start(self.runtime.handle());
         self.result_rx = self.worker_pool.result_rx();
 
-        match self.node_id {
-            Some(id) => self.start_verification(id),
-            None => self.start_registration(),
+        if self.node_id.is_some() {
+            self.start_verification();
+        } else {
+            self.start_registration();
         }
     }
 
@@ -152,7 +158,6 @@ impl NodeCore {
         self.check_verification();
         self.check_registration();
         self.check_realtime_events();
-        self.check_heartbeat();
         self.poll_claim_status();
         self.check_claim_result();
         self.check_work_results();
@@ -213,17 +218,17 @@ impl NodeCore {
         self.runtime.handle()
     }
 
-    fn start_verification(&mut self, node_id: Uuid) {
+    fn start_verification(&mut self) {
         let (tx, rx) = mpsc::channel(1);
         self.verify_rx = Some(rx);
-        let api = self.api.clone();
+        let sentinel = self.sentinel.clone();
 
         tracing::info!("Verifying node...");
 
-        // Heartbeat returns 404 if node doesn't exist or isn't claimed
+        // Verify returns 404 if node doesn't exist or isn't claimed
         // Other errors (network, 5xx) mean server is unavailable
         self.runtime.spawn(async move {
-            let result: Option<bool> = match api.set_online(node_id).await {
+            let result: Option<bool> = match sentinel.verify().await {
                 Ok(()) => Some(true),
                 Err(e) => {
                     let err_str = e.to_string();
@@ -310,12 +315,12 @@ impl NodeCore {
         tracing::info!("Retrying connection...");
 
         // Try to verify/register depending on whether we have a node_id
-        if let Some(id) = self.node_id {
+        if self.node_id.is_some() {
             self.state = NodeState::Verifying;
             let _ = self
                 .event_tx
                 .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
-            self.start_verification(id);
+            self.start_verification();
         } else {
             self.state = NodeState::Registering;
             let _ = self
@@ -328,10 +333,10 @@ impl NodeCore {
     fn start_registration(&mut self) {
         let (tx, rx) = mpsc::channel(1);
         self.register_rx = Some(rx);
-        let api = self.api.clone();
+        let sentinel = self.sentinel.clone();
 
         self.runtime.spawn(async move {
-            match claim::register(&api).await {
+            match claim::register(&sentinel).await {
                 Ok((id, code)) => {
                     let _ = tx.send(RegisterResult::Success { id, code }).await;
                 }
@@ -344,11 +349,16 @@ impl NodeCore {
     }
 
     fn start_realtime(&mut self, node_id: Uuid) {
-        let realtime = Arc::new(SupabaseRealtime::new(
-            self.config.api_url.clone(),
-            self.config.anon_key.clone(),
-        ));
-        self.realtime_rx = Some(realtime.subscribe(node_id, self.runtime.handle()));
+        // Cancel previous subscription if any
+        if let Some(token) = self.realtime_shutdown.take() {
+            token.cancel();
+        }
+
+        let shutdown = CancellationToken::new();
+        let realtime = NodeRealtime::new(&self.config.api_url, &self.config.anon_key);
+        self.realtime_rx =
+            Some(realtime.subscribe(node_id, self.runtime.handle(), shutdown.clone()));
+        self.realtime_shutdown = Some(shutdown);
     }
 
     fn check_registration(&mut self) {
@@ -421,7 +431,6 @@ impl NodeCore {
                 let _ = self
                     .event_tx
                     .try_send(NodeCoreEvent::ConnectionChanged(self.connection_status));
-                self.send_heartbeat();
             }
             RealtimeEvent::Disconnected => {
                 self.connection_status = ConnectionStatus::Disconnected;
@@ -465,33 +474,6 @@ impl NodeCore {
         self.total_cores = payload.total_cores.unsigned_abs();
     }
 
-    fn send_heartbeat(&mut self) {
-        let Some(node_id) = self.node_id else { return };
-        self.last_heartbeat = Some(Instant::now());
-        let api = self.api.clone();
-
-        self.runtime.spawn(async move {
-            if let Err(e) = api.set_online(node_id).await {
-                tracing::debug!("Heartbeat failed: {}", e);
-            }
-        });
-    }
-
-    fn check_heartbeat(&mut self) {
-        if self.connection_status != ConnectionStatus::Connected {
-            return;
-        }
-
-        let should_send = match self.last_heartbeat {
-            Some(last) => last.elapsed() >= HEARTBEAT_INTERVAL,
-            None => true,
-        };
-
-        if should_send {
-            self.send_heartbeat();
-        }
-    }
-
     fn poll_claim_status(&mut self) {
         if !matches!(self.state, NodeState::Claiming { .. }) {
             return;
@@ -506,15 +488,14 @@ impl NodeCore {
             return;
         }
 
-        let Some(node_id) = self.node_id else { return };
         self.last_claim_poll = Some(Instant::now());
 
         let (tx, rx) = mpsc::channel(1);
         self.claim_rx = Some(rx);
-        let api = self.api.clone();
+        let sentinel = self.sentinel.clone();
 
         self.runtime.spawn(async move {
-            let claimed = api.set_online(node_id).await.is_ok();
+            let claimed = sentinel.verify().await.is_ok();
             let _ = tx.send(claimed).await;
         });
     }
@@ -549,7 +530,7 @@ impl NodeCore {
         let config_hash = payload.config_hash.clone();
         let iterations = payload.iterations as u32;
         let seed_offset = payload.seed_offset as u64;
-        let api = self.api.clone();
+        let supabase = self.supabase.clone();
         let cache = Arc::clone(&self.cache);
         let work_tx = self.worker_pool.work_tx();
 
@@ -562,16 +543,16 @@ impl NodeCore {
                 }
                 None => {
                     tracing::debug!("Config cache miss, fetching: {}", &config_hash[..8]);
-                    match api.fetch_config(&config_hash).await {
-                        Ok(config) => {
-                            let rotation_id = config
+                    match queries::fetch_config(&supabase, &config_hash).await {
+                        Ok(row) => {
+                            let rotation_id = row.config
                                 .get("rotationId")
                                 .and_then(|v| v.as_str())
                                 .unwrap_or_default()
                                 .to_string();
 
                             let cached = CachedConfig {
-                                config_json: config,
+                                config_json: row.config,
                                 rotation_id,
                             };
                             cache.insert_config(config_hash.clone(), cached.clone());
@@ -586,7 +567,7 @@ impl NodeCore {
             };
 
             // 2. Get rotation script
-            let rotation_script = match api.fetch_rotation(&config_json.rotation_id).await {
+            let rotation_script = match queries::fetch_rotation(&supabase, &config_json.rotation_id).await {
                 Ok(rotation) => {
                     match cache.get_rotation(&config_json.rotation_id, &rotation.checksum) {
                         Some(script) => script,
@@ -664,18 +645,18 @@ impl NodeCore {
 
     fn handle_work_result(&self, result: WorkResult) {
         let chunk_id = result.chunk_id;
-        let api = self.api.clone();
+        let sentinel = self.sentinel.clone();
         let event_tx = self.event_tx.clone();
 
         // Extract mean_dps from result for the event
         let mean_dps = result
             .result
-            .get("mean_dps")
+            .get("meanDps")
             .and_then(|v| v.as_f64())
             .unwrap_or(0.0) as f32;
 
         self.runtime.spawn(async move {
-            match api.complete_chunk(chunk_id, result.result).await {
+            match sentinel.complete_chunk(chunk_id, result.result).await {
                 Ok(()) => {
                     tracing::info!("Chunk {} completed: {:.0} DPS", chunk_id, mean_dps);
                     let _ = event_tx
