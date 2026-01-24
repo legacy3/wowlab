@@ -81,6 +81,17 @@ export { useUserProfile } from "./profile";
 
 export { useLoadRotation, useSaveRotation } from "./rotation";
 
+// Sentinel
+
+export {
+  type SentinelMetricName,
+  type SentinelMetrics,
+  type TimeRange,
+  type TimeSeriesPoint,
+  useSentinelRange,
+  useSentinelStatus,
+} from "./sentinel";
+
 // Spell Description
 
 export {

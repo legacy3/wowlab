@@ -1,0 +1,13 @@
+app = "wowlab-alloy"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[restart]]
+  policy = "always"
+  retries = 3
+
+[[vm]]
+  memory = "256mb"
+  size = "shared-cpu-1x"

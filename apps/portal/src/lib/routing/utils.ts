@@ -1,4 +1,5 @@
 import {
+  Activity,
   BookOpen,
   Calculator,
   ChartBar,
@@ -25,6 +26,7 @@ import {
 import type { AnyRoute, DynamicRoute, IconName, Route } from "./types";
 
 const icons = {
+  Activity,
   BookOpen,
   Calculator,
   ChartBar,

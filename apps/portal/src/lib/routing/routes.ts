@@ -120,8 +120,9 @@ export const routes = {
     },
     engine: route("/dev/engine", "Engine", "Simulation engine", "Cpu"),
     hooks: route("/dev/hooks", "Hooks", "Game data hooks", "FlaskConical"),
+    sentinel: route("/dev/sentinel", "Sentinel", "Sentinel metrics", "Activity"),
     ui: route("/dev/ui", "UI Showcase", "UI components", "Sparkles"),
-  }).main("docs", "engine", "hooks", "ui"),
+  }).main("docs", "engine", "hooks", "sentinel", "ui"),
 
   error: route("/error", "Error", "Something went wrong", "Info"),
   notFound: route("/404", "Not Found", "Page not found", "Info"),

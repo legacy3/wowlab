@@ -1,6 +1,7 @@
 // Components
 
 export { DevIndex } from "./dev-index";
-export { EngineDemo } from "./engine";
+export { EngineContent } from "./engine";
 export { HooksDemo } from "./hooks";
+export { SentinelContent } from "./sentinel";
 export { UiDemo } from "./ui";

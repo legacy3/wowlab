@@ -11,7 +11,7 @@ const NAV = [
   { id: "validator", label: "Validator" },
 ];
 
-export function EngineDemo() {
+export function EngineContent() {
   return (
     <PageLayout nav={NAV}>
       <Stack gap="16">

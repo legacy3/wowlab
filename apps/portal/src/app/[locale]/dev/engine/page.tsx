@@ -1,5 +1,5 @@
-import { EngineDemo } from "@/components/dev";
+import { EngineContent } from "@/components/dev";
 
 export default function DevEnginePage() {
-  return <EngineDemo />;
+  return <EngineContent />;
 }

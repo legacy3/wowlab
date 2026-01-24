@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
+  Activity,
   BookOpen,
   Calculator,
   ChartBar,
@@ -29,6 +30,7 @@ import {
 import type { IconName } from "@/lib/routing";
 
 const icons: Record<IconName, LucideIcon> = {
+  Activity,
   BookOpen,
   Calculator,
   ChartBar,

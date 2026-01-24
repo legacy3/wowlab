@@ -10,6 +10,7 @@ export type DynamicRoute = {
 };
 
 export type IconName =
+  | "Activity"
   | "BookOpen"
   | "Calculator"
   | "ChartBar"

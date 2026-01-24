@@ -32,14 +32,25 @@ export function useClaimNode() {
         p_code: code,
       });
 
-      if (error) throw new Error("Invalid or expired claim code");
+      if (error || !data) {
+        throw new Error("Invalid or expired claim code");
+      }
+
+      // TODO Proper return types in supabase client
+      const node = data as {
+        id: string;
+        maxParallel: number;
+        name: string;
+        platform: string;
+        totalCores: number;
+      };
 
       return {
-        id: data.id,
-        max_parallel: data.maxParallel,
-        name: data.name,
-        platform: data.platform,
-        total_cores: data.totalCores,
+        id: node.id,
+        max_parallel: node.maxParallel,
+        name: node.name,
+        platform: node.platform,
+        total_cores: node.totalCores,
       };
     },
   });
