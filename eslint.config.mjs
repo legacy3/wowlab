@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
-import effectPlugin from "@effect/eslint-plugin";
 import perfectionist from "eslint-plugin-perfectionist";
 
 const sortClassGroups = [
@@ -87,7 +86,6 @@ const baseTypeScriptRules = {
 // Shared base plugins for all TypeScript files
 const baseTypeScriptPlugins = {
   "@typescript-eslint": tseslint,
-  "@effect": effectPlugin,
   perfectionist,
 };
 
@@ -106,12 +104,9 @@ export default [
       "**/dist/**",
       "**/node_modules/**",
       "**/coverage/**",
-      "**/.vite/**",
-      "**/.react-router/**", // React Router generated types
       "**/apps/*/build/**",
       "**/apps/*/dist/**",
       "**/rotations/code/**", // Example rotation scripts
-      "**/third_party/**", // Third-party code
       "**/docs/**", // Documentation
     ],
   },
@@ -131,30 +126,12 @@ export default [
       },
     },
     plugins: baseTypeScriptPlugins,
-    rules: {
-      ...baseTypeScriptRules,
-
-      // Effect rules - warn about barrel imports (can be refactored later)
-      "@effect/no-import-from-barrel-package": [
-        "warn",
-        {
-          packageNames: ["effect", "@effect/platform", "@effect/sql"],
-        },
-      ],
-    },
+    rules: baseTypeScriptRules,
   },
 
   // Branded IDs file - allow redeclaration for type+constructor pattern
   {
     files: ["**/branded/ids.ts"],
-    rules: {
-      "no-redeclare": "off",
-    },
-  },
-
-  // Combat log files - allow redeclaration for Effect Schema type+value pattern
-  {
-    files: ["**/combat-log/*.ts"],
     rules: {
       "no-redeclare": "off",
     },
@@ -211,17 +188,7 @@ export default [
       },
     },
     plugins: baseTypeScriptPlugins,
-    rules: {
-      ...baseTypeScriptRules,
-
-      // Effect rules - warn about barrel imports
-      "@effect/no-import-from-barrel-package": [
-        "warn",
-        {
-          packageNames: ["effect", "@effect/platform", "@effect/sql"],
-        },
-      ],
-    },
+    rules: baseTypeScriptRules,
   },
 
   // Package and script files

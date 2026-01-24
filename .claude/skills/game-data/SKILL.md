@@ -200,18 +200,10 @@ const castTime = spell.data?.castTime;
 // ASK: "I need X data. Should I add it to the transformer or is there another way?"
 ```
 
-## MCP Research - DO THIS BEFORE ASKING
+## Research - DO THIS BEFORE ASKING
 
-**Use MCP tools to research before asking the user anything.**
+**Use Supabase MCP to research before asking the user anything.**
 
-### wowlab MCP
-- `get_spell(id)` / `get_item(id)` - See transformed flat data
-- `search_spells(query)` / `search_items(query)` - Find by name
-- `get_schema()` - List all DBC tables
-- `get_schema(table)` - See columns for a table
-- `query_table(table, {filters, select})` - Query raw DBC
-
-### Supabase MCP
 ```sql
 -- Find tables
 SELECT table_name FROM information_schema.tables
@@ -223,8 +215,8 @@ SELECT * FROM raw_dbc.chr_classes LIMIT 5;
 
 ### Research workflow
 1. Check if data exists in current flat structures
-2. If not, search for DBC table: `get_schema()` or SQL
-3. If table exists, check columns: `get_schema(table_name)`
+2. If not, search for DBC table via Supabase SQL
+3. If table exists, check columns
 4. If table doesn't exist in Supabase but you need it, tell the user - they can add it from game files
 
 ## There Are No Hardcoded Constants

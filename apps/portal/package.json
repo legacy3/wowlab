@@ -38,7 +38,6 @@
     "d3-array": "^3.2.4",
     "d3-regression": "^1.3.10",
     "date-fns": "^4.1.0",
-    "effect": "^3.19.4",
     "fabric": "^7.1.0",
     "gray-matter": "^4.0.3",
     "idb-keyval": "^6.2.2",
@@ -61,13 +60,13 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
+    "baseline-browser-mapping": "^2.9.13",
     "@intlayer/swc": "^7.5.14",
     "@pandacss/dev": "^1.8.0",
     "@types/d3-array": "^3.2.2",
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "baseline-browser-mapping": "^2.9.13",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "eslint-plugin-perfectionist": "^5.1.0",

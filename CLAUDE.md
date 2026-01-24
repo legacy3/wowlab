@@ -32,7 +32,7 @@ WASM: `wasm-pack build --target web --out-dir ../../packages/wowlab-engine/wasm`
 
 ## MCP Servers
 
-Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
+Use for docs — don't guess APIs: Context7, Supabase
 
 ## Skills
 
@@ -43,7 +43,6 @@ Use for docs — don't guess APIs: Context7, Effect Docs, shadcn, Supabase
 | `portal-component` | New pages/components in portal    |
 | `engine-content`   | Rust engine spells/talents        |
 | `profile-engine`   | Performance profiling the engine  |
-| `effect-service`   | Effect-TS services                |
 | `rust-quality`     | Rust code review, clippy, testing |
 | `pre-commit`       | Code hygiene before commits       |
 

@@ -30,13 +30,6 @@ pnpm test
 - [ ] No commented-out code blocks
 - [ ] No `// TODO` without issue reference
 
-### For Effect-TS Code
-
-- [ ] No `async/await` - use `Effect.gen`
-- [ ] No type casts - use `satisfies`
-- [ ] Errors extend `Data.TaggedError`
-- [ ] Services have proper Layer
-
 ### For Portal Components
 
 - [ ] Pages are minimal

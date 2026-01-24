@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review code for Effect-TS patterns, common issues, and project conventions. Use when reviewing PRs, checking code quality, or before committing changes.
+description: Review code for common issues and project conventions. Use when reviewing PRs, checking code quality, or before committing changes.
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -9,14 +9,6 @@ allowed-tools: Read, Grep, Glob
 Read-only review skill for checking code quality against project conventions.
 
 ## Checklist
-
-### Effect-TS Patterns
-
-- [ ] Uses `Effect.gen` with `yield*`, not async/await
-- [ ] No type casts (`as Type`) - use `satisfies` instead
-- [ ] Errors are `Data.TaggedError` with descriptive payloads
-- [ ] Services use `Context.Tag` or `Effect.Service` pattern
-- [ ] Layers properly compose dependencies
 
 ### Branded IDs (wowlab-core)
 

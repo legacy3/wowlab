@@ -86,25 +86,6 @@ pnpm lint     # lint all packages
 - Sentinel assigns chunks to eligible nodes with backlog-aware load balancing
 - Access control via Discord guild membership (Bloom filters), explicit permissions, or public access
 
-## MCP Server
-
-WoW Lab includes an MCP server for querying WoW spell and item data (`@wowlab/mcp-server` on npm):
-
-```bash
-npx @wowlab/mcp-server
-```
-
-Or configure it in your Claude Code settings:
-
-```json
-{
-  "wowlab": {
-    "command": "npx",
-    "args": ["-y", "@wowlab/mcp-server"]
-  }
-}
-```
-
 ## License
 
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). See the LICENSE.md file for details.
