@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-const PROMETHEUS_URL = process.env.GRAFANA_PROMETHEUS_URL;
-const PROMETHEUS_USER = process.env.GRAFANA_PROMETHEUS_USER;
-const PROMETHEUS_TOKEN = process.env.GRAFANA_PROMETHEUS_TOKEN;
-
 const RANGE_SECONDS: Record<string, number> = {
   "1h": 3_600,
   "24h": 86_400,
@@ -25,6 +21,10 @@ const ALLOWED_METRICS = new Set([
 ]);
 
 export async function GET(request: NextRequest) {
+  const PROMETHEUS_URL = process.env.GRAFANA_PROMETHEUS_URL;
+  const PROMETHEUS_USER = process.env.GRAFANA_PROMETHEUS_USER;
+  const PROMETHEUS_TOKEN = process.env.GRAFANA_PROMETHEUS_TOKEN;
+
   if (!PROMETHEUS_URL || !PROMETHEUS_USER || !PROMETHEUS_TOKEN) {
     return NextResponse.json(
       { error: "Grafana Cloud not configured" },
