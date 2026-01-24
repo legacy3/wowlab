@@ -231,7 +231,7 @@ BEGIN
 
   IF _handle IS NOT NULL THEN
     INSERT INTO public.user_reserved_handles (handle, reason)
-    VALUES (_handle, 'account_deleted')
+    VALUES (_handle, 'Account deleted')
     ON CONFLICT (handle) DO NOTHING;
   END IF;
 
