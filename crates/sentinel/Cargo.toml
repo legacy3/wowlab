@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.5.4"
+version = "0.5.5"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -46,6 +46,10 @@ metrics-exporter-prometheus = "0.18"
 
 # System
 libc = "0.2"
+
+# Scheduling
+tokio-cron-scheduler = "0.15"
+async-trait = "0.1"
 
 # Utilities
 tracing = "0.1"

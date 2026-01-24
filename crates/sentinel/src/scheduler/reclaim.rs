@@ -1,4 +1,24 @@
+use async_trait::async_trait;
+
+use crate::cron::CronJob;
 use crate::state::ServerState;
+
+pub struct ReclaimChunksJob;
+
+#[async_trait]
+impl CronJob for ReclaimChunksJob {
+    fn name(&self) -> &'static str {
+        "reclaim_stale_chunks"
+    }
+
+    fn schedule(&self) -> &'static str {
+        "*/30 * * * * *"
+    }
+
+    async fn run(&self, state: &ServerState) {
+        reclaim_stale_chunks(state).await;
+    }
+}
 
 /// Reclaim chunks that have been running for over 5 minutes without completion.
 /// Resets them to pending so they can be reassigned.

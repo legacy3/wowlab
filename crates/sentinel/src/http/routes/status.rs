@@ -27,6 +27,7 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     Json(json!({
         "status": "success",
         "data": {
+            "version": env!("CARGO_PKG_VERSION"),
             "uptime": uptime,
             "load": load,
             "cpu_percent": (cpu * 10.0).round() / 10.0,

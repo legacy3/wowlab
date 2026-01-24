@@ -1,9 +1,9 @@
 pub mod assign;
-mod maintenance;
-mod reclaim;
+pub mod maintenance;
+pub mod reclaim;
 
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use sqlx::postgres::PgListener;
 use uuid::Uuid;
@@ -35,9 +35,6 @@ async fn listen_and_assign(
 
     process_pending(state).await;
 
-    let mut last_maintenance = Instant::now();
-    let mut last_cleanup = Instant::now();
-
     loop {
         state.touch_scheduler();
 
@@ -52,21 +49,6 @@ async fn listen_and_assign(
             }
             Err(_timeout) => {
                 process_pending(state).await;
-                reclaim::reclaim_stale_chunks(state).await;
-
-                // Every 60s: mark offline nodes
-                if last_maintenance.elapsed() >= Duration::from_secs(60) {
-                    maintenance::mark_nodes_offline(&state.db).await;
-                    last_maintenance = Instant::now();
-                }
-
-                // Every hour: cleanup stale data
-                if last_cleanup.elapsed() >= Duration::from_secs(3600) {
-                    maintenance::cleanup_stale_data(&state.db).await;
-                    last_cleanup = Instant::now();
-                }
-
-                record_gauges(state).await;
             }
         }
     }
@@ -101,32 +83,6 @@ async fn fetch_pending_chunks(
     )
     .fetch_all(&state.db)
     .await
-}
-
-async fn record_gauges(state: &ServerState) {
-    use crate::telemetry;
-
-    metrics::gauge!(telemetry::UPTIME_SECONDS).set(state.started_at.elapsed().as_secs() as f64);
-
-    let running: Result<(i64,), _> = sqlx::query_as(
-        "SELECT COUNT(*) FROM public.jobs_chunks WHERE status = 'running'"
-    )
-    .fetch_one(&state.db)
-    .await;
-
-    if let Ok((count,)) = running {
-        metrics::gauge!(telemetry::CHUNKS_RUNNING).set(count as f64);
-    }
-
-    let online: Result<(i64,), _> = sqlx::query_as(
-        "SELECT COUNT(*) FROM public.nodes WHERE last_seen_at > now() - interval '30 seconds'"
-    )
-    .fetch_one(&state.db)
-    .await;
-
-    if let Ok((count,)) = online {
-        metrics::gauge!(telemetry::NODES_ONLINE).set(count as f64);
-    }
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]

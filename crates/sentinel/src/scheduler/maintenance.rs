@@ -1,4 +1,42 @@
+use async_trait::async_trait;
 use sqlx::PgPool;
+
+use crate::cron::CronJob;
+use crate::state::ServerState;
+
+pub struct MarkNodesOfflineJob;
+
+#[async_trait]
+impl CronJob for MarkNodesOfflineJob {
+    fn name(&self) -> &'static str {
+        "mark_nodes_offline"
+    }
+
+    fn schedule(&self) -> &'static str {
+        "0 * * * * *"
+    }
+
+    async fn run(&self, state: &ServerState) {
+        mark_nodes_offline(&state.db).await;
+    }
+}
+
+pub struct CleanupStaleDataJob;
+
+#[async_trait]
+impl CronJob for CleanupStaleDataJob {
+    fn name(&self) -> &'static str {
+        "cleanup_stale_data"
+    }
+
+    fn schedule(&self) -> &'static str {
+        "0 0 * * * *"
+    }
+
+    async fn run(&self, state: &ServerState) {
+        cleanup_stale_data(&state.db).await;
+    }
+}
 
 /// Mark nodes as offline if they haven't sent a heartbeat in 5 minutes.
 pub async fn mark_nodes_offline(db: &PgPool) {

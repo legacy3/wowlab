@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
 use wowlab_sentinel::state::ServerState;
-use wowlab_sentinel::{bot, http, scheduler};
+use wowlab_sentinel::{bot, cron, http, scheduler};
 
 fn load_env() {
     if dotenvy::dotenv().is_err() {
@@ -68,6 +68,11 @@ async fn main() {
         result = scheduler::run(state.clone(), shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "Scheduler exited with error");
+            }
+        }
+        result = cron::run(state.clone()) => {
+            if let Err(e) = result {
+                tracing::error!(error = %e, "Cron scheduler exited with error");
             }
         }
         result = http::run(state.clone(), shutdown.clone()) => {
