@@ -119,6 +119,9 @@ importers:
       next-intlayer:
         specifier: ^7.5.14
         version: 7.5.14(intlayer@7.5.14(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tslib@2.8.1)(webpack@5.104.1)
+      next-seo:
+        specifier: ^7.0.1
+        version: 7.0.1(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2))(react@19.2.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -4702,6 +4705,12 @@ packages:
       react: '>=16.0.0'
       react-dom: '>=16.0.0'
 
+  next-seo@7.0.1:
+    resolution: {integrity: sha512-NxcnWaT7dLZdPjWOD6JZm1pUpJ1zxoDBOuXBR72fTTMqqO/bchcjkBJpx27MDACDJrIVwxfKPq5qGcv17qZiBQ==}
+    peerDependencies:
+      next: '>=13.4.0'
+      react: '>=18.2.0'
+
   next-themes@0.4.6:
     resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
     peerDependencies:
@@ -6044,11 +6053,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-CrwohcSMSj/xMPDcZ8TaORtKgKVKVBeqCfIk44aWjrzsxDnWv7+XtogDfR+9jYPCW8r07xmGpEMV3YHSGXy/mg==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-R4ZySi0fUkDcHEeq4aazw5UdBXuip01LyyQs/tdICwBbBZQmr3jk3ylIXxk6vQHMKDY6nxYmF9FIIHaACOGMUA==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz:
-    resolution: {integrity: sha512-7ZULwfn6YV0EbLpwZDBboMQWvWYnPS8wSRYrPgnNCXQaUZzC6Ko8xaU7EX7Jr7qfOSsjZFmm8UHc90TLA+3HZA==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
+    resolution: {integrity: sha512-K1p1a6HxYJk7p46l0V8Cynkzxym0fKHKFuzmKVqmy0LNc+d5ZyCvJQtC1J49dVXLKTiJbR4UtS9OVS01mUBfIQ==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:
@@ -11766,6 +11775,11 @@ snapshots:
       - utf-8-validate
       - webpack
       - webpack-cli
+
+  next-seo@7.0.1(next@16.1.1(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2))(react@19.2.3):
+    dependencies:
+      next: 16.1.1(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2)
+      react: 19.2.3
 
   next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
