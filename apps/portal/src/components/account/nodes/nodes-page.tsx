@@ -86,12 +86,10 @@ export function NodesPage() {
 
   const handleBulkPowerOn = async () => {
     // TODO: Implement bulk power on
-    console.log("Power on:", selectedIds);
   };
 
   const handleBulkPowerOff = async () => {
     // TODO: Implement bulk power off
-    console.log("Power off:", selectedIds);
   };
 
   if (isLoading) {

@@ -2,7 +2,7 @@
 
 export { useComputingDrawer } from "./computing";
 
-// Jobs (distributed simulation)
+// Editor
 
 export {
   useDefaultList,
@@ -11,7 +11,7 @@ export {
   useSelectedList,
 } from "./editor";
 
-// Editor
+// Game
 
 export {
   useAura,
@@ -33,7 +33,7 @@ export {
   useSpellSearch,
 } from "./game";
 
-// Game
+// Jobs (distributed simulation)
 
 export {
   type DistributedJobStatus,
@@ -90,7 +90,7 @@ export {
   useSpellDescription,
 } from "./spell-desc";
 
-// UI
+// Traits
 
 export {
   type TraitActions,
@@ -110,7 +110,7 @@ export {
   useVisibleNodes,
 } from "./traits";
 
-// Traits
+// UI
 
 export { useCardExpanded, useSidebar } from "./ui";
 

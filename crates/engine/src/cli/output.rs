@@ -26,8 +26,6 @@ struct ColorScheme {
     title: Style,
     label: Style,
     value: Style,
-    success: Style,
-    warning: Style,
 }
 
 impl Default for ColorScheme {
@@ -36,8 +34,6 @@ impl Default for ColorScheme {
             title: Style::new().bold().cyan(),
             label: Style::new().dim(),
             value: Style::new().bold().white(),
-            success: Style::new().green(),
-            warning: Style::new().yellow(),
         }
     }
 }
@@ -63,20 +59,6 @@ impl Output {
             self.colors.label.apply_to(format!("{}:", key)),
             self.colors.value.apply_to(value)
         );
-    }
-
-    /// Print a success message.
-    #[allow(dead_code)]
-    pub fn success(&self, text: &str) {
-        let styled = self.colors.success.apply_to(format!("✓ {}", text));
-        eprintln!("{}", styled);
-    }
-
-    /// Print a warning message.
-    #[allow(dead_code)]
-    pub fn warn(&self, text: &str) {
-        let styled = self.colors.warning.apply_to(format!("⚠ {}", text));
-        eprintln!("{}", styled);
     }
 
     /// Print a blank line.

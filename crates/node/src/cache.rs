@@ -79,16 +79,4 @@ impl ConfigCache {
             .insert(id, CachedRotation { script, checksum });
     }
 
-    /// Clear all caches. Useful for debugging or resetting.
-    #[allow(dead_code)]
-    pub fn clear(&self) {
-        self.configs.invalidate_all();
-        self.rotations.invalidate_all();
-    }
-
-    /// Get cache stats for debugging.
-    #[allow(dead_code)]
-    pub fn stats(&self) -> (u64, u64) {
-        (self.configs.entry_count(), self.rotations.entry_count())
-    }
 }

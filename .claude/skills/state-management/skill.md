@@ -51,7 +51,6 @@ lib/state/
 hooks/                  # ONLY pure utilities
   index.ts
   use-detected-platform.ts    # Browser platform detection
-  use-client-hardware.ts      # Navigator API (cores, memory)
   use-active-heading.ts       # IntersectionObserver for TOC
 ```
 
