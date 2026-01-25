@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # wowlab build script
-# Usage: ./scripts/build.sh [target]
+# Usage: ./scripts/build.sh [target] [--force]
 #
 # Targets:
 #   all         - Build everything (default)
@@ -12,103 +12,167 @@ set -euo pipefail
 #   portal      - Build portal app only
 #   rust        - Build all Rust crates
 #   check       - Type check and lint everything
+#
+# Options:
+#   --force     - Force rebuild even if no changes detected
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CACHE="$ROOT/.build-cache"
 
-cd "$ROOT_DIR"
+# Colors & logging
+info()    { echo -e "\033[0;34m==>\033[0m $1"; }
+success() { echo -e "\033[0;32m==>\033[0m $1"; }
+error()   { echo -e "\033[0;31m==>\033[0m $1" >&2; }
+skip()    { echo -e "\033[0;33m==>\033[0m $1 (no changes)"; }
+debug()   { echo -e "\033[0;34m   \033[0m $1"; }
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Parse args
+FORCE=false
+TARGET=all
+for arg in "$@"; do
+    case "$arg" in
+        --force) FORCE=true ;;
+        -*) ;;
+        *) TARGET="$arg" ;;
+    esac
+done
 
-info() { echo -e "${BLUE}==>${NC} $1"; }
-success() { echo -e "${GREEN}==>${NC} $1"; }
-error() { echo -e "${RED}==>${NC} $1" >&2; }
+mkdir -p "$CACHE"
 
-# Check dependencies
-check_deps() {
-    if ! command -v wasm-pack &> /dev/null; then
-        error "wasm-pack not found. Install with: cargo install wasm-pack"
-        exit 1
+#------------------------------------------------------------------------------
+# Cache functions
+#------------------------------------------------------------------------------
+
+checksum() {
+    local tmp=$(mktemp)
+    for pattern in "$@"; do
+        find $pattern -type f 2>/dev/null >> "$tmp"
+    done
+    if [[ -s "$tmp" ]]; then
+        sort "$tmp" | xargs cat 2>/dev/null | shasum -a 256 | cut -d' ' -f1
+    else
+        echo "empty"
     fi
-    if ! command -v cargo &> /dev/null; then
-        error "cargo not found. Install Rust from https://rustup.rs"
-        exit 1
+    rm -f "$tmp"
+}
+
+cached() {
+    local name=$1; shift
+    local cache_file="$CACHE/$name.checksum"
+
+    debug "[$name] checking cache..."
+
+    if [[ "$FORCE" == true ]]; then
+        debug "[$name] --force specified, rebuilding"
+        return 1
     fi
-    if ! command -v pnpm &> /dev/null; then
-        error "pnpm not found. Install with: npm install -g pnpm"
-        exit 1
+
+    local current=$(checksum "$@")
+    debug "[$name] current: ${current:0:12}..."
+
+    if [[ -f "$cache_file" ]]; then
+        local cached=$(cat "$cache_file")
+        debug "[$name] cached:  ${cached:0:12}..."
+        [[ "$current" == "$cached" ]]
+    else
+        debug "[$name] no cache found, rebuilding"
+        return 1
     fi
 }
 
-# Build WASM parser package
-build_parsers() {
-    info "Building WASM parser..."
-    cd "$ROOT_DIR/crates/parsers"
-
-    # Build to temp directory
-    local tmp_dir="$ROOT_DIR/.wasm-build"
-    rm -rf "$tmp_dir"
-    wasm-pack build --target web --out-dir "$tmp_dir"
-
-    # Pack tarball
-    cd "$tmp_dir"
-    rm -f "$ROOT_DIR/packages/parsers-"*.tgz
-    local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
-    cd "$ROOT_DIR"
-    rm -rf "$tmp_dir"
-
-    success "WASM parser built -> packages/$tarball"
+save_cache() {
+    local name=$1; shift
+    checksum "$@" > "$CACHE/$name.checksum"
 }
 
-# Build WASM engine package
-build_engine_wasm() {
-    info "Building WASM engine..."
-    cd "$ROOT_DIR/crates/engine"
+#------------------------------------------------------------------------------
+# Build functions
+#------------------------------------------------------------------------------
 
-    # Build to default pkg directory with wasm feature, no default features
+build_wasm_pkg() {
+    local name=$1 crate=$2 pkg_name=$3
+    shift 3
+    local patterns=("$ROOT/crates/$crate/src" "$ROOT/crates/$crate/Cargo.toml")
+
+    if cached "$name" "${patterns[@]}"; then
+        skip "WASM $crate already up to date"
+        return
+    fi
+
+    info "Building WASM $crate..."
+    cd "$ROOT/crates/$crate"
+
     rm -rf pkg
-    wasm-pack build --target web --features wasm --no-default-features
+    wasm-pack build --target web "$@"
 
-    # Pack tarball
-    cd pkg
-    rm -f "$ROOT_DIR/packages/wowlab-engine-"*.tgz
-    local tarball=$(npm pack --pack-destination "$ROOT_DIR/packages" 2>/dev/null)
-    cd "$ROOT_DIR"
+    # Move to temp if using custom out-dir, otherwise use pkg
+    local pkg_dir="${WASM_OUT_DIR:-pkg}"
+    cd "$pkg_dir"
+    rm -f "$ROOT/packages/$pkg_name-"*.tgz
+    local tarball=$(npm pack --pack-destination "$ROOT/packages")
+    cd "$ROOT"
+    [[ -n "${WASM_OUT_DIR:-}" ]] && rm -rf "$WASM_OUT_DIR"
 
-    success "WASM engine built -> packages/$tarball"
+    save_cache "$name" "${patterns[@]}"
+    success "WASM $crate built -> packages/$tarball"
 }
 
-# Build Rust engine
+build_parsers() {
+    WASM_OUT_DIR="$ROOT/.wasm-build" build_wasm_pkg \
+        parsers parsers wowlab-parsers \
+        --out-dir "$ROOT/.wasm-build"
+}
+
+build_engine_wasm() {
+    build_wasm_pkg \
+        engine-wasm engine wowlab-engine \
+        --features wasm --no-default-features
+}
+
 build_engine() {
+    local patterns=("$ROOT/crates/engine/src" "$ROOT/crates/engine/Cargo.toml")
+
+    if cached engine "${patterns[@]}"; then
+        skip "Rust engine already up to date"
+        return
+    fi
+
     info "Building Rust engine..."
-    cd "$ROOT_DIR/crates"
-    cargo build --release -p engine
+    cargo build --release -p engine --manifest-path "$ROOT/crates/Cargo.toml"
+    save_cache engine "${patterns[@]}"
     success "Engine built"
 }
 
-# Build all Rust crates
 build_rust() {
+    local patterns=("$ROOT/crates/*/src" "$ROOT/crates/*/Cargo.toml" "$ROOT/crates/Cargo.toml")
+
+    if cached rust "${patterns[@]}"; then
+        skip "Rust crates already up to date"
+        return
+    fi
+
     info "Building all Rust crates..."
-    cd "$ROOT_DIR/crates"
-    cargo build --release
+    cargo build --release --manifest-path "$ROOT/crates/Cargo.toml"
+    save_cache rust "${patterns[@]}"
     success "All Rust crates built"
 }
 
-# Build portal
 build_portal() {
+    local patterns=("$ROOT/apps/portal/src" "$ROOT/apps/portal/package.json" "$ROOT/packages/*.tgz")
+
+    if cached portal "${patterns[@]}"; then
+        skip "Portal already up to date"
+        return
+    fi
+
     info "Building portal..."
-    cd "$ROOT_DIR"
     pnpm --filter @apps/portal build
+    save_cache portal "${patterns[@]}"
     success "Portal built"
 }
 
-# Build everything
 build_all() {
-    check_deps
+    require_deps wasm-pack cargo pnpm
     build_parsers
     build_engine_wasm
     info "Installing dependencies..."
@@ -117,52 +181,49 @@ build_all() {
     success "Full build complete!"
 }
 
-# Check/lint everything
 check_all() {
     info "Running Rust checks..."
-    cd "$ROOT_DIR/crates"
+    cd "$ROOT/crates"
     cargo clippy --all-targets
     cargo fmt --check
     cargo test
 
     info "Running TypeScript checks..."
-    cd "$ROOT_DIR"
+    cd "$ROOT"
     pnpm typecheck
     pnpm lint
 
     success "All checks passed!"
 }
 
+#------------------------------------------------------------------------------
+# Utilities
+#------------------------------------------------------------------------------
+
+require_deps() {
+    for cmd in "$@"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            error "$cmd not found"
+            exit 1
+        fi
+    done
+}
+
+#------------------------------------------------------------------------------
 # Main
-TARGET="${1:-all}"
+#------------------------------------------------------------------------------
 
 case "$TARGET" in
-    all)
-        build_all
-        ;;
-    parsers)
-        check_deps
-        build_parsers
-        ;;
-    engine)
-        build_engine
-        ;;
-    engine-wasm)
-        check_deps
-        build_engine_wasm
-        ;;
-    rust)
-        build_rust
-        ;;
-    portal)
-        build_portal
-        ;;
-    check)
-        check_all
-        ;;
+    all)         build_all ;;
+    parsers)     require_deps wasm-pack && build_parsers ;;
+    engine)      build_engine ;;
+    engine-wasm) require_deps wasm-pack && build_engine_wasm ;;
+    rust)        build_rust ;;
+    portal)      build_portal ;;
+    check)       check_all ;;
     *)
         error "Unknown target: $TARGET"
-        echo "Usage: $0 [all|parsers|engine|engine-wasm|rust|portal|check]"
+        echo "Usage: $0 [all|parsers|engine|engine-wasm|rust|portal|check] [--force]"
         exit 1
         ;;
 esac

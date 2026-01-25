@@ -1,10 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
-
+import {
+  Children,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 import { code as inlineCode } from "styled-system/recipes";
+
+import { CodePreview } from "./preview";
+import { renderers } from "./renderers/index";
 
 type MdCodeProps = {
   className?: string;
@@ -19,7 +26,6 @@ type MdPreProps = {
   "data-theme"?: string;
 };
 
-// TODO Move this to recipe?
 const preStyles = css({
   "& [data-highlighted-chars]": {
     bg: "amber.a4",
@@ -87,6 +93,18 @@ export function MdInlineCode({ children, className }: MdCodeProps) {
 export function MdPre({ children, className, ...props }: MdPreProps) {
   const language = props["data-language"];
 
+  if (language && language in renderers) {
+    const code = extractTextContent(children);
+
+    return (
+      <CodePreview
+        code={code}
+        language={language}
+        renderer={renderers[language]}
+      />
+    );
+  }
+
   return (
     <Box position="relative">
       {language && <Box className={badgeStyles}>{language}</Box>}
@@ -95,4 +113,27 @@ export function MdPre({ children, className, ...props }: MdPreProps) {
       </pre>
     </Box>
   );
+}
+
+function extractTextContent(node: ReactNode): string {
+  if (typeof node === "string") {
+    return node;
+  }
+
+  if (typeof node === "number") {
+    return String(node);
+  }
+
+  if (!isValidElement(node)) {
+    return "";
+  }
+
+  const element = node as ReactElement<{ children?: ReactNode }>;
+  const children = element.props.children;
+
+  if (!children) {
+    return "";
+  }
+
+  return Children.toArray(children).map(extractTextContent).join("");
 }

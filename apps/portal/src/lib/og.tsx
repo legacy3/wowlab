@@ -1,17 +1,11 @@
+import { greenDark, slateDark } from "@radix-ui/colors";
 import { ImageResponse } from "next/og";
 
 import { LOGO_SVG, svgToImageSrc } from "./svg";
 
 const LOGO_SRC = svgToImageSrc(LOGO_SVG);
 
-const slate1 = "#111113";
-const slate7 = "#43484e";
-const slate11 = "#b0b4ba";
-const slate12 = "#edeef0";
-const green8 = "#2f7c57";
-const green9 = "#30a46c";
-
-const accentGradient = `linear-gradient(90deg, ${green9} 0%, ${green8} 100%)`;
+const accentGradient = `linear-gradient(90deg, ${greenDark.green9} 0%, ${greenDark.green8} 100%)`;
 
 export const ogSize = {
   height: 630,
@@ -45,8 +39,8 @@ export function createArticleOgImage({
   return new ImageResponse(
     <div
       style={{
-        background: slate1,
-        color: slate12,
+        background: slateDark.slate1,
+        color: slateDark.slate12,
         display: "flex",
         flexDirection: "column",
         fontSize: 32,
@@ -78,7 +72,7 @@ export function createArticleOgImage({
         <img src={logoSrc} width={40} height={40} />
         <div
           style={{
-            color: green9,
+            color: greenDark.green9,
             fontSize: 24,
             fontWeight: 600,
           }}
@@ -87,7 +81,7 @@ export function createArticleOgImage({
         </div>
         <div
           style={{
-            color: slate7,
+            color: slateDark.slate7,
             fontSize: 24,
           }}
         >
@@ -95,7 +89,7 @@ export function createArticleOgImage({
         </div>
         <div
           style={{
-            color: slate11,
+            color: slateDark.slate11,
             fontSize: 24,
           }}
         >
@@ -124,7 +118,7 @@ export function createArticleOgImage({
 
         <div
           style={{
-            color: slate11,
+            color: slateDark.slate11,
             fontSize: 32,
             lineHeight: 1.3,
           }}
@@ -137,18 +131,18 @@ export function createArticleOgImage({
         <div
           style={{
             alignItems: "center",
-            color: slate11,
+            color: slateDark.slate11,
             display: "flex",
             fontSize: 24,
           }}
         >
-          {author && <span style={{ color: green9 }}>{author}</span>}
+          {author && <span style={{ color: greenDark.green9 }}>{author}</span>}
           {author && date && <span style={{ margin: "0 12px" }}>·</span>}
           {date && <span>{date}</span>}
           {tag && (
             <>
               <span style={{ margin: "0 12px" }}>·</span>
-              <span style={{ color: slate7 }}>#{tag}</span>
+              <span style={{ color: slateDark.slate7 }}>#{tag}</span>
             </>
           )}
         </div>
@@ -168,8 +162,8 @@ export function createSectionOgImage({
     <div
       style={{
         alignItems: "center",
-        background: slate1,
-        color: slate12,
+        background: slateDark.slate1,
+        color: slateDark.slate12,
         display: "flex",
         flexDirection: "column",
         fontSize: 32,
@@ -202,7 +196,7 @@ export function createSectionOgImage({
       >
         <div
           style={{
-            color: green9,
+            color: greenDark.green9,
             fontSize: 48,
             fontWeight: 700,
           }}
@@ -211,7 +205,7 @@ export function createSectionOgImage({
         </div>
         <div
           style={{
-            color: slate7,
+            color: slateDark.slate7,
             fontSize: 48,
           }}
         >
@@ -229,7 +223,7 @@ export function createSectionOgImage({
 
       <div
         style={{
-          color: slate11,
+          color: slateDark.slate11,
           fontSize: 26,
         }}
       >
