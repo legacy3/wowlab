@@ -46,6 +46,31 @@ install_rust() {
     success "Rust installed: $(rustc --version)"
 }
 
+# Install protobuf compiler
+install_protoc() {
+    if command -v protoc &> /dev/null; then
+        local version=$(protoc --version)
+        success "protoc already installed: $version"
+        return 0
+    fi
+
+    info "Installing protobuf compiler..."
+    if [[ "$OS" == "macos" ]]; then
+        if command -v brew &> /dev/null; then
+            brew install protobuf
+        else
+            error "Please install Homebrew first or install protobuf manually"
+            return 1
+        fi
+    elif [[ "$OS" == "linux" ]]; then
+        sudo apt-get update && sudo apt-get install -y protobuf-compiler
+    else
+        error "Please install protobuf manually for your OS"
+        return 1
+    fi
+    success "protoc installed: $(protoc --version)"
+}
+
 # Install wasm-pack
 install_wasm_pack() {
     if command -v wasm-pack &> /dev/null; then
@@ -137,7 +162,7 @@ verify() {
     local all_good=true
 
     # Check each tool
-    for cmd in rustc cargo wasm-pack node pnpm; do
+    for cmd in rustc cargo protoc wasm-pack node pnpm; do
         if command -v $cmd &> /dev/null; then
             printf "  %-12s ${GREEN}✓${NC} %s\n" "$cmd" "$($cmd --version 2>/dev/null | head -1)"
         else
@@ -190,6 +215,7 @@ main() {
     # Source cargo env in case it was just installed
     [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
 
+    install_protoc
     install_wasm_target
     install_wasm_pack
     install_node
