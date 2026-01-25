@@ -77,6 +77,9 @@ importers:
       '@visx/group':
         specifier: ^3.12.0
         version: 3.12.0(react@19.2.3)
+      '@visx/responsive':
+        specifier: ^3.12.0
+        version: 3.12.0(react@19.2.3)
       '@visx/scale':
         specifier: ^3.12.0
         version: 3.12.0
@@ -214,7 +217,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/wowlab-parsers: {}
+  packages/parsers: {}
 
 packages:
 
@@ -2287,6 +2290,11 @@ packages:
 
   '@visx/point@3.12.0':
     resolution: {integrity: sha512-I6UrHoJAEVbx3RORQNupgTiX5EzjuZpiwLPxn8L2mI5nfERotPKi1Yus12Cq2WtXqEBR/WgqTnoImlqOXBykcA==}
+
+  '@visx/responsive@3.12.0':
+    resolution: {integrity: sha512-GV1BTYwAGlk/K5c9vH8lS2syPnTuIqEacI7L6LRPbsuaLscXMNi+i9fZyzo0BWvAdtRV8v6Urzglo++lvAXT1Q==}
+    peerDependencies:
+      react: ^16.0.0-0 || ^17.0.0-0 || ^18.0.0-0
 
   '@visx/scale@3.12.0':
     resolution: {integrity: sha512-+ubijrZ2AwWCsNey0HGLJ0YKNeC/XImEFsr9rM+Uef1CM3PNM43NDdNTrdBejSlzRq0lcfQPWYMYQFSlkLcPOg==}
@@ -8492,6 +8500,14 @@ snapshots:
       react: 19.2.3
 
   '@visx/point@3.12.0': {}
+
+  '@visx/responsive@3.12.0(react@19.2.3)':
+    dependencies:
+      '@types/lodash': 4.17.23
+      '@types/react': 19.2.2
+      lodash: 4.17.21
+      prop-types: 15.8.1
+      react: 19.2.3
 
   '@visx/scale@3.12.0':
     dependencies:

@@ -13,9 +13,21 @@ export {
 
 // Nodes store
 
-export { useNodesSelection, useNodesSelectionArray } from "./nodes/store";
+export type {
+  BeaconMetricName,
+  BeaconMetrics,
+  MetricName,
+  SentinelMetricName,
+  SentinelMetrics,
+  TimeRange,
+  TimeSeriesPoint,
+} from "./metrics";
 
 // Nodes types
+
+export { useNodesSelection, useNodesSelectionArray } from "./nodes/store";
+
+// Metrics types
 
 export {
   deriveAccessType,
@@ -30,15 +42,6 @@ export {
   type NodeWithMeta,
   transformNode,
 } from "./nodes/types";
-
-// Sentinel types
-
-export type {
-  SentinelMetricName,
-  SentinelMetrics,
-  TimeRange,
-  TimeSeriesPoint,
-} from "./sentinel/types";
 
 // Traits
 
@@ -82,12 +85,15 @@ export {
   type SimConfig,
   type SubmitJobInput,
   type SubmitJobResult,
+  useBeaconRange,
+  useBeaconStatus,
   useClaimNode,
   useClassesAndSpecs,
   useGlobalColors,
   useGlobalStrings,
   useJob,
   useLoadRotation,
+  useMetricsRange,
   useNode,
   useNodeMutations,
   useNodes,

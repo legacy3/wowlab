@@ -3,5 +3,5 @@
 export { DevIndex } from "./dev-index";
 export { EngineContent } from "./engine";
 export { HooksDemo } from "./hooks";
-export { SentinelContent } from "./sentinel";
+export { MetricsContent } from "./metrics";
 export { UiDemo } from "./ui";

@@ -21,6 +21,15 @@ export {
   useUserJobs,
 } from "./jobs";
 
+// Metrics services
+export {
+  useBeaconRange,
+  useBeaconStatus,
+  useMetricsRange,
+  useSentinelRange,
+  useSentinelStatus,
+} from "./metrics";
+
 // Nodes services
 export {
   type SaveNodeData,
@@ -39,9 +48,6 @@ export { type Profile, type Rotation, useUserProfile } from "./profile";
 
 // Rotation services
 export { useLoadRotation, useSaveRotation } from "./rotation";
-
-// Sentinel services
-export { useSentinelRange, useSentinelStatus } from "./sentinel";
 
 // User services
 export { type OAuthProvider, type User, type UserState, useUser } from "./user";
