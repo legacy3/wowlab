@@ -7,5 +7,6 @@ onlyBuiltDependencies:
   - "@swc/core"
   - canvas
   - esbuild
+  - protobufjs
   - sharp
   - unrs-resolver
