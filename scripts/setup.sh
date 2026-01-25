@@ -1,236 +1,289 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# wowlab development environment setup
-# Run this on a fresh machine to get everything working
+#==============================================================================
+#
+#    HERE BE DRAGONS
+#
+#    This script has only been run a handful of times on fresh machines.
+#    It works on macOS and probably works on Linux.
+#
+#    If something breaks:
+#      1. Read the error message
+#      2. Install the failing tool manually
+#      3. Re-run this script (it skips already-installed tools)
+#      4. Fix the script and commit your fix
+#
+#    Known limitations:
+#      - Windows: this script doesn't support Windows. Use WSL (Ubuntu
+#        recommended) or install tools manually. Native Windows dev works,
+#        the tooling just isn't there yet. PRs welcome!
+#      - Linux: assumes apt-get (Debian/Ubuntu), requires sudo
+#      - Doesn't handle version mismatches
+#
+#==============================================================================
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
+#------------------------------------------------------------------------------
+# Args
+#------------------------------------------------------------------------------
 
-info() { echo -e "${BLUE}==>${NC} $1"; }
-success() { echo -e "${GREEN}==>${NC} $1"; }
-warn() { echo -e "${YELLOW}==>${NC} $1"; }
-error() { echo -e "${RED}==>${NC} $1" >&2; }
-
-# Detect OS
-detect_os() {
-    case "$(uname -s)" in
-        Linux*)  OS="linux" ;;
-        Darwin*) OS="macos" ;;
-        MINGW*|MSYS*|CYGWIN*) OS="windows" ;;
-        *) OS="unknown" ;;
+AUTO_YES=false
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes) AUTO_YES=true ;;
     esac
-    echo "$OS"
-}
+done
 
-OS=$(detect_os)
+#------------------------------------------------------------------------------
+# Logging
+#------------------------------------------------------------------------------
 
-# Install Rust
-install_rust() {
-    if command -v rustc &> /dev/null; then
-        local version=$(rustc --version)
-        success "Rust already installed: $version"
+info()    { echo -e "\033[0;34m==>\033[0m $1"; }
+success() { echo -e "\033[0;32m==>\033[0m $1"; }
+warn()    { echo -e "\033[0;33m==>\033[0m $1"; }
+error()   { echo -e "\033[0;31m==>\033[0m $1" >&2; }
+
+#------------------------------------------------------------------------------
+# OS Detection
+#------------------------------------------------------------------------------
+
+case "$(uname -s)" in
+    Darwin*)              OS=macos ;;
+    Linux*)               OS=linux ;;
+    MINGW*|MSYS*|CYGWIN*) OS=windows ;;
+    *)                    OS=unknown ;;
+esac
+
+#------------------------------------------------------------------------------
+# Helpers
+#------------------------------------------------------------------------------
+
+has()     { command -v "$1" &>/dev/null; }
+version() { "$1" --version 2>/dev/null | head -1; }
+
+installed() {
+    local cmd=$1
+    if has "$cmd"; then
+        success "$cmd already installed: $(version "$cmd")"
         return 0
     fi
-
-    info "Installing Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
-    success "Rust installed: $(rustc --version)"
+    return 1
 }
 
-# Install protobuf compiler
-install_protoc() {
-    if command -v protoc &> /dev/null; then
-        local version=$(protoc --version)
-        success "protoc already installed: $version"
-        return 0
-    fi
-
-    info "Installing protobuf compiler..."
-    if [[ "$OS" == "macos" ]]; then
-        if command -v brew &> /dev/null; then
-            brew install protobuf
-        else
-            error "Please install Homebrew first or install protobuf manually"
-            return 1
-        fi
-    elif [[ "$OS" == "linux" ]]; then
-        sudo apt-get update && sudo apt-get install -y protobuf-compiler
+brew_or_fail() {
+    if has brew; then
+        brew install "$1"
     else
-        error "Please install protobuf manually for your OS"
+        error "Homebrew not found. Install $1 manually or install Homebrew first."
         return 1
     fi
-    success "protoc installed: $(protoc --version)"
 }
 
-# Install wasm-pack
-install_wasm_pack() {
-    if command -v wasm-pack &> /dev/null; then
-        local version=$(wasm-pack --version)
-        success "wasm-pack already installed: $version"
+confirm() {
+    if [[ "$AUTO_YES" == true ]]; then
+        echo "$1 [y/N] y (--yes)"
         return 0
     fi
 
-    info "Installing wasm-pack..."
-    cargo install wasm-pack
-    success "wasm-pack installed: $(wasm-pack --version)"
+    if [[ ! -t 0 ]]; then
+        read -r response
+        echo "$1 [y/N] $response"
+        [[ "$response" =~ ^[yY] ]]
+        return
+    fi
+
+    read -r -p "$1 [y/N] " response
+    [[ "$response" =~ ^[yY] ]]
 }
 
-# Install wasm32 target
+#------------------------------------------------------------------------------
+# Installers
+#------------------------------------------------------------------------------
+
+install_rust() {
+    installed rustc && return
+    info "Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source_cargo
+    success "Rust installed: $(version rustc)"
+}
+
+install_protoc() {
+    installed protoc && return
+    info "Installing protobuf compiler..."
+    case "$OS" in
+        macos)  brew_or_fail protobuf ;;
+        linux)  sudo apt-get update && sudo apt-get install -y protobuf-compiler ;;
+        *)      error "Install protobuf manually for your OS"; return 1 ;;
+    esac
+    success "protoc installed: $(version protoc)"
+}
+
 install_wasm_target() {
     if rustup target list --installed | grep -q wasm32-unknown-unknown; then
         success "wasm32-unknown-unknown target already installed"
-        return 0
+        return
     fi
-
     info "Installing wasm32-unknown-unknown target..."
     rustup target add wasm32-unknown-unknown
     success "wasm32 target installed"
 }
 
-# Install Node.js via fnm (if not present)
+install_wasm_pack() {
+    installed wasm-pack && return
+    info "Installing wasm-pack..."
+    cargo install wasm-pack
+    success "wasm-pack installed: $(version wasm-pack)"
+}
+
 install_node() {
-    if command -v node &> /dev/null; then
-        local version=$(node --version)
-        success "Node.js already installed: $version"
-        return 0
-    fi
-
+    installed node && return
     info "Installing fnm (Fast Node Manager)..."
-    if [[ "$OS" == "macos" ]]; then
-        if command -v brew &> /dev/null; then
-            brew install fnm
-        else
-            curl -fsSL https://fnm.vercel.app/install | bash
-        fi
-    else
-        curl -fsSL https://fnm.vercel.app/install | bash
-    fi
-
-    # Source fnm
-    export PATH="$HOME/.local/share/fnm:$PATH"
-    eval "$(fnm env)"
-
+    case "$OS" in
+        macos) brew_or_fail fnm || curl -fsSL https://fnm.vercel.app/install | bash ;;
+        *)     curl -fsSL https://fnm.vercel.app/install | bash ;;
+    esac
+    source_fnm
     info "Installing Node.js LTS..."
     fnm install --lts
     fnm use lts-latest
-    success "Node.js installed: $(node --version)"
+    success "Node.js installed: $(version node)"
 }
 
-# Install pnpm
 install_pnpm() {
-    if command -v pnpm &> /dev/null; then
-        local version=$(pnpm --version)
-        success "pnpm already installed: $version"
-        return 0
-    fi
-
+    installed pnpm && return
     info "Installing pnpm..."
     npm install -g pnpm
-    success "pnpm installed: $(pnpm --version)"
+    success "pnpm installed: $(version pnpm)"
 }
 
-# Install project dependencies
+#------------------------------------------------------------------------------
+# Environment
+#------------------------------------------------------------------------------
+
+source_cargo() {
+    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+}
+
+source_fnm() {
+    [[ -d "$HOME/.local/share/fnm" ]] && export PATH="$HOME/.local/share/fnm:$PATH"
+    has fnm && eval "$(fnm env 2>/dev/null)" || true
+}
+
+#------------------------------------------------------------------------------
+# Project
+#------------------------------------------------------------------------------
+
 install_deps() {
     info "Installing project dependencies..."
-    cd "$ROOT_DIR"
+    cd "$ROOT"
     pnpm install
     success "Dependencies installed"
 }
 
-# Build WASM packages
 build_wasm() {
     info "Building WASM packages..."
-    "$SCRIPT_DIR/build.sh" parsers
-    success "WASM packages built"
+    "$ROOT/scripts/build.sh" all --force
 }
 
-# Verify installation
+#------------------------------------------------------------------------------
+# Verify
+#------------------------------------------------------------------------------
+
 verify() {
     echo ""
     info "Verifying installation..."
     echo ""
 
     local all_good=true
+    local tools=(rustc cargo protoc wasm-pack node pnpm)
 
-    # Check each tool
-    for cmd in rustc cargo protoc wasm-pack node pnpm; do
-        if command -v $cmd &> /dev/null; then
-            printf "  %-12s ${GREEN}✓${NC} %s\n" "$cmd" "$($cmd --version 2>/dev/null | head -1)"
+    for cmd in "${tools[@]}"; do
+        if has "$cmd"; then
+            printf "  %-12s \033[0;32m✓\033[0m %s\n" "$cmd" "$(version "$cmd")"
         else
-            printf "  %-12s ${RED}✗${NC} not found\n" "$cmd"
+            printf "  %-12s \033[0;31m✗\033[0m not found\n" "$cmd"
             all_good=false
         fi
     done
 
     echo ""
-
-    if $all_good; then
-        success "All tools installed!"
-    else
-        error "Some tools are missing"
-        return 1
-    fi
+    $all_good && success "All tools installed!" || { error "Some tools missing"; return 1; }
 }
 
-# Print next steps
-next_steps() {
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    success "Setup complete!"
-    echo ""
-    echo "  Next steps:"
-    echo ""
-    echo "    pnpm dev          # Start development server"
-    echo "    pnpm build        # Build everything"
-    echo "    pnpm check        # Run all checks"
-    echo ""
-    echo "  After changing Rust code:"
-    echo ""
-    echo "    pnpm build:parsers   # Rebuild WASM parser"
-    echo "    pnpm build:engine    # Rebuild engine"
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-}
-
+#------------------------------------------------------------------------------
 # Main
+#------------------------------------------------------------------------------
+
 main() {
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  wowlab development environment setup"
-    echo "  Detected OS: $OS"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
+    echo "┃                                                                          ┃"
+    echo "┃   WoW Lab Development Environment Setup                                  ┃"
+    echo "┃                                                                          ┃"
+    echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+    echo ""
+    warn "Here be dragons. This script is not well tested."
+    echo ""
+    echo "  Never run scripts you haven't read. Review the source first:"
+    echo "  https://github.com/legacy3/wowlab/blob/main/scripts/setup.sh"
+    echo ""
+    echo "  OS: $OS"
+    echo ""
+    echo "  This will install (if not already present):"
+    echo ""
+    echo "    • Rust (via rustup)"
+    echo "    • wasm-pack + wasm32 target"
+    echo "    • protobuf compiler (sudo required on Linux)"
+    echo "    • Node.js (via fnm)"
+    echo "    • pnpm"
+    echo ""
+    echo "  Then build WASM packages and install project dependencies."
     echo ""
 
-    install_rust
-
-    # Source cargo env in case it was just installed
-    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
-
-    install_protoc
-    install_wasm_target
-    install_wasm_pack
-    install_node
-
-    # Source fnm if installed
-    if [[ -d "$HOME/.local/share/fnm" ]]; then
-        export PATH="$HOME/.local/share/fnm:$PATH"
-        eval "$(fnm env 2>/dev/null)" || true
+    if ! confirm "Continue?"; then
+        echo "Aborted."
+        exit 0
     fi
 
+    echo ""
+
+    # Rust
+    install_rust
+    source_cargo
+    install_wasm_target
+    install_wasm_pack
+
+    # System
+    install_protoc
+
+    # Node
+    install_node
+    source_fnm
     install_pnpm
+
+    # Project
     install_deps
     build_wasm
+
+    # Done
     verify
-    next_steps
+
+    echo ""
+    echo "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
+    echo "┃                                                                          ┃"
+    echo "┃   Setup complete!                                                        ┃"
+    echo "┃                                                                          ┃"
+    echo "┃   Next steps:                                                            ┃"
+    echo "┃                                                                          ┃"
+    echo "┃     pnpm dev     Start development server                                ┃"
+    echo "┃     pnpm build   Build everything                                        ┃"
+    echo "┃     pnpm check   Run all checks                                          ┃"
+    echo "┃                                                                          ┃"
+    echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+    echo ""
 }
 
 main "$@"
