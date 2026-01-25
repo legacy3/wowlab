@@ -1,0 +1,296 @@
+---
+title: Job Aggregation
+description: Final result aggregation and persistence using saga pattern
+---
+
+# Job Aggregation
+
+When all chunks complete, Sentinel aggregates results and persists to Supabase using a saga pattern.
+
+## Overview
+
+```mermaid
+flowchart TD
+    subgraph Trigger["Trigger"]
+        A1[Last chunk completes]
+        A2[complete_chunk returns AGGREGATE]
+    end
+
+    subgraph Aggregation["Aggregation"]
+        B1[Fetch all results from Redis]
+        B2[Validate result count]
+        B3[Compute aggregated stats]
+    end
+
+    subgraph Persistence["Persistence (Saga)"]
+        C1[Write to Supabase]
+        C2[Delete Redis keys]
+        C3[Publish completion]
+    end
+
+    A1 --> A2
+    A2 --> B1 --> B2 --> B3
+    B3 --> C1 --> C2 --> C3
+```
+
+## Aggregation Lock
+
+The `complete_chunk.lua` script handles lock acquisition:
+
+```mermaid
+flowchart TD
+    Complete[Chunk completes] --> Check{completed >= total?}
+    Check -->|No| Done[Return OK]
+    Check -->|Yes| TryLock{HSETNX lock = 1}
+    TryLock -->|Fail| Done
+    TryLock -->|Success| SetTime[Set lock_at timestamp]
+    SetTime --> Return[Return AGGREGATE flag]
+```
+
+```lua
+if completed >= total and total > 0 then
+    local agg_lock = redis.call('HSETNX', job_key, 'lock', '1')
+    if agg_lock == 1 then
+        redis.call('HSET', job_key, 'lock_at', now)
+        should_aggregate = true
+    end
+end
+```
+
+Only ONE sentinel gets the AGGREGATE flag, preventing duplicate aggregation.
+
+## Fetching Results
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+
+    Sentinel->>Redis: LRANGE {job}:{id}:results 0 -1
+    Redis-->>Sentinel: [result_1, result_2, ..., result_N]
+
+    Sentinel->>Sentinel: Validate count == total
+    Note over Sentinel: If count < total, something is wrong
+
+    Sentinel->>Redis: HGET {job}:{id} total
+    Redis-->>Sentinel: 10
+```
+
+## Computing Aggregated Stats
+
+```mermaid
+flowchart LR
+    Results["Chunk Results<br/>[r1, r2, ..., rN]"] --> Parse[Parse JSON]
+    Parse --> Aggregate[Aggregate]
+
+    subgraph Aggregate["Aggregation Logic"]
+        MeanCalc["Combined mean =<br/>Σ(chunk_mean × chunk_n) / total_n"]
+        StdCalc["Combined std =<br/>√(variance)"]
+        MinCalc["Global min =<br/>min(chunk_mins)"]
+        MaxCalc["Global max =<br/>max(chunk_maxs)"]
+    end
+```
+
+### Combining Means
+
+```rust
+fn combine_means(results: &[ChunkResult]) -> f64 {
+    let total_iterations: u64 = results.iter().map(|r| r.iterations).sum();
+    let weighted_sum: f64 = results.iter()
+        .map(|r| r.mean_dps * r.iterations as f64)
+        .sum();
+    weighted_sum / total_iterations as f64
+}
+```
+
+### Combining Standard Deviations
+
+Using parallel variance combination formula:
+
+```rust
+fn combine_std_devs(results: &[ChunkResult], combined_mean: f64) -> f64 {
+    let total_n: u64 = results.iter().map(|r| r.iterations).sum();
+
+    // Sum of squared deviations within each chunk
+    let within_variance: f64 = results.iter()
+        .map(|r| r.std_dps.powi(2) * r.iterations as f64)
+        .sum::<f64>() / total_n as f64;
+
+    // Variance between chunk means
+    let between_variance: f64 = results.iter()
+        .map(|r| {
+            let diff = r.mean_dps - combined_mean;
+            diff.powi(2) * r.iterations as f64
+        })
+        .sum::<f64>() / total_n as f64;
+
+    (within_variance + between_variance).sqrt()
+}
+```
+
+## Saga Pattern
+
+The saga ensures consistency between Redis and Supabase:
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+    participant Supabase
+    participant Centrifugo
+
+    rect rgb(200, 255, 200)
+        Note over Sentinel,Supabase: Happy Path
+        Sentinel->>Redis: LRANGE results
+        Sentinel->>Sentinel: Aggregate
+        Sentinel->>Supabase: UPDATE jobs SET result<br/>WHERE status != 'completed'
+        Supabase-->>Sentinel: RETURNING id (confirms write)
+        Sentinel->>Redis: DEL {job}:{id}
+        Sentinel->>Redis: DEL {job}:{id}:results
+        Sentinel->>Centrifugo: Publish completion
+    end
+
+    rect rgb(255, 200, 200)
+        Note over Sentinel,Supabase: Failure Path
+        Sentinel->>Redis: LRANGE results
+        Sentinel->>Sentinel: Aggregate
+        Sentinel->>Supabase: UPDATE jobs...
+        Supabase-->>Sentinel: Error (network, etc)
+        Note over Sentinel: DO NOT delete Redis keys
+        Note over Sentinel: Retry later
+    end
+```
+
+### Idempotent Write
+
+```sql
+UPDATE jobs
+SET
+    result = $1,
+    status = 'completed',
+    completed_at = now()
+WHERE id = $2
+  AND status != 'completed'
+RETURNING id
+```
+
+The `WHERE status != 'completed'` ensures:
+
+- Double-writes are safe
+- RETURNING confirms the write actually happened
+
+### Key Deletion Order
+
+**Critical:** Only delete Redis keys AFTER Supabase confirms:
+
+```rust
+// 1. Write to Supabase
+let result = supabase
+    .from("jobs")
+    .update(update_data)
+    .eq("id", job_id)
+    .neq("status", "completed")
+    .single()
+    .await;
+
+match result {
+    Ok(row) if row.is_some() => {
+        // 2. Only NOW delete Redis keys
+        redis.del(&format!("{{job}}:{}:results", job_id)).await?;
+        redis.del(&format!("{{job}}:{}", job_id)).await?;
+
+        // 3. Publish completion
+        centrifugo.publish(&format!("jobs:{}", job_id), completion_msg).await?;
+    }
+    Ok(_) => {
+        // Row not returned = already completed by another process
+        // Safe to delete Redis keys
+    }
+    Err(e) => {
+        // Keep Redis data for retry
+        log::error!("Supabase write failed: {}", e);
+    }
+}
+```
+
+## Stuck Lock Recovery
+
+Background task checks for stuck aggregation locks:
+
+```mermaid
+flowchart TD
+    Timer[Every 60 seconds] --> GetJobs[Get active jobs with locks]
+    GetJobs --> Loop{For each job}
+    Loop --> CheckAge{lock_at > 5 min ago?}
+    CheckAge -->|No| Loop
+    CheckAge -->|Yes| Release[Release lock]
+    Release --> Log[Log warning]
+    Log --> Loop
+```
+
+```rust
+// Check for stuck aggregation locks every 60 seconds
+for job_id in active_jobs {
+    let lock_at: Option<i64> = redis.hget(&job_key, "lock_at").await?;
+    if let Some(lock_time) = lock_at {
+        if now - lock_time > 300 { // 5 minutes
+            redis.hdel(&job_key, &["lock", "lock_at"]).await?;
+            log::warn!("Released stuck aggregation lock for job {}", job_id);
+        }
+    }
+}
+```
+
+## Completion Message
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Centrifugo
+    participant Portal
+
+    Sentinel->>Centrifugo: POST /api/publish
+    Note over Centrifugo: channel: jobs:{job_id}<br/>data: {type: completed, result: {...}}
+
+    Centrifugo-->>Portal: {type: completed, result: {...}}
+    Portal->>Portal: Show final results
+```
+
+```json
+{
+  "type": "completed",
+  "result": {
+    "meanDps": 12500.5,
+    "stdDps": 250.3,
+    "minDps": 11800.0,
+    "maxDps": 13200.0,
+    "totalIterations": 10000
+  }
+}
+```
+
+## Race Condition Handling
+
+### Multiple Sentinels Detect Completion
+
+```mermaid
+sequenceDiagram
+    participant Sentinel1
+    participant Sentinel2
+    participant Redis
+
+    Note over Sentinel1,Sentinel2: Both process last chunks simultaneously
+
+    par Sentinel 1
+        Sentinel1->>Redis: HSETNX lock 1
+        Redis-->>Sentinel1: OK (acquired)
+    and Sentinel 2
+        Sentinel2->>Redis: HSETNX lock 1
+        Redis-->>Sentinel2: nil (failed)
+    end
+
+    Note over Sentinel1: Proceeds with aggregation
+    Note over Sentinel2: Returns OK, no aggregation
+```
+
+Only ONE sentinel wins the lock race. The others see their chunk completion succeed but don't aggregate.

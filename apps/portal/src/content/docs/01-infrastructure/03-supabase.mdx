@@ -1,0 +1,194 @@
+---
+title: Supabase
+description: Persistence layer for final results and user data
+---
+
+# Supabase
+
+Supabase serves as the durability layer, storing final job results and user data. It is **NOT** used for real-time coordination.
+
+## Role in Architecture
+
+```mermaid
+flowchart TB
+    subgraph Realtime["Realtime Coordination"]
+        Redis[(Redis)]
+        Centrifugo[Centrifugo]
+    end
+
+    subgraph Persistence["Persistence Layer"]
+        Supabase[(Supabase)]
+    end
+
+    subgraph Writers["Writers"]
+        Sentinel[Sentinel]
+        Portal[Portal]
+    end
+
+    Sentinel -->|coordination| Redis
+    Sentinel -->|messaging| Centrifugo
+    Sentinel -->|"final results<br/>(after aggregation)"| Supabase
+
+    Portal -->|"user data,<br/>job creation"| Supabase
+```
+
+## Data Stored
+
+| Table      | Purpose                        | Written By                           |
+| ---------- | ------------------------------ | ------------------------------------ |
+| `jobs`     | Job metadata and final results | Portal (create), Sentinel (complete) |
+| `nodes`    | Node registration and config   | Portal (claim), Sentinel (register)  |
+| `users`    | User accounts and settings     | Supabase Auth                        |
+| `profiles` | User profile data              | Portal                               |
+
+## Write Patterns
+
+### Job Creation
+
+Portal creates jobs directly in Supabase:
+
+```mermaid
+sequenceDiagram
+    participant Portal
+    participant Supabase
+    participant Sentinel
+    participant Redis
+
+    Portal->>Supabase: INSERT INTO jobs (config, iterations)
+    Supabase-->>Portal: job_id
+    Supabase->>Sentinel: pg_notify('job_created', job_id)
+    Sentinel->>Redis: Initialize job state
+    Sentinel->>Redis: Schedule chunks
+```
+
+### Job Completion (Saga Pattern)
+
+Sentinel writes final results only after successful aggregation:
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+    participant Supabase
+    participant Centrifugo
+
+    Note over Sentinel: complete_chunk returns AGGREGATE flag
+
+    Sentinel->>Redis: LRANGE {job}:{id}:results
+    Redis-->>Sentinel: [r1, r2, ... rN]
+
+    Sentinel->>Sentinel: Validate result count
+    Sentinel->>Sentinel: Aggregate in memory
+
+    Sentinel->>Supabase: UPDATE jobs SET result, status<br/>WHERE id = job_id AND status != 'completed'<br/>RETURNING id
+
+    alt Supabase confirms update
+        Supabase-->>Sentinel: job_id
+        Sentinel->>Redis: DEL {job}:{id}
+        Sentinel->>Redis: DEL {job}:{id}:results
+        Sentinel->>Centrifugo: Publish completion
+    else Supabase fails
+        Supabase-->>Sentinel: Error
+        Note over Sentinel: Keep Redis data, retry later
+    end
+```
+
+**Critical:** Only delete Redis keys AFTER Supabase confirms the write. If Supabase fails, keep Redis data and retry.
+
+### Node Registration
+
+Sentinel registers nodes in Supabase after signature verification:
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Sentinel
+    participant Supabase
+
+    Node->>Sentinel: POST /nodes/register + signature
+    Sentinel->>Sentinel: Verify Ed25519 signature
+    Sentinel->>Supabase: INSERT INTO nodes (pubkey, pubkey_hash)
+    Supabase-->>Sentinel: node_id, claim_code
+    Sentinel-->>Node: {id, claimCode}
+```
+
+## Access Patterns
+
+### Portal Access
+
+Portal connects directly to Supabase with user JWT:
+
+- RLS policies enforce user-level access
+- Users can only see their own jobs
+- Users can only claim their own nodes
+
+### Sentinel Access
+
+Sentinel uses service role key:
+
+- Bypasses RLS for administrative operations
+- Writes final job results
+- Registers new nodes
+- Updates node status
+
+### Node Access
+
+**Nodes NEVER access Supabase directly.**
+
+All node operations go through Sentinel:
+
+- Registration → Sentinel HTTP → Supabase
+- Token refresh → Sentinel validates via Supabase lookup
+- Config fetch → Sentinel RPC → Redis (cached) or Supabase
+
+## Idempotent Writes
+
+Job completion uses idempotent update:
+
+```sql
+UPDATE jobs
+SET result = $1, status = 'completed', completed_at = now()
+WHERE id = $2 AND status != 'completed'
+RETURNING id
+```
+
+This ensures:
+
+- Double-writes are safe (no duplicate updates)
+- Concurrent completions (edge case) don't corrupt data
+- RETURNING confirms the write actually happened
+
+## Data Not Stored
+
+The following are **NOT** stored in Supabase:
+
+| Data                     | Where It Lives   | Why                            |
+| ------------------------ | ---------------- | ------------------------------ |
+| Node health/heartbeats   | Redis            | Transient, high-frequency      |
+| Chunk assignments        | Redis            | Short-lived, coordination only |
+| Job progress (in-flight) | Redis            | Transient state                |
+| WebSocket presence       | Centrifugo/Redis | Ephemeral                      |
+| Rate limiting            | Redis            | Ephemeral counters             |
+| Idempotency keys         | Redis            | Short TTL                      |
+
+## Triggers
+
+Supabase uses pg_notify to trigger Sentinel actions:
+
+```sql
+-- On job creation
+CREATE OR REPLACE FUNCTION notify_job_created()
+RETURNS TRIGGER AS $$
+BEGIN
+  PERFORM pg_notify('job_created', NEW.id::text);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER job_created_trigger
+AFTER INSERT ON jobs
+FOR EACH ROW
+EXECUTE FUNCTION notify_job_created();
+```
+
+Sentinel listens for these notifications to initiate job scheduling.

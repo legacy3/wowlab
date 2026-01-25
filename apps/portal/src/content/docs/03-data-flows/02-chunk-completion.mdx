@@ -1,0 +1,287 @@
+---
+title: Chunk Completion
+description: Chunk result submission and processing via publish proxy
+---
+
+# Chunk Completion
+
+This document covers how nodes submit chunk results and how Sentinel processes them.
+
+## Overview
+
+```mermaid
+flowchart TD
+    subgraph Node["Compute Node"]
+        A1[Complete simulation]
+        A2[Build result payload]
+        A3[Publish to chunks:complete]
+    end
+
+    subgraph Centrifugo["Centrifugo"]
+        B1[Receive publish]
+        B2[Route to publish proxy]
+    end
+
+    subgraph Sentinel["Sentinel"]
+        C1[Verify proxy secret]
+        C2[Rate limit check]
+        C3[Validate result]
+        C4[Execute complete_chunk.lua]
+        C5[Publish progress]
+    end
+
+    A1 --> A2 --> A3
+    A3 --> B1 --> B2
+    B2 --> C1 --> C2 --> C3 --> C4 --> C5
+```
+
+## Node Result Submission
+
+### Building the Result
+
+```mermaid
+flowchart LR
+    Sim[Simulation Engine] --> Stats[Aggregate Stats]
+    Stats --> Payload[Build Payload]
+
+    subgraph Payload["Result Payload"]
+        ChunkId[chunkId]
+        Mean[meanDps]
+        Std[stdDps]
+        Min[minDps]
+        Max[maxDps]
+        Iters[iterations]
+    end
+```
+
+### Publishing
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+
+    Node->>Centrifugo: publish chunks:complete
+    Note over Node,Centrifugo: {chunkId, result: {meanDps, stdDps, ...}}
+
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Note over Centrifugo,Sentinel: {user: node-uuid,<br/>channel: chunks:complete,<br/>data: {...},<br/>meta: {...}}
+```
+
+## Publish Proxy Processing
+
+### 1. Secret Verification
+
+```rust
+fn verify_proxy_secret(req: &Request) -> Result<()> {
+    let secret = req.headers()
+        .get("X-Centrifugo-Proxy-Secret")
+        .ok_or(AuthError::MissingSecret)?;
+
+    if secret != env::var("CENTRIFUGO_PROXY_SECRET")? {
+        return Err(AuthError::InvalidSecret);
+    }
+    Ok(())
+}
+```
+
+### 2. Rate Limit Check
+
+```mermaid
+flowchart TD
+    Request[Incoming Request] --> RateLimit{Rate limit check}
+    RateLimit -->|Under limit| Continue[Continue processing]
+    RateLimit -->|Over limit| Reject[Return 429]
+
+    subgraph RateLimitLogic["Rate Limit (100/sec per node)"]
+        Key["ratelimit:publish:{node}:{second}"]
+        INCR[INCR + EXPIRE]
+        Check{count > 100?}
+    end
+```
+
+```lua
+-- Atomic rate limit check
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+    redis.call('EXPIRE', KEYS[1], 2) -- 2 second window
+end
+return count
+```
+
+### 3. Result Validation
+
+```mermaid
+flowchart TD
+    Result[Chunk Result] --> IterCheck{Iterations match<br/>assignment?}
+    IterCheck -->|No| Reject1[Reject: Iteration mismatch]
+    IterCheck -->|Yes| DpsCheck{DPS in bounds?<br/>0 to 10M}
+    DpsCheck -->|No| Reject2[Reject: DPS out of bounds]
+    DpsCheck -->|Yes| StdCheck{Std dev valid?<br/>0 to mean*2}
+    StdCheck -->|No| Reject3[Reject: Invalid std dev]
+    StdCheck -->|Yes| MinMaxCheck{min <= mean <= max?}
+    MinMaxCheck -->|No| Reject4[Reject: Invalid min/max]
+    MinMaxCheck -->|Yes| Accept[Accept result]
+```
+
+```rust
+fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()> {
+    if result.iterations != expected_iterations {
+        return Err(ValidationError::IterationMismatch);
+    }
+
+    if result.mean_dps < 0.0 || result.mean_dps > 10_000_000.0 {
+        return Err(ValidationError::DpsOutOfBounds);
+    }
+
+    if result.std_dps < 0.0 || result.std_dps > result.mean_dps * 2.0 {
+        return Err(ValidationError::StdDevInvalid);
+    }
+
+    if result.min_dps > result.mean_dps || result.max_dps < result.mean_dps {
+        return Err(ValidationError::MinMaxInvalid);
+    }
+
+    Ok(())
+}
+```
+
+### 4. Lua Script Execution
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+
+    Sentinel->>Redis: EVALSHA complete_chunk
+    Note over Redis: KEYS: chunk_key, idempotency_key<br/>ARGV: result_json, node_id, timestamp
+
+    Redis->>Redis: SET NX idempotency key
+    alt Already completed
+        Redis-->>Sentinel: ALREADY_COMPLETED
+    else New completion
+        Redis->>Redis: Verify chunk exists
+        Redis->>Redis: Verify node is assigned
+        Redis->>Redis: Decrement node backlog
+        Redis->>Redis: Increment job completed
+        Redis->>Redis: Append result to list
+        Redis->>Redis: Delete chunk record
+        Redis->>Redis: Check if job complete
+        alt Job complete
+            Redis->>Redis: Acquire aggregation lock
+            Redis-->>Sentinel: {OK, job_id, completed, total, AGGREGATE}
+        else Job in progress
+            Redis-->>Sentinel: {OK, job_id, completed, total, nil}
+        end
+    end
+```
+
+## Response Handling
+
+### Success
+
+```json
+{
+  "result": {}
+}
+```
+
+Centrifugo confirms the publish to the node.
+
+### Errors
+
+```mermaid
+flowchart TD
+    Error[Error Type] --> Already{Already<br/>Completed?}
+    Already -->|Yes| Silent[Return success<br/>(idempotent)]
+
+    Error --> NotFound{Chunk Not<br/>Found?}
+    NotFound -->|Yes| Error4500[4500: Terminal error]
+
+    Error --> WrongNode{Wrong<br/>Node?}
+    WrongNode -->|Yes| Error4501[4501: Terminal error]
+
+    Error --> RateLimit{Rate<br/>Limited?}
+    RateLimit -->|Yes| Error4429[4429: Reconnectable]
+```
+
+| Error             | Code | Type          | Client Action      |
+| ----------------- | ---- | ------------- | ------------------ |
+| Already completed | -    | Success       | None (idempotent)  |
+| Chunk not found   | 4500 | Terminal      | Don't retry        |
+| Wrong node        | 4501 | Terminal      | Don't retry        |
+| Rate limited      | 4429 | Reconnectable | Retry with backoff |
+
+## Progress Publishing
+
+After successful completion, Sentinel publishes progress:
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Centrifugo
+    participant Portal
+
+    Sentinel->>Centrifugo: POST /api/publish
+    Note over Centrifugo: channel: jobs:{job_id}<br/>data: {type: progress, completed: 5, total: 10}
+
+    Centrifugo-->>Portal: Progress update
+    Portal->>Portal: Update UI
+```
+
+## Complete Flow
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+    participant Portal
+
+    Node->>Node: Complete simulation chunk
+    Node->>Centrifugo: publish chunks:complete
+
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Sentinel->>Sentinel: Verify secret
+    Sentinel->>Redis: Rate limit check
+    Sentinel->>Sentinel: Validate result
+
+    Sentinel->>Redis: EVALSHA complete_chunk
+    Redis-->>Sentinel: {OK, job-123, 5, 10, nil}
+
+    Sentinel-->>Centrifugo: {result: {}}
+    Centrifugo-->>Node: Publish confirmed
+
+    Sentinel->>Centrifugo: POST /api/publish (progress)
+    Centrifugo-->>Portal: {type: progress, completed: 5, total: 10}
+```
+
+## Retry Behavior
+
+Node SDK should implement retry with exponential backoff:
+
+```typescript
+async publishChunkCompletion(chunkId: string, result: ChunkResult) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+            await this.centrifuge.publish('chunks:complete', { chunkId, result });
+            return; // Success
+        } catch (error) {
+            if (this.isRetryable(error)) {
+                const baseDelay = Math.min(1000 * Math.pow(2, attempt), 30000);
+                const jitter = Math.random() * baseDelay * 0.25;
+                await sleep(baseDelay + jitter);
+                continue;
+            }
+            throw error; // Non-retryable
+        }
+    }
+    throw new Error('Max retries exceeded');
+}
+
+isRetryable(error: any): boolean {
+    return error.code >= 500 || error.code === 429;
+}
+```

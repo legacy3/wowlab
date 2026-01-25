@@ -1,0 +1,396 @@
+---
+title: Failure Scenarios
+description: Realistic failure modes and recovery strategies
+---
+
+# Failure Scenarios
+
+This document covers realistic failure scenarios and how the system recovers.
+
+## Failure Categories
+
+```mermaid
+flowchart TB
+    subgraph Infrastructure["Infrastructure Failures"]
+        Redis[Redis unavailable]
+        Supabase[Supabase unavailable]
+        Network[Network partition]
+    end
+
+    subgraph Process["Process Failures"]
+        SentinelDie[Sentinel crash]
+        NodeDie[Node disconnect]
+        CentrifugoDie[Centrifugo restart]
+    end
+
+    subgraph Logic["Logic Failures"]
+        Duplicate[Duplicate completion]
+        RaceCondition[Race conditions]
+        StuckLock[Stuck aggregation lock]
+    end
+```
+
+## Sentinel Instance Dies Mid-Request
+
+**Scenario:** Publish proxy request in flight, sentinel crashes.
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+
+    Node->>Centrifugo: publish chunks:complete
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Sentinel->>Redis: EVALSHA complete_chunk
+
+    Note over Sentinel: CRASH
+
+    Centrifugo-->>Centrifugo: Timeout (10s)
+    Centrifugo-->>Node: Error response
+
+    Note over Node: Retry with backoff
+
+    Node->>Centrifugo: publish chunks:complete (retry)
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Note over Sentinel: Different instance handles
+    Sentinel->>Redis: EVALSHA complete_chunk
+    alt First attempt succeeded
+        Redis-->>Sentinel: ALREADY_COMPLETED
+        Note over Sentinel: Return success (idempotent)
+    else First attempt failed
+        Redis-->>Sentinel: OK
+    end
+    Sentinel-->>Centrifugo: {result: {}}
+    Centrifugo-->>Node: Success
+```
+
+**Recovery:**
+
+- Idempotency key prevents double-counting if first request partially succeeded
+- If chunk completion never happened, retry succeeds on another sentinel
+- Node SDK implements exponential backoff with jitter
+
+## Redis Temporarily Unavailable
+
+**Scenario:** Redis down for 30 seconds.
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+
+    Node->>Centrifugo: publish chunks:complete
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Sentinel->>Redis: EVALSHA complete_chunk
+    Redis-->>Sentinel: Connection error
+
+    Sentinel-->>Centrifugo: Error response
+    Centrifugo-->>Node: Publish failed
+
+    Note over Node: Retry with backoff
+
+    loop Until Redis returns
+        Node->>Centrifugo: publish (retry)
+        Centrifugo->>Sentinel: POST /proxy/publish
+        Sentinel->>Redis: Connection error
+        Sentinel-->>Centrifugo: Error
+        Centrifugo-->>Node: Failed
+        Node->>Node: Exponential backoff
+    end
+
+    Note over Redis: Redis returns
+
+    Node->>Centrifugo: publish (retry)
+    Centrifugo->>Sentinel: POST /proxy/publish
+    Sentinel->>Redis: EVALSHA complete_chunk
+    Redis-->>Sentinel: OK
+    Sentinel-->>Centrifugo: Success
+    Centrifugo-->>Node: Success
+```
+
+**Impact during outage:**
+
+- All sentinel operations fail
+- Centrifugo returns errors to all proxy requests
+- Nodes see publish failures, retry with backoff
+- Portal sees stale progress (no updates published)
+
+**Recovery:**
+
+- When Redis returns, retries succeed
+- No data loss (nothing was committed during outage)
+- Progress catches up quickly
+
+## Node Disconnects Mid-Chunk
+
+**Scenario:** Node working on chunk, network dies.
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+
+    Note over Node: Processing chunk-1
+
+    Node--xCentrifugo: Network failure
+
+    Note over Centrifugo: Ping timeout (25-30s)
+    Centrifugo->>Sentinel: Presence leave event
+
+    Sentinel->>Sentinel: Note hint (don't act immediately)
+    Sentinel->>Redis: HGET last_heartbeat
+    Redis-->>Sentinel: timestamp (recent)
+
+    Note over Sentinel: Wait - heartbeat still fresh
+
+    Note over Node: Completes chunk despite disconnect
+
+    alt Node reconnects in time
+        Node->>Centrifugo: Reconnect
+        Node->>Centrifugo: publish chunks:complete
+        Centrifugo->>Sentinel: /proxy/publish
+        Sentinel->>Redis: complete_chunk
+        Note over Redis: Success - chunk done
+    else Node stays offline > 90s
+        Note over Sentinel: Background health check
+        Sentinel->>Redis: HGET last_heartbeat
+        Redis-->>Sentinel: timestamp (stale > 90s)
+        Sentinel->>Redis: EVALSHA reclaim_chunks
+        Note over Redis: Chunks reassigned
+    end
+```
+
+**Race condition handled:**
+
+```mermaid
+sequenceDiagram
+    participant OldNode
+    participant Sentinel
+    participant Redis
+    participant NewNode
+
+    Note over OldNode,NewNode: Node finishes just as reclaim happens
+
+    par Completion
+        OldNode->>Sentinel: Complete chunk-1
+        Sentinel->>Redis: complete_chunk
+    and Reclaim
+        Sentinel->>Redis: reclaim_chunks
+        Redis-->>Sentinel: [chunk-1]
+    end
+
+    alt Completion wins
+        Redis-->>Sentinel: OK (chunk deleted)
+        Note over Sentinel: Reclaim finds chunk gone
+        Sentinel->>Redis: EXISTS chunk-1
+        Redis-->>Sentinel: 0
+        Note over Sentinel: Skip reassignment
+    else Reclaim wins
+        Redis-->>Sentinel: WRONG_NODE or NOT_FOUND
+        Note over OldNode: Completion rejected
+        Sentinel->>NewNode: Reassign chunk-1
+    end
+```
+
+## Duplicate Chunk Completion
+
+### Scenario 1: Network retry
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+
+    Node->>Centrifugo: publish (attempt 1)
+    Centrifugo->>Sentinel: /proxy/publish
+    Sentinel->>Redis: complete_chunk
+    Redis-->>Sentinel: OK
+
+    Note over Centrifugo: Response lost (network glitch)
+
+    Node->>Node: Timeout, retry
+
+    Node->>Centrifugo: publish (attempt 2)
+    Centrifugo->>Sentinel: /proxy/publish
+    Sentinel->>Redis: complete_chunk
+    Redis-->>Sentinel: ALREADY_COMPLETED
+
+    Note over Sentinel: Return success (idempotent)
+    Sentinel-->>Centrifugo: {result: {}}
+    Centrifugo-->>Node: Success
+```
+
+### Scenario 2: Reclaimed chunk, both nodes complete
+
+```mermaid
+sequenceDiagram
+    participant NodeA
+    participant NodeB
+    participant Sentinel
+    participant Redis
+
+    Note over NodeA: Original assignee
+    Note over NodeB: Reassigned after reclaim
+
+    NodeB->>Sentinel: Complete chunk-1
+    Sentinel->>Redis: complete_chunk (nodeB)
+    Redis-->>Sentinel: OK
+    Note over Redis: chunk.node_id = nodeB<br/>Verified, accepted
+
+    NodeA->>Sentinel: Complete chunk-1 (late)
+    Sentinel->>Redis: complete_chunk (nodeA)
+    Redis-->>Sentinel: WRONG_NODE
+    Note over Redis: chunk.node_id = nodeB<br/>NodeA rejected
+
+    Note over NodeA: Late completion safely rejected
+```
+
+## Job Takes Longer Than Expected
+
+**Scenario:** Job runs for 20 hours (complex simulation).
+
+```mermaid
+flowchart TD
+    subgraph TTLs["TTL Management"]
+        JobTTL["Job keys: 24h initial"]
+        RefreshTTL["Refreshed on each chunk completion"]
+    end
+
+    subgraph Scenario
+        Start[Job starts] --> Chunk1[Chunk 1 completes]
+        Chunk1 -->|Refresh TTL| Chunk2[Chunk 2 completes]
+        Chunk2 -->|Refresh TTL| ChunkN[Chunk N completes]
+        ChunkN -->|Refresh TTL| Complete[Job completes]
+    end
+```
+
+- Job keys have 24h TTL
+- Each chunk completion refreshes TTL
+- As long as chunks keep completing, job stays alive
+- If no completions for 24h, job data expires (job was abandoned)
+
+## Supabase Write Fails During Aggregation
+
+**Scenario:** Network error writing final result to Supabase.
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+    participant Supabase
+
+    Note over Sentinel: All chunks complete, aggregating
+
+    Sentinel->>Redis: LRANGE results
+    Redis-->>Sentinel: [r1, r2, ... rN]
+
+    Sentinel->>Sentinel: Aggregate stats
+
+    Sentinel->>Supabase: UPDATE jobs SET result
+    Supabase-->>Sentinel: Network error
+
+    Note over Sentinel: DO NOT delete Redis keys
+    Note over Sentinel: Release lock, schedule retry
+
+    Sentinel->>Redis: HDEL {job}:{id} lock lock_at
+    Note over Redis: Lock released
+
+    Note over Sentinel: Later retry
+
+    Sentinel->>Redis: Check results still exist
+    Redis-->>Sentinel: Yes
+    Sentinel->>Sentinel: Re-aggregate
+    Sentinel->>Supabase: UPDATE jobs SET result
+    Supabase-->>Sentinel: Success
+
+    Sentinel->>Redis: DEL {job}:{id}
+    Sentinel->>Redis: DEL {job}:{id}:results
+```
+
+**Critical:** Only delete Redis keys AFTER Supabase confirms the write.
+
+## Multiple Sentinels Detect Job Completion
+
+**Scenario:** Two chunks complete simultaneously, both see `completed == total`.
+
+```mermaid
+sequenceDiagram
+    participant Sentinel1
+    participant Sentinel2
+    participant Redis
+
+    par Sentinel 1 processes chunk-9
+        Sentinel1->>Redis: complete_chunk
+        Redis->>Redis: HINCRBY completed +1 = 10
+        Redis->>Redis: HSETNX lock 1
+        Note over Redis: Success (lock acquired)
+        Redis-->>Sentinel1: {OK, completed=10, AGGREGATE}
+    and Sentinel 2 processes chunk-10
+        Sentinel2->>Redis: complete_chunk
+        Redis->>Redis: HINCRBY completed +1 = 10
+        Redis->>Redis: HSETNX lock 1
+        Note over Redis: Fail (lock exists)
+        Redis-->>Sentinel2: {OK, completed=10, nil}
+    end
+
+    Note over Sentinel1: Proceeds with aggregation
+    Note over Sentinel2: Returns success, no aggregation
+```
+
+The lock is acquired atomically via `HSETNX` - only one wins.
+
+## Aggregation Lock Gets Stuck
+
+**Scenario:** Sentinel acquires aggregation lock, then crashes before completing.
+
+```mermaid
+sequenceDiagram
+    participant Sentinel1
+    participant Sentinel2
+    participant Redis
+
+    Sentinel1->>Redis: HSETNX lock 1
+    Redis-->>Sentinel1: OK
+    Sentinel1->>Redis: HSET lock_at {timestamp}
+
+    Note over Sentinel1: CRASH before completing
+
+    Note over Sentinel2: Background task (60s interval)
+
+    Sentinel2->>Redis: HGET lock_at
+    Redis-->>Sentinel2: {old_timestamp}
+
+    Sentinel2->>Sentinel2: Check: now - lock_at > 300s?
+
+    alt Lock not stuck yet
+        Note over Sentinel2: Wait for next check
+    else Lock stuck (> 5 min)
+        Sentinel2->>Redis: HDEL lock lock_at
+        Note over Redis: Lock released
+
+        Note over Sentinel2: Retry aggregation
+        Sentinel2->>Redis: HSETNX lock 1
+        Redis-->>Sentinel2: OK
+        Sentinel2->>Sentinel2: Complete aggregation
+    end
+```
+
+## Recovery Summary
+
+| Failure               | Recovery Mechanism                 |
+| --------------------- | ---------------------------------- |
+| Sentinel crash        | Stateless - any instance continues |
+| Redis unavailable     | Retry with backoff, no data loss   |
+| Node disconnect       | Heartbeat-based reclamation        |
+| Duplicate completion  | Idempotency keys                   |
+| Supabase write fail   | Keep Redis data, retry             |
+| Concurrent completion | Redis atomic lock                  |
+| Stuck lock            | Background cleanup                 |

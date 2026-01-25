@@ -1,0 +1,284 @@
+---
+title: Node Resync
+description: Recovery and resynchronization for reconnecting nodes
+---
+
+# Node Resync
+
+When nodes reconnect, they must resynchronize to recover any missed chunk assignments.
+
+## Why Resync?
+
+```mermaid
+flowchart TD
+    subgraph Scenarios["Resync Scenarios"]
+        A[Network interruption]
+        B[Node restart]
+        C[History overflow]
+        D[History expired]
+    end
+
+    subgraph Problem["Problem"]
+        P[Missed chunk assignments]
+    end
+
+    subgraph Solution["Solution"]
+        S[RPC: getAssignedChunks]
+    end
+
+    A --> P
+    B --> P
+    C --> P
+    D --> P
+    P --> S
+```
+
+## Centrifugo Recovery Limits
+
+Centrifugo maintains limited message history:
+
+| Namespace | history_size | history_ttl |
+| --------- | ------------ | ----------- |
+| nodes     | 10           | 60s         |
+
+If a node:
+
+- Misses more than 10 messages, OR
+- Is offline for more than 60 seconds
+
+...it cannot recover via Centrifugo history alone.
+
+## Resync Flow
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Centrifugo
+    participant Sentinel
+    participant Redis
+
+    Node->>Centrifugo: Reconnect
+    Note over Centrifugo: Attempt history recovery
+
+    alt Within recovery window
+        Centrifugo-->>Node: Missed messages
+    else Beyond recovery window
+        Centrifugo-->>Node: Recovery failed
+    end
+
+    Note over Node: Always call resync regardless
+
+    Node->>Centrifugo: RPC: getAssignedChunks
+    Centrifugo->>Sentinel: POST /proxy/rpc
+
+    Sentinel->>Redis: SMEMBERS {node}:{id}:chunks
+    Redis-->>Sentinel: [chunk-1, chunk-2, ...]
+
+    loop For each chunk ID
+        Sentinel->>Redis: HGETALL {chunk}:{id}
+        Redis-->>Sentinel: Chunk data
+    end
+
+    Sentinel-->>Centrifugo: {chunks: [...]}
+    Centrifugo-->>Node: Full chunk list
+
+    Node->>Node: Reconcile with local state
+    Node->>Node: Process missing chunks
+```
+
+## RPC Handler
+
+```rust
+async fn handle_get_assigned_chunks(node_id: &str) -> Result<Vec<ChunkAssignment>> {
+    // Get all chunk IDs assigned to this node
+    let chunk_ids: Vec<String> = redis
+        .smembers(&format!("{{node}}:{}:chunks", node_id))
+        .await?;
+
+    let mut chunks = Vec::new();
+
+    for chunk_id in chunk_ids {
+        // Get chunk details
+        let chunk_data: Option<HashMap<String, String>> = redis
+            .hgetall(&format!("{{chunk}}:{}", chunk_id))
+            .await?;
+
+        if let Some(data) = chunk_data {
+            chunks.push(ChunkAssignment {
+                id: chunk_id,
+                job_id: data.get("job_id").unwrap().clone(),
+                iterations: data.get("iterations").unwrap().parse().unwrap(),
+                config_hash: data.get("config_hash").unwrap().clone(),
+                seed_offset: data.get("seed_offset").unwrap().parse().unwrap(),
+            });
+        }
+        // If chunk doesn't exist, it was already completed - skip
+    }
+
+    Ok(chunks)
+}
+```
+
+## Node Client Implementation
+
+```typescript
+class NodeClient {
+  private assignedChunks: Map<string, ChunkAssignment> = new Map();
+  private processingChunks: Set<string> = new Set();
+
+  async onConnect() {
+    // Always resync on connect, not just reconnect
+    await this.resync();
+  }
+
+  async resync() {
+    const response = await this.centrifuge.rpc("getAssignedChunks", {});
+    const serverChunks = response.data.chunks;
+
+    // Find chunks we don't know about
+    for (const chunk of serverChunks) {
+      if (
+        !this.assignedChunks.has(chunk.id) &&
+        !this.processingChunks.has(chunk.id)
+      ) {
+        // New chunk we missed
+        this.assignedChunks.set(chunk.id, chunk);
+        this.processChunk(chunk);
+      }
+    }
+
+    // Find chunks we have that server doesn't (already completed/reclaimed)
+    const serverChunkIds = new Set(serverChunks.map((c) => c.id));
+    for (const [id, chunk] of this.assignedChunks) {
+      if (!serverChunkIds.has(id)) {
+        // Chunk no longer assigned to us - was reclaimed or completed
+        this.assignedChunks.delete(id);
+      }
+    }
+  }
+
+  onMessage(message: any) {
+    if (message.type === "chunk") {
+      this.assignedChunks.set(message.id, message);
+      this.processChunk(message);
+    }
+  }
+}
+```
+
+## Design Principles
+
+### WebSocket Messages Are Hints
+
+```mermaid
+flowchart LR
+    subgraph WS["WebSocket (Hints)"]
+        Assignments[Chunk assignments]
+    end
+
+    subgraph Redis["Redis (Truth)"]
+        ChunkSets["{node}:{id}:chunks"]
+        ChunkData["{chunk}:{id}"]
+    end
+
+    WS -->|May be lost| Node[Node]
+    Redis -->|Authoritative| Sentinel[Sentinel]
+    Node -->|Resync via RPC| Sentinel
+```
+
+### Always Resync on Connect
+
+```mermaid
+stateDiagram-v2
+    [*] --> Connecting
+    Connecting --> Connected: Handshake complete
+    Connected --> Resyncing: Immediate resync
+    Resyncing --> Ready: Got assigned chunks
+    Ready --> Processing: Process chunks
+    Processing --> Ready: Chunk complete
+    Ready --> Connecting: Disconnect
+```
+
+Don't wait for recovery failure - always resync to ensure consistency.
+
+## Edge Cases
+
+### Chunk Completed During Resync
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Sentinel
+    participant Redis
+
+    Node->>Sentinel: getAssignedChunks
+    Sentinel->>Redis: SMEMBERS chunks
+    Redis-->>Sentinel: [chunk-1, chunk-2]
+
+    Note over Node: Meanwhile, Node completes chunk-1
+
+    Sentinel->>Redis: HGETALL chunk-1
+    Redis-->>Sentinel: null (deleted)
+
+    Sentinel->>Redis: HGETALL chunk-2
+    Redis-->>Sentinel: {data}
+
+    Sentinel-->>Node: {chunks: [chunk-2]}
+
+    Note over Node: chunk-1 not in response<br/>Node removes from local state
+```
+
+### Chunk Reclaimed During Resync
+
+Same behavior - if chunk was reclaimed to another node, it won't appear in the response.
+
+### New Chunk During Resync
+
+```mermaid
+sequenceDiagram
+    participant Node
+    participant Sentinel
+    participant Centrifugo
+
+    Node->>Sentinel: getAssignedChunks
+    Note over Sentinel: Processing...
+
+    Sentinel->>Centrifugo: New chunk assignment
+    Centrifugo-->>Node: {type: chunk, id: chunk-3}
+
+    Sentinel-->>Node: {chunks: [chunk-1, chunk-2]}
+
+    Note over Node: Received chunk-3 via WS<br/>Also received chunk-1,2 via RPC<br/>Both sources merged
+```
+
+Node should handle receiving assignments from both sources and deduplicate.
+
+## Connection Best Practices
+
+```typescript
+const centrifuge = new Centrifuge(
+  "wss://beacon.wowlab.gg/connection/websocket",
+  {
+    token: jwt,
+  },
+);
+
+centrifuge.on("connected", async () => {
+  console.log("Connected to beacon");
+  await resync(); // Always resync
+});
+
+centrifuge.on("disconnected", (ctx) => {
+  console.log("Disconnected:", ctx.reason);
+  // Will auto-reconnect based on config
+});
+
+// Handle both real-time and resync sources
+centrifuge.on("publication", (ctx) => {
+  if (ctx.channel.startsWith("nodes:")) {
+    handleNodeMessage(ctx.data);
+  }
+});
+
+centrifuge.connect();
+```

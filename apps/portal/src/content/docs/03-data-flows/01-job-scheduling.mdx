@@ -1,0 +1,278 @@
+---
+title: Job Scheduling
+description: Job creation, chunk distribution, and node assignment
+---
+
+# Job Scheduling
+
+This document covers how jobs are created, chunked, and distributed to compute nodes.
+
+## Overview
+
+```mermaid
+flowchart TD
+    subgraph Creation["Job Creation"]
+        A1[User creates job in Portal]
+        A2[Job inserted in Supabase]
+        A3[pg_notify triggers Sentinel]
+    end
+
+    subgraph Processing["Job Processing"]
+        B1[Hash and cache config]
+        B2[Initialize job in Redis]
+        B3[Chunk the job]
+        B4[Select healthy nodes]
+    end
+
+    subgraph Distribution["Chunk Distribution"]
+        C1[Assign chunks to nodes]
+        C2[Update Redis state]
+        C3[Push via Centrifugo]
+    end
+
+    A1 --> A2 --> A3
+    A3 --> B1 --> B2 --> B3 --> B4
+    B4 --> C1 --> C2 --> C3
+```
+
+## Job Creation
+
+### Portal → Supabase
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Portal
+    participant Supabase
+    participant Sentinel
+
+    User->>Portal: Configure simulation
+    Portal->>Portal: Build config object
+
+    Portal->>Supabase: INSERT INTO jobs<br/>(config, iterations, user_id)
+    Supabase-->>Portal: job_id
+
+    Supabase->>Supabase: Trigger: notify_job_created()
+    Supabase->>Sentinel: pg_notify('job_created', job_id)
+
+    Portal->>Portal: Subscribe to jobs:{job_id}
+    Portal->>User: Show progress UI
+```
+
+### Job Record
+
+```sql
+INSERT INTO jobs (
+    id,
+    user_id,
+    config,
+    iterations,
+    status,
+    created_at
+) VALUES (
+    gen_random_uuid(),
+    $user_id,
+    $config_json,
+    $iterations,
+    'pending',
+    now()
+)
+```
+
+## Config Caching
+
+Configs are content-addressed for deduplication:
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+
+    Sentinel->>Sentinel: hash = SHA256(canonical_json(config))
+
+    Sentinel->>Redis: GET config:{hash}
+    alt Cache hit
+        Redis-->>Sentinel: config_json
+    else Cache miss
+        Sentinel->>Redis: SET config:{hash} EX 604800
+        Note over Redis: 7 day TTL
+    end
+```
+
+**Why content-addressed?**
+
+- Multiple jobs with same config share one cache entry
+- Nodes fetch config by hash, not by job
+- Reduces storage and network overhead
+
+## Job Initialization
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+
+    Sentinel->>Redis: HSET {job}:{id}<br/>total, config_hash, created_at
+    Sentinel->>Redis: EXPIRE {job}:{id} 86400
+    Note over Redis: 24h TTL, refreshed on activity
+```
+
+### Redis Job State
+
+```json
+{
+  "total": 10,
+  "completed": 0,
+  "config_hash": "sha256...",
+  "created_at": 1234567890
+}
+```
+
+## Chunking Strategy
+
+Jobs are split into fixed-size chunks:
+
+```mermaid
+flowchart LR
+    Job["Job<br/>10,000 iterations"] --> Chunk1["Chunk 1<br/>1,000 iter<br/>seed: 0"]
+    Job --> Chunk2["Chunk 2<br/>1,000 iter<br/>seed: 1000"]
+    Job --> ChunkN["...<br/>Chunk 10<br/>1,000 iter<br/>seed: 9000"]
+```
+
+| Parameter   | Value                     | Notes                       |
+| ----------- | ------------------------- | --------------------------- |
+| Chunk size  | 1,000 iterations          | Configurable per deployment |
+| Seed offset | chunk_index \* chunk_size | Ensures reproducibility     |
+
+## Node Selection
+
+Sentinel selects nodes using the `select_nodes.lua` script:
+
+```mermaid
+flowchart TD
+    Start[Select N nodes] --> GetCandidates[ZRANGE by backlog]
+    GetCandidates --> Loop{For each candidate}
+    Loop --> CheckHealth{Heartbeat<br/>< 120s ago?}
+    CheckHealth -->|Yes| Add[Add to selected]
+    CheckHealth -->|No| Remove[Remove from ZSet]
+    Add --> Enough{Have N nodes?}
+    Remove --> Loop
+    Enough -->|No| Loop
+    Enough -->|Yes| Return[Return selected nodes]
+```
+
+### Selection Criteria
+
+1. **Lowest backlog** - Nodes with fewer pending chunks
+2. **Healthy** - Last heartbeat within 2 minutes
+3. **Available** - Not at max capacity
+
+```lua
+-- ZRANGE with BYSCORE gets nodes with lowest backlog
+local candidates = redis.call('ZRANGE', backlog_zset,
+    0, max_backlog, 'BYSCORE', 'LIMIT', 0, count * 2)
+
+for _, node_id in ipairs(candidates) do
+    -- Check node health
+    local last_hb = redis.call('HGET',
+        '{node}:' .. node_id .. ':state', 'last_heartbeat')
+    if last_hb and (now - tonumber(last_hb)) <= 120 then
+        table.insert(selected, node_id)
+    end
+end
+```
+
+## Chunk Assignment
+
+For each chunk, Sentinel runs `assign_chunk.lua`:
+
+```mermaid
+sequenceDiagram
+    participant Sentinel
+    participant Redis
+    participant Centrifugo
+    participant Node
+
+    loop For each chunk
+        Sentinel->>Redis: EVALSHA assign_chunk
+        Note over Redis: Increments backlog<br/>Tracks chunk<br/>Updates ZSet
+
+        Sentinel->>Centrifugo: POST /api/publish
+        Note over Centrifugo: channel: nodes:{node_id}<br/>data: {type: chunk, ...}
+
+        Centrifugo-->>Node: Chunk assignment
+    end
+```
+
+### Batch Publishing
+
+For efficiency, Sentinel batches publishes:
+
+```json
+{
+  "commands": [
+    {"publish": {"channel": "nodes:node-1", "data": {...}}},
+    {"publish": {"channel": "nodes:node-2", "data": {...}}},
+    {"publish": {"channel": "nodes:node-3", "data": {...}}}
+  ]
+}
+```
+
+## Failure Handling
+
+### Publish Failure
+
+```mermaid
+flowchart TD
+    Assign[Assign chunk in Redis] --> Publish{Publish to Centrifugo}
+    Publish -->|Success| Done[Done]
+    Publish -->|Failure| Retry{Retry count < 3?}
+    Retry -->|Yes| Backoff[Exponential backoff]
+    Backoff --> Publish
+    Retry -->|No| Log[Log warning]
+    Log --> Next[Continue to next chunk]
+    Next --> Note[Node will resync on connect]
+```
+
+**Critical:** If Centrifugo publish fails, the chunk assignment in Redis is still valid. The node will resync on next connect or heartbeat.
+
+### No Healthy Nodes
+
+```mermaid
+flowchart TD
+    Select[Select nodes] --> Found{Any healthy nodes?}
+    Found -->|Yes| Assign[Assign chunks]
+    Found -->|No| Wait[Wait 30 seconds]
+    Wait --> Retry[Retry selection]
+    Retry --> Found
+```
+
+## Complete Flow
+
+```mermaid
+sequenceDiagram
+    participant Portal
+    participant Supabase
+    participant Sentinel
+    participant Redis
+    participant Centrifugo
+    participant Node
+
+    Portal->>Supabase: INSERT job
+    Supabase->>Sentinel: pg_notify
+
+    Sentinel->>Sentinel: Hash config
+    Sentinel->>Redis: Cache config (if new)
+    Sentinel->>Redis: Initialize job state
+
+    Sentinel->>Redis: EVALSHA select_nodes
+    Redis-->>Sentinel: [node1, node2, ...]
+
+    loop For each chunk
+        Sentinel->>Redis: EVALSHA assign_chunk
+        Sentinel->>Centrifugo: Publish to nodes:{id}
+        Centrifugo-->>Node: {type: chunk, ...}
+    end
+
+    Node->>Node: Start processing
+```
