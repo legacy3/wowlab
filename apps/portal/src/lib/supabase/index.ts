@@ -13,7 +13,10 @@ export { updateSession } from "./middleware";
 export type { Database } from "./database.types";
 export type {
   Aura,
+  Class,
   GameRow,
+  GlobalColor,
+  GlobalString,
   Insert,
   Item,
   ItemSummary,

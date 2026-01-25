@@ -1,25 +1,17 @@
 import type { SpecTraits } from "@/lib/supabase/types";
 
-import { createClient } from "@/lib/supabase/server";
+import { getServerDataProvider } from "@/lib/refine/server";
 
-import { gameKeys } from "./query-keys";
-
-export { gameKeys };
-
+/**
+ * Fetch spec traits on the server using Refine's data provider.
+ * This ensures consistency with client-side Refine hooks.
+ */
 export async function fetchSpecTraits(specId: number): Promise<SpecTraits> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .schema("game")
-    .from("specs_traits")
-    .select("*")
-    .eq("spec_id", specId)
-    .single();
-
-  if (error) throw error;
-  return data as SpecTraits;
+  const dataProvider = await getServerDataProvider();
+  const { data } = await dataProvider.getOne<SpecTraits>({
+    id: specId,
+    meta: { idColumnName: "spec_id", schema: "game" },
+    resource: "specs_traits",
+  });
+  return data;
 }
-
-export const specTraitsQueryOptions = (specId: number) => ({
-  queryFn: () => fetchSpecTraits(specId),
-  queryKey: gameKeys.specTraits(specId),
-});

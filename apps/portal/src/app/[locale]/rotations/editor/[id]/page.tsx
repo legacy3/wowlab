@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 
 import { EditorPage } from "@/components/editor";
 import { ErrorBox, Loader, Text } from "@/components/ui";
-import { useLoadRotation } from "@/lib/state/rotation";
+import { useLoadRotation } from "@/lib/state";
 
 export default function EditRotationPage() {
   const { page: content } = useIntlayer("editor");

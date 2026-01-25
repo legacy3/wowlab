@@ -20,7 +20,8 @@ import type { Action, ActionType } from "@/lib/engine";
 import type { Item, Spell } from "@/lib/supabase";
 
 import { ACTION_TYPES } from "@/lib/engine";
-import { useEditor, useItem, useSpell } from "@/lib/state";
+import { items, spells, useResource } from "@/lib/refine";
+import { useEditor } from "@/lib/state";
 
 import {
   GameIcon,
@@ -76,12 +77,19 @@ const ActionIcon = memo(function ActionIcon({
   action: Action;
   size?: "md" | "lg";
 }) {
-  const { data: spell, isLoading: isSpellLoading } = useSpell(
-    action.type === "spell" ? action.spellId : null,
-  );
-  const { data: item, isLoading: isItemLoading } = useItem(
-    action.type === "item" ? action.itemId : null,
-  );
+  const spellId = action.type === "spell" ? action.spellId : null;
+  const itemId = action.type === "item" ? action.itemId : null;
+
+  const { data: spell, isLoading: isSpellLoading } = useResource<Spell>({
+    ...spells,
+    id: spellId ?? "",
+    queryOptions: { enabled: spellId != null },
+  });
+  const { data: item, isLoading: isItemLoading } = useResource<Item>({
+    ...items,
+    id: itemId ?? "",
+    queryOptions: { enabled: itemId != null },
+  });
 
   const dimension = size === "lg" ? "14" : "9";
 
@@ -131,10 +139,19 @@ function useActionName(
   action: Action,
   content: { selectSpell: string; selectItem: string; callActionList: string },
 ): string {
-  const { data: spell } = useSpell(
-    action.type === "spell" ? action.spellId : null,
-  );
-  const { data: item } = useItem(action.type === "item" ? action.itemId : null);
+  const spellId = action.type === "spell" ? action.spellId : null;
+  const itemId = action.type === "item" ? action.itemId : null;
+
+  const { data: spell } = useResource<Spell>({
+    ...spells,
+    id: spellId ?? "",
+    queryOptions: { enabled: spellId != null },
+  });
+  const { data: item } = useResource<Item>({
+    ...items,
+    id: itemId ?? "",
+    queryOptions: { enabled: itemId != null },
+  });
 
   if (action.type === "spell") {
     return spell?.name ?? content.selectSpell;

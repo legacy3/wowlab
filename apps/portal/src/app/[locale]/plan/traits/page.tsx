@@ -1,15 +1,8 @@
 import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
-
-import {
   InvalidLoadoutError,
   TraitCalculator,
   TraitStartScreen,
 } from "@/components/plan/traits";
-import { fetchSpecTraits, gameKeys } from "@/lib/state/game.server";
 import { extractSpecId } from "@/lib/trait";
 
 interface Props {
@@ -29,15 +22,7 @@ export default async function Page({ searchParams }: Props) {
     return <InvalidLoadoutError />;
   }
 
-  const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryFn: () => fetchSpecTraits(specId),
-    queryKey: gameKeys.specTraits(specId),
-  });
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <TraitCalculator specId={specId} />
-    </HydrationBoundary>
-  );
+  // TraitCalculator uses useResource + specsTraits internally
+  // Data fetching happens on the client via Refine hooks
+  return <TraitCalculator specId={specId} />;
 }

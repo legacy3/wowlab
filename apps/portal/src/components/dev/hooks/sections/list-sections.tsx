@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 
 import { Box, Flex, Stack } from "styled-system/jsx";
 
+import type { Class, SpecSummary } from "@/lib/supabase";
+
 import { Badge, Skeleton, Text } from "@/components/ui";
+import { classes, specs, useResourceList } from "@/lib/refine";
 import {
-  useClasses,
   useClassesAndSpecs,
   useGlobalColors,
   useGlobalStrings,
-  useSpecs,
 } from "@/lib/state";
 
 import { DataCard, JsonOutput, Section, Subsection } from "../../shared";
@@ -26,15 +27,18 @@ interface ListDisplayProps<T> {
 }
 
 export function ClassesDirectListSection() {
-  const { data: classes = [], isLoading } = useClasses();
+  const { data: classesData = [], isLoading } = useResourceList<Class>({
+    ...classes,
+    sorters: [{ field: "id", order: "asc" }],
+  });
 
   return (
     <ListDisplay
       id="classes-direct-list"
-      title="useClasses"
+      title="useResourceList + classes"
       noun="classes"
       description="Returns array of Class with full class data including color"
-      data={classes}
+      data={classesData}
       isLoading={isLoading}
       renderItems={(items) =>
         items.map((cls) => (
@@ -90,15 +94,26 @@ export function ClassesListSection() {
 }
 
 export function SpecsListSection() {
-  const { data: specs = [], isLoading } = useSpecs();
+  const { data: specsData = [], isLoading } = useResourceList<SpecSummary>({
+    ...specs,
+    meta: {
+      ...specs.meta,
+      select: "id, name, class_name, class_id, file_name",
+    },
+    pagination: { mode: "off" },
+    sorters: [
+      { field: "class_name", order: "asc" },
+      { field: "order_index", order: "asc" },
+    ],
+  });
 
   return (
     <ListDisplay
       id="specs-list"
-      title="useSpecs"
+      title="useResourceList + specs"
       noun="specs"
       description="Returns array of SpecSummary for all specializations"
-      data={specs}
+      data={specsData}
       isLoading={isLoading}
       renderItems={(items) => (
         <>

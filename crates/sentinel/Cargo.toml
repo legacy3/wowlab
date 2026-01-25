@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.6.0"
+version = "0.6.1"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -27,8 +27,8 @@ tower-http = { version = "0.6", features = ["trace"] }
 # Database
 sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "json"] }
 
-# Supabase
-wowlab-supabase = { path = "../supabase" }
+# Centrifugo
+wowlab-centrifugo = { path = "../centrifugo" }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }

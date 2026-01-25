@@ -32,8 +32,4 @@ pub enum SupabaseError {
 
     #[error("Failed to build HTTP client: {0}")]
     ClientBuild(String),
-
-    #[error("Realtime error: {0}")]
-    Realtime(#[from] supabase_realtime_rs::RealtimeError),
 }
-

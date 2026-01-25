@@ -4,10 +4,12 @@ import { X } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { Flex, HStack } from "styled-system/jsx";
 
+import type { SpecTraits } from "@/lib/supabase";
+
 import { SpecPicker } from "@/components/game";
 import { IconButton, Link, Loader, Tooltip } from "@/components/ui";
+import { specsTraits, useResource } from "@/lib/refine";
 import { routes } from "@/lib/routing";
-import { useSpecTraits } from "@/lib/state";
 
 import { TraitCanvas } from "./canvas";
 
@@ -16,7 +18,11 @@ interface TraitCalculatorProps {
 }
 
 export function TraitCalculator({ specId }: TraitCalculatorProps) {
-  const { data: specTraits } = useSpecTraits(specId);
+  const { data: specTraits } = useResource<SpecTraits>({
+    ...specsTraits,
+    id: specId,
+    queryOptions: { enabled: specId != null },
+  });
   const { calculator: content } = useIntlayer("traits");
 
   if (!specTraits) {

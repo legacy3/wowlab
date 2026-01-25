@@ -1,13 +1,6 @@
-// TODO Use client in index.ts sounds bad
 "use client";
 
-/* eslint-disable */
-
-// Queries
-
-export { useSentinelRange, useSentinelStatus } from "./queries";
-
-// Types
+// Types only - queries are now in @/lib/refine/services/sentinel
 
 export type {
   SentinelMetricName,

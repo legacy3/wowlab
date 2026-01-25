@@ -2,18 +2,11 @@
 
 import { useState } from "react";
 
-import { useClass, useItem, useSpec, useSpell } from "@/lib/state";
+import type { Class, Item, Spec, Spell } from "@/lib/supabase";
+
+import { classes, items, specs, spells, useResource } from "@/lib/refine";
 
 import { EntityDisplay } from "./entity-display";
-
-interface EntitySectionConfig<T> {
-  defaultId: number;
-  description: string;
-  id: string;
-  nameField: keyof T;
-  title: string;
-  useHook: (id: number) => StateResult<T>;
-}
 
 type StateResult<T> = {
   data: T | undefined;
@@ -21,59 +14,86 @@ type StateResult<T> = {
   isLoading: boolean;
 };
 
-function createEntitySection<T extends Record<string, unknown>>(
-  config: EntitySectionConfig<T>,
-) {
-  return function EntitySection() {
-    const [id, setId] = useState(config.defaultId);
-    const result = config.useHook(id);
+export function ClassSection() {
+  const [id, setId] = useState(1);
+  const result = useResource<Class>({
+    ...classes,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
 
-    return (
-      <EntityDisplay
-        description={config.description}
-        id={config.id}
-        inputId={id}
-        nameField={config.nameField}
-        onIdChange={setId}
-        result={result}
-        title={config.title}
-      />
-    );
-  };
+  return (
+    <EntityDisplay
+      description="Returns Class with name, color, and file info"
+      id="class"
+      inputId={id}
+      nameField="name"
+      onIdChange={setId}
+      result={result as StateResult<Record<string, unknown>>}
+      title="useResource + classes"
+    />
+  );
 }
 
-export const SpellSection = createEntitySection({
-  defaultId: 408,
-  description: "Returns Spell with all spell properties",
-  id: "spell",
-  nameField: "name",
-  title: "useSpell",
-  useHook: useSpell,
-});
+export function ItemSection() {
+  const [id, setId] = useState(19019);
+  const result = useResource<Item>({
+    ...items,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
 
-export const ItemSection = createEntitySection({
-  defaultId: 19019,
-  description: "Returns Item with all item properties",
-  id: "item",
-  nameField: "name",
-  title: "useItem",
-  useHook: useItem,
-});
+  return (
+    <EntityDisplay
+      description="Returns Item with all item properties"
+      id="item"
+      inputId={id}
+      nameField="name"
+      onIdChange={setId}
+      result={result as StateResult<Record<string, unknown>>}
+      title="useResource + items"
+    />
+  );
+}
 
-export const ClassSection = createEntitySection({
-  defaultId: 1,
-  description: "Returns Class with name, color, and file info",
-  id: "class",
-  nameField: "name",
-  title: "useClass",
-  useHook: useClass,
-});
+export function SpecSection() {
+  const [id, setId] = useState(62);
+  const result = useResource<Spec>({
+    ...specs,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
 
-export const SpecSection = createEntitySection({
-  defaultId: 62,
-  description: "Returns Spec with class info, role, and icon",
-  id: "spec",
-  nameField: "name",
-  title: "useSpec",
-  useHook: useSpec,
-});
+  return (
+    <EntityDisplay
+      description="Returns Spec with class info, role, and icon"
+      id="spec"
+      inputId={id}
+      nameField="name"
+      onIdChange={setId}
+      result={result as StateResult<Record<string, unknown>>}
+      title="useResource + specs"
+    />
+  );
+}
+
+export function SpellSection() {
+  const [id, setId] = useState(408);
+  const result = useResource<Spell>({
+    ...spells,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
+
+  return (
+    <EntityDisplay
+      description="Returns Spell with all spell properties"
+      id="spell"
+      inputId={id}
+      nameField="name"
+      onIdChange={setId}
+      result={result as StateResult<Record<string, unknown>>}
+      title="useResource + spells"
+    />
+  );
+}

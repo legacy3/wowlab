@@ -2,7 +2,7 @@
 
 import type { Item, ItemSummary, Spell, SpellSummary } from "@/lib/supabase";
 
-import { useItem, useItemSearch, useSpell, useSpellSearch } from "@/lib/state";
+import { items, spells, useResource, useResourceList } from "@/lib/refine";
 
 import {
   GameObjectPicker,
@@ -18,23 +18,42 @@ interface PickerProps {
 }
 
 function useItemSearchWrapper(opts: { query: string }) {
-  const result = useItemSearch(opts.query);
+  const result = useResourceList<ItemSummary>({
+    ...items,
+    filters: [{ field: "name", operator: "contains", value: opts.query }],
+    meta: { ...items.meta, select: "id, name, item_level, quality, file_name" },
+    pagination: { currentPage: 1, pageSize: 20 },
+    queryOptions: { enabled: opts.query.length > 2 },
+  });
   return { data: result.data ?? [], isLoading: result.isLoading };
 }
 
 function useItemWrapper(id: number | null | undefined) {
-  const result = useItem(id);
+  const result = useResource<Item>({
+    ...items,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
   return { data: result.data ?? null, isLoading: result.isLoading };
 }
 
-// Wrapper hooks to match expected signature
 function useSpellSearchWrapper(opts: { query: string }) {
-  const result = useSpellSearch(opts.query);
+  const result = useResourceList<SpellSummary>({
+    ...spells,
+    filters: [{ field: "name", operator: "contains", value: opts.query }],
+    meta: { ...spells.meta, select: "id, name, file_name" },
+    pagination: { currentPage: 1, pageSize: 20 },
+    queryOptions: { enabled: opts.query.length > 2 },
+  });
   return { data: result.data ?? [], isLoading: result.isLoading };
 }
 
 function useSpellWrapper(id: number | null | undefined) {
-  const result = useSpell(id);
+  const result = useResource<Spell>({
+    ...spells,
+    id: id ?? "",
+    queryOptions: { enabled: id != null },
+  });
   return { data: result.data ?? null, isLoading: result.isLoading };
 }
 

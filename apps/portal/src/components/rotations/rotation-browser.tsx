@@ -1,7 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDelete } from "@refinedev/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   GlobeIcon,
@@ -20,9 +20,9 @@ import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/lib/engine";
 
+import { rotations, useResourceList } from "@/lib/refine";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUser } from "@/lib/state";
-import { createClient } from "@/lib/supabase";
 
 import {
   Badge,
@@ -84,59 +84,56 @@ export function RotationBrowser() {
     [classFilter, getSpecIdsForClass],
   );
 
-  const supabase = createClient();
-  const queryClient = useQueryClient();
+  // Build filters for useList
+  const filters = useMemo(() => {
+    const result: Array<{
+      field: string;
+      operator: "eq" | "contains" | "in";
+      value: unknown;
+    }> = [];
 
-  const { data: rotations = [], isLoading } = useQuery({
-    queryFn: async () => {
-      let query = supabase
-        .from("rotations")
-        .select("*")
-        .order("updated_at", { ascending: false });
+    if (filter === "public") {
+      result.push({ field: "is_public", operator: "eq", value: true });
+    } else if (filter === "mine" && userId) {
+      result.push({ field: "user_id", operator: "eq", value: userId });
+    }
 
-      if (filter === "public") {
-        query = query.eq("is_public", true);
-      } else if (filter === "mine" && userId) {
-        query = query.eq("user_id", userId);
-      }
+    if (search.trim()) {
+      result.push({
+        field: "name",
+        operator: "contains",
+        value: search.trim(),
+      });
+    }
 
-      if (search.trim()) {
-        query = query.ilike("name", `%${search.trim()}%`);
-      }
+    if (specIdsForClass && specIdsForClass.length > 0) {
+      result.push({ field: "spec_id", operator: "in", value: specIdsForClass });
+    }
 
-      if (specIdsForClass && specIdsForClass.length > 0) {
-        query = query.in("spec_id", specIdsForClass);
-      }
+    return result;
+  }, [filter, userId, search, specIdsForClass]);
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as RotationsRow[];
-    },
-    queryKey: ["rotations", { filter, search, specIdsForClass, userId }],
+  const { data: rotationsList, isLoading } = useResourceList<RotationsRow>({
+    ...rotations,
+    filters,
+    pagination: { mode: "off" },
+    sorters: [{ field: "updated_at", order: "desc" }],
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("rotations").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rotations"] });
-    },
-  });
+  const { mutate: deleteRotation } = useDelete<RotationsRow>();
 
   const handleDelete = useCallback(
     (id: string) => {
       if (confirm(content.confirmDelete)) {
-        deleteMutation.mutate(id);
+        deleteRotation({ id, resource: "rotations" });
       }
     },
-    [deleteMutation, content.confirmDelete],
+    [deleteRotation, content.confirmDelete],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
-    count: rotations.length,
+    count: rotationsList.length,
     estimateSize: () => 65,
     getScrollElement: () => parentRef.current,
     overscan: 5,
@@ -245,7 +242,7 @@ export function RotationBrowser() {
         <Flex justify="center" py="12">
           <Loader />
         </Flex>
-      ) : rotations.length === 0 ? (
+      ) : rotationsList.length === 0 ? (
         <Empty.Root size="lg" variant="outline">
           <Empty.Content>
             <Empty.Title>
@@ -276,7 +273,7 @@ export function RotationBrowser() {
           <Box ref={parentRef} maxH="600px" overflow="auto">
             <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
               {virtualizer.getVirtualItems().map((virtualRow) => {
-                const rotation = rotations[virtualRow.index];
+                const rotation = rotationsList[virtualRow.index];
 
                 return (
                   <Box

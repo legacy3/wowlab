@@ -90,9 +90,7 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
   }
 
   const progress =
-    job.totalIterations > 0
-      ? (job.completedIterations / job.totalIterations) * 100
-      : 0;
+    job.chunksTotal > 0 ? (job.chunksCompleted / job.chunksTotal) * 100 : 0;
 
   // Job is running or pending
   if (job.status !== "completed") {
@@ -116,8 +114,8 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
                   </Text>
                   <Text textStyle="sm" fontWeight="medium">
                     {content.progressIterations({
-                      completed: formatNumber(job.completedIterations),
-                      total: formatNumber(job.totalIterations),
+                      completed: formatNumber(job.chunksCompleted),
+                      total: formatNumber(job.chunksTotal),
                     })}
                   </Text>
                 </HStack>
@@ -157,7 +155,7 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
           <Card.Title>{content.simulationResults}</Card.Title>
           <Card.Description>
             {content.completed({
-              iterations: formatNumber(job.totalIterations),
+              iterations: formatNumber(job.chunksTotal),
             })}
           </Card.Description>
         </Card.Header>

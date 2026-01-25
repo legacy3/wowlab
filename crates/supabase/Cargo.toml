@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Generic Supabase client (PostgREST + Realtime)"
+description = "Generic Supabase client (PostgREST)"
 
 [dependencies]
 reqwest = { version = "0.12", features = ["json"] }
@@ -12,10 +12,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["time"] }
-tokio-util = { version = "0.7", features = ["rt"] }
-supabase-realtime-rs = "0.1"
 tracing = "0.1"
-rand = "0.8"
 backoff = { version = "0.4", features = ["tokio"] }
 
 [dev-dependencies]

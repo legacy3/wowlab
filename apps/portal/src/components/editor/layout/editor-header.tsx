@@ -12,8 +12,8 @@ import { useIntlayer } from "next-intlayer";
 import { Flex, HStack } from "styled-system/jsx";
 
 import { SpecPicker } from "@/components/game";
+import { useSaveRotation } from "@/lib/state";
 import { useEditor } from "@/lib/state/editor";
-import { useSaveRotation } from "@/lib/state/rotation";
 
 import {
   Badge,

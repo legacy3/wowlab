@@ -1,9 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { Aura, Spell } from "@/lib/supabase/types";
+import type {
+  Aura,
+  Class,
+  GlobalColor,
+  GlobalString,
+  SpecSummary,
+  Spell,
+} from "@/lib/supabase/types";
 
 import {
   analyzeSpellDescription,
@@ -14,41 +20,32 @@ import {
   type SpellDescResolver,
 } from "@/lib/engine";
 
-import { useAuras, useSpell, useSpells } from "./game";
+import {
+  useResource,
+  useResourceList,
+  useResourceMany,
+} from "../hooks/use-resource";
+import {
+  auras,
+  classes,
+  globalColors,
+  globalStrings,
+  specs,
+  spells,
+} from "../resources";
 
-// Cache duration in ms
-const SPELL_DESC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// TODO Redo this entire file function based + Remove Cache + Remove React Query. Also most of this belongs in lib/engine
-
-/**
- * Paperdoll state representing character stats.
- * Used for rendering spell tooltips with player-specific values.
- */
 export interface PaperdollState {
-  /** Attack power */
   ap: number;
-  /** Player class ID */
   classId: number;
-  /** Crit rating as percentage (e.g., 25 for 25%) */
   crit: number;
-  /** Player gender (true = male) */
   isMale: boolean;
-  /** Player level */
   level: number;
-  /** Mastery rating */
   mastery: number;
-  /** Max health */
   maxHealth: number;
-  /** Spell power */
   sp: number;
-  /** Versatility as percentage */
   vers: number;
 }
 
-/**
- * Default paperdoll state for a level 80 character.
- */
 export const defaultPaperdoll: PaperdollState = {
   ap: 10000,
   classId: 0,
@@ -61,9 +58,6 @@ export const defaultPaperdoll: PaperdollState = {
   vers: 10,
 };
 
-/**
- * Spell effect data stored in the effects JSON column.
- */
 interface SpellEffect {
   amplitude: number;
   aura: number;
@@ -84,9 +78,6 @@ interface SpellEffect {
   variance: number;
 }
 
-/**
- * Build a SpellDescResolver from spell data and paperdoll state.
- */
 export function buildResolver(
   spell: Spell | null,
   spellCache: Map<number, Spell>,
@@ -227,13 +218,13 @@ export function buildResolver(
         case "d":
           return s.duration ? formatDuration(s.duration) : null;
         case "h":
-          return null; // proc_chance not in type
+          return null;
         case "i":
           return null;
         case "n":
           return s.max_charges ? String(s.max_charges) : null;
         case "p":
-          return null; // real_ppm not in type
+          return null;
         case "r":
           return s.range_max_0 ? formatRange(s.range_max_0) : null;
         case "u": {
@@ -265,17 +256,125 @@ export function buildResolver(
   };
 }
 
+export function useClassesAndSpecs() {
+  const { data: specsData = [], isLoading: specsLoading } =
+    useResourceList<SpecSummary>({
+      ...specs,
+      meta: {
+        ...specs.meta,
+        select: "id, name, class_name, class_id, file_name",
+      },
+      pagination: { mode: "off" },
+      sorters: [
+        { field: "class_name", order: "asc" },
+        { field: "order_index", order: "asc" },
+      ],
+    });
+
+  const { data: classesData = [], isLoading: classesLoading } =
+    useResourceList<Class>({
+      ...classes,
+      sorters: [{ field: "id", order: "asc" }],
+    });
+
+  const isLoading = specsLoading || classesLoading;
+
+  const classMap = useMemo(() => {
+    const map = new Map<number, Class>();
+    for (const cls of classesData) {
+      map.set(cls.id, cls);
+    }
+    return map;
+  }, [classesData]);
+
+  const classOptions = useMemo(() => {
+    return classesData
+      .map((cls) => ({
+        color: cls.color ?? "",
+        fileName: cls.file_name,
+        id: cls.id,
+        label: cls.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [classesData]);
+
+  const getClassColor = useCallback(
+    (specId: number) => {
+      const spec = specsData.find((s) => s.id === specId);
+      if (!spec) return null;
+      const cls = classMap.get(spec.class_id);
+      return cls?.color ?? null;
+    },
+    [specsData, classMap],
+  );
+
+  const getSpecIdsForClass = useCallback(
+    (classId: number) => {
+      return specsData.filter((s) => s.class_id === classId).map((s) => s.id);
+    },
+    [specsData],
+  );
+
+  const getSpecLabel = useCallback(
+    (specId: number) => {
+      const spec = specsData.find((s) => s.id === specId);
+      return spec?.name ?? null;
+    },
+    [specsData],
+  );
+
+  const getSpecIcon = useCallback(
+    (specId: number) => {
+      const spec = specsData.find((s) => s.id === specId);
+      if (!spec) return null;
+      return spec.file_name ?? null;
+    },
+    [specsData],
+  );
+
+  return {
+    classes: classOptions,
+    getClassColor,
+    getSpecIcon,
+    getSpecIdsForClass,
+    getSpecLabel,
+    isLoading,
+    specs: specsData,
+  };
+}
+
 /**
- * Hook to render a spell description with reactive updates.
- *
- * @param spellId - The spell ID to render
- * @param description - Optional override for the description text
- * @param paperdoll - Character stats (defaults to defaultPaperdoll)
- * @param knownSpells - Set of spell IDs the character knows
- * @param activeAuras - Set of aura IDs currently active
- *
- * @returns Object with render result and loading state
+ * Fetch global colors by name and return them in order.
+ * Variadic arguments for convenient tuple destructuring.
  */
+export function useGlobalColors<T extends string[]>(...names: T) {
+  const { data = [] } = useResourceMany<GlobalColor>({
+    ...globalColors,
+    ids: names,
+    queryOptions: { enabled: names.length > 0 },
+  });
+
+  return names.map((name) => data.find((c) => c.name === name)) as {
+    [K in keyof T]: GlobalColor | undefined;
+  };
+}
+
+/**
+ * Fetch global strings by tag and return them in order.
+ * Variadic arguments for convenient tuple destructuring.
+ */
+export function useGlobalStrings<T extends string[]>(...tags: T) {
+  const { data = [] } = useResourceMany<GlobalString>({
+    ...globalStrings,
+    ids: tags,
+    queryOptions: { enabled: tags.length > 0 },
+  });
+
+  return tags.map((tag) => data.find((s) => s.tag === tag)) as {
+    [K in keyof T]: GlobalString | undefined;
+  };
+}
+
 export function useSpellDescription(
   spellId: number | null | undefined,
   description?: string,
@@ -289,25 +388,29 @@ export function useSpellDescription(
   result: SpellDescRenderResult | null;
   spell: Spell | undefined;
 } {
-  // Fetch the primary spell
-  const { data: spell, isLoading: spellLoading } = useSpell(spellId);
+  const { data: spell, isLoading: spellLoading } = useResource<Spell>({
+    ...spells,
+    id: spellId ?? "",
+    queryOptions: { enabled: spellId != null },
+  });
 
-  // Get the description text
   const descriptionText = description ?? spell?.description ?? "";
 
-  // State for cross-spell IDs
   const [crossSpellIds, setCrossSpellIds] = useState<number[]>([]);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [analysisError, setAnalysisError] = useState<Error | null>(null);
 
-  // Analyze dependencies when description changes
+  // Analyze description to find cross-referenced spells
   useEffect(() => {
     if (!descriptionText || !spellId) {
       setCrossSpellIds([]);
       setAnalysisComplete(true);
+      setAnalysisError(null);
       return;
     }
 
     setAnalysisComplete(false);
+    setAnalysisError(null);
 
     analyzeSpellDescription(descriptionText, spellId)
       .then(({ dependencies }) => {
@@ -334,6 +437,7 @@ export function useSpellDescription(
       })
       .catch((err) => {
         console.error("Failed to analyze spell description:", err);
+        setAnalysisError(err instanceof Error ? err : new Error(String(err)));
         setCrossSpellIds([]);
         setAnalysisComplete(true);
       });
@@ -341,9 +445,13 @@ export function useSpellDescription(
 
   // Fetch cross-referenced spells
   const { data: crossSpells = [], isLoading: crossSpellsLoading } =
-    useSpells(crossSpellIds);
+    useResourceMany<Spell>({
+      ...spells,
+      ids: crossSpellIds,
+      queryOptions: { enabled: crossSpellIds.length > 0 },
+    });
 
-  // All spell IDs that might need aura data
+  // Collect all spell IDs for aura lookup
   const allSpellIds = useMemo(() => {
     const ids = new Set<number>();
     if (spellId) ids.add(spellId);
@@ -351,10 +459,15 @@ export function useSpellDescription(
     return Array.from(ids);
   }, [spellId, crossSpellIds]);
 
-  // Fetch auras
-  const { data: auras = [], isLoading: aurasLoading } = useAuras(allSpellIds);
+  // Fetch auras for all spells
+  const { data: aurasData = [], isLoading: aurasLoading } =
+    useResourceMany<Aura>({
+      ...auras,
+      ids: allSpellIds,
+      queryOptions: { enabled: allSpellIds.length > 0 },
+    });
 
-  // Build spell cache
+  // Build caches
   const spellCache = useMemo(() => {
     const cache = new Map<number, Spell>();
     if (spell) cache.set(spell.id, spell);
@@ -364,78 +477,75 @@ export function useSpellDescription(
     return cache;
   }, [spell, crossSpells]);
 
-  // Build aura cache
   const auraCache = useMemo(() => {
     const cache = new Map<number, Aura>();
-    for (const a of auras) {
+    for (const a of aurasData) {
       cache.set(a.spell_id, a);
     }
     return cache;
-  }, [auras]);
+  }, [aurasData]);
 
-  // Stable query key - serialize mutable objects
-  const queryKey = useMemo(
-    () => [
-      "spell-desc",
-      spellId,
-      descriptionText,
-      JSON.stringify(paperdoll),
-      JSON.stringify([...knownSpells].sort()),
-      JSON.stringify([...activeAuras].sort()),
-      JSON.stringify(crossSpellIds.sort()),
-    ],
-    [
-      spellId,
-      descriptionText,
+  // Render the description
+  const [renderResult, setRenderResult] =
+    useState<SpellDescRenderResult | null>(null);
+  const [renderError, setRenderError] = useState<Error | null>(null);
+  const [isRendering, setIsRendering] = useState(false);
+
+  useEffect(() => {
+    if (
+      !descriptionText ||
+      !spell ||
+      !analysisComplete ||
+      crossSpellsLoading ||
+      aurasLoading
+    ) {
+      return;
+    }
+
+    setIsRendering(true);
+    setRenderError(null);
+
+    const resolver = buildResolver(
+      spell,
+      spellCache,
+      auraCache,
       paperdoll,
       knownSpells,
       activeAuras,
-      crossSpellIds,
-    ],
-  );
+    );
 
-  // Render with React Query
-  const {
-    data,
-    error,
-    isLoading: renderLoading,
-  } = useQuery({
-    enabled:
-      !!descriptionText &&
-      !!spell &&
-      analysisComplete &&
-      !crossSpellsLoading &&
-      !aurasLoading,
-    queryFn: async (): Promise<SpellDescRenderResult> => {
-      if (!spell || !descriptionText) {
-        return { fragments: [], parseErrors: [], warnings: [] };
-      }
-
-      const resolver = buildResolver(
-        spell,
-        spellCache,
-        auraCache,
-        paperdoll,
-        knownSpells,
-        activeAuras,
-      );
-
-      return renderSpellDescription(descriptionText, spell.id, resolver);
-    },
-    queryKey,
-    staleTime: SPELL_DESC_CACHE_TTL,
-  });
+    renderSpellDescription(descriptionText, spell.id, resolver)
+      .then((result) => {
+        setRenderResult(result);
+        setIsRendering(false);
+      })
+      .catch((err) => {
+        setRenderError(err instanceof Error ? err : new Error(String(err)));
+        setIsRendering(false);
+      });
+  }, [
+    descriptionText,
+    spell,
+    analysisComplete,
+    crossSpellsLoading,
+    aurasLoading,
+    spellCache,
+    auraCache,
+    paperdoll,
+    knownSpells,
+    activeAuras,
+  ]);
 
   return {
-    error: error as Error | null,
+    error: analysisError ?? renderError,
     isLoading:
       spellLoading ||
       !analysisComplete ||
       crossSpellsLoading ||
       aurasLoading ||
-      renderLoading,
+      isRendering,
     raw: descriptionText,
-    result: data ?? null,
+    result: renderResult,
     spell,
   };
 }

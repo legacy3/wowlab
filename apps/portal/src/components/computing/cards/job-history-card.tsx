@@ -49,6 +49,7 @@ export function JobHistoryCard() {
   const statusLabels: Record<DistributedJobStatus | "all", string> = {
     all: content.all,
     completed: content.completed,
+    failed: content.failed ?? "Failed",
     pending: content.pending,
     running: content.running,
   };
@@ -152,10 +153,9 @@ export function JobHistoryCard() {
                   ) : (
                     filteredJobs.map((job) => {
                       const progress =
-                        job.totalIterations > 0
+                        job.chunksTotal > 0
                           ? Math.round(
-                              (job.completedIterations / job.totalIterations) *
-                                100,
+                              (job.chunksCompleted / job.chunksTotal) * 100,
                             )
                           : 0;
 
@@ -245,15 +245,15 @@ export function JobHistoryCard() {
                         {content.progress}
                       </Text>
                       <Text textStyle="sm" fontWeight="medium">
-                        {selectedJob.completedIterations.toLocaleString()} /{" "}
-                        {selectedJob.totalIterations.toLocaleString()}
+                        {selectedJob.chunksCompleted.toLocaleString()} /{" "}
+                        {selectedJob.chunksTotal.toLocaleString()}
                       </Text>
                     </HStack>
                     <Progress.Root
                       value={
-                        selectedJob.totalIterations > 0
-                          ? (selectedJob.completedIterations /
-                              selectedJob.totalIterations) *
+                        selectedJob.chunksTotal > 0
+                          ? (selectedJob.chunksCompleted /
+                              selectedJob.chunksTotal) *
                             100
                           : 0
                       }

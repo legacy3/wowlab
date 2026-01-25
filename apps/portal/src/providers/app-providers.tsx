@@ -3,7 +3,7 @@
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-import { QueryProvider } from "./query-provider";
+import { RefineProvider } from "./refine-provider";
 
 type AppProvidersProps = {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <NuqsAdapter>
       <ThemeProvider attribute="class">
-        <QueryProvider>{children}</QueryProvider>
+        <RefineProvider>{children}</RefineProvider>
       </ThemeProvider>
     </NuqsAdapter>
   );

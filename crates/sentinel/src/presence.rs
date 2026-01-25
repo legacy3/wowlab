@@ -1,124 +1,71 @@
-//! Track node online/offline status via Supabase Realtime presence.
+//! Track node online/offline status via Centrifugo presence polling.
 //!
-//! Nodes join the `nodes:presence` channel with their node ID as presence key.
-//! The sentinel subscribes and reconciles the database status accordingly.
+//! Periodically polls the `nodes:online` channel to get online nodes,
+//! then reconciles the database status accordingly.
 
+use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 
 use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
-use wowlab_supabase::{
-    ChannelEvent, EventPayload, RealtimeChannelOptions, RealtimeClient, RealtimeManager,
-    SupabaseError,
-};
 
+use wowlab_centrifugo::{CentrifugoApi, Error as CentrifugoError};
 use crate::state::ServerState;
+
+/// Centrifugo error code for "unknown channel" (no subscribers yet).
+const ERROR_UNKNOWN_CHANNEL: u32 = 102;
+
+const POLL_INTERVAL: Duration = Duration::from_secs(5);
 
 pub async fn run(
     state: Arc<ServerState>,
     shutdown: CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let supabase_url = std::env::var("SUPABASE_URL").expect("SUPABASE_URL required");
-    let anon_key = std::env::var("SUPABASE_ANON_KEY").expect("SUPABASE_ANON_KEY required");
+    let api = CentrifugoApi::from_env().expect("CENTRIFUGO_API_URL and CENTRIFUGO_HTTP_API_KEY required");
 
-    let manager = RealtimeManager::new(&supabase_url, &anon_key);
-    let db = state.db.clone();
+    tracing::info!("Presence monitor starting (polling every {:?})", POLL_INTERVAL);
 
-    manager
-        .run_with_shutdown(shutdown, |client| {
-            let db = db.clone();
-            async move { run_session(client, &db).await }
-        })
-        .await?;
-
-    Ok(())
-}
-
-async fn run_session(client: RealtimeClient, db: &PgPool) -> Result<(), SupabaseError> {
-    let channel = client
-        .channel("nodes:presence", RealtimeChannelOptions::default())
-        .await;
-
-    let mut state_rx = channel.on(ChannelEvent::PresenceState).await;
-    let mut diff_rx = channel.on(ChannelEvent::PresenceDiff).await;
-
-    channel.subscribe().await?;
-    tracing::info!("Subscribed to nodes:presence");
+    let mut previous_online: HashSet<Uuid> = HashSet::new();
 
     loop {
         tokio::select! {
-            Some(payload) = state_rx.recv() => {
-                if let EventPayload::PresenceState(value) = payload {
-                    handle_state(db, &value).await;
-                }
+            _ = shutdown.cancelled() => {
+                tracing::info!("Presence monitor shutting down");
+                return Ok(());
             }
-            Some(payload) = diff_rx.recv() => {
-                if let EventPayload::PresenceDiff(value) = payload {
-                    handle_diff(db, &value).await;
+            _ = tokio::time::sleep(POLL_INTERVAL) => {
+                let current_online = match api.presence("nodes:online").await {
+                    Ok(ids) => ids,
+                    // "Unknown channel" means no nodes are subscribed yet - treat as empty
+                    Err(CentrifugoError::Server { code, .. }) if code == ERROR_UNKNOWN_CHANNEL => {
+                        vec![]
+                    }
+                    Err(e) => {
+                        tracing::warn!(error = %e, "Failed to poll presence");
+                        continue;
+                    }
+                };
+
+                let current_set: HashSet<Uuid> = current_online.iter().copied().collect();
+
+                // Find nodes that joined (in current but not in previous)
+                let joined: Vec<Uuid> = current_set.difference(&previous_online).copied().collect();
+
+                // Find nodes that left (in previous but not in current)
+                let left: Vec<Uuid> = previous_online.difference(&current_set).copied().collect();
+
+                if !joined.is_empty() {
+                    set_online(&state.db, &joined).await;
                 }
-            }
-            else => break,
-        }
-    }
 
-    Ok(())
-}
+                if !left.is_empty() {
+                    set_offline(&state.db, &left).await;
+                }
 
-/// Full state sync. Mark present nodes online, absent nodes offline.
-async fn handle_state(db: &PgPool, value: &serde_json::Value) {
-    let ids = extract_uuids(value);
-
-    if ids.is_empty() {
-        // On reconnect, initial state is empty until nodes re-track.
-        // Don't sweep — diffs will handle leaves individually.
-        tracing::debug!("Presence state empty, skipping offline sweep");
-        return;
-    }
-
-    set_online(db, &ids).await;
-
-    let offline = sqlx::query(
-        "UPDATE public.nodes SET status = 'offline'
-         WHERE status = 'online' AND id != ALL($1)",
-    )
-    .bind(&ids)
-    .execute(db)
-    .await;
-
-    if let Ok(r) = offline {
-        if r.rows_affected() > 0 {
-            tracing::info!(count = r.rows_affected(), "Marked absent nodes offline");
-            metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE)
-                .increment(r.rows_affected());
-        }
-    }
-
-    metrics::gauge!(crate::telemetry::NODES_ONLINE).set(ids.len() as f64);
-}
-
-/// Incremental diff: process individual joins and leaves.
-async fn handle_diff(db: &PgPool, value: &serde_json::Value) {
-    let joins = value.get("joins").map(extract_uuids).unwrap_or_default();
-    let leaves = value.get("leaves").map(extract_uuids).unwrap_or_default();
-
-    if !joins.is_empty() {
-        set_online(db, &joins).await;
-    }
-
-    if !leaves.is_empty() {
-        let result = sqlx::query(
-            "UPDATE public.nodes SET status = 'offline' WHERE id = ANY($1)",
-        )
-        .bind(&leaves)
-        .execute(db)
-        .await;
-
-        if let Ok(r) = result {
-            if r.rows_affected() > 0 {
-                tracing::info!(count = r.rows_affected(), "Nodes left");
-                metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE)
-                    .increment(r.rows_affected());
+                metrics::gauge!(crate::telemetry::NODES_ONLINE).set(current_set.len() as f64);
+                previous_online = current_set;
             }
         }
     }
@@ -126,24 +73,37 @@ async fn handle_diff(db: &PgPool, value: &serde_json::Value) {
 
 /// Mark nodes online and update last_seen_at.
 async fn set_online(db: &PgPool, ids: &[Uuid]) {
-    let result = sqlx::query(
+    match sqlx::query(
         "UPDATE public.nodes SET status = 'online', last_seen_at = now() WHERE id = ANY($1)",
     )
     .bind(ids)
     .execute(db)
-    .await;
-
-    if let Ok(r) = result {
-        if r.rows_affected() > 0 {
-            tracing::info!(count = r.rows_affected(), "Nodes online");
+    .await
+    {
+        Ok(r) if r.rows_affected() > 0 => {
+            tracing::info!(count = r.rows_affected(), nodes = ?ids, "Nodes online");
+        }
+        Ok(_) => {}
+        Err(e) => {
+            tracing::warn!(error = %e, nodes = ?ids, "Failed to mark nodes online");
         }
     }
 }
 
-/// Extract UUID keys from a JSON object (presence keys are node IDs).
-fn extract_uuids(value: &serde_json::Value) -> Vec<Uuid> {
-    value
-        .as_object()
-        .map(|obj| obj.keys().filter_map(|k| k.parse().ok()).collect())
-        .unwrap_or_default()
+/// Mark nodes offline.
+async fn set_offline(db: &PgPool, ids: &[Uuid]) {
+    match sqlx::query("UPDATE public.nodes SET status = 'offline' WHERE id = ANY($1)")
+        .bind(ids)
+        .execute(db)
+        .await
+    {
+        Ok(r) if r.rows_affected() > 0 => {
+            tracing::info!(count = r.rows_affected(), nodes = ?ids, "Nodes offline");
+            metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE).increment(r.rows_affected());
+        }
+        Ok(_) => {}
+        Err(e) => {
+            tracing::warn!(error = %e, nodes = ?ids, "Failed to mark nodes offline");
+        }
+    }
 }

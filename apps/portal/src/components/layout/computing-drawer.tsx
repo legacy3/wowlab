@@ -27,6 +27,7 @@ import {
 
 const STATUS_LABELS: Record<DistributedJobStatus, string> = {
   completed: "Completed",
+  failed: "Failed",
   pending: "Pending",
   running: "Running",
 };
@@ -161,8 +162,8 @@ export function ComputingDrawer() {
 function JobCard({ job }: { job: Job }) {
   const StatusIcon = JOB_STATUS_ICONS[job.status];
   const progress =
-    job.totalIterations > 0
-      ? Math.round((job.completedIterations / job.totalIterations) * 100)
+    job.chunksTotal > 0
+      ? Math.round((job.chunksCompleted / job.chunksTotal) * 100)
       : 0;
 
   return (
@@ -195,8 +196,8 @@ function JobCard({ job }: { job: Job }) {
           >
             <span>{progress}%</span>
             <span>
-              {job.completedIterations.toLocaleString()} /{" "}
-              {job.totalIterations.toLocaleString()}
+              {job.chunksCompleted.toLocaleString()} /{" "}
+              {job.chunksTotal.toLocaleString()}
             </span>
           </HStack>
         </Stack>

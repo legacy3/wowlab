@@ -6,10 +6,11 @@ import { css, cx } from "styled-system/css";
 import { Flex, styled } from "styled-system/jsx";
 
 import type { Slot } from "@/lib/sim";
+import type { Item } from "@/lib/supabase";
 
 import { GameIcon, ItemTooltip } from "@/components/game";
 import { Skeleton, Text, Tooltip } from "@/components/ui";
-import { useItem } from "@/lib/state";
+import { items, useResource } from "@/lib/refine";
 
 type EquipmentSlotContent = ReturnType<
   typeof useIntlayer<"simulate">
@@ -123,7 +124,11 @@ export function EquipmentSlot({
   slot,
 }: EquipmentSlotProps) {
   const { equipmentSlot: content } = useIntlayer("simulate");
-  const { data: item, isLoading } = useItem(itemId);
+  const { data: item, isLoading } = useResource<Item>({
+    ...items,
+    id: itemId ?? "",
+    queryOptions: { enabled: itemId != null },
+  });
   const slotLabel = getSlotLabel(slot, content);
   const isRight = align === "right";
 

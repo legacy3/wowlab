@@ -41,8 +41,8 @@ export function UserMenu() {
           p="0"
         >
           <Avatar.Root size="sm">
-            {user.avatar_url ? (
-              <Avatar.Image src={user.avatar_url} alt={user.handle ?? "User"} />
+            {user.avatar ? (
+              <Avatar.Image src={user.avatar} alt={user.handle ?? "User"} />
             ) : null}
             <Avatar.Fallback>{user.initials}</Avatar.Fallback>
           </Avatar.Root>

@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { css } from "styled-system/css";
 import { HStack } from "styled-system/jsx";
 
@@ -15,6 +15,7 @@ export const JOB_STATUS_COLORS: Record<
   { bg: string; text: string; border: string }
 > = {
   completed: { bg: "green.3", border: "green.6", text: "green.11" },
+  failed: { bg: "red.3", border: "red.6", text: "red.11" },
   pending: { bg: "gray.3", border: "gray.6", text: "gray.11" },
   running: { bg: "blue.3", border: "blue.6", text: "blue.11" },
 };
@@ -22,6 +23,7 @@ export const JOB_STATUS_COLORS: Record<
 export const JOB_STATUS_ICONS: Record<DistributedJobStatus, LucideIcon | null> =
   {
     completed: CheckCircle2,
+    failed: XCircle,
     pending: Clock,
     running: null,
   };

@@ -56,33 +56,12 @@ export function ConfigureStep({
 
   const handleSimulate = () => {
     // Build the config from profile and form values
-    // Using placeholder stats for now - proper stat calculation from equipment
-    // would require item database lookups
+    // Note: specId would need to be resolved from profile.character.spec + class
     const config: SimConfig = {
       duration,
-      player: {
-        name: profile.character.name,
-        spec: specToSimSpec(
-          profile.character.class,
-          profile.character.spec ?? undefined,
-        ),
-        stats: {
-          // Placeholder stats - these would be calculated from equipment
-          agility: 8000,
-          crit_rating: 2000,
-          haste_rating: 1500,
-          intellect: 1000,
-          mastery_rating: 1800,
-          stamina: 5000,
-          strength: 1000,
-          versatility_rating: 1200,
-        },
-      },
-      target: {
-        armor: 0,
-        level_diff: 3,
-        max_health: 10000000,
-      },
+      iterations,
+      specId: 0, // TODO: Resolve from profile.character.spec
+      targetError: 0.05, // Default 5% target error
     };
 
     onSimulate(config, iterations);
@@ -211,20 +190,4 @@ export function ConfigureStep({
       </HStack>
     </Stack>
   );
-}
-
-function specToSimSpec(wowClass: string, spec: string | undefined): string {
-  if (!spec) return wowClass;
-  // Map common spec names to what the engine expects
-  const normalized = spec.toLowerCase().replace(/[_\s]/g, "");
-  switch (normalized) {
-    case "beastmastery":
-      return "beast_mastery";
-    case "marksmanship":
-      return "marksmanship";
-    case "survival":
-      return "survival";
-    default:
-      return spec.toLowerCase().replace(/\s/g, "_");
-  }
 }

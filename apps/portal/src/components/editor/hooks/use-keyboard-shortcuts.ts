@@ -2,8 +2,8 @@
 
 import { useKeyPress } from "ahooks";
 
+import { useSaveRotation } from "@/lib/state";
 import { useEditor } from "@/lib/state/editor";
-import { useSaveRotation } from "@/lib/state/rotation";
 
 interface KeyboardShortcutsOptions {
   enabled?: boolean;
