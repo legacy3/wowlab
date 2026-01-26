@@ -15,4 +15,5 @@ export {
   type ParseSuccessProps,
 } from "./parse-status";
 export { SimcInput, type SimcInputProps } from "./simc-input";
+export { SimulateContent } from "./simulate-content";
 export { SimulateWizard } from "./simulate-wizard";

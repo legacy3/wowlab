@@ -1,12 +1,22 @@
-import { TraitsContent } from "@/components/plan/traits";
+"use client";
+
+import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
+
+import { PageLoader } from "@/components/ui";
 import { extractSpecId } from "@/lib/trait";
 
-interface Props {
-  searchParams: Promise<{ loadout?: string }>;
-}
+const TraitsContent = dynamic(
+  () =>
+    import("@/components/plan/traits/traits-content").then(
+      (m) => m.TraitsContent,
+    ),
+  { loading: () => <PageLoader message="Loading WASM..." />, ssr: false },
+);
 
-export default async function Page({ searchParams }: Props) {
-  const { loadout } = await searchParams;
+export default function Page() {
+  const searchParams = useSearchParams();
+  const loadout = searchParams.get("loadout");
 
   if (!loadout) {
     return <TraitsContent type="start" />;

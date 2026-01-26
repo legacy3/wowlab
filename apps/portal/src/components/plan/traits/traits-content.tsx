@@ -1,9 +1,5 @@
 "use client";
 
-import { Suspense } from "react";
-import { Flex } from "styled-system/jsx";
-
-import { Loader } from "@/components/ui";
 import { WasmProvider } from "@/providers";
 
 import { InvalidLoadoutError } from "./invalid-loadout-error";
@@ -34,22 +30,12 @@ export function TraitsContent(props: TraitsContentProps) {
   }
 
   return (
-    <Suspense fallback={<LoadingState />}>
-      <WasmProvider>
-        {props.type === "start" ? (
-          <TraitStartScreen />
-        ) : (
-          <TraitCalculator specId={props.specId} />
-        )}
-      </WasmProvider>
-    </Suspense>
-  );
-}
-
-function LoadingState() {
-  return (
-    <Flex align="center" justify="center" minH="400px">
-      <Loader size="lg" />
-    </Flex>
+    <WasmProvider>
+      {props.type === "start" ? (
+        <TraitStartScreen />
+      ) : (
+        <TraitCalculator specId={props.specId} />
+      )}
+    </WasmProvider>
   );
 }

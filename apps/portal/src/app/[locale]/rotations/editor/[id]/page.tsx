@@ -1,12 +1,20 @@
 "use client";
 
 import { useIntlayer } from "next-intlayer";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { EditorContent } from "@/components/editor";
-import { ErrorBox, Loader, Text } from "@/components/ui";
+import { ErrorBox, Loader, PageLoader, Text } from "@/components/ui";
 import { useLoadRotation } from "@/lib/state";
+
+const EditorContent = dynamic(
+  () =>
+    import("@/components/editor/layout/editor-content").then(
+      (m) => m.EditorContent,
+    ),
+  { loading: () => <PageLoader message="Loading WASM..." />, ssr: false },
+);
 
 export default function EditRotationPage() {
   const { page: content } = useIntlayer("editor");

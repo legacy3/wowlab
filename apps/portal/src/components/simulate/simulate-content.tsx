@@ -2,12 +2,12 @@
 
 import { WasmProvider } from "@/providers";
 
-import { EditorPage } from "./editor-page";
+import { SimulateWizard } from "./simulate-wizard";
 
-export function EditorContent() {
+export function SimulateContent() {
   return (
     <WasmProvider>
-      <EditorPage />
+      <SimulateWizard />
     </WasmProvider>
   );
 }
