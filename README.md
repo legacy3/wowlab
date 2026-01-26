@@ -6,12 +6,12 @@ A monorepo for World of Warcraft spell rotation simulation and analysis.
 
 ## Overview
 
-WoW Lab provides a high-performance, event-driven simulation engine for analyzing WoW spell rotations and damage output. The simulation core is written in Rust (`crates/engine/`) with WASM bindings for browser use. Data parsing lives in `crates/parsers/` which compiles to both native and WASM.
+WoW Lab provides a high-performance, event-driven simulation engine for analyzing WoW spell rotations and damage output. The simulation core is written in Rust (`crates/engine/`) with WASM bindings for browser use. Shared types and parsers live in `crates/common/` which compiles to both native and WASM.
 
 **Tech Stack:**
 
 - **Simulation Engine:** Rust (with WASM support for browser)
-- **Parsers:** Rust (`crates/parsers/`) - DBC/CSV parsing, transformations, snapshots
+- **Shared Library:** Rust (`crates/common/`) - DBC/CSV parsing, types, stat calculations
 - **Frontend:** Next.js 16, Panda CSS, Park UI, Intlayer (i18n)
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
 - **Scheduler:** Rust (`crates/sentinel/`) - Discord bot, chunk scheduler, HTTP metrics
@@ -25,20 +25,21 @@ WoW Lab provides a high-performance, event-driven simulation engine for analyzin
 
 ### Crates (Rust)
 
-- `crates/api` - API service
-- `crates/cli` - Command-line tools
+- `crates/centrifugo` - Centrifugo WebSocket beacon for realtime updates
+- `crates/cli` - Command-line tools (wowlab-cli)
+- `crates/common` - Shared types, parsers (DBC/CSV), and stat calculations
 - `crates/engine` - Simulation engine with WASM target
-- `crates/parsers` - DBC/CSV data parsing, snapshot generation
-- `crates/types` - Shared type definitions
 - `crates/node` - Distributed simulation node (shared library)
 - `crates/node-gui` - GUI for simulation nodes (egui)
 - `crates/node-headless` - Headless simulation node for servers
 - `crates/sentinel` - Task scheduler, Discord bot, HTTP metrics
+- `crates/supabase` - Supabase client with PostgREST and Realtime
 
 ### Packages
 
 - `packages/wowlab-engine` - WASM bindings for `crates/engine`
-- `packages/wowlab-parsers` - WASM bindings for `crates/parsers`
+- `packages/wowlab-parsers` - WASM bindings for parsers
+- `packages/wowlab-common` - WASM bindings for `crates/common` (packed as .tgz)
 
 ## First-Time Setup
 
@@ -73,11 +74,11 @@ pnpm lint     # lint all packages
 - Parallel simulation support via rayon
 - WASM build for browser integration
 
-**Parsers (`crates/parsers/`):**
+**Common (`crates/common/`):**
 
 - DBC CSV parsing with serde structs
-- Spell/talent/aura/item transformation
-- Snapshot generation for efficient data access
+- Shared types for spells, talents, items, stats
+- Stat calculations and rating conversions
 - Compiles to both native and WASM
 
 **Distributed compute (`crates/node*` + `crates/sentinel/`):**

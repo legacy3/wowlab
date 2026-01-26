@@ -4,11 +4,11 @@ Horizontally scalable, realtime-first architecture. Stateless sentinels, Redis f
 
 ## Domains
 
-| Domain | Service | Purpose |
-|--------|---------|---------|
-| `api.wowlab.gg` | Supabase | Portal database, auth, user data |
-| `sentinel.wowlab.gg` | Sentinel | Node HTTP API (register, token) |
-| `beacon.wowlab.gg` | Centrifugo | WebSocket connections, realtime messaging |
+| Domain               | Service    | Purpose                                   |
+| -------------------- | ---------- | ----------------------------------------- |
+| `api.wowlab.gg`      | Supabase   | Portal database, auth, user data          |
+| `sentinel.wowlab.gg` | Sentinel   | Node HTTP API (register, token)           |
+| `beacon.wowlab.gg`   | Centrifugo | WebSocket connections, realtime messaging |
 
 **Nodes connect to:** `sentinel.wowlab.gg` (HTTP) and `beacon.wowlab.gg` (WebSocket)
 **Nodes NEVER connect to:** `api.wowlab.gg`, Redis, or Supabase directly
@@ -69,15 +69,18 @@ Horizontally scalable, realtime-first architecture. Stateless sentinels, Redis f
 1. **Sentinels are stateless** - Any instance can handle any request
 
 **Restart Safety:** Any sentinel can crash at any point and another instance (or the same after restart) can continue. All in-flight operations are either:
+
 - Completed atomically (Lua scripts)
 - Idempotent and safe to retry
 - Recoverable from Redis state
 
 Specifically:
+
 - Chunk assignments: Written to Redis before WS push. If push fails, resync recovers.
 - Chunk completions: Idempotency key prevents double-counting.
 - Job aggregation: Lock with timestamp allows stuck lock recovery.
 - Background tasks: Leader election prevents duplicate work, but tasks are idempotent if it fails.
+
 2. **Redis is the brain** - All coordination state lives in Redis
 3. **Centrifugo owns connections** - WebSocket management, presence, message routing
 4. **Ed25519 for node auth** - Nodes authenticate via signed requests (not just JWT trust). Signatures include timestamp + nonce to prevent replay attacks. For state-modifying requests, include SHA-256 content digest of request body
@@ -170,6 +173,7 @@ Specifically:
 **Redis Sentinel HA Configuration:** For production, deploy 3+ Sentinel nodes with `min-replicas-to-write 1` and `min-replicas-max-lag 10` on the master to prevent data loss during failover. Note that in-flight Lua scripts during failover may be lost - idempotency keys handle this gracefully.
 
 **Design Decision - Dynamic Key Construction:** Some Lua scripts (notably `complete_chunk.lua` and `select_nodes.lua`) construct keys dynamically from data read within the script. This is explicitly discouraged by Redis for Cluster compatibility, but is intentional here because:
+
 1. We are committed to single instance/Sentinel (no Cluster)
 2. It simplifies the caller interface (fewer KEYS to pass)
 3. All dynamically-accessed keys use consistent hash tags (`{node}:`, `{job}:`) for future reference
@@ -177,24 +181,25 @@ Specifically:
 
 ## Channels
 
-| Channel | Type | Direction | Purpose |
-|---------|------|-----------|---------|
-| `nodes:online` | Presence | Automatic | Hint for online nodes (NOT authoritative) |
-| `nodes:{id}` | Subscribe | Sentinel → Node | Chunk assignments, config updates, heartbeat pings |
-| `jobs:{id}` | Subscribe | Sentinel → Portal | Job progress, completion |
-| `chunks:complete` | Publish + Proxy | Node → Sentinel | Chunk results (proxied to HTTP) |
+| Channel           | Type            | Direction         | Purpose                                            |
+| ----------------- | --------------- | ----------------- | -------------------------------------------------- |
+| `nodes:online`    | Presence        | Automatic         | Hint for online nodes (NOT authoritative)          |
+| `nodes:{id}`      | Subscribe       | Sentinel → Node   | Chunk assignments, config updates, heartbeat pings |
+| `jobs:{id}`       | Subscribe       | Sentinel → Portal | Job progress, completion                           |
+| `chunks:complete` | Publish + Proxy | Node → Sentinel   | Chunk results (proxied to HTTP)                    |
 
 ## HTTP Endpoints
 
 ### External (Node → Sentinel)
 
-| Endpoint | Auth | Purpose |
-|----------|------|---------|
-| `POST /nodes/register` | Ed25519 | Initial node registration |
-| `POST /nodes/token` | Ed25519 | Get Centrifugo JWT (short-lived) |
-| `GET /config/{hash}` | Ed25519 | Fetch simulation config |
+| Endpoint               | Auth    | Purpose                          |
+| ---------------------- | ------- | -------------------------------- |
+| `POST /nodes/register` | Ed25519 | Initial node registration        |
+| `POST /nodes/token`    | Ed25519 | Get Centrifugo JWT (short-lived) |
+| `GET /config/{hash}`   | Ed25519 | Fetch simulation config          |
 
 **Token Issuance Flow:**
+
 1. Node calls `POST /nodes/token` on `sentinel.wowlab.gg` with Ed25519 signature
 2. Sentinel verifies signature and checks node exists (Sentinel queries Supabase, not the node)
 3. Sentinel creates JWT signed with `CENTRIFUGO_TOKEN_SECRET` (NOT a Supabase token)
@@ -207,30 +212,30 @@ Specifically:
 
 ### Internal (Centrifugo → Sentinel)
 
-| Endpoint | Auth | Purpose |
-|----------|------|---------|
-| `POST /proxy/connect` | Proxy Secret | Validate new connections, set connection meta |
-| `POST /proxy/subscribe` | Proxy Secret | Authorize channel subscriptions |
-| `POST /proxy/publish` | Proxy Secret | Handle chunk completions |
-| `POST /proxy/refresh` | Proxy Secret | Issue refreshed JWT, update heartbeat |
-| `POST /proxy/rpc` | Proxy Secret | Handle RPC requests (config fetch, etc.) |
+| Endpoint                | Auth         | Purpose                                       |
+| ----------------------- | ------------ | --------------------------------------------- |
+| `POST /proxy/connect`   | Proxy Secret | Validate new connections, set connection meta |
+| `POST /proxy/subscribe` | Proxy Secret | Authorize channel subscriptions               |
+| `POST /proxy/publish`   | Proxy Secret | Handle chunk completions                      |
+| `POST /proxy/refresh`   | Proxy Secret | Issue refreshed JWT, update heartbeat         |
+| `POST /proxy/rpc`       | Proxy Secret | Handle RPC requests (config fetch, etc.)      |
 
 **Proxy Secret:** Centrifugo includes `X-Centrifugo-Proxy-Secret` header. Sentinel validates this matches configured secret. This prevents direct HTTP access to proxy endpoints.
 
 ### RPC Methods (via Centrifugo)
 
-| Method | Direction | Purpose |
-|--------|-----------|---------|
-| `getConfig` | Node → Sentinel | Fetch simulation config by hash |
-| `getChunkInfo` | Node → Sentinel | Get chunk assignment details |
+| Method         | Direction       | Purpose                         |
+| -------------- | --------------- | ------------------------------- |
+| `getConfig`    | Node → Sentinel | Fetch simulation config by hash |
+| `getChunkInfo` | Node → Sentinel | Get chunk assignment details    |
 
 **Why RPC?** Instead of nodes making HTTP calls, they use Centrifugo's RPC feature over the existing WebSocket connection. This reduces connection overhead and keeps all communication through a single channel.
 
 ### Health
 
-| Endpoint | Auth | Purpose |
-|----------|------|---------|
-| `GET /status` | None | Health check |
+| Endpoint       | Auth | Purpose            |
+| -------------- | ---- | ------------------ |
+| `GET /status`  | None | Health check       |
 | `GET /metrics` | None | Prometheus metrics |
 
 ## Centrifugo Configuration (v5 Format)
@@ -386,12 +391,13 @@ Specifically:
 
 Use these codes in proxy error responses:
 
-| Code | Type | Use Case |
-|------|------|----------|
+| Code      | Type          | Use Case                      |
+| --------- | ------------- | ----------------------------- |
 | 4000-4499 | Reconnectable | Temporary errors, rate limits |
-| 4500-4999 | Terminal | Auth failures, invalid state |
+| 4500-4999 | Terminal      | Auth failures, invalid state  |
 
 Examples:
+
 - `4429` - Rate limit exceeded (reconnect with backoff)
 - `4500` - Chunk not found (terminal, don't retry)
 - `4501` - Authentication failed (terminal)
@@ -435,10 +441,12 @@ Examples:
 ```
 
 **Token Lifetime:**
+
 - Node JWT: 15 minutes (short-lived, refresh via proxy)
 - Portal JWT: 1 hour (refresh via standard auth flow)
 
 **Refresh Flow:**
+
 1. Centrifugo detects token approaching expiration
 2. Sends refresh request to `/proxy/refresh`
 3. Sentinel validates node still exists, issues new JWT
@@ -493,17 +501,17 @@ All subsequent proxy requests (subscribe, publish, refresh, rpc) include the met
 
 ### Keys (with Hash Tags for Future Cluster Compatibility)
 
-| Key | Type | TTL | Purpose |
-|-----|------|-----|---------|
-| `{node}:{id}:state` | Hash | 2h | `{backlog, last_heartbeat}` |
-| `{node}:{id}:chunks` | Set | 2h | Chunk IDs assigned (for reclaim) |
-| `{node}:backlog:sorted` | ZSet | - | Node selection by lowest backlog |
-| `{job}:{id}` | Hash | 24h | `{total, completed, config_hash, lock, lock_at, created_at}` |
-| `{job}:{id}:results` | List | 24h | Chunk results for aggregation |
-| `{chunk}:{id}` | Hash | 2h | `{job_id, node_id, iterations, seed_offset, assigned_at}` |
-| `config:{hash}` | String | 7d | Cached config JSON |
-| `ratelimit:publish:{node}:{window}` | Integer | 2s | Rate limit counter |
-| `idempotency:{chunk}:{node}` | String | 10m | Prevents duplicate completions |
+| Key                                 | Type    | TTL | Purpose                                                      |
+| ----------------------------------- | ------- | --- | ------------------------------------------------------------ |
+| `{node}:{id}:state`                 | Hash    | 2h  | `{backlog, last_heartbeat}`                                  |
+| `{node}:{id}:chunks`                | Set     | 2h  | Chunk IDs assigned (for reclaim)                             |
+| `{node}:backlog:sorted`             | ZSet    | -   | Node selection by lowest backlog                             |
+| `{job}:{id}`                        | Hash    | 24h | `{total, completed, config_hash, lock, lock_at, created_at}` |
+| `{job}:{id}:results`                | List    | 24h | Chunk results for aggregation                                |
+| `{chunk}:{id}`                      | Hash    | 2h  | `{job_id, node_id, iterations, seed_offset, assigned_at}`    |
+| `config:{hash}`                     | String  | 7d  | Cached config JSON                                           |
+| `ratelimit:publish:{node}:{window}` | Integer | 2s  | Rate limit counter                                           |
+| `idempotency:{chunk}:{node}`        | String  | 10m | Prevents duplicate completions                               |
 
 **Note:** Hash tags like `{node}` ensure related keys hash to same slot if we ever migrate to Cluster. Currently using single Redis instance.
 
@@ -518,6 +526,7 @@ All subsequent proxy requests (subscribe, publish, refresh, rpc) include the met
 ### Lua Scripts
 
 **assign_chunk.lua:**
+
 ```lua
 -- KEYS[1] = {node}:{node_id}:state
 -- KEYS[2] = {node}:{node_id}:chunks
@@ -580,6 +589,7 @@ return {new_backlog, 'OK'}
 ```
 
 **complete_chunk.lua:**
+
 ```lua
 -- KEYS[1] = {chunk}:{chunk_id}
 -- KEYS[2] = idempotency:{chunk_id}:{node_id}
@@ -669,6 +679,7 @@ return {'OK', job_id, completed, total, should_aggregate and 'AGGREGATE' or nil}
 ```
 
 **reclaim_chunks.lua:**
+
 ```lua
 -- KEYS[1] = {node}:{node_id}:state
 -- KEYS[2] = {node}:{node_id}:chunks
@@ -696,6 +707,7 @@ return chunks
 ```
 
 **heartbeat.lua:**
+
 ```lua
 -- KEYS[1] = {node}:{node_id}:state
 -- KEYS[2] = {node}:backlog:sorted
@@ -722,6 +734,7 @@ return {backlog, 'OK'}
 ```
 
 **select_nodes.lua:**
+
 ```lua
 -- Select N nodes with lowest backlog that are healthy
 -- KEYS[1] = {node}:backlog:sorted
@@ -830,6 +843,7 @@ After assigning chunks in Redis, Sentinel pushes assignments to nodes via Centri
 **Auth:** `Authorization: apikey ${CENTRIFUGO_API_KEY}`
 
 **Single publish:**
+
 ```json
 {
   "channel": "nodes:{node_id}",
@@ -845,6 +859,7 @@ After assigning chunks in Redis, Sentinel pushes assignments to nodes via Centri
 ```
 
 **Batch publish (for multiple chunks):**
+
 ```json
 {
   "commands": [
@@ -887,6 +902,7 @@ Node                 Centrifugo                Sentinel              Redis
 ```
 
 **On Publish Proxy Error (e.g., rate limit, chunk not found):**
+
 ```json
 {
   "error": {
@@ -987,11 +1003,13 @@ Sentinel (background task)       Redis                    Centrifugo           N
 ```
 
 **Key insight:** Presence is used as a HINT for which nodes might be online, but the authoritative health check is the heartbeat timestamp in Redis. This handles:
+
 - Presence events being lost (at-most-once delivery)
 - Network partitions where presence fires but node is still working
 - Nodes that connect but never heartbeat
 
 **Scalability Note:** Current design polls Redis for heartbeat timestamps every 30s. At scale (1000+ nodes), consider:
+
 - Push-based presence updates from Centrifugo (subscribe to presence events)
 - Coarser trust in join/leave for initial response, heartbeat as confirmation
 - Batch heartbeat checks in single MGET instead of per-node HGET
@@ -1047,6 +1065,7 @@ Nodes call `getAssignedChunks` RPC on connect to recover any missed assignments.
 **Flow:** Node → Centrifugo (RPC) → Sentinel (`/proxy/rpc`) → Redis → Sentinel → Centrifugo → Node
 
 **RPC Request:**
+
 ```json
 {
   "method": "getAssignedChunks",
@@ -1055,13 +1074,26 @@ Nodes call `getAssignedChunks` RPC on connect to recover any missed assignments.
 ```
 
 **RPC Response:**
+
 ```json
 {
   "result": {
     "data": {
       "chunks": [
-        {"id": "chunk-1", "jobId": "job-1", "iterations": 1000, "configHash": "...", "seedOffset": 0},
-        {"id": "chunk-2", "jobId": "job-1", "iterations": 1000, "configHash": "...", "seedOffset": 1000}
+        {
+          "id": "chunk-1",
+          "jobId": "job-1",
+          "iterations": 1000,
+          "configHash": "...",
+          "seedOffset": 0
+        },
+        {
+          "id": "chunk-2",
+          "jobId": "job-1",
+          "iterations": 1000,
+          "configHash": "...",
+          "seedOffset": 1000
+        }
       ]
     }
   }
@@ -1069,6 +1101,7 @@ Nodes call `getAssignedChunks` RPC on connect to recover any missed assignments.
 ```
 
 **Sentinel RPC Handler:**
+
 ```rust
 async fn handle_get_assigned_chunks(node_id: &str) -> Vec<ChunkAssignment> {
     let chunk_ids: Vec<String> = redis.smembers(&format!("{{node}}:{}:chunks", node_id)).await?;
@@ -1085,17 +1118,20 @@ async fn handle_get_assigned_chunks(node_id: &str) -> Vec<ChunkAssignment> {
 ### Design Principle
 
 WebSocket messages are hints, not the source of truth. Redis is authoritative:
+
 - Chunk assignments live in `{node}:{id}:chunks` and `{chunk}:{id}`
 - If a node misses a WS message, it calls `getAssignedChunks` RPC (via Centrifugo → Sentinel → Redis)
 - Nodes should call `getAssignedChunks` on every connect, not just reconnect
 
 **Important:** Nodes NEVER connect to Redis or Supabase directly. All node communication flows through:
+
 - `wss://beacon.wowlab.gg` (Centrifugo) for WebSocket + RPC
 - `https://sentinel.wowlab.gg` (Sentinel) for HTTP (registration, token)
 
 ## Message Payloads
 
 ### `nodes:{id}` - Chunk Assignment
+
 ```json
 {
   "type": "chunk",
@@ -1108,6 +1144,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 ### `nodes:{id}` - Heartbeat Ping
+
 ```json
 {
   "type": "ping",
@@ -1116,6 +1153,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 ### `nodes:{id}` - Config Update
+
 ```json
 {
   "type": "config",
@@ -1126,6 +1164,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 ### `chunks:complete` - Chunk Result (from Node)
+
 ```json
 {
   "chunkId": "chunk-uuid",
@@ -1140,6 +1179,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 ### `jobs:{id}` - Progress
+
 ```json
 {
   "type": "progress",
@@ -1150,6 +1190,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 ### `jobs:{id}` - Completed
+
 ```json
 {
   "type": "completed",
@@ -1168,6 +1209,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ### Connect Proxy
 
 **Request (Centrifugo → Sentinel):**
+
 ```json
 {
   "client": "client-uuid",
@@ -1180,6 +1222,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (Sentinel → Centrifugo):**
+
 ```json
 {
   "result": {
@@ -1192,6 +1235,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ### Subscribe Proxy
 
 **Request:**
+
 ```json
 {
   "client": "client-uuid",
@@ -1204,6 +1248,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (allow):**
+
 ```json
 {
   "result": {}
@@ -1211,6 +1256,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (deny):**
+
 ```json
 {
   "error": {
@@ -1223,6 +1269,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ### Publish Proxy
 
 **Request:**
+
 ```json
 {
   "client": "client-uuid",
@@ -1239,6 +1286,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (success):**
+
 ```json
 {
   "result": {}
@@ -1246,6 +1294,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (error):**
+
 ```json
 {
   "error": {
@@ -1258,6 +1307,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ### Refresh Proxy
 
 **Request:**
+
 ```json
 {
   "client": "client-uuid",
@@ -1269,6 +1319,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response:**
+
 ```json
 {
   "result": {
@@ -1280,6 +1331,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ### RPC Proxy
 
 **Request (getConfig):**
+
 ```json
 {
   "client": "client-uuid",
@@ -1299,6 +1351,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (success):**
+
 ```json
 {
   "result": {
@@ -1311,6 +1364,7 @@ WebSocket messages are hints, not the source of truth. Redis is authoritative:
 ```
 
 **Response (not found):**
+
 ```json
 {
   "error": {
@@ -1330,6 +1384,7 @@ Implementation: Lua script for atomic INCR + EXPIRE (fixed window)
 ```
 
 **rate_limit.lua:**
+
 ```lua
 -- Atomic rate limit check
 -- KEYS[1] = rate limit key
@@ -1345,6 +1400,7 @@ return count
 ```
 
 **In `/proxy/publish` handler:**
+
 ```rust
 let key = format!("ratelimit:publish:{}:{}", node_id, current_second);
 let count: u64 = redis.eval_sha(RATE_LIMIT_SHA, &[&key], &[2, 100]).await?;
@@ -1399,11 +1455,13 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Publish proxy request in flight, sentinel crashes.
 
 **What happens:**
+
 - Centrifugo times out (10s), returns error to node
 - Node's client SDK sees publish failure
 - Node retries with exponential backoff
 
 **Recovery:**
+
 - Idempotency key prevents double-counting if first request partially succeeded
 - If chunk completion never happened, node retry will succeed on another sentinel
 
@@ -1412,12 +1470,14 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Redis down for 30 seconds.
 
 **What happens:**
+
 - All sentinel operations fail
 - Centrifugo returns errors to all proxy requests
 - Nodes see publish failures, retry with backoff
 - Portal sees stale progress (Centrifugo can't publish updates)
 
 **Recovery:**
+
 - When Redis returns, retries succeed
 - No data loss (nothing was committed)
 - Progress catches up quickly
@@ -1427,12 +1487,14 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Node working on chunk, network dies.
 
 **What happens:**
+
 - Centrifugo detects disconnect (ping timeout ~25-30s)
 - Presence leave event fires
 - Sentinel notes the hint but checks heartbeat timestamp
 - If heartbeat also stale (>90s), reclaim begins
 
 **Race condition handled:**
+
 - Node finishes chunk just as disconnect detected
 - Publish proxy succeeds (chunk marked complete in Redis)
 - Reclaim script finds chunk doesn't exist, skips it
@@ -1442,6 +1504,7 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Network glitch causes node to retry publish.
 
 **What happens:**
+
 - First publish succeeds, sets idempotency key, deletes chunk
 - Second publish arrives, idempotency key exists
 - Returns `ALREADY_COMPLETED` - no double counting
@@ -1449,6 +1512,7 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Chunk reclaimed and completed by new node, old node also completes.
 
 **What happens:**
+
 - Chunk reassigned to Node B
 - Node A's late completion: chunk `node_id` doesn't match, rejected
 - Only Node B's result counts
@@ -1458,6 +1522,7 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Job runs for 20 hours (complex simulation).
 
 **What happens:**
+
 - Job keys have 24h TTL
 - Each chunk completion refreshes TTL
 - As long as chunks keep completing, job stays alive
@@ -1468,12 +1533,14 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Network error writing final result to Supabase.
 
 **What happens:**
+
 - Sentinel has aggregation lock (via Redis HSETNX)
 - Supabase write fails
 - Sentinel does NOT delete Redis keys
 - Sentinel releases lock, retries after backoff
 
 **Recovery:**
+
 - Same sentinel (or another) retries aggregation
 - Redis data still intact
 - Eventually Supabase write succeeds
@@ -1484,6 +1551,7 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Two chunks complete simultaneously, both see `completed == total`.
 
 **What happens:**
+
 - Both run `complete_chunk.lua`
 - Both try `HSETNX job:{id} lock 1`
 - Only ONE succeeds (Redis atomic)
@@ -1495,12 +1563,14 @@ fn validate_result(result: &ChunkResult, expected_iterations: u64) -> Result<()>
 **Scenario:** Sentinel acquires aggregation lock, then crashes before completing.
 
 **What happens:**
+
 - Lock exists with `lock_at` timestamp
 - Background job checks for stuck locks (lock_at > 5 minutes ago)
 - If found, releases lock by deleting `lock` and `lock_at` fields
 - Next chunk completion or background job retries aggregation
 
 **Recovery logic (background task):**
+
 ```rust
 // Check for stuck aggregation locks every 60 seconds
 for job_id in active_jobs {
@@ -1546,16 +1616,17 @@ for job_id in active_jobs {
 
 ### Channel Authorization Matrix
 
-| Channel | Who Can Subscribe | Who Can Publish | Enforced By |
-|---------|-------------------|-----------------|-------------|
-| `nodes:{id}` | Only that node | Only sentinel | Subscribe proxy |
-| `jobs:{id}` | Job owner only | Only sentinel | Subscribe proxy |
-| `nodes:online` | All authenticated | Nobody | Presence only |
-| `chunks:complete` | Nobody | Assigned node only | Publish proxy |
+| Channel           | Who Can Subscribe | Who Can Publish    | Enforced By     |
+| ----------------- | ----------------- | ------------------ | --------------- |
+| `nodes:{id}`      | Only that node    | Only sentinel      | Subscribe proxy |
+| `jobs:{id}`       | Job owner only    | Only sentinel      | Subscribe proxy |
+| `nodes:online`    | All authenticated | Nobody             | Presence only   |
+| `chunks:complete` | Nobody            | Assigned node only | Publish proxy   |
 
 ### Proxy Secret Validation
 
 Every proxy endpoint MUST verify:
+
 ```rust
 fn verify_proxy_secret(req: &Request) -> Result<()> {
     let secret = req.headers()
@@ -1570,6 +1641,7 @@ fn verify_proxy_secret(req: &Request) -> Result<()> {
 ```
 
 This prevents:
+
 - Direct HTTP access to proxy endpoints
 - Spoofing the `user` field
 
@@ -1579,26 +1651,26 @@ This prevents:
 
 **Sentinel Metrics:**
 
-| Metric | Alert Threshold | Meaning |
-|--------|-----------------|---------|
-| `sentinel_proxy_latency_p99` | > 5s | Proxy too slow |
-| `sentinel_redis_errors` | > 10/min | Redis issues |
-| `sentinel_chunk_completions` | < expected | Processing stalled |
-| `node_heartbeat_age_max` | > 120s | Nodes going stale |
-| `job_completion_time_p99` | > expected | Jobs running slow |
+| Metric                       | Alert Threshold | Meaning            |
+| ---------------------------- | --------------- | ------------------ |
+| `sentinel_proxy_latency_p99` | > 5s            | Proxy too slow     |
+| `sentinel_redis_errors`      | > 10/min        | Redis issues       |
+| `sentinel_chunk_completions` | < expected      | Processing stalled |
+| `node_heartbeat_age_max`     | > 120s          | Nodes going stale  |
+| `job_completion_time_p99`    | > expected      | Jobs running slow  |
 
 **Centrifugo Metrics (from Prometheus):**
 
-| Metric | Alert Threshold | Meaning |
-|--------|-----------------|---------|
-| `centrifugo_node_num_clients` | drop > 20% | Mass disconnect |
-| `centrifugo_proxy_duration_seconds{type="publish"}` | p99 > 5s | Publish proxy slow |
-| `centrifugo_proxy_duration_seconds{type="subscribe"}` | p99 > 1s | Subscribe proxy slow |
-| `centrifugo_proxy_errors_total` | > 100/min | Proxy failures |
-| `centrifugo_broker_redis_pub_sub_errors_total` | > 0 | Redis pub/sub issues |
-| `centrifugo_node_pub_sub_lag_seconds` | > 1s | Message delivery lag |
-| `centrifugo_transport_messages_sent_total` | - | Throughput baseline |
-| `centrifugo_transport_messages_received_total` | - | Throughput baseline |
+| Metric                                                | Alert Threshold | Meaning              |
+| ----------------------------------------------------- | --------------- | -------------------- |
+| `centrifugo_node_num_clients`                         | drop > 20%      | Mass disconnect      |
+| `centrifugo_proxy_duration_seconds{type="publish"}`   | p99 > 5s        | Publish proxy slow   |
+| `centrifugo_proxy_duration_seconds{type="subscribe"}` | p99 > 1s        | Subscribe proxy slow |
+| `centrifugo_proxy_errors_total`                       | > 100/min       | Proxy failures       |
+| `centrifugo_broker_redis_pub_sub_errors_total`        | > 0             | Redis pub/sub issues |
+| `centrifugo_node_pub_sub_lag_seconds`                 | > 1s            | Message delivery lag |
+| `centrifugo_transport_messages_sent_total`            | -               | Throughput baseline  |
+| `centrifugo_transport_messages_received_total`        | -               | Throughput baseline  |
 
 ### Health Check Endpoint
 
@@ -1621,6 +1693,7 @@ GET /status
 ## Migration Path
 
 ### Phase 1: Redis Integration
+
 1. Deploy Redis (single instance with persistence)
 2. Add `fred` crate to sentinel
 3. Implement Lua scripts
@@ -1628,6 +1701,7 @@ GET /status
 5. Shadow-write to Redis (don't use for decisions yet)
 
 ### Phase 2: Centrifugo Proxies
+
 1. Configure Centrifugo proxy endpoints
 2. Implement `/proxy/connect` (validation only, no auth changes)
 3. Implement `/proxy/subscribe` (authorization)
@@ -1635,18 +1709,21 @@ GET /status
 5. Test with feature flag
 
 ### Phase 3: Chunk Completion via Proxy
+
 1. Implement `/proxy/publish` with full validation
 2. Update node to publish via Centrifugo (feature flag)
 3. Run both paths in parallel, compare results
 4. Switch to proxy path, remove old HTTP endpoint
 
 ### Phase 4: Horizontal Scaling
+
 1. Remove in-memory state from sentinel
 2. Deploy multiple sentinel instances
 3. Configure load balancer
 4. Test failover scenarios
 
 ### Phase 5: Cleanup
+
 1. Remove old `/chunks/complete` endpoint
 2. Remove polling from portal
 3. Remove Supabase Realtime integration
@@ -1667,13 +1744,13 @@ class NodeClient {
   async publishChunkCompletion(chunkId: string, result: ChunkResult) {
     for (let attempt = 0; attempt < this.retryConfig.maxRetries; attempt++) {
       try {
-        await this.centrifuge.publish('chunks:complete', { chunkId, result });
+        await this.centrifuge.publish("chunks:complete", { chunkId, result });
         return; // Success
       } catch (error) {
         if (this.isRetryable(error)) {
           const baseDelay = Math.min(
             this.retryConfig.baseDelayMs * Math.pow(2, attempt),
-            this.retryConfig.maxDelayMs
+            this.retryConfig.maxDelayMs,
           );
           // Add jitter (0-25% of delay) to prevent thundering herd
           const jitter = Math.random() * baseDelay * 0.25;
@@ -1683,7 +1760,7 @@ class NodeClient {
         throw error; // Non-retryable error
       }
     }
-    throw new Error('Max retries exceeded');
+    throw new Error("Max retries exceeded");
   }
 
   private isRetryable(error: any): boolean {
@@ -1697,7 +1774,7 @@ class NodeClient {
 ### Token Refresh
 
 ```typescript
-centrifuge.on('refresh', async (ctx) => {
+centrifuge.on("refresh", async (ctx) => {
   // Centrifugo handles refresh automatically via proxy
   // We just need to ensure our heartbeat keeps us alive
   await this.recordHeartbeat();
@@ -1716,42 +1793,42 @@ centrifuge.on('refresh', async (ctx) => {
 
 ### Features We Use
 
-| Feature | Why |
-|---------|-----|
-| **JWT Authentication** | Standard auth for WebSocket connections |
-| **Token Refresh Proxy** | Keep long-lived connections alive |
-| **Connect Proxy** | Validate connections, set connection meta |
-| **Subscribe Proxy** | Channel-level authorization |
-| **Publish Proxy** | Process chunk completions server-side |
-| **RPC Proxy** | Config fetching over WebSocket |
-| **Presence** | Hint for online nodes (not authoritative) |
-| **Join/Leave Events** | Optimization for disconnect detection |
-| **History + Recovery** | At-least-once delivery within window |
-| **Named Proxies** | Different timeouts per operation type |
-| **Connection Meta** | Server-side metadata for security |
-| **Redis Engine** | Scalable pub/sub backend |
-| **Prometheus Metrics** | Monitoring and alerting |
-| **Health Endpoint** | Kubernetes readiness/liveness probes |
+| Feature                 | Why                                       |
+| ----------------------- | ----------------------------------------- |
+| **JWT Authentication**  | Standard auth for WebSocket connections   |
+| **Token Refresh Proxy** | Keep long-lived connections alive         |
+| **Connect Proxy**       | Validate connections, set connection meta |
+| **Subscribe Proxy**     | Channel-level authorization               |
+| **Publish Proxy**       | Process chunk completions server-side     |
+| **RPC Proxy**           | Config fetching over WebSocket            |
+| **Presence**            | Hint for online nodes (not authoritative) |
+| **Join/Leave Events**   | Optimization for disconnect detection     |
+| **History + Recovery**  | At-least-once delivery within window      |
+| **Named Proxies**       | Different timeouts per operation type     |
+| **Connection Meta**     | Server-side metadata for security         |
+| **Redis Engine**        | Scalable pub/sub backend                  |
+| **Prometheus Metrics**  | Monitoring and alerting                   |
+| **Health Endpoint**     | Kubernetes readiness/liveness probes      |
 
 ### Features We Don't Use (and Why)
 
-| Feature | Why Not |
-|---------|---------|
-| **Delta Compression** | Our messages are discrete events, not incremental updates |
-| **Unidirectional (SSE)** | All clients need bidirectional communication |
-| **Server-Side Subscriptions (JWT)** | We use subscribe proxy for dynamic authorization |
-| **Subscription Refresh** | Connection-level refresh is sufficient |
-| **Redis Cluster** | Lua scripts need multi-key atomicity |
-| **User Connections API** | Don't need to manage connections server-side |
-| **Channel Patterns** | Explicit channel names are clearer |
-| **Push Notifications** | Not applicable to our use case |
+| Feature                             | Why Not                                                   |
+| ----------------------------------- | --------------------------------------------------------- |
+| **Delta Compression**               | Our messages are discrete events, not incremental updates |
+| **Unidirectional (SSE)**            | All clients need bidirectional communication              |
+| **Server-Side Subscriptions (JWT)** | We use subscribe proxy for dynamic authorization          |
+| **Subscription Refresh**            | Connection-level refresh is sufficient                    |
+| **Redis Cluster**                   | Lua scripts need multi-key atomicity                      |
+| **User Connections API**            | Don't need to manage connections server-side              |
+| **Channel Patterns**                | Explicit channel names are clearer                        |
+| **Push Notifications**              | Not applicable to our use case                            |
 
 ### Features to Consider (Future)
 
-| Feature | When |
-|---------|------|
+| Feature                 | When                                              |
+| ----------------------- | ------------------------------------------------- |
 | **Rate Limiting (PRO)** | If publish proxy rate limiting becomes bottleneck |
-| **User Limits (PRO)** | If we need per-user connection limits |
+| **User Limits (PRO)**   | If we need per-user connection limits             |
 | **Granular Proxy Mode** | If we need different proxy backends per namespace |
-| **Tarantool Engine** | If Redis becomes performance bottleneck |
-| **GRPC Transport** | If we have internal GRPC services |
+| **Tarantool Engine**    | If Redis becomes performance bottleneck           |
+| **GRPC Transport**      | If we have internal GRPC services                 |

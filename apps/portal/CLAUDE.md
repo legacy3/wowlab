@@ -74,7 +74,10 @@ src/
 
 ## Skills
 
+- **code-style** - Code style and formatting rules.
+- **exports** - Barrel files, module exports.
 - **game-data** - How spell/item data works. Read before touching game data.
+- **loading-states** - Flask loaders, loading indicators.
 - **park-ui** - Component patterns. Check before adding UI.
 - **portal-component** - Patterns for new pages/components.
 - **state-management** - React Query, Zustand, domain modules.

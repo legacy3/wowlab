@@ -522,4 +522,4 @@ cargo audit
 - [Clippy Lint List](https://rust-lang.github.io/rust-clippy/master/index.html)
 - [Idiomatic Rust](https://github.com/mre/idiomatic-rust)
 - [Rust Code Review Guidelines](https://github.com/Rust-Coding-Guidelines/RustCodeReviewGuidelines)
-- Existing patterns: `crates/engine/src/`, `crates/parsers/src/`
+- Existing patterns: `crates/engine/src/`, `crates/common/src/`

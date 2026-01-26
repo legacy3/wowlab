@@ -7,166 +7,176 @@ description: Work with WoW spell, item, and DBC data in portal. Use when fetchin
 
 ## The Rules
 
-1. **ALL game data comes from the database** - NEVER hardcode
-2. **Apps ONLY use flat data structures** - `SpellDataFlat`, `ItemDataFlat`
-3. **Transformers assemble flat structures from DBC tables** - Apps never query DBC directly
-4. **If data isn't available via a transformer, ASK** - Don't improvise
+1. **ALL game data comes from Supabase** - NEVER hardcode
+2. **Use the `game` schema** - Tables like `spells`, `items`, `classes`, `specs`, `auras`
+3. **Types come from database.types.ts** - Use `GameRow<T>` or exported type aliases
+4. **Use resource hooks** - `useResource`, `useResourceMany`, `useResourceList`
+5. **If data isn't available, ASK** - Don't improvise or hardcode
 
 ## The Architecture
 
 ```
-Supabase (raw_dbc schema)     →  Transformer (wowlab-services)  →  Flat Structure  →  App Hook  →  UI
-├── spell_name                    transformSpell()                  SpellDataFlat      useSpell()
-├── spell_effect                  (joins 15+ tables)
-├── spell_misc
-├── spell_categories
-├── spell_cooldowns
-├── spell_duration
-├── spell_range
-├── ... (15+ more)
-
-├── item                          transformItem()                   ItemDataFlat       useItem()
-├── item_sparse                   (joins 8+ tables)
-├── item_x_item_effect
-├── item_effect
-├── item_modified_appearance
-├── item_appearance
-├── ... (more)
+Supabase (game schema)  →  Resource Definition  →  Hook  →  Component
+├── spells                  resources.ts            useResource()
+├── items                                           useResourceMany()
+├── classes                                         useResourceList()
+├── specs
+├── auras
+├── global_colors
+├── global_strings
+├── specs_traits
 ```
 
-## Flat Data Structures
+## Types
 
-Defined in `packages/wowlab-core/src/internal/schemas/`:
-
-### SpellDataFlat (`Spell.ts`)
+Defined in `apps/portal/src/lib/supabase/types.ts`:
 
 ```ts
-{
-  // Core
-  id: SpellID,
-  name: string,
-  description: string,
-  auraDescription: string,
-  fileName: string,              // Icon filename
-  isPassive: boolean,
-  knowledgeSource: KnowledgeSource,
+import type { Spell, Item, Class, Spec, Aura } from "@/lib/supabase/types";
 
-  // Timing
-  castTime: number,
-  recoveryTime: number,          // Cooldown
-  startRecoveryTime: number,     // GCD
-
-  // Resources
-  manaCost: number,
-  powerCost: number,
-  powerCostPct: number,
-  powerType: number,
-
-  // Charges
-  maxCharges: number,
-  chargeRecoveryTime: number,
-
-  // Range
-  rangeMin0: number, rangeMax0: number,  // Enemy
-  rangeMin1: number, rangeMax1: number,  // Ally
-
-  // Geometry
-  radiusMin: number, radiusMax: number,
-  coneDegrees: number,
-
-  // Combat
-  schoolMask: number,
-  defenseType: number,
-  effectBonusCoefficient: number,   // SP scaling
-  bonusCoefficientFromAP: number,   // AP scaling
-
-  // Duration
-  duration: number,
-  maxDuration: number,
-
-  // And more: interrupts, empower, mechanics, levels, aura restrictions,
-  // replacement, shapeshift, totems, attributes, triggers, learnSpells...
-}
+// Or use the generic helper
+import type { GameRow } from "@/lib/supabase/types";
+type MySpell = GameRow<"spells">;
 ```
 
-### ItemDataFlat (`Item.ts`)
+Available type aliases:
+- `Spell` - Full spell data
+- `Item` - Full item data
+- `Class` - Class information
+- `Spec` - Spec information
+- `Aura` - Aura data (indexed by spell_id)
+- `GlobalColor` - UI color constants
+- `GlobalString` - Localized strings
+- `SpecTraits` - Spec trait tree data
+
+Summary types for lists:
+- `SpellSummary` - id, name, file_name
+- `ItemSummary` - id, name, file_name, quality, item_level
+- `SpecSummary` - id, name, class_id, class_name, file_name
+
+## Resource Definitions
+
+Located in `apps/portal/src/lib/refine/resources.ts`:
 
 ```ts
-{
-  // Basic
-  id: number,
-  name: string,
-  description: string,
-  fileName: string,              // Icon filename
-  quality: number,
-  itemLevel: number,
-  requiredLevel: number,
-  binding: number,
+import { spells, items, classes, specs, auras } from "@/lib/refine/resources";
 
-  // Classification
-  classId: number,
-  subclassId: number,
-  inventoryType: number,
-  classification: {
-    className: string,
-    subclassName: string,
-    inventoryTypeName: string,
-    expansionId: number,
-    expansionName: string,
-  },
+// Use by spreading into hooks
+const { data } = useResource<Spell>({ ...spells, id: spellId });
+```
 
-  // Stats & Effects
-  stats: Array<{ type: number, value: number }>,
-  effects: Array<{ spellId: number, triggerType: number, cooldown: number, ... }>,
+## Hooks
 
-  // Sockets, flags, restrictions, set info, drop sources...
+### Single Resource
+
+```ts
+import { useResource } from "@/lib/refine/hooks/use-resource";
+import { spells } from "@/lib/refine/resources";
+import type { Spell } from "@/lib/supabase/types";
+
+function SpellCard({ spellId }: { spellId: number }) {
+  const { data: spell, isLoading, error } = useResource<Spell>({
+    ...spells,
+    id: spellId,
+    queryOptions: { enabled: !!spellId },
+  });
+
+  if (isLoading) return <Skeleton />;
+  if (!spell) return null;
+
+  return <div>{spell.name}</div>;
 }
 ```
 
-## Transformers
+### Multiple Resources by ID
 
-Located in `packages/wowlab-services/src/internal/data/transformer/`:
+```ts
+import { useResourceMany } from "@/lib/refine/hooks/use-resource";
+import { spells } from "@/lib/refine/resources";
+import type { Spell } from "@/lib/supabase/types";
 
-- `spell.ts` / `spell-impl.ts` - `transformSpell(id)` → `SpellDataFlat`
-- `item.ts` - `transformItem(id)` → `ItemDataFlat`
-- `extractors.ts` - `ExtractorService` for field-specific extraction
+function SpellList({ spellIds }: { spellIds: number[] }) {
+  const { data: spellsData = [], isLoading } = useResourceMany<Spell>({
+    ...spells,
+    ids: spellIds,
+    queryOptions: { enabled: spellIds.length > 0 },
+  });
 
-Transformers use `DbcService` to fetch from multiple DBC tables and assemble the flat structure.
-
-## App Hooks
-
-In `apps/portal/src/lib/state/dbc.ts`:
-
-```tsx
-import { useSpell, useItem } from "@/lib/state";
-
-// These return the FLAT structures, already transformed
-const spell = useSpell(spellId);   // → SpellDataFlat
-const item = useItem(itemId);      // → ItemDataFlat
-
-// Usage
-if (spell.data) {
-  console.log(spell.data.name);        // "Fireball"
-  console.log(spell.data.castTime);    // 2500
-  console.log(spell.data.fileName);    // "spell_fire_fireball02"
+  // spellsData is Spell[]
 }
+```
+
+### List with Filters/Sorting
+
+```ts
+import { useResourceList } from "@/lib/refine/hooks/use-resource";
+import { specs } from "@/lib/refine/resources";
+import type { SpecSummary } from "@/lib/supabase/types";
+
+function SpecsList() {
+  const { data: specsData = [], isLoading } = useResourceList<SpecSummary>({
+    ...specs,
+    meta: {
+      ...specs.meta,
+      select: "id, name, class_name, class_id, file_name",  // Partial select
+    },
+    pagination: { mode: "off" },
+    sorters: [
+      { field: "class_name", order: "asc" },
+      { field: "order_index", order: "asc" },
+    ],
+  });
+}
+```
+
+## Pre-built Hooks
+
+Available in `@/lib/refine/services`:
+
+```ts
+import {
+  useClassesAndSpecs,   // Classes and specs with helpers
+  useGlobalColors,      // Global color constants
+  useGlobalStrings,     // Localized strings
+  useSpellDescription,  // Spell description rendering
+} from "@/lib/refine/services";
+
+// Classes and specs with utility functions
+const {
+  classes,
+  specs,
+  isLoading,
+  getClassColor,
+  getSpecLabel,
+  getSpecIcon,
+  getSpecIdsForClass,
+} = useClassesAndSpecs();
+
+// Global colors (variadic)
+const [primaryColor, secondaryColor] = useGlobalColors("primary", "secondary");
+
+// Global strings (variadic)
+const [errorText, successText] = useGlobalStrings("ERROR", "SUCCESS");
+
+// Spell description with cross-references
+const { result, isLoading, error, spell } = useSpellDescription(spellId);
 ```
 
 ## What To Do When Data Is Missing
 
-### Scenario 1: Field exists in flat structure but is wrong/incomplete
-→ Fix the transformer in `wowlab-services`
+### Scenario 1: Field exists in table but not in type
+→ Check `database.types.ts` is up to date (run `pnpm cli generate-schemas`)
 
-### Scenario 2: Need a field that's in DBC but not in flat structure
-→ Add field to schema in `wowlab-core`, update transformer in `wowlab-services`
+### Scenario 2: Need data from a different table
+→ Check if resource exists in `resources.ts`, add if needed
 
-### Scenario 3: Need entirely new entity type
+### Scenario 3: Need entirely new data type
 → ASK THE USER. They need to decide:
-  - What DBC tables to use
-  - What the flat structure should look like
-  - Where the transformer goes
+  - Which Supabase table/view to use
+  - What schema (`game` vs `public`)
+  - Whether to add a new resource definition
 
-### Scenario 4: Need data that might not be in DBC at all
+### Scenario 4: Need data that might not be in database
 → ASK THE USER. Don't guess. Don't hardcode.
 
 ## NEVER DO THIS
@@ -175,10 +185,10 @@ if (spell.data) {
 // WRONG - Hardcoded game data
 const SPELL_SCHOOLS = { 1: "Physical", 2: "Holy", 4: "Fire" };
 const CLASS_NAMES = ["Warrior", "Paladin", "Hunter"];
-const ITEM_QUALITIES = ["Poor", "Common", "Uncommon", "Rare", "Epic"];
 
-// WRONG - Direct DBC query in app
-const { data } = useList({ resource: "spell_name", meta: { schema: "raw_dbc" } });
+// WRONG - Direct Supabase query (use hooks)
+const supabase = createClient();
+const { data } = await supabase.from("spells").select("*");
 
 // WRONG - Guessing spell data
 const fireball = { id: 133, name: "Fireball", castTime: 2500 };
@@ -187,17 +197,15 @@ const fireball = { id: 133, name: "Fireball", castTime: 2500 };
 ## ALWAYS DO THIS
 
 ```tsx
-// RIGHT - Use the hook, get flat structure
-const spell = useSpell(spellId);
-const item = useItem(itemId);
+// RIGHT - Use resource hooks
+const { data: spell } = useResource<Spell>({ ...spells, id: spellId });
+const { data: items } = useResourceMany<Item>({ ...items, ids: itemIds });
 
-// RIGHT - Access fields from flat structure
-const spellName = spell.data?.name;
-const iconFile = spell.data?.fileName;
-const castTime = spell.data?.castTime;
+// RIGHT - Use type aliases
+import type { Spell, Item, Class } from "@/lib/supabase/types";
 
 // RIGHT - If you need something that doesn't exist
-// ASK: "I need X data. Should I add it to the transformer or is there another way?"
+// ASK: "I need X data. Which table has this?"
 ```
 
 ## Research - DO THIS BEFORE ASKING
@@ -205,27 +213,27 @@ const castTime = spell.data?.castTime;
 **Use Supabase MCP to research before asking the user anything.**
 
 ```sql
--- Find tables
+-- Find tables in game schema
 SELECT table_name FROM information_schema.tables
-WHERE table_schema = 'raw_dbc' AND table_name LIKE '%power%';
+WHERE table_schema = 'game';
+
+-- Check column names
+SELECT column_name, data_type FROM information_schema.columns
+WHERE table_schema = 'game' AND table_name = 'spells';
 
 -- Query data
-SELECT * FROM raw_dbc.chr_classes LIMIT 5;
+SELECT * FROM game.spells WHERE id = 12345;
 ```
 
-### Research workflow
-1. Check if data exists in current flat structures
-2. If not, search for DBC table via Supabase SQL
-3. If table exists, check columns
-4. If table doesn't exist in Supabase but you need it, tell the user - they can add it from game files
+## Resources Quick Reference
 
-## There Are No Hardcoded Constants
-
-**ALL game data exists in DBC/DB2 files.** If a table isn't in Supabase yet, the user can add it. Never assume something needs to be hardcoded. Examples of data that IS in game files:
-
-- Power type labels → `UnitPowerBarInfo` or similar
-- Item quality colors → `ItemQuality` or UI tables
-- Spell school colors → UI texture/color tables
-- Class colors → `chr_classes.ClassColorR/G/B`
-
-If you can't find it, ask: "I need X data. I searched for Y tables but didn't find it. Which DBC table has this?"
+| Resource | Schema | ID Column | Type |
+|----------|--------|-----------|------|
+| `spells` | game | id | Spell |
+| `items` | game | id | Item |
+| `classes` | game | id | Class |
+| `specs` | game | id | Spec |
+| `auras` | game | spell_id | Aura |
+| `global_colors` | game | name | GlobalColor |
+| `global_strings` | game | tag | GlobalString |
+| `specs_traits` | game | spec_id | SpecTraits |

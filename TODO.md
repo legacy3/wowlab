@@ -2,8 +2,6 @@
 
 ## portal (`apps/portal`)
 
-- [ ] Rewrite `src/lib/engine/spell-desc.ts` to be function-based
-- [ ] Remove duplicated TODO in `src/lib/state/spell-desc.ts` (same rewrite)
 - [ ] Implement account overview page (`src/app/[locale]/account/page.tsx`) - currently just redirects to nodes
 - [ ] Import content types from lib package instead of local definitions (`src/lib/content/types.ts`)
 - [ ] Add dark theme support to mermaid diagrams (`src/components/content/md/md-mermaid.tsx`)

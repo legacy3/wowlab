@@ -36,15 +36,20 @@ Use for docs — don't guess APIs: Context7, Supabase
 
 ## Skills
 
-| Skill              | When                              |
-| ------------------ | --------------------------------- |
-| `game-data`        | Spells, items, DBC data           |
-| `park-ui`          | UI components                     |
-| `portal-component` | New pages/components in portal    |
-| `engine-content`   | Rust engine spells/talents        |
-| `profile-engine`   | Performance profiling the engine  |
-| `rust-quality`     | Rust code review, clippy, testing |
-| `pre-commit`       | Code hygiene before commits       |
+| Skill              | When                                 |
+| ------------------ | ------------------------------------ |
+| `code-review`      | Reviewing PRs, checking code quality |
+| `code-style`       | Code style and formatting rules      |
+| `engine-content`   | Rust engine spells/talents           |
+| `exports`          | Barrel files, module exports         |
+| `game-data`        | Spells, items, DBC data              |
+| `loading-states`   | Flask loaders, loading indicators    |
+| `park-ui`          | UI components                        |
+| `portal-component` | New pages/components in portal       |
+| `pre-commit`       | Code hygiene before commits          |
+| `profile-engine`   | Performance profiling the engine     |
+| `rust-quality`     | Rust code review, clippy, testing    |
+| `state-management` | React Query, Zustand, domain modules |
 
 ## More Context
 

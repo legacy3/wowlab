@@ -58,6 +58,7 @@ This document describes the realtime infrastructure for wowlab, including Centri
 **Purpose**: Realtime WebSocket server for pub/sub messaging and presence tracking.
 
 **Deployment**: Fly.io with Upstash Redis backend
+
 - App name: `wowlab-beacon`
 - Primary region: `lhr` (London)
 - Base image: `centrifugo/centrifugo:v6`
@@ -79,23 +80,25 @@ This document describes the realtime infrastructure for wowlab, including Centri
 
 **Channel Namespaces**:
 
-| Namespace | Pattern | Features | History |
-|-----------|---------|----------|---------|
-| `nodes` | `nodes:{uuid}` | presence, join_leave, force_push | 10 msgs, 60s TTL |
-| `jobs` | `jobs:{uuid}` | - | 100 msgs, 300s TTL |
-| `chunks` | `chunks:{uuid}` | - | 10 msgs, 60s TTL |
+| Namespace | Pattern         | Features                         | History            |
+| --------- | --------------- | -------------------------------- | ------------------ |
+| `nodes`   | `nodes:{uuid}`  | presence, join_leave, force_push | 10 msgs, 60s TTL   |
+| `jobs`    | `jobs:{uuid}`   | -                                | 100 msgs, 300s TTL |
+| `chunks`  | `chunks:{uuid}` | -                                | 10 msgs, 60s TTL   |
 
 **Special Channels**:
+
 - `nodes:online` - Global presence channel for tracking online nodes
 
 **Authentication**:
 
-| Type | Mechanism | Secret |
-|------|-----------|--------|
+| Type               | Mechanism            | Secret                                    |
+| ------------------ | -------------------- | ----------------------------------------- |
 | Client (WebSocket) | JWT with HMAC-SHA256 | `CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY` |
-| Server (HTTP API) | `X-API-Key` header | `CENTRIFUGO_HTTP_API_KEY` |
+| Server (HTTP API)  | `X-API-Key` header   | `CENTRIFUGO_HTTP_API_KEY`                 |
 
 **Environment Variables** (Fly.io secrets):
+
 - `CENTRIFUGO_TOKEN_SECRET` - HMAC secret for JWT tokens
 - `CENTRIFUGO_API_KEY` - Server-side API key
 - `CENTRIFUGO_ADMIN_PASSWORD` - Admin UI password
@@ -113,6 +116,7 @@ This document describes the realtime infrastructure for wowlab, including Centri
 **Port**: 8080 (HTTP)
 
 **Concurrent Services** (via `tokio::select!`):
+
 1. **Bot** - Discord bot with slash commands
 2. **Scheduler** - PG LISTEN for pending chunks + assignment logic
 3. **Cron** - Periodic jobs (reclaim stale chunks, cleanup, metrics)
@@ -121,17 +125,18 @@ This document describes the realtime infrastructure for wowlab, including Centri
 
 **HTTP Endpoints**:
 
-| Endpoint | Method | Auth | Purpose |
-|----------|--------|------|---------|
-| `/nodes/register` | POST | Ed25519 | Register new node |
-| `/nodes/heartbeat` | POST | Ed25519 | Node heartbeat |
-| `/chunks/complete` | POST | Ed25519 | Report chunk completion |
-| `/status` | GET | None | Health check |
-| `/metrics` | GET | None | Prometheus metrics |
+| Endpoint           | Method | Auth    | Purpose                 |
+| ------------------ | ------ | ------- | ----------------------- |
+| `/nodes/register`  | POST   | Ed25519 | Register new node       |
+| `/nodes/heartbeat` | POST   | Ed25519 | Node heartbeat          |
+| `/chunks/complete` | POST   | Ed25519 | Report chunk completion |
+| `/status`          | GET    | None    | Health check            |
+| `/metrics`         | GET    | None    | Prometheus metrics      |
 
 **Ed25519 Authentication**:
 
 Headers required:
+
 - `X-Node-Key`: Base64-encoded public key
 - `X-Node-Sig`: Base64-encoded signature
 - `X-Node-Ts`: Unix timestamp
@@ -141,17 +146,20 @@ Message format: `{timestamp}\0{method}\0{pathname}\0{body_sha256_hex}`
 Clock skew tolerance: 5 minutes
 
 **Database Connection**:
+
 - Direct PostgreSQL via `sqlx`
 - Connection pool: 5 connections
 - Acquire timeout: 5 seconds
 - Uses PG LISTEN/NOTIFY for chunk notifications
 
 **Centrifugo Integration**:
+
 - Uses HTTP API only (not WebSocket)
 - Polls `nodes:online` presence every 5 seconds
 - Updates node status in database based on presence changes
 
 **Environment Variables**:
+
 - `SUPABASE_DB_URL` - PostgreSQL connection string
 - `CENTRIFUGO_API_URL` - Beacon HTTP API URL (https://beacon.wowlab.gg)
 - `CENTRIFUGO_HTTP_API_KEY` - API key for Centrifugo
@@ -165,6 +173,7 @@ Clock skew tolerance: 5 minutes
 **Centrifugo Integration**:
 
 **Token Generation**: `apps/portal/src/app/api/centrifugo/token/route.ts`
+
 ```typescript
 const token = await new SignJWT({ sub: user.id })
   .setProtectedHeader({ alg: "HS256" })
@@ -173,17 +182,20 @@ const token = await new SignJWT({ sub: user.id })
 ```
 
 **Client Connection**: `apps/portal/src/lib/refine/live-provider.ts`
+
 - Uses `centrifuge` npm package (v5.5.3)
 - Singleton client instance
 - WebSocket with Protobuf format
 - Auto-reconnection handled by library
 
 **Live Provider Integration**:
+
 - Integrated with Refine framework
 - `liveMode: "auto"` for automatic subscriptions
 - Resources: `rotations`, `user_profiles`, `jobs`, `nodes`, `nodes_permissions`
 
 **Supabase Integration**:
+
 - `@supabase/ssr` with cookie-based sessions
 - OAuth providers: Discord, GitHub
 - RPC calls for node claiming and job creation
@@ -196,15 +208,16 @@ const token = await new SignJWT({ sub: user.id })
 
 **Authentication**:
 
-| Target | Mechanism |
-|--------|-----------|
+| Target             | Mechanism          |
+| ------------------ | ------------------ |
 | sentinel.wowlab.gg | Ed25519 signatures |
-| beacon.wowlab.gg | JWT token (HMAC) |
-| api.wowlab.gg | Supabase anon key |
+| beacon.wowlab.gg   | JWT token (HMAC)   |
+| api.wowlab.gg      | Supabase anon key  |
 
 **Keypair Storage**: `~/.config/wowlab-node/keypair`
 
 **Centrifugo Subscriptions** (from `crates/node/src/realtime.rs`):
+
 1. `nodes:{node_id}` - Node configuration updates
 2. `chunks:{node_id}` - Chunk assignments (join_leave: false)
 3. `nodes:online` - Presence channel (join_leave: true)
@@ -220,63 +233,68 @@ const token = await new SignJWT({ sub: user.id })
 **Database Tables**:
 
 #### `nodes`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `user_id` | uuid | Owner (NULL until claimed) |
-| `public_key` | text | Ed25519 public key (base64) |
-| `claim_code` | text | 6-char base32 code (NULL after claimed) |
-| `name` | text | Display name |
-| `total_cores` | int | Hardware CPU cores |
-| `max_parallel` | int | Configured parallelism |
-| `status` | text | 'pending' \| 'online' \| 'offline' |
-| `platform` | text | OS-arch identifier |
-| `version` | text | Node software version |
-| `last_seen_at` | timestamptz | Updated by presence system |
-| `created_at` | timestamptz | Registration time |
+
+| Column         | Type        | Description                             |
+| -------------- | ----------- | --------------------------------------- |
+| `id`           | uuid        | Primary key                             |
+| `user_id`      | uuid        | Owner (NULL until claimed)              |
+| `public_key`   | text        | Ed25519 public key (base64)             |
+| `claim_code`   | text        | 6-char base32 code (NULL after claimed) |
+| `name`         | text        | Display name                            |
+| `total_cores`  | int         | Hardware CPU cores                      |
+| `max_parallel` | int         | Configured parallelism                  |
+| `status`       | text        | 'pending' \| 'online' \| 'offline'      |
+| `platform`     | text        | OS-arch identifier                      |
+| `version`      | text        | Node software version                   |
+| `last_seen_at` | timestamptz | Updated by presence system              |
+| `created_at`   | timestamptz | Registration time                       |
 
 #### `jobs`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `user_id` | uuid | Job owner |
-| `config_hash` | text | FK to jobs_configs |
-| `total_iterations` | int | Total simulation iterations |
-| `completed_iterations` | int | Completed count |
-| `status` | text | 'pending' \| 'running' \| 'completed' \| 'failed' |
-| `result` | jsonb | Aggregated simulation results |
-| `access_type` | text | 'private' \| 'public' \| 'user' \| 'discord' |
-| `discord_server_id` | text | For Discord guild access |
+
+| Column                 | Type  | Description                                       |
+| ---------------------- | ----- | ------------------------------------------------- |
+| `id`                   | uuid  | Primary key                                       |
+| `user_id`              | uuid  | Job owner                                         |
+| `config_hash`          | text  | FK to jobs_configs                                |
+| `total_iterations`     | int   | Total simulation iterations                       |
+| `completed_iterations` | int   | Completed count                                   |
+| `status`               | text  | 'pending' \| 'running' \| 'completed' \| 'failed' |
+| `result`               | jsonb | Aggregated simulation results                     |
+| `access_type`          | text  | 'private' \| 'public' \| 'user' \| 'discord'      |
+| `discord_server_id`    | text  | For Discord guild access                          |
 
 #### `jobs_chunks`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `job_id` | uuid | Parent job |
-| `node_id` | uuid | Assigned node (nullable) |
-| `config_hash` | text | Configuration reference |
-| `iterations` | int | Chunk size |
-| `seed_offset` | int | RNG seed offset |
-| `status` | text | 'pending' \| 'running' \| 'completed' |
-| `result` | jsonb | Chunk results |
+
+| Column        | Type  | Description                           |
+| ------------- | ----- | ------------------------------------- |
+| `id`          | uuid  | Primary key                           |
+| `job_id`      | uuid  | Parent job                            |
+| `node_id`     | uuid  | Assigned node (nullable)              |
+| `config_hash` | text  | Configuration reference               |
+| `iterations`  | int   | Chunk size                            |
+| `seed_offset` | int   | RNG seed offset                       |
+| `status`      | text  | 'pending' \| 'running' \| 'completed' |
+| `result`      | jsonb | Chunk results                         |
 
 #### `nodes_permissions`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `node_id` | uuid | Node reference |
+
+| Column        | Type | Description     |
+| ------------- | ---- | --------------- |
+| `id`          | uuid | Primary key     |
+| `node_id`     | uuid | Node reference  |
 | `access_type` | text | Permission type |
-| `target_id` | text | User/guild ID |
+| `target_id`   | text | User/guild ID   |
 
 **RPC Functions**:
 
-| Function | Purpose |
-|----------|---------|
-| `verify_claim_code(code)` | Verify claim code exists and node is unclaimed |
-| `claim_node(node_id, name, max_parallel)` | Assign node to current user |
-| `create_job(config, iterations, access_type, discord_server_id)` | Create job with chunks |
+| Function                                                         | Purpose                                        |
+| ---------------------------------------------------------------- | ---------------------------------------------- |
+| `verify_claim_code(code)`                                        | Verify claim code exists and node is unclaimed |
+| `claim_node(node_id, name, max_parallel)`                        | Assign node to current user                    |
+| `create_job(config, iterations, access_type, discord_server_id)` | Create job with chunks                         |
 
 **Triggers**:
+
 - `notify_pending_chunk` - Sends `pg_notify('pending_chunk', chunk_id)` on chunk creation
 
 ---
@@ -433,11 +451,13 @@ Sentinel                              Supabase
 Shared Centrifugo client library.
 
 **Files**:
+
 - `src/api.rs` - HTTP API client (`CentrifugoApi`)
 - `src/client.rs` - WebSocket client with Protobuf
 - `src/proto/centrifugo.proto` - Protocol buffer definitions
 
 **API Client Usage**:
+
 ```rust
 let api = CentrifugoApi::from_env()?;  // CENTRIFUGO_API_URL, CENTRIFUGO_HTTP_API_KEY
 
@@ -453,6 +473,7 @@ api.publish("chunks:uuid", &payload).await?;
 Task scheduler and coordinator.
 
 **Key Files**:
+
 - `src/main.rs` - Entry point, spawns 5 concurrent services
 - `src/http/routes/nodes.rs` - Node registration endpoints
 - `src/http/auth.rs` - Ed25519 verification middleware
@@ -465,6 +486,7 @@ Task scheduler and coordinator.
 Distributed worker binary.
 
 **Key Files**:
+
 - `src/main.rs` - Entry point
 - `src/core.rs` - Main node logic
 - `src/auth.rs` - Ed25519 keypair management
@@ -477,40 +499,40 @@ Distributed worker binary.
 
 ### Portal (apps/portal)
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase API URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `NEXT_PUBLIC_CENTRIFUGO_URL` | Centrifugo WebSocket URL |
-| `CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY` | JWT signing secret |
+| Variable                                  | Description              |
+| ----------------------------------------- | ------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase API URL         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`           | Supabase anonymous key   |
+| `NEXT_PUBLIC_CENTRIFUGO_URL`              | Centrifugo WebSocket URL |
+| `CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY` | JWT signing secret       |
 
 ### Sentinel (crates/sentinel)
 
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_DB_URL` | PostgreSQL connection string |
-| `CENTRIFUGO_API_URL` | Beacon HTTP API URL |
-| `CENTRIFUGO_HTTP_API_KEY` | API key for Centrifugo |
-| `DISCORD_TOKEN` | Discord bot token |
+| Variable                  | Description                  |
+| ------------------------- | ---------------------------- |
+| `SUPABASE_DB_URL`         | PostgreSQL connection string |
+| `CENTRIFUGO_API_URL`      | Beacon HTTP API URL          |
+| `CENTRIFUGO_HTTP_API_KEY` | API key for Centrifugo       |
+| `DISCORD_TOKEN`           | Discord bot token            |
 
 ### Node (crates/node)
 
-| Variable | Description |
-|----------|-------------|
-| `WOWLAB_API_URL` | Supabase API URL |
-| `WOWLAB_ANON_KEY` | Supabase anonymous key |
-| `WOWLAB_SENTINEL_URL` | Sentinel HTTP URL |
-| `WOWLAB_BEACON_URL` | Centrifugo WebSocket URL |
+| Variable              | Description              |
+| --------------------- | ------------------------ |
+| `WOWLAB_API_URL`      | Supabase API URL         |
+| `WOWLAB_ANON_KEY`     | Supabase anonymous key   |
+| `WOWLAB_SENTINEL_URL` | Sentinel HTTP URL        |
+| `WOWLAB_BEACON_URL`   | Centrifugo WebSocket URL |
 
 ### Beacon (deploy/beacon)
 
-| Variable | Description |
-|----------|-------------|
-| `CENTRIFUGO_TOKEN_SECRET` | HMAC secret for client JWTs |
-| `CENTRIFUGO_API_KEY` | Server-side API key |
-| `CENTRIFUGO_ADMIN_PASSWORD` | Admin UI password |
-| `CENTRIFUGO_ADMIN_SECRET` | Admin secret |
-| `CENTRIFUGO_ENGINE__REDIS__ADDRESS` | Redis connection |
+| Variable                            | Description                 |
+| ----------------------------------- | --------------------------- |
+| `CENTRIFUGO_TOKEN_SECRET`           | HMAC secret for client JWTs |
+| `CENTRIFUGO_API_KEY`                | Server-side API key         |
+| `CENTRIFUGO_ADMIN_PASSWORD`         | Admin UI password           |
+| `CENTRIFUGO_ADMIN_SECRET`           | Admin secret                |
+| `CENTRIFUGO_ENGINE__REDIS__ADDRESS` | Redis connection            |
 
 ---
 
@@ -525,6 +547,7 @@ Distributed worker binary.
 **Problem**: After `batch_assign()` updates chunks in the database, nothing publishes to Centrifugo to notify nodes. Nodes subscribe to `chunks:{node_id}` but never receive messages.
 
 **Expected Implementation**:
+
 ```rust
 // After batch_assign() completes
 for assignment in &assignments {
@@ -547,11 +570,13 @@ for assignment in &assignments {
 **Problem**: Nodes use `api_url` (api.wowlab.gg) for Centrifugo connections instead of beacon.wowlab.gg.
 
 **Current Code**:
+
 ```rust
 NodeRealtime::new(&self.config.api_url, &self.config.anon_key)
 ```
 
 **Fix**: Add `beacon_url` to node config and use it:
+
 ```rust
 NodeRealtime::new(&self.config.beacon_url, &token)
 ```
@@ -567,6 +592,7 @@ NodeRealtime::new(&self.config.beacon_url, &token)
 **Current**: Uses `anon_key` (Supabase JWT with role=anon)
 
 **Required**: Either:
+
 1. Generate node-specific Centrifugo tokens on the server
 2. Add a token endpoint to sentinel that nodes can call after registration
 
@@ -574,15 +600,15 @@ NodeRealtime::new(&self.config.beacon_url, &token)
 
 ## Component Status Matrix
 
-| Component | Connection | Status |
-|-----------|------------|--------|
-| Portal → beacon.wowlab.gg | WebSocket + JWT | ✅ Working |
-| Portal → api.wowlab.gg | Supabase client | ✅ Working |
-| Sentinel → beacon.wowlab.gg | HTTP API (presence) | ✅ Working |
-| Sentinel → Supabase | PostgreSQL | ✅ Working |
-| Node → sentinel.wowlab.gg | HTTP + Ed25519 | ✅ Working |
-| Node → beacon.wowlab.gg | WebSocket | ❌ Wrong URL & token |
-| Sentinel → Centrifugo publish | HTTP API | ❌ Not implemented |
+| Component                     | Connection          | Status               |
+| ----------------------------- | ------------------- | -------------------- |
+| Portal → beacon.wowlab.gg     | WebSocket + JWT     | ✅ Working           |
+| Portal → api.wowlab.gg        | Supabase client     | ✅ Working           |
+| Sentinel → beacon.wowlab.gg   | HTTP API (presence) | ✅ Working           |
+| Sentinel → Supabase           | PostgreSQL          | ✅ Working           |
+| Node → sentinel.wowlab.gg     | HTTP + Ed25519      | ✅ Working           |
+| Node → beacon.wowlab.gg       | WebSocket           | ❌ Wrong URL & token |
+| Sentinel → Centrifugo publish | HTTP API            | ❌ Not implemented   |
 
 ---
 
@@ -591,16 +617,19 @@ NodeRealtime::new(&self.config.beacon_url, &token)
 ### Supabase Realtime → Centrifugo (commit ec070804)
 
 **Removed**:
+
 - `crates/supabase/src/realtime.rs` - Supabase Realtime client
 - `supabase-realtime-rs` dependency
 - Edge functions for node operations (moved to sentinel)
 
 **Added**:
+
 - `crates/centrifugo/` - New Centrifugo client crate
 - `deploy/beacon/` - Centrifugo deployment config
 - Sentinel presence polling via HTTP API
 
 **Incomplete**:
+
 - Chunk assignment publishing to Centrifugo
 - Node configuration for beacon URL
 - Node token authentication for Centrifugo

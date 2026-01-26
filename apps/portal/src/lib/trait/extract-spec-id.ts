@@ -3,7 +3,7 @@
 // - 16 bits: spec_id
 // - 128 bits: tree_hash
 // - variable: node data
-// Mirrors: crates/parsers/src/loadout/mod.rs
+// Mirrors: crates/common/src/parsers/loadout/mod.rs
 
 const BASE64_CHAR_MAP: Record<string, number> = {};
 const STANDARD =

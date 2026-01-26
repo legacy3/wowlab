@@ -62,44 +62,44 @@ User (Asia) ─► Fly Edge ──► Centrifugo SIN ──► Redis SIN replica
 ### Generate JWT tokens (in your Supabase Edge Function):
 
 ```typescript
-import * as jwt from 'jsonwebtoken';
+import * as jwt from "jsonwebtoken";
 
 const token = jwt.sign(
   { sub: user.id },
-  Deno.env.get('CENTRIFUGO_TOKEN_SECRET'),
-  { expiresIn: '24h' }
+  Deno.env.get("CENTRIFUGO_TOKEN_SECRET"),
+  { expiresIn: "24h" },
 );
 ```
 
 ### Publish from backend:
 
 ```typescript
-await fetch('https://beacon.wowlab.gg/api/publish', {
-  method: 'POST',
+await fetch("https://beacon.wowlab.gg/api/publish", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': Deno.env.get('CENTRIFUGO_API_KEY')
+    "Content-Type": "application/json",
+    "X-API-Key": Deno.env.get("CENTRIFUGO_API_KEY"),
   },
   body: JSON.stringify({
-    channel: 'updates',
-    data: { message: 'Hello!' }
-  })
+    channel: "updates",
+    data: { message: "Hello!" },
+  }),
 });
 ```
 
 ### Client connection (JS):
 
 ```javascript
-import { Centrifuge } from 'centrifuge';
+import { Centrifuge } from "centrifuge";
 
-const client = new Centrifuge('wss://beacon.wowlab.gg/connection/websocket', {
-  token: 'YOUR_JWT_TOKEN'
+const client = new Centrifuge("wss://beacon.wowlab.gg/connection/websocket", {
+  token: "YOUR_JWT_TOKEN",
 });
 
-client.on('connected', () => console.log('Connected!'));
+client.on("connected", () => console.log("Connected!"));
 
-const sub = client.newSubscription('updates');
-sub.on('publication', (ctx) => console.log('Received:', ctx.data));
+const sub = client.newSubscription("updates");
+sub.on("publication", (ctx) => console.log("Received:", ctx.data));
 sub.subscribe();
 
 client.connect();
