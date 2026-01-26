@@ -6,6 +6,7 @@ import { regressionLinear } from "d3-regression";
 import { useMemo, useState } from "react";
 import { HStack, Stack, VStack } from "styled-system/jsx";
 
+import { Switch, Text } from "@/components/ui";
 import {
   AnalysisChart,
   AreaChart,
@@ -15,8 +16,6 @@ import {
   PieChart,
   StatBadge,
 } from "@/components/ui/charts";
-import * as Switch from "@/components/ui/switch";
-import { Text } from "@/components/ui/text";
 
 import {
   DemoBox,

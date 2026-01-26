@@ -10,18 +10,34 @@ import { AreaClosed, LinePath } from "@visx/shape";
 import { deviation, mean, quantile } from "d3-array";
 // @ts-expect-error - d3-regression doesn't have types
 import { regressionLinear } from "d3-regression";
+import { ChartLine } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Box, HStack, Stack } from "styled-system/jsx";
 
 import type { TimeRange, TimeSeriesPoint } from "@/lib/state";
 
-import { Badge, Button, Card, Text } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  IconButton,
+  Popover,
+  Text,
+} from "@/components/ui";
 import { Chart, chartColors } from "@/components/ui/charts";
-import * as Switch from "@/components/ui/switch";
 
 // =============================================================================
 // Types
 // =============================================================================
+
+type AnalysisKey = "mean" | "trend" | "ma" | "stdDev" | "quantiles";
+
+interface AnalysisOption {
+  description: string;
+  key: AnalysisKey;
+  label: string;
+}
 
 type DataPoint = { x: number; y: number };
 
@@ -72,8 +88,16 @@ const COLORS = [
   chartColors[5],
 ];
 
+const ANALYSIS_OPTIONS: AnalysisOption[] = [
+  { description: "Average value line", key: "mean", label: "Mean" },
+  { description: "Linear regression", key: "trend", label: "Trendline" },
+  { description: "5-point smoothing", key: "ma", label: "Moving Avg" },
+  { description: "Deviation band (±σ)", key: "stdDev", label: "Std Dev" },
+  { description: "P25/P50/P75/P99", key: "quantiles", label: "Percentiles" },
+];
+
 // =============================================================================
-// MetricsChart - One chart for all metrics
+// MetricsChart
 // =============================================================================
 
 export function ErrorState({ message }: ErrorStateProps) {
@@ -92,13 +116,9 @@ export function ErrorState({ message }: ErrorStateProps) {
 }
 
 // =============================================================================
-// ChartSvg - Internal SVG renderer
+// Analysis Popover
 // =============================================================================
 
-/**
- * Single reusable chart component for all metrics.
- * Supports single or multi-series data with optional analysis overlays.
- */
 export function MetricsChart({
   data,
   error,
@@ -107,15 +127,28 @@ export function MetricsChart({
   labels,
   title,
 }: MetricsChartProps) {
-  const [showTrendline, setShowTrendline] = useState(false);
-  const [showMovingAvg, setShowMovingAvg] = useState(false);
-  const [showStdDev, setShowStdDev] = useState(false);
-  const [showMean, setShowMean] = useState(false);
-  const [showQuantiles, setShowQuantiles] = useState(false);
+  const [enabled, setEnabled] = useState<Set<AnalysisKey>>(new Set());
+
+  const toggle = (key: AnalysisKey) => {
+    setEnabled((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  };
 
   // Normalize to array of series
   const series = useMemo(() => {
-    if (data.length === 0) return [];
+    if (data.length === 0) {
+      return [];
+    }
+
     return Array.isArray(data[0])
       ? (data as TimeSeriesPoint[][])
       : [data as TimeSeriesPoint[]];
@@ -126,9 +159,13 @@ export function MetricsChart({
 
   // Stats computed from all data
   const stats = useMemo(() => {
-    if (allData.length < 2) return null;
+    if (allData.length < 2) {
+      return null;
+    }
+
     const values = allData.map((d) => d.y);
     const sorted = [...values].sort((a, b) => a - b);
+
     return {
       mean: mean(values) ?? 0,
       p25: quantile(sorted, 0.25) ?? 0,
@@ -141,12 +178,16 @@ export function MetricsChart({
 
   // Trendline from first series
   const trendline = useMemo(() => {
-    if (!showTrendline || !series[0] || series[0].length < 2) return undefined;
+    if (!enabled.has("trend") || !series[0] || series[0].length < 2) {
+      return undefined;
+    }
+
     const d = series[0];
     const regression = regressionLinear()
       .x((p: DataPoint) => p.x)
       .y((p: DataPoint) => p.y);
     const result = regression(d);
+
     return {
       points: [
         { x: d[0].x, y: result.predict(d[0].x) },
@@ -154,23 +195,27 @@ export function MetricsChart({
       ] as DataPoint[],
       rSquared: result.rSquared as number,
     };
-  }, [series, showTrendline]);
+  }, [series, enabled]);
 
   // Moving average from first series
   const movingAverage = useMemo(() => {
-    if (!showMovingAvg || !series[0] || series[0].length < 5) return undefined;
+    if (!enabled.has("ma") || !series[0] || series[0].length < 5) {
+      return undefined;
+    }
+
     const d = series[0];
     const window = Math.min(5, Math.floor(d.length / 3));
+
     return d.map((point, i) => {
       const start = Math.max(0, i - window + 1);
       const slice = d.slice(start, i + 1);
       const avg = mean(slice, (s) => s.y) ?? point.y;
+
       return { x: point.x, y: avg };
     });
-  }, [series, showMovingAvg]);
+  }, [series, enabled]);
 
-  const hasAnalysis =
-    showTrendline || showMovingAvg || showStdDev || showMean || showQuantiles;
+  const hasAnalysis = enabled.size > 0;
 
   // Loading state
   if (isLoading) {
@@ -244,7 +289,7 @@ export function MetricsChart({
   return (
     <Card.Root h="full">
       <Card.Header py="3">
-        <HStack justify="space-between" flexWrap="wrap" gap="2">
+        <HStack justify="space-between" gap="2">
           <HStack gap="2">
             <Card.Title textStyle="sm">{title}</Card.Title>
             {labels && series.length > 1 && (
@@ -274,25 +319,7 @@ export function MetricsChart({
               </HStack>
             )}
           </HStack>
-          <HStack gap="3" flexWrap="wrap">
-            <Toggle checked={showMean} onChange={setShowMean} label="Mean" />
-            <Toggle
-              checked={showTrendline}
-              onChange={setShowTrendline}
-              label="Trend"
-            />
-            <Toggle
-              checked={showMovingAvg}
-              onChange={setShowMovingAvg}
-              label="MA"
-            />
-            <Toggle checked={showStdDev} onChange={setShowStdDev} label="±σ" />
-            <Toggle
-              checked={showQuantiles}
-              onChange={setShowQuantiles}
-              label="Pct"
-            />
-          </HStack>
+          <AnalysisPopover enabled={enabled} onToggle={toggle} />
         </HStack>
       </Card.Header>
       <Card.Body pt="0">
@@ -304,16 +331,18 @@ export function MetricsChart({
                   series={series}
                   width={width}
                   height={height}
-                  showMean={showMean && stats ? stats.mean : undefined}
+                  showMean={
+                    enabled.has("mean") && stats ? stats.mean : undefined
+                  }
                   stdDev={
-                    showStdDev && stats
+                    enabled.has("stdDev") && stats
                       ? { mean: stats.mean, stdDev: stats.stdDev }
                       : undefined
                   }
                   trendline={trendline?.points}
                   movingAverage={movingAverage}
                   quantiles={
-                    showQuantiles && stats
+                    enabled.has("quantiles") && stats
                       ? {
                           p25: stats.p25,
                           p50: stats.p50,
@@ -330,16 +359,16 @@ export function MetricsChart({
         <Box h="10" mt="2">
           {hasAnalysis && stats && (
             <HStack gap="4" justify="center" flexWrap="wrap">
-              {(showMean || showStdDev) && (
+              {(enabled.has("mean") || enabled.has("stdDev")) && (
                 <Stat label="Mean" value={formatValue(stats.mean)} />
               )}
-              {showStdDev && (
+              {enabled.has("stdDev") && (
                 <Stat label="Std Dev" value={`±${formatValue(stats.stdDev)}`} />
               )}
-              {showTrendline && trendline && (
+              {enabled.has("trend") && trendline && (
                 <Stat label="R²" value={trendline.rSquared.toFixed(3)} />
               )}
-              {showQuantiles && (
+              {enabled.has("quantiles") && (
                 <>
                   <Stat
                     label="P50"
@@ -366,6 +395,10 @@ export function MetricsChart({
   );
 }
 
+// =============================================================================
+// Shared Components
+// =============================================================================
+
 export function NotConfigured({ service }: NotConfiguredProps) {
   return (
     <Card.Root>
@@ -384,10 +417,6 @@ export function NotConfigured({ service }: NotConfiguredProps) {
   );
 }
 
-// =============================================================================
-// Shared Components
-// =============================================================================
-
 export function RangeSelector({ onChange, value }: RangeSelectorProps) {
   return (
     <HStack gap="1">
@@ -404,6 +433,81 @@ export function RangeSelector({ onChange, value }: RangeSelectorProps) {
     </HStack>
   );
 }
+
+function AnalysisPopover({
+  enabled,
+  onToggle,
+}: {
+  enabled: Set<AnalysisKey>;
+  onToggle: (key: AnalysisKey) => void;
+}) {
+  return (
+    <Popover.Root positioning={{ placement: "bottom-end" }}>
+      <Popover.Trigger asChild>
+        <IconButton
+          size="xs"
+          variant={enabled.size > 0 ? "subtle" : "plain"}
+          aria-label="Analysis options"
+        >
+          <ChartLine size={14} />
+          {enabled.size > 0 && (
+            <Box
+              position="absolute"
+              top="-1"
+              right="-1"
+              w="3.5"
+              h="3.5"
+              rounded="full"
+              bg="accent.default"
+              color="accent.fg"
+              fontSize="2xs"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              {enabled.size}
+            </Box>
+          )}
+        </IconButton>
+      </Popover.Trigger>
+      <Popover.Positioner>
+        <Popover.Content w="56">
+          <Popover.Arrow>
+            <Popover.ArrowTip />
+          </Popover.Arrow>
+          <Stack gap="1" p="2">
+            <Text textStyle="xs" fontWeight="medium" color="fg.muted" mb="1">
+              Analysis Overlays
+            </Text>
+            {ANALYSIS_OPTIONS.map((opt) => (
+              <Checkbox.Root
+                key={opt.key}
+                size="sm"
+                checked={enabled.has(opt.key)}
+                onCheckedChange={() => onToggle(opt.key)}
+              >
+                <Checkbox.Control />
+                <Checkbox.Label>
+                  <Stack gap="0">
+                    <Text textStyle="sm">{opt.label}</Text>
+                    <Text textStyle="xs" color="fg.muted">
+                      {opt.description}
+                    </Text>
+                  </Stack>
+                </Checkbox.Label>
+                <Checkbox.HiddenInput />
+              </Checkbox.Root>
+            ))}
+          </Stack>
+        </Popover.Content>
+      </Popover.Positioner>
+    </Popover.Root>
+  );
+}
+
+// =============================================================================
+// ChartSvg - Internal SVG renderer
+// =============================================================================
 
 function ChartSvg({
   height,
@@ -429,7 +533,9 @@ function ChartSvg({
   const innerHeight = height - margin.top - margin.bottom;
 
   const allData = series.flat();
-  if (allData.length === 0) return null;
+  if (allData.length === 0) {
+    return null;
+  }
 
   const xMin = Math.min(...allData.map((d) => d.x));
   const xMax = Math.max(...allData.map((d) => d.x));
@@ -457,6 +563,7 @@ function ChartSvg({
         month: "short",
       });
     }
+
     return date.toLocaleTimeString(undefined, {
       hour: "2-digit",
       minute: "2-digit",
@@ -597,16 +704,16 @@ function ChartSvg({
   );
 }
 
+// =============================================================================
+// Helpers
+// =============================================================================
+
 function formatValue(v: number): string {
   return v.toLocaleString(undefined, {
     maximumFractionDigits: 1,
     notation: "compact",
   });
 }
-
-// =============================================================================
-// Helpers
-// =============================================================================
 
 function HorizontalLine({
   color,
@@ -665,29 +772,5 @@ function Stat({
         {value}
       </Text>
     </Stack>
-  );
-}
-
-function Toggle({
-  checked,
-  label,
-  onChange,
-}: {
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <Switch.Root
-      size="sm"
-      checked={checked}
-      onCheckedChange={(e) => onChange(e.checked)}
-    >
-      <Switch.Control />
-      <Switch.Label>
-        <Text textStyle="xs">{label}</Text>
-      </Switch.Label>
-      <Switch.HiddenInput />
-    </Switch.Root>
   );
 }
