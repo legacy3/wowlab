@@ -168,7 +168,7 @@ export function AnalysisChart({
               y0={() => yScale(stdDev.mean - stdDev.stdDev)}
               y1={() => yScale(stdDev.mean + stdDev.stdDev)}
               yScale={yScale}
-              fill={chartColors[3]}
+              fill="var(--colors-fg-muted)"
               fillOpacity={0.15}
             />
           )}
