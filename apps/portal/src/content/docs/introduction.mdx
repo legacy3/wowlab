@@ -9,16 +9,14 @@ Welcome to WowLab. This documentation uses academic-style citations to reference
 
 ## Citation Examples
 
-Inline citations appear as superscript links. For example, the WebSocket protocol <Cite id="websocket" /> enables full-duplex communication between clients and servers.
+Inline citations appear as superscript links. For example, the <Cite id="websocket">WebSocket protocol</Cite> enables full-duplex communication between clients and servers.
 
-You can cite multiple sources in sequence. Our architecture uses Redis <Cite id="redis2024" /> for coordination and Centrifugo <Cite id="centrifugo2024" /> for real-time messaging.
+You can cite multiple sources in sequence. Our architecture uses <Cite id="redis2024">Redis</Cite> for coordination and <Cite id="centrifugo2024">Centrifugo</Cite> for real-time messaging.
 
-Authentication relies on Ed25519 signatures <Cite id="ed25519" /> for cryptographic security, while persistent data is stored in Supabase <Cite id="supabase2024" />.
+Authentication relies on <Cite id="ed25519">Ed25519 signatures</Cite> for cryptographic security, while persistent data is stored in <Cite id="supabase2024">Supabase</Cite>.
 
 ## How Citations Work
 
 1. Add references to `src/content/references.ts`
-2. Use `<Cite id="key" />` inline where needed
-3. Add `<Bibliography />` at the bottom of the page
-
-<Bibliography />
+2. Use `<Cite id="key">cited text</Cite>` inline where needed
+3. All references appear on the [References](/dev/docs/references) page

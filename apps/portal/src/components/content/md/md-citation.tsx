@@ -9,6 +9,7 @@ import { references } from "@/content/references";
 
 type MdCiteProps = {
   id: string;
+  children?: React.ReactNode;
 };
 
 export function MdBibliography() {
@@ -19,14 +20,7 @@ export function MdBibliography() {
   }
 
   return (
-    <Stack
-      gap="3"
-      mt="10"
-      pt="6"
-      borderTopWidth="1px"
-      borderColor="border.muted"
-    >
-      <Heading size="sm">References</Heading>
+    <Stack gap="3">
       <Table.Root size="sm" w="full" tableLayout="fixed">
         <Table.Body>
           {allRefs.map(([id, ref], idx) => (
@@ -64,7 +58,7 @@ export function MdBibliography() {
   );
 }
 
-export function MdCite({ id }: MdCiteProps) {
+export function MdCite({ children, id }: MdCiteProps) {
   const ref = references[id];
   const allIds = Object.keys(references);
   const num = allIds.indexOf(id) + 1;
@@ -72,7 +66,7 @@ export function MdCite({ id }: MdCiteProps) {
   if (!ref) {
     return (
       <Text as="span" textStyle="xs" color="red.11">
-        (?)
+        {children}(?)
       </Text>
     );
   }
@@ -80,8 +74,12 @@ export function MdCite({ id }: MdCiteProps) {
   return (
     <HoverCard.Root openDelay={200} closeDelay={100}>
       <HoverCard.Trigger asChild>
-        <Link href={`#ref-${id}`} colorPalette="amber">
-          ({num})
+        <Link
+          href={`/dev/docs/references#ref-${id}`}
+          colorPalette="amber"
+          whiteSpace="nowrap"
+        >
+          {children}({num})
         </Link>
       </HoverCard.Trigger>
       <HoverCard.Positioner>
