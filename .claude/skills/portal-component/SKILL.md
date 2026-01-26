@@ -162,11 +162,11 @@ import {
   formatDurationMs,
 } from "@/lib/format";
 
-formatInt(1234567);          // "1,234,567"
-formatCompact(1234567);      // "1.2M"
-formatPercent(85.5);         // "85.5%"
-formatRelativeToNow(date);   // "2 hours ago"
-formatDurationMs(5000);      // "5 seconds"
+formatInt(1234567); // "1,234,567"
+formatCompact(1234567); // "1.2M"
+formatPercent(85.5); // "85.5%"
+formatRelativeToNow(date); // "2 hours ago"
+formatDurationMs(5000); // "5 seconds"
 ```
 
 ## Styling
@@ -184,7 +184,7 @@ import { css } from "styled-system/css";
   <HStack gap="2">
     <span className={css({ fontWeight: "bold" })}>Label</span>
   </HStack>
-</div>
+</div>;
 ```
 
 ## Instructions

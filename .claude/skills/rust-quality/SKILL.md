@@ -1,6 +1,6 @@
 ---
 name: rust-quality
-description: Ensure consistent Rust code quality across all crates. Use when reviewing Rust code, adding new crates, or running quality checks.
+description: Rust code quality for crates/engine. Use when reviewing Rust code, auditing the engine, or running quality checks.
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
@@ -11,7 +11,7 @@ Comprehensive quality standards for Rust crates in `crates/`.
 ## Quick Commands
 
 ```bash
-cd crates/engine  # or any crate
+cd crates/engine
 
 # Quality checks
 cargo clippy --all-targets -- -D warnings
@@ -149,107 +149,114 @@ fn get_pattern() -> &'static Regex {
 
 ---
 
-## Code Organization
+## Known Codebase Issues
 
-### Module Structure
+### TODO Comments Requiring Resolution
 
-```
-src/
-├── lib.rs          # Public API, crate-level lints
-├── errors.rs       # Error types (if >20 lines)
-├── types.rs        # Core types (if shared)
-├── prelude.rs      # Re-exports for convenience
-└── <domain>/       # Domain modules
-    ├── mod.rs      # Module API
-    └── *.rs        # Implementation files
-```
+| File                        | Line           | Issue                                          |
+| --------------------------- | -------------- | ---------------------------------------------- |
+| `combat/damage/pipeline.rs` | 127            | Armor constant hardcoded, needs config         |
+| `rotation/compiler.rs`      | 600, 613       | Equipment system not implemented               |
+| `rotation/expr/spell.rs`    | 48, 52, 56, 64 | Spell costs/times should come from definitions |
+| `rotation/expr/enemy.rs`    | 33             | Enemy positioning not implemented              |
+| `rotation/expr/player.rs`   | 113            | Armor tracking incomplete                      |
+| `actor/player.rs`           | 272            | Spell range hardcoded                          |
 
-### Visibility Rules
+### Error Handling Violations
 
-```rust
-// lib.rs
-pub mod types;      // Public module
-pub(crate) mod internal;  // Internal module
-mod private;        // Private module
+**OnceLock expects that will panic if not initialized:**
 
-pub use types::{SpellIdx, AuraIdx};  // Re-export key types
-pub use errors::{Error, Result};     // Re-export error types
-```
+- `specs/hunter/bm/handler.rs:54` - `.expect("BM Hunter spell definitions not initialized")`
+- `specs/hunter/bm/handler.rs:60` - `.expect("BM Hunter aura definitions not initialized")`
 
-### One File Per Concept
+**Recommendation:** Return `Result` types or use `get_or_init()` with error handling.
 
-- One struct per file for large types (>100 lines)
-- Group related small types together
-- Separate tests into `tests.rs` when substantial
+### Missing Documentation
+
+Public functions missing doc comments:
+
+- `stats/attributes.rs` - `get()`, `set()`, `add()` - no docs on attribute meanings
+- `resource/pool.rs:39-79` - `current_int()`, `can_afford()`, `deficit()` - behavior unclear
+- `stats/ratings.rs:16,28,40` - No docs on rating scale or DR behavior
+- `proc/handler.rs:52-71` - Builder methods lack default behavior docs
+- `aura/tracker.rs:72-95` - Unclear if methods include expired auras
+
+### Magic Numbers
+
+Replace with named constants:
+
+| File                         | Line | Value         | Suggested Constant          |
+| ---------------------------- | ---- | ------------- | --------------------------- |
+| `combat/damage/pipeline.rs`  | 131  | `0.85`        | `ARMOR_DAMAGE_CAP`          |
+| `stats/ratings.rs`           | 82   | `(30.0, 0.4)` | `DR_THRESHOLD`, `DR_FACTOR` |
+| `specs/hunter/bm/handler.rs` | 555  | `0.10`        | `FRENZY_HASTE_PER_STACK`    |
+
+### Large Functions to Refactor
+
+| File                         | Function    | Lines | Issue                                            |
+| ---------------------------- | ----------- | ----- | ------------------------------------------------ |
+| `cli/runner.rs`              | `run_sim()` | 95    | Handles CLI, gear, player, sim, progress         |
+| `specs/hunter/bm/handler.rs` | `do_cast()` | 66    | Resource, cooldown, aura, GCD, events all in one |
+
+### Unsafe Cast Patterns
+
+`core/queue.rs` uses `u32::MAX` as NULL marker then casts to usize throughout (lines 96, 148, 150, 160, 168, 172, 195, 219, 229, 246). Consider using `Option<u32>` or a dedicated `NodeIdx` newtype with checked conversions.
 
 ---
 
-## Type Safety Patterns
+## Anti-Patterns
 
-### Newtype IDs
+### Deref Polymorphism
 
 ```rust
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SpellIdx(pub u32);
-
-impl SpellIdx {
-    pub const fn new(id: u32) -> Self {
-        Self(id)
-    }
+// WRONG - using Deref to emulate inheritance
+impl Deref for Player {
+    type Target = Actor;
+    fn deref(&self) -> &Self::Target { &self.actor }
 }
 
-// Display for debugging
-impl std::fmt::Display for SpellIdx {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Spell({})", self.0)
-    }
+// RIGHT - explicit delegation or traits
+impl Player {
+    pub fn name(&self) -> &str { self.actor.name() }
+}
+
+// RIGHT - use traits for shared behavior
+trait Named {
+    fn name(&self) -> &str;
 }
 ```
 
-### Builder Pattern
-
-For complex construction:
+### Clone to Fight Borrow Checker
 
 ```rust
-pub struct SpellBuilder {
-    id: SpellIdx,
-    name: String,
-    damage: Option<DamageEffect>,
-    // ...
-}
+// WRONG - cloning to satisfy borrow checker
+for item in items.iter().cloned() { ... }
+let copy = data.clone(); // just to avoid borrow
 
-impl SpellBuilder {
-    pub fn new(id: SpellIdx, name: impl Into<String>) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            damage: None,
-        }
-    }
+// RIGHT - restructure to avoid
+for item in &items { ... }
+for item in items { ... }  // consume if you can
 
-    pub fn damage(mut self, effect: DamageEffect) -> Self {
-        self.damage = Some(effect);
-        self
-    }
-
-    pub fn build(self) -> SpellDef {
-        SpellDef {
-            id: self.id,
-            name: self.name,
-            damage: self.damage,
-        }
-    }
-}
+// RIGHT - if clone needed, document why
+let copy = data.clone(); // Clone needed: data used after async boundary
 ```
 
-### Prefer Slices Over Vecs
+### Excessive Borrow Lifetimes
 
 ```rust
-// WRONG: Takes ownership unnecessarily
-fn process(items: Vec<Item>) { ... }
+// WRONG - storing borrows in structs
+struct Processor<'a> {
+    data: &'a Data,  // Forces caller to manage lifetime
+}
 
-// RIGHT: Accepts any contiguous sequence
-fn process(items: &[Item]) { ... }
+// RIGHT - owned data or pass at call site
+struct Processor {
+    data: Data,  // Owned
+}
+
+impl Processor {
+    fn process(&self, data: &Data) { ... }  // Borrow at use
+}
 ```
 
 ---
@@ -288,12 +295,12 @@ fn name(&self) -> &str {
 // WRONG: Clone in loop
 for item in items.iter().cloned() { ... }
 
-// RIGHT: Borrow or use into_iter
+// RIGHT: Borrow or consume
 for item in &items { ... }
-for item in items { ... }  // consumes
+for item in items { ... }
 ```
 
-### Profile Macros (criterion)
+### Profile with Criterion
 
 ```rust
 use criterion::{criterion_group, criterion_main, Criterion};
@@ -310,12 +317,73 @@ criterion_main!(benches);
 
 ---
 
+## Type Safety Patterns
+
+### Newtype IDs
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SpellIdx(pub u32);
+
+impl SpellIdx {
+    pub const fn new(id: u32) -> Self {
+        Self(id)
+    }
+}
+
+impl std::fmt::Display for SpellIdx {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Spell({})", self.0)
+    }
+}
+```
+
+### Builder Pattern
+
+```rust
+pub struct SpellBuilder {
+    id: SpellIdx,
+    name: String,
+    damage: Option<DamageEffect>,
+}
+
+impl SpellBuilder {
+    pub fn new(id: SpellIdx, name: impl Into<String>) -> Self {
+        Self {
+            id,
+            name: name.into(),
+            damage: None,
+        }
+    }
+
+    pub fn damage(mut self, effect: DamageEffect) -> Self {
+        self.damage = Some(effect);
+        self
+    }
+
+    pub fn build(self) -> SpellDef {
+        SpellDef { id: self.id, name: self.name, damage: self.damage }
+    }
+}
+```
+
+### Prefer Slices Over Vecs
+
+```rust
+// WRONG: Takes ownership unnecessarily
+fn process(items: Vec<Item>) { ... }
+
+// RIGHT: Accepts any contiguous sequence
+fn process(items: &[Item]) { ... }
+```
+
+---
+
 ## Testing Standards
 
 ### Test Organization
 
 ```rust
-// Unit tests in same file
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -332,13 +400,6 @@ mod tests {
         assert_eq!(result, expected);
     }
 }
-
-// Integration tests in tests/
-// tests/integration.rs
-use my_crate::*;
-
-#[test]
-fn test_full_workflow() { ... }
 ```
 
 ### Snapshot Testing
@@ -375,7 +436,7 @@ fn test_parse_error_on_invalid_input() { }
 
 ### Module Docs
 
-```rust
+````rust
 //! Spell effect handling and damage calculation.
 //!
 //! This module provides the core damage pipeline including:
@@ -391,7 +452,7 @@ fn test_parse_error_on_invalid_input() { }
 //!
 //! let damage = DamagePipeline::calculate(base, coefficients, stats);
 //! ```
-```
+````
 
 ### Function Docs
 
@@ -407,10 +468,6 @@ fn test_parse_error_on_invalid_input() { }
 /// # Returns
 ///
 /// Final damage value after all modifiers applied.
-///
-/// # Panics
-///
-/// Panics if `stats` is uninitialized. Use `Stats::default()` for safe defaults.
 pub fn calculate_damage(base: f32, stats: &Stats, target: &Target) -> f32 {
     // ...
 }
@@ -429,8 +486,6 @@ pub fn calculate_damage(base: f32, stats: &Stats, target: &Target) -> f32 {
 ### Required Documentation
 
 ```rust
-/// Detect CPU core count using platform-specific APIs.
-///
 /// # Safety
 ///
 /// This function uses platform-specific system calls that are well-defined
@@ -452,7 +507,7 @@ pub unsafe fn detect_cores() -> usize {
 
 ---
 
-## Common Issues Checklist
+## Quality Checklist
 
 ### Error Handling
 
@@ -516,10 +571,34 @@ cargo audit
 
 ---
 
+## Audit Commands
+
+```bash
+# Find unwrap/expect outside tests
+grep -rn "\.unwrap()\|\.expect(" crates/engine/src/ --include="*.rs" | grep -v "_test\|tests\|#\[test\]"
+
+# Find TODO comments
+grep -rn "TODO\|FIXME" crates/engine/src/ --include="*.rs"
+
+# Find panic! calls
+grep -rn "panic!" crates/engine/src/ --include="*.rs" | grep -v "_test\|tests"
+
+# Find missing docs on pub items
+cargo doc --workspace --no-deps 2>&1 | grep "warning: missing documentation"
+
+# Find clone in loops
+grep -rn "\.iter()\.cloned()\|\.clone()" crates/engine/src/ --include="*.rs"
+
+# Find magic numbers
+grep -rn "[^0-9][0-9]\+\.[0-9]\+" crates/engine/src/ --include="*.rs" | grep -v "const\|static\|test"
+```
+
+---
+
 ## References
 
 - [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
 - [Clippy Lint List](https://rust-lang.github.io/rust-clippy/master/index.html)
+- [Rust Design Patterns](https://rust-unofficial.github.io/patterns/)
 - [Idiomatic Rust](https://github.com/mre/idiomatic-rust)
-- [Rust Code Review Guidelines](https://github.com/Rust-Coding-Guidelines/RustCodeReviewGuidelines)
 - Existing patterns: `crates/engine/src/`, `crates/common/src/`

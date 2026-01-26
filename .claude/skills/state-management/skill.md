@@ -60,7 +60,11 @@ hooks/                  # ONLY pure utilities
 
 ```ts
 // database.types.ts provides everything
-import type { Tables, TablesInsert, TablesUpdate } from "@/lib/supabase/database.types";
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/lib/supabase/database.types";
 
 // Row type (for reading)
 type NodeRow = Tables<"nodes">;
@@ -97,11 +101,16 @@ export const NODE_ACCESS_OPTIONS = [
 // Mapping functions (DB value <-> UI value)
 export function mapAccessTypeFromDb(dbValue: string): NodeAccessType {
   switch (dbValue) {
-    case "owner": return "private";
-    case "user": return "friends";
-    case "guild": return "guild";
-    case "public": return "public";
-    default: return "private";
+    case "owner":
+      return "private";
+    case "user":
+      return "friends";
+    case "guild":
+      return "guild";
+    case "public":
+      return "public";
+    default:
+      return "private";
   }
 }
 ```
@@ -197,10 +206,10 @@ export function useNodeMutations() {
   const updateNode = useMutation({
     mutationFn: async ({
       nodeId,
-      data
+      data,
     }: {
       nodeId: string;
-      data: TablesUpdate<"nodes">
+      data: TablesUpdate<"nodes">;
     }) => {
       const { error } = await supabase
         .from("nodes")
@@ -215,10 +224,7 @@ export function useNodeMutations() {
 
   const deleteNode = useMutation({
     mutationFn: async (nodeId: string) => {
-      const { error } = await supabase
-        .from("nodes")
-        .delete()
-        .eq("id", nodeId);
+      const { error } = await supabase.from("nodes").delete().eq("id", nodeId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -251,7 +257,7 @@ export function useClaimNode() {
       nodeId,
       userId,
       name,
-      maxParallel
+      maxParallel,
     }: {
       nodeId: string;
       userId: string;
@@ -315,13 +321,13 @@ export const useNodesSelection = create<NodesSelectionStore>()((set, get) => ({
 
 ### When to Use Zustand vs React Query
 
-| Data Type | Tool | Example |
-|-----------|------|---------|
-| Server data (fetched) | React Query | Node list, user profile, rotations |
-| Selection state | Zustand | Selected node IDs, selected rows |
-| Editor state | Zustand | Rotation being edited |
-| UI preferences | Zustand + persist | Sidebar collapsed, theme |
-| Operation progress | Local useState | isSaving, isDeleting |
+| Data Type             | Tool              | Example                            |
+| --------------------- | ----------------- | ---------------------------------- |
+| Server data (fetched) | React Query       | Node list, user profile, rotations |
+| Selection state       | Zustand           | Selected node IDs, selected rows   |
+| Editor state          | Zustand           | Rotation being edited              |
+| UI preferences        | Zustand + persist | Sidebar collapsed, theme           |
+| Operation progress    | Local useState    | isSaving, isDeleting               |
 
 ## Domain Module Index
 
@@ -342,7 +348,11 @@ export { useNodesSelection } from "./store";
 
 // Types (UI-only, not DB types)
 export type { NodeOwner, NodeAccessType } from "./types";
-export { NODE_ACCESS_OPTIONS, mapAccessTypeFromDb, mapAccessTypeToDb } from "./types";
+export {
+  NODE_ACCESS_OPTIONS,
+  mapAccessTypeFromDb,
+  mapAccessTypeToDb,
+} from "./types";
 ```
 
 ## Main Index Re-exports
@@ -351,10 +361,20 @@ export { NODE_ACCESS_OPTIONS, mapAccessTypeFromDb, mapAccessTypeToDb } from "./t
 // lib/state/index.ts
 
 // Nodes
-export { useNodes, useNode, useNodeMutations, useNodesSelection } from "./nodes";
+export {
+  useNodes,
+  useNode,
+  useNodeMutations,
+  useNodesSelection,
+} from "./nodes";
 
 // Editor
-export { useEditor, useDefaultList, useListsByType, useSelectedList } from "./editor";
+export {
+  useEditor,
+  useDefaultList,
+  useListsByType,
+  useSelectedList,
+} from "./editor";
 
 // Game
 export { useSpell, useSpells, useItem, useItems } from "./game";
@@ -465,5 +485,9 @@ const { data, isLoading } = useNodes(userId);
 const { selectedIds, toggleSelected } = useNodesSelection();
 
 // RIGHT - Domain module structure
-import { useNodes, useNodeMutations, useNodesSelection } from "@/lib/state/nodes";
+import {
+  useNodes,
+  useNodeMutations,
+  useNodesSelection,
+} from "@/lib/state/nodes";
 ```

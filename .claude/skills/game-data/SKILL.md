@@ -40,6 +40,7 @@ type MySpell = GameRow<"spells">;
 ```
 
 Available type aliases:
+
 - `Spell` - Full spell data
 - `Item` - Full item data
 - `Class` - Class information
@@ -50,6 +51,7 @@ Available type aliases:
 - `SpecTraits` - Spec trait tree data
 
 Summary types for lists:
+
 - `SpellSummary` - id, name, file_name
 - `ItemSummary` - id, name, file_name, quality, item_level
 - `SpecSummary` - id, name, class_id, class_name, file_name
@@ -118,7 +120,7 @@ function SpecsList() {
     ...specs,
     meta: {
       ...specs.meta,
-      select: "id, name, class_name, class_id, file_name",  // Partial select
+      select: "id, name, class_name, class_id, file_name", // Partial select
     },
     pagination: { mode: "off" },
     sorters: [
@@ -135,10 +137,10 @@ Available in `@/lib/refine/services`:
 
 ```ts
 import {
-  useClassesAndSpecs,   // Classes and specs with helpers
-  useGlobalColors,      // Global color constants
-  useGlobalStrings,     // Localized strings
-  useSpellDescription,  // Spell description rendering
+  useClassesAndSpecs, // Classes and specs with helpers
+  useGlobalColors, // Global color constants
+  useGlobalStrings, // Localized strings
+  useSpellDescription, // Spell description rendering
 } from "@/lib/refine/services";
 
 // Classes and specs with utility functions
@@ -165,18 +167,23 @@ const { result, isLoading, error, spell } = useSpellDescription(spellId);
 ## What To Do When Data Is Missing
 
 ### Scenario 1: Field exists in table but not in type
+
 → Check `database.types.ts` is up to date (run `pnpm cli generate-schemas`)
 
 ### Scenario 2: Need data from a different table
+
 → Check if resource exists in `resources.ts`, add if needed
 
 ### Scenario 3: Need entirely new data type
+
 → ASK THE USER. They need to decide:
-  - Which Supabase table/view to use
-  - What schema (`game` vs `public`)
-  - Whether to add a new resource definition
+
+- Which Supabase table/view to use
+- What schema (`game` vs `public`)
+- Whether to add a new resource definition
 
 ### Scenario 4: Need data that might not be in database
+
 → ASK THE USER. Don't guess. Don't hardcode.
 
 ## NEVER DO THIS
@@ -227,13 +234,13 @@ SELECT * FROM game.spells WHERE id = 12345;
 
 ## Resources Quick Reference
 
-| Resource | Schema | ID Column | Type |
-|----------|--------|-----------|------|
-| `spells` | game | id | Spell |
-| `items` | game | id | Item |
-| `classes` | game | id | Class |
-| `specs` | game | id | Spec |
-| `auras` | game | spell_id | Aura |
-| `global_colors` | game | name | GlobalColor |
-| `global_strings` | game | tag | GlobalString |
-| `specs_traits` | game | spec_id | SpecTraits |
+| Resource         | Schema | ID Column | Type         |
+| ---------------- | ------ | --------- | ------------ |
+| `spells`         | game   | id        | Spell        |
+| `items`          | game   | id        | Item         |
+| `classes`        | game   | id        | Class        |
+| `specs`          | game   | id        | Spec         |
+| `auras`          | game   | spell_id  | Aura         |
+| `global_colors`  | game   | name      | GlobalColor  |
+| `global_strings` | game   | tag       | GlobalString |
+| `specs_traits`   | game   | spec_id   | SpecTraits   |

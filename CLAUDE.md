@@ -46,8 +46,10 @@ Use for docs — don't guess APIs: Context7, Supabase
 | `loading-states`   | Flask loaders, loading indicators    |
 | `park-ui`          | UI components                        |
 | `portal-component` | New pages/components in portal       |
+| `portal-quality`   | TypeScript/React/Next.js quality     |
 | `pre-commit`       | Code hygiene before commits          |
 | `profile-engine`   | Performance profiling the engine     |
+| `quality-control`  | Project-wide quality audits          |
 | `rust-quality`     | Rust code review, clippy, testing    |
 | `state-management` | React Query, Zustand, domain modules |
 

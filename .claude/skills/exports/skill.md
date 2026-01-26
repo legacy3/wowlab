@@ -42,17 +42,17 @@ export { More } from "./more";
 
 Use these section names consistently:
 
-| Section | Contents |
-|---------|----------|
-| `Components` | React components |
-| `Hooks` | Custom React hooks |
-| `Types` | Type-only exports |
-| `Constants` | Const values, enums, config |
-| `Utilities` | Pure functions |
-| `Context` | React context providers/consumers |
-| `Mutations` | Data mutation hooks (React Query) |
-| `Queries` | Data fetching hooks (React Query) |
-| `Store` | Zustand/state stores |
+| Section      | Contents                          |
+| ------------ | --------------------------------- |
+| `Components` | React components                  |
+| `Hooks`      | Custom React hooks                |
+| `Types`      | Type-only exports                 |
+| `Constants`  | Const values, enums, config       |
+| `Utilities`  | Pure functions                    |
+| `Context`    | React context providers/consumers |
+| `Mutations`  | Data mutation hooks (React Query) |
+| `Queries`    | Data fetching hooks (React Query) |
+| `Store`      | Zustand/state stores              |
 
 ## Examples
 
@@ -179,6 +179,7 @@ Always. Every directory with exportable code gets an `index.ts`.
 An `index.ts` file must ONLY contain re-exports. No implementations.
 
 If you find an `index.ts` with actual code (functions, constants, types defined inline), **split it up**:
+
 1. Move implementations to separate files (e.g., `utils.ts`, `types.ts`, `constants.ts`)
 2. Make `index.ts` a pure barrel that re-exports from those files
 
