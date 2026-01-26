@@ -10,7 +10,7 @@ use std::collections::HashMap;
 #[cfg(feature = "wasm")]
 use tsify::Tsify;
 
-use wowlab_types::{AuraIdx, SpellIdx};
+use wowlab_common::types::{AuraIdx, SpellIdx};
 
 use super::expr::{
     BuffExpr, CombatExpr, CooldownExpr, DebuffExpr, DotExpr, EnemyExpr, FieldType, GcdExpr,

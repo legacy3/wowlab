@@ -1,4 +1,4 @@
-use wowlab_types::{AuraIdx, ProcIdx, SpellIdx};
+use wowlab_common::types::{AuraIdx, ProcIdx, SpellIdx};
 
 // ============================================================================
 // Spell IDs

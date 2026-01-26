@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::rotation::{get_var_path_schema, validate_rotation, Rotation};
-use wowlab_types::{Attribute, DamageSchool, RatingType, ResourceType};
+use wowlab_common::types::{Attribute, DamageSchool, RatingType, ResourceType};
 
 // Spec-related imports (require JIT for spec implementations)
 #[cfg(feature = "jit")]

@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
 import { Button, Text, Textarea } from "@/components/ui";
-import { fragmentsToPlainText } from "@/lib/engine";
 import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
+import { fragmentsToPlainText } from "@/lib/wasm";
 
 import type { DebugTabProps } from "./types";
 

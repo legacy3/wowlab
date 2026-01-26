@@ -5,10 +5,11 @@
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use wowlab_parsers::{
+use wowlab_common::parsers::{
     transform_all_auras, transform_all_items, transform_all_trait_trees, transform_spell,
-    AuraDataFlat, DbcData, ItemDataFlat, SpellDataFlat, TraitTreeFlat,
+    DbcData,
 };
+use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::RwLock;

@@ -3,7 +3,7 @@
 import { useCreate, useUpdate } from "@refinedev/core";
 import { useCallback } from "react";
 
-import type { RotationsRow } from "@/lib/engine";
+import type { RotationsRow } from "@/lib/editor";
 
 import { href, routes, useLocalizedRouter } from "@/lib/routing";
 

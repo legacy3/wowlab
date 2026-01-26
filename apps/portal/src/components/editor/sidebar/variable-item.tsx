@@ -3,7 +3,7 @@
 import { VariableIcon } from "lucide-react";
 import { Flex, HStack, VStack } from "styled-system/jsx";
 
-import type { Variable } from "@/lib/engine";
+import type { Variable } from "@/lib/editor";
 
 import { Badge, Text } from "@/components/ui";
 

@@ -3,7 +3,7 @@ use crate::combat::{ChargedCooldown, Cooldown};
 use crate::proc::ProcRegistry;
 use crate::resource::UnitResources;
 use crate::stats::StatCache;
-use wowlab_types::{SimTime, SpecId, SpellIdx, UnitIdx};
+use wowlab_common::types::{SimTime, SpecId, SpellIdx, UnitIdx};
 use std::collections::HashMap;
 
 /// Player state during simulation

@@ -8,7 +8,7 @@ use crate::actor::Player;
 use crate::core::{ScheduledEvent, SimEvent};
 use crate::handler::SpecHandler;
 use crate::resource::ResourceRegen;
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 use std::sync::Arc;
 use tracing::{debug, trace};
 

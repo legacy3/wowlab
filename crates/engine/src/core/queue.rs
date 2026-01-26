@@ -7,7 +7,7 @@
 //! - Arena allocation with free list for zero allocations in hot path
 
 use super::SimEvent;
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 
 const WHEEL_SHIFT: u32 = 5; // 32ms per slot
 const WHEEL_SIZE: usize = 32768; // ~17 minutes coverage

@@ -5,7 +5,7 @@ use wowlab_engine::handler::SpecHandler;
 use wowlab_engine::sim::{BatchResults, SimConfig, Simulation};
 use wowlab_engine::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
 use wowlab_engine::specs::hunter::mm::MmHunter;
-use wowlab_types::{ChunkResult, SpecId};
+use wowlab_common::types::{ChunkResult, SpecId};
 use serde::Deserialize;
 use std::sync::Arc;
 

@@ -1,5 +1,5 @@
 use super::{CombatStats, PrimaryStats, Ratings};
-use wowlab_types::SpecId;
+use wowlab_common::types::SpecId;
 
 /// Cached stat calculations to avoid recomputation
 #[derive(Clone, Debug)]
@@ -57,7 +57,7 @@ impl StatCache {
     fn compute_combat_stats(&mut self, mastery_coeff: f32) {
         use super::attributes::primary_stat_for_spec;
         use super::ratings::rating_to_percent;
-        use wowlab_types::RatingType;
+        use wowlab_common::types::RatingType;
 
         // Get primary stat for this spec
         let primary = self.primary.get(primary_stat_for_spec(self.spec));

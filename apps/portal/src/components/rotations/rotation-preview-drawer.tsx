@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { GlobeIcon, LockIcon, PencilIcon, XIcon } from "lucide-react";
 import { HStack, VStack } from "styled-system/jsx";
 
-import type { RotationsRow } from "@/lib/engine";
+import type { RotationsRow } from "@/lib/editor";
 
 import { href, routes, useLocalizedRouter } from "@/lib/routing";
 

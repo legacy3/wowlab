@@ -1,4 +1,4 @@
-import type { RotationsRow } from "@/lib/engine";
+import type { RotationsRow } from "@/lib/editor";
 
 import { PageBreadcrumbs } from "@/components/common";
 import { breadcrumb, routes } from "@/lib/routing";

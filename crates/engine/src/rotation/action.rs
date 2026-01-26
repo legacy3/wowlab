@@ -1,6 +1,6 @@
 //! Rotation action types.
 
-use wowlab_types::SpellIdx;
+use wowlab_common::types::SpellIdx;
 
 /// Action to perform - the output of rotation evaluation.
 #[derive(Debug, Clone, PartialEq)]

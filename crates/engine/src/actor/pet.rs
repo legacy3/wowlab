@@ -1,7 +1,7 @@
 use crate::aura::TargetAuras;
 use crate::combat::Cooldown;
 use crate::stats::StatCache;
-use wowlab_types::{PetKind, SimTime, SpellIdx, UnitIdx};
+use wowlab_common::types::{PetKind, SimTime, SpellIdx, UnitIdx};
 use std::collections::HashMap;
 
 /// Pet state during simulation
@@ -28,7 +28,7 @@ pub struct Pet {
     /// When pet expires (for temporary pets)
     pub expires_at: Option<SimTime>,
     /// Current target
-    pub target: Option<wowlab_types::TargetIdx>,
+    pub target: Option<wowlab_common::types::TargetIdx>,
 }
 
 impl Pet {

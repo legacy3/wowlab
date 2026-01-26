@@ -1,4 +1,4 @@
-import type { Profile } from "@/lib/engine";
+import type { Profile } from "@/lib/wasm";
 
 export type {
   Character,
@@ -9,7 +9,7 @@ export type {
   Slot,
   Talents,
   WowClass,
-} from "@/lib/engine";
+} from "@/lib/wasm";
 
 export type ParseState =
   | { status: "idle" }

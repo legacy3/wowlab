@@ -6,7 +6,7 @@ set -euo pipefail
 #
 # Targets:
 #   all         - Build everything (default)
-#   parsers     - Build WASM parser only
+#   common      - Build WASM common crate only
 #   engine      - Build Rust engine only
 #   engine-wasm - Build WASM engine only
 #   portal      - Build portal app only
@@ -117,10 +117,11 @@ build_wasm_pkg() {
     success "WASM $crate built -> packages/$tarball"
 }
 
-build_parsers() {
+build_common() {
     WASM_OUT_DIR="$ROOT/.wasm-build" build_wasm_pkg \
-        parsers parsers wowlab-parsers \
-        --out-dir "$ROOT/.wasm-build"
+        common common wowlab-common \
+        --out-dir "$ROOT/.wasm-build" \
+        --features wasm
 }
 
 build_engine_wasm() {
@@ -173,7 +174,7 @@ build_portal() {
 
 build_all() {
     require_deps wasm-pack cargo pnpm
-    build_parsers
+    build_common
     build_engine_wasm
     info "Installing dependencies..."
     pnpm install
@@ -215,7 +216,7 @@ require_deps() {
 
 case "$TARGET" in
     all)         build_all ;;
-    parsers)     require_deps wasm-pack && build_parsers ;;
+    common)      require_deps wasm-pack && build_common ;;
     engine)      build_engine ;;
     engine-wasm) require_deps wasm-pack && build_engine_wasm ;;
     rust)        build_rust ;;
@@ -223,7 +224,7 @@ case "$TARGET" in
     check)       check_all ;;
     *)
         error "Unknown target: $TARGET"
-        echo "Usage: $0 [all|parsers|engine|engine-wasm|rust|portal|check] [--force]"
+        echo "Usage: $0 [all|common|engine|engine-wasm|rust|portal|check] [--force]"
         exit 1
         ;;
 esac

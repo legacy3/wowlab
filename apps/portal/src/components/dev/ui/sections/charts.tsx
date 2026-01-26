@@ -1,8 +1,5 @@
 "use client";
 
-import { bin, deviation, mean, quantile } from "d3-array";
-// @ts-expect-error - d3-regression doesn't have types
-import { regressionLinear } from "d3-regression";
 import { useMemo, useState } from "react";
 import { HStack, Stack, VStack } from "styled-system/jsx";
 
@@ -16,6 +13,7 @@ import {
   PieChart,
   StatBadge,
 } from "@/components/ui/charts";
+import { useCommon } from "@/providers";
 
 import {
   DemoBox,
@@ -55,6 +53,7 @@ const dpsDistributionData = [
 type DataPoint = { x: number; y: number };
 
 function AnalysisDemo() {
+  const common = useCommon();
   const [showTrendline, setShowTrendline] = useState(true);
   const [showMovingAvg, setShowMovingAvg] = useState(false);
   const [showStdDev, setShowStdDev] = useState(false);
@@ -65,64 +64,65 @@ function AnalysisDemo() {
   const distribution = dpsDistributionData;
 
   const stats = useMemo(() => {
-    const values = data.map((d) => d.y);
-    const sorted = [...values].sort((a, b) => a - b);
+    const values = new Float64Array(data.map((d) => d.y));
+    const wasmStats = common.computeStats(values);
     return {
-      mean: mean(values) ?? 0,
-      p25: quantile(sorted, 0.25) ?? 0,
-      p50: quantile(sorted, 0.5) ?? 0,
-      p75: quantile(sorted, 0.75) ?? 0,
-      p99: quantile(sorted, 0.99) ?? 0,
-      stdDev: deviation(values) ?? 0,
+      mean: wasmStats.mean,
+      p25: common.computePercentile(values, 25),
+      p50: common.computePercentile(values, 50),
+      p75: common.computePercentile(values, 75),
+      p99: common.computePercentile(values, 99),
+      stdDev: wasmStats.stdDev,
     };
-  }, [data]);
+  }, [data, common]);
 
   const trendline = useMemo(() => {
-    const regression = regressionLinear()
-      .x((d: DataPoint) => d.x)
-      .y((d: DataPoint) => d.y);
-    const result = regression(data);
+    const x = new Float64Array(data.map((d) => d.x));
+    const y = new Float64Array(data.map((d) => d.y));
+    const result = common.computeLinearRegression(x, y);
+
+    if (!result) {
+      return { points: [], rSquared: 0 };
+    }
+
     return {
       points: [
-        { x: data[0].x, y: result.predict(data[0].x) },
+        { x: data[0].x, y: result.slope * data[0].x + result.intercept },
         {
           x: data[data.length - 1].x,
-          y: result.predict(data[data.length - 1].x),
+          y: result.slope * data[data.length - 1].x + result.intercept,
         },
       ],
       rSquared: result.rSquared,
     };
-  }, [data]);
+  }, [data, common]);
 
   const movingAverage = useMemo(() => {
-    const window = 5;
-    return data.map((d, i) => {
-      const start = Math.max(0, i - window + 1);
-      const slice = data.slice(start, i + 1);
-      const avg = mean(slice, (s) => s.y) ?? d.y;
-      return { x: d.x, y: avg };
-    });
-  }, [data]);
+    const yValues = new Float64Array(data.map((d) => d.y));
+    const smaValues = common.computeSma(yValues, 5);
+    return data.map((d, i) => ({ x: d.x, y: smaValues[i] }));
+  }, [data, common]);
 
   const histogram = useMemo(() => {
-    const bins = bin().thresholds(10)(distribution);
+    const bins = createHistogram(distribution, 10);
     return bins.map((b) => ({
-      label: `${Math.round((b.x0 ?? 0) / 1000)}k`,
+      label: `${Math.round(b.x0 / 1000)}k`,
       value: b.length,
-      x0: b.x0 ?? 0,
-      x1: b.x1 ?? 0,
+      x0: b.x0,
+      x1: b.x1,
     }));
   }, [distribution]);
 
   const distStats = useMemo(() => {
-    const sorted = [...distribution].sort((a, b) => a - b);
+    const values = new Float64Array(distribution);
+    const wasmStats = common.computeStats(values);
     return {
-      mean: mean(distribution) ?? 0,
-      p50: quantile(sorted, 0.5) ?? 0,
-      p75: quantile(sorted, 0.75) ?? 0,
-      p99: quantile(sorted, 0.99) ?? 0,
+      mean: wasmStats.mean,
+      p50: common.computePercentile(values, 50),
+      p75: common.computePercentile(values, 75),
+      p99: common.computePercentile(values, 99),
     };
-  }, [distribution]);
+  }, [distribution, common]);
 
   return (
     <Subsection title="Data Analysis">
@@ -281,6 +281,25 @@ function BarChartDemo() {
       </Stack>
     </Subsection>
   );
+}
+
+// Simple histogram binning function to replace d3-array bin
+function createHistogram(data: number[], numBins: number) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const binWidth = (max - min) / numBins;
+
+  const bins: { x0: number; x1: number; length: number }[] = [];
+  for (let i = 0; i < numBins; i++) {
+    const x0 = min + i * binWidth;
+    const x1 = min + (i + 1) * binWidth;
+    const count = data.filter(
+      (d) => d >= x0 && (i === numBins - 1 ? d <= x1 : d < x1),
+    ).length;
+    bins.push({ length: count, x0, x1 });
+  }
+
+  return bins;
 }
 
 function LineChartDemo() {

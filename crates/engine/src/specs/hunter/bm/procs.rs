@@ -1,6 +1,6 @@
 use super::constants::*;
 use crate::proc::{FixedProc, ProcEffect, ProcFlags, ProcHandler, ProcRegistry};
-use wowlab_types::{ProcIdx, SimTime};
+use wowlab_common::types::{ProcIdx, SimTime};
 
 /// Setup BM Hunter procs based on enabled talents
 pub fn setup_procs(registry: &mut ProcRegistry) {
@@ -539,7 +539,7 @@ fn setup_sentinel_procs(registry: &mut ProcRegistry, talents: TalentFlags) {
                 "Invigorating Pulse",
                 ProcFlags::ON_DAMAGE,
                 ProcEffect::Resource {
-                    resource: wowlab_types::ResourceType::Focus,
+                    resource: wowlab_common::types::ResourceType::Focus,
                     amount: INVIGORATING_PULSE_FOCUS,
                 },
             ),

@@ -1,4 +1,4 @@
-use wowlab_types::{DamageSchool, HitResult, SnapshotFlags};
+use wowlab_common::types::{DamageSchool, HitResult, SnapshotFlags};
 
 /// Snapshotted state for an action (DoTs, delayed damage)
 #[derive(Clone, Debug, Default)]

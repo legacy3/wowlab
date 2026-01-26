@@ -6,12 +6,12 @@ import { HStack, Stack } from "styled-system/jsx";
 
 import { FragmentRenderer } from "@/components/game";
 import { Accordion, Badge, Card, Input, Text } from "@/components/ui";
+import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
 import {
   fragmentsToPlainText,
   type SpellDescFragment,
-  tokenizeSpellDescription,
-} from "@/lib/engine";
-import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
+  tokenizeSpellDesc,
+} from "@/lib/wasm";
 
 import type { DebugTabProps } from "./types";
 
@@ -122,7 +122,7 @@ function SpellCard({ spell }: { spell: TraitSpell }) {
   );
 
   useEffect(() => {
-    tokenizeSpellDescription(spell.description).then(setRawFragments);
+    tokenizeSpellDesc(spell.description).then(setRawFragments);
   }, [spell.description]);
 
   const rendered = result ? fragmentsToPlainText(result.fragments) : null;

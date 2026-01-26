@@ -1,7 +1,7 @@
 use super::{SimConfig, Simulation};
 use crate::actor::Player;
 use crate::handler::SpecHandler;
-use crate::math::{RunningStats, Summary};
+use crate::math::Summary;
 use parking_lot::Mutex;
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -127,12 +127,12 @@ impl BatchRunner {
     }
 }
 
-/// Progress tracking with running statistics for live display.
-/// Uses mutex-protected RunningStats for thread-safe accumulation.
+/// Progress tracking with batch statistics for live display.
+/// Collects values in a Vec and computes stats on demand.
 pub struct ExactProgress {
     completed: AtomicU32,
     total: u32,
-    stats: Mutex<RunningStats>,
+    values: Mutex<Vec<f64>>,
     start: Instant,
     num_threads: usize,
 }
@@ -142,7 +142,7 @@ impl ExactProgress {
         Self {
             completed: AtomicU32::new(0),
             total,
-            stats: Mutex::new(RunningStats::new()),
+            values: Mutex::new(Vec::with_capacity(total as usize)),
             start: Instant::now(),
             num_threads: rayon::current_num_threads(),
         }
@@ -150,7 +150,7 @@ impl ExactProgress {
 
     pub fn record_iteration(&self, dps: f64) {
         self.completed.fetch_add(1, Ordering::Relaxed);
-        self.stats.lock().push(dps);
+        self.values.lock().push(dps);
     }
 
     pub fn completed(&self) -> u32 {
@@ -174,22 +174,38 @@ impl ExactProgress {
         }
     }
 
-    /// Running mean (Welford's algorithm)
+    /// Current mean of collected values
     pub fn running_mean(&self) -> f64 {
-        self.stats.lock().mean()
+        let values = self.values.lock();
+        if values.is_empty() {
+            return 0.0;
+        }
+        Summary::new(values.clone()).mean()
     }
 
-    /// Running standard deviation (Welford's algorithm)
+    /// Current standard deviation of collected values
     pub fn running_std_dev(&self) -> f64 {
-        self.stats.lock().std_dev()
+        let values = self.values.lock();
+        if values.is_empty() {
+            return 0.0;
+        }
+        Summary::new(values.clone()).std_dev()
     }
 
     pub fn current_min(&self) -> f64 {
-        self.stats.lock().min()
+        let values = self.values.lock();
+        if values.is_empty() {
+            return f64::INFINITY;
+        }
+        Summary::new(values.clone()).min()
     }
 
     pub fn current_max(&self) -> f64 {
-        self.stats.lock().max()
+        let values = self.values.lock();
+        if values.is_empty() {
+            return f64::NEG_INFINITY;
+        }
+        Summary::new(values.clone()).max()
     }
 
     pub fn num_threads(&self) -> usize {

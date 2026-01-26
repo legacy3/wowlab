@@ -1,5 +1,5 @@
 use super::StatsCollector;
-use wowlab_types::SpellIdx;
+use wowlab_common::types::SpellIdx;
 use std::collections::HashMap;
 
 /// Damage breakdown entry

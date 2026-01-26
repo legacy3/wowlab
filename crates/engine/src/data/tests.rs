@@ -147,7 +147,7 @@ fn local_resolver_integration() {
 #[cfg(feature = "supabase")]
 mod cache_tests {
     use crate::data::cache::GameDataCache;
-    use wowlab_parsers::SpellDataFlat;
+    use wowlab_common::parsers::SpellDataFlat;
     use wowlab_supabase::SupabaseClient;
 
     use wiremock::matchers::{header, method, path_regex};

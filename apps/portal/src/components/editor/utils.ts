@@ -1,4 +1,4 @@
-import type { ActionList, RotationData, Variable } from "@/lib/engine";
+import type { ActionList, RotationData, Variable } from "@/lib/editor";
 
 export interface ValidationError {
   message: string;

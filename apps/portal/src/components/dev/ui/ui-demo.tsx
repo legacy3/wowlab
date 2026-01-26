@@ -1,5 +1,7 @@
 "use client";
 
+import { WasmProvider } from "@/providers";
+
 import { PageLayout } from "../shared";
 import {
   ActionsSection,
@@ -36,19 +38,21 @@ const NAV = [
 
 export function UiDemo() {
   return (
-    <PageLayout nav={NAV}>
-      <TokensSection />
-      <I18nSection />
-      <ActionsSection />
-      <FormsSection />
-      <DataDisplaySection />
-      <ChartsSection />
-      <NavigationSection />
-      <OverlaysSection />
-      <FeedbackSection />
-      <SimulateSection />
-      <SpecPickerSection />
-      <DistributedNodesSection />
-    </PageLayout>
+    <WasmProvider>
+      <PageLayout nav={NAV}>
+        <TokensSection />
+        <I18nSection />
+        <ActionsSection />
+        <FormsSection />
+        <DataDisplaySection />
+        <ChartsSection />
+        <NavigationSection />
+        <OverlaysSection />
+        <FeedbackSection />
+        <SimulateSection />
+        <SpecPickerSection />
+        <DistributedNodesSection />
+      </PageLayout>
+    </WasmProvider>
   );
 }

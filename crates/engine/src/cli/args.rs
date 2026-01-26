@@ -74,10 +74,10 @@ pub enum SpecArg {
 }
 
 impl SpecArg {
-    pub fn to_spec_id(&self) -> wowlab_types::SpecId {
+    pub fn to_spec_id(&self) -> wowlab_common::types::SpecId {
         match self {
-            SpecArg::BmHunter => wowlab_types::SpecId::BeastMastery,
-            SpecArg::MmHunter => wowlab_types::SpecId::Marksmanship,
+            SpecArg::BmHunter => wowlab_common::types::SpecId::BeastMastery,
+            SpecArg::MmHunter => wowlab_common::types::SpecId::Marksmanship,
         }
     }
 }

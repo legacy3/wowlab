@@ -1,6 +1,6 @@
 "use client";
 
-import type { SpellDescFragment } from "@/lib/engine";
+import type { SpellDescFragment } from "@/lib/wasm";
 
 import { Code } from "@/components/ui";
 

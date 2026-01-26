@@ -1,4 +1,4 @@
-use wowlab_types::{MasteryEffect, SpecId};
+use wowlab_common::types::{MasteryEffect, SpecId};
 
 /// Class/spec coefficients for stat calculations
 #[derive(Clone, Debug)]

@@ -6,12 +6,8 @@ import { Container, Flex, styled, VStack } from "styled-system/jsx";
 
 import { SpecPicker } from "@/components/game";
 import { Button, Input, Text } from "@/components/ui";
-import { engine } from "@/lib/engine";
 import { routes, useLocalizedRouter } from "@/lib/routing";
-
-// =============================================================================
-// Component
-// =============================================================================
+import { encodeMinimalLoadout } from "@/lib/wasm";
 
 export function TraitStartScreen() {
   const router = useLocalizedRouter();
@@ -19,7 +15,7 @@ export function TraitStartScreen() {
   const { startScreen: content } = useIntlayer("traits");
 
   const handleSpecSelect = async (specId: number) => {
-    const loadout = await engine.encodeMinimalLoadout(specId);
+    const loadout = await encodeMinimalLoadout(specId);
     router.push(
       `${routes.plan.traits.path}?loadout=${encodeURIComponent(loadout)}`,
     );

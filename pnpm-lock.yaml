@@ -167,12 +167,12 @@ importers:
       velite:
         specifier: ^0.3.1
         version: 0.3.1
+      wowlab-common:
+        specifier: file:../../packages/wowlab-common-0.4.1.tgz
+        version: file:packages/wowlab-common-0.4.1.tgz
       wowlab-engine:
         specifier: file:../../packages/wowlab-engine-0.4.1.tgz
         version: file:packages/wowlab-engine-0.4.1.tgz
-      wowlab-parsers:
-        specifier: file:../../packages/wowlab-parsers-0.4.1.tgz
-        version: file:packages/wowlab-parsers-0.4.1.tgz
       zustand:
         specifier: ^5.0.4
         version: 5.0.9(@types/react@19.2.2)(immer@11.1.3)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
@@ -216,8 +216,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
-
-  packages/wowlab-parsers: {}
 
 packages:
 
@@ -6179,12 +6177,12 @@ packages:
     resolution: {integrity: sha512-0yweIbkINJodk27gX9LBGMzyQdBDan3s/dEAiwBOj+Mf0PPyWL6/rikalkv8EeD0E8jm4o5RXEOrFTP3NXbhJg==}
     engines: {node: '>=12.17'}
 
-  wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-dpZO9m2bhgZAKyUvdu2y90qYgZkKwMgMkRogpY/MuudnqR5x2erDGKIR6b+3gmRsZPfU57DL4H2X20GbUtDE+Q==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+  wowlab-common@file:packages/wowlab-common-0.4.1.tgz:
+    resolution: {integrity: sha512-pSrYZm3VZH7ba6IDUKw5SiSbLitT9PPI0ZDkt6cBWIJRH5aQTo8rgTp3HPP2aF5FIh7W0RzRnWm5jV8B2Fpwgg==, tarball: file:packages/wowlab-common-0.4.1.tgz}
     version: 0.4.1
 
-  wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz:
-    resolution: {integrity: sha512-X5W10nSQ1z7s9A1rQ77Mh10D0NimAgKKhjQvo4NLK+rv4j5PxaCcBAheMeMnBXFz3GOPPt2AlukrkZDyBw5FBw==, tarball: file:packages/wowlab-parsers-0.4.1.tgz}
+  wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
+    resolution: {integrity: sha512-lBiR61JRVRrAzRAca0qhBKvX2JJ1fsR3VpABpTluJEkRx+JmIcIxaClS4BmN0KqAAWTeS3MUwKmWqNNffNnxHQ==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:
@@ -13699,9 +13697,9 @@ snapshots:
 
   wordwrapjs@5.1.1: {}
 
-  wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz: {}
+  wowlab-common@file:packages/wowlab-common-0.4.1.tgz: {}
 
-  wowlab-parsers@file:packages/wowlab-parsers-0.4.1.tgz: {}
+  wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz: {}
 
   wrappy@1.0.2: {}
 

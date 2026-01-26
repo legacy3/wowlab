@@ -16,10 +16,10 @@ import { useIntlayer } from "next-intlayer";
 import { memo, useMemo, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
-import type { Action, ActionType } from "@/lib/engine";
+import type { Action, ActionType } from "@/lib/editor";
 import type { Item, Spell } from "@/lib/supabase";
 
-import { ACTION_TYPES } from "@/lib/engine";
+import { ACTION_TYPES } from "@/lib/editor";
 import { items, spells, useResource } from "@/lib/refine";
 import { useEditor } from "@/lib/state";
 

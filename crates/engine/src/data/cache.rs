@@ -16,7 +16,7 @@ use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 use wowlab_supabase::{SupabaseClient, SupabaseError};
-use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 
 /// Unified game data cache with memory and disk layers.
 pub struct GameDataCache {

@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import type { RotationsRow } from "@/lib/engine";
+import type { RotationsRow } from "@/lib/editor";
 
 import { RotationPreviewDrawer } from "@/components/rotations";
 import { Loader } from "@/components/ui";

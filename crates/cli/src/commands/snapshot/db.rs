@@ -10,7 +10,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
 use sqlx::{PgPool, Postgres, QueryBuilder, Transaction};
 use std::sync::Arc;
-use wowlab_parsers::{
+use wowlab_common::{
     AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, GlobalColorFlat, GlobalStringFlat,
     ItemBonusFlat, ItemDataFlat, RandPropPointsFlat, SpecDataFlat, SpellDataFlat, TraitTreeFlat,
 };

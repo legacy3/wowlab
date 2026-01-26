@@ -6,7 +6,7 @@
 //! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
 
 use async_trait::async_trait;
-use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections};
+use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections};
 use std::path::PathBuf;
 
 /// Errors that can occur during data resolution.
@@ -44,20 +44,20 @@ pub enum ResolverError {
     EnvVar(String),
 }
 
-impl From<wowlab_parsers::DbcError> for ResolverError {
-    fn from(e: wowlab_parsers::DbcError) -> Self {
+impl From<wowlab_common::parsers::DbcError> for ResolverError {
+    fn from(e: wowlab_common::parsers::DbcError) -> Self {
         ResolverError::DbcParse(e.to_string())
     }
 }
 
-impl From<wowlab_parsers::TransformError> for ResolverError {
-    fn from(e: wowlab_parsers::TransformError) -> Self {
+impl From<wowlab_common::parsers::TransformError> for ResolverError {
+    fn from(e: wowlab_common::parsers::TransformError) -> Self {
         ResolverError::Transform(e.to_string())
     }
 }
 
-impl From<wowlab_parsers::errors::TraitError> for ResolverError {
-    fn from(e: wowlab_parsers::errors::TraitError) -> Self {
+impl From<wowlab_common::parsers::errors::TraitError> for ResolverError {
+    fn from(e: wowlab_common::parsers::errors::TraitError) -> Self {
         ResolverError::TraitDecode(e.to_string())
     }
 }
@@ -103,8 +103,8 @@ pub trait DataResolver: Send + Sync {
         trait_string: &str,
     ) -> Result<TraitTreeWithSelections, ResolverError> {
         let tree = self.get_trait_tree(spec_id).await?;
-        let decoded = wowlab_parsers::decode_trait_loadout(trait_string)?;
-        Ok(wowlab_parsers::apply_decoded_traits(tree, &decoded))
+        let decoded = wowlab_common::parsers::decode_trait_loadout(trait_string)?;
+        Ok(wowlab_common::parsers::apply_decoded_traits(tree, &decoded))
     }
 
     /// Get all spell IDs from decoded traits.

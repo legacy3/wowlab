@@ -8,7 +8,7 @@
 use crate::data::cache::GameDataCache;
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
-use wowlab_parsers::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
 use wowlab_supabase::{SupabaseClient, SupabaseError};
 
 /// Resolver that loads data from Supabase PostgREST API.

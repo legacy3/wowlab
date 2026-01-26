@@ -2,7 +2,7 @@ use super::*;
 use crate::actor::Player;
 use crate::handler::SpecHandler;
 use crate::specs::BmHunter;
-use wowlab_types::*;
+use wowlab_common::types::*;
 use std::sync::Arc;
 
 fn create_handler() -> Arc<dyn SpecHandler> {

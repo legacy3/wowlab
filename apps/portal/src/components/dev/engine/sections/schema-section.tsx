@@ -1,11 +1,13 @@
 "use client";
 
 import { useDebounceFn } from "ahooks";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
-import { Badge, Code, Input, Skeleton, Table, Text } from "@/components/ui";
-import { engine, type VarPathCategory, type VarPathInfo } from "@/lib/engine";
+import type { VarPathCategory, VarPathInfo } from "@/lib/wasm";
+
+import { Badge, Code, Input, Table, Text } from "@/components/ui";
+import { useEngine } from "@/providers";
 
 import { DemoBox, DemoDescription, Section, Subsection } from "../../shared";
 
@@ -14,28 +16,17 @@ interface FlatPath extends VarPathInfo {
 }
 
 export function SchemaSection() {
-  const [schema, setSchema] = useState<VarPathCategory[] | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    engine.schema
-      .varPaths()
-      .then(setSchema)
-      .catch(setError)
-      .finally(() => setIsLoading(false));
-  }, []);
+  const engine = useEngine();
+  const schema: VarPathCategory[] = engine.getVarPathSchema();
 
   const flatPaths = useMemo(() => {
-    if (!schema) return [];
-    return schema.flatMap((cat) =>
-      cat.paths.map((path) => ({ ...path, category: cat.name })),
+    return schema.flatMap((cat: VarPathCategory) =>
+      cat.paths.map((path: VarPathInfo) => ({ ...path, category: cat.name })),
     );
   }, [schema]);
 
   const categories = useMemo(() => {
-    if (!schema) return [];
-    return schema.map((cat) => cat.name);
+    return schema.map((cat: VarPathCategory) => cat.name);
   }, [schema]);
 
   return (
@@ -47,21 +38,10 @@ export function SchemaSection() {
             category.
           </DemoDescription>
           <DemoBox>
-            {isLoading ? (
-              <HStack gap="2">
-                <Skeleton h="5" w="24" />
-                <Skeleton h="5" w="24" />
-              </HStack>
-            ) : error ? (
-              <Text color="fg.error">{error.message}</Text>
-            ) : (
-              <HStack gap="2">
-                <Badge colorPalette="blue">
-                  {categories.length} Categories
-                </Badge>
-                <Badge colorPalette="green">{flatPaths.length} Paths</Badge>
-              </HStack>
-            )}
+            <HStack gap="2">
+              <Badge colorPalette="blue">{categories.length} Categories</Badge>
+              <Badge colorPalette="green">{flatPaths.length} Paths</Badge>
+            </HStack>
           </DemoBox>
         </Subsection>
 
@@ -69,14 +49,7 @@ export function SchemaSection() {
           <DemoDescription>
             Search paths by name or description. Click a category to filter.
           </DemoDescription>
-          {isLoading ? (
-            <Stack gap="2">
-              <Skeleton h="10" />
-              <Skeleton h="64" />
-            </Stack>
-          ) : schema ? (
-            <PathBrowser paths={flatPaths} categories={categories} />
-          ) : null}
+          <PathBrowser paths={flatPaths} categories={categories} />
         </Subsection>
       </Stack>
     </Section>

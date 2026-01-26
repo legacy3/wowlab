@@ -1,7 +1,7 @@
 use super::constants::*;
 use crate::actor::Pet;
 use crate::combat::Cooldown;
-use wowlab_types::{PetKind, SimTime, UnitIdx};
+use wowlab_common::types::{PetKind, SimTime, UnitIdx};
 
 /// Create a BM Hunter pet
 pub fn create_pet(owner: UnitIdx) -> Pet {

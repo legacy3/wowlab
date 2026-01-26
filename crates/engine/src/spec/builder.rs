@@ -4,7 +4,7 @@ use super::{
     SpellTarget,
 };
 use crate::aura::PeriodicEffect;
-use wowlab_types::{AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx};
+use wowlab_common::types::{AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx};
 
 /// Builder for spell definitions
 pub struct SpellBuilder {
@@ -347,21 +347,21 @@ impl AuraBuilder {
         self
     }
 
-    pub fn attribute_flat(mut self, attr: wowlab_types::Attribute, amount: f32) -> Self {
+    pub fn attribute_flat(mut self, attr: wowlab_common::types::Attribute, amount: f32) -> Self {
         self.aura
             .effects
             .push(AuraEffect::AttributeFlat { attr, amount });
         self
     }
 
-    pub fn attribute_percent(mut self, attr: wowlab_types::Attribute, amount: f32) -> Self {
+    pub fn attribute_percent(mut self, attr: wowlab_common::types::Attribute, amount: f32) -> Self {
         self.aura
             .effects
             .push(AuraEffect::AttributePercent { attr, amount });
         self
     }
 
-    pub fn rating_flat(mut self, rating: wowlab_types::RatingType, amount: f32) -> Self {
+    pub fn rating_flat(mut self, rating: wowlab_common::types::RatingType, amount: f32) -> Self {
         self.aura
             .effects
             .push(AuraEffect::RatingFlat { rating, amount });

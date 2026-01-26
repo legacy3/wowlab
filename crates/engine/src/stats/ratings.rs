@@ -1,4 +1,4 @@
-use wowlab_types::RatingType;
+use wowlab_common::types::RatingType;
 
 /// Rating values (raw numbers from gear)
 #[derive(Clone, Debug, Default)]

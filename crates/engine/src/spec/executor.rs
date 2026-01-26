@@ -10,7 +10,7 @@ use crate::sim::SimState;
 use crate::spec::{
     AuraDef, DamageMod, EffectCondition, ModCondition, SpellDef, SpellEffect, SpellFlags,
 };
-use wowlab_types::{AuraIdx, DamageSchool, HitResult, SimTime, SpellIdx, TargetIdx};
+use wowlab_common::types::{AuraIdx, DamageSchool, HitResult, SimTime, SpellIdx, TargetIdx};
 
 use tracing::debug;
 

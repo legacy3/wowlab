@@ -1,4 +1,4 @@
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 
 /// Cooldown with charges (like Barbed Shot)
 #[derive(Clone, Debug)]

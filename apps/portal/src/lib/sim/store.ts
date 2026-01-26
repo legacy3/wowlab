@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { engine } from "@/lib/engine";
+import { parseSimc } from "@/lib/wasm";
 
 import type { ParseState, Profile, RecentProfile } from "./types";
 
@@ -37,7 +37,7 @@ export const useCharacterInput = create<CharacterInputStore>()((set) => ({
     set({ parseState: { status: "parsing" } });
 
     try {
-      const profile = await engine.parseSimc(input);
+      const profile = await parseSimc(input);
       set({ parseState: { profile, status: "success" } });
     } catch (err) {
       set({

@@ -2,7 +2,7 @@ use crate::actor::{EnemyManager, PetManager, Player};
 use crate::aura::AuraTracker;
 use crate::combat::DamageMultipliers;
 use crate::core::{EventQueue, FastRng};
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 
 /// Configuration for simulation
 #[derive(Clone, Debug)]
@@ -184,31 +184,31 @@ pub struct TraceEvent {
 #[derive(Clone, Debug)]
 pub enum TraceEventType {
     SpellCast {
-        spell: wowlab_types::SpellIdx,
-        target: wowlab_types::TargetIdx,
+        spell: wowlab_common::types::SpellIdx,
+        target: wowlab_common::types::TargetIdx,
     },
     Damage {
-        spell: wowlab_types::SpellIdx,
+        spell: wowlab_common::types::SpellIdx,
         amount: f32,
         is_crit: bool,
     },
     AuraApply {
-        aura: wowlab_types::AuraIdx,
-        target: wowlab_types::TargetIdx,
+        aura: wowlab_common::types::AuraIdx,
+        target: wowlab_common::types::TargetIdx,
     },
     AuraExpire {
-        aura: wowlab_types::AuraIdx,
-        target: wowlab_types::TargetIdx,
+        aura: wowlab_common::types::AuraIdx,
+        target: wowlab_common::types::TargetIdx,
     },
     ResourceGain {
-        resource: wowlab_types::ResourceType,
+        resource: wowlab_common::types::ResourceType,
         amount: f32,
     },
     CooldownStart {
-        spell: wowlab_types::SpellIdx,
+        spell: wowlab_common::types::SpellIdx,
     },
     ProcTrigger {
-        proc: wowlab_types::ProcIdx,
+        proc: wowlab_common::types::ProcIdx,
     },
 }
 

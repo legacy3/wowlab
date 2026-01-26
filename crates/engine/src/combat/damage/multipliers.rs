@@ -1,4 +1,4 @@
-use wowlab_types::DamageSchool;
+use wowlab_common::types::DamageSchool;
 
 /// Layered damage multipliers (applied multiplicatively)
 #[derive(Clone, Debug)]

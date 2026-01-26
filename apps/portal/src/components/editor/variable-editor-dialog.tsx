@@ -4,7 +4,7 @@ import { useIntlayer } from "next-intlayer";
 import { useEffect, useState } from "react";
 import { Box, VStack } from "styled-system/jsx";
 
-import type { Variable } from "@/lib/engine";
+import type { Variable } from "@/lib/editor";
 
 import { Button, Code, Dialog, Input, Text } from "../ui";
 

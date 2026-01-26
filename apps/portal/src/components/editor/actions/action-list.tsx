@@ -26,7 +26,7 @@ import { useIntlayer } from "next-intlayer";
 import { useMemo, useRef, useState } from "react";
 import { Box, Center, VStack } from "styled-system/jsx";
 
-import type { Action } from "@/lib/engine";
+import type { Action } from "@/lib/editor";
 
 import { useEditor, useSelectedList } from "@/lib/state/editor";
 

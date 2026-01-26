@@ -18,7 +18,7 @@ import { useIntlayer } from "next-intlayer";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import type { RotationsRow } from "@/lib/engine";
+import type { RotationsRow } from "@/lib/editor";
 
 import { rotations, useResourceList } from "@/lib/refine";
 import { href, routes } from "@/lib/routing";

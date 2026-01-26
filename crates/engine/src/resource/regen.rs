@@ -1,5 +1,5 @@
 use super::ResourcePool;
-use wowlab_types::{ResourceType, SimTime};
+use wowlab_common::types::{ResourceType, SimTime};
 
 /// Handles resource regeneration
 pub struct ResourceRegen;

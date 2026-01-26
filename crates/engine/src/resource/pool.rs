@@ -1,4 +1,4 @@
-use wowlab_types::ResourceType;
+use wowlab_common::types::ResourceType;
 
 /// A single resource pool (Focus, Energy, Rage, etc.)
 #[derive(Clone, Debug)]

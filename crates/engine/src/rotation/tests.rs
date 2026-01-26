@@ -3,7 +3,7 @@
 use super::*;
 use crate::actor::Player;
 use crate::sim::{SimConfig, SimState};
-use wowlab_types::SpecId;
+use wowlab_common::types::SpecId;
 
 /// Create a minimal SimState for testing
 fn test_sim_state() -> SimState {
@@ -473,7 +473,7 @@ fn test_eval_result_none() {
 
 #[test]
 fn test_eval_result_cast() {
-    let result = EvalResult::cast(wowlab_types::SpellIdx(123));
+    let result = EvalResult::cast(wowlab_common::types::SpellIdx(123));
     assert!(result.is_cast());
     assert!(!result.is_none());
     assert!(!result.is_wait());
@@ -497,7 +497,7 @@ fn test_eval_result_wait() {
 fn test_schema_builder() {
     use super::context::ExprKey;
     use super::expr::{BuffExpr, CooldownExpr, ResourceExpr};
-    use wowlab_types::ResourceType;
+    use wowlab_common::types::ResourceType;
 
     let mut builder = SchemaBuilder::new();
 
@@ -505,10 +505,10 @@ fn test_schema_builder() {
         resource: ResourceType::Focus,
     });
     let key2 = ExprKey::Cooldown(CooldownExpr::CooldownReady {
-        spell: wowlab_types::SpellIdx(1),
+        spell: wowlab_common::types::SpellIdx(1),
     });
     let key3 = ExprKey::Buff(BuffExpr::Stacks {
-        aura: wowlab_types::AuraIdx(1),
+        aura: wowlab_common::types::AuraIdx(1),
     });
 
     let offset1 = builder.add_key(key1.clone()).unwrap();
@@ -531,13 +531,13 @@ fn test_schema_builder() {
 fn test_schema_alignment() {
     use super::context::ExprKey;
     use super::expr::{CooldownExpr, ResourceExpr};
-    use wowlab_types::ResourceType;
+    use wowlab_common::types::ResourceType;
 
     let mut builder = SchemaBuilder::new();
 
     // Add bool (1 byte)
     let bool_key = ExprKey::Cooldown(CooldownExpr::CooldownReady {
-        spell: wowlab_types::SpellIdx(1),
+        spell: wowlab_common::types::SpellIdx(1),
     });
     builder.add_key(bool_key).unwrap();
     // Add float (8 bytes) - should be aligned
@@ -592,7 +592,7 @@ fn test_bm_hunter_example_rotation() {
 #[test]
 fn test_cooldown_expr_json_roundtrip() {
     use super::expr::CooldownExpr;
-    use wowlab_types::SpellIdx;
+    use wowlab_common::types::SpellIdx;
 
     let test_cases = vec![
         CooldownExpr::CooldownReady {
@@ -638,7 +638,7 @@ fn test_cooldown_expr_json_roundtrip() {
 #[test]
 fn test_cooldown_expr_camel_case_deserialization() {
     use super::expr::CooldownExpr;
-    use wowlab_types::SpellIdx;
+    use wowlab_common::types::SpellIdx;
 
     // All 9 expressions with camelCase type tag
     let test_cases = vec![
@@ -769,7 +769,7 @@ fn test_parse_cooldown_full_recharge_time() {
 #[test]
 fn test_cooldown_expr_field_types() {
     use super::expr::{CooldownExpr, FieldType, PopulateContext};
-    use wowlab_types::SpellIdx;
+    use wowlab_common::types::SpellIdx;
 
     // Bool type
     assert_eq!(
@@ -821,7 +821,7 @@ fn test_cooldown_expr_field_types() {
 #[test]
 fn test_target_time_to_die() {
     use crate::actor::Enemy;
-    use wowlab_types::TargetIdx;
+    use wowlab_common::types::TargetIdx;
 
     // Test time_to_die calculation
     let enemy = Enemy::new(TargetIdx(0), "Test Boss");
@@ -834,13 +834,13 @@ fn test_target_time_to_die() {
 
     // With 0 DPS, TTD should be MAX
     let ttd_zero = enemy.time_to_die(0.0);
-    assert_eq!(ttd_zero, wowlab_types::SimTime::MAX);
+    assert_eq!(ttd_zero, wowlab_common::types::SimTime::MAX);
 }
 
 #[test]
 fn test_target_time_to_percent() {
     use crate::actor::Enemy;
-    use wowlab_types::TargetIdx;
+    use wowlab_common::types::TargetIdx;
 
     let mut enemy = Enemy::new(TargetIdx(0), "Test Boss");
     enemy.max_health = 1_000_000.0;
@@ -854,11 +854,11 @@ fn test_target_time_to_percent() {
 
     // Already below target percent - should be 0
     let ttp_below = enemy.time_to_percent(60.0, 10_000.0);
-    assert_eq!(ttp_below, wowlab_types::SimTime::ZERO);
+    assert_eq!(ttp_below, wowlab_common::types::SimTime::ZERO);
 
     // With 0 DPS - should be MAX
     let ttp_zero = enemy.time_to_percent(30.0, 0.0);
-    assert_eq!(ttp_zero, wowlab_types::SimTime::MAX);
+    assert_eq!(ttp_zero, wowlab_common::types::SimTime::MAX);
 }
 
 #[test]
@@ -869,7 +869,7 @@ fn test_enemy_count_returns_alive_count() {
     assert_eq!(enemies.alive_count(), 3);
 
     // Kill one enemy
-    if let Some(enemy) = enemies.get_mut(wowlab_types::TargetIdx(0)) {
+    if let Some(enemy) = enemies.get_mut(wowlab_common::types::TargetIdx(0)) {
         enemy.current_health = 0.0;
     }
     assert_eq!(enemies.alive_count(), 2);
@@ -926,7 +926,7 @@ fn test_parse_combat_time_expressions() {
 #[test]
 fn test_dps_window_calculation() {
     use crate::sim::DpsWindow;
-    use wowlab_types::SimTime;
+    use wowlab_common::types::SimTime;
 
     let mut window = DpsWindow::new(5.0);
 
@@ -947,7 +947,7 @@ fn test_dps_window_calculation() {
 #[test]
 fn test_enemy_fields() {
     use crate::actor::Enemy;
-    use wowlab_types::TargetIdx;
+    use wowlab_common::types::TargetIdx;
 
     let mut enemy = Enemy::new(TargetIdx(0), "Test Boss");
 
@@ -978,7 +978,7 @@ fn test_enemy_fields() {
 #[test]
 fn test_spell_expr_field_types() {
     use super::expr::{FieldType, PopulateContext, SpellExpr};
-    use wowlab_types::SpellIdx;
+    use wowlab_common::types::SpellIdx;
 
     // Float types
     assert_eq!(
@@ -1181,7 +1181,7 @@ fn test_gcd_active_parse() {
 #[test]
 fn test_pet_expr_field_types() {
     use super::expr::{FieldType, PetExpr, PopulateContext};
-    use wowlab_types::AuraIdx;
+    use wowlab_common::types::AuraIdx;
 
     // Bool types
     assert_eq!(PetExpr::Active.field_type(), FieldType::Bool);
@@ -2179,7 +2179,7 @@ fn test_bm_hunter_st_rotation_execution() {
 
 #[test]
 fn test_all_expr_variants_have_value_type() {
-    use wowlab_types::{AuraIdx, ResourceType, SpellIdx};
+    use wowlab_common::types::{AuraIdx, ResourceType, SpellIdx};
 
     // Test every expression variant has a valid value_type
     let expressions: Vec<Expr> = vec![
@@ -2321,7 +2321,7 @@ fn test_all_expr_variants_have_value_type() {
 
 #[test]
 fn test_all_expr_variants_validate_depth() {
-    use wowlab_types::{AuraIdx, ResourceType, SpellIdx};
+    use wowlab_common::types::{AuraIdx, ResourceType, SpellIdx};
 
     // All leaf expressions should pass depth validation
     let expressions: Vec<Expr> = vec![
@@ -2369,7 +2369,7 @@ fn test_all_expr_variants_validate_depth() {
 #[test]
 fn test_all_resource_expr_field_types() {
     use super::expr::{FieldType, PopulateContext, ResourceExpr};
-    use wowlab_types::ResourceType;
+    use wowlab_common::types::ResourceType;
 
     let variants = [
         ResourceExpr::ResourceCurrent {
@@ -2413,7 +2413,7 @@ fn test_all_resource_expr_field_types() {
 #[test]
 fn test_all_buff_expr_field_types() {
     use super::expr::{BuffExpr, FieldType, PopulateContext};
-    use wowlab_types::AuraIdx;
+    use wowlab_common::types::AuraIdx;
 
     let aura = AuraIdx(1);
 
@@ -2428,7 +2428,7 @@ fn test_all_buff_expr_field_types() {
 #[test]
 fn test_all_debuff_expr_field_types() {
     use super::expr::{DebuffExpr, FieldType, PopulateContext};
-    use wowlab_types::AuraIdx;
+    use wowlab_common::types::AuraIdx;
 
     let aura = AuraIdx(1);
 
@@ -2448,7 +2448,7 @@ fn test_all_debuff_expr_field_types() {
 #[test]
 fn test_all_dot_expr_field_types() {
     use super::expr::{DotExpr, FieldType, PopulateContext};
-    use wowlab_types::AuraIdx;
+    use wowlab_common::types::AuraIdx;
 
     let aura = AuraIdx(1);
 
@@ -2524,7 +2524,7 @@ fn test_all_combat_expr_field_types() {
 #[test]
 fn test_all_enemy_expr_field_types() {
     use super::expr::{EnemyExpr, FieldType, PopulateContext};
-    use wowlab_types::SpellIdx;
+    use wowlab_common::types::SpellIdx;
 
     assert_eq!(EnemyExpr::Count.field_type(), FieldType::Int);
     assert_eq!(
@@ -2975,7 +2975,7 @@ fn test_expression_variant_count() {
     let variant_count = 39; // Update this if variants are added/removed
 
     // Create 39 distinct expression variants
-    use wowlab_types::{AuraIdx, ResourceType, SpellIdx};
+    use wowlab_common::types::{AuraIdx, ResourceType, SpellIdx};
 
     let examples: Vec<Expr> = vec![
         // Literals (3)

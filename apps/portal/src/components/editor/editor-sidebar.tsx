@@ -29,7 +29,7 @@ import { useIntlayer } from "next-intlayer";
 import { useRef, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import type { Variable } from "@/lib/engine";
+import type { Variable } from "@/lib/editor";
 
 import { useEditor } from "@/lib/state/editor";
 

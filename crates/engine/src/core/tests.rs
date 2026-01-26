@@ -1,5 +1,5 @@
 use super::*;
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 
 #[test]
 fn event_queue_basic() {

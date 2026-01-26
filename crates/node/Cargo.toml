@@ -11,7 +11,7 @@ name = "wowlab_node"
 path = "src/lib.rs"
 
 [dependencies]
-wowlab-types = { path = "../types" }
+wowlab-common = { path = "../common" }
 wowlab-supabase = { path = "../supabase" }
 wowlab-centrifugo = { path = "../centrifugo" }
 urlencoding = "2"

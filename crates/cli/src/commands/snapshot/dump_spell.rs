@@ -1,7 +1,7 @@
 //! Dump spell command - Output a single spell as JSON for debugging
 
 use anyhow::Result;
-use wowlab_parsers::{transform::transform_spell, DbcData};
+use wowlab_common::parsers::{transform::transform_spell, DbcData};
 
 use super::DumpSpellArgs;
 

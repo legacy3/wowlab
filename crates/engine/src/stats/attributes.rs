@@ -1,4 +1,4 @@
-use wowlab_types::{Attribute, SpecId};
+use wowlab_common::types::{Attribute, SpecId};
 
 /// Primary stat values
 #[derive(Clone, Debug, Default)]

@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
+import type { Rotation, ValidationResult } from "@/lib/wasm";
+
 import { Badge, Button, Code, Text, Textarea } from "@/components/ui";
-import { engine, type Rotation, type ValidationResult } from "@/lib/engine";
+import { useEngine } from "@/providers";
 
 import {
   DataCard,
@@ -45,22 +47,19 @@ export function ValidatorSection() {
 }
 
 function ParserDemo() {
+  const engine = useEngine();
   const [input, setInput] = useState(EXAMPLE_VALID);
   const [result, setResult] = useState<Rotation | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleParse = async () => {
-    setIsLoading(true);
+  const handleParse = () => {
     setResult(null);
     setError(null);
     try {
-      const parsed = await engine.parseRotation(input);
+      const parsed = engine.parseRotation(input);
       setResult(parsed);
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -99,13 +98,13 @@ function ParserDemo() {
               fontFamily="mono"
               fontSize="sm"
             />
-            <Button size="sm" onClick={handleParse} loading={isLoading}>
+            <Button size="sm" onClick={handleParse}>
               Parse
             </Button>
           </Stack>
         </DemoBox>
         <DataCard title="parseRotation(json)" description="Parsed result">
-          <JsonOutput data={result} error={error} isLoading={isLoading} />
+          <JsonOutput data={result} error={error} isLoading={false} />
         </DataCard>
       </Stack>
     </Subsection>
@@ -152,22 +151,19 @@ function ValidationDisplay({ result }: { result: ValidationResult }) {
 }
 
 function ValidatorDemo() {
+  const engine = useEngine();
   const [input, setInput] = useState(EXAMPLE_VALID);
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleValidate = async () => {
-    setIsLoading(true);
+  const handleValidate = () => {
     setResult(null);
     setError(null);
     try {
-      const validated = await engine.validate(input);
+      const validated = engine.validateRotation(input);
       setResult(validated);
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -206,7 +202,7 @@ function ValidatorDemo() {
               fontFamily="mono"
               fontSize="sm"
             />
-            <Button size="sm" onClick={handleValidate} loading={isLoading}>
+            <Button size="sm" onClick={handleValidate}>
               Validate
             </Button>
           </Stack>
@@ -220,7 +216,7 @@ function ValidatorDemo() {
           ) : result ? (
             <ValidationDisplay result={result} />
           ) : (
-            <JsonOutput data={null} error={null} isLoading={isLoading} />
+            <JsonOutput data={null} error={null} isLoading={false} />
           )}
         </DataCard>
       </Stack>

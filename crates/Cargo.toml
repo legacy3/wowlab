@@ -3,14 +3,13 @@ resolver = "2"
 members = [
     "centrifugo",
     "cli",
+    "common",
     "engine",
     "node",
     "node-gui",
     "node-headless",
-    "parsers",
     "sentinel",
     "supabase",
-    "types",
 ]
 
 [workspace.package]

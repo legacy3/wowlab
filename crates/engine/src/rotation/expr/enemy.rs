@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use crate::sim::SimState;
-use wowlab_types::{SimTime, SpellIdx};
+use wowlab_common::types::{SimTime, SpellIdx};
 
 use super::{write_i32, FieldType, PopulateContext};
 

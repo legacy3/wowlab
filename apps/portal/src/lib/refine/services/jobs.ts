@@ -3,8 +3,8 @@
 import { useGetIdentity, useInvalidate, useList } from "@refinedev/core";
 import { useCallback, useState } from "react";
 
-import type { SimulationResult } from "@/lib/engine";
 import type { Json } from "@/lib/supabase/database.types";
+import type { SimulationResult } from "@/lib/wasm";
 
 import { createClient } from "@/lib/supabase/client";
 

@@ -5,7 +5,7 @@ import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
-import { ACTION_TYPES, type ActionType } from "@/lib/engine";
+import { ACTION_TYPES, type ActionType } from "@/lib/editor";
 import { useEditor } from "@/lib/state/editor";
 
 import { Button, Dialog, IconButton, Tabs, Text } from "../../ui";

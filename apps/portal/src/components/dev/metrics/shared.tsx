@@ -7,9 +7,6 @@ import { Group } from "@visx/group";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { AreaClosed, LinePath } from "@visx/shape";
-import { deviation, mean, quantile } from "d3-array";
-// @ts-expect-error - d3-regression doesn't have types
-import { regressionLinear } from "d3-regression";
 import { ChartLine } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Box, HStack, Stack } from "styled-system/jsx";
@@ -26,10 +23,7 @@ import {
   Text,
 } from "@/components/ui";
 import { Chart, chartColors } from "@/components/ui/charts";
-
-// =============================================================================
-// Types
-// =============================================================================
+import { useCommon } from "@/providers";
 
 type AnalysisKey = "mean" | "trend" | "ma" | "stdDev" | "quantiles";
 
@@ -69,10 +63,6 @@ interface RangeSelectorProps {
   value: TimeRange;
 }
 
-// =============================================================================
-// Constants
-// =============================================================================
-
 const RANGES: { label: string; value: TimeRange }[] = [
   { label: "1h", value: "1h" },
   { label: "6h", value: "6h" },
@@ -96,10 +86,6 @@ const ANALYSIS_OPTIONS: AnalysisOption[] = [
   { description: "P25/P50/P75/P99", key: "quantiles", label: "Percentiles" },
 ];
 
-// =============================================================================
-// MetricsChart
-// =============================================================================
-
 export function ErrorState({ message }: ErrorStateProps) {
   return (
     <Card.Root>
@@ -115,10 +101,6 @@ export function ErrorState({ message }: ErrorStateProps) {
   );
 }
 
-// =============================================================================
-// Analysis Popover
-// =============================================================================
-
 export function MetricsChart({
   data,
   error,
@@ -127,6 +109,7 @@ export function MetricsChart({
   labels,
   title,
 }: MetricsChartProps) {
+  const common = useCommon();
   const [enabled, setEnabled] = useState<Set<AnalysisKey>>(new Set());
 
   const toggle = (key: AnalysisKey) => {
@@ -157,47 +140,53 @@ export function MetricsChart({
   // Flatten all data for stats
   const allData = useMemo(() => series.flat(), [series]);
 
-  // Stats computed from all data
+  // Stats computed from all data using WASM
   const stats = useMemo(() => {
     if (allData.length < 2) {
       return null;
     }
 
-    const values = allData.map((d) => d.y);
-    const sorted = [...values].sort((a, b) => a - b);
+    const values = new Float64Array(allData.map((d) => d.y));
+    const wasmStats = common.computeStats(values);
 
     return {
-      mean: mean(values) ?? 0,
-      p25: quantile(sorted, 0.25) ?? 0,
-      p50: quantile(sorted, 0.5) ?? 0,
-      p75: quantile(sorted, 0.75) ?? 0,
-      p99: quantile(sorted, 0.99) ?? 0,
-      stdDev: deviation(values) ?? 0,
+      mean: wasmStats.mean,
+      p25: common.computePercentile(values, 25),
+      p50: common.computePercentile(values, 50),
+      p75: common.computePercentile(values, 75),
+      p99: common.computePercentile(values, 99),
+      stdDev: wasmStats.stdDev,
     };
-  }, [allData]);
+  }, [allData, common]);
 
-  // Trendline from first series
+  // Trendline from first series using WASM linear regression
   const trendline = useMemo(() => {
     if (!enabled.has("trend") || !series[0] || series[0].length < 2) {
       return undefined;
     }
 
     const d = series[0];
-    const regression = regressionLinear()
-      .x((p: DataPoint) => p.x)
-      .y((p: DataPoint) => p.y);
-    const result = regression(d);
+    const x = new Float64Array(d.map((p) => p.x));
+    const y = new Float64Array(d.map((p) => p.y));
+    const result = common.computeLinearRegression(x, y);
+
+    if (!result) {
+      return undefined;
+    }
 
     return {
       points: [
-        { x: d[0].x, y: result.predict(d[0].x) },
-        { x: d[d.length - 1].x, y: result.predict(d[d.length - 1].x) },
+        { x: d[0].x, y: result.slope * d[0].x + result.intercept },
+        {
+          x: d[d.length - 1].x,
+          y: result.slope * d[d.length - 1].x + result.intercept,
+        },
       ] as DataPoint[],
-      rSquared: result.rSquared as number,
+      rSquared: result.rSquared,
     };
-  }, [series, enabled]);
+  }, [series, enabled, common]);
 
-  // Moving average from first series
+  // Moving average from first series using WASM SMA
   const movingAverage = useMemo(() => {
     if (!enabled.has("ma") || !series[0] || series[0].length < 5) {
       return undefined;
@@ -205,15 +194,14 @@ export function MetricsChart({
 
     const d = series[0];
     const window = Math.min(5, Math.floor(d.length / 3));
+    const yValues = new Float64Array(d.map((p) => p.y));
+    const smaValues = common.computeSma(yValues, window);
 
-    return d.map((point, i) => {
-      const start = Math.max(0, i - window + 1);
-      const slice = d.slice(start, i + 1);
-      const avg = mean(slice, (s) => s.y) ?? point.y;
-
-      return { x: point.x, y: avg };
-    });
-  }, [series, enabled]);
+    return d.map((point, i) => ({
+      x: point.x,
+      y: smaValues[i],
+    }));
+  }, [series, enabled, common]);
 
   const hasAnalysis = enabled.size > 0;
 
@@ -395,10 +383,6 @@ export function MetricsChart({
   );
 }
 
-// =============================================================================
-// Shared Components
-// =============================================================================
-
 export function NotConfigured({ service }: NotConfiguredProps) {
   return (
     <Card.Root>
@@ -504,10 +488,6 @@ function AnalysisPopover({
     </Popover.Root>
   );
 }
-
-// =============================================================================
-// ChartSvg - Internal SVG renderer
-// =============================================================================
 
 function ChartSvg({
   height,
@@ -703,10 +683,6 @@ function ChartSvg({
     </Chart>
   );
 }
-
-// =============================================================================
-// Helpers
-// =============================================================================
 
 function formatValue(v: number): string {
   return v.toLocaleString(undefined, {

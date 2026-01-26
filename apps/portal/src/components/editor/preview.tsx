@@ -15,7 +15,7 @@ import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
-import type { ActionList, Variable } from "@/lib/engine";
+import type { ActionList, Variable } from "@/lib/editor";
 
 import { useEditor } from "@/lib/state/editor";
 

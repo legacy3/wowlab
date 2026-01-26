@@ -16,7 +16,7 @@ import { useIntlayer } from "next-intlayer";
 import { useCallback, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
-import type { ActionList } from "@/lib/engine";
+import type { ActionList } from "@/lib/editor";
 
 import { Badge, IconButton, Input, Text, Tooltip } from "@/components/ui";
 

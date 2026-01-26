@@ -6,7 +6,7 @@ import { QueryBuilder } from "react-querybuilder";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 
-import { CONDITION_FIELDS, OPERATORS } from "@/lib/engine";
+import { CONDITION_FIELDS, OPERATORS } from "@/lib/editor";
 
 import {
   AddGroupButton,

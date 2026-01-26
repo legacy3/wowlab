@@ -6,7 +6,7 @@ use crate::actor::Player;
 use crate::rotation::Action;
 use crate::sim::SimState;
 use crate::spec::{AuraDef, SpellDef};
-use wowlab_types::{AuraIdx, ClassId, DamageSchool, SpecId, SpellIdx, TargetIdx, UnitIdx};
+use wowlab_common::types::{AuraIdx, ClassId, DamageSchool, SpecId, SpellIdx, TargetIdx, UnitIdx};
 
 /// Core trait all specs must implement.
 ///

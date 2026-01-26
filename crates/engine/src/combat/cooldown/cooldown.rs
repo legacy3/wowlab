@@ -1,4 +1,4 @@
-use wowlab_types::SimTime;
+use wowlab_common::types::SimTime;
 
 /// Basic cooldown state
 #[derive(Clone, Debug)]

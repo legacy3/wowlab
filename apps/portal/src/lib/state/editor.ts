@@ -12,9 +12,9 @@ import type {
   RotationsRow,
   Variable,
   ViewMode,
-} from "@/lib/engine";
+} from "@/lib/editor";
 
-import { createEmptyCondition, generateId } from "@/lib/engine";
+import { createEmptyCondition, generateId } from "@/lib/editor";
 
 const createDefaultList = (): ActionList => ({
   actions: [],

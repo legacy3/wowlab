@@ -1,5 +1,5 @@
 use crate::combat::ActionState;
-use wowlab_types::{AuraIdx, SimTime, TargetIdx};
+use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 use serde::{Deserialize, Serialize};
 
 /// Flags for aura behavior

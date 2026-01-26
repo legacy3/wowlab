@@ -12,13 +12,53 @@ import type {
 } from "@/lib/supabase/types";
 
 import {
-  analyzeSpellDescription,
-  formatDuration,
-  formatRange,
-  renderSpellDescription,
+  analyzeSpellDesc,
+  renderSpellDesc,
   type SpellDescRenderResult,
   type SpellDescResolver,
-} from "@/lib/engine";
+} from "@/lib/wasm";
+
+export interface PaperdollState {
+  ap: number;
+  classId: number;
+  crit: number;
+  isMale: boolean;
+  level: number;
+  mastery: number;
+  maxHealth: number;
+  sp: number;
+  vers: number;
+}
+
+// TODO Replace this crap
+function formatDuration(ms: number): string {
+  if (ms === 0) {
+    return "0 sec";
+  }
+
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (hours > 0) {
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0
+      ? `${hours} hr ${remainingMinutes} min`
+      : hours === 1
+        ? "1 hour"
+        : `${hours} hours`;
+  }
+  if (minutes > 0) {
+    const remainingSeconds = seconds % 60;
+    return remainingSeconds > 0
+      ? `${minutes} min ${remainingSeconds} sec`
+      : minutes === 1
+        ? "1 min"
+        : `${minutes} min`;
+  }
+
+  return seconds === 1 ? "1 sec" : `${seconds} sec`;
+}
 
 import {
   useResource,
@@ -34,16 +74,9 @@ import {
   spells,
 } from "../resources";
 
-export interface PaperdollState {
-  ap: number;
-  classId: number;
-  crit: number;
-  isMale: boolean;
-  level: number;
-  mastery: number;
-  maxHealth: number;
-  sp: number;
-  vers: number;
+// TODO Replace this crap
+function formatRange(yards: number): string {
+  return yards === 0 ? "Melee" : `${yards} yd`;
 }
 
 export const defaultPaperdoll: PaperdollState = {
@@ -412,7 +445,7 @@ export function useSpellDescription(
     setAnalysisComplete(false);
     setAnalysisError(null);
 
-    analyzeSpellDescription(descriptionText, spellId)
+    analyzeSpellDesc(descriptionText, spellId)
       .then(({ dependencies }) => {
         const ids = new Set<number>();
 
@@ -514,7 +547,7 @@ export function useSpellDescription(
       activeAuras,
     );
 
-    renderSpellDescription(descriptionText, spell.id, resolver)
+    renderSpellDesc(descriptionText, spell.id, resolver)
       .then((result) => {
         setRenderResult(result);
         setIsRendering(false);

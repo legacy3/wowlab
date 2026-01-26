@@ -1,6 +1,6 @@
 use super::DamageMultipliers;
 use crate::core::FastRng;
-use wowlab_types::{DamageFlags, DamageSchool, HitResult};
+use wowlab_common::types::{DamageFlags, DamageSchool, HitResult};
 
 /// Result of damage calculation
 #[derive(Clone, Debug)]

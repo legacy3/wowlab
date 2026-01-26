@@ -91,7 +91,7 @@ Rotations use JSON with variables, action lists, and conditions:
 
 ## Key Dependencies
 
-- `wowlab-types`, `wowlab-parsers` - Shared types and data parsing
+- `wowlab-common` - Shared types, parsers, and stats
 - `cranelift` - JIT compilation for rotation evaluation
 - `rayon` - Parallel simulation
 - `bitflags` - Efficient flag types

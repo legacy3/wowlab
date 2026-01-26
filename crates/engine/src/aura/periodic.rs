@@ -1,5 +1,5 @@
 use crate::combat::ActionState;
-use wowlab_types::{AuraIdx, SimTime};
+use wowlab_common::types::{AuraIdx, SimTime};
 use serde::{Deserialize, Serialize};
 
 /// Defines periodic effect behavior

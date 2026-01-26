@@ -40,7 +40,7 @@ src/
 
 - `wowlab-engine` - Core simulation engine (with JIT)
 - `wowlab-supabase` - Supabase client (PostgREST + Realtime)
-- `wowlab-types` - Shared type definitions
+- `wowlab-common` - Shared types and parsers
 - `tokio` / `tokio-util` - Async runtime + CancellationToken
 - `reqwest` - HTTP client (for sentinel requests)
 - `ed25519-dalek` - Ed25519 signatures for node auth

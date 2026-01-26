@@ -4,7 +4,7 @@
 
 use super::constants::*;
 use crate::rotation::SpecResolver;
-use wowlab_types::SpellIdx;
+use wowlab_common::types::SpellIdx;
 
 /// Create a spec resolver for BM Hunter.
 ///

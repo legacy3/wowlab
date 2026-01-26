@@ -2,6 +2,8 @@
 
 import { Stack } from "styled-system/jsx";
 
+import { WasmProvider } from "@/providers";
+
 import { PageLayout } from "../shared";
 import { SchemaSection, StatusSection, ValidatorSection } from "./sections";
 
@@ -13,12 +15,14 @@ const NAV = [
 
 export function EngineContent() {
   return (
-    <PageLayout nav={NAV}>
-      <Stack gap="16">
-        <StatusSection />
-        <SchemaSection />
-        <ValidatorSection />
-      </Stack>
-    </PageLayout>
+    <WasmProvider>
+      <PageLayout nav={NAV}>
+        <Stack gap="16">
+          <StatusSection />
+          <SchemaSection />
+          <ValidatorSection />
+        </Stack>
+      </PageLayout>
+    </WasmProvider>
   );
 }

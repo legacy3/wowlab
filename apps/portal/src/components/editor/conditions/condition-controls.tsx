@@ -14,7 +14,7 @@ import { PlusIcon, XIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 
-import { CONDITION_FIELDS, FIELD_CATEGORIES } from "@/lib/engine";
+import { CONDITION_FIELDS, FIELD_CATEGORIES } from "@/lib/editor";
 
 import { Button, Combobox, Empty, IconButton, Input } from "../../ui";
 import { SelectField, type SelectOption } from "../common/select-field";

@@ -1,7 +1,7 @@
 use crate::actor::{Enemy, Player};
 use crate::aura::AuraTracker;
 use crate::combat::ActionState;
-use wowlab_types::{DamageSchool, SimTime, SpellIdx, TargetIdx};
+use wowlab_common::types::{DamageSchool, SimTime, SpellIdx, TargetIdx};
 
 /// Context for checking if a spell can be cast
 #[derive(Clone, Debug)]
@@ -89,12 +89,12 @@ pub enum CastResult {
     OnCooldown { remaining: SimTime },
     /// Not enough resource
     NotEnoughResource {
-        resource: wowlab_types::ResourceType,
+        resource: wowlab_common::types::ResourceType,
         have: f32,
         need: f32,
     },
     /// Missing required aura
-    MissingRequiredAura { aura: wowlab_types::AuraIdx },
+    MissingRequiredAura { aura: wowlab_common::types::AuraIdx },
     /// Invalid target
     InvalidTarget,
     /// Out of range
@@ -126,7 +126,7 @@ pub struct DamageEvent {
 /// Resource event
 #[derive(Clone, Debug)]
 pub struct ResourceEvent {
-    pub resource: wowlab_types::ResourceType,
+    pub resource: wowlab_common::types::ResourceType,
     pub amount: f32,
     pub is_gain: bool,
     pub source: SpellIdx,

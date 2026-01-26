@@ -7,7 +7,7 @@ use tsify::Tsify;
 
 use crate::resource::ResourceRegen;
 use crate::sim::SimState;
-use wowlab_types::{ResourceType, SimTime};
+use wowlab_common::types::{ResourceType, SimTime};
 
 use super::{write_f64, FieldType, PopulateContext};
 
