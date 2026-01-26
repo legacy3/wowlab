@@ -12,11 +12,10 @@ import {
 } from "@/lib/state";
 
 import {
-  ChartCard,
   ErrorState,
+  MetricsChart,
   NotConfigured,
   RangeSelector,
-  TimeSeriesChart,
 } from "../shared";
 
 export function SentinelTab() {
@@ -118,20 +117,19 @@ function SentinelCharts() {
       <RangeSelector value={range} onChange={setRange} />
 
       <Grid columns={{ base: 1, lg: 2 }} gap="4">
-        <ChartCard title="Nodes Online">
-          <TimeSeriesChart
-            data={nodesOnline.data}
-            isLoading={nodesOnline.isLoading}
-            error={nodesOnline.error}
-          />
-        </ChartCard>
+        <MetricsChart
+          title="Nodes Online"
+          data={nodesOnline.data}
+          isLoading={nodesOnline.isLoading}
+          error={nodesOnline.error}
+        />
 
-        <ChartCard title="Chunks (Running vs Pending)">
-          <TimeSeriesChart
-            data={[chunksRunning.data, chunksPending.data]}
-            isLoading={chunksRunning.isLoading || chunksPending.isLoading}
-          />
-        </ChartCard>
+        <MetricsChart
+          title="Chunks"
+          data={[chunksRunning.data, chunksPending.data]}
+          labels={["Running", "Pending"]}
+          isLoading={chunksRunning.isLoading || chunksPending.isLoading}
+        />
       </Grid>
     </Stack>
   );

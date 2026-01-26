@@ -7,10 +7,13 @@ import { useMemo, useState } from "react";
 import { HStack, Stack, VStack } from "styled-system/jsx";
 
 import {
+  AnalysisChart,
   AreaChart,
   BarChart,
+  DistributionChart,
   LineChart,
   PieChart,
+  StatBadge,
 } from "@/components/ui/charts";
 import * as Switch from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
@@ -52,152 +55,6 @@ const dpsDistributionData = [
 
 type DataPoint = { x: number; y: number };
 
-function AnalysisChart({
-  data,
-  height,
-  movingAverage,
-  showDots,
-  stdDev,
-  trendline,
-  width,
-}: {
-  data: DataPoint[];
-  trendline?: DataPoint[];
-  movingAverage?: DataPoint[];
-  stdDev?: { mean: number; stdDev: number };
-  showDots: boolean;
-  width: number;
-  height: number;
-}) {
-  const margin = { bottom: 40, left: 60, right: 20, top: 20 };
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
-
-  const xScale = scaleLinear({
-    domain: [0, Math.max(...data.map((d) => d.x))],
-    range: [0, innerWidth],
-  });
-
-  const yMin = Math.min(...data.map((d) => d.y)) * 0.9;
-  const yMax = Math.max(...data.map((d) => d.y)) * 1.1;
-
-  const yScale = scaleLinear({
-    domain: [yMin, yMax],
-    nice: true,
-    range: [innerHeight, 0],
-  });
-
-  return (
-    <Chart>
-      <svg width={width} height={height}>
-        <Group left={margin.left} top={margin.top}>
-          <GridRows
-            scale={yScale}
-            width={innerWidth}
-            stroke={chartColors.grid}
-            strokeOpacity={0.5}
-          />
-
-          {/* Std Dev Band */}
-          {stdDev && (
-            <AreaClosed
-              data={data}
-              x={(d) => xScale(d.x)}
-              y0={() => yScale(stdDev.mean - stdDev.stdDev)}
-              y1={() => yScale(stdDev.mean + stdDev.stdDev)}
-              yScale={yScale}
-              fill={chartColors[3]}
-              fillOpacity={0.15}
-            />
-          )}
-
-          {/* Mean line when showing std dev */}
-          {stdDev && (
-            <line
-              x1={0}
-              x2={innerWidth}
-              y1={yScale(stdDev.mean)}
-              y2={yScale(stdDev.mean)}
-              stroke={chartColors[3]}
-              strokeWidth={1}
-              strokeDasharray="4,4"
-              strokeOpacity={0.6}
-            />
-          )}
-
-          {/* Main data line */}
-          <LinePath
-            data={data}
-            x={(d) => xScale(d.x)}
-            y={(d) => yScale(d.y)}
-            stroke={chartColors[1]}
-            strokeWidth={2}
-            curve={curveMonotoneX}
-          />
-
-          {/* Moving Average */}
-          {movingAverage && (
-            <LinePath
-              data={movingAverage}
-              x={(d) => xScale(d.x)}
-              y={(d) => yScale(d.y)}
-              stroke={chartColors[2]}
-              strokeWidth={2}
-              curve={curveMonotoneX}
-            />
-          )}
-
-          {/* Trendline */}
-          {trendline && (
-            <LinePath
-              data={trendline}
-              x={(d) => xScale(d.x)}
-              y={(d) => yScale(d.y)}
-              stroke={chartColors[4]}
-              strokeWidth={2}
-              strokeDasharray="6,4"
-            />
-          )}
-
-          {/* Data points */}
-          {showDots &&
-            data.map((d, i) => (
-              <circle
-                key={i}
-                cx={xScale(d.x)}
-                cy={yScale(d.y)}
-                r={3}
-                fill={chartColors[1]}
-              />
-            ))}
-
-          <AxisBottom
-            top={innerHeight}
-            scale={xScale}
-            stroke={chartColors.axis}
-            tickStroke={chartColors.axis}
-            tickLabelProps={{ fill: chartColors.text, fontSize: 11 }}
-            label="Time (s)"
-            labelProps={{
-              fill: chartColors.text,
-              fontSize: 11,
-              textAnchor: "middle",
-            }}
-            labelOffset={15}
-          />
-          <AxisLeft
-            scale={yScale}
-            stroke={chartColors.axis}
-            tickStroke={chartColors.axis}
-            tickLabelProps={{ fill: chartColors.text, fontSize: 11 }}
-            tickFormat={(v) => `${Number(v) / 1000}k`}
-          />
-        </Group>
-      </svg>
-    </Chart>
-  );
-}
-
 function AnalysisDemo() {
   const [showTrendline, setShowTrendline] = useState(true);
   const [showMovingAvg, setShowMovingAvg] = useState(false);
@@ -223,8 +80,8 @@ function AnalysisDemo() {
 
   const trendline = useMemo(() => {
     const regression = regressionLinear()
-      .x((d: { x: number; y: number }) => d.x)
-      .y((d: { x: number; y: number }) => d.y);
+      .x((d: DataPoint) => d.x)
+      .y((d: DataPoint) => d.y);
     const result = regression(data);
     return {
       points: [
@@ -307,9 +164,12 @@ function AnalysisDemo() {
                 ? { mean: stats.mean, stdDev: stats.stdDev }
                 : undefined
             }
+            showMean={showStdDev ? stats.mean : undefined}
             showDots={showDataPoints}
             width={520}
             height={280}
+            xAxisLabel="Time (s)"
+            formatY={(v) => `${v / 1000}k`}
           />
           <HStack gap="6" mt="3" flexWrap="wrap" justify="center">
             <StatBadge
@@ -340,6 +200,7 @@ function AnalysisDemo() {
             percentiles={showPercentiles ? distStats : undefined}
             width={520}
             height={240}
+            yAxisLabel="Count"
           />
           {showPercentiles && (
             <HStack gap="6" mt="3" flexWrap="wrap" justify="center">
@@ -365,16 +226,6 @@ function AnalysisDemo() {
     </Subsection>
   );
 }
-
-// Custom chart component with analysis overlays
-import { AxisBottom, AxisLeft } from "@visx/axis";
-import { curveMonotoneX } from "@visx/curve";
-import { GridRows } from "@visx/grid";
-import { Group } from "@visx/group";
-import { scaleBand, scaleLinear } from "@visx/scale";
-import { AreaClosed, Bar, LinePath } from "@visx/shape";
-
-import { Chart, chartColors } from "@/components/ui/charts";
 
 function AreaChartDemo() {
   return (
@@ -433,120 +284,6 @@ function BarChartDemo() {
   );
 }
 
-function DistributionChart({
-  data,
-  height,
-  percentiles,
-  width,
-}: {
-  data: { label: string; value: number; x0: number; x1: number }[];
-  percentiles?: { mean: number; p50: number; p75: number; p99: number };
-  width: number;
-  height: number;
-}) {
-  const margin = { bottom: 40, left: 50, right: 20, top: 20 };
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
-
-  const xScale = scaleBand({
-    domain: data.map((d) => d.label),
-    padding: 0.2,
-    range: [0, innerWidth],
-  });
-
-  const yScale = scaleLinear({
-    domain: [0, Math.max(...data.map((d) => d.value))],
-    nice: true,
-    range: [innerHeight, 0],
-  });
-
-  // Scale for percentile markers (based on actual DPS values)
-  const xLinear = scaleLinear({
-    domain: [data[0]?.x0 ?? 0, data[data.length - 1]?.x1 ?? 0],
-    range: [0, innerWidth],
-  });
-
-  return (
-    <Chart>
-      <svg width={width} height={height}>
-        <Group left={margin.left} top={margin.top}>
-          <GridRows
-            scale={yScale}
-            width={innerWidth}
-            stroke={chartColors.grid}
-            strokeOpacity={0.5}
-          />
-
-          {data.map((d) => {
-            const barWidth = xScale.bandwidth();
-            const barHeight = innerHeight - yScale(d.value);
-            const barX = xScale(d.label) ?? 0;
-            const barY = innerHeight - barHeight;
-
-            return (
-              <Bar
-                key={d.label}
-                x={barX}
-                y={barY}
-                width={barWidth}
-                height={barHeight}
-                fill={chartColors[1]}
-                fillOpacity={0.8}
-                rx={2}
-              />
-            );
-          })}
-
-          {/* Percentile markers */}
-          {percentiles && (
-            <>
-              <PercentileLine
-                x={xLinear(percentiles.p50)}
-                height={innerHeight}
-                color={chartColors[2]}
-                label="P50"
-              />
-              <PercentileLine
-                x={xLinear(percentiles.p75)}
-                height={innerHeight}
-                color={chartColors[3]}
-                label="P75"
-              />
-              <PercentileLine
-                x={xLinear(percentiles.p99)}
-                height={innerHeight}
-                color={chartColors[1]}
-                label="P99"
-              />
-            </>
-          )}
-
-          <AxisBottom
-            top={innerHeight}
-            scale={xScale}
-            stroke={chartColors.axis}
-            tickStroke={chartColors.axis}
-            tickLabelProps={{ fill: chartColors.text, fontSize: 10 }}
-          />
-          <AxisLeft
-            scale={yScale}
-            stroke={chartColors.axis}
-            tickStroke={chartColors.axis}
-            tickLabelProps={{ fill: chartColors.text, fontSize: 11 }}
-            label="Count"
-            labelProps={{
-              fill: chartColors.text,
-              fontSize: 11,
-              textAnchor: "middle",
-            }}
-            labelOffset={30}
-          />
-        </Group>
-      </svg>
-    </Chart>
-  );
-}
-
 function LineChartDemo() {
   return (
     <Subsection title="Line Chart">
@@ -580,42 +317,6 @@ function LineChartDemo() {
   );
 }
 
-function PercentileLine({
-  color,
-  height,
-  label,
-  x,
-}: {
-  x: number;
-  height: number;
-  color: string;
-  label: string;
-}) {
-  return (
-    <g>
-      <line
-        x1={x}
-        x2={x}
-        y1={0}
-        y2={height}
-        stroke={color}
-        strokeWidth={2}
-        strokeDasharray="4,2"
-      />
-      <text
-        x={x}
-        y={-5}
-        fill={color}
-        fontSize={10}
-        textAnchor="middle"
-        fontWeight="bold"
-      >
-        {label}
-      </text>
-    </g>
-  );
-}
-
 function PieChartDemo() {
   return (
     <Subsection title="Pie Chart">
@@ -645,33 +346,6 @@ function PieChartDemo() {
         </DemoBox>
       </Stack>
     </Subsection>
-  );
-}
-
-function StatBadge({
-  color = "gray",
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-  color?: "gray" | "green" | "blue" | "amber";
-}) {
-  const colorMap = {
-    amber: "amber.text",
-    blue: "blue.text",
-    gray: "fg.muted",
-    green: "green.text",
-  };
-  return (
-    <VStack gap="0">
-      <Text textStyle="xs" color="fg.subtle">
-        {label}
-      </Text>
-      <Text textStyle="sm" fontWeight="medium" color={colorMap[color]}>
-        {value}
-      </Text>
-    </VStack>
   );
 }
 

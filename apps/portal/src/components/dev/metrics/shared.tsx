@@ -5,23 +5,56 @@ import { curveMonotoneX } from "@visx/curve";
 import { GridRows } from "@visx/grid";
 import { Group } from "@visx/group";
 import { ParentSize } from "@visx/responsive";
-import { scaleLinear } from "@visx/scale";
+import { scaleLinear, scaleTime } from "@visx/scale";
 import { AreaClosed, LinePath } from "@visx/shape";
-import { deviation, mean } from "d3-array";
+import { deviation, mean, quantile } from "d3-array";
 // @ts-expect-error - d3-regression doesn't have types
 import { regressionLinear } from "d3-regression";
 import { useMemo, useState } from "react";
-import { Box, HStack, Stack, VStack } from "styled-system/jsx";
+import { Box, HStack, Stack } from "styled-system/jsx";
 
-import type { TimeSeriesPoint } from "@/lib/state";
-import type { TimeRange } from "@/lib/state";
+import type { TimeRange, TimeSeriesPoint } from "@/lib/state";
 
-import { Badge, Button, Card, LineChart, Text } from "@/components/ui";
+import { Badge, Button, Card, Text } from "@/components/ui";
 import { Chart, chartColors } from "@/components/ui/charts";
 import * as Switch from "@/components/ui/switch";
 
 // =============================================================================
-// Range Selector
+// Types
+// =============================================================================
+
+type DataPoint = { x: number; y: number };
+
+interface ErrorStateProps {
+  message: string;
+}
+
+interface MetricsChartProps {
+  /** Single series or array of series */
+  data: TimeSeriesPoint[] | TimeSeriesPoint[][];
+  /** Error state */
+  error?: Error | null;
+  /** Chart height */
+  height?: number;
+  /** Loading state */
+  isLoading: boolean;
+  /** Series labels for legend (only for multi-series) */
+  labels?: string[];
+  /** Chart title */
+  title: string;
+}
+
+interface NotConfiguredProps {
+  service: string;
+}
+
+interface RangeSelectorProps {
+  onChange: (range: TimeRange) => void;
+  value: TimeRange;
+}
+
+// =============================================================================
+// Constants
 // =============================================================================
 
 const RANGES: { label: string; value: TimeRange }[] = [
@@ -31,119 +64,115 @@ const RANGES: { label: string; value: TimeRange }[] = [
   { label: "7d", value: "7d" },
 ];
 
-interface AnalyticsChartProps {
-  data: TimeSeriesPoint[];
-  error?: Error | null;
-  height?: number;
-  isLoading: boolean;
-  title: string;
-}
+const COLORS = [
+  chartColors[1],
+  chartColors[2],
+  chartColors[3],
+  chartColors[4],
+  chartColors[5],
+];
 
-interface ChartCardProps {
-  action?: React.ReactNode;
-  children: React.ReactNode;
-  title: string;
+// =============================================================================
+// MetricsChart - One chart for all metrics
+// =============================================================================
+
+export function ErrorState({ message }: ErrorStateProps) {
+  return (
+    <Card.Root>
+      <Card.Body>
+        <HStack gap="3">
+          <Badge colorPalette="red">Error</Badge>
+          <Text color="fg.error" textStyle="sm">
+            {message}
+          </Text>
+        </HStack>
+      </Card.Body>
+    </Card.Root>
+  );
 }
 
 // =============================================================================
-// Time Series Chart
-// =============================================================================
-
-type DataPoint = { x: number; y: number };
-
-interface ErrorStateProps {
-  message: string;
-}
-
-interface NotConfiguredProps {
-  service: string;
-}
-
-// =============================================================================
-// Service Status Badge
-// =============================================================================
-
-interface RangeSelectorProps {
-  onChange: (range: TimeRange) => void;
-  value: TimeRange;
-}
-
-interface TimeSeriesChartProps {
-  data: TimeSeriesPoint[] | TimeSeriesPoint[][];
-  error?: Error | null;
-  height?: number;
-  isLoading: boolean;
-}
-
-// =============================================================================
-// Error State
+// ChartSvg - Internal SVG renderer
 // =============================================================================
 
 /**
- * Chart with toggleable statistical analysis overlays.
- * Includes: trendline, moving average, std dev band, mean line.
+ * Single reusable chart component for all metrics.
+ * Supports single or multi-series data with optional analysis overlays.
  */
-export function AnalyticsChart({
+export function MetricsChart({
   data,
   error,
   height = 240,
   isLoading,
+  labels,
   title,
-}: AnalyticsChartProps) {
+}: MetricsChartProps) {
   const [showTrendline, setShowTrendline] = useState(false);
   const [showMovingAvg, setShowMovingAvg] = useState(false);
   const [showStdDev, setShowStdDev] = useState(false);
   const [showMean, setShowMean] = useState(false);
+  const [showQuantiles, setShowQuantiles] = useState(false);
 
-  const hasAnalysis = showTrendline || showMovingAvg || showStdDev || showMean;
+  // Normalize to array of series
+  const series = useMemo(() => {
+    if (data.length === 0) return [];
+    return Array.isArray(data[0])
+      ? (data as TimeSeriesPoint[][])
+      : [data as TimeSeriesPoint[]];
+  }, [data]);
 
-  // Normalize data
-  const normalized = useMemo(
-    () => data.map((p, i) => ({ x: i, y: p.y })),
-    [data],
-  );
+  // Flatten all data for stats
+  const allData = useMemo(() => series.flat(), [series]);
 
-  // Compute stats
+  // Stats computed from all data
   const stats = useMemo(() => {
-    if (normalized.length < 2) return null;
-    const values = normalized.map((d) => d.y);
+    if (allData.length < 2) return null;
+    const values = allData.map((d) => d.y);
+    const sorted = [...values].sort((a, b) => a - b);
     return {
       mean: mean(values) ?? 0,
+      p25: quantile(sorted, 0.25) ?? 0,
+      p50: quantile(sorted, 0.5) ?? 0,
+      p75: quantile(sorted, 0.75) ?? 0,
+      p99: quantile(sorted, 0.99) ?? 0,
       stdDev: deviation(values) ?? 0,
     };
-  }, [normalized]);
+  }, [allData]);
 
-  // Compute trendline
+  // Trendline from first series
   const trendline = useMemo(() => {
-    if (!showTrendline || normalized.length < 2) return null;
+    if (!showTrendline || !series[0] || series[0].length < 2) return undefined;
+    const d = series[0];
     const regression = regressionLinear()
-      .x((d: DataPoint) => d.x)
-      .y((d: DataPoint) => d.y);
-    const result = regression(normalized);
+      .x((p: DataPoint) => p.x)
+      .y((p: DataPoint) => p.y);
+    const result = regression(d);
     return {
       points: [
-        { x: normalized[0].x, y: result.predict(normalized[0].x) },
-        {
-          x: normalized[normalized.length - 1].x,
-          y: result.predict(normalized[normalized.length - 1].x),
-        },
+        { x: d[0].x, y: result.predict(d[0].x) },
+        { x: d[d.length - 1].x, y: result.predict(d[d.length - 1].x) },
       ] as DataPoint[],
       rSquared: result.rSquared as number,
     };
-  }, [normalized, showTrendline]);
+  }, [series, showTrendline]);
 
-  // Compute moving average
+  // Moving average from first series
   const movingAverage = useMemo(() => {
-    if (!showMovingAvg || normalized.length < 5) return null;
-    const window = Math.min(5, Math.floor(normalized.length / 3));
-    return normalized.map((d, i) => {
+    if (!showMovingAvg || !series[0] || series[0].length < 5) return undefined;
+    const d = series[0];
+    const window = Math.min(5, Math.floor(d.length / 3));
+    return d.map((point, i) => {
       const start = Math.max(0, i - window + 1);
-      const slice = normalized.slice(start, i + 1);
-      const avg = mean(slice, (s) => s.y) ?? d.y;
-      return { x: d.x, y: avg };
+      const slice = d.slice(start, i + 1);
+      const avg = mean(slice, (s) => s.y) ?? point.y;
+      return { x: point.x, y: avg };
     });
-  }, [normalized, showMovingAvg]);
+  }, [series, showMovingAvg]);
 
+  const hasAnalysis =
+    showTrendline || showMovingAvg || showStdDev || showMean || showQuantiles;
+
+  // Loading state
   if (isLoading) {
     return (
       <Card.Root h="full">
@@ -166,6 +195,7 @@ export function AnalyticsChart({
     );
   }
 
+  // Error state
   if (error) {
     return (
       <Card.Root h="full">
@@ -188,7 +218,8 @@ export function AnalyticsChart({
     );
   }
 
-  if (normalized.length < 2) {
+  // No data state
+  if (allData.length < 2) {
     return (
       <Card.Root h="full">
         <Card.Header py="3">
@@ -214,27 +245,52 @@ export function AnalyticsChart({
     <Card.Root h="full">
       <Card.Header py="3">
         <HStack justify="space-between" flexWrap="wrap" gap="2">
-          <Card.Title textStyle="sm">{title}</Card.Title>
+          <HStack gap="2">
+            <Card.Title textStyle="sm">{title}</Card.Title>
+            {labels && series.length > 1 && (
+              <HStack gap="1">
+                {labels.map((label, i) => (
+                  <Box
+                    key={i}
+                    px="1.5"
+                    py="0.5"
+                    rounded="sm"
+                    bg="bg.subtle"
+                    display="flex"
+                    alignItems="center"
+                    gap="1"
+                  >
+                    <Box
+                      w="2"
+                      h="2"
+                      rounded="full"
+                      bg={COLORS[i % COLORS.length]}
+                    />
+                    <Text textStyle="xs" color="fg.muted">
+                      {label}
+                    </Text>
+                  </Box>
+                ))}
+              </HStack>
+            )}
+          </HStack>
           <HStack gap="3" flexWrap="wrap">
-            <AnalysisToggle
-              checked={showMean}
-              onChange={setShowMean}
-              label="Mean"
-            />
-            <AnalysisToggle
+            <Toggle checked={showMean} onChange={setShowMean} label="Mean" />
+            <Toggle
               checked={showTrendline}
               onChange={setShowTrendline}
               label="Trend"
             />
-            <AnalysisToggle
+            <Toggle
               checked={showMovingAvg}
               onChange={setShowMovingAvg}
               label="MA"
             />
-            <AnalysisToggle
-              checked={showStdDev}
-              onChange={setShowStdDev}
-              label="±σ"
+            <Toggle checked={showStdDev} onChange={setShowStdDev} label="±σ" />
+            <Toggle
+              checked={showQuantiles}
+              onChange={setShowQuantiles}
+              label="Pct"
             />
           </HStack>
         </HStack>
@@ -244,72 +300,71 @@ export function AnalyticsChart({
           <ParentSize debounceTime={50}>
             {({ width }) =>
               width > 0 ? (
-                <AnalysisChartInner
-                  data={normalized}
+                <ChartSvg
+                  series={series}
                   width={width}
                   height={height}
-                  trendline={trendline?.points}
-                  movingAverage={movingAverage ?? undefined}
-                  stdDev={showStdDev && stats ? stats : undefined}
                   showMean={showMean && stats ? stats.mean : undefined}
+                  stdDev={
+                    showStdDev && stats
+                      ? { mean: stats.mean, stdDev: stats.stdDev }
+                      : undefined
+                  }
+                  trendline={trendline?.points}
+                  movingAverage={movingAverage}
+                  quantiles={
+                    showQuantiles && stats
+                      ? {
+                          p25: stats.p25,
+                          p50: stats.p50,
+                          p75: stats.p75,
+                          p99: stats.p99,
+                        }
+                      : undefined
+                  }
                 />
               ) : null
             }
           </ParentSize>
         </Box>
-        {hasAnalysis && stats && (
-          <HStack gap="4" mt="2" justify="center" flexWrap="wrap">
-            {(showMean || showStdDev) && (
-              <StatBadge label="Mean" value={formatValue(stats.mean)} />
-            )}
-            {showStdDev && (
-              <StatBadge
-                label="Std Dev"
-                value={`±${formatValue(stats.stdDev)}`}
-              />
-            )}
-            {showTrendline && trendline && (
-              <StatBadge label="R²" value={trendline.rSquared.toFixed(3)} />
-            )}
-          </HStack>
-        )}
+        <Box h="10" mt="2">
+          {hasAnalysis && stats && (
+            <HStack gap="4" justify="center" flexWrap="wrap">
+              {(showMean || showStdDev) && (
+                <Stat label="Mean" value={formatValue(stats.mean)} />
+              )}
+              {showStdDev && (
+                <Stat label="Std Dev" value={`±${formatValue(stats.stdDev)}`} />
+              )}
+              {showTrendline && trendline && (
+                <Stat label="R²" value={trendline.rSquared.toFixed(3)} />
+              )}
+              {showQuantiles && (
+                <>
+                  <Stat
+                    label="P50"
+                    value={formatValue(stats.p50)}
+                    color="green.text"
+                  />
+                  <Stat
+                    label="P75"
+                    value={formatValue(stats.p75)}
+                    color="blue.text"
+                  />
+                  <Stat
+                    label="P99"
+                    value={formatValue(stats.p99)}
+                    color="amber.text"
+                  />
+                </>
+              )}
+            </HStack>
+          )}
+        </Box>
       </Card.Body>
     </Card.Root>
   );
 }
-
-export function ChartCard({ action, children, title }: ChartCardProps) {
-  return (
-    <Card.Root h="full">
-      <Card.Header py="3">
-        <HStack justify="space-between">
-          <Card.Title textStyle="sm">{title}</Card.Title>
-          {action}
-        </HStack>
-      </Card.Header>
-      <Card.Body pt="0">{children}</Card.Body>
-    </Card.Root>
-  );
-}
-
-export function ErrorState({ message }: ErrorStateProps) {
-  return (
-    <Card.Root>
-      <Card.Body>
-        <HStack gap="3">
-          <Badge colorPalette="red">Error</Badge>
-          <Text color="fg.error" textStyle="sm">
-            {message}
-          </Text>
-        </HStack>
-      </Card.Body>
-    </Card.Root>
-  );
-}
-
-// =============================================================================
-// Analytics Chart - Chart with toggleable analysis features
-// =============================================================================
 
 export function NotConfigured({ service }: NotConfiguredProps) {
   return (
@@ -329,6 +384,10 @@ export function NotConfigured({ service }: NotConfiguredProps) {
   );
 }
 
+// =============================================================================
+// Shared Components
+// =============================================================================
+
 export function RangeSelector({ onChange, value }: RangeSelectorProps) {
   return (
     <HStack gap="1">
@@ -346,116 +405,63 @@ export function RangeSelector({ onChange, value }: RangeSelectorProps) {
   );
 }
 
-export function TimeSeriesChart({
-  data,
-  error,
-  height = 200,
-  isLoading,
-}: TimeSeriesChartProps) {
-  if (isLoading) {
-    return (
-      <Box
-        h={height}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text color="fg.muted" textStyle="sm">
-          Loading...
-        </Text>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        h={height}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text color="fg.error" textStyle="sm">
-          {error.message}
-        </Text>
-      </Box>
-    );
-  }
-
-  const series = Array.isArray(data[0])
-    ? (data as TimeSeriesPoint[][])
-    : [data as TimeSeriesPoint[]];
-  const hasData = series.some((s) => s.length >= 2);
-
-  if (!hasData) {
-    return (
-      <Box
-        h={height}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text color="fg.muted" textStyle="sm">
-          Not enough data points
-        </Text>
-      </Box>
-    );
-  }
-
-  // Normalize timestamps to indices for display
-  const normalized = series.map((s) => s.map((p, i) => ({ x: i, y: p.y })));
-  const chartData = normalized.length === 1 ? normalized[0] : normalized;
-
-  return (
-    <Box h={height}>
-      <ParentSize debounceTime={50}>
-        {({ width }) =>
-          width > 0 ? (
-            <LineChart
-              data={chartData}
-              width={width}
-              height={height}
-              showDots={series[0].length <= 30}
-            />
-          ) : null
-        }
-      </ParentSize>
-    </Box>
-  );
-}
-
-function AnalysisChartInner({
-  data,
+function ChartSvg({
   height,
   movingAverage,
+  quantiles,
+  series,
   showMean,
   stdDev,
   trendline,
   width,
 }: {
-  data: DataPoint[];
+  series: TimeSeriesPoint[][];
+  width: number;
   height: number;
-  movingAverage?: DataPoint[];
   showMean?: number;
   stdDev?: { mean: number; stdDev: number };
   trendline?: DataPoint[];
-  width: number;
+  movingAverage?: DataPoint[];
+  quantiles?: { p25?: number; p50?: number; p75?: number; p99?: number };
 }) {
-  const margin = { bottom: 30, left: 50, right: 10, top: 10 };
+  const margin = { bottom: 30, left: 50, right: 40, top: 10 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  const xMax = Math.max(...data.map((d) => d.x));
-  const yValues = data.map((d) => d.y);
-  const yMin = Math.min(...yValues) * 0.95;
-  const yMax = Math.max(...yValues) * 1.05;
+  const allData = series.flat();
+  if (allData.length === 0) return null;
 
-  const xScale = scaleLinear({ domain: [0, xMax], range: [0, innerWidth] });
+  const xMin = Math.min(...allData.map((d) => d.x));
+  const xMax = Math.max(...allData.map((d) => d.x));
+  const yMin = Math.min(...allData.map((d) => d.y)) * 0.95;
+  const yMax = Math.max(...allData.map((d) => d.y)) * 1.05;
+
+  const xScale = scaleTime({
+    domain: [new Date(xMin * 1000), new Date(xMax * 1000)],
+    range: [0, innerWidth],
+  });
+
   const yScale = scaleLinear({
     domain: [yMin, yMax],
     nice: true,
     range: [innerHeight, 0],
   });
+
+  const getX = (d: DataPoint) => xScale(new Date(d.x * 1000));
+
+  const formatTimeTick = (date: Date) => {
+    const range = xMax - xMin;
+    if (range > 86400 * 2) {
+      return date.toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+      });
+    }
+    return date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <Chart>
@@ -469,15 +475,50 @@ function AnalysisChartInner({
           />
 
           {/* Std Dev Band */}
-          {stdDev && (
+          {stdDev && series[0] && series[0].length > 0 && (
             <AreaClosed
-              data={data}
-              x={(d) => xScale(d.x)}
+              data={series[0]}
+              x={getX}
               y0={() => yScale(stdDev.mean - stdDev.stdDev)}
               y1={() => yScale(stdDev.mean + stdDev.stdDev)}
               yScale={yScale}
               fill={chartColors[3]}
               fillOpacity={0.15}
+            />
+          )}
+
+          {/* Quantile lines */}
+          {quantiles?.p25 !== undefined && (
+            <HorizontalLine
+              y={yScale(quantiles.p25)}
+              width={innerWidth}
+              color={chartColors[2]}
+              label="P25"
+              opacity={0.5}
+            />
+          )}
+          {quantiles?.p50 !== undefined && (
+            <HorizontalLine
+              y={yScale(quantiles.p50)}
+              width={innerWidth}
+              color={chartColors[2]}
+              label="P50"
+            />
+          )}
+          {quantiles?.p75 !== undefined && (
+            <HorizontalLine
+              y={yScale(quantiles.p75)}
+              width={innerWidth}
+              color={chartColors[3]}
+              label="P75"
+            />
+          )}
+          {quantiles?.p99 !== undefined && (
+            <HorizontalLine
+              y={yScale(quantiles.p99)}
+              width={innerWidth}
+              color={chartColors[1]}
+              label="P99"
             />
           )}
 
@@ -495,24 +536,28 @@ function AnalysisChartInner({
             />
           )}
 
-          {/* Main data line */}
-          <LinePath
-            data={data}
-            x={(d) => xScale(d.x)}
-            y={(d) => yScale(d.y)}
-            stroke={chartColors[1]}
-            strokeWidth={2}
-            curve={curveMonotoneX}
-          />
+          {/* Data lines */}
+          {series.map((line, i) => (
+            <LinePath
+              key={i}
+              data={line}
+              x={getX}
+              y={(d) => yScale(d.y)}
+              stroke={COLORS[i % COLORS.length]}
+              strokeWidth={2}
+              curve={curveMonotoneX}
+            />
+          ))}
 
           {/* Moving Average */}
           {movingAverage && (
             <LinePath
               data={movingAverage}
-              x={(d) => xScale(d.x)}
+              x={getX}
               y={(d) => yScale(d.y)}
               stroke={chartColors[2]}
               strokeWidth={2}
+              strokeOpacity={0.7}
               curve={curveMonotoneX}
             />
           )}
@@ -521,7 +566,7 @@ function AnalysisChartInner({
           {trendline && (
             <LinePath
               data={trendline}
-              x={(d) => xScale(d.x)}
+              x={getX}
               y={(d) => yScale(d.y)}
               stroke={chartColors[4]}
               strokeWidth={2}
@@ -535,6 +580,7 @@ function AnalysisChartInner({
             stroke={chartColors.axis}
             tickStroke={chartColors.axis}
             tickLabelProps={{ fill: chartColors.text, fontSize: 10 }}
+            tickFormat={(v) => formatTimeTick(v as Date)}
             numTicks={5}
           />
           <AxisLeft
@@ -551,7 +597,78 @@ function AnalysisChartInner({
   );
 }
 
-function AnalysisToggle({
+function formatValue(v: number): string {
+  return v.toLocaleString(undefined, {
+    maximumFractionDigits: 1,
+    notation: "compact",
+  });
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function HorizontalLine({
+  color,
+  label,
+  opacity = 0.8,
+  width,
+  y,
+}: {
+  y: number;
+  width: number;
+  color: string;
+  label: string;
+  opacity?: number;
+}) {
+  return (
+    <g>
+      <line
+        x1={0}
+        x2={width}
+        y1={y}
+        y2={y}
+        stroke={color}
+        strokeWidth={1}
+        strokeDasharray="6,3"
+        strokeOpacity={opacity}
+      />
+      <text
+        x={width + 4}
+        y={y + 3}
+        fill={color}
+        fontSize={9}
+        fontWeight="500"
+        opacity={opacity}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
+function Stat({
+  color,
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+  color?: string;
+}) {
+  return (
+    <Stack gap="0" alignItems="center">
+      <Text textStyle="xs" color="fg.subtle">
+        {label}
+      </Text>
+      <Text textStyle="sm" fontWeight="medium" color={color ?? "fg.muted"}>
+        {value}
+      </Text>
+    </Stack>
+  );
+}
+
+function Toggle({
   checked,
   label,
   onChange,
@@ -572,25 +689,5 @@ function AnalysisToggle({
       </Switch.Label>
       <Switch.HiddenInput />
     </Switch.Root>
-  );
-}
-
-function formatValue(v: number): string {
-  return v.toLocaleString(undefined, {
-    maximumFractionDigits: 1,
-    notation: "compact",
-  });
-}
-
-function StatBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <VStack gap="0">
-      <Text textStyle="xs" color="fg.subtle">
-        {label}
-      </Text>
-      <Text textStyle="sm" fontWeight="medium" color="fg.muted">
-        {value}
-      </Text>
-    </VStack>
   );
 }

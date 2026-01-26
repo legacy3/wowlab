@@ -56,11 +56,20 @@ export { StatCard, type StatCardProps } from "./stat-card";
 
 // Charts
 
+export {
+  AnalysisChart,
+  type AnalysisChartProps,
+} from "./charts/analysis-chart";
 export { AreaChart } from "./charts/area-chart";
 export { BarChart } from "./charts/bar-chart";
 export { Chart, chartColors, type ChartProps } from "./charts/chart";
+export {
+  DistributionChart,
+  type DistributionChartProps,
+} from "./charts/distribution-chart";
 export { LineChart } from "./charts/line-chart";
 export { PieChart } from "./charts/pie-chart";
+export { StatBadge, type StatBadgeProps } from "./charts/stat-badge";
 
 // Compound Components
 

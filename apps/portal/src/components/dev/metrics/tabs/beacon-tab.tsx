@@ -8,12 +8,10 @@ import { StatCard, Text } from "@/components/ui";
 import { type TimeRange, useBeaconRange, useBeaconStatus } from "@/lib/state";
 
 import {
-  AnalyticsChart,
-  ChartCard,
   ErrorState,
+  MetricsChart,
   NotConfigured,
   RangeSelector,
-  TimeSeriesChart,
 } from "../shared";
 
 export function BeaconTab() {
@@ -127,56 +125,54 @@ function BeaconCharts() {
       <RangeSelector value={range} onChange={setRange} />
 
       <Grid columns={{ base: 1, lg: 2 }} gap="4">
-        {/* Connection metrics - single series with analytics */}
-        <AnalyticsChart
+        <MetricsChart
           title="Connected Clients"
           data={clients.data}
           isLoading={clients.isLoading}
           error={clients.error}
         />
 
-        <AnalyticsChart
+        <MetricsChart
           title="Unique Users"
           data={users.data}
           isLoading={users.isLoading}
           error={users.error}
         />
 
-        <AnalyticsChart
+        <MetricsChart
           title="Channels"
           data={channels.data}
           isLoading={channels.isLoading}
           error={channels.error}
         />
 
-        <AnalyticsChart
+        <MetricsChart
           title="Subscriptions"
           data={subscriptions.data}
           isLoading={subscriptions.isLoading}
           error={subscriptions.error}
         />
 
-        {/* Multi-series comparisons - plain charts */}
-        <ChartCard title="Broker Messages (Sent vs Received)">
-          <TimeSeriesChart
-            data={[messagesSent.data, messagesReceived.data]}
-            isLoading={messagesSent.isLoading || messagesReceived.isLoading}
-          />
-        </ChartCard>
+        <MetricsChart
+          title="Broker Messages"
+          data={[messagesSent.data, messagesReceived.data]}
+          labels={["Sent", "Received"]}
+          isLoading={messagesSent.isLoading || messagesReceived.isLoading}
+        />
 
-        <ChartCard title="Transport Messages (Sent vs Received)">
-          <TimeSeriesChart
-            data={[transportSent.data, transportReceived.data]}
-            isLoading={transportSent.isLoading || transportReceived.isLoading}
-          />
-        </ChartCard>
+        <MetricsChart
+          title="Transport Messages"
+          data={[transportSent.data, transportReceived.data]}
+          labels={["Sent", "Received"]}
+          isLoading={transportSent.isLoading || transportReceived.isLoading}
+        />
 
-        <ChartCard title="Bandwidth (Bytes Sent vs Received)">
-          <TimeSeriesChart
-            data={[bytesSent.data, bytesReceived.data]}
-            isLoading={bytesSent.isLoading || bytesReceived.isLoading}
-          />
-        </ChartCard>
+        <MetricsChart
+          title="Bandwidth (Bytes)"
+          data={[bytesSent.data, bytesReceived.data]}
+          labels={["Sent", "Received"]}
+          isLoading={bytesSent.isLoading || bytesReceived.isLoading}
+        />
       </Grid>
     </Stack>
   );
