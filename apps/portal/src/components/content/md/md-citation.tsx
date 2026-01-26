@@ -66,7 +66,7 @@ export function MdCite({ children, id }: MdCiteProps) {
   if (!ref) {
     return (
       <Text as="span" textStyle="xs" color="red.11">
-        {children}(?)
+        {children} (?)
       </Text>
     );
   }
@@ -79,7 +79,7 @@ export function MdCite({ children, id }: MdCiteProps) {
           colorPalette="amber"
           whiteSpace="nowrap"
         >
-          {children}({num})
+          {children} ({num})
         </Link>
       </HoverCard.Trigger>
       <HoverCard.Positioner>
