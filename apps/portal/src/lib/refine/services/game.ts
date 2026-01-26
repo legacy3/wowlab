@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import type {
   Aura,
@@ -10,13 +10,12 @@ import type {
   SpecSummary,
   Spell,
 } from "@/lib/supabase/types";
+import type { SpellDescRenderResult, SpellDescResolver } from "@/lib/wasm";
 
-import {
-  analyzeSpellDesc,
-  renderSpellDesc,
-  type SpellDescRenderResult,
-  type SpellDescResolver,
-} from "@/lib/wasm";
+import { useCommon } from "@/providers";
+
+import { useResource, useResourceMany } from "../hooks/use-resource";
+import { auras, spells } from "../resources";
 
 export interface PaperdollState {
   ap: number;
@@ -60,19 +59,8 @@ function formatDuration(ms: number): string {
   return seconds === 1 ? "1 sec" : `${seconds} sec`;
 }
 
-import {
-  useResource,
-  useResourceList,
-  useResourceMany,
-} from "../hooks/use-resource";
-import {
-  auras,
-  classes,
-  globalColors,
-  globalStrings,
-  specs,
-  spells,
-} from "../resources";
+import { useResourceList } from "../hooks/use-resource";
+import { classes, globalColors, globalStrings, specs } from "../resources";
 
 // TODO Replace this crap
 function formatRange(yards: number): string {
@@ -421,6 +409,8 @@ export function useSpellDescription(
   result: SpellDescRenderResult | null;
   spell: Spell | undefined;
 } {
+  const common = useCommon();
+
   const { data: spell, isLoading: spellLoading } = useResource<Spell>({
     ...spells,
     id: spellId ?? "",
@@ -429,52 +419,41 @@ export function useSpellDescription(
 
   const descriptionText = description ?? spell?.description ?? "";
 
-  const [crossSpellIds, setCrossSpellIds] = useState<number[]>([]);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [analysisError, setAnalysisError] = useState<Error | null>(null);
-
   // Analyze description to find cross-referenced spells
-  useEffect(() => {
+  const { analysisError, crossSpellIds } = useMemo(() => {
     if (!descriptionText || !spellId) {
-      setCrossSpellIds([]);
-      setAnalysisComplete(true);
-      setAnalysisError(null);
-      return;
+      return { analysisError: null, crossSpellIds: [] };
     }
 
-    setAnalysisComplete(false);
-    setAnalysisError(null);
+    try {
+      const result = common.analyzeSpellDesc(descriptionText, spellId);
+      const ids = new Set<number>();
 
-    analyzeSpellDesc(descriptionText, spellId)
-      .then(({ dependencies }) => {
-        const ids = new Set<number>();
-
-        for (const eff of dependencies.effects) {
-          if (eff.spellId !== spellId) {
-            ids.add(eff.spellId);
-          }
+      for (const eff of result.dependencies.effects) {
+        if (eff.spellId !== spellId) {
+          ids.add(eff.spellId);
         }
+      }
 
-        for (const sv of dependencies.spellValues) {
-          if (sv.spellId !== spellId) {
-            ids.add(sv.spellId);
-          }
+      for (const sv of result.dependencies.spellValues) {
+        if (sv.spellId !== spellId) {
+          ids.add(sv.spellId);
         }
+      }
 
-        for (const embed of dependencies.embeddedSpellIds) {
-          ids.add(embed);
-        }
+      for (const embed of result.dependencies.embeddedSpellIds) {
+        ids.add(embed);
+      }
 
-        setCrossSpellIds(Array.from(ids));
-        setAnalysisComplete(true);
-      })
-      .catch((err) => {
-        console.error("Failed to analyze spell description:", err);
-        setAnalysisError(err instanceof Error ? err : new Error(String(err)));
-        setCrossSpellIds([]);
-        setAnalysisComplete(true);
-      });
-  }, [descriptionText, spellId]);
+      return { analysisError: null, crossSpellIds: Array.from(ids) };
+    } catch (err) {
+      console.error("Failed to analyze spell description:", err);
+      return {
+        analysisError: err instanceof Error ? err : new Error(String(err)),
+        crossSpellIds: [],
+      };
+    }
+  }, [common, descriptionText, spellId]);
 
   // Fetch cross-referenced spells
   const { data: crossSpells = [], isLoading: crossSpellsLoading } =
@@ -519,47 +498,37 @@ export function useSpellDescription(
   }, [aurasData]);
 
   // Render the description
-  const [renderResult, setRenderResult] =
-    useState<SpellDescRenderResult | null>(null);
-  const [renderError, setRenderError] = useState<Error | null>(null);
-  const [isRendering, setIsRendering] = useState(false);
-
-  useEffect(() => {
-    if (
-      !descriptionText ||
-      !spell ||
-      !analysisComplete ||
-      crossSpellsLoading ||
-      aurasLoading
-    ) {
-      return;
+  const { renderError, renderResult } = useMemo(() => {
+    if (!descriptionText || !spell || crossSpellsLoading || aurasLoading) {
+      return { renderError: null, renderResult: null };
     }
 
-    setIsRendering(true);
-    setRenderError(null);
+    try {
+      const resolver = buildResolver(
+        spell,
+        spellCache,
+        auraCache,
+        paperdoll,
+        knownSpells,
+        activeAuras,
+      );
 
-    const resolver = buildResolver(
-      spell,
-      spellCache,
-      auraCache,
-      paperdoll,
-      knownSpells,
-      activeAuras,
-    );
-
-    renderSpellDesc(descriptionText, spell.id, resolver)
-      .then((result) => {
-        setRenderResult(result);
-        setIsRendering(false);
-      })
-      .catch((err) => {
-        setRenderError(err instanceof Error ? err : new Error(String(err)));
-        setIsRendering(false);
-      });
+      const result = common.renderSpellDesc(
+        descriptionText,
+        spell.id,
+        resolver,
+      );
+      return { renderError: null, renderResult: result };
+    } catch (err) {
+      return {
+        renderError: err instanceof Error ? err : new Error(String(err)),
+        renderResult: null,
+      };
+    }
   }, [
+    common,
     descriptionText,
     spell,
-    analysisComplete,
     crossSpellsLoading,
     aurasLoading,
     spellCache,
@@ -571,12 +540,7 @@ export function useSpellDescription(
 
   return {
     error: analysisError ?? renderError,
-    isLoading:
-      spellLoading ||
-      !analysisComplete ||
-      crossSpellsLoading ||
-      aurasLoading ||
-      isRendering,
+    isLoading: spellLoading || crossSpellsLoading || aurasLoading,
     raw: descriptionText,
     result: renderResult,
     spell,

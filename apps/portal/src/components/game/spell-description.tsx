@@ -2,9 +2,9 @@
 
 import { css } from "styled-system/css";
 
-import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
+import { defaultPaperdoll, useSpellDescription } from "@/lib/refine/services";
 
-import { FragmentRenderer } from ".";
+import { FragmentRenderer } from "./fragment-renderer";
 
 const containerStyles = css({
   lineHeight: "relaxed",

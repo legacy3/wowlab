@@ -4,7 +4,7 @@ import { useIntlayer } from "next-intlayer";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { EditorPage } from "@/components/editor";
+import { EditorContent } from "@/components/editor";
 import { ErrorBox, Loader, Text } from "@/components/ui";
 import { useLoadRotation } from "@/lib/state";
 
@@ -40,5 +40,5 @@ export default function EditRotationPage() {
     return <Text color="fg.muted">{content.rotationNotFound}</Text>;
   }
 
-  return <EditorPage />;
+  return <EditorContent />;
 }

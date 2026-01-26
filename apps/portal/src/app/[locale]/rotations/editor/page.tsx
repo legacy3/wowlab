@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { EditorPage } from "@/components/editor";
+import { EditorContent } from "@/components/editor";
 import { useEditor } from "@/lib/state/editor";
 
 export default function NewRotationPage() {
@@ -12,5 +12,5 @@ export default function NewRotationPage() {
     reset();
   }, [reset]);
 
-  return <EditorPage />;
+  return <EditorContent />;
 }

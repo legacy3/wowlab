@@ -1,17 +1,14 @@
 "use client";
 
 import { ChevronDownIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
 import { FragmentRenderer } from "@/components/game";
 import { Accordion, Badge, Card, Input, Text } from "@/components/ui";
 import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
-import {
-  fragmentsToPlainText,
-  type SpellDescFragment,
-  tokenizeSpellDesc,
-} from "@/lib/wasm";
+import { fragmentsToPlainText, type SpellDescFragment } from "@/lib/wasm";
+import { useCommon } from "@/providers";
 
 import type { DebugTabProps } from "./types";
 
@@ -111,19 +108,16 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
 }
 
 function SpellCard({ spell }: { spell: TraitSpell }) {
+  const common = useCommon();
   const { isLoading, result } = useSpellDescription(
     spell.spellId,
     spell.description,
     defaultPaperdoll,
   );
 
-  const [rawFragments, setRawFragments] = useState<SpellDescFragment[] | null>(
-    null,
-  );
-
-  useEffect(() => {
-    tokenizeSpellDesc(spell.description).then(setRawFragments);
-  }, [spell.description]);
+  const rawFragments = useMemo<SpellDescFragment[] | null>(() => {
+    return common.tokenizeSpellDesc(spell.description);
+  }, [common, spell.description]);
 
   const rendered = result ? fragmentsToPlainText(result.fragments) : null;
 

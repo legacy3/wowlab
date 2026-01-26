@@ -52,7 +52,7 @@ export {
 
 // Layout
 
-export { EditorHeader, EditorPage } from "./layout";
+export { EditorContent, EditorHeader, EditorPage } from "./layout";
 
 // Pickers
 
