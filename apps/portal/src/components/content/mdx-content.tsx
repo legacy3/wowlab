@@ -5,9 +5,11 @@ import * as runtime from "react/jsx-runtime";
 import {
   MdAlert,
   MdBadge,
+  MdBibliography,
   MdBlockquote,
   MdCard,
   MdCardGrid,
+  MdCite,
   MdCode,
   MdCollapsible,
   MdDel,
@@ -73,8 +75,10 @@ const nativeComponents = {
 const customComponents = {
   Alert: MdAlert,
   Badge: MdBadge,
+  Bibliography: MdBibliography,
   Card: MdCard,
   CardGrid: MdCardGrid,
+  Cite: MdCite,
   Collapsible: MdCollapsible,
   FeatureCard: MdFeatureCard,
   Icon: MdIcon,

@@ -3,6 +3,7 @@
 export { MdAlert } from "./md-alert";
 export { MdBadge } from "./md-badge";
 export { MdCard, MdCardGrid, MdFeatureCard } from "./md-card";
+export { MdBibliography, MdCite } from "./md-citation";
 export { MdCode, MdPre } from "./md-code/index";
 export { MdCollapsible } from "./md-collapsible";
 export { MdH2, MdH3, MdH4, MdH5, MdH6 } from "./md-heading";

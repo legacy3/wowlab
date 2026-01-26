@@ -1,82 +1,24 @@
 ---
-title: Realtime Architecture
-description: Horizontally scalable, realtime-first distributed simulation infrastructure
+title: Introduction
+description: Getting started with WowLab documentation
 ---
 
-# Realtime Architecture v2
+# Introduction
 
-WowLab's realtime infrastructure is designed for horizontal scalability, fault tolerance, and efficient distributed simulation processing. This architecture enables thousands of compute nodes to process simulation chunks while providing real-time progress updates to users.
+Welcome to WowLab. This documentation uses academic-style citations to reference external sources.
 
-## Core Philosophy
+## Citation Examples
 
-The architecture follows several key principles:
+Inline citations appear as superscript links. For example, the WebSocket protocol <Cite id="websocket" /> enables full-duplex communication between clients and servers.
 
-1. **Stateless Sentinels** - Any sentinel instance can handle any request
-2. **Redis as the Brain** - All coordination state lives in Redis
-3. **Centrifugo Owns Connections** - WebSocket management, presence, message routing
-4. **Ed25519 for Node Auth** - Cryptographic signatures prevent replay attacks
-5. **Supabase for Durability** - Final results and user data only
-6. **Idempotency Everywhere** - Every operation must be safe to retry
-7. **Heartbeats over Presence** - Active health checks, presence as optimization
+You can cite multiple sources in sequence. Our architecture uses Redis <Cite id="redis2024" /> for coordination and Centrifugo <Cite id="centrifugo2024" /> for real-time messaging.
 
-## Domain Services
+Authentication relies on Ed25519 signatures <Cite id="ed25519" /> for cryptographic security, while persistent data is stored in Supabase <Cite id="supabase2024" />.
 
-| Domain               | Service    | Purpose                                   |
-| -------------------- | ---------- | ----------------------------------------- |
-| `api.wowlab.gg`      | Supabase   | Portal database, auth, user data          |
-| `sentinel.wowlab.gg` | Sentinel   | Node HTTP API (register, token)           |
-| `beacon.wowlab.gg`   | Centrifugo | WebSocket connections, realtime messaging |
+## How Citations Work
 
-## Connection Rules
+1. Add references to `src/content/references.ts`
+2. Use `<Cite id="key" />` inline where needed
+3. Add `<Bibliography />` at the bottom of the page
 
-**Nodes connect to:**
-
-- `sentinel.wowlab.gg` (HTTP) - Registration, token acquisition
-- `beacon.wowlab.gg` (WebSocket) - Real-time messaging
-
-**Nodes NEVER connect to:**
-
-- `api.wowlab.gg` (Supabase)
-- Redis directly
-
-```mermaid
-flowchart TB
-    subgraph Internet["Internet"]
-        Portal[Portal Web App]
-        Node1[Node 1]
-        NodeN[Node N]
-    end
-
-    subgraph Infrastructure["Infrastructure"]
-        Sentinel[Sentinel Service]
-        Beacon[Centrifugo / Beacon]
-        Redis[(Redis)]
-        Supabase[(Supabase)]
-    end
-
-    Portal -->|WSS| Beacon
-    Portal -->|HTTPS| Supabase
-
-    Node1 -->|HTTP: register, token| Sentinel
-    Node1 -->|WSS: subscribe, publish| Beacon
-    NodeN -->|HTTP: register, token| Sentinel
-    NodeN -->|WSS: subscribe, publish| Beacon
-
-    Beacon -->|Proxy callbacks| Sentinel
-    Sentinel --> Redis
-    Sentinel --> Supabase
-    Sentinel --> Beacon
-
-    Node1 -.->|NEVER| Supabase
-    Node1 -.->|NEVER| Redis
-```
-
-## Documentation Structure
-
-- **[Overview](/docs/00-overview/00-design-principles)** - Architecture principles and topology
-- **[Infrastructure](/docs/01-infrastructure/00-sentinel)** - Component deep-dives
-- **[Protocols](/docs/02-protocols/00-authentication)** - Authentication, channels, and APIs
-- **[Data Flows](/docs/03-data-flows/00-node-registration)** - End-to-end request flows
-- **[Reliability](/docs/04-reliability/00-failure-scenarios)** - Fault tolerance and recovery
-- **[Security](/docs/05-security/00-security-model)** - Security boundaries and authorization
-- **[Operations](/docs/06-operations/00-monitoring)** - Monitoring and deployment
+<Bibliography />
