@@ -55,6 +55,7 @@ styled-system-studio/
 
 # Velite
 .velite/
+apps/portal/public/static/
 
 # Intlayer
 .intlayer/
