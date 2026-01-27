@@ -66,7 +66,9 @@ export function NodesClaimPage() {
     name: string;
     workers: number;
   }) => {
-    if (!pendingNode) return;
+    if (!pendingNode) {
+      return;
+    }
 
     try {
       await claimNode.mutateAsync({

@@ -185,8 +185,9 @@ impl<'a, R: SpellDescResolver> RenderContext<'a, R> {
                             .push(format!("Unresolved cross-spell effect: {}", token));
                         vec![SpellDescFragment::Unresolved { token }]
                     }
-                } else if let Some(value) =
-                    self.resolver.get_spell_value(cross.spell_id, &cross.var_type)
+                } else if let Some(value) = self
+                    .resolver
+                    .get_spell_value(cross.spell_id, &cross.var_type)
                 {
                     vec![SpellDescFragment::Text { value }]
                 } else {
@@ -409,7 +410,10 @@ impl<'a, R: SpellDescResolver> RenderContext<'a, R> {
     }
 
     fn evaluate_condition_expression(&self, func_name: &str, args: &[ExpressionNode]) -> bool {
-        let values: Vec<f64> = args.iter().map(|arg| self.evaluate_expression(arg)).collect();
+        let values: Vec<f64> = args
+            .iter()
+            .map(|arg| self.evaluate_expression(arg))
+            .collect();
 
         match func_name {
             "gt" => values.len() >= 2 && values[0] > values[1],
@@ -504,9 +508,10 @@ impl<'a, R: SpellDescResolver> RenderContext<'a, R> {
                     .unwrap_or(0.0)
             }
 
-            VariableNode::Player(player) => {
-                self.resolver.get_player_stat(&player.var_name).unwrap_or(0.0)
-            }
+            VariableNode::Player(player) => self
+                .resolver
+                .get_player_stat(&player.var_name)
+                .unwrap_or(0.0),
 
             VariableNode::CrossSpell(cross) => {
                 if let Some(idx) = cross.effect_index {
@@ -521,9 +526,10 @@ impl<'a, R: SpellDescResolver> RenderContext<'a, R> {
                 }
             }
 
-            VariableNode::Custom(custom) => {
-                self.resolver.get_custom_var(&custom.var_name).unwrap_or(0.0)
-            }
+            VariableNode::Custom(custom) => self
+                .resolver
+                .get_custom_var(&custom.var_name)
+                .unwrap_or(0.0),
 
             VariableNode::At(at) => self.resolver.get_player_stat(&at.var_type).unwrap_or(0.0),
 
@@ -546,7 +552,10 @@ impl<'a, R: SpellDescResolver> RenderContext<'a, R> {
     }
 
     fn evaluate_function(&self, func_name: &str, args: &[ExpressionNode]) -> f64 {
-        let values: Vec<f64> = args.iter().map(|arg| self.evaluate_expression(arg)).collect();
+        let values: Vec<f64> = args
+            .iter()
+            .map(|arg| self.evaluate_expression(arg))
+            .collect();
 
         match func_name {
             "max" => values.iter().cloned().fold(f64::NEG_INFINITY, f64::max),

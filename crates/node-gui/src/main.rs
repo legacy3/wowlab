@@ -7,8 +7,8 @@ use mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 use clap::{Parser, Subcommand};
-use wowlab_node::utils::logging;
 use std::sync::Arc;
+use wowlab_node::utils::logging;
 
 #[derive(Parser)]
 #[command(name = "node-gui")]

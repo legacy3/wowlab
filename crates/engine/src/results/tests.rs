@@ -1,6 +1,6 @@
 use super::*;
-use wowlab_common::types::*;
 use std::collections::HashMap;
+use wowlab_common::types::*;
 
 #[test]
 fn spell_stats_record() {

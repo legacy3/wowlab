@@ -109,7 +109,9 @@ export function buildResolver(
 ): SpellDescResolver {
   return {
     getCustomVar(name: string) {
-      if (!spell?.description_variables) return null;
+      if (!spell?.description_variables) {
+        return null;
+      }
 
       try {
         const vars = JSON.parse(spell.description_variables);
@@ -122,11 +124,15 @@ export function buildResolver(
 
     getEffectValue(spellId: number, effectIndex: number, varType: string) {
       const s = spellId === spell?.id ? spell : spellCache.get(spellId);
-      if (!s) return null;
+      if (!s) {
+        return null;
+      }
 
       const effects = parseEffects(s);
       const effect = effects.find((e) => e.index === effectIndex - 1);
-      if (!effect) return null;
+      if (!effect) {
+        return null;
+      }
 
       switch (varType) {
         case "a":
@@ -229,7 +235,9 @@ export function buildResolver(
 
     getSpellValue(spellId: number, varType: string) {
       const s = spellId === spell?.id ? spell : spellCache.get(spellId);
-      if (!s) return null;
+      if (!s) {
+        return null;
+      }
 
       const baseType = varType.replace(/\d+$/, "");
 
@@ -322,7 +330,9 @@ export function useClassesAndSpecs() {
   const getClassColor = useCallback(
     (specId: number) => {
       const spec = specsData.find((s) => s.id === specId);
-      if (!spec) return null;
+      if (!spec) {
+        return null;
+      }
       const cls = classMap.get(spec.class_id);
       return cls?.color ?? null;
     },
@@ -347,7 +357,9 @@ export function useClassesAndSpecs() {
   const getSpecIcon = useCallback(
     (specId: number) => {
       const spec = specsData.find((s) => s.id === specId);
-      if (!spec) return null;
+      if (!spec) {
+        return null;
+      }
       return spec.file_name ?? null;
     },
     [specsData],
@@ -447,7 +459,6 @@ export function useSpellDescription(
 
       return { analysisError: null, crossSpellIds: Array.from(ids) };
     } catch (err) {
-      console.error("Failed to analyze spell description:", err);
       return {
         analysisError: err instanceof Error ? err : new Error(String(err)),
         crossSpellIds: [],
@@ -466,8 +477,12 @@ export function useSpellDescription(
   // Collect all spell IDs for aura lookup
   const allSpellIds = useMemo(() => {
     const ids = new Set<number>();
-    if (spellId) ids.add(spellId);
-    for (const id of crossSpellIds) ids.add(id);
+    if (spellId) {
+      ids.add(spellId);
+    }
+    for (const id of crossSpellIds) {
+      ids.add(id);
+    }
     return Array.from(ids);
   }, [spellId, crossSpellIds]);
 
@@ -482,7 +497,9 @@ export function useSpellDescription(
   // Build caches
   const spellCache = useMemo(() => {
     const cache = new Map<number, Spell>();
-    if (spell) cache.set(spell.id, spell);
+    if (spell) {
+      cache.set(spell.id, spell);
+    }
     for (const s of crossSpells) {
       cache.set(s.id, s);
     }

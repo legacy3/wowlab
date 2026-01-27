@@ -2,8 +2,8 @@ use super::*;
 use crate::actor::Player;
 use crate::handler::SpecHandler;
 use crate::specs::BmHunter;
-use wowlab_common::types::*;
 use std::sync::Arc;
+use wowlab_common::types::*;
 
 fn create_handler() -> Arc<dyn SpecHandler> {
     Arc::new(BmHunter::with_defaults().expect("Failed to create BmHunter"))

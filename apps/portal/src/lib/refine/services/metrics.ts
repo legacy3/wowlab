@@ -13,10 +13,6 @@ import type {
   TimeSeriesPoint,
 } from "../../state/metrics/types";
 
-// =============================================================================
-// Constants
-// =============================================================================
-
 const SENTINEL_METRICS = [
   "sentinel_chunks_assigned_total",
   "sentinel_chunks_reclaimed_total",
@@ -71,10 +67,6 @@ const DEFAULT_SENTINEL: SentinelMetrics = {
   },
 };
 
-// =============================================================================
-// Fetchers
-// =============================================================================
-
 export function useBeaconRange(
   metric: BeaconMetricName,
   range: TimeRange = "1h",
@@ -114,10 +106,6 @@ export function useMetricsRange(metric: MetricName, range: TimeRange = "1h") {
   };
 }
 
-// =============================================================================
-// Hooks
-// =============================================================================
-
 export function useSentinelRange(
   metric: SentinelMetricName,
   range: TimeRange = "1h",
@@ -145,7 +133,9 @@ async function fetchBeaconMetrics(): Promise<BeaconMetrics> {
   const res = await fetch(
     `/api/metrics/query?metrics=${BEACON_METRICS.join(",")}`,
   );
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   const json: { data: Record<string, number> } = await res.json();
   const d = json.data;
@@ -176,7 +166,9 @@ async function fetchMetricRange(
   });
 
   const res = await fetch(`/api/metrics/query?${params}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   const json: PrometheusQueryResponse = await res.json();
   if (json.status !== "success" || !json.data.result.length) {
@@ -193,7 +185,9 @@ async function fetchSentinelMetrics(): Promise<SentinelMetrics> {
   const res = await fetch(
     `/api/metrics/query?metrics=${SENTINEL_METRICS.join(",")}`,
   );
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   const json: { data: Record<string, number> } = await res.json();
   const d = json.data;

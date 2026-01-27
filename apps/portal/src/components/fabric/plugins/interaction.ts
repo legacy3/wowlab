@@ -35,7 +35,9 @@ export class InteractionPlugin implements FabricPlugin {
     }
   };
   private handleMouseMove = (opt: fabric.TPointerEventInfo): void => {
-    if (!this.isPanning || this.currentMode !== "grab") return;
+    if (!this.isPanning || this.currentMode !== "grab") {
+      return;
+    }
 
     const e = opt.e as MouseEvent;
     const deltaX = e.clientX - this.lastPosX;
@@ -131,7 +133,9 @@ export class InteractionPlugin implements FabricPlugin {
   }
 
   setMode(mode: InteractionMode): void {
-    if (this.currentMode === mode) return;
+    if (this.currentMode === mode) {
+      return;
+    }
 
     this.previousMode = this.currentMode;
     this.currentMode = mode;
@@ -221,7 +225,9 @@ export class InteractionPlugin implements FabricPlugin {
 
   private registerShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     // Space to toggle grab mode
     shortcuts.register(
@@ -256,7 +262,9 @@ export class InteractionPlugin implements FabricPlugin {
 
   private unregisterShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     shortcuts.unregister("Space");
     shortcuts.unregister("v");

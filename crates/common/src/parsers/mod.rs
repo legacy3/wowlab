@@ -28,10 +28,10 @@ pub use simc::{
 pub use dbc::DbcData;
 
 // Error types
-pub use errors::TransformError;
 #[cfg(feature = "dbc")]
 pub use errors::DbcError;
 pub use errors::TraitError;
+pub use errors::TransformError;
 
 // DBC → Flat transformation (requires dbc feature for DbcData)
 #[cfg(feature = "dbc")]
@@ -55,9 +55,8 @@ pub use loadout::{
 // Spell description parsing
 pub use spell_desc::{
     analyze_dependencies as analyze_spell_desc_dependencies, parse as parse_spell_desc,
-    render_with_resolver as render_spell_desc, NullResolver, ParsedSpellDescription,
-    ParseResult as SpellDescParseResult, SpellDescResolver, SpellDescriptionNode, TestResolver,
-    VariableNode,
+    render_with_resolver as render_spell_desc, NullResolver, ParseResult as SpellDescParseResult,
+    ParsedSpellDescription, SpellDescResolver, SpellDescriptionNode, TestResolver, VariableNode,
 };
 
 // Item scaling functions

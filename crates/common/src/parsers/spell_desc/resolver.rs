@@ -199,13 +199,21 @@ impl TestResolver {
         }
     }
 
-    pub fn with_effect(mut self, spell_id: u32, effect_index: u8, var_type: &str, value: f64) -> Self {
-        self.effects.insert((spell_id, effect_index, var_type.to_string()), value);
+    pub fn with_effect(
+        mut self,
+        spell_id: u32,
+        effect_index: u8,
+        var_type: &str,
+        value: f64,
+    ) -> Self {
+        self.effects
+            .insert((spell_id, effect_index, var_type.to_string()), value);
         self
     }
 
     pub fn with_spell_value(mut self, spell_id: u32, var_type: &str, value: &str) -> Self {
-        self.spell_values.insert((spell_id, var_type.to_string()), value.to_string());
+        self.spell_values
+            .insert((spell_id, var_type.to_string()), value.to_string());
         self
     }
 
@@ -245,18 +253,23 @@ impl TestResolver {
     }
 
     pub fn with_spell_description(mut self, spell_id: u32, description: &str) -> Self {
-        self.spell_descriptions.insert(spell_id, description.to_string());
+        self.spell_descriptions
+            .insert(spell_id, description.to_string());
         self
     }
 }
 
 impl SpellDescResolver for TestResolver {
     fn get_effect_value(&self, spell_id: u32, effect_index: u8, var_type: &str) -> Option<f64> {
-        self.effects.get(&(spell_id, effect_index, var_type.to_string())).copied()
+        self.effects
+            .get(&(spell_id, effect_index, var_type.to_string()))
+            .copied()
     }
 
     fn get_spell_value(&self, spell_id: u32, var_type: &str) -> Option<String> {
-        self.spell_values.get(&(spell_id, var_type.to_string())).cloned()
+        self.spell_values
+            .get(&(spell_id, var_type.to_string()))
+            .cloned()
     }
 
     fn get_player_stat(&self, stat: &str) -> Option<f64> {

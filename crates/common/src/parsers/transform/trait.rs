@@ -14,11 +14,15 @@
 use std::collections::{HashMap, HashSet};
 
 #[cfg(feature = "dbc")]
-use super::super::dbc::rows::{TraitNodeGroupXTraitNodeRow, TraitNodeRow, TraitNodeXTraitNodeEntryRow};
+use super::super::dbc::rows::{
+    TraitNodeGroupXTraitNodeRow, TraitNodeRow, TraitNodeXTraitNodeEntryRow,
+};
 #[cfg(feature = "dbc")]
 use super::super::dbc::DbcData;
 use super::super::errors::TransformError;
-use crate::types::data::{PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat};
+use crate::types::data::{
+    PointLimits, TraitEdge, TraitNode, TraitNodeEntry, TraitSubTree, TraitTreeFlat,
+};
 
 /// Target position for hero talent trees after offset calculation.
 /// Hero trees are repositioned to appear in a consistent location.
@@ -417,7 +421,10 @@ fn get_talent_name(dbc: &DbcData, definition: &super::super::dbc::TraitDefinitio
 }
 
 /// Get talent description from definition override or spell description.
-fn get_talent_description(dbc: &DbcData, definition: &super::super::dbc::TraitDefinitionRow) -> String {
+fn get_talent_description(
+    dbc: &DbcData,
+    definition: &super::super::dbc::TraitDefinitionRow,
+) -> String {
     if let Some(desc) = &definition.OverrideDescription_lang {
         return desc.clone();
     }

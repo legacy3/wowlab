@@ -46,7 +46,10 @@ pub struct SentinelClient {
 }
 
 impl SentinelClient {
-    pub fn new(sentinel_url: String, signer: Arc<dyn RequestSigner>) -> Result<Self, SentinelError> {
+    pub fn new(
+        sentinel_url: String,
+        signer: Arc<dyn RequestSigner>,
+    ) -> Result<Self, SentinelError> {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .connect_timeout(CONNECT_TIMEOUT)
@@ -60,7 +63,11 @@ impl SentinelClient {
         })
     }
 
-    async fn signed_post(&self, path: &str, body: &[u8]) -> Result<reqwest::Response, SentinelError> {
+    async fn signed_post(
+        &self,
+        path: &str,
+        body: &[u8],
+    ) -> Result<reqwest::Response, SentinelError> {
         let url = format!("{}{}", self.sentinel_url, path);
         let headers = self.signer.sign_request("POST", path, body);
 

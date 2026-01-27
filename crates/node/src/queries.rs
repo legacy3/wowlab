@@ -18,10 +18,7 @@ pub struct RotationRow {
 }
 
 /// Fetch a job config by its content hash.
-pub async fn fetch_config(
-    client: &SupabaseClient,
-    hash: &str,
-) -> Result<ConfigRow, SupabaseError> {
+pub async fn fetch_config(client: &SupabaseClient, hash: &str) -> Result<ConfigRow, SupabaseError> {
     let path = format!(
         "jobs_configs?hash=eq.{}&select=config",
         urlencoding::encode(hash)

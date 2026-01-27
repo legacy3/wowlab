@@ -1,7 +1,5 @@
 "use client";
 
-import type { RuleGroupType } from "react-querybuilder";
-
 import { useBoolean } from "ahooks";
 import {
   ChevronDownIcon,
@@ -13,8 +11,8 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { memo, useMemo, useState } from "react";
-import { Box, Flex, HStack } from "styled-system/jsx";
+import { memo, useMemo } from "react";
+import { Box, Flex } from "styled-system/jsx";
 
 import type { Action, ActionType } from "@/lib/editor";
 import type { Item, Spell } from "@/lib/supabase";
@@ -241,10 +239,8 @@ export const ActionCard = memo(function ActionCard({
   const update = <K extends keyof Action>(field: K, value: Action[K]) =>
     updateAction(listId, action.id, { [field]: value });
 
-  const handleSpellChange = (spellId: number, _name: string) =>
-    update("spellId", spellId);
-  const handleItemChange = (itemId: number, _name: string) =>
-    update("itemId", itemId);
+  const handleSpellChange = (spellId: number) => update("spellId", spellId);
+  const handleItemChange = (itemId: number) => update("itemId", itemId);
 
   const actionName = useActionName(action, content);
 

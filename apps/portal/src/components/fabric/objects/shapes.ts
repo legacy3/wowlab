@@ -2,10 +2,6 @@ import * as fabric from "fabric";
 
 import type { ShapeOptions, TextOptions } from "../core/types";
 
-// =============================================================================
-// Shape Factories
-// =============================================================================
-
 export function createCircle(
   x: number,
   y: number,
@@ -74,10 +70,6 @@ export function createText(options: TextOptions = {}): fabric.Textbox {
     width: 150,
   });
 }
-
-// =============================================================================
-// Static Objects (non-interactive, optimized for rendering)
-// =============================================================================
 
 const STATIC_DEFAULTS: Partial<fabric.FabricObjectProps> = {
   evented: false,

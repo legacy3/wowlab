@@ -48,7 +48,10 @@ pub enum Event {
     /// Subscription was established.
     Subscribed,
     /// Subscription ended.
-    Unsubscribed { code: u32, reason: String },
+    Unsubscribed {
+        code: u32,
+        reason: String,
+    },
     /// Connection state changed.
     Connected,
     Disconnected,

@@ -1,7 +1,7 @@
 use clap::Parser;
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use wowlab_engine::cli::{Args, Command, Runner};
 use wowlab_engine::core::{configure_thread_pool, get_optimal_concurrency};
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 // Use mimalloc for faster allocations (significant speedup for clone-heavy batch sims)
 #[global_allocator]

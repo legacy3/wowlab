@@ -3,18 +3,10 @@ import * as fabric from "fabric";
 import type { CanvasController } from "../core/controller";
 import type { FabricPlugin } from "../core/plugin";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface GuidelinesConfig {
-  /** Line color. Default: "rgba(255, 95, 95, 1)" */
   color?: string;
-  /** Line offset beyond object edges. Default: 5 */
   lineOffset?: number;
-  /** Line width in pixels. Default: 1 */
   lineWidth?: number;
-  /** Snap margin in pixels - how close objects must be to snap. Default: 4 */
   snapMargin?: number;
 }
 
@@ -30,19 +22,10 @@ interface VerticalLine {
   y2: number;
 }
 
-// =============================================================================
-// Guidelines Plugin
-// =============================================================================
-
-/**
- * Smart alignment plugin that shows guidelines when moving/scaling objects
- * and snaps them to edges/centers of other objects.
- */
 export class GuidelinesPlugin implements FabricPlugin {
   readonly name = "guidelines";
 
   private activeHeight = 0;
-  // Cached state for scaling operations
   private activeLeft = 0;
 
   private activeTop = 0;
@@ -53,11 +36,15 @@ export class GuidelinesPlugin implements FabricPlugin {
   private controller!: CanvasController;
   private handleAfterRender = (): void => {
     const ctx = this.canvas.getSelectionContext();
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const vpt = this.canvas.viewportTransform;
     const zoom = this.canvas.getZoom();
-    if (!vpt) return;
+    if (!vpt) {
+      return;
+    }
 
     ctx.save();
     ctx.beginPath();
@@ -80,7 +67,9 @@ export class GuidelinesPlugin implements FabricPlugin {
   private handleBeforeRender = (): void => {
     // Clear the selection context before rendering
     // Guard against null context (e.g., during image export)
-    if (this.canvas.contextTop === null) return;
+    if (this.canvas.contextTop === null) {
+      return;
+    }
 
     try {
       this.canvas.clearContext(this.canvas.contextTop);
@@ -90,7 +79,9 @@ export class GuidelinesPlugin implements FabricPlugin {
   };
 
   private handleMouseDown = (e: fabric.TPointerEventInfo): void => {
-    if (!e.target) return;
+    if (!e.target) {
+      return;
+    }
 
     // Cache initial dimensions for scaling operations
     this.activeLeft = e.target.left ?? 0;
@@ -98,10 +89,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     this.activeWidth = e.target.getScaledWidth();
     this.activeHeight = e.target.getScaledHeight();
   };
-
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
 
   private handleMouseUp = (): void => {
     this.verticalLines = [];
@@ -113,10 +100,14 @@ export class GuidelinesPlugin implements FabricPlugin {
     e: { target: fabric.FabricObject } & fabric.BasicTransformEvent,
   ): void => {
     const activeObject = e.target;
-    if (!activeObject) return;
+    if (!activeObject) {
+      return;
+    }
 
     const vpt = this.canvas.viewportTransform;
-    if (!vpt) return;
+    if (!vpt) {
+      return;
+    }
 
     const canvasObjects = this.canvas.getObjects();
     const activeCenter = activeObject.getCenterPoint();
@@ -140,8 +131,14 @@ export class GuidelinesPlugin implements FabricPlugin {
 
     for (let i = canvasObjects.length; i--; ) {
       const obj = canvasObjects[i];
-      if (obj === activeObject) continue;
-      if (!obj.visible || obj.evented === false) continue;
+      
+      if (obj === activeObject) {
+        continue;
+      }
+
+      if (!obj.visible || obj.evented === false) {
+        continue;
+      }
 
       const objectCenter = obj.getCenterPoint();
       const objectLeft = objectCenter.x;
@@ -149,10 +146,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       const objectBoundingRect = obj.getBoundingRect();
       const objectWidth = objectBoundingRect.width / vpt[0];
       const objectHeight = objectBoundingRect.height / vpt[3];
-
-      // =========================================================================
-      // Vertical alignments (check X coordinates)
-      // =========================================================================
 
       // Horizontal center to horizontal center
       if (this.isInRange(objectLeft, activeObjectLeft)) {
@@ -257,10 +250,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         );
         snapX = x + activeObjectWidth / 2;
       }
-
-      // =========================================================================
-      // Horizontal alignments (check Y coordinates)
-      // =========================================================================
 
       // Vertical center to vertical center
       if (this.isInRange(objectTop, activeObjectTop)) {
@@ -387,10 +376,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     }
   };
 
-  // ===========================================================================
-  // Event Handlers
-  // ===========================================================================
-
   private handleObjectScaling = (
     e: {
       target: fabric.FabricObject;
@@ -398,10 +383,14 @@ export class GuidelinesPlugin implements FabricPlugin {
     } & fabric.BasicTransformEvent,
   ): void => {
     const activeObject = e.target;
-    if (!activeObject || !e.transform) return;
+    if (!activeObject || !e.transform) {
+      return;
+    }
 
     const vpt = this.canvas.viewportTransform;
-    if (!vpt) return;
+    if (!vpt) {
+      return;
+    }
 
     const canvasObjects = this.canvas.getObjects();
     const activeCenter = activeObject.getCenterPoint();
@@ -426,8 +415,12 @@ export class GuidelinesPlugin implements FabricPlugin {
 
     for (let i = canvasObjects.length; i--; ) {
       const obj = canvasObjects[i];
-      if (obj === activeObject) continue;
-      if (!obj.visible || obj.evented === false) continue;
+      if (obj === activeObject) {
+        continue;
+      }
+      if (!obj.visible || obj.evented === false) {
+        continue;
+      }
 
       const objectCenter = obj.getCenterPoint();
       const objectLeft = objectCenter.x;
@@ -435,10 +428,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       const objectBoundingRect = obj.getBoundingRect();
       const objectWidth = objectBoundingRect.width / vpt[0];
       const objectHeight = objectBoundingRect.height / vpt[3];
-
-      // =========================================================================
-      // Vertical alignments during scaling
-      // =========================================================================
 
       // Center alignment
       if (this.isInRange(objectLeft, activeObjectLeft)) {
@@ -589,10 +578,6 @@ export class GuidelinesPlugin implements FabricPlugin {
           break;
         }
       }
-
-      // =========================================================================
-      // Horizontal alignments during scaling
-      // =========================================================================
 
       // Center alignment
       if (this.isInRange(objectTop, activeObjectTop)) {
@@ -791,13 +776,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     this.canvas.on("mouse:up", this.handleMouseUp);
   }
 
-  // ===========================================================================
-  // Helper Methods
-  // ===========================================================================
-
-  /**
-   * Create a horizontal guide line structure.
-   */
   private createHorizontalLine(
     y: number,
     objectLeft: number,
@@ -819,9 +797,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     };
   }
 
-  /**
-   * Create a vertical guide line structure.
-   */
   private createVerticalLine(
     x: number,
     objectTop: number,
@@ -843,9 +818,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     };
   }
 
-  /**
-   * Draw a horizontal line on the canvas context.
-   */
   private drawHorizontalLine(
     ctx: CanvasRenderingContext2D,
     line: HorizontalLine,
@@ -860,9 +832,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     ctx.lineTo(x2, y);
   }
 
-  /**
-   * Draw a vertical line on the canvas context.
-   */
   private drawVerticalLine(
     ctx: CanvasRenderingContext2D,
     line: VerticalLine,
@@ -877,9 +846,6 @@ export class GuidelinesPlugin implements FabricPlugin {
     ctx.lineTo(x, y2);
   }
 
-  /**
-   * Check if two values are within the snap margin.
-   */
   private isInRange(value1: number, value2: number): boolean {
     const v1 = Math.round(value1);
     const v2 = Math.round(value2);

@@ -18,10 +18,6 @@ import { IconButton, Tooltip } from "@/components/ui";
 import type { CanvasState } from "../core/types";
 import type { InteractionMode } from "../plugins/interaction";
 
-// =============================================================================
-// Styles
-// =============================================================================
-
 const toolbarStyles = css({
   alignItems: "center",
   backdropFilter: "blur(8px)",
@@ -55,10 +51,6 @@ const activeToolStyles = css({
   color: "fg.default",
 });
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface ToolbarProps {
   className?: string;
   /** Current interaction mode */
@@ -84,10 +76,6 @@ export interface ToolbarProps {
   /** Canvas state with zoom level */
   state: CanvasState;
 }
-
-// =============================================================================
-// Component
-// =============================================================================
 
 export const Toolbar = memo(function Toolbar({
   className,

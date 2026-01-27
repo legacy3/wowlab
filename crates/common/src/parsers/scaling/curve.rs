@@ -31,7 +31,11 @@ pub fn interpolate_curve_points(points: &[CurvePointFlat], x: f64) -> Option<f64
 
     // Points should be sorted by order_index, but let's ensure by pos_0 (x value)
     let mut sorted_points: Vec<_> = points.iter().collect();
-    sorted_points.sort_by(|a, b| a.pos_0.partial_cmp(&b.pos_0).unwrap_or(std::cmp::Ordering::Equal));
+    sorted_points.sort_by(|a, b| {
+        a.pos_0
+            .partial_cmp(&b.pos_0)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     // Clamp to bounds
     let first = sorted_points.first()?;

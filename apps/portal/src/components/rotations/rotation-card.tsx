@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, HStack, VStack } from "styled-system/jsx";
+import { Flex, VStack } from "styled-system/jsx";
 
 import { GameIcon } from "@/components/game";
 import { Link, Text } from "@/components/ui";
@@ -63,6 +63,7 @@ export function RotationCard({
   );
 }
 
+// TODO Use intlayer here
 function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diff = date.getTime() - now.getTime();
@@ -73,8 +74,17 @@ function formatRelativeTime(date: Date): string {
 
   const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
-  if (Math.abs(days) >= 1) return rtf.format(days, "day");
-  if (Math.abs(hours) >= 1) return rtf.format(hours, "hour");
-  if (Math.abs(minutes) >= 1) return rtf.format(minutes, "minute");
+  if (Math.abs(days) >= 1) {
+    return rtf.format(days, "day");
+  }
+
+  if (Math.abs(hours) >= 1) {
+    return rtf.format(hours, "hour");
+  }
+
+  if (Math.abs(minutes) >= 1) {
+    return rtf.format(minutes, "minute");
+  }
+
   return rtf.format(seconds, "second");
 }

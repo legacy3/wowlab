@@ -1,9 +1,9 @@
 //! Handler registry - maps spec IDs to handler implementations.
 
 use super::SpecHandler;
-use wowlab_common::types::SpecId;
 use std::collections::HashMap;
 use std::sync::Arc;
+use wowlab_common::types::SpecId;
 
 /// Registry mapping spec IDs to their handlers.
 ///

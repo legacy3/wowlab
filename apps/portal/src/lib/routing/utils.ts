@@ -70,7 +70,6 @@ export function href(
   route: DynamicRoute,
   params: Record<string, string>,
 ): string;
-
 export function href(route: AnyRoute, params?: Record<string, string>): string {
   if ("template" in route) {
     let result = route.template;

@@ -7,10 +7,6 @@ import type { CanvasConfig, CanvasState } from "./types";
 import { EventEmitter } from "./events";
 import { FabricPlugin, PluginRegistry } from "./plugin";
 
-// =============================================================================
-// Canvas Controller - Slim Core
-// =============================================================================
-
 export class CanvasController {
   readonly canvas: fabric.Canvas;
   readonly events: EventEmitter;
@@ -46,10 +42,6 @@ export class CanvasController {
     this.events.emit("canvas:ready");
   }
 
-  // ===========================================================================
-  // Getters
-  // ===========================================================================
-
   get height(): number {
     return this.config.height;
   }
@@ -70,10 +62,6 @@ export class CanvasController {
     return this.canvas.getZoom();
   }
 
-  // ===========================================================================
-  // Public API
-  // ===========================================================================
-
   clear(): void {
     this.canvas.clear();
     this.canvas.backgroundColor = this.config.backgroundColor;
@@ -82,11 +70,14 @@ export class CanvasController {
 
   deleteSelected(): void {
     const active = this.canvas.getActiveObjects();
-    if (active.length === 0) return;
+    if (active.length === 0) {
+      return;
+    }
 
     for (const obj of active) {
       this.canvas.remove(obj);
     }
+    
     this.canvas.discardActiveObject();
     this.canvas.requestRenderAll();
   }
@@ -144,10 +135,6 @@ export class CanvasController {
     this.plugins.register(plugin, this.canvas, this);
     return this;
   }
-
-  // ===========================================================================
-  // Private Methods
-  // ===========================================================================
 
   private setupCoreEvents(): void {
     // Selection changes

@@ -42,9 +42,13 @@ export function useTraitCanvas({
   const controllerRef = useRef<CanvasController | null>(null);
   const treeDataRef = useRef<TraitTreeFlat | null>(null);
   const onTooltipRef = useRef(onTooltip);
-  onTooltipRef.current = onTooltip;
 
   const selection = useTraitStore((s) => s.selection);
+
+  // Update ref in effect to avoid accessing during render
+  useEffect(() => {
+    onTooltipRef.current = onTooltip;
+  }, [onTooltip]);
 
   useEffect(() => {
     const treeData = transformSpecTraits(specTraits);
@@ -89,6 +93,7 @@ export function useTraitCanvas({
         if (!node) {
           return "locked";
         }
+        
         return getNodeState(node, selection, incoming);
       },
       onNodeHover: (data) => onTooltipRef.current?.(data),

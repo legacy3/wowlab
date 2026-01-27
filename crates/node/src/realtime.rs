@@ -65,9 +65,7 @@ impl NodeRealtime {
             let shutdown_clone = shutdown.clone();
 
             // Spawn the client run loop
-            let run_handle = tokio::spawn(async move {
-                client_clone.run(shutdown_clone).await
-            });
+            let run_handle = tokio::spawn(async move { client_clone.run(shutdown_clone).await });
 
             // Subscribe to channels
             let result = run_subscriptions(client, node_id, &tx, shutdown).await;

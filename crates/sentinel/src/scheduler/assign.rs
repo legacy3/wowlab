@@ -90,13 +90,11 @@ pub fn is_eligible(
 
     match job.access_type.as_deref() {
         Some("public") => true,
-        Some("user") => {
-            permissions.iter().any(|p| {
-                p.node_id == node.id
-                    && p.access_type == "user"
-                    && p.target_id.as_deref() == Some(&job.user_id.to_string())
-            })
-        }
+        Some("user") => permissions.iter().any(|p| {
+            p.node_id == node.id
+                && p.access_type == "user"
+                && p.target_id.as_deref() == Some(&job.user_id.to_string())
+        }),
         Some("discord") => {
             let node_discord_id = match &node.discord_id {
                 Some(id) => id,
@@ -112,10 +110,7 @@ pub fn is_eligible(
                 Err(_) => return false,
             };
 
-            let guild_id: GuildId = target_guild
-                .parse::<u64>()
-                .unwrap_or_default()
-                .into();
+            let guild_id: GuildId = target_guild.parse::<u64>().unwrap_or_default().into();
             match map.get(&guild_id) {
                 Some(gf) => gf.filter.might_contain(node_discord_id),
                 None => false,
@@ -126,14 +121,11 @@ pub fn is_eligible(
     }
 }
 
-async fn fetch_jobs(
-    db: &PgPool,
-    job_ids: &[Uuid],
-) -> Result<HashMap<Uuid, JobInfo>, sqlx::Error> {
+async fn fetch_jobs(db: &PgPool, job_ids: &[Uuid]) -> Result<HashMap<Uuid, JobInfo>, sqlx::Error> {
     let rows = sqlx::query_as::<_, JobInfo>(
         "SELECT id, user_id, access_type, discord_server_id
          FROM public.jobs
-         WHERE id = ANY($1)"
+         WHERE id = ANY($1)",
     )
     .bind(job_ids)
     .fetch_all(db)
@@ -149,24 +141,30 @@ async fn fetch_online_nodes(db: &PgPool) -> Result<Vec<OnlineNode>, sqlx::Error>
          FROM public.nodes n
          LEFT JOIN auth.identities i
            ON i.user_id = n.user_id AND i.provider = 'discord'
-         WHERE n.status = 'online'"
+         WHERE n.status = 'online'",
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows.into_iter().map(|r| OnlineNode {
-        id: r.id,
-        user_id: r.user_id,
-        discord_id: r.discord_id,
-        capacity: (r.max_parallel as usize).min(r.total_cores as usize),
-        backlog: 0,
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| OnlineNode {
+            id: r.id,
+            user_id: r.user_id,
+            discord_id: r.discord_id,
+            capacity: (r.max_parallel as usize).min(r.total_cores as usize),
+            backlog: 0,
+        })
+        .collect())
 }
 
-async fn fetch_permissions(db: &PgPool, node_ids: &[Uuid]) -> Result<Vec<NodePermission>, sqlx::Error> {
+async fn fetch_permissions(
+    db: &PgPool,
+    node_ids: &[Uuid],
+) -> Result<Vec<NodePermission>, sqlx::Error> {
     sqlx::query_as::<_, NodePermission>(
         "SELECT node_id, access_type, target_id FROM public.nodes_permissions
-         WHERE node_id = ANY($1)"
+         WHERE node_id = ANY($1)",
     )
     .bind(node_ids)
     .fetch_all(db)
@@ -178,18 +176,18 @@ async fn fetch_backlogs(db: &PgPool) -> Result<HashMap<Uuid, usize>, sqlx::Error
         "SELECT node_id, COUNT(*)::int as count
          FROM public.jobs_chunks
          WHERE status = 'running' AND node_id IS NOT NULL
-         GROUP BY node_id"
+         GROUP BY node_id",
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows.into_iter().map(|r| (r.node_id, r.count as usize)).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| (r.node_id, r.count as usize))
+        .collect())
 }
 
-async fn batch_assign(
-    db: &PgPool,
-    assignments: &[Assignment],
-) -> Result<(), sqlx::Error> {
+async fn batch_assign(db: &PgPool, assignments: &[Assignment]) -> Result<(), sqlx::Error> {
     let chunk_ids: Vec<Uuid> = assignments.iter().map(|a| a.chunk_id).collect();
     let node_ids: Vec<Uuid> = assignments.iter().map(|a| a.node_id).collect();
 
@@ -197,7 +195,7 @@ async fn batch_assign(
         "UPDATE public.jobs_chunks
          SET node_id = data.node_id, status = 'running', claimed_at = now()
          FROM (SELECT unnest($1::uuid[]) as chunk_id, unnest($2::uuid[]) as node_id) data
-         WHERE jobs_chunks.id = data.chunk_id"
+         WHERE jobs_chunks.id = data.chunk_id",
     )
     .bind(&chunk_ids)
     .bind(&node_ids)

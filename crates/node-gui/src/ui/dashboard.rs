@@ -4,8 +4,8 @@ use super::theme::{
     FG_DEFAULT, FG_SUBTLE, GREEN_9, RED_9, SPACE_MD, SPACE_SM,
 };
 use egui_plot::{Line, Plot, PlotPoints};
-use wowlab_node::NodeStats;
 use std::collections::VecDeque;
+use wowlab_node::NodeStats;
 
 pub fn show(
     ui: &mut egui::Ui,

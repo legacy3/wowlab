@@ -78,5 +78,4 @@ impl ConfigCache {
         self.rotations
             .insert(id, CachedRotation { script, checksum });
     }
-
 }

@@ -21,8 +21,10 @@ export function ThemeToggle() {
   const { setTheme, theme = "system" } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // TODO Find a proper mounted SSR hook for this
   useEffect(() => {
     setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Hydration pattern, runs once on mount
   }, []);
 
   const themeLabels: Record<ThemeKey, string> = {

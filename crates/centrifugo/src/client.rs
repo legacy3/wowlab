@@ -176,7 +176,9 @@ impl Client {
                 });
             }
 
-            reply.connect.ok_or_else(|| Error::Protocol("No connect result".into()))?
+            reply
+                .connect
+                .ok_or_else(|| Error::Protocol("No connect result".into()))?
         };
 
         tracing::info!(
@@ -253,8 +255,8 @@ impl Client {
         data: &[u8],
         pending: &RwLock<HashMap<u32, PendingRequest>>,
     ) -> Result<(), Error> {
-        let reply =
-            proto::Reply::decode_length_delimited(data).map_err(|e| Error::Protocol(e.to_string()))?;
+        let reply = proto::Reply::decode_length_delimited(data)
+            .map_err(|e| Error::Protocol(e.to_string()))?;
 
         // Check if this is a reply to a pending request
         if reply.id > 0 {

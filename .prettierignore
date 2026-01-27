@@ -10,7 +10,7 @@ package-lock.json
 yarn.lock
 
 # Next
+.intlayer/
 .next/
-
-# Old stuff
-apps_old/
+.velite/
+styled-system/

@@ -1,5 +1,5 @@
-use wowlab_common::types::{SimTime, SpellIdx, TargetIdx};
 use std::collections::HashMap;
+use wowlab_common::types::{SimTime, SpellIdx, TargetIdx};
 
 /// Single damage event record
 #[derive(Clone, Debug)]

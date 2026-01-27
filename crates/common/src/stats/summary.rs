@@ -58,9 +58,7 @@ impl Streaming {
         let n = self.n + other.n;
         let delta = other.mean - self.mean;
         let mean = self.mean + delta * other.n as f64 / n as f64;
-        let m2 = self.m2
-            + other.m2
-            + delta * delta * (self.n as f64 * other.n as f64 / n as f64);
+        let m2 = self.m2 + other.m2 + delta * delta * (self.n as f64 * other.n as f64 / n as f64);
 
         self.n = n;
         self.mean = mean;
@@ -172,7 +170,8 @@ impl Batch {
 
     fn ensure_sorted(&mut self) {
         if !self.sorted {
-            self.data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            self.data
+                .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
             self.sorted = true;
         }
     }

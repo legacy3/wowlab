@@ -223,7 +223,7 @@ export function RotationBrowser() {
           )}
           {search && (
             <Badge size="sm" variant="outline">
-              "{search}"
+              &quot;{search}&quot;
               <IconButton
                 variant="plain"
                 size="xs"
@@ -379,9 +379,15 @@ function formatRelativeTime(date: Date): string {
 
   const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
-  if (Math.abs(days) >= 1) return rtf.format(days, "day");
-  if (Math.abs(hours) >= 1) return rtf.format(hours, "hour");
-  if (Math.abs(minutes) >= 1) return rtf.format(minutes, "minute");
+  if (Math.abs(days) >= 1) {
+    return rtf.format(days, "day");
+  }
+  if (Math.abs(hours) >= 1) {
+    return rtf.format(hours, "hour");
+  }
+  if (Math.abs(minutes) >= 1) {
+    return rtf.format(minutes, "minute");
+  }
   return rtf.format(seconds, "second");
 }
 

@@ -108,7 +108,9 @@ impl<'a> Parser<'a> {
 
             Token::MiscVariable(s) => Some(SpellDescriptionNode::Variable(parse_misc_var(s))),
 
-            Token::CrossSpellRef(s) => Some(SpellDescriptionNode::Variable(parse_cross_spell_ref(s))),
+            Token::CrossSpellRef(s) => {
+                Some(SpellDescriptionNode::Variable(parse_cross_spell_ref(s)))
+            }
 
             Token::SimpleVariable(s) => {
                 // Treat unknown variables as misc
@@ -122,16 +124,13 @@ impl<'a> Parser<'a> {
 
             Token::ConditionalStart => self.parse_conditional(),
 
-            Token::Pluralization((content, capitalized)) => {
-                Some(SpellDescriptionNode::Pluralization(parse_pluralization(
-                    content,
-                    capitalized,
-                )))
-            }
+            Token::Pluralization((content, capitalized)) => Some(
+                SpellDescriptionNode::Pluralization(parse_pluralization(content, capitalized)),
+            ),
 
-            Token::Gender((content, capitalized)) => {
-                Some(SpellDescriptionNode::Gender(parse_gender(content, capitalized)))
-            }
+            Token::Gender((content, capitalized)) => Some(SpellDescriptionNode::Gender(
+                parse_gender(content, capitalized),
+            )),
 
             Token::ColorCode(s) => Some(SpellDescriptionNode::ColorCode(ColorCodeNode {
                 code: s[1..].to_string(),
@@ -630,7 +629,11 @@ fn parse_misc_var(s: &str) -> VariableNode {
     let body = &s[1..]; // strip $
 
     // Check for trailing digits (like ctrmax1)
-    let digits: String = body.chars().rev().take_while(|c| c.is_ascii_digit()).collect();
+    let digits: String = body
+        .chars()
+        .rev()
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
     let id = if !digits.is_empty() {
         digits.chars().rev().collect::<String>().parse().ok()
     } else {
@@ -661,7 +664,11 @@ fn parse_at_var(s: &str) -> VariableNode {
     let body = &s[2..]; // strip $@
 
     // Check for trailing digits (spell ID)
-    let digits: String = body.chars().rev().take_while(|c| c.is_ascii_digit()).collect();
+    let digits: String = body
+        .chars()
+        .rev()
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
     let spell_id = if !digits.is_empty() {
         digits.chars().rev().collect::<String>().parse().ok()
     } else {
@@ -683,9 +690,7 @@ fn parse_at_var(s: &str) -> VariableNode {
 /// Effect variable types that require an effect index.
 /// When parsing cross-spell refs without an explicit index, these types default to effect 1.
 /// Note: W (weapon damage) is separate from w (weapon coeff)
-const EFFECT_VAR_TYPES: &[&str] = &[
-    "s", "m", "o", "t", "a", "e", "w", "x", "bc", "q", "sw",
-];
+const EFFECT_VAR_TYPES: &[&str] = &["s", "m", "o", "t", "a", "e", "w", "x", "bc", "q", "sw"];
 
 fn parse_cross_spell_ref(s: &str) -> VariableNode {
     let body = &s[1..]; // strip $
@@ -697,7 +702,11 @@ fn parse_cross_spell_ref(s: &str) -> VariableNode {
     let remainder = &body[id_digits.len()..];
 
     // Extract trailing effect index
-    let trail_digits: String = remainder.chars().rev().take_while(|c| c.is_ascii_digit()).collect();
+    let trail_digits: String = remainder
+        .chars()
+        .rev()
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
     let mut effect_index = if !trail_digits.is_empty() {
         trail_digits.chars().rev().collect::<String>().parse().ok()
     } else {
@@ -774,7 +783,9 @@ fn parse_condition_type(s: &str) -> Option<SingleConditionNode> {
     // c7 - class check
     if let Some(rest) = s.strip_prefix('c') {
         if let Ok(id) = rest.parse::<u32>() {
-            return Some(SingleConditionNode::Class(ClassConditionNode { class_id: id }));
+            return Some(SingleConditionNode::Class(ClassConditionNode {
+                class_id: id,
+            }));
         }
     }
 

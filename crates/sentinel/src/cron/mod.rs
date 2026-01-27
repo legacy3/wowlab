@@ -32,7 +32,11 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
     ];
 
     for job in &jobs {
-        tracing::info!(job = job.name(), schedule = job.schedule(), "Registering cron job");
+        tracing::info!(
+            job = job.name(),
+            schedule = job.schedule(),
+            "Registering cron job"
+        );
     }
 
     for job in jobs {

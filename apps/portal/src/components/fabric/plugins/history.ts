@@ -5,20 +5,10 @@ import type { HistoryState } from "../core/events";
 import type { FabricPlugin } from "../core/plugin";
 import type { ShortcutsPlugin } from "./shortcuts";
 
-// =============================================================================
-// History Plugin Configuration
-// =============================================================================
-
 export interface HistoryPluginConfig {
-  /** Maximum number of history states to keep (default: 50) */
   maxLength?: number;
-  /** Throttle delay in ms between saves (default: 100) */
   throttleDelay?: number;
 }
-
-// =============================================================================
-// History Plugin
-// =============================================================================
 
 export class HistoryPlugin implements FabricPlugin {
   readonly hotkeys = ["mod+z", "mod+shift+z"];
@@ -47,10 +37,6 @@ export class HistoryPlugin implements FabricPlugin {
     this.throttleDelay = config.throttleDelay ?? 100;
   }
 
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
-
   get canRedo(): boolean {
     return this.currentIndex < this.stack.length;
   }
@@ -58,10 +44,6 @@ export class HistoryPlugin implements FabricPlugin {
   get canUndo(): boolean {
     return this.currentIndex > 1;
   }
-
-  // ===========================================================================
-  // Shortcut Registration
-  // ===========================================================================
 
   get redoCount(): number {
     return this.stack.length - this.currentIndex;
@@ -71,11 +53,6 @@ export class HistoryPlugin implements FabricPlugin {
     return this.currentIndex - 1;
   }
 
-  // ===========================================================================
-  // Public API
-  // ===========================================================================
-
-  /** Clear history and save current state as initial */
   clear(): void {
     const currentState = this.serializeCanvas();
     this.stack = [currentState];
@@ -127,7 +104,9 @@ export class HistoryPlugin implements FabricPlugin {
   }
 
   redo(): void {
-    if (!this.canRedo || this.isProcessing) return;
+    if (!this.canRedo || this.isProcessing) {
+      return;
+    }
 
     const state = this.stack[this.currentIndex];
     if (state) {
@@ -137,7 +116,9 @@ export class HistoryPlugin implements FabricPlugin {
   }
 
   undo(): void {
-    if (!this.canUndo || this.isProcessing) return;
+    if (!this.canUndo || this.isProcessing) {
+      return;
+    }
 
     this.currentIndex--;
     const state = this.stack[this.currentIndex - 1];
@@ -170,16 +151,9 @@ export class HistoryPlugin implements FabricPlugin {
     });
   }
 
-  // ===========================================================================
-  // State Management
-  // ===========================================================================
-
   private registerShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
     if (!shortcuts) {
-      console.warn(
-        "[HistoryPlugin] ShortcutsPlugin not found. Register ShortcutsPlugin before HistoryPlugin for keyboard shortcuts.",
-      );
       return;
     }
 
@@ -204,7 +178,9 @@ export class HistoryPlugin implements FabricPlugin {
 
   private saveState(): void {
     // Don't save during undo/redo operations
-    if (this.isProcessing) return;
+    if (this.isProcessing) {
+      return;
+    }
 
     const now = Date.now();
     const timeSinceLastSave = now - this.lastSaveTime;
@@ -228,7 +204,9 @@ export class HistoryPlugin implements FabricPlugin {
   }
 
   private saveStateImmediate(): void {
-    if (this.isProcessing) return;
+    if (this.isProcessing) {
+      return;
+    }
 
     const state = this.serializeCanvas();
 
@@ -257,7 +235,9 @@ export class HistoryPlugin implements FabricPlugin {
 
   private unregisterShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     shortcuts.unregister("mod+z");
     shortcuts.unregister("mod+shift+z");

@@ -55,7 +55,11 @@ impl CentrifugoApi {
     }
 
     /// Broadcast data to multiple channels.
-    pub async fn broadcast<T: Serialize>(&self, channels: &[String], data: &T) -> Result<(), Error> {
+    pub async fn broadcast<T: Serialize>(
+        &self,
+        channels: &[String],
+        data: &T,
+    ) -> Result<(), Error> {
         let resp = self
             .client
             .post(format!("{}/api/broadcast", self.url))

@@ -5,7 +5,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("WebSocket error: {0}")]
-    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
+    WebSocket(Box<tokio_tungstenite::tungstenite::Error>),
 
     #[error("Connection closed")]
     ConnectionClosed,
@@ -30,4 +30,10 @@ pub enum Error {
 
     #[error("Not connected")]
     NotConnected,
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for Error {
+    fn from(err: tokio_tungstenite::tungstenite::Error) -> Self {
+        Error::WebSocket(Box::new(err))
+    }
 }

@@ -6,8 +6,10 @@
 //! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
 
 use async_trait::async_trait;
-use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections};
 use std::path::PathBuf;
+use wowlab_common::types::data::{
+    AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat, TraitTreeWithSelections,
+};
 
 /// Errors that can occur during data resolution.
 #[derive(Debug, thiserror::Error)]

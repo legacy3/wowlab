@@ -14,7 +14,10 @@ use crate::types::SpellDescDependencies;
 ///
 /// # Returns
 /// A `SpellDescDependencies` struct containing all data needed to render the description.
-pub fn analyze_dependencies(ast: &ParsedSpellDescription, self_spell_id: u32) -> SpellDescDependencies {
+pub fn analyze_dependencies(
+    ast: &ParsedSpellDescription,
+    self_spell_id: u32,
+) -> SpellDescDependencies {
     let mut deps = SpellDescDependencies::new();
     deps.add_spell_id(self_spell_id);
 

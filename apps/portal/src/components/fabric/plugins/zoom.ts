@@ -155,7 +155,9 @@ export class ZoomPlugin implements FabricPlugin {
     const contentWidth = bounds.width;
     const contentHeight = bounds.height;
 
-    if (contentWidth === 0 || contentHeight === 0) return;
+    if (contentWidth === 0 || contentHeight === 0) {
+      return;
+    }
 
     const canvasWidth = this.canvas.getWidth() - padding * 2;
     const canvasHeight = this.canvas.getHeight() - padding * 2;
@@ -185,7 +187,9 @@ export class ZoomPlugin implements FabricPlugin {
 
   zoomToSelection(padding = 50): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     this.zoomToObject(active, padding);
   }
@@ -196,7 +200,9 @@ export class ZoomPlugin implements FabricPlugin {
 
   private registerShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     shortcuts.register(
       "+",
@@ -237,7 +243,9 @@ export class ZoomPlugin implements FabricPlugin {
 
   private unregisterShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     shortcuts.unregister("+");
     shortcuts.unregister("-");

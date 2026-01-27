@@ -64,24 +64,22 @@ export function NodesPage() {
   const totalWorkers = selectTotalWorkers(allNodes);
 
   const handleSave = async (data: SaveNodeData) => {
-    if (!settingsNode) return;
-    try {
-      await updateNode.mutateAsync({ data, nodeId: settingsNode.id });
-      setSettingsNode(null);
-    } catch (err) {
-      console.error("Failed to save node:", err);
+    if (!settingsNode) {
+      return;
     }
+
+    await updateNode.mutateAsync({ data, nodeId: settingsNode.id });
+    setSettingsNode(null);
   };
 
   const handleDelete = async () => {
-    if (!settingsNode) return;
-    try {
-      await deleteNode.mutateAsync(settingsNode.id);
-      setSettingsNode(null);
-      clearSelection();
-    } catch (err) {
-      console.error("Failed to delete node:", err);
+    if (!settingsNode) {
+      return;
     }
+    
+    await deleteNode.mutateAsync(settingsNode.id);
+    setSettingsNode(null);
+    clearSelection();
   };
 
   const handleBulkPowerOn = async () => {

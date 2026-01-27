@@ -121,7 +121,8 @@ pub trait HunterClass: SpecHandler {
 
         let haste = state.player.stats.haste() * self.pet_attack_speed_modifier(state);
         let base_speed = PET_ATTACK_SPEED.as_millis() as f32;
-        let speed = wowlab_common::types::SimTime::from_millis(((base_speed / haste) as u32).max(100));
+        let speed =
+            wowlab_common::types::SimTime::from_millis(((base_speed / haste) as u32).max(100));
         state.schedule_in(speed, crate::core::SimEvent::PetAttack { pet });
     }
 

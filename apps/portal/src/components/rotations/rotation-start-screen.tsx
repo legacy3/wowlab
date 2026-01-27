@@ -1,17 +1,13 @@
 "use client";
 
 import { useIntlayer } from "next-intlayer";
-import { Container, Flex, VStack } from "styled-system/jsx";
+import { Container, VStack } from "styled-system/jsx";
 
 import { SpecPicker } from "@/components/game";
 import { Input, Tabs, Text } from "@/components/ui";
 import { useEditor } from "@/lib/state/editor";
 
 import { RotationPresetPicker } from "./rotation-preset-picker";
-
-// =============================================================================
-// Component
-// =============================================================================
 
 export function RotationStartScreen() {
   const { startScreen: content } = useIntlayer("editor");

@@ -36,7 +36,9 @@ export type ThumbProps = ComponentProps<typeof Thumb>;
 export const Marks = forwardRef<HTMLDivElement, MarksProps>(
   function Marks(props, ref) {
     const { marks, ...rest } = props;
-    if (!marks?.length) return null;
+    if (!marks?.length) {
+      return null;
+    }
 
     return (
       <MarkerGroup ref={ref} {...rest}>

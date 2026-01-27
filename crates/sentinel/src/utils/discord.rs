@@ -11,7 +11,9 @@ pub async fn fetch_all_member_ids(
     let mut after: Option<UserId> = None;
 
     loop {
-        let members = guild_id.members(http, Some(MEMBER_PAGE_SIZE), after).await?;
+        let members = guild_id
+            .members(http, Some(MEMBER_PAGE_SIZE), after)
+            .await?;
 
         if members.is_empty() {
             break;

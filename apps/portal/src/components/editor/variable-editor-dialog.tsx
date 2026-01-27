@@ -6,7 +6,7 @@ import { Box, VStack } from "styled-system/jsx";
 
 import type { Variable } from "@/lib/editor";
 
-import { Button, Code, Dialog, Input, Text } from "../ui";
+import { Button, Dialog, Input, Text } from "../ui";
 
 export interface VariableEditorDialogProps {
   onOpenChange: (open: boolean) => void;
@@ -30,6 +30,7 @@ export function VariableEditorDialog({
       setName(variable?.name ?? "");
       setExpression(variable?.expression ?? "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Sync state with props when dialog opens
   }, [open, variable]);
 
   const handleSave = () => {

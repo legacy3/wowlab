@@ -10,13 +10,13 @@ mod proto {
     include!(concat!(env!("OUT_DIR"), "/centrifugo.rs"));
 }
 
-mod client;
 mod api;
+mod client;
 mod error;
 mod events;
 
 pub use api::CentrifugoApi;
 pub use client::{Client, ClientConfig, Subscription};
 pub use error::Error;
-pub use events::{Event, ClientInfo, Publication};
+pub use events::{ClientInfo, Event, Publication};
 pub use proto::{PresenceResult, PresenceStatsResult};

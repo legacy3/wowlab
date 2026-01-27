@@ -12,7 +12,10 @@ use tokio_util::sync::CancellationToken;
 
 use crate::state::ServerState;
 
-pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn run(
+    state: Arc<ServerState>,
+    shutdown: CancellationToken,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing::info!("Scheduler starting");
 
     loop {
@@ -40,7 +43,10 @@ async fn listen_and_assign(
 
         match tokio::time::timeout(Duration::from_secs(30), listener.recv()).await {
             Ok(Ok(notification)) => {
-                tracing::debug!(payload = notification.payload(), "pending_chunk notification");
+                tracing::debug!(
+                    payload = notification.payload(),
+                    "pending_chunk notification"
+                );
                 tokio::time::sleep(Duration::from_millis(50)).await;
                 process_pending(state).await;
             }
@@ -72,14 +78,12 @@ async fn process_pending(state: &ServerState) {
     }
 }
 
-async fn fetch_pending_chunks(
-    state: &ServerState,
-) -> Result<Vec<PendingChunk>, sqlx::Error> {
+async fn fetch_pending_chunks(state: &ServerState) -> Result<Vec<PendingChunk>, sqlx::Error> {
     sqlx::query_as::<_, PendingChunk>(
         "SELECT id, job_id FROM public.jobs_chunks
          WHERE status = 'pending' AND node_id IS NULL
          ORDER BY created_at ASC
-         LIMIT 100"
+         LIMIT 100",
     )
     .fetch_all(&state.db)
     .await

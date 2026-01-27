@@ -10,13 +10,15 @@
 use wasm_bindgen::prelude::*;
 
 use crate::parsers::{
-    apply_item_bonuses, encode_minimal_loadout, parse_simc, parse_spell_desc, Profile,
-    ParsedSpellDescription,
+    apply_item_bonuses, encode_minimal_loadout, parse_simc, parse_spell_desc,
+    ParsedSpellDescription, Profile,
 };
 use crate::types::data::{ItemQuality, ItemScalingData, ItemStat};
 
 // Re-export spell description WASM functions from parsers
-pub use crate::parsers::spell_desc::{wasm_analyze_spell_desc, wasm_render_spell_desc, AnalyzeResult};
+pub use crate::parsers::spell_desc::{
+    wasm_analyze_spell_desc, wasm_render_spell_desc, AnalyzeResult,
+};
 
 // Re-export tokenize function
 pub use crate::parsers::spell_desc::wasm_tokenize_spell_desc;
@@ -113,7 +115,12 @@ pub fn wasm_get_stat_budget(
         Ok(v) => v,
         Err(_) => return JsValue::NULL,
     };
-    match crate::parsers::get_stat_budget(&scaling_data, item_level, ItemQuality::from(quality), slot_index) {
+    match crate::parsers::get_stat_budget(
+        &scaling_data,
+        item_level,
+        ItemQuality::from(quality),
+        slot_index,
+    ) {
         Some(v) => JsValue::from_f64(v),
         None => JsValue::NULL,
     }
@@ -174,7 +181,11 @@ mod crypto_wasm {
         message: &str,
         signature_base64: &str,
     ) -> Result<bool, JsError> {
-        match crypto::verify_signature_base64(public_key_base64, message.as_bytes(), signature_base64) {
+        match crypto::verify_signature_base64(
+            public_key_base64,
+            message.as_bytes(),
+            signature_base64,
+        ) {
             Ok(()) => Ok(true),
             Err(crypto::CryptoError::VerificationFailed) => Ok(false),
             Err(e) => Err(JsError::new(&e.to_string())),

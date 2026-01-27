@@ -8,6 +8,8 @@ allowed-tools: Read, Grep, Glob, Bash, Task
 
 Comprehensive project-wide quality control that orchestrates language-specific checks.
 
+**MANDATORY:** When running this skill, you MUST spawn parallel sub-agents for `/rust-quality` and `/portal-quality`. Do NOT run all checks inline yourself. See "Audit Workflow" section.
+
 ## Quick Audit Commands
 
 ```bash
@@ -23,14 +25,16 @@ cd apps/portal && pnpm lint && pnpm build
 
 ---
 
-## Language-Specific Skills
+## Language-Specific Skills (REQUIRED)
 
-This skill delegates to specialized quality skills:
+This skill MUST delegate to specialized quality skills via sub-agents:
 
 | Codebase         | Skill             | Focus                                 |
 | ---------------- | ----------------- | ------------------------------------- |
-| `crates/engine/` | `/rust-quality`   | Rust patterns, clippy, error handling |
+| `crates/`        | `/rust-quality`   | Rust patterns, clippy, error handling |
 | `apps/portal/`   | `/portal-quality` | TypeScript, React, Next.js patterns   |
+
+**Do NOT skip these.** Spawn them as parallel sub-agents at the start of the audit.
 
 ---
 
@@ -154,34 +158,35 @@ let index = usize::try_from(value)?;
 
 ## Audit Workflow
 
+**IMPORTANT:** This skill MUST spawn parallel sub-agents for language-specific audits. Do NOT run checks inline.
+
 When running a full audit:
 
-1. **Run automated checks first**
+1. **Spawn parallel sub-agents immediately**
 
-   ```bash
-   pnpm build && pnpm lint && pnpm test
-   cd crates/engine && cargo clippy --workspace --all-targets -- -D warnings && cargo test
+   Use the Task tool to spawn these agents IN PARALLEL (single message, multiple Task calls):
+
+   ```
+   Agent 1: Run /rust-quality skill for crates/ code
+   Agent 2: Run /portal-quality skill for apps/portal/ code
    ```
 
-2. **Check for universal anti-patterns**
+   These skills contain the detailed checks. Do not duplicate their work.
+
+2. **While agents run, check universal anti-patterns**
 
    ```bash
    # TODOs without issue references
    grep -rn "TODO" --include="*.ts" --include="*.tsx" --include="*.rs" | grep -v "#[0-9]"
 
-   # Console/print statements
+   # Console/print statements in production code
    grep -rn "console\." apps/portal/src/ --include="*.ts" --include="*.tsx"
-   grep -rn "println!\|dbg!" crates/
-
-   # Commented code blocks (consecutive comment lines)
-   grep -rn "^[[:space:]]*//.*{" --include="*.ts" --include="*.tsx"
+   grep -rn "println!\|dbg!" crates/ --include="*.rs" | grep -v "/tests\|/cli\|test.rs"
    ```
 
-3. **Run language-specific skill**
-   - Use `/rust-quality` for `crates/` code
-   - Use `/portal-quality` for `apps/portal/` code
+3. **Collect agent results and generate unified report**
 
-4. **Generate report** with:
+   Combine findings from both agents with universal anti-pattern results into a single report with:
    - Issue count by severity
    - Files affected
    - Specific line numbers

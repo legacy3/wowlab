@@ -1,6 +1,8 @@
 use crate::aura::{AuraFlags, PeriodicEffect};
-use wowlab_common::types::{Attribute, AuraIdx, DamageSchool, DerivedStat, RatingType, SimTime, SpellIdx};
 use serde::{Deserialize, Serialize};
+use wowlab_common::types::{
+    Attribute, AuraIdx, DamageSchool, DerivedStat, RatingType, SimTime, SpellIdx,
+};
 
 /// Type of aura effect
 #[derive(Clone, Debug, Serialize, Deserialize)]

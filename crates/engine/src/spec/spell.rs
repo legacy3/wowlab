@@ -1,6 +1,6 @@
 use super::effect::SpellEffect;
-use wowlab_common::types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
 use serde::{Deserialize, Serialize};
+use wowlab_common::types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
 
 /// Target type for spells
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

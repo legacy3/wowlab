@@ -57,7 +57,6 @@ const perfectionistRules = {
 };
 
 const eslintConfig = defineConfig([
-  // Disable removal of eslint-disable comments
   {
     linterOptions: {
       reportUnusedDisableDirectives: "off",
@@ -65,13 +64,14 @@ const eslintConfig = defineConfig([
   },
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".intlayer/**",
+    ".velite/**",
+    "styled-system/**",
   ]),
   {
     plugins: { perfectionist },

@@ -50,6 +50,7 @@ export function useUser(): UserState {
     } = supabase.auth.onAuthStateChange(() => {
       invalidate({ invalidates: ["all"] });
     });
+    
     return () => subscription.unsubscribe();
   }, [supabase, invalidate]);
 
@@ -68,7 +69,10 @@ export function useUser(): UserState {
         },
         provider,
       });
-      if (error) throw error;
+
+      if (error) {
+        throw error;
+      }
     },
     [supabase],
   );

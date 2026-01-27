@@ -33,8 +33,7 @@ const IconButton = styled(Button, {
 export function SignInForm({ redirectTo }: SignInFormProps) {
   const { signInForm: content } = useIntlayer("auth");
   const [error, setError] = useState<string | null>(null);
-  const [loading, { setFalse: stopLoading, setTrue: startLoading }] =
-    useBoolean(false);
+  const [loading, { setTrue: startLoading }] = useBoolean(false);
   const { login } = useUser();
 
   const handleOAuthSignIn = (provider: OAuthProvider) => {

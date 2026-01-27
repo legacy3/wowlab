@@ -5,7 +5,11 @@ mod inner {
         let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as f64;
         std::fs::read_to_string("/proc/self/statm")
             .ok()
-            .and_then(|s| s.split_whitespace().nth(1).and_then(|p| p.parse::<u64>().ok()))
+            .and_then(|s| {
+                s.split_whitespace()
+                    .nth(1)
+                    .and_then(|p| p.parse::<u64>().ok())
+            })
             .map(|pages| pages as f64 * page_size / (1024.0 * 1024.0))
             .unwrap_or(0.0)
     }
@@ -144,26 +148,15 @@ mod inner {
             task_info_out: *mut i32,
             task_info_count: *mut u32,
         ) -> i32;
-        fn host_statistics(
-            host: u32,
-            flavor: i32,
-            info: *mut i32,
-            count: *mut u32,
-        ) -> i32;
-        fn host_statistics64(
-            host: u32,
-            flavor: i32,
-            info: *mut i32,
-            count: *mut u32,
-        ) -> i32;
+        fn host_statistics(host: u32, flavor: i32, info: *mut i32, count: *mut u32) -> i32;
+        fn host_statistics64(host: u32, flavor: i32, info: *mut i32, count: *mut u32) -> i32;
     }
 
     /// RSS memory in megabytes via Mach `task_info`.
     pub fn read_memory_mb() -> f64 {
         unsafe {
             let mut info: MachTaskBasicInfo = mem::zeroed();
-            let mut count =
-                (mem::size_of::<MachTaskBasicInfo>() / mem::size_of::<u32>()) as u32;
+            let mut count = (mem::size_of::<MachTaskBasicInfo>() / mem::size_of::<u32>()) as u32;
             let ret = task_info(
                 mach_task_self(),
                 MACH_TASK_BASIC_INFO,
@@ -193,8 +186,7 @@ mod inner {
     fn read_cpu_ticks() -> Option<(u64, u64)> {
         unsafe {
             let mut info: HostCpuLoadInfo = mem::zeroed();
-            let mut count =
-                (mem::size_of::<HostCpuLoadInfo>() / mem::size_of::<u32>()) as u32;
+            let mut count = (mem::size_of::<HostCpuLoadInfo>() / mem::size_of::<u32>()) as u32;
             let ret = host_statistics(
                 mach_host_self(),
                 HOST_CPU_LOAD_INFO,
@@ -236,7 +228,7 @@ mod inner {
             let mut size: u64 = 0;
             let mut len = mem::size_of::<u64>();
             let ret = libc::sysctlbyname(
-                b"hw.memsize\0".as_ptr() as *const libc::c_char,
+                c"hw.memsize".as_ptr(),
                 &mut size as *mut _ as *mut libc::c_void,
                 &mut len,
                 std::ptr::null_mut(),
@@ -251,8 +243,7 @@ mod inner {
 
         let available = unsafe {
             let mut info: VmStatistics64 = mem::zeroed();
-            let mut count =
-                (mem::size_of::<VmStatistics64>() / mem::size_of::<u32>()) as u32;
+            let mut count = (mem::size_of::<VmStatistics64>() / mem::size_of::<u32>()) as u32;
             let ret = host_statistics64(
                 mach_host_self(),
                 HOST_VM_INFO64,
@@ -326,11 +317,7 @@ mod inner {
             cb: u32,
         ) -> i32;
         fn GlobalMemoryStatusEx(status: *mut MemoryStatusEx) -> i32;
-        fn GetSystemTimes(
-            idle: *mut FileTime,
-            kernel: *mut FileTime,
-            user: *mut FileTime,
-        ) -> i32;
+        fn GetSystemTimes(idle: *mut FileTime, kernel: *mut FileTime, user: *mut FileTime) -> i32;
     }
 
     /// RSS (working set) in megabytes via `K32GetProcessMemoryInfo`.
@@ -338,11 +325,7 @@ mod inner {
         unsafe {
             let mut counters: ProcessMemoryCounters = mem::zeroed();
             counters.cb = mem::size_of::<ProcessMemoryCounters>() as u32;
-            let ret = K32GetProcessMemoryInfo(
-                GetCurrentProcess(),
-                &mut counters,
-                counters.cb,
-            );
+            let ret = K32GetProcessMemoryInfo(GetCurrentProcess(), &mut counters, counters.cb);
             if ret != 0 {
                 counters.working_set_size as f64 / (1024.0 * 1024.0)
             } else {

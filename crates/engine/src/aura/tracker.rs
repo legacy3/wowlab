@@ -1,6 +1,6 @@
 use super::AuraInstance;
-use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 use smallvec::SmallVec;
+use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 
 /// Per-target aura tracking (stack-allocated for typical aura counts)
 #[derive(Clone, Debug, Default)]

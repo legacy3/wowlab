@@ -7,10 +7,6 @@ import { Box, Flex, Stack, styled } from "styled-system/jsx";
 import { Card, Code, ErrorBox, Heading, Skeleton, Text } from "@/components/ui";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 
-// =============================================================================
-// Demo Components
-// =============================================================================
-
 export function DemoBox({ children }: { children: React.ReactNode }) {
   return (
     <Box
@@ -40,10 +36,6 @@ export function DemoLabel({ children }: { children: React.ReactNode }) {
     </Text>
   );
 }
-
-// =============================================================================
-// Layout
-// =============================================================================
 
 export const NavLink = styled("a", {
   base: {
@@ -89,10 +81,6 @@ export function ComponentCard({
   );
 }
 
-// =============================================================================
-// Sections
-// =============================================================================
-
 export function DataCard({
   children,
   description,
@@ -120,10 +108,6 @@ export function ImportPath({ path }: { path: string }) {
     </>
   );
 }
-
-// =============================================================================
-// Cards
-// =============================================================================
 
 export function JsonOutput({
   data,
@@ -189,10 +173,6 @@ export function LazyContent({
     </Box>
   );
 }
-
-// =============================================================================
-// Data Display
-// =============================================================================
 
 export function PageLayout({ children, nav }: PageLayoutProps) {
   const headingIds = useMemo(() => nav.map((item) => item.id), [nav]);

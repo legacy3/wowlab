@@ -7,6 +7,7 @@ import { Group } from "@visx/group";
 import { scaleBand, scaleLinear } from "@visx/scale";
 import { Bar } from "@visx/shape";
 import { Text } from "@visx/text";
+import { useId } from "react";
 
 import { Chart, chartColors, type ChartProps } from "./chart";
 
@@ -35,7 +36,8 @@ export function BarChart({
   ...props
 }: BarChartProps) {
   const barColor = color ?? chartColors[1];
-  const gradientId = `bar-gradient-${Math.random().toString(36).slice(2)}`;
+  const reactId = useId();
+  const gradientId = `bar-gradient-${reactId}`;
 
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;

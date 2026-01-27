@@ -182,10 +182,8 @@ pub async fn insert_spells(
             let patch = patch.clone();
             let pb = Arc::clone(&pb);
             async move {
-                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-                    "INSERT INTO game.spells ({}) ",
-                    COLUMNS.join(", ")
-                ));
+                let mut qb: QueryBuilder<Postgres> =
+                    QueryBuilder::new(format!("INSERT INTO game.spells ({}) ", COLUMNS.join(", ")));
 
                 qb.push_values(chunk, |mut b, s| {
                     b.push_bind(s.id)
@@ -866,10 +864,8 @@ pub async fn insert_curves(
             let patch = patch.clone();
             let pb = Arc::clone(&pb);
             async move {
-                let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(format!(
-                    "INSERT INTO game.curves ({}) ",
-                    COLUMNS.join(", ")
-                ));
+                let mut qb: QueryBuilder<Postgres> =
+                    QueryBuilder::new(format!("INSERT INTO game.curves ({}) ", COLUMNS.join(", ")));
 
                 qb.push_values(chunk, |mut b, r| {
                     b.push_bind(r.id)

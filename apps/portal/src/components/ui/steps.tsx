@@ -243,13 +243,16 @@ export function useStepsState<T extends string = string>({
 
   useEffect(() => {
     const currentStep = steps[currentIndex];
+    
     if (currentStep?.autoAdvanceTo) {
       const nextValue = currentStep.autoAdvanceTo();
+
       if (nextValue && isUnlocked(nextValue)) {
         onStepChange?.(value, nextValue);
         setValue(nextValue);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Auto-advance wizard step
   }, [currentIndex, isUnlocked, onStepChange, steps, value]);
 
   const rootProps = useMemo(

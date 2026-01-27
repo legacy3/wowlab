@@ -45,7 +45,9 @@ export class EventEmitter {
     ...args: FabricEvents[K] extends void ? [] : [FabricEvents[K]]
   ): void {
     const handlers = this.listeners.get(event);
-    if (!handlers) return;
+    if (!handlers) {
+      return;
+    }
 
     const data = args[0];
     for (const handler of handlers) {

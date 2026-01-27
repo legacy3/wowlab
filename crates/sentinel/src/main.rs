@@ -33,8 +33,7 @@ async fn main() {
         .install_recorder()
         .expect("Failed to install prometheus recorder");
 
-    let db_url = std::env::var("SUPABASE_DB_URL")
-        .expect("SUPABASE_DB_URL required");
+    let db_url = std::env::var("SUPABASE_DB_URL").expect("SUPABASE_DB_URL required");
     let db = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(std::time::Duration::from_secs(5))

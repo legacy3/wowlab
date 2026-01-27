@@ -9,7 +9,6 @@ import type {
   EditorState,
   ListType,
   RotationData,
-  RotationsRow,
   Variable,
   ViewMode,
 } from "@/lib/editor";

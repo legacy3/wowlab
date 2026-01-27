@@ -1,8 +1,8 @@
 use crate::aura::TargetAuras;
 use crate::combat::Cooldown;
 use crate::stats::StatCache;
-use wowlab_common::types::{PetKind, SimTime, SpellIdx, UnitIdx};
 use std::collections::HashMap;
+use wowlab_common::types::{PetKind, SimTime, SpellIdx, UnitIdx};
 
 /// Pet state during simulation
 #[derive(Clone, Debug)]

@@ -42,11 +42,10 @@ pub async fn stats(ctx: Context<'_>) -> Result<(), Error> {
     drop(filters);
 
     // Online nodes count
-    let online_nodes: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM public.nodes WHERE status = 'online'",
-    )
-    .fetch_one(db)
-    .await?;
+    let online_nodes: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM public.nodes WHERE status = 'online'")
+            .fetch_one(db)
+            .await?;
 
     let completed = throughput.completed.unwrap_or(0);
     let running = throughput.running.unwrap_or(0);

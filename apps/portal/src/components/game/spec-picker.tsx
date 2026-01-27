@@ -11,10 +11,6 @@ import { useClassesAndSpecs } from "@/lib/state";
 
 import { GameIcon } from "./game-icon";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 interface ClassGridProps {
   classes: Array<{
     color: string;
@@ -24,10 +20,6 @@ interface ClassGridProps {
   }>;
   onSelect: (classId: number) => void;
 }
-
-// =============================================================================
-// Main Component
-// =============================================================================
 
 interface SpecGridProps {
   onBack: () => void;
@@ -42,20 +34,12 @@ interface SpecPickerProps {
   specId?: number | null;
 }
 
-// =============================================================================
-// Compact Mode (Inline)
-// =============================================================================
-
 export function SpecPicker({ compact, onSelect, specId }: SpecPickerProps) {
   if (compact) {
     return <CompactPicker onSelect={onSelect} specId={specId} />;
   }
   return <FullPicker onSelect={onSelect} specId={specId} />;
 }
-
-// =============================================================================
-// Full Mode (Card)
-// =============================================================================
 
 export function SpecPickerSkeleton({ compact }: { compact?: boolean }) {
   if (compact) {
@@ -76,10 +60,6 @@ export function SpecPickerSkeleton({ compact }: { compact?: boolean }) {
     </Card.Root>
   );
 }
-
-// =============================================================================
-// Shared Grid Components
-// =============================================================================
 
 function ClassGrid({ classes, onSelect }: ClassGridProps) {
   return (
@@ -332,10 +312,6 @@ function SpecGrid({ onBack, onSelect, selectedSpecId, specs }: SpecGridProps) {
     </VStack>
   );
 }
-
-// =============================================================================
-// Shared Components
-// =============================================================================
 
 const GridButton = styled("button", {
   base: {

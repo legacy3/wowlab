@@ -1,6 +1,6 @@
 use crate::combat::ActionState;
-use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 use serde::{Deserialize, Serialize};
+use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 
 /// Flags for aura behavior
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]

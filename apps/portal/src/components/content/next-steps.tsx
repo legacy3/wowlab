@@ -12,7 +12,9 @@ type NextStepsProps = {
 };
 
 export function NextSteps({ items }: NextStepsProps) {
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <Box mt="10" pt="6" borderTopWidth="1px" borderColor="border.default">

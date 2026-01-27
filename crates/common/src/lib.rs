@@ -60,11 +60,12 @@ pub use parsers::{
 pub use parsers::DbcData;
 
 // Error types
-pub use parsers::{TraitError, TransformError};
 #[cfg(feature = "dbc")]
 pub use parsers::DbcError;
+pub use parsers::{TraitError, TransformError};
 
 // DBC → Flat transformation
+pub use parsers::SpellKnowledgeContext;
 #[cfg(feature = "dbc")]
 pub use parsers::{
     transform_all_auras, transform_all_classes, transform_all_curve_points, transform_all_curves,
@@ -73,7 +74,6 @@ pub use parsers::{
     transform_all_trait_trees, transform_aura, transform_class, transform_global_color,
     transform_global_string, transform_item, transform_spec, transform_spell, transform_trait_tree,
 };
-pub use parsers::SpellKnowledgeContext;
 
 // Talent loadout encoding/decoding
 pub use parsers::{

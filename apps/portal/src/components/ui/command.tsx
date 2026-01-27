@@ -11,10 +11,6 @@ import * as DialogPrimitive from "./dialog";
 
 const styles = command();
 
-// =============================================================================
-// Components
-// =============================================================================
-
 export interface DialogProps extends DialogPrimitive.RootProps {
   children: ReactNode;
   description?: string;

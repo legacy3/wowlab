@@ -3,8 +3,8 @@
 //! This module provides a data-driven way to define spell behavior
 //! without scattered if/else chains in handlers.
 
-use wowlab_common::types::{AuraIdx, PetKind, SpellIdx};
 use serde::{Deserialize, Serialize};
+use wowlab_common::types::{AuraIdx, PetKind, SpellIdx};
 
 /// Effect that fires when a spell is cast.
 #[derive(Clone, Debug, Serialize, Deserialize)]

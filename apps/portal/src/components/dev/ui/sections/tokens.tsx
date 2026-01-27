@@ -14,6 +14,7 @@ import {
   Loader,
   Text,
 } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 
 import {
   DemoBox,
@@ -226,13 +227,13 @@ function TypographyDemo() {
           <DemoLabel>Links</DemoLabel>
           <VStack gap="2" alignItems="stretch">
             <HStack justify="space-between" py="0.5">
-              <Link href="#">Default Link</Link>
+              <Link href={href(routes.dev.ui)}>Default Link</Link>
               <Text color="fg.muted" textStyle="xs">
                 default
               </Text>
             </HStack>
             <HStack justify="space-between" py="0.5">
-              <Link href="#" colorPalette="amber">
+              <Link href={href(routes.dev.ui)} colorPalette="amber">
                 Amber Link
               </Link>
               <Text color="fg.muted" textStyle="xs">
@@ -240,7 +241,7 @@ function TypographyDemo() {
               </Text>
             </HStack>
             <HStack justify="space-between" py="0.5">
-              <Link href="#" colorPalette="red">
+              <Link href={href(routes.dev.ui)} colorPalette="red">
                 Red Link
               </Link>
               <Text color="fg.muted" textStyle="xs">

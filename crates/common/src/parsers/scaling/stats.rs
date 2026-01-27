@@ -122,16 +122,19 @@ pub fn get_stat_name(stat_type: i32) -> &'static str {
 }
 
 /// Get whether a stat type is a primary stat.
+#[allow(dead_code)]
 pub fn is_primary_stat(stat_type: i32) -> bool {
     matches!(stat_type, 3 | 4 | 5 | 7 | 71 | 72 | 73 | 74)
 }
 
 /// Get whether a stat type is a secondary rating.
+#[allow(dead_code)]
 pub fn is_secondary_stat(stat_type: i32) -> bool {
     matches!(stat_type, 32 | 36 | 40 | 49)
 }
 
 /// Get whether a stat type is a tertiary stat.
+#[allow(dead_code)]
 pub fn is_tertiary_stat(stat_type: i32) -> bool {
     matches!(stat_type, 91 | 93 | 94)
 }

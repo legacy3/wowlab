@@ -4,10 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { CanvasController } from "../core/controller";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface TooltipPosition {
   screenX: number;
   screenY: number;
@@ -22,10 +18,6 @@ export interface UseCanvasContainerReturn {
   transformTooltip: <T extends TooltipPosition>(data: T | null) => T | null;
 }
 
-// =============================================================================
-// Hook
-// =============================================================================
-
 export function useCanvasContainer(): UseCanvasContainerReturn {
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<CanvasController | null>(null);
@@ -35,7 +27,9 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
   // Resize observer
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const updateSize = () => {
       const rect = container.getBoundingClientRect();
@@ -48,16 +42,21 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
     updateSize();
     const observer = new ResizeObserver(updateSize);
     observer.observe(container);
+    
     return () => observer.disconnect();
   }, []);
 
   // Transform tooltip position based on viewport
   const transformTooltip = useCallback(
     <T extends TooltipPosition>(data: T | null): T | null => {
-      if (!data) return null;
+      if (!data) {
+        return null;
+      }
 
       const controller = controllerRef.current;
-      if (!controller) return data;
+      if (!controller) {
+        return data;
+      }
 
       const vpt = controller.canvas.viewportTransform;
       const zoom = controller.canvas.getZoom();

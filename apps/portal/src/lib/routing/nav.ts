@@ -1,4 +1,4 @@
-import type { AnyRoute, DynamicRoute, IndexedRoute, Route } from "./types";
+import type { AnyRoute, IndexedRoute, Route } from "./types";
 
 import { routes } from "./routes";
 

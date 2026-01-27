@@ -36,8 +36,8 @@ pub use target::{PercentValue, TargetExpr};
 pub use variable::VariableExpr;
 
 use crate::sim::SimState;
-use wowlab_common::types::SimTime;
 use serde::{Deserialize, Serialize};
+use wowlab_common::types::SimTime;
 
 #[cfg(feature = "wasm")]
 use tsify::Tsify;

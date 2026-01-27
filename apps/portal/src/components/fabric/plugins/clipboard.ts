@@ -4,18 +4,10 @@ import type { CanvasController } from "../core/controller";
 import type { FabricPlugin } from "../core/plugin";
 import type { ShortcutsPlugin } from "./shortcuts";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 interface ClipboardData {
   objects: object[];
   timestamp: number;
 }
-
-// =============================================================================
-// Clipboard Plugin
-// =============================================================================
 
 export class ClipboardPlugin implements FabricPlugin {
   readonly hotkeys = ["mod+c", "mod+x", "mod+v", "mod+d"];
@@ -28,24 +20,16 @@ export class ClipboardPlugin implements FabricPlugin {
   private pasteCount = 0;
   private pasteOffset = 10;
 
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
-
-  /**
-   * Clear the clipboard.
-   */
   clear(): void {
     this.clipboard = null;
     this.pasteCount = 0;
   }
 
-  /**
-   * Copy selected objects to clipboard.
-   */
   async copy(): Promise<void> {
     const activeObjects = this.canvas.getActiveObjects();
-    if (activeObjects.length === 0) return;
+    if (activeObjects.length === 0) {
+      return;
+    }
 
     const serialized = await this.serializeObjects(activeObjects);
 
@@ -60,16 +44,11 @@ export class ClipboardPlugin implements FabricPlugin {
     });
   }
 
-  // ===========================================================================
-  // Public API
-  // ===========================================================================
-
-  /**
-   * Cut selected objects (copy then delete).
-   */
   async cut(): Promise<void> {
     const activeObjects = this.canvas.getActiveObjects();
-    if (activeObjects.length === 0) return;
+    if (activeObjects.length === 0) {
+      return;
+    }
 
     await this.copy();
     this.controller.deleteSelected();
@@ -85,12 +64,11 @@ export class ClipboardPlugin implements FabricPlugin {
     this.pasteCount = 0;
   }
 
-  /**
-   * Duplicate selected objects (copy + paste in one step).
-   */
   async duplicate(): Promise<void> {
     const activeObjects = this.canvas.getActiveObjects();
-    if (activeObjects.length === 0) return;
+    if (activeObjects.length === 0) {
+      return;
+    }
 
     // Store current clipboard state
     const prevClipboard = this.clipboard;
@@ -105,9 +83,6 @@ export class ClipboardPlugin implements FabricPlugin {
     this.pasteCount = prevPasteCount;
   }
 
-  /**
-   * Check if clipboard has content.
-   */
   hasContent(): boolean {
     return this.clipboard !== null && this.clipboard.objects.length > 0;
   }
@@ -119,11 +94,10 @@ export class ClipboardPlugin implements FabricPlugin {
     this.registerShortcuts();
   }
 
-  /**
-   * Paste objects from clipboard with offset.
-   */
   async paste(): Promise<void> {
-    if (!this.clipboard || this.clipboard.objects.length === 0) return;
+    if (!this.clipboard || this.clipboard.objects.length === 0) {
+      return;
+    }
 
     this.pasteCount++;
     const offset = this.pasteCount * this.pasteOffset;
@@ -156,10 +130,6 @@ export class ClipboardPlugin implements FabricPlugin {
     });
   }
 
-  // ===========================================================================
-  // Private Methods
-  // ===========================================================================
-
   private async deserializeObjects(
     data: object[],
   ): Promise<fabric.FabricObject[]> {
@@ -176,9 +146,6 @@ export class ClipboardPlugin implements FabricPlugin {
   private registerShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
     if (!shortcuts) {
-      console.warn(
-        "ClipboardPlugin: ShortcutsPlugin not found. Register ShortcutsPlugin first.",
-      );
       return;
     }
 
@@ -224,7 +191,9 @@ export class ClipboardPlugin implements FabricPlugin {
   }
 
   private selectObjects(objects: fabric.FabricObject[]): void {
-    if (objects.length === 0) return;
+    if (objects.length === 0) {
+      return;
+    }
 
     if (objects.length === 1) {
       this.canvas.setActiveObject(objects[0]);
@@ -252,7 +221,9 @@ export class ClipboardPlugin implements FabricPlugin {
 
   private unregisterShortcuts(): void {
     const shortcuts = this.controller.plugins.get<ShortcutsPlugin>("shortcuts");
-    if (!shortcuts) return;
+    if (!shortcuts) {
+      return;
+    }
 
     shortcuts.unregister("mod+c");
     shortcuts.unregister("mod+x");

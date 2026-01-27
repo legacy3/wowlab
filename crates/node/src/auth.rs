@@ -1,10 +1,10 @@
+use crate::sentinel::SignedHeaders;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use directories::ProjectDirs;
 use ed25519_dalek::{Signer, SigningKey};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
-use crate::sentinel::SignedHeaders;
 
 /// Ed25519 keypair for node authentication.
 #[derive(Clone)]

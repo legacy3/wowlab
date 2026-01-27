@@ -1,9 +1,5 @@
 import * as fabric from "fabric";
 
-// =============================================================================
-// Image Preloading
-// =============================================================================
-
 const imageCache = new Map<string, HTMLImageElement>();
 
 export function batchAdd(
@@ -15,10 +11,6 @@ export function batchAdd(
   }
   canvas.requestRenderAll();
 }
-
-// =============================================================================
-// Batch Operations
-// =============================================================================
 
 export function batchRemove(
   canvas: fabric.Canvas,

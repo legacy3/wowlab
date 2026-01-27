@@ -34,12 +34,10 @@ pub async fn complete(
     Json(payload): Json<CompleteRequest>,
 ) -> Response {
     // Look up node by public key
-    let node_row = sqlx::query_as::<_, (uuid::Uuid,)>(
-        "SELECT id FROM nodes WHERE public_key = $1",
-    )
-    .bind(&node.public_key)
-    .fetch_optional(&state.db)
-    .await;
+    let node_row = sqlx::query_as::<_, (uuid::Uuid,)>("SELECT id FROM nodes WHERE public_key = $1")
+        .bind(&node.public_key)
+        .fetch_optional(&state.db)
+        .await;
 
     let node_id = match node_row {
         Ok(Some((id,))) => id,

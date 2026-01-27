@@ -92,7 +92,10 @@ pub async fn verify_node(request: Request, next: Next) -> Response {
     };
     let signature = Signature::from_bytes(&sig_bytes);
 
-    if verifying_key.verify(message.as_bytes(), &signature).is_err() {
+    if verifying_key
+        .verify(message.as_bytes(), &signature)
+        .is_err()
+    {
         return auth_error("Invalid signature");
     }
 

@@ -1,7 +1,3 @@
-// =============================================================================
-// Canvas Configuration
-// =============================================================================
-
 export interface CanvasConfig {
   backgroundColor?: string;
   height: number;
@@ -15,10 +11,6 @@ export interface CanvasState {
   panY: number;
   zoom: number;
 }
-
-// =============================================================================
-// Shape Options (for factory functions)
-// =============================================================================
 
 export interface ShapeOptions {
   fill?: string;

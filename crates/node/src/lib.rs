@@ -14,8 +14,8 @@ pub mod update;
 pub mod utils;
 pub mod worker;
 
-pub use auth::NodeKeypair;
 pub use crate::core::{NodeCore, NodeCoreEvent};
+pub use auth::NodeKeypair;
 pub use claim::ClaimError;
 pub use config::NodeConfig;
 pub use queries::{ConfigRow, RotationRow};

@@ -14,8 +14,10 @@ use crate::handler::SpecHandler;
 use crate::rotation::{Action, CompiledRotation, Rotation};
 use crate::sim::SimState;
 use crate::spec::{AuraDef, AuraEffect, GcdType, SpellDef, SpellFlags};
-use wowlab_common::types::{AuraIdx, ClassId, DamageSchool, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx};
 use tracing::debug;
+use wowlab_common::types::{
+    AuraIdx, ClassId, DamageSchool, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx,
+};
 
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
@@ -317,8 +319,8 @@ impl SpecHandler for MmHunter {
 
     fn init_player(&self, player: &mut Player) {
         player.spec = SpecId::Marksmanship;
-        player.resources =
-            crate::resource::UnitResources::new().with_primary(wowlab_common::types::ResourceType::Focus);
+        player.resources = crate::resource::UnitResources::new()
+            .with_primary(wowlab_common::types::ResourceType::Focus);
 
         for spell in spell_definitions() {
             if spell.cooldown > SimTime::ZERO {

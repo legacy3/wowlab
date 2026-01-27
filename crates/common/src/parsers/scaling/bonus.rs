@@ -80,7 +80,9 @@ pub fn apply_item_bonuses(
             }
             bonus_type::ILEVEL_CURVE => {
                 // Type 14: Set item level from curve at player level
-                if let Some(new_ilvl) = interpolate_curve(scaling_data, bonus.value_0, player_level as f64) {
+                if let Some(new_ilvl) =
+                    interpolate_curve(scaling_data, bonus.value_0, player_level as f64)
+                {
                     item_level = new_ilvl.round() as i32;
                     applied.push(AppliedBonus {
                         bonus_list_id: bonus.parent_item_bonus_list_id,
@@ -138,7 +140,9 @@ pub fn apply_item_bonuses(
             }
             bonus_type::SCALING | bonus_type::SCALING_2 => {
                 // Type 11/13: Scaling from curve
-                if let Some(scaled_value) = interpolate_curve(scaling_data, bonus.value_0, player_level as f64) {
+                if let Some(scaled_value) =
+                    interpolate_curve(scaling_data, bonus.value_0, player_level as f64)
+                {
                     let stat_type = bonus.value_1;
                     if stat_type > 0 {
                         *stats_map.entry(stat_type).or_default() += scaled_value;
@@ -194,8 +198,7 @@ pub fn get_bonus_description(bonus_type: i32) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
-    use crate::types::data::{CurveFlat, CurvePointFlat, ItemBonusFlat, RandPropPointsFlat};
+    use crate::types::data::{ItemBonusFlat, RandPropPointsFlat};
 
     fn make_scaling_data() -> ItemScalingData {
         let mut data = ItemScalingData::default();
@@ -330,6 +333,10 @@ mod tests {
         let result = apply_item_bonuses(155, &base_stats, 3, &bonus_ids, &data, Some(80));
 
         // Base 155 + bonus 562 = 717
-        assert_eq!(result.item_level, 717, "Expected ilvl 717, got {}", result.item_level);
+        assert_eq!(
+            result.item_level, 717,
+            "Expected ilvl 717, got {}",
+            result.item_level
+        );
     }
 }

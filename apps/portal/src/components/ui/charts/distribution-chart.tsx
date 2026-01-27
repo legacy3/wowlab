@@ -63,7 +63,9 @@ export function DistributionChart({
   const barColor = color ?? chartColors[1];
 
   const scales = useMemo(() => {
-    if (data.length === 0) return null;
+    if (data.length === 0) {
+      return null;
+    }
 
     return {
       x: scaleBand({

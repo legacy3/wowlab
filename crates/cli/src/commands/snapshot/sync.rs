@@ -9,16 +9,14 @@ use std::time::Instant;
 use anyhow::Result;
 use sqlx::PgPool;
 use wowlab_common::parsers::{
-    transform_all_auras, transform_all_classes, transform_all_curve_points,
-    transform_all_curves, transform_all_global_colors, transform_all_global_strings,
-    transform_all_item_bonuses, transform_all_items, transform_all_rand_prop_points,
-    transform_all_specs, transform_all_spells, transform_all_trait_trees,
-    DbcData,
+    transform_all_auras, transform_all_classes, transform_all_curve_points, transform_all_curves,
+    transform_all_global_colors, transform_all_global_strings, transform_all_item_bonuses,
+    transform_all_items, transform_all_rand_prop_points, transform_all_specs, transform_all_spells,
+    transform_all_trait_trees, DbcData,
 };
 use wowlab_common::{
-    AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, GlobalColorFlat,
-    GlobalStringFlat, ItemBonusFlat, ItemDataFlat, RandPropPointsFlat, SpecDataFlat, SpellDataFlat,
-    TraitTreeFlat,
+    AuraDataFlat, ClassDataFlat, CurveFlat, CurvePointFlat, GlobalColorFlat, GlobalStringFlat,
+    ItemBonusFlat, ItemDataFlat, RandPropPointsFlat, SpecDataFlat, SpellDataFlat, TraitTreeFlat,
 };
 
 use super::{db, SyncArgs, SyncTable};

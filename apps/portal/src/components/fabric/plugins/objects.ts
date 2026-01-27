@@ -75,7 +75,9 @@ export class ObjectsPlugin implements FabricPlugin {
 
   bringForward(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     if (active.type === "activeSelection") {
       const selection = active as fabric.ActiveSelection;
@@ -92,7 +94,9 @@ export class ObjectsPlugin implements FabricPlugin {
 
   bringToFront(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     if (active.type === "activeSelection") {
       const selection = active as fabric.ActiveSelection;
@@ -121,7 +125,9 @@ export class ObjectsPlugin implements FabricPlugin {
 
   duplicate(): TrackedObject[] {
     const active = this.canvas.getActiveObject();
-    if (!active) return [];
+    if (!active) {
+      return [];
+    }
 
     const duplicated: TrackedObject[] = [];
 
@@ -205,16 +211,21 @@ export class ObjectsPlugin implements FabricPlugin {
 
   remove(id: string): boolean {
     const obj = this.objectMap.get(id);
-    if (!obj) return false;
+    if (!obj) {
+      return false;
+    }
 
     this.canvas.remove(obj);
     this.canvas.requestRenderAll();
+    
     return true;
   }
 
   removeSelected(): TrackedObject[] {
     const active = this.canvas.getActiveObjects() as TrackedObject[];
-    if (active.length === 0) return [];
+    if (active.length === 0) {
+      return [];
+    }
 
     for (const obj of active) {
       this.canvas.remove(obj);
@@ -229,7 +240,9 @@ export class ObjectsPlugin implements FabricPlugin {
 
   selectAll(): void {
     const objects = this.canvas.getObjects();
-    if (objects.length === 0) return;
+    if (objects.length === 0) {
+      return;
+    }
 
     const selection = new fabric.ActiveSelection(objects, {
       canvas: this.canvas,
@@ -240,16 +253,21 @@ export class ObjectsPlugin implements FabricPlugin {
 
   selectById(id: string): boolean {
     const obj = this.objectMap.get(id);
-    if (!obj) return false;
+    if (!obj) {
+      return false;
+    }
 
     this.canvas.setActiveObject(obj);
     this.canvas.requestRenderAll();
+
     return true;
   }
 
   sendBackward(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     if (active.type === "activeSelection") {
       const selection = active as fabric.ActiveSelection;
@@ -266,7 +284,9 @@ export class ObjectsPlugin implements FabricPlugin {
 
   sendToBack(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     if (active.type === "activeSelection") {
       const selection = active as fabric.ActiveSelection;
@@ -285,10 +305,12 @@ export class ObjectsPlugin implements FabricPlugin {
     if (!obj.id) {
       obj.id = generateId();
     }
+
     this.objectMap.set(obj.id, obj);
   }
 }
 
+// TODO This should use useID from react
 function generateId(): string {
   return `obj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }

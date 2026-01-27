@@ -15,8 +15,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fs;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
-use wowlab_supabase::{SupabaseClient, SupabaseError};
 use wowlab_common::types::data::{AuraDataFlat, ItemDataFlat, SpellDataFlat, TraitTreeFlat};
+use wowlab_supabase::{SupabaseClient, SupabaseError};
 
 /// Unified game data cache with memory and disk layers.
 pub struct GameDataCache {
@@ -139,9 +139,14 @@ impl GameDataCache {
 
         // Batch-fetch missing from network
         if !missing.is_empty() {
-            let id_list: String = missing.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
+            let id_list: String = missing
+                .iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
             let path = format!("spells?id=in.({})&select=*", id_list);
-            let fetched: Vec<SpellDataFlat> = self.client.get_schema(&path, "game").await?.json().await?;
+            let fetched: Vec<SpellDataFlat> =
+                self.client.get_schema(&path, "game").await?.json().await?;
             for spell in fetched {
                 self.write_disk("spells", spell.id, &spell)?;
                 self.spells.insert(spell.id, spell.clone());
@@ -149,10 +154,7 @@ impl GameDataCache {
         }
 
         // Collect results in input order, skipping IDs not found
-        let results = ids
-            .iter()
-            .filter_map(|id| self.spells.get(id))
-            .collect();
+        let results = ids.iter().filter_map(|id| self.spells.get(id)).collect();
 
         Ok(results)
     }
@@ -169,7 +171,9 @@ impl GameDataCache {
         }
 
         let path = format!("specs_traits?spec_id=eq.{}", spec_id);
-        let v: TraitTreeFlat = self.get_single(&path, "specs_traits", "spec_id", spec_id).await?;
+        let v: TraitTreeFlat = self
+            .get_single(&path, "specs_traits", "spec_id", spec_id)
+            .await?;
         self.write_disk("traits", spec_id, &v)?;
         self.traits.insert(spec_id, v.clone());
         Ok(v)
@@ -205,7 +209,9 @@ impl GameDataCache {
         }
 
         let path = format!("auras?spell_id=eq.{}", spell_id);
-        let v: AuraDataFlat = self.get_single(&path, "auras", "spell_id", spell_id).await?;
+        let v: AuraDataFlat = self
+            .get_single(&path, "auras", "spell_id", spell_id)
+            .await?;
         self.write_disk("auras", spell_id, &v)?;
         self.auras.insert(spell_id, v.clone());
         Ok(v)

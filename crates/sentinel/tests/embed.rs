@@ -23,19 +23,14 @@ fn section_adds_spacing_between_groups() {
 
 #[test]
 fn first_section_has_no_leading_newline() {
-    let out = EmbedContent::new()
-        .section("First")
-        .field("X", "1")
-        .build();
+    let out = EmbedContent::new().section("First").field("X", "1").build();
 
     assert_eq!(out, "**First**\n**X:** 1");
 }
 
 #[test]
 fn line_renders_plain_text() {
-    let out = EmbedContent::new()
-        .line("Running: 3 · Pending: 7")
-        .build();
+    let out = EmbedContent::new().line("Running: 3 · Pending: 7").build();
 
     assert_eq!(out, "Running: 3 · Pending: 7");
 }

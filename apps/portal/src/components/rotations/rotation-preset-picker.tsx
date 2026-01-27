@@ -3,15 +3,11 @@
 import { BookMarkedIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
-import { HStack, VStack } from "styled-system/jsx";
+import { VStack } from "styled-system/jsx";
 
 import { GameIcon } from "@/components/game";
 import { Button, Command, Text } from "@/components/ui";
 import { useClassesAndSpecs } from "@/lib/state";
-
-// =============================================================================
-// Types
-// =============================================================================
 
 interface RotationPreset {
   className: string;
@@ -21,10 +17,6 @@ interface RotationPreset {
   specId: number;
   specName: string;
 }
-
-// =============================================================================
-// Mock Data
-// =============================================================================
 
 const MOCK_PRESETS: RotationPreset[] = [
   // Death Knight
@@ -177,10 +169,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specName: "Outlaw",
   },
 ];
-
-// =============================================================================
-// Component
-// =============================================================================
 
 export interface RotationPresetPickerProps {
   onSelect: (preset: { specId: number; name: string }) => void;

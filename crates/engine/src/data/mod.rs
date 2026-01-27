@@ -5,17 +5,17 @@
 //! - **LocalResolver**: Loads from local CSV files (default, offline, portable)
 //! - **SupabaseResolver**: Loads from Supabase API (optional, requires `supabase` feature)
 
+#[cfg(feature = "supabase")]
+mod cache;
 mod local;
 mod resolver;
 #[cfg(feature = "supabase")]
-mod cache;
-#[cfg(feature = "supabase")]
 mod supabase;
 
+#[cfg(feature = "supabase")]
+pub use cache::{CacheStats, DiskStats, GameDataCache, MemoryStats};
 pub use local::LocalResolver;
 pub use resolver::{DataResolver, ResolverConfig, ResolverError};
-#[cfg(feature = "supabase")]
-pub use cache::{CacheStats, GameDataCache, MemoryStats, DiskStats};
 #[cfg(feature = "supabase")]
 pub use supabase::SupabaseResolver;
 

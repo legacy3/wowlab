@@ -127,7 +127,9 @@ export function useClaimNode() {
           p_node_id: input.nodeId,
         });
 
-        if (rpcError) throw rpcError;
+        if (rpcError) {
+          throw rpcError;
+        }
 
         invalidate({ invalidates: ["all"], resource: "nodes" });
         return data;
@@ -200,14 +202,18 @@ export function useNodeMutations() {
           .update(nodeUpdate)
           .eq("id", input.nodeId);
 
-        if (nodeError) throw nodeError;
+        if (nodeError) {
+          throw nodeError;
+        }
 
         const { error: deleteError } = await supabase
           .from("nodes_permissions")
           .delete()
           .eq("node_id", input.nodeId);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          throw deleteError;
+        }
 
         if (input.data.accessType !== "private") {
           const { error: insertError } = await supabase
@@ -218,7 +224,9 @@ export function useNodeMutations() {
               target_id: null,
             });
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            throw insertError;
+          }
         }
 
         invalidate({ invalidates: ["all"], resource: "nodes" });

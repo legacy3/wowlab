@@ -15,11 +15,7 @@ pub struct GuildFilter {
 pub type FilterMap = Arc<RwLock<HashMap<GuildId, GuildFilter>>>;
 
 /// Spawns a one-time task to build filters for all guilds the bot is in at startup.
-pub fn build_initial(
-    http: Arc<Http>,
-    guild_ids: Vec<GuildId>,
-    filters: FilterMap,
-) {
+pub fn build_initial(http: Arc<Http>, guild_ids: Vec<GuildId>, filters: FilterMap) {
     tokio::spawn(async move {
         tracing::info!(count = guild_ids.len(), "Building initial server filters");
 
@@ -40,11 +36,7 @@ pub fn build_initial(
 }
 
 /// Called on GuildMemberAddition. Inserts the new member into the existing filter.
-pub async fn handle_member_add(
-    filters: &FilterMap,
-    guild_id: GuildId,
-    discord_id: &str,
-) {
+pub async fn handle_member_add(filters: &FilterMap, guild_id: GuildId, discord_id: &str) {
     let mut map = filters.write().await;
     let entry = match map.get_mut(&guild_id) {
         Some(e) => e,
@@ -61,11 +53,7 @@ pub async fn handle_member_add(
 
 /// Called on GuildMemberRemoval. Rebuilds the filter from scratch since Bloom
 /// filters don't support removal.
-pub async fn handle_member_remove(
-    http: &Http,
-    filters: &FilterMap,
-    guild_id: GuildId,
-) {
+pub async fn handle_member_remove(http: &Http, filters: &FilterMap, guild_id: GuildId) {
     if let Err(e) = rebuild_guild(http, filters, guild_id).await {
         tracing::warn!(guild_id = %guild_id, error = %e, "Failed to rebuild filter after remove");
     }
@@ -89,7 +77,13 @@ async fn rebuild_guild(
         "Filter built"
     );
 
-    filters.write().await.insert(guild_id, GuildFilter { filter, member_count });
+    filters.write().await.insert(
+        guild_id,
+        GuildFilter {
+            filter,
+            member_count,
+        },
+    );
 
     Ok(())
 }

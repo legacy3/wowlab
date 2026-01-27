@@ -4,8 +4,8 @@ use super::theme::{
     FG_MUTED, FG_SUBTLE, RED_9, SLATE_8, SPACE_SM, SPACE_XS,
 };
 use egui_virtual_list::VirtualList;
-use wowlab_node::{utils::logging, LogEntry, LogLevel};
 use std::collections::VecDeque;
+use wowlab_node::{utils::logging, LogEntry, LogLevel};
 
 #[derive(Default)]
 pub struct LogFilter {

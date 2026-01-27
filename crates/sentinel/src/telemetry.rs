@@ -17,7 +17,12 @@ pub fn init() {
         metrics::gauge!(name).set(0.0);
     }
 
-    for name in [CHUNKS_ASSIGNED, CHUNKS_RECLAIMED, NODES_MARKED_OFFLINE, STALE_DATA_CLEANUPS] {
+    for name in [
+        CHUNKS_ASSIGNED,
+        CHUNKS_RECLAIMED,
+        NODES_MARKED_OFFLINE,
+        STALE_DATA_CLEANUPS,
+    ] {
         metrics::counter!(name).absolute(0);
     }
 }
@@ -46,11 +51,10 @@ impl CronJob for RecordGaugesJob {
             metrics::gauge!(CHUNKS_RUNNING).set(count as f64);
         }
 
-        let online: Result<(i64,), _> = sqlx::query_as(
-            "SELECT COUNT(*) FROM public.nodes WHERE status = 'online'",
-        )
-        .fetch_one(&state.db)
-        .await;
+        let online: Result<(i64,), _> =
+            sqlx::query_as("SELECT COUNT(*) FROM public.nodes WHERE status = 'online'")
+                .fetch_one(&state.db)
+                .await;
 
         if let Ok((count,)) = online {
             metrics::gauge!(NODES_ONLINE).set(count as f64);

@@ -28,7 +28,9 @@ export const authProvider: AuthProvider = {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const [{ data: profile }, { data: identityData }] = await Promise.all([
       supabase
@@ -83,7 +85,6 @@ export const authProvider: AuthProvider = {
   },
 
   onError: async (error) => {
-    console.error(error);
     return { error };
   },
 

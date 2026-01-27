@@ -1,6 +1,6 @@
+use crate::sentinel::{SentinelClient, SentinelError};
 use crate::utils::cpu;
 use uuid::Uuid;
-use crate::sentinel::{SentinelClient, SentinelError};
 
 pub fn default_name() -> String {
     hostname::get()

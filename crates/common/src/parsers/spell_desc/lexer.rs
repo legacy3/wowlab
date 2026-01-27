@@ -31,10 +31,7 @@ fn parse_expression_block<'a>(lex: &mut LogosLexer<'a, Token<'a>>) -> &'a str {
     let after_brace = &remainder[end + 1..];
     let format_len = if let Some(after_dot) = after_brace.strip_prefix('.') {
         // Count digits after the dot
-        let digits: usize = after_dot
-            .chars()
-            .take_while(|c| c.is_ascii_digit())
-            .count();
+        let digits: usize = after_dot.chars().take_while(|c| c.is_ascii_digit()).count();
         if digits > 0 {
             1 + digits // include the dot
         } else {
@@ -285,7 +282,11 @@ pub fn tokenize_expr(input: &str) -> Vec<ExprToken<'_>> {
 use crate::types::spell_desc::SpellDescFragment;
 
 /// Convert a token to its corresponding fragment.
-fn token_to_fragment(token: &Token<'_>, input: &str, span: std::ops::Range<usize>) -> SpellDescFragment {
+fn token_to_fragment(
+    token: &Token<'_>,
+    input: &str,
+    span: std::ops::Range<usize>,
+) -> SpellDescFragment {
     match token {
         // Color codes -> ColorStart/ColorEnd
         Token::ColorCode(code) => {

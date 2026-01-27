@@ -35,10 +35,11 @@ export function Expandable({
     if (isOpen) {
       document.body.style.overflow = "hidden";
       closeButtonRef.current?.focus();
+      const trigger = triggerRef.current;
 
       return () => {
         document.body.style.overflow = "";
-        triggerRef.current?.focus();
+        trigger?.focus();
       };
     }
   }, [isOpen]);

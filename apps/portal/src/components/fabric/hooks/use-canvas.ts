@@ -6,10 +6,6 @@ import type { CanvasConfig, CanvasState } from "../core/types";
 
 import { CanvasController } from "../core/controller";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface UseCanvasOptions extends CanvasConfig {
   onReady?: (controller: CanvasController) => void;
 }
@@ -29,33 +25,33 @@ const DEFAULT_STATE: CanvasState = {
   zoom: 1,
 };
 
-// =============================================================================
-// Hook
-// =============================================================================
-
 export function useCanvas(options: UseCanvasOptions): UseCanvasReturn {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<CanvasController | null>(null);
   const [state, setState] = useState<CanvasState>(DEFAULT_STATE);
+  const [controller, setController] = useState<CanvasController | null>(null);
 
-  // Initialize
   useEffect(() => {
     const element = canvasRef.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
 
-    const controller = new CanvasController(element, options);
-    controller.setStateListener(setState);
-    controllerRef.current = controller;
+    const newController = new CanvasController(element, options);
+    newController.setStateListener(setState);
+    controllerRef.current = newController;
+    setController(newController);
 
-    options.onReady?.(controller);
+    options.onReady?.(newController);
 
     return () => {
-      void controller.dispose();
+      void newController.dispose();
       controllerRef.current = null;
+      setController(null);
     };
-  }, []); // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Initialize once on mount, options changes handled separately
+  }, []);
 
-  // Update dimensions
   useEffect(() => {
     controllerRef.current?.setDimensions(options.width, options.height);
   }, [options.width, options.height]);
@@ -75,7 +71,7 @@ export function useCanvas(options: UseCanvasOptions): UseCanvasReturn {
   return {
     canvasRef,
     clear,
-    controller: controllerRef.current,
+    controller,
     deleteSelected,
     resetView,
     state,

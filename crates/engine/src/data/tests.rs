@@ -165,7 +165,11 @@ mod cache_tests {
     }
 
     fn temp_dir(suffix: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("wowlab_cache_test_{}_{}", std::process::id(), suffix))
+        std::env::temp_dir().join(format!(
+            "wowlab_cache_test_{}_{}",
+            std::process::id(),
+            suffix
+        ))
     }
 
     #[test]

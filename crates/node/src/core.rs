@@ -1,5 +1,6 @@
 //! Core node logic that can be used by both GUI and headless binaries.
 
+use crate::sentinel::SentinelClient;
 use crate::{
     cache::{CachedConfig, ConfigCache},
     claim,
@@ -7,17 +8,16 @@ use crate::{
     queries,
     realtime::NodeRealtime,
     utils::backoff::ExponentialBackoff,
-    ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent,
-    WorkItem, WorkResult, WorkerPool,
+    ChunkPayload, ConnectionStatus, NodePayload, NodeState, NodeStats, RealtimeEvent, WorkItem,
+    WorkResult, WorkerPool,
 };
-use crate::sentinel::SentinelClient;
-use tokio_util::sync::CancellationToken;
-use wowlab_supabase::SupabaseClient;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::runtime::Handle;
 use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
+use wowlab_supabase::SupabaseClient;
 
 const CLAIM_POLL_INTERVAL: Duration = Duration::from_secs(3);
 
@@ -89,10 +89,7 @@ impl NodeCore {
     ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::sentinel::SentinelError> {
         let config = NodeConfig::load_or_create();
         let keypair = crate::auth::NodeKeypair::load_or_create();
-        let sentinel = SentinelClient::new(
-            config.sentinel_url.clone(),
-            Arc::new(keypair),
-        )?;
+        let sentinel = SentinelClient::new(config.sentinel_url.clone(), Arc::new(keypair))?;
         let supabase = SupabaseClient::new(&config.api_url, &config.anon_key)
             .map_err(|e| crate::sentinel::SentinelError::ClientBuild(e.to_string()))?;
         let total_cores = claim::total_cores().unsigned_abs();
@@ -545,7 +542,8 @@ impl NodeCore {
                     tracing::debug!("Config cache miss, fetching: {}", &config_hash[..8]);
                     match queries::fetch_config(&supabase, &config_hash).await {
                         Ok(row) => {
-                            let rotation_id = row.config
+                            let rotation_id = row
+                                .config
                                 .get("rotationId")
                                 .and_then(|v| v.as_str())
                                 .unwrap_or_default()
@@ -567,25 +565,26 @@ impl NodeCore {
             };
 
             // 2. Get rotation script
-            let rotation_script = match queries::fetch_rotation(&supabase, &config_json.rotation_id).await {
-                Ok(rotation) => {
-                    match cache.get_rotation(&config_json.rotation_id, &rotation.checksum) {
-                        Some(script) => script,
-                        None => {
-                            cache.insert_rotation(
-                                rotation.id.clone(),
-                                rotation.script.clone(),
-                                rotation.checksum,
-                            );
-                            rotation.script
+            let rotation_script =
+                match queries::fetch_rotation(&supabase, &config_json.rotation_id).await {
+                    Ok(rotation) => {
+                        match cache.get_rotation(&config_json.rotation_id, &rotation.checksum) {
+                            Some(script) => script,
+                            None => {
+                                cache.insert_rotation(
+                                    rotation.id.clone(),
+                                    rotation.script.clone(),
+                                    rotation.checksum,
+                                );
+                                rotation.script
+                            }
                         }
                     }
-                }
-                Err(e) => {
-                    tracing::error!("Failed to fetch rotation: {}", e);
-                    return;
-                }
-            };
+                    Err(e) => {
+                        tracing::error!("Failed to fetch rotation: {}", e);
+                        return;
+                    }
+                };
 
             // 3. Build combined JSON (config + rotation)
             let mut combined = config_json.config_json.clone();
@@ -640,8 +639,6 @@ impl NodeCore {
             self.handle_work_result(result);
         }
     }
-
-
 
     fn handle_work_result(&self, result: WorkResult) {
         let chunk_id = result.chunk_id;

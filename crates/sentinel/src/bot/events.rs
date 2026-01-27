@@ -11,10 +11,7 @@ pub async fn handle(
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot } => {
-            tracing::debug!(
-                "Connected to {} guilds",
-                data_about_bot.guilds.len()
-            );
+            tracing::debug!("Connected to {} guilds", data_about_bot.guilds.len());
         }
         serenity::FullEvent::GuildCreate { guild, is_new } => {
             if is_new.unwrap_or(false) {
@@ -50,7 +47,8 @@ pub async fn handle(
                     &data.state.filters,
                     new_member.guild_id,
                     &discord_id,
-                ).await;
+                )
+                .await;
             }
         }
         serenity::FullEvent::GuildMemberRemoval { guild_id, user, .. } => {

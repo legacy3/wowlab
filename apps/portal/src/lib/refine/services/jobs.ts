@@ -124,8 +124,13 @@ export function useSubmitJob() {
           p_iterations: input.iterations,
         });
 
-        if (rpcError) throw rpcError;
-        if (!data) throw new Error("No data returned from create_job");
+        if (rpcError) {
+          throw rpcError;
+        }
+        
+        if (!data) {
+          throw new Error("No data returned from create_job");
+        }
 
         const result = data as unknown as { jobId: string; iterations: number };
 

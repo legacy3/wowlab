@@ -30,7 +30,8 @@ impl EmbedContent {
 
     /// Bold label with value: `**Label:** value`
     pub fn field(mut self, label: &str, value: impl std::fmt::Display) -> Self {
-        self.parts.push(Part::Field(label.to_string(), value.to_string()));
+        self.parts
+            .push(Part::Field(label.to_string(), value.to_string()));
         self
     }
 

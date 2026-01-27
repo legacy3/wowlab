@@ -8,8 +8,8 @@ use super::lexer::tokenize_to_fragments;
 use super::parser::parse;
 use super::renderer::render_with_resolver;
 use super::resolver::SpellDescResolver;
-use wasm_bindgen::prelude::*;
 use crate::types::spell_desc::SpellDescDependencies;
+use wasm_bindgen::prelude::*;
 
 /// A resolver that delegates to JavaScript functions.
 ///
@@ -251,7 +251,8 @@ pub fn wasm_render_spell_desc(
     let js_resolver = JsResolver::from_js_object(&resolver)?;
     let result = parse(input);
     let parse_errors: Vec<String> = result.errors.iter().map(|e| e.to_string()).collect();
-    let render_result = render_with_resolver(&result.ast, self_spell_id, &js_resolver, parse_errors);
+    let render_result =
+        render_with_resolver(&result.ast, self_spell_id, &js_resolver, parse_errors);
     serde_wasm_bindgen::to_value(&render_result).map_err(|e| JsError::new(&e.to_string()))
 }
 

@@ -50,8 +50,6 @@ const dpsDistributionData = [
   55000, 49500, 53000, 50000, 56000, 52500, 54000, 51500,
 ];
 
-type DataPoint = { x: number; y: number };
-
 function AnalysisDemo() {
   const common = useCommon();
   const [showTrendline, setShowTrendline] = useState(true);

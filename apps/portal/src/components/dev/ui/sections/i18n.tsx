@@ -1,16 +1,16 @@
 "use client";
 
-import { useIntlayer, useLocale } from "next-intlayer";
+import { useLocale } from "next-intlayer";
 import { Grid, HStack, Stack, VStack } from "styled-system/jsx";
 
 import { Badge, Code, Text } from "@/components/ui";
 
 import { DemoBox, DemoLabel, Section, Subsection } from "../../shared";
 
+// TODO All of these formatters have to come from intlayer
 export function I18nSection() {
   const { locale } = useLocale();
   const localeStr = String(locale);
-  const { i18nSection: content } = useIntlayer("dev");
 
   const formatNumber = (value: number, options?: Intl.NumberFormatOptions) =>
     new Intl.NumberFormat(localeStr, options).format(value);
@@ -27,17 +27,32 @@ export function I18nSection() {
 
     const rtf = new Intl.RelativeTimeFormat(localeStr, { numeric: "auto" });
 
-    if (Math.abs(days) >= 1) return rtf.format(days, "day");
-    if (Math.abs(hours) >= 1) return rtf.format(hours, "hour");
-    if (Math.abs(minutes) >= 1) return rtf.format(minutes, "minute");
+    if (Math.abs(days) >= 1) {
+      return rtf.format(days, "day");
+    }
+
+    if (Math.abs(hours) >= 1) {
+      return rtf.format(hours, "hour");
+    }
+
+    if (Math.abs(minutes) >= 1) {
+      return rtf.format(minutes, "minute");
+    }
+
     return rtf.format(seconds, "second");
   };
 
   const now = new Date();
 
   const formatPlural = (count: number) => {
-    if (count === 0) return "No items";
-    if (count === 1) return "One item";
+    if (count === 0) {
+      return "No items";
+    }
+
+    if (count === 1) {
+      return "One item";
+    }
+
     return `${count} items`;
   };
 
@@ -45,8 +60,10 @@ export function I18nSection() {
     switch (status) {
       case "offline":
         return "Offline";
+
       case "online":
         return "Online";
+        
       default:
         return "Unknown";
     }

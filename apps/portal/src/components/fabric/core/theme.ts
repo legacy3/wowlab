@@ -1,7 +1,4 @@
-// =============================================================================
-// Shared Theme - Base colors for all canvas components
-// =============================================================================
-
+// TODO These should all come from tokens
 export const THEME = {
   // Backgrounds
   bg: "#09090b",

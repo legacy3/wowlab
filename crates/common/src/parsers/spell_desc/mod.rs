@@ -53,7 +53,9 @@ pub use renderer::render_with_resolver;
 
 // WASM bindings
 #[cfg(feature = "wasm")]
-pub use wasm::{wasm_analyze_spell_desc, wasm_render_spell_desc, wasm_tokenize_spell_desc, AnalyzeResult};
+pub use wasm::{
+    wasm_analyze_spell_desc, wasm_render_spell_desc, wasm_tokenize_spell_desc, AnalyzeResult,
+};
 
 // Re-export lexer for advanced use cases
 pub use lexer::{lex, tokenize, tokenize_to_fragments, ExprToken, Token};

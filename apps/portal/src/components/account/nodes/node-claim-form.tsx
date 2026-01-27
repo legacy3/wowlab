@@ -58,7 +58,10 @@ export function NodeClaimForm({
   const isCodeComplete = codeString.length === 6;
 
   const handleVerify = async () => {
-    if (!isCodeComplete) return;
+    if (!isCodeComplete) {
+      return;
+    }
+    
     const result = await onVerify(codeString);
     if (result) {
       setVerifyResult(result);

@@ -80,7 +80,9 @@ export function AnalysisChart({
   const lineColor = color ?? chartColors[1];
 
   const scales = useMemo(() => {
-    if (data.length === 0) return null;
+    if (data.length === 0) {
+      return null;
+    }
 
     const xValues = data.map((d) => d.x);
     const yValues = data.map((d) => d.y);

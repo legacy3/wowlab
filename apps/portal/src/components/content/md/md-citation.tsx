@@ -3,7 +3,7 @@
 import { ExternalLinkIcon } from "lucide-react";
 import { HStack, Stack } from "styled-system/jsx";
 
-import { Badge, Heading, HoverCard, Link, Text } from "@/components/ui";
+import { Badge, HoverCard, Link, Text } from "@/components/ui";
 import * as Table from "@/components/ui/table";
 import { references } from "@/content/references";
 
@@ -14,7 +14,6 @@ type MdCiteProps = {
 
 export function MdBibliography() {
   const allRefs = Object.entries(references);
-
   if (allRefs.length === 0) {
     return null;
   }

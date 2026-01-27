@@ -164,13 +164,14 @@ function LinkDemo() {
       <DemoDescription>Styled anchor elements.</DemoDescription>
       <DemoBox>
         <HStack gap="6" flexWrap="wrap">
-          <Link href="#">Default</Link>
-          <Link href="#" colorPalette="amber">
+          <Link href={href(routes.dev.ui)}>Default</Link>
+          <Link href={href(routes.dev.ui)} colorPalette="amber">
             Colored
           </Link>
-          <Link href="#" textDecoration="underline">
+          <Link href={href(routes.dev.ui)} textDecoration="underline">
             Underlined
           </Link>
+          {/* eslint-disable-next-line no-restricted-syntax -- Demo external link */}
           <Link href="https://example.com" target="_blank">
             External <ExternalLinkIcon size={14} />
           </Link>

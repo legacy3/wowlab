@@ -11,7 +11,10 @@ use tower_http::trace::TraceLayer;
 
 use crate::state::ServerState;
 
-pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn run(
+    state: Arc<ServerState>,
+    shutdown: CancellationToken,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Node API routes (require Ed25519 auth)
     let node_api = Router::new()
         .route("/nodes/register", post(routes::nodes::register))

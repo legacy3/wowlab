@@ -68,6 +68,14 @@ export function ActionList() {
     [],
   );
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: selectedList?.actions.length ?? 0,
+    estimateSize: () => 72,
+    getScrollElement: () => parentRef.current,
+    overscan: 3,
+  });
+
   if (!selectedList) {
     return (
       <Center h="full">
@@ -105,14 +113,6 @@ export function ActionList() {
   const activeIndex = activeAction
     ? selectedList.actions.findIndex((a) => a.id === activeId)
     : -1;
-
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: selectedList.actions.length,
-    estimateSize: () => 72,
-    getScrollElement: () => parentRef.current,
-    overscan: 3,
-  });
 
   return (
     <Box maxW="4xl" mx="auto">

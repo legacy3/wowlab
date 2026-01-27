@@ -44,7 +44,10 @@ fn filters_with_member(guild_id: u64, discord_id: &str) -> FilterMap {
     let mut map = HashMap::new();
     map.insert(
         GuildId::new(guild_id),
-        GuildFilter { filter, member_count: 1 },
+        GuildFilter {
+            filter,
+            member_count: 1,
+        },
     );
     Arc::new(RwLock::new(map))
 }

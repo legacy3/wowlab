@@ -3,36 +3,14 @@ import * as fabric from "fabric";
 import type { CanvasController } from "../core/controller";
 import type { FabricPlugin } from "../core/plugin";
 
-// =============================================================================
-// Controls Plugin Configuration
-// =============================================================================
-
 export interface ControlsConfig {
-  /** Border color for selected objects (default: "#51B9F9") */
   borderColor?: string;
-  /** Corner fill color (default: "#FFF") */
   cornerColor?: string;
-  /** Corner size in pixels (default: 10) */
   cornerSize?: number;
-  /** Corner stroke color (default: "#0E98FC") */
   cornerStrokeColor?: string;
-  /** Offset for rotation control from object (default: 30) */
   rotatingPointOffset?: number;
 }
 
-// =============================================================================
-// Controls Plugin
-// =============================================================================
-
-/**
- * Customizes Fabric.js object selection controls for a polished visual appearance.
- *
- * Sets global defaults on fabric.Object.prototype for:
- * - Selection border styling (colors, opacity, scale factor)
- * - Corner controls (style, colors, size)
- * - Rotation control position (moved to bottom)
- * - Numeric precision for scaling operations
- */
 export class ControlsPlugin implements FabricPlugin {
   readonly name = "controls";
 
@@ -48,15 +26,12 @@ export class ControlsPlugin implements FabricPlugin {
     };
   }
 
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
-
   destroy(): void {
     // Controls are set on the prototype, so we don't need to clean up
     // The next plugin instance or page reload will reset them
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by FabricPlugin interface
   init(_canvas: fabric.Canvas, _controller: CanvasController): void {
     // Increase numeric precision for scaling operations
     // Default is toFixed(2), we use toFixed(4) for more accurate scaling
@@ -68,10 +43,6 @@ export class ControlsPlugin implements FabricPlugin {
     // Customize control positions
     this.customizeControls();
   }
-
-  // ===========================================================================
-  // Private Methods
-  // ===========================================================================
 
   private applySelectionStyles(): void {
     // Set default selection styling on fabric.Object.prototype

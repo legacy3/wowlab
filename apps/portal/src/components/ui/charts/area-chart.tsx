@@ -7,7 +7,7 @@ import { GridRows } from "@visx/grid";
 import { Group } from "@visx/group";
 import { scaleLinear } from "@visx/scale";
 import { AreaClosed, LinePath } from "@visx/shape";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 
 import { Chart, chartColors, type ChartProps } from "./chart";
 
@@ -36,10 +36,8 @@ export function AreaChart({
   ...props
 }: AreaChartProps) {
   const areaColor = color ?? chartColors[1];
-  const gradientId = useMemo(
-    () => `area-gradient-${Math.random().toString(36).slice(2)}`,
-    [],
-  );
+  const reactId = useId();
+  const gradientId = useMemo(() => `area-gradient-${reactId}`, [reactId]);
 
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;

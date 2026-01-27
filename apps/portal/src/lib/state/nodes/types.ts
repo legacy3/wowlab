@@ -50,10 +50,22 @@ export const NODE_ACCESS_OPTIONS: NodeAccessOption[] = [
 export function deriveAccessType(
   permissions: NodePermissionRow[],
 ): NodeAccessType {
-  if (permissions.length === 0) return "private";
-  if (permissions.some((p) => p.access_type === "public")) return "public";
-  if (permissions.some((p) => p.access_type === "guild")) return "guild";
-  if (permissions.some((p) => p.access_type === "user")) return "friends";
+  if (permissions.length === 0) {
+    return "private";
+  }
+
+  if (permissions.some((p) => p.access_type === "public")) {
+    return "public";
+  }
+
+  if (permissions.some((p) => p.access_type === "guild")) {
+    return "guild";
+  }
+
+  if (permissions.some((p) => p.access_type === "user")) {
+    return "friends";
+  }
+
   return "private";
 }
 
@@ -62,12 +74,16 @@ export function mapAccessTypeFromDb(dbValue: string): NodeAccessType {
   switch (dbValue) {
     case "guild":
       return "guild";
+      
     case "owner":
       return "private";
+
     case "public":
       return "public";
+
     case "user":
       return "friends";
+
     default:
       return "private";
   }
@@ -77,10 +93,13 @@ export function mapAccessTypeToDb(uiValue: NodeAccessType): string {
   switch (uiValue) {
     case "friends":
       return "user";
+
     case "guild":
       return "guild";
+
     case "private":
       return "owner";
+      
     case "public":
       return "public";
   }

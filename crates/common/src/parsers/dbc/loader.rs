@@ -6,8 +6,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::rows::*;
 use super::super::errors::DbcError;
+use super::rows::*;
 
 /// Container for all loaded DBC data with indexed lookups.
 ///

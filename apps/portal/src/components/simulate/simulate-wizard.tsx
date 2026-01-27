@@ -55,13 +55,9 @@ export function SimulateWizard() {
   });
 
   const handleSimulate = async (config: SimConfig, iterations: number) => {
-    try {
-      const result = await submitJob.mutateAsync({ config, iterations });
-      setJobId(result.jobId);
-      wizard.goTo("results");
-    } catch (error) {
-      console.error("Failed to submit job:", error);
-    }
+    const result = await submitJob.mutateAsync({ config, iterations });
+    setJobId(result.jobId);
+    wizard.goTo("results");
   };
 
   return (

@@ -11,8 +11,8 @@ use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
-use wowlab_centrifugo::{CentrifugoApi, Error as CentrifugoError};
 use crate::state::ServerState;
+use wowlab_centrifugo::{CentrifugoApi, Error as CentrifugoError};
 
 /// Centrifugo error code for "unknown channel" (no subscribers yet).
 const ERROR_UNKNOWN_CHANNEL: u32 = 102;
@@ -23,9 +23,13 @@ pub async fn run(
     state: Arc<ServerState>,
     shutdown: CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let api = CentrifugoApi::from_env().expect("CENTRIFUGO_API_URL and CENTRIFUGO_HTTP_API_KEY required");
+    let api =
+        CentrifugoApi::from_env().expect("CENTRIFUGO_API_URL and CENTRIFUGO_HTTP_API_KEY required");
 
-    tracing::info!("Presence monitor starting (polling every {:?})", POLL_INTERVAL);
+    tracing::info!(
+        "Presence monitor starting (polling every {:?})",
+        POLL_INTERVAL
+    );
 
     let mut previous_online: HashSet<Uuid> = HashSet::new();
 

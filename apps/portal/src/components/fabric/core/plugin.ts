@@ -2,10 +2,6 @@ import type * as fabric from "fabric";
 
 import type { CanvasController } from "./controller";
 
-// =============================================================================
-// Plugin Interface
-// =============================================================================
-
 export interface FabricPlugin {
   destroy(): void;
   readonly hotkeys?: string[];
@@ -13,10 +9,6 @@ export interface FabricPlugin {
   init(canvas: fabric.Canvas, controller: CanvasController): void;
   readonly name: string;
 }
-
-// =============================================================================
-// Plugin Registry
-// =============================================================================
 
 export class PluginRegistry {
   private plugins = new Map<string, FabricPlugin>();
@@ -42,7 +34,6 @@ export class PluginRegistry {
     controller: CanvasController,
   ): void {
     if (this.plugins.has(plugin.name)) {
-      console.warn(`Plugin "${plugin.name}" already registered, skipping`);
       return;
     }
 

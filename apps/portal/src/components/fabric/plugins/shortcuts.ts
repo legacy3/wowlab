@@ -3,10 +3,6 @@ import * as fabric from "fabric";
 import type { CanvasController } from "../core/controller";
 import type { FabricPlugin } from "../core/plugin";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export type ShortcutHandler = (e: KeyboardEvent) => void | boolean;
 
 export interface ShortcutRegistration {
@@ -15,18 +11,12 @@ export interface ShortcutRegistration {
   source?: string;
 }
 
-// =============================================================================
-// Platform Detection
-// =============================================================================
-
 const isMac = (): boolean => {
-  if (typeof navigator === "undefined") return false;
+  if (typeof navigator === "undefined") {
+    return false;
+  }
   return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 };
-
-// =============================================================================
-// Shortcuts Plugin
-// =============================================================================
 
 export class ShortcutsPlugin implements FabricPlugin {
   readonly hotkeys = [
@@ -60,11 +50,15 @@ export class ShortcutsPlugin implements FabricPlugin {
   };
 
   private onPanMouseMove = (opt: fabric.TPointerEventInfo): void => {
-    if (!this.isDragging) return;
+    if (!this.isDragging) {
+      return;
+    }
 
     const e = opt.e as MouseEvent;
     const vpt = this.canvas.viewportTransform;
-    if (!vpt) return;
+    if (!vpt) {
+      return;
+    }
 
     vpt[4] += e.clientX - this.lastPosX;
     vpt[5] += e.clientY - this.lastPosY;
@@ -84,17 +78,9 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.canvas.setCursor("grab");
   };
 
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
-
   private prevCursor = "default";
 
   private prevSelection = true;
-
-  // ===========================================================================
-  // Public API
-  // ===========================================================================
 
   private spaceHeld = false;
 
@@ -116,24 +102,14 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.handlers.clear();
   }
 
-  /**
-   * Get all registered shortcuts.
-   */
   getAll(): Map<string, ShortcutRegistration> {
     return new Map(this.handlers);
   }
 
-  /**
-   * Check if a shortcut is registered.
-   */
   has(shortcut: string): boolean {
     const normalized = this.normalizeShortcut(shortcut);
     return this.handlers.has(normalized);
   }
-
-  // ===========================================================================
-  // Default Shortcuts
-  // ===========================================================================
 
   init(canvas: fabric.Canvas, controller: CanvasController): void {
     this.canvas = canvas;
@@ -149,19 +125,11 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.registerDefaults();
   }
 
-  /**
-   * Register a shortcut handler.
-   * Use "mod" for platform-aware modifier (Cmd on Mac, Ctrl on Windows).
-   * Examples: "mod+z", "mod+shift+z", "delete", "escape"
-   */
   register(shortcut: string, handler: ShortcutHandler, source?: string): void {
     const normalized = this.normalizeShortcut(shortcut);
     this.handlers.set(normalized, { handler, source });
   }
 
-  /**
-   * Unregister a shortcut handler.
-   */
   unregister(shortcut: string): void {
     const normalized = this.normalizeShortcut(shortcut);
     this.handlers.delete(normalized);
@@ -171,17 +139,15 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.controller.deleteSelected();
   }
 
-  // ===========================================================================
-  // Pan Mode (Space held)
-  // ===========================================================================
-
   private deselectAll(): void {
     this.canvas.discardActiveObject();
     this.canvas.requestRenderAll();
   }
 
   private enterPanMode(): void {
-    if (this.spaceHeld) return;
+    if (this.spaceHeld) {
+      return;
+    }
 
     this.spaceHeld = true;
     this.prevCursor = this.canvas.defaultCursor ?? "default";
@@ -199,16 +165,21 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.canvas.on("mouse:up", this.onPanMouseUp);
   }
 
-  /**
-   * Convert keyboard event to normalized shortcut string.
-   */
   private eventToShortcut(e: KeyboardEvent): string {
     const modifiers: string[] = [];
 
-    if (e.ctrlKey) modifiers.push("ctrl");
-    if (e.metaKey) modifiers.push("meta");
-    if (e.shiftKey) modifiers.push("shift");
-    if (e.altKey) modifiers.push("alt");
+    if (e.ctrlKey) {
+      modifiers.push("ctrl");
+    }
+    if (e.metaKey) {
+      modifiers.push("meta");
+    }
+    if (e.shiftKey) {
+      modifiers.push("shift");
+    }
+    if (e.altKey) {
+      modifiers.push("alt");
+    }
 
     // Sort modifiers for consistent matching
     modifiers.sort();
@@ -217,16 +188,26 @@ export class ShortcutsPlugin implements FabricPlugin {
     let key = e.key.toLowerCase();
 
     // Normalize some common keys
-    if (e.code === "Delete") key = "delete";
-    if (e.code === "Backspace") key = "backspace";
-    if (e.code === "Escape") key = "escape";
-    if (e.code === "Space") key = "space";
+    if (e.code === "Delete") {
+      key = "delete";
+    }
+    if (e.code === "Backspace") {
+      key = "backspace";
+    }
+    if (e.code === "Escape") {
+      key = "escape";
+    }
+    if (e.code === "Space") {
+      key = "space";
+    }
 
     return modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
   }
 
   private exitPanMode(): void {
-    if (!this.spaceHeld) return;
+    if (!this.spaceHeld) {
+      return;
+    }
 
     this.spaceHeld = false;
     this.canvas.defaultCursor = this.prevCursor;
@@ -241,7 +222,9 @@ export class ShortcutsPlugin implements FabricPlugin {
 
   private handleKeyDown(e: KeyboardEvent): void {
     // Skip if typing in input/textarea
-    if (this.isInputFocused(e)) return;
+    if (this.isInputFocused(e)) {
+      return;
+    }
 
     // Handle space for pan mode (special case - hold behavior)
     if (e.code === "Space" && !e.repeat) {
@@ -265,10 +248,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     }
   }
 
-  // ===========================================================================
-  // Keyboard Event Handling
-  // ===========================================================================
-
   private handleKeyUp(e: KeyboardEvent): void {
     // Exit pan mode when space is released
     if (e.code === "Space") {
@@ -278,7 +257,9 @@ export class ShortcutsPlugin implements FabricPlugin {
 
   private isInputFocused(e: KeyboardEvent): boolean {
     const target = e.target as HTMLElement;
-    if (!target) return false;
+    if (!target) {
+      return false;
+    }
 
     const tagName = target.tagName.toUpperCase();
     if (tagName === "INPUT" || tagName === "TEXTAREA") {
@@ -298,11 +279,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     return false;
   }
 
-  /**
-   * Normalize shortcut string for consistent lookup.
-   * Converts "mod" to platform-specific modifier.
-   * Lowercases and sorts modifiers.
-   */
   private normalizeShortcut(shortcut: string): string {
     const parts = shortcut.toLowerCase().split("+");
     const modifiers: string[] = [];
@@ -336,10 +312,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     return modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
   }
 
-  // ===========================================================================
-  // Shortcut Normalization
-  // ===========================================================================
-
   private registerDefaults(): void {
     // Delete selected objects
     this.register("delete", () => this.deleteSelected(), "shortcuts");
@@ -361,7 +333,9 @@ export class ShortcutsPlugin implements FabricPlugin {
 
   private selectAll(): void {
     const objects = this.canvas.getObjects().filter((obj) => obj.selectable);
-    if (objects.length === 0) return;
+    if (objects.length === 0) {
+      return;
+    }
 
     if (objects.length === 1) {
       this.canvas.setActiveObject(objects[0]);

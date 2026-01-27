@@ -1,5 +1,5 @@
-use wowlab_node::utils::backoff::ExponentialBackoff;
 use std::time::Duration;
+use wowlab_node::utils::backoff::ExponentialBackoff;
 
 #[test]
 fn test_new() {

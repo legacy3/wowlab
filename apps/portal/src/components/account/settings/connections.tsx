@@ -30,7 +30,9 @@ export function DiscordLinkBanner() {
 
   const isLinked = user?.identities.includes("discord") ?? false;
 
-  if (isLinked) return null;
+  if (isLinked) {
+    return null;
+  }
 
   const handleLink = async () => {
     setLinking(true);
@@ -78,8 +80,12 @@ function ProviderRow({
   const Icon = meta.icon;
 
   const handleLink = async () => {
-    if (isLinked || !meta.enabled) return;
+    if (isLinked || !meta.enabled) {
+      return;
+    }
+
     setLinking(true);
+    
     try {
       await linkIdentity(meta.provider);
     } catch {

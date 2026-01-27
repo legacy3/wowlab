@@ -11,7 +11,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignBottom(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const bottom = (selection.height ?? 0) / 2;
@@ -28,7 +30,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignCenter(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
 
@@ -44,7 +48,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignLeft(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const left = -(selection.width ?? 0) / 2;
@@ -60,7 +66,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignMiddle(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
 
@@ -76,7 +84,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignRight(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const right = (selection.width ?? 0) / 2;
@@ -93,7 +103,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   alignTop(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const top = -(selection.height ?? 0) / 2;
@@ -109,7 +121,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   centerOnCanvas(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     const canvasCenter = this.canvas.getCenterPoint();
     const objWidth = active.getScaledWidth();
@@ -127,7 +141,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   centerOnCanvasHorizontal(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     const canvasCenter = this.canvas.getCenterPoint();
     const objWidth = active.getScaledWidth();
@@ -143,7 +159,9 @@ export class AlignmentPlugin implements FabricPlugin {
 
   centerOnCanvasVertical(): void {
     const active = this.canvas.getActiveObject();
-    if (!active) return;
+    if (!active) {
+      return;
+    }
 
     const canvasCenter = this.canvas.getCenterPoint();
     const objHeight = active.getScaledHeight();
@@ -163,11 +181,15 @@ export class AlignmentPlugin implements FabricPlugin {
 
   distributeHorizontal(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const objects = selection.getObjects();
-    if (objects.length < 3) return;
+    if (objects.length < 3) {
+      return;
+    }
 
     // Sort by left position
     const sorted = [...objects].sort((a, b) => (a.left ?? 0) - (b.left ?? 0));
@@ -203,11 +225,15 @@ export class AlignmentPlugin implements FabricPlugin {
 
   distributeVertical(): void {
     const active = this.canvas.getActiveObject();
-    if (!active || active.type !== "activeSelection") return;
+    if (!active || active.type !== "activeSelection") {
+      return;
+    }
 
     const selection = active as fabric.ActiveSelection;
     const objects = selection.getObjects();
-    if (objects.length < 3) return;
+    if (objects.length < 3) {
+      return;
+    }
 
     // Sort by top position
     const sorted = [...objects].sort((a, b) => (a.top ?? 0) - (b.top ?? 0));

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVerticalIcon } from "lucide-react";
-import { Box, Flex } from "styled-system/jsx";
+import { Box } from "styled-system/jsx";
 
 export interface DragHandleProps {
   attributes: ReturnType<typeof useSortable>["attributes"];

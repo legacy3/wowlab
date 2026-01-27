@@ -166,9 +166,7 @@ async fn test_get_rate_limited() {
 
     Mock::given(method("GET"))
         .and(path_regex(r"^/rest/v1/.*"))
-        .respond_with(
-            ResponseTemplate::new(429).insert_header("retry-after", "2000"),
-        )
+        .respond_with(ResponseTemplate::new(429).insert_header("retry-after", "2000"))
         .mount(&mock_server)
         .await;
 

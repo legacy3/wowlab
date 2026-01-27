@@ -4,7 +4,9 @@ use super::{
     SpellTarget,
 };
 use crate::aura::PeriodicEffect;
-use wowlab_common::types::{AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx};
+use wowlab_common::types::{
+    AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx,
+};
 
 /// Builder for spell definitions
 pub struct SpellBuilder {

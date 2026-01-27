@@ -1,8 +1,8 @@
 import { Compass } from "lucide-react";
-import NextLink from "next/link";
 import { Container } from "styled-system/jsx";
 
-import { Button, Empty } from "@/components/ui";
+import { Button, Empty, Link } from "@/components/ui";
+import { href, routes } from "@/lib/routing";
 
 export default function NotFound() {
   return (
@@ -14,12 +14,12 @@ export default function NotFound() {
         <Empty.Content>
           <Empty.Title>Page Not Found</Empty.Title>
           <Empty.Description>
-            The page you're looking for doesn't exist.
+            The page you&apos;re looking for doesn&apos;t exist.
           </Empty.Description>
         </Empty.Content>
         <Empty.Action>
           <Button asChild>
-            <NextLink href="/">Go Home</NextLink>
+            <Link href={href(routes.home)}>Go Home</Link>
           </Button>
         </Empty.Action>
       </Empty.Root>

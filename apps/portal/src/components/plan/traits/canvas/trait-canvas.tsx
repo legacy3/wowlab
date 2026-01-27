@@ -61,7 +61,6 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     containerRef,
     controllerRef,
     dimensions,
-    isReady,
     setIsReady,
     transformTooltip,
   } = useCanvasContainer();
@@ -107,6 +106,7 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
       if (!controller) {
         return;
       }
+
       const interaction =
         controller.plugins.get<InteractionPlugin>("interaction");
       if (interaction) {
@@ -121,6 +121,7 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     if (!controller) {
       return;
     }
+
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomIn();
   }, [controllerRef]);
@@ -130,6 +131,7 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     if (!controller) {
       return;
     }
+
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomOut();
   }, [controllerRef]);
@@ -139,15 +141,18 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     if (!controller) {
       return;
     }
+
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomToFit(80);
   }, [controllerRef]);
 
+  // TODO This looks awful
   const handleExport = useCallback(() => {
     const controller = controllerRef.current;
     if (controller) {
       const dataUrl = controller.toDataURL("png");
       const link = document.createElement("a");
+
       link.download = "trait-tree.png";
       link.href = dataUrl;
       link.click();

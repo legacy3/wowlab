@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- OG images can't use next/image */
 import { greenDark, slateDark } from "@radix-ui/colors";
 import { ImageResponse } from "next/og";
 
@@ -69,7 +70,7 @@ export function createArticleOgImage({
           marginBottom: "40px",
         }}
       >
-        <img src={logoSrc} width={40} height={40} />
+        <img src={logoSrc} width={40} height={40} alt="" />
         <div
           style={{
             color: greenDark.green9,
@@ -185,7 +186,7 @@ export function createSectionOgImage({
         }}
       />
 
-      <img src={logoSrc} width={96} height={96} />
+      <img src={logoSrc} width={96} height={96} alt="" />
 
       <div
         style={{

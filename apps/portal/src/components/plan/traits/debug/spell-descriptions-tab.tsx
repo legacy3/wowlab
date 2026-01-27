@@ -42,7 +42,9 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
       const subTreeName = subTreeMap.get(node.subTreeId);
 
       for (const entry of node.entries) {
-        if (!entry.description) continue;
+        if (!entry.description) {
+          continue;
+        }
 
         spells.push({
           description: entry.description,
@@ -59,10 +61,14 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
     return spells.sort((a, b) => a.name.localeCompare(b.name));
   }, [nodes, subTreeMap]);
 
+  // TODO Use fuzze search here
   const filteredSpells = useMemo(() => {
-    if (!search.trim()) return allSpells;
+    if (!search.trim()) {
+      return allSpells;
+    }
 
     const searchLower = search.toLowerCase();
+
     return allSpells.filter(
       (spell) =>
         spell.name.toLowerCase().includes(searchLower) ||

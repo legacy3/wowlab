@@ -45,8 +45,7 @@ export function tryTransformSpecTraits(
 ): TraitTreeFlat | null {
   try {
     return transformSpecTraits(specTraits);
-  } catch (e) {
-    console.error("Failed to transform spec traits:", e);
+  } catch {
     return null;
   }
 }

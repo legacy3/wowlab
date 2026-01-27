@@ -26,10 +26,6 @@ import {
   Subsection,
 } from "../../shared";
 
-// =============================================================================
-// Section
-// =============================================================================
-
 export function DistributedNodesSection() {
   return (
     <Section
@@ -51,10 +47,6 @@ export function DistributedNodesSection() {
     </Section>
   );
 }
-
-// =============================================================================
-// Demos
-// =============================================================================
 
 function BulkActionBarDemo() {
   const [selected, setSelected] = useState<string[]>(["node-1", "node-2"]);
@@ -244,7 +236,7 @@ function OwnerFilterTabsDemo() {
       <DemoDescription>Filter nodes by ownership.</DemoDescription>
       <Stack gap="4">
         <DemoBox>
-          <DemoLabel>variant="subtle"</DemoLabel>
+          <DemoLabel>variant=&quot;subtle&quot;</DemoLabel>
           <OwnerFilterTabs
             value={filter}
             onValueChange={setFilter}
@@ -252,7 +244,7 @@ function OwnerFilterTabsDemo() {
           />
         </DemoBox>
         <DemoBox>
-          <DemoLabel>variant="enclosed"</DemoLabel>
+          <DemoLabel>variant=&quot;enclosed&quot;</DemoLabel>
           <OwnerFilterTabs
             value={filter}
             onValueChange={setFilter}

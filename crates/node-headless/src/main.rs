@@ -5,13 +5,13 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use clap::{Parser, Subcommand};
-use wowlab_node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 #[cfg(unix)]
 use signal_hook::consts::signal::{SIGINT, SIGTERM};
 #[cfg(unix)]
 use signal_hook_tokio::Signals;
 #[cfg(unix)]
 use tokio_stream::StreamExt;
+use wowlab_node::{utils::logging, ConnectionStatus, NodeCore, NodeCoreEvent, NodeState};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

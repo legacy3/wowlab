@@ -46,16 +46,11 @@ pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result
                     framework.options().commands.len()
                 );
 
-                let guild_ids: Vec<serenity::GuildId> =
-                    ready.guilds.iter().map(|g| g.id).collect();
+                let guild_ids: Vec<serenity::GuildId> = ready.guilds.iter().map(|g| g.id).collect();
                 tracing::info!(count = guild_ids.len(), "Tracking guilds");
 
                 // Build filters for all guilds once at startup
-                filter_refresh::build_initial(
-                    ctx.http.clone(),
-                    guild_ids,
-                    shared.filters.clone(),
-                );
+                filter_refresh::build_initial(ctx.http.clone(), guild_ids, shared.filters.clone());
 
                 Ok(Data { state: shared })
             })
@@ -100,7 +95,9 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                 "Command error: {}",
                 error
             );
-            let _ = ctx.say("An error occurred while executing the command.").await;
+            let _ = ctx
+                .say("An error occurred while executing the command.")
+                .await;
         }
         poise::FrameworkError::CommandPanic { ctx, payload, .. } => {
             tracing::error!(
@@ -111,18 +108,22 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
             );
             let _ = ctx.say("An internal error occurred.").await;
         }
-        poise::FrameworkError::ArgumentParse { error, input, ctx, .. } => {
+        poise::FrameworkError::ArgumentParse {
+            error, input, ctx, ..
+        } => {
             tracing::warn!(
                 command = ctx.command().name,
                 input = ?input,
                 "Argument parse error: {}",
                 error
             );
-            let _ = ctx
-                .say(format!("Invalid argument: {}", error))
-                .await;
+            let _ = ctx.say(format!("Invalid argument: {}", error)).await;
         }
-        poise::FrameworkError::CooldownHit { remaining_cooldown, ctx, .. } => {
+        poise::FrameworkError::CooldownHit {
+            remaining_cooldown,
+            ctx,
+            ..
+        } => {
             let _ = ctx
                 .say(format!(
                     "Please wait {:.1}s before using this command again.",
@@ -130,7 +131,11 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                 ))
                 .await;
         }
-        poise::FrameworkError::MissingBotPermissions { missing_permissions, ctx, .. } => {
+        poise::FrameworkError::MissingBotPermissions {
+            missing_permissions,
+            ctx,
+            ..
+        } => {
             tracing::warn!(
                 command = ctx.command().name,
                 permissions = %missing_permissions,
@@ -140,7 +145,11 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
                 .say(format!("I'm missing permissions: {}", missing_permissions))
                 .await;
         }
-        poise::FrameworkError::MissingUserPermissions { missing_permissions, ctx, .. } => {
+        poise::FrameworkError::MissingUserPermissions {
+            missing_permissions,
+            ctx,
+            ..
+        } => {
             let perms = missing_permissions
                 .map(|p| p.to_string())
                 .unwrap_or_else(|| "unknown".to_string());

@@ -27,13 +27,13 @@ import {
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useRef, useState } from "react";
-import { Box, Flex, HStack, VStack } from "styled-system/jsx";
+import { Box, Flex, HStack } from "styled-system/jsx";
 
 import type { Variable } from "@/lib/editor";
 
 import { useEditor } from "@/lib/state/editor";
 
-import { Button, Code, IconButton, Tabs, Text, Tooltip } from "../ui";
+import { Button, IconButton, Tabs, Text, Tooltip } from "../ui";
 import {
   CollapsedSidebar,
   SortableListItem,

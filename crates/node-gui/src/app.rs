@@ -11,10 +11,6 @@ use crate::ui::{
 };
 use egui_modal::Modal;
 use egui_notify::Toasts;
-use wowlab_node::{
-    utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
-    NodeCoreEvent, NodeState,
-};
 use std::{
     collections::VecDeque,
     sync::Arc,
@@ -23,6 +19,10 @@ use std::{
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 use tracing::Level;
+use wowlab_node::{
+    utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
+    NodeCoreEvent, NodeState,
+};
 
 const MAX_LOGS: usize = 100;
 const VERSION: &str = env!("CARGO_PKG_VERSION");

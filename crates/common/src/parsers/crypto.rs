@@ -223,7 +223,9 @@ mod tests {
 
         // Claim code should be uppercase alphanumeric
         assert_eq!(code.len(), CLAIM_CODE_LENGTH);
-        assert!(code.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
+        assert!(code
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
 
         // Same keypair should produce same code
         assert_eq!(code, kp.claim_code());
