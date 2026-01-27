@@ -42,7 +42,7 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
     updateSize();
     const observer = new ResizeObserver(updateSize);
     observer.observe(container);
-    
+
     return () => observer.disconnect();
   }, []);
 

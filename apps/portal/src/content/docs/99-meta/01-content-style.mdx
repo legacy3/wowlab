@@ -1,0 +1,99 @@
+---
+title: Content Style
+description: Guidelines for writing documentation
+---
+
+# Content Style
+
+Guidelines for writing MDX content.
+
+## Writing style
+
+- **Be concise.** Short sentences. No filler.
+- **Be accurate.** Verify claims against code.
+- **Be direct.** Tell the reader what to do.
+- **Use present tense.** "The engine compiles" not "The engine will compile".
+
+## Prefer native markdown
+
+| Element         | When to use                                     |
+| --------------- | ----------------------------------------------- |
+| `## Heading`    | Major sections. H2 for main, H3 for subsections |
+| `**bold**`      | Key terms on first use                          |
+| `` `code` ``    | Function names, variables, file paths           |
+| `- list`        | 3+ related items                                |
+| `[link](/path)` | Navigation, references                          |
+| Tables          | Comparing 3+ items                              |
+| Code blocks     | Examples (always include language)              |
+
+## Code blocks
+
+Always specify language:
+
+```rust
+fn main() {}
+```
+
+Supported: `rust`, `typescript`, `json`, `bash`, `yaml`, `jsx`, `sql`
+
+## Links
+
+- Internal: `[text](/dev/docs/section/page)`
+- External: `[text](https://example.com)`
+- Anchor: `[text](#heading)`
+
+## Citations
+
+Use the `<Cite>` component for academic-style references:
+
+```mdx
+The <Cite id="websocket">WebSocket protocol</Cite> enables real-time communication.
+```
+
+Add reference entries to `src/content/references.ts` before using a citation ID.
+
+## Do NOT
+
+- Add placeholder content ("TODO", "Coming soon")
+- Make claims without verifying against code
+- Use components for decoration
+- Nest components excessively
+- Write walls of text without structure
+- Use em dashes
+- Use AI-sounding phrases ("It's important to note", "Furthermore")
+
+## File naming
+
+- Docs: `{order}-{slug}.mdx` (e.g., `00-quickstart.mdx`)
+- Blog: `{date}-{slug}.mdx` (e.g., `2025-12-hello.mdx`)
+
+## Frontmatter
+
+Required and optional fields for documentation pages:
+
+```yaml
+---
+title: Page Title # Required
+description: Brief summary # Optional, used for SEO
+nextSteps: # Optional, array of doc paths
+  - 01-overview/00-architecture
+  - 02-engine/00-simulation-core
+---
+```
+
+## Review checklist
+
+<Steps>
+  <Step step={1} title="Verify code examples">
+    All code compiles and runs correctly.
+  </Step>
+  <Step step={2} title="Check links">
+    All internal and external links resolve.
+  </Step>
+  <Step step={3} title="Fact-check claims">
+    Technical claims verified against source code.
+  </Step>
+  <Step step={4} title="Style check">
+    Concise, direct, present tense. No AI artifacts.
+  </Step>
+</Steps>

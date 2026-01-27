@@ -76,7 +76,7 @@ export function NodesPage() {
     if (!settingsNode) {
       return;
     }
-    
+
     await deleteNode.mutateAsync(settingsNode.id);
     setSettingsNode(null);
     clearSelection();

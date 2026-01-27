@@ -74,7 +74,7 @@ export function mapAccessTypeFromDb(dbValue: string): NodeAccessType {
   switch (dbValue) {
     case "guild":
       return "guild";
-      
+
     case "owner":
       return "private";
 
@@ -99,7 +99,7 @@ export function mapAccessTypeToDb(uiValue: NodeAccessType): string {
 
     case "private":
       return "owner";
-      
+
     case "public":
       return "public";
   }

@@ -63,7 +63,7 @@ export function I18nSection() {
 
       case "online":
         return "Online";
-        
+
       default:
         return "Unknown";
     }

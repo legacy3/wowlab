@@ -217,7 +217,7 @@ export class ObjectsPlugin implements FabricPlugin {
 
     this.canvas.remove(obj);
     this.canvas.requestRenderAll();
-    
+
     return true;
   }
 

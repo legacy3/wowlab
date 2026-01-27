@@ -127,7 +127,7 @@ export function useSubmitJob() {
         if (rpcError) {
           throw rpcError;
         }
-        
+
         if (!data) {
           throw new Error("No data returned from create_job");
         }

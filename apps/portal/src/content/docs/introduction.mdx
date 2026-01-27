@@ -1,26 +1,37 @@
 ---
 title: Introduction
-description: Getting started with WowLab documentation
+description: A distributed simulation engine for World of Warcraft theorycrafting
+nextSteps:
+  - 01-overview/00-architecture
+  - 01-overview/01-design-principles
 ---
 
 # Introduction
 
-Welcome to WowLab. This documentation uses academic-style citations to reference external sources.
+WowLab is a distributed simulation engine for World of Warcraft theorycrafting. It combines a high-performance Rust-based simulation core with a horizontally scalable network infrastructure to enable large-scale statistical analysis of combat mechanics.
 
-## Citation Examples
+## Overview
 
-Inline citations appear as superscript links. For example, the <Cite id="websocket">WebSocket protocol</Cite> enables full-duplex communication between clients and servers.
+The system consists of three primary components:
 
-You can cite multiple sources in sequence. Our architecture uses <Cite id="redis2024">Redis</Cite> for coordination and <Cite id="centrifugo2024">Centrifugo</Cite> for real-time messaging.
+1. **Simulation Engine** - A deterministic Rust engine compiled to WebAssembly for browser execution and native binaries for distributed compute nodes
+2. **Distributed Network** - A realtime infrastructure using Centrifugo for WebSocket communication and Redis for coordination
+3. **Portal Application** - A Next.js web application providing the user interface for character planning, rotation editing, and simulation analysis
 
-Authentication relies on <Cite id="ed25519">Ed25519 signatures</Cite> for cryptographic security, while persistent data is stored in <Cite id="supabase2024">Supabase</Cite>.
+## Documentation Structure
 
-## Architecture Overview
+This documentation covers the technical architecture and implementation details of the WowLab platform:
 
-![System architecture](./images/overview.jpg)
+<CardGrid>
+  <Card title="Architecture">System design and component overview</Card>
+  <Card title="Engine">Simulation mechanics and WASM integration</Card>
+  <Card title="Networking">Realtime infrastructure and protocols</Card>
+</CardGrid>
 
-## How Citations Work
+## Citation System
 
-1. Add references to `src/content/references.ts`
-2. Use `<Cite id="key">cited text</Cite>` inline where needed
-3. All references appear on the [References](/dev/docs/references) page
+This documentation uses academic-style citations to reference external sources. Inline citations appear as superscript links. For example, the <Cite id="websocket">WebSocket protocol</Cite> enables full-duplex communication between clients and servers.
+
+All referenced sources are listed on the [References](/dev/docs/references) page.
+
+![Overview](./images/overview.jpg)

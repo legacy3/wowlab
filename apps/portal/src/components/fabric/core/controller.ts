@@ -77,7 +77,7 @@ export class CanvasController {
     for (const obj of active) {
       this.canvas.remove(obj);
     }
-    
+
     this.canvas.discardActiveObject();
     this.canvas.requestRenderAll();
   }

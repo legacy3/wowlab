@@ -131,7 +131,7 @@ export class GuidelinesPlugin implements FabricPlugin {
 
     for (let i = canvasObjects.length; i--; ) {
       const obj = canvasObjects[i];
-      
+
       if (obj === activeObject) {
         continue;
       }

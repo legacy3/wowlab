@@ -61,7 +61,7 @@ export function NodeClaimForm({
     if (!isCodeComplete) {
       return;
     }
-    
+
     const result = await onVerify(codeString);
     if (result) {
       setVerifyResult(result);

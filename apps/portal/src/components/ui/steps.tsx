@@ -243,7 +243,7 @@ export function useStepsState<T extends string = string>({
 
   useEffect(() => {
     const currentStep = steps[currentIndex];
-    
+
     if (currentStep?.autoAdvanceTo) {
       const nextValue = currentStep.autoAdvanceTo();
 

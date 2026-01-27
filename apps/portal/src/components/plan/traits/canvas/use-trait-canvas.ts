@@ -93,7 +93,7 @@ export function useTraitCanvas({
         if (!node) {
           return "locked";
         }
-        
+
         return getNodeState(node, selection, incoming);
       },
       onNodeHover: (data) => onTooltipRef.current?.(data),

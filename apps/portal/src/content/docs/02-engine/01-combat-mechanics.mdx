@@ -1,0 +1,84 @@
+---
+title: Combat Mechanics
+description: Implementation of World of Warcraft combat systems
+nextSteps:
+  - 03-networking/00-realtime-infrastructure
+---
+
+# Combat Mechanics
+
+The simulation engine implements World of Warcraft's combat mechanics with high fidelity to the live game.
+
+## Damage Calculation
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+### Base Formula
+
+Damage calculation follows the standard formula:
+
+```
+Base Damage = Spell Power × Coefficient × Versatility × (1 + Mastery)
+Final Damage = Base Damage × (1 + Crit Bonus) × (1 + Target Modifiers)
+```
+
+### Coefficient Sources
+
+| Source      | Description                                  |
+| ----------- | -------------------------------------------- |
+| Spell Data  | Base coefficient from game data              |
+| Talents     | Multiplicative modifiers from talent effects |
+| Auras       | Active buff/debuff modifications             |
+| Set Bonuses | Tier set effect modifiers                    |
+
+## Resource Systems
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
+<Tabs>
+  <TabList>
+    <TabTrigger value="mana">Mana</TabTrigger>
+    <TabTrigger value="energy">Energy</TabTrigger>
+    <TabTrigger value="rage">Rage</TabTrigger>
+  </TabList>
+  <TabContent value="mana">
+    Mana regenerates based on Spirit and in-combat regeneration rules. Base
+    regeneration is 2% of maximum mana per second out of combat.
+  </TabContent>
+  <TabContent value="energy">
+    Energy regenerates at a fixed rate of 10 per second baseline. Haste affects
+    energy regeneration rate linearly.
+  </TabContent>
+  <TabContent value="rage">
+    Rage is generated through damage dealt and received. Generation rates vary
+    by spec and ability.
+  </TabContent>
+</Tabs>
+
+## Aura System
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+
+<Steps>
+  <Step step={1} title="Aura Application">
+    Check immunity, apply diminishing returns for CC effects.
+  </Step>
+  <Step step={2} title="Effect Processing">
+    Execute aura effects: stat modifiers, periodic damage, absorbs.
+  </Step>
+  <Step step={3} title="Duration Tracking">
+    Track remaining duration, handle pandemic refresh rules.
+  </Step>
+  <Step step={4} title="Expiration">
+    Remove aura, trigger on-expire effects, clean up state.
+  </Step>
+</Steps>
+
+## Proc System
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<Alert title="RPPM Mechanics">
+  Real Procs Per Minute (RPPM) uses a bad luck protection system that increases
+  proc chance based on time since last proc.
+</Alert>

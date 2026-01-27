@@ -85,7 +85,7 @@ function ProviderRow({
     }
 
     setLinking(true);
-    
+
     try {
       await linkIdentity(meta.provider);
     } catch {

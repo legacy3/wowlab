@@ -97,7 +97,7 @@ function formatUptime(seconds: number): string {
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
-  
+
   return `${minutes}m`;
 }
 
