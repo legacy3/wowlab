@@ -27,7 +27,6 @@ export const useNodesSelection = create<NodesSelectionStore>()((set, get) => ({
   },
 }));
 
-// Helper to convert Set to Array for components
 export function useNodesSelectionArray() {
   const { selectedIds, ...rest } = useNodesSelection();
   return {

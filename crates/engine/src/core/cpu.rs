@@ -1,11 +1,7 @@
-//! CPU detection utilities for optimal parallelism.
-
-/// Returns the optimal number of CPU cores to use for compute-intensive work.
-///
-/// This mimics Mozilla's MLUtils::GetOptimalCPUConcurrency logic:
-/// - On aarch64 (Apple Silicon/big.LITTLE): Use only performance cores
-/// - On x86_64: Use physical cores (avoid hyperthreading siblings)
-/// - Fallback: Use all logical CPUs
+// Mimics Mozilla's MLUtils::GetOptimalCPUConcurrency:
+// - aarch64 (Apple Silicon): P-cores only
+// - x86_64: physical cores (no HT siblings)
+// - fallback: all logical CPUs
 #[cfg(feature = "parallel")]
 pub fn get_optimal_concurrency() -> usize {
     #[cfg(target_arch = "aarch64")]
@@ -15,7 +11,6 @@ pub fn get_optimal_concurrency() -> usize {
 
     #[cfg(target_arch = "x86_64")]
     {
-        // Use physical cores (half of logical on hyperthreaded systems)
         std::thread::available_parallelism()
             .map(|p| p.get() / 2)
             .unwrap_or(1)
@@ -28,7 +23,6 @@ pub fn get_optimal_concurrency() -> usize {
     }
 }
 
-/// On aarch64, detect performance cores.
 #[cfg(all(feature = "parallel", target_arch = "aarch64"))]
 fn get_aarch64_performance_cores() -> Option<usize> {
     #[cfg(target_os = "macos")]
@@ -42,8 +36,6 @@ fn get_aarch64_performance_cores() -> Option<usize> {
     }
 }
 
-/// Query macOS sysctl for cores at a given performance level.
-/// Level 0 = performance cores (P-cores), Level 1 = efficiency cores (E-cores)
 #[cfg(all(feature = "parallel", target_arch = "aarch64", target_os = "macos"))]
 fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
     use std::ffi::CString;
@@ -84,8 +76,6 @@ fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
     None
 }
 
-/// Configure rayon's global thread pool with the specified number of threads.
-/// Must be called before any rayon operations.
 #[cfg(feature = "parallel")]
 pub fn configure_thread_pool(num_threads: usize) -> Result<(), rayon::ThreadPoolBuildError> {
     rayon::ThreadPoolBuilder::new()
@@ -93,8 +83,6 @@ pub fn configure_thread_pool(num_threads: usize) -> Result<(), rayon::ThreadPool
         .build_global()
 }
 
-/// Configure rayon with optimal concurrency for this system.
-/// Must be called before any rayon operations.
 #[cfg(feature = "parallel")]
 pub fn configure_optimal_thread_pool() -> Result<(), rayon::ThreadPoolBuildError> {
     configure_thread_pool(get_optimal_concurrency())

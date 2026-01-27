@@ -19,10 +19,8 @@ import {
 } from "./sections";
 
 const NAV = [
-  // Foundation
   { id: "tokens", label: "Tokens" },
   { id: "i18n", label: "i18n" },
-  // Core UI
   { id: "actions", label: "Actions" },
   { id: "forms", label: "Forms" },
   { id: "data-display", label: "Data Display" },
@@ -30,7 +28,6 @@ const NAV = [
   { id: "navigation", label: "Navigation" },
   { id: "overlays", label: "Overlays" },
   { id: "feedback", label: "Feedback" },
-  // Domain-specific
   { id: "simulate", label: "Simulate" },
   { id: "spec-picker", label: "Spec Picker" },
   { id: "distributed-nodes", label: "Distributed Nodes" },

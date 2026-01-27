@@ -54,10 +54,6 @@ pub fn aura_definitions() -> Vec<AuraDef> {
     ]
 }
 
-// ============================================================================
-// Core Buffs
-// ============================================================================
-
 fn bestial_wrath_buff() -> AuraDef {
     AuraBuilder::buff(BESTIAL_WRATH_BUFF, "Bestial Wrath", BESTIAL_WRATH_DURATION)
         .damage_multiplier(1.25) // 25% increased damage
@@ -88,10 +84,6 @@ fn beast_cleave_buff() -> AuraDef {
         .build()
 }
 
-// ============================================================================
-// Major Cooldown Buffs/Debuffs
-// ============================================================================
-
 fn call_of_the_wild_buff() -> AuraDef {
     AuraBuilder::buff(
         CALL_OF_THE_WILD_BUFF,
@@ -120,10 +112,6 @@ fn murder_of_crows_debuff() -> AuraDef {
     .snapshots()
     .build()
 }
-
-// ============================================================================
-// Talent Buffs
-// ============================================================================
 
 /// Thrill of the Hunt - player crit buff
 fn thrill_of_the_hunt_buff() -> AuraDef {
@@ -211,10 +199,6 @@ fn brutal_companion_buff() -> AuraDef {
         .build()
 }
 
-// ============================================================================
-// Hero Talent Buffs - Pack Leader
-// ============================================================================
-
 fn wyvern_ready_buff() -> AuraDef {
     AuraBuilder::buff(WYVERN_READY, "Wyvern Ready", 30.0)
         .hidden()
@@ -259,10 +243,6 @@ fn envenomed_fangs_dot() -> AuraDef {
     .build()
 }
 
-// ============================================================================
-// Hero Talent Buffs - Dark Ranger
-// ============================================================================
-
 fn black_arrow_dot() -> AuraDef {
     AuraBuilder::dot(
         BLACK_ARROW_DOT,
@@ -288,10 +268,6 @@ fn withering_fire_buff() -> AuraDef {
         .stacks(3)
         .build()
 }
-
-// ============================================================================
-// Sentinel Hero Talent Buffs
-// ============================================================================
 
 fn sentinel_debuff() -> AuraDef {
     AuraBuilder::debuff(SENTINEL_DEBUFF, "Sentinel", 18.0)
@@ -319,10 +295,6 @@ fn crescent_steel_debuff() -> AuraDef {
         // Each stack increases damage taken
         .build()
 }
-
-// ============================================================================
-// Tier Set Buffs
-// ============================================================================
 
 fn harmonize_buff() -> AuraDef {
     AuraBuilder::buff(HARMONIZE, "Harmonize", 8.0)
@@ -381,10 +353,6 @@ fn boon_of_elune_4pc_buff() -> AuraDef {
         .crit(TWW_S3_SENTINEL_4PC_CRIT)
         .build()
 }
-
-// ============================================================================
-// Missing Talent Buffs
-// ============================================================================
 
 fn huntsmasters_call_buff() -> AuraDef {
     AuraBuilder::buff(HUNTSMASTERS_CALL_BUFF, "Huntmaster's Call", 15.0)

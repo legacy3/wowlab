@@ -27,10 +27,6 @@ use wowlab_common::types::{
     AuraIdx, ClassId, DamageSchool, PetKind, SimTime, SpecId, SpellIdx, TargetIdx, UnitIdx,
 };
 
-// ============================================================================
-// Static Storage (spell/aura definitions are code constants)
-// ============================================================================
-
 static SPELL_DEFS: std::sync::OnceLock<Vec<SpellDef>> = std::sync::OnceLock::new();
 static AURA_DEFS: std::sync::OnceLock<Vec<AuraDef>> = std::sync::OnceLock::new();
 
@@ -59,10 +55,6 @@ fn get_aura_defs() -> &'static [AuraDef] {
         .get()
         .expect("BM Hunter aura definitions not initialized")
 }
-
-// ============================================================================
-// Handler
-// ============================================================================
 
 /// BM Hunter spec handler.
 pub struct BmHunter {
@@ -252,10 +244,6 @@ impl BmHunter {
         state.player.stats.mastery()
     }
 }
-
-// ============================================================================
-// SpecHandler Implementation
-// ============================================================================
 
 impl SpecHandler for BmHunter {
     fn spec_id(&self) -> SpecId {
@@ -520,10 +508,6 @@ impl SpecHandler for BmHunter {
         self.do_damage(state, None, TargetIdx(0), ap_coef, sp_coef, school)
     }
 }
-
-// ============================================================================
-// HunterClass Implementation
-// ============================================================================
 
 impl HunterClass for BmHunter {
     fn pet_damage_modifier(&self, state: &SimState) -> f32 {

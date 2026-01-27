@@ -131,10 +131,6 @@ impl Rotation {
     }
 }
 
-// =============================================================================
-// Unresolved parsing (for validation without a resolver)
-// =============================================================================
-
 fn parse_action_unresolved(value: &Value) -> Result<Action> {
     let obj = value
         .as_object()
@@ -422,10 +418,6 @@ fn parse_expr_object_unresolved(obj: &serde_json::Map<String, Value>) -> Result<
         _ => Err(Error::UnknownOperator(op.clone())),
     }
 }
-
-// =============================================================================
-// Resolved parsing (with a SpecResolver)
-// =============================================================================
 
 fn parse_action_resolved(value: &Value, resolver: &SpecResolver) -> Result<Action> {
     let obj = value
@@ -1017,10 +1009,6 @@ fn parse_var_path_resolved(s: &str, resolver: &SpecResolver) -> Result<Expr> {
         }),
     }
 }
-
-// =============================================================================
-// Shared helpers
-// =============================================================================
 
 fn parse_var_op(s: &str) -> Result<VarOp> {
     match s {

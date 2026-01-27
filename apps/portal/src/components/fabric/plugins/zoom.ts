@@ -5,13 +5,9 @@ import type { FabricPlugin } from "../core/plugin";
 import type { ShortcutsPlugin } from "./shortcuts";
 
 export interface ZoomPluginConfig {
-  /** Enable mouse wheel zoom (default: true) */
   enableMouseWheel?: boolean;
-  /** Maximum zoom level (default: uses controller config) */
   maxZoom?: number;
-  /** Minimum zoom level (default: uses controller config) */
   minZoom?: number;
-  /** Zoom step for button zoom (default: 0.2 = 20%) */
   zoomStep?: number;
 }
 
@@ -52,7 +48,6 @@ export class ZoomPlugin implements FabricPlugin {
     this.canvas = canvas;
     this.controller = controller;
 
-    // Merge user config with controller defaults
     this.config = {
       enableMouseWheel: this.userConfig.enableMouseWheel ?? true,
       maxZoom: this.userConfig.maxZoom ?? controller.maxZoom,
@@ -108,7 +103,6 @@ export class ZoomPlugin implements FabricPlugin {
       return;
     }
 
-    // Get bounding box of all objects
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -137,7 +131,6 @@ export class ZoomPlugin implements FabricPlugin {
     const scaleY = canvasHeight / contentHeight;
     const zoom = this.clampZoom(Math.min(scaleX, scaleY));
 
-    // Center content
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
     const canvasCenterX = this.canvas.getWidth() / 2;
@@ -166,7 +159,6 @@ export class ZoomPlugin implements FabricPlugin {
     const scaleY = canvasHeight / contentHeight;
     const zoom = this.clampZoom(Math.min(scaleX, scaleY));
 
-    // Center on object
     const centerX = bounds.left + contentWidth / 2;
     const centerY = bounds.top + contentHeight / 2;
     const canvasCenterX = this.canvas.getWidth() / 2;

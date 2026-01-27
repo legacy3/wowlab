@@ -70,15 +70,12 @@ export class ClipboardPlugin implements FabricPlugin {
       return;
     }
 
-    // Store current clipboard state
     const prevClipboard = this.clipboard;
     const prevPasteCount = this.pasteCount;
 
-    // Copy and paste
     await this.copy();
     await this.paste();
 
-    // Restore previous clipboard (duplicate shouldn't affect clipboard)
     this.clipboard = prevClipboard;
     this.pasteCount = prevPasteCount;
   }
@@ -104,14 +101,11 @@ export class ClipboardPlugin implements FabricPlugin {
 
     const objects = await this.deserializeObjects(this.clipboard.objects);
 
-    // Apply offset and add to canvas
     const pastedObjects: fabric.FabricObject[] = [];
 
     for (const obj of objects) {
-      // Generate new ID
       (obj as { id?: string } & fabric.FabricObject).id = this.generateId();
 
-      // Apply offset
       obj.set({
         left: (obj.left ?? 0) + offset,
         top: (obj.top ?? 0) + offset,
@@ -121,7 +115,6 @@ export class ClipboardPlugin implements FabricPlugin {
       pastedObjects.push(obj);
     }
 
-    // Select pasted objects
     this.selectObjects(pastedObjects);
     this.canvas.requestRenderAll();
 
@@ -211,7 +204,6 @@ export class ClipboardPlugin implements FabricPlugin {
     const serialized: object[] = [];
 
     for (const obj of objects) {
-      // Clone to get a clean serialized version
       const cloned = await obj.clone();
       serialized.push(cloned.toObject(["id"]));
     }

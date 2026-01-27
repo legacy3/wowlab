@@ -1,7 +1,6 @@
 prometheus.scrape "sentinel" {
   targets = [{
-    __address__ = "sentinel.wowlab.gg",
-    __scheme__  = "https",
+    __address__ = "wowlab-sentinel.internal:8080",
   }]
   metrics_path    = "/metrics"
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
@@ -10,8 +9,7 @@ prometheus.scrape "sentinel" {
 
 prometheus.scrape "beacon" {
   targets = [{
-    __address__ = "beacon.wowlab.gg",
-    __scheme__  = "https",
+    __address__ = "wowlab-beacon.internal:8000",
   }]
   metrics_path    = "/metrics"
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]

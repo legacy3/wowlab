@@ -2,8 +2,6 @@ import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
 
 import { createClient } from "@/lib/supabase/client";
 
-// Lazy-initialize the provider to avoid SSR issues
-// The browser client is created only when first accessed on the client
 let _supabaseClient: ReturnType<typeof createClient> | null = null;
 let _dataProvider: ReturnType<typeof supabaseDataProvider> | null = null;
 
@@ -21,7 +19,6 @@ function getSupabaseClient() {
   return _supabaseClient;
 }
 
-// Proxy to the lazy-initialized data provider
 export const dataProvider = new Proxy(
   {} as ReturnType<typeof supabaseDataProvider>,
   {

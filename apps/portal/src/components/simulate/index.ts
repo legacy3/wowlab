@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// Components
-
 export { CharacterCard, type CharacterCardProps } from "./character-card";
 export { CharacterPanel, type CharacterPanelProps } from "./character-panel";
 export { EquipmentGrid, type EquipmentGridProps } from "./equipment-grid";

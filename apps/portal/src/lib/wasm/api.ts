@@ -1,8 +1,3 @@
-/**
- * Async WASM API for non-React code (stores, server actions, etc.)
- * React components should use useCommon()/useEngine() hooks instead.
- */
-
 import type { SpellDescFragment } from "./types";
 
 import { getCommon, getEngine } from "./loaders";
@@ -25,7 +20,6 @@ export interface SpellDescResolver {
   knowsSpell(spellId: number): boolean;
 }
 
-// Helper to call common module function
 async function common<T>(
   fn: (m: Awaited<ReturnType<typeof getCommon>>) => T,
 ): Promise<T> {

@@ -18,7 +18,6 @@ const FLASK_PATH =
 const MINI_FLASK_PATH =
   "M9 4h6v4l4 10c.5 1.5-.5 2-1.5 2h-11c-1 0-2-.5-1.5-2L9 8V4z";
 
-// Detailed SVG for larger sizes (md, lg, xl)
 function DetailedFlaskOutline() {
   return (
     <>
@@ -398,7 +397,6 @@ function MiniProcessingFill() {
   );
 }
 
-// Mini SVG for smaller sizes (xs, sm)
 function MiniStaticFill() {
   return (
     <>
@@ -486,7 +484,6 @@ export const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
   },
 );
 
-// Convenience alias for button loading state
 export const InlineLoader = React.forwardRef<
   HTMLDivElement,
   Omit<LoaderProps, "size">
@@ -496,7 +493,6 @@ export const InlineLoader = React.forwardRef<
 
 export type InlineLoaderProps = Omit<LoaderProps, "size">;
 
-// Wrapper components for common use cases
 export interface LoaderWrapperProps {
   className?: string;
   message?: string;

@@ -9,7 +9,6 @@ import {
   type GameObjectPickerConfig,
 } from "./game-object-picker";
 
-// Shared props interface for all pickers
 interface PickerProps {
   onSelect: (id: number, name: string) => void;
   placeholder?: string;
@@ -57,7 +56,6 @@ function useSpellWrapper(id: number | null | undefined) {
   return { data: result.data ?? null, isLoading: result.isLoading };
 }
 
-// Configs
 const SPELL_CONFIG: GameObjectPickerConfig<SpellSummary, Spell> = {
   emptyMessage: "No spells found",
   getIconName: (data) => data.file_name,
@@ -101,7 +99,6 @@ export function ItemPicker({
   );
 }
 
-// Picker components
 export function SpellPicker({
   onSelect,
   placeholder,

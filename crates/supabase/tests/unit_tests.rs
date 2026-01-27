@@ -5,10 +5,6 @@ use std::sync::Arc;
 
 use wowlab_supabase::{with_retry, RetryConfig, SupabaseClient, SupabaseError};
 
-// ============================================================================
-// Client Tests
-// ============================================================================
-
 #[test]
 fn test_new_client() {
     let _client = SupabaseClient::new("https://example.supabase.co", "test_key").unwrap();
@@ -18,10 +14,6 @@ fn test_new_client() {
 fn test_new_client_trailing_slash() {
     let _client = SupabaseClient::new("https://example.supabase.co/", "test_key").unwrap();
 }
-
-// ============================================================================
-// Retry Tests
-// ============================================================================
 
 #[tokio::test]
 async fn test_with_retry_success_first_try() {
@@ -112,10 +104,6 @@ async fn test_with_retry_max_attempts_exceeded() {
     assert!(matches!(result, Err(SupabaseError::Server { .. })));
     assert_eq!(counter.load(Ordering::SeqCst), 3);
 }
-
-// ============================================================================
-// Client Request Tests (with wiremock)
-// ============================================================================
 
 use wiremock::matchers::{header, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};

@@ -1,8 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { cache } from "react";
 
-// React cache() ensures one QueryClient per request on server
-// On browser, this just returns the same instance
 const getQueryClient = cache(
   () =>
     new QueryClient({

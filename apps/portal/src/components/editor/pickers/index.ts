@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// Components
-
 export {
   GameObjectPicker,
   type GameObjectPickerConfig,

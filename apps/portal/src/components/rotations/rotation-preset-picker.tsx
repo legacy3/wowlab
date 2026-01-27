@@ -19,7 +19,6 @@ interface RotationPreset {
 }
 
 const MOCK_PRESETS: RotationPreset[] = [
-  // Death Knight
   {
     className: "Death Knight",
     description: "Standard raid tanking rotation",
@@ -44,8 +43,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 252,
     specName: "Unholy",
   },
-
-  // Druid
   {
     className: "Druid",
     description: "Raid boss damage rotation",
@@ -62,8 +59,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 103,
     specName: "Feral",
   },
-
-  // Hunter
   {
     className: "Hunter",
     description: "Raid single target rotation",
@@ -88,8 +83,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 254,
     specName: "Marksmanship",
   },
-
-  // Mage
   {
     className: "Mage",
     description: "Burst combustion windows",
@@ -114,8 +107,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 62,
     specName: "Arcane",
   },
-
-  // Warrior
   {
     className: "Warrior",
     description: "Execute phase specialist",
@@ -140,8 +131,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 73,
     specName: "Protection",
   },
-
-  // Paladin
   {
     className: "Paladin",
     description: "Single target burst rotation",
@@ -150,8 +139,6 @@ const MOCK_PRESETS: RotationPreset[] = [
     specId: 70,
     specName: "Retribution",
   },
-
-  // Rogue
   {
     className: "Rogue",
     description: "Poison damage focused",

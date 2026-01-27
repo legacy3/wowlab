@@ -191,7 +191,6 @@ export class AlignmentPlugin implements FabricPlugin {
       return;
     }
 
-    // Sort by left position
     const sorted = [...objects].sort((a, b) => (a.left ?? 0) - (b.left ?? 0));
 
     const first = sorted[0];
@@ -199,17 +198,14 @@ export class AlignmentPlugin implements FabricPlugin {
     const firstLeft = first.left ?? 0;
     const lastRight = (last.left ?? 0) + last.getScaledWidth();
 
-    // Calculate total object width
     let totalWidth = 0;
     for (const obj of sorted) {
       totalWidth += obj.getScaledWidth();
     }
 
-    // Calculate gap
     const totalSpace = lastRight - firstLeft - totalWidth;
     const gap = totalSpace / (sorted.length - 1);
 
-    // Position objects
     let currentLeft = firstLeft;
     for (const obj of sorted) {
       obj.set({ left: currentLeft });
@@ -235,7 +231,6 @@ export class AlignmentPlugin implements FabricPlugin {
       return;
     }
 
-    // Sort by top position
     const sorted = [...objects].sort((a, b) => (a.top ?? 0) - (b.top ?? 0));
 
     const first = sorted[0];
@@ -243,17 +238,14 @@ export class AlignmentPlugin implements FabricPlugin {
     const firstTop = first.top ?? 0;
     const lastBottom = (last.top ?? 0) + last.getScaledHeight();
 
-    // Calculate total object height
     let totalHeight = 0;
     for (const obj of sorted) {
       totalHeight += obj.getScaledHeight();
     }
 
-    // Calculate gap
     const totalSpace = lastBottom - firstTop - totalHeight;
     const gap = totalSpace / (sorted.length - 1);
 
-    // Position objects
     let currentTop = firstTop;
     for (const obj of sorted) {
       obj.set({ top: currentTop });

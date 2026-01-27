@@ -53,27 +53,16 @@ const activeToolStyles = css({
 
 export interface ToolbarProps {
   className?: string;
-  /** Current interaction mode */
   mode?: InteractionMode;
-  /** Callback when clear is clicked */
   onClear?: () => void;
-  /** Callback when delete is clicked */
   onDelete?: () => void;
-  /** Callback when mode changes */
   onModeChange?: (mode: InteractionMode) => void;
-  /** Callback when reset view is clicked */
   onResetView?: () => void;
-  /** Callback when zoom in is clicked */
   onZoomIn?: () => void;
-  /** Callback when zoom out is clicked */
   onZoomOut?: () => void;
-  /** Callback when zoom to fit is clicked */
   onZoomToFit?: () => void;
-  /** Show action buttons (delete, clear) */
   showActions?: boolean;
-  /** Show tool selection (pointer, hand) */
   showTools?: boolean;
-  /** Canvas state with zoom level */
   state: CanvasState;
 }
 
@@ -93,7 +82,6 @@ export const Toolbar = memo(function Toolbar({
 }: ToolbarProps) {
   return (
     <div className={cx(toolbarStyles, className)}>
-      {/* Tool Selection */}
       {showTools && (
         <>
           <HStack gap="0.5">
@@ -122,7 +110,6 @@ export const Toolbar = memo(function Toolbar({
         </>
       )}
 
-      {/* Zoom Controls */}
       <HStack gap="0.5">
         <Tooltip content="Zoom Out (-)">
           <IconButton variant="plain" size="sm" onClick={onZoomOut}>
@@ -150,7 +137,6 @@ export const Toolbar = memo(function Toolbar({
         </Tooltip>
       </HStack>
 
-      {/* Actions */}
       {showActions && (
         <>
           <div className={dividerStyles} />

@@ -1,15 +1,9 @@
 /* eslint-disable */
 
-// Hooks
-
 export { useLocalizedRouter } from "./hooks";
-
-// Constants
 
 export { navMain, navSecondary } from "./nav";
 export { routes } from "./routes";
-
-// Utilities
 
 export { breadcrumb, getIcon, getLocalizedUrl, href } from "./utils";
 export {
@@ -18,8 +12,6 @@ export {
   getRouteByPath,
   getSitemapRoutes,
 } from "./nav";
-
-// Types
 
 export type {
   AnyRoute,

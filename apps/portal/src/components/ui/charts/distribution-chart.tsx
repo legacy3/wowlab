@@ -43,9 +43,6 @@ export type DistributionChartProps = {
   color?: string;
 } & ChartProps;
 
-/**
- * Distribution/histogram chart with optional percentile markers.
- */
 export function DistributionChart({
   color,
   data,
@@ -124,7 +121,6 @@ export function DistributionChart({
             );
           })}
 
-          {/* Percentile markers */}
           {percentiles?.p50 !== undefined && (
             <PercentileLine
               x={xLinear(percentiles.p50)}

@@ -31,7 +31,7 @@ pub async fn run(
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
+    let listener = tokio::net::TcpListener::bind("[::]:8080").await?;
     tracing::info!("HTTP server listening on :8080");
     axum::serve(listener, app)
         .with_graceful_shutdown(async move { shutdown.cancelled().await })

@@ -45,7 +45,6 @@ export function ConfigureStep({
   const { configureStep: content } = useIntlayer("simulate");
   const { goBack } = Steps.useSteps();
 
-  // Form state
   const [duration, setDuration] = useState(300);
   const [iterations, setIterations] = useState(10000);
   const [targetCount, setTargetCount] = useState(1);
@@ -55,8 +54,6 @@ export function ConfigureStep({
   const [consumables, setConsumables] = useState(true);
 
   const handleSimulate = () => {
-    // Build the config from profile and form values
-    // Note: specId would need to be resolved from profile.character.spec + class
     const config: SimConfig = {
       duration,
       iterations,

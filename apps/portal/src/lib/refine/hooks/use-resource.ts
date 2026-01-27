@@ -10,10 +10,6 @@ import type {
 
 import { useList, useMany, useOne } from "@refinedev/core";
 
-/**
- * Generic unwrapping helper for useOne.
- * Returns data directly instead of result.data and exposes query state.
- */
 export function useResource<T extends BaseRecord>(
   options: UseOneProps<T, HttpError, T>,
 ) {
@@ -31,10 +27,6 @@ export function useResource<T extends BaseRecord>(
   };
 }
 
-/**
- * Generic unwrapping helper for useList.
- * Returns data array directly instead of result.data and exposes query state.
- */
 export function useResourceList<T extends BaseRecord>(
   options: UseListProps<T, HttpError, T>,
 ) {
@@ -52,10 +44,6 @@ export function useResourceList<T extends BaseRecord>(
   };
 }
 
-/**
- * Generic unwrapping helper for useMany.
- * Returns data array directly instead of result.data and exposes query state.
- */
 export function useResourceMany<T extends BaseRecord>(
   options: UseManyProps<T, HttpError, T>,
 ) {

@@ -2,12 +2,6 @@ import type { ResourceProps } from "@refinedev/core";
 
 const GAME_SCHEMA = { schema: "game" };
 
-/**
- * Typed resource configs for use with useResource, useResourceList, useResourceMany.
- * Spread these into hook calls: useResource({ ...spells, id: spellId })
- */
-
-// Game schema resources
 export const spells = {
   meta: GAME_SCHEMA,
   resource: "spells",
@@ -48,7 +42,6 @@ export const specsTraits = {
   resource: "specs_traits",
 } as const;
 
-// Public schema resources
 export const rotations = {
   resource: "rotations",
 } as const;
@@ -70,11 +63,7 @@ export const nodesPermissions = {
   resource: "nodes_permissions",
 } as const;
 
-/**
- * Resource definitions for Refine provider configuration
- */
 export const resources: ResourceProps[] = [
-  // Game schema resources
   { meta: GAME_SCHEMA, name: "spells" },
   { meta: GAME_SCHEMA, name: "items" },
   { meta: GAME_SCHEMA, name: "classes" },
@@ -83,7 +72,6 @@ export const resources: ResourceProps[] = [
   { meta: { ...GAME_SCHEMA, idColumnName: "name" }, name: "global_colors" },
   { meta: { ...GAME_SCHEMA, idColumnName: "tag" }, name: "global_strings" },
   { meta: { ...GAME_SCHEMA, idColumnName: "spec_id" }, name: "specs_traits" },
-  // Public schema resources
   { name: "rotations" },
   { meta: { idColumnName: "handle" }, name: "user_profiles" },
   { name: "jobs" },

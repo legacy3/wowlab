@@ -9,7 +9,6 @@ import type { ParseState, Profile, RecentProfile } from "./types";
 
 export const MAX_RECENT_PROFILES = 8;
 
-// Character input store
 interface CharacterInputStore {
   clearCharacter: () => void;
   input: string;
@@ -51,7 +50,6 @@ export const useCharacterInput = create<CharacterInputStore>()((set) => ({
   },
 }));
 
-// Recent profiles store (persisted)
 interface RecentProfilesStore {
   addRecent: (simc: string, profile: Profile) => void;
   clearRecent: () => void;
@@ -87,7 +85,6 @@ export const useRecentProfiles = create<RecentProfilesStore>()(
   ),
 );
 
-// Selectors
 export const selectProfile = (state: CharacterInputStore): Profile | null =>
   state.parseState.status === "success" ? state.parseState.profile : null;
 

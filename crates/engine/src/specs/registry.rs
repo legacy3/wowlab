@@ -98,10 +98,6 @@ impl SpecData {
         self
     }
 
-    // =========================================================================
-    // Name → ID lookups
-    // =========================================================================
-
     /// Look up spell ID by name.
     pub fn spell_id(&self, name: &str) -> Option<SpellIdx> {
         self.spell_name_to_id.get(name).copied()
@@ -117,10 +113,6 @@ impl SpecData {
         self.dot_name_to_id.get(name).copied()
     }
 
-    // =========================================================================
-    // ID → Name lookups
-    // =========================================================================
-
     /// Look up spell name by ID.
     pub fn spell_name(&self, id: SpellIdx) -> Option<&str> {
         self.spell_id_to_name.get(&id).map(|s| s.as_str())
@@ -135,10 +127,6 @@ impl SpecData {
     pub fn dot_name(&self, id: AuraIdx) -> Option<&str> {
         self.dot_id_to_name.get(&id).map(|s| s.as_str())
     }
-
-    // =========================================================================
-    // Other lookups
-    // =========================================================================
 
     /// Check if a talent is enabled.
     pub fn talent_enabled(&self, name: &str) -> Option<bool> {
@@ -175,10 +163,6 @@ impl SpecData {
         self.talents.contains_key(name)
     }
 
-    // =========================================================================
-    // Iterators
-    // =========================================================================
-
     /// Iterate over all spell name/ID pairs.
     pub fn spells(&self) -> impl Iterator<Item = (&str, SpellIdx)> {
         self.spell_name_to_id.iter().map(|(k, v)| (k.as_str(), *v))
@@ -198,10 +182,6 @@ impl SpecData {
     pub fn talents_iter(&self) -> impl Iterator<Item = (&str, bool)> {
         self.talents.iter().map(|(k, v)| (k.as_str(), *v))
     }
-
-    // =========================================================================
-    // Statistics
-    // =========================================================================
 
     /// Get the number of registered spells.
     pub fn spell_count(&self) -> usize {

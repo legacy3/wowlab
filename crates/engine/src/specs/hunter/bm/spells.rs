@@ -44,10 +44,6 @@ pub fn spell_definitions() -> Vec<SpellDef> {
     ]
 }
 
-// ============================================================================
-// Core Abilities
-// ============================================================================
-
 fn kill_command() -> SpellDef {
     SpellBuilder::new(KILL_COMMAND, "Kill Command")
         .school(DamageSchool::Physical)
@@ -167,10 +163,6 @@ fn kill_shot() -> SpellDef {
         .build()
 }
 
-// ============================================================================
-// Major Cooldowns
-// ============================================================================
-
 fn call_of_the_wild() -> SpellDef {
     SpellBuilder::new(CALL_OF_THE_WILD, "Call of the Wild")
         .instant()
@@ -225,10 +217,6 @@ fn murder_of_crows() -> SpellDef {
         .build()
 }
 
-// ============================================================================
-// Talent Spells
-// ============================================================================
-
 fn explosive_shot() -> SpellDef {
     SpellBuilder::new(EXPLOSIVE_SHOT, "Explosive Shot")
         .school(DamageSchool::Fire)
@@ -239,10 +227,6 @@ fn explosive_shot() -> SpellDef {
         .spell_damage(DamageSchool::Fire, 1.5)
         .build()
 }
-
-// ============================================================================
-// Pet Abilities
-// ============================================================================
 
 fn pet_stomp() -> SpellDef {
     SpellBuilder::new(PET_STOMP, "Stomp")
@@ -288,10 +272,6 @@ fn dire_beast_attack() -> SpellDef {
         .build()
 }
 
-// ============================================================================
-// Hero Talent Spells - Pack Leader
-// ============================================================================
-
 fn howl_of_the_pack_leader() -> SpellDef {
     SpellBuilder::new(HOWL_OF_THE_PACK_LEADER, "Howl of the Pack Leader")
         .instant()
@@ -311,10 +291,6 @@ fn boar_charge() -> SpellDef {
         .build()
 }
 
-// ============================================================================
-// Hero Talent Spells - Dark Ranger
-// ============================================================================
-
 fn black_arrow() -> SpellDef {
     SpellBuilder::new(BLACK_ARROW, "Black Arrow")
         .school(DamageSchool::Shadow)
@@ -324,10 +300,6 @@ fn black_arrow() -> SpellDef {
         .apply_aura(BLACK_ARROW_DOT)
         .build()
 }
-
-// ============================================================================
-// Hero Talent Spells - Sentinel
-// ============================================================================
 
 fn sentinel_tick() -> SpellDef {
     SpellBuilder::new(SENTINEL_TICK, "Sentinel")
@@ -367,10 +339,6 @@ fn symphonic_arsenal_damage() -> SpellDef {
         .background()
         .build()
 }
-
-// ============================================================================
-// Tier Set Spells
-// ============================================================================
 
 fn harmonize_barbed_shot() -> SpellDef {
     SpellBuilder::new(HARMONIZE_BARBED_SHOT, "Harmonize Barbed Shot")

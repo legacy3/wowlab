@@ -1,8 +1,3 @@
-/**
- * Singleton lazy loader for wowlab-common WASM module.
- * Uses a promise-based pattern for deduplication.
- */
-
 type CommonModule = typeof import("wowlab-common");
 
 let cachedModule: CommonModule | null = null;

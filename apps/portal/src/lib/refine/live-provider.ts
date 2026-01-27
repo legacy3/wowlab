@@ -28,10 +28,7 @@ async function getToken() {
 }
 
 export const liveProvider: RefineLifeProvider = {
-  publish: () => {
-    // Server-side only - clients cannot publish
-    return Promise.resolve();
-  },
+  publish: () => Promise.resolve(),
 
   subscribe: ({ callback, channel, params, types }) => {
     const c = getClient();
@@ -39,7 +36,6 @@ export const liveProvider: RefineLifeProvider = {
       ? `${params.resource}:${params.id}`
       : (params?.resource ?? channel);
 
-    // Reuse existing subscription if already subscribed
     const existing = subs.get(channelName);
     if (existing) {
       return Promise.resolve({ channel: channelName });

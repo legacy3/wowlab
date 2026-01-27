@@ -1,4 +1,3 @@
-// Game services
 export {
   buildResolver,
   defaultPaperdoll,
@@ -9,7 +8,6 @@ export {
   useSpellDescription,
 } from "./game";
 
-// Jobs services
 export {
   type DistributedJobStatus,
   type Job,
@@ -21,7 +19,6 @@ export {
   useUserJobs,
 } from "./jobs";
 
-// Metrics services
 export {
   useBeaconRange,
   useBeaconStatus,
@@ -30,7 +27,6 @@ export {
   useSentinelStatus,
 } from "./metrics";
 
-// Nodes services
 export {
   type SaveNodeData,
   selectOnlineCount,
@@ -43,11 +39,8 @@ export {
   type VerifyResult,
 } from "./nodes";
 
-// Profile services
 export { type Profile, type Rotation, useUserProfile } from "./profile";
 
-// Rotation services
 export { useLoadRotation, useSaveRotation } from "./rotation";
 
-// User services
 export { type OAuthProvider, type User, type UserState, useUser } from "./user";

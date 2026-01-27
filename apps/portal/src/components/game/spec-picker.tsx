@@ -118,7 +118,6 @@ function CompactPicker({
     return <Skeleton h="7" w="32" rounded="md" />;
   }
 
-  // Display mode - show current selection
   if (mode === "display") {
     return (
       <styled.button
@@ -158,7 +157,6 @@ function CompactPicker({
     );
   }
 
-  // Class selection mode
   if (mode === "class") {
     return (
       <HStack gap="1" flexWrap="wrap">
@@ -191,7 +189,6 @@ function CompactPicker({
     );
   }
 
-  // Spec selection mode
   return (
     <HStack gap="1" flexWrap="wrap">
       <styled.button

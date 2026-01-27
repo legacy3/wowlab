@@ -51,10 +51,6 @@ export type AnalysisChartProps = {
   color?: string;
 } & ChartProps;
 
-/**
- * Analysis chart with optional statistical overlays.
- * Supports trendline, moving average, std dev band, mean line, and quantile lines.
- */
 export function AnalysisChart({
   color,
   data,
@@ -114,7 +110,6 @@ export function AnalysisChart({
 
   const { x: xScale, y: yScale } = scales;
 
-  // Helper to get x position - handles both time and linear scales
   const getX = (d: AnalysisChartDataPoint): number => {
     if (timeScale) {
       return (xScale as ReturnType<typeof scaleTime>)(
@@ -125,7 +120,6 @@ export function AnalysisChart({
     return (xScale as ReturnType<typeof scaleLinear>)(d.x) as number;
   };
 
-  // Format time ticks based on range
   const formatTimeTick = (date: Date) => {
     const range = data[data.length - 1].x - data[0].x;
     if (range > 86400 * 2) {
@@ -162,7 +156,6 @@ export function AnalysisChart({
             />
           )}
 
-          {/* Std Dev Band */}
           {stdDev && (
             <AreaClosed
               data={data}
@@ -175,7 +168,6 @@ export function AnalysisChart({
             />
           )}
 
-          {/* Quantile lines */}
           {quantiles?.p25 !== undefined && (
             <QuantileLine
               y={yScale(quantiles.p25)}
@@ -210,7 +202,6 @@ export function AnalysisChart({
             />
           )}
 
-          {/* Mean line */}
           {showMean !== undefined && (
             <line
               x1={0}
@@ -224,7 +215,6 @@ export function AnalysisChart({
             />
           )}
 
-          {/* Main data line */}
           <LinePath
             data={data}
             x={getX}
@@ -234,7 +224,6 @@ export function AnalysisChart({
             curve={curveMonotoneX}
           />
 
-          {/* Data points */}
           {showDots &&
             data.map((d, i) => (
               <circle
@@ -246,7 +235,6 @@ export function AnalysisChart({
               />
             ))}
 
-          {/* Moving Average */}
           {movingAverage && (
             <LinePath
               data={movingAverage}
@@ -258,7 +246,6 @@ export function AnalysisChart({
             />
           )}
 
-          {/* Trendline */}
           {trendline && (
             <LinePath
               data={trendline}

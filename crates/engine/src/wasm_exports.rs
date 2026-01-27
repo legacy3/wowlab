@@ -1,14 +1,9 @@
-//! WASM exports for the engine crate.
-//!
-//! Provides schema definitions and metadata for the frontend editor.
-
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::rotation::{get_var_path_schema, validate_rotation, Rotation};
 use wowlab_common::types::{Attribute, DamageSchool, RatingType, ResourceType};
 
-// Spec-related imports (require JIT for spec implementations)
 #[cfg(feature = "jit")]
 use crate::handler::SpecHandler;
 #[cfg(feature = "jit")]
@@ -18,87 +13,52 @@ use crate::specs::hunter::mm::MmHunter;
 #[cfg(feature = "jit")]
 use std::sync::OnceLock;
 
-// ============================================================================
-// Spec Coverage Types (require JIT feature for spec implementations)
-// ============================================================================
-
-/// Information about an implemented spec.
 #[cfg(feature = "jit")]
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpecInfo {
-    /// WoW API spec ID (e.g., 253 for BM Hunter).
     pub wow_spec_id: u32,
-    /// WoW API class ID (e.g., 3 for Hunter).
     pub wow_class_id: u32,
-    /// Human-readable display name.
     pub display_name: String,
-    /// Number of implemented spells.
     pub spell_count: usize,
-    /// Number of implemented auras.
     pub aura_count: usize,
-    /// Number of implemented talents.
     pub talent_count: usize,
 }
 
-/// Detailed coverage information for a spec.
 #[cfg(feature = "jit")]
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpecCoverage {
-    /// WoW API spec ID.
     pub wow_spec_id: u32,
-    /// WoW API class ID.
     pub wow_class_id: u32,
-    /// Human-readable display name.
     pub display_name: String,
-    /// List of implemented spell IDs (WoW spell IDs).
     pub spell_ids: Vec<u32>,
-    /// List of implemented aura IDs (WoW spell IDs).
     pub aura_ids: Vec<u32>,
-    /// List of implemented talent names.
     pub talent_names: Vec<String>,
 }
 
-/// Spell definition for frontend display.
 #[cfg(feature = "jit")]
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SpellDefInfo {
-    /// WoW spell ID.
     pub id: u32,
-    /// Spell name.
     pub name: String,
-    /// Cooldown in seconds.
     pub cooldown: f32,
-    /// Focus/resource cost.
     pub cost: f32,
-    /// Number of charges (0 = no charges).
     pub charges: u8,
 }
 
-/// Aura definition for frontend display.
 #[cfg(feature = "jit")]
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct AuraDefInfo {
-    /// WoW spell ID.
     pub id: u32,
-    /// Aura name.
     pub name: String,
-    /// Duration in seconds.
     pub duration: f32,
-    /// Max stacks.
     pub max_stacks: u8,
-    /// Whether it's a debuff.
     pub is_debuff: bool,
 }
 
-// ============================================================================
-// Handler Initialization (for coverage queries only, requires JIT)
-// ============================================================================
-
-/// Initialize BM Hunter static data for coverage queries.
 #[cfg(feature = "jit")]
 fn ensure_bm_hunter_initialized() {
     static INIT: OnceLock<()> = OnceLock::new();
@@ -107,7 +67,6 @@ fn ensure_bm_hunter_initialized() {
     });
 }
 
-/// Initialize MM Hunter static data for coverage queries.
 #[cfg(feature = "jit")]
 fn ensure_mm_hunter_initialized() {
     static INIT: OnceLock<()> = OnceLock::new();
@@ -116,7 +75,6 @@ fn ensure_mm_hunter_initialized() {
     });
 }
 
-/// Get handler by WoW spec ID for coverage queries.
 #[cfg(feature = "jit")]
 fn get_handler_for_coverage(wow_spec_id: u32) -> Option<Box<dyn SpecHandler>> {
     match wow_spec_id {
@@ -132,7 +90,6 @@ fn get_handler_for_coverage(wow_spec_id: u32) -> Option<Box<dyn SpecHandler>> {
     }
 }
 
-/// Get all implemented handlers for coverage queries.
 #[cfg(feature = "jit")]
 fn get_all_handlers() -> Vec<Box<dyn SpecHandler>> {
     ensure_bm_hunter_initialized();
@@ -140,37 +97,25 @@ fn get_all_handlers() -> Vec<Box<dyn SpecHandler>> {
     vec![Box::new(BmHunter::new()), Box::new(MmHunter::new())]
 }
 
-/// Field definition for condition schema (used by editor).
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ConditionFieldDef {
-    /// Field name (e.g., "BuffActive", "TargetHealthBelow").
     pub name: String,
-    /// Human-readable description.
     pub description: String,
-    /// Field type for UI rendering.
     pub field_type: ConditionFieldType,
-    /// Whether this field takes arguments.
     pub has_args: bool,
-    /// Argument type if has_args is true.
     pub arg_type: Option<String>,
 }
 
-/// Type of condition field for UI rendering.
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionFieldType {
-    /// Simple boolean condition (e.g., PetActive).
     Boolean,
-    /// Takes a spell/aura index.
     Index,
-    /// Takes a numeric threshold.
     Threshold,
-    /// Compound condition (And/Or/Not).
     Compound,
 }
 
-/// Resource type info for UI.
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ResourceTypeInfo {
@@ -180,7 +125,6 @@ pub struct ResourceTypeInfo {
     pub has_passive_regen: bool,
 }
 
-/// Damage school info for UI.
 #[derive(Clone, Debug, Serialize, Deserialize, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct DamageSchoolInfo {
@@ -189,13 +133,11 @@ pub struct DamageSchoolInfo {
     pub is_physical: bool,
 }
 
-/// Get engine version.
 #[wasm_bindgen(js_name = getEngineVersion)]
 pub fn get_engine_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Get condition schema for effect conditions.
 #[wasm_bindgen(js_name = getEffectConditionSchema)]
 pub fn get_effect_condition_schema() -> Result<JsValue, JsValue> {
     let schema = vec![
@@ -288,7 +230,6 @@ pub fn get_effect_condition_schema() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&schema).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get condition schema for damage mod conditions.
 #[wasm_bindgen(js_name = getModConditionSchema)]
 pub fn get_mod_condition_schema() -> Result<JsValue, JsValue> {
     let schema = vec![
@@ -388,7 +329,6 @@ pub fn get_mod_condition_schema() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&schema).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get all resource types with metadata.
 #[wasm_bindgen(js_name = getResourceTypes)]
 pub fn get_resource_types() -> Result<JsValue, JsValue> {
     let types = vec![
@@ -499,7 +439,6 @@ pub fn get_resource_types() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&types).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get all damage schools with metadata.
 #[wasm_bindgen(js_name = getDamageSchools)]
 pub fn get_damage_schools() -> Result<JsValue, JsValue> {
     let schools = vec![
@@ -548,7 +487,6 @@ pub fn get_damage_schools() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&schools).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get all attribute types.
 #[wasm_bindgen(js_name = getAttributes)]
 pub fn get_attributes() -> Result<JsValue, JsValue> {
     let attrs = vec![
@@ -561,7 +499,6 @@ pub fn get_attributes() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&attrs).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get all rating types.
 #[wasm_bindgen(js_name = getRatingTypes)]
 pub fn get_rating_types() -> Result<JsValue, JsValue> {
     let ratings = vec![
@@ -577,7 +514,6 @@ pub fn get_rating_types() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&ratings).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get all derived stat types.
 #[wasm_bindgen(js_name = getDerivedStats)]
 pub fn get_derived_stats() -> Result<JsValue, JsValue> {
     let stats = vec![
@@ -591,11 +527,6 @@ pub fn get_derived_stats() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&stats).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-// ============================================================================
-// Spec Coverage Exports (require JIT feature)
-// ============================================================================
-
-/// Get all implemented specs with their coverage counts.
 #[cfg(feature = "jit")]
 #[wasm_bindgen(js_name = getImplementedSpecs)]
 pub fn get_implemented_specs() -> Result<JsValue, JsValue> {
@@ -615,7 +546,6 @@ pub fn get_implemented_specs() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&specs).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get detailed coverage for a specific spec by WoW spec ID.
 #[cfg(feature = "jit")]
 #[wasm_bindgen(js_name = getSpecCoverage)]
 pub fn get_spec_coverage(wow_spec_id: u32) -> Result<JsValue, JsValue> {
@@ -634,7 +564,6 @@ pub fn get_spec_coverage(wow_spec_id: u32) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&coverage).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get spell definitions for a specific spec by WoW spec ID.
 #[cfg(feature = "jit")]
 #[wasm_bindgen(js_name = getSpellDefs)]
 pub fn get_spell_defs(wow_spec_id: u32) -> Result<JsValue, JsValue> {
@@ -656,7 +585,6 @@ pub fn get_spell_defs(wow_spec_id: u32) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&spells).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get aura definitions for a specific spec by WoW spec ID.
 #[cfg(feature = "jit")]
 #[wasm_bindgen(js_name = getAuraDefs)]
 pub fn get_aura_defs(wow_spec_id: u32) -> Result<JsValue, JsValue> {
@@ -678,7 +606,6 @@ pub fn get_aura_defs(wow_spec_id: u32) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&auras).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get talent names for a specific spec by WoW spec ID.
 #[cfg(feature = "jit")]
 #[wasm_bindgen(js_name = getTalentNames)]
 pub fn get_talent_names(wow_spec_id: u32) -> Result<JsValue, JsValue> {
@@ -689,13 +616,6 @@ pub fn get_talent_names(wow_spec_id: u32) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&talents).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-// ============================================================================
-// Rotation Exports
-// ============================================================================
-
-/// Parse a rotation from JSON.
-///
-/// Returns the parsed rotation or null if invalid JSON.
 #[wasm_bindgen(js_name = parseRotation)]
 pub fn parse_rotation_json(json: &str) -> Result<JsValue, JsValue> {
     match serde_json::from_str::<Rotation>(json) {
@@ -706,9 +626,6 @@ pub fn parse_rotation_json(json: &str) -> Result<JsValue, JsValue> {
     }
 }
 
-/// Validate a rotation JSON and return validation results.
-///
-/// Returns ValidationResult with errors and warnings.
 #[wasm_bindgen(js_name = validateRotation)]
 pub fn validate_rotation_json(json: &str) -> Result<JsValue, JsValue> {
     let rotation: Rotation = serde_json::from_str(json)
@@ -718,9 +635,6 @@ pub fn validate_rotation_json(json: &str) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&result).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-/// Get the VarPath schema for the rotation editor.
-///
-/// Returns a categorized list of all available VarPath variants.
 #[wasm_bindgen(js_name = getVarPathSchema)]
 pub fn get_var_path_schema_wasm() -> Result<JsValue, JsValue> {
     let schema = get_var_path_schema();

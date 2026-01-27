@@ -376,10 +376,6 @@ export function useClassesAndSpecs() {
   };
 }
 
-/**
- * Fetch global colors by name and return them in order.
- * Variadic arguments for convenient tuple destructuring.
- */
 export function useGlobalColors<T extends string[]>(...names: T) {
   const { data = [] } = useResourceMany<GlobalColor>({
     ...globalColors,
@@ -392,10 +388,6 @@ export function useGlobalColors<T extends string[]>(...names: T) {
   };
 }
 
-/**
- * Fetch global strings by tag and return them in order.
- * Variadic arguments for convenient tuple destructuring.
- */
 export function useGlobalStrings<T extends string[]>(...tags: T) {
   const { data = [] } = useResourceMany<GlobalString>({
     ...globalStrings,
@@ -431,7 +423,6 @@ export function useSpellDescription(
 
   const descriptionText = description ?? spell?.description ?? "";
 
-  // Analyze description to find cross-referenced spells
   const { analysisError, crossSpellIds } = useMemo(() => {
     if (!descriptionText || !spellId) {
       return { analysisError: null, crossSpellIds: [] };
@@ -466,7 +457,6 @@ export function useSpellDescription(
     }
   }, [common, descriptionText, spellId]);
 
-  // Fetch cross-referenced spells
   const { data: crossSpells = [], isLoading: crossSpellsLoading } =
     useResourceMany<Spell>({
       ...spells,
@@ -474,7 +464,6 @@ export function useSpellDescription(
       queryOptions: { enabled: crossSpellIds.length > 0 },
     });
 
-  // Collect all spell IDs for aura lookup
   const allSpellIds = useMemo(() => {
     const ids = new Set<number>();
     if (spellId) {
@@ -486,7 +475,6 @@ export function useSpellDescription(
     return Array.from(ids);
   }, [spellId, crossSpellIds]);
 
-  // Fetch auras for all spells
   const { data: aurasData = [], isLoading: aurasLoading } =
     useResourceMany<Aura>({
       ...auras,
@@ -494,7 +482,6 @@ export function useSpellDescription(
       queryOptions: { enabled: allSpellIds.length > 0 },
     });
 
-  // Build caches
   const spellCache = useMemo(() => {
     const cache = new Map<number, Spell>();
     if (spell) {
@@ -514,7 +501,6 @@ export function useSpellDescription(
     return cache;
   }, [aurasData]);
 
-  // Render the description
   const { renderError, renderResult } = useMemo(() => {
     if (!descriptionText || !spell || crossSpellsLoading || aurasLoading) {
       return { renderError: null, renderResult: null };

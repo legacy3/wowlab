@@ -1,5 +1,3 @@
-// Components
-
 export { ComputingContent, ComputingSkeleton } from "./computing-content";
 export {
   JOB_STATUS_COLORS,

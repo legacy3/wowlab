@@ -24,35 +24,14 @@ interface WasmProviderProps {
   children: React.ReactNode;
 }
 
-/**
- * Get the initialized common module.
- * Must be used within a WasmProvider (which must be inside a Suspense boundary).
- */
 export function useCommon(): CommonModule {
   return useWasmContext().common;
 }
 
-/**
- * Get the initialized engine module.
- * Must be used within a WasmProvider (which must be inside a Suspense boundary).
- */
 export function useEngine(): EngineModule {
   return useWasmContext().engine;
 }
 
-/**
- * Provider that initializes both WASM modules using Suspense.
- * Wrap your app with this inside a Suspense boundary.
- *
- * @example
- * ```tsx
- * <Suspense fallback={<Loading />}>
- *   <WasmProvider>
- *     <App />
- *   </WasmProvider>
- * </Suspense>
- * ```
- */
 export function WasmProvider({ children }: WasmProviderProps) {
   const { data: engine } = useSuspenseQuery({
     queryFn: getEngine,

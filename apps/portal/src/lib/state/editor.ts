@@ -105,7 +105,6 @@ export const useEditor = create<EditorState>()(
 
     deleteList: (id) =>
       set((state) => {
-        // Don't delete the last list
         if (state.actionLists.length <= 1) {
           return;
         }
@@ -117,12 +116,10 @@ export const useEditor = create<EditorState>()(
 
         state.actionLists.splice(index, 1);
 
-        // Update defaultListId if we deleted the default
         if (state.defaultListId === id) {
           state.defaultListId = state.actionLists[0].id;
         }
 
-        // Update selectedListId if we deleted the selected
         if (state.selectedListId === id) {
           state.selectedListId = state.actionLists[0].id;
         }

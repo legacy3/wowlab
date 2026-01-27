@@ -281,7 +281,6 @@ function BarChartDemo() {
   );
 }
 
-// Simple histogram binning function to replace d3-array bin
 function createHistogram(data: number[], numBins: number) {
   const min = Math.min(...data);
   const max = Math.max(...data);

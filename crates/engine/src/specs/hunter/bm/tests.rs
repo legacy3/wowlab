@@ -89,10 +89,6 @@ fn pet_init() {
     );
 }
 
-// ============================================================================
-// Spell ID Resolver Tests
-// ============================================================================
-
 #[test]
 fn spell_id_resolver() {
     assert_eq!(spell_id_to_idx(34026), Some(KILL_COMMAND));
@@ -110,10 +106,6 @@ fn spell_name_resolver() {
     assert_eq!(spell_name_to_idx("bestial_wrath"), Some(BESTIAL_WRATH));
     assert_eq!(spell_name_to_idx("unknown_spell"), None);
 }
-
-// ============================================================================
-// Name-Based Rotation Tests
-// ============================================================================
 
 #[test]
 fn rotation_parse_basic() {

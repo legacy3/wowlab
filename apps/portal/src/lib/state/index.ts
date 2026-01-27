@@ -1,8 +1,4 @@
-// Computing
-
 export { useComputingDrawer } from "./computing";
-
-// Editor
 
 export {
   useDefaultList,
@@ -10,8 +6,6 @@ export {
   useListsByType,
   useSelectedList,
 } from "./editor";
-
-// Nodes store
 
 export type {
   BeaconMetricName,
@@ -23,11 +17,7 @@ export type {
   TimeSeriesPoint,
 } from "./metrics";
 
-// Nodes types
-
 export { useNodesSelection, useNodesSelectionArray } from "./nodes/store";
-
-// Metrics types
 
 export {
   deriveAccessType,
@@ -42,8 +32,6 @@ export {
   type NodeWithMeta,
   transformNode,
 } from "./nodes/types";
-
-// Traits
 
 export {
   type TraitActions,
@@ -63,11 +51,7 @@ export {
   useVisibleNodes,
 } from "./traits";
 
-// UI
-
 export { useCardExpanded, useSidebar } from "./ui";
-
-// Services (re-exported from refine services)
 
 export {
   buildResolver,

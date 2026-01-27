@@ -1,10 +1,6 @@
 "use client";
 
-// Store
-
 export { useNodesSelection, useNodesSelectionArray } from "./store";
-
-// Types
 
 export {
   deriveAccessType,

@@ -45,10 +45,8 @@ export class ObjectsPlugin implements FabricPlugin {
   add(obj: TrackedObject, options: AddObjectOptions = {}): TrackedObject {
     const { centered = false, id = generateId(), select = true } = options;
 
-    // Assign ID
     obj.id = id;
 
-    // Center if requested
     if (centered) {
       const center = this.canvas.getCenterPoint();
       obj.set({
@@ -186,7 +184,6 @@ export class ObjectsPlugin implements FabricPlugin {
 
     await this.canvas.loadFromJSON(data);
 
-    // Re-index all objects
     this.objectMap.clear();
     for (const obj of this.canvas.getObjects()) {
       this.indexObject(obj as TrackedObject);
@@ -203,7 +200,6 @@ export class ObjectsPlugin implements FabricPlugin {
     this.canvas.on("object:added", this.handleObjectAdded);
     this.canvas.on("object:removed", this.handleObjectRemoved);
 
-    // Index any existing objects
     for (const obj of this.canvas.getObjects()) {
       this.indexObject(obj as TrackedObject);
     }

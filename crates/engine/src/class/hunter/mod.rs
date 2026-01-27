@@ -49,10 +49,6 @@ use wowlab_common::types::{DamageSchool, TargetIdx, UnitIdx};
 /// }
 /// ```
 pub trait HunterClass: SpecHandler {
-    // ========================================================================
-    // Resource Management
-    // ========================================================================
-
     /// Base focus regeneration per second (before haste).
     ///
     /// Override this for talents/effects that modify base regen.
@@ -67,10 +63,6 @@ pub trait HunterClass: SpecHandler {
         let haste = state.player.stats.haste();
         self.base_focus_regen() * haste
     }
-
-    // ========================================================================
-    // Pet Mechanics
-    // ========================================================================
 
     /// Pet damage modifier (multiplier applied to all pet damage).
     ///
@@ -126,10 +118,6 @@ pub trait HunterClass: SpecHandler {
         state.schedule_in(speed, crate::core::SimEvent::PetAttack { pet });
     }
 
-    // ========================================================================
-    // Shared Abilities
-    // ========================================================================
-
     /// Check if Kill Shot can be used on the target.
     fn can_kill_shot(&self, state: &SimState, target: TargetIdx) -> bool {
         can_use_kill_shot(state, target)
@@ -143,10 +131,6 @@ pub trait HunterClass: SpecHandler {
         state.record_damage(damage);
         damage
     }
-
-    // ========================================================================
-    // Damage Calculation
-    // ========================================================================
 
     /// Calculate damage with Hunter-specific modifiers.
     ///
@@ -163,10 +147,6 @@ pub trait HunterClass: SpecHandler {
         // Use the SpecHandler's calculate_damage method
         self.calculate_damage(state, base, ap_coef, sp_coef, school)
     }
-
-    // ========================================================================
-    // Auto-Attack
-    // ========================================================================
 
     /// Get ranged auto-attack speed with haste.
     fn ranged_attack_speed(&self, state: &SimState) -> wowlab_common::types::SimTime {

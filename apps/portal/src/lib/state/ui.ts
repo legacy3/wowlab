@@ -2,9 +2,6 @@
 
 import { createClientState } from "./helpers";
 
-// Example hooks demonstrating the state pattern.
-// Replace or extend these as needed.
-
 export const useSidebar = createClientState<{ collapsed: boolean }>({
   initial: { collapsed: false },
   persist: "sidebar",

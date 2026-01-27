@@ -84,7 +84,6 @@ export function RotationBrowser() {
     [classFilter, getSpecIdsForClass],
   );
 
-  // Build filters for useList
   const filters = useMemo(() => {
     const result: Array<{
       field: string;

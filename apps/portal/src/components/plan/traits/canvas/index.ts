@@ -1,10 +1,6 @@
 /* eslint-disable */
 
-// Components
-
 export { TraitCanvas } from "./trait-canvas";
-
-// Hooks
 
 export {
   useTraitCanvas,

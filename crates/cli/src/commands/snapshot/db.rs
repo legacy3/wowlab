@@ -17,10 +17,6 @@ use wowlab_common::{
 
 use super::SyncTable;
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /// Postgres maximum bind parameters per query.
 const PG_BIND_LIMIT: usize = 65535;
 
@@ -31,10 +27,6 @@ const CONCURRENCY: usize = 10;
 const fn batch_size(columns: usize) -> usize {
     PG_BIND_LIMIT / columns - 1
 }
-
-// ============================================================================
-// Public API
-// ============================================================================
 
 /// Connect to the database.
 pub async fn connect() -> Result<PgPool, anyhow::Error> {
@@ -86,10 +78,6 @@ pub async fn cleanup_patch(
 
     Ok(())
 }
-
-// ============================================================================
-// Insert Functions - Concurrent Batch Execution
-// ============================================================================
 
 pub async fn insert_spells(
     pool: &PgPool,
@@ -749,10 +737,6 @@ pub async fn insert_global_strings(
     Ok(())
 }
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
 /// Generate ON CONFLICT UPDATE clause for all columns except the first (primary key).
 fn upsert_all_columns(columns: &[&str]) -> String {
     columns[1..]
@@ -781,10 +765,6 @@ fn progress_bar(total: usize, label: &str) -> ProgressBar {
     );
     pb
 }
-
-// ============================================================================
-// Item Scaling Table Inserts
-// ============================================================================
 
 pub async fn insert_item_bonuses(
     pool: &PgPool,

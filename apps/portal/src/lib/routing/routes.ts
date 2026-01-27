@@ -109,14 +109,14 @@ export const routes = {
 
   blog: group({
     index: route("/blog", "Blog", "News and updates", "Newspaper", sitemap.weekly),
-    post: dynamic("/blog/:slug", ["slug"], "Blog Post", "FileText"), // sitemap: lib/blog
+    post: dynamic("/blog/:slug", ["slug"], "Blog Post", "FileText"),
   }).secondary(),
 
   dev: group({
     index: route("/dev", "Developer", "Developer tools", "Code", sitemap.monthly),
     docs: {
       index: route("/dev/docs", "Docs", "Documentation", "BookOpen", sitemap.weekly),
-      page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"), // sitemap: lib/docs
+      page: dynamic("/dev/docs/:slug", ["slug"], "Doc Page", "FileText"),
     },
     engine: route("/dev/engine", "Engine", "Simulation engine", "Cpu"),
     hooks: route("/dev/hooks", "Hooks", "Game data hooks", "FlaskConical"),

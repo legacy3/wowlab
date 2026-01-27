@@ -1,18 +1,12 @@
 /* eslint-disable */
 
-// Components
-
 export { InvalidLoadoutError } from "./invalid-loadout-error";
 export { TraitCalculator } from "./trait-calculator";
 export { TraitCanvas, useTraitCanvas } from "./canvas";
 export { TraitsContent } from "./traits-content";
 export { TraitStartScreen } from "./trait-start-screen";
 
-// Debug
-
 export { DebugModal } from "./debug";
-
-// Renderer
 
 export {
   COLORS,
@@ -23,7 +17,5 @@ export {
   type RenderOptions,
   type TooltipData,
 } from "./renderer";
-
-// UI
 
 export { PointCounter, TraitToolbar, TraitTooltip } from "./ui";

@@ -1,9 +1,5 @@
 use super::*;
 
-// ============================================================================
-// DataResolver Tests
-// ============================================================================
-
 #[test]
 fn local_resolver_creation() {
     use std::path::PathBuf;
@@ -139,10 +135,6 @@ fn local_resolver_integration() {
 
     println!("LocalResolver integration test PASSED");
 }
-
-// ============================================================================
-// GameDataCache Tests
-// ============================================================================
 
 #[cfg(feature = "supabase")]
 mod cache_tests {

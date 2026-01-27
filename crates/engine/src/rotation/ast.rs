@@ -135,7 +135,6 @@ pub enum VarOp {
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum Expr {
-    // === Literals ===
     Bool {
         value: bool,
     },
@@ -146,12 +145,10 @@ pub enum Expr {
         value: f64,
     },
 
-    // === User variable reference ===
     UserVar {
         name: String,
     },
 
-    // === Domain expressions (resolved) ===
     /// Resource expressions (focus, mana, etc.).
     Resource(ResourceExpr),
     /// Cooldown expressions.
@@ -191,7 +188,6 @@ pub enum Expr {
         slot: u8,
     },
 
-    // === Logical ===
     And {
         operands: Vec<Expr>,
     },
@@ -202,7 +198,6 @@ pub enum Expr {
         operand: Box<Expr>,
     },
 
-    // === Comparison ===
     Gt {
         left: Box<Expr>,
         right: Box<Expr>,
@@ -228,7 +223,6 @@ pub enum Expr {
         right: Box<Expr>,
     },
 
-    // === Arithmetic ===
     Add {
         left: Box<Expr>,
         right: Box<Expr>,
@@ -250,7 +244,6 @@ pub enum Expr {
         right: Box<Expr>,
     },
 
-    // === Functions ===
     Floor {
         operand: Box<Expr>,
     },

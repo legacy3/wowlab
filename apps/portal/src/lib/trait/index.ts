@@ -1,10 +1,6 @@
 /* eslint-disable */
 
-// Utilities
-
 export { extractSpecId } from "./extract-spec-id";
-
-// Graph
 
 export {
   buildEdgeMaps,
@@ -19,15 +15,11 @@ export {
   hasDependents,
 } from "./graph";
 
-// Transform
-
 export {
   TraitTransformError,
   transformSpecTraits,
   tryTransformSpecTraits,
 } from "./transform";
-
-// Types
 
 export type {
   EdgeState,
@@ -50,8 +42,6 @@ export {
   isTraitNodeType,
   TraitNodeTypeLabel,
 } from "./types";
-
-// Validation
 
 export {
   canPurchaseNode,

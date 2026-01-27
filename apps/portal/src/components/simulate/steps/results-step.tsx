@@ -14,10 +14,8 @@ export interface ResultsStepProps {
 export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
   const { resultsStep: content } = useIntlayer("simulate");
 
-  // Poll for job status every 2 seconds until completed
   const { data: job, error, isLoading } = useJob(jobId, { pollInterval: 2000 });
 
-  // No job ID - shouldn't happen but handle gracefully
   if (!jobId) {
     return (
       <Stack gap="6">
@@ -35,7 +33,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
     );
   }
 
-  // Loading initial job data
   if (isLoading && !job) {
     return (
       <Stack gap="6">
@@ -51,7 +48,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
     );
   }
 
-  // Error fetching job
   if (error) {
     return (
       <Stack gap="6">
@@ -71,7 +67,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
     );
   }
 
-  // Job not found
   if (!job) {
     return (
       <Stack gap="6">
@@ -92,7 +87,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
   const progress =
     job.chunksTotal > 0 ? (job.chunksCompleted / job.chunksTotal) * 100 : 0;
 
-  // Job is running or pending
   if (job.status !== "completed") {
     return (
       <Stack gap="6">
@@ -145,7 +139,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
     );
   }
 
-  // Job is completed
   const result = job.result;
 
   return (
@@ -172,7 +165,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
                 </Text>
               </Stack>
 
-              {/* DPS Range */}
               <HStack gap="8" justify="center">
                 <Stack gap="1" align="center">
                   <Text textStyle="xl" fontWeight="medium">
@@ -192,7 +184,6 @@ export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
                 </Stack>
               </HStack>
 
-              {/* Stats */}
               <HStack gap="6" justify="center" pt="4" borderTopWidth="1">
                 <Stack gap="0" align="center">
                   <Text textStyle="sm" fontWeight="medium">

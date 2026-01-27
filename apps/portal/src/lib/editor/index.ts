@@ -1,4 +1,3 @@
-// Constants
 export {
   ACTION_TYPE_MAP,
   ACTION_TYPES,
@@ -13,7 +12,6 @@ export {
   OPERATORS,
 } from "./constants";
 
-// Types
 export type {
   Action,
   ActionActions,
@@ -38,5 +36,4 @@ export type {
   ViewMode,
 } from "./types";
 
-// Utilities
 export { createEmptyCondition, generateId, getFieldsByCategory } from "./utils";

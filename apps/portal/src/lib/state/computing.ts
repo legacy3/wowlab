@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 
-// Drawer state
 interface DrawerStore {
   open: boolean;
   setOpen: (open: boolean) => void;

@@ -51,12 +51,10 @@ export class GuidelinesPlugin implements FabricPlugin {
     ctx.lineWidth = this.config.lineWidth;
     ctx.strokeStyle = this.config.color;
 
-    // Draw vertical lines
     for (const line of this.verticalLines) {
       this.drawVerticalLine(ctx, line, vpt, zoom);
     }
 
-    // Draw horizontal lines
     for (const line of this.horizontalLines) {
       this.drawHorizontalLine(ctx, line, vpt, zoom);
     }
@@ -65,17 +63,13 @@ export class GuidelinesPlugin implements FabricPlugin {
     ctx.restore();
   };
   private handleBeforeRender = (): void => {
-    // Clear the selection context before rendering
-    // Guard against null context (e.g., during image export)
     if (this.canvas.contextTop === null) {
       return;
     }
 
     try {
       this.canvas.clearContext(this.canvas.contextTop);
-    } catch {
-      // Ignore errors during context clearing
-    }
+    } catch {}
   };
 
   private handleMouseDown = (e: fabric.TPointerEventInfo): void => {
@@ -83,7 +77,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       return;
     }
 
-    // Cache initial dimensions for scaling operations
     this.activeLeft = e.target.left ?? 0;
     this.activeTop = e.target.top ?? 0;
     this.activeWidth = e.target.getScaledWidth();
@@ -119,13 +112,11 @@ export class GuidelinesPlugin implements FabricPlugin {
     let horizontalInRange = false;
     let verticalInRange = false;
 
-    // Track snap positions for combining horizontal + vertical snaps
     let reachLeft = false;
     let reachTop = false;
     let snapX = 0;
     let snapY = 0;
 
-    // Clear previous lines
     this.verticalLines = [];
     this.horizontalLines = [];
 
@@ -147,7 +138,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       const objectWidth = objectBoundingRect.width / vpt[0];
       const objectHeight = objectBoundingRect.height / vpt[3];
 
-      // Horizontal center to horizontal center
       if (this.isInRange(objectLeft, activeObjectLeft)) {
         verticalInRange = true;
         this.verticalLines.push(
@@ -163,7 +153,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         reachLeft = true;
       }
 
-      // Left edge to left edge
       if (
         this.isInRange(
           objectLeft - objectWidth / 2,
@@ -185,7 +174,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapX = x + activeObjectWidth / 2;
       }
 
-      // Right edge to right edge
       if (
         this.isInRange(
           objectLeft + objectWidth / 2,
@@ -207,7 +195,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapX = x - activeObjectWidth / 2;
       }
 
-      // Left edge to right edge (object spacing)
       if (
         this.isInRange(
           objectLeft - objectWidth / 2,
@@ -229,7 +216,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapX = x - activeObjectWidth / 2;
       }
 
-      // Right edge to left edge (object spacing)
       if (
         this.isInRange(
           objectLeft + objectWidth / 2,
@@ -251,7 +237,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapX = x + activeObjectWidth / 2;
       }
 
-      // Vertical center to vertical center
       if (this.isInRange(objectTop, activeObjectTop)) {
         horizontalInRange = true;
         reachTop = true;
@@ -267,7 +252,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapY = objectTop;
       }
 
-      // Top edge to top edge
       if (
         this.isInRange(
           objectTop - objectHeight / 2,
@@ -289,7 +273,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapY = y + activeObjectHeight / 2;
       }
 
-      // Bottom edge to bottom edge
       if (
         this.isInRange(
           objectTop + objectHeight / 2,
@@ -311,7 +294,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapY = y - activeObjectHeight / 2;
       }
 
-      // Top edge to bottom edge (object spacing)
       if (
         this.isInRange(
           objectTop - objectHeight / 2,
@@ -333,7 +315,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         snapY = y - activeObjectHeight / 2;
       }
 
-      // Bottom edge to top edge (object spacing)
       if (
         this.isInRange(
           objectTop + objectHeight / 2,
@@ -356,7 +337,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       }
     }
 
-    // Apply snapping
     if (reachLeft || reachTop) {
       const newX = reachLeft ? snapX : activeObjectLeft;
       const newY = reachTop ? snapY : activeObjectTop;
@@ -367,7 +347,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       );
     }
 
-    // Clear lines if not in range
     if (!horizontalInRange) {
       this.horizontalLines = [];
     }
@@ -403,11 +382,9 @@ export class GuidelinesPlugin implements FabricPlugin {
     let horizontalInRange = false;
     let verticalInRange = false;
 
-    // Clear previous lines
     this.verticalLines = [];
     this.horizontalLines = [];
 
-    // Define which corners affect which edges
     const leftCorners = new Set(["bl", "ml", "tl"]);
     const rightCorners = new Set(["br", "mr", "tr"]);
     const topCorners = new Set(["mt", "tl", "tr"]);
@@ -429,7 +406,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       const objectWidth = objectBoundingRect.width / vpt[0];
       const objectHeight = objectBoundingRect.height / vpt[3];
 
-      // Center alignment
       if (this.isInRange(objectLeft, activeObjectLeft)) {
         verticalInRange = true;
         this.verticalLines.push(
@@ -443,7 +419,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         );
       }
 
-      // Left edge alignment
       if (
         this.isInRange(
           objectLeft - objectWidth / 2,
@@ -482,7 +457,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Right edge alignment
       if (
         this.isInRange(
           objectLeft + objectWidth / 2,
@@ -515,7 +489,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Left to right edge (spacing)
       if (
         this.isInRange(
           objectLeft - objectWidth / 2,
@@ -544,7 +517,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Right to left edge (spacing)
       if (
         this.isInRange(
           objectLeft + objectWidth / 2,
@@ -579,7 +551,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Center alignment
       if (this.isInRange(objectTop, activeObjectTop)) {
         horizontalInRange = true;
         this.horizontalLines.push(
@@ -593,7 +564,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         );
       }
 
-      // Top edge alignment
       if (
         this.isInRange(
           objectTop - objectHeight / 2,
@@ -632,7 +602,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Bottom edge alignment
       if (
         this.isInRange(
           objectTop + objectHeight / 2,
@@ -665,7 +634,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Top to bottom edge (spacing)
       if (
         this.isInRange(
           objectTop - objectHeight / 2,
@@ -694,7 +662,6 @@ export class GuidelinesPlugin implements FabricPlugin {
         }
       }
 
-      // Bottom to top edge (spacing)
       if (
         this.isInRange(
           objectTop + objectHeight / 2,
@@ -730,7 +697,6 @@ export class GuidelinesPlugin implements FabricPlugin {
       }
     }
 
-    // Clear lines if not in range
     if (!horizontalInRange) {
       this.horizontalLines = [];
     }

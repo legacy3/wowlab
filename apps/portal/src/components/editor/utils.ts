@@ -37,7 +37,6 @@ export function validateRotation(
   const errors: ValidationError[] = [];
   const warnings: ValidationError[] = [];
 
-  // Validate name
   if (!name.trim()) {
     errors.push({
       message: "Rotation name is required",
@@ -46,7 +45,6 @@ export function validateRotation(
     });
   }
 
-  // Validate lists exist
   if (data.lists.length === 0) {
     errors.push({
       message: "At least one action list is required",
@@ -55,7 +53,6 @@ export function validateRotation(
     });
   }
 
-  // Validate default list exists
   const defaultExists = data.lists.some((l) => l.id === data.defaultListId);
   if (!defaultExists && data.lists.length > 0) {
     errors.push({
@@ -65,21 +62,18 @@ export function validateRotation(
     });
   }
 
-  // Validate each list
   for (const list of data.lists) {
     const listErrors = validateList(list, data.lists);
     errors.push(...listErrors.filter((e) => e.type === "error"));
     warnings.push(...listErrors.filter((e) => e.type === "warning"));
   }
 
-  // Validate variables
   for (const variable of data.variables) {
     const variableErrors = validateVariable(variable);
     errors.push(...variableErrors.filter((e) => e.type === "error"));
     warnings.push(...variableErrors.filter((e) => e.type === "warning"));
   }
 
-  // Check for circular references
   const circularErrors = detectCircularReferences(data.lists);
   errors.push(...circularErrors);
 
@@ -93,7 +87,6 @@ export function validateRotation(
 function detectCircularReferences(lists: ActionList[]): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  // Build adjacency list
   const graph = new Map<string, string[]>();
   for (const list of lists) {
     const targets: string[] = [];
@@ -105,7 +98,6 @@ function detectCircularReferences(lists: ActionList[]): ValidationError[] {
     graph.set(list.id, targets);
   }
 
-  // DFS to detect cycles
   const visited = new Set<string>();
   const recursionStack = new Set<string>();
 
@@ -173,7 +165,6 @@ function validateList(
     });
   }
 
-  // Validate each action
   for (const action of list.actions) {
     if (action.type === "spell" && !action.spellId) {
       errors.push({
@@ -225,7 +216,6 @@ function validateVariable(variable: Variable): ValidationError[] {
     });
   }
 
-  // Check for valid variable name format (snake_case, starts with letter)
   if (variable.name && !/^[a-z][a-z0-9_]*$/.test(variable.name)) {
     errors.push({
       message:

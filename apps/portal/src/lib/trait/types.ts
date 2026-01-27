@@ -9,7 +9,6 @@ export type {
   TraitTreeWithSelections,
 } from "@/lib/wasm";
 
-// Node types: 0 = single, 1 = tiered, 2 = choice
 export type TraitNodeType = 0 | 1 | 2;
 
 export const TraitNodeTypeLabel: Record<TraitNodeType, string> = {

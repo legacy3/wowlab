@@ -482,10 +482,6 @@ impl SpecHandler for MmHunter {
     }
 }
 
-// ============================================================================
-// HunterClass Implementation
-// ============================================================================
-
 impl HunterClass for MmHunter {
     /// MM Hunter pet damage modifier.
     ///

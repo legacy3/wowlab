@@ -1,14 +1,8 @@
 /* eslint-disable */
 
-// Client
-
 export { createClient } from "./client";
 
-// Middleware
-
 export { updateSession } from "./middleware";
-
-// Types
 
 export type { Database } from "./database.types";
 export type {
@@ -30,5 +24,3 @@ export type {
   UserIdentity,
   View,
 } from "./types";
-
-// Note: Server client must be imported directly from "./server" in server components to avoid bundling next/headers in client code

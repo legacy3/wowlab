@@ -1,24 +1,18 @@
 use wowlab_common::types::{DamageSchool, HitResult, SnapshotFlags};
 
-/// Snapshotted state for an action (DoTs, delayed damage)
 #[derive(Clone, Debug, Default)]
 pub struct ActionState {
-    // Snapshotted stats
     pub attack_power: f32,
     pub spell_power: f32,
     pub crit_chance: f32,
     pub haste: f32,
     pub versatility: f32,
     pub mastery: f32,
-
-    // Snapshotted multipliers
     pub da_multiplier: f32,
     pub ta_multiplier: f32,
     pub persistent_multiplier: f32,
     pub player_multiplier: f32,
     pub target_multiplier: f32,
-
-    // Result tracking
     pub result: HitResult,
     pub school: DamageSchool,
 }
@@ -35,7 +29,6 @@ impl ActionState {
         }
     }
 
-    /// Snapshot stats from cache based on flags
     pub fn snapshot(&mut self, cache: &crate::stats::StatCache, flags: SnapshotFlags) {
         if flags.contains(SnapshotFlags::ATTACK_POWER) {
             self.attack_power = cache.attack_power();
@@ -57,7 +50,6 @@ impl ActionState {
         }
     }
 
-    /// Get attack power (snapshotted or live)
     #[inline]
     pub fn get_attack_power(&self, live: f32, flags: SnapshotFlags) -> f32 {
         if flags.contains(SnapshotFlags::ATTACK_POWER) {
@@ -67,7 +59,6 @@ impl ActionState {
         }
     }
 
-    /// Get spell power (snapshotted or live)
     #[inline]
     pub fn get_spell_power(&self, live: f32, flags: SnapshotFlags) -> f32 {
         if flags.contains(SnapshotFlags::SPELL_POWER) {

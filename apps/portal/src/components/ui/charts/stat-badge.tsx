@@ -16,17 +16,11 @@ const colorMap: Record<StatBadgeColor, string> = {
 };
 
 export type StatBadgeProps = {
-  /** Label text */
   label: string;
-  /** Value to display */
   value: string;
-  /** Color variant */
   color?: StatBadgeColor;
 };
 
-/**
- * A simple stat display badge with label and value.
- */
 export function StatBadge({ color = "gray", label, value }: StatBadgeProps) {
   return (
     <VStack gap="0">

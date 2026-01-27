@@ -1,9 +1,5 @@
 use wowlab_common::types::{AuraIdx, ProcIdx, SpellIdx};
 
-// ============================================================================
-// Spell IDs
-// ============================================================================
-
 /// Aimed Shot - Primary spender
 pub const AIMED_SHOT: SpellIdx = SpellIdx(19434);
 /// Rapid Fire - Channel dealing multiple hits
@@ -20,10 +16,6 @@ pub const TRUESHOT: SpellIdx = SpellIdx(288613);
 pub const MULTI_SHOT: SpellIdx = SpellIdx(257620);
 /// Volley - AoE talent
 pub const VOLLEY: SpellIdx = SpellIdx(260243);
-
-// ============================================================================
-// Aura IDs
-// ============================================================================
 
 /// Trueshot buff
 pub const TRUESHOT_BUFF: AuraIdx = AuraIdx(288613);
@@ -42,16 +34,8 @@ pub const VOLLEY_BUFF: AuraIdx = AuraIdx(260243);
 /// Deathblow - Kill Shot proc below 20%
 pub const DEATHBLOW: AuraIdx = AuraIdx(378769);
 
-// ============================================================================
-// Proc IDs
-// ============================================================================
-
 /// Lock and Load proc
 pub const LOCK_AND_LOAD_PROC: ProcIdx = ProcIdx(10);
-
-// ============================================================================
-// Tuning Constants
-// ============================================================================
 
 /// Aimed Shot focus cost
 pub const AIMED_SHOT_COST: f32 = 35.0;
@@ -116,10 +100,6 @@ pub const LOCK_AND_LOAD_CHANCE: f32 = 0.08;
 pub const MULTI_SHOT_COST: f32 = 20.0;
 /// Multi-Shot AP coefficient
 pub const MULTI_SHOT_AP_COEF: f32 = 0.40;
-
-// ============================================================================
-// Talent Flags
-// ============================================================================
 
 bitflags::bitflags! {
     /// MM Hunter talent flags

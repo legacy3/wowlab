@@ -27,7 +27,6 @@ export function EditorPage() {
     }
   });
 
-  // Show start screen if no spec is selected (new rotation)
   if (specId === null) {
     return <RotationStartScreen />;
   }

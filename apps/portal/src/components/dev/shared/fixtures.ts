@@ -22,6 +22,19 @@ export const fixtures = {
       { label: "May", value: 55 },
       { label: "Jun", value: 83 },
     ],
+    dpsDistribution: [
+      52000, 54500, 48000, 56000, 51000, 49500, 55000, 53000, 50000, 57000,
+      52500, 54000, 49000, 55500, 51500, 53500, 50500, 56500, 52000, 48500,
+      54500, 51000, 55000, 49500, 53000, 50000, 56000, 52500, 54000, 51500,
+    ],
+    dpsTimeline: Array.from({ length: 30 }, (_, i) => ({
+      x: i,
+      y:
+        45000 +
+        Math.sin(i * 0.5) * 8000 +
+        (Math.random() - 0.5) * 12000 +
+        i * 500,
+    })),
     line: [
       { x: 0, y: 20 },
       { x: 1, y: 35 },
@@ -59,21 +72,6 @@ export const fixtures = {
       { label: "Frost", value: 25 },
       { label: "Arcane", value: 20 },
       { label: "Nature", value: 20 },
-    ],
-    // Simulated DPS timeline data (30 seconds of combat)
-    dpsTimeline: Array.from({ length: 30 }, (_, i) => ({
-      x: i,
-      y:
-        45000 +
-        Math.sin(i * 0.5) * 8000 +
-        (Math.random() - 0.5) * 12000 +
-        i * 500,
-    })),
-    // DPS distribution across multiple pulls
-    dpsDistribution: [
-      52000, 54500, 48000, 56000, 51000, 49500, 55000, 53000, 50000, 57000,
-      52500, 54000, 49000, 55500, 51500, 53500, 50500, 56500, 52000, 48500,
-      54500, 51000, 55000, 49500, 53000, 50000, 56000, 52500, 54000, 51500,
     ],
   },
 

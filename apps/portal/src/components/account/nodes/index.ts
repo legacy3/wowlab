@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// Components
-
 export { BulkActionBar } from "./bulk-action-bar";
 export { NodeClaimForm } from "./node-claim-form";
 export { NodeDownloadDialog } from "./node-download-dialog";

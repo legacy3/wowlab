@@ -1,7 +1,5 @@
-// Batch utilities
 export { batchAdd, batchRemove, preloadImages } from "./batch";
 
-// Core
 export { CanvasController } from "./core/controller";
 export {
   EventEmitter,
@@ -11,7 +9,6 @@ export {
 export { type FabricPlugin, PluginRegistry } from "./core/plugin";
 export { THEME, type Theme } from "./core/theme";
 
-// Types
 export type {
   CanvasConfig,
   CanvasState,
@@ -19,7 +16,6 @@ export type {
   TextOptions,
 } from "./core/types";
 
-// React Hooks
 export {
   useCanvas,
   type UseCanvasOptions,
@@ -29,7 +25,7 @@ export {
   useCanvasContainer,
   type UseCanvasContainerReturn,
 } from "./hooks/use-canvas-container";
-// Shape factories (native Fabric.js wrappers)
+
 export {
   createCircle,
   createEllipse,
@@ -44,7 +40,6 @@ export {
   staticText,
 } from "./objects/shapes";
 
-// Plugins
 export {
   ClipboardPlugin,
   type ControlsConfig,
@@ -62,7 +57,7 @@ export {
   ZoomPlugin,
   type ZoomPluginConfig,
 } from "./plugins";
-// UI
+
 export { Toolbar } from "./ui/toolbar";
 
 export type { ToolbarProps } from "./ui/toolbar";

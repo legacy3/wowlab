@@ -84,22 +84,17 @@ export class HistoryPlugin implements FabricPlugin {
     this.canvas = canvas;
     this.controller = controller;
 
-    // Create bound handlers for cleanup
     this.boundHandlers = {
       onAdded: () => this.saveState(),
       onModified: () => this.saveState(),
       onRemoved: () => this.saveState(),
     };
 
-    // Listen to object changes
     this.canvas.on("object:modified", this.boundHandlers.onModified);
     this.canvas.on("object:added", this.boundHandlers.onAdded);
     this.canvas.on("object:removed", this.boundHandlers.onRemoved);
 
-    // Register shortcuts with ShortcutsPlugin if available
     this.registerShortcuts();
-
-    // Save initial state
     this.saveStateImmediate();
   }
 
@@ -177,7 +172,6 @@ export class HistoryPlugin implements FabricPlugin {
   }
 
   private saveState(): void {
-    // Don't save during undo/redo operations
     if (this.isProcessing) {
       return;
     }
@@ -185,13 +179,11 @@ export class HistoryPlugin implements FabricPlugin {
     const now = Date.now();
     const timeSinceLastSave = now - this.lastSaveTime;
 
-    // Clear any pending save
     if (this.pendingSave) {
       clearTimeout(this.pendingSave);
       this.pendingSave = null;
     }
 
-    // Throttle saves
     if (timeSinceLastSave < this.throttleDelay) {
       this.pendingSave = setTimeout(() => {
         this.saveStateImmediate();
@@ -210,14 +202,12 @@ export class HistoryPlugin implements FabricPlugin {
 
     const state = this.serializeCanvas();
 
-    // Clear redo history when new change is made
     if (this.currentIndex < this.stack.length) {
       this.stack = this.stack.slice(0, this.currentIndex);
     }
 
     this.stack.push(state);
 
-    // Truncate if max length exceeded
     if (this.stack.length > this.maxLength) {
       this.stack.shift();
     } else {

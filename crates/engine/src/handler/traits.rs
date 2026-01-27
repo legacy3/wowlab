@@ -14,8 +14,6 @@ use wowlab_common::types::{AuraIdx, ClassId, DamageSchool, SpecId, SpellIdx, Tar
 /// spec-specific game logic. By using trait objects, we eliminate match
 /// statements and enable true polymorphism.
 pub trait SpecHandler: Send + Sync {
-    // === Identity ===
-
     /// Returns the spec identifier.
     fn spec_id(&self) -> SpecId;
 
@@ -37,8 +35,6 @@ pub trait SpecHandler: Send + Sync {
     /// Human-readable display name for the spec.
     fn display_name(&self) -> &'static str;
 
-    // === Coverage Methods ===
-
     /// Returns all spell definitions implemented by this spec.
     fn spell_definitions(&self) -> &'static [SpellDef];
 
@@ -48,15 +44,11 @@ pub trait SpecHandler: Send + Sync {
     /// Returns all talent names for this spec.
     fn talent_names(&self) -> Vec<String>;
 
-    // === Initialization ===
-
     /// Initialize simulation state (pets, events, etc.).
     fn init(&self, state: &mut SimState);
 
     /// Initialize player state (resources, cooldowns, procs).
     fn init_player(&self, player: &mut Player);
-
-    // === Event Handlers ===
 
     /// Called when GCD ends and rotation can make a decision.
     fn on_gcd(&self, state: &mut SimState);
@@ -86,17 +78,11 @@ pub trait SpecHandler: Send + Sync {
         let _ = (state, aura, target);
     }
 
-    // === Actions ===
-
     /// Cast a spell on a target.
     fn cast_spell(&self, state: &mut SimState, spell: SpellIdx, target: TargetIdx);
 
-    // === Rotation ===
-
     /// Get the next action from the rotation.
     fn next_action(&self, state: &SimState) -> Action;
-
-    // === Spell/Aura Lookup ===
 
     /// Get spell definition by ID.
     fn get_spell(&self, id: SpellIdx) -> Option<&SpellDef>;
@@ -109,8 +95,6 @@ pub trait SpecHandler: Send + Sync {
 
     /// Convert aura name to ID.
     fn aura_name_to_idx(&self, name: &str) -> Option<AuraIdx>;
-
-    // === Default Implementations ===
 
     /// Calculate damage using the standard pipeline.
     ///

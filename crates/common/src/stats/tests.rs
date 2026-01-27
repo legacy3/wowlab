@@ -1,5 +1,3 @@
-//! Tests for stats module.
-
 use super::*;
 
 #[test]

@@ -1,5 +1,3 @@
-// Components
-
 export { FragmentRenderer } from "./fragment-renderer";
 export { GameIcon } from "./game-icon";
 export {
@@ -14,7 +12,5 @@ export {
   SpellDescription,
   type SpellDescriptionProps,
 } from "./spell-description";
-
-// Constants
 
 export { tooltipColors } from "./tooltip-colors";

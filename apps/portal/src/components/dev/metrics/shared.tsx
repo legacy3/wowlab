@@ -40,17 +40,11 @@ interface ErrorStateProps {
 }
 
 interface MetricsChartProps {
-  /** Single series or array of series */
   data: TimeSeriesPoint[] | TimeSeriesPoint[][];
-  /** Error state */
   error?: Error | null;
-  /** Chart height */
   height?: number;
-  /** Loading state */
   isLoading: boolean;
-  /** Series labels for legend (only for multi-series) */
   labels?: string[];
-  /** Chart title */
   title: string;
 }
 
@@ -126,7 +120,6 @@ export function MetricsChart({
     });
   };
 
-  // Normalize to array of series
   const series = useMemo(() => {
     if (data.length === 0) {
       return [];
@@ -137,10 +130,8 @@ export function MetricsChart({
       : [data as TimeSeriesPoint[]];
   }, [data]);
 
-  // Flatten all data for stats
   const allData = useMemo(() => series.flat(), [series]);
 
-  // Stats computed from all data using WASM
   const stats = useMemo(() => {
     if (allData.length < 2) {
       return null;
@@ -159,7 +150,6 @@ export function MetricsChart({
     };
   }, [allData, common]);
 
-  // Trendline from first series using WASM linear regression
   const trendline = useMemo(() => {
     if (!enabled.has("trend") || !series[0] || series[0].length < 2) {
       return undefined;
@@ -186,7 +176,6 @@ export function MetricsChart({
     };
   }, [series, enabled, common]);
 
-  // Moving average from first series using WASM SMA
   const movingAverage = useMemo(() => {
     if (!enabled.has("ma") || !series[0] || series[0].length < 5) {
       return undefined;
@@ -205,7 +194,6 @@ export function MetricsChart({
 
   const hasAnalysis = enabled.size > 0;
 
-  // Loading state
   if (isLoading) {
     return (
       <Card.Root h="full">
@@ -228,7 +216,6 @@ export function MetricsChart({
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Card.Root h="full">
@@ -251,7 +238,6 @@ export function MetricsChart({
     );
   }
 
-  // No data state
   if (allData.length < 2) {
     return (
       <Card.Root h="full">
@@ -561,7 +547,6 @@ function ChartSvg({
             strokeOpacity={0.5}
           />
 
-          {/* Std Dev Band */}
           {stdDev && series[0] && series[0].length > 0 && (
             <AreaClosed
               data={series[0]}
@@ -574,7 +559,6 @@ function ChartSvg({
             />
           )}
 
-          {/* Quantile lines */}
           {quantiles?.p25 !== undefined && (
             <HorizontalLine
               y={yScale(quantiles.p25)}
@@ -609,7 +593,6 @@ function ChartSvg({
             />
           )}
 
-          {/* Mean line */}
           {showMean !== undefined && (
             <line
               x1={0}
@@ -623,7 +606,6 @@ function ChartSvg({
             />
           )}
 
-          {/* Data lines */}
           {series.map((line, i) => (
             <LinePath
               key={i}
@@ -636,7 +618,6 @@ function ChartSvg({
             />
           ))}
 
-          {/* Moving Average */}
           {movingAverage && (
             <LinePath
               data={movingAverage}
@@ -649,7 +630,6 @@ function ChartSvg({
             />
           )}
 
-          {/* Trendline */}
           {trendline && (
             <LinePath
               data={trendline}

@@ -1,9 +1,5 @@
 use wowlab_common::types::{AuraIdx, ProcIdx, SpellIdx};
 
-// ============================================================================
-// Spell IDs - Core Abilities
-// ============================================================================
-
 /// Kill Command
 pub const KILL_COMMAND: SpellIdx = SpellIdx(34026);
 /// Cobra Shot
@@ -19,10 +15,6 @@ pub const BEAST_CLEAVE_SPELL: SpellIdx = SpellIdx(115939);
 /// Kill Shot
 pub const KILL_SHOT: SpellIdx = SpellIdx(53351);
 
-// ============================================================================
-// Spell IDs - Major Cooldowns
-// ============================================================================
-
 /// A Murder of Crows
 pub const MURDER_OF_CROWS: SpellIdx = SpellIdx(131894);
 /// Bloodshed
@@ -33,10 +25,6 @@ pub const CALL_OF_THE_WILD: SpellIdx = SpellIdx(359844);
 pub const DIRE_BEAST: SpellIdx = SpellIdx(120679);
 /// Explosive Shot (from Thundering Hooves)
 pub const EXPLOSIVE_SHOT: SpellIdx = SpellIdx(212431);
-
-// ============================================================================
-// Spell IDs - Pet Abilities
-// ============================================================================
 
 /// Pet auto-attack
 pub const PET_MELEE: SpellIdx = SpellIdx(100001);
@@ -53,10 +41,6 @@ pub const DIRE_BEAST_ATTACK: SpellIdx = SpellIdx(100004);
 /// Animal Companion pet KC
 pub const ANIMAL_COMPANION_KC: SpellIdx = SpellIdx(100005);
 
-// ============================================================================
-// Spell IDs - Hero Talents (Pack Leader)
-// ============================================================================
-
 /// Howl of the Pack Leader
 pub const HOWL_OF_THE_PACK_LEADER: SpellIdx = SpellIdx(471878);
 /// Boar Charge
@@ -64,20 +48,12 @@ pub const BOAR_CHARGE: SpellIdx = SpellIdx(471936);
 /// Boar Charge Cleave
 pub const BOAR_CHARGE_CLEAVE: SpellIdx = SpellIdx(471938);
 
-// ============================================================================
-// Spell IDs - Hero Talents (Dark Ranger)
-// ============================================================================
-
 /// Black Arrow
 pub const BLACK_ARROW: SpellIdx = SpellIdx(467902);
 /// Black Arrow DoT
 pub const BLACK_ARROW_DOT_SPELL: SpellIdx = SpellIdx(468572);
 /// Shadow Hound attack
 pub const SHADOW_HOUND_ATTACK: SpellIdx = SpellIdx(100010);
-
-// ============================================================================
-// Aura IDs - Core Buffs
-// ============================================================================
 
 /// Bestial Wrath buff
 pub const BESTIAL_WRATH_BUFF: AuraIdx = AuraIdx(19574);
@@ -95,10 +71,6 @@ pub const BLOODSHED_DEBUFF: AuraIdx = AuraIdx(321538);
 pub const MURDER_OF_CROWS_DEBUFF: AuraIdx = AuraIdx(131894);
 /// Aspect of the Wild buff
 pub const ASPECT_OF_THE_WILD: AuraIdx = AuraIdx(193530);
-
-// ============================================================================
-// Aura IDs - Talent Buffs
-// ============================================================================
 
 /// Thrill of the Hunt (crit stacks)
 pub const THRILL_OF_THE_HUNT: AuraIdx = AuraIdx(257946);
@@ -119,10 +91,6 @@ pub const WILD_INSTINCTS: AuraIdx = AuraIdx(469885);
 /// Brutal Companion buff
 pub const BRUTAL_COMPANION_BUFF: AuraIdx = AuraIdx(459729);
 
-// ============================================================================
-// Aura IDs - Hero Talent Buffs (Pack Leader)
-// ============================================================================
-
 /// Wyvern Ready
 pub const WYVERN_READY: AuraIdx = AuraIdx(471878);
 /// Boar Ready
@@ -136,10 +104,6 @@ pub const PACK_MENTALITY: AuraIdx = AuraIdx(471935);
 /// Envenomed Fangs DoT
 pub const ENVENOMED_FANGS: AuraIdx = AuraIdx(471944);
 
-// ============================================================================
-// Aura IDs - Hero Talent Buffs (Dark Ranger)
-// ============================================================================
-
 /// Black Arrow DoT
 pub const BLACK_ARROW_DOT: AuraIdx = AuraIdx(468572);
 /// Phantom Pain buff (damage replication)
@@ -147,18 +111,10 @@ pub const PHANTOM_PAIN: AuraIdx = AuraIdx(468560);
 /// Withering Fire buff
 pub const WITHERING_FIRE: AuraIdx = AuraIdx(468566);
 
-// ============================================================================
-// Proc IDs - Base Procs
-// ============================================================================
-
 /// Wild Call (Barbed Shot reset)
 pub const WILD_CALL: ProcIdx = ProcIdx(1);
 /// Barbed Wrath CDR
 pub const BARBED_WRATH: ProcIdx = ProcIdx(2);
-
-// ============================================================================
-// Proc IDs - Talent Procs
-// ============================================================================
 
 /// War Orders (KC reset on Barbed Shot)
 pub const WAR_ORDERS: ProcIdx = ProcIdx(10);
@@ -199,10 +155,6 @@ pub const STOMP_PROC: ProcIdx = ProcIdx(27);
 /// Bloodshed Dire Beast spawn
 pub const BLOODSHED_DIRE_BEAST: ProcIdx = ProcIdx(28);
 
-// ============================================================================
-// Proc IDs - Hero Talents
-// ============================================================================
-
 /// Lead from the Front
 pub const LEAD_FROM_THE_FRONT: ProcIdx = ProcIdx(40);
 /// Covering Fire (Multi-Shot extends Beast Cleave)
@@ -213,10 +165,6 @@ pub const URSINE_FURY: ProcIdx = ProcIdx(42);
 pub const BLEAK_POWDER: ProcIdx = ProcIdx(43);
 /// Withering Fire proc
 pub const WITHERING_FIRE_PROC: ProcIdx = ProcIdx(44);
-
-// ============================================================================
-// Talent Flags (bitflags for enabled talents)
-// ============================================================================
 
 bitflags::bitflags! {
     /// BM Hunter talent flags
@@ -292,10 +240,6 @@ bitflags::bitflags! {
     }
 }
 
-// ============================================================================
-// Tuning Constants - Core
-// ============================================================================
-
 /// Focus regeneration per second (base)
 pub const FOCUS_REGEN_BASE: f32 = 5.0;
 /// Kill Command Focus cost
@@ -322,10 +266,6 @@ pub const WILD_CALL_CHANCE: f32 = 0.20;
 pub const COBRA_SHOT_CDR: f32 = 1.0;
 /// Player ranged attack speed (ms)
 pub const RANGED_ATTACK_SPEED: f32 = 2600.0;
-
-// ============================================================================
-// Tuning Constants - Major Cooldowns
-// ============================================================================
 
 /// Call of the Wild duration
 pub const CALL_OF_THE_WILD_DURATION: f32 = 20.0;
@@ -360,10 +300,6 @@ pub const MURDER_OF_CROWS_DURATION: f32 = 15.0;
 pub const MURDER_OF_CROWS_COOLDOWN: f32 = 60.0;
 /// A Murder of Crows tick interval
 pub const MURDER_OF_CROWS_TICK: f32 = 1.0;
-
-// ============================================================================
-// Tuning Constants - Talent Effects
-// ============================================================================
 
 /// War Orders KC reset chance
 pub const WAR_ORDERS_CHANCE: f32 = 0.50;
@@ -441,10 +377,6 @@ pub const PIERCING_FANGS_CRIT: f32 = 0.10;
 /// Piercing Fangs pet crit damage bonus
 pub const PIERCING_FANGS_CRIT_DAMAGE: f32 = 0.20;
 
-// ============================================================================
-// Tuning Constants - Hero Talents (Pack Leader)
-// ============================================================================
-
 /// Pack Mentality KC damage bonus
 pub const PACK_MENTALITY_BONUS: f32 = 0.10;
 
@@ -458,10 +390,6 @@ pub const ENVENOMED_FANGS_TICK: f32 = 2.0;
 
 /// Covering Fire Beast Cleave extension
 pub const COVERING_FIRE_EXTENSION: f32 = 2.0;
-
-// ============================================================================
-// Tuning Constants - Hero Talents (Dark Ranger)
-// ============================================================================
 
 /// Black Arrow duration
 pub const BLACK_ARROW_DURATION: f32 = 18.0;
@@ -482,10 +410,6 @@ pub const WITHERING_FIRE_THRESHOLD: f32 = 0.20;
 pub const BLEAK_POWDER_TARGETS: u8 = 2;
 /// Bleak Powder damage reduction
 pub const BLEAK_POWDER_REDUCTION: f32 = 0.30;
-
-// ============================================================================
-// Tuning Constants - Hero Talents (Sentinel)
-// ============================================================================
 
 /// Sentinel base stack chance
 pub const SENTINEL_STACK_CHANCE: f32 = 0.22;
@@ -532,10 +456,6 @@ pub const LUNAR_STORM_TICK: f32 = 0.5;
 /// Lunar Storm AP coefficient per tick
 pub const LUNAR_STORM_AP_COEF: f32 = 0.05;
 
-// ============================================================================
-// Tuning Constants - Tier Sets
-// ============================================================================
-
 /// TWW S1 2pc: Harmonize stack chance from pet melee
 pub const TWW_S1_2PC_CHANCE: f32 = 0.15;
 /// TWW S1 4pc: Harmonize grants bonus Barbed Shot damage
@@ -567,10 +487,6 @@ pub const TWW_S3_SENTINEL_2PC_BONUS: f32 = 0.08;
 /// TWW S3 Sentinel 4pc: Boon of Elune crit bonus
 pub const TWW_S3_SENTINEL_4PC_CRIT: f32 = 0.05;
 
-// ============================================================================
-// Tuning Constants - Missing Talents
-// ============================================================================
-
 /// Cobra Senses: Extra Cobra Shot chance on KC
 pub const COBRA_SENSES_CHANCE: f32 = 0.25;
 
@@ -585,10 +501,6 @@ pub const WILD_HUNT_FOCUS_THRESHOLD: f32 = 50.0;
 /// Wild Hunt: Damage bonus when above threshold
 pub const WILD_HUNT_DAMAGE_BONUS: f32 = 0.10;
 
-// ============================================================================
-// Spell IDs - Sentinel Hero Talents
-// ============================================================================
-
 /// Sentinel (base ability)
 pub const SENTINEL_SPELL: SpellIdx = SpellIdx(450369);
 /// Sentinel damage tick
@@ -600,20 +512,12 @@ pub const LUNAR_STORM_PERIODIC: SpellIdx = SpellIdx(471042);
 /// Symphonic Arsenal damage
 pub const SYMPHONIC_ARSENAL: SpellIdx = SpellIdx(471043);
 
-// ============================================================================
-// Spell IDs - Tier Set Procs
-// ============================================================================
-
 /// TWW S1 4pc Barbed Shot proc
 pub const HARMONIZE_BARBED_SHOT: SpellIdx = SpellIdx(100020);
 /// TWW S2 2pc reduced Barbed Shot
 pub const REDUCED_BARBED_SHOT: SpellIdx = SpellIdx(100021);
 /// TWW S3 Pack Leader 4pc Stampede
 pub const STAMPEDE_DAMAGE: SpellIdx = SpellIdx(100022);
-
-// ============================================================================
-// Aura IDs - Sentinel
-// ============================================================================
 
 /// Sentinel debuff on target
 pub const SENTINEL_DEBUFF: AuraIdx = AuraIdx(450387);
@@ -625,10 +529,6 @@ pub const LUNAR_STORM_READY: AuraIdx = AuraIdx(471040);
 pub const LUNAR_STORM_ACTIVE: AuraIdx = AuraIdx(471041);
 /// Crescent Steel debuff
 pub const CRESCENT_STEEL: AuraIdx = AuraIdx(468533);
-
-// ============================================================================
-// Aura IDs - Tier Sets
-// ============================================================================
 
 /// TWW S1 4pc Harmonize buff
 pub const HARMONIZE: AuraIdx = AuraIdx(457261);
@@ -649,18 +549,10 @@ pub const BOON_OF_ELUNE_2PC: AuraIdx = AuraIdx(471105);
 /// TWW S3 Sentinel 4pc Boon of Elune
 pub const BOON_OF_ELUNE_4PC: AuraIdx = AuraIdx(471106);
 
-// ============================================================================
-// Aura IDs - Missing Talents
-// ============================================================================
-
 /// Huntmaster's Call tracking buff
 pub const HUNTSMASTERS_CALL_BUFF: AuraIdx = AuraIdx(471107);
 /// Cobra Senses ready buff (free Cobra Shot)
 pub const COBRA_SENSES_READY: AuraIdx = AuraIdx(471108);
-
-// ============================================================================
-// Proc IDs - Sentinel
-// ============================================================================
 
 /// Sentinel stack proc
 pub const SENTINEL_STACK_PROC: ProcIdx = ProcIdx(70);
@@ -677,10 +569,6 @@ pub const OVERWATCH: ProcIdx = ProcIdx(75);
 /// Crescent Steel
 pub const CRESCENT_STEEL_PROC: ProcIdx = ProcIdx(76);
 
-// ============================================================================
-// Proc IDs - Tier Sets
-// ============================================================================
-
 /// TWW S1 2pc Harmonize stack
 pub const TWW_S1_2PC: ProcIdx = ProcIdx(80);
 /// TWW S1 4pc Harmonize Barbed Shot
@@ -694,20 +582,12 @@ pub const TWW_S3_PL_2PC: ProcIdx = ProcIdx(84);
 /// TWW S3 Pack Leader 4pc
 pub const TWW_S3_PL_4PC: ProcIdx = ProcIdx(85);
 
-// ============================================================================
-// Proc IDs - Missing Talents
-// ============================================================================
-
 /// Cobra Senses proc
 pub const COBRA_SENSES_PROC: ProcIdx = ProcIdx(90);
 /// Wildspeaker KC proc
 pub const WILDSPEAKER_PROC: ProcIdx = ProcIdx(91);
 /// Huntmaster's Call proc
 pub const HUNTSMASTERS_CALL_PROC: ProcIdx = ProcIdx(92);
-
-// ============================================================================
-// Talent Flags - Additional
-// ============================================================================
 
 impl TalentFlags {
     // Hero Talents - Sentinel

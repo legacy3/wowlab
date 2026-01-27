@@ -21,10 +21,6 @@ use wowlab_common::{
 
 use super::{db, SyncArgs, SyncTable};
 
-// ============================================================================
-// Types
-// ============================================================================
-
 /// Transformed data ready for database insertion.
 struct TransformedData {
     spells: Option<Vec<SpellDataFlat>>,
@@ -40,10 +36,6 @@ struct TransformedData {
     curve_points: Option<Vec<CurvePointFlat>>,
     rand_prop_points: Option<Vec<RandPropPointsFlat>>,
 }
-
-// ============================================================================
-// Main Entry Point
-// ============================================================================
 
 pub async fn run_sync(args: SyncArgs) -> Result<()> {
     let total_start = Instant::now();
@@ -93,10 +85,6 @@ pub async fn run_sync(args: SyncArgs) -> Result<()> {
     );
     Ok(())
 }
-
-// ============================================================================
-// Transform
-// ============================================================================
 
 fn transform_data(dbc: &DbcData, tables: &[SyncTable]) -> TransformedData {
     TransformedData {
@@ -160,10 +148,6 @@ where
     );
     Some(result)
 }
-
-// ============================================================================
-// Insert
-// ============================================================================
 
 async fn insert_all(pool: &PgPool, data: &TransformedData, patch: &str) -> Result<()> {
     if let Some(ref rows) = data.spells {
@@ -247,10 +231,6 @@ where
     Ok(())
 }
 
-// ============================================================================
-// Timing Helpers
-// ============================================================================
-
 fn timed<T, E, F>(label: &str, f: F) -> Result<T, E>
 where
     F: FnOnce() -> Result<T, E>,
@@ -272,10 +252,6 @@ where
     tracing::info!("{} in {:.2}s", label, start.elapsed().as_secs_f64());
     result
 }
-
-// ============================================================================
-// Logging
-// ============================================================================
 
 fn log_sync_start(args: &SyncArgs) {
     if args.tables.is_empty() {

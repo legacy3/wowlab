@@ -1,5 +1,3 @@
-// Components
-
 export { RotationBrowser } from "./rotation-browser";
 export { RotationCard } from "./rotation-card";
 export { RotationPresetPicker } from "./rotation-preset-picker";

@@ -1,10 +1,3 @@
-// Loadout string format (bitstream):
-// - 8 bits: version
-// - 16 bits: spec_id
-// - 128 bits: tree_hash
-// - variable: node data
-// Mirrors: crates/common/src/parsers/loadout/mod.rs
-
 const BASE64_CHAR_MAP: Record<string, number> = {};
 const STANDARD =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -16,7 +9,6 @@ for (let i = 0; i < 64; i++) {
   BASE64_CHAR_MAP[URL_SAFE[i]] = i;
 }
 
-// Reads bits LSB-first from base64 string
 class BitReader {
   private position = 0;
 
@@ -43,7 +35,6 @@ class BitReader {
 }
 
 export function extractSpecId(loadoutString: string): number | null {
-  // Need at least 4 chars for 24 bits (4 * 6 = 24)
   if (!loadoutString || loadoutString.length < 4) {
     return null;
   }

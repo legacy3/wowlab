@@ -7,10 +7,6 @@ use crate::combat::DamagePipeline;
 use crate::sim::SimState;
 use wowlab_common::types::{AuraIdx, DamageSchool, SimTime, SpellIdx, TargetIdx};
 
-// ============================================================================
-// Shared Spell IDs
-// ============================================================================
-
 /// Kill Shot - Execute ability available below 20% health
 pub const KILL_SHOT: SpellIdx = SpellIdx(53351);
 
@@ -23,19 +19,11 @@ pub const ARCANE_SHOT: SpellIdx = SpellIdx(185358);
 /// Steady Shot - Focus generator (MM/SV)
 pub const STEADY_SHOT: SpellIdx = SpellIdx(56641);
 
-// ============================================================================
-// Shared Aura IDs
-// ============================================================================
-
 /// Aspect of the Cheetah - Speed boost
 pub const ASPECT_OF_THE_CHEETAH: AuraIdx = AuraIdx(186257);
 
 /// Aspect of the Turtle - Damage immunity
 pub const ASPECT_OF_THE_TURTLE: AuraIdx = AuraIdx(186265);
-
-// ============================================================================
-// Kill Shot Mechanics
-// ============================================================================
 
 /// Execute threshold (20% health).
 pub const KILL_SHOT_THRESHOLD: f32 = 0.20;
@@ -83,10 +71,6 @@ pub fn calculate_kill_shot_damage(state: &mut SimState) -> f32 {
 
     result.final_amount
 }
-
-// ============================================================================
-// Ranged Auto-Attack
-// ============================================================================
 
 /// Base ranged auto-attack speed (ms).
 pub const RANGED_ATTACK_SPEED: f32 = 2600.0;

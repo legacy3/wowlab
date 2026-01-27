@@ -10,32 +10,28 @@ const RANGE_SECONDS: Record<string, number> = {
 };
 
 const ALLOWED_METRICS = new Set([
-  // Sentinel gauges
-  "sentinel_chunks_pending",
-  "sentinel_chunks_running",
-  "sentinel_nodes_online",
-  "sentinel_uptime_seconds",
-  // Sentinel counters
-  "sentinel_chunks_assigned_total",
-  "sentinel_chunks_reclaimed_total",
-  "sentinel_nodes_marked_offline_total",
-  "sentinel_stale_data_cleanups_total",
-  // Beacon gauges
   "centrifugo_broker_redis_pub_sub_buffered_messages",
+  "centrifugo_client_connections_accepted",
   "centrifugo_client_connections_inflight",
+  "centrifugo_node_messages_received_count",
+  "centrifugo_node_messages_sent_count",
   "centrifugo_node_num_channels",
   "centrifugo_node_num_clients",
   "centrifugo_node_num_nodes",
   "centrifugo_node_num_subscriptions",
   "centrifugo_node_num_users",
-  // Beacon counters
-  "centrifugo_client_connections_accepted",
-  "centrifugo_node_messages_received_count",
-  "centrifugo_node_messages_sent_count",
   "centrifugo_transport_messages_received",
   "centrifugo_transport_messages_received_size",
   "centrifugo_transport_messages_sent",
   "centrifugo_transport_messages_sent_size",
+  "sentinel_chunks_assigned_total",
+  "sentinel_chunks_pending",
+  "sentinel_chunks_reclaimed_total",
+  "sentinel_chunks_running",
+  "sentinel_nodes_marked_offline_total",
+  "sentinel_nodes_online",
+  "sentinel_stale_data_cleanups_total",
+  "sentinel_uptime_seconds",
 ]);
 
 export async function GET(request: NextRequest) {
@@ -50,13 +46,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Support both single metric and batch metrics
   const metricParam = request.nextUrl.searchParams.get("metric");
   const metricsParam = request.nextUrl.searchParams.get("metrics");
   const range = request.nextUrl.searchParams.get("range");
   const step = request.nextUrl.searchParams.get("step") ?? "60";
 
-  // Parse metrics list
   const metrics = metricsParam
     ? metricsParam.split(",").filter((m) => ALLOWED_METRICS.has(m))
     : metricParam && ALLOWED_METRICS.has(metricParam)
@@ -72,9 +66,7 @@ export async function GET(request: NextRequest) {
 
   const basicAuth = btoa(`${PROMETHEUS_USER}:${PROMETHEUS_TOKEN}`);
 
-  // Batch instant query (no range param)
   if (!range) {
-    // Fetch all metrics in parallel
     const results = await Promise.all(
       metrics.map(async (metric) => {
         const params = new URLSearchParams({ query: metric });
@@ -102,7 +94,6 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    // Return as a map of metric -> value
     const data: Record<string, number> = {};
     for (const r of results) {
       if (!r.error) {
@@ -113,7 +104,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data, status: "success" });
   }
 
-  // Range query (only supports single metric for now)
   if (metrics.length > 1) {
     return NextResponse.json(
       { error: "Range queries only support single metric" },

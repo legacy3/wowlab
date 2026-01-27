@@ -1,5 +1,3 @@
-// Charts
-
 export {
   AnalysisChart,
   type AnalysisChartDataPoint,

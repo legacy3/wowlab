@@ -22,7 +22,6 @@ export class InteractionPlugin implements FabricPlugin {
   private handleMouseDown = (opt: fabric.TPointerEventInfo): void => {
     const e = opt.e as MouseEvent;
 
-    // Alt+click enables grab mode temporarily
     if (e.altKey && this.currentMode === "selection") {
       this.setGrab();
     }
@@ -61,7 +60,6 @@ export class InteractionPlugin implements FabricPlugin {
       this.isPanning = false;
       this.canvas.defaultCursor = "grab";
 
-      // If Alt was used for temporary grab, return to selection
       if (!e.altKey && this.previousMode === "selection") {
         this.setSelection();
       }

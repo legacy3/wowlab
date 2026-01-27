@@ -17,22 +17,15 @@ import { shadows } from "@/theme/tokens/shadows";
 import { zIndex } from "@/theme/tokens/z-index";
 
 export default defineConfig({
-  // Whether to use css reset
-  preflight: true,
-
-  // Where to look for your css declarations
-  include: ["./src/**/*.{js,jsx,ts,tsx}"],
-
-  // Files to exclude
+  conditions: conditions,
   exclude: [],
-
-  // Match tsconfig paths for styled-system imports
+  globalCss: globalCss,
   importMap: "styled-system",
-
-  // Enable JSX components (Box, Stack, etc)
+  include: ["./src/**/*.{js,jsx,ts,tsx}"],
   jsxFramework: "react",
+  outdir: "styled-system",
 
-  // Useful for theme customization
+  preflight: true,
   theme: {
     extend: {
       animationStyles: animationStyles,
@@ -143,10 +136,4 @@ export default defineConfig({
       },
     },
   },
-
-  // The output directory for your css system
-  conditions: conditions,
-
-  globalCss: globalCss,
-  outdir: "styled-system",
 });

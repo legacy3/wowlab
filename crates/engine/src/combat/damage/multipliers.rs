@@ -1,25 +1,15 @@
 use wowlab_common::types::DamageSchool;
 
-/// Layered damage multipliers (applied multiplicatively)
 #[derive(Clone, Debug)]
 pub struct DamageMultipliers {
-    /// Action-specific multiplier
     pub action: f32,
-    /// Direct damage multiplier
     pub da: f32,
-    /// Tick/periodic damage multiplier
     pub ta: f32,
-    /// Persistent (snapshotted at cast)
     pub persistent: f32,
-    /// Player-wide (school-based)
     pub player: f32,
-    /// Target debuffs
     pub target: f32,
-    /// Versatility
     pub versatility: f32,
-    /// Pet owner scaling
     pub pet: f32,
-    /// Crit multiplier (2.0 base)
     pub crit: f32,
 }
 
@@ -44,7 +34,6 @@ impl DamageMultipliers {
         Self::default()
     }
 
-    /// Calculate total multiplier for direct damage
     pub fn total_da(&self, is_crit: bool) -> f32 {
         let mut mult = self.action
             * self.da
@@ -61,7 +50,6 @@ impl DamageMultipliers {
         mult
     }
 
-    /// Calculate total multiplier for periodic damage
     pub fn total_ta(&self, is_crit: bool) -> f32 {
         let mut mult = self.action
             * self.ta
@@ -79,7 +67,6 @@ impl DamageMultipliers {
     }
 }
 
-/// Per-school damage modifiers (from debuffs, etc.)
 #[derive(Clone, Debug, Default)]
 pub struct SchoolModifiers {
     pub physical: f32,

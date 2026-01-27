@@ -12,10 +12,6 @@ export const SkeletonCircle = styled(ark.div, skeleton, {
 });
 
 export interface SkeletonTextProps extends SkeletonProps {
-  /**
-   * Number of lines to display
-   * @default 3
-   */
   noOfLines?: number | undefined;
   rootProps?: StackProps | undefined;
 }

@@ -91,7 +91,6 @@ export interface ConditionField extends Field {
 }
 
 export const CONDITION_FIELDS: ConditionField[] = [
-  // Target
   {
     category: "target",
     inputType: "number",
@@ -156,8 +155,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Target Level",
     name: "target.level",
   },
-
-  // Resource
   {
     category: "resource",
     inputType: "number",
@@ -355,8 +352,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Astral Power Deficit",
     name: "astral_power.deficit",
   },
-
-  // Buff
   {
     category: "buff",
     inputType: "text",
@@ -409,8 +404,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
       { label: "No", name: "false" },
     ],
   },
-
-  // Debuff
   {
     category: "debuff",
     inputType: "text",
@@ -457,8 +450,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
       { label: "No", name: "false" },
     ],
   },
-
-  // DoT
   { category: "dot", inputType: "text", label: "DoT Active", name: "dot.up" },
   {
     category: "dot",
@@ -506,8 +497,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "DoT Tick Time Remaining",
     name: "dot.tick_time_remains",
   },
-
-  // Cooldown
   {
     category: "cooldown",
     inputType: "text",
@@ -568,8 +557,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Full Recharge Time",
     name: "full_recharge_time",
   },
-
-  // Spell
   {
     category: "spell",
     inputType: "text",
@@ -618,8 +605,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Previous Off-GCD",
     name: "prev_off_gcd",
   },
-
-  // Combat
   {
     category: "combat",
     inputType: "text",
@@ -704,8 +689,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Player Health Deficit",
     name: "health.deficit",
   },
-
-  // Encounter
   {
     category: "encounter",
     inputType: "number",
@@ -752,8 +735,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
       { label: "No", name: "false" },
     ],
   },
-
-  // Talent
   {
     category: "talent",
     inputType: "text",
@@ -772,8 +753,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Talent Rank",
     name: "talent.rank",
   },
-
-  // Pet
   {
     category: "pet",
     inputType: "text",
@@ -802,8 +781,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Pet Buff Remaining",
     name: "pet.buff.remains",
   },
-
-  // Totem
   {
     category: "totem",
     inputType: "text",
@@ -816,8 +793,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
     label: "Totem Remaining",
     name: "totem.remains",
   },
-
-  // Trinket
   {
     category: "trinket",
     inputType: "text",
@@ -870,8 +845,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
       { label: "No", name: "false" },
     ],
   },
-
-  // Racial
   {
     category: "racial",
     inputType: "text",
@@ -912,8 +885,6 @@ export const CONDITION_FIELDS: ConditionField[] = [
       { label: "No", name: "false" },
     ],
   },
-
-  // Variable
   {
     category: "variable",
     inputType: "text",

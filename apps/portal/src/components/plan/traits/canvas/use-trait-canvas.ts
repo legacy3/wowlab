@@ -45,7 +45,6 @@ export function useTraitCanvas({
 
   const selection = useTraitStore((s) => s.selection);
 
-  // Update ref in effect to avoid accessing during render
   useEffect(() => {
     onTooltipRef.current = onTooltip;
   }, [onTooltip]);

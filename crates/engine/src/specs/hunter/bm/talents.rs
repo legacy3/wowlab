@@ -88,10 +88,6 @@ fn is_talent_active(flags: TalentFlags, name: &str) -> bool {
         .unwrap_or(false)
 }
 
-// ============================================================================
-// Core Talents
-// ============================================================================
-
 fn alpha_predator() -> TalentDef {
     TalentDef::new("alpha_predator", "Alpha Predator")
         // +30% Kill Command damage
@@ -118,10 +114,6 @@ fn training_expert() -> TalentDef {
         .pet_damage(1.0 + TRAINING_EXPERT_BONUS)
 }
 
-// ============================================================================
-// Pet Talents
-// ============================================================================
-
 fn animal_companion() -> TalentDef {
     TalentDef::new("animal_companion", "Animal Companion")
     // Summon a second pet - handled via spell effects
@@ -145,10 +137,6 @@ fn brutal_companion() -> TalentDef {
     TalentDef::new("brutal_companion", "Brutal Companion")
     // Extra pet attack at max Frenzy - handled in handler
 }
-
-// ============================================================================
-// Damage Talents
-// ============================================================================
 
 fn piercing_fangs() -> TalentDef {
     TalentDef::new("piercing_fangs", "Piercing Fangs")
@@ -229,10 +217,6 @@ fn wild_instincts() -> TalentDef {
             priority: 0,
         })
 }
-
-// ============================================================================
-// Cooldown/Utility Talents
-// ============================================================================
 
 fn kill_cleave_talent() -> TalentDef {
     TalentDef::new("kill_cleave", "Kill Cleave")

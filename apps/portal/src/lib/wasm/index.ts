@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// API
-
 export {
   analyzeSpellDesc,
   encodeMinimalLoadout,
@@ -16,11 +14,7 @@ export {
   validateRotation,
 } from "./api";
 
-// Loaders
-
 export { getCommon, getEngine, isCommonReady, isEngineReady } from "./loaders";
-
-// Types
 
 export type {
   Action,

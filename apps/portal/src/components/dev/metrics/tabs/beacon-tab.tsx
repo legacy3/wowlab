@@ -23,7 +23,6 @@ export function BeaconTab() {
 
   return (
     <Stack gap="6">
-      {/* Connection stats */}
       <Grid columns={{ base: 2, md: 5 }} gap="3">
         <StatCard
           icon={Users}
@@ -52,7 +51,6 @@ export function BeaconTab() {
         />
       </Grid>
 
-      {/* Message stats */}
       <Grid columns={2} gap="3">
         <MessageStat
           icon={Send}
@@ -66,7 +64,6 @@ export function BeaconTab() {
         />
       </Grid>
 
-      {/* Charts */}
       <BeaconCharts />
     </Stack>
   );
@@ -75,7 +72,6 @@ export function BeaconTab() {
 function BeaconCharts() {
   const [range, setRange] = useState<TimeRange>("1h");
 
-  // Connection gauges
   const clients = useBeaconRange("centrifugo_node_num_clients", range);
   const channels = useBeaconRange("centrifugo_node_num_channels", range);
   const subscriptions = useBeaconRange(
@@ -84,7 +80,6 @@ function BeaconCharts() {
   );
   const users = useBeaconRange("centrifugo_node_num_users", range);
 
-  // Message counters
   const messagesSent = useBeaconRange(
     "centrifugo_node_messages_sent_count",
     range,
@@ -94,7 +89,6 @@ function BeaconCharts() {
     range,
   );
 
-  // Transport metrics
   const transportSent = useBeaconRange(
     "centrifugo_transport_messages_sent",
     range,

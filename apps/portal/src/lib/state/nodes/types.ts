@@ -2,7 +2,6 @@
 
 import type { Tables } from "@/lib/supabase/database.types";
 
-// Access options for UI
 export interface NodeAccessOption {
   description: string;
   label: string;
@@ -10,14 +9,11 @@ export interface NodeAccessOption {
 }
 export type NodeAccessType = "private" | "friends" | "guild" | "public";
 
-// UI-only types (computed, not in DB)
 export type NodeOwner = "me" | "shared";
 export type NodePermissionRow = Tables<"nodes_permissions">;
 
-// DB row types (use these for Supabase operations)
 export type NodeRow = Tables<"nodes">;
 
-// Extended node with computed fields for UI
 export interface NodeWithMeta extends NodeRow {
   accessType: NodeAccessType;
   owner: NodeOwner;
@@ -46,7 +42,6 @@ export const NODE_ACCESS_OPTIONS: NodeAccessOption[] = [
   },
 ];
 
-// Derive access type from permissions
 export function deriveAccessType(
   permissions: NodePermissionRow[],
 ): NodeAccessType {
@@ -69,7 +64,6 @@ export function deriveAccessType(
   return "private";
 }
 
-// DB access_type <-> UI accessType mapping
 export function mapAccessTypeFromDb(dbValue: string): NodeAccessType {
   switch (dbValue) {
     case "guild":
@@ -105,7 +99,6 @@ export function mapAccessTypeToDb(uiValue: NodeAccessType): string {
   }
 }
 
-// Transform DB row to UI type
 export function transformNode(
   row: NodeRow,
   currentUserId: string | undefined,

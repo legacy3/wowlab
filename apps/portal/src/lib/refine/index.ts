@@ -19,5 +19,4 @@ export {
   spells,
   userProfiles,
 } from "./resources";
-// Note: getServerDataProvider must be imported directly from "./server" in server contexts
 export * from "./services";

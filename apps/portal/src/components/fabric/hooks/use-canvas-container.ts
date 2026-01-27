@@ -24,7 +24,6 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
   const [dimensions, setDimensions] = useState({ height: 600, width: 800 });
   const [isReady, setIsReady] = useState(false);
 
-  // Resize observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -46,7 +45,6 @@ export function useCanvasContainer(): UseCanvasContainerReturn {
     return () => observer.disconnect();
   }, []);
 
-  // Transform tooltip position based on viewport
   const transformTooltip = useCallback(
     <T extends TooltipPosition>(data: T | null): T | null => {
       if (!data) {

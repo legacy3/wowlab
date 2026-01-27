@@ -1,14 +1,10 @@
 /* eslint-disable */
 
-// Actions
-
 export {
   ActionCard,
   ActionList as ActionListComponent,
   ActionPicker,
 } from "./actions";
-
-// Common
 
 export {
   DragHandle,
@@ -27,11 +23,7 @@ export {
   type UseSortableItemReturn,
 } from "./common";
 
-// Conditions
-
 export { ConditionBuilder } from "./conditions";
-
-// Components
 
 export { EditorSidebar } from "./editor-sidebar";
 export { Preview } from "./preview";
@@ -39,8 +31,6 @@ export {
   VariableEditorDialog,
   type VariableEditorDialogProps,
 } from "./variable-editor-dialog";
-
-// Hooks
 
 export {
   formatShortcut,
@@ -50,11 +40,7 @@ export {
   useKeyboardShortcuts,
 } from "./hooks";
 
-// Layout
-
 export { EditorContent, EditorHeader, EditorPage } from "./layout";
-
-// Pickers
 
 export {
   GameObjectPicker,
@@ -67,8 +53,6 @@ export {
   type SpellPickerProps,
 } from "./pickers";
 
-// Sidebar
-
 export {
   CollapsedSidebar,
   SortableListItem,
@@ -76,8 +60,6 @@ export {
   type TabId,
   type VariableItemProps,
 } from "./sidebar";
-
-// Utils
 
 export {
   countEnabledActions,

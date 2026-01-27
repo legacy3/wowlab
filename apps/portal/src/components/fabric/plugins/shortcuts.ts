@@ -7,7 +7,6 @@ export type ShortcutHandler = (e: KeyboardEvent) => void | boolean;
 
 export interface ShortcutRegistration {
   handler: ShortcutHandler;
-  /** Source plugin that registered this shortcut */
   source?: string;
 }
 
@@ -94,7 +93,6 @@ export class ShortcutsPlugin implements FabricPlugin {
       this.boundKeyUp = null;
     }
 
-    // Reset pan mode if space was held
     if (this.spaceHeld) {
       this.exitPanMode();
     }
@@ -121,7 +119,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     window.addEventListener("keydown", this.boundKeyDown);
     window.addEventListener("keyup", this.boundKeyUp);
 
-    // Register default shortcuts
     this.registerDefaults();
   }
 
@@ -157,7 +154,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     this.canvas.selection = false;
     this.canvas.setCursor("grab");
 
-    // Reset drag state
     this.isDragging = false;
 
     this.canvas.on("mouse:down", this.onPanMouseDown);
@@ -181,13 +177,10 @@ export class ShortcutsPlugin implements FabricPlugin {
       modifiers.push("alt");
     }
 
-    // Sort modifiers for consistent matching
     modifiers.sort();
 
-    // Get the key
     let key = e.key.toLowerCase();
 
-    // Normalize some common keys
     if (e.code === "Delete") {
       key = "delete";
     }
@@ -221,26 +214,21 @@ export class ShortcutsPlugin implements FabricPlugin {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    // Skip if typing in input/textarea
     if (this.isInputFocused(e)) {
       return;
     }
 
-    // Handle space for pan mode (special case - hold behavior)
     if (e.code === "Space" && !e.repeat) {
       e.preventDefault();
       this.enterPanMode();
       return;
     }
 
-    // Build shortcut string from event
     const shortcut = this.eventToShortcut(e);
 
-    // Try to find and execute handler
     const registration = this.handlers.get(shortcut);
     if (registration) {
       const result = registration.handler(e);
-      // If handler returns true, stop propagation
       if (result === true) {
         e.preventDefault();
         e.stopPropagation();
@@ -249,7 +237,6 @@ export class ShortcutsPlugin implements FabricPlugin {
   }
 
   private handleKeyUp(e: KeyboardEvent): void {
-    // Exit pan mode when space is released
     if (e.code === "Space") {
       this.exitPanMode();
     }
@@ -270,7 +257,6 @@ export class ShortcutsPlugin implements FabricPlugin {
       return true;
     }
 
-    // Also check if we're in an IText editing mode
     const activeObject = this.canvas.getActiveObject();
     if (activeObject && "isEditing" in activeObject && activeObject.isEditing) {
       return true;
@@ -287,7 +273,6 @@ export class ShortcutsPlugin implements FabricPlugin {
     for (const part of parts) {
       const trimmed = part.trim();
       if (trimmed === "mod") {
-        // Platform-aware: Cmd on Mac, Ctrl on Windows
         modifiers.push(isMac() ? "meta" : "ctrl");
       } else if (trimmed === "ctrl" || trimmed === "control") {
         modifiers.push("ctrl");
@@ -306,21 +291,15 @@ export class ShortcutsPlugin implements FabricPlugin {
       }
     }
 
-    // Sort modifiers for consistent matching
     modifiers.sort();
 
     return modifiers.length > 0 ? `${modifiers.join("+")}+${key}` : key;
   }
 
   private registerDefaults(): void {
-    // Delete selected objects
     this.register("delete", () => this.deleteSelected(), "shortcuts");
     this.register("backspace", () => this.deleteSelected(), "shortcuts");
-
-    // Deselect all
     this.register("escape", () => this.deselectAll(), "shortcuts");
-
-    // Select all
     this.register(
       "mod+a",
       (e) => {

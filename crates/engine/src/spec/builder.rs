@@ -175,10 +175,6 @@ impl SpellBuilder {
         self
     }
 
-    // ========================================================================
-    // Effect methods - define spell behavior declaratively
-    // ========================================================================
-
     /// Add an effect that fires when this spell is cast.
     pub fn on_cast(mut self, effect: SpellEffect) -> Self {
         self.spell.effects.push(effect);

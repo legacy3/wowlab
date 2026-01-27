@@ -9,7 +9,6 @@ import { chart } from "styled-system/recipes";
 export type ChartProps = ComponentProps<typeof Chart>;
 export const Chart = styled(ark.div, chart);
 
-// Chart color tokens for use in visx components
 export const chartColors = {
   1: "var(--chart-1)",
   2: "var(--chart-2)",

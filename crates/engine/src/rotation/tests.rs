@@ -33,10 +33,6 @@ fn test_resolver() -> SpecResolver {
         .charged_cooldown("barbed_shot")
 }
 
-// ============================================================================
-// Parser Tests
-// ============================================================================
-
 #[test]
 fn test_parse_simple_rotation() {
     let json = r#"{
@@ -145,10 +141,6 @@ fn test_parse_functions() {
     let rotation = Rotation::from_json(json).unwrap();
     assert!(rotation.variables.contains_key("floored"));
 }
-
-// ============================================================================
-// Variable Path Tests
-// ============================================================================
 
 #[test]
 fn test_parse_resource_paths() {
@@ -286,10 +278,6 @@ fn test_parse_talent_path() {
     assert_eq!(rotation.actions.len(), 1);
 }
 
-// ============================================================================
-// Resolver Tests
-// ============================================================================
-
 #[test]
 fn test_resolver_spells() {
     let resolver = test_resolver();
@@ -325,10 +313,6 @@ fn test_resolver_charged_cooldowns() {
     assert!(resolver.is_charged("barbed_shot"));
     assert!(!resolver.is_charged("spell_a"));
 }
-
-// ============================================================================
-// Compilation Tests
-// ============================================================================
 
 #[test]
 fn test_compile_simple() {
@@ -459,10 +443,6 @@ fn test_compile_unknown_aura_error() {
     assert!(result.is_err());
 }
 
-// ============================================================================
-// EvalResult Tests
-// ============================================================================
-
 #[test]
 fn test_eval_result_none() {
     let result = EvalResult::NONE;
@@ -488,10 +468,6 @@ fn test_eval_result_wait() {
     assert!(!result.is_cast());
     assert!((result.wait_time - 0.5).abs() < 0.001);
 }
-
-// ============================================================================
-// Context Schema Tests
-// ============================================================================
 
 #[test]
 fn test_schema_builder() {
@@ -553,10 +529,6 @@ fn test_schema_alignment() {
     assert_eq!(float_offset % 8, 0);
 }
 
-// ============================================================================
-// BM Hunter Integration Tests
-// ============================================================================
-
 #[test]
 fn test_bm_hunter_minimal_rotation() {
     use crate::specs::hunter::bm::{default_resolver, MINIMAL_ROTATION_JSON};
@@ -584,10 +556,6 @@ fn test_bm_hunter_example_rotation() {
     // Should have non-zero schema (uses variables)
     assert!(compiled.schema().size > 0);
 }
-
-// ============================================================================
-// Cooldown Expression Tests
-// ============================================================================
 
 #[test]
 fn test_cooldown_expr_json_roundtrip() {
@@ -814,10 +782,6 @@ fn test_cooldown_expr_field_types() {
     );
 }
 
-// ============================================================================
-// Combat and Target Expression Tests
-// ============================================================================
-
 #[test]
 fn test_target_time_to_die() {
     use crate::actor::Enemy;
@@ -971,10 +935,6 @@ fn test_enemy_fields() {
     assert!(!enemy.is_moving);
 }
 
-// ============================================================================
-// Spell Expression Tests
-// ============================================================================
-
 #[test]
 fn test_spell_expr_field_types() {
     use super::expr::{FieldType, PopulateContext, SpellExpr};
@@ -1052,10 +1012,6 @@ fn test_spell_range_parse() {
     let rotation = Rotation::from_json_resolved(json, &resolver).unwrap();
     assert_eq!(rotation.actions.len(), 1);
 }
-
-// ============================================================================
-// Talent Expression Tests
-// ============================================================================
 
 #[test]
 fn test_talent_expr_field_types() {
@@ -1142,10 +1098,6 @@ fn test_talent_max_rank_parse() {
     assert_eq!(rotation.actions.len(), 1);
 }
 
-// ============================================================================
-// GCD Expression Tests
-// ============================================================================
-
 #[test]
 fn test_gcd_expr_field_types() {
     use super::expr::{FieldType, GcdExpr, PopulateContext};
@@ -1173,10 +1125,6 @@ fn test_gcd_active_parse() {
     let rotation = Rotation::from_json_resolved(json, &resolver).unwrap();
     assert_eq!(rotation.actions.len(), 1);
 }
-
-// ============================================================================
-// Pet Expression Tests
-// ============================================================================
 
 #[test]
 fn test_pet_expr_field_types() {
@@ -1213,10 +1161,6 @@ fn test_pet_count_parse() {
     assert_eq!(rotation.actions.len(), 1);
 }
 
-// ============================================================================
-// TalentInfo Tests
-// ============================================================================
-
 #[test]
 fn test_talent_info_new() {
     use super::resolver::TalentInfo;
@@ -1250,10 +1194,6 @@ fn test_talent_info_ranked() {
     assert_eq!(info.rank, 0);
     assert_eq!(info.max_rank, 3);
 }
-
-// ============================================================================
-// Expression System Tests (Logic, Comparison, Arithmetic)
-// ============================================================================
 
 #[test]
 fn test_division_by_zero_returns_zero() {
@@ -1669,10 +1609,6 @@ fn test_not_operator() {
     assert_eq!(result.spell_id, 1);
 }
 
-// ============================================================================
-// Action System Tests
-// ============================================================================
-
 #[test]
 fn test_set_var_continues_to_next_action() {
     // SetVar should continue to next action (not consume GCD)
@@ -1982,10 +1918,6 @@ fn test_modify_var_reset_allows_any_type() {
     );
 }
 
-// ============================================================================
-// Comprehensive Integration Tests
-// ============================================================================
-
 /// Test rotation JSON for BM Hunter Single Target
 /// Note: This uses resolved variable references that work with validation
 const BM_HUNTER_ST_ROTATION: &str = r#"{
@@ -2173,10 +2105,6 @@ fn test_bm_hunter_st_rotation_execution() {
     }
 }
 
-// ============================================================================
-// Expression Type Tests - All Variants
-// ============================================================================
-
 #[test]
 fn test_all_expr_variants_have_value_type() {
     use wowlab_common::types::{AuraIdx, ResourceType, SpellIdx};
@@ -2362,10 +2290,6 @@ fn test_all_expr_variants_validate_depth() {
     }
 }
 
-// ============================================================================
-// Domain Expression Field Type Tests
-// ============================================================================
-
 #[test]
 fn test_all_resource_expr_field_types() {
     use super::expr::{FieldType, PopulateContext, ResourceExpr};
@@ -2533,10 +2457,6 @@ fn test_all_enemy_expr_field_types() {
     );
 }
 
-// ============================================================================
-// Expr JSON Serialization Tests
-// ============================================================================
-
 #[test]
 fn test_expr_json_roundtrip_literals() {
     let cases: Vec<Expr> = vec![
@@ -2683,10 +2603,6 @@ fn test_expr_json_roundtrip_functions() {
     }
 }
 
-// ============================================================================
-// Action JSON Serialization Tests
-// ============================================================================
-
 #[test]
 fn test_action_json_roundtrip() {
     let actions: Vec<AstAction> = vec![
@@ -2753,10 +2669,6 @@ fn test_action_json_roundtrip() {
         );
     }
 }
-
-// ============================================================================
-// Complex Expression Trees Tests
-// ============================================================================
 
 #[test]
 fn test_deeply_nested_and_or() {
@@ -2842,10 +2754,6 @@ fn test_mixed_comparison_chain() {
     assert_eq!(result.spell_id, 1);
 }
 
-// ============================================================================
-// Validation Edge Cases
-// ============================================================================
-
 #[test]
 fn test_validation_circular_variable_reference() {
     let json = r#"{
@@ -2926,10 +2834,6 @@ fn test_validation_unused_variable_warning() {
         .iter()
         .any(|w| matches!(w, ValidationWarning::UnusedVariable { name } if name == "unused_var")));
 }
-
-// ============================================================================
-// Expression Count Verification
-// ============================================================================
 
 #[test]
 fn test_expression_variant_count() {
@@ -3087,10 +2991,6 @@ fn test_expression_variant_count() {
         examples.len()
     );
 }
-
-// ============================================================================
-// Runtime Variable Mutation Tests
-// ============================================================================
 
 /// Test that SetVar actually modifies a variable at runtime.
 /// The rotation sets a bool variable to true, then uses it in a condition.

@@ -58,7 +58,6 @@ export function NodesPage() {
     }
   }, [ownerFilter, myNodes, sharedNodes, allNodes]);
 
-  // Stats
   const totalCount = allNodes.length;
   const onlineCount = selectOnlineCount(allNodes);
   const totalWorkers = selectTotalWorkers(allNodes);

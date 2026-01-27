@@ -89,7 +89,6 @@ export class CanvasController {
     await this.canvas.dispose();
   }
 
-  /** Notify state listeners of current viewport state */
   notifyState(): void {
     const vpt = this.canvas.viewportTransform;
     this.onStateChange?.({
@@ -137,7 +136,6 @@ export class CanvasController {
   }
 
   private setupCoreEvents(): void {
-    // Selection changes
     this.canvas.on("selection:created", (e) => {
       this.events.emit("selection:change", { objects: e.selected ?? [] });
     });

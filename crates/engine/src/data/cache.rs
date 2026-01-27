@@ -96,10 +96,6 @@ impl GameDataCache {
         Ok(cache)
     }
 
-    // ========================================================================
-    // Public API
-    // ========================================================================
-
     /// Get a spell by ID.
     pub async fn get_spell(&self, id: i32) -> Result<SpellDataFlat, SupabaseError> {
         if let Some(v) = self.spells.get(&id) {
@@ -277,10 +273,6 @@ impl GameDataCache {
         let _ = self.remove_disk("traits", spec_id);
     }
 
-    // ========================================================================
-    // Network Layer
-    // ========================================================================
-
     async fn get_single<T: DeserializeOwned>(
         &self,
         path: &str,
@@ -295,10 +287,6 @@ impl GameDataCache {
             value: value.to_string(),
         })
     }
-
-    // ========================================================================
-    // Disk Layer
-    // ========================================================================
 
     fn read_disk<T: DeserializeOwned>(&self, category: &str, key: i32) -> Option<T> {
         let path = self.disk_path(category, key);
@@ -359,10 +347,6 @@ impl GameDataCache {
             .map(|entries| entries.filter_map(|e| e.ok()).count())
             .unwrap_or(0)
     }
-
-    // ========================================================================
-    // Patch Version Tracking
-    // ========================================================================
 
     fn patch_version_path(&self) -> PathBuf {
         self.cache_dir.join("patch_version")

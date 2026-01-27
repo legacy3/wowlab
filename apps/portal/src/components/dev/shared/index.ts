@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// Components
-
 export {
   ComponentCard,
   DataCard,
@@ -16,7 +14,5 @@ export {
   Section,
   Subsection,
 } from "./shared";
-
-// Fixtures
 
 export { fixtures } from "./fixtures";

@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// Primitives
-
 export { AbsoluteCenter, type AbsoluteCenterProps } from "./absolute-center";
 export { Badge, type BadgeProps } from "./badge";
 export {
@@ -23,8 +21,6 @@ export { Text, type TextProps } from "./text";
 export { Textarea, type TextareaProps } from "./textarea";
 export { Tooltip, type TooltipProps } from "./tooltip";
 
-// Loaders
-
 export {
   CardLoader,
   InlineLoader,
@@ -37,8 +33,6 @@ export {
   type LoaderWrapperProps,
 } from "./loader";
 
-// Skeleton
-
 export {
   Skeleton,
   SkeletonCircle,
@@ -48,13 +42,9 @@ export {
   type SkeletonTextProps,
 } from "./skeleton";
 
-// Layout
-
 export { Code, type CodeProps } from "./code";
 export { Expandable } from "./expandable";
 export { StatCard, type StatCardProps } from "./stat-card";
-
-// Charts
 
 export {
   AnalysisChart,
@@ -70,8 +60,6 @@ export {
 export { LineChart } from "./charts/line-chart";
 export { PieChart } from "./charts/pie-chart";
 export { StatBadge, type StatBadgeProps } from "./charts/stat-badge";
-
-// Compound Components
 
 export * as Accordion from "./accordion";
 export * as Alert from "./alert";
