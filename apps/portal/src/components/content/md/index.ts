@@ -15,6 +15,7 @@ export { MdLi, MdOl, MdUl } from "./md-list";
 export { MdStep, MdSteps } from "./md-steps";
 export { MdTable, MdTbody, MdTd, MdTh, MdThead, MdTr } from "./md-table";
 export { MdTabContent, MdTabList, MdTabs, MdTabTrigger } from "./md-tabs";
+export { MdGlossary, MdTerm } from "./md-term";
 export {
   MdBlockquote,
   MdDel,

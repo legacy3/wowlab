@@ -15,6 +15,7 @@ import {
   MdDel,
   MdEm,
   MdFeatureCard,
+  MdGlossary,
   MdH2,
   MdH3,
   MdH4,
@@ -39,6 +40,7 @@ import {
   MdTabTrigger,
   MdTbody,
   MdTd,
+  MdTerm,
   MdTh,
   MdThead,
   MdTr,
@@ -81,6 +83,7 @@ const customComponents = {
   Cite: MdCite,
   Collapsible: MdCollapsible,
   FeatureCard: MdFeatureCard,
+  Glossary: MdGlossary,
   Icon: MdIcon,
   Kbd: MdKbd,
   Step: MdStep,
@@ -89,6 +92,7 @@ const customComponents = {
   TabList: MdTabList,
   Tabs: MdTabs,
   TabTrigger: MdTabTrigger,
+  Term: MdTerm,
 };
 
 type MDXContentProps = {

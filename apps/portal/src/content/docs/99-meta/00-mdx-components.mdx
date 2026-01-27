@@ -23,6 +23,7 @@ Components available in MDX files. Use sparingly. Prefer native markdown.
 | Mermaid     | Process flows, diagrams     | Simple lists       |
 | Steps       | Multi-step procedures       | Single actions     |
 | Tabs        | Alternative implementations | Sequential content |
+| Term        | Project terminology         | Common words       |
 
 ## Alert
 
@@ -210,3 +211,28 @@ Alternative implementations:
   <TabContent value="npm">`npm install wowlab`</TabContent>
   <TabContent value="pnpm">`pnpm add wowlab`</TabContent>
 </Tabs>
+
+## Term
+
+Project-specific terminology with hover definitions:
+
+```mdx
+Our Centrifugo instance is called <Term id="beacon" />.
+You can also use custom text: <Term id="beacon">the Beacon server</Term>.
+```
+
+Our Centrifugo instance is called <Term id="beacon" />.
+You can also use custom text: <Term id="beacon">the Beacon server</Term>.
+
+Terms must have a corresponding entry in `src/content/terms.ts`:
+
+```ts
+export const terms: Record<string, Term> = {
+  beacon: term(
+    "beacon",
+    "Beacon",
+    "Our Centrifugo-based real-time messaging server...",
+    "/dev/docs/networking/realtime-infrastructure", // optional docs link
+  ),
+};
+```
