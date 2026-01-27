@@ -81,9 +81,37 @@ Academic-style citations that link to the references page:
 
 ```mdx
 The <Cite id="websocket">WebSocket protocol</Cite> enables real-time communication.
+The framing spec is in <Cite id="websocket" s="5.2">section 5.2</Cite>.
 ```
 
 The <Cite id="websocket">WebSocket protocol</Cite> enables real-time communication.
+The framing spec is in <Cite id="websocket" s="5.2">section 5.2</Cite>.
+
+### Location props
+
+Cite specific sections, pages, or lines. Shown in hover card only:
+
+| Prop   | Renders as   | Example                                  |
+| ------ | ------------ | ---------------------------------------- |
+| `s`    | §4.1         | `<Cite id="rfc" s="4.1">...</Cite>`      |
+| `p`    | p. 42        | `<Cite id="book" p="42-45">...</Cite>`   |
+| `line` | line 23      | `<Cite id="code" line="23">...</Cite>`   |
+| `loc`  | (raw string) | `<Cite id="x" loc="Chapter 3">...</Cite>` |
+
+Combine multiple: `<Cite id="paper" s="3.2" p="15">...</Cite>` renders as "§3.2, p. 15"
+
+### Archived references
+
+References can have screenshots shown in hover cards and on the References page.
+Use `.withArchive()` in `src/content/references.ts` and place images in `src/content/docs/images/references/`:
+
+```ts
+import { websocketImg } from "./docs/images/references";
+
+websocket: ref("I. Fette, A. Melnikov", "The WebSocket Protocol", "RFC 6455, IETF", 2011)
+  .url("https://datatracker.ietf.org/doc/html/rfc6455")
+  .withArchive(websocketImg, "2024-12-15"),
+```
 
 Citations must have a corresponding entry in `src/content/references.ts`.
 
