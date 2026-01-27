@@ -55,7 +55,7 @@ export const expandable = defineSlotRecipe({
             minWidth: "60vw",
             width: "auto",
           },
-          bg: "white",
+          bg: "canvas",
           borderRadius: "lg",
           p: "8",
         },

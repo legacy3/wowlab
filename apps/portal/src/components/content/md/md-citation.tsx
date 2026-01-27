@@ -46,77 +46,77 @@ export function MdBibliography() {
 
   return (
     <Stack gap="3">
-        {allRefs.map(([id, ref], idx) => {
-          const waybackUrl = getWaybackUrl(ref);
+      {allRefs.map(([id, ref], idx) => {
+        const waybackUrl = getWaybackUrl(ref);
 
-          return (
-            <HStack
-              key={id}
-              id={`ref-${id}`}
-              gap="4"
-              alignItems="start"
-              py="3"
-              borderBottomWidth="1"
-              borderColor="border.muted"
-              _last={{ borderBottomWidth: 0 }}
+        return (
+          <HStack
+            key={id}
+            id={`ref-${id}`}
+            gap="4"
+            alignItems="start"
+            py="3"
+            borderBottomWidth="1"
+            borderColor="border.muted"
+            _last={{ borderBottomWidth: 0 }}
+          >
+            <Badge
+              variant="surface"
+              colorPalette="amber"
+              size="sm"
+              flexShrink={0}
             >
-              <Badge
-                variant="surface"
-                colorPalette="amber"
-                size="sm"
-                flexShrink={0}
-              >
-                {idx + 1}
-              </Badge>
-              <Stack gap="2" flex="1" minW="0">
-                <HStack gap="2" justify="space-between" alignItems="start">
-                  <Stack gap="0.5" flex="1" minW="0">
-                    <Text fontWeight="medium">{ref.title}</Text>
-                    <Text textStyle="xs" color="fg.muted">
-                      {ref.authors} ({ref.year}).{" "}
-                      <Text as="span" fontStyle="italic">
-                        {ref.source}
-                      </Text>
-                      {hasArchive(ref) && (
-                        <>
-                          {" "}
-                          Accessed {formatAccessedDate(ref.archive.accessedAt)}.
-                        </>
-                      )}
+              {idx + 1}
+            </Badge>
+            <Stack gap="2" flex="1" minW="0">
+              <HStack gap="2" justify="space-between" alignItems="start">
+                <Stack gap="0.5" flex="1" minW="0">
+                  <Text fontWeight="medium">{ref.title}</Text>
+                  <Text textStyle="xs" color="fg.muted">
+                    {ref.authors} ({ref.year}).{" "}
+                    <Text as="span" fontStyle="italic">
+                      {ref.source}
                     </Text>
-                  </Stack>
-                  <HStack gap="2" flexShrink={0}>
-                    {waybackUrl && (
-                      <Link
-                        href={waybackUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Wayback Machine archive"
-                      >
-                        <ArchiveIcon size={14} />
-                      </Link>
+                    {hasArchive(ref) && (
+                      <>
+                        {" "}
+                        Accessed {formatAccessedDate(ref.archive.accessedAt)}.
+                      </>
                     )}
-                    {getRefUrl(ref) && (
-                      <Link
-                        href={getRefUrl(ref)!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Original source"
-                      >
-                        <ExternalLinkIcon size={14} />
-                      </Link>
-                    )}
-                  </HStack>
+                  </Text>
+                </Stack>
+                <HStack gap="2" flexShrink={0}>
+                  {waybackUrl && (
+                    <Link
+                      href={waybackUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Wayback Machine archive"
+                    >
+                      <ArchiveIcon size={14} />
+                    </Link>
+                  )}
+                  {getRefUrl(ref) && (
+                    <Link
+                      href={getRefUrl(ref)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Original source"
+                    >
+                      <ExternalLinkIcon size={14} />
+                    </Link>
+                  )}
                 </HStack>
-                {hasArchive(ref) && (
-                  <Box maxW="sm">
-                    <RefScreenshot src={ref.archive.screenshot} alt={ref.title} />
-                  </Box>
-                )}
-              </Stack>
-            </HStack>
-          );
-        })}
+              </HStack>
+              {hasArchive(ref) && (
+                <Box maxW="sm">
+                  <RefScreenshot src={ref.archive.screenshot} alt={ref.title} />
+                </Box>
+              )}
+            </Stack>
+          </HStack>
+        );
+      })}
     </Stack>
   );
 }

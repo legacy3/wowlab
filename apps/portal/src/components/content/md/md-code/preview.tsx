@@ -1,8 +1,8 @@
 "use client";
 
 import { css } from "styled-system/css";
-import { Box } from "styled-system/jsx";
 
+import { Expandable } from "@/components/ui/expandable";
 import * as Tabs from "@/components/ui/tabs";
 
 import type { CodeRenderer } from "./renderers/index";
@@ -17,11 +17,6 @@ const codeStyles = css({
   overflow: "auto",
   p: "4",
   whiteSpace: "pre",
-});
-
-const previewStyles = css({
-  overflow: "auto",
-  p: "4",
 });
 
 type CodePreviewProps = {
@@ -43,9 +38,9 @@ export function CodePreview({
         <Tabs.Indicator />
       </Tabs.List>
       <Tabs.Content value="preview">
-        <Box className={previewStyles}>
+        <Expandable variant="diagram">
           <Renderer code={code} />
-        </Box>
+        </Expandable>
       </Tabs.Content>
       <Tabs.Content value="code">
         <code className={codeStyles}>{code}</code>

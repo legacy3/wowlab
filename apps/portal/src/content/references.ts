@@ -53,8 +53,15 @@ function ref(authors: string, title: string, source: string, year: number) {
 
       return {
         ...urlRef,
-        withArchive(screenshot: StaticImageData, accessedAt: string): ArchivedRef {
-          return { ...base, archive: { accessedAt, screenshot }, url: urlValue };
+        withArchive(
+          screenshot: StaticImageData,
+          accessedAt: string,
+        ): ArchivedRef {
+          return {
+            ...base,
+            archive: { accessedAt, screenshot },
+            url: urlValue,
+          };
         },
       };
     },
