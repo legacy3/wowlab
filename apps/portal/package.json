@@ -45,6 +45,7 @@
     "d3-regression": "^1.3.10",
     "date-fns": "^4.1.0",
     "fabric": "^7.1.0",
+    "flexsearch": "^0.8.212",
     "gray-matter": "^4.0.3",
     "idb-keyval": "^6.2.2",
     "intlayer": "^7.5.14",

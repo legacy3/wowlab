@@ -1,19 +1,28 @@
 "use client";
 
-import { CalendarIcon, ChevronDown, ChevronRight, Clock } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  SearchIcon,
+} from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Box, Flex, VStack } from "styled-system/jsx";
 
 import type { DocEntry, TocEntry, TocHeading } from "@/lib/content";
 
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
+import { Kbd } from "@/components/ui/kbd";
 import { Link } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 import { flattenToc } from "@/lib/content";
 import { href, routes } from "@/lib/routing";
+import { useDocsSearch } from "@/providers";
 
 type ArticleSidebarProps = {
   toc?: TocEntry[];
@@ -58,6 +67,7 @@ export function ArticleSidebar({ meta, nav, toc }: ArticleSidebarProps) {
         maxH="calc(100vh - 8rem)"
         overflowY="auto"
       >
+        {hasNav && <SearchButton />}
         {hasMeta && <Meta meta={meta} />}
         {hasNav && (
           <Navigation items={nav.items} currentSlug={nav.currentSlug} />
@@ -212,6 +222,26 @@ function Navigation({
         })}
       </VStack>
     </Box>
+  );
+}
+
+function SearchButton() {
+  const { openSearch } = useDocsSearch();
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={openSearch}
+      justifyContent="space-between"
+      w="full"
+    >
+      <Flex alignItems="center" gap="2">
+        <SearchIcon size={14} />
+        <Text textStyle="xs">Search</Text>
+      </Flex>
+      <Kbd size="sm">⌘K</Kbd>
+    </Button>
   );
 }
 
