@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use poise::serenity_prelude::{ChannelId, CreateEmbed, CreateMessage, Http};
+use poise::serenity_prelude::{
+    AutoArchiveDuration, ChannelId, CreateEmbed, CreateMessage, CreateThread, Http,
+};
 use sqlx::{FromRow, PgPool};
 use tokio::sync::mpsc;
 
@@ -71,13 +73,51 @@ pub async fn run(mut rx: mpsc::UnboundedReceiver<Notification>, http: Arc<Http>,
                 }
             };
 
-            if let Err(e) = channel_id.send_message(&http, message.clone()).await {
-                tracing::error!(
-                    channel_id = %channel_id,
-                    event = event_type,
-                    error = %e,
-                    "Failed to send notification to channel"
-                );
+            let sent_message = match channel_id.send_message(&http, message.clone()).await {
+                Ok(msg) => msg,
+                Err(e) => {
+                    tracing::error!(
+                        channel_id = %channel_id,
+                        event = event_type,
+                        error = %e,
+                        "Failed to send notification to channel"
+                    );
+                    continue;
+                }
+            };
+
+            // Post thread reply if thread_content is set
+            if let Some(ref thread_content) = notification.thread_content {
+                let thread = match sent_message
+                    .channel_id
+                    .create_thread_from_message(
+                        &http,
+                        sent_message.id,
+                        CreateThread::new("AI Summary")
+                            .auto_archive_duration(AutoArchiveDuration::OneHour),
+                    )
+                    .await
+                {
+                    Ok(thread) => thread,
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            "Failed to create thread for AI summary"
+                        );
+                        continue;
+                    }
+                };
+
+                if let Err(e) = thread
+                    .id
+                    .send_message(&http, CreateMessage::new().content(thread_content))
+                    .await
+                {
+                    tracing::warn!(
+                        error = %e,
+                        "Failed to send AI summary to thread"
+                    );
+                }
             }
         }
     }

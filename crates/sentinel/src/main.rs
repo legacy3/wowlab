@@ -8,7 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
-use wowlab_sentinel::notifications;
+use wowlab_sentinel::{ai, notifications};
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{bot, cron, http, presence, scheduler};
 
@@ -45,6 +45,10 @@ async fn main() {
 
     let filters = Arc::new(RwLock::new(HashMap::new()));
     let (notification_tx, notification_rx) = notifications::channel();
+    let ai_client = ai::default_client();
+    if ai_client.is_some() {
+        tracing::info!("AI summarization enabled (OpenRouter)");
+    }
     let state = Arc::new(ServerState {
         db,
         filters,
@@ -53,6 +57,7 @@ async fn main() {
         shard_manager: OnceLock::new(),
         last_scheduler_tick: AtomicU64::new(0),
         notification_tx,
+        ai_client,
     });
 
     wowlab_sentinel::telemetry::init();

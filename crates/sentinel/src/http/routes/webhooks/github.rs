@@ -206,7 +206,10 @@ async fn handle_push(state: &ServerState, body: &[u8]) -> Response {
         commit_summary
     };
 
-    let notification = Notification::new(
+    // Generate AI summary of the diff as thread content
+    let thread_content = generate_ai_summary(state, &payload.compare).await;
+
+    let mut notification = Notification::new(
         NotificationEvent::GitPush,
         format!(
             "[{}] {} pushed {} commit{} to {}",
@@ -220,11 +223,61 @@ async fn handle_push(state: &ServerState, body: &[u8]) -> Response {
     )
     .url(&payload.compare);
 
+    if let Some(content) = thread_content {
+        notification = notification.thread_content(content);
+    }
+
     if let Err(e) = state.notification_tx.send(notification) {
         tracing::error!(error = %e, "Failed to send push notification");
     }
 
     StatusCode::OK.into_response()
+}
+
+/// Fetch the diff from GitHub and generate an AI summary.
+async fn generate_ai_summary(state: &ServerState, compare_url: &str) -> Option<String> {
+    // Check if AI summaries are enabled
+    if std::env::var("AI_SUMMARY_ENABLED").ok()?.to_lowercase() != "true" {
+        return None;
+    }
+
+    let ai_client = state.ai_client.as_ref()?;
+
+    // Fetch the diff from GitHub (compare_url + .diff)
+    let diff_url = format!("{}.diff", compare_url);
+    let diff = fetch_github_diff(&diff_url).await.ok()?;
+
+    if diff.trim().is_empty() {
+        return None;
+    }
+
+    // Truncate very large diffs to avoid token limits
+    let truncated = if diff.len() > 15000 {
+        format!("{}...\n[truncated]", &diff[..15000])
+    } else {
+        diff
+    };
+
+    match ai_client.summarize_diff(&truncated).await {
+        Ok(summary) => Some(summary),
+        Err(e) => {
+            tracing::warn!(error = %e, "Failed to generate AI diff summary");
+            None
+        }
+    }
+}
+
+/// Fetch a diff from GitHub.
+async fn fetch_github_diff(url: &str) -> Result<String, reqwest::Error> {
+    reqwest::Client::new()
+        .get(url)
+        .header("Accept", "application/vnd.github.v3.diff")
+        .header("User-Agent", "wowlab-sentinel")
+        .send()
+        .await?
+        .error_for_status()?
+        .text()
+        .await
 }
 
 async fn handle_pr(state: &ServerState, body: &[u8]) -> Response {

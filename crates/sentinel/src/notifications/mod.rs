@@ -21,6 +21,8 @@ pub struct Notification {
     pub fields: Vec<(String, String)>,
     /// The embed color (defaults to event type color if not specified).
     pub color: u32,
+    /// Optional content to post as a threaded reply under the main message.
+    pub thread_content: Option<String>,
 }
 
 impl Notification {
@@ -37,6 +39,7 @@ impl Notification {
             description: description.into(),
             url: None,
             fields: Vec::new(),
+            thread_content: None,
         }
     }
 
@@ -55,6 +58,12 @@ impl Notification {
     /// Override the default color.
     pub fn color(mut self, color: u32) -> Self {
         self.color = color;
+        self
+    }
+
+    /// Set content to be posted as a threaded reply.
+    pub fn thread_content(mut self, content: impl Into<String>) -> Self {
+        self.thread_content = Some(content.into());
         self
     }
 }
