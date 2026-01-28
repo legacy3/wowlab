@@ -38,13 +38,13 @@ js-sys = { version = "0.3", optional = true }
 # Crypto (optional - for node auth)
 ed25519-dalek = { version = "2", optional = true, features = ["rand_core"] }
 sha2 = { version = "0.10", optional = true }
-rand = { version = "0.8", optional = true }
+rand = { version = "0.9", optional = true }
 
 # DBC loading (optional - for CLI tools)
-csv = { version = "1.3", optional = true }
+csv = { version = "1.4", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [dev-dependencies]
 pretty_assertions = "1"

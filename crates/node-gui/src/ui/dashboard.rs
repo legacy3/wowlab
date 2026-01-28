@@ -148,7 +148,7 @@ fn sparkline<T: Into<f64> + Copy>(
 
     plot.show(ui, |plot_ui| {
         plot_ui.line(
-            Line::new(points)
+            Line::new("", points)
                 .color(color)
                 .stroke(egui::Stroke::new(1.5, color)),
         );

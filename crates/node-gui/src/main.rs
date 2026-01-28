@@ -40,7 +40,7 @@ fn setup_egui(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
     fonts.font_data.insert(
         "lucide".to_owned(),
-        egui::FontData::from_static(lucide_icons::LUCIDE_FONT_BYTES),
+        std::sync::Arc::new(egui::FontData::from_static(lucide_icons::LUCIDE_FONT_BYTES)),
     );
     fonts
         .families

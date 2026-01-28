@@ -10,7 +10,7 @@ const COPIED_FEEDBACK_DURATION: f64 = 2.0;
 pub fn show(ui: &mut egui::Ui, code: &str) {
     let available = ui.available_rect_before_wrap();
 
-    ui.allocate_new_ui(egui::UiBuilder::new().max_rect(available), |ui| {
+    ui.scope_builder(egui::UiBuilder::new().max_rect(available), |ui| {
         ui.vertical_centered(|ui| {
             let top_space = ((available.height() - 350.0) / 3.0).max(20.0);
             ui.add_space(top_space);
@@ -25,11 +25,11 @@ fn claim_card(ui: &mut egui::Ui, code: &str) {
     let full_url = format!("https://wowlab.gg/account/nodes/claim?token={code}");
     let chars: Vec<char> = code.chars().collect();
 
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(BG_SURFACE)
         .stroke(egui::Stroke::new(1.0, BORDER))
-        .rounding(egui::Rounding::same(RADIUS_LG))
-        .inner_margin(egui::Margin::symmetric(40.0, 32.0))
+        .corner_radius(RADIUS_LG)
+        .inner_margin(egui::Margin::symmetric(40, 32))
         .show(ui, |ui| {
             ui.vertical_centered(|ui| {
                 ui.label(
@@ -96,7 +96,7 @@ fn copy_code_button(ui: &mut egui::Ui, code: &str) {
         .on_hover_cursor(egui::CursorIcon::PointingHand)
         .clicked()
     {
-        ui.output_mut(|o| o.copied_text = code.to_string());
+        ui.ctx().copy_text(code.to_string());
         ui.ctx().memory_mut(|mem| {
             mem.data
                 .insert_temp(egui::Id::new("code_copied_at"), Instant::now());
@@ -110,7 +110,7 @@ fn open_claim_button(ui: &mut egui::Ui, url: &str) {
     )
     .fill(GREEN_9)
     .stroke(egui::Stroke::NONE)
-    .rounding(egui::Rounding::same(RADIUS_MD))
+    .corner_radius(RADIUS_MD)
     .min_size(egui::vec2(220.0, 40.0));
 
     let response = ui.add(button);
@@ -136,11 +136,11 @@ fn waiting_spinner(ui: &mut egui::Ui) {
 }
 
 fn char_slot(ui: &mut egui::Ui, ch: char) {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(BG_CANVAS)
         .stroke(egui::Stroke::new(1.0, BORDER_HOVER))
-        .rounding(egui::Rounding::same(RADIUS_MD))
-        .inner_margin(egui::Margin::symmetric(14.0, 10.0))
+        .corner_radius(RADIUS_MD)
+        .inner_margin(egui::Margin::symmetric(14, 10))
         .show(ui, |ui| {
             ui.label(
                 text(ch.to_string())

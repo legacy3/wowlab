@@ -169,10 +169,10 @@ fn log_entry_row(
 
     let mut clicked = false;
 
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(bg_color)
-        .rounding(egui::Rounding::same(SPACE_XS))
-        .inner_margin(egui::Margin::symmetric(SPACE_XS, 2.0))
+        .corner_radius(4)
+        .inner_margin(egui::Margin::symmetric(4, 2))
         .show(ui, |ui| {
             clicked = render_row_content(
                 ui,
@@ -205,11 +205,11 @@ fn render_row_content(
     let max_msg_width = (available_width - prefix_width - 30.0).max(100.0);
 
     let font_id = egui::FontId::proportional(12.0);
-    let full_text_width = ui.fonts(|f| {
-        f.layout_no_wrap(entry.message.clone(), font_id.clone(), msg_color)
-            .rect
-            .width()
-    });
+    let full_text_width = ui
+        .painter()
+        .layout_no_wrap(entry.message.clone(), font_id.clone(), msg_color)
+        .rect
+        .width();
     let needs_truncate = full_text_width > max_msg_width;
 
     let mut clicked = false;
@@ -277,11 +277,11 @@ fn truncate_to_width(
         let mid = (lo + hi).div_ceil(2);
         let byte_idx = char_indices.get(mid).copied().unwrap_or(text_content.len());
         let truncated = format!("{}...", &text_content[..byte_idx]);
-        let width = ui.fonts(|f| {
-            f.layout_no_wrap(truncated, font_id.clone(), color)
-                .rect
-                .width()
-        });
+        let width = ui
+            .painter()
+            .layout_no_wrap(truncated, font_id.clone(), color)
+            .rect
+            .width();
 
         if width <= max_width {
             lo = mid;

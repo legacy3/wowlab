@@ -9,7 +9,6 @@ use crate::ui::{
     },
     update_modal::UpdateModal,
 };
-use egui_modal::Modal;
 use egui_notify::Toasts;
 use std::{
     collections::VecDeque,
@@ -256,29 +255,31 @@ impl NodeApp {
 
     fn show_unlink_modal(&mut self, ctx: &egui::Context) -> bool {
         let mut should_unlink = false;
-        let modal = Modal::new(ctx, "unlink_confirmation");
-
-        modal.show(|ui| {
-            modal.title(ui, "Unlink Node");
-            modal.frame(ui, |ui| {
-                modal.body(
-                    ui,
-                    "Are you sure you want to unlink this node?\n\nYou will need to re-claim it to use it again.",
-                );
-            });
-            modal.buttons(ui, |ui| {
-                if modal.caution_button(ui, "Unlink").clicked() {
-                    should_unlink = true;
-                }
-                if modal.button(ui, "Cancel").clicked() {
-                    self.confirm_unlink = false;
-                }
-            });
-        });
 
         if self.confirm_unlink {
-            modal.open();
-            self.confirm_unlink = false;
+            egui::Window::new("Unlink Node")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.add_space(8.0);
+                    ui.label(text("Are you sure you want to unlink this node?").color(FG_DEFAULT));
+                    ui.add_space(4.0);
+                    ui.label(text("You will need to re-claim it to use it again.").color(FG_SUBTLE));
+                    ui.add_space(16.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("Cancel").clicked() {
+                            self.confirm_unlink = false;
+                        }
+                        ui.add_space(8.0);
+                        let unlink_btn = egui::Button::new(text("Unlink").color(egui::Color32::WHITE))
+                            .fill(RED_9);
+                        if ui.add(unlink_btn).clicked() {
+                            should_unlink = true;
+                            self.confirm_unlink = false;
+                        }
+                    });
+                });
         }
 
         should_unlink
@@ -421,9 +422,9 @@ impl eframe::App for NodeApp {
 
         egui::CentralPanel::default()
             .frame(
-                egui::Frame::none()
+                egui::Frame::new()
                     .fill(BG_CANVAS)
-                    .inner_margin(egui::Margin::same(16.0)),
+                    .inner_margin(egui::Margin::same(16)),
             )
             .show(ctx, |ui| match self.core.state() {
                 NodeState::Verifying => self.show_loading_state(ui, "Verifying node..."),
@@ -456,7 +457,7 @@ fn tab_button(ui: &mut egui::Ui, current: &mut Tab, tab: Tab, tab_icon: Icon, la
     } else {
         egui::Stroke::NONE
     })
-    .rounding(egui::Rounding::same(RADIUS_SM))
+    .corner_radius(RADIUS_SM)
     .min_size(egui::vec2(0.0, 32.0));
 
     if ui.add(button).clicked() {

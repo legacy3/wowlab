@@ -1,5 +1,5 @@
 use super::icons::{icon, Icon};
-use egui::{Color32, RichText, Rounding, Shadow, Stroke, Vec2};
+use egui::{Color32, CornerRadius, RichText, Shadow, Stroke, Vec2};
 
 // Radix Colors - Slate scale (dark mode)
 pub const SLATE_1: Color32 = Color32::from_rgb(17, 17, 19);
@@ -34,10 +34,10 @@ pub const BG_SUBTLE_ACTIVE: Color32 = SLATE_5;
 pub const BORDER: Color32 = SLATE_6;
 pub const BORDER_HOVER: Color32 = SLATE_7;
 
-// Radius
-pub const RADIUS_SM: f32 = 6.0;
-pub const RADIUS_MD: f32 = 8.0;
-pub const RADIUS_LG: f32 = 12.0;
+// Radius (u8 for CornerRadius)
+pub const RADIUS_SM: u8 = 6;
+pub const RADIUS_MD: u8 = 8;
+pub const RADIUS_LG: u8 = 12;
 
 // Spacing constants
 pub const SPACE_XS: f32 = 4.0;
@@ -45,30 +45,30 @@ pub const SPACE_SM: f32 = 8.0;
 pub const SPACE_MD: f32 = 12.0;
 pub const SPACE_LG: f32 = 16.0;
 
-// Shadows
+// Shadows (offset: [i8; 2], blur: u8, spread: u8)
 pub fn shadow_sm() -> Shadow {
     Shadow {
-        offset: [0.0, 2.0].into(),
-        blur: 4.0,
-        spread: 0.0,
+        offset: [0, 2],
+        blur: 4,
+        spread: 0,
         color: Color32::from_black_alpha(60),
     }
 }
 
 pub fn shadow_md() -> Shadow {
     Shadow {
-        offset: [0.0, 4.0].into(),
-        blur: 8.0,
-        spread: 0.0,
+        offset: [0, 4],
+        blur: 8,
+        spread: 0,
         color: Color32::from_black_alpha(80),
     }
 }
 
 pub fn shadow_lg() -> Shadow {
     Shadow {
-        offset: [0.0, 8.0].into(),
-        blur: 16.0,
-        spread: 0.0,
+        offset: [0, 8],
+        blur: 16,
+        spread: 0,
         color: Color32::from_black_alpha(100),
     }
 }
@@ -88,10 +88,10 @@ pub fn apply_theme(ctx: &egui::Context) {
         hyperlink_color: BLUE_11,
         warn_fg_color: AMBER_11,
         error_fg_color: RED_9,
-        window_rounding: Rounding::same(RADIUS_LG),
+        window_corner_radius: CornerRadius::same(RADIUS_LG),
         window_shadow: shadow_lg(),
         window_stroke: Stroke::new(1.0, BORDER),
-        menu_rounding: Rounding::same(RADIUS_MD),
+        menu_corner_radius: CornerRadius::same(RADIUS_MD),
         popup_shadow: shadow_md(),
         selection: Selection {
             bg_fill: GREEN_9.gamma_multiply(0.25),
@@ -103,7 +103,7 @@ pub fn apply_theme(ctx: &egui::Context) {
                 weak_bg_fill: BG_SURFACE,
                 bg_stroke: Stroke::new(1.0, BORDER),
                 fg_stroke: Stroke::new(1.0, FG_MUTED),
-                rounding: Rounding::same(RADIUS_SM),
+                corner_radius: CornerRadius::same(RADIUS_SM),
                 expansion: 0.0,
             },
             inactive: egui::style::WidgetVisuals {
@@ -111,7 +111,7 @@ pub fn apply_theme(ctx: &egui::Context) {
                 weak_bg_fill: BG_SUBTLE,
                 bg_stroke: Stroke::new(1.0, BORDER),
                 fg_stroke: Stroke::new(1.0, FG_MUTED),
-                rounding: Rounding::same(RADIUS_SM),
+                corner_radius: CornerRadius::same(RADIUS_SM),
                 expansion: 0.0,
             },
             hovered: egui::style::WidgetVisuals {
@@ -119,7 +119,7 @@ pub fn apply_theme(ctx: &egui::Context) {
                 weak_bg_fill: BG_SUBTLE_HOVER,
                 bg_stroke: Stroke::new(1.0, BORDER_HOVER),
                 fg_stroke: Stroke::new(1.0, FG_DEFAULT),
-                rounding: Rounding::same(RADIUS_SM),
+                corner_radius: CornerRadius::same(RADIUS_SM),
                 expansion: 0.0,
             },
             active: egui::style::WidgetVisuals {
@@ -127,7 +127,7 @@ pub fn apply_theme(ctx: &egui::Context) {
                 weak_bg_fill: BG_SUBTLE_ACTIVE,
                 bg_stroke: Stroke::new(1.0, BORDER_HOVER),
                 fg_stroke: Stroke::new(1.0, FG_DEFAULT),
-                rounding: Rounding::same(RADIUS_SM),
+                corner_radius: CornerRadius::same(RADIUS_SM),
                 expansion: 0.0,
             },
             open: egui::style::WidgetVisuals {
@@ -135,7 +135,7 @@ pub fn apply_theme(ctx: &egui::Context) {
                 weak_bg_fill: BG_SURFACE,
                 bg_stroke: Stroke::new(1.0, BORDER),
                 fg_stroke: Stroke::new(1.0, FG_DEFAULT),
-                rounding: Rounding::same(RADIUS_SM),
+                corner_radius: CornerRadius::same(RADIUS_SM),
                 expansion: 0.0,
             },
         },
@@ -145,35 +145,35 @@ pub fn apply_theme(ctx: &egui::Context) {
     ctx.style_mut(|style| {
         style.spacing.item_spacing = Vec2::new(8.0, 6.0);
         style.spacing.button_padding = Vec2::new(14.0, 8.0);
-        style.spacing.window_margin = egui::Margin::same(16.0);
-        style.spacing.menu_margin = egui::Margin::same(6.0);
+        style.spacing.window_margin = egui::Margin::same(16);
+        style.spacing.menu_margin = egui::Margin::same(6);
         style.interaction.selectable_labels = false;
     });
 }
 
 // Frame helpers
 pub fn card_frame() -> egui::Frame {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(BG_SURFACE)
         .stroke(Stroke::new(1.0, BORDER))
-        .rounding(Rounding::same(RADIUS_LG))
-        .inner_margin(egui::Margin::same(SPACE_LG))
+        .corner_radius(CornerRadius::same(RADIUS_LG))
+        .inner_margin(egui::Margin::same(16))
         .shadow(shadow_sm())
 }
 
 pub fn inner_card() -> egui::Frame {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(BG_SUBTLE)
         .stroke(Stroke::new(1.0, BORDER))
-        .rounding(Rounding::same(RADIUS_MD))
-        .inner_margin(egui::Margin::same(SPACE_MD))
+        .corner_radius(CornerRadius::same(RADIUS_MD))
+        .inner_margin(egui::Margin::same(12))
 }
 
 pub fn header_frame() -> egui::Frame {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(BG_SURFACE)
         .stroke(Stroke::new(1.0, BORDER))
-        .inner_margin(egui::Margin::symmetric(SPACE_LG, SPACE_MD))
+        .inner_margin(egui::Margin::symmetric(16, 12))
 }
 
 // Text helpers - basic building blocks

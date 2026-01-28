@@ -6,7 +6,6 @@
 
 use data_encoding::BASE32_NOPAD;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
-use rand::rngs::OsRng;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
@@ -44,7 +43,10 @@ pub struct NodeKeypair {
 impl NodeKeypair {
     /// Generate a new random keypair.
     pub fn generate() -> Self {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        use rand::RngCore;
+        let mut key_bytes = [0u8; 32];
+        rand::rng().fill_bytes(&mut key_bytes);
+        let signing_key = SigningKey::from_bytes(&key_bytes);
         Self { signing_key }
     }
 

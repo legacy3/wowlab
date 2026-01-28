@@ -57,7 +57,7 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let button = egui::Button::new(text("Unlink").size(12.0).color(SLATE_1))
                     .fill(RED_9)
-                    .rounding(egui::Rounding::same(RADIUS_SM));
+                    .corner_radius(RADIUS_SM);
 
                 if ui.add(button).clicked() {
                     action = SettingsAction::Unlink;

@@ -12,16 +12,15 @@ path = "src/main.rs"
 
 [dependencies]
 wowlab-node = { path = "../node" }
-eframe = "0.29"
-egui = "0.29"
-egui-notify = "0.17"
-egui-modal = "0.5"
-egui_virtual_list = "0.5"
-egui_plot = "0.29"
+eframe = "0.33"
+egui = "0.33"
+egui-notify = "0.21"
+egui_virtual_list = "0.9"
+egui_plot = "0.34"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 image = { version = "0.25", default-features = false, features = ["png"] }
-lucide-icons = "0.562"
+lucide-icons = "0.563"
 open = "5"
 uuid = { version = "1", features = ["v4"] }
 clap = { version = "4.5", features = ["derive"] }

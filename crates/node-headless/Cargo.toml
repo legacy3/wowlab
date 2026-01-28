@@ -18,6 +18,6 @@ clap = { version = "4.5", features = ["derive"] }
 
 # Signal handling (Unix only - supports SIGTERM for containers)
 [target.'cfg(unix)'.dependencies]
-signal-hook = "0.3"
-signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
+signal-hook = "0.4"
+signal-hook-tokio = { version = "0.4", features = ["futures-v0_3"] }
 tokio-stream = "0.1"

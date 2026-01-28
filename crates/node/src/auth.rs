@@ -39,7 +39,10 @@ impl NodeKeypair {
         }
 
         // Generate new keypair
-        let signing_key = SigningKey::generate(&mut rand::thread_rng());
+        use rand::RngCore;
+        let mut key_bytes = [0u8; 32];
+        rand::rng().fill_bytes(&mut key_bytes);
+        let signing_key = SigningKey::from_bytes(&key_bytes);
         let verifying_key = signing_key.verifying_key();
         let public_key_b64 = BASE64.encode(verifying_key.as_bytes());
 

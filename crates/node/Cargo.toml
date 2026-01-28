@@ -18,19 +18,19 @@ urlencoding = "2"
 wowlab-engine = { path = "../engine", features = ["jit"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.13", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ed25519-dalek = { version = "2", features = ["rand_core"] }
 sha2 = "0.10"
 base64 = "0.22"
 hex = "0.4"
-rand = "0.8"
-config = { version = "0.14", features = ["ini"] }
-directories = "5"
+rand = "0.9"
+config = { version = "0.15", features = ["ini"] }
+directories = "6"
 uuid = { version = "1", features = ["v4", "serde"] }
 hostname = "0.4"
-num_cpus = "1.16"
+num_cpus = "1.17"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
