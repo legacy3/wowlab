@@ -5,8 +5,7 @@
     },
     "allowed_origins": [
       "https://wowlab.gg",
-      "https://*.wowlab.gg",
-      "http://localhost:3000"
+      "https://*.wowlab.gg"
     ]
   },
 

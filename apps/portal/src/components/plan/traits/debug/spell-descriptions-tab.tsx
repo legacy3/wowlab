@@ -61,7 +61,7 @@ export function SpellDescriptionsTab({ nodes, subTrees }: DebugTabProps) {
     return spells.sort((a, b) => a.name.localeCompare(b.name));
   }, [nodes, subTreeMap]);
 
-  // TODO Use fuzze search here
+  // TODO Use fuzzy search here
   const filteredSpells = useMemo(() => {
     if (!search.trim()) {
       return allSpells;

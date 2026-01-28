@@ -26,6 +26,9 @@ Next.js 16 / React 19 app. Panda CSS + Park UI. Intlayer for i18n (en + de).
 /computing               Distributed computing
 /dev/docs                Docs index
 /dev/docs/[...slug]      Doc page
+/dev/engine              Engine playground
+/dev/hooks               Hooks showcase
+/dev/metrics             Metrics dashboard
 /dev/ui                  Component showcase
 /plan                    Planning
 /plan/traits             Trait editor

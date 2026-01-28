@@ -2,24 +2,9 @@
 
 export { extractSpecId } from "./extract-spec-id";
 
-export {
-  buildEdgeMaps,
-  buildIncomingEdgeMap,
-  buildNodeMap,
-  buildOutgoingEdgeMap,
-  findPathToNode,
-  findReachableNodes,
-  getActiveDependents,
-  getRootNodes,
-  hasAllDependencies,
-  hasDependents,
-} from "./graph";
+export { buildEdgeMaps } from "./graph";
 
-export {
-  TraitTransformError,
-  transformSpecTraits,
-  tryTransformSpecTraits,
-} from "./transform";
+export { TraitTransformError, transformSpecTraits } from "./transform";
 
 export type {
   EdgeState,
@@ -36,12 +21,7 @@ export type {
   TraitTreeFlat,
   TraitTreeWithSelections,
 } from "./types";
-export {
-  isChoiceNode,
-  isTieredNode,
-  isTraitNodeType,
-  TraitNodeTypeLabel,
-} from "./types";
+export { isChoiceNode, isTraitNodeType } from "./types";
 
 export {
   canPurchaseNode,

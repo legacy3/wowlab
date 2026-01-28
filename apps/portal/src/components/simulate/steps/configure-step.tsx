@@ -17,6 +17,7 @@ import {
   Switch,
   Text,
 } from "@/components/ui";
+import { extractSpecId } from "@/lib/trait";
 
 import { CharacterPanel } from "../character-panel";
 
@@ -57,7 +58,7 @@ export function ConfigureStep({
     const config: SimConfig = {
       duration,
       iterations,
-      specId: 0, // TODO: Resolve from profile.character.spec
+      specId: extractSpecId(profile.talents.encoded) ?? 0,
       targetError: 0.05, // Default 5% target error
     };
 
