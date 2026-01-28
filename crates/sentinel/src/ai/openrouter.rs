@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use super::{AiBackend, AiError};
+use super::{prompts, AiBackend, AiError};
 
 const OPENROUTER_API_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL: &str = "anthropic/claude-haiku-4.5";
@@ -108,22 +108,7 @@ impl AiBackend for OpenRouterClient {
             return Ok("No changes to summarize.".to_string());
         }
 
-        let prompt = format!(
-            r#"You are a technical code reviewer. Analyze this git diff and provide a concise summary.
-
-Focus on:
-- What files were modified
-- The nature of the changes (new features, bug fixes, refactoring, etc.)
-- Key technical details that are relevant
-
-Keep your summary to 2-3 sentences maximum. Be direct and technical.
-
-```diff
-{}
-```"#,
-            diff
-        );
-
+        let prompt = prompts::summarize_diff(diff);
         self.send_request(&prompt, 200).await
     }
 
@@ -132,11 +117,7 @@ Keep your summary to 2-3 sentences maximum. Be direct and technical.
             return Ok("No commits to summarize.".to_string());
         }
 
-        let prompt = format!(
-            "Summarize these git commits in 1-2 concise sentences. Focus on what changed, not who made the changes:\n\n{}",
-            commits
-        );
-
+        let prompt = prompts::summarize_commits(commits);
         self.send_request(&prompt, 150).await
     }
 

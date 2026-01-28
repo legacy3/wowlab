@@ -3,6 +3,7 @@
 //! Provides a trait-based abstraction for AI backends with OpenRouter as the default.
 
 mod openrouter;
+mod prompts;
 
 use async_trait::async_trait;
 
