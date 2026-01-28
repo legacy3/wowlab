@@ -7,7 +7,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use hmac::{Hmac, Mac};
 use serde::Deserialize;
-use sha2::Sha256;
+use sha1::Sha1;
 
 use crate::notifications::events::{
     COLOR_DEPLOY_BUILDING, COLOR_DEPLOY_FAILED, COLOR_DEPLOY_SUCCESS,
@@ -59,9 +59,9 @@ pub struct VercelProject {
     pub name: String,
 }
 
-/// Verify Vercel webhook signature using HMAC-SHA256.
+/// Verify Vercel webhook signature using HMAC-SHA1.
 fn verify_signature(secret: &[u8], signature: &str, body: &[u8]) -> bool {
-    let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(secret) else {
+    let Ok(mut mac) = Hmac::<Sha1>::new_from_slice(secret) else {
         return false;
     };
     mac.update(body);
