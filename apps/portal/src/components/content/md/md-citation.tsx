@@ -144,7 +144,7 @@ export function MdCite({ children, id, ...locatorProps }: MdCiteProps) {
     >
       <HoverCard.Trigger asChild>
         <Link
-          href={`/dev/docs/98-references#ref-${id}`}
+          href={`/dev/docs/references#ref-${id}`}
           colorPalette="amber"
           whiteSpace="nowrap"
         >

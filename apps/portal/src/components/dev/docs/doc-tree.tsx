@@ -37,8 +37,6 @@ export function DocTree({ activeSlug, items }: DocTreeProps) {
 }
 
 function DocLink({ isActive, item }: { item: DocEntry; isActive: boolean }) {
-  const number = extractNumber(item.slug);
-
   return (
     <Link
       href={href(routes.dev.docs.page, { slug: item.slug })}
@@ -57,18 +55,16 @@ function DocLink({ isActive, item }: { item: DocEntry; isActive: boolean }) {
         transition="colors"
         colorPalette="amber"
       >
-        {number && (
-          <Text
-            color="fg.subtle"
-            fontFamily="mono"
-            textStyle="xs"
-            fontVariantNumeric="tabular-nums"
-            w="3"
-            textAlign="right"
-          >
-            {number}
-          </Text>
-        )}
+        <Text
+          color="fg.subtle"
+          fontFamily="mono"
+          textStyle="xs"
+          fontVariantNumeric="tabular-nums"
+          w="3"
+          textAlign="right"
+        >
+          {item.order + 1}
+        </Text>
         <Text textStyle="sm">{item.title}</Text>
       </Flex>
     </Link>
@@ -113,10 +109,4 @@ function DocSection({
       </Accordion.ItemContent>
     </Accordion.Item>
   );
-}
-
-function extractNumber(slug: string): string | null {
-  const lastSegment = slug.split("/").pop() ?? slug;
-  const match = lastSegment.match(/^(\d+)-/);
-  return match ? String(parseInt(match[1], 10) + 1) : null;
 }

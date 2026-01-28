@@ -59,6 +59,7 @@ const docs = defineCollection({
   schema: s.object({
     ...baseSchema,
     nextSteps: s.array(s.string()).optional(),
+    sortKey: s.path(),
   }),
 });
 

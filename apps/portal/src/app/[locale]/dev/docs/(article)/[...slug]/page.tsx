@@ -32,6 +32,7 @@ export default async function DocPage({ params }: Props) {
     next,
     nextSteps,
     prev,
+    sortKey,
     title,
     toc,
     updatedAt,
@@ -62,7 +63,7 @@ export default async function DocPage({ params }: Props) {
               )}
               <ArticleMeta
                 date={updatedAt}
-                editPath={`apps/portal/src/content/docs/${fullSlug}.mdx`}
+                editPath={`apps/portal/src/content/docs/${sortKey}.mdx`}
               />
             </VStack>
             <MDXContent code={body} />
