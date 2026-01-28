@@ -1,0 +1,78 @@
+---
+title: Design Principles
+description: Core architectural principles guiding system design
+nextSteps:
+  - 02-engine/00-simulation-core
+  - 03-networking/00-realtime-infrastructure
+---
+
+# Design Principles
+
+The WowLab architecture follows several core principles that guide technical decisions across all components.
+
+## Stateless Services
+
+All service instances are stateless and interchangeable. Any Sentinel can handle any request. Any node can process any chunk.
+
+<Alert title="Implication">
+  This enables horizontal scaling without session affinity. Load balancers can
+  route requests to any available instance.
+</Alert>
+
+## Redis as Coordination Layer
+
+All distributed coordination state lives in <Cite id="redis2024">Redis</Cite>:
+
+- Job queues and chunk assignments
+- Node health and heartbeat tracking
+- Distributed locks for atomic operations
+- Pub/sub for cross-instance communication
+
+Services never coordinate through local state or direct service-to-service calls.
+
+## Centrifugo Owns Connections
+
+<Cite id="centrifugo2024">Centrifugo</Cite> manages all WebSocket connections:
+
+- Connection lifecycle and reconnection
+- Presence tracking and subscription management
+- Message routing and delivery guarantees
+- Horizontal scaling across multiple instances
+
+Services publish messages to Centrifugo rather than maintaining direct connections to clients.
+
+## Cryptographic Node Authentication
+
+Compute nodes authenticate using <Cite id="ed25519">Ed25519 signatures</Cite>:
+
+- Each node generates a keypair on first run
+- Registration includes public key
+- Subsequent requests signed with private key
+- Prevents replay attacks and node impersonation
+
+## Idempotency Everywhere
+
+Every operation must be safe to retry:
+
+- Chunk processing is deterministic given the same seed
+- Progress updates use last-write-wins semantics
+- Job state transitions are guarded by version checks
+- Network failures never leave the system in an inconsistent state
+
+## Heartbeats Over Presence
+
+Active health monitoring takes precedence over connection presence:
+
+- Nodes send periodic heartbeats with system metrics
+- Sentinel tracks node health independently of Centrifugo presence
+- Presence is an optimization for routing, not a source of truth
+- Nodes are considered dead after missed heartbeat threshold
+
+## Eventual Persistence
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
+- Realtime updates flow through Redis/Centrifugo
+- <Cite id="supabase2024">Supabase</Cite> stores durable records asynchronously
+- User-facing data eventually consistent within seconds
+- Simulation results batched for efficient storage

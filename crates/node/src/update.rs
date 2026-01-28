@@ -4,7 +4,9 @@ const REPO_OWNER: &str = "legacy3";
 const REPO_NAME: &str = "wowlab";
 
 /// Check if a newer version is available.
-pub fn check_for_update(current_version: &str) -> Result<Option<String>, Box<dyn std::error::Error>> {
+pub fn check_for_update(
+    current_version: &str,
+) -> Result<Option<String>, Box<dyn std::error::Error>> {
     let releases = self_update::backends::github::ReleaseList::configure()
         .repo_owner(REPO_OWNER)
         .repo_name(REPO_NAME)

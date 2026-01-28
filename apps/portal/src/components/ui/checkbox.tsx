@@ -1,32 +1,52 @@
 "use client";
+import type { HTMLStyledProps } from "styled-system/types";
 
-import * as React from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { CheckIcon } from "lucide-react";
+import { Checkbox, useCheckboxContext } from "@ark-ui/react/checkbox";
+import { type ComponentProps, forwardRef } from "react";
+import { createStyleContext, styled } from "styled-system/jsx";
+import { checkbox } from "styled-system/recipes";
 
-import { cn } from "@/lib/utils";
+const { withContext, withProvider } = createStyleContext(checkbox);
 
-function Checkbox({
-  className,
-  ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
-  return (
-    <CheckboxPrimitive.Root
-      data-slot="checkbox"
-      className={cn(
-        "peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    >
-      <CheckboxPrimitive.Indicator
-        data-slot="checkbox-indicator"
-        className="grid place-content-center text-current transition-none"
-      >
-        <CheckIcon className="size-3.5" />
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
-  );
-}
+export type HiddenInputProps = ComponentProps<typeof HiddenInput>;
+export type RootProps = ComponentProps<typeof Root>;
 
-export { Checkbox };
+export const Root = withProvider(Checkbox.Root, "root");
+export const RootProvider = withProvider(Checkbox.RootProvider, "root");
+export const Control = withContext(Checkbox.Control, "control");
+export const Group = withProvider(Checkbox.Group, "group");
+export const Label = withContext(Checkbox.Label, "label");
+export const HiddenInput = Checkbox.HiddenInput;
+
+export {
+  type CheckboxCheckedState as CheckedState,
+  CheckboxGroupProvider as GroupProvider,
+} from "@ark-ui/react/checkbox";
+
+export const Indicator = forwardRef<SVGSVGElement, HTMLStyledProps<"svg">>(
+  function Indicator(props, ref) {
+    const { checked, indeterminate } = useCheckboxContext();
+
+    return (
+      <Checkbox.Indicator indeterminate={indeterminate} asChild>
+        <styled.svg
+          ref={ref}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3px"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          {...props}
+        >
+          <title>Checkmark</title>
+          {indeterminate ? (
+            <path d="M5 12h14" />
+          ) : checked ? (
+            <path d="M20 6 9 17l-5-5" />
+          ) : null}
+        </styled.svg>
+      </Checkbox.Indicator>
+    );
+  },
+);

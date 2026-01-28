@@ -1,87 +1,36 @@
-# Dependencies
-node_modules/
-
-# Build outputs
-build/
-dist/
-*.tsbuildinfo
-
-# Rust build artifacts
-target/
-Cargo.lock
-*.rs.bk
-*.pdb
-
-# Next.js
-.next/
-out/
-next-env.d.ts
-.vercel
-
-# Environment variables
-.env
-.env.local
-.env.*.local
+# OS
+.DS_Store
+._*
+__MACOSX/
+.AppleDouble
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+.fuse_hidden*
+.Trash-*
+.nfs*
 
 # IDE / Editor
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
-*~
-.vs/
+*.sublime-*
 
-# OS files
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Cache
-.cache/
-.eslintcache
-.parcel-cache/
-.turbo/
-
-# Coverage
-.nyc_output/
-coverage/
-profile.json.gz
-
-# Temporary files
-*.tmp
-*.temp
-.temp/
-
-# Project specific
-apps/playground/public/data/
-apps/gamedata-server/data/
-apps/mcp-server/src/config.ts
-
-# Supabase
-supabase/.branches
-.env.keys
+# Node.js
+node_modules/
 .pnpm-store/
-.claude/*
-!.claude/skills/
+.pnpm-debug.log
 *.tgz
-.mcp.json
+!packages/*.tgz
 
-# Third party data (local only)
-third_party/*
-!third_party/README.md
-
-# npm
+# pnpm / Yarn
 .npm*
-
-# Yarn
-/.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -89,5 +38,78 @@ third_party/*
 !.yarn/releases
 !.yarn/versions
 
-# PEM files (certificates)
+# TypeScript
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Turbopack
+.turbo/
+
+# Panda CSS
+styled-system/
+styled-system-studio/
+
+# Velite
+.velite/
+apps/portal/public/static/
+
+# Intlayer
+.intlayer/
+
+# Rust / WASM
+target/
+Cargo.lock
+*.rs.bk
+*.pdb
+pkg/
+*.wasm
+
+# Supabase
+supabase/.branches
+**/supabase/.temp/
+
+# Vercel
+.vercel/
+
+# Environment / Secrets
+.env*
+!.env.example
 *.pem
+
+# Logs
+*.log
+logs/
+
+# Test / Coverage
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+
+# Cache
+.cache/
+.build-cache/
+.eslintcache
+.stylelintcache
+
+# Build
+build/
+dist/
+
+# Temporary
+*.tmp
+*.temp
+.temp/
+tmp/
+
+# Sentry
+.sentryclirc
+
+# Claude Code
+.claude/*
+!.claude/skills/
+.mcp.json

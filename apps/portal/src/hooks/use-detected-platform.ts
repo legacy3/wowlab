@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import type { NodePlatform } from "@/lib/config/downloads";
+
+import type { NodePlatform } from "@/components/account/nodes/downloads";
 
 declare global {
   interface Navigator {
@@ -11,8 +12,14 @@ declare global {
   }
 }
 
+export function useDetectedPlatform(): NodePlatform | null {
+  return useMemo(() => detectPlatform(), []);
+}
+
 function detectPlatform(): NodePlatform | null {
-  if (typeof navigator === "undefined") return null;
+  if (typeof navigator === "undefined") {
+    return null;
+  }
 
   // Modern API (Chromium only)
   const platform = (
@@ -32,8 +39,4 @@ function detectPlatform(): NodePlatform | null {
   }
 
   return null;
-}
-
-export function useDetectedPlatform(): NodePlatform | null {
-  return useMemo(() => detectPlatform(), []);
 }

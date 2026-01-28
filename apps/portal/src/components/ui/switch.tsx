@@ -1,31 +1,65 @@
 "use client";
+import { ark } from "@ark-ui/react";
+import { Switch, useSwitchContext } from "@ark-ui/react/switch";
+import { type ComponentProps, forwardRef, type ReactNode } from "react";
+import { createStyleContext, styled } from "styled-system/jsx";
+import { switchRecipe } from "styled-system/recipes";
 
-import * as React from "react";
-import * as SwitchPrimitive from "@radix-ui/react-switch";
+const { withContext, withProvider } = createStyleContext(switchRecipe);
 
-import { cn } from "@/lib/utils";
+export type RootProps = ComponentProps<typeof Root>;
+export const Root = withProvider(Switch.Root, "root");
+export const RootProvider = withProvider(Switch.RootProvider, "root");
+export const Label = withContext(Switch.Label, "label");
+export const Thumb = withContext(Switch.Thumb, "thumb");
+export const HiddenInput = Switch.HiddenInput;
 
-function Switch({
-  className,
-  ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
-  return (
-    <SwitchPrimitive.Root
-      data-slot="switch"
-      className={cn(
-        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    >
-      <SwitchPrimitive.Thumb
-        data-slot="switch-thumb"
-        className={cn(
-          "bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0",
-        )}
-      />
-    </SwitchPrimitive.Root>
-  );
+export const Control = withContext(Switch.Control, "control", {
+  defaultProps: { children: <Thumb /> },
+});
+
+export { SwitchContext as Context } from "@ark-ui/react/switch";
+
+interface IndicatorProps extends ComponentProps<typeof StyledIndicator> {
+  fallback?: ReactNode | undefined;
 }
 
-export { Switch };
+const StyledIndicator = withContext(ark.span, "indicator");
+export const Indicator = forwardRef<HTMLSpanElement, IndicatorProps>(
+  function Indicator(props, ref) {
+    const { children, fallback, ...rest } = props;
+    const api = useSwitchContext();
+    return (
+      <StyledIndicator
+        ref={ref}
+        data-checked={api.checked ? "" : undefined}
+        {...rest}
+      >
+        {api.checked ? children : fallback}
+      </StyledIndicator>
+    );
+  },
+);
+
+interface ThumbIndicatorProps extends ComponentProps<
+  typeof StyledThumbIndicator
+> {
+  fallback?: React.ReactNode | undefined;
+}
+
+const StyledThumbIndicator = styled(ark.span);
+export const ThumbIndicator = forwardRef<HTMLSpanElement, ThumbIndicatorProps>(
+  function SwitchThumbIndicator(props, ref) {
+    const { children, fallback, ...rest } = props;
+    const api = useSwitchContext();
+    return (
+      <StyledThumbIndicator
+        ref={ref}
+        data-checked={api.checked ? "" : undefined}
+        {...rest}
+      >
+        {api.checked ? children : fallback}
+      </StyledThumbIndicator>
+    );
+  },
+);

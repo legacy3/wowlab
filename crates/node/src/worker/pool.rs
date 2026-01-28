@@ -15,7 +15,6 @@ pub struct WorkItem {
     pub seed_offset: u64,
 }
 
-#[allow(dead_code)]
 pub struct WorkResult {
     pub chunk_id: Uuid,
     pub result: serde_json::Value,

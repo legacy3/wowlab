@@ -1,154 +1,158 @@
-use super::icons::{icon, Icon};
+use super::icons::Icon;
 use super::theme::{
-    card_frame, BLUE_500, GREEN_500, RED_500, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY, YELLOW_500,
-    ZINC_700, ZINC_800,
+    card_frame, progress_bar, section_header, stat_card, text, two_columns, AMBER_9, BLUE_9,
+    FG_DEFAULT, FG_SUBTLE, GREEN_9, RED_9, SPACE_MD, SPACE_SM,
 };
-use node::NodeStats;
+use egui_plot::{Line, Plot, PlotPoints};
+use std::collections::VecDeque;
+use wowlab_node::NodeStats;
 
-pub fn show(ui: &mut egui::Ui, stats: &NodeStats) {
-    ui.add_space(8.0);
+pub fn show(
+    ui: &mut egui::Ui,
+    stats: &NodeStats,
+    sims_history: &VecDeque<f64>,
+    cpu_history: &VecDeque<f32>,
+) {
+    ui.add_space(SPACE_SM);
 
     card_frame().show(ui, |ui| {
-        // Calculate card width inside the frame
-        let total_width = ui.available_width();
-        let card_width = (total_width - 8.0) / 2.0;
-
-        // Stats grid - 2x2
-        egui::Grid::new("stats_grid")
-            .num_columns(2)
-            .spacing([8.0, 8.0])
-            .show(ui, |ui| {
-                stat_card(
-                    ui,
-                    card_width,
-                    &icon(Icon::Cpu),
+        // Stats grid
+        two_columns(ui, |ui, idx| {
+            let (icon, label, value, color) = match idx {
+                0 => (
+                    Icon::Cpu,
                     "Workers",
-                    &format!(
+                    format!(
                         "{}/{} ({})",
                         stats.busy_workers, stats.max_workers, stats.total_cores
                     ),
                     if stats.busy_workers > 0 {
-                        Some(GREEN_500)
+                        GREEN_9
                     } else {
-                        None
+                        FG_DEFAULT
                     },
-                );
-                stat_card(
-                    ui,
-                    card_width,
-                    &icon(Icon::Layers),
+                ),
+                1 => (
+                    Icon::Layers,
                     "Jobs",
-                    &stats.active_jobs.to_string(),
+                    stats.active_jobs.to_string(),
                     if stats.active_jobs > 0 {
-                        Some(BLUE_500)
+                        BLUE_9
                     } else {
-                        None
+                        FG_DEFAULT
                     },
-                );
-                ui.end_row();
-
-                stat_card(
-                    ui,
-                    card_width,
-                    &icon(Icon::CircleCheck),
+                ),
+                2 => (
+                    Icon::CircleCheck,
                     "Completed",
-                    &format_number(stats.completed_chunks),
-                    None,
-                );
-                stat_card(
-                    ui,
-                    card_width,
-                    &icon(Icon::Zap),
+                    format_number(stats.completed_chunks),
+                    FG_DEFAULT,
+                ),
+                3 => (
+                    Icon::Zap,
                     "Sims/sec",
-                    &format!("{:.0}", stats.sims_per_second),
+                    format!("{:.0}", stats.sims_per_second),
                     if stats.sims_per_second > 0.0 {
-                        Some(YELLOW_500)
+                        AMBER_9
                     } else {
-                        None
+                        FG_DEFAULT
                     },
-                );
-                ui.end_row();
-            });
+                ),
+                _ => return,
+            };
+            stat_card(ui, icon, label, &value, color);
+        });
 
-        ui.add_space(12.0);
+        ui.add_space(SPACE_MD);
         ui.separator();
-        ui.add_space(8.0);
+        ui.add_space(SPACE_SM);
 
-        // CPU progress bar inline
-        cpu_bar(ui, stats.cpu_usage);
-    });
-}
-
-fn stat_card(
-    ui: &mut egui::Ui,
-    width: f32,
-    icon_char: &str,
-    label: &str,
-    value: &str,
-    accent: Option<egui::Color32>,
-) {
-    egui::Frame::none()
-        .fill(ZINC_800)
-        .rounding(egui::Rounding::same(6.0))
-        .inner_margin(egui::Margin::same(10.0))
-        .show(ui, |ui| {
-            ui.set_width(width - 22.0);
-
-            ui.horizontal(|ui| {
-                ui.label(egui::RichText::new(icon_char).color(TEXT_MUTED).size(12.0));
-                ui.label(egui::RichText::new(label).color(TEXT_MUTED).size(11.0));
-            });
-
-            ui.add_space(2.0);
-
-            ui.label(
-                egui::RichText::new(value)
-                    .color(accent.unwrap_or(TEXT_PRIMARY))
-                    .size(18.0)
-                    .strong()
-                    .monospace(),
-            );
-        });
-}
-
-fn cpu_bar(ui: &mut egui::Ui, usage: f32) {
-    ui.horizontal(|ui| {
-        ui.label(
-            egui::RichText::new(icon(Icon::Gauge))
-                .color(TEXT_MUTED)
-                .size(12.0),
-        );
-        ui.label(egui::RichText::new("CPU").color(TEXT_SECONDARY).size(11.0));
-
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            ui.label(
-                egui::RichText::new(format!("{:.0}%", usage * 100.0))
-                    .color(TEXT_PRIMARY)
-                    .size(11.0)
-                    .monospace(),
-            );
-        });
-    });
-
-    ui.add_space(4.0);
-
-    let bar_width = ui.available_width();
-    let (rect, _) = ui.allocate_exact_size(egui::vec2(bar_width, 4.0), egui::Sense::hover());
-
-    ui.painter().rect_filled(rect, 2.0, ZINC_700);
-
-    let fill_width = rect.width() * usage;
-    if fill_width > 0.0 {
-        let fill_rect = egui::Rect::from_min_size(rect.min, egui::vec2(fill_width, rect.height()));
-        let fill_color = if usage > 0.8 {
-            RED_500
-        } else if usage > 0.5 {
-            YELLOW_500
+        // CPU bar
+        let cpu_color = if stats.cpu_usage > 0.8 {
+            RED_9
+        } else if stats.cpu_usage > 0.5 {
+            AMBER_9
         } else {
-            GREEN_500
+            GREEN_9
         };
-        ui.painter().rect_filled(fill_rect, 2.0, fill_color);
+        progress_bar(ui, Icon::Gauge, "CPU", stats.cpu_usage, cpu_color);
+
+        // Sparklines
+        if !sims_history.is_empty() || !cpu_history.is_empty() {
+            ui.add_space(SPACE_MD);
+            ui.separator();
+            ui.add_space(SPACE_SM);
+
+            section_header(ui, Icon::Activity, "Metrics");
+            ui.add_space(SPACE_SM);
+
+            let width = (ui.available_width() - SPACE_SM) / 2.0;
+            ui.horizontal(|ui| {
+                sparkline_card(ui, "Sims/sec", sims_history, AMBER_9, width, None);
+                ui.add_space(SPACE_SM);
+                sparkline_card(ui, "CPU %", cpu_history, GREEN_9, width, Some(100.0));
+            });
+        }
+    });
+}
+
+fn sparkline_card<T: Into<f64> + Copy>(
+    ui: &mut egui::Ui,
+    label: &str,
+    data: &VecDeque<T>,
+    color: egui::Color32,
+    width: f32,
+    max_y: Option<f64>,
+) {
+    ui.vertical(|ui| {
+        ui.set_width(width);
+        ui.label(text(label).size(10.0).color(FG_SUBTLE));
+        sparkline(ui, data, color, width, 40.0, max_y);
+    });
+}
+
+fn sparkline<T: Into<f64> + Copy>(
+    ui: &mut egui::Ui,
+    data: &VecDeque<T>,
+    color: egui::Color32,
+    width: f32,
+    height: f32,
+    max_y: Option<f64>,
+) {
+    if data.is_empty() {
+        return;
     }
+
+    let points: PlotPoints = data
+        .iter()
+        .enumerate()
+        .map(|(i, v)| [i as f64, (*v).into()])
+        .collect();
+
+    let mut plot = Plot::new(ui.next_auto_id())
+        .height(height)
+        .width(width)
+        .show_axes([false, false])
+        .show_grid(false)
+        .allow_zoom(false)
+        .allow_drag(false)
+        .allow_scroll(false)
+        .show_x(false)
+        .show_y(false)
+        .include_y(0.0)
+        .show_background(false);
+
+    if let Some(max) = max_y {
+        plot = plot.include_y(max);
+    }
+
+    plot.show(ui, |plot_ui| {
+        plot_ui.line(
+            Line::new(points)
+                .color(color)
+                .stroke(egui::Stroke::new(1.5, color)),
+        );
+    });
 }
 
 #[allow(clippy::cast_precision_loss)]

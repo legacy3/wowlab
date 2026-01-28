@@ -6,37 +6,40 @@ A monorepo for World of Warcraft spell rotation simulation and analysis.
 
 ## Overview
 
-WoW Lab provides a high-performance, event-driven simulation engine for analyzing WoW spell rotations and damage output. The simulation core is written in Rust (`crates/engine/`) for speed and correctness, with WASM bindings for browser use. The web frontend and tooling use Effect-TS for composable services and Immutable.js for state management.
+WoW Lab provides a high-performance, event-driven simulation engine for analyzing WoW spell rotations and damage output. The simulation core is written in Rust (`crates/engine/`) with WASM bindings for browser use. Shared types and parsers live in `crates/common/` which compiles to both native and WASM.
 
 **Tech Stack:**
 
 - **Simulation Engine:** Rust (with WASM support for browser)
-- **Runtime:** Effect-TS (functional effect system)
-- **State:** Immutable.js Records
-- **Frontend:** Next.js 16, shadcn/ui, TailwindCSS v4, Jotai
+- **Shared Library:** Rust (`crates/common/`) - DBC/CSV parsing, types, stat calculations
+- **Frontend:** Next.js 16, Panda CSS, Park UI, Intlayer (i18n)
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **Scheduler:** Rust (`crates/sentinel/`) - Discord bot, chunk scheduler, HTTP metrics
 - **Package Manager:** pnpm (workspace monorepo)
 
 ## Layout
 
 ### Apps
 
-- `apps/portal` - Next.js 16 web application (Supabase, shadcn/ui)
-- `apps/cli` - Effect-TS CLI tools for game data management
-- `apps/mcp-server` - MCP server for querying WoW spell and item data (`@wowlab/mcp-server` on npm)
+- `apps/portal` - Next.js 16 web application
 
 ### Crates (Rust)
 
-- `crates/engine` - Rust simulation engine with CLI and WASM targets
-- `crates/node` - GUI for distributed simulation nodes (egui)
-- `crates/node-core` - Core logic for simulation nodes
+- `crates/centrifugo` - Centrifugo WebSocket beacon for realtime updates
+- `crates/cli` - Command-line tools (wowlab-cli)
+- `crates/common` - Shared types, parsers (DBC/CSV), and stat calculations
+- `crates/engine` - Simulation engine with WASM target
+- `crates/node` - Distributed simulation node (shared library)
+- `crates/node-gui` - GUI for simulation nodes (egui)
 - `crates/node-headless` - Headless simulation node for servers
+- `crates/sentinel` - Task scheduler, Discord bot, HTTP metrics
+- `crates/supabase` - Supabase client with PostgREST and Realtime
 
 ### Packages
 
-- `packages/wowlab-core` - Core entities, schemas, branded types (Immutable.js Records)
-- `packages/wowlab-services` - Effect services (state, spell, lifecycle)
-- `packages/wowlab-parsers` - SimC parser, spell description parser, talent encoding
+- `packages/wowlab-engine` - WASM bindings for `crates/engine`
+- `packages/wowlab-parsers` - WASM bindings for parsers
+- `packages/wowlab-common` - WASM bindings for `crates/common` (packed as .tgz)
 
 ## First-Time Setup
 
@@ -45,13 +48,11 @@ WoW Lab provides a high-performance, event-driven simulation engine for analyzin
 corepack enable
 
 # activate the repo's pnpm version
-corepack prepare pnpm@10.22.0 --activate
+corepack prepare pnpm@10.26.2 --activate
 
 # install all workspace deps
 pnpm install
 ```
-
-> Tip: `pnpm store path` shows where the shared package cache lives if you ever need to inspect or clean it.
 
 ## Everyday Commands
 
@@ -63,79 +64,28 @@ pnpm test     # run all tests
 pnpm lint     # lint all packages
 ```
 
-### Quick pnpm vs npm TL;DR
-
-- `pnpm install` replaces `npm install` (never run npm/yarn here anymore).
-- `pnpm <script>` is the same as `npm run <script>` - you can drop the `run`.
-- `pnpm store` commands manage the shared cache (`pnpm store prune`, etc.).
-
-If someone forgets and runs `npm install`, blow away `node_modules` and rerun `pnpm install` to restore the workspace layout.
-
 ## Architecture
 
-**Rust simulation engine (`crates/engine/`):**
+**Simulation engine (`crates/engine/`):**
 
-- High-performance event-driven core with timing wheel scheduler
-- Rhai-based rotation scripting with predictive condition gating
+- High-performance discrete-event simulation with batch processing
+- JSON-based rotation DSL with variables, action lists, and conditions
+- JIT compilation via Cranelift for rotation evaluation
 - Parallel simulation support via rayon
 - WASM build for browser integration
 
-**TypeScript packages:**
+**Common (`crates/common/`):**
 
-- `@wowlab/core` - Immutable.js entities, schemas, branded types
-- `@wowlab/services` - Effect services (state, spell, lifecycle)
-- `@wowlab/parsers` - SimC parser, spell description parser, talent encoding
+- DBC CSV parsing with serde structs
+- Shared types for spells, talents, items, stats
+- Stat calculations and rating conversions
+- Compiles to both native and WASM
 
-## MCP Server
+**Distributed compute (`crates/node*` + `crates/sentinel/`):**
 
-WoW Lab includes an MCP server for querying WoW spell and item data. Install it via npm:
-
-```bash
-npx @wowlab/mcp-server
-```
-
-Or configure it in your Claude Code settings:
-
-```json
-{
-  "wowlab": {
-    "command": "npx",
-    "args": ["-y", "@wowlab/mcp-server"]
-  }
-}
-```
-
-### Additional MCP Servers (Optional)
-
-For AI-assisted development with Claude Code, these MCP servers are also useful:
-
-```json
-{
-  "context7": {
-    "command": "npx",
-    "args": ["-y", "@upstash/context7-mcp"]
-  },
-  "effect-docs": {
-    "command": "npx",
-    "args": ["-y", "effect-mcp@latest"]
-  },
-  "shadcn": {
-    "command": "npx",
-    "args": ["shadcn@latest", "mcp"]
-  }
-}
-```
-
-## Contributing
-
-Contributions are welcome! Please read `CLAUDE.md` for development guidelines and architectural patterns.
-
-**Key principles:**
-
-- Pure functional programming (Effect-TS)
-- Immutable state (Immutable.js Records)
-- No type casts, async/await, or imperative code
-- Use MCP servers for library documentation
+- Nodes register and receive simulation chunks via Supabase Realtime
+- Sentinel assigns chunks to eligible nodes with backlog-aware load balancing
+- Access control via Discord guild membership (Bloom filters), explicit permissions, or public access
 
 ## License
 

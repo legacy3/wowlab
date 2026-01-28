@@ -22,11 +22,12 @@ Most contributors can skip this directory entirely.
 Deploy functions to the linked project:
 
 ```bash
-supabase functions deploy          # deploy all
-supabase functions deploy job-create  # deploy one
+./supabase/functions/deploy_all.sh   # deploy all functions
+./supabase/functions/check_all.sh    # type-check all functions
+supabase functions deploy icons      # deploy one
 ```
 
-Each function has its own `deno.json` for dependency isolation. JWT verification settings live in `config.toml`.
+Functions: `icons`, `talent-atlas`. Each has its own `deno.json` for dependency isolation. JWT verification settings live in `config.toml`.
 
 ## Database Schema
 

@@ -1,71 +1,26 @@
-# Portal App
+# Portal
 
-Next.js 16 web application for WoW spell rotation simulation.
+WoW Lab web application built with Next.js 16, React 19, Panda CSS, and Park UI.
 
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router)
-- **UI:** shadcn/ui, TailwindCSS v4, Radix UI
-- **State:** Jotai
-- **Auth/DB:** Supabase
-- **Library:** Effect-TS, Immutable.js
-
-## Local Development
+## Development
 
 ```bash
-# From repository root
+# from the repo root
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Runs at [http://localhost:3000](http://localhost:3000).
 
-## Environment Variables
+## Stack
 
-Copy `.env.example` to `.env` and fill in your Supabase credentials:
+- **Framework**: Next.js 16 with App Router
+- **Styling**: Panda CSS with Park UI components
+- **Data**: Supabase (auth, database, storage) + React Query
+- **State**: Zustand for local state, React Query for server state
+- **i18n**: Intlayer (English + German)
+- **Content**: MDX via Velite (docs, blog)
+- **Simulation**: WASM engine integration (`packages/wowlab-engine`)
 
-```bash
-NEXT_PUBLIC_APP_URL=https://wowlab.gg
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+## Environment
 
-Get these from: Supabase Dashboard → Project Settings → API
-
-## Deployment (Vercel)
-
-### 1. Import from GitHub
-
-In Vercel dashboard:
-
-- **Framework Preset:** Next.js
-- **Root Directory:** `apps/portal`
-
-### 2. Add Environment Variables
-
-Project Settings → Environment Variables:
-
-```bash
-NEXT_PUBLIC_APP_URL
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-Set for: Production, Preview, Development
-
-### 3. Deploy
-
-The `vercel.json` config handles the monorepo build automatically:
-
-- Installs all workspace dependencies
-- Builds internal packages first
-- Builds Next.js app
-- Deploys
-
-## Architecture
-
-See `CLAUDE.md` in repository root for:
-
-- Component naming conventions
-- State management patterns
-- Page structure guidelines
-- Effect-TS patterns
+Copy `.env.example` to `.env.local` for Supabase credentials.

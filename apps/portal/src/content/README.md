@@ -1,7 +1,9 @@
-# Documentation
+# Content
 
-These markdown files power the docs at [wowlab.gg/docs](https://wowlab.gg/docs).
+MDX content. Processed by Velite.
 
 ## Contributing
 
-Edit any `.md` file and submit a PR. New docs need to be added to `src/lib/docs/` (the relevant `section.*` module).
+Edit any `.mdx` file and submit a PR. Files are auto-discovered.
+
+See [MDX Components](https://wowlab.gg/dev/docs/guides/02-mdx-components) for available components.

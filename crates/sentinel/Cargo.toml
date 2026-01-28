@@ -1,0 +1,62 @@
+[package]
+name = "wowlab-sentinel"
+version = "0.6.2"
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "WoW Lab sentinel: Discord bot + chunk scheduler + status HTTP"
+
+[lib]
+name = "wowlab_sentinel"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wowlab-sentinel"
+path = "src/main.rs"
+
+[dependencies]
+# Framework
+poise = "0.6"
+tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+
+# HTTP
+axum = "0.8"
+tower-http = { version = "0.6", features = ["trace"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "json"] }
+
+# Centrifugo
+wowlab-centrifugo = { path = "../centrifugo" }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Crypto
+sha2 = "0.10"
+ed25519-dalek = "2"
+base64 = "0.22"
+hex = "0.4"
+
+# Types
+uuid = { version = "1", features = ["serde"] }
+
+# Metrics
+metrics = "0.24"
+metrics-exporter-prometheus = "0.18"
+
+# System
+libc = "0.2"
+
+# Scheduling
+tokio-cron-scheduler = "0.15"
+async-trait = "0.1"
+
+# Utilities
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = "0.15"
+
+[dev-dependencies]

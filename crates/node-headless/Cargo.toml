@@ -1,7 +1,9 @@
 [package]
-name = "node-headless"
-version = "0.3.0"
-edition = "2021"
+name = "wowlab-node-headless"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
 description = "Headless WoW Lab simulation node for servers"
 
 [[bin]]
@@ -9,8 +11,13 @@ name = "node-headless"
 path = "src/main.rs"
 
 [dependencies]
-node = { path = "../node" }
+wowlab-node = { path = "../node" }
 tokio = { version = "1", features = ["full", "signal"] }
 tracing = "0.1"
-ctrlc = "3.4"
 clap = { version = "4.5", features = ["derive"] }
+
+# Signal handling (Unix only - supports SIGTERM for containers)
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3"
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
+tokio-stream = "0.1"

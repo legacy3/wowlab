@@ -1,135 +1,110 @@
 "use client";
 
+import { useBoolean } from "ahooks";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
-import { useLogin } from "@refinedev/core";
-import { Button } from "@/components/ui/button";
-import { ErrorAlert } from "@/components/ui/error-alert";
+import { Box, Flex, Grid, Stack, styled } from "styled-system/jsx";
+
+import type { OAuthProvider } from "@/lib/state";
+
 import {
+  Button,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Link } from "@/components/ui/link";
-import type { OAuthProvider } from "@/lib/refine/auth-provider";
-import { CardLoader } from "@/components/ui/flask-loader";
-import { DiscordIcon, GitHubIcon, GoogleIcon, TwitchIcon } from "@/lib/icons";
+  CardLoader,
+  ErrorBox,
+  Link,
+  Text,
+} from "@/components/ui";
+import { OAUTH_PROVIDERS } from "@/lib/providers";
+import { href, routes } from "@/lib/routing";
+import { useUser } from "@/lib/state";
 
 interface SignInFormProps {
   redirectTo?: string;
 }
 
+const IconButton = styled(Button, {
+  base: {
+    gap: "2",
+    h: "11",
+  },
+});
+
 export function SignInForm({ redirectTo }: SignInFormProps) {
+  const { signInForm: content } = useIntlayer("auth");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { mutate: login } = useLogin<{
-    provider: OAuthProvider;
-    redirectTo?: string;
-  }>();
+  const [loading, { setTrue: startLoading }] = useBoolean(false);
+  const { login } = useUser();
 
-  const handleOAuthSignIn = async (provider: OAuthProvider) => {
+  const handleOAuthSignIn = (provider: OAuthProvider) => {
     setError(null);
-    setLoading(true);
-
-    try {
-      login({
-        provider,
-        redirectTo,
-      });
-    } catch {
-      setError("An unexpected error occurred");
-      setLoading(false);
-    }
+    startLoading();
+    login(provider, redirectTo);
   };
 
   if (loading) {
     return (
-      <div className="w-full max-w-md">
-        <Card className="border-2">
-          <CardContent className="py-6">
-            <CardLoader message="Signing you in ..." />
-          </CardContent>
-        </Card>
-      </div>
+      <Card.Root w="full" maxW="md">
+        <Card.Body>
+          <CardLoader message={content.signingYouIn} />
+        </Card.Body>
+      </Card.Root>
     );
   }
 
   return (
-    <div className="w-full max-w-md space-y-6">
-      <Card className="border-2">
-        <CardHeader className="space-y-1.5 text-center">
-          <CardTitle className="text-2xl">Sign in to continue</CardTitle>
-          <CardDescription>
-            Choose your preferred authentication method
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && <ErrorAlert message={error} />}
+    <Stack gap="6" w="full" maxW="md">
+      <Card.Root>
+        <Card.Header textAlign="center">
+          <Card.Title fontSize="2xl">{content.signInToContinue}</Card.Title>
+          <Card.Description>{content.chooseMethod}</Card.Description>
+        </Card.Header>
+        <Card.Body>
+          <Stack gap="4">
+            {error && <ErrorBox>{error}</ErrorBox>}
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthSignIn("discord")}
-              className="h-11"
-            >
-              <DiscordIcon className="mr-2 h-4 w-4" />
-              Discord
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthSignIn("github")}
-              className="h-11"
-            >
-              <GitHubIcon className="mr-2 h-4 w-4" />
-              GitHub
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthSignIn("google")}
-              className="h-11"
-              disabled
-            >
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthSignIn("twitch")}
-              className="h-11"
-              disabled
-            >
-              <TwitchIcon className="mr-2 h-4 w-4" />
-              Twitch
-            </Button>
-          </div>
+            <Grid columns={2} gap="2">
+              {OAUTH_PROVIDERS.map(
+                ({ enabled, icon: Icon, label, provider }) => (
+                  <IconButton
+                    key={provider}
+                    variant="outline"
+                    onClick={() => handleOAuthSignIn(provider)}
+                    disabled={!enabled}
+                  >
+                    <Icon width={16} height={16} />
+                    {label}
+                  </IconButton>
+                ),
+              )}
+            </Grid>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Secure authentication
-              </span>
-            </div>
-          </div>
+            <Flex align="center" gap="3">
+              <Box flex="1" h="1px" bg="border" />
+              <Text fontSize="xs" color="fg.subtle" textTransform="uppercase">
+                {content.secureAuth}
+              </Text>
+              <Box flex="1" h="1px" bg="border" />
+            </Flex>
 
-          <p className="text-center text-xs text-muted-foreground">
-            By continuing, you agree to our{" "}
-            <Link href="/about?tab=terms-of-service">Terms of Service</Link> and{" "}
-            <Link href="/about?tab=privacy-policy">Privacy Policy</Link>
-          </p>
-        </CardContent>
-      </Card>
+            <Text textAlign="center" fontSize="xs" color="fg.muted">
+              {content.termsPrefix}
+              <Link href={href(routes.about.terms)}>
+                {content.termsOfService}
+              </Link>
+              {content.and}
+              <Link href={href(routes.about.privacy)}>
+                {content.privacyPolicy}
+              </Link>
+              {content.termsSuffix}
+            </Text>
+          </Stack>
+        </Card.Body>
+      </Card.Root>
 
-      <p className="text-center text-xs text-muted-foreground/60">
-        New here? Signing in creates an account automatically.
-      </p>
-    </div>
+      <Text textAlign="center" fontSize="xs" color="fg.subtle">
+        {content.newHere}
+      </Text>
+    </Stack>
   );
 }

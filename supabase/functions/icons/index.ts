@@ -1,12 +1,12 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { optionsResponse, textResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, text } from "../_shared/response.ts";
 
 const WOWHEAD_BASE = "https://wow.zamimg.com/images/wow/icons";
 const VALID_SIZES = ["small", "medium", "large"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return optionsResponse();
+    return options();
   }
 
   const url = new URL(req.url);
@@ -16,11 +16,11 @@ Deno.serve(async (req) => {
   const filename = pathParts[2];
 
   if (!size || !filename) {
-    return textResponse("Missing size or filename", 400);
+    return text("Missing size or filename", 400);
   }
 
   if (!VALID_SIZES.includes(size)) {
-    return textResponse("Invalid size. Use: small, medium, or large", 400);
+    return text("Invalid size. Use: small, medium, or large", 400);
   }
 
   try {
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const response = await fetch(iconUrl);
 
     if (!response.ok) {
-      return textResponse("Icon not found", 404);
+      return text("Icon not found", 404);
     }
 
     return new Response(response.body, {
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (error) {
-    return textResponse(`Failed to fetch icon: ${error.message}`, 500);
+  } catch (err) {
+    return text(`Failed to fetch icon: ${(err as Error).message}`, 500);
   }
 });

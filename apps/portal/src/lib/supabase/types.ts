@@ -1,74 +1,51 @@
 import type { Database } from "./database.types";
 
-export type Profile = Database["public"]["Tables"]["user_profiles"]["Row"];
+/* eslint-disable */
 
-export type Rotation = Database["public"]["Tables"]["rotations"]["Row"];
+type GameTables = Database["game"]["Tables"];
+type Tables = Database["public"]["Tables"];
+type Views = Database["public"]["Views"];
 
-export type RotationHistory =
-  Database["public"]["Tables"]["rotations_history"]["Row"];
+export type GameRow<T extends keyof GameTables> = GameTables[T]["Row"];
+export type Row<T extends keyof Tables> = Tables[T]["Row"];
+export type Insert<T extends keyof Tables> = Tables[T]["Insert"];
+export type Update<T extends keyof Tables> = Tables[T]["Update"];
+export type View<T extends keyof Views> = Views[T]["Row"];
 
-export type MostWantedItem =
-  Database["public"]["Views"]["view_most_wanted_items"]["Row"];
+export type Aura = GameRow<"auras">;
+export type Class = GameRow<"classes">;
+export type GlobalColor = GameRow<"global_colors">;
+export type GlobalString = GameRow<"global_strings">;
+export type Item = GameRow<"items">;
+export type Spec = GameRow<"specs">;
+export type SpecTraits = GameRow<"specs_traits">;
+export type Spell = GameRow<"spells">;
 
-export type SpecRankingRow =
-  Database["public"]["Views"]["view_spec_rankings_hourly"]["Row"];
-
-export type TopSimRow =
-  Database["public"]["Views"]["view_top_sims_daily"]["Row"];
-
-export interface UserIdentity {
-  id: string;
-  email?: string;
-  handle?: string;
-  avatarUrl?: string | null;
+export interface ItemSummary {
+  file_name: string;
+  id: number;
+  item_level: number;
+  name: string;
+  quality: number;
 }
 
-export type RotationInsert =
-  Database["public"]["Tables"]["rotations"]["Insert"];
+export interface SpecSummary {
+  class_id: number;
+  class_name: string;
+  file_name: string;
+  id: number;
+  name: string;
+}
 
-export type RotationUpdate =
-  Database["public"]["Tables"]["rotations"]["Update"];
+export interface SpellSummary {
+  file_name: string;
+  id: number;
+  name: string;
+}
 
-// Node types
-export type UserNode = Database["public"]["Tables"]["user_nodes"]["Row"];
-export type UserNodeInsert =
-  Database["public"]["Tables"]["user_nodes"]["Insert"];
-export type UserNodeUpdate =
-  Database["public"]["Tables"]["user_nodes"]["Update"];
-
-export type UserNodePermission =
-  Database["public"]["Tables"]["user_nodes_permissions"]["Row"];
-export type UserNodePermissionInsert =
-  Database["public"]["Tables"]["user_nodes_permissions"]["Insert"];
-
-// Simulation types
-export type SimConfig = Database["public"]["Tables"]["sim_configs"]["Row"];
-export type SimConfigInsert =
-  Database["public"]["Tables"]["sim_configs"]["Insert"];
-
-export type SimJob = Database["public"]["Tables"]["sim_jobs"]["Row"];
-export type SimJobInsert = Database["public"]["Tables"]["sim_jobs"]["Insert"];
-export type SimJobUpdate = Database["public"]["Tables"]["sim_jobs"]["Update"];
-
-export type SimChunk = Database["public"]["Tables"]["sim_chunks"]["Row"];
-export type SimChunkInsert =
-  Database["public"]["Tables"]["sim_chunks"]["Insert"];
-export type SimChunkUpdate =
-  Database["public"]["Tables"]["sim_chunks"]["Update"];
-
-// Status enums for better type safety
-export type NodeStatus = "pending" | "online" | "offline";
-export type AccessType = "owner" | "user" | "guild" | "public";
-export type JobStatus = "pending" | "running" | "completed" | "failed";
-export type ChunkStatus =
-  | "pending"
-  | "claimed"
-  | "running"
-  | "completed"
-  | "failed";
-
-// Extended node type with optional joined fields
-export interface UserNodeWithAccess extends UserNode {
-  accessType?: AccessType;
-  ownerName?: string;
+export interface UserIdentity {
+  avatarUrl: string | null;
+  email: string | null;
+  handle: string | null;
+  id: string;
 }

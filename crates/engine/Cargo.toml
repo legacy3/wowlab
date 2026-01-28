@@ -1,26 +1,79 @@
 [package]
-name = "engine"
-version = "0.3.0"
-edition = "2021"
+name = "wowlab-engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
 
 [lib]
-crate-type = ["rlib"]
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
 
 [[bin]]
 name = "engine"
-path = "src/bin/main.rs"
+path = "src/main.rs"
+required-features = ["cli"]
 
 [features]
-default = []
-debug_logging = []  # Enable with --features debug_logging
-large_capacity = [] # Preallocate 16384 events instead of default
-meta_events = []    # Batch same-time events into meta events
+default = ["local", "jit", "cli", "parallel"]
+local = []  # Use local CSV files (no network)
+supabase = ["dep:wowlab-supabase", "dep:urlencoding", "dep:moka", "dep:directories"]  # Use Supabase (network required)
+jit = ["dep:cranelift", "dep:cranelift-jit", "dep:cranelift-module", "dep:cranelift-native"]  # JIT compilation
+cli = ["dep:clap", "dep:console", "dep:indicatif", "dep:tabled", "dep:tokio", "dep:tracing-subscriber"]  # CLI tools
+wasm = ["wowlab-common/wasm", "dep:tsify", "dep:wasm-bindgen", "dep:serde-wasm-bindgen"]  # WASM export
+parallel = ["dep:rayon", "dep:num_cpus", "dep:mimalloc"]  # Parallel execution & fast allocator
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-thiserror = "2.0"
-rhai = { version = "1.21", features = ["sync", "internals"] }
-clap = { version = "4.5", features = ["derive"] }
+# Core types and parsers
+wowlab-common = { path = "../common", features = ["dbc"] }
+wowlab-supabase = { path = "../supabase", optional = true }
+urlencoding = { version = "2", optional = true }
+moka = { version = "0.12", features = ["sync"], optional = true }
+directories = { version = "5", optional = true }
+async-trait = "0.1"
+bitflags = { version = "2", features = ["serde"] }
+clap = { version = "4", features = ["derive"], optional = true }
+console = { version = "0.15", optional = true }
+indicatif = { version = "0.17", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+statrs = "0.18"
+tabled = { version = "0.15", features = ["std"], optional = true }
 toml = "0.8"
-rayon = "1.10"
+
+# WASM support
+tsify = { version = "0.5", optional = true, features = ["js"] }
+wasm-bindgen = { version = "0.2", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
+tracing = "0.1"
+thiserror = "2"
+
+# CLI async runtime (optional for WASM builds)
+tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
+
+# Cranelift JIT (optional for WASM builds)
+cranelift = { version = "0.127.1", optional = true }
+cranelift-jit = { version = "0.127.1", optional = true }
+cranelift-module = { version = "0.127.1", optional = true }
+cranelift-native = { version = "0.127.1", optional = true }
+
+# Parallelism & Performance (optional for WASM builds)
+rayon = { version = "1.10", optional = true }
+num_cpus = { version = "1.16", optional = true }
+mimalloc = { version = "0.1", default-features = false, optional = true }
+
+# Fast data structures (always needed)
+parking_lot = "0.12"
+fastrand = "2"
+ahash = "0.8"
+smallvec = "1"
+
+# WASM target-specific dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }
+wiremock = "0.6"

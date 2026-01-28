@@ -5,9 +5,8 @@ packages:
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - "@swc/core"
-  - better-sqlite3
-  - core-js
+  - canvas
   - esbuild
-  - msgpackr-extract
+  - protobufjs
   - sharp
   - unrs-resolver

@@ -1,0 +1,96 @@
+pub mod assign;
+pub mod maintenance;
+pub mod reclaim;
+
+use std::sync::Arc;
+use std::time::Duration;
+
+use sqlx::postgres::PgListener;
+use uuid::Uuid;
+
+use tokio_util::sync::CancellationToken;
+
+use crate::state::ServerState;
+
+pub async fn run(
+    state: Arc<ServerState>,
+    shutdown: CancellationToken,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    tracing::info!("Scheduler starting");
+
+    loop {
+        if shutdown.is_cancelled() {
+            return Ok(());
+        }
+        if let Err(e) = listen_and_assign(&state).await {
+            tracing::error!(error = %e, "Scheduler failed, reconnecting...");
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        }
+    }
+}
+
+async fn listen_and_assign(
+    state: &ServerState,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let mut listener = PgListener::connect_with(&state.db).await?;
+    listener.listen("pending_chunk").await?;
+    tracing::info!("Listening for pending_chunk notifications");
+
+    process_pending(state).await;
+
+    loop {
+        state.touch_scheduler();
+
+        match tokio::time::timeout(Duration::from_secs(30), listener.recv()).await {
+            Ok(Ok(notification)) => {
+                tracing::debug!(
+                    payload = notification.payload(),
+                    "pending_chunk notification"
+                );
+                tokio::time::sleep(Duration::from_millis(50)).await;
+                process_pending(state).await;
+            }
+            Ok(Err(e)) => {
+                return Err(e.into());
+            }
+            Err(_timeout) => {
+                process_pending(state).await;
+            }
+        }
+    }
+}
+
+async fn process_pending(state: &ServerState) {
+    match fetch_pending_chunks(state).await {
+        Ok(pending) if !pending.is_empty() => {
+            tracing::debug!(count = pending.len(), "Found pending chunks");
+            metrics::gauge!(crate::telemetry::CHUNKS_PENDING).set(pending.len() as f64);
+            if let Err(e) = assign::assign_pending_chunks(state, &pending).await {
+                tracing::error!(error = %e, "Assignment failed");
+            }
+        }
+        Ok(_) => {
+            metrics::gauge!(crate::telemetry::CHUNKS_PENDING).set(0.0);
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to fetch pending chunks");
+        }
+    }
+}
+
+async fn fetch_pending_chunks(state: &ServerState) -> Result<Vec<PendingChunk>, sqlx::Error> {
+    sqlx::query_as::<_, PendingChunk>(
+        "SELECT id, job_id FROM public.jobs_chunks
+         WHERE status = 'pending' AND node_id IS NULL
+         ORDER BY created_at ASC
+         LIMIT 100",
+    )
+    .fetch_all(&state.db)
+    .await
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct PendingChunk {
+    pub id: Uuid,
+    pub job_id: Uuid,
+}

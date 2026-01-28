@@ -1,0 +1,51 @@
+{
+  "client": {
+    "token": {
+      "hmac_secret_key": ""
+    },
+    "allowed_origins": [
+      "https://wowlab.gg",
+      "https://*.wowlab.gg"
+    ]
+  },
+
+  "http_api": {
+    "key": ""
+  },
+
+  "admin": {
+    "enabled": true
+  },
+
+  "health": {
+    "enabled": true
+  },
+
+  "prometheus": {
+    "enabled": true
+  },
+
+  "channel": {
+    "namespaces": [
+      {
+        "name": "nodes",
+        "presence": true,
+        "join_leave": true,
+        "force_push_join_leave": true,
+        "allow_presence_for_subscriber": true,
+        "history_size": 10,
+        "history_ttl": "60s"
+      },
+      {
+        "name": "jobs",
+        "history_size": 100,
+        "history_ttl": "300s"
+      },
+      {
+        "name": "chunks",
+        "history_size": 10,
+        "history_ttl": "60s"
+      }
+    ]
+  }
+}

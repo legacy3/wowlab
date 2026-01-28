@@ -1,42 +1,8 @@
-import type { NavItem } from "./types";
+/* eslint-disable */
 
-export function createNavItem(
-  slug: string,
-  title: string,
-  basePath: string,
-): NonNullable<NavItem> {
-  return {
-    slug,
-    title,
-    href: `${basePath}/${slug}`,
-  };
-}
+export type { DocEntry } from "./docs";
+export type { NavItem, TocEntry } from "./types";
 
-export function getAdjacentItems<T extends { slug: string; title?: string }>(
-  items: T[],
-  currentSlug: string,
-  basePath: string,
-  getTitle: (item: T) => string,
-): { prev: NavItem; next: NavItem } {
-  const currentIndex = items.findIndex((item) => item.slug === currentSlug);
+export { flattenToc, type TocHeading } from "./toc";
 
-  const prev =
-    currentIndex > 0
-      ? createNavItem(
-          items[currentIndex - 1].slug,
-          getTitle(items[currentIndex - 1]),
-          basePath,
-        )
-      : null;
-
-  const next =
-    currentIndex < items.length - 1
-      ? createNavItem(
-          items[currentIndex + 1].slug,
-          getTitle(items[currentIndex + 1]),
-          basePath,
-        )
-      : null;
-
-  return { prev, next };
-}
+export { createNavItem, getAdjacentItems } from "./utils";

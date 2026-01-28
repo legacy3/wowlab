@@ -1,24 +1,30 @@
 "use client";
 
-import * as React from "react";
+import type { ReactNode } from "react";
 
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Box, Flex } from "styled-system/jsx";
+
 import { AppSidebar } from "./app-sidebar";
-import { Navbar } from "./navbar";
 import { ComputingDrawer } from "./computing-drawer";
+import { Navbar } from "./navbar";
+import { SidebarProvider } from "./sidebar-context";
 
-export interface SiteShellProps {
-  readonly children: React.ReactNode;
+interface SiteShellProps {
+  children: ReactNode;
 }
 
 export function SiteShell({ children }: SiteShellProps) {
   return (
-    <SidebarProvider defaultOpen>
-      <AppSidebar />
-      <SidebarInset>
-        <Navbar />
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
-      </SidebarInset>
+    <SidebarProvider>
+      <Flex minH="100vh" bg="bg.canvas">
+        <AppSidebar />
+        <Box flex="1" ml={{ base: "0", lg: "64" }}>
+          <Navbar />
+          <Box as="main" p="4">
+            {children}
+          </Box>
+        </Box>
+      </Flex>
       <ComputingDrawer />
     </SidebarProvider>
   );

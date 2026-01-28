@@ -4,3 +4,4 @@ pub mod icons;
 pub mod logs;
 pub mod settings;
 pub mod theme;
+pub mod update_modal;

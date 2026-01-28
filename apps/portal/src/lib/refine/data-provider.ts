@@ -1,17 +1,31 @@
 import { dataProvider as supabaseDataProvider } from "@refinedev/supabase";
+
 import { createClient } from "@/lib/supabase/client";
 
-// Singleton client to avoid creating multiple connections
-let client: ReturnType<typeof createClient> | null = null;
+let _supabaseClient: ReturnType<typeof createClient> | null = null;
+let _dataProvider: ReturnType<typeof supabaseDataProvider> | null = null;
 
-export function getSupabaseClient() {
-  if (!client) {
-    client = createClient();
+function getDataProvider() {
+  if (!_dataProvider) {
+    _dataProvider = supabaseDataProvider(getSupabaseClient());
   }
-
-  return client;
+  return _dataProvider;
 }
 
-export function createDataProvider() {
-  return supabaseDataProvider(getSupabaseClient());
+function getSupabaseClient() {
+  if (!_supabaseClient) {
+    _supabaseClient = createClient();
+  }
+  return _supabaseClient;
 }
+
+export const dataProvider = new Proxy(
+  {} as ReturnType<typeof supabaseDataProvider>,
+  {
+    get(_, prop) {
+      return getDataProvider()[
+        prop as keyof ReturnType<typeof supabaseDataProvider>
+      ];
+    },
+  },
+);

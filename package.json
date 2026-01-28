@@ -3,27 +3,25 @@
   "private": true,
   "packageManager": "pnpm@10.26.2",
   "scripts": {
-    "build": "pnpm -r build",
-    "cli": "pnpm --filter @apps/cli dev",
-    "dev": "pnpm -r --filter portal --parallel dev",
+    "cli": "cargo build --release --manifest-path crates/Cargo.toml -p wowlab-cli && ./crates/target/release/wowlab",
+    "setup": "./scripts/setup.sh",
+    "build": "./scripts/build.sh all",
+    "build:parsers": "./scripts/build.sh parsers",
+    "build:engine": "./scripts/build.sh engine",
+    "build:rust": "./scripts/build.sh rust",
+    "build:portal": "./scripts/build.sh portal",
+    "dev": "pnpm -r --filter @apps/portal --parallel dev",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r --if-present --no-bail lint",
     "lint:fix": "pnpm -r --if-present --no-bail lint:fix",
     "format": "pnpm -r --if-present --no-bail format",
+    "check": "./scripts/build.sh check",
     "ncu": "pnpm -r --if-present ncu"
   },
   "devDependencies": {
-    "@effect/eslint-plugin": "^0.3.2",
-    "@effect/language-service": "^0.62.5",
-    "@eslint/js": "^9.39.2",
-    "@typescript-eslint/eslint-plugin": "^8.50.1",
-    "@typescript-eslint/parser": "^8.50.1",
-    "eslint": "^9.39.2",
-    "eslint-plugin-perfectionist": "^5.1.0",
     "npm-check-updates": "^19.2.0",
     "prettier": "^3.7.4",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.0"
+    "typescript": "^5.9.3"
   }
 }

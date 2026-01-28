@@ -1,61 +1,101 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+"use client";
+import { ark } from "@ark-ui/react/factory";
+import { createContext, mergeProps } from "@ark-ui/react/utils";
+import { type ComponentProps, forwardRef, useMemo } from "react";
+import { styled } from "styled-system/jsx";
+import { button, type ButtonVariantProps } from "styled-system/recipes";
 
-import { cn } from "@/lib/utils";
+import { AbsoluteCenter } from "./absolute-center";
+import { Group, type GroupProps } from "./group";
+import { InlineLoader } from "./loader";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.98]",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground active:bg-accent/80 dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground active:bg-accent/80 dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline active:scale-100",
-      },
-      size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+type BaseButtonProps = ComponentProps<typeof BaseButton>;
+
+interface ButtonLoadingProps {
+  loaderPlacement?: "start" | "end" | undefined;
+  loading?: boolean | undefined;
+  loadingText?: React.ReactNode | undefined;
+}
+const BaseButton = styled(ark.button, button);
+
+const Span = styled("span");
+
+export interface ButtonProps extends BaseButtonProps, ButtonLoadingProps {}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(props, ref) {
+    const propsContext = useButtonPropsContext();
+    const buttonProps = useMemo(
+      () => mergeProps<ButtonProps>(propsContext, props),
+      [propsContext, props],
+    );
+
+    const {
+      children,
+      loaderPlacement = "start",
+      loading,
+      loadingText,
+      ...rest
+    } = buttonProps;
+
+    if (!props.asChild && loading) {
+      if (loadingText) {
+        return (
+          <BaseButton
+            type="button"
+            ref={ref}
+            {...rest}
+            data-loading=""
+            disabled
+          >
+            {loaderPlacement === "start" && <InlineLoader />}
+            {loadingText}
+            {loaderPlacement === "end" && <InlineLoader />}
+          </BaseButton>
+        );
+      }
+
+      return (
+        <BaseButton type="button" ref={ref} {...rest} data-loading="" disabled>
+          <AbsoluteCenter display="inline-flex">
+            <InlineLoader />
+          </AbsoluteCenter>
+          <Span visibility="hidden" display="contents">
+            {children}
+          </Span>
+        </BaseButton>
+      );
+    }
+
+    return (
+      <BaseButton type="button" ref={ref} {...rest} disabled={rest.disabled}>
+        {children}
+      </BaseButton>
+    );
   },
 );
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot : "button";
+export interface ButtonGroupProps extends ButtonVariantProps, GroupProps {}
 
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
-}
+export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
+  function ButtonGroup(props, ref) {
+    const [variantProps, otherProps] = useMemo(
+      () => button.splitVariantProps(props),
+      [props],
+    );
 
-export { Button, buttonVariants };
+    return (
+      <ButtonPropsProvider value={variantProps}>
+        <Group ref={ref} {...otherProps} />
+      </ButtonPropsProvider>
+    );
+  },
+);
+
+const [ButtonPropsProvider, useButtonPropsContext] =
+  createContext<ButtonVariantProps>({
+    hookName: "useButtonPropsContext",
+    name: "ButtonPropsContext",
+    providerName: "<PropsProvider />",
+    strict: false,
+  });

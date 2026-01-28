@@ -1,95 +1,94 @@
 import type { AuthProvider } from "@refinedev/core";
+
 import { createClient } from "@/lib/supabase/client";
-import { env } from "@/lib/env";
 
 export type OAuthProvider = "discord" | "github" | "google" | "twitch";
 
-function buildCallbackUrl(redirectTo?: string): string {
-  const url = new URL("/auth/callback", env.APP_URL);
-  if (redirectTo) {
-    url.searchParams.set("next", redirectTo);
-  }
+export const authProvider: AuthProvider = {
+  check: async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  return url.toString();
-}
+    if (user) {
+      return { authenticated: true };
+    }
 
-export function createAuthProvider(): AuthProvider {
-  const supabase = createClient();
+    return {
+      authenticated: false,
+      logout: true,
+      redirectTo: "/auth/sign-in",
+    };
+  },
 
-  return {
-    login: async ({
-      provider,
-      redirectTo,
-    }: {
-      provider: OAuthProvider;
-      redirectTo?: string;
-    }) => {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: buildCallbackUrl(redirectTo) },
-      });
+  getIdentity: async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (error) {
-        return { success: false, error };
-      }
+    if (!user) {
+      return null;
+    }
 
-      // OAuth redirects, so we return the URL
-      if (data.url) {
-        window.location.href = data.url;
-      }
-
-      return { success: true };
-    },
-
-    logout: async () => {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        return { success: false, error };
-      }
-
-      return { success: true, redirectTo: "/" };
-    },
-
-    check: async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (data.session) {
-        return { authenticated: true };
-      }
-
-      return { authenticated: false, redirectTo: "/" };
-    },
-
-    getIdentity: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        return null;
-      }
-
-      const { data: profile } = await supabase
+    const [{ data: profile }, { data: identityData }] = await Promise.all([
+      supabase
         .from("user_profiles")
-        .select("handle, avatarUrl")
+        .select("handle, avatar_url")
         .eq("id", user.id)
-        .single();
+        .single(),
+      supabase.auth.getUserIdentities(),
+    ]);
 
-      return {
-        id: user.id,
-        email: user.email,
-        handle: profile?.handle,
-        avatarUrl: profile?.avatarUrl,
-      };
-    },
+    const handle = profile?.handle ?? null;
+    const identities = identityData?.identities.map((i) => i.provider) ?? [];
 
-    onError: async (error) => {
-      if (error.status === 401 || error.status === 403) {
-        return { logout: true };
-      }
+    return {
+      avatar: profile?.avatar_url ?? null,
+      email: user.email ?? null,
+      handle,
+      id: user.id,
+      identities,
+      initials: handle ? handle.slice(0, 2).toUpperCase() : "?",
+      name: handle ?? user.email ?? "User",
+    };
+  },
 
-      return { error };
-    },
-  };
-}
+  getPermissions: async () => null,
+
+  login: async ({ provider, redirectTo }) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      options: {
+        redirectTo: redirectTo ?? `${window.location.origin}/auth/callback`,
+      },
+      provider,
+    });
+
+    if (error) {
+      return { error, success: false };
+    }
+
+    return { success: true };
+  },
+
+  logout: async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return { error, success: false };
+    }
+
+    return { redirectTo: "/", success: true };
+  },
+
+  onError: async (error) => {
+    return { error };
+  },
+
+  register: async () => {
+    throw new Error("Not implemented - use OAuth");
+  },
+};

@@ -1,63 +1,67 @@
 "use client";
+import { ark } from "@ark-ui/react/factory";
+import { Slider, useSliderContext } from "@ark-ui/react/slider";
+import { type ComponentProps, forwardRef } from "react";
+import { createStyleContext } from "styled-system/jsx";
+import { slider } from "styled-system/recipes";
 
-import * as React from "react";
-import * as SliderPrimitive from "@radix-ui/react-slider";
+const { withContext, withProvider } = createStyleContext(slider);
 
-import { cn } from "@/lib/utils";
+export const Root = withProvider(Slider.Root, "root");
+export const Control = withContext(Slider.Control, "control");
+export const DraggingIndicator = withContext(
+  Slider.DraggingIndicator,
+  "draggingIndicator",
+);
+export const Label = withContext(Slider.Label, "label");
+export const Marker = withContext(Slider.Marker, "marker");
+export const MarkerIndicator = withContext(ark.div, "markerIndicator");
+export const MarkerGroup = withContext(Slider.MarkerGroup, "markerGroup");
+export const Range = withContext(Slider.Range, "range");
+export const Thumb = withContext(Slider.Thumb, "thumb");
+export const Track = withContext(Slider.Track, "track");
+export const ValueText = withContext(Slider.ValueText, "valueText");
+export const HiddenInput = Slider.HiddenInput;
 
-function Slider({
-  className,
-  defaultValue,
-  value,
-  min = 0,
-  max = 100,
-  ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
-  const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
-    [value, defaultValue, min, max],
-  );
+export { SliderContext as Context } from "@ark-ui/react/slider";
 
-  return (
-    <SliderPrimitive.Root
-      data-slot="slider"
-      defaultValue={defaultValue}
-      value={value}
-      min={min}
-      max={max}
-      className={cn(
-        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        className,
-      )}
-      {...props}
-    >
-      <SliderPrimitive.Track
-        data-slot="slider-track"
-        className={cn(
-          "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5",
-        )}
-      >
-        <SliderPrimitive.Range
-          data-slot="slider-range"
-          className={cn(
-            "bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
-          )}
-        />
-      </SliderPrimitive.Track>
-      {Array.from({ length: _values.length }, (_, index) => (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          key={index}
-          className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
-        />
-      ))}
-    </SliderPrimitive.Root>
-  );
+export type MarkerGroupProps = ComponentProps<typeof MarkerGroup>;
+export interface MarksProps extends MarkerGroupProps {
+  marks?: Array<number | { value: number; label: React.ReactNode }> | undefined;
 }
+export type RootProps = ComponentProps<typeof Root>;
 
-export { Slider };
+export type ThumbProps = ComponentProps<typeof Thumb>;
+
+export const Marks = forwardRef<HTMLDivElement, MarksProps>(
+  function Marks(props, ref) {
+    const { marks, ...rest } = props;
+    if (!marks?.length) {
+      return null;
+    }
+
+    return (
+      <MarkerGroup ref={ref} {...rest}>
+        {marks.map((mark, index) => {
+          const value = typeof mark === "number" ? mark : mark.value;
+          const label = typeof mark === "number" ? undefined : mark.label;
+          return (
+            <Marker key={index} value={value}>
+              <MarkerIndicator />
+              {label != null && <span>{label}</span>}
+            </Marker>
+          );
+        })}
+      </MarkerGroup>
+    );
+  },
+);
+
+export const Thumbs = (props: Omit<ThumbProps, "index">) => {
+  const slider = useSliderContext();
+  return slider.value.map((_, index) => (
+    <Thumb key={index} index={index} {...props}>
+      <HiddenInput />
+    </Thumb>
+  ));
+};

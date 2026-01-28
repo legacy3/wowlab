@@ -2,9 +2,13 @@ mod app;
 mod ui;
 
 use app::NodeApp;
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 use clap::{Parser, Subcommand};
-use node::utils::logging;
 use std::sync::Arc;
+use wowlab_node::utils::logging;
 
 #[derive(Parser)]
 #[command(name = "node-gui")]
@@ -14,6 +18,10 @@ use std::sync::Arc;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
+
+    /// Skip automatic update check on startup
+    #[arg(long, global = true)]
+    no_update: bool,
 }
 
 #[derive(Subcommand)]
@@ -62,7 +70,7 @@ fn main() -> eframe::Result<()> {
     match cli.command {
         Some(Commands::Update { check }) => {
             if check {
-                match node::update::check_for_update(VERSION) {
+                match wowlab_node::update::check_for_update(VERSION) {
                     Ok(Some(version)) => {
                         println!("New version available: {}", version);
                         println!("Run `node-gui update` to install");
@@ -73,7 +81,7 @@ fn main() -> eframe::Result<()> {
                         std::process::exit(1);
                     }
                 }
-            } else if let Err(e) = node::update::update("node-gui", VERSION) {
+            } else if let Err(e) = wowlab_node::update::update("node-gui", VERSION) {
                 eprintln!("Update failed: {}", e);
                 std::process::exit(1);
             }
@@ -82,6 +90,7 @@ fn main() -> eframe::Result<()> {
         Some(Commands::Run) | None => {}
     }
 
+    let skip_update = cli.no_update;
     let log_rx = logging::init_with_ui();
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create runtime"));
@@ -103,9 +112,9 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "WoW Lab Node",
         options,
-        Box::new(|cc| {
+        Box::new(move |cc| {
             setup_egui(&cc.egui_ctx);
-            Ok(Box::new(NodeApp::new(cc, runtime, log_rx)))
+            Ok(Box::new(NodeApp::new(cc, runtime, log_rx, skip_update)))
         }),
     )
 }

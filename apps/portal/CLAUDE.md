@@ -1,118 +1,86 @@
-# apps/portal
+# portal
 
-Next.js 16 app with shadcn/ui components and Jotai state management.
+**RULE: Never leave old code.** When refactoring or renaming, DELETE the old code completely. No deprecated wrappers, no backwards-compatibility shims, no "legacy exports", no commented-out old versions. Update ALL usages and remove the old thing entirely.
 
-## File Structure
+Next.js 16 / React 19 app. Panda CSS + Park UI. Intlayer for i18n (en + de).
+
+## Stack
+
+- **Styling**: Panda CSS (not Tailwind) - recipes in `src/theme/recipes/`
+- **Components**: Park UI in `src/components/ui/`
+- **Data**: Supabase + React Query with persistence
+- **State**: Zustand for editor/UI, React Query for server state
+- **Content**: MDX for docs/blog via Velite in `src/content/`
+- **i18n**: Intlayer with `[locale]` route prefix (en default, de)
+
+## Routes
+
+```
+/                        Home
+/about                   About
+/account                 User account
+/auth/sign-in            Auth
+/auth/callback           OAuth callback
+/blog                    Blog index
+/blog/[slug]             Blog post
+/computing               Distributed computing
+/dev/docs                Docs index
+/dev/docs/[...slug]      Doc page
+/dev/engine              Engine playground
+/dev/hooks               Hooks showcase
+/dev/metrics             Metrics dashboard
+/dev/ui                  Component showcase
+/plan                    Planning
+/plan/traits             Trait editor
+/rotations               Rotation browser
+/rotations/browse        Browse with modal interception
+/rotations/editor        New rotation
+/rotations/editor/[id]   Edit rotation
+/simulate                Simulation
+/users                   User profiles
+```
+
+## Structure
 
 ```
 src/
-  app/               # Next.js App Router pages
-    lab/
-      (overview)/    # Route groups for layouts
-      inspector/
-        spell/[id]/
-          page.tsx   # Minimal: renders component
-          loading.tsx # Uses *Skeleton component
+  app/[locale]/      Next.js routes (locale-prefixed)
   components/
-    lab/
-      inspector/
-        spell/
-          index.ts           # Barrel exports
-          spell-detail-page.tsx
-          spell-detail-content.tsx
-    ui/              # shadcn components
-  atoms/             # Jotai state
-    lab/
-    settings/
-    utils/
+    ui/              Park UI components
+    editor/          Rotation editor
+    game/            GameIcon, tooltips
+    layout/          Shell, navbar, sidebar
+    content/         MDX components
+    computing/       Distributed computing UI
+    plan/            Planning UI
+    fabric/          Fabric.js canvas editor
+    auth/            Auth components
+    account/         Account components
+    rotations/       Rotation browser UI
+    simulate/        Simulation UI
+    users/           User profile components
+  lib/
+    state/           Zustand stores, React Query hooks
+    engine/          WASM engine integration
+    supabase/        Client setup
+    content/         MDX fetcher & processing
+    routing/         Locale routing utilities
+    sim/             Simulation helpers
+    trait/           Trait logic
+  theme/
+    recipes/         Component styles (Panda CSS)
+    tokens/          Design tokens
+  content/           MDX files (docs, blog)
+  providers/         React context providers
+  i18n/              Intlayer content declarations
 ```
 
-## Page Pattern
+## Skills
 
-Pages are minimal - just render a component:
-
-```tsx
-// app/lab/inspector/spell/[id]/page.tsx
-import { SpellDetailPage } from "@/components/lab/inspector/spell";
-
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export default async function SpellInspectorPage({ params }: Props) {
-  const { id } = await params;
-  return <SpellDetailPage spellId={id} />;
-}
-```
-
-## Loading States
-
-Use `loading.tsx` with Skeleton components:
-
-```tsx
-// app/lab/inspector/spell/[id]/loading.tsx
-import { SpellDetailSkeleton } from "@/components/lab/inspector/spell";
-
-export default function SpellInspectorLoading() {
-  return <SpellDetailSkeleton />;
-}
-```
-
-## Component Naming
-
-Export both `Feature` and `FeatureSkeleton` from same file:
-
-```tsx
-// spell-detail-page.tsx
-"use client";
-
-export function SpellDetailPage({ spellId }: Props) {
-  const spell = useSpellData(spellId);
-  return (
-    <SpellProvider spell={spell}>
-      <SpellDetailContent />
-    </SpellProvider>
-  );
-}
-
-export function SpellDetailSkeleton() {
-  return <Skeleton className="..." />;
-}
-```
-
-## Barrel Exports
-
-Use `index.ts` for clean imports:
-
-```ts
-// components/lab/inspector/spell/index.ts
-export { SpellDetailPage, SpellDetailSkeleton } from "./spell-detail-page";
-export { SpellProvider, useSpellData } from "./spell-context";
-```
-
-## Jotai Atoms
-
-Atoms live in domain folders under `atoms/`. Mark with `"use client"`:
-
-```ts
-// atoms/lab/state.ts
-"use client";
-
-import { createPersistedOrderAtom } from "../utils";
-
-export type LabCardId = "data-inspector" | "spec-coverage" | "table-coverage";
-
-export const labOrderAtom = createPersistedOrderAtom<LabCardId>(
-  "lab-order-v4",
-  ["data-inspector", "spec-coverage", "table-coverage"],
-);
-```
-
-## Key Conventions
-
-- **Server components**: Default for pages, fetch data
-- **Client components**: `"use client"` for interactivity
-- **Jotai hooks**: `useAtom`, `useAtomValue`, `useSetAtom` as needed
-- **Suspense**: Wrap async atoms, use Skeleton components
-- **shadcn**: Use MCP server for component docs, don't guess APIs
-- **Imports**: Use `@/` alias for src/ paths
+- **code-style** - Code style and formatting rules.
+- **exports** - Barrel files, module exports.
+- **game-data** - How spell/item data works. Read before touching game data.
+- **loading-states** - Flask loaders, loading indicators.
+- **park-ui** - Component patterns. Check before adding UI.
+- **portal-component** - Patterns for new pages/components.
+- **state-management** - React Query, Zustand, domain modules.

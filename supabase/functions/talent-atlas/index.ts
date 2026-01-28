@@ -1,11 +1,11 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { optionsResponse, textResponse } from "../_shared/mod.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { options, text } from "../_shared/response.ts";
 
 const WOWHEAD_BASE = "https://wow.zamimg.com/images/wow/TextureAtlas/live";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return optionsResponse();
+    return options();
   }
 
   const url = new URL(req.url);
@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
   const filename = pathParts[1];
 
   if (!filename) {
-    return textResponse("Missing filename", 400);
+    return text("Missing filename", 400);
   }
 
   try {
@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const response = await fetch(atlasUrl);
 
     if (!response.ok) {
-      return textResponse("Atlas not found", 404);
+      return text("Atlas not found", 404);
     }
 
     return new Response(response.body, {
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (error) {
-    return textResponse(`Failed to fetch atlas: ${error.message}`, 500);
+  } catch (err) {
+    return text(`Failed to fetch atlas: ${(err as Error).message}`, 500);
   }
 });

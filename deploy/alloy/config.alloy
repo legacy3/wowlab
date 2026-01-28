@@ -1,0 +1,27 @@
+prometheus.scrape "sentinel" {
+  targets = [{
+    __address__ = "wowlab-sentinel.internal:8080",
+  }]
+  metrics_path    = "/metrics"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+  scrape_interval = "30s"
+}
+
+prometheus.scrape "beacon" {
+  targets = [{
+    __address__ = "wowlab-beacon.internal:8000",
+  }]
+  metrics_path    = "/metrics"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+  scrape_interval = "30s"
+}
+
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_REMOTE_WRITE_URL")
+    basic_auth {
+      username = sys.env("GRAFANA_REMOTE_WRITE_USER")
+      password = sys.env("GRAFANA_REMOTE_WRITE_PASSWORD")
+    }
+  }
+}

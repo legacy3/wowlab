@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import {
-  GITHUB_REPO,
   getAssetPattern,
+  GITHUB_REPO,
   isValidPlatform,
   isValidVariant,
-} from "@/lib/config/downloads";
+} from "@/components/account/nodes/downloads";
 
 interface GitHubRelease {
+  assets: Array<{ browser_download_url: string; name: string }>;
   tag_name: string;
-  assets: Array<{ name: string; browser_download_url: string }>;
 }
 
 export const runtime = "edge";

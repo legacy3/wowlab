@@ -1,41 +1,39 @@
-import { forwardRef } from "react";
+"use client";
+
+import type { ComponentProps } from "react";
+import type { HTMLStyledProps } from "styled-system/jsx";
+
+import { useLocale } from "next-intlayer";
 import NextLink from "next/link";
-import { ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { css, cx } from "styled-system/css";
+import { splitCssProps } from "styled-system/jsx";
+import { link, type LinkVariantProps } from "styled-system/recipes";
 
-type LinkProps = {
-  href: string;
-  external?: boolean;
-  className?: string;
-  title?: string;
-  children: React.ReactNode;
-};
+import { getLocalizedUrl } from "@/lib/routing";
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, external, className, title, children }, ref) => {
-    const styles = cn("text-primary hover:underline", className);
+const isExternal = (href?: string) => /^https?:\/\//.test(href ?? "");
+const isHashOnly = (href?: string) => href?.startsWith("#") ?? false;
 
-    if (external) {
-      return (
-        <a
-          ref={ref}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={title}
-          className={cn(styles, "inline-flex items-center gap-1")}
-        >
-          {children}
-          <ExternalLink className="h-3 w-3 opacity-50" />
-        </a>
-      );
-    }
+export type LinkProps = ComponentProps<typeof NextLink> &
+  LinkVariantProps &
+  Omit<HTMLStyledProps<"a">, keyof ComponentProps<typeof NextLink>>;
 
-    return (
-      <NextLink ref={ref} href={href} title={title} className={styles}>
-        {children}
-      </NextLink>
-    );
-  },
-);
-Link.displayName = "Link";
+export function Link({ className, href, variant, ...props }: LinkProps) {
+  const { locale } = useLocale();
+  const [cssProps, restProps] = splitCssProps(props);
+
+  const hrefString = href?.toString();
+  const shouldLocalize =
+    href && !isExternal(hrefString) && !isHashOnly(hrefString);
+  const localizedHref = shouldLocalize
+    ? getLocalizedUrl(hrefString!, locale)
+    : href;
+
+  return (
+    <NextLink
+      href={localizedHref ?? ""}
+      className={cx(link({ variant }), css(cssProps), className)}
+      {...restProps}
+    />
+  );
+}

@@ -1,0 +1,37 @@
+---
+title: Introduction
+description: A distributed simulation engine for World of Warcraft theorycrafting
+nextSteps:
+  - 01-overview/00-architecture
+  - 01-overview/01-design-principles
+---
+
+# Introduction
+
+WowLab is a distributed simulation engine for World of Warcraft theorycrafting. It combines a high-performance Rust-based simulation core with a horizontally scalable network infrastructure to enable large-scale statistical analysis of combat mechanics.
+
+## Overview
+
+The system consists of three primary components:
+
+1. **Simulation Engine** - A deterministic Rust engine compiled to WebAssembly for browser execution and native binaries for distributed compute nodes
+2. **Distributed Network** - A realtime infrastructure using Centrifugo for WebSocket communication and Redis for coordination
+3. **Portal Application** - A Next.js web application providing the user interface for character planning, rotation editing, and simulation analysis
+
+## Documentation Structure
+
+This documentation covers the technical architecture and implementation details of the WowLab platform:
+
+<CardGrid>
+  <Card title="Architecture">System design and component overview</Card>
+  <Card title="Engine">Simulation mechanics and WASM integration</Card>
+  <Card title="Networking">Realtime infrastructure and protocols</Card>
+</CardGrid>
+
+## Citation System
+
+This documentation uses academic-style citations to reference external sources. Inline citations appear as superscript links. For example, the <Cite id="websocket" s="4.1">WebSocket protocol</Cite> enables full-duplex communication between clients and servers.
+
+All referenced sources are listed on the [References](/dev/docs/98-references) page.
+
+![Overview](./images/overview.jpg)

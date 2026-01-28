@@ -1,21 +1,31 @@
 [workspace]
 resolver = "2"
 members = [
+    "centrifugo",
+    "cli",
+    "common",
     "engine",
     "node",
     "node-gui",
     "node-headless",
+    "sentinel",
+    "supabase",
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.1"
 edition = "2021"
 authors = ["wowlab"]
 repository = "https://github.com/legacy3/wowlab"
 
 [profile.release]
 opt-level = 3
-lto = true
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[profile.release.package."*"]
+opt-level = 3
 
 # For profiling (no LTO for symbol resolution)
 [profile.bench-profile]

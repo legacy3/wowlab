@@ -1,108 +1,17 @@
+/* eslint-disable @next/next/no-img-element -- OG images can't use next/image */
+import { greenDark, slateDark } from "@radix-ui/colors";
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { CLASS_COLORS } from "./colors";
+
+import { LOGO_SVG, svgToImageSrc } from "./svg";
+
+const LOGO_SRC = svgToImageSrc(LOGO_SVG);
+
+const accentGradient = `linear-gradient(90deg, ${greenDark.green9} 0%, ${greenDark.green8} 100%)`;
 
 export const ogSize = {
-  width: 1200,
   height: 630,
+  width: 1200,
 };
-
-async function getLogo() {
-  const logoData = await readFile(
-    join(process.cwd(), "public/logo.svg"),
-    "base64",
-  );
-
-  return `data:image/svg+xml;base64,${logoData}`;
-}
-
-type OgSectionImageProps = {
-  section: string;
-  description: string;
-};
-
-export async function createSectionOgImage({
-  section,
-  description,
-}: OgSectionImageProps) {
-  const logoSrc = await getLogo();
-
-  return new ImageResponse(
-    <div
-      style={{
-        fontSize: 32,
-        background: "#09090b",
-        color: "#fafafa",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "32px",
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "4px",
-          background: "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)",
-        }}
-      />
-
-      <img src={logoSrc} width={96} height={96} />
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 48,
-            fontWeight: 700,
-            color: "#22c55e",
-          }}
-        >
-          WoW Lab
-        </div>
-        <div
-          style={{
-            fontSize: 48,
-            color: "#3f3f46",
-          }}
-        >
-          /
-        </div>
-        <div
-          style={{
-            fontSize: 48,
-            fontWeight: 700,
-          }}
-        >
-          {section}
-        </div>
-      </div>
-
-      <div
-        style={{
-          fontSize: 26,
-          color: "#71717a",
-        }}
-      >
-        {description}
-      </div>
-    </div>,
-    { ...ogSize },
-  );
-}
 
 type OgArticleImageProps = {
   section: string;
@@ -113,268 +22,76 @@ type OgArticleImageProps = {
   tag?: string;
 };
 
-type OgRotationImageProps = {
-  name: string;
-  description: string | null;
-  className: string;
-  specName: string;
-  author: string;
-  version: number;
-  updatedAt: string;
+type OgSectionImageProps = {
+  section: string;
+  description: string;
 };
 
-export async function createRotationOgImage({
-  name,
-  description,
-  className,
-  specName,
-  author,
-  version,
-  updatedAt,
-}: OgRotationImageProps) {
-  const logoSrc = await getLogo();
-  const classColor = CLASS_COLORS[className] || "#22c55e";
-
-  return new ImageResponse(
-    <div
-      style={{
-        fontSize: 32,
-        background: "#09090b",
-        color: "#fafafa",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        padding: "48px 64px",
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "4px",
-          background: `linear-gradient(90deg, ${classColor} 0%, ${classColor}99 100%)`,
-        }}
-      />
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "40px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-          }}
-        >
-          <img src={logoSrc} width={40} height={40} />
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 600,
-              color: "#22c55e",
-            }}
-          >
-            WoW Lab
-          </div>
-          <div
-            style={{
-              fontSize: 24,
-              color: "#3f3f46",
-            }}
-          >
-            /
-          </div>
-          <div
-            style={{
-              fontSize: 24,
-              color: "#71717a",
-            }}
-          >
-            Rotations
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "8px 20px",
-            background: "#18181b",
-            borderRadius: "9999px",
-            border: `1px solid ${classColor}40`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              color: classColor,
-            }}
-          >
-            {className}
-          </div>
-          <div
-            style={{
-              fontSize: 22,
-              color: "#52525b",
-            }}
-          >
-            ·
-          </div>
-          <div
-            style={{
-              fontSize: 22,
-              color: "#a1a1aa",
-            }}
-          >
-            {specName}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          flex: 1,
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 64,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {name}
-        </div>
-
-        {description && (
-          <div
-            style={{
-              fontSize: 28,
-              color: "#71717a",
-              lineHeight: 1.4,
-              maxWidth: "900px",
-            }}
-          >
-            {description}
-          </div>
-        )}
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontSize: 22,
-          color: "#52525b",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span>by</span>
-          <span style={{ color: "#a1a1aa", fontWeight: 500 }}>{author}</span>
-          <span style={{ color: "#3f3f46" }}>·</span>
-          <span>updated {updatedAt}</span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 12px",
-            background: "#18181b",
-            borderRadius: "6px",
-          }}
-        >
-          <span style={{ color: "#71717a" }}>v</span>
-          <span style={{ color: "#a1a1aa", fontWeight: 500 }}>{version}</span>
-        </div>
-      </div>
-    </div>,
-    { ...ogSize },
-  );
-}
-
-export async function createArticleOgImage({
-  section,
-  title,
-  description,
+export function createArticleOgImage({
   author,
   date,
+  description,
+  section,
   tag,
+  title,
 }: OgArticleImageProps) {
-  const logoSrc = await getLogo();
+  const logoSrc = LOGO_SRC;
 
   return new ImageResponse(
     <div
       style={{
-        fontSize: 32,
-        background: "#09090b",
-        color: "#fafafa",
-        width: "100%",
-        height: "100%",
+        background: slateDark.slate1,
+        color: slateDark.slate12,
         display: "flex",
         flexDirection: "column",
+        fontSize: 32,
+        height: "100%",
         padding: "48px 64px",
         position: "relative",
+        width: "100%",
       }}
     >
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
+          background: accentGradient,
           height: "4px",
-          background: "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)",
+          left: 0,
+          position: "absolute",
+          right: 0,
+          top: 0,
         }}
       />
 
       <div
         style={{
-          display: "flex",
           alignItems: "center",
+          display: "flex",
           gap: "14px",
           marginBottom: "40px",
         }}
       >
-        <img src={logoSrc} width={40} height={40} />
+        <img src={logoSrc} width={40} height={40} alt="" />
         <div
           style={{
+            color: greenDark.green9,
             fontSize: 24,
             fontWeight: 600,
-            color: "#22c55e",
           }}
         >
           WoW Lab
         </div>
         <div
           style={{
+            color: slateDark.slate7,
             fontSize: 24,
-            color: "#3f3f46",
           }}
         >
           /
         </div>
         <div
           style={{
+            color: slateDark.slate11,
             fontSize: 24,
-            color: "#71717a",
           }}
         >
           {section}
@@ -384,9 +101,9 @@ export async function createArticleOgImage({
       <div
         style={{
           display: "flex",
+          flex: 1,
           flexDirection: "column",
           gap: "24px",
-          flex: 1,
           justifyContent: "center",
         }}
       >
@@ -402,8 +119,8 @@ export async function createArticleOgImage({
 
         <div
           style={{
+            color: slateDark.slate11,
             fontSize: 32,
-            color: "#a1a1aa",
             lineHeight: 1.3,
           }}
         >
@@ -414,23 +131,105 @@ export async function createArticleOgImage({
       {(author || date || tag) && (
         <div
           style={{
-            display: "flex",
             alignItems: "center",
+            color: slateDark.slate11,
+            display: "flex",
             fontSize: 24,
-            color: "#52525b",
           }}
         >
-          {author && <span style={{ color: "#22c55e" }}>{author}</span>}
+          {author && <span style={{ color: greenDark.green9 }}>{author}</span>}
           {author && date && <span style={{ margin: "0 12px" }}>·</span>}
           {date && <span>{date}</span>}
           {tag && (
             <>
               <span style={{ margin: "0 12px" }}>·</span>
-              <span style={{ color: "#3f3f46" }}>#{tag}</span>
+              <span style={{ color: slateDark.slate7 }}>#{tag}</span>
             </>
           )}
         </div>
       )}
+    </div>,
+    { ...ogSize },
+  );
+}
+
+export function createSectionOgImage({
+  description,
+  section,
+}: OgSectionImageProps) {
+  const logoSrc = LOGO_SRC;
+
+  return new ImageResponse(
+    <div
+      style={{
+        alignItems: "center",
+        background: slateDark.slate1,
+        color: slateDark.slate12,
+        display: "flex",
+        flexDirection: "column",
+        fontSize: 32,
+        gap: "32px",
+        height: "100%",
+        justifyContent: "center",
+        position: "relative",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          background: accentGradient,
+          height: "4px",
+          left: 0,
+          position: "absolute",
+          right: 0,
+          top: 0,
+        }}
+      />
+
+      <img src={logoSrc} width={96} height={96} alt="" />
+
+      <div
+        style={{
+          alignItems: "center",
+          display: "flex",
+          gap: "16px",
+        }}
+      >
+        <div
+          style={{
+            color: greenDark.green9,
+            fontSize: 48,
+            fontWeight: 700,
+          }}
+        >
+          WoW Lab
+        </div>
+        <div
+          style={{
+            color: slateDark.slate7,
+            fontSize: 48,
+          }}
+        >
+          /
+        </div>
+        <div
+          style={{
+            fontSize: 48,
+            fontWeight: 700,
+          }}
+        >
+          {section}
+        </div>
+      </div>
+
+      <div
+        style={{
+          color: slateDark.slate11,
+          fontSize: 26,
+        }}
+      >
+        {description}
+      </div>
     </div>,
     { ...ogSize },
   );

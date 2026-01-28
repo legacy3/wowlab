@@ -2,22 +2,25 @@
 //!
 //! Used by both the GUI (`node-gui`) and headless (`node-headless`) binaries.
 
+pub mod auth;
 pub mod cache;
 pub mod claim;
 pub mod config;
 mod core;
-pub mod supabase;
+pub mod queries;
+pub mod realtime;
+pub mod sentinel;
 pub mod update;
 pub mod utils;
 pub mod worker;
 
 pub use crate::core::{NodeCore, NodeCoreEvent};
+pub use auth::NodeKeypair;
 pub use claim::ClaimError;
 pub use config::NodeConfig;
-pub use supabase::{
-    ApiClient, ApiError, ChunkPayload, ClaimWorkResponse, ClaimedChunk, NodePayload, RealtimeEvent,
-    RotationResponse, WorkAvailablePayload,
-};
+pub use queries::{ConfigRow, RotationRow};
+pub use realtime::{ChunkPayload, NodePayload, NodeRealtime, RealtimeEvent};
+pub use sentinel::{RegisterResponse, SentinelClient, SentinelError};
 pub use worker::{WorkItem, WorkResult, WorkerPool};
 
 use std::time::Instant;
@@ -55,12 +58,16 @@ pub enum LogLevel {
 /// Current state of the node.
 #[derive(Clone, Debug)]
 pub enum NodeState {
+    /// Verifying saved node is still valid.
+    Verifying,
     /// Registering with the server.
     Registering,
     /// Waiting to be claimed by a user.
     Claiming { code: String },
     /// Fully operational.
     Running,
+    /// Server unavailable (maintenance/outage).
+    Unavailable,
 }
 
 /// Connection status to the realtime server.
