@@ -18,6 +18,17 @@ export default {
         en: "Run quick simulations for your character.",
       }),
       simulateTitle: t({ de: "Simulate", en: "Simulate" }),
+      toolsTitle: t({ de: "Tools", en: "Tools" }),
+    },
+    recentProfiles: {
+      description: t({
+        de: "Schnell zur Simulation springen",
+        en: "Jump back into simulating",
+      }),
+      title: t({
+        de: "Kürzliche Charaktere",
+        en: "Recent Characters",
+      }),
     },
   },
   description: "Content for home page.",

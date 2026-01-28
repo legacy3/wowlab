@@ -97,6 +97,20 @@ export default {
         en: "Parsing...",
       }),
     },
+    recentProfiles: {
+      continueSimulating: t({
+        de: "Simulation fortsetzen",
+        en: "Continue simulating",
+      }),
+      noRecent: t({
+        de: "Keine kürzlichen Importe",
+        en: "No recent imports",
+      }),
+      title: t({
+        de: "Kürzliche Importe",
+        en: "Recent imports",
+      }),
+    },
     resultsStep: {
       averageDps: t({ de: "Durchschnittliche DPS", en: "Average DPS" }),
       back: t({ de: "Zurück", en: "Back" }),

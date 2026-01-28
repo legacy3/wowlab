@@ -191,5 +191,5 @@ impl UpdateModal {
 }
 
 fn release_url(version: &str) -> String {
-    format!("https://github.com/legacy3/wowlab/releases/tag/v{version}")
+    format!("https://wowlab.gg/go/github/releases/tag/v{version}")
 }
