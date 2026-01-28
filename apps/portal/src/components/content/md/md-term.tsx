@@ -104,7 +104,7 @@ export function MdTerm({ children, id }: MdTermProps) {
     >
       <HoverCard.Trigger asChild>
         <Link
-          href={`/dev/docs/glossary#term-${id}`}
+          href={`/dev/docs/97-glossary#term-${id}`}
           fontWeight="medium"
           borderBottomWidth="1"
           borderStyle="dashed"

@@ -1,6 +1,6 @@
 import { Flex, HStack, Stack } from "styled-system/jsx";
 
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Link } from "@/components/ui";
 import { docsIndex, getFirstSlug } from "@/lib/content/docs";
 import { href, routes } from "@/lib/routing";
 
@@ -21,9 +21,9 @@ export function DocsIndex() {
           <HStack gap="3">
             <DocsSearchButton />
             <Button asChild size="sm">
-              <a href={href(routes.dev.docs.page, { slug: getFirstSlug() })}>
+              <Link href={href(routes.dev.docs.page, { slug: getFirstSlug() })}>
                 Read the Introduction
-              </a>
+              </Link>
             </Button>
           </HStack>
         </Flex>

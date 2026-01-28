@@ -11,8 +11,8 @@ import { link, type LinkVariantProps } from "styled-system/recipes";
 
 import { getLocalizedUrl } from "@/lib/routing";
 
-const checkIsExternalLink = (href?: string): boolean =>
-  /^https?:\/\//.test(href ?? "");
+const isExternal = (href?: string) => /^https?:\/\//.test(href ?? "");
+const isHashOnly = (href?: string) => href?.startsWith("#") ?? false;
 
 export type LinkProps = ComponentProps<typeof NextLink> &
   LinkVariantProps &
@@ -22,9 +22,12 @@ export function Link({ className, href, variant, ...props }: LinkProps) {
   const { locale } = useLocale();
   const [cssProps, restProps] = splitCssProps(props);
 
-  const isExternal = checkIsExternalLink(href?.toString());
-  const localizedHref =
-    href && !isExternal ? getLocalizedUrl(href.toString(), locale) : href;
+  const hrefString = href?.toString();
+  const shouldLocalize =
+    href && !isExternal(hrefString) && !isHashOnly(hrefString);
+  const localizedHref = shouldLocalize
+    ? getLocalizedUrl(hrefString!, locale)
+    : href;
 
   return (
     <NextLink

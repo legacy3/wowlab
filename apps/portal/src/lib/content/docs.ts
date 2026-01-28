@@ -1,4 +1,5 @@
 import { type Doc, docs as veliteDocs } from "#content";
+import { capitalCase } from "change-case";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
@@ -16,64 +17,56 @@ export type DocEntry = {
   children?: DocEntry[];
 };
 
-const stripPrefix = (s: string) => s.replace(/^docs\//, "");
-const getDepth = (s: string) => s.split("/").length;
-const getSection = (s: string) => s.split("/")[0];
-
-const toTitleCase = (s: string) =>
-  s
-    .replace(/^\d+-/, "")
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+const toTitle = (s: string) => capitalCase(s.replace(/^\d+-/, ""));
 
 export const docs = Object.fromEntries(
-  veliteDocs.map((doc) => [stripPrefix(doc.slug), doc]),
+  veliteDocs.map((doc) => [doc.slug.replace(/^docs\//, ""), doc]),
 ) as Record<string, Doc>;
 
+export const getDoc = (slug: string) => docs[slug];
+
 export const docSlugs = Object.keys(docs).sort((a, b) => {
-  const depthDiff = getDepth(a) - getDepth(b);
-  return depthDiff !== 0 ? depthDiff : a.localeCompare(b);
+  const diff = a.split("/").length - b.split("/").length;
+
+  return diff !== 0 ? diff : a.localeCompare(b);
 });
 
 function buildDocsIndex(): DocEntry[] {
-  const root: DocEntry[] = [];
-  const sections = new Map<string, DocEntry[]>();
+  const entries = new Map<string, DocEntry>();
 
   for (const slug of docSlugs) {
-    const entry = { slug, title: docs[slug].title };
+    const [key, ...rest] = slug.split("/");
+    const isRoot = rest.length === 0;
 
-    if (getDepth(slug) === 1) {
-      root.push(entry);
-    } else {
-      const section = getSection(slug);
-      if (!sections.has(section)) {
-        sections.set(section, []);
-      }
-      sections.get(section)!.push(entry);
+    if (isRoot) {
+      entries.set(key, { slug, title: getDoc(slug).title });
+      continue;
     }
+
+    const section = entries.get(key) ?? {
+      children: [],
+      slug: key,
+      title: toTitle(key),
+    };
+
+    entries.set(key, section);
+    section.children!.push({ slug, title: getDoc(slug).title });
   }
 
-  return [
-    ...root,
-    ...[...sections.keys()].sort().map((section) => ({
-      children: sections.get(section)!,
-      slug: section,
-      title: toTitleCase(section),
-    })),
-  ];
+  return [...entries.keys()].sort().map((k) => entries.get(k)!);
 }
 
 export const docsIndex = buildDocsIndex();
 
-export const getDoc = (slug: string) => docs[slug];
+export const getDocNavMeta = (slug: string): NavItem => {
+  const doc = getDoc(slug);
 
-export const getDocNavMeta = (slug: string): NavItem =>
-  docs[slug]
-    ? createNavItem(slug, docs[slug].title, routes.dev.docs.index.path)
+  return doc
+    ? createNavItem(slug, doc.title, routes.dev.docs.index.path)
     : null;
+};
 
-export const getFirstSlug = () => docSlugs[0] ?? "introduction";
+export const getFirstSlug = () => docSlugs[0]!;
 
 export const resolveNextSteps = (slugs?: string[]): NonNullable<NavItem>[] =>
   (slugs ?? [])
