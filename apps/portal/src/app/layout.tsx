@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Analytics } from "@vercel/analytics/next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 
 import { env } from "@/lib/env";
@@ -39,7 +40,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${roboto.variable} ${robotoMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

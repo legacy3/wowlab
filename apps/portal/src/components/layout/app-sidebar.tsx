@@ -5,7 +5,16 @@ import { useIntlayer, useLocale } from "next-intlayer";
 import Image from "next/image";
 import { Box, Flex, Stack, styled } from "styled-system/jsx";
 
-import { Badge, Collapsible, Link, Text, Tooltip } from "@/components/ui";
+import {
+  Badge,
+  Collapsible,
+  IconButton,
+  Link,
+  Text,
+  Tooltip,
+} from "@/components/ui";
+import { env } from "@/lib/env";
+import { DiscordIcon, GitHubIcon } from "@/lib/icons";
 import {
   href,
   type MenuItem,
@@ -81,18 +90,34 @@ export function AppSidebar() {
         </Stack>
       </Stack>
 
-      <Flex
+      <Stack
         px="4"
         py="3"
         borderTopWidth="1px"
         borderColor="border"
-        justify="center"
+        align="center"
         gap="2"
       >
+        <Flex gap="2">
+          <Tooltip content="GitHub" positioning={{ placement: "top" }}>
+            <IconButton variant="plain" size="sm" asChild>
+              <Link href={env.GITHUB_URL} target="_blank" aria-label="GitHub">
+                <GitHubIcon width={18} height={18} />
+              </Link>
+            </IconButton>
+          </Tooltip>
+          <Tooltip content="Discord" positioning={{ placement: "top" }}>
+            <IconButton variant="plain" size="sm" asChild>
+              <Link href={env.DISCORD_URL} target="_blank" aria-label="Discord">
+                <DiscordIcon width={18} height={18} />
+              </Link>
+            </IconButton>
+          </Tooltip>
+        </Flex>
         <Text fontSize="xs" color="fg.subtle">
           © 2025 WoW Lab
         </Text>
-      </Flex>
+      </Stack>
     </Box>
   );
 }
