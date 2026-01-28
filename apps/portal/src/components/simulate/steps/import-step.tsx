@@ -10,6 +10,7 @@ import {
 } from "@/lib/sim";
 
 import { ParseError, ParseLoading } from "../parse-status";
+import { RecentProfiles } from "../recent-profiles";
 import { SimcInput } from "../simc-input";
 
 export function ImportStep() {
@@ -21,6 +22,8 @@ export function ImportStep() {
 
   return (
     <Stack gap="4">
+      <RecentProfiles />
+
       <SimcInput value={input} onChange={(e) => setInput(e.target.value)} />
 
       {isParsing && <ParseLoading message={content.parsingSimCData} />}

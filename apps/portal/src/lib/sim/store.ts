@@ -37,7 +37,9 @@ export const useCharacterInput = create<CharacterInputStore>()((set) => ({
 
     try {
       const profile = await parseSimc(input);
+
       set({ parseState: { profile, status: "success" } });
+      useRecentProfiles.getState().addRecent(input, profile);
     } catch (err) {
       set({
         parseState: {

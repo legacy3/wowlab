@@ -12,6 +12,8 @@ export {
   type ParseLoadingProps,
   type ParseSuccessProps,
 } from "./parse-status";
+export { ProfileBadge, type ProfileBadgeProps } from "./profile-badge";
+export { RecentProfiles } from "./recent-profiles";
 export { SimcInput, type SimcInputProps } from "./simc-input";
 export { SimulateContent } from "./simulate-content";
 export { SimulateWizard } from "./simulate-wizard";
