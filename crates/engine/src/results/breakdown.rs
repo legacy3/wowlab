@@ -69,7 +69,7 @@ impl DamageBreakdown {
             .collect();
 
         // Sort by damage descending
-        entries.sort_by(|a, b| b.damage.partial_cmp(&a.damage).unwrap());
+        entries.sort_by(|a, b| b.damage.total_cmp(&a.damage));
 
         Self {
             entries,

@@ -236,6 +236,7 @@ impl SchemaBuilder {
             name: name.to_string(),
             var_type,
         };
+        // SAFETY: User variables always have unique names enforced by the caller
         self.add_key(key)
             .expect("user var should always be addable")
     }

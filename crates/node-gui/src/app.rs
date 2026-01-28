@@ -265,15 +265,18 @@ impl NodeApp {
                     ui.add_space(8.0);
                     ui.label(text("Are you sure you want to unlink this node?").color(FG_DEFAULT));
                     ui.add_space(4.0);
-                    ui.label(text("You will need to re-claim it to use it again.").color(FG_SUBTLE));
+                    ui.label(
+                        text("You will need to re-claim it to use it again.").color(FG_SUBTLE),
+                    );
                     ui.add_space(16.0);
                     ui.horizontal(|ui| {
                         if ui.button("Cancel").clicked() {
                             self.confirm_unlink = false;
                         }
                         ui.add_space(8.0);
-                        let unlink_btn = egui::Button::new(text("Unlink").color(egui::Color32::WHITE))
-                            .fill(RED_9);
+                        let unlink_btn =
+                            egui::Button::new(text("Unlink").color(egui::Color32::WHITE))
+                                .fill(RED_9);
                         if ui.add(unlink_btn).clicked() {
                             should_unlink = true;
                             self.confirm_unlink = false;

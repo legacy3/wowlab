@@ -5,9 +5,9 @@
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::RwLock;
 use wowlab_common::parsers::{
     transform_all_auras, transform_all_items, transform_all_trait_trees, transform_spell, DbcData,
 };
@@ -57,13 +57,13 @@ impl LocalResolver {
 
     /// Ensure DBC data is loaded.
     fn ensure_dbc_loaded(&self) -> Result<(), ResolverError> {
-        if self.dbc.read().unwrap().is_some() {
+        if self.dbc.read().is_some() {
             return Ok(());
         }
 
         tracing::info!(data_dir = %self.data_dir.display(), "Loading DBC data from CSV files");
         let dbc_data = DbcData::load_all(&self.data_dir)?;
-        *self.dbc.write().unwrap() = Some(dbc_data);
+        *self.dbc.write() = Some(dbc_data);
         tracing::info!("DBC data loaded successfully");
 
         Ok(())
@@ -71,14 +71,14 @@ impl LocalResolver {
 
     /// Lazy load spells on first access.
     fn ensure_spells_loaded(&self) -> Result<(), ResolverError> {
-        if self.spells.read().unwrap().is_some() {
+        if self.spells.read().is_some() {
             return Ok(());
         }
 
         self.ensure_dbc_loaded()?;
 
         tracing::debug!("Transforming all spells");
-        let dbc_guard = self.dbc.read().unwrap();
+        let dbc_guard = self.dbc.read();
         let dbc = dbc_guard.as_ref().unwrap();
 
         // Transform all spells
@@ -90,7 +90,7 @@ impl LocalResolver {
         }
 
         let count = spell_map.len();
-        *self.spells.write().unwrap() = Some(spell_map);
+        *self.spells.write() = Some(spell_map);
         tracing::debug!(count, "Spells loaded");
 
         Ok(())
@@ -98,14 +98,14 @@ impl LocalResolver {
 
     /// Lazy load trait trees on first access.
     fn ensure_traits_loaded(&self) -> Result<(), ResolverError> {
-        if self.traits.read().unwrap().is_some() {
+        if self.traits.read().is_some() {
             return Ok(());
         }
 
         self.ensure_dbc_loaded()?;
 
         tracing::debug!("Transforming all trait trees");
-        let dbc_guard = self.dbc.read().unwrap();
+        let dbc_guard = self.dbc.read();
         let dbc = dbc_guard.as_ref().unwrap();
 
         let traits = transform_all_trait_trees(dbc);
@@ -113,7 +113,7 @@ impl LocalResolver {
             traits.into_iter().map(|t| (t.spec_id, t)).collect();
 
         let count = trait_map.len();
-        *self.traits.write().unwrap() = Some(trait_map);
+        *self.traits.write() = Some(trait_map);
         tracing::debug!(count, "Trait trees loaded");
 
         Ok(())
@@ -121,21 +121,21 @@ impl LocalResolver {
 
     /// Lazy load items on first access.
     fn ensure_items_loaded(&self) -> Result<(), ResolverError> {
-        if self.items.read().unwrap().is_some() {
+        if self.items.read().is_some() {
             return Ok(());
         }
 
         self.ensure_dbc_loaded()?;
 
         tracing::debug!("Transforming all items");
-        let dbc_guard = self.dbc.read().unwrap();
+        let dbc_guard = self.dbc.read();
         let dbc = dbc_guard.as_ref().unwrap();
 
         let items = transform_all_items(dbc);
         let item_map: HashMap<i32, ItemDataFlat> = items.into_iter().map(|i| (i.id, i)).collect();
 
         let count = item_map.len();
-        *self.items.write().unwrap() = Some(item_map);
+        *self.items.write() = Some(item_map);
         tracing::debug!(count, "Items loaded");
 
         Ok(())
@@ -143,14 +143,14 @@ impl LocalResolver {
 
     /// Lazy load auras on first access.
     fn ensure_auras_loaded(&self) -> Result<(), ResolverError> {
-        if self.auras.read().unwrap().is_some() {
+        if self.auras.read().is_some() {
             return Ok(());
         }
 
         self.ensure_dbc_loaded()?;
 
         tracing::debug!("Transforming all auras");
-        let dbc_guard = self.dbc.read().unwrap();
+        let dbc_guard = self.dbc.read();
         let dbc = dbc_guard.as_ref().unwrap();
 
         let auras = transform_all_auras(dbc);
@@ -158,7 +158,7 @@ impl LocalResolver {
             auras.into_iter().map(|a| (a.spell_id, a)).collect();
 
         let count = aura_map.len();
-        *self.auras.write().unwrap() = Some(aura_map);
+        *self.auras.write() = Some(aura_map);
         tracing::debug!(count, "Auras loaded");
 
         Ok(())
@@ -171,7 +171,6 @@ impl DataResolver for LocalResolver {
         self.ensure_spells_loaded()?;
         self.spells
             .read()
-            .unwrap()
             .as_ref()
             .unwrap()
             .get(&id)
@@ -181,7 +180,7 @@ impl DataResolver for LocalResolver {
 
     async fn get_spells(&self, ids: &[i32]) -> Result<Vec<SpellDataFlat>, ResolverError> {
         self.ensure_spells_loaded()?;
-        let spells = self.spells.read().unwrap();
+        let spells = self.spells.read();
         let spell_map = spells.as_ref().unwrap();
         Ok(ids
             .iter()
@@ -193,7 +192,6 @@ impl DataResolver for LocalResolver {
         self.ensure_traits_loaded()?;
         self.traits
             .read()
-            .unwrap()
             .as_ref()
             .unwrap()
             .get(&spec_id)
@@ -205,7 +203,6 @@ impl DataResolver for LocalResolver {
         self.ensure_items_loaded()?;
         self.items
             .read()
-            .unwrap()
             .as_ref()
             .unwrap()
             .get(&id)
@@ -217,7 +214,6 @@ impl DataResolver for LocalResolver {
         self.ensure_auras_loaded()?;
         self.auras
             .read()
-            .unwrap()
             .as_ref()
             .unwrap()
             .get(&spell_id)
@@ -232,7 +228,7 @@ impl DataResolver for LocalResolver {
     ) -> Result<Vec<SpellDataFlat>, ResolverError> {
         self.ensure_spells_loaded()?;
         let query_lower = query.to_lowercase();
-        let spells = self.spells.read().unwrap();
+        let spells = self.spells.read();
         Ok(spells
             .as_ref()
             .unwrap()

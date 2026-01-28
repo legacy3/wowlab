@@ -40,12 +40,14 @@ fn get_aura(id: AuraIdx) -> Option<&'static AuraDef> {
 }
 
 fn get_spell_defs() -> &'static [SpellDef] {
+    // SAFETY: ensure_definitions() is called in MmHunter::new() before any access
     SPELL_DEFS
         .get()
         .expect("MM Hunter spell definitions not initialized")
 }
 
 fn get_aura_defs() -> &'static [AuraDef] {
+    // SAFETY: ensure_definitions() is called in MmHunter::new() before any access
     AURA_DEFS
         .get()
         .expect("MM Hunter aura definitions not initialized")

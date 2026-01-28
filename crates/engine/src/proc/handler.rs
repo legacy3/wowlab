@@ -3,9 +3,16 @@ use wowlab_common::types::{AuraIdx, ProcIdx, SpellIdx};
 
 #[derive(Clone, Debug)]
 pub enum ProcEffect {
-    ApplyAura { aura: AuraIdx },
-    CastSpell { spell: SpellIdx },
-    Damage { base: f32, coefficient: f32 },
+    ApplyAura {
+        aura: AuraIdx,
+    },
+    CastSpell {
+        spell: SpellIdx,
+    },
+    Damage {
+        base: f32,
+        coefficient: f32,
+    },
     Resource {
         resource: wowlab_common::types::ResourceType,
         amount: f32,
@@ -18,7 +25,10 @@ pub enum ProcEffect {
         aura: AuraIdx,
         amount: wowlab_common::types::SimTime,
     },
-    AddStacks { aura: AuraIdx, stacks: u8 },
+    AddStacks {
+        aura: AuraIdx,
+        stacks: u8,
+    },
     Multiple(Vec<ProcEffect>),
 }
 
