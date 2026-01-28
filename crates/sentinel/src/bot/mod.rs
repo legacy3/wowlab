@@ -4,9 +4,9 @@ mod events;
 use std::sync::Arc;
 
 use poise::serenity_prelude as serenity;
-
 use tokio_util::sync::CancellationToken;
 
+use crate::notifications::{self, NotificationReceiver};
 use crate::state::ServerState;
 use crate::utils::filter_refresh;
 
@@ -18,7 +18,11 @@ pub struct Data {
 }
 
 /// Run the Discord bot. Blocks until the bot shuts down.
-pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result<(), Error> {
+pub async fn run(
+    state: Arc<ServerState>,
+    notification_rx: NotificationReceiver,
+    shutdown: CancellationToken,
+) -> Result<(), Error> {
     let token = std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN env var required");
 
     let intents = serenity::GatewayIntents::non_privileged()
@@ -26,6 +30,9 @@ pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result
         | serenity::GatewayIntents::MESSAGE_CONTENT;
 
     let shared = state.clone();
+    let db_for_receiver = state.db.clone();
+    // Wrap in Option so we can take() it in the setup closure
+    let mut notification_rx = Some(notification_rx);
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: commands::all(),
@@ -38,6 +45,9 @@ pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result
             ..Default::default()
         })
         .setup(move |ctx, ready, framework| {
+            let http = ctx.http.clone();
+            let db = db_for_receiver.clone();
+            let rx = notification_rx.take().expect("setup called twice");
             Box::pin(async move {
                 tracing::info!("Logged in as {}", ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
@@ -51,6 +61,9 @@ pub async fn run(state: Arc<ServerState>, shutdown: CancellationToken) -> Result
 
                 // Build filters for all guilds once at startup
                 filter_refresh::build_initial(ctx.http.clone(), guild_ids, shared.filters.clone());
+
+                // Spawn notification receiver task
+                tokio::spawn(notifications::run_receiver(rx, http, db));
 
                 Ok(Data { state: shared })
             })

@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::bot::{Context, Error};
-use crate::utils::colors;
+use crate::utils::{colors, markdown as md};
 
 /// Show your running and pending jobs
 #[poise::command(slash_command, user_cooldown = 5)]
@@ -63,8 +63,8 @@ pub async fn jobs(ctx: Context<'_>) -> Result<(), Error> {
         let id_short = &row.id.to_string()[..8];
         let access = row.access_type.as_deref().unwrap_or("private");
         lines.push(format!(
-            "`{}` ({}) — {} done / {} running / {} pending",
-            id_short,
+            "{} ({}) — {} done / {} running / {} pending",
+            md::code(id_short),
             access,
             row.done.unwrap_or(0),
             row.running.unwrap_or(0),

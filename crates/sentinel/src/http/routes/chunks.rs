@@ -3,23 +3,29 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::routing::post;
+use axum::{Extension, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
 
+/// Create router for chunk API endpoints.
+pub fn router() -> Router<Arc<ServerState>> {
+    Router::new().route("/chunks/complete", post(complete))
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CompleteRequest {
+struct CompleteRequest {
     chunk_id: uuid::Uuid,
     result: ChunkResult,
 }
 
 #[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ChunkResult {
+struct ChunkResult {
     mean_dps: f64,
     #[allow(dead_code)]
     std_dps: f64,
@@ -28,7 +34,7 @@ pub struct ChunkResult {
     iterations: i64,
 }
 
-pub async fn complete(
+async fn complete(
     State(state): State<Arc<ServerState>>,
     Extension(node): Extension<VerifiedNode>,
     Json(payload): Json<CompleteRequest>,

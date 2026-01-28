@@ -3,6 +3,7 @@ mod help;
 mod jobs;
 mod members;
 mod nodes;
+mod notify;
 mod ping;
 mod server;
 mod stats;
@@ -21,6 +22,7 @@ use crate::bot::{Context, Error};
         "jobs::jobs",
         "nodes::nodes",
         "stats::stats",
+        "notify::notify",
     )
 )]
 pub async fn wlab(_ctx: Context<'_>) -> Result<(), Error> {

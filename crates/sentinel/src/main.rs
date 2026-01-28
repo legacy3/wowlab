@@ -8,6 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
+use wowlab_sentinel::notifications;
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{bot, cron, http, presence, scheduler};
 
@@ -43,6 +44,7 @@ async fn main() {
         .expect("Failed to connect to database");
 
     let filters = Arc::new(RwLock::new(HashMap::new()));
+    let (notification_tx, notification_rx) = notifications::channel();
     let state = Arc::new(ServerState {
         db,
         filters,
@@ -50,6 +52,7 @@ async fn main() {
         prometheus,
         shard_manager: OnceLock::new(),
         last_scheduler_tick: AtomicU64::new(0),
+        notification_tx,
     });
 
     wowlab_sentinel::telemetry::init();
@@ -59,7 +62,7 @@ async fn main() {
     let shutdown = CancellationToken::new();
 
     tokio::select! {
-        result = bot::run(state.clone(), shutdown.clone()) => {
+        result = bot::run(state.clone(), notification_rx, shutdown.clone()) => {
             if let Err(e) = result {
                 tracing::error!(error = %e, "Bot exited with error");
             }

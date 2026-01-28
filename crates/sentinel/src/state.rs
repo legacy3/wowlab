@@ -6,6 +6,7 @@ use metrics_exporter_prometheus::PrometheusHandle;
 use poise::serenity_prelude::{ConnectionStage, ShardManager};
 use sqlx::PgPool;
 
+use crate::notifications::NotificationSender;
 use crate::utils::filter_refresh::FilterMap;
 
 pub struct ServerState {
@@ -15,6 +16,7 @@ pub struct ServerState {
     pub prometheus: PrometheusHandle,
     pub shard_manager: OnceLock<Arc<ShardManager>>,
     pub last_scheduler_tick: AtomicU64,
+    pub notification_tx: NotificationSender,
 }
 
 impl ServerState {

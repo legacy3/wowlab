@@ -1,7 +1,7 @@
 use poise::serenity_prelude as serenity;
 
 use crate::bot::{Context, Error};
-use crate::utils::colors;
+use crate::utils::{colors, markdown as md};
 
 /// Show online nodes and their current load
 #[poise::command(slash_command, guild_only, user_cooldown = 5)]
@@ -41,8 +41,15 @@ pub async fn nodes(ctx: Context<'_>) -> Result<(), Error> {
         let running = node.running.unwrap_or(0) as usize;
         let bar = capacity_bar(running, capacity);
         lines.push(format!(
-            "**{}** — {}/{} chunks {}\n` {} · {} cores · v{}`",
-            node.name, running, capacity, bar, node.platform, node.total_cores, node.version,
+            "{} — {}/{} chunks {}\n{}",
+            md::bold(&node.name),
+            running,
+            capacity,
+            bar,
+            md::code(format!(
+                "{} · {} cores · v{}",
+                node.platform, node.total_cores, node.version
+            )),
         ));
     }
 

@@ -1,6 +1,8 @@
+pub mod ai;
 pub mod bot;
 pub mod cron;
 pub mod http;
+pub mod notifications;
 pub mod presence;
 pub mod scheduler;
 pub mod state;

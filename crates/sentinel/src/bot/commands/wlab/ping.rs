@@ -1,4 +1,5 @@
 use crate::bot::{Context, Error};
+use crate::utils::markdown as md;
 
 /// Check bot latency
 #[poise::command(slash_command, user_cooldown = 3)]
@@ -13,8 +14,11 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     reply
         .edit(
             ctx,
-            poise::CreateReply::default()
-                .content(format!("Pong! Gateway: `{gateway}` · API: `{api:.0}ms`")),
+            poise::CreateReply::default().content(format!(
+                "Pong! Gateway: {} · API: {}",
+                md::code(&gateway),
+                md::code(format!("{api:.0}ms"))
+            )),
         )
         .await?;
 

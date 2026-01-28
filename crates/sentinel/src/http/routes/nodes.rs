@@ -3,7 +3,8 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::routing::post;
+use axum::{Extension, Json, Router};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde::Deserialize;
@@ -12,6 +13,13 @@ use sha2::{Digest, Sha256};
 
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
+
+/// Create router for node API endpoints.
+pub fn router() -> Router<Arc<ServerState>> {
+    Router::new()
+        .route("/nodes/register", post(register))
+        .route("/nodes/heartbeat", post(heartbeat))
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,7 +31,7 @@ pub struct RegisterRequest {
     version: Option<String>,
 }
 
-pub async fn register(
+async fn register(
     State(state): State<Arc<ServerState>>,
     Extension(node): Extension<VerifiedNode>,
     Json(payload): Json<RegisterRequest>,
@@ -118,7 +126,7 @@ pub struct HeartbeatRequest {
     status: Option<String>,
 }
 
-pub async fn heartbeat(
+async fn heartbeat(
     State(state): State<Arc<ServerState>>,
     Extension(node): Extension<VerifiedNode>,
     Json(payload): Json<HeartbeatRequest>,
