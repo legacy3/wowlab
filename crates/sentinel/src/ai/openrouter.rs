@@ -83,7 +83,7 @@ impl OpenRouterClient {
             .client
             .post(OPENROUTER_API_URL)
             .header("Authorization", format!("Bearer {}", self.api_key))
-            .header("HTTP-Referer", "https://wowlab.io")
+            .header("HTTP-Referer", "https://wowlab.gg")
             .header("X-Title", "WowLab Sentinel")
             .json(&request)
             .send()
@@ -175,6 +175,6 @@ mod tests {
 
     #[test]
     fn test_default_model() {
-        assert_eq!(DEFAULT_MODEL, "anthropic/claude-3-haiku");
+        assert_eq!(DEFAULT_MODEL, "anthropic/claude-haiku-4.5");
     }
 }
