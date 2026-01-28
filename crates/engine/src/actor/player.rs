@@ -3,7 +3,7 @@ use crate::combat::{ChargedCooldown, Cooldown};
 use crate::proc::ProcRegistry;
 use crate::resource::UnitResources;
 use crate::stats::StatCache;
-use std::collections::HashMap;
+use ahash::AHashMap;
 use wowlab_common::types::{SimTime, SpecId, SpellIdx, UnitIdx};
 
 #[derive(Clone, Debug)]
@@ -13,8 +13,8 @@ pub struct Player {
     pub stats: StatCache,
     pub resources: UnitResources,
     pub buffs: TargetAuras,
-    pub cooldowns: HashMap<SpellIdx, Cooldown>,
-    pub charged_cooldowns: HashMap<SpellIdx, ChargedCooldown>,
+    pub cooldowns: AHashMap<SpellIdx, Cooldown>,
+    pub charged_cooldowns: AHashMap<SpellIdx, ChargedCooldown>,
     pub procs: ProcRegistry,
     pub gcd_end: SimTime,
     pub cast_end: Option<SimTime>,
@@ -43,8 +43,8 @@ impl Player {
             stats: StatCache::new(),
             resources: UnitResources::new(),
             buffs: TargetAuras::new(),
-            cooldowns: HashMap::new(),
-            charged_cooldowns: HashMap::new(),
+            cooldowns: AHashMap::new(),
+            charged_cooldowns: AHashMap::new(),
             procs: ProcRegistry::new(),
             gcd_end: SimTime::ZERO,
             cast_end: None,

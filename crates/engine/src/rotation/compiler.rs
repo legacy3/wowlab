@@ -2,6 +2,7 @@
 //!
 //! Compiles rotation AST to native code via Cranelift.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 use cranelift::codegen::ir::BlockArg;
@@ -17,6 +18,15 @@ use super::context::{populate_context, ContextSchema, ExprKey, SchemaBuilder};
 use super::error::{Error, Result};
 use super::expr::{FieldType, TalentExpr};
 use super::resolver::SpecResolver;
+
+// Maximum size for stack-allocated context buffer.
+// Rotations with larger schemas will fall back to thread-local allocation.
+const MAX_STACK_BUFFER_SIZE: usize = 512;
+
+// Thread-local buffer for rotation context evaluation (fallback for large schemas).
+thread_local! {
+    static EVAL_BUFFER: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(1024));
+}
 
 /// Convert ValueType to FieldType.
 fn value_type_to_field_type(vt: ValueType) -> FieldType {
@@ -220,14 +230,33 @@ impl CompiledRotation {
 
     /// Evaluate the rotation.
     pub fn evaluate(&self, state: &SimState) -> EvalResult {
-        let mut buffer = vec![0u8; self.schema.size.max(8)];
-        populate_context(&mut buffer, &self.schema, state);
-        let packed = unsafe { (self.func_ptr.0)(buffer.as_ptr()) };
-        // Unpack: bits 0-31 = wait_time, bits 32-55 = spell_id, bits 56-63 = kind
-        EvalResult {
-            kind: (packed >> 56) as u8,
-            spell_id: ((packed >> 32) & 0x00FFFFFF) as u32,
-            wait_time: f32::from_bits(packed as u32),
+        let required = self.schema.size.max(8);
+
+        // Fast path: use stack buffer for typical small schemas
+        if required <= MAX_STACK_BUFFER_SIZE {
+            let mut buffer = [0u8; MAX_STACK_BUFFER_SIZE];
+            populate_context(&mut buffer[..required], &self.schema, state);
+            let packed = unsafe { (self.func_ptr.0)(buffer.as_ptr()) };
+            EvalResult {
+                kind: (packed >> 56) as u8,
+                spell_id: ((packed >> 32) & 0x00FFFFFF) as u32,
+                wait_time: f32::from_bits(packed as u32),
+            }
+        } else {
+            // Fallback: thread-local for large schemas
+            EVAL_BUFFER.with(|buf| {
+                let mut buffer = buf.borrow_mut();
+                if buffer.len() < required {
+                    buffer.resize(required, 0);
+                }
+                populate_context(&mut buffer[..required], &self.schema, state);
+                let packed = unsafe { (self.func_ptr.0)(buffer.as_ptr()) };
+                EvalResult {
+                    kind: (packed >> 56) as u8,
+                    spell_id: ((packed >> 32) & 0x00FFFFFF) as u32,
+                    wait_time: f32::from_bits(packed as u32),
+                }
+            })
         }
     }
 

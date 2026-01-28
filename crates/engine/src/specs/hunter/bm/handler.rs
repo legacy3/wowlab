@@ -63,6 +63,10 @@ pub struct BmHunter {
     talents: TalentFlags,
     tier_sets: TierSetFlags,
     rotation: CompiledRotation,
+    /// Cached talent names for hot path (computed once at creation).
+    cached_talent_names: Vec<&'static str>,
+    /// Cached damage modifiers for hot path (computed once at creation).
+    cached_damage_mods: Vec<crate::spec::DamageMod>,
 }
 
 impl BmHunter {
@@ -78,10 +82,16 @@ impl BmHunter {
         let rotation = CompiledRotation::compile_json(rotation_json, &resolver)
             .map_err(|e| format!("Compile error: {}", e))?;
 
+        // Pre-compute and cache for hot path performance
+        let cached_talent_names = active_talents(talents);
+        let cached_damage_mods = collect_damage_mods(talents);
+
         Ok(Self {
             talents,
             tier_sets,
             rotation,
+            cached_talent_names,
+            cached_damage_mods,
         })
     }
 
@@ -105,11 +115,6 @@ impl BmHunter {
 
     pub fn has_tier_set(&self, tier_set: TierSetFlags) -> bool {
         self.tier_sets.contains(tier_set)
-    }
-
-    /// Get talent names for effect execution.
-    fn talent_names(&self) -> Vec<&'static str> {
-        active_talents(self.talents)
     }
 
     /// Cast a spell using the effect system.
@@ -151,13 +156,11 @@ impl BmHunter {
         }
 
         // Execute declarative effects
-        let talents = self.talent_names();
-        let talents_slice: Vec<&'static str> = talents;
         let mut ctx = EffectContext {
             state,
             spell,
             target,
-            talents: &talents_slice,
+            talents: &self.cached_talent_names,
             get_aura: &|id| get_aura(id),
         };
         execute_effects(&mut ctx);
@@ -223,10 +226,6 @@ impl BmHunter {
         sp_coef: f32,
         school: DamageSchool,
     ) -> f32 {
-        let talents = self.talent_names();
-        let talents_slice: Vec<&'static str> = talents;
-        let damage_mods = collect_damage_mods(self.talents);
-
         let spell = spell_id.and_then(get_spell);
 
         let mut ctx = DamageContext {
@@ -234,8 +233,8 @@ impl BmHunter {
             spell,
             spell_id,
             target,
-            talents: &talents_slice,
-            modifiers: &damage_mods,
+            talents: &self.cached_talent_names,
+            modifiers: &self.cached_damage_mods,
             is_crit: false,
         };
 
