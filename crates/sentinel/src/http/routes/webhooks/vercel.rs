@@ -25,9 +25,11 @@ pub struct VercelDeploymentPayload {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 pub struct VercelPayloadInner {
     pub deployment: VercelDeployment,
     pub project: VercelProject,
+    pub target: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -35,9 +37,8 @@ pub struct VercelPayloadInner {
 pub struct VercelDeployment {
     pub id: String,
     pub url: String,
+    /// The project name used in the deployment URL
     pub name: String,
-    #[serde(rename = "readyState")]
-    pub ready_state: Option<String>,
     pub meta: Option<VercelMeta>,
 }
 
@@ -56,7 +57,6 @@ pub struct VercelMeta {
 #[allow(dead_code)]
 pub struct VercelProject {
     pub id: String,
-    pub name: String,
 }
 
 /// Verify Vercel webhook signature using HMAC-SHA1.
@@ -115,34 +115,24 @@ pub async fn handle(
         }
     };
 
-    let status = payload
-        .payload
-        .deployment
-        .ready_state
-        .as_deref()
-        .unwrap_or("unknown");
+    let project_name = &payload.payload.deployment.name;
 
     tracing::info!(
-        project = %payload.payload.project.name,
+        project = %project_name,
         deployment_url = %payload.payload.deployment.url,
-        status = %status,
         event_type = %payload.event_type,
         "Received Vercel deployment webhook"
     );
 
-    // Only notify on deployment.ready or deployment.error events
-    let (status_text, color) = match (payload.event_type.as_str(), status) {
-        ("deployment.ready", _) | (_, "READY") => ("deployed successfully", COLOR_DEPLOY_SUCCESS),
-        ("deployment.error", _) | (_, "ERROR") => ("failed to deploy", COLOR_DEPLOY_FAILED),
-        ("deployment.created", _) | (_, "BUILDING") => ("started building", COLOR_DEPLOY_BUILDING),
+    // Only notify on deployment.ready, deployment.succeeded, or deployment.error events
+    let (status_text, color) = match payload.event_type.as_str() {
+        "deployment.ready" | "deployment.succeeded" => ("deployed successfully", COLOR_DEPLOY_SUCCESS),
+        "deployment.error" => ("failed to deploy", COLOR_DEPLOY_FAILED),
+        "deployment.created" => ("started building", COLOR_DEPLOY_BUILDING),
         _ => return StatusCode::OK.into_response(),
     };
 
-    let mut description = format!(
-        "{} {}",
-        md::bold(&payload.payload.project.name),
-        status_text
-    );
+    let mut description = format!("{} {}", md::bold(project_name), status_text);
 
     // Add commit info if available
     if let Some(meta) = &payload.payload.deployment.meta {
@@ -157,10 +147,7 @@ pub async fn handle(
 
     let notification = Notification::new(
         NotificationEvent::Deployment,
-        format!(
-            "[{}] Deployment {}",
-            payload.payload.project.name, status_text
-        ),
+        format!("[{}] Deployment {}", project_name, status_text),
         description,
     )
     .url(format!("https://{}", payload.payload.deployment.url))
