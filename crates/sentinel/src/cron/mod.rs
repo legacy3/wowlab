@@ -49,6 +49,7 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
                 let job = job.clone();
                 Box::pin(async move {
                     job.run(&state).await;
+                    state.touch_cron();
                 })
             })?)
             .await?;

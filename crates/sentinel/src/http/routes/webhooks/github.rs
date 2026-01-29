@@ -115,13 +115,9 @@ pub async fn handle(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    // Get webhook secret from environment
-    let secret = match std::env::var("GITHUB_WEBHOOK_SECRET") {
-        Ok(s) => s,
-        Err(_) => {
-            tracing::error!("GITHUB_WEBHOOK_SECRET not configured");
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
+    let Some(ref secret) = state.config.github_webhook_secret else {
+        tracing::error!("SENTINEL_GITHUB_WEBHOOK_SECRET not configured");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
 
     // Verify signature
@@ -141,10 +137,19 @@ pub async fn handle(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
+    use crate::telemetry::{record_github_webhook, GitHubEvent};
+
     match event_type {
-        "push" => handle_push(&state, &body).await,
-        "pull_request" => handle_pr(&state, &body).await,
+        "push" => {
+            record_github_webhook(GitHubEvent::Push);
+            handle_push(&state, &body).await
+        }
+        "pull_request" => {
+            record_github_webhook(GitHubEvent::PullRequest);
+            handle_pr(&state, &body).await
+        }
         "ping" => {
+            record_github_webhook(GitHubEvent::Ping);
             tracing::info!("Received GitHub ping webhook");
             StatusCode::OK.into_response()
         }
@@ -224,7 +229,10 @@ async fn handle_push(state: &ServerState, body: &[u8]) -> Response {
     .url(&payload.compare);
 
     if let Some(content) = thread_content {
-        notification = notification.thread_content(content);
+        let short_hash = &payload.after[..7];
+        notification = notification
+            .thread_content(content)
+            .thread_name(format!("Summary #{}", short_hash));
     }
 
     if let Err(e) = state.notification_tx.send(notification) {
@@ -236,11 +244,6 @@ async fn handle_push(state: &ServerState, body: &[u8]) -> Response {
 
 /// Fetch the diff from GitHub and generate an AI summary.
 async fn generate_ai_summary(state: &ServerState, compare_url: &str) -> Option<String> {
-    // Check if AI summaries are enabled
-    if std::env::var("AI_SUMMARY_ENABLED").ok()?.to_lowercase() != "true" {
-        return None;
-    }
-
     let ai_client = state.ai_client.as_ref()?;
 
     // Fetch the diff from GitHub (compare_url + .diff)
@@ -251,16 +254,16 @@ async fn generate_ai_summary(state: &ServerState, compare_url: &str) -> Option<S
         return None;
     }
 
-    // Truncate very large diffs to avoid token limits
-    let truncated = if diff.len() > 15000 {
-        format!("{}...\n[truncated]", &diff[..15000])
-    } else {
-        diff
-    };
+    // Truncation is handled by the AI client using tiktoken
+    use crate::telemetry::{record_ai_summary, AiSummaryStatus};
 
-    match ai_client.summarize_diff(&truncated).await {
-        Ok(summary) => Some(summary),
+    match ai_client.summarize_diff(&diff).await {
+        Ok(summary) => {
+            record_ai_summary(AiSummaryStatus::Success);
+            Some(summary)
+        }
         Err(e) => {
+            record_ai_summary(AiSummaryStatus::Error);
             tracing::warn!(error = %e, "Failed to generate AI diff summary");
             None
         }

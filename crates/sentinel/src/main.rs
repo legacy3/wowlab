@@ -8,9 +8,8 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
-use wowlab_sentinel::{ai, notifications};
 use wowlab_sentinel::state::ServerState;
-use wowlab_sentinel::{bot, cron, http, presence, scheduler};
+use wowlab_sentinel::{ai, bot, cron, http, notifications, presence, scheduler, Config};
 
 fn load_env() {
     if dotenvy::dotenv().is_err() {
@@ -30,39 +29,46 @@ async fn main() {
         )
         .init();
 
+    let config = Config::from_env();
+    if let Err(e) = config.validate() {
+        panic!("Configuration error: {}", e);
+    }
+
     let prometheus = PrometheusBuilder::new()
         .install_recorder()
         .expect("Failed to install prometheus recorder");
 
-    let db_url = std::env::var("SUPABASE_DB_URL").expect("SUPABASE_DB_URL required");
     let db = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(std::time::Duration::from_secs(5))
         .idle_timeout(std::time::Duration::from_secs(600))
-        .connect(&db_url)
+        .connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
 
     let filters = Arc::new(RwLock::new(HashMap::new()));
     let (notification_tx, notification_rx) = notifications::channel();
-    let ai_client = ai::default_client();
+    let ai_client = ai::client_from_config(&config);
     if ai_client.is_some() {
-        tracing::info!("AI summarization enabled (OpenRouter)");
+        tracing::info!("AI summarization enabled ({})", config.ai_model);
     }
     let state = Arc::new(ServerState {
+        config,
         db,
         filters,
         started_at: Instant::now(),
         prometheus,
         shard_manager: OnceLock::new(),
         last_scheduler_tick: AtomicU64::new(0),
+        last_presence_tick: AtomicU64::new(0),
+        last_cron_tick: AtomicU64::new(0),
         notification_tx,
         ai_client,
     });
 
     wowlab_sentinel::telemetry::init();
 
-    tracing::info!("Starting wowlab-sentinel (bot + scheduler + http)");
+    tracing::info!("Starting wowlab-sentinel");
 
     let shutdown = CancellationToken::new();
 

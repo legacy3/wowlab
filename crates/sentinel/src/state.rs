@@ -7,16 +7,20 @@ use poise::serenity_prelude::{ConnectionStage, ShardManager};
 use sqlx::PgPool;
 
 use crate::ai::AiBackend;
+use crate::config::Config;
 use crate::notifications::NotificationSender;
 use crate::utils::filter_refresh::FilterMap;
 
 pub struct ServerState {
+    pub config: Config,
     pub db: PgPool,
     pub filters: FilterMap,
     pub started_at: Instant,
     pub prometheus: PrometheusHandle,
     pub shard_manager: OnceLock<Arc<ShardManager>>,
     pub last_scheduler_tick: AtomicU64,
+    pub last_presence_tick: AtomicU64,
+    pub last_cron_tick: AtomicU64,
     pub notification_tx: NotificationSender,
     pub ai_client: Option<Box<dyn AiBackend>>,
 }
@@ -27,8 +31,17 @@ impl ServerState {
     }
 
     pub fn touch_scheduler(&self) {
-        let now = epoch_secs();
-        self.last_scheduler_tick.store(now, Ordering::Relaxed);
+        self.last_scheduler_tick
+            .store(epoch_secs(), Ordering::Relaxed);
+    }
+
+    pub fn touch_presence(&self) {
+        self.last_presence_tick
+            .store(epoch_secs(), Ordering::Relaxed);
+    }
+
+    pub fn touch_cron(&self) {
+        self.last_cron_tick.store(epoch_secs(), Ordering::Relaxed);
     }
 
     pub async fn bot_healthy(&self) -> bool {
@@ -44,6 +57,16 @@ impl ServerState {
 
     pub fn scheduler_healthy(&self) -> bool {
         age_secs(self.last_scheduler_tick.load(Ordering::Relaxed)) < 60
+    }
+
+    pub fn presence_healthy(&self) -> bool {
+        // Presence polls every 5s, allow 30s grace period
+        age_secs(self.last_presence_tick.load(Ordering::Relaxed)) < 30
+    }
+
+    pub fn cron_healthy(&self) -> bool {
+        // Cron runs jobs every 30s at minimum, allow 90s grace period
+        age_secs(self.last_cron_tick.load(Ordering::Relaxed)) < 90
     }
 }
 

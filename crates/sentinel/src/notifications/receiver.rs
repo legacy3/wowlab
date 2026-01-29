@@ -88,12 +88,14 @@ pub async fn run(mut rx: mpsc::UnboundedReceiver<Notification>, http: Arc<Http>,
 
             // Post thread reply if thread_content is set
             if let Some(ref thread_content) = notification.thread_content {
+                let thread_name = notification.thread_name.as_deref().unwrap_or("AI Summary");
+
                 let thread = match sent_message
                     .channel_id
                     .create_thread_from_message(
                         &http,
                         sent_message.id,
-                        CreateThread::new("AI Summary")
+                        CreateThread::new(thread_name)
                             .auto_archive_duration(AutoArchiveDuration::OneHour),
                     )
                     .await

@@ -7,6 +7,14 @@ use serde_json::{json, Value};
 use crate::state::ServerState;
 use crate::utils::sys;
 
+fn status_str(healthy: bool) -> &'static str {
+    if healthy {
+        "OK"
+    } else {
+        "DEGRADED"
+    }
+}
+
 pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     let uptime = state.started_at.elapsed().as_secs();
     let memory_mb = sys::read_memory_mb();
@@ -15,22 +23,8 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     let cpu = sys::cpu_usage_percent().await;
 
     let db_start = std::time::Instant::now();
-    let db_status = match sqlx::query("SELECT 1").execute(&state.db).await {
-        Ok(_) => "OK",
-        Err(_) => "ERROR",
-    };
+    let db_healthy = sqlx::query("SELECT 1").execute(&state.db).await.is_ok();
     let db_ping_ms = db_start.elapsed().as_millis() as u64;
-
-    let bot_status = if state.bot_healthy().await {
-        "OK"
-    } else {
-        "DEGRADED"
-    };
-    let scheduler_status = if state.scheduler_healthy() {
-        "OK"
-    } else {
-        "DEGRADED"
-    };
 
     Json(json!({
         "status": "success",
@@ -45,9 +39,11 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
                 "available": (os_mem_available * 10.0).round() / 10.0,
             },
             "services": [
-                { "name": "Bot", "status": bot_status },
-                { "name": "Scheduler", "status": scheduler_status },
-                { "name": "Database", "status": db_status, "ping": db_ping_ms },
+                { "name": "Bot", "status": status_str(state.bot_healthy().await) },
+                { "name": "Scheduler", "status": status_str(state.scheduler_healthy()) },
+                { "name": "Presence", "status": status_str(state.presence_healthy()) },
+                { "name": "Cron", "status": status_str(state.cron_healthy()) },
+                { "name": "Database", "status": status_str(db_healthy), "ping_ms": db_ping_ms },
             ]
         }
     }))

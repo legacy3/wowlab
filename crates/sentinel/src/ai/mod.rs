@@ -7,6 +7,7 @@ mod prompts;
 
 use async_trait::async_trait;
 
+use crate::config::Config;
 pub use openrouter::OpenRouterClient;
 
 /// Error type for AI operations.
@@ -35,9 +36,19 @@ pub trait AiBackend: Send + Sync {
     async fn complete(&self, prompt: &str, max_tokens: u32) -> Result<String, AiError>;
 }
 
-/// Create the default AI client from environment variables.
+/// Create an AI client from configuration.
 ///
-/// Returns `None` if `OPENROUTER_API_KEY` is not set.
-pub fn default_client() -> Option<Box<dyn AiBackend>> {
-    OpenRouterClient::from_env().map(|c| Box::new(c) as Box<dyn AiBackend>)
+/// Returns `None` if AI is not enabled or API key is not set.
+pub fn client_from_config(config: &Config) -> Option<Box<dyn AiBackend>> {
+    if !config.ai_enabled {
+        return None;
+    }
+    let api_key = config.ai_api_key.as_ref()?;
+    Some(Box::new(OpenRouterClient::new(
+        api_key.clone(),
+        config.ai_model.clone(),
+        config.ai_max_input_tokens,
+        config.ai_diff_output_tokens,
+        config.ai_commit_output_tokens,
+    )))
 }

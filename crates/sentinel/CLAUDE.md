@@ -12,7 +12,7 @@ cargo test                # Bloom filter tests
 RUST_LOG=sentinel=debug ./target/release/sentinel
 ```
 
-Requires `DISCORD_TOKEN` and `SUPABASE_DB_URL` environment variables.
+Requires `SENTINEL_DISCORD_TOKEN`, `SENTINEL_DATABASE_URL`, `SENTINEL_CENTRIFUGO_URL`, and `SENTINEL_CENTRIFUGO_KEY` environment variables. See `.env.example` for all options.
 
 ## Architecture
 
@@ -41,14 +41,16 @@ src/
     sys.rs          - Linux /proc system metrics
     colors.rs       - Discord embed color constants
     meta.rs         - App metadata constants
-  state.rs          - Shared ServerState (db, filters, metrics, shard manager)
+  config.rs         - Centralized Config struct (loads from SENTINEL_* env vars)
+  state.rs          - Shared ServerState (config, db, filters, metrics, shard manager)
   telemetry.rs      - Prometheus metrics + RecordGaugesJob cron
   main.rs           - Entry point, runs bot + scheduler + cron + http via tokio::select!
 ```
 
 ## Key Types
 
-- `ServerState` - Shared across all services (PgPool, FilterMap, PrometheusHandle, ShardManager)
+- `Config` - Centralized configuration from environment variables
+- `ServerState` - Shared across all services (Config, PgPool, FilterMap, PrometheusHandle, ShardManager)
 - `BloomFilter` - SHA-256 based, interoperable with TypeScript implementation
 - `FilterMap` - `Arc<RwLock<HashMap<GuildId, GuildFilter>>>`
 - `CancellationToken` - Graceful shutdown signal across services

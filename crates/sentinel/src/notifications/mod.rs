@@ -23,6 +23,8 @@ pub struct Notification {
     pub color: u32,
     /// Optional content to post as a threaded reply under the main message.
     pub thread_content: Option<String>,
+    /// Optional name for the thread (defaults to "AI Summary" if not set).
+    pub thread_name: Option<String>,
 }
 
 impl Notification {
@@ -40,6 +42,7 @@ impl Notification {
             url: None,
             fields: Vec::new(),
             thread_content: None,
+            thread_name: None,
         }
     }
 
@@ -64,6 +67,12 @@ impl Notification {
     /// Set content to be posted as a threaded reply.
     pub fn thread_content(mut self, content: impl Into<String>) -> Self {
         self.thread_content = Some(content.into());
+        self
+    }
+
+    /// Set the name for the thread.
+    pub fn thread_name(mut self, name: impl Into<String>) -> Self {
+        self.thread_name = Some(name.into());
         self
     }
 }

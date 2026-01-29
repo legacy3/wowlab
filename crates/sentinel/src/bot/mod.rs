@@ -23,7 +23,7 @@ pub async fn run(
     notification_rx: NotificationReceiver,
     shutdown: CancellationToken,
 ) -> Result<(), Error> {
-    let token = std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN env var required");
+    let token = state.config.discord_token.clone();
 
     let intents = serenity::GatewayIntents::non_privileged()
         | serenity::GatewayIntents::GUILD_MEMBERS

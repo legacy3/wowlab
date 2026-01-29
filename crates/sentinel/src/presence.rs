@@ -5,7 +5,6 @@
 
 use std::collections::HashSet;
 use std::sync::Arc;
-use std::time::Duration;
 
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
@@ -18,18 +17,16 @@ use wowlab_centrifugo::{CentrifugoApi, Error as CentrifugoError};
 /// Centrifugo error code for "unknown channel" (no subscribers yet).
 const ERROR_UNKNOWN_CHANNEL: u32 = 102;
 
-const POLL_INTERVAL: Duration = Duration::from_secs(5);
-
 pub async fn run(
     state: Arc<ServerState>,
     shutdown: CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let api =
-        CentrifugoApi::from_env().expect("CENTRIFUGO_API_URL and CENTRIFUGO_HTTP_API_KEY required");
+    let api = CentrifugoApi::new(&state.config.centrifugo_url, &state.config.centrifugo_key);
+    let poll_interval = state.config.presence_poll_interval;
 
     tracing::info!(
         "Presence monitor starting (polling every {:?})",
-        POLL_INTERVAL
+        poll_interval
     );
 
     let mut previous_online: HashSet<Uuid> = HashSet::new();
@@ -40,7 +37,7 @@ pub async fn run(
                 tracing::info!("Presence monitor shutting down");
                 return Ok(());
             }
-            _ = tokio::time::sleep(POLL_INTERVAL) => {
+            _ = tokio::time::sleep(poll_interval) => {
                 let current_online = match api.presence("nodes:online").await {
                     Ok(ids) => ids,
                     // "Unknown channel" means no nodes are subscribed yet - treat as empty
@@ -70,6 +67,8 @@ pub async fn run(
                 }
 
                 metrics::gauge!(crate::telemetry::NODES_ONLINE).set(current_set.len() as f64);
+                metrics::counter!(crate::telemetry::PRESENCE_POLLS).increment(1);
+                state.touch_presence();
                 previous_online = current_set;
             }
         }

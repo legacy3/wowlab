@@ -82,13 +82,9 @@ pub async fn handle(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    // Get webhook secret from environment
-    let secret = match std::env::var("VERCEL_WEBHOOK_SECRET") {
-        Ok(s) => s,
-        Err(_) => {
-            tracing::error!("VERCEL_WEBHOOK_SECRET not configured");
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
+    let Some(ref secret) = state.config.vercel_webhook_secret else {
+        tracing::error!("SENTINEL_VERCEL_WEBHOOK_SECRET not configured");
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
 
     // Verify signature
@@ -115,6 +111,8 @@ pub async fn handle(
         }
     };
 
+    use crate::telemetry::{record_vercel_webhook, VercelEvent};
+
     let project_name = &payload.payload.deployment.name;
 
     tracing::info!(
@@ -124,13 +122,32 @@ pub async fn handle(
         "Received Vercel deployment webhook"
     );
 
-    // Only notify on deployment.ready, deployment.succeeded, or deployment.error events
-    let (status_text, color) = match payload.event_type.as_str() {
-        "deployment.ready" | "deployment.succeeded" => ("deployed successfully", COLOR_DEPLOY_SUCCESS),
-        "deployment.error" => ("failed to deploy", COLOR_DEPLOY_FAILED),
-        "deployment.created" => ("started building", COLOR_DEPLOY_BUILDING),
+    // Only notify on known deployment events
+    let (event, status_text, color) = match payload.event_type.as_str() {
+        "deployment.ready" => (
+            VercelEvent::DeploymentReady,
+            "deployed successfully",
+            COLOR_DEPLOY_SUCCESS,
+        ),
+        "deployment.succeeded" => (
+            VercelEvent::DeploymentSucceeded,
+            "deployed successfully",
+            COLOR_DEPLOY_SUCCESS,
+        ),
+        "deployment.error" => (
+            VercelEvent::DeploymentError,
+            "failed to deploy",
+            COLOR_DEPLOY_FAILED,
+        ),
+        "deployment.created" => (
+            VercelEvent::DeploymentCreated,
+            "started building",
+            COLOR_DEPLOY_BUILDING,
+        ),
         _ => return StatusCode::OK.into_response(),
     };
+
+    record_vercel_webhook(event);
 
     let mut description = format!("{} {}", md::bold(project_name), status_text);
 

@@ -224,7 +224,7 @@ async fn complete(
         .execute(&state.db)
         .await;
 
-        metrics::counter!("chunks_completed").increment(1);
+        metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 
         return (
             StatusCode::OK,
@@ -244,7 +244,7 @@ async fn complete(
     .execute(&state.db)
     .await;
 
-    metrics::counter!("chunks_completed").increment(1);
+    metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 
     (
         StatusCode::OK,

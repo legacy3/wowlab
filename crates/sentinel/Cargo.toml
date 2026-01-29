@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.6.7"
+version = "0.6.8"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -64,5 +64,8 @@ async-trait = "0.1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0.15"
+
+# Tokenization
+tiktoken-rs = "0.9"
 
 [dev-dependencies]
