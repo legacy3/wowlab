@@ -17,7 +17,7 @@ export function RefineProvider({ children }: { children: React.ReactNode }) {
         authProvider={authProvider}
         dataProvider={{ default: dataProvider }}
         liveProvider={liveProvider}
-        options={{ disableTelemetry: true, liveMode: "auto" }}
+        options={{ disableTelemetry: true, liveMode: "off" }}
         resources={resources}
         routerProvider={routerProvider}
       >

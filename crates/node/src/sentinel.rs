@@ -25,6 +25,8 @@ pub trait RequestSigner: Send + Sync {
 pub struct RegisterResponse {
     pub id: Uuid,
     pub claim_code: String,
+    #[serde(default)]
+    pub beacon_token: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -136,6 +138,25 @@ impl SentinelClient {
         }
 
         Ok(())
+    }
+
+    /// Refresh beacon token for realtime connection.
+    pub async fn refresh_token(&self) -> Result<String, SentinelError> {
+        let response = self.signed_post("/nodes/token", &[]).await?;
+
+        if !response.status().is_success() {
+            let error = response.text().await.unwrap_or_default();
+            return Err(SentinelError::Api(error));
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct TokenResponse {
+            beacon_token: String,
+        }
+
+        let resp: TokenResponse = response.json().await?;
+        Ok(resp.beacon_token)
     }
 
     /// Submit completed chunk result.

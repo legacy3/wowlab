@@ -164,6 +164,7 @@ export function useNode(nodeId: string | undefined) {
   const { data, error, isError, isLoading } = useResource<NodeWithPermissions>({
     ...nodes,
     id: nodeId ?? "",
+    liveMode: "auto",
     meta: { select: "*, nodes_permissions(*)" },
     queryOptions: { enabled: !!nodeId },
   });
@@ -268,6 +269,7 @@ export function useNodes(userId: string | undefined) {
     filters: effectiveUserId
       ? [{ field: "user_id", operator: "eq", value: effectiveUserId }]
       : [],
+    liveMode: "auto",
     pagination: { mode: "off" },
     queryOptions: {
       enabled: !!effectiveUserId,
@@ -285,6 +287,7 @@ export function useNodes(userId: string | undefined) {
       nodeIds.length > 0
         ? [{ field: "node_id", operator: "in", value: nodeIds }]
         : [],
+    liveMode: "auto",
     pagination: { mode: "off" },
     queryOptions: { enabled: nodeIds.length > 0 },
   });
@@ -296,6 +299,7 @@ export function useNodes(userId: string | undefined) {
     filters: effectiveUserId
       ? [{ field: "user_id", operator: "ne", value: effectiveUserId }]
       : [],
+    liveMode: "auto",
     meta: {
       select:
         "*, nodes_permissions!inner(access_type, target_id, node_id, id, created_at)",

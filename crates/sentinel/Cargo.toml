@@ -48,6 +48,7 @@ thiserror = "2"
 
 # Types
 uuid = { version = "1", features = ["serde"] }
+chrono = "0.4"
 
 # Metrics
 metrics = "0.24"
@@ -67,5 +68,8 @@ dotenvy = "0.15"
 
 # Tokenization
 tiktoken-rs = "0.9"
+
+# JWT
+jsonwebtoken = "9"
 
 [dev-dependencies]

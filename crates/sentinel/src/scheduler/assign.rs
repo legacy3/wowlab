@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use poise::serenity_prelude::GuildId;
+use serde::Serialize;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -72,6 +73,29 @@ pub async fn assign_pending_chunks(
     batch_assign(&state.db, &assignments).await?;
     metrics::counter!(crate::telemetry::CHUNKS_ASSIGNED).increment(assignments.len() as u64);
     tracing::debug!(count = assignments.len(), "Assigned chunks to nodes");
+
+    // 7. Fetch details for publishing
+    let chunk_details = fetch_assigned_chunk_details(&state.db, &assignments).await?;
+
+    // 8. Publish to nodes
+    for detail in chunk_details {
+        let payload = ChunkAssignment {
+            id: detail.id,
+            iterations: detail.iterations,
+            config_hash: detail.config_hash,
+            seed_offset: detail.seed_offset,
+        };
+
+        let channel = format!("chunks:{}", detail.node_id);
+        if let Err(e) = state.centrifugo.publish(&channel, &payload).await {
+            tracing::warn!(
+                error = %e,
+                chunk_id = %detail.id,
+                node_id = %detail.node_id,
+                "Failed to publish chunk assignment"
+            );
+        }
+    }
 
     Ok(())
 }
@@ -187,6 +211,23 @@ async fn fetch_backlogs(db: &PgPool) -> Result<HashMap<Uuid, usize>, sqlx::Error
         .collect())
 }
 
+async fn fetch_assigned_chunk_details(
+    db: &PgPool,
+    assignments: &[Assignment],
+) -> Result<Vec<ChunkDetail>, sqlx::Error> {
+    let chunk_ids: Vec<Uuid> = assignments.iter().map(|a| a.chunk_id).collect();
+
+    sqlx::query_as::<_, ChunkDetail>(
+        r#"SELECT c.id, c.node_id, c.iterations, j.config_hash, c.seed_offset
+           FROM jobs_chunks c
+           JOIN jobs j ON j.id = c.job_id
+           WHERE c.id = ANY($1)"#,
+    )
+    .bind(&chunk_ids)
+    .fetch_all(db)
+    .await
+}
+
 async fn batch_assign(db: &PgPool, assignments: &[Assignment]) -> Result<(), sqlx::Error> {
     let chunk_ids: Vec<Uuid> = assignments.iter().map(|a| a.chunk_id).collect();
     let node_ids: Vec<Uuid> = assignments.iter().map(|a| a.node_id).collect();
@@ -247,4 +288,22 @@ struct BacklogRow {
 struct Assignment {
     chunk_id: Uuid,
     node_id: Uuid,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ChunkDetail {
+    id: Uuid,
+    node_id: Uuid,
+    iterations: i32,
+    config_hash: String,
+    seed_offset: i32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChunkAssignment {
+    id: Uuid,
+    iterations: i32,
+    config_hash: String,
+    seed_offset: i32,
 }

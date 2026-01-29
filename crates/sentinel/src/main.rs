@@ -8,6 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
+use wowlab_centrifugo::CentrifugoApi;
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{ai, bot, cron, http, notifications, presence, scheduler, Config};
 
@@ -52,6 +53,7 @@ async fn main() {
     if ai_client.is_some() {
         tracing::info!("AI summarization enabled ({})", config.ai_model);
     }
+    let centrifugo = CentrifugoApi::new(&config.centrifugo_url, &config.centrifugo_key);
     let state = Arc::new(ServerState {
         config,
         db,
@@ -64,6 +66,7 @@ async fn main() {
         last_cron_tick: AtomicU64::new(0),
         notification_tx,
         ai_client,
+        centrifugo,
     });
 
     wowlab_sentinel::telemetry::init();

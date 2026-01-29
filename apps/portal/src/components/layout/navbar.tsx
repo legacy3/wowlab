@@ -10,6 +10,7 @@ import { useComputingDrawer, useUserJobs } from "@/lib/state";
 
 import { AuthButton } from "./auth-button";
 import { LocaleSwitcher } from "./locale-switcher";
+import { OnlineIndicator } from "./online-indicator";
 import { useSidebar } from "./sidebar-context";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -37,6 +38,7 @@ export function Navbar() {
         </IconButton>
         <Box display={{ base: "none", lg: "block" }} />
         <Flex align="center" gap="2">
+          <OnlineIndicator />
           <Tooltip content={content.computing}>
             <IconButton
               variant="plain"

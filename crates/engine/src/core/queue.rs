@@ -189,7 +189,7 @@ impl EventQueue {
             let node = &self.arena[head_idx as usize];
             return Some(ScheduledEvent {
                 time: SimTime::from_millis(node.time_ms),
-                event: node.event.clone(),
+                event: node.event,
             });
         }
 
@@ -198,7 +198,7 @@ impl EventQueue {
         let node = &self.arena[head_idx as usize];
         Some(ScheduledEvent {
             time: SimTime::from_millis(node.time_ms),
-            event: node.event.clone(),
+            event: node.event,
         })
     }
 

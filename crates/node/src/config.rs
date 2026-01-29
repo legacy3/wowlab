@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 const DEFAULT_API_URL: &str = "https://api.wowlab.gg";
 const DEFAULT_SENTINEL_URL: &str = "https://sentinel.wowlab.gg";
+const DEFAULT_BEACON_URL: &str = "wss://beacon.wowlab.gg/connection/websocket";
 const DEFAULT_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -23,8 +24,12 @@ pub struct NodeConfig {
     pub api_url: String,
     #[serde(default = "default_sentinel_url")]
     pub sentinel_url: String,
+    #[serde(default = "default_beacon_url")]
+    pub beacon_url: String,
     #[serde(default = "default_anon_key")]
     pub anon_key: String,
+    #[serde(default)]
+    pub beacon_token: Option<String>,
 }
 
 fn default_api_url() -> String {
@@ -33,6 +38,10 @@ fn default_api_url() -> String {
 
 fn default_sentinel_url() -> String {
     DEFAULT_SENTINEL_URL.to_string()
+}
+
+fn default_beacon_url() -> String {
+    DEFAULT_BEACON_URL.to_string()
 }
 
 fn default_anon_key() -> String {
@@ -45,7 +54,9 @@ impl Default for NodeConfig {
             node_id: None,
             api_url: default_api_url(),
             sentinel_url: default_sentinel_url(),
+            beacon_url: default_beacon_url(),
             anon_key: default_anon_key(),
+            beacon_token: None,
         }
     }
 }
@@ -113,7 +124,12 @@ impl NodeConfig {
 
         let _ = writeln!(content, "api_url = {}", self.api_url);
         let _ = writeln!(content, "sentinel_url = {}", self.sentinel_url);
+        let _ = writeln!(content, "beacon_url = {}", self.beacon_url);
         let _ = writeln!(content, "anon_key = {}", self.anon_key);
+
+        if let Some(token) = &self.beacon_token {
+            let _ = writeln!(content, "beacon_token = {token}");
+        }
 
         if let Err(e) = std::fs::write(&path, content) {
             tracing::error!("Failed to save config: {}", e);
@@ -127,6 +143,11 @@ impl NodeConfig {
 
     pub fn clear_node_id(&mut self) {
         self.node_id = None;
+        self.save();
+    }
+
+    pub fn set_beacon_token(&mut self, token: String) {
+        self.beacon_token = Some(token);
         self.save();
     }
 

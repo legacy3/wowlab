@@ -5,6 +5,8 @@ import type {
 
 import { Centrifuge, type Subscription } from "centrifuge";
 
+import { useLiveStore } from "@/lib/state/live";
+
 let client: Centrifuge | null = null;
 const subs = new Map<string, Subscription>();
 
@@ -13,9 +15,16 @@ function getClient() {
     const url =
       process.env.NEXT_PUBLIC_CENTRIFUGO_URL ??
       "wss://beacon.wowlab.gg/connection/websocket";
+
     client = new Centrifuge(url, { getToken });
+
+    client.on("state", (ctx) => {
+      useLiveStore.getState().setState(ctx.newState);
+    });
+
     client.connect();
   }
+
   return client;
 }
 
@@ -24,6 +33,7 @@ async function getToken() {
   if (!res.ok) {
     throw new Error("Failed to get Centrifugo token");
   }
+
   return (await res.json()).token;
 }
 

@@ -41,7 +41,7 @@ pub enum NodeCoreEvent {
 }
 
 enum RegisterResult {
-    Success { id: Uuid, code: String },
+    Success { id: Uuid, code: String, token: Option<String> },
     Failed(String),
 }
 
@@ -334,8 +334,8 @@ impl NodeCore {
 
         self.runtime.spawn(async move {
             match claim::register(&sentinel).await {
-                Ok((id, code)) => {
-                    let _ = tx.send(RegisterResult::Success { id, code }).await;
+                Ok((id, code, token)) => {
+                    let _ = tx.send(RegisterResult::Success { id, code, token }).await;
                 }
                 Err(e) => {
                     tracing::error!("Registration failed: {}", e);
@@ -351,8 +351,14 @@ impl NodeCore {
             token.cancel();
         }
 
+        // Get token from config, or skip if not available
+        let Some(beacon_token) = self.config.beacon_token.as_ref() else {
+            tracing::warn!("No beacon token available, skipping realtime connection");
+            return;
+        };
+
         let shutdown = CancellationToken::new();
-        let realtime = NodeRealtime::new(&self.config.api_url, &self.config.anon_key);
+        let realtime = NodeRealtime::new(&self.config.beacon_url, beacon_token);
         self.realtime_rx =
             Some(realtime.subscribe(node_id, self.runtime.handle(), shutdown.clone()));
         self.realtime_shutdown = Some(shutdown);
@@ -364,9 +370,15 @@ impl NodeCore {
         };
 
         match rx.try_recv() {
-            Ok(RegisterResult::Success { id, code }) => {
+            Ok(RegisterResult::Success { id, code, token }) => {
                 self.node_id = Some(id);
                 self.config.set_node_id(id);
+
+                // Store beacon token if provided
+                if let Some(t) = token {
+                    self.config.set_beacon_token(t);
+                }
+
                 self.backoff.reset();
                 self.state = NodeState::Claiming { code: code.clone() };
                 tracing::info!("Registered! Claim code: {code}");

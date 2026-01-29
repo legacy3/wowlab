@@ -5,6 +5,7 @@ use std::time::Instant;
 use metrics_exporter_prometheus::PrometheusHandle;
 use poise::serenity_prelude::{ConnectionStage, ShardManager};
 use sqlx::PgPool;
+use wowlab_centrifugo::CentrifugoApi;
 
 use crate::ai::AiBackend;
 use crate::config::Config;
@@ -23,6 +24,7 @@ pub struct ServerState {
     pub last_cron_tick: AtomicU64,
     pub notification_tx: NotificationSender,
     pub ai_client: Option<Box<dyn AiBackend>>,
+    pub centrifugo: CentrifugoApi,
 }
 
 impl ServerState {

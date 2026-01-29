@@ -63,6 +63,12 @@ pub struct Config {
     // -------------------------------------------------------------------------
     /// Presence poll interval (default: 5s).
     pub presence_poll_interval: Duration,
+
+    // -------------------------------------------------------------------------
+    // Centrifugo Token
+    // -------------------------------------------------------------------------
+    /// HMAC secret for signing Centrifugo client tokens.
+    pub centrifugo_token_secret: String,
 }
 
 impl Config {
@@ -99,6 +105,9 @@ impl Config {
                 "SENTINEL_PRESENCE_POLL_INTERVAL",
                 5,
             )),
+
+            // Centrifugo Token
+            centrifugo_token_secret: require("SENTINEL_CENTRIFUGO_TOKEN_SECRET"),
         }
     }
 

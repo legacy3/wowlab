@@ -5,11 +5,28 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Extension, Json, Router};
-use serde::Deserialize;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct JobProgressEvent {
+    r#type: &'static str,
+    payload: JobProgressPayload,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct JobProgressPayload {
+    status: String,
+    chunks_completed: i64,
+    chunks_total: i64,
+    completed_at: Option<String>,
+}
 
 /// Create router for chunk API endpoints.
 pub fn router() -> Router<Arc<ServerState>> {
@@ -224,6 +241,25 @@ async fn complete(
         .execute(&state.db)
         .await;
 
+        // Publish job completion to Portal
+        let event = JobProgressEvent {
+            r#type: "updated",
+            payload: JobProgressPayload {
+                status: "completed".to_string(),
+                chunks_completed: chunks.len() as i64,
+                chunks_total: chunks.len() as i64,
+                completed_at: Some(Utc::now().to_rfc3339()),
+            },
+        };
+
+        if let Err(e) = state
+            .centrifugo
+            .publish(&format!("jobs:{}", job_id), &event)
+            .await
+        {
+            tracing::warn!(error = %e, job_id = %job_id, "Failed to publish job completion");
+        }
+
         metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 
         return (
@@ -243,6 +279,33 @@ async fn complete(
     .bind(job_id)
     .execute(&state.db)
     .await;
+
+    // Publish job progress to Portal
+    let (chunks_completed, chunks_total): (i64, i64) = sqlx::query_as(
+        "SELECT COUNT(*) FILTER (WHERE status = 'completed'), COUNT(*) FROM jobs_chunks WHERE job_id = $1",
+    )
+    .bind(job_id)
+    .fetch_one(&state.db)
+    .await
+    .unwrap_or((0, 0));
+
+    let event = JobProgressEvent {
+        r#type: "updated",
+        payload: JobProgressPayload {
+            status: "running".to_string(),
+            chunks_completed,
+            chunks_total,
+            completed_at: None,
+        },
+    };
+
+    if let Err(e) = state
+        .centrifugo
+        .publish(&format!("jobs:{}", job_id), &event)
+        .await
+    {
+        tracing::warn!(error = %e, job_id = %job_id, "Failed to publish job progress");
+    }
 
     metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 

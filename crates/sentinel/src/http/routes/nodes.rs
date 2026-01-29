@@ -7,6 +7,7 @@ use axum::routing::post;
 use axum::{Extension, Json, Router};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::Deserialize;
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -14,11 +15,42 @@ use sha2::{Digest, Sha256};
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
 
+#[derive(serde::Serialize)]
+struct CentrifugoClaims {
+    sub: String,
+    exp: i64,
+    iat: i64,
+}
+
+fn generate_beacon_token(
+    node_id: uuid::Uuid,
+    secret: &str,
+) -> Result<String, jsonwebtoken::errors::Error> {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+    let exp = now + (24 * 60 * 60); // 24 hours
+
+    let claims = CentrifugoClaims {
+        sub: node_id.to_string(),
+        exp,
+        iat: now,
+    };
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
+}
+
 /// Create router for node API endpoints.
 pub fn router() -> Router<Arc<ServerState>> {
     Router::new()
         .route("/nodes/register", post(register))
         .route("/nodes/heartbeat", post(heartbeat))
+        .route("/nodes/token", post(refresh_token))
 }
 
 #[derive(Deserialize)]
@@ -46,12 +78,16 @@ async fn register(
 
     match existing {
         Ok(Some((id, claim_code, user_id))) => {
+            let beacon_token =
+                generate_beacon_token(id, &state.config.centrifugo_token_secret).ok();
+
             return (
                 StatusCode::OK,
                 Json(json!({
                     "id": id,
                     "claimCode": claim_code,
                     "claimed": user_id.is_some(),
+                    "beaconToken": beacon_token,
                 })),
             )
                 .into_response();
@@ -101,15 +137,21 @@ async fn register(
     .await;
 
     match result {
-        Ok((id, code)) => (
-            StatusCode::OK,
-            Json(json!({
-                "id": id,
-                "claimCode": code,
-                "claimed": false,
-            })),
-        )
-            .into_response(),
+        Ok((id, code)) => {
+            let beacon_token =
+                generate_beacon_token(id, &state.config.centrifugo_token_secret).ok();
+
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "id": id,
+                    "claimCode": code,
+                    "claimed": false,
+                    "beaconToken": beacon_token,
+                })),
+            )
+                .into_response()
+        }
         Err(e) => {
             tracing::error!(error = %e, "Failed to insert node");
             (
@@ -184,4 +226,50 @@ fn derive_claim_code(pubkey_bytes: &[u8]) -> String {
         result.push(ALPHABET[idx] as char);
     }
     result
+}
+
+async fn refresh_token(
+    State(state): State<Arc<ServerState>>,
+    Extension(node): Extension<VerifiedNode>,
+) -> Response {
+    // Look up node by public key
+    let node_row = sqlx::query_as::<_, (uuid::Uuid,)>(
+        "SELECT id FROM nodes WHERE public_key = $1 AND user_id IS NOT NULL",
+    )
+    .bind(&node.public_key)
+    .fetch_optional(&state.db)
+    .await;
+
+    match node_row {
+        Ok(Some((id,))) => {
+            match generate_beacon_token(id, &state.config.centrifugo_token_secret) {
+                Ok(token) => (
+                    StatusCode::OK,
+                    Json(json!({ "beaconToken": token })),
+                )
+                    .into_response(),
+                Err(e) => {
+                    tracing::error!(error = %e, "Failed to generate beacon token");
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({ "error": "Token generation failed" })),
+                    )
+                        .into_response()
+                }
+            }
+        }
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "Node not found or not claimed" })),
+        )
+            .into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to query node");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "Database error" })),
+            )
+                .into_response()
+        }
+    }
 }

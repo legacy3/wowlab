@@ -75,6 +75,7 @@ export function useJob(
   const { data, error, isError, isLoading } = useResource<JobRow>({
     ...jobs,
     id: jobId ?? "",
+    liveMode: "auto",
     queryOptions: {
       enabled: !!jobId,
       refetchInterval: (query) => {
@@ -167,6 +168,7 @@ export function useUserJobs(options?: { pollInterval?: number }) {
     filters: userId
       ? [{ field: "user_id", operator: "eq", value: userId }]
       : [],
+    liveMode: "auto",
     pagination: { currentPage: 1, pageSize: 50 },
     queryOptions: {
       enabled: !!userId,

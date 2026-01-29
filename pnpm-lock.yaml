@@ -6206,7 +6206,7 @@ packages:
     version: 0.4.1
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-nChU0vZniKHVf+5YjsnPCFRsAkCwB+CFLlnORExKqtWhi0DV73pJqZY8RpOoAMpeqx+Dj4UCDCsi1GUPmnW/IA==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-qZaVA5C7EzbeJwI0adXjHcv/Ig1/KyfzfYyPrCRcEl0mj6aS8VmTsoAHALco66ffnCl+4OHWT6CEaWrWpNmrjw==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:

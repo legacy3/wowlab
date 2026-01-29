@@ -26,7 +26,7 @@ pub fn platform() -> String {
     format!("{os}-{arch}")
 }
 
-pub async fn register(client: &SentinelClient) -> Result<(Uuid, String), ClaimError> {
+pub async fn register(client: &SentinelClient) -> Result<(Uuid, String, Option<String>), ClaimError> {
     let hostname = default_name();
     let total = total_cores();
     let enabled = default_enabled_cores();
@@ -41,7 +41,7 @@ pub async fn register(client: &SentinelClient) -> Result<(Uuid, String), ClaimEr
         response.id,
         response.claim_code
     );
-    Ok((response.id, response.claim_code))
+    Ok((response.id, response.claim_code, response.beacon_token))
 }
 
 #[derive(Debug, thiserror::Error)]
