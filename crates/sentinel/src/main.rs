@@ -81,9 +81,9 @@ async fn main() {
     .await;
 
     if connected != Ok(true) {
-        tracing::warn!("Failed to connect to Centrifuge, continuing anyway (publishes may fail)");
+        tracing::warn!("Failed to connect to Beacon on startup");
     } else {
-        tracing::info!("Connected to Centrifuge");
+        tracing::info!("Connected to Beacon");
     }
 
     let presence = Presence::new(&config.centrifugo_url, &config.centrifugo_key);

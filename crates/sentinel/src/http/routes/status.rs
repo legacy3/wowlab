@@ -43,6 +43,7 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
                 { "name": "Scheduler", "status": status_str(state.scheduler_healthy()) },
                 { "name": "Presence", "status": status_str(state.presence_healthy()) },
                 { "name": "Cron", "status": status_str(state.cron_healthy()) },
+                { "name": "Centrifuge", "status": status_str(state.centrifuge_healthy().await) },
                 { "name": "Database", "status": status_str(db_healthy), "ping_ms": db_ping_ms },
             ]
         }

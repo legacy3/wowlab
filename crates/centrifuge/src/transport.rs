@@ -33,7 +33,8 @@ impl Transport {
     pub async fn connect(url: &str) -> Result<Self, Error> {
         ensure_crypto_provider();
 
-        let full_url = format!("{}?format=protobuf", url);
+        let ws_url = http_to_ws(url);
+        let full_url = format!("{}?format=protobuf", ws_url);
         tracing::debug!("Connecting to {}", full_url);
 
         let (ws, _) = tokio_tungstenite::connect_async(&full_url).await?;
@@ -111,4 +112,11 @@ impl Transport {
     pub async fn close(&mut self) {
         let _ = self.write.close().await;
     }
+}
+
+fn http_to_ws(url: &str) -> String {
+    url.strip_prefix("https://")
+        .map(|rest| format!("wss://{rest}"))
+        .or_else(|| url.strip_prefix("http://").map(|rest| format!("ws://{rest}")))
+        .unwrap_or_else(|| url.to_string())
 }

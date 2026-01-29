@@ -77,6 +77,10 @@ impl ServerState {
         age_secs(self.last_cron_tick.load(Ordering::Relaxed)) < CRON_GRACE_PERIOD_SECS
     }
 
+    pub async fn centrifuge_healthy(&self) -> bool {
+        self.centrifuge.is_connected().await
+    }
+
     /// Publish a message to a Centrifuge channel with retry logic.
     pub async fn publish<T: Serialize>(&self, channel: &str, payload: &T) {
         let data = match serde_json::to_vec(payload) {
