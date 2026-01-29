@@ -273,7 +273,7 @@ export function useNodes(userId: string | undefined) {
     pagination: { mode: "off" },
     queryOptions: {
       enabled: !!effectiveUserId,
-      staleTime: 1000 * 60,
+      staleTime: 1000 * 5,
     },
     sorters: [{ field: "created_at", order: "desc" }],
   });
@@ -307,7 +307,7 @@ export function useNodes(userId: string | undefined) {
     pagination: { mode: "off" },
     queryOptions: {
       enabled: !!effectiveUserId,
-      staleTime: 1000 * 60,
+      staleTime: 1000 * 5,
     },
   });
   const sharedNodesData = sharedNodesResult.query.data;

@@ -6,6 +6,7 @@ import type {
 import { Centrifuge, type Subscription } from "centrifuge";
 
 import { useLiveStore } from "@/lib/state/live";
+import pkg from "../../../package.json";
 
 let client: Centrifuge | null = null;
 const subs = new Map<string, Subscription>();
@@ -16,7 +17,11 @@ function getClient() {
       process.env.NEXT_PUBLIC_CENTRIFUGO_URL ??
       "wss://beacon.wowlab.gg/connection/websocket";
 
-    client = new Centrifuge(url, { getToken });
+    client = new Centrifuge(url, {
+      getToken,
+      name: pkg.name,
+      version: pkg.version,
+    });
 
     client.on("state", (ctx) => {
       useLiveStore.getState().setState(ctx.newState);

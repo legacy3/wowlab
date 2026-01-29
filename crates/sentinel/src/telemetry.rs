@@ -1,8 +1,3 @@
-use async_trait::async_trait;
-
-use crate::cron::CronJob;
-use crate::state::ServerState;
-
 // Scheduler metrics
 pub const CHUNKS_ASSIGNED: &str = "sentinel_chunks_assigned_total";
 pub const CHUNKS_COMPLETED: &str = "sentinel_chunks_completed_total";
@@ -116,6 +111,20 @@ pub fn init() {
     init_ai_counters();
 }
 
+/// Initialize CHUNKS_RUNNING gauge from the current database state.
+/// Call this at startup after the database connection is established.
+pub async fn init_running_chunks_gauge(db: &sqlx::PgPool) {
+    let running: Result<(i64,), _> =
+        sqlx::query_as("SELECT COUNT(*) FROM public.jobs_chunks WHERE status = 'running'")
+            .fetch_one(db)
+            .await;
+
+    if let Ok((count,)) = running {
+        metrics::gauge!(CHUNKS_RUNNING).set(count as f64);
+        tracing::info!(count, "Initialized CHUNKS_RUNNING gauge from database");
+    }
+}
+
 fn init_gauges() {
     for name in [CHUNKS_PENDING, CHUNKS_RUNNING, NODES_ONLINE, UPTIME_SECONDS] {
         metrics::gauge!(name).set(0.0);
@@ -149,40 +158,5 @@ fn init_webhook_counters() {
 fn init_ai_counters() {
     for status in AiSummaryStatus::ALL {
         metrics::counter!(AI_SUMMARIES, "status" => status.as_str()).absolute(0);
-    }
-}
-
-pub struct RecordGaugesJob;
-
-#[async_trait]
-impl CronJob for RecordGaugesJob {
-    fn name(&self) -> &'static str {
-        "record_gauges"
-    }
-
-    fn schedule(&self) -> &'static str {
-        "*/30 * * * * *"
-    }
-
-    async fn run(&self, state: &ServerState) {
-        metrics::gauge!(UPTIME_SECONDS).set(state.started_at.elapsed().as_secs() as f64);
-
-        let running: Result<(i64,), _> =
-            sqlx::query_as("SELECT COUNT(*) FROM public.jobs_chunks WHERE status = 'running'")
-                .fetch_one(&state.db)
-                .await;
-
-        if let Ok((count,)) = running {
-            metrics::gauge!(CHUNKS_RUNNING).set(count as f64);
-        }
-
-        let online: Result<(i64,), _> =
-            sqlx::query_as("SELECT COUNT(*) FROM public.nodes WHERE status = 'online'")
-                .fetch_one(&state.db)
-                .await;
-
-        if let Ok((count,)) = online {
-            metrics::gauge!(NODES_ONLINE).set(count as f64);
-        }
     }
 }

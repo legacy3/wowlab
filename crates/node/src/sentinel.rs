@@ -124,13 +124,14 @@ impl SentinelClient {
         Ok(response.json().await?)
     }
 
-    /// Verify this node is registered and claimed.
+    /// Verify this node is registered and claimed via heartbeat.
     ///
     /// Returns Ok(()) if the node exists and is claimed.
     /// Returns an error with "not found"/"not claimed" for invalid nodes,
     /// or a network/server error if the sentinel is unavailable.
     pub async fn verify(&self) -> Result<(), SentinelError> {
-        let response = self.signed_post("/nodes/verify", &[]).await?;
+        let body = b"{}";
+        let response = self.signed_post("/nodes/heartbeat", body).await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();

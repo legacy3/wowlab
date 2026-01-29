@@ -62,7 +62,8 @@ impl NodeApp {
         skip_update: bool,
     ) -> Self {
         let (mut core, event_rx) =
-            NodeCore::new(Arc::clone(&runtime)).expect("Failed to create node core");
+            NodeCore::new(Arc::clone(&runtime), env!("CARGO_PKG_NAME"), VERSION)
+                .expect("Failed to create node core");
         core.start();
 
         let (update_tx, update_rx) = mpsc::channel(1);

@@ -59,6 +59,10 @@ pub struct NodeCore {
     max_parallel: u32,
     total_cores: u32,
 
+    // App identification for Centrifugo
+    app_name: String,
+    app_version: String,
+
     // Local cache for configs and rotations
     cache: Arc<ConfigCache>,
 
@@ -84,8 +88,15 @@ pub struct NodeCore {
 
 impl NodeCore {
     /// Creates a new instance and returns it with an event receiver.
+    ///
+    /// # Arguments
+    /// * `runtime` - Tokio runtime for async tasks
+    /// * `app_name` - Application name for Centrifugo identification (e.g., "wowlab-node-gui")
+    /// * `app_version` - Application version (e.g., "0.6.9")
     pub fn new(
         runtime: Arc<tokio::runtime::Runtime>,
+        app_name: impl Into<String>,
+        app_version: impl Into<String>,
     ) -> Result<(Self, mpsc::Receiver<NodeCoreEvent>), crate::sentinel::SentinelError> {
         let config = NodeConfig::load_or_create();
         let keypair = crate::auth::NodeKeypair::load_or_create();
@@ -113,6 +124,8 @@ impl NodeCore {
             node_name: claim::default_name(),
             max_parallel: enabled_cores,
             total_cores,
+            app_name: app_name.into(),
+            app_version: app_version.into(),
             cache: Arc::new(ConfigCache::new()),
             connection_status: ConnectionStatus::Connecting,
             verify_rx: None,
@@ -358,7 +371,8 @@ impl NodeCore {
         };
 
         let shutdown = CancellationToken::new();
-        let realtime = NodeRealtime::new(&self.config.beacon_url, beacon_token);
+        let realtime =
+            NodeRealtime::new(&self.config.beacon_url, beacon_token, &self.app_name, &self.app_version);
         self.realtime_rx =
             Some(realtime.subscribe(node_id, self.runtime.handle(), shutdown.clone()));
         self.realtime_shutdown = Some(shutdown);

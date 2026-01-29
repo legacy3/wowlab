@@ -9,6 +9,7 @@ description = "Centrifugo client for WoW Lab"
 [dependencies]
 # WebSocket
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-native-roots"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 futures-util = "0.3"
 
 # Async runtime

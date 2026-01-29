@@ -2,8 +2,6 @@
 //!
 //! All configuration is loaded from environment variables with the `SENTINEL_` prefix.
 
-use std::time::Duration;
-
 /// Application configuration loaded from environment variables.
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -59,10 +57,19 @@ pub struct Config {
     pub ai_commit_output_tokens: u32,
 
     // -------------------------------------------------------------------------
-    // Presence Monitoring
+    // Cron Schedules (6-field: sec min hour day month weekday)
     // -------------------------------------------------------------------------
-    /// Presence poll interval (default: 5s).
-    pub presence_poll_interval: Duration,
+    /// Presence sync schedule (default: every 5 seconds).
+    pub cron_presence: String,
+
+    /// Reclaim stale chunks schedule (default: every 30 seconds).
+    pub cron_reclaim: String,
+
+    /// Cleanup stale data schedule (default: every hour).
+    pub cron_cleanup: String,
+
+    /// Record uptime schedule (default: every 30 seconds).
+    pub cron_uptime: String,
 
     // -------------------------------------------------------------------------
     // Centrifugo Token
@@ -100,11 +107,11 @@ impl Config {
             ai_diff_output_tokens: parse_or("SENTINEL_AI_DIFF_OUTPUT_TOKENS", 500),
             ai_commit_output_tokens: parse_or("SENTINEL_AI_COMMIT_OUTPUT_TOKENS", 300),
 
-            // Presence
-            presence_poll_interval: Duration::from_secs(parse_or(
-                "SENTINEL_PRESENCE_POLL_INTERVAL",
-                5,
-            )),
+            // Cron Schedules
+            cron_presence: env_or("SENTINEL_CRON_PRESENCE", "*/5 * * * * *"),
+            cron_reclaim: env_or("SENTINEL_CRON_RECLAIM", "*/30 * * * * *"),
+            cron_cleanup: env_or("SENTINEL_CRON_CLEANUP", "0 0 * * * *"),
+            cron_uptime: env_or("SENTINEL_CRON_UPTIME", "*/30 * * * * *"),
 
             // Centrifugo Token
             centrifugo_token_secret: require("SENTINEL_CENTRIFUGO_TOKEN_SECRET"),
@@ -135,6 +142,10 @@ fn parse_bool(name: &str) -> bool {
     std::env::var(name)
         .map(|v| matches!(v.to_lowercase().as_str(), "true" | "1" | "yes"))
         .unwrap_or(false)
+}
+
+fn env_or(name: &str, default: &str) -> String {
+    std::env::var(name).unwrap_or_else(|_| default.to_string())
 }
 
 /// Ensure the database URL has sslmode=require if not already set.

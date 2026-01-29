@@ -3,9 +3,10 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
+use crate::presence;
 use crate::scheduler::{maintenance, reclaim};
 use crate::state::ServerState;
-use crate::telemetry;
+use crate::telemetry::UPTIME_SECONDS;
 
 /// A periodic job managed by the cron scheduler.
 /// Implement this on a struct in the module that owns the job's logic.
@@ -15,10 +16,29 @@ pub trait CronJob: Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     /// Cron expression (6-field: sec min hour day month weekday).
-    fn schedule(&self) -> &'static str;
+    fn schedule(&self) -> &str;
 
     /// Execute the job.
     async fn run(&self, state: &ServerState);
+}
+
+struct RecordUptimeJob {
+    schedule: String,
+}
+
+#[async_trait]
+impl CronJob for RecordUptimeJob {
+    fn name(&self) -> &'static str {
+        "record_uptime"
+    }
+
+    fn schedule(&self) -> &str {
+        &self.schedule
+    }
+
+    async fn run(&self, state: &ServerState) {
+        metrics::gauge!(UPTIME_SECONDS).set(state.started_at.elapsed().as_secs() as f64);
+    }
 }
 
 /// Start the cron scheduler with all registered jobs.
@@ -26,9 +46,12 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
     let sched = JobScheduler::new().await?;
 
     let jobs: Vec<Arc<dyn CronJob>> = vec![
-        Arc::new(reclaim::ReclaimChunksJob),
-        Arc::new(maintenance::CleanupStaleDataJob),
-        Arc::new(telemetry::RecordGaugesJob),
+        Arc::new(reclaim::ReclaimChunksJob::new(&state.config.cron_reclaim)),
+        Arc::new(maintenance::CleanupStaleDataJob::new(&state.config.cron_cleanup)),
+        Arc::new(presence::PresenceJob::new(&state.config.cron_presence)),
+        Arc::new(RecordUptimeJob {
+            schedule: state.config.cron_uptime.clone(),
+        }),
     ];
 
     for job in &jobs {

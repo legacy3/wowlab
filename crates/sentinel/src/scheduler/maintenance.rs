@@ -4,7 +4,17 @@ use sqlx::PgPool;
 use crate::cron::CronJob;
 use crate::state::ServerState;
 
-pub struct CleanupStaleDataJob;
+pub struct CleanupStaleDataJob {
+    schedule: String,
+}
+
+impl CleanupStaleDataJob {
+    pub fn new(schedule: &str) -> Self {
+        Self {
+            schedule: schedule.to_string(),
+        }
+    }
+}
 
 #[async_trait]
 impl CronJob for CleanupStaleDataJob {
@@ -12,8 +22,8 @@ impl CronJob for CleanupStaleDataJob {
         "cleanup_stale_data"
     }
 
-    fn schedule(&self) -> &'static str {
-        "0 0 * * * *"
+    fn schedule(&self) -> &str {
+        &self.schedule
     }
 
     async fn run(&self, state: &ServerState) {

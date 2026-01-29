@@ -2,8 +2,16 @@
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Once};
 use std::time::Duration;
+
+static CRYPTO_INIT: Once = Once::new();
+
+fn ensure_crypto_provider() {
+    CRYPTO_INIT.call_once(|| {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    });
+}
 
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
@@ -29,12 +37,17 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    pub fn new(url: impl Into<String>, token: impl Into<String>) -> Self {
+    pub fn new(
+        url: impl Into<String>,
+        token: impl Into<String>,
+        name: impl Into<String>,
+        version: impl Into<String>,
+    ) -> Self {
         Self {
             url: url.into(),
             token: token.into(),
-            name: "wowlab".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
+            name: name.into(),
+            version: version.into(),
         }
     }
 }
@@ -86,6 +99,25 @@ impl Client {
         }
     }
 
+    /// Check if the client is connected.
+    pub async fn is_connected(&self) -> bool {
+        self.inner.read().await.cmd_tx.is_some()
+    }
+
+    /// Wait for the client to be connected, with timeout.
+    pub async fn wait_connected(&self, timeout: Duration) -> Result<(), Error> {
+        let start = tokio::time::Instant::now();
+        loop {
+            if self.is_connected().await {
+                return Ok(());
+            }
+            if start.elapsed() > timeout {
+                return Err(Error::Timeout);
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    }
+
     /// Run the client with automatic reconnection.
     /// Returns when the shutdown token is cancelled.
     pub async fn run(&self, shutdown: CancellationToken) -> Result<(), Error> {
@@ -128,6 +160,8 @@ impl Client {
     }
 
     async fn connect_and_run(&self, shutdown: &CancellationToken) -> Result<(), Error> {
+        ensure_crypto_provider();
+
         let config = self.inner.read().await.config.clone();
         let url = format!("{}?format=protobuf", config.url);
 
@@ -181,6 +215,18 @@ impl Client {
                 .ok_or_else(|| Error::Protocol("No connect result".into()))?
         };
 
+        // Set up ping interval from server config
+        let ping_interval = if connect_result.ping > 0 && connect_result.pong {
+            tracing::debug!(
+                "Server requested pings every {}s (pong={})",
+                connect_result.ping,
+                connect_result.pong
+            );
+            Some(Duration::from_secs(connect_result.ping as u64))
+        } else {
+            None
+        };
+
         tracing::info!(
             "Connected to Centrifugo: client={}, version={}",
             connect_result.client,
@@ -196,11 +242,36 @@ impl Client {
 
         let pending_write = pending.clone();
 
+        // Ping timer - sends keepalive pings to server
+        let mut ping_timer = ping_interval.map(tokio::time::interval);
+        if let Some(ref mut timer) = ping_timer {
+            timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+        }
+
         // Main loop
         loop {
             tokio::select! {
                 _ = shutdown.cancelled() => {
                     break;
+                }
+
+                // Send periodic pings to keep connection alive
+                _ = async {
+                    match ping_timer.as_mut() {
+                        Some(timer) => timer.tick().await,
+                        None => std::future::pending().await,
+                    }
+                } => {
+                    let ping_cmd = proto::Command {
+                        ping: Some(proto::PingRequest {}),
+                        ..Default::default()
+                    };
+                    let data = ping_cmd.encode_length_delimited_to_vec();
+                    if let Err(e) = write.send(WsMessage::Binary(data.into())).await {
+                        tracing::error!("Failed to send ping: {}", e);
+                        break;
+                    }
+                    tracing::trace!("Sent ping");
                 }
 
                 // Handle outgoing commands

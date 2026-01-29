@@ -151,7 +151,8 @@ fn run_node() {
 
     let runtime = Arc::new(tokio::runtime::Runtime::new().expect("Failed to create tokio runtime"));
     let (mut core, mut event_rx) =
-        NodeCore::new(Arc::clone(&runtime)).expect("Failed to create node core");
+        NodeCore::new(Arc::clone(&runtime), env!("CARGO_PKG_NAME"), VERSION)
+            .expect("Failed to create node core");
 
     let running = Arc::new(AtomicBool::new(true));
 

@@ -104,7 +104,11 @@ async fn complete(
     .await;
 
     let job_id = match chunk_row {
-        Ok(Some((_, job_id))) => job_id,
+        Ok(Some((_, job_id))) => {
+            // Chunk transitioned from 'running' to 'completed'
+            metrics::gauge!(crate::telemetry::CHUNKS_RUNNING).decrement(1.0);
+            job_id
+        }
         Ok(None) => {
             // Check if chunk exists for better error message
             let existing = sqlx::query_as::<_, (String, uuid::Uuid)>(

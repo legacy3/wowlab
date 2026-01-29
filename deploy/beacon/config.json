@@ -29,6 +29,7 @@
     "namespaces": [
       {
         "name": "nodes",
+        "allow_subscribe_for_client": true,
         "presence": true,
         "join_leave": true,
         "force_push_join_leave": true,
@@ -38,11 +39,13 @@
       },
       {
         "name": "jobs",
+        "allow_subscribe_for_client": true,
         "history_size": 100,
         "history_ttl": "300s"
       },
       {
         "name": "chunks",
+        "allow_subscribe_for_client": true,
         "history_size": 10,
         "history_ttl": "60s"
       }

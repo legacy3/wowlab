@@ -223,6 +223,8 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/parsers: {}
+
 packages:
 
   '@antfu/install-pkg@1.1.0':
@@ -6202,11 +6204,11 @@ packages:
     engines: {node: '>=12.17'}
 
   wowlab-common@file:packages/wowlab-common-0.4.1.tgz:
-    resolution: {integrity: sha512-Cs1Lezgh/xvoa5X7Ziz7MzkmV+iXaKwnJVy9mFSufCcOsS3sSPL7OJIFgyyKavYCsyfJInd1VTTCgOx//YlqGw==, tarball: file:packages/wowlab-common-0.4.1.tgz}
+    resolution: {integrity: sha512-eG5JDwOgfaFq4wY0mS0htbcuAKp4Vxg6aoK//h6R5j94IR7NTQpMkyDUOAnAzgdh93B9IGYucMxMxm70oPaMAA==, tarball: file:packages/wowlab-common-0.4.1.tgz}
     version: 0.4.1
 
   wowlab-engine@file:packages/wowlab-engine-0.4.1.tgz:
-    resolution: {integrity: sha512-qZaVA5C7EzbeJwI0adXjHcv/Ig1/KyfzfYyPrCRcEl0mj6aS8VmTsoAHALco66ffnCl+4OHWT6CEaWrWpNmrjw==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
+    resolution: {integrity: sha512-uUvH8+lmNYDwGXE+DUKPSVHngTsAN6zop9X83JPp76m1oBpF1NGFiyt2ssneyCrcccQVu0F96B0YAa1wI7ApIg==, tarball: file:packages/wowlab-engine-0.4.1.tgz}
     version: 0.4.1
 
   wrappy@1.0.2:

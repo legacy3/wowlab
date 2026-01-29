@@ -3,7 +3,17 @@ use async_trait::async_trait;
 use crate::cron::CronJob;
 use crate::state::ServerState;
 
-pub struct ReclaimChunksJob;
+pub struct ReclaimChunksJob {
+    schedule: String,
+}
+
+impl ReclaimChunksJob {
+    pub fn new(schedule: &str) -> Self {
+        Self {
+            schedule: schedule.to_string(),
+        }
+    }
+}
 
 #[async_trait]
 impl CronJob for ReclaimChunksJob {
@@ -11,8 +21,8 @@ impl CronJob for ReclaimChunksJob {
         "reclaim_stale_chunks"
     }
 
-    fn schedule(&self) -> &'static str {
-        "*/30 * * * * *"
+    fn schedule(&self) -> &str {
+        &self.schedule
     }
 
     async fn run(&self, state: &ServerState) {
@@ -27,6 +37,8 @@ pub async fn reclaim_stale_chunks(state: &ServerState) {
         Ok(count) if count > 0 => {
             tracing::info!(count, "Reclaimed stale chunks");
             metrics::counter!(crate::telemetry::CHUNKS_RECLAIMED).increment(count);
+            // Chunks transitioned from 'running' to 'pending'
+            metrics::gauge!(crate::telemetry::CHUNKS_RUNNING).decrement(count as f64);
         }
         Ok(_) => {}
         Err(e) => {

@@ -1,11 +1,15 @@
 //! Realtime subscription for node updates, chunk assignments, and presence tracking.
 
+use std::time::Duration;
+
 use serde::Deserialize;
 use tokio::runtime::Handle;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
-use wowlab_centrifugo::{Client, ClientConfig, Event, Publication};
+use wowlab_centrifugo::{Client, ClientConfig, Event};
+
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone)]
 pub enum RealtimeEvent {
@@ -43,9 +47,9 @@ pub struct NodeRealtime {
 }
 
 impl NodeRealtime {
-    pub fn new(url: &str, token: &str) -> Self {
+    pub fn new(url: &str, token: &str, name: &str, version: &str) -> Self {
         Self {
-            config: ClientConfig::new(url, token),
+            config: ClientConfig::new(url, token, name, version),
         }
     }
 
@@ -60,20 +64,19 @@ impl NodeRealtime {
 
         handle.spawn(async move {
             let client = Client::new(config);
-            let client_clone = client.clone();
-            let tx_clone = tx.clone();
-            let shutdown_clone = shutdown.clone();
+            let shutdown_for_run = shutdown.clone();
 
             // Spawn the client run loop
-            let run_handle = tokio::spawn(async move { client_clone.run(shutdown_clone).await });
+            let client_for_run = client.clone();
+            let run_handle =
+                tokio::spawn(async move { client_for_run.run(shutdown_for_run).await });
 
-            // Subscribe to channels
-            let result = run_subscriptions(client, node_id, &tx, shutdown).await;
-            if let Err(e) = result {
+            // Subscribe to channels and process events
+            if let Err(e) = run_subscriptions(&client, node_id, &tx, shutdown).await {
                 let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
             }
 
-            let _ = tx_clone.send(RealtimeEvent::Disconnected).await;
+            let _ = tx.send(RealtimeEvent::Disconnected).await;
             let _ = run_handle.await;
             tracing::debug!("Realtime subscription shut down");
         });
@@ -83,41 +86,36 @@ impl NodeRealtime {
 }
 
 async fn run_subscriptions(
-    client: Client,
+    client: &Client,
     node_id: Uuid,
     tx: &mpsc::Sender<RealtimeEvent>,
     shutdown: CancellationToken,
 ) -> Result<(), wowlab_centrifugo::Error> {
-    // Subscribe to node updates
-    let node_channel = format!("nodes:{node_id}");
-    let (_, mut node_rx) = client.subscribe(&node_channel, false).await?;
-    tracing::debug!("Subscribed to node updates on {}", node_channel);
+    client.wait_connected(CONNECT_TIMEOUT).await?;
 
-    // Subscribe to chunk assignments
-    let chunks_channel = format!("chunks:{node_id}");
-    let (_, mut chunks_rx) = client.subscribe(&chunks_channel, false).await?;
-    tracing::debug!("Subscribed to chunk assignments on {}", chunks_channel);
-
-    // Subscribe to presence channel with join/leave events
+    // Subscribe to channels
+    let (_, mut node_rx) = client.subscribe(&format!("nodes:{node_id}"), false).await?;
+    let (_, mut chunks_rx) = client.subscribe(&format!("chunks:{node_id}"), false).await?;
     let (_, mut presence_rx) = client.subscribe("nodes:online", true).await?;
-    tracing::debug!("Subscribed to nodes:online presence");
 
+    tracing::debug!("Subscribed to node:{node_id}, chunks:{node_id}, nodes:online");
     let _ = tx.send(RealtimeEvent::Connected).await;
 
     loop {
         tokio::select! {
-            _ = shutdown.cancelled() => {
-                tracing::debug!("Shutdown requested");
-                break;
-            }
+            _ = shutdown.cancelled() => break,
             Some(event) = node_rx.recv() => {
-                handle_node_event(event, tx).await;
+                if let Some(payload) = extract_publication::<NodePayload>(&event) {
+                    let _ = tx.send(RealtimeEvent::NodeUpdated(payload)).await;
+                }
             }
             Some(event) = chunks_rx.recv() => {
-                handle_chunk_event(event, tx).await;
+                if let Some(payload) = extract_publication::<ChunkPayload>(&event) {
+                    let _ = tx.send(RealtimeEvent::ChunkAssigned(payload)).await;
+                }
             }
             Some(event) = presence_rx.recv() => {
-                handle_presence_event(event);
+                log_presence_event(&event);
             }
             else => break,
         }
@@ -126,82 +124,35 @@ async fn run_subscriptions(
     Ok(())
 }
 
-async fn handle_node_event(event: Event, tx: &mpsc::Sender<RealtimeEvent>) {
-    match event {
-        Event::Publication(pub_) => {
-            if let Some(payload) = parse_publication::<NodePayload>(&pub_) {
-                let _ = tx.send(RealtimeEvent::NodeUpdated(payload)).await;
-            }
-        }
-        Event::Connected => {
-            tracing::debug!("Node channel connected");
-        }
-        Event::Disconnected => {
-            tracing::debug!("Node channel disconnected");
-        }
-        Event::Error(e) => {
-            tracing::warn!("Node channel error: {}", e);
-        }
-        _ => {}
-    }
+/// Extract and parse a publication payload from an event.
+fn extract_publication<T: for<'de> Deserialize<'de>>(event: &Event) -> Option<T> {
+    let Event::Publication(pub_) = event else {
+        return None;
+    };
+    parse_json(&pub_.data)
 }
 
-async fn handle_chunk_event(event: Event, tx: &mpsc::Sender<RealtimeEvent>) {
-    match event {
-        Event::Publication(pub_) => {
-            if let Some(payload) = parse_publication::<ChunkPayload>(&pub_) {
-                let _ = tx.send(RealtimeEvent::ChunkAssigned(payload)).await;
-            }
-        }
-        Event::Connected => {
-            tracing::debug!("Chunks channel connected");
-        }
-        Event::Disconnected => {
-            tracing::debug!("Chunks channel disconnected");
-        }
-        Event::Error(e) => {
-            tracing::warn!("Chunks channel error: {}", e);
-        }
-        _ => {}
-    }
-}
-
-fn handle_presence_event(event: Event) {
+/// Log presence join/leave events for debugging.
+fn log_presence_event(event: &Event) {
     match event {
         Event::Join(info) => {
-            tracing::debug!("Node joined: user={}, client={}", info.user, info.client);
+            tracing::debug!(user = %info.user, client = %info.client, "Node joined");
         }
         Event::Leave(info) => {
-            tracing::debug!("Node left: user={}, client={}", info.user, info.client);
+            tracing::debug!(user = %info.user, client = %info.client, "Node left");
         }
-        Event::Connected => {
-            tracing::debug!("Presence channel connected");
-        }
-        Event::Disconnected => {
-            tracing::debug!("Presence channel disconnected");
-        }
-        Event::Error(e) => {
-            tracing::warn!("Presence channel error: {}", e);
-        }
-        Event::Publication(_) | Event::Subscribed | Event::Unsubscribed { .. } => {}
+        _ => {}
     }
 }
 
-fn parse_publication<T: for<'de> Deserialize<'de> + std::fmt::Debug>(
-    pub_: &Publication,
-) -> Option<T> {
-    match serde_json::from_slice::<T>(&pub_.data) {
-        Ok(parsed) => {
-            tracing::debug!("Parsed publication: {:?}", parsed);
-            Some(parsed)
-        }
-        Err(e) => {
+fn parse_json<T: for<'de> Deserialize<'de>>(data: &[u8]) -> Option<T> {
+    serde_json::from_slice(data)
+        .inspect_err(|e| {
             tracing::warn!(
-                "Failed to parse publication: {} - raw: {}",
-                e,
-                String::from_utf8_lossy(&pub_.data)
+                error = %e,
+                raw = %String::from_utf8_lossy(data),
+                "Failed to parse publication"
             );
-            None
-        }
-    }
+        })
+        .ok()
 }
