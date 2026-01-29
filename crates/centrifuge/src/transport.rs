@@ -34,7 +34,7 @@ impl Transport {
         ensure_crypto_provider();
 
         let ws_url = http_to_ws(url);
-        let full_url = format!("{}?format=protobuf", ws_url);
+        let full_url = format!("{}/connection/websocket?format=protobuf", ws_url.trim_end_matches('/'));
         tracing::debug!("Connecting to {}", full_url);
 
         let (ws, _) = tokio_tungstenite::connect_async(&full_url).await?;

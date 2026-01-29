@@ -7,7 +7,7 @@ use metrics_exporter_prometheus::PrometheusBuilder;
 use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
-use wowlab_centrifuge::{Client, ClientConfig, ClientEvent, Presence};
+use wowlab_centrifuge::{token, Client, ClientConfig, ClientEvent, Presence};
 
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{ai, bot, cron, http, notifications, scheduler, Config};
@@ -59,10 +59,20 @@ async fn main() {
         tracing::info!("AI summarization enabled ({})", config.ai_model);
     }
 
+    let initial_token = token::generate("sentinel", &config.centrifugo_token_secret)
+        .expect("Failed to generate beacon token");
+    let token_secret = config.centrifugo_token_secret.clone();
     let centrifuge = Client::new(
-        ClientConfig::new(&config.centrifugo_url, &config.centrifugo_key)
+        ClientConfig::new(&config.centrifugo_url, &initial_token)
             .name(env!("CARGO_PKG_NAME"))
-            .version(env!("CARGO_PKG_VERSION")),
+            .version(env!("CARGO_PKG_VERSION"))
+            .get_token(move || {
+                let secret = token_secret.clone();
+                async move {
+                    token::generate("sentinel", &secret)
+                        .map_err(|e| wowlab_centrifuge::Error::Protocol(e.to_string()))
+                }
+            }),
     );
 
     let mut events = centrifuge.events().await;

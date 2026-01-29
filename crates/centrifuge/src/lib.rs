@@ -30,6 +30,7 @@ mod codes;
 mod error;
 mod presence;
 mod subscription;
+pub mod token;
 mod transport;
 mod types;
 

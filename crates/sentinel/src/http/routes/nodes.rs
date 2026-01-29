@@ -7,43 +7,12 @@ use axum::routing::post;
 use axum::{Extension, Json, Router};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
-use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::Deserialize;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
-
-#[derive(serde::Serialize)]
-struct CentrifugoClaims {
-    sub: String,
-    exp: i64,
-    iat: i64,
-}
-
-fn generate_beacon_token(
-    node_id: uuid::Uuid,
-    secret: &str,
-) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
-    let exp = now + (24 * 60 * 60); // 24 hours
-
-    let claims = CentrifugoClaims {
-        sub: node_id.to_string(),
-        exp,
-        iat: now,
-    };
-
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
-    )
-}
 
 /// Create router for node API endpoints.
 pub fn router() -> Router<Arc<ServerState>> {
@@ -79,7 +48,7 @@ async fn register(
     match existing {
         Ok(Some((id, claim_code, user_id))) => {
             let beacon_token =
-                generate_beacon_token(id, &state.config.centrifugo_token_secret).ok();
+                wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret).ok();
 
             return (
                 StatusCode::OK,
@@ -139,7 +108,7 @@ async fn register(
     match result {
         Ok((id, code)) => {
             let beacon_token =
-                generate_beacon_token(id, &state.config.centrifugo_token_secret).ok();
+                wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret).ok();
 
             (
                 StatusCode::OK,
@@ -242,7 +211,7 @@ async fn refresh_token(
 
     match node_row {
         Ok(Some((id,))) => {
-            match generate_beacon_token(id, &state.config.centrifugo_token_secret) {
+            match wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret) {
                 Ok(token) => (
                     StatusCode::OK,
                     Json(json!({ "beaconToken": token })),
