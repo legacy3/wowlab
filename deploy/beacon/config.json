@@ -25,6 +25,20 @@
     "enabled": true
   },
 
+  "broker": {
+    "enabled": true,
+    "type": "nats",
+    "nats": {
+      "url": "nats://wowlab-nats.internal:4222"
+    }
+  },
+
+  "presence_manager": {
+    "enabled": true,
+    "type": "redis",
+    "redis": {}
+  },
+
   "channel": {
     "namespaces": [
       {
@@ -33,21 +47,15 @@
         "presence": true,
         "join_leave": true,
         "force_push_join_leave": true,
-        "allow_presence_for_subscriber": true,
-        "history_size": 10,
-        "history_ttl": "60s"
+        "allow_presence_for_subscriber": true
       },
       {
         "name": "jobs",
-        "allow_subscribe_for_client": true,
-        "history_size": 100,
-        "history_ttl": "300s"
+        "allow_subscribe_for_client": true
       },
       {
         "name": "chunks",
-        "allow_subscribe_for_client": true,
-        "history_size": 10,
-        "history_ttl": "60s"
+        "allow_subscribe_for_client": true
       }
     ]
   }
