@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 const DEFAULT_API_URL: &str = "https://api.wowlab.gg";
 const DEFAULT_SENTINEL_URL: &str = "https://sentinel.wowlab.gg";
-const DEFAULT_BEACON_URL: &str = "wss://beacon.wowlab.gg/connection/websocket";
+const DEFAULT_BEACON_URL: &str = "wss://beacon.wowlab.gg";
 const DEFAULT_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtbHp6aWZzanNuanJxb3FyZ2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUyMTYsImV4cCI6MjA3Nzk3MTIxNn0.I8sbS5AgEzLzD2h5FXcIBZCCchHnbnVn3EufN61WMoM";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

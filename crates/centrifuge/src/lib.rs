@@ -9,7 +9,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let config = ClientConfig::new("wss://example.com/connection/websocket", "token");
+//!     let config = ClientConfig::new("wss://example.com", "token");
 //!     let client = Client::new(config);
 //!
 //!     let mut events = client.events().await;
