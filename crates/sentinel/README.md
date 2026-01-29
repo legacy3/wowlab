@@ -4,7 +4,7 @@ Distributed task scheduler and monitoring service. Coordinates simulation worklo
 
 ## Running
 
-Requires `DISCORD_TOKEN`, `SUPABASE_DB_URL`, `CENTRIFUGO_API_URL`, and `CENTRIFUGO_HTTP_API_KEY` in `.env`.
+Requires environment variables — see `.env.example`.
 
 ```bash
 cargo build --release
@@ -44,6 +44,7 @@ Public routes:
 
 Node API (Ed25519 authenticated):
 
-- `POST /nodes/register` — node registration
-- `POST /nodes/heartbeat` — node heartbeat
+- `POST /nodes/register` — node registration, returns beacon token
+- `POST /nodes/heartbeat` — node heartbeat (verifies claimed status)
+- `POST /nodes/token` — refresh beacon token for Centrifugo
 - `POST /chunks/complete` — chunk completion
