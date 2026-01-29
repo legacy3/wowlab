@@ -9,7 +9,6 @@ use crate::core::{ScheduledEvent, SimEvent};
 use crate::handler::SpecHandler;
 use crate::resource::ResourceRegen;
 use std::sync::Arc;
-use tracing::{debug, trace};
 use wowlab_common::types::SimTime;
 
 /// Simulation combining handler and state.
@@ -41,71 +40,14 @@ impl Simulation {
 
     /// Run one iteration of the simulation.
     pub fn run(&mut self) {
-        debug!(
-            duration_secs = self.state.config.duration.as_secs_f32(),
-            targets = self.state.config.target_count,
-            seed = self.state.config.seed,
-            iteration = self.state.iteration,
-            "Simulation iteration starting"
-        );
-
-        let mut prev_time = SimTime::ZERO;
-        let mut event_count = 0u32;
-        let mut gcd_count = 0u32;
-        let mut resource_tick_count = 0u32;
-        let mut total_time_jumps = 0u32;
-        let mut max_jump_ms = 0u32;
-
         while let Some(event) = self.state.events.pop() {
             if self.state.finished {
                 break;
             }
 
-            let event_time = event.time;
-            let jump_ms = event_time.as_millis().saturating_sub(prev_time.as_millis());
-
-            if jump_ms > 0 {
-                total_time_jumps += 1;
-                if jump_ms > max_jump_ms {
-                    max_jump_ms = jump_ms;
-                }
-            }
-
-            // Log time jump details at trace level
-            trace!(
-                prev_ms = prev_time.as_millis(),
-                now_ms = event_time.as_millis(),
-                jump_ms = jump_ms,
-                event = ?event.event,
-                "Time advance"
-            );
-
-            // Advance simulation time to the event time
-            self.state.advance_time(event_time);
-            prev_time = event_time;
-            event_count += 1;
-
-            match &event.event {
-                SimEvent::GcdEnd => gcd_count += 1,
-                SimEvent::ResourceTick => resource_tick_count += 1,
-                _ => {}
-            }
-
+            self.state.advance_time(event.time);
             self.handle_event(event);
         }
-
-        debug!(
-            iteration = self.state.iteration,
-            total_damage = self.state.total_damage,
-            dps = self.state.current_dps(),
-            event_count = event_count,
-            gcd_events = gcd_count,
-            resource_ticks = resource_tick_count,
-            time_jumps = total_time_jumps,
-            max_jump_ms = max_jump_ms,
-            events_scheduled = self.state.events.events_scheduled,
-            "Simulation iteration finished"
-        );
     }
 
     /// Reset simulation for next iteration.

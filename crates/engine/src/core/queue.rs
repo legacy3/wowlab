@@ -9,7 +9,7 @@ const BITMAP_SIZE: usize = WHEEL_SIZE / 64;
 type NodeIdx = u32;
 const NULL_IDX: NodeIdx = u32::MAX;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct ScheduledEvent {
     pub time: SimTime,
     pub event: SimEvent,
@@ -141,9 +141,10 @@ impl EventQueue {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn pop(&mut self) -> Option<ScheduledEvent> {
-        let head_idx = self.wheel_head[self.current_slot];
+        // Fast path: check current slot first (most common)
+        let head_idx = unsafe { *self.wheel_head.get_unchecked(self.current_slot) };
         if head_idx != NULL_IDX {
             return Some(self.pop_from_slot(self.current_slot, head_idx));
         }
@@ -151,22 +152,28 @@ impl EventQueue {
         let next_slot = self.find_next_slot()?;
         self.current_slot = next_slot;
 
-        let head_idx = self.wheel_head[next_slot];
+        let head_idx = unsafe { *self.wheel_head.get_unchecked(next_slot) };
         Some(self.pop_from_slot(next_slot, head_idx))
     }
 
     #[inline(always)]
     fn pop_from_slot(&mut self, slot: usize, head_idx: NodeIdx) -> ScheduledEvent {
-        let node = &self.arena[head_idx as usize];
+        // SAFETY: head_idx is known to be valid from caller
+        let node = unsafe { self.arena.get_unchecked(head_idx as usize) };
         let event = ScheduledEvent {
             time: SimTime::from_millis(node.time_ms),
-            event: node.event.clone(),
+            event: node.event, // Copy instead of clone (SimEvent is now Copy)
         };
         let next = node.next;
 
-        self.wheel_head[slot] = next;
+        // SAFETY: slot is known valid from caller
+        unsafe {
+            *self.wheel_head.get_unchecked_mut(slot) = next;
+        }
         if next == NULL_IDX {
-            self.wheel_tail[slot] = NULL_IDX;
+            unsafe {
+                *self.wheel_tail.get_unchecked_mut(slot) = NULL_IDX;
+            }
             self.clear_slot_bit(slot);
         }
 
@@ -224,22 +231,24 @@ impl EventQueue {
         let start_word = self.current_slot >> 6;
         let start_bit = self.current_slot & 63;
 
+        // SAFETY: start_word < BITMAP_SIZE guaranteed by current_slot < WHEEL_SIZE
         let mask = !0u64 << start_bit;
-        let masked = self.slot_bitmap[start_word] & mask;
+        let masked = unsafe { *self.slot_bitmap.get_unchecked(start_word) } & mask;
         if masked != 0 {
             return Some((start_word << 6) | masked.trailing_zeros() as usize);
         }
 
         for i in 1..BITMAP_SIZE {
             let word_idx = (start_word + i) & (BITMAP_SIZE - 1);
-            let word = self.slot_bitmap[word_idx];
+            // SAFETY: word_idx < BITMAP_SIZE by mask
+            let word = unsafe { *self.slot_bitmap.get_unchecked(word_idx) };
             if word != 0 {
                 return Some((word_idx << 6) | word.trailing_zeros() as usize);
             }
         }
 
         let wrap_mask = (1u64 << start_bit) - 1;
-        let wrap_masked = self.slot_bitmap[start_word] & wrap_mask;
+        let wrap_masked = unsafe { *self.slot_bitmap.get_unchecked(start_word) } & wrap_mask;
         if wrap_masked != 0 {
             return Some((start_word << 6) | wrap_masked.trailing_zeros() as usize);
         }
@@ -284,7 +293,10 @@ impl EventQueue {
 
     #[inline(always)]
     fn free_node(&mut self, idx: NodeIdx) {
-        self.arena[idx as usize].next = self.free_head;
+        // SAFETY: idx is always valid from caller
+        unsafe {
+            self.arena.get_unchecked_mut(idx as usize).next = self.free_head;
+        }
         self.free_head = idx;
     }
 }

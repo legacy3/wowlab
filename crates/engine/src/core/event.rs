@@ -1,6 +1,6 @@
 use wowlab_common::types::{AuraIdx, ProcIdx, SpellIdx, TargetIdx, UnitIdx};
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum SimEvent {
     GcdEnd,
     CastComplete {

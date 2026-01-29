@@ -79,19 +79,29 @@ impl FieldType {
 }
 
 /// Write helpers for context buffer population.
-#[inline]
+/// Using unsafe pointer writes to avoid bounds checking overhead in hot paths.
+#[inline(always)]
 pub fn write_bool(buffer: &mut [u8], offset: usize, value: bool) {
-    buffer[offset] = if value { 1 } else { 0 };
+    // SAFETY: Caller guarantees offset is within bounds (schema ensures this)
+    unsafe {
+        *buffer.get_unchecked_mut(offset) = value as u8;
+    }
 }
 
-#[inline]
+#[inline(always)]
 pub fn write_i32(buffer: &mut [u8], offset: usize, value: i32) {
-    let bytes = value.to_ne_bytes();
-    buffer[offset..offset + 4].copy_from_slice(&bytes);
+    // SAFETY: Caller guarantees offset + 4 is within bounds (schema ensures this)
+    unsafe {
+        let ptr = buffer.as_mut_ptr().add(offset) as *mut i32;
+        ptr.write_unaligned(value);
+    }
 }
 
-#[inline]
+#[inline(always)]
 pub fn write_f64(buffer: &mut [u8], offset: usize, value: f64) {
-    let bytes = value.to_ne_bytes();
-    buffer[offset..offset + 8].copy_from_slice(&bytes);
+    // SAFETY: Caller guarantees offset + 8 is within bounds (schema ensures this)
+    unsafe {
+        let ptr = buffer.as_mut_ptr().add(offset) as *mut f64;
+        ptr.write_unaligned(value);
+    }
 }
