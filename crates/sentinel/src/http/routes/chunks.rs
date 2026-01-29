@@ -56,7 +56,6 @@ async fn complete(
     Extension(node): Extension<VerifiedNode>,
     Json(payload): Json<CompleteRequest>,
 ) -> Response {
-    // Look up node by public key
     let node_row = sqlx::query_as::<_, (uuid::Uuid,)>("SELECT id FROM nodes WHERE public_key = $1")
         .bind(&node.public_key)
         .fetch_optional(&state.db)
@@ -81,7 +80,6 @@ async fn complete(
         }
     };
 
-    // Store the full result as JSON for the chunk
     let result_json = json!({
         "meanDps": payload.result.mean_dps,
         "stdDps": payload.result.std_dps,
@@ -90,7 +88,6 @@ async fn complete(
         "iterations": payload.result.iterations,
     });
 
-    // Update chunk status
     let chunk_row = sqlx::query_as::<_, (uuid::Uuid, uuid::Uuid)>(
         r#"UPDATE jobs_chunks
            SET status = 'completed', result = $1, completed_at = now()
@@ -105,12 +102,10 @@ async fn complete(
 
     let job_id = match chunk_row {
         Ok(Some((_, job_id))) => {
-            // Chunk transitioned from 'running' to 'completed'
             metrics::gauge!(crate::telemetry::CHUNKS_RUNNING).decrement(1.0);
             job_id
         }
         Ok(None) => {
-            // Check if chunk exists for better error message
             let existing = sqlx::query_as::<_, (String, uuid::Uuid)>(
                 "SELECT status, node_id FROM jobs_chunks WHERE id = $1",
             )
@@ -165,7 +160,6 @@ async fn complete(
         }
     };
 
-    // Query all completed chunks for this job
     let completed_chunks = sqlx::query_as::<_, (Value,)>(
         "SELECT result FROM jobs_chunks WHERE job_id = $1 AND status = 'completed'",
     )
@@ -185,13 +179,11 @@ async fn complete(
         }
     };
 
-    // Compute total iterations from completed chunks
     let total_iterations: i64 = chunks
         .iter()
         .map(|(r,)| r.get("iterations").and_then(|v| v.as_i64()).unwrap_or(0))
         .sum();
 
-    // Check if all chunks are done
     let pending_count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM jobs_chunks WHERE job_id = $1 AND status != 'completed'",
     )
@@ -201,7 +193,6 @@ async fn complete(
     .unwrap_or(1);
 
     if pending_count == 0 && !chunks.is_empty() {
-        // All chunks complete — aggregate results
         let mean_dps = if total_iterations > 0 {
             chunks
                 .iter()
@@ -245,7 +236,6 @@ async fn complete(
         .execute(&state.db)
         .await;
 
-        // Publish job completion to Portal
         let event = JobProgressEvent {
             r#type: "updated",
             payload: JobProgressPayload {
@@ -256,13 +246,7 @@ async fn complete(
             },
         };
 
-        if let Err(e) = state
-            .centrifugo
-            .publish(&format!("jobs:{}", job_id), &event)
-            .await
-        {
-            tracing::warn!(error = %e, job_id = %job_id, "Failed to publish job completion");
-        }
+        state.publish(&format!("jobs:{job_id}"), &event).await;
 
         metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 
@@ -273,7 +257,6 @@ async fn complete(
             .into_response();
     }
 
-    // Job still in progress — update iterations and ensure status is running
     let _ = sqlx::query(
         r#"UPDATE jobs
            SET status = 'running', completed_iterations = $1
@@ -284,7 +267,6 @@ async fn complete(
     .execute(&state.db)
     .await;
 
-    // Publish job progress to Portal
     let (chunks_completed, chunks_total): (i64, i64) = sqlx::query_as(
         "SELECT COUNT(*) FILTER (WHERE status = 'completed'), COUNT(*) FROM jobs_chunks WHERE job_id = $1",
     )
@@ -303,13 +285,7 @@ async fn complete(
         },
     };
 
-    if let Err(e) = state
-        .centrifugo
-        .publish(&format!("jobs:{}", job_id), &event)
-        .await
-    {
-        tracing::warn!(error = %e, job_id = %job_id, "Failed to publish job progress");
-    }
+    state.publish(&format!("jobs:{job_id}"), &event).await;
 
     metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 

@@ -18,28 +18,21 @@ pub async fn assign_pending_chunks(
     }
 
     let job_ids: Vec<Uuid> = pending.iter().map(|c| c.job_id).collect();
-
-    // 1. Get job metadata for the pending chunks
     let jobs = fetch_jobs(&state.db, &job_ids).await?;
 
-    // 2. Get online nodes with their Discord IDs (from auth.identities)
     let mut nodes = fetch_online_nodes(&state.db).await?;
     if nodes.is_empty() {
         tracing::debug!("No online nodes available");
         return Ok(());
     }
 
-    // 3. Get permissions per node
     let node_ids: Vec<Uuid> = nodes.iter().map(|n| n.id).collect();
     let permissions = fetch_permissions(&state.db, &node_ids).await?;
-
-    // 4. Get current backlog per node
     let backlogs = fetch_backlogs(&state.db).await?;
     for node in &mut nodes {
         node.backlog = *backlogs.get(&node.id).unwrap_or(&0);
     }
 
-    // 5. Assign each chunk to the node with the most available capacity
     let mut assignments: Vec<Assignment> = Vec::new();
 
     for chunk in pending {
@@ -68,16 +61,13 @@ pub async fn assign_pending_chunks(
         return Ok(());
     }
 
-    // 6. Batch update chunks with assignments
     batch_assign(&state.db, &assignments).await?;
     metrics::counter!(crate::telemetry::CHUNKS_ASSIGNED).increment(assignments.len() as u64);
     metrics::gauge!(crate::telemetry::CHUNKS_RUNNING).increment(assignments.len() as f64);
     tracing::debug!(count = assignments.len(), "Assigned chunks to nodes");
 
-    // 7. Fetch details for publishing
     let chunk_details = fetch_assigned_chunk_details(&state.db, &assignments).await?;
 
-    // 8. Publish to nodes
     for detail in chunk_details {
         let payload = ChunkAssignment {
             id: detail.id,
@@ -86,15 +76,7 @@ pub async fn assign_pending_chunks(
             seed_offset: detail.seed_offset,
         };
 
-        let channel = format!("chunks:{}", detail.node_id);
-        if let Err(e) = state.centrifugo.publish(&channel, &payload).await {
-            tracing::warn!(
-                error = %e,
-                chunk_id = %detail.id,
-                node_id = %detail.node_id,
-                "Failed to publish chunk assignment"
-            );
-        }
+        state.publish(&format!("chunks:{}", detail.node_id), &payload).await;
     }
 
     Ok(())

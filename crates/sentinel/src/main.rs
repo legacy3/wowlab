@@ -7,10 +7,15 @@ use metrics_exporter_prometheus::PrometheusBuilder;
 use sqlx::postgres::PgPoolOptions;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
+use wowlab_centrifuge::{Client, ClientConfig, ClientEvent, Presence};
 
-use wowlab_centrifugo::CentrifugoApi;
 use wowlab_sentinel::state::ServerState;
 use wowlab_sentinel::{ai, bot, cron, http, notifications, scheduler, Config};
+
+const DB_MAX_CONNECTIONS: u32 = 5;
+const DB_ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+const DB_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(600);
+const CENTRIFUGE_CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
 fn load_env() {
     if dotenvy::dotenv().is_err() {
@@ -40,9 +45,9 @@ async fn main() {
         .expect("Failed to install prometheus recorder");
 
     let db = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(std::time::Duration::from_secs(5))
-        .idle_timeout(std::time::Duration::from_secs(600))
+        .max_connections(DB_MAX_CONNECTIONS)
+        .acquire_timeout(DB_ACQUIRE_TIMEOUT)
+        .idle_timeout(DB_IDLE_TIMEOUT)
         .connect(&config.database_url)
         .await
         .expect("Failed to connect to database");
@@ -53,7 +58,36 @@ async fn main() {
     if ai_client.is_some() {
         tracing::info!("AI summarization enabled ({})", config.ai_model);
     }
-    let centrifugo = CentrifugoApi::new(&config.centrifugo_url, &config.centrifugo_key);
+
+    let centrifuge = Client::new(
+        ClientConfig::new(&config.centrifugo_url, &config.centrifugo_key)
+            .name(env!("CARGO_PKG_NAME"))
+            .version(env!("CARGO_PKG_VERSION")),
+    );
+
+    let mut events = centrifuge.events().await;
+    centrifuge.connect();
+
+    let connected = tokio::time::timeout(CENTRIFUGE_CONNECT_TIMEOUT, async {
+        while let Some(event) = events.recv().await {
+            match event {
+                ClientEvent::Connected(_) => return true,
+                ClientEvent::Error(e) => tracing::warn!("Centrifuge connection error: {}", e),
+                _ => {}
+            }
+        }
+        false
+    })
+    .await;
+
+    if connected != Ok(true) {
+        tracing::warn!("Failed to connect to Centrifuge, continuing anyway (publishes may fail)");
+    } else {
+        tracing::info!("Connected to Centrifuge");
+    }
+
+    let presence = Presence::new(&config.centrifugo_url, &config.centrifugo_key);
+
     let state = Arc::new(ServerState {
         config,
         db,
@@ -66,7 +100,8 @@ async fn main() {
         last_cron_tick: AtomicU64::new(0),
         notification_tx,
         ai_client,
-        centrifugo,
+        centrifuge,
+        presence,
     });
 
     wowlab_sentinel::telemetry::init();

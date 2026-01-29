@@ -7,15 +7,12 @@ use std::collections::HashSet;
 use async_trait::async_trait;
 use serde::Serialize;
 use uuid::Uuid;
+use wowlab_centrifuge::error_codes;
 
 use crate::cron::CronJob;
 use crate::notifications::{Notification, NotificationEvent};
 use crate::state::ServerState;
 use crate::utils::markdown as md;
-use wowlab_centrifugo::Error as CentrifugoError;
-
-/// Centrifugo error code for "unknown channel" (no subscribers yet).
-const ERROR_UNKNOWN_CHANNEL: u32 = 102;
 
 pub struct PresenceJob {
     schedule: String,
@@ -40,20 +37,17 @@ impl CronJob for PresenceJob {
     }
 
     async fn run(&self, state: &ServerState) {
-        // Get nodes currently in Centrifugo presence
-        let centrifugo_online: HashSet<Uuid> =
-            match state.centrifugo.presence("nodes:online").await {
-                Ok(ids) => ids.into_iter().collect(),
-                Err(CentrifugoError::Server { code, .. }) if code == ERROR_UNKNOWN_CHANNEL => {
-                    HashSet::new()
-                }
-                Err(e) => {
-                    tracing::warn!(error = %e, "Failed to poll presence");
-                    return;
-                }
-            };
+        let centrifugo_online: HashSet<Uuid> = match state.presence.get_online("nodes:online").await {
+            Ok(ids) => ids,
+            Err(wowlab_centrifuge::Error::Server { code, .. }) if code == error_codes::UNKNOWN_CHANNEL => {
+                HashSet::new()
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to poll presence");
+                return;
+            }
+        };
 
-        // Get nodes marked online in database
         let db_online: HashSet<Uuid> = match fetch_online_node_ids(&state.db).await {
             Ok(ids) => ids.into_iter().collect(),
             Err(e) => {
@@ -62,7 +56,6 @@ impl CronJob for PresenceJob {
             }
         };
 
-        // Reconcile differences
         let to_online: Vec<Uuid> = centrifugo_online.difference(&db_online).copied().collect();
         let to_offline: Vec<Uuid> = db_online.difference(&centrifugo_online).copied().collect();
 
@@ -115,7 +108,6 @@ async fn set_online(state: &ServerState, ids: &[Uuid]) {
     tracing::info!(count = r.rows_affected(), "Nodes online");
     publish_node_updates(state, ids).await;
 
-    // Send notifications
     let nodes = fetch_node_info(&state.db, ids).await;
     for node in nodes {
         send_notification(state, &node, NotificationEvent::NodeOnline, "is now online");
@@ -123,7 +115,6 @@ async fn set_online(state: &ServerState, ids: &[Uuid]) {
 }
 
 async fn set_offline(state: &ServerState, ids: &[Uuid]) {
-    // Fetch node info before updating (for notifications)
     let nodes = fetch_node_info(&state.db, ids).await;
 
     let result = sqlx::query("UPDATE public.nodes SET status = 'offline' WHERE id = ANY($1)")
@@ -144,7 +135,6 @@ async fn set_offline(state: &ServerState, ids: &[Uuid]) {
     metrics::counter!(crate::telemetry::NODES_MARKED_OFFLINE).increment(r.rows_affected());
     publish_node_updates(state, ids).await;
 
-    // Send notifications
     for node in nodes {
         send_notification(state, &node, NotificationEvent::NodeOffline, "went offline");
     }
@@ -179,9 +169,7 @@ async fn publish_node_updates(state: &ServerState, ids: &[Uuid]) {
         },
     };
 
-    if let Err(e) = state.centrifugo.publish("nodes", &payload).await {
-        tracing::warn!(error = %e, "Failed to publish node update");
-    }
+    state.publish("nodes", &payload).await;
 }
 
 fn send_notification(state: &ServerState, node: &NodeInfo, event: NotificationEvent, action: &str) {

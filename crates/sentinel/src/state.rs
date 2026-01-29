@@ -1,16 +1,23 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use metrics_exporter_prometheus::PrometheusHandle;
 use poise::serenity_prelude::{ConnectionStage, ShardManager};
+use serde::Serialize;
 use sqlx::PgPool;
-use wowlab_centrifugo::CentrifugoApi;
+use wowlab_centrifuge::{Client as CentrifugeClient, Presence};
 
 use crate::ai::AiBackend;
 use crate::config::Config;
 use crate::notifications::NotificationSender;
 use crate::utils::filter_refresh::FilterMap;
+
+const PUBLISH_RETRIES: u32 = 3;
+const PUBLISH_RETRY_DELAY: Duration = Duration::from_millis(100);
+const SCHEDULER_GRACE_PERIOD_SECS: u64 = 60;
+const PRESENCE_GRACE_PERIOD_SECS: u64 = 30;
+const CRON_GRACE_PERIOD_SECS: u64 = 90;
 
 pub struct ServerState {
     pub config: Config,
@@ -24,7 +31,8 @@ pub struct ServerState {
     pub last_cron_tick: AtomicU64,
     pub notification_tx: NotificationSender,
     pub ai_client: Option<Box<dyn AiBackend>>,
-    pub centrifugo: CentrifugoApi,
+    pub centrifuge: CentrifugeClient,
+    pub presence: Presence,
 }
 
 impl ServerState {
@@ -58,17 +66,45 @@ impl ServerState {
     }
 
     pub fn scheduler_healthy(&self) -> bool {
-        age_secs(self.last_scheduler_tick.load(Ordering::Relaxed)) < 60
+        age_secs(self.last_scheduler_tick.load(Ordering::Relaxed)) < SCHEDULER_GRACE_PERIOD_SECS
     }
 
     pub fn presence_healthy(&self) -> bool {
-        // Presence polls every 5s, allow 30s grace period
-        age_secs(self.last_presence_tick.load(Ordering::Relaxed)) < 30
+        age_secs(self.last_presence_tick.load(Ordering::Relaxed)) < PRESENCE_GRACE_PERIOD_SECS
     }
 
     pub fn cron_healthy(&self) -> bool {
-        // Cron runs jobs every 30s at minimum, allow 90s grace period
-        age_secs(self.last_cron_tick.load(Ordering::Relaxed)) < 90
+        age_secs(self.last_cron_tick.load(Ordering::Relaxed)) < CRON_GRACE_PERIOD_SECS
+    }
+
+    /// Publish a message to a Centrifuge channel with retry logic.
+    pub async fn publish<T: Serialize>(&self, channel: &str, payload: &T) {
+        let data = match serde_json::to_vec(payload) {
+            Ok(d) => d,
+            Err(e) => {
+                tracing::error!(error = %e, channel, "Failed to serialize publish payload");
+                return;
+            }
+        };
+
+        for attempt in 0..PUBLISH_RETRIES {
+            match self.centrifuge.publish(channel, data.clone()).await {
+                Ok(()) => return,
+                Err(e) if e.is_temporary() && attempt + 1 < PUBLISH_RETRIES => {
+                    tracing::debug!(
+                        error = %e,
+                        channel,
+                        attempt = attempt + 1,
+                        "Publish failed, retrying"
+                    );
+                    tokio::time::sleep(PUBLISH_RETRY_DELAY).await;
+                }
+                Err(e) => {
+                    tracing::warn!(error = %e, channel, "Failed to publish");
+                    return;
+                }
+            }
+        }
     }
 }
 

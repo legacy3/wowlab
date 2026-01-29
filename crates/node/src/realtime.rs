@@ -7,7 +7,7 @@ use tokio::runtime::Handle;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
-use wowlab_centrifugo::{Client, ClientConfig, Event};
+use wowlab_centrifuge::{Client, ClientConfig, ClientEvent, SubscriptionConfig, SubscriptionEvent};
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
@@ -49,7 +49,7 @@ pub struct NodeRealtime {
 impl NodeRealtime {
     pub fn new(url: &str, token: &str, name: &str, version: &str) -> Self {
         Self {
-            config: ClientConfig::new(url, token, name, version),
+            config: ClientConfig::new(url, token).name(name).version(version),
         }
     }
 
@@ -64,20 +64,34 @@ impl NodeRealtime {
 
         handle.spawn(async move {
             let client = Client::new(config);
-            let shutdown_for_run = shutdown.clone();
+            let mut events = client.events().await;
+            client.connect();
 
-            // Spawn the client run loop
-            let client_for_run = client.clone();
-            let run_handle =
-                tokio::spawn(async move { client_for_run.run(shutdown_for_run).await });
+            let connected = tokio::time::timeout(CONNECT_TIMEOUT, async {
+                while let Some(event) = events.recv().await {
+                    if matches!(event, ClientEvent::Connected(_)) {
+                        return true;
+                    }
+                    if let ClientEvent::Error(e) = event {
+                        tracing::warn!("Connection error: {}", e);
+                    }
+                }
+                false
+            })
+            .await;
 
-            // Subscribe to channels and process events
+            if connected != Ok(true) {
+                let _ = tx.send(RealtimeEvent::Error("Connection timeout".into())).await;
+                client.disconnect();
+                return;
+            }
+
             if let Err(e) = run_subscriptions(&client, node_id, &tx, shutdown).await {
                 let _ = tx.send(RealtimeEvent::Error(e.to_string())).await;
             }
 
             let _ = tx.send(RealtimeEvent::Disconnected).await;
-            let _ = run_handle.await;
+            client.disconnect();
             tracing::debug!("Realtime subscription shut down");
         });
 
@@ -90,13 +104,16 @@ async fn run_subscriptions(
     node_id: Uuid,
     tx: &mpsc::Sender<RealtimeEvent>,
     shutdown: CancellationToken,
-) -> Result<(), wowlab_centrifugo::Error> {
-    client.wait_connected(CONNECT_TIMEOUT).await?;
-
-    // Subscribe to channels
-    let (_, mut node_rx) = client.subscribe(&format!("nodes:{node_id}"), false).await?;
-    let (_, mut chunks_rx) = client.subscribe(&format!("chunks:{node_id}"), false).await?;
-    let (_, mut presence_rx) = client.subscribe("nodes:online", true).await?;
+) -> Result<(), wowlab_centrifuge::Error> {
+    let mut node_sub = client
+        .subscribe(SubscriptionConfig::new(format!("nodes:{node_id}")))
+        .await?;
+    let mut chunks_sub = client
+        .subscribe(SubscriptionConfig::new(format!("chunks:{node_id}")))
+        .await?;
+    let mut presence_sub = client
+        .subscribe(SubscriptionConfig::new("nodes:online").join_leave(true))
+        .await?;
 
     tracing::debug!("Subscribed to node:{node_id}, chunks:{node_id}, nodes:online");
     let _ = tx.send(RealtimeEvent::Connected).await;
@@ -104,17 +121,17 @@ async fn run_subscriptions(
     loop {
         tokio::select! {
             _ = shutdown.cancelled() => break,
-            Some(event) = node_rx.recv() => {
+            Some(event) = node_sub.recv() => {
                 if let Some(payload) = extract_publication::<NodePayload>(&event) {
                     let _ = tx.send(RealtimeEvent::NodeUpdated(payload)).await;
                 }
             }
-            Some(event) = chunks_rx.recv() => {
+            Some(event) = chunks_sub.recv() => {
                 if let Some(payload) = extract_publication::<ChunkPayload>(&event) {
                     let _ = tx.send(RealtimeEvent::ChunkAssigned(payload)).await;
                 }
             }
-            Some(event) = presence_rx.recv() => {
+            Some(event) = presence_sub.recv() => {
                 log_presence_event(&event);
             }
             else => break,
@@ -124,21 +141,19 @@ async fn run_subscriptions(
     Ok(())
 }
 
-/// Extract and parse a publication payload from an event.
-fn extract_publication<T: for<'de> Deserialize<'de>>(event: &Event) -> Option<T> {
-    let Event::Publication(pub_) = event else {
+fn extract_publication<T: for<'de> Deserialize<'de>>(event: &SubscriptionEvent) -> Option<T> {
+    let SubscriptionEvent::Publication(pub_) = event else {
         return None;
     };
     parse_json(&pub_.data)
 }
 
-/// Log presence join/leave events for debugging.
-fn log_presence_event(event: &Event) {
+fn log_presence_event(event: &SubscriptionEvent) {
     match event {
-        Event::Join(info) => {
+        SubscriptionEvent::Join(info) => {
             tracing::debug!(user = %info.user, client = %info.client, "Node joined");
         }
-        Event::Leave(info) => {
+        SubscriptionEvent::Leave(info) => {
             tracing::debug!(user = %info.user, client = %info.client, "Node left");
         }
         _ => {}

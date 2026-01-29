@@ -13,7 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 wowlab-common = { path = "../common" }
 wowlab-supabase = { path = "../supabase" }
-wowlab-centrifugo = { path = "../centrifugo" }
+wowlab-centrifuge = { path = "../centrifuge" }
 urlencoding = "2"
 wowlab-engine = { path = "../engine", features = ["jit"] }
 tokio = { version = "1", features = ["full"] }

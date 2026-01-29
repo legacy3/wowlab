@@ -1,6 +1,9 @@
+// Centrifugo client protocol - synced from:
+// https://github.com/centrifugal/protocol/blob/master/definitions/client.proto
+
 syntax = "proto3";
 
-package centrifugo;
+package centrifugal.centrifuge.protocol;
 
 message Error {
   uint32 code = 1;
@@ -8,8 +11,15 @@ message Error {
   bool temporary = 3;
 }
 
+message EmulationRequest {
+  string node = 1;
+  string session = 2;
+  bytes data = 3;
+}
+
 message Command {
   uint32 id = 1;
+  reserved 2, 3;
   ConnectRequest connect = 4;
   SubscribeRequest subscribe = 5;
   UnsubscribeRequest unsubscribe = 6;
@@ -18,6 +28,8 @@ message Command {
   PresenceStatsRequest presence_stats = 9;
   HistoryRequest history = 10;
   PingRequest ping = 11;
+  SendRequest send = 12;
+  RPCRequest rpc = 13;
   RefreshRequest refresh = 14;
   SubRefreshRequest sub_refresh = 15;
 }
@@ -25,6 +37,7 @@ message Command {
 message Reply {
   uint32 id = 1;
   Error error = 2;
+  reserved 3;
   Push push = 4;
   ConnectResult connect = 5;
   SubscribeResult subscribe = 6;
@@ -34,11 +47,14 @@ message Reply {
   PresenceStatsResult presence_stats = 10;
   HistoryResult history = 11;
   PingResult ping = 12;
+  RPCResult rpc = 13;
   RefreshResult refresh = 14;
   SubRefreshResult sub_refresh = 15;
 }
 
 message Push {
+  reserved 3;
+  int64 id = 1;
   string channel = 2;
   Publication pub = 4;
   Join join = 5;
@@ -59,6 +75,7 @@ message ClientInfo {
 }
 
 message Publication {
+  reserved 1, 2, 3;
   bytes data = 4;
   ClientInfo info = 5;
   uint64 offset = 6;
@@ -77,12 +94,14 @@ message Leave {
 }
 
 message Unsubscribe {
+  reserved 1;
   uint32 code = 2;
   string reason = 3;
 }
 
 message Subscribe {
   bool recoverable = 1;
+  reserved 2, 3;
   string epoch = 4;
   uint64 offset = 5;
   bool positioned = 6;
@@ -124,6 +143,8 @@ message ConnectRequest {
   map<string, SubscribeRequest> subs = 3;
   string name = 4;
   string version = 5;
+  map<string, string> headers = 6;
+  int64 flag = 7;
 }
 
 message ConnectResult {
@@ -155,18 +176,23 @@ message SubscribeRequest {
   string channel = 1;
   string token = 2;
   bool recover = 3;
+  reserved 4, 5;
   string epoch = 6;
   uint64 offset = 7;
   bytes data = 8;
   bool positioned = 9;
   bool recoverable = 10;
   bool join_leave = 11;
+  string delta = 12;
+  FilterNode tf = 13;
+  int64 flag = 14;
 }
 
 message SubscribeResult {
   bool expires = 1;
   uint32 ttl = 2;
   bool recoverable = 3;
+  reserved 4, 5;
   string epoch = 6;
   repeated Publication publications = 7;
   bool recovered = 8;
@@ -174,6 +200,8 @@ message SubscribeResult {
   bool positioned = 10;
   bytes data = 11;
   bool was_recovering = 12;
+  bool delta = 13;
+  int64 id = 14;
 }
 
 message SubRefreshRequest {
@@ -216,9 +244,17 @@ message PresenceStatsResult {
   uint32 num_users = 2;
 }
 
+message StreamPosition {
+  uint64 offset = 1;
+  string epoch = 2;
+}
+
 message HistoryRequest {
   string channel = 1;
+  reserved 2, 3, 4, 5, 6;
   int32 limit = 7;
+  StreamPosition since = 8;
+  bool reverse = 9;
 }
 
 message HistoryResult {
@@ -230,3 +266,25 @@ message HistoryResult {
 message PingRequest {}
 
 message PingResult {}
+
+message RPCRequest {
+  bytes data = 1;
+  string method = 2;
+}
+
+message RPCResult {
+  bytes data = 1;
+}
+
+message SendRequest {
+  bytes data = 1;
+}
+
+message FilterNode {
+  string op = 1;
+  string key = 2;
+  string cmp = 3;
+  string val = 4;
+  repeated string vals = 5;
+  repeated FilterNode nodes = 6;
+}
