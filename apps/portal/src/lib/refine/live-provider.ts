@@ -18,7 +18,8 @@ async function getToken() {
   return (await res.json()).token;
 }
 
-const client = new Centrifuge(env.CENTRIFUGO_URL, {
+const wsUrl = new URL("connection/websocket", env.CENTRIFUGO_URL).href;
+const client = new Centrifuge(wsUrl, {
   getToken,
   name: pkg.name,
   version: pkg.version,
