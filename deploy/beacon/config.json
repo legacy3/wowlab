@@ -40,10 +40,14 @@
   },
 
   "channel": {
+    "without_namespace": {
+      "allow_subscribe_for_client": true
+    },
     "namespaces": [
       {
         "name": "nodes",
         "allow_subscribe_for_client": true,
+        "allow_publish_for_client": true,
         "presence": true,
         "join_leave": true,
         "force_push_join_leave": true,
@@ -51,11 +55,13 @@
       },
       {
         "name": "jobs",
-        "allow_subscribe_for_client": true
+        "allow_subscribe_for_client": true,
+        "allow_publish_for_client": true
       },
       {
         "name": "chunks",
-        "allow_subscribe_for_client": true
+        "allow_subscribe_for_client": true,
+        "allow_publish_for_client": true
       }
     ]
   }

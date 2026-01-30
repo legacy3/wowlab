@@ -169,7 +169,7 @@ async fn publish_node_updates(state: &ServerState, ids: &[Uuid]) {
         },
     };
 
-    state.publish("nodes", &payload).await;
+    state.publish("nodes:all", &payload).await;
 }
 
 fn send_notification(state: &ServerState, node: &NodeInfo, event: NotificationEvent, action: &str) {
