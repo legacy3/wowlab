@@ -247,6 +247,7 @@ async fn complete(
         };
 
         state.publish(&format!("jobs:{job_id}"), &event).await;
+        state.publish("jobs:all", &event).await;
 
         metrics::counter!(crate::telemetry::CHUNKS_COMPLETED).increment(1);
 

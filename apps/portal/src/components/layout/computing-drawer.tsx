@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<DistributedJobStatus, string> = {
 export function ComputingDrawer() {
   const { computingDrawer: content } = useIntlayer("layout");
   const { open, setOpen } = useComputingDrawer();
-  const { data: jobs = [] } = useUserJobs({ pollInterval: 2000 });
+  const { data: jobs = [] } = useUserJobs();
 
   const activeJobs = useMemo(
     () => jobs.filter((j) => j.status === "pending" || j.status === "running"),

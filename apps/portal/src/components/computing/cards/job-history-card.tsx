@@ -30,7 +30,7 @@ const statuses: (DistributedJobStatus | "all")[] = [
 
 export function JobHistoryCard() {
   const content = useIntlayer("computing").jobHistoryCard;
-  const { data: jobs = [], isLoading } = useUserJobs({ pollInterval: 5000 });
+  const { data: jobs = [], isLoading } = useUserJobs();
 
   const [statusFilter, setStatusFilter] = useState<
     DistributedJobStatus | "all"

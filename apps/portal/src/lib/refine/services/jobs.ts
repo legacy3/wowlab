@@ -68,24 +68,12 @@ interface User {
   id: string;
 }
 
-export function useJob(
-  jobId: string | null,
-  options?: { pollInterval?: number },
-) {
+export function useJob(jobId: string | null) {
   const { data, error, isError, isLoading } = useResource<JobRow>({
     ...jobs,
     id: jobId ?? "",
     liveMode: "auto",
-    queryOptions: {
-      enabled: !!jobId,
-      refetchInterval: (query) => {
-        const job = query.state.data?.data;
-        if (job?.status === "completed") {
-          return false;
-        }
-        return options?.pollInterval ?? 2000;
-      },
-    },
+    queryOptions: { enabled: !!jobId },
   });
 
   return {
@@ -159,7 +147,7 @@ export function useSubmitJob() {
   };
 }
 
-export function useUserJobs(options?: { pollInterval?: number }) {
+export function useUserJobs() {
   const { data: user } = useGetIdentity<User>();
   const userId = user?.id;
 
@@ -170,17 +158,7 @@ export function useUserJobs(options?: { pollInterval?: number }) {
       : [],
     liveMode: "auto",
     pagination: { currentPage: 1, pageSize: 50 },
-    queryOptions: {
-      enabled: !!userId,
-      refetchInterval: (query) => {
-        const jobsData = query.state.data?.data ?? [];
-        const hasActive = jobsData.some((j) => j.status !== "completed");
-        if (!hasActive) {
-          return false;
-        }
-        return options?.pollInterval ?? 5000;
-      },
-    },
+    queryOptions: { enabled: !!userId },
     sorters: [{ field: "created_at", order: "desc" }],
   });
 

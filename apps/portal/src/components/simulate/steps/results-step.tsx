@@ -14,7 +14,7 @@ export interface ResultsStepProps {
 export function ResultsStep({ jobId, onBack }: ResultsStepProps) {
   const { resultsStep: content } = useIntlayer("simulate");
 
-  const { data: job, error, isLoading } = useJob(jobId, { pollInterval: 2000 });
+  const { data: job, error, isLoading } = useJob(jobId);
 
   if (!jobId) {
     return (
