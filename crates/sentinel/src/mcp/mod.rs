@@ -98,6 +98,9 @@ pub fn create_service(db: PgPool) -> StreamableHttpService<McpHandler, LocalSess
     StreamableHttpService::new(
         move || Ok(McpHandler::new(db.clone())),
         Arc::new(LocalSessionManager::default()),
-        StreamableHttpServerConfig::default(),
+        StreamableHttpServerConfig {
+            stateful_mode: false,
+            ..Default::default()
+        },
     )
 }
