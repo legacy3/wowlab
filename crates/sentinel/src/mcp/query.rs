@@ -1,9 +1,3 @@
-//! Query execution for MCP game data tables.
-//!
-//! Builds and executes parameterized SQL queries with filtering, sorting,
-//! and pagination. All user input is bound via query parameters to prevent
-//! SQL injection.
-
 use std::time::Duration;
 
 use schemars::JsonSchema;
