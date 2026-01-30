@@ -287,7 +287,6 @@ export function useNodes(userId: string | undefined) {
       nodeIds.length > 0
         ? [{ field: "node_id", operator: "in", value: nodeIds }]
         : [],
-    liveMode: "auto",
     pagination: { mode: "off" },
     queryOptions: { enabled: nodeIds.length > 0 },
   });
