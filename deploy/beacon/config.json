@@ -4,6 +4,7 @@
       "hmac_secret_key": ""
     },
     "allowed_origins": [
+      "http://localhost:3000",
       "https://wowlab.gg",
       "https://*.wowlab.gg"
     ]

@@ -133,24 +133,20 @@ async fn register(
 }
 
 #[derive(Deserialize)]
-pub struct HeartbeatRequest {
-    status: Option<String>,
-}
+pub struct HeartbeatRequest {}
 
 async fn heartbeat(
     State(state): State<Arc<ServerState>>,
     Extension(node): Extension<VerifiedNode>,
-    Json(payload): Json<HeartbeatRequest>,
+    Json(_payload): Json<HeartbeatRequest>,
 ) -> Response {
-    let status = payload.status.as_deref().unwrap_or("online");
-
+    // Only update last_seen_at - status is managed by presence polling
     let result = sqlx::query_as::<_, (uuid::Uuid, String, i32, String)>(
         r#"UPDATE nodes
-           SET status = $1, last_seen_at = now()
-           WHERE public_key = $2 AND user_id IS NOT NULL
+           SET last_seen_at = now()
+           WHERE public_key = $1 AND user_id IS NOT NULL
            RETURNING id, name, max_parallel, status"#,
     )
-    .bind(status)
     .bind(&node.public_key)
     .fetch_optional(&state.db)
     .await;
