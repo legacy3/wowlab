@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.6.16"
+version = "0.6.17"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -68,5 +68,9 @@ dotenvy = "0.15"
 
 # Tokenization
 tiktoken-rs = "0.9"
+
+# MCP Server
+rmcp = { version = "0.14", features = ["server", "transport-streamable-http-server", "macros"] }
+schemars = "1"
 
 [dev-dependencies]

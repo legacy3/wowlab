@@ -47,8 +47,11 @@ async fn register(
 
     match existing {
         Ok(Some((id, claim_code, user_id))) => {
-            let beacon_token =
-                wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret).ok();
+            let beacon_token = wowlab_centrifuge::token::generate(
+                &id.to_string(),
+                &state.config.centrifugo_token_secret,
+            )
+            .ok();
 
             return (
                 StatusCode::OK,
@@ -107,8 +110,11 @@ async fn register(
 
     match result {
         Ok((id, code)) => {
-            let beacon_token =
-                wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret).ok();
+            let beacon_token = wowlab_centrifuge::token::generate(
+                &id.to_string(),
+                &state.config.centrifugo_token_secret,
+            )
+            .ok();
 
             (
                 StatusCode::OK,
@@ -207,12 +213,13 @@ async fn refresh_token(
 
     match node_row {
         Ok(Some((id,))) => {
-            match wowlab_centrifuge::token::generate(&id.to_string(), &state.config.centrifugo_token_secret) {
-                Ok(token) => (
-                    StatusCode::OK,
-                    Json(json!({ "beaconToken": token })),
-                )
-                    .into_response(),
+            match wowlab_centrifuge::token::generate(
+                &id.to_string(),
+                &state.config.centrifugo_token_secret,
+            ) {
+                Ok(token) => {
+                    (StatusCode::OK, Json(json!({ "beaconToken": token }))).into_response()
+                }
                 Err(e) => {
                     tracing::error!(error = %e, "Failed to generate beacon token");
                     (

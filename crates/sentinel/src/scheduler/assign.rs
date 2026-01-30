@@ -76,7 +76,9 @@ pub async fn assign_pending_chunks(
             seed_offset: detail.seed_offset,
         };
 
-        state.publish(&format!("chunks:{}", detail.node_id), &payload).await;
+        state
+            .publish(&format!("chunks:{}", detail.node_id), &payload)
+            .await;
     }
 
     Ok(())

@@ -47,7 +47,9 @@ pub async fn run(state: Arc<ServerState>) -> Result<(), Box<dyn std::error::Erro
 
     let jobs: Vec<Arc<dyn CronJob>> = vec![
         Arc::new(reclaim::ReclaimChunksJob::new(&state.config.cron_reclaim)),
-        Arc::new(maintenance::CleanupStaleDataJob::new(&state.config.cron_cleanup)),
+        Arc::new(maintenance::CleanupStaleDataJob::new(
+            &state.config.cron_cleanup,
+        )),
         Arc::new(presence::PresenceJob::new(&state.config.cron_presence)),
         Arc::new(RecordUptimeJob {
             schedule: state.config.cron_uptime.clone(),

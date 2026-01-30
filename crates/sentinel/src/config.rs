@@ -36,6 +36,12 @@ pub struct Config {
     pub vercel_webhook_secret: Option<String>,
 
     // -------------------------------------------------------------------------
+    // MCP Server
+    // -------------------------------------------------------------------------
+    /// Whether MCP server is enabled (default: false).
+    pub mcp_enabled: bool,
+
+    // -------------------------------------------------------------------------
     // AI Summaries
     // -------------------------------------------------------------------------
     /// Whether AI summaries are enabled.
@@ -98,8 +104,11 @@ impl Config {
             github_webhook_secret: std::env::var("SENTINEL_GITHUB_WEBHOOK_SECRET").ok(),
             vercel_webhook_secret: std::env::var("SENTINEL_VERCEL_WEBHOOK_SECRET").ok(),
 
+            // MCP Server
+            mcp_enabled: parse_bool("SENTINEL_MCP_ENABLED", false),
+
             // AI Summaries
-            ai_enabled: parse_bool("SENTINEL_AI_ENABLED"),
+            ai_enabled: parse_bool("SENTINEL_AI_ENABLED", false),
             ai_api_key: std::env::var("SENTINEL_AI_API_KEY").ok(),
             ai_model: std::env::var("SENTINEL_AI_MODEL")
                 .unwrap_or_else(|_| "anthropic/claude-haiku-4.5".into()),
@@ -138,10 +147,15 @@ fn parse_or<T: std::str::FromStr>(name: &str, default: T) -> T {
         .unwrap_or(default)
 }
 
-fn parse_bool(name: &str) -> bool {
-    std::env::var(name)
-        .map(|v| matches!(v.to_lowercase().as_str(), "true" | "1" | "yes"))
-        .unwrap_or(false)
+fn parse_bool(name: &str, default: bool) -> bool {
+    match std::env::var(name) {
+        Ok(v) => match v.to_lowercase().as_str() {
+            "true" | "1" | "yes" => true,
+            "false" | "0" | "no" => false,
+            _ => default,
+        },
+        Err(_) => default,
+    }
 }
 
 fn env_or(name: &str, default: &str) -> String {

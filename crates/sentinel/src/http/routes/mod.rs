@@ -18,7 +18,7 @@ use crate::http::auth;
 use crate::state::ServerState;
 
 /// Create the main application router with all routes.
-pub fn router() -> Router<Arc<ServerState>> {
+pub fn router(state: &Arc<ServerState>) -> Router<Arc<ServerState>> {
     // Node API routes (require Ed25519 signature verification)
     let node_api = Router::new()
         .merge(nodes::router())
@@ -32,9 +32,18 @@ pub fn router() -> Router<Arc<ServerState>> {
         .route("/status", get(status::handler))
         .route("/metrics", get(metrics::handler));
 
-    // Compose all routes
-    Router::new()
+    // Base router
+    let mut router = Router::new()
         .merge(public)
         .merge(node_api)
-        .merge(webhooks::router())
+        .merge(webhooks::router());
+
+    // TODO Check if passing state to router is an okay thing to do
+    if state.config.mcp_enabled {
+        let mcp_service = crate::mcp::create_service(state.db.clone());
+        router = router.nest_service("/mcp", mcp_service);
+        tracing::info!("MCP server enabled at /mcp");
+    }
+
+    router
 }

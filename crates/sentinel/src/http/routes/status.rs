@@ -26,6 +26,19 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
     let db_healthy = sqlx::query("SELECT 1").execute(&state.db).await.is_ok();
     let db_ping_ms = db_start.elapsed().as_millis() as u64;
 
+    let mut services = vec![
+        json!({ "name": "Bot", "status": status_str(state.bot_healthy().await) }),
+        json!({ "name": "Scheduler", "status": status_str(state.scheduler_healthy()) }),
+        json!({ "name": "Presence", "status": status_str(state.presence_healthy()) }),
+        json!({ "name": "Cron", "status": status_str(state.cron_healthy()) }),
+        json!({ "name": "Centrifuge", "status": status_str(state.centrifuge_healthy().await) }),
+        json!({ "name": "Database", "status": status_str(db_healthy), "ping_ms": db_ping_ms }),
+    ];
+
+    if state.config.mcp_enabled {
+        services.push(json!({ "name": "MCP", "status": "OK" }));
+    }
+
     Json(json!({
         "status": "success",
         "data": {
@@ -38,14 +51,7 @@ pub async fn handler(State(state): State<Arc<ServerState>>) -> Json<Value> {
                 "total": (os_mem_total * 10.0).round() / 10.0,
                 "available": (os_mem_available * 10.0).round() / 10.0,
             },
-            "services": [
-                { "name": "Bot", "status": status_str(state.bot_healthy().await) },
-                { "name": "Scheduler", "status": status_str(state.scheduler_healthy()) },
-                { "name": "Presence", "status": status_str(state.presence_healthy()) },
-                { "name": "Cron", "status": status_str(state.cron_healthy()) },
-                { "name": "Centrifuge", "status": status_str(state.centrifuge_healthy().await) },
-                { "name": "Database", "status": status_str(db_healthy), "ping_ms": db_ping_ms },
-            ]
+            "services": services
         }
     }))
 }

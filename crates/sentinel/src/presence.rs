@@ -37,9 +37,12 @@ impl CronJob for PresenceJob {
     }
 
     async fn run(&self, state: &ServerState) {
-        let centrifugo_online: HashSet<Uuid> = match state.presence.get_online("nodes:online").await {
+        let centrifugo_online: HashSet<Uuid> = match state.presence.get_online("nodes:online").await
+        {
             Ok(ids) => ids,
-            Err(wowlab_centrifuge::Error::Server { code, .. }) if code == error_codes::UNKNOWN_CHANNEL => {
+            Err(wowlab_centrifuge::Error::Server { code, .. })
+                if code == error_codes::UNKNOWN_CHANNEL =>
+            {
                 HashSet::new()
             }
             Err(e) => {
@@ -74,10 +77,9 @@ impl CronJob for PresenceJob {
 }
 
 async fn fetch_online_node_ids(db: &sqlx::PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
-    let rows: Vec<(Uuid,)> =
-        sqlx::query_as("SELECT id FROM public.nodes WHERE status = 'online'")
-            .fetch_all(db)
-            .await?;
+    let rows: Vec<(Uuid,)> = sqlx::query_as("SELECT id FROM public.nodes WHERE status = 'online'")
+        .fetch_all(db)
+        .await?;
     Ok(rows.into_iter().map(|(id,)| id).collect())
 }
 

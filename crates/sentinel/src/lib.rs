@@ -3,6 +3,7 @@ pub mod bot;
 pub mod config;
 pub mod cron;
 pub mod http;
+pub mod mcp;
 pub mod notifications;
 pub mod presence;
 pub mod scheduler;

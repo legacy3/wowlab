@@ -21,7 +21,7 @@ pub async fn run(
     shutdown: CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let port = state.config.http_port;
-    let app = routes::router()
+    let app = routes::router(&state)
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
