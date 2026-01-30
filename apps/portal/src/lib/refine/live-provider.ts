@@ -2,7 +2,7 @@
 
 import type { LiveEvent, LiveProvider } from "@refinedev/core";
 
-import { Centrifuge, type Subscription } from "centrifuge";
+import { Centrifuge, type Subscription, UnauthorizedError } from "centrifuge";
 
 import { env } from "@/lib/env";
 import { useLiveStore } from "@/lib/state/live";
@@ -12,6 +12,10 @@ import pkg from "../../../package.json";
 async function getToken() {
   const res = await fetch("/api/centrifugo/token");
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new UnauthorizedError("Not authenticated");
+    }
+
     throw new Error("Failed to get token");
   }
 

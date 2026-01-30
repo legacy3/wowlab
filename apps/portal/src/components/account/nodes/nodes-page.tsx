@@ -16,7 +16,6 @@ import {
   useNodeMutations,
   useNodes,
   useNodesSelectionArray,
-  useUser,
 } from "@/lib/state";
 
 import { BulkActionBar } from "./bulk-action-bar";
@@ -26,10 +25,7 @@ import { type OwnerFilter, OwnerFilterTabs } from "./owner-filter-tabs";
 
 export function NodesPage() {
   const content = useIntlayer("account").nodesPage;
-  const { data: user } = useUser();
-  const userId = user?.id;
-
-  const { data, isLoading } = useNodes(userId);
+  const { data, isLoading } = useNodes();
 
   const { clearSelection, selectAll, selectedIds } = useNodesSelectionArray();
   const { deleteNode, isDeleting, isUpdating, updateNode } = useNodeMutations();

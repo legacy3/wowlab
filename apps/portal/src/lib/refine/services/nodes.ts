@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useDelete,
-  useGetIdentity,
-  useInvalidate,
-  useList,
-} from "@refinedev/core";
+import { useDelete, useGetIdentity, useInvalidate, useList } from "@refinedev/core";
 import { useCallback, useState } from "react";
 
 import type { TablesUpdate } from "@/lib/supabase/database.types";
@@ -260,19 +255,17 @@ export function useNodeMutations() {
   };
 }
 
-export function useNodes(userId: string | undefined) {
-  const { data: identity } = useGetIdentity<User>();
-  const effectiveUserId = userId ?? identity?.id;
+export function useNodes() {
+  const { data: user } = useGetIdentity<User>();
+  const userId = user?.id;
 
   const myNodesResult = useList<NodeRow>({
     ...nodes,
-    filters: effectiveUserId
-      ? [{ field: "user_id", operator: "eq", value: effectiveUserId }]
-      : [],
+    filters: userId ? [{ field: "user_id", operator: "eq", value: userId }] : [],
     liveMode: "auto",
     pagination: { mode: "off" },
     queryOptions: {
-      enabled: !!effectiveUserId,
+      enabled: !!userId,
       staleTime: 1000 * 5,
     },
     sorters: [{ field: "created_at", order: "desc" }],
@@ -295,8 +288,8 @@ export function useNodes(userId: string | undefined) {
 
   const sharedNodesResult = useList<NodeWithPermissions>({
     ...nodes,
-    filters: effectiveUserId
-      ? [{ field: "user_id", operator: "ne", value: effectiveUserId }]
+    filters: userId
+      ? [{ field: "user_id", operator: "ne", value: userId }]
       : [],
     liveMode: "auto",
     meta: {
@@ -305,7 +298,7 @@ export function useNodes(userId: string | undefined) {
     },
     pagination: { mode: "off" },
     queryOptions: {
-      enabled: !!effectiveUserId,
+      enabled: !!userId,
       staleTime: 1000 * 5,
     },
   });
@@ -316,7 +309,7 @@ export function useNodes(userId: string | undefined) {
 
   const myPermissions = (myPermsData?.data ?? []) as NodePermissionRow[];
   const myNodes = (myNodesData?.data ?? []).map((row) =>
-    transformNode(row as NodeRow, effectiveUserId ?? "", myPermissions),
+    transformNode(row as NodeRow, userId ?? "", myPermissions),
   );
 
   const sharedNodes = (sharedNodesData?.data ?? [])
@@ -325,14 +318,14 @@ export function useNodes(userId: string | undefined) {
       return perms.some(
         (p) =>
           p.access_type === "public" ||
-          (p.access_type === "user" && p.target_id === effectiveUserId),
+          (p.access_type === "user" && p.target_id === userId),
       );
     })
     .map((row) => {
       const { nodes_permissions, ...nodeRow } = row;
       return transformNode(
         nodeRow as NodeRow,
-        effectiveUserId ?? "",
+        userId ?? "",
         nodes_permissions as NodePermissionRow[],
       );
     });
