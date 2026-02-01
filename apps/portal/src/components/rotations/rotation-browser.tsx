@@ -2,7 +2,6 @@
 
 import { createListCollection } from "@ark-ui/react/select";
 import { useDelete } from "@refinedev/core";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   GlobeIcon,
   LockIcon,
@@ -15,12 +14,12 @@ import {
   XIcon,
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
 
 import type { RotationsRow } from "@/lib/editor";
 
-import { rotations, useResourceList } from "@/lib/refine";
+import { rotations, useVirtualInfiniteList } from "@/lib/refine";
 import { href, routes } from "@/lib/routing";
 import { useClassesAndSpecs, useUser } from "@/lib/state";
 
@@ -112,10 +111,16 @@ export function RotationBrowser() {
     return result;
   }, [filter, userId, search, specIdsForClass]);
 
-  const { data: rotationsList, isLoading } = useResourceList<RotationsRow>({
+  const {
+    isLoading,
+    items: rotationsList,
+    parentRef,
+    virtualizer,
+  } = useVirtualInfiniteList<RotationsRow>({
     ...rotations,
+    estimateSize: 65,
     filters,
-    pagination: { mode: "off" },
+    pageSize: 50,
     sorters: [{ field: "updated_at", order: "desc" }],
   });
 
@@ -129,14 +134,6 @@ export function RotationBrowser() {
     },
     [deleteRotation, content.confirmDelete],
   );
-
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: rotationsList.length,
-    estimateSize: () => 65,
-    getScrollElement: () => parentRef.current,
-    overscan: 5,
-  });
 
   return (
     <VStack gap="4" alignItems="stretch">
@@ -273,6 +270,23 @@ export function RotationBrowser() {
             <Box h={`${virtualizer.getTotalSize()}px`} position="relative">
               {virtualizer.getVirtualItems().map((virtualRow) => {
                 const rotation = rotationsList[virtualRow.index];
+
+                if (!rotation) {
+                  return (
+                    <Box
+                      key="loading"
+                      position="absolute"
+                      top="0"
+                      left="0"
+                      w="full"
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                    >
+                      <Flex px="4" py="4" justify="center">
+                        <Loader />
+                      </Flex>
+                    </Box>
+                  );
+                }
 
                 return (
                   <Box

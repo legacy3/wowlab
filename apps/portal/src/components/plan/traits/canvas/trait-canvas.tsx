@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useMemoizedFn } from "ahooks";
+import { useState } from "react";
 import { css } from "styled-system/css";
 import { Box } from "styled-system/jsx";
 
@@ -71,12 +72,9 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [mode, setMode] = useState<InteractionMode>("grab");
 
-  const handleTooltip = useCallback(
-    (data: TooltipData | null) => {
-      setTooltip(data ? transformTooltip(data) : null);
-    },
-    [transformTooltip],
-  );
+  const handleTooltip = useMemoizedFn((data: TooltipData | null) => {
+    setTooltip(data ? transformTooltip(data) : null);
+  });
 
   const { handleReady: baseHandleReady } = useTraitCanvas({
     onModeChange: setMode,
@@ -84,14 +82,11 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     specTraits,
   });
 
-  const handleReady = useCallback(
-    (controller: CanvasController) => {
-      baseHandleReady(controller);
-      controllerRef.current = controller;
-      setIsReady(true);
-    },
-    [baseHandleReady, controllerRef, setIsReady],
-  );
+  const handleReady = useMemoizedFn((controller: CanvasController) => {
+    baseHandleReady(controller);
+    controllerRef.current = controller;
+    setIsReady(true);
+  });
 
   const { canvasRef, resetView, state } = useCanvas({
     backgroundColor: "transparent",
@@ -100,68 +95,49 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
     width: dimensions.width,
   });
 
-  const handleModeChange = useCallback(
-    (newMode: InteractionMode) => {
-      const controller = controllerRef.current;
-      if (!controller) {
-        return;
-      }
-
-      const interaction =
-        controller.plugins.get<InteractionPlugin>("interaction");
-      if (interaction) {
-        interaction.setMode(newMode);
-      }
-    },
-    [controllerRef],
-  );
-
-  const handleZoomIn = useCallback(() => {
+  const handleModeChange = useMemoizedFn((newMode: InteractionMode) => {
     const controller = controllerRef.current;
-    if (!controller) {
-      return;
-    }
+    if (!controller) return;
+
+    const interaction =
+      controller.plugins.get<InteractionPlugin>("interaction");
+    interaction?.setMode(newMode);
+  });
+
+  const handleZoomIn = useMemoizedFn(() => {
+    const controller = controllerRef.current;
+    if (!controller) return;
 
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomIn();
-  }, [controllerRef]);
+  });
 
-  const handleZoomOut = useCallback(() => {
+  const handleZoomOut = useMemoizedFn(() => {
     const controller = controllerRef.current;
-    if (!controller) {
-      return;
-    }
+    if (!controller) return;
 
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomOut();
-  }, [controllerRef]);
+  });
 
-  const handleZoomToFit = useCallback(() => {
+  const handleZoomToFit = useMemoizedFn(() => {
     const controller = controllerRef.current;
-    if (!controller) {
-      return;
-    }
+    if (!controller) return;
 
     const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
     zoomPlugin?.zoomToFit(80);
-  }, [controllerRef]);
+  });
 
-  // TODO This looks awful
-  const handleExport = useCallback(() => {
+  const handleExport = useMemoizedFn(() => {
     const controller = controllerRef.current;
-    if (controller) {
-      const dataUrl = controller.toDataURL("png");
-      const link = document.createElement("a");
+    if (!controller) return;
 
-      link.download = "trait-tree.png";
-      link.href = dataUrl;
-      link.click();
-    }
-  }, [controllerRef]);
-
-  const handleShare = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href);
-  }, []);
+    const dataUrl = controller.toDataURL("png");
+    const link = document.createElement("a");
+    link.download = "trait-tree.png";
+    link.href = dataUrl;
+    link.click();
+  });
 
   return (
     <div className={containerStyles} ref={containerRef}>
@@ -180,7 +156,7 @@ export function TraitCanvas({ specTraits }: TraitCanvasProps) {
           onExport={handleExport}
           onModeChange={handleModeChange}
           onResetView={resetView}
-          onShare={handleShare}
+          shareUrl={typeof window !== "undefined" ? window.location.href : ""}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onZoomToFit={handleZoomToFit}

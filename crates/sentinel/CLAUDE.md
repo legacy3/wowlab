@@ -29,7 +29,6 @@ src/
   scheduler/
     assign.rs       - Chunk-to-node matching with capacity and permissions
     reclaim.rs      - Stale chunk recovery (nodes offline >60s)
-    maintenance.rs  - Mark nodes offline, stale data cleanup
     mod.rs          - PG LISTEN loop with 30s timeout
   cron/
     mod.rs          - Job scheduler with CronJob trait

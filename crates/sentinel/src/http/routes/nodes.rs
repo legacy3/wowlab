@@ -5,26 +5,22 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Extension, Json, Router};
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine;
 use serde::Deserialize;
 use serde_json::json;
-use sha2::{Digest, Sha256};
 
 use crate::http::auth::VerifiedNode;
 use crate::state::ServerState;
 
-/// Create router for node API endpoints.
 pub fn router() -> Router<Arc<ServerState>> {
     Router::new()
         .route("/nodes/register", post(register))
-        .route("/nodes/heartbeat", post(heartbeat))
         .route("/nodes/token", post(refresh_token))
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
+    claim_token: String,
     hostname: Option<String>,
     total_cores: Option<i32>,
     enabled_cores: Option<i32>,
@@ -37,16 +33,41 @@ async fn register(
     Extension(node): Extension<VerifiedNode>,
     Json(payload): Json<RegisterRequest>,
 ) -> Response {
+    // Validate claim token against user_settings
+    let user_id: Option<uuid::Uuid> =
+        sqlx::query_scalar::<_, uuid::Uuid>("SELECT id FROM user_settings WHERE claim_token = $1")
+            .bind(&payload.claim_token)
+            .fetch_optional(&state.db)
+            .await
+            .ok()
+            .flatten();
+
+    let user_id = match user_id {
+        Some(id) => id,
+        None => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({ "error": "Invalid claim token" })),
+            )
+                .into_response();
+        }
+    };
+
     // Check if node already exists
-    let existing = sqlx::query_as::<_, (uuid::Uuid, String, Option<uuid::Uuid>)>(
-        "SELECT id, claim_code, user_id FROM nodes WHERE public_key = $1",
-    )
-    .bind(&node.public_key)
-    .fetch_optional(&state.db)
-    .await;
+    let existing = sqlx::query_as::<_, (uuid::Uuid,)>("SELECT id FROM nodes WHERE public_key = $1")
+        .bind(&node.public_key)
+        .fetch_optional(&state.db)
+        .await;
 
     match existing {
-        Ok(Some((id, claim_code, user_id))) => {
+        Ok(Some((id,))) => {
+            // Update existing node's user_id if it changed
+            let _ = sqlx::query("UPDATE nodes SET user_id = $1 WHERE id = $2")
+                .bind(user_id)
+                .bind(id)
+                .execute(&state.db)
+                .await;
+
             let beacon_token = wowlab_centrifuge::token::generate(
                 &id.to_string(),
                 &state.config.centrifugo_token_secret,
@@ -57,8 +78,6 @@ async fn register(
                 StatusCode::OK,
                 Json(json!({
                     "id": id,
-                    "claimCode": claim_code,
-                    "claimed": user_id.is_some(),
                     "beaconToken": beacon_token,
                 })),
             )
@@ -75,31 +94,18 @@ async fn register(
         }
     }
 
-    // Derive claim code from public key
-    let pubkey_bytes = match BASE64.decode(&node.public_key) {
-        Ok(b) => b,
-        Err(_) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(json!({ "error": "Invalid public key" })),
-            )
-                .into_response()
-        }
-    };
-    let claim_code = derive_claim_code(&pubkey_bytes);
-
     let total_cores = payload.total_cores.unwrap_or(4);
     let max_parallel = payload.enabled_cores.unwrap_or(total_cores);
     let name = payload.hostname.as_deref().unwrap_or("WowLab Node");
     let platform = payload.platform.as_deref().unwrap_or("unknown");
 
-    let result = sqlx::query_as::<_, (uuid::Uuid, String)>(
-        r#"INSERT INTO nodes (public_key, claim_code, name, total_cores, max_parallel, platform, version, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
-           RETURNING id, claim_code"#,
+    let result = sqlx::query_as::<_, (uuid::Uuid,)>(
+        r#"INSERT INTO nodes (public_key, user_id, name, total_cores, max_parallel, platform, version, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 'online')
+           RETURNING id"#,
     )
     .bind(&node.public_key)
-    .bind(&claim_code)
+    .bind(user_id)
     .bind(name)
     .bind(total_cores)
     .bind(max_parallel)
@@ -109,7 +115,7 @@ async fn register(
     .await;
 
     match result {
-        Ok((id, code)) => {
+        Ok((id,)) => {
             let beacon_token = wowlab_centrifuge::token::generate(
                 &id.to_string(),
                 &state.config.centrifugo_token_secret,
@@ -120,8 +126,6 @@ async fn register(
                 StatusCode::OK,
                 Json(json!({
                     "id": id,
-                    "claimCode": code,
-                    "claimed": false,
                     "beaconToken": beacon_token,
                 })),
             )
@@ -136,67 +140,6 @@ async fn register(
                 .into_response()
         }
     }
-}
-
-#[derive(Deserialize)]
-pub struct HeartbeatRequest {}
-
-async fn heartbeat(
-    State(state): State<Arc<ServerState>>,
-    Extension(node): Extension<VerifiedNode>,
-    Json(_payload): Json<HeartbeatRequest>,
-) -> Response {
-    // Only update last_seen_at - status is managed by presence polling
-    let result = sqlx::query_as::<_, (uuid::Uuid, String, i32, String)>(
-        r#"UPDATE nodes
-           SET last_seen_at = now()
-           WHERE public_key = $1 AND user_id IS NOT NULL
-           RETURNING id, name, max_parallel, status"#,
-    )
-    .bind(&node.public_key)
-    .fetch_optional(&state.db)
-    .await;
-
-    match result {
-        Ok(Some((id, name, max_parallel, node_status))) => (
-            StatusCode::OK,
-            Json(json!({
-                "id": id,
-                "name": name,
-                "maxParallel": max_parallel,
-                "status": node_status,
-            })),
-        )
-            .into_response(),
-        Ok(None) => (
-            StatusCode::NOT_FOUND,
-            Json(json!({ "error": "Node not found or not claimed" })),
-        )
-            .into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to update node heartbeat");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({ "error": "Database error" })),
-            )
-                .into_response()
-        }
-    }
-}
-
-/// Derive a 6-character base32 claim code from the public key.
-/// SHA-256(pubkey) → first 4 bytes → base32 → first 6 chars → uppercase.
-fn derive_claim_code(pubkey_bytes: &[u8]) -> String {
-    let hash = Sha256::digest(pubkey_bytes);
-    let val = u32::from_be_bytes([hash[0], hash[1], hash[2], hash[3]]);
-
-    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let mut result = String::with_capacity(6);
-    for shift in [27, 22, 17, 12, 7, 2] {
-        let idx = ((val >> shift) & 0x1F) as usize;
-        result.push(ALPHABET[idx] as char);
-    }
-    result
 }
 
 async fn refresh_token(

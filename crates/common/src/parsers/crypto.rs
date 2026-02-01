@@ -4,13 +4,9 @@
 //! authentication system. The same code runs natively (node binary) and in
 //! WASM (portal for node creation).
 
-use data_encoding::BASE32_NOPAD;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
-
-/// Length of claim codes (characters).
-const CLAIM_CODE_LENGTH: usize = 8;
 
 /// Errors from crypto operations.
 #[derive(Debug, Error)]
@@ -81,11 +77,6 @@ impl NodeKeypair {
         data_encoding::BASE64.encode(&self.public_key_bytes())
     }
 
-    /// Derive the claim code from this keypair's public key.
-    pub fn claim_code(&self) -> String {
-        derive_claim_code(&self.public_key_bytes())
-    }
-
     /// Sign a message.
     pub fn sign(&self, message: &[u8]) -> [u8; 64] {
         self.signing_key.sign(message).to_bytes()
@@ -103,27 +94,6 @@ pub fn keypair_from_base64(private_key_base64: &str) -> Result<NodeKeypair, Cryp
         .decode(private_key_base64.as_bytes())
         .map_err(|_| CryptoError::InvalidPrivateKeyLength(0))?;
     NodeKeypair::from_private_key(&bytes)
-}
-
-/// Derive a claim code from a public key.
-///
-/// The claim code is the first N characters of the base32-encoded SHA256 hash
-/// of the public key. This gives a human-readable code that's easy to type.
-pub fn derive_claim_code(public_key: &[u8]) -> String {
-    let hash = Sha256::digest(public_key);
-    let encoded = BASE32_NOPAD.encode(&hash);
-    encoded[..CLAIM_CODE_LENGTH].to_uppercase()
-}
-
-/// Derive a claim code from a base64-encoded public key.
-pub fn derive_claim_code_from_base64(public_key_base64: &str) -> Result<String, CryptoError> {
-    let bytes = data_encoding::BASE64
-        .decode(public_key_base64.as_bytes())
-        .map_err(|_| CryptoError::InvalidPublicKeyLength(0))?;
-    if bytes.len() != 32 {
-        return Err(CryptoError::InvalidPublicKeyLength(bytes.len()));
-    }
-    Ok(derive_claim_code(&bytes))
 }
 
 /// Verify a signature against a public key.
@@ -216,34 +186,6 @@ mod tests {
 
         assert_eq!(original.private_key_bytes(), restored.private_key_bytes());
         assert_eq!(original.public_key_bytes(), restored.public_key_bytes());
-    }
-
-    #[test]
-    fn test_claim_code_derivation() {
-        let kp = NodeKeypair::generate();
-        let code = kp.claim_code();
-
-        // Claim code should be uppercase alphanumeric
-        assert_eq!(code.len(), CLAIM_CODE_LENGTH);
-        assert!(code
-            .chars()
-            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
-
-        // Same keypair should produce same code
-        assert_eq!(code, kp.claim_code());
-
-        // Derive from base64 should match
-        let code_from_base64 = derive_claim_code_from_base64(&kp.public_key_base64()).unwrap();
-        assert_eq!(code, code_from_base64);
-    }
-
-    #[test]
-    fn test_claim_code_uniqueness() {
-        let kp1 = NodeKeypair::generate();
-        let kp2 = NodeKeypair::generate();
-
-        // Different keys should (almost certainly) produce different codes
-        assert_ne!(kp1.claim_code(), kp2.claim_code());
     }
 
     #[test]

@@ -31,38 +31,24 @@ const EVENT_CHANNEL_BUFFER: usize = 64;
 const COMMAND_CHANNEL_BUFFER: usize = 32;
 const BACKOFF_RESET_THRESHOLD: Duration = Duration::from_secs(30);
 
-/// Client state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ClientState {
-    /// Disconnected.
     #[default]
     Disconnected,
-    /// Connecting.
     Connecting,
-    /// Connected.
     Connected,
 }
 
-/// Client configuration.
 #[derive(Clone)]
 pub struct ClientConfig {
-    /// WebSocket URL.
     pub url: String,
-    /// Connection token.
     pub token: String,
-    /// Client name.
     pub name: String,
-    /// Client version.
     pub version: String,
-    /// Custom data to send with connect.
     pub data: Option<Vec<u8>>,
-    /// Custom headers to send with connect.
     pub headers: HashMap<String, String>,
-    /// Minimum reconnect delay.
     pub min_reconnect_delay: Duration,
-    /// Maximum reconnect delay.
     pub max_reconnect_delay: Duration,
-    /// Callback to get a new token when refresh is needed.
     pub get_token: Option<TokenCallback>,
 }
 
@@ -83,7 +69,6 @@ impl std::fmt::Debug for ClientConfig {
 }
 
 impl ClientConfig {
-    /// Create a new client config.
     pub fn new(url: impl Into<String>, token: impl Into<String>) -> Self {
         Self {
             url: url.into(),
@@ -98,37 +83,31 @@ impl ClientConfig {
         }
     }
 
-    /// Set client name.
     pub fn name(mut self, name: impl Into<String>) -> Self {
         self.name = name.into();
         self
     }
 
-    /// Set client version.
     pub fn version(mut self, version: impl Into<String>) -> Self {
         self.version = version.into();
         self
     }
 
-    /// Set custom data.
     pub fn data(mut self, data: Vec<u8>) -> Self {
         self.data = Some(data);
         self
     }
 
-    /// Set custom headers.
     pub fn headers(mut self, headers: HashMap<String, String>) -> Self {
         self.headers = headers;
         self
     }
 
-    /// Set a header.
     pub fn header(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.headers.insert(key.into(), value.into());
         self
     }
 
-    /// Set token refresh callback.
     pub fn get_token<F, Fut>(mut self, f: F) -> Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -162,7 +141,6 @@ struct CommandRequest {
     reply_tx: PendingRequest,
 }
 
-/// Centrifuge client.
 #[derive(Clone)]
 pub struct Client {
     inner: Arc<RwLock<ClientInner>>,
@@ -170,7 +148,6 @@ pub struct Client {
 }
 
 impl Client {
-    /// Create a new client.
     pub fn new(config: ClientConfig) -> Self {
         let (event_tx, _) = mpsc::channel(EVENT_CHANNEL_BUFFER);
 
@@ -191,28 +168,22 @@ impl Client {
         }
     }
 
-    /// Get the event receiver.
-    ///
-    /// Call this before `connect()` to receive events.
+    /// Call before `connect()` to receive events.
     pub async fn events(&self) -> mpsc::Receiver<ClientEvent> {
         let (tx, rx) = mpsc::channel(EVENT_CHANNEL_BUFFER);
         self.inner.write().await.event_tx = tx;
         rx
     }
 
-    /// Get current state.
     pub async fn state(&self) -> ClientState {
         self.inner.read().await.state
     }
 
-    /// Check if connected.
     pub async fn is_connected(&self) -> bool {
         self.inner.read().await.state == ClientState::Connected
     }
 
-    /// Connect to the server with automatic reconnection.
-    ///
-    /// This spawns a background task that maintains the connection.
+    /// Spawns a background task that maintains the connection with auto-reconnect.
     pub fn connect(&self) {
         let client = self.clone();
         tokio::spawn(async move {
@@ -220,7 +191,6 @@ impl Client {
         });
     }
 
-    /// Run the client (blocking).
     pub async fn run(&self) {
         let mut backoff = {
             let inner = self.inner.read().await;
@@ -465,7 +435,11 @@ impl Client {
         Ok(())
     }
 
-    async fn handle_reply(&self, reply: proto::Reply, transport: &mut Transport) -> Result<(), Error> {
+    async fn handle_reply(
+        &self,
+        reply: proto::Reply,
+        transport: &mut Transport,
+    ) -> Result<(), Error> {
         // Check if this is a reply to a pending request
         if reply.id > 0 {
             let tx = self.inner.write().await.pending.remove(&reply.id);
@@ -565,12 +539,8 @@ impl Client {
         inner
             .subscriptions
             .iter()
-            .filter(|(_, sub)| {
-                sub.config.recoverable && sub.stream_position.is_some()
-            })
-            .map(|(channel, sub)| {
-                (channel.clone(), sub.build_subscribe_request(true))
-            })
+            .filter(|(_, sub)| sub.config.recoverable && sub.stream_position.is_some())
+            .map(|(channel, sub)| (channel.clone(), sub.build_subscribe_request(true)))
             .collect()
     }
 
@@ -673,7 +643,6 @@ impl Client {
             .map_err(|_| Error::ConnectionClosed)?
     }
 
-    /// Subscribe to a channel.
     pub async fn subscribe(&self, config: SubscriptionConfig) -> Result<Subscription, Error> {
         let channel = config.channel.clone();
 
@@ -700,7 +669,6 @@ impl Client {
         Ok(Subscription::new(channel, event_rx))
     }
 
-    /// Unsubscribe from a channel.
     pub async fn unsubscribe(&self, channel: &str) -> Result<(), Error> {
         let cmd = proto::Command {
             unsubscribe: Some(proto::UnsubscribeRequest {
@@ -724,7 +692,6 @@ impl Client {
         Ok(())
     }
 
-    /// Get presence for a channel.
     pub async fn presence(&self, channel: &str) -> Result<PresenceResult, Error> {
         let cmd = proto::Command {
             presence: Some(proto::PresenceRequest {
@@ -746,7 +713,6 @@ impl Client {
         Ok(PresenceResult::from(result))
     }
 
-    /// Get presence stats for a channel.
     pub async fn presence_stats(&self, channel: &str) -> Result<PresenceStats, Error> {
         let cmd = proto::Command {
             presence_stats: Some(proto::PresenceStatsRequest {
@@ -768,7 +734,6 @@ impl Client {
         Ok(PresenceStats::from(result))
     }
 
-    /// Get history for a channel.
     pub async fn history(
         &self,
         channel: &str,
@@ -802,7 +767,6 @@ impl Client {
         Ok(HistoryResult::from(result))
     }
 
-    /// Publish to a channel.
     pub async fn publish(&self, channel: &str, data: Vec<u8>) -> Result<(), Error> {
         let cmd = proto::Command {
             publish: Some(proto::PublishRequest {
@@ -821,7 +785,6 @@ impl Client {
         Ok(())
     }
 
-    /// Call a server-side RPC method.
     pub async fn rpc(&self, method: &str, data: Vec<u8>) -> Result<RpcResult, Error> {
         let cmd = proto::Command {
             rpc: Some(proto::RpcRequest {
@@ -844,7 +807,7 @@ impl Client {
         Ok(RpcResult::from(result))
     }
 
-    /// Send asynchronous message to the server (no response expected).
+    /// Fire-and-forget message to server.
     pub async fn send(&self, data: Vec<u8>) -> Result<(), Error> {
         let cmd = proto::Command {
             send: Some(proto::SendRequest { data }),
@@ -860,7 +823,6 @@ impl Client {
         Ok(())
     }
 
-    /// Refresh subscription token.
     pub async fn sub_refresh(&self, channel: &str, token: &str) -> Result<SubRefreshResult, Error> {
         let cmd = proto::Command {
             sub_refresh: Some(proto::SubRefreshRequest {
@@ -883,12 +845,10 @@ impl Client {
         Ok(SubRefreshResult::from(result))
     }
 
-    /// Disconnect and stop reconnecting.
     pub fn disconnect(&self) {
         self.shutdown.cancel();
     }
 
-    /// Refresh the connection token.
     async fn refresh_token(&self, transport: &mut Transport) -> Result<Option<Instant>, Error> {
         let get_token = {
             let inner = self.inner.read().await;
@@ -909,7 +869,12 @@ impl Client {
         };
 
         let cmd = proto::Command {
-            id: self.inner.read().await.next_id.fetch_add(1, Ordering::Relaxed),
+            id: self
+                .inner
+                .read()
+                .await
+                .next_id
+                .fetch_add(1, Ordering::Relaxed),
             refresh: Some(refresh_req),
             ..Default::default()
         };
@@ -935,13 +900,17 @@ impl Client {
             inner.refresh_required = false;
         }
 
-        tracing::debug!("Token refreshed, expires={}, ttl={}", result.expires, result.ttl);
+        tracing::debug!(
+            "Token refreshed, expires={}, ttl={}",
+            result.expires,
+            result.ttl
+        );
 
         Ok(ttl_to_instant(result.ttl, result.expires))
     }
 }
 
-/// Convert TTL seconds to an Instant, capping at i32::MAX ms to match centrifuge-js.
+// Cap at i32::MAX ms to match centrifuge-js behavior.
 fn ttl_to_instant(ttl: u32, expires: bool) -> Option<Instant> {
     if expires && ttl > 0 {
         let ttl_ms = (ttl as u64 * 1000).min(i32::MAX as u64);

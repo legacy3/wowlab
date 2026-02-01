@@ -1,7 +1,6 @@
-//! BM Hunter spec handler using declarative effects.
-//!
-//! This handler delegates to the generic effect executor, keeping
-//! spec-specific code minimal.
+//! BM Hunter spec handler.
+
+use compact_str::CompactString;
 
 use super::auras::aura_definitions;
 use super::constants::*;
@@ -266,7 +265,7 @@ impl SpecHandler for BmHunter {
         get_aura_defs()
     }
 
-    fn talent_names(&self) -> Vec<String> {
+    fn talent_names(&self) -> Vec<CompactString> {
         super::talents::talent_definitions()
             .into_iter()
             .map(|t| t.name)
@@ -538,5 +537,17 @@ impl HunterClass for BmHunter {
         let now = state.now();
         let frenzy_stacks = state.player.buffs.stacks(FRENZY, now);
         1.0 + frenzy_stacks as f32 * 0.10
+    }
+}
+
+// Register BM Hunter with the spec registry
+inventory::submit! {
+    crate::handler::SpecRegistration {
+        id: SpecId::BeastMastery,
+        name: "Beast Mastery Hunter",
+        create: |rotation_json| {
+            let handler = BmHunter::new(rotation_json, TalentFlags::empty(), TierSetFlags::NONE)?;
+            Ok(std::sync::Arc::new(handler))
+        },
     }
 }

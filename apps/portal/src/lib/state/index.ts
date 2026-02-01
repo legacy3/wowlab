@@ -72,7 +72,7 @@ export {
   type SubmitJobResult,
   useBeaconRange,
   useBeaconStatus,
-  useClaimNode,
+  useClaimToken,
   useClassesAndSpecs,
   useGlobalColors,
   useGlobalStrings,
@@ -91,5 +91,4 @@ export {
   useUser,
   useUserJobs,
   useUserProfile,
-  type VerifyResult,
 } from "@/lib/refine/services";

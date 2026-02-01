@@ -1,14 +1,28 @@
+//! Convenient builder wrappers for SpellDef and AuraDef.
+//!
+//! These wrappers provide chainable methods for accumulating effects, costs, and other
+//! Vec fields that bon's #[derive(Builder)] doesn't handle directly.
+
+use compact_str::CompactString;
+
 use super::effect::{EffectCondition, SpellEffect};
 use super::{
     AuraDef, AuraEffect, CastType, DamageEffect, GcdType, ResourceCost, SpellDef, SpellFlags,
     SpellTarget,
 };
-use crate::aura::PeriodicEffect;
+use crate::aura::{AuraFlags, PeriodicEffect};
 use wowlab_common::types::{
     AuraIdx, DamageSchool, DerivedStat, PetKind, ResourceType, SimTime, SpellIdx,
 };
 
-/// Builder for spell definitions
+// =============================================================================
+// SpellBuilder - wrapper for building spells with convenience methods
+// =============================================================================
+
+/// Builder for spell definitions with convenient chainable methods.
+///
+/// This wrapper around SpellDef allows accumulating costs, gains, effects, and auras.
+/// The underlying SpellDef uses bon's #[derive(Builder)] for its basic construction.
 pub struct SpellBuilder {
     spell: SpellDef,
 }
@@ -16,7 +30,7 @@ pub struct SpellBuilder {
 impl SpellBuilder {
     pub fn new(id: SpellIdx, name: &'static str) -> Self {
         Self {
-            spell: SpellDef::new(id, name),
+            spell: SpellDef::builder().id(id).name(name).build(),
         }
     }
 
@@ -196,7 +210,12 @@ impl SpellBuilder {
     }
 
     /// Summon a pet/guardian when cast.
-    pub fn summons_pet(mut self, kind: PetKind, duration: f32, name: impl Into<String>) -> Self {
+    pub fn summons_pet(
+        mut self,
+        kind: PetKind,
+        duration: f32,
+        name: impl Into<CompactString>,
+    ) -> Self {
         self.spell.effects.push(SpellEffect::SummonPet {
             kind,
             duration,
@@ -264,7 +283,7 @@ impl SpellBuilder {
     }
 
     /// Add effect that only fires when a talent is enabled.
-    pub fn with_talent(mut self, talent: impl Into<String>, effect: SpellEffect) -> Self {
+    pub fn with_talent(mut self, talent: impl Into<CompactString>, effect: SpellEffect) -> Self {
         self.spell.effects.push(SpellEffect::Conditional {
             condition: EffectCondition::TalentEnabled(talent.into()),
             effect: Box::new(effect),
@@ -286,7 +305,14 @@ impl SpellBuilder {
     }
 }
 
-/// Builder for aura definitions
+// =============================================================================
+// AuraBuilder - wrapper for building auras with convenience methods
+// =============================================================================
+
+/// Builder for aura definitions with convenient chainable methods.
+///
+/// This wrapper around AuraDef allows accumulating effects.
+/// The underlying AuraDef uses bon's #[derive(Builder)] for its basic construction.
 pub struct AuraBuilder {
     aura: AuraDef,
 }
@@ -294,13 +320,25 @@ pub struct AuraBuilder {
 impl AuraBuilder {
     pub fn buff(id: AuraIdx, name: &'static str, duration_secs: f32) -> Self {
         Self {
-            aura: AuraDef::buff(id, name, SimTime::from_secs_f32(duration_secs)),
+            aura: AuraDef::builder()
+                .id(id)
+                .name(name)
+                .duration(SimTime::from_secs_f32(duration_secs))
+                .build(),
         }
     }
 
     pub fn debuff(id: AuraIdx, name: &'static str, duration_secs: f32) -> Self {
         Self {
-            aura: AuraDef::debuff(id, name, SimTime::from_secs_f32(duration_secs)),
+            aura: AuraDef::builder()
+                .id(id)
+                .name(name)
+                .duration(SimTime::from_secs_f32(duration_secs))
+                .flags(AuraFlags {
+                    is_debuff: true,
+                    ..Default::default()
+                })
+                .build(),
         }
     }
 
@@ -311,12 +349,23 @@ impl AuraBuilder {
         tick_interval_secs: f32,
     ) -> Self {
         Self {
-            aura: AuraDef::dot(
-                id,
-                name,
-                SimTime::from_secs_f32(duration_secs),
-                SimTime::from_secs_f32(tick_interval_secs),
-            ),
+            aura: AuraDef::builder()
+                .id(id)
+                .name(name)
+                .duration(SimTime::from_secs_f32(duration_secs))
+                .flags(AuraFlags {
+                    is_debuff: true,
+                    is_periodic: true,
+                    can_pandemic: true,
+                    snapshots: true,
+                    refreshable: true,
+                    ..Default::default()
+                })
+                .periodic(PeriodicEffect::new(
+                    id,
+                    SimTime::from_secs_f32(tick_interval_secs),
+                ))
+                .build(),
         }
     }
 

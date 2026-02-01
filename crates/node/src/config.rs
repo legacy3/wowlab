@@ -30,6 +30,8 @@ pub struct NodeConfig {
     pub anon_key: String,
     #[serde(default)]
     pub beacon_token: Option<String>,
+    #[serde(skip)]
+    pub claim_token: Option<String>,
 }
 
 fn default_api_url() -> String {
@@ -57,6 +59,7 @@ impl Default for NodeConfig {
             beacon_url: default_beacon_url(),
             anon_key: default_anon_key(),
             beacon_token: None,
+            claim_token: None,
         }
     }
 }
@@ -70,16 +73,23 @@ impl NodeConfig {
     pub fn load_or_create() -> Self {
         let Some(path) = Self::config_path() else {
             tracing::warn!("Could not determine config directory");
-            return Self::default();
+            let mut config = Self::default();
+            if let Ok(token) = std::env::var("WOWLAB_CLAIM_TOKEN") {
+                config.claim_token = Some(token);
+            }
+            return config;
         };
 
         if !path.exists() {
-            let config = Self::default();
+            let mut config = Self::default();
+            if let Ok(token) = std::env::var("WOWLAB_CLAIM_TOKEN") {
+                config.claim_token = Some(token);
+            }
             config.save();
             return config;
         }
 
-        match Config::builder()
+        let mut config = match Config::builder()
             .add_source(File::new(path.to_str().unwrap_or(""), FileFormat::Ini))
             .build()
         {
@@ -103,7 +113,13 @@ impl NodeConfig {
                 config.save();
                 config
             }
+        };
+
+        if let Ok(token) = std::env::var("WOWLAB_CLAIM_TOKEN") {
+            config.claim_token = Some(token);
         }
+
+        config
     }
 
     pub fn save(&self) {

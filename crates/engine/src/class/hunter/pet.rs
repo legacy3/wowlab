@@ -1,7 +1,4 @@
-//! Shared pet mechanics for all Hunter specs.
-//!
-//! All Hunter specs have pets with similar base mechanics. This module
-//! provides shared constants and default behavior that specs can override.
+//! Pet mechanics (attack speed, stat inheritance, damage calculation).
 
 use crate::combat::DamagePipeline;
 use crate::core::SimEvent;

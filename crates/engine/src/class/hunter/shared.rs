@@ -1,7 +1,4 @@
-//! Shared abilities for all Hunter specs.
-//!
-//! Abilities like Kill Shot, Tranquilizing Shot, and aspects are available
-//! to all Hunter specs with the same base implementation.
+//! Shared abilities (Kill Shot, Tranq, Arcane Shot, aspects).
 
 use crate::combat::DamagePipeline;
 use crate::sim::SimState;

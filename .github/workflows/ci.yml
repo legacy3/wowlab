@@ -115,6 +115,10 @@ jobs:
       - name: Build
         working-directory: crates
         run: cargo build -p wowlab-node-gui -p wowlab-node-headless --release
+        env:
+          # x86-64-v2: SSE4.2, SSSE3, POPCNT (any server CPU from ~2009+)
+          # aarch64: use +lse for better atomics on ARMv8.1+
+          RUSTFLAGS: ${{ contains(matrix.target, 'x86_64') && '-C target-cpu=x86-64-v2' || contains(matrix.target, 'aarch64') && '-C target-feature=+lse' || '' }}
 
       - name: Get version
         id: version
@@ -171,6 +175,8 @@ jobs:
       - name: Build
         working-directory: crates
         run: cargo build -p wowlab-sentinel --release
+        env:
+          RUSTFLAGS: ${{ contains(matrix.target, 'x86_64') && '-C target-cpu=x86-64-v2' || '-C target-feature=+lse' }}
 
       - name: Get version
         id: version

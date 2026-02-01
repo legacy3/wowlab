@@ -1,9 +1,4 @@
-//! Expression evaluation helpers.
-//!
-//! Provides utility functions for safe arithmetic operations including:
-//! - Division by zero protection
-//! - Float epsilon comparison
-//! - True modulo operation (result has same sign as divisor)
+//! Safe arithmetic helpers (division by zero, modulo, epsilon).
 
 /// Epsilon value for floating point comparisons.
 pub const EPSILON: f64 = 1e-6;

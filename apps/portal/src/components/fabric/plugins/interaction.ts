@@ -227,7 +227,6 @@ export class InteractionPlugin implements FabricPlugin {
       return;
     }
 
-    // Space to toggle grab mode
     shortcuts.register(
       "Space",
       (e) => {
@@ -237,7 +236,6 @@ export class InteractionPlugin implements FabricPlugin {
       this.name,
     );
 
-    // V for selection mode
     shortcuts.register(
       "v",
       (e) => {
@@ -247,7 +245,6 @@ export class InteractionPlugin implements FabricPlugin {
       this.name,
     );
 
-    // H for grab/hand mode
     shortcuts.register(
       "h",
       (e) => {

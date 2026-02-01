@@ -1,7 +1,7 @@
 {
   "name": "wowlab-workspace",
   "private": true,
-  "packageManager": "pnpm@10.26.2",
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "cli": "cargo build --release --manifest-path crates/Cargo.toml -p wowlab-cli && ./crates/target/release/wowlab",
     "setup": "./scripts/setup.sh",
@@ -20,8 +20,8 @@
     "ncu": "pnpm -r --if-present ncu"
   },
   "devDependencies": {
-    "npm-check-updates": "^19.2.0",
-    "prettier": "^3.7.4",
+    "npm-check-updates": "^19.3.2",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   }
 }

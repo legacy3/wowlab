@@ -1,8 +1,4 @@
-//! Declarative spell effects and damage modifiers.
-//!
-//! This module provides a data-driven way to define spell behavior
-//! without scattered if/else chains in handlers.
-
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use wowlab_common::types::{AuraIdx, PetKind, SpellIdx};
 
@@ -24,7 +20,7 @@ pub enum SpellEffect {
     SummonPet {
         kind: PetKind,
         duration: f32,
-        name: String,
+        name: CompactString,
     },
 
     /// Apply a buff to the player (with optional stack count).
@@ -67,7 +63,7 @@ pub enum EffectCondition {
     DebuffActive(AuraIdx),
 
     /// Talent is enabled.
-    TalentEnabled(String),
+    TalentEnabled(CompactString),
 
     /// Target health below percentage.
     TargetHealthBelow(f32),
@@ -103,7 +99,7 @@ pub enum EffectCondition {
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct DamageMod {
     /// Unique identifier for debugging.
-    pub name: String,
+    pub name: CompactString,
 
     /// Multiplicative modifier (1.0 = no change, 1.5 = +50%).
     pub multiplier: f32,
@@ -151,7 +147,7 @@ pub enum ModCondition {
     StatScaling { base: f32 },
 
     /// Talent is enabled.
-    TalentEnabled(String),
+    TalentEnabled(CompactString),
 
     /// Multiple conditions (all must be true).
     And(Vec<ModCondition>),
@@ -162,7 +158,7 @@ pub enum ModCondition {
 
 impl DamageMod {
     /// Create a simple always-active modifier.
-    pub fn always(name: impl Into<String>, multiplier: f32) -> Self {
+    pub fn always(name: impl Into<CompactString>, multiplier: f32) -> Self {
         Self {
             name: name.into(),
             multiplier,
@@ -172,7 +168,7 @@ impl DamageMod {
     }
 
     /// Create a modifier for a specific spell.
-    pub fn for_spell(name: impl Into<String>, spell: SpellIdx, multiplier: f32) -> Self {
+    pub fn for_spell(name: impl Into<CompactString>, spell: SpellIdx, multiplier: f32) -> Self {
         Self {
             name: name.into(),
             multiplier,
@@ -182,7 +178,7 @@ impl DamageMod {
     }
 
     /// Create a modifier that applies when a buff is active.
-    pub fn when_buff(name: impl Into<String>, aura: AuraIdx, multiplier: f32) -> Self {
+    pub fn when_buff(name: impl Into<CompactString>, aura: AuraIdx, multiplier: f32) -> Self {
         Self {
             name: name.into(),
             multiplier,
@@ -192,7 +188,7 @@ impl DamageMod {
     }
 
     /// Create a modifier for pet abilities.
-    pub fn pet_ability(name: impl Into<String>, multiplier: f32) -> Self {
+    pub fn pet_ability(name: impl Into<CompactString>, multiplier: f32) -> Self {
         Self {
             name: name.into(),
             multiplier,
@@ -202,7 +198,7 @@ impl DamageMod {
     }
 
     /// Create a modifier for execute phase.
-    pub fn execute(name: impl Into<String>, threshold: f32, multiplier: f32) -> Self {
+    pub fn execute(name: impl Into<CompactString>, threshold: f32, multiplier: f32) -> Self {
         Self {
             name: name.into(),
             multiplier,
@@ -212,7 +208,7 @@ impl DamageMod {
     }
 
     /// Create a per-stack modifier.
-    pub fn per_stack(name: impl Into<String>, aura: AuraIdx, per_stack: f32) -> Self {
+    pub fn per_stack(name: impl Into<CompactString>, aura: AuraIdx, per_stack: f32) -> Self {
         Self {
             name: name.into(),
             multiplier: 1.0, // Base multiplier, actual calculated at runtime
@@ -248,7 +244,7 @@ impl SpellEffect {
     }
 
     /// Create effect that only fires with talent.
-    pub fn with_talent(talent: impl Into<String>, effect: SpellEffect) -> Self {
+    pub fn with_talent(talent: impl Into<CompactString>, effect: SpellEffect) -> Self {
         SpellEffect::Conditional {
             condition: EffectCondition::TalentEnabled(talent.into()),
             effect: Box::new(effect),
@@ -270,10 +266,10 @@ impl SpellEffect {
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct TalentDef {
     /// Internal name (snake_case).
-    pub name: String,
+    pub name: CompactString,
 
     /// Display name.
-    pub display_name: String,
+    pub display_name: CompactString,
 
     /// Damage modifiers this talent provides.
     pub damage_mods: Vec<DamageMod>,
@@ -311,7 +307,7 @@ pub struct ChargeMod {
 }
 
 impl TalentDef {
-    pub fn new(name: impl Into<String>, display_name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<CompactString>, display_name: impl Into<CompactString>) -> Self {
         Self {
             name: name.into(),
             display_name: display_name.into(),

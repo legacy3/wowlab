@@ -4,12 +4,13 @@ import {
   type Combobox as ComboboxType,
   createListCollection,
 } from "@ark-ui/react/combobox";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
+
+import { useVirtualList } from "@/lib/refine";
 
 import { GameIcon } from "../../game";
 import { Button, Combobox, Empty, Loader, Text } from "../../ui";
@@ -90,12 +91,9 @@ export function GameObjectPicker<TSearchResult, TData>({
     });
   }, [searchResults, config]);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
+  const { parentRef: listRef, virtualizer } = useVirtualList({
     count: collection.items.length,
-    estimateSize: () => 40,
-    getScrollElement: () => listRef.current,
-    overscan: 5,
+    estimateSize: 40,
   });
 
   const handleInputChange = (details: ComboboxType.InputValueChangeDetails) => {

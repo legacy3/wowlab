@@ -3,8 +3,9 @@
 //! These wrappers prevent mixing up different index types (e.g., passing a spell index
 //! where an aura index is expected) and provide validation at construction time.
 
+use derive_more::{Debug, Display, From, Into};
+use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 // SpellIdx - Index into spell definitions/states
 
@@ -12,7 +13,25 @@ use std::fmt;
 ///
 /// Used to reference spells in cooldown lookups, damage calculations, and events.
 /// The underlying u32 matches WoW's spell ID system.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("SpellIdx({_0})")]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -20,6 +39,22 @@ use std::fmt;
 pub struct SpellIdx(pub u32);
 
 impl SpellIdx {
+    /// Cast a slice of u32 to SpellIdx zero-copy.
+    /// # Safety
+    /// SpellIdx is #[repr(transparent)] over u32.
+    #[inline]
+    pub fn cast_slice(slice: &[u32]) -> &[Self] {
+        // SAFETY: SpellIdx is repr(transparent) over u32
+        unsafe { &*(slice as *const [u32] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u32 to SpellIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u32]) -> &mut [Self] {
+        // SAFETY: SpellIdx is repr(transparent) over u32
+        unsafe { &mut *(slice as *mut [u32] as *mut [Self]) }
+    }
+
     /// Create from raw u32 (unchecked, use in validated contexts)
     #[inline(always)]
     pub const fn from_raw(id: u32) -> Self {
@@ -55,38 +90,30 @@ impl SpellIdx {
     }
 }
 
-impl fmt::Debug for SpellIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "SpellIdx({})", self.0)
-    }
-}
-
-impl fmt::Display for SpellIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u32> for SpellIdx {
-    #[inline(always)]
-    fn from(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<SpellIdx> for u32 {
-    #[inline(always)]
-    fn from(idx: SpellIdx) -> Self {
-        idx.0
-    }
-}
-
 // AuraIdx - Index into aura definitions/instances
 
 /// A type-safe aura identifier (WoW spell ID for auras).
 ///
 /// Used to reference buffs/debuffs in aura tracking, effect application, and events.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("AuraIdx({_0})")]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -94,6 +121,22 @@ impl From<SpellIdx> for u32 {
 pub struct AuraIdx(pub u32);
 
 impl AuraIdx {
+    /// Cast a slice of u32 to AuraIdx zero-copy.
+    /// # Safety
+    /// AuraIdx is #[repr(transparent)] over u32.
+    #[inline]
+    pub fn cast_slice(slice: &[u32]) -> &[Self] {
+        // SAFETY: AuraIdx is repr(transparent) over u32
+        unsafe { &*(slice as *const [u32] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u32 to AuraIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u32]) -> &mut [Self] {
+        // SAFETY: AuraIdx is repr(transparent) over u32
+        unsafe { &mut *(slice as *mut [u32] as *mut [Self]) }
+    }
+
     /// Create from raw u32 (unchecked, use in validated contexts)
     #[inline(always)]
     pub const fn from_raw(id: u32) -> Self {
@@ -129,38 +172,30 @@ impl AuraIdx {
     }
 }
 
-impl fmt::Debug for AuraIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "AuraIdx({})", self.0)
-    }
-}
-
-impl fmt::Display for AuraIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u32> for AuraIdx {
-    #[inline(always)]
-    fn from(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<AuraIdx> for u32 {
-    #[inline(always)]
-    fn from(idx: AuraIdx) -> Self {
-        idx.0
-    }
-}
-
 // ProcIdx - Index into proc definitions
 
 /// A type-safe proc identifier (internal).
 ///
 /// Used to reference proc handlers in the proc registry and ICD tracking.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("ProcIdx({_0})")]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -168,6 +203,22 @@ impl From<AuraIdx> for u32 {
 pub struct ProcIdx(pub u32);
 
 impl ProcIdx {
+    /// Cast a slice of u32 to ProcIdx zero-copy.
+    /// # Safety
+    /// ProcIdx is #[repr(transparent)] over u32.
+    #[inline]
+    pub fn cast_slice(slice: &[u32]) -> &[Self] {
+        // SAFETY: ProcIdx is repr(transparent) over u32
+        unsafe { &*(slice as *const [u32] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u32 to ProcIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u32]) -> &mut [Self] {
+        // SAFETY: ProcIdx is repr(transparent) over u32
+        unsafe { &mut *(slice as *mut [u32] as *mut [Self]) }
+    }
+
     /// Create from raw u32
     #[inline(always)]
     pub const fn from_raw(id: u32) -> Self {
@@ -197,32 +248,6 @@ impl ProcIdx {
     }
 }
 
-impl fmt::Debug for ProcIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ProcIdx({})", self.0)
-    }
-}
-
-impl fmt::Display for ProcIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u32> for ProcIdx {
-    #[inline(always)]
-    fn from(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<ProcIdx> for u32 {
-    #[inline(always)]
-    fn from(idx: ProcIdx) -> Self {
-        idx.0
-    }
-}
-
 // UnitIdx - Index into unit list (player, pets, enemies)
 
 /// A type-safe unit index.
@@ -231,7 +256,25 @@ impl From<ProcIdx> for u32 {
 /// - 0 = Player
 /// - 1..N = Pets
 /// - N+1.. = Enemies
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("{}", if *_0 == 0 { "UnitIdx(PLAYER)".to_string() } else { format!("UnitIdx({})", _0) })]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -244,6 +287,22 @@ impl UnitIdx {
 
     /// The player unit index
     pub const PLAYER: UnitIdx = UnitIdx(0);
+
+    /// Cast a slice of u16 to UnitIdx zero-copy.
+    /// # Safety
+    /// UnitIdx is #[repr(transparent)] over u16.
+    #[inline]
+    pub fn cast_slice(slice: &[u16]) -> &[Self] {
+        // SAFETY: UnitIdx is repr(transparent) over u16
+        unsafe { &*(slice as *const [u16] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u16 to UnitIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u16]) -> &mut [Self] {
+        // SAFETY: UnitIdx is repr(transparent) over u16
+        unsafe { &mut *(slice as *mut [u16] as *mut [Self]) }
+    }
 
     /// Create from raw u16
     #[inline(always)]
@@ -291,43 +350,31 @@ impl UnitIdx {
     }
 }
 
-impl fmt::Debug for UnitIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_player() {
-            write!(f, "UnitIdx(PLAYER)")
-        } else {
-            write!(f, "UnitIdx({})", self.0)
-        }
-    }
-}
-
-impl fmt::Display for UnitIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u16> for UnitIdx {
-    #[inline(always)]
-    fn from(idx: u16) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<UnitIdx> for u16 {
-    #[inline(always)]
-    fn from(idx: UnitIdx) -> Self {
-        idx.0
-    }
-}
-
 // TargetIdx - Index into target list (for multi-target scenarios)
 
 /// A type-safe target index.
 ///
 /// Used to reference targets (enemies) for damage/debuff application.
 /// Target 0 is the primary target.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("{}", if *_0 == 0 { "TargetIdx(PRIMARY)".to_string() } else { format!("TargetIdx({})", _0) })]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -340,6 +387,22 @@ impl TargetIdx {
 
     /// The primary target index
     pub const PRIMARY: TargetIdx = TargetIdx(0);
+
+    /// Cast a slice of u16 to TargetIdx zero-copy.
+    /// # Safety
+    /// TargetIdx is #[repr(transparent)] over u16.
+    #[inline]
+    pub fn cast_slice(slice: &[u16]) -> &[Self] {
+        // SAFETY: TargetIdx is repr(transparent) over u16
+        unsafe { &*(slice as *const [u16] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u16 to TargetIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u16]) -> &mut [Self] {
+        // SAFETY: TargetIdx is repr(transparent) over u16
+        unsafe { &mut *(slice as *mut [u16] as *mut [Self]) }
+    }
 
     /// Create from raw u16
     #[inline(always)]
@@ -387,43 +450,31 @@ impl TargetIdx {
     }
 }
 
-impl fmt::Debug for TargetIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_primary() {
-            write!(f, "TargetIdx(PRIMARY)")
-        } else {
-            write!(f, "TargetIdx({})", self.0)
-        }
-    }
-}
-
-impl fmt::Display for TargetIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u16> for TargetIdx {
-    #[inline(always)]
-    fn from(idx: u16) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<TargetIdx> for u16 {
-    #[inline(always)]
-    fn from(idx: TargetIdx) -> Self {
-        idx.0
-    }
-}
-
 // PetIdx - Index into pet list
 
 /// A type-safe pet index.
 ///
 /// Used to reference pets in the simulation. Separate from UnitIdx for
 /// type safety when only pets are valid.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("{}", if *_0 == 0 { "PetIdx(PRIMARY)".to_string() } else { format!("PetIdx({})", _0) })]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -436,6 +487,22 @@ impl PetIdx {
 
     /// The primary (main) pet
     pub const PRIMARY: PetIdx = PetIdx(0);
+
+    /// Cast a slice of u16 to PetIdx zero-copy.
+    /// # Safety
+    /// PetIdx is #[repr(transparent)] over u16.
+    #[inline]
+    pub fn cast_slice(slice: &[u16]) -> &[Self] {
+        // SAFETY: PetIdx is repr(transparent) over u16
+        unsafe { &*(slice as *const [u16] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u16 to PetIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u16]) -> &mut [Self] {
+        // SAFETY: PetIdx is repr(transparent) over u16
+        unsafe { &mut *(slice as *mut [u16] as *mut [Self]) }
+    }
 
     /// Create from raw u16
     #[inline(always)]
@@ -483,43 +550,31 @@ impl PetIdx {
     }
 }
 
-impl fmt::Debug for PetIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_primary() {
-            write!(f, "PetIdx(PRIMARY)")
-        } else {
-            write!(f, "PetIdx({})", self.0)
-        }
-    }
-}
-
-impl fmt::Display for PetIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u16> for PetIdx {
-    #[inline(always)]
-    fn from(idx: u16) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<PetIdx> for u16 {
-    #[inline(always)]
-    fn from(idx: PetIdx) -> Self {
-        idx.0
-    }
-}
-
 // EnemyIdx - Index into enemy list
 
 /// A type-safe enemy index.
 ///
 /// Used to reference enemies in the simulation. Separate from UnitIdx and
 /// TargetIdx for type safety in enemy-specific operations.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("{}", if *_0 == 0 { "EnemyIdx(PRIMARY)".to_string() } else { format!("EnemyIdx({})", _0) })]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -532,6 +587,22 @@ impl EnemyIdx {
 
     /// The primary (boss) enemy
     pub const PRIMARY: EnemyIdx = EnemyIdx(0);
+
+    /// Cast a slice of u16 to EnemyIdx zero-copy.
+    /// # Safety
+    /// EnemyIdx is #[repr(transparent)] over u16.
+    #[inline]
+    pub fn cast_slice(slice: &[u16]) -> &[Self] {
+        // SAFETY: EnemyIdx is repr(transparent) over u16
+        unsafe { &*(slice as *const [u16] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u16 to EnemyIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u16]) -> &mut [Self] {
+        // SAFETY: EnemyIdx is repr(transparent) over u16
+        unsafe { &mut *(slice as *mut [u16] as *mut [Self]) }
+    }
 
     /// Create from raw u16
     #[inline(always)]
@@ -579,43 +650,31 @@ impl EnemyIdx {
     }
 }
 
-impl fmt::Debug for EnemyIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_primary() {
-            write!(f, "EnemyIdx(PRIMARY)")
-        } else {
-            write!(f, "EnemyIdx({})", self.0)
-        }
-    }
-}
-
-impl fmt::Display for EnemyIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u16> for EnemyIdx {
-    #[inline(always)]
-    fn from(idx: u16) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<EnemyIdx> for u16 {
-    #[inline(always)]
-    fn from(idx: EnemyIdx) -> Self {
-        idx.0
-    }
-}
-
 // SnapshotIdx - Index for tracking snapshotted state
 
 /// A unique identifier for snapshotted state.
 ///
 /// Used to track stats at the time of cast for delayed damage application
 /// (travel time, etc.). Each snapshot gets a unique incrementing ID.
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("{}", if *_0 == 0 { "SnapshotIdx(INVALID)".to_string() } else { format!("SnapshotIdx({})", _0) })]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -625,6 +684,22 @@ pub struct SnapshotIdx(pub u32);
 impl SnapshotIdx {
     /// Invalid/null snapshot
     pub const INVALID: SnapshotIdx = SnapshotIdx(0);
+
+    /// Cast a slice of u32 to SnapshotIdx zero-copy.
+    /// # Safety
+    /// SnapshotIdx is #[repr(transparent)] over u32.
+    #[inline]
+    pub fn cast_slice(slice: &[u32]) -> &[Self] {
+        // SAFETY: SnapshotIdx is repr(transparent) over u32
+        unsafe { &*(slice as *const [u32] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u32 to SnapshotIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u32]) -> &mut [Self] {
+        // SAFETY: SnapshotIdx is repr(transparent) over u32
+        unsafe { &mut *(slice as *mut [u32] as *mut [Self]) }
+    }
 
     /// Create from raw u32
     #[inline(always)]
@@ -657,42 +732,30 @@ impl SnapshotIdx {
     }
 }
 
-impl fmt::Debug for SnapshotIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if !self.is_valid() {
-            write!(f, "SnapshotIdx(INVALID)")
-        } else {
-            write!(f, "SnapshotIdx({})", self.0)
-        }
-    }
-}
-
-impl fmt::Display for SnapshotIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u32> for SnapshotIdx {
-    #[inline(always)]
-    fn from(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<SnapshotIdx> for u32 {
-    #[inline(always)]
-    fn from(idx: SnapshotIdx) -> Self {
-        idx.0
-    }
-}
-
 // ResourceIdx - Index into resource types
 
 /// A type-safe resource index.
 ///
 /// Used to reference different resource types (mana, rage, energy, focus, etc.).
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    From,
+    Into,
+    RefCast,
+)]
+#[debug("ResourceIdx({_0})")]
+#[display("{_0}")]
 #[serde(transparent)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -721,6 +784,22 @@ impl ResourceIdx {
     pub const PAIN: ResourceIdx = ResourceIdx(14);
     pub const ESSENCE: ResourceIdx = ResourceIdx(15);
 
+    /// Cast a slice of u8 to ResourceIdx zero-copy.
+    /// # Safety
+    /// ResourceIdx is #[repr(transparent)] over u8.
+    #[inline]
+    pub fn cast_slice(slice: &[u8]) -> &[Self] {
+        // SAFETY: ResourceIdx is repr(transparent) over u8
+        unsafe { &*(slice as *const [u8] as *const [Self]) }
+    }
+
+    /// Cast a mutable slice of u8 to ResourceIdx zero-copy.
+    #[inline]
+    pub fn cast_slice_mut(slice: &mut [u8]) -> &mut [Self] {
+        // SAFETY: ResourceIdx is repr(transparent) over u8
+        unsafe { &mut *(slice as *mut [u8] as *mut [Self]) }
+    }
+
     /// Create from raw u8
     #[inline(always)]
     pub const fn from_raw(idx: u8) -> Self {
@@ -747,31 +826,5 @@ impl ResourceIdx {
     #[inline(always)]
     pub const fn as_u8(self) -> u8 {
         self.0
-    }
-}
-
-impl fmt::Debug for ResourceIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ResourceIdx({})", self.0)
-    }
-}
-
-impl fmt::Display for ResourceIdx {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<u8> for ResourceIdx {
-    #[inline(always)]
-    fn from(idx: u8) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<ResourceIdx> for u8 {
-    #[inline(always)]
-    fn from(idx: ResourceIdx) -> Self {
-        idx.0
     }
 }

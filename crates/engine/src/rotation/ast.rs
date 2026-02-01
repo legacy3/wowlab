@@ -1,8 +1,4 @@
-//! Rotation AST types.
-//!
-//! Represents parsed and resolved rotation definitions.
-//! Names are resolved to IDs at the parser boundary, eliminating the need
-//! for a separate resolution phase.
+//! Rotation AST types (names resolved to IDs at parse time).
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

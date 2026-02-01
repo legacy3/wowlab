@@ -43,7 +43,6 @@ pub const RADIUS_LG: u8 = 12;
 pub const SPACE_XS: f32 = 4.0;
 pub const SPACE_SM: f32 = 8.0;
 pub const SPACE_MD: f32 = 12.0;
-pub const SPACE_LG: f32 = 16.0;
 
 // Shadows (offset: [i8; 2], blur: u8, spread: u8)
 pub fn shadow_sm() -> Shadow {

@@ -1,10 +1,3 @@
-//! HTTP server for the sentinel service.
-//!
-//! Provides:
-//! - Public endpoints: `/`, `/favicon.ico`, `/status`, `/metrics`
-//! - Node API: `/nodes/register`, `/nodes/heartbeat`, `/chunks/complete`
-//! - Webhooks: `/webhooks/github`, `/webhooks/vercel`
-
 pub mod auth;
 mod routes;
 
@@ -15,7 +8,6 @@ use tower_http::trace::TraceLayer;
 
 use crate::state::ServerState;
 
-/// Run the HTTP server.
 pub async fn run(
     state: Arc<ServerState>,
     shutdown: CancellationToken,

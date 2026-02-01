@@ -1,4 +1,4 @@
-//! Signed HTTP client for sentinel node operations.
+//! Signed HTTP client for sentinel operations.
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -8,14 +8,14 @@ use uuid::Uuid;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// Headers produced by signing a request.
+/// Auth headers for signed requests.
 pub struct SignedHeaders {
     pub key: String,
     pub signature: String,
     pub timestamp: String,
 }
 
-/// Trait for signing HTTP requests to the sentinel.
+/// Trait for request signing.
 pub trait RequestSigner: Send + Sync {
     fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders;
 }
@@ -24,7 +24,6 @@ pub trait RequestSigner: Send + Sync {
 #[serde(rename_all = "camelCase")]
 pub struct RegisterResponse {
     pub id: Uuid,
-    pub claim_code: String,
     #[serde(default)]
     pub beacon_token: Option<String>,
 }
@@ -39,7 +38,7 @@ pub enum SentinelError {
     ClientBuild(String),
 }
 
-/// Client for signed HTTP requests to the sentinel service.
+/// Client for signed requests to the sentinel.
 #[derive(Clone)]
 pub struct SentinelClient {
     http: reqwest::Client,
@@ -94,6 +93,7 @@ impl SentinelClient {
         enabled_cores: i32,
         platform: &str,
         version: &str,
+        claim_token: Option<&str>,
     ) -> Result<RegisterResponse, SentinelError> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
@@ -103,6 +103,8 @@ impl SentinelClient {
             enabled_cores: i32,
             platform: &'a str,
             version: &'a str,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            claim_token: Option<&'a str>,
         }
 
         let body = serde_json::to_vec(&Request {
@@ -111,6 +113,7 @@ impl SentinelClient {
             enabled_cores,
             platform,
             version,
+            claim_token,
         })
         .unwrap();
 
@@ -124,11 +127,7 @@ impl SentinelClient {
         Ok(response.json().await?)
     }
 
-    /// Verify this node is registered and claimed via heartbeat.
-    ///
-    /// Returns Ok(()) if the node exists and is claimed.
-    /// Returns an error with "not found"/"not claimed" for invalid nodes,
-    /// or a network/server error if the sentinel is unavailable.
+    /// Verify node is registered and claimed via heartbeat.
     pub async fn verify(&self) -> Result<(), SentinelError> {
         let body = b"{}";
         let response = self.signed_post("/nodes/heartbeat", body).await?;
@@ -141,7 +140,6 @@ impl SentinelClient {
         Ok(())
     }
 
-    /// Refresh beacon token for realtime connection.
     pub async fn refresh_token(&self) -> Result<String, SentinelError> {
         let response = self.signed_post("/nodes/token", &[]).await?;
 
@@ -160,7 +158,6 @@ impl SentinelClient {
         Ok(resp.beacon_token)
     }
 
-    /// Submit completed chunk result.
     pub async fn complete_chunk(
         &self,
         chunk_id: Uuid,

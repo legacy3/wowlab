@@ -1,7 +1,3 @@
-//! Track node online/offline status via Centrifugo presence polling.
-//!
-//! Compares Centrifugo presence with database state and reconciles differences.
-
 use std::collections::HashSet;
 
 use async_trait::async_trait;
@@ -83,7 +79,6 @@ async fn fetch_online_node_ids(db: &sqlx::PgPool) -> Result<Vec<Uuid>, sqlx::Err
     Ok(rows.into_iter().map(|(id,)| id).collect())
 }
 
-/// Node info for notifications.
 #[derive(sqlx::FromRow)]
 struct NodeInfo {
     name: String,
@@ -151,7 +146,6 @@ async fn fetch_node_info(db: &sqlx::PgPool, ids: &[Uuid]) -> Vec<NodeInfo> {
         .unwrap_or_default()
 }
 
-/// Publish node status update to portal (Refine live format).
 async fn publish_node_updates(state: &ServerState, ids: &[Uuid]) {
     #[derive(Serialize)]
     struct RefineUpdate {

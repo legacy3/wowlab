@@ -1,6 +1,4 @@
-//! BM Hunter spell definitions with declarative effects.
-//!
-//! Each spell defines its behavior inline - costs, damage, and effects.
+//! BM Hunter spell definitions (costs, damage, effects).
 
 use super::constants::*;
 use crate::spec::{EffectCondition, SpellBuilder, SpellDef, SpellEffect, SpellTarget};
@@ -60,7 +58,7 @@ fn kill_command() -> SpellDef {
         // Kill Cleave: Cleave during Beast Cleave
         .on_cast_if(
             EffectCondition::And(vec![
-                EffectCondition::TalentEnabled("kill_cleave".to_string()),
+                EffectCondition::TalentEnabled("kill_cleave".into()),
                 EffectCondition::BuffActive(BEAST_CLEAVE),
             ]),
             SpellEffect::Cleave {
@@ -71,7 +69,7 @@ fn kill_command() -> SpellDef {
         // Wild Instincts: Apply debuff during Call of the Wild
         .on_cast_if(
             EffectCondition::And(vec![
-                EffectCondition::TalentEnabled("wild_instincts".to_string()),
+                EffectCondition::TalentEnabled("wild_instincts".into()),
                 EffectCondition::BuffActive(CALL_OF_THE_WILD_BUFF),
             ]),
             SpellEffect::ApplyDebuff {

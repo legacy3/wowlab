@@ -1,13 +1,13 @@
 "use client";
 
+import { useBoolean } from "ahooks";
 import { CpuIcon, PlusIcon, ServerIcon, WifiIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Grid, HStack, Stack } from "styled-system/jsx";
 
 import { DiscordLinkBanner } from "@/components/account/settings";
-import { Button, Card, Empty, Link, Skeleton, StatCard } from "@/components/ui";
-import { routes } from "@/lib/routing";
+import { Button, Card, Empty, Skeleton, StatCard } from "@/components/ui";
 import {
   type NodeWithMeta,
   type SaveNodeData,
@@ -20,6 +20,7 @@ import {
 
 import { BulkActionBar } from "./bulk-action-bar";
 import { NodeSettingsDialog } from "./node-settings-dialog";
+import { NodeSetupDialog } from "./node-setup-dialog";
 import { NodesTable, NodesTableSkeleton } from "./nodes-table";
 import { type OwnerFilter, OwnerFilterTabs } from "./owner-filter-tabs";
 
@@ -32,6 +33,7 @@ export function NodesPage() {
 
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
   const [settingsNode, setSettingsNode] = useState<NodeWithMeta | null>(null);
+  const [showSetupDialog, setShowSetupDialog] = useBoolean(false);
 
   const myNodes = useMemo(() => data?.myNodes ?? [], [data?.myNodes]);
   const sharedNodes = useMemo(
@@ -111,11 +113,9 @@ export function NodesPage() {
               onPowerOn={handleBulkPowerOn}
             />
           )}
-          <Button asChild>
-            <Link href={routes.account.nodes.claim.path}>
-              <PlusIcon size={16} />
-              {content.claimNode}
-            </Link>
+          <Button onClick={setShowSetupDialog.setTrue}>
+            <PlusIcon size={16} />
+            {content.addNode}
           </Button>
         </HStack>
       </HStack>
@@ -131,11 +131,9 @@ export function NodesPage() {
               <Empty.Description>
                 {content.claimNodeDescription}
               </Empty.Description>
-              <Button asChild>
-                <Link href={routes.account.nodes.claim.path}>
-                  <PlusIcon size={16} />
-                  {content.claimYourFirstNode}
-                </Link>
+              <Button onClick={setShowSetupDialog.setTrue}>
+                <PlusIcon size={16} />
+                {content.addYourFirstNode}
               </Button>
             </Empty.Root>
           </Card.Body>
@@ -160,6 +158,13 @@ export function NodesPage() {
           isDeleting={isDeleting}
         />
       )}
+
+      <NodeSetupDialog
+        open={showSetupDialog}
+        onOpenChange={(open) =>
+          setShowSetupDialog[open ? "setTrue" : "setFalse"]()
+        }
+      />
     </Stack>
   );
 }

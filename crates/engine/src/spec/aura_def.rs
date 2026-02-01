@@ -1,3 +1,5 @@
+use bon::Builder;
+
 use crate::aura::{AuraFlags, PeriodicEffect};
 use serde::{Deserialize, Serialize};
 use wowlab_common::types::{
@@ -41,9 +43,10 @@ pub enum AuraEffect {
 }
 
 /// Aura definition
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Builder, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[builder(on(String, into))]
 pub struct AuraDef {
     /// Unique aura ID
     pub id: AuraIdx,
@@ -52,92 +55,16 @@ pub struct AuraDef {
     /// Base duration
     pub duration: SimTime,
     /// Max stacks
+    #[builder(default = 1)]
     pub max_stacks: u8,
     /// Behavior flags
+    #[builder(default)]
     pub flags: AuraFlags,
     /// Effects while active
+    #[builder(default)]
     pub effects: Vec<AuraEffect>,
     /// Periodic effect (for DoTs/HoTs)
     pub periodic: Option<PeriodicEffect>,
     /// Spell that applies this aura
     pub applied_by: Option<SpellIdx>,
-}
-
-impl AuraDef {
-    pub fn new(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            duration,
-            max_stacks: 1,
-            flags: AuraFlags::default(),
-            effects: Vec::new(),
-            periodic: None,
-            applied_by: None,
-        }
-    }
-
-    /// Create a buff
-    pub fn buff(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
-        Self::new(id, name, duration)
-    }
-
-    /// Create a debuff
-    pub fn debuff(id: AuraIdx, name: impl Into<String>, duration: SimTime) -> Self {
-        let mut aura = Self::new(id, name, duration);
-        aura.flags.is_debuff = true;
-        aura
-    }
-
-    /// Create a DoT
-    pub fn dot(
-        id: AuraIdx,
-        name: impl Into<String>,
-        duration: SimTime,
-        tick_interval: SimTime,
-    ) -> Self {
-        let mut aura = Self::debuff(id, name, duration);
-        aura.flags.is_periodic = true;
-        aura.flags.can_pandemic = true;
-        aura.flags.snapshots = true;
-        aura.flags.refreshable = true;
-        aura.periodic = Some(PeriodicEffect::new(id, tick_interval));
-        aura
-    }
-
-    pub fn with_stacks(mut self, max: u8) -> Self {
-        self.max_stacks = max;
-        self
-    }
-
-    pub fn with_effect(mut self, effect: AuraEffect) -> Self {
-        self.effects.push(effect);
-        self
-    }
-
-    pub fn with_periodic(mut self, periodic: PeriodicEffect) -> Self {
-        self.periodic = Some(periodic);
-        self.flags.is_periodic = true;
-        self
-    }
-
-    pub fn pandemic(mut self) -> Self {
-        self.flags.can_pandemic = true;
-        self
-    }
-
-    pub fn snapshots(mut self) -> Self {
-        self.flags.snapshots = true;
-        self
-    }
-
-    pub fn refreshable(mut self) -> Self {
-        self.flags.refreshable = true;
-        self
-    }
-
-    pub fn hidden(mut self) -> Self {
-        self.flags.is_hidden = true;
-        self
-    }
 }

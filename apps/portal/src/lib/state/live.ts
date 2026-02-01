@@ -2,7 +2,11 @@
 
 import { create } from "zustand";
 
-export type LiveState = "disconnected" | "connecting" | "connected";
+export type LiveState =
+  | "disabled"
+  | "disconnected"
+  | "connecting"
+  | "connected";
 
 interface LiveStore {
   setState: (state: LiveState) => void;
@@ -11,7 +15,7 @@ interface LiveStore {
 
 export const useLiveStore = create<LiveStore>()((set) => ({
   setState: (state) => set({ state }),
-  state: "disconnected",
+  state: "disabled",
 }));
 
 export function useLiveConnected() {

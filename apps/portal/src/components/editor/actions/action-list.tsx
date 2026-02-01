@@ -19,15 +19,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBoolean } from "ahooks";
 import { ListTreeIcon, PlusIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Center, VStack } from "styled-system/jsx";
 
 import type { Action } from "@/lib/editor";
 
+import { useVirtualList } from "@/lib/refine";
 import { useEditor, useSelectedList } from "@/lib/state/editor";
 
 import { Badge, Button, Heading, Text } from "../../ui";
@@ -68,11 +68,9 @@ export function ActionList() {
     [],
   );
 
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
+  const { parentRef, virtualizer } = useVirtualList({
     count: selectedList?.actions.length ?? 0,
-    estimateSize: () => 72,
-    getScrollElement: () => parentRef.current,
+    estimateSize: 72,
     overscan: 3,
   });
 

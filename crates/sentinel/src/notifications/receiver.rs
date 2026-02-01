@@ -13,11 +13,6 @@ struct SubscriptionRow {
     channel_id: String,
 }
 
-/// Async task that receives notifications and sends them to subscribed Discord channels.
-///
-/// This function loops indefinitely, receiving notifications from the channel and
-/// sending them to all subscribed Discord channels. Errors are logged but do not
-/// crash the task.
 pub async fn run(mut rx: mpsc::UnboundedReceiver<Notification>, http: Arc<Http>, db: PgPool) {
     tracing::info!("Notification receiver task started");
 
@@ -127,7 +122,6 @@ pub async fn run(mut rx: mpsc::UnboundedReceiver<Notification>, http: Arc<Http>,
     tracing::info!("Notification receiver task stopped");
 }
 
-/// Build a Discord embed from a notification.
 fn build_embed(notification: &Notification) -> CreateEmbed {
     let mut embed = CreateEmbed::new()
         .title(&notification.title)

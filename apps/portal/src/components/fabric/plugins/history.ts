@@ -68,7 +68,6 @@ export class HistoryPlugin implements FabricPlugin {
       this.boundHandlers = null;
     }
 
-    // Unregister shortcuts
     this.unregisterShortcuts();
 
     if (this.pendingSave) {

@@ -73,4 +73,10 @@ tiktoken-rs = "0.9"
 rmcp = { version = "0.14", features = ["server", "transport-streamable-http-server", "macros"] }
 schemars = "1"
 
+# Performance
+mimalloc = "0.1"
+
 [dev-dependencies]
+
+[lints]
+workspace = true

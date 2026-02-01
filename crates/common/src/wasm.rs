@@ -141,7 +141,7 @@ mod crypto_wasm {
 
     /// Generate a new node keypair.
     ///
-    /// Returns an object with `privateKey`, `publicKey`, and `claimCode` fields (all base64/string).
+    /// Returns an object with `privateKey` and `publicKey` fields (both base64).
     #[wasm_bindgen(js_name = generateNodeKeypair)]
     pub fn wasm_generate_node_keypair() -> JsValue {
         let keypair = crypto::NodeKeypair::generate();
@@ -149,17 +149,9 @@ mod crypto_wasm {
         let result = serde_json::json!({
             "privateKey": keypair.private_key_base64(),
             "publicKey": keypair.public_key_base64(),
-            "claimCode": keypair.claim_code(),
         });
 
         serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::NULL)
-    }
-
-    /// Derive claim code from a base64-encoded public key.
-    #[wasm_bindgen(js_name = deriveClaimCode)]
-    pub fn wasm_derive_claim_code(public_key_base64: &str) -> Result<String, JsError> {
-        crypto::derive_claim_code_from_base64(public_key_base64)
-            .map_err(|e| JsError::new(&e.to_string()))
     }
 
     /// Sign a message with a base64-encoded private key.

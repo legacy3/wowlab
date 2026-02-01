@@ -1,99 +1,49 @@
-//! Discord markdown formatting utilities.
-//!
-//! Provides functions and builders for consistent markdown formatting across the bot.
-//!
-//! # Basic Formatting
-//!
-//! ```ignore
-//! use crate::utils::markdown as md;
-//!
-//! md::bold("important")           // **important**
-//! md::italic("emphasis")          // *emphasis*
-//! md::code("inline")              // `inline`
-//! md::code_block("rust", "code")  // ```rust\ncode\n```
-//! md::link("text", "url")         // [text](url)
-//! md::channel(123456789)          // <#123456789>
-//! md::user(123456789)             // <@123456789>
-//! ```
-//!
-//! # Tables
-//!
-//! ```ignore
-//! let table = md::Table::new()
-//!     .headers(["Name", "Status", "Chunks"])
-//!     .row(["node-1", "online", "42"])
-//!     .row(["node-2", "offline", "0"])
-//!     .build();
-//! ```
-
 use std::fmt::Display;
-
-// =============================================================================
-// Basic Formatting Functions
-// =============================================================================
-
-/// Bold text: `**text**`
 #[inline]
 pub fn bold(text: impl Display) -> String {
     format!("**{}**", text)
 }
 
-/// Italic text: `*text*`
 #[inline]
 pub fn italic(text: impl Display) -> String {
     format!("*{}*", text)
 }
 
-/// Bold and italic: `***text***`
 #[inline]
 pub fn bold_italic(text: impl Display) -> String {
     format!("***{}***", text)
 }
 
-/// Underline text: `__text__`
 #[inline]
 pub fn underline(text: impl Display) -> String {
     format!("__{}__", text)
 }
 
-/// Strikethrough text: `~~text~~`
 #[inline]
 pub fn strike(text: impl Display) -> String {
     format!("~~{}~~", text)
 }
 
-/// Underline + italic: `__*text*__`
 #[inline]
 pub fn underline_italic(text: impl Display) -> String {
     format!("__*{}*__", text)
 }
 
-/// Underline + bold: `__**text**__`
 #[inline]
 pub fn underline_bold(text: impl Display) -> String {
     format!("__**{}**__", text)
 }
 
-/// Underline + bold + italic: `__***text***__`
 #[inline]
 pub fn underline_bold_italic(text: impl Display) -> String {
     format!("__***{}***__", text)
 }
 
-/// Inline code: `` `text` ``
 #[inline]
 pub fn code(text: impl Display) -> String {
     format!("`{}`", text)
 }
 
-/// Code block with optional language.
-///
-/// ```ignore
-/// code_block("rust", "let x = 1;")
-/// // ```rust
-/// // let x = 1;
-/// // ```
-/// ```
 pub fn code_block(language: &str, content: impl Display) -> String {
     if language.is_empty() {
         format!("```\n{}\n```", content)
@@ -102,7 +52,6 @@ pub fn code_block(language: &str, content: impl Display) -> String {
     }
 }
 
-/// Block quote (single line per line): `> text`
 pub fn quote(text: impl Display) -> String {
     let text = text.to_string();
     text.lines()
@@ -111,178 +60,121 @@ pub fn quote(text: impl Display) -> String {
         .join("\n")
 }
 
-/// Multi-line block quote: `>>> text`
-///
-/// Everything after `>>>` until the end of the message is quoted.
 #[inline]
 pub fn quote_block(text: impl Display) -> String {
     format!(">>> {}", text)
 }
 
-// =============================================================================
-// Headers & Structure
-// =============================================================================
-
-/// Large header: `# text`
 #[inline]
 pub fn h1(text: impl Display) -> String {
     format!("# {}", text)
 }
 
-/// Medium header: `## text`
 #[inline]
 pub fn h2(text: impl Display) -> String {
     format!("## {}", text)
 }
 
-/// Small header: `### text`
 #[inline]
 pub fn h3(text: impl Display) -> String {
     format!("### {}", text)
 }
 
-/// Subtext (small, muted): `-# text`
 #[inline]
 pub fn subtext(text: impl Display) -> String {
     format!("-# {}", text)
 }
 
-// =============================================================================
-// Links
-// =============================================================================
-
-/// Hyperlink: `[text](url)`
 #[inline]
 pub fn link(text: impl Display, url: impl Display) -> String {
     format!("[{}]({})", text, url)
 }
 
-/// Masked link (shows URL on hover): `[text](url "title")`
 #[inline]
 pub fn link_titled(text: impl Display, url: impl Display, title: impl Display) -> String {
     format!("[{}]({} \"{}\")", text, url, title)
 }
 
-/// Spoiler text: `||text||`
 #[inline]
 pub fn spoiler(text: impl Display) -> String {
     format!("||{}||", text)
 }
 
-// =============================================================================
-// Discord-Specific Mentions
-// =============================================================================
-
-/// Channel mention: `<#channel_id>`
 #[inline]
 pub fn channel(id: impl Display) -> String {
     format!("<#{}>", id)
 }
 
-/// User mention: `<@user_id>`
 #[inline]
 pub fn user(id: impl Display) -> String {
     format!("<@{}>", id)
 }
 
-/// Role mention: `<@&role_id>`
 #[inline]
 pub fn role(id: impl Display) -> String {
     format!("<@&{}>", id)
 }
 
-/// Slash command mention: `</command:id>`
 #[inline]
 pub fn slash_command(name: &str, id: impl Display) -> String {
     format!("</{name}:{}>", id)
 }
 
-/// Unix timestamp: `<t:timestamp>`
 #[inline]
 pub fn timestamp(unix: i64) -> String {
     format!("<t:{}>", unix)
 }
 
-/// Unix timestamp with style: `<t:timestamp:style>`
-///
-/// Styles:
-/// - `t` - Short time (16:20)
-/// - `T` - Long time (16:20:30)
-/// - `d` - Short date (20/04/2021)
-/// - `D` - Long date (20 April 2021)
-/// - `f` - Short date/time (20 April 2021 16:20)
-/// - `F` - Long date/time (Tuesday, 20 April 2021 16:20)
-/// - `R` - Relative (2 months ago)
+/// Style: t/T (time), d/D (date), f/F (date+time), R (relative)
 #[inline]
 pub fn timestamp_styled(unix: i64, style: char) -> String {
     format!("<t:{}:{}>", unix, style)
 }
 
-/// Relative timestamp: `<t:timestamp:R>` (e.g., "2 hours ago")
 #[inline]
 pub fn relative_time(unix: i64) -> String {
     timestamp_styled(unix, 'R')
 }
 
-// =============================================================================
-// Compound Formatting
-// =============================================================================
-
-/// Key-value pair: `**key:** value`
 #[inline]
 pub fn kv(key: impl Display, value: impl Display) -> String {
     format!("**{}:** {}", key, value)
 }
 
-/// Labeled code: `**label:** \`value\``
 #[inline]
 pub fn kv_code(key: impl Display, value: impl Display) -> String {
     format!("**{}:** `{}`", key, value)
 }
 
-/// Stats format: `` `+additions` `-deletions` ``
 #[inline]
 pub fn diff_stats(additions: impl Display, deletions: impl Display) -> String {
     format!("`+{}` `-{}`", additions, deletions)
 }
 
-/// Commit format: `` `short_sha` message ``
 pub fn commit(sha: &str, message: &str) -> String {
     let short_sha = &sha[..7.min(sha.len())];
     let first_line = message.lines().next().unwrap_or("");
     format!("`{}` {}", short_sha, first_line)
 }
 
-/// Arrow mapping: `` `from` → `to` `` or `from → to`
 #[inline]
 pub fn arrow(from: impl Display, to: impl Display) -> String {
     format!("{} → {}", from, to)
 }
 
-/// Arrow with code formatting: `` `from` → `to` ``
 #[inline]
 pub fn arrow_code(from: impl Display, to: impl Display) -> String {
     format!("`{}` → `{}`", from, to)
 }
 
-// =============================================================================
-// List Builder
-// =============================================================================
-
-/// List style for markdown lists.
 #[derive(Clone, Copy)]
 pub enum ListStyle {
-    /// Unordered with `-` (Discord default)
     Dash,
-    /// Unordered with `*`
     Asterisk,
-    /// Unordered with `•` (Unicode bullet)
     Bullet,
-    /// Ordered with `1.`, `2.`, etc.
     Ordered,
 }
 
-/// Builder for markdown lists (ordered and unordered).
 pub struct List {
     items: Vec<String>,
     style: ListStyle,
@@ -295,7 +187,6 @@ impl Default for List {
 }
 
 impl List {
-    /// Create a new unordered list with `-` bullets.
     pub fn new() -> Self {
         Self {
             items: Vec::new(),
@@ -303,7 +194,6 @@ impl List {
         }
     }
 
-    /// Create an unordered list with `*` bullets.
     pub fn asterisk() -> Self {
         Self {
             items: Vec::new(),
@@ -311,7 +201,6 @@ impl List {
         }
     }
 
-    /// Create a list with `•` bullets.
     pub fn bullet() -> Self {
         Self {
             items: Vec::new(),
@@ -319,7 +208,6 @@ impl List {
         }
     }
 
-    /// Create an ordered list (1., 2., 3., ...).
     pub fn ordered() -> Self {
         Self {
             items: Vec::new(),
@@ -327,13 +215,11 @@ impl List {
         }
     }
 
-    /// Add an item to the list.
     pub fn item(mut self, text: impl Display) -> Self {
         self.items.push(text.to_string());
         self
     }
 
-    /// Add multiple items.
     pub fn items<I, T>(mut self, items: I) -> Self
     where
         I: IntoIterator<Item = T>,
@@ -345,7 +231,6 @@ impl List {
         self
     }
 
-    /// Build the list string.
     pub fn build(self) -> String {
         self.items
             .into_iter()
@@ -361,30 +246,7 @@ impl List {
     }
 }
 
-// =============================================================================
-// Table Builder
-// =============================================================================
-
-/// Builder for fixed-width tables rendered in code blocks.
-///
-/// Since Discord doesn't support markdown tables, this renders as a code block
-/// with aligned columns.
-///
-/// ```ignore
-/// let table = Table::new()
-///     .headers(["Name", "Status", "Count"])
-///     .row(["alpha", "online", "42"])
-///     .row(["beta", "offline", "0"])
-///     .build();
-/// ```
-///
-/// Output:
-/// ```text
-/// Name   Status   Count
-/// ─────  ───────  ─────
-/// alpha  online   42
-/// beta   offline  0
-/// ```
+/// Discord doesn't support markdown tables, so this renders as a code block.
 pub struct Table {
     headers: Vec<String>,
     rows: Vec<Vec<String>>,
@@ -398,7 +260,6 @@ impl Default for Table {
 }
 
 impl Table {
-    /// Create a new empty table.
     pub fn new() -> Self {
         Self {
             headers: Vec::new(),
@@ -407,7 +268,6 @@ impl Table {
         }
     }
 
-    /// Set column headers.
     pub fn headers<I, T>(mut self, headers: I) -> Self
     where
         I: IntoIterator<Item = T>,
@@ -417,7 +277,6 @@ impl Table {
         self
     }
 
-    /// Add a row of values.
     pub fn row<I, T>(mut self, values: I) -> Self
     where
         I: IntoIterator<Item = T>,
@@ -428,7 +287,6 @@ impl Table {
         self
     }
 
-    /// Add multiple rows at once.
     pub fn rows<I, R, T>(mut self, rows: I) -> Self
     where
         I: IntoIterator<Item = R>,
@@ -442,13 +300,11 @@ impl Table {
         self
     }
 
-    /// Set padding between columns (default: 2).
     pub fn padding(mut self, padding: usize) -> Self {
         self.padding = padding;
         self
     }
 
-    /// Calculate column widths based on content.
     fn column_widths(&self) -> Vec<usize> {
         let col_count = self
             .headers
@@ -472,7 +328,6 @@ impl Table {
         widths
     }
 
-    /// Build the table as a plain string (no code block wrapper).
     pub fn build_plain(self) -> String {
         let widths = self.column_widths();
         let mut lines = Vec::new();
@@ -512,15 +367,10 @@ impl Table {
         lines.join("\n")
     }
 
-    /// Build the table wrapped in a code block.
     pub fn build(self) -> String {
         code_block("", self.build_plain())
     }
 }
-
-// =============================================================================
-// Tests
-// =============================================================================
 
 #[cfg(test)]
 mod tests {

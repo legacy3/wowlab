@@ -1,6 +1,8 @@
 "use client";
 
+import { useBoolean, useTimeout } from "ahooks";
 import {
+  CheckIcon,
   Download,
   Hand,
   Maximize,
@@ -61,10 +63,11 @@ export interface TraitToolbarProps {
   onExport?: () => void;
   onModeChange?: (mode: InteractionMode) => void;
   onResetView?: () => void;
-  onShare?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onZoomToFit?: () => void;
+  /** URL to copy when share is clicked */
+  shareUrl?: string;
   state: CanvasState;
 }
 
@@ -74,19 +77,29 @@ export const TraitToolbar = memo(function TraitToolbar({
   onExport,
   onModeChange,
   onResetView,
-  onShare,
   onZoomIn,
   onZoomOut,
   onZoomToFit,
+  shareUrl,
   state,
 }: TraitToolbarProps) {
   const { canRedo, canUndo } = useHistoryState();
   const undo = useTraitStore((s) => s.undo);
   const redo = useTraitStore((s) => s.redo);
   const { toolbar: content } = useIntlayer("traits");
+  const [shareCopied, { setFalse: clearShareCopied, setTrue: setShareCopied }] =
+    useBoolean(false);
+
+  useTimeout(clearShareCopied, shareCopied ? 2000 : undefined);
 
   const handleUndo = useCallback(() => undo(), [undo]);
   const handleRedo = useCallback(() => redo(), [redo]);
+
+  const handleShare = useCallback(async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setShareCopied();
+  }, [shareUrl, setShareCopied]);
 
   return (
     <div className={cx(toolbarStyles, className)}>
@@ -170,9 +183,9 @@ export const TraitToolbar = memo(function TraitToolbar({
       <div className={dividerStyles} />
 
       <HStack gap="0.5">
-        <Tooltip content={content.shareLink}>
-          <IconButton variant="plain" size="sm" onClick={onShare}>
-            <Share2 size={16} />
+        <Tooltip content={shareCopied ? content.copied : content.shareLink}>
+          <IconButton variant="plain" size="sm" onClick={handleShare}>
+            {shareCopied ? <CheckIcon size={16} /> : <Share2 size={16} />}
           </IconButton>
         </Tooltip>
         <Tooltip content={content.exportPng}>

@@ -1,7 +1,4 @@
-//! Domain expression sub-enums for the rotation system.
-//!
-//! Each domain module defines expressions that operate on a specific game concept
-//! and implements the PopulateContext trait for distributed context population.
+//! Domain-specific expression types for rotation conditions.
 
 mod arithmetic;
 mod aura;

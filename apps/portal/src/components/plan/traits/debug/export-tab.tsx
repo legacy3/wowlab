@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, ClipboardCopy } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemoizedFn } from "ahooks";
+import { useEffect, useMemo, useState } from "react";
 import { HStack, Stack } from "styled-system/jsx";
 
-import { Button, Text, Textarea } from "@/components/ui";
+import { CopyButton, Text, Textarea } from "@/components/ui";
 import { defaultPaperdoll, useSpellDescription } from "@/lib/state";
 import { fragmentsToPlainText } from "@/lib/wasm";
 
@@ -23,7 +23,6 @@ export function ExportTab({ nodes, subTrees }: DebugTabProps) {
   const [renderedMap, setRenderedMap] = useState<Map<number, string>>(
     new Map(),
   );
-  const [copied, setCopied] = useState(false);
 
   const subTreeMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -82,9 +81,9 @@ export function ExportTab({ nodes, subTrees }: DebugTabProps) {
     });
   }, [allSpells]);
 
-  const handleRendered = useCallback((spellId: number, rendered: string) => {
+  const handleRendered = useMemoizedFn((spellId: number, rendered: string) => {
     setRenderedMap((prev) => new Map(prev).set(spellId, rendered));
-  }, []);
+  });
 
   const output = useMemo(() => {
     const lines: string[] = [];
@@ -120,12 +119,6 @@ export function ExportTab({ nodes, subTrees }: DebugTabProps) {
     return lines.join("\n").trim();
   }, [allSpells, renderedMap]);
 
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [output]);
-
   const renderedCount = Array.from(renderedMap.values()).filter(Boolean).length;
 
   return (
@@ -142,10 +135,12 @@ export function ExportTab({ nodes, subTrees }: DebugTabProps) {
         <Text textStyle="xs" color="fg.muted">
           {renderedCount}/{allSpells.length} parsed
         </Text>
-        <Button variant="outline" size="xs" onClick={handleCopy}>
-          {copied ? <Check size={14} /> : <ClipboardCopy size={14} />}
-          {copied ? "Copied!" : "Copy All"}
-        </Button>
+        <CopyButton
+          content={output}
+          variant="outline"
+          size="xs"
+          label="Copy All"
+        />
       </HStack>
 
       <Textarea

@@ -1,9 +1,8 @@
-//! Self-update functionality for node binaries.
+//! Self-update via GitHub releases.
 
 const REPO_OWNER: &str = "legacy3";
 const REPO_NAME: &str = "wowlab";
 
-/// Check if a newer version is available.
 pub fn check_for_update(
     current_version: &str,
 ) -> Result<Option<String>, Box<dyn std::error::Error>> {
@@ -21,7 +20,6 @@ pub fn check_for_update(
     Ok(None)
 }
 
-/// Check and update if a newer version is available.
 /// Returns Ok(true) if updated, Ok(false) if already on latest.
 pub fn update(bin_name: &str, current_version: &str) -> Result<bool, Box<dyn std::error::Error>> {
     tracing::info!("Checking for updates (current: {})", current_version);

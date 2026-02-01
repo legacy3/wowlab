@@ -1,4 +1,4 @@
-//! Realtime subscription for node updates, chunk assignments, and presence tracking.
+//! Realtime subscriptions for node updates and chunk assignments.
 
 use std::time::Duration;
 
@@ -81,7 +81,9 @@ impl NodeRealtime {
             .await;
 
             if connected != Ok(true) {
-                let _ = tx.send(RealtimeEvent::Error("Connection timeout".into())).await;
+                let _ = tx
+                    .send(RealtimeEvent::Error("Connection timeout".into()))
+                    .await;
                 client.disconnect();
                 return;
             }

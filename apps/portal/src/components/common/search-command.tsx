@@ -1,11 +1,11 @@
 "use client";
 
 import { FileTextIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { VStack } from "styled-system/jsx";
 
 import { useLocalizedRouter } from "@/lib/routing";
-import { searchDocs, type SearchResult } from "@/lib/search";
+import { searchDocs } from "@/lib/search";
 
 import { Command, Text } from "../ui";
 
@@ -16,20 +16,17 @@ export type SearchCommandProps = {
 
 export function SearchCommand({ onOpenChange, open }: SearchCommandProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
   const router = useLocalizedRouter();
 
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setResults([]);
-    }
-  }, [open]);
+  // Compute results during render instead of useEffect
+  const results = useMemo(() => searchDocs(query), [query]);
 
-  useEffect(() => {
-    const results = searchDocs(query);
-    setResults(results);
-  }, [query]);
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setQuery("");
+    }
+    onOpenChange?.(newOpen);
+  };
 
   const handleSelect = (slug: string) => {
     onOpenChange?.(false);
@@ -39,7 +36,7 @@ export function SearchCommand({ onOpenChange, open }: SearchCommandProps) {
   return (
     <Command.Dialog
       open={open}
-      onOpenChange={(e) => onOpenChange?.(e.open)}
+      onOpenChange={(e) => handleOpenChange(e.open)}
       title="Search Documentation"
       description="Search for documentation pages"
     >

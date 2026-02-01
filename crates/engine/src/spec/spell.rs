@@ -1,13 +1,16 @@
+use bon::Builder;
+
 use super::effect::SpellEffect;
 use serde::{Deserialize, Serialize};
 use wowlab_common::types::{AuraIdx, DamageSchool, ResourceType, SimTime, SpellIdx};
 
 /// Target type for spells
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum SpellTarget {
     /// Single enemy target
+    #[default]
     Enemy,
     /// Self
     Player,
@@ -24,11 +27,12 @@ pub enum SpellTarget {
 }
 
 /// GCD behavior
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum GcdType {
     /// Standard GCD (affected by haste)
+    #[default]
     Normal,
     /// Fixed GCD (not affected by haste)
     Fixed(u32), // milliseconds
@@ -37,11 +41,12 @@ pub enum GcdType {
 }
 
 /// Cast time behavior
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub enum CastType {
     /// Instant cast
+    #[default]
     Instant,
     /// Cast time (affected by haste)
     Cast(u32), // base milliseconds
@@ -118,49 +123,65 @@ impl Default for DamageEffect {
 }
 
 /// Spell definition
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Builder, Serialize, Deserialize)]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[builder(on(String, into))]
 pub struct SpellDef {
     /// Unique spell ID
     pub id: SpellIdx,
     /// Display name
     pub name: String,
     /// Spell school
+    #[builder(default)]
     pub school: DamageSchool,
     /// Cast type
+    #[builder(default)]
     pub cast_type: CastType,
     /// GCD behavior
+    #[builder(default)]
     pub gcd: GcdType,
     /// Resource costs
+    #[builder(default)]
     pub costs: Vec<ResourceCost>,
     /// Resource gains
+    #[builder(default)]
     pub gains: Vec<ResourceCost>,
     /// Cooldown duration (0 = no cooldown)
+    #[builder(default)]
     pub cooldown: SimTime,
     /// Charges (0 = no charges, use cooldown)
+    #[builder(default)]
     pub charges: u8,
     /// Charge recharge time
+    #[builder(default)]
     pub charge_time: SimTime,
     /// Range in yards
+    #[builder(default = 40.0)]
     pub range: f32,
     /// Target type
+    #[builder(default)]
     pub target: SpellTarget,
     /// Damage effect (if any)
     pub damage: Option<DamageEffect>,
     /// Auras to apply
+    #[builder(default)]
     pub apply_auras: Vec<AuraIdx>,
     /// Required aura to cast
     pub requires_aura: Option<AuraIdx>,
     /// Consumes aura on cast
     pub consumes_aura: Option<AuraIdx>,
     /// Effects that fire when this spell is cast
+    #[builder(default)]
     pub effects: Vec<SpellEffect>,
     /// Travel time in ms (for projectiles)
+    #[builder(default)]
     pub travel_time: u32,
     /// Whether this can be cast while moving
+    #[builder(default = true)]
     pub castable_while_moving: bool,
     /// Spell flags for special handling
+    #[builder(default = SpellFlags::ON_GCD)]
     pub flags: SpellFlags,
 }
 
@@ -188,31 +209,6 @@ bitflags::bitflags! {
 }
 
 impl SpellDef {
-    pub fn new(id: SpellIdx, name: impl Into<String>) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            school: DamageSchool::Physical,
-            cast_type: CastType::Instant,
-            gcd: GcdType::Normal,
-            costs: Vec::new(),
-            gains: Vec::new(),
-            cooldown: SimTime::ZERO,
-            charges: 0,
-            charge_time: SimTime::ZERO,
-            range: 40.0,
-            target: SpellTarget::Enemy,
-            damage: None,
-            apply_auras: Vec::new(),
-            requires_aura: None,
-            consumes_aura: None,
-            effects: Vec::new(),
-            travel_time: 0,
-            castable_while_moving: true,
-            flags: SpellFlags::ON_GCD,
-        }
-    }
-
     /// Get effective cast time with haste
     pub fn cast_time(&self, haste: f32) -> SimTime {
         match self.cast_type {

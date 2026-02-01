@@ -1,8 +1,26 @@
 //! Damage types and flags.
 
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumCount, EnumIter, EnumString};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Default,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -41,16 +59,32 @@ bitflags::bitflags! {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Default,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[repr(u8)]
 pub enum HitResult {
     #[default]
-    Hit,
-    Crit,
-    Miss,
-    Dodge,
-    Parry,
+    Hit = 0,
+    Crit = 1,
+    Miss = 2,
+    Dodge = 3,
+    Parry = 4,
 }
 
 impl HitResult {

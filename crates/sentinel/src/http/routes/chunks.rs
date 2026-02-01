@@ -28,7 +28,6 @@ struct JobProgressPayload {
     completed_at: Option<String>,
 }
 
-/// Create router for chunk API endpoints.
 pub fn router() -> Router<Arc<ServerState>> {
     Router::new().route("/chunks/complete", post(complete))
 }

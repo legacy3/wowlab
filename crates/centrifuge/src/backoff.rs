@@ -6,7 +6,6 @@ use std::time::Duration;
 
 use rand::Rng;
 
-/// Backoff calculator with full jitter.
 #[derive(Debug, Clone)]
 pub struct Backoff {
     min_delay: Duration,
@@ -15,7 +14,6 @@ pub struct Backoff {
 }
 
 impl Backoff {
-    /// Create a new backoff calculator.
     pub fn new(min_delay: Duration, max_delay: Duration) -> Self {
         Self {
             min_delay,
@@ -24,24 +22,20 @@ impl Backoff {
         }
     }
 
-    /// Get the next backoff delay and increment attempt counter.
     pub fn next_delay(&mut self) -> Duration {
         let delay = self.calculate_delay();
         self.attempt = self.attempt.saturating_add(1);
         delay
     }
 
-    /// Calculate delay for current attempt without incrementing.
     pub fn calculate_delay(&self) -> Duration {
         backoff_with_jitter(self.attempt, self.min_delay, self.max_delay)
     }
 
-    /// Reset the attempt counter.
     pub fn reset(&mut self) {
         self.attempt = 0;
     }
 
-    /// Get current attempt count.
     pub fn attempt(&self) -> u32 {
         self.attempt
     }
@@ -49,18 +43,11 @@ impl Backoff {
 
 impl Default for Backoff {
     fn default() -> Self {
-        Self::new(
-            Duration::from_millis(500),
-            Duration::from_secs(20),
-        )
+        Self::new(Duration::from_millis(500), Duration::from_secs(20))
     }
 }
 
-/// Calculate backoff with full jitter.
-///
-/// Uses AWS-style full jitter: `min(max, min + random(0, min * 2^attempt))`
-///
-/// This matches the centrifuge-js implementation exactly.
+/// AWS-style full jitter: `min(max, min + random(0, min * 2^attempt))`
 pub fn backoff_with_jitter(attempt: u32, min_delay: Duration, max_delay: Duration) -> Duration {
     let base_ms = min_delay.as_millis() as u64;
     let max_ms = max_delay.as_millis() as u64;
@@ -105,11 +92,8 @@ mod tests {
     #[test]
     fn test_backoff_respects_max() {
         for attempt in 0..50 {
-            let delay = backoff_with_jitter(
-                attempt,
-                Duration::from_millis(100),
-                Duration::from_secs(10),
-            );
+            let delay =
+                backoff_with_jitter(attempt, Duration::from_millis(100), Duration::from_secs(10));
             assert!(delay <= Duration::from_secs(10));
             // With the min + jitter formula, delay is always >= min
             assert!(delay >= Duration::from_millis(100));

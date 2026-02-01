@@ -1,9 +1,4 @@
-//! DataResolver trait for abstracting data sources.
-//!
-//! The resolver trait allows the engine to load spell, talent, item, and aura data
-//! from different sources:
-//! - `LocalResolver`: Loads from local CSV files via snapshot-parser (offline, portable)
-//! - `SupabaseResolver`: Loads from Supabase PostgREST API (online, requires feature)
+//! DataResolver trait (local CSV or Supabase API).
 
 use async_trait::async_trait;
 use std::path::PathBuf;

@@ -87,6 +87,22 @@ pnpm lint     # lint all packages
 - Sentinel assigns chunks to eligible nodes with backlog-aware load balancing
 - Access control via Discord guild membership (Bloom filters), explicit permissions, or public access
 
+## CPU Requirements
+
+Release binaries are compiled with optimized CPU instruction sets for better performance:
+
+| Architecture | Target                           | Minimum CPU                                 |
+| ------------ | -------------------------------- | ------------------------------------------- |
+| x86-64       | `x86-64-v2`                      | Intel Nehalem (2008) / AMD Bulldozer (2011) |
+| ARM64        | `+lse` (Large System Extensions) | ARMv8.1-A (2016)                            |
+
+**What this means:**
+
+- **x86-64-v2** enables SSE4.2, SSSE3, and POPCNT instructions. Any server or desktop CPU from the last ~15 years supports this.
+- **ARM64 LSE** enables atomic operations that are significantly faster on multi-core ARM systems. All Apple Silicon and most ARM servers (AWS Graviton2+, Ampere Altra) support this.
+
+These flags provide measurable performance gains for compute-intensive simulation workloads. If you need binaries for older hardware, open an issue and we can provide legacy builds.
+
 ## License
 
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). See the LICENSE.md file for details.

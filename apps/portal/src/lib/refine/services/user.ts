@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect } from "react";
 
 import { routes } from "@/lib/routing";
+import { useLiveStore } from "@/lib/state/live";
 import { createClient } from "@/lib/supabase";
 
 export type OAuthProvider = "discord" | "github" | "google" | "twitch";
@@ -83,10 +84,12 @@ export function useUser(): UserState {
       throw error;
     }
 
+    useLiveStore.getState().setState("disabled");
     await refineLogout();
   }, [supabase, refineLogout]);
 
   const logout = useCallback(async () => {
+    useLiveStore.getState().setState("disabled");
     await refineLogout();
   }, [refineLogout]);
 

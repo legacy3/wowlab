@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useLatest, useMemoizedFn, useTimeout } from "ahooks";
+import { useEffect, useRef, useState } from "react";
 
 import type { SpecTraits } from "@/lib/supabase/types";
 
@@ -41,13 +42,21 @@ export function useTraitCanvas({
 }: UseTraitCanvasOptions): UseTraitCanvasReturn {
   const controllerRef = useRef<CanvasController | null>(null);
   const treeDataRef = useRef<TraitTreeFlat | null>(null);
-  const onTooltipRef = useRef(onTooltip);
+  const onTooltipRef = useLatest(onTooltip);
+  const [shouldZoomToFit, setShouldZoomToFit] = useState(false);
 
   const selection = useTraitStore((s) => s.selection);
 
-  useEffect(() => {
-    onTooltipRef.current = onTooltip;
-  }, [onTooltip]);
+  // Use useTimeout for safe cleanup instead of raw setTimeout
+  useTimeout(
+    () => {
+      const controller = controllerRef.current;
+      const zoomPlugin = controller?.plugins.get<ZoomPlugin>("zoom");
+      zoomPlugin?.zoomToFit(80);
+      setShouldZoomToFit(false);
+    },
+    shouldZoomToFit ? 100 : undefined,
+  );
 
   useEffect(() => {
     const treeData = transformSpecTraits(specTraits);
@@ -55,21 +64,18 @@ export function useTraitCanvas({
     useTraitStore.getState().loadTree(treeData);
   }, [specTraits]);
 
-  const handleReady = useCallback(
-    (controller: CanvasController) => {
-      controller
-        .use(new ShortcutsPlugin())
-        .use(new InteractionPlugin({ defaultMode: "grab" }))
-        .use(new ZoomPlugin());
+  const handleReady = useMemoizedFn((controller: CanvasController) => {
+    controller
+      .use(new ShortcutsPlugin())
+      .use(new InteractionPlugin({ defaultMode: "grab" }))
+      .use(new ZoomPlugin());
 
-      controller.events.on("interaction:change", ({ mode: newMode }) => {
-        onModeChange?.(newMode);
-      });
+    controller.events.on("interaction:change", ({ mode: newMode }) => {
+      onModeChange?.(newMode);
+    });
 
-      controllerRef.current = controller;
-    },
-    [onModeChange],
-  );
+    controllerRef.current = controller;
+  });
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -104,12 +110,9 @@ export function useTraitCanvas({
       },
       selection,
     }).then(() => {
-      const zoomPlugin = controller.plugins.get<ZoomPlugin>("zoom");
-      if (zoomPlugin) {
-        setTimeout(() => zoomPlugin.zoomToFit(80), 100);
-      }
+      setShouldZoomToFit(true);
     });
-  }, [selection]);
+  }, [onTooltipRef, selection]);
 
   return {
     handleReady,

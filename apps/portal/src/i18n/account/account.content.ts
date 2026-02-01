@@ -10,47 +10,6 @@ export default {
         t({ de: "{{count}} ausgewählt", en: "{{count}} selected" }),
       ),
     },
-    claimForm: {
-      claimNode: t({ de: "Node beanspruchen", en: "Claim Node" }),
-      claimYourNode: t({
-        de: "Beanspruche deinen Node",
-        en: "Claim Your Node",
-      }),
-      configureYourNode: t({
-        de: "Konfiguriere deinen Node",
-        en: "Configure Your Node",
-      }),
-      dontHaveTheApp: t({
-        de: "Du hast die App nicht?",
-        en: "Don't have the app?",
-      }),
-      downloadNode: t({ de: "Node herunterladen", en: "Download Node" }),
-      enterCodeDescription: t({
-        de: "Gib den 6-stelligen Code ein, der von deiner Node-Anwendung angezeigt wird",
-        en: "Enter the 6-character code displayed by your node application",
-      }),
-      nodeName: t({ de: "Node-Name", en: "Node Name" }),
-      nodeNamePlaceholder: t({ de: "Mein Gaming-PC", en: "My Gaming PC" }),
-      verifyCode: t({ de: "Code verifizieren", en: "Verify Code" }),
-      workers: t({ de: "Workers", en: "Workers" }),
-      workersHelperText: t({
-        de: "Wie viele CPU-Kerne für Simulationen verwendet werden sollen",
-        en: "How many CPU cores to dedicate to simulations",
-      }),
-      workersOfCores: insert(
-        t({
-          de: "{{workers}} / {{totalCores}} Kerne",
-          en: "{{workers}} / {{totalCores}} cores",
-        }),
-      ),
-    },
-    claimPage: {
-      downloadAndRun: t({
-        de: "Lade die WoW Lab Node-Anwendung herunter und führe sie auf deinem Computer aus",
-        en: "Download and run the WoW Lab Node application on your computer",
-      }),
-      error: t({ de: "Fehler", en: "Error" }),
-    },
     discordLink: {
       bannerText: t({
         de: "Discord ist nicht verknüpft. Du kannst keine Guild-geschützten Nodes nutzen.",
@@ -77,14 +36,10 @@ export default {
       view: t({ de: "Ansehen", en: "View" }),
     },
     nodesPage: {
-      claimNode: t({ de: "Node beanspruchen", en: "Claim Node" }),
-      claimNodeDescription: t({
-        de: "Beanspruche einen Node, um Rechenressourcen für Simulationen beizutragen",
-        en: "Claim a node to contribute compute resources for simulations",
-      }),
-      claimYourFirstNode: t({
-        de: "Beanspruche deinen ersten Node",
-        en: "Claim Your First Node",
+      addNode: t({ de: "Node hinzufügen", en: "Add Node" }),
+      addYourFirstNode: t({
+        de: "Füge deinen ersten Node hinzu",
+        en: "Add Your First Node",
       }),
       nodes: t({ de: "Nodes", en: "Nodes" }),
       noNodesYet: t({ de: "Noch keine Nodes", en: "No nodes yet" }),
@@ -207,6 +162,50 @@ export default {
         de: "Folgendes wird gelöscht:",
         en: "The following will be deleted:",
       }),
+    },
+    setupDialog: {
+      cancel: t({ de: "Abbrechen", en: "Cancel" }),
+      claimTokenDescription: t({
+        de: "Gib diesen Token in der Node-App ein, um ihn mit deinem Konto zu verbinden.",
+        en: "Enter this token in the node app to link it to your account.",
+      }),
+      copied: t({ de: "Kopiert!", en: "Copied!" }),
+      copyDocker: t({
+        de: "Docker-Befehl kopieren",
+        en: "Copy Docker command",
+      }),
+      description: t({
+        de: "Trage Rechenleistung zum verteilten Netzwerk bei und hilf, Simulationen schneller auszuführen.",
+        en: "Contribute computing power to the distributed network and help run simulations faster.",
+      }),
+      desktop: t({ de: "Desktop", en: "Desktop" }),
+      detected: t({ de: "Erkannt", en: "Detected" }),
+      downloadCliHeadless: t({
+        de: "CLI herunterladen (headless)",
+        en: "Download CLI (headless)",
+      }),
+      downloadTitle: t({ de: "Node herunterladen", en: "Download Node" }),
+      multiArchContainer: t({
+        de: "Multi-Arch-Container für Server",
+        en: "Multi-arch container for servers",
+      }),
+      readMore: t({ de: "Mehr erfahren", en: "Read more" }),
+      regenerate: t({ de: "Regenerieren", en: "Regenerate" }),
+      regenerateConfirmDescription: t({
+        de: "Das Regenerieren deines Tokens macht das alte Token ungültig.",
+        en: "Regenerating your token will invalidate the old token.",
+      }),
+      regenerateConfirmTitle: t({
+        de: "Token regenerieren?",
+        en: "Regenerate Token?",
+      }),
+      regenerateToken: t({ de: "Token regenerieren", en: "Regenerate token" }),
+      regenerateWarning: t({
+        de: "Alle Nodes, die das alte Token verwenden, müssen mit dem neuen Token neu konfiguriert werden.",
+        en: "Any nodes using the old token will need to be reconfigured with the new token.",
+      }),
+      title: t({ de: "Eigenen Node betreiben", en: "Run Your Own Node" }),
+      view: t({ de: "Ansehen", en: "View" }),
     },
   },
   description: "Content for account management.",

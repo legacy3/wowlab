@@ -43,6 +43,7 @@ export {
 } from "./skeleton";
 
 export { Code, type CodeProps } from "./code";
+export { CopyButton, type CopyButtonProps } from "./copy-button";
 export { Expandable } from "./expandable";
 export { StatCard, type StatCardProps } from "./stat-card";
 

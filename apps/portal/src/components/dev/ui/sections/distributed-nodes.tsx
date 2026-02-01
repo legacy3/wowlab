@@ -1,12 +1,12 @@
 "use client";
 
+import { useBoolean } from "ahooks";
 import { DownloadIcon, ServerIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
-import { Box, Stack } from "styled-system/jsx";
+import { Stack } from "styled-system/jsx";
 
 import {
   BulkActionBar,
-  NodeClaimForm,
   NodeDownloadDialog,
   NodeSettingsDialog,
   NodesTable,
@@ -40,7 +40,6 @@ export function DistributedNodesSection() {
         <BulkActionBarDemo />
         <NodesTableDemo />
         <NodesSkeletonDemo />
-        <NodeClaimFormDemo />
         <NodeSettingsDialogDemo />
         <NodeDownloadDialogDemo />
       </Stack>
@@ -66,48 +65,8 @@ function BulkActionBarDemo() {
   );
 }
 
-function NodeClaimFormDemo() {
-  const [downloadOpen, setDownloadOpen] = useState(false);
-
-  return (
-    <Subsection title="NodeClaimForm">
-      <DemoDescription>
-        Form for claiming a new node with code verification and download link.
-      </DemoDescription>
-      <DemoBox>
-        <Box maxW="md">
-          <NodeClaimForm
-            onVerify={async (code) => {
-              // Simulate verification
-              await new Promise((r) => setTimeout(r, 500));
-              if (code === "123456") {
-                return {
-                  maxParallel: 6,
-                  name: "Demo Gaming PC",
-                  platform: "windows",
-                  totalCores: 12,
-                  version: "1.2.0",
-                };
-              }
-              return null;
-            }}
-            onClaim={async () => {
-              await new Promise((r) => setTimeout(r, 500));
-            }}
-            onDownloadClick={() => setDownloadOpen(true)}
-          />
-          <NodeDownloadDialog
-            open={downloadOpen}
-            onOpenChange={setDownloadOpen}
-          />
-        </Box>
-      </DemoBox>
-    </Subsection>
-  );
-}
-
 function NodeDownloadDialogDemo() {
-  const [open, setOpen] = useState(false);
+  const [open, { set: setOpen, setTrue: openDialog }] = useBoolean(false);
 
   return (
     <Subsection title="NodeDownloadDialog">
@@ -115,7 +74,7 @@ function NodeDownloadDialogDemo() {
         Platform download options with auto-detection.
       </DemoDescription>
       <DemoBox>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={openDialog}>
           <DownloadIcon size={16} />
           Download Node
         </Button>
@@ -126,7 +85,7 @@ function NodeDownloadDialogDemo() {
 }
 
 function NodeSettingsDialogDemo() {
-  const [open, setOpen] = useState(false);
+  const [open, { set: setOpen, setTrue: openDialog }] = useBoolean(false);
   const node = fixtures.nodes.list[0];
 
   return (
@@ -135,7 +94,7 @@ function NodeSettingsDialogDemo() {
         Dialog for editing node settings with delete confirmation.
       </DemoDescription>
       <DemoBox>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={openDialog}>
           <SettingsIcon size={16} />
           Open Settings
         </Button>
@@ -152,7 +111,8 @@ function NodeSettingsDialogDemo() {
 }
 
 function NodesSkeletonDemo() {
-  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadOpen, { set: setDownloadOpen, setTrue: openDownload }] =
+    useBoolean(false);
 
   return (
     <Subsection title="NodesSkeletons">
@@ -175,7 +135,7 @@ function NodesSkeletonDemo() {
               Download the node application to get started with distributed
               simulations.
             </Empty.Description>
-            <Button onClick={() => setDownloadOpen(true)}>
+            <Button onClick={openDownload}>
               <DownloadIcon size={16} />
               Download Node
             </Button>

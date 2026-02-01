@@ -1,6 +1,4 @@
-//! MM Hunter rotation support.
-//!
-//! Provides name resolution for MM Hunter rotations.
+//! MM Hunter rotation name resolution.
 
 use super::constants::*;
 use crate::rotation::SpecResolver;

@@ -29,10 +29,10 @@ cd apps/portal && pnpm lint && pnpm build
 
 This skill MUST delegate to specialized quality skills via sub-agents:
 
-| Codebase         | Skill             | Focus                                 |
-| ---------------- | ----------------- | ------------------------------------- |
-| `crates/`        | `/rust-quality`   | Rust patterns, clippy, error handling |
-| `apps/portal/`   | `/portal-quality` | TypeScript, React, Next.js patterns   |
+| Codebase       | Skill             | Focus                                 |
+| -------------- | ----------------- | ------------------------------------- |
+| `crates/`      | `/rust-quality`   | Rust patterns, clippy, error handling |
+| `apps/portal/` | `/portal-quality` | TypeScript, React, Next.js patterns   |
 
 **Do NOT skip these.** Spawn them as parallel sub-agents at the start of the audit.
 

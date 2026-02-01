@@ -1,5 +1,10 @@
 //! Headless simulation node for servers.
 
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -156,7 +161,6 @@ fn run_node() {
 
     let running = Arc::new(AtomicBool::new(true));
 
-    // Set up signal handling for graceful shutdown
     #[cfg(unix)]
     {
         let r = Arc::clone(&running);
@@ -204,13 +208,13 @@ fn run_node() {
 fn handle_event(event: &NodeCoreEvent, core: &NodeCore) {
     match event {
         NodeCoreEvent::StateChanged(state) => match state {
+            NodeState::Setup => {
+                tracing::error!("No claim token configured");
+                tracing::error!("Set WOWLAB_CLAIM_TOKEN environment variable");
+                tracing::error!("Get your token at https://wowlab.gg/account/nodes");
+            }
             NodeState::Verifying => tracing::info!("Verifying node..."),
             NodeState::Registering => tracing::info!("Registering with server..."),
-            NodeState::Claiming { code } => {
-                tracing::info!("Waiting to be claimed");
-                tracing::info!("Claim code: {code}");
-                tracing::info!("Visit https://wowlab.gg/nodes to claim this node");
-            }
             NodeState::Running => tracing::info!("Node running"),
             NodeState::Unavailable => {
                 tracing::error!("Server unavailable");
@@ -225,7 +229,6 @@ fn handle_event(event: &NodeCoreEvent, core: &NodeCore) {
             };
             tracing::info!("Connection: {msg}");
         }
-        NodeCoreEvent::Claimed => tracing::info!("Node claimed!"),
         NodeCoreEvent::ChunkAssigned { id, iterations } => {
             tracing::info!("Chunk assigned: {id} ({iterations} iterations)");
         }
@@ -260,13 +263,12 @@ fn print_status(core: &NodeCore) {
     );
 
     match core.state() {
+        NodeState::Setup => {
+            tracing::error!("Status: Setup required");
+            tracing::error!("Set WOWLAB_CLAIM_TOKEN=ct_xxx environment variable");
+        }
         NodeState::Verifying => tracing::info!("Status: Verifying..."),
         NodeState::Registering => tracing::info!("Status: Registering..."),
-        NodeState::Claiming { code } => {
-            tracing::info!("Status: Pending claim");
-            tracing::info!("Claim code: {code}");
-            tracing::info!("Visit https://wowlab.gg/nodes to claim this node");
-        }
         NodeState::Running => tracing::info!("Status: Ready"),
         NodeState::Unavailable => {
             tracing::error!("Status: Server unavailable");

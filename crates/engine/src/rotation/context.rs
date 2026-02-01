@@ -1,7 +1,4 @@
-//! Runtime context for JIT-compiled rotations.
-//!
-//! Dynamically builds a context schema based on what variables the rotation uses,
-//! then populates it at runtime from SimState using the PopulateContext trait.
+//! Runtime context buffer for JIT rotations (schema + populate from SimState).
 
 use std::collections::HashMap;
 

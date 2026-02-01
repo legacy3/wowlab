@@ -1,4 +1,4 @@
-//! Core node logic that can be used by both GUI and headless binaries.
+//! Core node logic and state machine.
 
 use crate::sentinel::SentinelClient;
 use crate::{
@@ -12,40 +12,36 @@ use crate::{
     WorkResult, WorkerPool,
 };
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 use wowlab_supabase::SupabaseClient;
 
-const CLAIM_POLL_INTERVAL: Duration = Duration::from_secs(3);
-
-/// Events emitted by `NodeCore` for the UI/CLI to handle.
+/// Events emitted by `NodeCore`.
 #[derive(Debug, Clone)]
 pub enum NodeCoreEvent {
-    /// State changed (registering -> claiming -> running).
+    /// State transition.
     StateChanged(NodeState),
-    /// Connection status changed.
+    /// Realtime connection change.
     ConnectionChanged(ConnectionStatus),
-    /// Node was claimed by a user.
-    Claimed,
-    /// Chunk was assigned to this node.
+    /// Chunk assigned.
     ChunkAssigned { id: Uuid, iterations: i32 },
-    /// Chunk simulation completed.
+    /// Chunk completed.
     ChunkCompleted { id: Uuid, mean_dps: f32 },
-    /// Chunk simulation failed.
+    /// Chunk failed.
     ChunkFailed { id: Uuid, error: String },
-    /// Error occurred.
+    /// Error.
     Error(String),
 }
 
 enum RegisterResult {
-    Success { id: Uuid, code: String, token: Option<String> },
+    Success { id: Uuid, token: Option<String> },
     Failed(String),
 }
 
-/// Core node logic, independent of GUI.
+/// Main node controller with event-driven architecture.
 pub struct NodeCore {
     runtime: Arc<tokio::runtime::Runtime>,
     config: NodeConfig,
@@ -59,40 +55,25 @@ pub struct NodeCore {
     max_parallel: u32,
     total_cores: u32,
 
-    // App identification for Centrifugo
     app_name: String,
     app_version: String,
 
-    // Local cache for configs and rotations
     cache: Arc<ConfigCache>,
 
-    // Async task receivers
     verify_rx: Option<mpsc::Receiver<Option<bool>>>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     realtime_shutdown: Option<CancellationToken>,
-    claim_rx: Option<mpsc::Receiver<bool>>,
     result_rx: Option<mpsc::Receiver<WorkResult>>,
 
-    // Timing
-    last_claim_poll: Option<Instant>,
-
-    // Retry backoff for unavailable state
     backoff: ExponentialBackoff,
 
-    // Event output
     event_tx: mpsc::Sender<NodeCoreEvent>,
 
     started: bool,
 }
 
 impl NodeCore {
-    /// Creates a new instance and returns it with an event receiver.
-    ///
-    /// # Arguments
-    /// * `runtime` - Tokio runtime for async tasks
-    /// * `app_name` - Application name for Centrifugo identification (e.g., "wowlab-node-gui")
-    /// * `app_version` - Application version (e.g., "0.6.9")
     pub fn new(
         runtime: Arc<tokio::runtime::Runtime>,
         app_name: impl Into<String>,
@@ -106,10 +87,19 @@ impl NodeCore {
         let total_cores = claim::total_cores().unsigned_abs();
         let enabled_cores = claim::default_enabled_cores().unsigned_abs();
 
+        if let Err(e) = rayon::ThreadPoolBuilder::new()
+            .num_threads(enabled_cores as usize)
+            .build_global()
+        {
+            tracing::warn!("Failed to configure rayon thread pool: {e}");
+        }
+
         let state = if config.node_id.is_some() {
             NodeState::Verifying
-        } else {
+        } else if config.claim_token.is_some() {
             NodeState::Registering
+        } else {
+            NodeState::Setup
         };
 
         let (event_tx, event_rx) = mpsc::channel(32);
@@ -132,9 +122,7 @@ impl NodeCore {
             register_rx: None,
             realtime_rx: None,
             realtime_shutdown: None,
-            claim_rx: None,
             result_rx: None,
-            last_claim_poll: None,
             backoff: ExponentialBackoff::new(Duration::from_secs(5), Duration::from_secs(5 * 60)),
             event_tx,
             config,
@@ -144,8 +132,7 @@ impl NodeCore {
         Ok((core, event_rx))
     }
 
-    /// Start async tasks (registration, realtime, worker pool).
-    /// Call this once after creation.
+    /// Start async tasks. Call once after creation.
     pub fn start(&mut self) {
         if self.started {
             return;
@@ -155,49 +142,50 @@ impl NodeCore {
         self.worker_pool.start(self.runtime.handle());
         self.result_rx = self.worker_pool.result_rx();
 
-        if self.node_id.is_some() {
-            self.start_verification();
-        } else {
-            self.start_registration();
+        match self.state {
+            NodeState::Verifying => self.start_verification(),
+            NodeState::Registering => self.start_registration(),
+            NodeState::Setup | NodeState::Running | NodeState::Unavailable => {}
         }
     }
 
-    /// Poll for updates. Call this periodically (e.g., every 100ms).
-    /// Returns true if there are pending events.
+    /// Set claim token and start registration.
+    pub fn set_claim_token(&mut self, token: String) {
+        self.config.claim_token = Some(token);
+        self.state = NodeState::Registering;
+        let _ = self
+            .event_tx
+            .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+        self.start_registration();
+    }
+
+    /// Poll for updates. Call periodically.
     pub fn poll(&mut self) -> bool {
         self.check_verification();
         self.check_registration();
         self.check_realtime_events();
-        self.poll_claim_status();
-        self.check_claim_result();
         self.check_work_results();
         self.check_retry();
 
-        // Return whether we made progress
         true
     }
 
-    /// Get current node state.
     pub fn state(&self) -> &NodeState {
         &self.state
     }
 
-    /// Get connection status.
     pub fn connection_status(&self) -> ConnectionStatus {
         self.connection_status
     }
 
-    /// Get node ID if registered.
     pub fn node_id(&self) -> Option<Uuid> {
         self.node_id
     }
 
-    /// Get node name.
     pub fn node_name(&self) -> &str {
         &self.node_name
     }
 
-    /// Get current stats.
     pub fn stats(&self) -> NodeStats {
         let mut stats = self.worker_pool.stats();
         stats.max_workers = self.max_parallel;
@@ -205,25 +193,14 @@ impl NodeCore {
         stats
     }
 
-    /// Get time until next retry attempt (for UI display).
     pub fn time_until_retry(&self) -> Option<Duration> {
         self.backoff.time_until_retry()
     }
 
-    /// Get the claim code if in claiming state.
-    pub fn claim_code(&self) -> Option<&str> {
-        match &self.state {
-            NodeState::Claiming { code } => Some(code),
-            _ => None,
-        }
-    }
-
-    /// Unlink this node (delete config).
     pub fn unlink(&self) -> bool {
         NodeConfig::delete()
     }
 
-    /// Get the runtime handle.
     pub fn runtime_handle(&self) -> &Handle {
         self.runtime.handle()
     }
@@ -235,18 +212,15 @@ impl NodeCore {
 
         tracing::info!("Verifying node...");
 
-        // Verify returns 404 if node doesn't exist or isn't claimed
-        // Other errors (network, 5xx) mean server is unavailable
         self.runtime.spawn(async move {
+            // Some(true) = valid, Some(false) = invalid/not claimed, None = server unavailable
             let result: Option<bool> = match sentinel.verify().await {
                 Ok(()) => Some(true),
                 Err(e) => {
                     let err_str = e.to_string();
-                    // 404 "Node not found" means invalid node
                     if err_str.contains("not found") || err_str.contains("not claimed") {
                         Some(false)
                     } else {
-                        // Network error or server error - unavailable
                         None
                     }
                 }
@@ -296,7 +270,6 @@ impl NodeCore {
         }
     }
 
-    /// Set state to unavailable and schedule retry with backoff.
     fn set_unavailable(&mut self) {
         self.state = NodeState::Unavailable;
         let _ = self.backoff.next_retry_at();
@@ -309,7 +282,6 @@ impl NodeCore {
             .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
     }
 
-    /// Check if it's time to retry after unavailable state.
     fn check_retry(&mut self) {
         if !matches!(self.state, NodeState::Unavailable) {
             return;
@@ -319,12 +291,10 @@ impl NodeCore {
             return;
         }
 
-        // Time to retry - increase backoff for next failure
         self.backoff.on_retry();
 
         tracing::info!("Retrying connection...");
 
-        // Try to verify/register depending on whether we have a node_id
         if self.node_id.is_some() {
             self.state = NodeState::Verifying;
             let _ = self
@@ -344,11 +314,12 @@ impl NodeCore {
         let (tx, rx) = mpsc::channel(1);
         self.register_rx = Some(rx);
         let sentinel = self.sentinel.clone();
+        let claim_token = self.config.claim_token.clone();
 
         self.runtime.spawn(async move {
-            match claim::register(&sentinel).await {
-                Ok((id, code, token)) => {
-                    let _ = tx.send(RegisterResult::Success { id, code, token }).await;
+            match claim::register(&sentinel, claim_token.as_deref()).await {
+                Ok((id, token)) => {
+                    let _ = tx.send(RegisterResult::Success { id, token }).await;
                 }
                 Err(e) => {
                     tracing::error!("Registration failed: {}", e);
@@ -359,20 +330,22 @@ impl NodeCore {
     }
 
     fn start_realtime(&mut self, node_id: Uuid) {
-        // Cancel previous subscription if any
         if let Some(token) = self.realtime_shutdown.take() {
             token.cancel();
         }
 
-        // Get token from config, or skip if not available
         let Some(beacon_token) = self.config.beacon_token.as_ref() else {
             tracing::warn!("No beacon token available, skipping realtime connection");
             return;
         };
 
         let shutdown = CancellationToken::new();
-        let realtime =
-            NodeRealtime::new(&self.config.beacon_url, beacon_token, &self.app_name, &self.app_version);
+        let realtime = NodeRealtime::new(
+            &self.config.beacon_url,
+            beacon_token,
+            &self.app_name,
+            &self.app_version,
+        );
         self.realtime_rx =
             Some(realtime.subscribe(node_id, self.runtime.handle(), shutdown.clone()));
         self.realtime_shutdown = Some(shutdown);
@@ -384,18 +357,17 @@ impl NodeCore {
         };
 
         match rx.try_recv() {
-            Ok(RegisterResult::Success { id, code, token }) => {
+            Ok(RegisterResult::Success { id, token }) => {
                 self.node_id = Some(id);
                 self.config.set_node_id(id);
 
-                // Store beacon token if provided
                 if let Some(t) = token {
                     self.config.set_beacon_token(t);
                 }
 
                 self.backoff.reset();
-                self.state = NodeState::Claiming { code: code.clone() };
-                tracing::info!("Registered! Claim code: {code}");
+                self.state = NodeState::Running;
+                tracing::info!("Registered node {id}, now running");
                 self.register_rx = None;
                 self.start_realtime(id);
                 let _ = self
@@ -406,7 +378,17 @@ impl NodeCore {
                 tracing::error!("Registration failed: {err}");
                 self.register_rx = None;
                 let _ = self.event_tx.try_send(NodeCoreEvent::Error(err.clone()));
-                self.set_unavailable();
+
+                // Invalid token -> back to setup, otherwise treat as unavailable
+                if err.contains("Invalid claim token") || err.contains("401") {
+                    self.config.claim_token = None;
+                    self.state = NodeState::Setup;
+                    let _ = self
+                        .event_tx
+                        .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
+                } else {
+                    self.set_unavailable();
+                }
             }
             Err(mpsc::error::TryRecvError::Empty) => {}
             Err(mpsc::error::TryRecvError::Disconnected) => {
@@ -431,7 +413,6 @@ impl NodeCore {
                     let _ = self
                         .event_tx
                         .try_send(NodeCoreEvent::ConnectionChanged(self.connection_status));
-                    // Restart realtime subscription
                     if let Some(id) = self.node_id {
                         tracing::info!("Realtime channel dropped, restarting subscription");
                         self.start_realtime(id);
@@ -483,69 +464,9 @@ impl NodeCore {
     }
 
     fn handle_node_update(&mut self, payload: &NodePayload) {
-        if payload.user_id.is_some() && matches!(self.state, NodeState::Claiming { .. }) {
-            tracing::info!("Node claimed successfully!");
-            self.state = NodeState::Running;
-            let _ = self
-                .event_tx
-                .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
-            let _ = self.event_tx.try_send(NodeCoreEvent::Claimed);
-        }
-
         self.node_name.clone_from(&payload.name);
         self.max_parallel = payload.max_parallel.unsigned_abs();
         self.total_cores = payload.total_cores.unsigned_abs();
-    }
-
-    fn poll_claim_status(&mut self) {
-        if !matches!(self.state, NodeState::Claiming { .. }) {
-            return;
-        }
-
-        let should_poll = match self.last_claim_poll {
-            Some(last) => last.elapsed() >= CLAIM_POLL_INTERVAL,
-            None => true,
-        };
-
-        if !should_poll || self.claim_rx.is_some() {
-            return;
-        }
-
-        self.last_claim_poll = Some(Instant::now());
-
-        let (tx, rx) = mpsc::channel(1);
-        self.claim_rx = Some(rx);
-        let sentinel = self.sentinel.clone();
-
-        self.runtime.spawn(async move {
-            let claimed = sentinel.verify().await.is_ok();
-            let _ = tx.send(claimed).await;
-        });
-    }
-
-    fn check_claim_result(&mut self) {
-        let Some(ref mut rx) = self.claim_rx else {
-            return;
-        };
-
-        match rx.try_recv() {
-            Ok(true) => {
-                tracing::info!("Node claimed successfully!");
-                self.state = NodeState::Running;
-                self.claim_rx = None;
-                let _ = self
-                    .event_tx
-                    .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
-                let _ = self.event_tx.try_send(NodeCoreEvent::Claimed);
-            }
-            Ok(false) => {
-                self.claim_rx = None;
-            }
-            Err(mpsc::error::TryRecvError::Empty) => {}
-            Err(mpsc::error::TryRecvError::Disconnected) => {
-                self.claim_rx = None;
-            }
-        }
     }
 
     fn process_chunk(&mut self, payload: &ChunkPayload) {
@@ -558,7 +479,6 @@ impl NodeCore {
         let work_tx = self.worker_pool.work_tx();
 
         self.runtime.spawn(async move {
-            // 1. Get config (from cache or fetch)
             let config_json = match cache.get_config(&config_hash) {
                 Some(c) => {
                     tracing::debug!("Config cache hit: {}", &config_hash[..8]);
@@ -590,7 +510,6 @@ impl NodeCore {
                 }
             };
 
-            // 2. Get rotation script
             let rotation_script =
                 match queries::fetch_rotation(&supabase, &config_json.rotation_id).await {
                     Ok(rotation) => {
@@ -612,7 +531,6 @@ impl NodeCore {
                     }
                 };
 
-            // 3. Build combined JSON (config + rotation)
             let mut combined = config_json.config_json.clone();
             if let Some(obj) = combined.as_object_mut() {
                 obj.insert(
@@ -621,7 +539,6 @@ impl NodeCore {
                 );
             }
 
-            // 4. Submit to worker pool
             let work_item = WorkItem {
                 chunk_id,
                 config_json: combined.to_string(),
@@ -642,7 +559,6 @@ impl NodeCore {
             return;
         };
 
-        // Collect up to 10 results
         let mut results = Vec::new();
         let mut disconnected = false;
         for _ in 0..10 {
@@ -660,7 +576,6 @@ impl NodeCore {
             self.result_rx = None;
         }
 
-        // Process results outside the borrow
         for result in results {
             self.handle_work_result(result);
         }
@@ -671,7 +586,6 @@ impl NodeCore {
         let sentinel = self.sentinel.clone();
         let event_tx = self.event_tx.clone();
 
-        // Extract mean_dps from result for the event
         let mean_dps = result
             .result
             .get("meanDps")

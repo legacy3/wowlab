@@ -1,47 +1,4 @@
-//! JIT-compiled rotation system.
-//!
-//! Compiles user-defined rotations from JSON to native machine code
-//! via Cranelift for ~3ns evaluation time.
-//!
-//! # Pipeline
-//!
-//! ```text
-//! JSON → AST → Cranelift IR → Native Code
-//!                                  ↓
-//!        SimState → Context → evaluate() → EvalResult
-//! ```
-//!
-//! Names are resolved at parse time using a SpecResolver, eliminating
-//! the need for a separate resolution phase.
-//!
-//! # Example
-//!
-//! ```ignore
-//! // Define a rotation in JSON
-//! let json = r#"{
-//!   "name": "BM Hunter",
-//!   "actions": [
-//!     { "cast": "kill_command", "if": "cd.kill_command.ready" },
-//!     { "cast": "cobra_shot" }
-//!   ]
-//! }"#;
-//!
-//! // Parse and compile
-//! let rotation = Rotation::from_json(json)?;
-//! let resolver = SpecResolver::new("bm_hunter")
-//!     .resource("focus")
-//!     .spell("kill_command", 34026)
-//!     .spell("cobra_shot", 193455);
-//! let compiled = CompiledRotation::compile(&rotation, &resolver)?;
-//!
-//! // Evaluate during simulation
-//! let result = compiled.evaluate(&sim_state);
-//! match result.kind {
-//!     1 => cast_spell(SpellIdx(result.spell_id)),
-//!     2 => wait(result.wait_time),
-//!     _ => idle(),
-//! }
-//! ```
+//! JSON rotation -> Cranelift JIT -> native code (~3ns eval).
 
 mod action;
 mod ast;

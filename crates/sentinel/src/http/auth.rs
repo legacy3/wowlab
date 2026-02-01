@@ -1,27 +1,78 @@
+use std::sync::Arc;
+
 use axum::body::Body;
-use axum::extract::Request;
+use axum::extract::{Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use sha2::{Digest, Sha256};
 
-/// Verified node identity, inserted into request extensions by auth middleware.
+use crate::state::ServerState;
+
 #[derive(Clone, Debug)]
 pub struct VerifiedNode {
-    /// Base64-encoded public key (as sent in X-Node-Key header).
     pub public_key: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct AuthenticatedUser {
+    pub user_id: uuid::Uuid,
+}
+
+pub async fn verify_claim_token(
+    State(state): State<Arc<ServerState>>,
+    mut request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let token = request
+        .headers()
+        .get("Authorization")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|h| h.strip_prefix("Bearer "));
+
+    let Some(token) = token else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "error": "Missing Authorization header"
+            })),
+        )
+            .into_response();
+    };
+
+    let user_id: Option<uuid::Uuid> =
+        sqlx::query_scalar("SELECT id FROM user_settings WHERE claim_token = $1")
+            .bind(token)
+            .fetch_optional(&state.db)
+            .await
+            .ok()
+            .flatten();
+
+    let Some(user_id) = user_id else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "error": "Invalid claim token"
+            })),
+        )
+            .into_response();
+    };
+
+    request
+        .extensions_mut()
+        .insert(AuthenticatedUser { user_id });
+    next.run(request).await
 }
 
 const MAX_CLOCK_SKEW: u64 = 300; // 5 minutes
 const MAX_BODY_SIZE: usize = 1024 * 1024; // 1 MB
 
-/// Axum middleware that verifies Ed25519 node signatures.
-///
-/// Expects headers: X-Node-Key (base64), X-Node-Sig (base64), X-Node-Ts (unix seconds).
-/// Message format: "{timestamp}\0{method}\0{pathname}\0{body_sha256_hex}"
+/// Headers: X-Node-Key, X-Node-Sig (base64), X-Node-Ts (unix seconds).
+/// Message: "{timestamp}\0{method}\0{path}\0{body_sha256}"
 pub async fn verify_node(request: Request, next: Next) -> Response {
     let (parts, body) = request.into_parts();
 

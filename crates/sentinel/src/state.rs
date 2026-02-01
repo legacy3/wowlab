@@ -81,7 +81,6 @@ impl ServerState {
         self.centrifuge.is_connected().await
     }
 
-    /// Publish a message to a Centrifuge channel with retry logic.
     pub async fn publish<T: Serialize>(&self, channel: &str, payload: &T) {
         let data = match serde_json::to_vec(payload) {
             Ok(d) => d,

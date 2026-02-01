@@ -58,6 +58,7 @@ export default {
       traitCalculator: t({ de: "Trait-Rechner", en: "Trait Calculator" }),
     },
     toolbar: {
+      copied: t({ de: "Link kopiert!", en: "Link Copied!" }),
       exportPng: t({ de: "Als PNG exportieren", en: "Export PNG" }),
       pan: t({ de: "Schwenken (Leertaste / H)", en: "Pan (Space / H)" }),
       redo: t({ de: "Wiederholen (Cmd+Shift+Z)", en: "Redo (Cmd+Shift+Z)" }),

@@ -12,6 +12,7 @@ import { code } from "./code";
 import { collapsible } from "./collapsible";
 import { combobox } from "./combobox";
 import { command } from "./command";
+import { copyButton } from "./copy-button";
 import { dialog } from "./dialog";
 import { drawer } from "./drawer";
 import { empty } from "./empty";
@@ -57,6 +58,7 @@ export const recipes = {
   button,
   chart,
   code,
+  copyButton,
   errorBox,
   group,
   heading,

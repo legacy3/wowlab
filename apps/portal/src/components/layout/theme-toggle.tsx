@@ -1,9 +1,9 @@
 "use client";
 
+import { useBoolean, useMount } from "ahooks";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 import { IconButton } from "@/components/ui";
 
@@ -19,13 +19,9 @@ const themeKeys: ThemeKey[] = ["light", "dark", "system"];
 export function ThemeToggle() {
   const { themeToggle: content } = useIntlayer("layout");
   const { setTheme, theme = "system" } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [mounted, { setTrue: setMounted }] = useBoolean(false);
 
-  // TODO Find a proper mounted SSR hook for this
-  useEffect(() => {
-    setMounted(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Hydration pattern, runs once on mount
-  }, []);
+  useMount(setMounted);
 
   const themeLabels: Record<ThemeKey, string> = {
     dark: content.dark,

@@ -1,15 +1,13 @@
-//! OpenRouter API client implementation.
-
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tiktoken_rs::o200k_base;
 
 use super::{prompts, AiBackend, AiError};
+use crate::utils::meta;
 
 const OPENROUTER_API_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
 
-/// OpenRouter API request body.
 #[derive(Serialize)]
 struct ChatRequest<'a> {
     model: &'a str,
@@ -23,7 +21,6 @@ struct ChatMessage<'a> {
     content: &'a str,
 }
 
-/// OpenRouter API response.
 #[derive(Deserialize)]
 struct ChatResponse {
     choices: Vec<ChatChoice>,
@@ -39,7 +36,6 @@ struct ChatMessageResponse {
     content: String,
 }
 
-/// OpenRouter API client.
 pub struct OpenRouterClient {
     client: Client,
     api_key: String,
@@ -50,7 +46,6 @@ pub struct OpenRouterClient {
 }
 
 impl OpenRouterClient {
-    /// Create a new client with explicit configuration.
     pub fn new(
         api_key: impl Into<String>,
         model: impl Into<String>,
@@ -71,7 +66,6 @@ impl OpenRouterClient {
         }
     }
 
-    /// Truncate text to fit within max_input_tokens using tiktoken.
     fn truncate_to_tokens(&self, text: &str) -> String {
         let Ok(bpe) = o200k_base() else {
             // Fallback to char-based truncation if tokenizer fails
@@ -91,7 +85,6 @@ impl OpenRouterClient {
         format!("{}...\n[truncated]", truncated)
     }
 
-    /// Send a chat completion request.
     async fn send_request(&self, prompt: &str, max_tokens: u32) -> Result<String, AiError> {
         let request = ChatRequest {
             model: &self.model,
@@ -106,7 +99,7 @@ impl OpenRouterClient {
             .client
             .post(OPENROUTER_API_URL)
             .header("Authorization", format!("Bearer {}", self.api_key))
-            .header("HTTP-Referer", "https://wowlab.gg")
+            .header("HTTP-Referer", meta::WEBSITE)
             .header("X-Title", "WowLab Sentinel")
             .json(&request)
             .send()

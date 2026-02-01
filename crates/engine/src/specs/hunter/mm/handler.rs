@@ -1,5 +1,7 @@
 //! MM Hunter spec handler - uses definitions from spells.rs, auras.rs
 
+use compact_str::CompactString;
+
 use super::auras::aura_definitions;
 use super::constants::*;
 use super::procs::setup_procs;
@@ -294,14 +296,14 @@ impl SpecHandler for MmHunter {
         get_aura_defs()
     }
 
-    fn talent_names(&self) -> Vec<String> {
+    fn talent_names(&self) -> Vec<CompactString> {
         // MM Hunter has basic talent flags but no full talent definitions yet
         vec![
-            "trueshot".to_string(),
-            "lock_and_load".to_string(),
-            "steady_focus".to_string(),
-            "trick_shots".to_string(),
-            "volley".to_string(),
+            "trueshot".into(),
+            "lock_and_load".into(),
+            "steady_focus".into(),
+            "trick_shots".into(),
+            "volley".into(),
         ]
     }
 
@@ -498,5 +500,17 @@ impl HunterClass for MmHunter {
     /// No special pet attack speed bonuses for MM.
     fn pet_attack_speed_modifier(&self, _state: &SimState) -> f32 {
         1.0
+    }
+}
+
+// Register MM Hunter with the spec registry
+inventory::submit! {
+    crate::handler::SpecRegistration {
+        id: SpecId::Marksmanship,
+        name: "Marksmanship Hunter",
+        create: |rotation_json| {
+            let handler = MmHunter::new(rotation_json)?;
+            Ok(std::sync::Arc::new(handler))
+        },
     }
 }

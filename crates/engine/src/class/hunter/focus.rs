@@ -1,7 +1,4 @@
-//! Shared focus regeneration for all Hunter specs.
-//!
-//! All Hunter specs use Focus as their primary resource with the same base
-//! regeneration rate. This module provides the shared constants and logic.
+//! Focus regeneration (5/sec base, scales with haste).
 
 use crate::sim::SimState;
 

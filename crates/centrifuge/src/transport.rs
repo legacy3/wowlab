@@ -22,19 +22,20 @@ fn ensure_crypto_provider() {
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
-/// WebSocket transport for Centrifugo.
 pub struct Transport {
     write: SplitSink<WsStream, WsMessage>,
     read: SplitStream<WsStream>,
 }
 
 impl Transport {
-    /// Connect to a Centrifugo server.
     pub async fn connect(url: &str) -> Result<Self, Error> {
         ensure_crypto_provider();
 
         let ws_url = http_to_ws(url);
-        let full_url = format!("{}/connection/websocket?format=protobuf", ws_url.trim_end_matches('/'));
+        let full_url = format!(
+            "{}/connection/websocket?format=protobuf",
+            ws_url.trim_end_matches('/')
+        );
         tracing::debug!("Connecting to {}", full_url);
 
         let (ws, _) = tokio_tungstenite::connect_async(&full_url).await?;
@@ -43,17 +44,12 @@ impl Transport {
         Ok(Self { write, read })
     }
 
-    /// Send a command and wait for reply.
     pub async fn send_command(&mut self, cmd: proto::Command) -> Result<proto::Reply, Error> {
         let data = cmd.encode_length_delimited_to_vec();
         self.write.send(WsMessage::Binary(data.into())).await?;
 
         loop {
-            let msg = self
-                .read
-                .next()
-                .await
-                .ok_or(Error::ConnectionClosed)??;
+            let msg = self.read.next().await.ok_or(Error::ConnectionClosed)??;
 
             match msg {
                 WsMessage::Binary(data) => {
@@ -69,20 +65,14 @@ impl Transport {
         }
     }
 
-    /// Send raw data without waiting for reply (for pong).
     pub async fn send_raw(&mut self, data: Vec<u8>) -> Result<(), Error> {
         self.write.send(WsMessage::Binary(data.into())).await?;
         Ok(())
     }
 
-    /// Read the next message.
     pub async fn read_message(&mut self) -> Result<proto::Reply, Error> {
         loop {
-            let msg = self
-                .read
-                .next()
-                .await
-                .ok_or(Error::ConnectionClosed)??;
+            let msg = self.read.next().await.ok_or(Error::ConnectionClosed)??;
 
             match msg {
                 WsMessage::Binary(data) => {
@@ -108,7 +98,6 @@ impl Transport {
         }
     }
 
-    /// Close the connection.
     pub async fn close(&mut self) {
         let _ = self.write.close().await;
     }
@@ -117,6 +106,9 @@ impl Transport {
 fn http_to_ws(url: &str) -> String {
     url.strip_prefix("https://")
         .map(|rest| format!("wss://{rest}"))
-        .or_else(|| url.strip_prefix("http://").map(|rest| format!("ws://{rest}")))
+        .or_else(|| {
+            url.strip_prefix("http://")
+                .map(|rest| format!("ws://{rest}"))
+        })
         .unwrap_or_else(|| url.to_string())
 }

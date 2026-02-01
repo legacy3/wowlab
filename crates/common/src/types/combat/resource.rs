@@ -1,8 +1,25 @@
 //! Resource types (mana, rage, focus, etc).
 
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumCount, EnumIter, EnumString};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -27,7 +44,7 @@ pub enum ResourceType {
 }
 
 impl ResourceType {
-    pub const COUNT: usize = 17;
+    pub const COUNT: usize = <Self as strum::EnumCount>::COUNT;
 
     /// Maximum value for this resource (before gear/talents)
     pub const fn base_max(self) -> u32 {

@@ -175,9 +175,7 @@ export class AlignmentPlugin implements FabricPlugin {
     });
   }
 
-  destroy(): void {
-    // No cleanup needed
-  }
+  destroy(): void {}
 
   distributeHorizontal(): void {
     const active = this.canvas.getActiveObject();

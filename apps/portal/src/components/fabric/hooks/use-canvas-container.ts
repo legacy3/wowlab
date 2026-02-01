@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSize } from "ahooks";
+import { useCallback, useRef, useState } from "react";
 
 import type { CanvasController } from "../core/controller";
 
@@ -21,29 +22,13 @@ export interface UseCanvasContainerReturn {
 export function useCanvasContainer(): UseCanvasContainerReturn {
   const containerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<CanvasController | null>(null);
-  const [dimensions, setDimensions] = useState({ height: 600, width: 800 });
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
-    const updateSize = () => {
-      const rect = container.getBoundingClientRect();
-      setDimensions({
-        height: Math.floor(rect.height),
-        width: Math.floor(rect.width),
-      });
-    };
-
-    updateSize();
-    const observer = new ResizeObserver(updateSize);
-    observer.observe(container);
-
-    return () => observer.disconnect();
-  }, []);
+  const size = useSize(containerRef);
+  const dimensions = {
+    height: size?.height ? Math.floor(size.height) : 600,
+    width: size?.width ? Math.floor(size.width) : 800,
+  };
 
   const transformTooltip = useCallback(
     <T extends TooltipPosition>(data: T | null): T | null => {

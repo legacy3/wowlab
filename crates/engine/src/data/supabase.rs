@@ -1,7 +1,4 @@
-//! SupabaseResolver: Loads data from Supabase PostgREST API.
-//!
-//! This resolver requires the `supabase` feature and network access.
-//! Uses GameDataCache for efficient caching (memory + disk).
+//! SupabaseResolver: loads from Supabase API with L1/L2/L3 caching.
 
 #![cfg(feature = "supabase")]
 

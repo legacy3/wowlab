@@ -1,7 +1,3 @@
-//! Cranelift JIT compiler for rotations.
-//!
-//! Compiles rotation AST to native code via Cranelift.
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 

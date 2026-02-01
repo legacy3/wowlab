@@ -1,6 +1,3 @@
-//! AI prompt templates.
-
-/// Build a prompt for summarizing a git diff.
 pub fn summarize_diff(diff: &str) -> String {
     format!(
         r#"You are a technical code reviewer. Analyze this git diff and provide a concise summary.
@@ -18,7 +15,6 @@ Keep your summary to 2-3 sentences maximum. Be direct and technical.
     )
 }
 
-/// Build a prompt for summarizing commit messages.
 pub fn summarize_commits(commits: &str) -> String {
     format!(
         "Summarize these git commits in 1-2 concise sentences. \

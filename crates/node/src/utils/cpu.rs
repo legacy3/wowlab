@@ -1,15 +1,8 @@
-/// Returns the total number of logical CPU cores available.
-/// This is the maximum value for any worker slider.
 pub fn get_total_cores() -> usize {
     num_cpus::get()
 }
 
-/// Returns the optimal number of CPU cores to use for compute-intensive work.
-///
-/// This mimics Mozilla's MLUtils::GetOptimalCPUConcurrency logic:
-/// - On aarch64 (Apple Silicon/big.LITTLE): Use only performance cores
-/// - On x86_64: Use physical cores (avoid hyperthreading siblings)
-/// - Fallback: Use all logical CPUs
+/// Optimal cores for compute work: P-cores on ARM, physical on x86.
 pub fn get_optimal_concurrency() -> usize {
     #[cfg(target_arch = "aarch64")]
     {
@@ -27,9 +20,6 @@ pub fn get_optimal_concurrency() -> usize {
     }
 }
 
-/// On aarch64, detect performance cores.
-/// - macOS: Query sysctl for perflevel0 cores
-/// - Linux: Parse /sys/devices/system/cpu for big.LITTLE topology
 #[cfg(target_arch = "aarch64")]
 fn get_aarch64_performance_cores() -> Option<usize> {
     #[cfg(target_os = "macos")]
@@ -48,8 +38,6 @@ fn get_aarch64_performance_cores() -> Option<usize> {
     }
 }
 
-/// Query macOS sysctl for cores at a given performance level.
-/// Level 0 = performance cores (P-cores), Level 1 = efficiency cores (E-cores)
 #[cfg(all(target_arch = "aarch64", target_os = "macos"))]
 fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
     use std::ffi::CString;
@@ -90,9 +78,7 @@ fn get_macos_perflevel_cores(level: u32) -> Option<usize> {
     None
 }
 
-/// On Linux aarch64, detect big.LITTLE by reading cpu_capacity from sysfs.
-/// CPUs with capacity >= 900 (out of 1024) are considered "big" cores.
-/// Falls back to None if detection fails (homogeneous or unknown topology).
+/// Detect big.LITTLE cores via sysfs cpu_capacity (>= 900 = big).
 #[cfg(all(target_arch = "aarch64", target_os = "linux"))]
 fn get_linux_big_cores() -> Option<usize> {
     use std::fs;
@@ -100,7 +86,6 @@ fn get_linux_big_cores() -> Option<usize> {
 
     let cpu_base = Path::new("/sys/devices/system/cpu");
 
-    // Check if cpu_capacity exists (indicates heterogeneous system)
     let cpu0_capacity = cpu_base.join("cpu0/cpu_capacity");
     if !cpu0_capacity.exists() {
         return None;
@@ -109,13 +94,11 @@ fn get_linux_big_cores() -> Option<usize> {
     let mut big_cores = 0;
     let mut found_any = false;
 
-    // Iterate through all CPUs
     for entry in fs::read_dir(cpu_base).ok()? {
         let entry = entry.ok()?;
         let name = entry.file_name();
         let name_str = name.to_string_lossy();
 
-        // Match cpu0, cpu1, etc.
         if !name_str.starts_with("cpu") {
             continue;
         }
@@ -130,7 +113,6 @@ fn get_linux_big_cores() -> Option<usize> {
         if let Ok(content) = fs::read_to_string(&capacity_path) {
             if let Ok(capacity) = content.trim().parse::<u32>() {
                 found_any = true;
-                // Capacity 1024 = max performance, typically big cores are >= 900
                 if capacity >= 900 {
                     big_cores += 1;
                 }

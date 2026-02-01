@@ -16,7 +16,6 @@ use crate::notifications::{Notification, NotificationEvent};
 use crate::state::ServerState;
 use crate::utils::markdown as md;
 
-/// Vercel deployment event payload.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VercelDeploymentPayload {
     #[serde(rename = "type")]
@@ -59,7 +58,6 @@ pub struct VercelProject {
     pub id: String,
 }
 
-/// Verify Vercel webhook signature using HMAC-SHA1.
 fn verify_signature(secret: &[u8], signature: &str, body: &[u8]) -> bool {
     let Ok(mut mac) = Hmac::<Sha1>::new_from_slice(secret) else {
         return false;
@@ -76,7 +74,6 @@ fn verify_signature(secret: &[u8], signature: &str, body: &[u8]) -> bool {
             == 0
 }
 
-/// Handle Vercel webhook requests.
 pub async fn handle(
     State(state): State<Arc<ServerState>>,
     headers: HeaderMap,

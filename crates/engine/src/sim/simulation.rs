@@ -1,13 +1,9 @@
-//! Simulation - owns handler and state together.
-//!
-//! This struct solves the borrow checker issue where we need to call
-//! `handler.on_gcd(&mut state)`. By owning both, we can borrow them separately.
-
 use super::{SimConfig, SimState};
 use crate::actor::Player;
 use crate::core::{ScheduledEvent, SimEvent};
 use crate::handler::SpecHandler;
 use crate::resource::ResourceRegen;
+use bumpalo::Bump;
 use std::sync::Arc;
 use wowlab_common::types::SimTime;
 
@@ -21,6 +17,8 @@ pub struct Simulation {
     pub handler: Arc<dyn SpecHandler>,
     /// The simulation state.
     pub state: SimState,
+    /// Per-iteration scratch space.
+    arena: Bump,
 }
 
 impl Simulation {
@@ -35,7 +33,11 @@ impl Simulation {
         // Initialize simulation with spec-specific setup (pets, events, etc.)
         handler.init(&mut state);
 
-        Self { handler, state }
+        Self {
+            handler,
+            state,
+            arena: Bump::new(),
+        }
     }
 
     /// Run one iteration of the simulation.
@@ -52,8 +54,16 @@ impl Simulation {
 
     /// Reset simulation for next iteration.
     pub fn reset(&mut self, iteration: u32) {
+        self.arena.reset();
         self.state.reset(iteration);
         self.handler.init(&mut self.state);
+    }
+
+    /// Get a reference to the per-iteration arena allocator.
+    /// Use for temporary allocations that should be freed at iteration end.
+    #[inline]
+    pub fn arena(&self) -> &Bump {
+        &self.arena
     }
 
     /// Get final DPS.

@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useBoolean, useKeyPress } from "ahooks";
+import { createContext, useContext } from "react";
 
 import { SearchCommand } from "@/components/common/search-command";
 
@@ -13,23 +14,16 @@ type DocsSearchContextValue = {
 const DocsSearchContext = createContext<DocsSearchContextValue | null>(null);
 
 export function DocsSearchProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, { set: setOpen, setTrue: openSearch, toggle }] =
+    useBoolean(false);
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((o) => !o);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  useKeyPress(["meta.k", "ctrl.k"], (e) => {
+    e.preventDefault();
+    toggle();
+  });
 
   return (
-    <DocsSearchContext.Provider value={{ openSearch: () => setOpen(true) }}>
+    <DocsSearchContext.Provider value={{ openSearch }}>
       {children}
       <SearchCommand open={open} onOpenChange={setOpen} />
     </DocsSearchContext.Provider>

@@ -15,9 +15,13 @@ wowlab-node = { path = "../node" }
 tokio = { version = "1", features = ["full", "signal"] }
 tracing = "0.1"
 clap = { version = "4.5", features = ["derive"] }
+mimalloc = "0.1"
 
 # Signal handling (Unix only - supports SIGTERM for containers)
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.4"
 signal-hook-tokio = { version = "0.4", features = ["futures-v0_3"] }
 tokio-stream = "0.1"
+
+[lints]
+workspace = true

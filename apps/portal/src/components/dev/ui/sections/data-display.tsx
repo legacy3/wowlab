@@ -343,6 +343,17 @@ function SecretValueDemo() {
                 variant="field"
               />
             </HStack>
+            <HStack gap="4">
+              <Text textStyle="sm" color="fg.muted" minW="16">
+                copyable
+              </Text>
+              <SecretValue
+                value="ct_abc123def456"
+                hiddenLength={16}
+                variant="field"
+                copyable
+              />
+            </HStack>
           </Stack>
         </DemoBox>
         <DemoBox>

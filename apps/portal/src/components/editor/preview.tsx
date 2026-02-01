@@ -2,15 +2,7 @@
 
 import type { RuleGroupType, RuleType } from "react-querybuilder";
 
-import { useBoolean } from "ahooks";
-import {
-  BracesIcon,
-  CheckIcon,
-  ClipboardIcon,
-  Code2Icon,
-  LayoutGridIcon,
-  TextIcon,
-} from "lucide-react";
+import { BracesIcon, Code2Icon, LayoutGridIcon, TextIcon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useMemo, useState } from "react";
 import { Box, Flex, HStack, VStack } from "styled-system/jsx";
@@ -19,7 +11,7 @@ import type { ActionList, Variable } from "@/lib/editor";
 
 import { useEditor } from "@/lib/state/editor";
 
-import { Button, Card, Code, Text, Tooltip } from "../ui";
+import { Button, Card, Code, CopyButton, Text } from "../ui";
 
 type PreviewMode = "visual" | "natural" | "dsl" | "json";
 
@@ -53,8 +45,6 @@ export function Preview() {
   const defaultListId = useEditor((s) => s.defaultListId);
 
   const [previewMode, setPreviewMode] = useState<PreviewMode>("dsl");
-  const [copied, { setFalse: clearCopied, setTrue: setCopied }] =
-    useBoolean(false);
 
   const generatorContext = useMemo<GeneratorContext>(
     () => ({
@@ -80,13 +70,8 @@ export function Preview() {
     }
   }, [previewMode, generatorContext]);
 
-  const handleCopy = async () => {
-    const textToCopy =
-      previewMode === "visual" ? generateDSL(generatorContext) : previewContent;
-    await navigator.clipboard.writeText(textToCopy);
-    setCopied();
-    setTimeout(clearCopied, 2000);
-  };
+  const copyContent =
+    previewMode === "visual" ? generateDSL(generatorContext) : previewContent;
 
   return (
     <Box maxW="4xl" mx="auto">
@@ -113,12 +98,15 @@ export function Preview() {
             ))}
           </HStack>
 
-          <Tooltip content={copied ? content.copied : content.copyAsDsl}>
-            <Button variant="outline" size="sm" onClick={handleCopy}>
-              {copied ? <CheckIcon size={16} /> : <ClipboardIcon size={16} />}
-              {copied ? content.copiedShort : content.copy}
-            </Button>
-          </Tooltip>
+          <CopyButton
+            content={copyContent}
+            variant="outline"
+            size="sm"
+            label={content.copy.value}
+            copiedLabel={content.copiedShort.value}
+            tooltipContent={content.copyAsDsl.value}
+            tooltipCopiedContent={content.copied.value}
+          />
         </Flex>
 
         {previewMode === "visual" ? (

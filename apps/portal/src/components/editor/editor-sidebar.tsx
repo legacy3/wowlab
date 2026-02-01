@@ -16,8 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useBoolean } from "ahooks";
+import { useBoolean, useSetState } from "ahooks";
 import {
   ChevronLeftIcon,
   GripVerticalIcon,
@@ -26,11 +25,12 @@ import {
   VariableIcon,
 } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Box, Flex, HStack } from "styled-system/jsx";
 
 import type { Variable } from "@/lib/editor";
 
+import { useVirtualList } from "@/lib/refine";
 import { useEditor } from "@/lib/state/editor";
 
 import { Button, IconButton, Tabs, Text, Tooltip } from "../ui";
@@ -48,11 +48,10 @@ export function EditorSidebar() {
     useBoolean(false);
   const [activeTab, setActiveTab] = useState<TabId>("lists");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [
-    variableDialogOpen,
-    { set: setVariableDialogOpen, setTrue: openVariableDialog },
-  ] = useBoolean(false);
-  const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
+  const [dialogState, setDialogState] = useSetState({
+    editingVariable: null as Variable | null,
+    open: false,
+  });
 
   const actionLists = useEditor((s) => s.actionLists);
   const selectedListId = useEditor((s) => s.selectedListId);
@@ -106,38 +105,34 @@ export function EditorSidebar() {
     : null;
 
   const handleAddVariable = () => {
-    setEditingVariable(null);
-    openVariableDialog();
+    setDialogState({ editingVariable: null, open: true });
   };
 
   const handleEditVariable = (variable: Variable) => {
-    setEditingVariable(variable);
-    openVariableDialog();
+    setDialogState({ editingVariable: variable, open: true });
   };
 
   const handleSaveVariable = (data: Omit<Variable, "id">) => {
-    if (editingVariable) {
-      updateVariable(editingVariable.id, data);
+    if (dialogState.editingVariable) {
+      updateVariable(dialogState.editingVariable.id, data);
     } else {
       addVariable(data);
     }
   };
 
-  const listsParentRef = useRef<HTMLDivElement>(null);
-  const listsVirtualizer = useVirtualizer({
-    count: actionLists.length,
-    estimateSize: () => 36,
-    getScrollElement: () => listsParentRef.current,
-    overscan: 5,
-  });
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setDialogState({ editingVariable: null, open: false });
+    } else {
+      setDialogState({ open: true });
+    }
+  };
 
-  const varsParentRef = useRef<HTMLDivElement>(null);
-  const varsVirtualizer = useVirtualizer({
-    count: variables.length,
-    estimateSize: () => 40,
-    getScrollElement: () => varsParentRef.current,
-    overscan: 5,
-  });
+  const { parentRef: listsParentRef, virtualizer: listsVirtualizer } =
+    useVirtualList({ count: actionLists.length, estimateSize: 36 });
+
+  const { parentRef: varsParentRef, virtualizer: varsVirtualizer } =
+    useVirtualList({ count: variables.length, estimateSize: 40 });
 
   if (collapsed) {
     return (
@@ -399,9 +394,9 @@ export function EditorSidebar() {
       </Tabs.Root>
 
       <VariableEditorDialog
-        variable={editingVariable}
-        open={variableDialogOpen}
-        onOpenChange={setVariableDialogOpen}
+        variable={dialogState.editingVariable}
+        open={dialogState.open}
+        onOpenChange={handleDialogOpenChange}
         onSave={handleSaveVariable}
       />
     </Flex>

@@ -69,8 +69,8 @@ pub use parsers::{
 
 #[cfg(feature = "crypto")]
 pub use parsers::{
-    build_sign_message, derive_claim_code, derive_claim_code_from_base64, keypair_from_base64,
-    sha256_hex, verify_signature, verify_signature_base64, CryptoError, NodeKeypair,
+    build_sign_message, keypair_from_base64, sha256_hex, verify_signature, verify_signature_base64,
+    CryptoError, NodeKeypair,
 };
 
 pub use stats::{

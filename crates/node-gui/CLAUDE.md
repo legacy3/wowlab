@@ -21,7 +21,6 @@ src/
     dashboard.rs     - Main dashboard view
     logs.rs          - Log viewer
     settings.rs      - Settings panel
-    claim_view.rs    - Pairing code display
     update_modal.rs  - Update notification dialog
     theme.rs         - UI theming
     icons.rs         - Icon definitions
@@ -36,7 +35,6 @@ Desktop application built with:
 ## Features
 
 - Visual node status and statistics
-- Pairing code display for account linking
 - Real-time job monitoring
 - Auto-update notifications
 

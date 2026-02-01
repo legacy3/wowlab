@@ -1,9 +1,26 @@
 //! Class, spec, and race types.
 
 use super::super::combat::ResourceType;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumCount, EnumIter, EnumString};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -13,17 +30,34 @@ pub enum ClassId {
     Hunter = 3,
     Rogue = 4,
     Priest = 5,
+    #[strum(serialize = "Death Knight", serialize = "DeathKnight")]
     DeathKnight = 6,
     Shaman = 7,
     Mage = 8,
     Warlock = 9,
     Monk = 10,
     Druid = 11,
+    #[strum(serialize = "Demon Hunter", serialize = "DemonHunter")]
     DemonHunter = 12,
     Evoker = 13,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -31,13 +65,22 @@ pub enum SpecId {
     // Warrior
     Arms = 1,
     Fury = 2,
+    #[strum(serialize = "Protection Warrior", serialize = "ProtWarrior")]
     ProtWarrior = 3,
     // Paladin
+    #[strum(serialize = "Holy Paladin", serialize = "HolyPaladin")]
     HolyPaladin = 4,
+    #[strum(serialize = "Protection Paladin", serialize = "ProtPaladin")]
     ProtPaladin = 5,
     Retribution = 6,
     // Hunter
+    #[strum(
+        serialize = "Beast Mastery",
+        serialize = "BeastMastery",
+        serialize = "bm"
+    )]
     BeastMastery = 7,
+    #[strum(serialize = "Marksmanship", serialize = "mm")]
     Marksmanship = 8,
     Survival = 9,
     // Rogue
@@ -46,19 +89,23 @@ pub enum SpecId {
     Subtlety = 12,
     // Priest
     Discipline = 13,
+    #[strum(serialize = "Holy Priest", serialize = "HolyPriest")]
     HolyPriest = 14,
     Shadow = 15,
     // Death Knight
     Blood = 16,
+    #[strum(serialize = "Frost DK", serialize = "FrostDK")]
     FrostDK = 17,
     Unholy = 18,
     // Shaman
     Elemental = 19,
     Enhancement = 20,
+    #[strum(serialize = "Restoration Shaman", serialize = "RestoShaman")]
     RestoShaman = 21,
     // Mage
     Arcane = 22,
     Fire = 23,
+    #[strum(serialize = "Frost Mage", serialize = "FrostMage")]
     FrostMage = 24,
     // Warlock
     Affliction = 25,
@@ -72,6 +119,7 @@ pub enum SpecId {
     Balance = 31,
     Feral = 32,
     Guardian = 33,
+    #[strum(serialize = "Restoration Druid", serialize = "RestoDruid")]
     RestoDruid = 34,
     // Demon Hunter
     Havoc = 35,
@@ -83,7 +131,7 @@ pub enum SpecId {
 }
 
 impl SpecId {
-    pub const COUNT: usize = 39;
+    pub const COUNT: usize = <Self as strum::EnumCount>::COUNT;
 
     /// Returns the WoW API spec ID (used in GetSpecialization, etc).
     pub const fn wow_spec_id(self) -> u32 {
@@ -241,7 +289,22 @@ impl SpecId {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -249,34 +312,62 @@ pub enum RaceId {
     Human = 1,
     Orc = 2,
     Dwarf = 3,
+    #[strum(serialize = "Night Elf", serialize = "NightElf")]
     NightElf = 4,
     Undead = 5,
     Tauren = 6,
     Gnome = 7,
     Troll = 8,
     Goblin = 9,
+    #[strum(serialize = "Blood Elf", serialize = "BloodElf")]
     BloodElf = 10,
     Draenei = 11,
     Worgen = 12,
+    #[strum(serialize = "Pandaren (Alliance)", serialize = "PandarenA")]
     PandarenA = 13,
+    #[strum(serialize = "Pandaren (Horde)", serialize = "PandarenH")]
     PandarenH = 14,
     Nightborne = 15,
+    #[strum(serialize = "Highmountain Tauren", serialize = "HighmountainTauren")]
     HighmountainTauren = 16,
+    #[strum(serialize = "Void Elf", serialize = "VoidElf")]
     VoidElf = 17,
+    #[strum(serialize = "Lightforged Draenei", serialize = "LightforgedDraenei")]
     LightforgedDraenei = 18,
+    #[strum(serialize = "Zandalari Troll", serialize = "ZandalariTroll")]
     ZandalariTroll = 19,
+    #[strum(serialize = "Kul Tiran", serialize = "KulTiran")]
     KulTiran = 20,
+    #[strum(serialize = "Dark Iron Dwarf", serialize = "DarkIronDwarf")]
     DarkIronDwarf = 21,
     Vulpera = 22,
+    #[strum(serialize = "Mag'har Orc", serialize = "MagharOrc")]
     MagharOrc = 23,
     Mechagnome = 24,
     Dracthyr = 25,
+    #[strum(serialize = "Earthen (Alliance)", serialize = "EarthenA")]
     EarthenA = 26,
+    #[strum(serialize = "Earthen (Horde)", serialize = "EarthenH")]
     EarthenH = 27,
 }
 
 /// Hunter pet specialization
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]
@@ -287,7 +378,22 @@ pub enum PetType {
 }
 
 /// Pet summon kind (permanent vs temporary)
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumIter,
+    EnumString,
+    EnumCount,
+    IntoPrimitive,
+    TryFromPrimitive,
+)]
 #[cfg_attr(feature = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[repr(u8)]

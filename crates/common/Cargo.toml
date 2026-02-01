@@ -22,6 +22,13 @@ serde = { version = "1", features = ["derive"] }
 bitflags = { version = "2", features = ["serde"] }
 thiserror = "2"
 
+# Performance crates
+compact_str = { version = "0.8", features = ["serde"] }
+derive_more = { version = "1", features = ["full"] }
+num_enum = "0.7"
+ref-cast = "1"
+strum = { version = "0.26", features = ["derive"] }
+
 # Parsing (always needed for parsers module)
 logos = "0.16"
 data-encoding = "2"
@@ -49,3 +56,9 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 [dev-dependencies]
 pretty_assertions = "1"
 insta = { version = "1", features = ["json"] }
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
+[lints]
+workspace = true

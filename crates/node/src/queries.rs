@@ -1,15 +1,13 @@
-//! Typed PostgREST query helpers for node data fetching.
+//! PostgREST query helpers.
 
 use serde::Deserialize;
 use wowlab_supabase::{SupabaseClient, SupabaseError};
 
-/// A job config row from the `jobs_configs` table.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigRow {
     pub config: serde_json::Value,
 }
 
-/// A rotation row from the `rotations` table.
 #[derive(Debug, Clone, Deserialize)]
 pub struct RotationRow {
     pub id: String,
@@ -17,7 +15,6 @@ pub struct RotationRow {
     pub checksum: String,
 }
 
-/// Fetch a job config by its content hash.
 pub async fn fetch_config(client: &SupabaseClient, hash: &str) -> Result<ConfigRow, SupabaseError> {
     let path = format!(
         "jobs_configs?hash=eq.{}&select=config",
@@ -31,7 +28,6 @@ pub async fn fetch_config(client: &SupabaseClient, hash: &str) -> Result<ConfigR
     })
 }
 
-/// Fetch a rotation by ID.
 pub async fn fetch_rotation(
     client: &SupabaseClient,
     rotation_id: &str,

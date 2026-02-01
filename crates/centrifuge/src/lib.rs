@@ -21,7 +21,6 @@
 //! }
 //! ```
 
-/// Result type alias for this crate.
 pub type Result<T> = std::result::Result<T, Error>;
 
 mod backoff;
@@ -36,7 +35,10 @@ mod types;
 
 pub(crate) mod proto {
     #![allow(dead_code)] // Proto generates types we don't use
-    include!(concat!(env!("OUT_DIR"), "/centrifugal.centrifuge.protocol.rs"));
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/centrifugal.centrifuge.protocol.rs"
+    ));
 }
 
 pub use backoff::Backoff;

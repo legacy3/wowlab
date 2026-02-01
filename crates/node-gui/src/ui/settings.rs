@@ -48,7 +48,7 @@ pub fn show(ui: &mut egui::Ui, node_name: &str, node_id: Option<Uuid>) -> Settin
             ui.vertical(|ui| {
                 section_header(ui, Icon::Unlink, "Unlink Node");
                 ui.label(
-                    text("You'll need to re-claim this node to use it again")
+                    text("You'll need to re-register this node to use it again")
                         .size(11.0)
                         .color(FG_SUBTLE),
                 );

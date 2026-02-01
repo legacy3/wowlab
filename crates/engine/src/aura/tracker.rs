@@ -1,87 +1,127 @@
 use super::AuraInstance;
-use smallvec::SmallVec;
+use slotmap::{new_key_type, SlotMap};
 use wowlab_common::types::{AuraIdx, SimTime, TargetIdx};
 
-/// Per-target aura tracking (stack-allocated for typical aura counts)
+new_key_type! {
+    /// Generational key for aura entity storage, detects stale references
+    pub struct AuraKey;
+}
+
+/// Per-target aura tracking with generational keys for safe reference handling
 #[derive(Clone, Debug, Default)]
 pub struct TargetAuras {
-    auras: SmallVec<[AuraInstance; 16]>,
+    auras: SlotMap<AuraKey, AuraInstance>,
 }
 
 impl TargetAuras {
     pub fn new() -> Self {
         Self {
-            auras: SmallVec::new(),
+            auras: SlotMap::with_key(),
         }
     }
 
-    /// Get aura by ID
-    pub fn get(&self, aura_id: AuraIdx) -> Option<&AuraInstance> {
-        self.auras.iter().find(|a| a.aura_id == aura_id)
+    /// Get aura by generational key
+    pub fn get_by_key(&self, key: AuraKey) -> Option<&AuraInstance> {
+        self.auras.get(key)
     }
 
-    /// Get mutable aura by ID
+    /// Get mutable aura by generational key
+    pub fn get_by_key_mut(&mut self, key: AuraKey) -> Option<&mut AuraInstance> {
+        self.auras.get_mut(key)
+    }
+
+    /// Get aura by AuraIdx (searches all auras)
+    pub fn get(&self, aura_id: AuraIdx) -> Option<&AuraInstance> {
+        self.auras.values().find(|a| a.aura_id == aura_id)
+    }
+
+    /// Get mutable aura by AuraIdx (searches all auras)
     pub fn get_mut(&mut self, aura_id: AuraIdx) -> Option<&mut AuraInstance> {
-        self.auras.iter_mut().find(|a| a.aura_id == aura_id)
+        self.auras.values_mut().find(|a| a.aura_id == aura_id)
     }
 
     /// Check if aura is active
     pub fn has(&self, aura_id: AuraIdx, now: SimTime) -> bool {
         self.auras
-            .iter()
+            .values()
             .any(|a| a.aura_id == aura_id && a.is_active(now))
     }
 
     /// Get stack count (0 if not present)
     pub fn stacks(&self, aura_id: AuraIdx, now: SimTime) -> u8 {
         self.auras
-            .iter()
+            .values()
             .find(|a| a.aura_id == aura_id && a.is_active(now))
             .map(|a| a.stacks)
             .unwrap_or(0)
     }
 
-    /// Apply or refresh aura
-    pub fn apply(&mut self, aura: AuraInstance, now: SimTime) {
-        if let Some(existing) = self.get_mut(aura.aura_id) {
-            if existing.flags.refreshable {
-                existing.refresh(now);
-                existing.add_stack();
+    /// Apply or refresh aura, returns the AuraKey for the aura
+    pub fn apply(&mut self, aura: AuraInstance, now: SimTime) -> AuraKey {
+        // Find existing aura by AuraIdx
+        let existing_key = self
+            .auras
+            .iter()
+            .find(|(_, a)| a.aura_id == aura.aura_id)
+            .map(|(k, _)| k);
+
+        if let Some(key) = existing_key {
+            if let Some(existing) = self.auras.get_mut(key) {
+                if existing.flags.refreshable {
+                    existing.refresh(now);
+                    existing.add_stack();
+                }
             }
-            // If not refreshable, do nothing (or replace based on game rules)
+            key
         } else {
-            self.auras.push(aura);
+            self.auras.insert(aura)
         }
     }
 
-    /// Remove aura by ID
+    /// Remove aura by AuraIdx
     pub fn remove(&mut self, aura_id: AuraIdx) -> Option<AuraInstance> {
-        if let Some(pos) = self.auras.iter().position(|a| a.aura_id == aura_id) {
-            Some(self.auras.swap_remove(pos))
-        } else {
-            None
-        }
+        let key = self
+            .auras
+            .iter()
+            .find(|(_, a)| a.aura_id == aura_id)
+            .map(|(k, _)| k);
+        key.and_then(|k| self.auras.remove(k))
+    }
+
+    /// Remove aura by generational key
+    pub fn remove_by_key(&mut self, key: AuraKey) -> Option<AuraInstance> {
+        self.auras.remove(key)
     }
 
     /// Remove expired auras
     pub fn cleanup(&mut self, now: SimTime) {
-        self.auras.retain(|a| a.is_active(now));
+        self.auras.retain(|_, a| a.is_active(now));
     }
 
-    /// Iterate all active auras
+    /// Iterate all auras
     pub fn iter(&self) -> impl Iterator<Item = &AuraInstance> {
+        self.auras.values()
+    }
+
+    /// Iterate all auras mutably
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AuraInstance> {
+        self.auras.values_mut()
+    }
+
+    /// Iterate all auras with their keys
+    pub fn iter_with_keys(&self) -> impl Iterator<Item = (AuraKey, &AuraInstance)> {
         self.auras.iter()
     }
 
-    /// Iterate active auras mutably
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AuraInstance> {
+    /// Iterate all auras mutably with their keys
+    pub fn iter_with_keys_mut(&mut self) -> impl Iterator<Item = (AuraKey, &mut AuraInstance)> {
         self.auras.iter_mut()
     }
 
     /// Count of active debuffs
     pub fn debuff_count(&self, now: SimTime) -> usize {
         self.auras
-            .iter()
+            .values()
             .filter(|a| a.flags.is_debuff && a.is_active(now))
             .count()
     }
@@ -89,7 +129,7 @@ impl TargetAuras {
     /// Count of active buffs
     pub fn buff_count(&self, now: SimTime) -> usize {
         self.auras
-            .iter()
+            .values()
             .filter(|a| !a.flags.is_debuff && a.is_active(now))
             .count()
     }

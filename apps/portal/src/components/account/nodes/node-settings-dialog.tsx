@@ -1,6 +1,7 @@
 "use client";
 
 import { createListCollection } from "@ark-ui/react/select";
+import { useBoolean } from "ahooks";
 import { Trash2Icon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
@@ -54,7 +55,10 @@ export function NodeSettingsDialog({
     node.accessType ?? "private",
   );
   const [enabled, setEnabled] = useState(node.status !== "offline");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [
+    showDeleteConfirm,
+    { setFalse: closeDeleteConfirm, setTrue: openDeleteConfirm },
+  ] = useBoolean(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   const handleSave = async () => {
@@ -68,7 +72,7 @@ export function NodeSettingsDialog({
 
   const handleDelete = async () => {
     await onDelete();
-    setShowDeleteConfirm(false);
+    closeDeleteConfirm();
     onOpenChange(false);
   };
 
@@ -178,7 +182,7 @@ export function NodeSettingsDialog({
               <Button
                 variant="outline"
                 colorPalette="red"
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={openDeleteConfirm}
               >
                 <Trash2Icon size={14} />
                 {content.delete}
@@ -197,8 +201,12 @@ export function NodeSettingsDialog({
       <Dialog.Root
         open={showDeleteConfirm}
         onOpenChange={(e) => {
-          setShowDeleteConfirm(e.open);
-          setDeleteConfirmName("");
+          if (e.open) {
+            openDeleteConfirm();
+          } else {
+            closeDeleteConfirm();
+            setDeleteConfirmName("");
+          }
         }}
       >
         <Dialog.Positioner>
@@ -222,10 +230,7 @@ export function NodeSettingsDialog({
             </Dialog.Body>
 
             <Dialog.Footer>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
+              <Button variant="outline" onClick={closeDeleteConfirm}>
                 {content.cancel}
               </Button>
               <Button

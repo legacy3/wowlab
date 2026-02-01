@@ -1,6 +1,5 @@
 #[cfg(target_os = "linux")]
 mod inner {
-    /// RSS memory in megabytes from `/proc/self/statm`.
     pub fn read_memory_mb() -> f64 {
         let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as f64;
         std::fs::read_to_string("/proc/self/statm")
@@ -14,7 +13,6 @@ mod inner {
             .unwrap_or(0.0)
     }
 
-    /// 1/5/15-minute load averages via `getloadavg`.
     pub fn read_load_average() -> [f64; 3] {
         let mut avg = [0.0f64; 3];
         let ret = unsafe { libc::getloadavg(avg.as_mut_ptr(), 3) };
@@ -25,7 +23,6 @@ mod inner {
         }
     }
 
-    /// CPU times (total, idle) from `/proc/stat`.
     fn read_cpu_times() -> Option<(u64, u64)> {
         let stat = std::fs::read_to_string("/proc/stat").ok()?;
         let cpu = stat.lines().find(|l| l.starts_with("cpu "))?;
@@ -41,7 +38,6 @@ mod inner {
         Some((total, idle))
     }
 
-    /// CPU usage percentage sampled over 100ms.
     pub async fn cpu_usage_percent() -> f64 {
         let Some((total1, idle1)) = read_cpu_times() else {
             return 0.0;
@@ -58,7 +54,6 @@ mod inner {
         100.0 * (total_delta - idle_delta) as f64 / total_delta as f64
     }
 
-    /// System total and available memory in MB from `/proc/meminfo`.
     pub fn read_os_memory_mb() -> (f64, f64) {
         let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") else {
             return (0.0, 0.0);
@@ -152,7 +147,6 @@ mod inner {
         fn host_statistics64(host: u32, flavor: i32, info: *mut i32, count: *mut u32) -> i32;
     }
 
-    /// RSS memory in megabytes via Mach `task_info`.
     pub fn read_memory_mb() -> f64 {
         unsafe {
             let mut info: MachTaskBasicInfo = mem::zeroed();
@@ -171,7 +165,6 @@ mod inner {
         }
     }
 
-    /// 1/5/15-minute load averages via `getloadavg`.
     pub fn read_load_average() -> [f64; 3] {
         let mut avg = [0.0f64; 3];
         let ret = unsafe { libc::getloadavg(avg.as_mut_ptr(), 3) };
@@ -182,7 +175,6 @@ mod inner {
         }
     }
 
-    /// CPU ticks (total, idle) from Mach `host_statistics`.
     fn read_cpu_ticks() -> Option<(u64, u64)> {
         unsafe {
             let mut info: HostCpuLoadInfo = mem::zeroed();
@@ -205,7 +197,6 @@ mod inner {
         }
     }
 
-    /// CPU usage percentage sampled over 100ms.
     pub async fn cpu_usage_percent() -> f64 {
         let Some((total1, idle1)) = read_cpu_ticks() else {
             return 0.0;
@@ -222,7 +213,6 @@ mod inner {
         100.0 * (total_delta - idle_delta) as f64 / total_delta as f64
     }
 
-    /// System total and available memory in MB.
     pub fn read_os_memory_mb() -> (f64, f64) {
         let total = unsafe {
             let mut size: u64 = 0;
@@ -320,7 +310,6 @@ mod inner {
         fn GetSystemTimes(idle: *mut FileTime, kernel: *mut FileTime, user: *mut FileTime) -> i32;
     }
 
-    /// RSS (working set) in megabytes via `K32GetProcessMemoryInfo`.
     pub fn read_memory_mb() -> f64 {
         unsafe {
             let mut counters: ProcessMemoryCounters = mem::zeroed();
@@ -334,12 +323,10 @@ mod inner {
         }
     }
 
-    /// Load average is not a native concept on Windows.
     pub fn read_load_average() -> [f64; 3] {
         [0.0; 3]
     }
 
-    /// CPU times (total, idle) from `GetSystemTimes`.
     fn read_cpu_times() -> Option<(u64, u64)> {
         unsafe {
             let mut idle = mem::zeroed::<FileTime>();
@@ -355,7 +342,6 @@ mod inner {
         }
     }
 
-    /// CPU usage percentage sampled over 100ms.
     pub async fn cpu_usage_percent() -> f64 {
         let Some((total1, idle1)) = read_cpu_times() else {
             return 0.0;
@@ -372,7 +358,6 @@ mod inner {
         100.0 * (total_delta - idle_delta) as f64 / total_delta as f64
     }
 
-    /// System total and available physical memory in MB.
     pub fn read_os_memory_mb() -> (f64, f64) {
         unsafe {
             let mut status: MemoryStatusEx = mem::zeroed();
@@ -413,7 +398,6 @@ pub use inner::read_load_average;
 pub use inner::read_memory_mb;
 pub use inner::read_os_memory_mb;
 
-/// Format a byte count into a human-readable string (B, KB, MB).
 pub fn format_bytes(bytes: usize) -> String {
     if bytes < 1024 {
         format!("{} B", bytes)
@@ -424,7 +408,6 @@ pub fn format_bytes(bytes: usize) -> String {
     }
 }
 
-/// Format seconds into a human-readable "Xd Yh Zm" string.
 pub fn format_uptime(secs: u64) -> String {
     let days = secs / 86400;
     let hours = (secs % 86400) / 3600;

@@ -3,7 +3,7 @@ use crate::combat::{ChargedCooldown, Cooldown};
 use crate::proc::ProcRegistry;
 use crate::resource::UnitResources;
 use crate::stats::StatCache;
-use ahash::AHashMap;
+use smallvec::SmallVec;
 use wowlab_common::types::{SimTime, SpecId, SpellIdx, UnitIdx};
 
 #[derive(Clone, Debug)]
@@ -13,8 +13,8 @@ pub struct Player {
     pub stats: StatCache,
     pub resources: UnitResources,
     pub buffs: TargetAuras,
-    pub cooldowns: AHashMap<SpellIdx, Cooldown>,
-    pub charged_cooldowns: AHashMap<SpellIdx, ChargedCooldown>,
+    pub cooldowns: SmallVec<[(SpellIdx, Cooldown); 24]>,
+    pub charged_cooldowns: SmallVec<[(SpellIdx, ChargedCooldown); 12]>,
     pub procs: ProcRegistry,
     pub gcd_end: SimTime,
     pub cast_end: Option<SimTime>,
@@ -43,8 +43,8 @@ impl Player {
             stats: StatCache::new(),
             resources: UnitResources::new(),
             buffs: TargetAuras::new(),
-            cooldowns: AHashMap::new(),
-            charged_cooldowns: AHashMap::new(),
+            cooldowns: SmallVec::new(),
+            charged_cooldowns: SmallVec::new(),
             procs: ProcRegistry::new(),
             gcd_end: SimTime::ZERO,
             cast_end: None,
@@ -78,10 +78,10 @@ impl Player {
         self.mounted = false;
         self.movement_duration = 0.0;
 
-        for cd in self.cooldowns.values_mut() {
+        for (_, cd) in self.cooldowns.iter_mut() {
             cd.reset();
         }
-        for cd in self.charged_cooldowns.values_mut() {
+        for (_, cd) in self.charged_cooldowns.iter_mut() {
             cd.reset();
         }
 
@@ -96,27 +96,47 @@ impl Player {
     }
 
     pub fn add_cooldown(&mut self, spell: SpellIdx, cooldown: Cooldown) {
-        self.cooldowns.insert(spell, cooldown);
+        if let Some((_, existing)) = self.cooldowns.iter_mut().find(|(s, _)| *s == spell) {
+            *existing = cooldown;
+        } else {
+            self.cooldowns.push((spell, cooldown));
+        }
     }
 
     pub fn add_charged_cooldown(&mut self, spell: SpellIdx, cooldown: ChargedCooldown) {
-        self.charged_cooldowns.insert(spell, cooldown);
+        if let Some((_, existing)) = self.charged_cooldowns.iter_mut().find(|(s, _)| *s == spell) {
+            *existing = cooldown;
+        } else {
+            self.charged_cooldowns.push((spell, cooldown));
+        }
     }
 
     pub fn cooldown(&self, spell: SpellIdx) -> Option<&Cooldown> {
-        self.cooldowns.get(&spell)
+        self.cooldowns
+            .iter()
+            .find(|(s, _)| *s == spell)
+            .map(|(_, c)| c)
     }
 
     pub fn cooldown_mut(&mut self, spell: SpellIdx) -> Option<&mut Cooldown> {
-        self.cooldowns.get_mut(&spell)
+        self.cooldowns
+            .iter_mut()
+            .find(|(s, _)| *s == spell)
+            .map(|(_, c)| c)
     }
 
     pub fn charged_cooldown(&self, spell: SpellIdx) -> Option<&ChargedCooldown> {
-        self.charged_cooldowns.get(&spell)
+        self.charged_cooldowns
+            .iter()
+            .find(|(s, _)| *s == spell)
+            .map(|(_, c)| c)
     }
 
     pub fn charged_cooldown_mut(&mut self, spell: SpellIdx) -> Option<&mut ChargedCooldown> {
-        self.charged_cooldowns.get_mut(&spell)
+        self.charged_cooldowns
+            .iter_mut()
+            .find(|(s, _)| *s == spell)
+            .map(|(_, c)| c)
     }
 
     #[inline]

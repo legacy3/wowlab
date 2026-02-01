@@ -2,7 +2,6 @@ use poise::serenity_prelude::{GuildId, Http, UserId};
 
 const MEMBER_PAGE_SIZE: u64 = 1000;
 
-/// Fetch all human (non-bot) member Discord IDs from a guild, paginating.
 pub async fn fetch_all_member_ids(
     http: &Http,
     guild_id: GuildId,

@@ -30,8 +30,7 @@ impl CronJob for ReclaimChunksJob {
     }
 }
 
-/// Reclaim chunks that have been running for over 5 minutes without completion.
-/// Resets them to pending so they can be reassigned.
+/// Resets chunks running >5min back to pending for reassignment.
 pub async fn reclaim_stale_chunks(state: &ServerState) {
     match do_reclaim(state).await {
         Ok(count) if count > 0 => {

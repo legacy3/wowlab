@@ -1,12 +1,12 @@
 "use client";
 
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useIntlayer } from "next-intlayer";
 import { Box, Stack } from "styled-system/jsx";
 
 import type { BlogPost } from "@/lib/content/blog";
 
 import { Empty, Link, Text } from "@/components/ui";
+import { useWindowVirtualList } from "@/lib/refine";
 import { href, routes } from "@/lib/routing";
 
 type BlogListProps = {
@@ -16,10 +16,9 @@ type BlogListProps = {
 export function BlogList({ posts }: BlogListProps) {
   const { blogList: content } = useIntlayer("blog");
 
-  const virtualizer = useWindowVirtualizer({
+  const { virtualizer } = useWindowVirtualList({
     count: posts.length,
-    estimateSize: () => 80,
-    overscan: 5,
+    estimateSize: 80,
   });
 
   if (posts.length === 0) {

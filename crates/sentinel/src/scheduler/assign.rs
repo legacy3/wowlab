@@ -8,7 +8,6 @@ use uuid::Uuid;
 use super::PendingChunk;
 use crate::state::ServerState;
 
-/// Assign pending chunks to eligible online nodes using backlog-aware distribution.
 pub async fn assign_pending_chunks(
     state: &ServerState,
     pending: &[PendingChunk],
@@ -84,7 +83,6 @@ pub async fn assign_pending_chunks(
     Ok(())
 }
 
-/// Check if a node is eligible to run a chunk based on the job's access settings.
 pub fn is_eligible(
     node: &OnlineNode,
     job: &JobInfo,

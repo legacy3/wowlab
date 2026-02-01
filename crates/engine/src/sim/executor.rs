@@ -1,5 +1,3 @@
-//! Decision context for APL evaluation.
-
 use super::SimState;
 use wowlab_common::types::SimTime;
 

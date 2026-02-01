@@ -69,6 +69,22 @@ fastrand = "2"
 ahash = "0.8"
 smallvec = "1"
 
+# Performance crates
+bon = "3"
+bumpalo = { version = "3", features = ["collections"] }
+compact_str = { version = "0.8", features = ["serde"] }
+derive_more = { version = "1", features = ["full"] }
+half = "2"
+indexmap = { version = "2", features = ["serde"] }
+inventory = "0.3"
+num_enum = "0.7"
+ordered-float = "4"
+ref-cast = "1"
+slotmap = "1"
+strum = { version = "0.26", features = ["derive"] }
+wide = "0.7"
+zerocopy = { version = "0.8", features = ["derive"] }
+
 # WASM target-specific dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
@@ -77,3 +93,9 @@ getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }
 wiremock = "0.6"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
+[lints]
+workspace = true

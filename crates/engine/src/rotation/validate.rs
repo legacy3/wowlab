@@ -1,6 +1,4 @@
-//! Rotation validation.
-//!
-//! Provides validation for rotation definitions before compilation.
+//! Pre-compilation validation for rotation definitions.
 
 use std::collections::HashSet;
 

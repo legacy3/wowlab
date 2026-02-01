@@ -1,9 +1,19 @@
-//! Handler registry - maps spec IDs to handler implementations.
-
 use super::SpecHandler;
 use std::collections::HashMap;
 use std::sync::Arc;
 use wowlab_common::types::SpecId;
+
+/// Registration entry for a spec handler.
+pub struct SpecRegistration {
+    /// The spec ID this registration is for.
+    pub id: SpecId,
+    /// Human-readable name.
+    pub name: &'static str,
+    /// Factory function to create the handler.
+    pub create: fn(&str) -> Result<Arc<dyn SpecHandler>, String>,
+}
+
+inventory::collect!(SpecRegistration);
 
 /// Registry mapping spec IDs to their handlers.
 ///
@@ -72,18 +82,17 @@ pub fn create_handler(
     spec_id: SpecId,
     rotation_json: &str,
 ) -> Result<Arc<dyn SpecHandler>, String> {
-    use crate::specs::hunter::bm::{BmHunter, TalentFlags, TierSetFlags};
-    use crate::specs::hunter::mm::MmHunter;
-
-    match spec_id {
-        SpecId::BeastMastery => {
-            let handler = BmHunter::new(rotation_json, TalentFlags::empty(), TierSetFlags::NONE)?;
-            Ok(Arc::new(handler))
+    for reg in inventory::iter::<SpecRegistration> {
+        if reg.id == spec_id {
+            return (reg.create)(rotation_json);
         }
-        SpecId::Marksmanship => {
-            let handler = MmHunter::new(rotation_json)?;
-            Ok(Arc::new(handler))
-        }
-        _ => Err(format!("Spec {:?} not implemented", spec_id)),
     }
+    Err(format!("Spec {:?} not implemented", spec_id))
+}
+
+/// Get list of all available specs with their names.
+pub fn available_specs() -> Vec<(SpecId, &'static str)> {
+    inventory::iter::<SpecRegistration>()
+        .map(|r| (r.id, r.name))
+        .collect()
 }

@@ -2,16 +2,11 @@
 
 use std::collections::HashMap;
 
-/// Information about a connected client.
 #[derive(Debug, Clone, Default)]
 pub struct ClientInfo {
-    /// User ID.
     pub user: String,
-    /// Client ID.
     pub client: String,
-    /// Connection info (custom data).
     pub conn_info: Vec<u8>,
-    /// Channel info (custom data).
     pub chan_info: Vec<u8>,
 }
 
@@ -26,22 +21,15 @@ impl From<crate::proto::ClientInfo> for ClientInfo {
     }
 }
 
-/// A publication in a channel.
 #[derive(Debug, Clone)]
 pub struct Publication {
-    /// Publication data.
     pub data: Vec<u8>,
-    /// Publisher info (if available).
     pub info: Option<ClientInfo>,
-    /// Stream offset.
     pub offset: u64,
-    /// Publication tags.
     pub tags: HashMap<String, String>,
-    /// Whether data is a delta from previous.
     pub delta: bool,
-    /// Publication timestamp (Unix ms).
     pub time: i64,
-    /// Channel name (for wildcard subscriptions).
+    /// For wildcard subscriptions.
     pub channel: Option<String>,
 }
 
@@ -63,12 +51,9 @@ impl From<crate::proto::Publication> for Publication {
     }
 }
 
-/// Stream position for recovery.
 #[derive(Debug, Clone, Default)]
 pub struct StreamPosition {
-    /// Stream offset.
     pub offset: u64,
-    /// Stream epoch.
     pub epoch: String,
 }
 
@@ -81,28 +66,17 @@ impl From<crate::proto::StreamPosition> for StreamPosition {
     }
 }
 
-/// Connection information from server.
 #[derive(Debug, Clone)]
 pub struct ConnectResult {
-    /// Client ID assigned by server.
     pub client: String,
-    /// Server version.
     pub version: String,
-    /// Whether token expires.
     pub expires: bool,
-    /// TTL in seconds (if expires).
     pub ttl: u32,
-    /// Custom data from server.
     pub data: Vec<u8>,
-    /// Server ping interval in seconds.
     pub ping: u32,
-    /// Whether to respond with pong.
     pub pong: bool,
-    /// Session ID.
     pub session: String,
-    /// Node ID.
     pub node: String,
-    /// Server time (Unix ms).
     pub time: i64,
 }
 
@@ -123,30 +97,18 @@ impl From<crate::proto::ConnectResult> for ConnectResult {
     }
 }
 
-/// Subscription result from server.
 #[derive(Debug, Clone)]
 pub struct SubscribeResult {
-    /// Whether subscription expires.
     pub expires: bool,
-    /// TTL in seconds (if expires).
     pub ttl: u32,
-    /// Whether subscription is recoverable.
     pub recoverable: bool,
-    /// Stream epoch.
     pub epoch: String,
-    /// Initial publications (for recovery).
     pub publications: Vec<Publication>,
-    /// Whether recovery was successful.
     pub recovered: bool,
-    /// Current stream offset.
     pub offset: u64,
-    /// Whether positioning is enabled.
     pub positioned: bool,
-    /// Custom data from server.
     pub data: Vec<u8>,
-    /// Whether client was recovering.
     pub was_recovering: bool,
-    /// Whether delta compression is enabled.
     pub delta: bool,
 }
 
@@ -157,7 +119,11 @@ impl From<crate::proto::SubscribeResult> for SubscribeResult {
             ttl: result.ttl,
             recoverable: result.recoverable,
             epoch: result.epoch,
-            publications: result.publications.into_iter().map(Publication::from).collect(),
+            publications: result
+                .publications
+                .into_iter()
+                .map(Publication::from)
+                .collect(),
             recovered: result.recovered,
             offset: result.offset,
             positioned: result.positioned,
@@ -168,48 +134,32 @@ impl From<crate::proto::SubscribeResult> for SubscribeResult {
     }
 }
 
-/// Client event.
 #[derive(Debug, Clone)]
 pub enum ClientEvent {
-    /// Client is connecting.
     Connecting,
-    /// Client connected.
     Connected(ConnectResult),
-    /// Client disconnected.
     Disconnected {
         code: u32,
         reason: String,
         reconnect: bool,
     },
-    /// Error occurred.
     Error(String),
-    /// Server-to-client message (not pub/sub).
     Message(Vec<u8>),
 }
 
-/// Subscription event.
 #[derive(Debug, Clone)]
 pub enum SubscriptionEvent {
-    /// Subscription is subscribing.
     Subscribing,
-    /// Subscription succeeded.
     Subscribed(SubscribeResult),
-    /// Subscription ended.
     Unsubscribed { code: u32, reason: String },
-    /// Publication received.
     Publication(Publication),
-    /// Client joined channel.
     Join(ClientInfo),
-    /// Client left channel.
     Leave(ClientInfo),
-    /// Error occurred.
     Error(String),
 }
 
-/// Presence information for a channel.
 #[derive(Debug, Clone, Default)]
 pub struct PresenceResult {
-    /// Map of client ID to client info.
     pub presence: HashMap<String, ClientInfo>,
 }
 
@@ -225,12 +175,9 @@ impl From<crate::proto::PresenceResult> for PresenceResult {
     }
 }
 
-/// Presence statistics for a channel.
 #[derive(Debug, Clone, Default)]
 pub struct PresenceStats {
-    /// Number of clients.
     pub num_clients: u32,
-    /// Number of unique users.
     pub num_users: u32,
 }
 
@@ -243,31 +190,29 @@ impl From<crate::proto::PresenceStatsResult> for PresenceStats {
     }
 }
 
-/// History result for a channel.
 #[derive(Debug, Clone, Default)]
 pub struct HistoryResult {
-    /// Publications in history.
     pub publications: Vec<Publication>,
-    /// Stream epoch.
     pub epoch: String,
-    /// Current stream offset.
     pub offset: u64,
 }
 
 impl From<crate::proto::HistoryResult> for HistoryResult {
     fn from(result: crate::proto::HistoryResult) -> Self {
         Self {
-            publications: result.publications.into_iter().map(Publication::from).collect(),
+            publications: result
+                .publications
+                .into_iter()
+                .map(Publication::from)
+                .collect(),
             epoch: result.epoch,
             offset: result.offset,
         }
     }
 }
 
-/// RPC result from server.
 #[derive(Debug, Clone, Default)]
 pub struct RpcResult {
-    /// Response data.
     pub data: Vec<u8>,
 }
 
@@ -277,12 +222,9 @@ impl From<crate::proto::RpcResult> for RpcResult {
     }
 }
 
-/// Subscription refresh result from server.
 #[derive(Debug, Clone, Default)]
 pub struct SubRefreshResult {
-    /// Whether subscription expires.
     pub expires: bool,
-    /// TTL in seconds (if expires).
     pub ttl: u32,
 }
 

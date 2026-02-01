@@ -22,7 +22,6 @@ fn get_http_client() -> &'static reqwest::Client {
     })
 }
 
-/// Centrifugo presence client for querying online users.
 #[derive(Clone)]
 pub struct Presence {
     url: String,
@@ -30,7 +29,6 @@ pub struct Presence {
 }
 
 impl Presence {
-    /// Create a new presence client.
     pub fn new(url: impl Into<String>, api_key: impl Into<String>) -> Self {
         Self {
             url: url.into().trim_end_matches('/').to_string(),
@@ -38,7 +36,6 @@ impl Presence {
         }
     }
 
-    /// Get online user IDs for a channel.
     pub async fn get_online(&self, channel: &str) -> Result<HashSet<Uuid>, Error> {
         let resp = get_http_client()
             .post(format!("{}/api/presence", self.url))
@@ -52,10 +49,7 @@ impl Presence {
             return Err(Error::Http(format!("HTTP {}", resp.status())));
         }
 
-        let body: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| Error::Http(e.to_string()))?;
+        let body: serde_json::Value = resp.json().await.map_err(|e| Error::Http(e.to_string()))?;
 
         if let Some(error) = body.get("error") {
             let code = error.get("code").and_then(|c| c.as_u64()).unwrap_or(0) as u32;

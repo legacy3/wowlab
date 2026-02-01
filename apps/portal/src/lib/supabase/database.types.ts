@@ -974,7 +974,6 @@ export type Database = {
       };
       nodes: {
         Row: {
-          claim_code: string | null;
           created_at: string;
           id: string;
           last_seen_at: string | null;
@@ -984,11 +983,10 @@ export type Database = {
           public_key: string;
           status: string;
           total_cores: number;
-          user_id: string | null;
+          user_id: string;
           version: string;
         };
         Insert: {
-          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
@@ -998,11 +996,10 @@ export type Database = {
           public_key: string;
           status?: string;
           total_cores?: number;
-          user_id?: string | null;
+          user_id: string;
           version?: string;
         };
         Update: {
-          claim_code?: string | null;
           created_at?: string;
           id?: string;
           last_seen_at?: string | null;
@@ -1012,7 +1009,7 @@ export type Database = {
           public_key?: string;
           status?: string;
           total_cores?: number;
-          user_id?: string | null;
+          user_id?: string;
           version?: string;
         };
         Relationships: [];
@@ -1150,6 +1147,33 @@ export type Database = {
           },
         ];
       };
+      sentinel_notification_subscriptions: {
+        Row: {
+          channel_id: string;
+          created_at: string | null;
+          created_by: string | null;
+          event_type: string;
+          guild_id: string;
+          id: string;
+        };
+        Insert: {
+          channel_id: string;
+          created_at?: string | null;
+          created_by?: string | null;
+          event_type: string;
+          guild_id: string;
+          id?: string;
+        };
+        Update: {
+          channel_id?: string;
+          created_at?: string | null;
+          created_by?: string | null;
+          event_type?: string;
+          guild_id?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       short_urls: {
         Row: {
           created_at: string;
@@ -1236,6 +1260,7 @@ export type Database = {
       };
       user_settings: {
         Row: {
+          claim_token: string;
           compact_mode: boolean;
           created_at: string;
           default_fight_duration: number;
@@ -1246,6 +1271,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          claim_token?: string;
           compact_mode?: boolean;
           created_at?: string;
           default_fight_duration?: number;
@@ -1256,6 +1282,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          claim_token?: string;
           compact_mode?: boolean;
           created_at?: string;
           default_fight_duration?: number;
@@ -1272,10 +1299,6 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      claim_node: {
-        Args: { p_max_parallel: number; p_name: string; p_node_id: string };
-        Returns: Json;
-      };
       create_job:
         | {
             Args: {
@@ -1296,13 +1319,14 @@ export type Database = {
             Returns: Json;
           };
       delete_own_account: { Args: never; Returns: undefined };
+      generate_claim_token: { Args: never; Returns: string };
       generate_default_handle: { Args: { user_id: string }; Returns: string };
       generate_random_seed: { Args: never; Returns: string };
       get_or_create_short_url: {
         Args: { p_target_url: string; p_user_id?: string };
         Returns: string;
       };
-      verify_claim_code: { Args: { p_code: string }; Returns: Json };
+      regenerate_claim_token: { Args: never; Returns: string };
     };
     Enums: {
       [_ in never]: never;

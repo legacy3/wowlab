@@ -1,12 +1,4 @@
-//! Hunter class shared behavior.
-//!
-//! All Hunter specs (Beast Mastery, Marksmanship, Survival) share:
-//! - Focus as primary resource
-//! - Pet mechanics
-//! - Certain abilities (Kill Shot, Tranquilizing Shot, aspects)
-//!
-//! This module provides the `HunterClass` trait that extends `SpecHandler`
-//! with Hunter-specific shared functionality.
+//! Hunter class shared behavior (focus, pets, Kill Shot).
 
 pub mod focus;
 pub mod pet;
@@ -27,27 +19,7 @@ use crate::handler::SpecHandler;
 use crate::sim::SimState;
 use wowlab_common::types::{DamageSchool, TargetIdx, UnitIdx};
 
-/// Shared behavior for all Hunter specs.
-///
-/// This trait extends `SpecHandler` with Hunter-specific methods that have
-/// default implementations. Specs can override any method to customize
-/// behavior while still benefiting from shared code.
-///
-/// # Implementation Pattern
-///
-/// ```ignore
-/// impl HunterClass for BmHunter {
-///     // Override pet damage modifier for BM-specific bonuses
-///     fn pet_damage_modifier(&self, state: &SimState) -> f32 {
-///         let base = 1.0;
-///         if state.player.buffs.has(BESTIAL_WRATH_BUFF, state.now()) {
-///             base * 2.0  // Bestial Wrath doubles pet damage
-///         } else {
-///             base
-///         }
-///     }
-/// }
-/// ```
+/// Shared behavior for all Hunter specs (extends SpecHandler).
 pub trait HunterClass: SpecHandler {
     /// Base focus regeneration per second (before haste).
     ///

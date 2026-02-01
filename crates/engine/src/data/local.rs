@@ -1,7 +1,4 @@
-//! LocalResolver: Loads data from local CSV files via snapshot-parser.
-//!
-//! This resolver is the default and works offline with just CSV files.
-//! It uses lazy loading to avoid loading all data upfront.
+//! LocalResolver: lazy-loads from local CSV files (offline).
 
 use crate::data::resolver::{DataResolver, ResolverError};
 use async_trait::async_trait;

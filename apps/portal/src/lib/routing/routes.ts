@@ -73,7 +73,6 @@ export const routes = {
     settings: route("/account/settings", "Settings", "Account settings", "Settings"),
     nodes: {
       index: route("/account/nodes", "Nodes", "Manage compute nodes", "Server"),
-      claim: route("/account/nodes/claim", "Claim Node", "Claim a new node", "Server"),
     },
   }).standalone(),
 

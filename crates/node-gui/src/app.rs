@@ -1,8 +1,9 @@
 use crate::ui::{
-    claim_view, dashboard,
+    dashboard,
     icons::{icon, Icon},
     logs::{self, LogFilter},
     settings::{self, SettingsAction},
+    setup_view::{self, SetupAction},
     theme::{
         header_frame, subtitle, text, title, title_lg, AMBER_9, BG_CANVAS, BG_SUBTLE, BORDER,
         FG_DEFAULT, FG_SUBTLE, GREEN_9, RADIUS_SM, RED_9,
@@ -52,6 +53,9 @@ pub struct NodeApp {
     sims_per_second_history: VecDeque<f64>,
     cpu_usage_history: VecDeque<f32>,
     last_metrics_sample: Instant,
+    // Setup state
+    setup_token_input: String,
+    setup_error: Option<String>,
 }
 
 impl NodeApp {
@@ -94,6 +98,8 @@ impl NodeApp {
             sims_per_second_history: VecDeque::with_capacity(METRICS_HISTORY_SIZE),
             cpu_usage_history: VecDeque::with_capacity(METRICS_HISTORY_SIZE),
             last_metrics_sample: Instant::now(),
+            setup_token_input: String::new(),
+            setup_error: None,
         }
     }
 
@@ -117,7 +123,14 @@ impl NodeApp {
     }
 
     fn poll_core_events(&mut self) {
-        while self.event_rx.try_recv().is_ok() {}
+        while let Ok(event) = self.event_rx.try_recv() {
+            // Capture registration errors for setup view
+            if let NodeCoreEvent::Error(ref err) = event {
+                if matches!(self.core.state(), NodeState::Setup) {
+                    self.setup_error = Some(err.clone());
+                }
+            }
+        }
     }
 
     fn poll_update_check(&mut self) {
@@ -176,11 +189,6 @@ impl NodeApp {
 
         if let Some(last_state) = &self.last_node_state {
             match (&last_state, &current_state) {
-                (NodeState::Claiming { .. }, NodeState::Running) => {
-                    self.toasts
-                        .success("Node linked successfully!")
-                        .duration(Some(Duration::from_secs(4)));
-                }
                 (_, NodeState::Unavailable) if !matches!(last_state, NodeState::Unavailable) => {
                     self.toasts
                         .error("Server unavailable")
@@ -194,9 +202,9 @@ impl NodeApp {
 
     fn show_status_indicator(&self, ui: &mut egui::Ui) {
         let (color, label, icon_char) = match (self.core.state(), self.core.connection_status()) {
+            (NodeState::Setup, _) => (FG_SUBTLE, "Setup", icon(Icon::Settings)),
             (NodeState::Verifying, _) => (FG_SUBTLE, "Verifying", icon(Icon::Loader)),
             (NodeState::Registering, _) => (FG_SUBTLE, "Registering", icon(Icon::Loader)),
-            (NodeState::Claiming { .. }, _) => (AMBER_9, "Pending", icon(Icon::Clock)),
             (NodeState::Unavailable, _) => (RED_9, "Unavailable", icon(Icon::CircleX)),
             (NodeState::Running, ConnectionStatus::Connected) => {
                 (GREEN_9, "Online", icon(Icon::Wifi))
@@ -267,7 +275,7 @@ impl NodeApp {
                     ui.label(text("Are you sure you want to unlink this node?").color(FG_DEFAULT));
                     ui.add_space(4.0);
                     ui.label(
-                        text("You will need to re-claim it to use it again.").color(FG_SUBTLE),
+                        text("You will need to re-register it to use it again.").color(FG_SUBTLE),
                     );
                     ui.add_space(16.0);
                     ui.horizontal(|ui| {
@@ -287,6 +295,15 @@ impl NodeApp {
         }
 
         should_unlink
+    }
+
+    fn show_setup_state(&mut self, ui: &mut egui::Ui) {
+        let action = setup_view::show(ui, &mut self.setup_token_input, self.setup_error.as_deref());
+
+        if let SetupAction::Submit(token) = action {
+            self.setup_error = None;
+            self.core.set_claim_token(token);
+        }
     }
 
     fn show_loading_state(&self, ui: &mut egui::Ui, message: &str) {
@@ -431,9 +448,9 @@ impl eframe::App for NodeApp {
                     .inner_margin(egui::Margin::same(16)),
             )
             .show(ctx, |ui| match self.core.state() {
+                NodeState::Setup => self.show_setup_state(ui),
                 NodeState::Verifying => self.show_loading_state(ui, "Verifying node..."),
                 NodeState::Registering => self.show_loading_state(ui, "Connecting to server..."),
-                NodeState::Claiming { code } => claim_view::show(ui, code),
                 NodeState::Unavailable => self.show_unavailable_state(ui),
                 NodeState::Running => self.show_running_state(ui),
             });

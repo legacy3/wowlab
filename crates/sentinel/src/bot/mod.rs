@@ -17,7 +17,6 @@ pub struct Data {
     pub state: Arc<ServerState>,
 }
 
-/// Run the Discord bot. Blocks until the bot shuts down.
 pub async fn run(
     state: Arc<ServerState>,
     notification_rx: NotificationReceiver,

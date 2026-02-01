@@ -1,10 +1,10 @@
 "use client";
 
+import { useBoolean } from "ahooks";
 import { ExternalLinkIcon } from "lucide-react";
-import { useState } from "react";
 import { Box, HStack, Stack } from "styled-system/jsx";
 
-import { Badge, HoverCard, Link, Text } from "@/components/ui";
+import { HoverCard, Link, Text } from "@/components/ui";
 import { type Term, terms } from "@/content/terms";
 
 type MdTermProps = {
@@ -82,7 +82,7 @@ export function MdGlossary() {
 }
 
 export function MdTerm({ children, id }: MdTermProps) {
-  const [open, setOpen] = useState(false);
+  const [open, { set: setOpen, setFalse: close }] = useBoolean(false);
   const term = terms[id];
 
   if (!term) {
@@ -135,7 +135,7 @@ export function MdTerm({ children, id }: MdTermProps) {
                   href={term.link}
                   textStyle="xs"
                   colorPalette="amber"
-                  onClick={() => setOpen(false)}
+                  onClick={close}
                 >
                   <HStack gap="1">
                     <Text as="span">Docs</Text>

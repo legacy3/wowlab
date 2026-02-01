@@ -1,6 +1,4 @@
-//! BM Hunter talent definitions with declarative modifiers.
-//!
-//! Each talent defines its damage modifiers, cooldown changes, and effects.
+//! BM Hunter talent definitions (modifiers, cooldown changes, effects).
 
 use super::constants::*;
 use crate::spec::{DamageMod, ModCondition, TalentDef};
@@ -122,9 +120,10 @@ fn animal_companion() -> TalentDef {
 fn solitary_companion() -> TalentDef {
     TalentDef::new("solitary_companion", "Solitary Companion")
         // +10% damage without Animal Companion
-        .damage_mod(DamageMod::always("solitary_companion", 1.10).when(
-            ModCondition::TalentEnabled("solitary_companion".to_string()),
-        ))
+        .damage_mod(
+            DamageMod::always("solitary_companion", 1.10)
+                .when(ModCondition::TalentEnabled("solitary_companion".into())),
+        )
 }
 
 fn wild_hunt() -> TalentDef {
@@ -142,7 +141,7 @@ fn piercing_fangs() -> TalentDef {
     TalentDef::new("piercing_fangs", "Piercing Fangs")
         // Pet crit damage during Bestial Wrath
         .damage_mod(DamageMod {
-            name: "piercing_fangs".to_string(),
+            name: "piercing_fangs".into(),
             multiplier: 1.0 + PIERCING_FANGS_CRIT_DAMAGE,
             condition: ModCondition::And(vec![
                 ModCondition::PetAbility,
@@ -157,7 +156,7 @@ fn serpentine_rhythm() -> TalentDef {
     TalentDef::new("serpentine_rhythm", "Serpentine Rhythm")
         // Cobra Shot damage bonus per stack
         .damage_mod(DamageMod {
-            name: "serpentine_rhythm".to_string(),
+            name: "serpentine_rhythm".into(),
             multiplier: 1.0, // Calculated at runtime based on stacks
             condition: ModCondition::And(vec![
                 ModCondition::ForSpell(COBRA_SHOT),
@@ -174,7 +173,7 @@ fn go_for_the_throat() -> TalentDef {
     TalentDef::new("go_for_the_throat", "Go for the Throat")
         // KC crit damage scales with crit rating
         .damage_mod(DamageMod {
-            name: "go_for_the_throat".to_string(),
+            name: "go_for_the_throat".into(),
             multiplier: 1.0, // Calculated at runtime
             condition: ModCondition::And(vec![
                 ModCondition::ForSpell(KILL_COMMAND),
@@ -191,7 +190,7 @@ fn pack_mentality() -> TalentDef {
     TalentDef::new("pack_mentality", "Pack Mentality")
         // KC damage bonus with special pet buff
         .damage_mod(DamageMod {
-            name: "pack_mentality".to_string(),
+            name: "pack_mentality".into(),
             multiplier: 1.0 + PACK_MENTALITY_BONUS,
             condition: ModCondition::And(vec![
                 ModCondition::ForSpell(KILL_COMMAND),
@@ -205,7 +204,7 @@ fn wild_instincts() -> TalentDef {
     TalentDef::new("wild_instincts", "Wild Instincts")
         // KC bonus vs debuffed targets - per stack
         .damage_mod(DamageMod {
-            name: "wild_instincts".to_string(),
+            name: "wild_instincts".into(),
             multiplier: 1.0,
             condition: ModCondition::And(vec![
                 ModCondition::ForSpell(KILL_COMMAND),

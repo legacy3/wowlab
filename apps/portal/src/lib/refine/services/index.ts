@@ -1,3 +1,5 @@
+export { useClaimToken } from "./claim-token";
+
 export {
   buildResolver,
   defaultPaperdoll,
@@ -32,11 +34,9 @@ export {
   selectOnlineCount,
   selectOnlineNodes,
   selectTotalWorkers,
-  useClaimNode,
   useNode,
   useNodeMutations,
   useNodes,
-  type VerifyResult,
 } from "./nodes";
 
 export { type Profile, type Rotation, useUserProfile } from "./profile";

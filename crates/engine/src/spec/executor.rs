@@ -1,8 +1,3 @@
-//! Generic effect executor for spell effects and damage modifiers.
-//!
-//! This module processes SpellEffects and DamageMods declaratively,
-//! replacing scattered if/else chains in spec handlers.
-
 use crate::aura::AuraInstance;
 use crate::combat::DamagePipeline;
 use crate::core::SimEvent;
@@ -83,7 +78,12 @@ fn execute_single_effect(ctx: &mut EffectContext<'_>, effect: &SpellEffect) {
                 .schedule(now, SimEvent::PetAttack { pet: pet_id });
             // Duration is tracked via pet's expires_at, no explicit despawn event needed
             let _ = duration; // Duration used during pet creation
-            debug!(pet = pet_id.0, duration, name, "Summoned pet");
+            debug!(
+                pet = pet_id.0,
+                duration,
+                name = name.as_str(),
+                "Summoned pet"
+            );
         }
 
         SpellEffect::ApplyBuff { aura, stacks } => {
@@ -322,7 +322,7 @@ pub fn calculate_damage(
         let mult = get_modifier_value(ctx, modifier);
         damage *= mult;
         debug!(
-            name = modifier.name,
+            name = modifier.name.as_str(),
             mult, damage, "Applied damage modifier"
         );
     }

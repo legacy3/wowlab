@@ -1,6 +1,11 @@
 "use client";
 
-import { useDelete, useGetIdentity, useInvalidate, useList } from "@refinedev/core";
+import {
+  useDelete,
+  useGetIdentity,
+  useInvalidate,
+  useList,
+} from "@refinedev/core";
 import { useCallback, useState } from "react";
 
 import type { TablesUpdate } from "@/lib/supabase/database.types";
@@ -24,14 +29,6 @@ export interface SaveNodeData {
   name: string;
 }
 
-export interface VerifyResult {
-  id: string;
-  max_parallel: number;
-  name: string;
-  platform: string;
-  total_cores: number;
-}
-
 type NodeWithPermissions = {
   nodes_permissions: NodePermissionRow[];
 } & NodeRow;
@@ -53,106 +50,6 @@ export function selectTotalWorkers(nodesData: NodeWithMeta[]) {
     (sum, n) => sum + n.max_parallel,
     0,
   );
-}
-
-export function useClaimNode() {
-  const invalidate = useInvalidate();
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [pendingNode, setPendingNode] = useState<VerifyResult | null>(null);
-
-  const verifyCode = useCallback(
-    async (code: string): Promise<VerifyResult> => {
-      setIsVerifying(true);
-      setError(null);
-
-      try {
-        const supabase = createClient();
-        const { data, error: rpcError } = await supabase.rpc(
-          "verify_claim_code",
-          {
-            p_code: code,
-          },
-        );
-
-        if (rpcError || !data) {
-          throw new Error("Invalid or expired claim code");
-        }
-
-        const node = data as {
-          id: string;
-          maxParallel: number;
-          name: string;
-          platform: string;
-          totalCores: number;
-        };
-
-        const result: VerifyResult = {
-          id: node.id,
-          max_parallel: node.maxParallel,
-          name: node.name,
-          platform: node.platform,
-          total_cores: node.totalCores,
-        };
-
-        setPendingNode(result);
-        return result;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
-        throw error;
-      } finally {
-        setIsVerifying(false);
-      }
-    },
-    [],
-  );
-
-  const claimNode = useCallback(
-    async (input: { nodeId: string; name: string; maxParallel: number }) => {
-      setIsClaiming(true);
-      setError(null);
-
-      try {
-        const supabase = createClient();
-        const { data, error: rpcError } = await supabase.rpc("claim_node", {
-          p_max_parallel: input.maxParallel,
-          p_name: input.name,
-          p_node_id: input.nodeId,
-        });
-
-        if (rpcError) {
-          throw rpcError;
-        }
-
-        invalidate({ invalidates: ["all"], resource: "nodes" });
-        return data;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
-        throw error;
-      } finally {
-        setIsClaiming(false);
-      }
-    },
-    [invalidate],
-  );
-
-  const reset = useCallback(() => {
-    setError(null);
-    setPendingNode(null);
-  }, []);
-
-  return {
-    claimNode: { mutateAsync: claimNode },
-    error,
-    isClaiming,
-    isVerifying,
-    pendingNode,
-    reset,
-    verifyCode: { mutateAsync: verifyCode },
-  };
 }
 
 export function useNode(nodeId: string | undefined) {
@@ -261,7 +158,9 @@ export function useNodes() {
 
   const myNodesResult = useList<NodeRow>({
     ...nodes,
-    filters: userId ? [{ field: "user_id", operator: "eq", value: userId }] : [],
+    filters: userId
+      ? [{ field: "user_id", operator: "eq", value: userId }]
+      : [],
     liveMode: "auto",
     pagination: { mode: "off" },
     queryOptions: {

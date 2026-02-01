@@ -1,6 +1,19 @@
 export { authProvider } from "./auth-provider";
 export { dataProvider } from "./data-provider";
-export { useResource, useResourceList, useResourceMany } from "./hooks";
+export {
+  useResource,
+  useResourceList,
+  useResourceMany,
+  useVirtualInfiniteList,
+  type UseVirtualInfiniteListOptions,
+  type UseVirtualInfiniteListResult,
+  useVirtualList,
+  type UseVirtualListOptions,
+  type UseVirtualListResult,
+  useWindowVirtualList,
+  type UseWindowVirtualListOptions,
+  type UseWindowVirtualListResult,
+} from "./hooks";
 export { liveProvider } from "./live-provider";
 export { getQueryClient } from "./query-client";
 export {

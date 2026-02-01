@@ -1,9 +1,8 @@
-//! Centralized spec data registry.
-//!
-//! Provides a single source of truth for all spell, aura, and talent definitions
-//! with bidirectional lookups (name ↔ ID).
+//! Spec data registry with bidirectional spell/aura/talent lookups.
 
-use std::collections::HashMap;
+use compact_str::CompactString;
+use indexmap::IndexMap;
+use std::collections::HashSet;
 
 use wowlab_common::types::{AuraIdx, SpellIdx};
 
@@ -14,52 +13,52 @@ use wowlab_common::types::{AuraIdx, SpellIdx};
 #[derive(Debug, Clone)]
 pub struct SpecData {
     /// Spec name (e.g., "bm_hunter").
-    pub name: String,
+    pub name: CompactString,
     /// Primary resource type (e.g., "focus").
-    pub resource_type: Option<String>,
+    pub resource_type: Option<CompactString>,
     /// Spell name → ID mapping.
-    spell_name_to_id: HashMap<String, SpellIdx>,
+    spell_name_to_id: IndexMap<CompactString, SpellIdx>,
     /// Spell ID → name mapping.
-    spell_id_to_name: HashMap<SpellIdx, String>,
+    spell_id_to_name: IndexMap<SpellIdx, CompactString>,
     /// Aura name → ID mapping.
-    aura_name_to_id: HashMap<String, AuraIdx>,
+    aura_name_to_id: IndexMap<CompactString, AuraIdx>,
     /// Aura ID → name mapping.
-    aura_id_to_name: HashMap<AuraIdx, String>,
+    aura_id_to_name: IndexMap<AuraIdx, CompactString>,
     /// DoT name → ID mapping (subset of auras).
-    dot_name_to_id: HashMap<String, AuraIdx>,
+    dot_name_to_id: IndexMap<CompactString, AuraIdx>,
     /// DoT ID → name mapping.
-    dot_id_to_name: HashMap<AuraIdx, String>,
+    dot_id_to_name: IndexMap<AuraIdx, CompactString>,
     /// Talent name → enabled state.
-    talents: HashMap<String, bool>,
+    talents: IndexMap<CompactString, bool>,
     /// Charged cooldown spell names.
-    charged_cooldowns: std::collections::HashSet<String>,
+    charged_cooldowns: HashSet<CompactString>,
 }
 
 impl SpecData {
     /// Create a new spec data registry.
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<CompactString>) -> Self {
         Self {
             name: name.into(),
             resource_type: None,
-            spell_name_to_id: HashMap::new(),
-            spell_id_to_name: HashMap::new(),
-            aura_name_to_id: HashMap::new(),
-            aura_id_to_name: HashMap::new(),
-            dot_name_to_id: HashMap::new(),
-            dot_id_to_name: HashMap::new(),
-            talents: HashMap::new(),
-            charged_cooldowns: std::collections::HashSet::new(),
+            spell_name_to_id: IndexMap::new(),
+            spell_id_to_name: IndexMap::new(),
+            aura_name_to_id: IndexMap::new(),
+            aura_id_to_name: IndexMap::new(),
+            dot_name_to_id: IndexMap::new(),
+            dot_id_to_name: IndexMap::new(),
+            talents: IndexMap::new(),
+            charged_cooldowns: HashSet::new(),
         }
     }
 
     /// Set the primary resource type.
-    pub fn resource(mut self, resource_type: impl Into<String>) -> Self {
+    pub fn resource(mut self, resource_type: impl Into<CompactString>) -> Self {
         self.resource_type = Some(resource_type.into());
         self
     }
 
     /// Register a spell with bidirectional lookup.
-    pub fn spell(mut self, name: impl Into<String>, id: SpellIdx) -> Self {
+    pub fn spell(mut self, name: impl Into<CompactString>, id: SpellIdx) -> Self {
         let name = name.into();
         self.spell_name_to_id.insert(name.clone(), id);
         self.spell_id_to_name.insert(id, name);
@@ -67,7 +66,7 @@ impl SpecData {
     }
 
     /// Register an aura (buff/debuff) with bidirectional lookup.
-    pub fn aura(mut self, name: impl Into<String>, id: AuraIdx) -> Self {
+    pub fn aura(mut self, name: impl Into<CompactString>, id: AuraIdx) -> Self {
         let name = name.into();
         self.aura_name_to_id.insert(name.clone(), id);
         self.aura_id_to_name.insert(id, name);
@@ -76,7 +75,7 @@ impl SpecData {
 
     /// Register a DoT with bidirectional lookup.
     /// DoTs are also registered as auras.
-    pub fn dot(mut self, name: impl Into<String>, id: AuraIdx) -> Self {
+    pub fn dot(mut self, name: impl Into<CompactString>, id: AuraIdx) -> Self {
         let name = name.into();
         self.dot_name_to_id.insert(name.clone(), id);
         self.dot_id_to_name.insert(id, name.clone());
@@ -87,13 +86,13 @@ impl SpecData {
     }
 
     /// Register a talent with its enabled state.
-    pub fn talent(mut self, name: impl Into<String>, enabled: bool) -> Self {
+    pub fn talent(mut self, name: impl Into<CompactString>, enabled: bool) -> Self {
         self.talents.insert(name.into(), enabled);
         self
     }
 
     /// Register a charged cooldown.
-    pub fn charged_cooldown(mut self, name: impl Into<String>) -> Self {
+    pub fn charged_cooldown(mut self, name: impl Into<CompactString>) -> Self {
         self.charged_cooldowns.insert(name.into());
         self
     }

@@ -1,6 +1,4 @@
-//! Core spec handler trait.
-//!
-//! All specializations must implement this trait to participate in the simulation.
+use compact_str::CompactString;
 
 use crate::actor::Player;
 use crate::rotation::Action;
@@ -42,7 +40,7 @@ pub trait SpecHandler: Send + Sync {
     fn aura_definitions(&self) -> &'static [AuraDef];
 
     /// Returns all talent names for this spec.
-    fn talent_names(&self) -> Vec<String>;
+    fn talent_names(&self) -> Vec<CompactString>;
 
     /// Initialize simulation state (pets, events, etc.).
     fn init(&self, state: &mut SimState);

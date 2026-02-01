@@ -1,11 +1,4 @@
-//! Unified game data cache: memory (moka) -> disk -> network
-//!
-//! Provides a three-layer cache for immutable game data:
-//! - L1: In-memory moka cache for hot data
-//! - L2: Disk cache (JSON files) for persistence across restarts
-//! - L3: Network fetch from Supabase as fallback
-//!
-//! Cache is keyed by patch version - when patch changes, disk cache is cleared.
+//! Three-layer cache (memory -> disk -> network) keyed by patch version.
 
 #![cfg(feature = "supabase")]
 

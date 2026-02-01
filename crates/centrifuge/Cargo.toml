@@ -35,3 +35,6 @@ jsonwebtoken = "9"
 
 [build-dependencies]
 prost-build = "0.14"
+
+[lints]
+workspace = true

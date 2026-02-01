@@ -1,7 +1,4 @@
-//! Name resolution for rotations.
-//!
-//! Provides a SpecResolver that maps spell/aura names to game IDs.
-//! Resolution happens at parse time, so the Expr enum contains resolved IDs.
+//! Maps spell/aura names to game IDs for rotation parsing.
 
 use std::collections::{HashMap, HashSet};
 

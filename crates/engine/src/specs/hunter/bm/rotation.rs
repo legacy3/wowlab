@@ -1,6 +1,4 @@
-//! BM Hunter rotation support.
-//!
-//! Provides name resolution for BM Hunter rotations and context building.
+//! BM Hunter rotation name resolution.
 
 use super::constants::*;
 use crate::rotation::SpecResolver;

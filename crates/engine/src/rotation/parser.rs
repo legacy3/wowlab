@@ -1,7 +1,3 @@
-//! JSON parser for rotation definitions.
-//!
-//! Parses rotation JSON and resolves names to IDs using the provided SpecResolver.
-
 use std::collections::HashMap;
 
 use serde_json::Value;

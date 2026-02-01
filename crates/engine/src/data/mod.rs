@@ -1,16 +1,14 @@
-//! Data loading module.
-//!
-//! This module provides:
-//! - **DataResolver trait**: Abstract interface for loading game data
-//! - **LocalResolver**: Loads from local CSV files (default, offline, portable)
-//! - **SupabaseResolver**: Loads from Supabase API (optional, requires `supabase` feature)
+//! Game data loading (local CSV or Supabase API).
 
+mod binary;
 #[cfg(feature = "supabase")]
 mod cache;
 mod local;
 mod resolver;
 #[cfg(feature = "supabase")]
 mod supabase;
+
+pub use binary::{AuraRecord, ItemStatRecord, SpellRecord};
 
 #[cfg(feature = "supabase")]
 pub use cache::{CacheStats, DiskStats, GameDataCache, MemoryStats};

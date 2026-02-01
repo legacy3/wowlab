@@ -2,8 +2,8 @@
 
 import type { StaticImageData } from "next/image";
 
+import { useBoolean } from "ahooks";
 import { ArchiveIcon, ExternalLinkIcon, MapPinIcon } from "lucide-react";
-import { useState } from "react";
 import { Box, HStack, Stack } from "styled-system/jsx";
 
 import { Badge, HoverCard, Link, Text } from "@/components/ui";
@@ -122,7 +122,7 @@ export function MdBibliography() {
 }
 
 export function MdCite({ children, id, ...locatorProps }: MdCiteProps) {
-  const [open, setOpen] = useState(false);
+  const [open, { set: setOpen, setFalse: close }] = useBoolean(false);
   const ref = references[id];
   const num = Object.keys(references).indexOf(id) + 1;
   const location = formatLocation(locatorProps);
@@ -161,7 +161,7 @@ export function MdCite({ children, id, ...locatorProps }: MdCiteProps) {
               <RefScreenshot
                 src={ref.archive.screenshot}
                 alt={ref.title}
-                onClick={() => setOpen(false)}
+                onClick={close}
               />
             )}
             <Stack gap="1">
@@ -183,7 +183,7 @@ export function MdCite({ children, id, ...locatorProps }: MdCiteProps) {
                 <Text textStyle="xs" color="fg.subtle" fontStyle="italic">
                   {ref.source}
                 </Text>
-                <RefLink ref={ref} />
+                <RefLink reference={ref} />
               </HStack>
             </Stack>
           </Stack>
@@ -231,8 +231,8 @@ function getWaybackUrl(ref: Reference): string | undefined {
   return `https://web.archive.org/web/${timestamp}/${ref.url}`;
 }
 
-function RefLink({ ref }: { ref: Reference }) {
-  const url = getRefUrl(ref);
+function RefLink({ reference }: { reference: Reference }) {
+  const url = getRefUrl(reference);
   if (!url) {
     return null;
   }
@@ -246,7 +246,7 @@ function RefLink({ ref }: { ref: Reference }) {
       colorPalette="amber"
     >
       <HStack gap="1">
-        <Text as="span">{hasDoi(ref) ? "DOI" : "Link"}</Text>
+        <Text as="span">{hasDoi(reference) ? "DOI" : "Link"}</Text>
         <ExternalLinkIcon size={12} />
       </HStack>
     </Link>

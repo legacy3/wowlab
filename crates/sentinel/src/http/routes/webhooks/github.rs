@@ -16,7 +16,6 @@ use crate::notifications::{Notification, NotificationEvent};
 use crate::state::ServerState;
 use crate::utils::markdown as md;
 
-/// A single commit from a GitHub push event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitCommit {
     pub id: String,
@@ -31,7 +30,6 @@ pub struct GitAuthor {
     pub username: Option<String>,
 }
 
-/// GitHub push event payload.
 #[derive(Debug, Clone, Deserialize)]
 #[allow(dead_code)]
 pub struct GitPushPayload {
@@ -58,7 +56,6 @@ pub struct GitPusher {
     pub name: String,
 }
 
-/// GitHub pull request event payload.
 #[derive(Debug, Clone, Deserialize)]
 pub struct GitPrPayload {
     pub action: String,
@@ -88,7 +85,6 @@ pub struct GitUser {
     pub avatar_url: String,
 }
 
-/// Verify GitHub webhook signature using HMAC-SHA256.
 fn verify_signature(secret: &[u8], signature: &str, body: &[u8]) -> bool {
     let Some(expected) = signature.strip_prefix("sha256=") else {
         return false;
@@ -109,7 +105,6 @@ fn verify_signature(secret: &[u8], signature: &str, body: &[u8]) -> bool {
             == 0
 }
 
-/// Handle GitHub webhook requests.
 pub async fn handle(
     State(state): State<Arc<ServerState>>,
     headers: HeaderMap,
@@ -242,7 +237,6 @@ async fn handle_push(state: &ServerState, body: &[u8]) -> Response {
     StatusCode::OK.into_response()
 }
 
-/// Fetch the diff from GitHub and generate an AI summary.
 async fn generate_ai_summary(state: &ServerState, compare_url: &str) -> Option<String> {
     let ai_client = state.ai_client.as_ref()?;
 
@@ -270,7 +264,6 @@ async fn generate_ai_summary(state: &ServerState, compare_url: &str) -> Option<S
     }
 }
 
-/// Fetch a diff from GitHub.
 async fn fetch_github_diff(url: &str) -> Result<String, reqwest::Error> {
     reqwest::Client::new()
         .get(url)

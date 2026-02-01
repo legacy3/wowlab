@@ -6,16 +6,15 @@ use ed25519_dalek::{Signer, SigningKey};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 
-/// Ed25519 keypair for node authentication.
+/// Ed25519 keypair for signing requests to the sentinel.
 #[derive(Clone)]
 pub struct NodeKeypair {
     signing_key: SigningKey,
-    /// Base64-encoded public key (sent as X-Node-Key header).
+    /// Base64-encoded public key.
     pub public_key_b64: String,
 }
 
 impl NodeKeypair {
-    /// Load existing keypair or generate a new one.
     pub fn load_or_create() -> Self {
         let path = Self::keypair_path();
 
@@ -38,7 +37,6 @@ impl NodeKeypair {
             }
         }
 
-        // Generate new keypair
         use rand::RngCore;
         let mut key_bytes = [0u8; 32];
         rand::rng().fill_bytes(&mut key_bytes);
@@ -46,7 +44,6 @@ impl NodeKeypair {
         let verifying_key = signing_key.verifying_key();
         let public_key_b64 = BASE64.encode(verifying_key.as_bytes());
 
-        // Save private key bytes
         if let Some(ref path) = path {
             if let Some(parent) = path.parent() {
                 let _ = std::fs::create_dir_all(parent);
@@ -54,7 +51,6 @@ impl NodeKeypair {
             if let Err(e) = std::fs::write(path, signing_key.to_bytes()) {
                 tracing::error!("Failed to save keypair: {}", e);
             } else {
-                // Set restrictive permissions on Unix
                 #[cfg(unix)]
                 {
                     use std::os::unix::fs::PermissionsExt;
@@ -70,7 +66,6 @@ impl NodeKeypair {
         }
     }
 
-    /// Sign a request, returning the auth headers (key, signature, timestamp).
     fn sign(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -95,7 +90,6 @@ impl NodeKeypair {
             .map(|dirs| dirs.config_dir().join("keypair"))
     }
 
-    /// Delete the stored keypair file.
     pub fn delete() -> bool {
         match Self::keypair_path() {
             Some(path) => std::fs::remove_file(&path).is_ok(),

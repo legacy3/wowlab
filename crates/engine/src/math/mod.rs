@@ -1,6 +1,3 @@
-//! Math and statistics utilities.
-//!
-//! Re-exports statistics types from wowlab_common::stats.
-//! Use types from this module instead of importing statrs directly.
+//! Math and statistics re-exports from wowlab_common::stats.
 
 pub use wowlab_common::stats::*;

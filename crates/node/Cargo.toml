@@ -15,7 +15,8 @@ wowlab-common = { path = "../common" }
 wowlab-supabase = { path = "../supabase" }
 wowlab-centrifuge = { path = "../centrifuge" }
 urlencoding = "2"
-wowlab-engine = { path = "../engine", features = ["jit"] }
+wowlab-engine = { path = "../engine", features = ["jit", "parallel"] }
+rayon = "1.11"
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 reqwest = { version = "0.13", features = ["json"] }
@@ -42,3 +43,6 @@ self_update = { version = "0.42", default-features = false, features = [
     "compression-flate2",
     "rustls",
 ] }
+
+[lints]
+workspace = true

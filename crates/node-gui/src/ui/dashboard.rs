@@ -16,7 +16,6 @@ pub fn show(
     ui.add_space(SPACE_SM);
 
     card_frame().show(ui, |ui| {
-        // Stats grid
         two_columns(ui, |ui, idx| {
             let (icon, label, value, color) = match idx {
                 0 => (
@@ -67,7 +66,6 @@ pub fn show(
         ui.separator();
         ui.add_space(SPACE_SM);
 
-        // CPU bar
         let cpu_color = if stats.cpu_usage > 0.8 {
             RED_9
         } else if stats.cpu_usage > 0.5 {
@@ -77,7 +75,6 @@ pub fn show(
         };
         progress_bar(ui, Icon::Gauge, "CPU", stats.cpu_usage, cpu_color);
 
-        // Sparklines
         if !sims_history.is_empty() || !cpu_history.is_empty() {
             ui.add_space(SPACE_MD);
             ui.separator();

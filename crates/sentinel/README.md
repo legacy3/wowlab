@@ -44,7 +44,6 @@ Public routes:
 
 Node API (Ed25519 authenticated):
 
-- `POST /nodes/register` — node registration, returns beacon token
-- `POST /nodes/heartbeat` — node heartbeat (verifies claimed status)
+- `POST /nodes/register` — node registration with claim token, returns beacon token
 - `POST /nodes/token` — refresh beacon token for Centrifugo
 - `POST /chunks/complete` — chunk completion

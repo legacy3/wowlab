@@ -3,8 +3,13 @@
 import type { ComponentProps } from "react";
 
 import { ark } from "@ark-ui/react/factory";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useState } from "react";
+import {
+  useBoolean,
+  useControllableValue,
+  useMemoizedFn,
+  useTimeout,
+} from "ahooks";
+import { CheckIcon, ClipboardIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { css } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 import {
@@ -12,7 +17,7 @@ import {
   type SecretValueVariantProps,
 } from "styled-system/recipes";
 
-const StyledButton = styled(ark.button, secretValue);
+const StyledContainer = styled(ark.div, secretValue);
 
 const iconStyles = css({
   _groupHover: {
@@ -20,6 +25,17 @@ const iconStyles = css({
   },
   color: "fg.subtle",
   flexShrink: 0,
+  transition: "color 0.15s ease-in-out",
+});
+
+const copyIconStyles = css({
+  _groupHover: {
+    color: "fg.muted",
+  },
+  color: "fg.subtle",
+  cursor: "pointer",
+  flexShrink: 0,
+  ml: "auto",
   transition: "color 0.15s ease-in-out",
 });
 
@@ -38,11 +54,12 @@ const valueStyles = css({
 
 export interface SecretValueProps
   extends
-    Omit<ComponentProps<typeof StyledButton>, keyof SecretValueBaseProps>,
+    Omit<ComponentProps<typeof StyledContainer>, keyof SecretValueBaseProps>,
     SecretValueBaseProps,
     SecretValueVariantProps {}
 
 interface SecretValueBaseProps {
+  copyable?: boolean;
   defaultRevealed?: boolean;
   hiddenCharacter?: string;
   hiddenLength: number;
@@ -52,6 +69,7 @@ interface SecretValueBaseProps {
 }
 
 export function SecretValue({
+  copyable = false,
   defaultRevealed = false,
   hiddenCharacter = "•",
   hiddenLength,
@@ -60,27 +78,37 @@ export function SecretValue({
   value,
   ...props
 }: SecretValueProps) {
-  const [internalRevealed, setInternalRevealed] = useState(defaultRevealed);
+  const [isRevealed, setRevealed] = useControllableValue({
+    defaultValue: defaultRevealed,
+    onChange: onRevealedChange,
+    value: controlledRevealed,
+  });
+  const [copied, { setFalse: clearCopied, setTrue: setCopied }] =
+    useBoolean(false);
 
-  const isControlled = controlledRevealed !== undefined;
-  const isRevealed = isControlled ? controlledRevealed : internalRevealed;
+  useTimeout(clearCopied, copied ? 2000 : undefined);
 
   const handleToggle = () => {
-    const newValue = !isRevealed;
-    if (!isControlled) {
-      setInternalRevealed(newValue);
-    }
-    onRevealedChange?.(newValue);
+    setRevealed(!isRevealed);
   };
+
+  const handleCopy = useMemoizedFn(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    setCopied();
+  });
 
   const displayValue = isRevealed
     ? value
     : hiddenCharacter.repeat(hiddenLength);
 
   return (
-    <StyledButton
-      type="button"
+    <StyledContainer
+      role="button"
+      tabIndex={0}
       onClick={handleToggle}
+      onKeyDown={(e) => e.key === "Enter" && handleToggle()}
       aria-label={isRevealed ? "Click to hide" : "Click to reveal"}
       aria-pressed={isRevealed}
       className="group"
@@ -92,6 +120,20 @@ export function SecretValue({
       <span className={valueStyles} data-hidden={!isRevealed ? "" : undefined}>
         {displayValue}
       </span>
-    </StyledButton>
+      {copyable && (
+        <span
+          role="button"
+          tabIndex={0}
+          className={copyIconStyles}
+          onClick={handleCopy}
+          onKeyDown={(e) =>
+            e.key === "Enter" && handleCopy(e as unknown as React.MouseEvent)
+          }
+          aria-label="Copy to clipboard"
+        >
+          {copied ? <CheckIcon size="1em" /> : <ClipboardIcon size="1em" />}
+        </span>
+      )}
+    </StyledContainer>
   );
 }

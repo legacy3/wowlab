@@ -1,6 +1,4 @@
 //! Shared library for distributed simulation nodes.
-//!
-//! Used by both the GUI (`node-gui`) and headless (`node-headless`) binaries.
 
 pub mod auth;
 pub mod cache;
@@ -25,7 +23,7 @@ pub use worker::{WorkItem, WorkResult, WorkerPool};
 
 use std::time::Instant;
 
-/// Statistics about node operation.
+/// Runtime statistics for UI display.
 #[derive(Default, Clone, Debug)]
 pub struct NodeStats {
     pub active_jobs: u32,
@@ -37,7 +35,7 @@ pub struct NodeStats {
     pub cpu_usage: f32,
 }
 
-/// Log entry for display.
+/// Log entry for UI display.
 #[derive(Clone, Debug)]
 pub struct LogEntry {
     pub timestamp: Instant,
@@ -45,7 +43,7 @@ pub struct LogEntry {
     pub message: String,
 }
 
-/// Log level for display.
+/// Log level for UI display.
 #[derive(Clone, Copy, PartialEq, Default, Debug)]
 pub enum LogLevel {
     #[default]
@@ -55,22 +53,22 @@ pub enum LogLevel {
     Debug,
 }
 
-/// Current state of the node.
+/// Node lifecycle state.
 #[derive(Clone, Debug)]
 pub enum NodeState {
+    /// Needs claim token to register.
+    Setup,
     /// Verifying saved node is still valid.
     Verifying,
     /// Registering with the server.
     Registering,
-    /// Waiting to be claimed by a user.
-    Claiming { code: String },
     /// Fully operational.
     Running,
     /// Server unavailable (maintenance/outage).
     Unavailable,
 }
 
-/// Connection status to the realtime server.
+/// Realtime connection status.
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum ConnectionStatus {
     #[default]

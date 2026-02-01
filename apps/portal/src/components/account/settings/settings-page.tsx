@@ -1,5 +1,6 @@
 "use client";
 
+import { useBoolean } from "ahooks";
 import { Trash2Icon } from "lucide-react";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
@@ -24,7 +25,10 @@ export function SettingsPage() {
   const content = useIntlayer("account").settingsPage;
   const { data: user, deleteAccount } = useUser();
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [
+    showDeleteConfirm,
+    { setFalse: closeDeleteConfirm, setTrue: openDeleteConfirm },
+  ] = useBoolean(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -91,7 +95,7 @@ export function SettingsPage() {
               <Button
                 variant="outline"
                 colorPalette="red"
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={openDeleteConfirm}
               >
                 <Trash2Icon size={14} />
                 {content.deleteAccount}
@@ -104,8 +108,12 @@ export function SettingsPage() {
       <Dialog.Root
         open={showDeleteConfirm}
         onOpenChange={(e) => {
-          setShowDeleteConfirm(e.open);
-          setDeleteConfirmText("");
+          if (e.open) {
+            openDeleteConfirm();
+          } else {
+            closeDeleteConfirm();
+            setDeleteConfirmText("");
+          }
         }}
       >
         <Dialog.Positioner>
@@ -169,10 +177,7 @@ export function SettingsPage() {
             </Dialog.Body>
 
             <Dialog.Footer>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
+              <Button variant="outline" onClick={closeDeleteConfirm}>
                 {content.cancel}
               </Button>
               <Button
