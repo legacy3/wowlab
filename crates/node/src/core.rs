@@ -60,7 +60,7 @@ pub struct NodeCore {
 
     cache: Arc<ConfigCache>,
 
-    verify_rx: Option<mpsc::Receiver<Option<bool>>>,
+    verify_rx: Option<mpsc::Receiver<Result<String, bool>>>,
     register_rx: Option<mpsc::Receiver<RegisterResult>>,
     realtime_rx: Option<mpsc::Receiver<RealtimeEvent>>,
     realtime_shutdown: Option<CancellationToken>,
@@ -145,7 +145,8 @@ impl NodeCore {
         match self.state {
             NodeState::Verifying => self.start_verification(),
             NodeState::Registering => self.start_registration(),
-            NodeState::Setup | NodeState::Running | NodeState::Unavailable => {}
+            NodeState::Setup | NodeState::Running | NodeState::NotFound | NodeState::Unavailable => {
+            }
         }
     }
 
@@ -198,6 +199,16 @@ impl NodeCore {
     }
 
     pub fn unlink(&self) -> bool {
+        // Try to notify server (best effort, don't block on failure)
+        let sentinel = self.sentinel.clone();
+        self.runtime.spawn(async move {
+            if let Err(e) = sentinel.unlink().await {
+                tracing::warn!("Failed to unlink from server: {}", e);
+            }
+        });
+
+        // Delete local state
+        crate::auth::NodeKeypair::delete();
         NodeConfig::delete()
     }
 
@@ -213,15 +224,16 @@ impl NodeCore {
         tracing::info!("Verifying node...");
 
         self.runtime.spawn(async move {
-            // Some(true) = valid, Some(false) = invalid/not claimed, None = server unavailable
-            let result: Option<bool> = match sentinel.verify().await {
-                Ok(()) => Some(true),
+            // Ok(token) = valid, Err(true) = not found, Err(false) = server unavailable
+            let result: Result<String, bool> = match sentinel.verify().await {
+                Ok(token) => Ok(token),
                 Err(e) => {
-                    let err_str = e.to_string();
+                    let err_str = e.to_string().to_lowercase();
+                    tracing::debug!("Verify error: {}", err_str);
                     if err_str.contains("not found") || err_str.contains("not claimed") {
-                        Some(false)
+                        Err(true) // Node not found
                     } else {
-                        None
+                        Err(false) // Server unavailable
                     }
                 }
             };
@@ -235,10 +247,11 @@ impl NodeCore {
         };
 
         match rx.try_recv() {
-            Ok(Some(true)) => {
+            Ok(Ok(token)) => {
                 tracing::info!("Node verified, starting...");
                 self.verify_rx = None;
                 self.backoff.reset();
+                self.config.set_beacon_token(token);
                 self.state = NodeState::Running;
                 let _ = self
                     .event_tx
@@ -247,18 +260,18 @@ impl NodeCore {
                     self.start_realtime(id);
                 }
             }
-            Ok(Some(false)) => {
-                tracing::warn!("Node invalid or not claimed, re-registering...");
+            Ok(Err(true)) => {
+                // Node not found in database
+                tracing::warn!("Node not found, needs re-registration");
                 self.verify_rx = None;
                 self.node_id = None;
                 self.config.clear_node_id();
-                self.state = NodeState::Registering;
+                self.state = NodeState::NotFound;
                 let _ = self
                     .event_tx
                     .try_send(NodeCoreEvent::StateChanged(self.state.clone()));
-                self.start_registration();
             }
-            Ok(None) => {
+            Ok(Err(false)) => {
                 tracing::error!("Server unavailable, please check https://wowlab.gg/status");
                 self.verify_rx = None;
                 self.set_unavailable();

@@ -20,7 +20,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 use tracing::Level;
 use wowlab_node::{
-    utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeConfig, NodeCore,
+    utils::logging::UiLogEntry, ConnectionStatus, LogEntry, LogLevel, NodeCore,
     NodeCoreEvent, NodeState,
 };
 
@@ -189,6 +189,11 @@ impl NodeApp {
 
         if let Some(last_state) = &self.last_node_state {
             match (&last_state, &current_state) {
+                (_, NodeState::NotFound) if !matches!(last_state, NodeState::NotFound) => {
+                    self.toasts
+                        .warning("Node not found")
+                        .duration(Some(Duration::from_secs(4)));
+                }
                 (_, NodeState::Unavailable) if !matches!(last_state, NodeState::Unavailable) => {
                     self.toasts
                         .error("Server unavailable")
@@ -205,6 +210,7 @@ impl NodeApp {
             (NodeState::Setup, _) => (FG_SUBTLE, "Setup", icon(Icon::Settings)),
             (NodeState::Verifying, _) => (FG_SUBTLE, "Verifying", icon(Icon::Loader)),
             (NodeState::Registering, _) => (FG_SUBTLE, "Registering", icon(Icon::Loader)),
+            (NodeState::NotFound, _) => (AMBER_9, "Not Found", icon(Icon::CircleAlert)),
             (NodeState::Unavailable, _) => (RED_9, "Unavailable", icon(Icon::CircleX)),
             (NodeState::Running, ConnectionStatus::Connected) => {
                 (GREEN_9, "Online", icon(Icon::Wifi))
@@ -315,6 +321,19 @@ impl NodeApp {
         });
     }
 
+    fn show_not_found_state(&mut self, ui: &mut egui::Ui) {
+        let action = setup_view::show_reregister(
+            ui,
+            &mut self.setup_token_input,
+            self.setup_error.as_deref(),
+        );
+
+        if let SetupAction::Submit(token) = action {
+            self.setup_error = None;
+            self.core.set_claim_token(token);
+        }
+    }
+
     fn show_unavailable_state(&self, ui: &mut egui::Ui) {
         ui.vertical_centered(|ui| {
             ui.add_space(60.0);
@@ -420,7 +439,7 @@ impl eframe::App for NodeApp {
         self.handle_keyboard_shortcuts(ctx);
         self.update_modal.render(ctx);
         if self.show_unlink_modal(ctx) {
-            NodeConfig::delete();
+            self.core.unlink();
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
         self.toasts.show(ctx);
@@ -451,6 +470,7 @@ impl eframe::App for NodeApp {
                 NodeState::Setup => self.show_setup_state(ui),
                 NodeState::Verifying => self.show_loading_state(ui, "Verifying node..."),
                 NodeState::Registering => self.show_loading_state(ui, "Connecting to server..."),
+                NodeState::NotFound => self.show_not_found_state(ui),
                 NodeState::Unavailable => self.show_unavailable_state(ui),
                 NodeState::Running => self.show_running_state(ui),
             });

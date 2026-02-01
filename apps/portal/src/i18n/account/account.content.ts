@@ -206,6 +206,16 @@ export default {
       }),
       title: t({ de: "Eigenen Node betreiben", en: "Run Your Own Node" }),
       view: t({ de: "Ansehen", en: "View" }),
+      // Success state
+      closeAndViewNodes: t({
+        de: "Schließen und Nodes anzeigen",
+        en: "Close & View Nodes",
+      }),
+      nodeConnected: t({ de: "Node verbunden!", en: "Node Connected!" }),
+      nodeConnectedDescription: t({
+        de: "Dein Node ist jetzt online und bereit für Simulationen.",
+        en: "Your node is now online and ready to run simulations.",
+      }),
     },
   },
   description: "Content for account management.",

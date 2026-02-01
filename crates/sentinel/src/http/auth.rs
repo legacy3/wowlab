@@ -9,7 +9,6 @@ use axum::Json;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use sha2::{Digest, Sha256};
 
 use crate::state::ServerState;
 
@@ -72,7 +71,7 @@ const MAX_CLOCK_SKEW: u64 = 300; // 5 minutes
 const MAX_BODY_SIZE: usize = 1024 * 1024; // 1 MB
 
 /// Headers: X-Node-Key, X-Node-Sig (base64), X-Node-Ts (unix seconds).
-/// Message: "{timestamp}\0{method}\0{path}\0{body_sha256}"
+/// Message: "{timestamp}\0{method}\0{host}\0{path}\0{body_sha256}"
 pub async fn verify_node(request: Request, next: Next) -> Response {
     let (parts, body) = request.into_parts();
 
@@ -88,6 +87,12 @@ pub async fn verify_node(request: Request, next: Next) -> Response {
         Some(v) => v.to_str().unwrap_or("").to_string(),
         None => return auth_error("Missing X-Node-Ts"),
     };
+    let host = parts
+        .headers
+        .get("Host")
+        .and_then(|v| v.to_str().ok())
+        .map(|h| h.split(':').next().unwrap_or(h)) // Strip port if present
+        .unwrap_or("");
 
     // Validate timestamp freshness
     let timestamp: u64 = match ts_str.parse() {
@@ -124,16 +129,13 @@ pub async fn verify_node(request: Request, next: Next) -> Response {
         Err(_) => return auth_error("Body too large"),
     };
 
-    // Hash body with SHA-256
-    let body_hash = hex::encode(Sha256::digest(&body_bytes));
-
-    // Build canonical message: "timestamp\0METHOD\0/path\0bodyHash"
-    let message = format!(
-        "{}\0{}\0{}\0{}",
-        ts_str,
-        parts.method,
+    // Build canonical message using shared function
+    let message = wowlab_common::build_sign_message(
+        timestamp,
+        parts.method.as_str(),
+        host,
         parts.uri.path(),
-        body_hash,
+        &body_bytes,
     );
 
     // Verify Ed25519 signature

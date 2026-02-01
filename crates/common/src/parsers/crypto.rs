@@ -146,10 +146,10 @@ pub fn sha256_hex(data: &[u8]) -> String {
 
 /// Build the message to sign for a node request.
 ///
-/// Format: `timestamp\0method\0path\0body_hash`
-pub fn build_sign_message(timestamp: u64, method: &str, path: &str, body: &[u8]) -> String {
+/// Format: `timestamp\0method\0host\0path\0body_hash`
+pub fn build_sign_message(timestamp: u64, method: &str, host: &str, path: &str, body: &[u8]) -> String {
     let body_hash = sha256_hex(body);
-    format!("{timestamp}\0{method}\0{path}\0{body_hash}")
+    format!("{timestamp}\0{method}\0{host}\0{path}\0{body_hash}")
 }
 
 #[cfg(test)]
@@ -265,18 +265,20 @@ mod tests {
     fn test_build_sign_message() {
         let timestamp = 1234567890u64;
         let method = "POST";
-        let path = "/functions/v1/node-heartbeat";
+        let host = "sentinel.wowlab.gg";
+        let path = "/nodes/register";
         let body = b"{}";
 
-        let message = build_sign_message(timestamp, method, path, body);
+        let message = build_sign_message(timestamp, method, host, path, body);
 
         // Should contain all parts separated by null bytes
         let parts: Vec<&str> = message.split('\0').collect();
-        assert_eq!(parts.len(), 4);
+        assert_eq!(parts.len(), 5);
         assert_eq!(parts[0], "1234567890");
         assert_eq!(parts[1], "POST");
-        assert_eq!(parts[2], "/functions/v1/node-heartbeat");
-        assert_eq!(parts[3], sha256_hex(body));
+        assert_eq!(parts[2], "sentinel.wowlab.gg");
+        assert_eq!(parts[3], "/nodes/register");
+        assert_eq!(parts[4], sha256_hex(body));
     }
 
     #[test]
@@ -286,10 +288,11 @@ mod tests {
         // Build request message
         let timestamp = 1700000000u64;
         let method = "POST";
-        let path = "/functions/v1/chunk-claim";
-        let body = br#"{"batchSize":5}"#;
+        let host = "sentinel.wowlab.gg";
+        let path = "/chunks/complete";
+        let body = br#"{"chunkId":"abc"}"#;
 
-        let message = build_sign_message(timestamp, method, path, body);
+        let message = build_sign_message(timestamp, method, host, path, body);
 
         // Sign
         let signature = kp.sign_base64(message.as_bytes());

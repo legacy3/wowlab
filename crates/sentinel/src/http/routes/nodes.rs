@@ -15,6 +15,7 @@ pub fn router() -> Router<Arc<ServerState>> {
     Router::new()
         .route("/nodes/register", post(register))
         .route("/nodes/token", post(refresh_token))
+        .route("/nodes/unlink", post(unlink))
 }
 
 #[derive(Deserialize)]
@@ -180,6 +181,36 @@ async fn refresh_token(
             .into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to query node");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "Database error" })),
+            )
+                .into_response()
+        }
+    }
+}
+
+async fn unlink(
+    State(state): State<Arc<ServerState>>,
+    Extension(node): Extension<VerifiedNode>,
+) -> Response {
+    let result = sqlx::query("DELETE FROM nodes WHERE public_key = $1")
+        .bind(&node.public_key)
+        .execute(&state.db)
+        .await;
+
+    match result {
+        Ok(r) if r.rows_affected() > 0 => {
+            tracing::info!(public_key = %node.public_key, "Node unlinked");
+            (StatusCode::OK, Json(json!({ "success": true }))).into_response()
+        }
+        Ok(_) => (
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": "Node not found" })),
+        )
+            .into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to delete node");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "Database error" })),

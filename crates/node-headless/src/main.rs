@@ -216,6 +216,12 @@ fn handle_event(event: &NodeCoreEvent, core: &NodeCore) {
             NodeState::Verifying => tracing::info!("Verifying node..."),
             NodeState::Registering => tracing::info!("Registering with server..."),
             NodeState::Running => tracing::info!("Node running"),
+            NodeState::NotFound => {
+                tracing::error!("Node not found in database");
+                tracing::error!("Re-register with your claim token");
+                tracing::error!("Set WOWLAB_CLAIM_TOKEN environment variable");
+                tracing::error!("Get your token at https://wowlab.gg/account/nodes");
+            }
             NodeState::Unavailable => {
                 tracing::error!("Server unavailable");
                 tracing::error!("Check https://wowlab.gg/status for updates");
@@ -270,6 +276,10 @@ fn print_status(core: &NodeCore) {
         NodeState::Verifying => tracing::info!("Status: Verifying..."),
         NodeState::Registering => tracing::info!("Status: Registering..."),
         NodeState::Running => tracing::info!("Status: Ready"),
+        NodeState::NotFound => {
+            tracing::error!("Status: Node not found");
+            tracing::error!("Re-register with WOWLAB_CLAIM_TOKEN=ct_xxx");
+        }
         NodeState::Unavailable => {
             tracing::error!("Status: Server unavailable");
             tracing::error!("Check https://wowlab.gg/status for updates");

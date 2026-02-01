@@ -3,7 +3,6 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use directories::ProjectDirs;
 use ed25519_dalek::{Signer, SigningKey};
-use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 
 /// Ed25519 keypair for signing requests to the sentinel.
@@ -66,14 +65,13 @@ impl NodeKeypair {
         }
     }
 
-    fn sign(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
+    fn sign(&self, method: &str, host: &str, path: &str, body: &[u8]) -> SignedHeaders {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
 
-        let body_hash = hex::encode(Sha256::digest(body));
-        let message = format!("{}\0{}\0{}\0{}", timestamp, method, path, body_hash);
+        let message = wowlab_common::build_sign_message(timestamp, method, host, path, body);
 
         let signature = self.signing_key.sign(message.as_bytes());
         let sig_b64 = BASE64.encode(signature.to_bytes());
@@ -99,7 +97,7 @@ impl NodeKeypair {
 }
 
 impl crate::sentinel::RequestSigner for NodeKeypair {
-    fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders {
-        self.sign(method, path, body)
+    fn sign_request(&self, method: &str, host: &str, path: &str, body: &[u8]) -> SignedHeaders {
+        self.sign(method, host, path, body)
     }
 }

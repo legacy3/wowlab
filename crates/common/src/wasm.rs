@@ -186,10 +186,10 @@ mod crypto_wasm {
 
     /// Build the message to sign for a node request.
     ///
-    /// Format: `timestamp:method:path:sha256(body)`
+    /// Format: `timestamp\0method\0host\0path\0sha256(body)`
     #[wasm_bindgen(js_name = buildSignMessage)]
-    pub fn wasm_build_sign_message(timestamp: u64, method: &str, path: &str, body: &str) -> String {
-        crypto::build_sign_message(timestamp, method, path, body.as_bytes())
+    pub fn wasm_build_sign_message(timestamp: u64, method: &str, host: &str, path: &str, body: &str) -> String {
+        crypto::build_sign_message(timestamp, method, host, path, body.as_bytes())
     }
 
     /// Compute SHA256 hash of a string and return as hex.

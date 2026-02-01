@@ -17,7 +17,7 @@ pub struct SignedHeaders {
 
 /// Trait for request signing.
 pub trait RequestSigner: Send + Sync {
-    fn sign_request(&self, method: &str, path: &str, body: &[u8]) -> SignedHeaders;
+    fn sign_request(&self, method: &str, host: &str, path: &str, body: &[u8]) -> SignedHeaders;
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -43,6 +43,7 @@ pub enum SentinelError {
 pub struct SentinelClient {
     http: reqwest::Client,
     sentinel_url: String,
+    sentinel_host: String,
     signer: Arc<dyn RequestSigner>,
 }
 
@@ -57,9 +58,15 @@ impl SentinelClient {
             .build()
             .map_err(|e| SentinelError::ClientBuild(e.to_string()))?;
 
+        let sentinel_host = reqwest::Url::parse(&sentinel_url)
+            .ok()
+            .and_then(|u| u.host_str().map(|h| h.to_string()))
+            .unwrap_or_default();
+
         Ok(Self {
             http,
             sentinel_url,
+            sentinel_host,
             signer,
         })
     }
@@ -70,7 +77,7 @@ impl SentinelClient {
         body: &[u8],
     ) -> Result<reqwest::Response, SentinelError> {
         let url = format!("{}{}", self.sentinel_url, path);
-        let headers = self.signer.sign_request("POST", path, body);
+        let headers = self.signer.sign_request("POST", &self.sentinel_host, path, body);
 
         let response = self
             .http
@@ -127,17 +134,23 @@ impl SentinelClient {
         Ok(response.json().await?)
     }
 
-    /// Verify node is registered and claimed via heartbeat.
-    pub async fn verify(&self) -> Result<(), SentinelError> {
-        let body = b"{}";
-        let response = self.signed_post("/nodes/heartbeat", body).await?;
+    /// Verify node is registered and claimed via token refresh.
+    pub async fn verify(&self) -> Result<String, SentinelError> {
+        let response = self.signed_post("/nodes/token", &[]).await?;
 
         if !response.status().is_success() {
             let error = response.text().await.unwrap_or_default();
             return Err(SentinelError::Api(error));
         }
 
-        Ok(())
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct TokenResponse {
+            beacon_token: String,
+        }
+
+        let resp: TokenResponse = response.json().await?;
+        Ok(resp.beacon_token)
     }
 
     pub async fn refresh_token(&self) -> Result<String, SentinelError> {
@@ -156,6 +169,17 @@ impl SentinelClient {
 
         let resp: TokenResponse = response.json().await?;
         Ok(resp.beacon_token)
+    }
+
+    pub async fn unlink(&self) -> Result<(), SentinelError> {
+        let response = self.signed_post("/nodes/unlink", &[]).await?;
+
+        if !response.status().is_success() {
+            let error = response.text().await.unwrap_or_default();
+            return Err(SentinelError::Api(error));
+        }
+
+        Ok(())
     }
 
     pub async fn complete_chunk(

@@ -64,6 +64,8 @@ pub enum NodeState {
     Registering,
     /// Fully operational.
     Running,
+    /// Node not found in database (needs re-registration).
+    NotFound,
     /// Server unavailable (maintenance/outage).
     Unavailable,
 }
