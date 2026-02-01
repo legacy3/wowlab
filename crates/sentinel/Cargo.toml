@@ -1,6 +1,6 @@
 [package]
 name = "wowlab-sentinel"
-version = "0.6.18"
+version = "0.6.19"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
